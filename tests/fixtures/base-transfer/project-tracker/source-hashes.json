@@ -1,0 +1,51 @@
+{
+  "fixtureId": "project-tracker",
+  "hashAlgorithm": "SHA-256",
+  "artifacts": [
+    {
+      "path": "api/metadata.json",
+      "sha256": "7b68190434ca912d843ccdae3fbf5fdfa5b438692d0a7684048f00d59de50df8",
+      "size": 2562
+    },
+    {
+      "path": "api/people-page-1.json",
+      "sha256": "10e7c00578a71269eb8069661fb597a594969f2332cc0c0600eb5c50fb43f94c",
+      "size": 376
+    },
+    {
+      "path": "api/people-page-2.json",
+      "sha256": "8a34fc8cb429ca31566965040e94c9647faf4ab6bc7905145275019f76c66ee0",
+      "size": 174
+    },
+    {
+      "path": "api/projects-page-1.json",
+      "sha256": "ff36bf5d6321f672e518c4ba846bf36cf774cce0d452ac3428c47c9f55db1d54",
+      "size": 461
+    },
+    {
+      "path": "api/tasks-page-1.json",
+      "sha256": "fac4ed631a2146221d037f80160febf3227de72ff6b0fcdb75740a951029e626",
+      "size": 868
+    },
+    {
+      "path": "api/tasks-page-2.json",
+      "sha256": "2e9fd83c62248eb5211a49870c76d2d2a3495eb914e6171e85d03ba8727eecc6",
+      "size": 876
+    },
+    {
+      "path": "csv/People-Grid view.csv",
+      "sha256": "c570acf804ea428bdf3ae64bc644cd9dd6084437630456bf97543097668cb632",
+      "size": 181
+    },
+    {
+      "path": "csv/Projects-Grid view.csv",
+      "sha256": "d8838a7e2cfcb7212d06b424150c6ec74549f973d743c2956028f003b3904f83",
+      "size": 199
+    },
+    {
+      "path": "csv/Tasks-Grid view.csv",
+      "sha256": "abba6bfdb0934a1f2b2ae807ac86e2467a568b1b69f92b941421a5d005c4375e",
+      "size": 665
+    }
+  ]
+}

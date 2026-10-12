@@ -1,0 +1,3 @@
+import type {Versioned,PrincipalRef,RevisionRef,Impact,Freshness,AllowedAction} from '../../contracts/primitives';
+import type {EvidenceLink} from '../evidence/contracts';
+export type Decision=Versioned&{kind:'quote'|'strategy'|'grant'|'release'|'case';requester:PrincipalRef;assigneeId:string|null;subject:RevisionRef;exactInputHash:string;proposalId:string|null;recommendation:string;alternatives:string[];impact:Impact;evidence:EvidenceLink[];freshness:Freshness;dueAt:string;expiresAt:string|null;state:'awaiting'|'in_review'|'approved'|'rejected'|'cancelled'|'superseded'|'stale';rationale:string|null;decidedBy:PrincipalRef|null;decidedAt:string|null;supersedesId:string|null;allowedActions:AllowedAction[]};

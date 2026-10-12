@@ -1,0 +1,14 @@
+{
+  "fixtureId": "attachments",
+  "sourceFormat": "csv-set",
+  "csvFile": "Assets-Grid view.csv",
+  "attachmentColumn": "Files",
+  "rowsRead": 5,
+  "skippedNonempty": 4,
+  "manifest": [
+    { "rowOrdinal": 1, "primary": "One file", "parsed": true, "names": ["brief.pdf"], "urls": ["https://attachments.example.com/f/1/brief.pdf"] },
+    { "rowOrdinal": 2, "primary": "Several files", "parsed": true, "names": ["photo-1.jpg", "photo-2.jpg"], "urls": ["https://attachments.example.com/f/2/photo-1.jpg", "https://attachments.example.com/f/3/photo-2.jpg"] },
+    { "rowOrdinal": 3, "primary": "Comma in name", "parsed": true, "names": ["Smith, Jones contract.pdf"], "urls": ["https://attachments.example.com/f/4/contract.pdf"] },
+    { "rowOrdinal": 5, "primary": "Name only", "parsed": false }
+  ]
+}

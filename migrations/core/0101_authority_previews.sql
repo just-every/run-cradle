@@ -1,0 +1,1 @@
+CREATE TABLE authority_policy_previews (id TEXT PRIMARY KEY, app_id TEXT NOT NULL, issuer_id TEXT NOT NULL, policy_id TEXT NOT NULL, expected_version INTEGER NOT NULL, policy_json TEXT NOT NULL, impact_hash TEXT NOT NULL, impact_json TEXT NOT NULL, source_revision TEXT NOT NULL, expires_at INTEGER NOT NULL, consumed_at INTEGER, created_at INTEGER NOT NULL);

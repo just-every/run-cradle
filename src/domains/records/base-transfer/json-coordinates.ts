@@ -1,0 +1,15 @@
+import { ImportInputError } from './input-error'
+import { canonicalMetadataLabel,type PortableBase } from './json-format'
+import type { ImportIdentities,ImportOptions } from './contracts'
+const exact=(actual:object|undefined,expected:string[],path:string)=>{const keys=Object.keys(actual??{}),wanted=new Set(expected);if(keys.length!==wanted.size||keys.some(key=>!wanted.has(key)))throw new ImportInputError(`${path}: identity keys must cover exactly the source coordinates`)}
+export function validateJsonCoordinates(snapshot:PortableBase,ids:ImportIdentities):void {
+ exact(ids.tables,snapshot.base.tables.map(t=>t.id),'tables')
+ for(const table of snapshot.base.tables){const identity=ids.tables[table.id];exact(identity.fields,table.fields.map(f=>f.id),table.label+' fields');exact(identity.records,table.records.map(r=>r.id),table.label+' records');exact(identity.options,table.fields.filter(f=>f.type==='select').map(f=>f.id),table.label+' option fields');for(const field of table.fields)if(field.type==='select')exact(identity.options[field.id],field.options!.map(o=>o.label),field.label+' options')}
+ exact(ids.views,snapshot.base.views.map(v=>v.id),'views');exact(ids.forms,snapshot.base.forms.map(v=>v.id),'forms');exact(ids.incomingRelations,snapshot.base.tables.flatMap(t=>t.incomingRelations.map(i=>i.id)),'incomingRelations')
+}
+export function validateJsonOverrides(snapshot:PortableBase,options:ImportOptions):void {
+ const label=(value:string,path:string,maximum:number)=>{if(!canonicalMetadataLabel(maximum).safeParse(value).success)throw new ImportInputError(`${path}: metadata label must be canonical, without leading or trailing whitespace`)}
+ if(options.name!=='')label(options.name,'Base name',120)
+ if(options.referenceChoices||options.correspondenceAcceptedFingerprint)throw new ImportInputError('CSV correspondence choices cannot override native JSON')
+ for(const [key,override]of Object.entries(options.tables??{})){const table=snapshot.base.tables.find(t=>t.id===key);if(!table)throw new ImportInputError(`Unknown JSON table override ${key}`);if(override.label!==undefined)label(override.label,table.label,120);const labels=new Set<string>();for(const field of table.fields){const value=override.columns?.[field.id]?.label??field.label;label(value,field.label,200);if(value==='_record_id')throw new ImportInputError('The field name _record_id is reserved');if(labels.has(value))throw new ImportInputError(`${table.label}: duplicate field labels`);labels.add(value)}if(override.primaryColumnKey&&override.primaryColumnKey!==table.primaryFieldId)throw new ImportInputError(`${table.label}: native primary identity cannot change during import`);for(const column of Object.keys(override.columns??{}))if(!table.fields.some(f=>f.id===column))throw new ImportInputError(`${table.label}: unknown JSON field override ${column}`)}
+}

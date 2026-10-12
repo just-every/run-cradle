@@ -1,0 +1,1 @@
+CREATE TABLE launch_analysis_requests(id TEXT PRIMARY KEY,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,version INTEGER NOT NULL,actor_id TEXT NOT NULL,state TEXT NOT NULL,input_json TEXT NOT NULL,task_json TEXT,analysis_id TEXT,error_code TEXT,error_message TEXT);

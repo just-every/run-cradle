@@ -1,0 +1,2 @@
+CREATE TABLE construction_source_intakes(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,version INTEGER NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,lifecycle TEXT NOT NULL,schema_version INTEGER NOT NULL);
+CREATE TABLE construction_source_intake_files(id TEXT PRIMARY KEY,record_id TEXT NOT NULL REFERENCES construction_source_intakes(id),value TEXT NOT NULL REFERENCES evidence_files(id),position INTEGER NOT NULL,UNIQUE(record_id,value));

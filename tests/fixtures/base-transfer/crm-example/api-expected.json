@@ -1,0 +1,68 @@
+{
+  "fixtureId": "crm-example",
+  "sourceFormat": "web-api-recorded-pages",
+  "groundTruth": "ground-truth.json",
+  "expectedNativeSchemaRef": "ground-truth.json#/nativeSchema",
+  "expectedNativeRecordsRef": "ground-truth.json#/nativeRecords",
+  "nativeRecordKeys": ["companies.acme", "companies.cedar", "companies.northstar", "contacts.avery", "contacts.blair", "contacts.casey", "deals.acmePilot", "deals.cedarRenewal", "deals.northstarRollout"],
+  "pageAccounting": { "metadataPagesRead": 1, "recordPagesRead": 6, "requests": 7, "recordsRead": 9, "offsetChainVerified": true },
+  "rowsByTable": [
+    { "tableKey": "companies", "rowsRead": 3, "created": 3, "rejected": 0 },
+    { "tableKey": "contacts", "rowsRead": 3, "created": 3, "rejected": 0 },
+    { "tableKey": "deals", "rowsRead": 3, "created": 3, "rejected": 0 }
+  ],
+  "columnAccounting": [
+    { "fieldKey": "companies.name", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.industry", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.employees", "sourceValues": 3, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.annualRevenue", "sourceValues": 2, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.founded", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.active", "sourceValues": 2, "converted": 1, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "normalizedOmittedCheckboxFalse": 1 },
+    { "fieldKey": "companies.contacts", "sourceValues": 2, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 4 },
+    { "fieldKey": "contacts.name", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.email", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.phone", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.website", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.kind", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.active", "sourceValues": 2, "converted": 1, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "normalizedOmittedCheckboxFalse": 1 },
+    { "fieldKey": "contacts.company", "sourceValues": 3, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 3 },
+    { "fieldKey": "deals.name", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.company", "sourceValues": 3, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 3 },
+    { "fieldKey": "deals.stage", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.amount", "sourceValues": 3, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.probability", "sourceValues": 3, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.closeDate", "sourceValues": 2, "converted": 1, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.won", "sourceValues": 0, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "normalizedOmittedCheckboxFalse": 3 },
+    { "fieldKey": "deals.companyName", "sourceValues": 3, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "recomputed": 3 }
+  ],
+  "linkAccounting": {
+    "linkRefsRead": 10,
+    "resolved": 10,
+    "unresolved": 0,
+    "ambiguous": 0,
+    "references": [
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.acme", "sourceRecordId": "recSYN00000000001", "page": 1, "rawReference": "recSYN00000000011", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.avery" },
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.acme", "sourceRecordId": "recSYN00000000001", "page": 1, "rawReference": "recSYN00000000012", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.blair" },
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.cedar", "sourceRecordId": "recSYN00000000002", "page": 1, "rawReference": "recSYN00000000013", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.casey" },
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.cedar", "sourceRecordId": "recSYN00000000002", "page": 1, "rawReference": "recSYN00000000012", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.blair" },
+      { "tableKey": "contacts", "fieldKey": "company", "sourceRecordKey": "contacts.avery", "sourceRecordId": "recSYN00000000011", "page": 1, "rawReference": "recSYN00000000001", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.acme" },
+      { "tableKey": "contacts", "fieldKey": "company", "sourceRecordKey": "contacts.blair", "sourceRecordId": "recSYN00000000012", "page": 1, "rawReference": "recSYN00000000001", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.acme" },
+      { "tableKey": "contacts", "fieldKey": "company", "sourceRecordKey": "contacts.casey", "sourceRecordId": "recSYN00000000013", "page": 2, "rawReference": "recSYN00000000002", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.cedar" },
+      { "tableKey": "deals", "fieldKey": "company", "sourceRecordKey": "deals.acmePilot", "sourceRecordId": "recSYN00000000021", "page": 1, "rawReference": "recSYN00000000001", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.acme" },
+      { "tableKey": "deals", "fieldKey": "company", "sourceRecordKey": "deals.cedarRenewal", "sourceRecordId": "recSYN00000000022", "page": 1, "rawReference": "recSYN00000000002", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.cedar" },
+      { "tableKey": "deals", "fieldKey": "company", "sourceRecordKey": "deals.northstarRollout", "sourceRecordId": "recSYN00000000023", "page": 2, "rawReference": "recSYN00000000003", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.northstar" }
+    ]
+  },
+  "lookups": { "recognized": 1, "recognizedRows": 3, "firstMismatch": null, "expectedValues": { "deals.acmePilot": "Acme Example Works", "deals.cedarRenewal": "Cedar Example Group", "deals.northstarRollout": "Northstar Example" } },
+  "reciprocalDisagreements": { "count": 1, "references": "ground-truth.json#/sourceReciprocalDisagreement/items" },
+  "sourceCellDifferencesRef": "ground-truth.json#/sourceCellDifferences",
+  "sourcePathDifferences": [
+    "The exact API numeric JSON bytes contain five nonempty currency numbers: companies.annualRevenue 1250000 -> 1250000 and 72000.5 -> 72000.5; deals.amount 12500 -> 12500, 9000 -> 9000, and 0 -> 0. CSV retains the display cells $1,250,000.00, $72,000.50, $12,500.00, $9,000.00, and $0.00. Both paths map to canonical decimal strings, with no currency conversion.",
+    "Three API percent fractions 0.35, 0.6, 0.05 are retained as raw JSON numbers and map to canonical strings 0.35, 0.6, 0.05; the corresponding CSV display cells are 35%, 60%, 5%. Across each source path, five currency values and three fractions are the eight nonempty decimal normalizations; Employees 42, 8, 0 retain the same canonical digit strings.",
+    "The exact API pages retain four explicit true checkbox booleans and omit five false values: one each for Cedar and Casey, and three Deals. Each omission is explicitly normalized to false. CSV uses checked -> true and blank -> false: Companies 2/1, Contacts 2/1, Deals 0/3; all nine CSV row cells change representation to Boolean.",
+    "The API metadata includes unused select options in its declared order. The same labels are retained in the CSV mapping's editable owner-preview choices.",
+    "Each of the three API lookup payloads is a one-element label array. Its exact label matches the scalar display recomputed from the resolved Company relation; all three are counted as changed array-to-display representations and are not written as native lookup fields.",
+    "Contacts.Website is declared as source URL but maps to native text; all three example.com URLs remain exact strings without URL normalization.",
+    "Companies.Contacts is a source inverse view, not a second native relation field. Its four source references remain in link accounting; canonical Contacts.Company stores three links, and Companies.Contacts is expected as a derived incoming projection. The one Cedar/Blair disagreement remains counted."
+  ]
+}

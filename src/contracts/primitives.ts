@@ -1,0 +1,25 @@
+// Frozen shared wire primitives: cradle.api.v1. No server dependencies.
+export type Id = string;
+export type Instant = string;
+export type LocalDate = string;
+export type Decimal = string;
+export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+export type Money = { minor: string; currency: string; scale: number };
+export type Versioned = { id: Id; version: number; createdAt: Instant; updatedAt: Instant };
+export type Ref = { appId: Id; entityId: Id; recordId: Id };
+export type RevisionRef = { ref: Ref; version: number };
+export type PrincipalRef = { kind: 'human' | 'agent' | 'connector' | 'system'; id: Id };
+export type PageQuery = { cursor?: string; limit?: number; consistencyToken?: string };
+export type Page<T> = { items: T[]; nextCursor: string | null; total: { kind: 'exact' | 'at_least'; value: number }; evaluatedAt: Instant };
+export type Success<T> = { data: T; meta: { requestId: Id; apiVersion: 'cradle.api.v1'; evaluatedAt: Instant; consistencyToken: string } };
+export type ErrorCode = 'validation' | 'signed_out' | 'forbidden' | 'not_found' | 'version_conflict' | 'stale_cursor' | 'stale_evidence' | 'schema_conflict' | 'capacity_limit' | 'idempotency_conflict' | 'invalid_transition' | 'separation_of_duties' | 'grant_expired' | 'grant_revoked' | 'budget_exhausted' | 'unconfigured' | 'provider_unavailable' | 'provider_refused' | 'invalid_provider_output' | 'unknown_outcome' | 'upload_rejected' | 'rate_limited' | 'evaluation_failed' | 'release_conflict' | 'internal';
+export type Failure = { error: { requestId: Id; operation: string; code: ErrorCode; message: string; retry: 'read' | 'reconcile' | 'after_change' | 'never'; retryAfter?: Instant; currentVersions?: RevisionRef[]; issues?: { path: string; fieldId?: Id; message: string }[]; blockers?: { code: string; message: string; ref?: Ref }[]; erasureCopies?: { store: string; rows: number; reason: 'inside_longer_word' | 'other_person' | 'not_attributed' }[]; commandId?: Id } };
+export type Capability = { id: string; state: 'disabled' | 'unconfigured' | 'ready' | 'unavailable'; checkedAt: Instant | null; missing: string[]; reason: string | null; supportedActions: string[] };
+export type AllowedAction = { action: string; enabled: boolean; reason: string | null; requiredDecisionId: Id | null };
+export type Freshness = { asOf: Instant; sourcesKnown: number; sourcesExpected: number | null; staleSourceIds: Id[]; unknowns: string[] };
+export type Impact = { summary: string; spend: Money[]; commitments: string[]; affected: Ref[]; accessChanges: string[]; egress: { destination: string; fields: Id[]; purpose: string }[]; uncertainty: string[] };
+export type CommandInput<T> = { commandId: Id; expected: RevisionRef[]; controlEpoch?: number; input: T };
+export type CommandResult<T> = { commandId: Id; state: 'committed'; value: T; changed: RevisionRef[]; eventIds: Id[] } | { commandId: Id; state: 'accepted'; runId: Id; statusUrl: string };
+export type CommandStatus = { commandId: Id; action: string; state: 'accepted' | 'running' | 'committed' | 'failed' | 'cancelled' | 'partial' | 'unknown'; result: Json | null; failure: Failure['error'] | null; runId: Id | null; receiptIds: Id[]; firstPossibleEffectAt: Instant | null; updatedAt: Instant };
+export type CellValue = null | string | boolean | Decimal | Money | Ref | Ref[] | string[] | { fileId: Id }[];
+export type Cell = { state: 'value'; value: CellValue } | { state: 'redacted'; reason: 'policy' | 'erased' } | { state: 'unavailable'; code: 'invalid_source' | 'dependency_limit' | 'rollup_limit' | 'mixed_currency' | 'stale_rate'; fieldIds: Id[]; message: string };

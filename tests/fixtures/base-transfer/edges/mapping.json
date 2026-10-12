@@ -1,0 +1,35 @@
+{
+  "mappingVersion": "edges-v1",
+  "baseLabel": "Edge cases",
+  "tables": [
+    {
+      "key": "targets",
+      "label": "Targets",
+      "sourceTableId": "tblSYN00000000061",
+      "csvFile": "Targets-Grid view.csv",
+      "primaryFieldKey": "name",
+      "fields": [
+        { "key": "name", "label": "Name", "csvColumn": "Name", "sourceFieldId": "fldSYN00000000061", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "notes", "label": "Notes", "csvColumn": "Notes", "sourceFieldId": "fldSYN00000000062", "sourceType": "multilineText", "targetType": "text", "preserveExact": true }
+      ]
+    },
+    {
+      "key": "edges",
+      "label": "Edges",
+      "sourceTableId": "tblSYN00000000062",
+      "csvFile": "Edges-Grid view.csv",
+      "primaryFieldKey": "name",
+      "fields": [
+        { "key": "name", "label": "Edge", "csvColumn": "Edge", "sourceFieldId": "fldSYN00000000071", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "targets", "label": "Targets", "csvColumn": "Targets", "sourceFieldId": "fldSYN00000000072", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "targets", "cardinality": "many", "onDelete": "restrict", "primaryResolution": "quoted-comma-separated-exact-labels" },
+        { "key": "externalArchive", "label": "External archive item", "csvColumn": "External archive item", "sourceFieldId": "fldSYN00000000073", "sourceType": "multipleRecordLinks", "targetType": "skip", "targetTableId": "tblSYN00000000999", "disposition": "unresolved-missing-target-table" },
+        { "key": "inertText", "label": "Inert text", "csvColumn": "Inert text", "sourceFieldId": "fldSYN00000000074", "sourceType": "multilineText", "targetType": "text", "preserveExact": true }
+      ]
+    }
+  ],
+  "ownerPreviewChoices": {
+    "tables": ["Targets", "Edges"],
+    "fieldOverrides": { "edges.externalArchive": "skip relation because target table tblSYN00000000999 is absent from this source subset" },
+    "notes": "Skipping the missing-target field is an explicit preview choice. Its source reference is still listed and counted as unresolved. No hidden IDs are added to resolve a CSV primary-label ambiguity."
+  }
+}

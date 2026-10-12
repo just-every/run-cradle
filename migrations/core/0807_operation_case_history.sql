@@ -1,0 +1,4 @@
+CREATE TABLE operation_case_history(case_id TEXT NOT NULL,version INTEGER NOT NULL,state TEXT NOT NULL,effective_at TEXT NOT NULL,data_json TEXT NOT NULL,PRIMARY KEY(case_id,version));
+INSERT INTO operation_case_history(case_id,version,state,effective_at,data_json) SELECT id,version,state,json_extract(data_json,'$.updatedAt'),data_json FROM operation_cases;
+CREATE TRIGGER operation_case_insert_history AFTER INSERT ON operation_cases BEGIN INSERT INTO operation_case_history(case_id,version,state,effective_at,data_json) VALUES(new.id,new.version,new.state,json_extract(new.data_json,'$.updatedAt'),new.data_json); END;
+CREATE TRIGGER operation_case_update_history AFTER UPDATE ON operation_cases BEGIN INSERT INTO operation_case_history(case_id,version,state,effective_at,data_json) VALUES(new.id,new.version,new.state,json_extract(new.data_json,'$.updatedAt'),new.data_json); END;

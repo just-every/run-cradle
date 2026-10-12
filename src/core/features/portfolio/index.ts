@@ -1,0 +1,1 @@
+export { registerPortfolioRoutes } from './routes'

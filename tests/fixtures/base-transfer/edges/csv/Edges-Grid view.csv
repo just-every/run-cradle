@@ -1,0 +1,10 @@
+Edge,Targets,External archive item,Inert text
+Edge duplicate,Twin,,"=SUM(1,1)"
+Edge quote,"""Quoted """"Entry""""""",,+1+1
+Edge comma,"""Comma, Entry""",,-2+3
+Edge missing,Missing target,,@SUM(3)
+Edge empty,,,<script>alert('x')</script>
+Edge known and external,Café Δelta / العربية,Archive ticket 991,literal café text
+Edge whitespace,Space Target ,,+1+1
+Edge case,café Δelta / العربية,,case-sensitive reference
+Edge quoted list,"""Comma, Entry"",""Quoted """"Entry"""""",Café Δelta / العربية",,@literal

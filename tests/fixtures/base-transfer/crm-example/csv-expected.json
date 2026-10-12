@@ -1,0 +1,67 @@
+{
+  "fixtureId": "crm-example",
+  "sourceFormat": "csv-set",
+  "groundTruth": "ground-truth.json",
+  "expectedNativeSchemaRef": "ground-truth.json#/nativeSchema",
+  "expectedNativeRecordsRef": "ground-truth.json#/nativeRecords",
+  "nativeRecordKeys": ["companies.acme", "companies.cedar", "companies.northstar", "contacts.avery", "contacts.blair", "contacts.casey", "deals.acmePilot", "deals.cedarRenewal", "deals.northstarRollout"],
+  "rowsByTable": [
+    { "tableKey": "companies", "rowsRead": 3, "created": 3, "rejected": 0 },
+    { "tableKey": "contacts", "rowsRead": 3, "created": 3, "rejected": 0 },
+    { "tableKey": "deals", "rowsRead": 3, "created": 3, "rejected": 0 }
+  ],
+  "columnAccounting": [
+    { "fieldKey": "companies.name", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.industry", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.employees", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.annualRevenue", "sourceValues": 2, "converted": 3, "textChanges": 2, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.founded", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "companies.active", "sourceValues": 2, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "normalizedCheckedCheckboxTrue": 2, "normalizedBlankCheckboxFalse": 1 },
+    { "fieldKey": "companies.contacts", "sourceValues": 2, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 4 },
+    { "fieldKey": "contacts.name", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.email", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.phone", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.website", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.kind", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "contacts.active", "sourceValues": 2, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "normalizedCheckedCheckboxTrue": 2, "normalizedBlankCheckboxFalse": 1 },
+    { "fieldKey": "contacts.company", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 3 },
+    { "fieldKey": "deals.name", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.company", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 3 },
+    { "fieldKey": "deals.stage", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.amount", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.probability", "sourceValues": 3, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.closeDate", "sourceValues": 2, "converted": 1, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "deals.won", "sourceValues": 0, "converted": 3, "textChanges": 3, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "normalizedCheckedCheckboxTrue": 0, "normalizedBlankCheckboxFalse": 3 },
+    { "fieldKey": "deals.companyName", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "recomputed": 3 }
+  ],
+  "linkAccounting": {
+    "linkRefsRead": 10,
+    "resolved": 10,
+    "unresolved": 0,
+    "ambiguous": 0,
+    "references": [
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.acme", "sourcePath": "csv/Companies-Grid view.csv", "physicalLine": 2, "rawReference": "Avery Example", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.avery" },
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.acme", "sourcePath": "csv/Companies-Grid view.csv", "physicalLine": 2, "rawReference": "Blair Example", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.blair" },
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.cedar", "sourcePath": "csv/Companies-Grid view.csv", "physicalLine": 3, "rawReference": "Casey Example", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.casey" },
+      { "tableKey": "companies", "fieldKey": "contacts", "sourceRecordKey": "companies.cedar", "sourcePath": "csv/Companies-Grid view.csv", "physicalLine": 3, "rawReference": "Blair Example", "targetTableKey": "contacts", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "contacts.blair" },
+      { "tableKey": "contacts", "fieldKey": "company", "sourceRecordKey": "contacts.avery", "sourcePath": "csv/Contacts-Grid view.csv", "physicalLine": 2, "rawReference": "Acme Example Works", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.acme" },
+      { "tableKey": "contacts", "fieldKey": "company", "sourceRecordKey": "contacts.blair", "sourcePath": "csv/Contacts-Grid view.csv", "physicalLine": 3, "rawReference": "Acme Example Works", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.acme" },
+      { "tableKey": "contacts", "fieldKey": "company", "sourceRecordKey": "contacts.casey", "sourcePath": "csv/Contacts-Grid view.csv", "physicalLine": 4, "rawReference": "Cedar Example Group", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.cedar" },
+      { "tableKey": "deals", "fieldKey": "company", "sourceRecordKey": "deals.acmePilot", "sourcePath": "csv/Deals-Grid view.csv", "physicalLine": 2, "rawReference": "Acme Example Works", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.acme" },
+      { "tableKey": "deals", "fieldKey": "company", "sourceRecordKey": "deals.cedarRenewal", "sourcePath": "csv/Deals-Grid view.csv", "physicalLine": 3, "rawReference": "Cedar Example Group", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.cedar" },
+      { "tableKey": "deals", "fieldKey": "company", "sourceRecordKey": "deals.northstarRollout", "sourcePath": "csv/Deals-Grid view.csv", "physicalLine": 4, "rawReference": "Northstar Example", "targetTableKey": "companies", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "companies.northstar" }
+    ]
+  },
+  "lookups": { "recognized": 1, "recognizedRows": 3, "firstMismatch": null, "expectedValues": { "deals.acmePilot": "Acme Example Works", "deals.cedarRenewal": "Cedar Example Group", "deals.northstarRollout": "Northstar Example" } },
+  "reciprocalDisagreements": { "count": 1, "references": "ground-truth.json#/sourceReciprocalDisagreement/items" },
+  "sourceCellDifferencesRef": "ground-truth.json#/sourceCellDifferences",
+  "sourcePathDifferences": [
+    "Five nonempty CSV currency cells keep their exact displayed source strings but normalize to canonical decimal strings: companies.annualRevenue has $1,250,000.00 -> 1250000 and $72,000.50 -> 72000.5; deals.amount has $12,500.00 -> 12500, $9,000.00 -> 9000, and $0.00 -> 0. The API retains its exact numeric JSON bytes and maps those five numbers to the same canonical strings. No currency conversion occurs.",
+    "Three CSV percentage cells retain source display text 35%, 60%, 5% and divide by 100 to canonical native strings 0.35, 0.6, 0.05. The exact API fraction numbers 0.35, 0.6, 0.05 map to those same strings. Across each source path, five currency values and three fractions are the eight nonempty decimal normalizations; Employees 42, 8, 0 retain the same canonical digit strings.",
+    "CSV checkboxes use the explicit fixture convention checked -> true and blank -> false: Companies has 2 checked/1 blank, Contacts 2/1, and Deals 0/3 (4 checked and 5 blank overall). `sourceValues` counts only the four nonempty checked cells; `converted` counts all nine row cells, and all nine have a representation change to Boolean. The exact API bytes retain four explicit true values and omit five false values; omitted false is counted once for each affected row.",
+    "CSV cannot reveal unused select choices. The explicit owner-preview option lists preserve Public sector, Former vendor, and Closed lost. API metadata also carries these choices.",
+    "All three displayed company lookup cells match the computed Company primary label and are checked/recomputed from each resolved Company relation; the source lookup cell is not written.",
+    "Contacts.Website is declared as source URL but maps to native text; all three example.com URLs remain exact strings without URL normalization.",
+    "Companies.Contacts is a source inverse view, not a second native relation field. Its four source references remain in link accounting; canonical Contacts.Company stores three links, and Companies.Contacts is expected as a derived incoming projection. The one Cedar/Blair disagreement remains counted."
+  ]
+}

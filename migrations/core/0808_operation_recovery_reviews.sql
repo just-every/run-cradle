@@ -1,0 +1,1 @@
+CREATE TABLE operation_recovery_reviews(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,release_id TEXT NOT NULL,input_hash TEXT NOT NULL,assignee_id TEXT NOT NULL,state TEXT NOT NULL,version INTEGER NOT NULL,detail_json TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(release_id,input_hash));

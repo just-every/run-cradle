@@ -1,0 +1,54 @@
+import './typescript-loader.mjs'
+import assert from 'node:assert/strict'
+import { randomBytes } from 'node:crypto'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { emittedRuntime } from './emitted-runtime.mjs'
+import { migrationInventory } from '../../scripts/migration-groups.mjs'
+import {loadDescriptorRegistry} from '../../src/domains/records/loader.server.ts'
+import {launchDescriptors} from '../../src/apps/launch/descriptors.server.ts'
+import {repairDescriptors} from '../../src/apps/repairs/descriptors.ts'
+import {stagingDescriptor} from '../../src/domains/evidence/staging.server.ts'
+import {sourceIntakeDescriptor} from '../../src/domains/construction/intake.server.ts'
+import {INSTALLATION_AUTHORITY_APP} from '../../src/domains/authority/pending-app.server.ts'
+import {completeFirstRun} from './complete-first-run.mjs'
+
+/** Native Base owner and a real one-use emailed token in the local outbox.
+ * No LOCAL_MEMBER_ID or injected production principal is used. */
+export async function recordsImportBrowserRuntime(port=18847,network={}) {
+ const directory=await mkdtemp(path.join(tmpdir(),'records-base-owner-')),origin=`http://127.0.0.1:${port}`
+ const credentials={session:randomBytes(32).toString('hex'),setup:randomBytes(32).toString('hex')}
+ const options={origin,email:'import-owner@example.test',name:'Import owner',workspace:'Import records',timezone:'UTC',currency:'USD'}
+ const environment={APP_ORIGIN:origin,AUTH_LOCAL:'true',OWNER_EMAIL:options.email,SESSION_SECRET:credentials.session,SETUP_TOKEN:credentials.setup,WORKSPACE_NAME:options.workspace,WORKSPACE_TIMEZONE:options.timezone,WORKSPACE_CURRENCY:options.currency,MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',...network.bindings}
+ let runtime=await emittedRuntime(directory,port,environment,network.outbound),db
+ try {
+  db=await runtime.getD1Database('DB')
+  for(const migration of migrationInventory())await db.exec(migration.sql.replace(/^\s*--.*$/gm,'').replaceAll('\n',' '))
+  await runtime.ready
+  const post=(route,body)=>fetch(origin+route,{method:'POST',redirect:'manual',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)})
+  const bootstrap=await post('/auth/bootstrap',{token:credentials.setup,displayName:options.name,returnTo:'/app'})
+  assert.equal(bootstrap.status,303)
+  await completeFirstRun(origin,bootstrap.headers.get('set-cookie').split(';')[0])
+  const initialized=await fetch(origin+'/app',{headers:{cookie:bootstrap.headers.get('set-cookie').split(';')[0]}});assert.equal(initialized.status,200);await initialized.arrayBuffer()
+  assert.equal((await post('/auth/magic-link',{email:options.email,returnTo:'/app'})).status,202)
+  const row=await db.prepare('SELECT message FROM rer_mail_development_outbox ORDER BY sequence DESC LIMIT 1').first()
+  const message=JSON.parse(row.message),text=message.text,link=new URL(text.match(/http:\/\/[^\s]+/)[0])
+  const response=await post('/auth/confirm',{token:link.searchParams.get('token')})
+  assert.equal(response.status,303)
+  const cookie=response.headers.get('set-cookie').split(';')[0]
+  assert.ok(cookie.startsWith('operator_session_local='),'Base issues the actual local session cookie')
+  const home=await fetch(origin+'/app',{headers:{cookie}})
+  assert.equal(home.status,200,'Workspace establishes its native owner projection');await home.arrayBuffer()
+  return {get runtime(){return runtime},get db(){return db},origin,cookie,
+  /** Stop the Worker process and start a new one over the same persisted D1. */
+  async restart(){await runtime.dispose();runtime=await emittedRuntime(directory,port,environment,network.outbound);db=await runtime.getD1Database('DB');await runtime.ready},
+  async descriptors(){
+   // The native local installation includes the product's source-owned schemas.
+   // Use its actual descriptors, as createLaunchFoundation does; an empty source
+   // list incorrectly treats those custom physical tables as manual tables.
+   const stored=await db.prepare('SELECT DISTINCT app_id FROM record_schemas').all(),sources=[...launchDescriptors,...repairDescriptors],apps=new Set([...sources.map(d=>d.schema.appId),...stored.results.map(r=>r.app_id)])
+   return loadDescriptorRegistry(db,[...sources,sourceIntakeDescriptor(INSTALLATION_AUTHORITY_APP),...[...apps].map(stagingDescriptor)])
+  },async close(){await runtime.dispose();await rm(directory,{recursive:true,force:true})}}
+ }catch(error){await runtime.dispose();await rm(directory,{recursive:true,force:true});throw error}
+}

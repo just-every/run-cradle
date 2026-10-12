@@ -1,0 +1,2 @@
+CREATE TABLE construction_source_snapshots(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,source_hash TEXT NOT NULL,parent_id TEXT,producer_id TEXT NOT NULL,detail_json TEXT NOT NULL CHECK(json_valid(detail_json)),created_at TEXT NOT NULL);
+CREATE TABLE app_source_heads(app_id TEXT PRIMARY KEY,snapshot_id TEXT NOT NULL REFERENCES construction_source_snapshots(id),source_hash TEXT NOT NULL,version INTEGER NOT NULL);

@@ -1,0 +1,1 @@
+CREATE TABLE construction_applications(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL,brief TEXT NOT NULL,state TEXT NOT NULL CHECK(state IN ('pending','live','rejected')),version INTEGER NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);

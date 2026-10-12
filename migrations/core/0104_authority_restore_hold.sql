@@ -1,0 +1,1 @@
+ALTER TABLE authority_grants ADD COLUMN restore_hold INTEGER NOT NULL DEFAULT 0;

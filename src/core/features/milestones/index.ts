@@ -1,0 +1,1 @@
+export { registerMilestoneRoutes } from './routes'

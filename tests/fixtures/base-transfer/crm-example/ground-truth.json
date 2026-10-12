@@ -1,0 +1,105 @@
+{
+  "fixtureId": "crm-example",
+  "synthetic": true,
+  "nativeIdentityAliases": {
+    "policy": "Bind these aliases once to native ULIDs returned by schema adoption and row creation. No expected native ULID is guessed.",
+    "tables": ["companies", "contacts", "deals"],
+    "fields": ["companies.name", "companies.industry", "companies.employees", "companies.annualRevenue", "companies.founded", "companies.active", "contacts.name", "contacts.email", "contacts.phone", "contacts.website", "contacts.kind", "contacts.active", "contacts.company", "deals.name", "deals.company", "deals.stage", "deals.amount", "deals.probability", "deals.closeDate", "deals.won", "deals.companyName"],
+    "incomingRelations": ["companies.contacts"],
+    "records": ["companies.acme", "companies.cedar", "companies.northstar", "contacts.avery", "contacts.blair", "contacts.casey", "deals.acmePilot", "deals.cedarRenewal", "deals.northstarRollout"]
+  },
+  "nativeSchema": {
+    "tableOrder": ["companies", "contacts", "deals"],
+    "tables": [
+      { "key": "companies", "label": "Companies", "primaryFieldKey": "name", "fields": [
+        { "key": "name", "label": "Company", "type": "text", "primary": true },
+        { "key": "industry", "label": "Industry", "type": "select", "options": ["Software", "Healthcare", "Retail", "Public sector"] },
+        { "key": "employees", "label": "Employees", "type": "number" },
+        { "key": "annualRevenue", "label": "Annual revenue", "type": "number", "decimalScale": 2, "sourceCurrency": "USD" },
+        { "key": "founded", "label": "Founded", "type": "date" },
+        { "key": "active", "label": "Active", "type": "boolean" }
+      ], "incomingRelations": [
+        { "key": "contacts", "label": "Contacts", "sourceTableKey": "contacts", "sourceFieldKey": "company" }
+      ] },
+      { "key": "contacts", "label": "Contacts", "primaryFieldKey": "name", "fields": [
+        { "key": "name", "label": "Full name", "type": "text", "primary": true },
+        { "key": "email", "label": "Email", "type": "text" },
+        { "key": "phone", "label": "Phone", "type": "text" },
+        { "key": "website", "label": "Website", "type": "text" },
+        { "key": "kind", "label": "Kind", "type": "select", "options": ["Customer", "Partner", "Lead", "Former vendor"] },
+        { "key": "active", "label": "Active", "type": "boolean" },
+        { "key": "company", "label": "Company", "type": "relation", "targetTableKey": "companies", "cardinality": "one", "onDelete": "restrict", "inverseFieldKey": "contacts", "canonicalForSourceImport": true }
+      ] },
+      { "key": "deals", "label": "Deals", "primaryFieldKey": "name", "fields": [
+        { "key": "name", "label": "Deal", "type": "text", "primary": true },
+        { "key": "company", "label": "Company", "type": "relation", "targetTableKey": "companies", "cardinality": "one", "onDelete": "restrict", "canonicalForSourceImport": true },
+        { "key": "stage", "label": "Stage", "type": "select", "options": ["Qualified", "Negotiation", "New", "Closed lost"] },
+        { "key": "amount", "label": "Amount", "type": "number", "decimalScale": 2, "sourceCurrency": "USD" },
+        { "key": "probability", "label": "Probability", "type": "number", "unit": "fraction" },
+        { "key": "closeDate", "label": "Close date", "type": "date" },
+        { "key": "won", "label": "Won", "type": "boolean" },
+        { "key": "companyName", "label": "Company name (lookup)", "type": "computed", "resultType": "text", "readOnly": true, "expression": { "kind": "rollup", "aggregate": "lookup", "relationFieldKey": "company", "valueFieldKey": "name" } }
+      ] }
+    ]
+  },
+  "sourceIdentityAliases": [
+    { "recordKey": "companies.acme", "tableKey": "companies", "csv": { "path": "csv/Companies-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000001", "recordId": "recSYN00000000001" } },
+    { "recordKey": "companies.cedar", "tableKey": "companies", "csv": { "path": "csv/Companies-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000001", "recordId": "recSYN00000000002" } },
+    { "recordKey": "companies.northstar", "tableKey": "companies", "csv": { "path": "csv/Companies-Grid view.csv", "physicalLine": 4 }, "api": { "tableId": "tblSYN00000000001", "recordId": "recSYN00000000003" } },
+    { "recordKey": "contacts.avery", "tableKey": "contacts", "csv": { "path": "csv/Contacts-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000002", "recordId": "recSYN00000000011" } },
+    { "recordKey": "contacts.blair", "tableKey": "contacts", "csv": { "path": "csv/Contacts-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000002", "recordId": "recSYN00000000012" } },
+    { "recordKey": "contacts.casey", "tableKey": "contacts", "csv": { "path": "csv/Contacts-Grid view.csv", "physicalLine": 4 }, "api": { "tableId": "tblSYN00000000002", "recordId": "recSYN00000000013" } },
+    { "recordKey": "deals.acmePilot", "tableKey": "deals", "csv": { "path": "csv/Deals-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000003", "recordId": "recSYN00000000021" } },
+    { "recordKey": "deals.cedarRenewal", "tableKey": "deals", "csv": { "path": "csv/Deals-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000003", "recordId": "recSYN00000000022" } },
+    { "recordKey": "deals.northstarRollout", "tableKey": "deals", "csv": { "path": "csv/Deals-Grid view.csv", "physicalLine": 4 }, "api": { "tableId": "tblSYN00000000003", "recordId": "recSYN00000000023" } }
+  ],
+  "nativeRecords": [
+    { "recordKey": "companies.acme", "tableKey": "companies", "fields": { "name": "Acme Example Works", "industry": "Software", "employees": "42", "annualRevenue": "1250000", "founded": "2022-03-10", "active": true }, "links": {} },
+    { "recordKey": "companies.cedar", "tableKey": "companies", "fields": { "name": "Cedar Example Group", "industry": "Healthcare", "employees": "8", "annualRevenue": "72000.5", "founded": "2021-11-08", "active": false }, "links": {} },
+    { "recordKey": "companies.northstar", "tableKey": "companies", "fields": { "name": "Northstar Example", "industry": "Retail", "employees": "0", "annualRevenue": null, "founded": "2020-02-29", "active": true }, "links": {} },
+    { "recordKey": "contacts.avery", "tableKey": "contacts", "fields": { "name": "Avery Example", "email": "avery@example.com", "phone": "+1-202-555-0101", "website": "https://example.com/avery", "kind": "Customer", "active": true }, "links": { "company": "companies.acme" } },
+    { "recordKey": "contacts.blair", "tableKey": "contacts", "fields": { "name": "Blair Example", "email": "blair@example.com", "phone": "+1-202-555-0102", "website": "https://example.com/blair", "kind": "Partner", "active": true }, "links": { "company": "companies.acme" } },
+    { "recordKey": "contacts.casey", "tableKey": "contacts", "fields": { "name": "Casey Example", "email": "casey@example.com", "phone": "+1-202-555-0103", "website": "https://example.com/casey", "kind": "Lead", "active": false }, "links": { "company": "companies.cedar" } },
+    { "recordKey": "deals.acmePilot", "tableKey": "deals", "fields": { "name": "Acme Pilot", "stage": "Qualified", "amount": "12500", "probability": "0.35", "closeDate": "2026-11-15", "won": false, "companyName": "Acme Example Works" }, "links": { "company": "companies.acme" } },
+    { "recordKey": "deals.cedarRenewal", "tableKey": "deals", "fields": { "name": "Cedar Renewal", "stage": "Negotiation", "amount": "9000", "probability": "0.6", "closeDate": "2027-02-01", "won": false, "companyName": "Cedar Example Group" }, "links": { "company": "companies.cedar" } },
+    { "recordKey": "deals.northstarRollout", "tableKey": "deals", "fields": { "name": "Northstar Rollout", "stage": "New", "amount": "0", "probability": "0.05", "closeDate": null, "won": false, "companyName": "Northstar Example" }, "links": { "company": "companies.northstar" } }
+  ],
+  "derivedIncomingRelationValues": {
+    "companies.acme.contacts": ["contacts.avery", "contacts.blair"],
+    "companies.cedar.contacts": ["contacts.casey"],
+    "companies.northstar.contacts": []
+  },
+  "sourceReciprocalDisagreement": {
+    "count": 1,
+    "canonicalRule": "The one-cardinality Contacts.company field is canonical for this pair.",
+    "items": [
+      { "companyRecordKey": "companies.cedar", "companySourceField": "contacts", "listedContactRecordKey": "contacts.blair", "contactRecordKey": "contacts.blair", "contactSourceField": "company", "canonicalCompanyRecordKey": "companies.acme" }
+    ]
+  },
+  "sourceCellDifferences": [
+    { "fieldKey": "companies.employees", "recordKey": "companies.acme", "csvRaw": "42", "apiRaw": 42, "native": "42" },
+    { "fieldKey": "companies.employees", "recordKey": "companies.cedar", "csvRaw": "8", "apiRaw": 8, "native": "8" },
+    { "fieldKey": "companies.employees", "recordKey": "companies.northstar", "csvRaw": "0", "apiRaw": 0, "native": "0" },
+    { "fieldKey": "companies.annualRevenue", "recordKey": "companies.acme", "csvRaw": "$1,250,000.00", "apiRaw": 1250000, "native": "1250000" },
+    { "fieldKey": "companies.annualRevenue", "recordKey": "companies.cedar", "csvRaw": "$72,000.50", "apiRaw": 72000.5, "native": "72000.5" },
+    { "fieldKey": "companies.annualRevenue", "recordKey": "companies.northstar", "csvRaw": "", "apiRaw": "omitted", "native": null },
+    { "fieldKey": "deals.amount", "recordKey": "deals.acmePilot", "csvRaw": "$12,500.00", "apiRaw": 12500, "native": "12500" },
+    { "fieldKey": "deals.amount", "recordKey": "deals.cedarRenewal", "csvRaw": "$9,000.00", "apiRaw": 9000, "native": "9000" },
+    { "fieldKey": "deals.amount", "recordKey": "deals.northstarRollout", "csvRaw": "$0.00", "apiRaw": 0, "native": "0" },
+    { "fieldKey": "deals.probability", "recordKey": "deals.acmePilot", "csvRaw": "35%", "apiRaw": 0.35, "native": "0.35" },
+    { "fieldKey": "deals.probability", "recordKey": "deals.cedarRenewal", "csvRaw": "60%", "apiRaw": 0.6, "native": "0.6" },
+    { "fieldKey": "deals.probability", "recordKey": "deals.northstarRollout", "csvRaw": "5%", "apiRaw": 0.05, "native": "0.05" },
+    { "fieldKey": "companies.active", "recordKey": "companies.acme", "csvRaw": "checked", "apiRaw": true, "native": true },
+    { "fieldKey": "companies.active", "recordKey": "companies.cedar", "csvRaw": "", "apiRaw": "omitted", "native": false },
+    { "fieldKey": "companies.active", "recordKey": "companies.northstar", "csvRaw": "checked", "apiRaw": true, "native": true },
+    { "fieldKey": "contacts.active", "recordKey": "contacts.avery", "csvRaw": "checked", "apiRaw": true, "native": true },
+    { "fieldKey": "contacts.active", "recordKey": "contacts.blair", "csvRaw": "checked", "apiRaw": true, "native": true },
+    { "fieldKey": "contacts.active", "recordKey": "contacts.casey", "csvRaw": "", "apiRaw": "omitted", "native": false },
+    { "fieldKey": "deals.won", "recordKey": "deals.acmePilot", "csvRaw": "", "apiRaw": "omitted", "native": false },
+    { "fieldKey": "deals.won", "recordKey": "deals.cedarRenewal", "csvRaw": "", "apiRaw": "omitted", "native": false },
+    { "fieldKey": "deals.won", "recordKey": "deals.northstarRollout", "csvRaw": "", "apiRaw": "omitted", "native": false },
+    { "fieldKey": "deals.companyName", "recordKey": "deals.acmePilot", "csvRaw": "Acme Example Works", "apiRaw": ["Acme Example Works"], "native": "Acme Example Works", "nativeHandling": "recomputed from Company relation" },
+    { "fieldKey": "deals.companyName", "recordKey": "deals.cedarRenewal", "csvRaw": "Cedar Example Group", "apiRaw": ["Cedar Example Group"], "native": "Cedar Example Group", "nativeHandling": "recomputed from Company relation" },
+    { "fieldKey": "deals.companyName", "recordKey": "deals.northstarRollout", "csvRaw": "Northstar Example", "apiRaw": ["Northstar Example"], "native": "Northstar Example", "nativeHandling": "recomputed from Company relation" }
+  ]
+}

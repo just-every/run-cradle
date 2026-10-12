@@ -1,0 +1,1 @@
+export { registerDecisionRoutes } from './routes'

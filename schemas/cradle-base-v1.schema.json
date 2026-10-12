@@ -1,0 +1,667 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "cradle-base"
+    },
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "envelope": {
+      "type": "object",
+      "properties": {
+        "capturedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        }
+      },
+      "required": [
+        "capturedAt"
+      ],
+      "additionalProperties": false
+    },
+    "base": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+        },
+        "tables": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+              },
+              "primaryFieldId": {
+                "type": "string",
+                "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "fields": {
+                "minItems": 1,
+                "maxItems": 80,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200,
+                      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "url",
+                        "number",
+                        "date",
+                        "boolean",
+                        "select",
+                        "relation",
+                        "computed"
+                      ]
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "unique": {
+                      "type": "boolean"
+                    },
+                    "options": {
+                      "maxItems": 10000,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                          },
+                          "label": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "label"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "relation": {
+                      "type": "object",
+                      "properties": {
+                        "tableId": {
+                          "type": "string",
+                          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                        },
+                        "cardinality": {
+                          "type": "string",
+                          "enum": [
+                            "one",
+                            "many"
+                          ]
+                        },
+                        "onDelete": {
+                          "type": "string",
+                          "const": "restrict"
+                        }
+                      },
+                      "required": [
+                        "tableId",
+                        "cardinality",
+                        "onDelete"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "lookup": {
+                      "type": "object",
+                      "properties": {
+                        "relationFieldId": {
+                          "type": "string",
+                          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                        },
+                        "valueFieldId": {
+                          "type": "string",
+                          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                        }
+                      },
+                      "required": [
+                        "relationFieldId",
+                        "valueFieldId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "resultType": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "url",
+                        "number",
+                        "date",
+                        "boolean",
+                        "select"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "type",
+                    "required",
+                    "unique"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "incomingRelations": {
+                "maxItems": 80,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200
+                    },
+                    "sourceEntityId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "sourceFieldId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "sourceEntityId",
+                    "sourceFieldId"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "records": {
+                "maxItems": 10000,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "values": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "maxItems": 10000,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "values"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "primaryFieldId",
+              "fields",
+              "incomingRelations",
+              "records"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "views": {
+          "maxItems": 10000,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "tableId": {
+                "type": "string",
+                "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+              },
+              "display": {
+                "type": "string",
+                "enum": [
+                  "grid",
+                  "cards",
+                  "board",
+                  "calendar",
+                  "timeline",
+                  "agenda"
+                ]
+              },
+              "fields": {
+                "maxItems": 80,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                }
+              },
+              "filter": {
+                "$ref": "#/$defs/__schema0"
+              },
+              "sort": {
+                "maxItems": 10,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fieldId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "direction": {
+                      "type": "string",
+                      "enum": [
+                        "asc",
+                        "desc"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "fieldId",
+                    "direction"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "groupBy": {
+                "maxItems": 5,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                }
+              },
+              "layout": {
+                "type": "object",
+                "properties": {
+                  "titleFieldId": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "startFieldId": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "endFieldId": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "boardFieldId": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  }
+                },
+                "required": [
+                  "titleFieldId"
+                ],
+                "additionalProperties": false
+              },
+              "visibility": {
+                "type": "string",
+                "enum": [
+                  "private",
+                  "app"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "tableId",
+              "name",
+              "display",
+              "fields",
+              "filter",
+              "sort",
+              "groupBy",
+              "layout",
+              "visibility"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "forms": {
+          "maxItems": 10000,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "tableId": {
+                "type": "string",
+                "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "fields": {
+                "maxItems": 80,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fieldId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "help": {
+                      "type": "string",
+                      "maxLength": 2000
+                    },
+                    "required": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "fieldId",
+                    "label",
+                    "help",
+                    "required"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "submitAction": {
+                "type": "string",
+                "const": "record.create"
+              },
+              "authenticated": {
+                "type": "boolean",
+                "const": true
+              }
+            },
+            "required": [
+              "id",
+              "tableId",
+              "title",
+              "fields",
+              "submitAction",
+              "authenticated"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "tables",
+        "views",
+        "forms"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "envelope",
+    "base"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "all",
+                "any"
+              ]
+            },
+            "conditions": {
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "conditions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "condition"
+            },
+            "fieldId": {
+              "type": "string",
+              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "eq",
+                "ne",
+                "in",
+                "contains",
+                "empty",
+                "not_empty",
+                "before",
+                "after",
+                "next_days"
+              ]
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "maxLength": 100000
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "minor": {
+                      "type": "string",
+                      "maxLength": 129,
+                      "pattern": "^-?(0|[1-9]\\d*)$"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "pattern": "^[A-Z]{3}$"
+                    },
+                    "scale": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 6
+                    }
+                  },
+                  "required": [
+                    "minor",
+                    "currency",
+                    "scale"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "appId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "entityId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "recordId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    }
+                  },
+                  "required": [
+                    "appId",
+                    "entityId",
+                    "recordId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "appId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "recordId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      }
+                    },
+                    "required": [
+                      "appId",
+                      "entityId",
+                      "recordId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 100000
+                  }
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fileId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      }
+                    },
+                    "required": [
+                      "fileId"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "fieldId",
+            "op"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "title": "Cradle base v1",
+  "description": "Portable base allowlist. Runtime also checks unique IDs, native values, cross-references and lookup equality."
+}

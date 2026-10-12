@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "projectId": "just-every/cradle",
+  "name": "Cradle",
+  "sourceRepository": "https://github.com/just-every/cradle",
+  "license": "MIT",
+  "deployment": {
+    "target": "cloudflare-workers",
+    "artifactFile": "rer-worker-artifact.json"
+  },
+  "operations": {
+    "setup": "node scripts/rer.mjs install && PLAYWRIGHT_SKIP_BROWSER_GC=1 pnpm exec playwright install --with-deps chromium",
+    "build": "node scripts/rer.mjs build",
+    "verify": "node scripts/rer.mjs verify",
+    "artifact": "node scripts/build-delivery-artifact.mjs",
+    "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly."
+  },
+  "verification": {
+    "sensitivePaths": [
+      "src/domains/authority/**",
+      "src/core/platform/**",
+      "scripts/installer/**",
+      "src/core/features/editor/**",
+      "src/editor/**",
+      "scripts/delivery/**",
+      "rer-setup.json",
+      "packaging.json"
+    ],
+    "migrationDirectories": [
+      "migrations/core",
+      "migrations/base",
+      "migrations/import",
+      "migrations/updates"
+    ],
+    "guidanceFiles": [
+      "CONTRACT.md",
+      "BASELINE.md",
+      "README.md"
+    ],
+    "testPatterns": [
+      "tests/*.mjs"
+    ]
+  },
+  "setup": {
+    "path": "rer-setup.json",
+    "sha256": "5718e37cf46453f9d694204b944ce8bd2b48d6f1725c257249bd5cdafec4de07"
+  }
+}

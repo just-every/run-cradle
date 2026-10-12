@@ -1,0 +1,73 @@
+/* Landing foundations. Everything on the public page lives under `.lp`, so nothing here reaches the operator app or /signin.
+   Spacing scale: 8, 16, 24, 32, 48, 64, 96. Type: Lexend for headlines and the wordmark, Cradle Sans for the rest (both from /fonts). */
+
+.lp {
+  --paper: #f3f3ee;
+  --ink: #12372e;
+  --ink-deep: #0d302c;
+  --lime: #d7f25b;
+  --sage: #d6e4d5;
+  --card: #fffefd;
+  --muted: #52695f;
+  --soft: #5f7469;
+  --eyebrow: #3f6b36;
+  --line: rgba(18, 55, 46, 0.1);
+  --shadow: 0 1px 2px rgba(18, 55, 46, 0.05), 0 14px 36px rgba(18, 55, 46, 0.08);
+  --radius: 24px;
+  --display: var(--font-display);
+  --sans: "Cradle Sans", ui-sans-serif, system-ui, sans-serif;
+  --section-pad: 100px;
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 18px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+.lp *, .lp *::before, .lp *::after { box-sizing: border-box; }
+.lp h1, .lp h2, .lp h3, .lp h4, .lp p, .lp ul, .lp table { margin: 0; padding: 0; }
+.lp ul { list-style: none; }
+.lp svg, .lp img { display: block; }
+.lp a { color: inherit; text-decoration: none; }
+.lp a:focus-visible { outline: 3px solid var(--ink-deep); outline-offset: 4px; border-radius: 8px; }
+.lp main { overflow-x: clip; }
+.lp .lp-defs { position: absolute; }
+
+/* One 1200px content column: 1248 wrap with 24px padding, 12 columns, 24px gutters. */
+.lp .lp-wrap { max-width: 1248px; margin: 0 auto; padding-inline: 24px; }
+.lp .lp-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: center; }
+.lp .lp-grid--art-right .lp-copy { grid-column: 1 / span 5; grid-row: 1; }
+.lp .lp-grid--art-right .lp-art { grid-column: 6 / span 7; grid-row: 1; }
+.lp .lp-grid--art-left .lp-copy { grid-column: 8 / span 5; grid-row: 1; }
+.lp .lp-grid--art-left .lp-art { grid-column: 1 / span 7; grid-row: 1; }
+
+.lp .lp-sec { padding-block: var(--section-pad); }
+.lp .lp-eyebrow { margin-bottom: 16px; color: var(--eyebrow); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; line-height: 1.4; text-transform: uppercase; }
+.lp h2 {
+  margin-bottom: 24px;
+  color: var(--ink-deep);
+  font-family: var(--display);
+  font-size: clamp(32px, 3.6vw, 48px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.lp .lp-copy p:not(.lp-eyebrow) { max-width: 30em; color: var(--muted); text-wrap: pretty; }
+.lp .lp-copy p:not(.lp-eyebrow) + p { margin-top: 16px; }
+
+@media (max-width: 1199px) {
+  .lp { --section-pad: 72px; }
+}
+@media (max-width: 900px) {
+  .lp { font-size: 17px; }
+  .lp .lp-grid { display: flex; flex-direction: column; align-items: stretch; gap: 48px; }
+  .lp .lp-grid--art-right .lp-copy, .lp .lp-grid--art-left .lp-copy { order: -1; }
+}
+@media (max-width: 640px) {
+  .lp { --section-pad: 56px; }
+  .lp .lp-wrap { padding-inline: 20px; }
+}

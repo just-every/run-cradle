@@ -1,0 +1,47 @@
+{
+  "format": "cradle-base-v1",
+  "baseName": "Edge cases",
+  "tables": [
+    {
+      "id": "tblSYN00000000061",
+      "label": "Targets",
+      "primaryFieldId": "fldSYN00000000061",
+      "fields": [
+        { "id": "fldSYN00000000061", "label": "Name", "type": "text", "required": true, "primary": true },
+        { "id": "fldSYN00000000062", "label": "Notes", "type": "text", "required": false }
+      ],
+      "records": {
+        "recSYN00000000061": { "createdAt": "2026-10-05T00:00:00.000Z", "fields": { "fldSYN00000000061": "Twin", "fldSYN00000000062": "=SUM(1,1)" } },
+        "recSYN00000000062": { "createdAt": "2026-10-05T00:01:00.000Z", "fields": { "fldSYN00000000061": "Twin", "fldSYN00000000062": "+1+1" } },
+        "recSYN00000000063": { "createdAt": "2026-10-05T00:02:00.000Z", "fields": { "fldSYN00000000061": "Comma, Entry", "fldSYN00000000062": "Café Δelta — العربية" } },
+        "recSYN00000000064": { "createdAt": "2026-10-05T00:03:00.000Z", "fields": { "fldSYN00000000061": "Quoted \"Entry\"", "fldSYN00000000062": "<script>alert('x')</script>" } },
+        "recSYN00000000065": { "createdAt": "2026-10-05T00:04:00.000Z", "fields": { "fldSYN00000000061": "Café Δelta / العربية", "fldSYN00000000062": "שלום — مرحبا" } },
+        "recSYN00000000066": { "createdAt": "2026-10-05T00:05:00.000Z", "fields": { "fldSYN00000000061": "Space Target", "fldSYN00000000062": "@example literal" } }
+      }
+    },
+    {
+      "id": "tblSYN00000000062",
+      "label": "Edges",
+      "primaryFieldId": "fldSYN00000000071",
+      "fields": [
+        { "id": "fldSYN00000000071", "label": "Edge", "type": "text", "required": true, "primary": true },
+        { "id": "fldSYN00000000072", "label": "Targets", "type": "relation", "required": false, "relation": { "targetTableId": "tblSYN00000000061", "cardinality": "many", "onDelete": "restrict" } },
+        { "id": "fldSYN00000000073", "label": "External archive item", "type": "relation", "required": false, "relation": { "targetTableId": "tblSYN00000000999", "cardinality": "many", "onDelete": "restrict" } },
+        { "id": "fldSYN00000000074", "label": "Inert text", "type": "text", "required": false }
+      ],
+      "records": {
+        "recSYN00000000071": { "createdAt": "2026-10-05T01:00:00.000Z", "fields": { "fldSYN00000000071": "Edge duplicate", "fldSYN00000000072": ["recSYN00000000061"], "fldSYN00000000073": [], "fldSYN00000000074": "=SUM(1,1)" } },
+        "recSYN00000000072": { "createdAt": "2026-10-05T01:01:00.000Z", "fields": { "fldSYN00000000071": "Edge quote", "fldSYN00000000072": ["recSYN00000000064"], "fldSYN00000000073": [], "fldSYN00000000074": "+1+1" } },
+        "recSYN00000000073": { "createdAt": "2026-10-05T01:02:00.000Z", "fields": { "fldSYN00000000071": "Edge comma", "fldSYN00000000072": ["recSYN00000000063"], "fldSYN00000000073": [], "fldSYN00000000074": "-2+3" } },
+        "recSYN00000000074": { "createdAt": "2026-10-05T01:03:00.000Z", "fields": { "fldSYN00000000071": "Edge missing", "fldSYN00000000072": ["recSYN00000000888"], "fldSYN00000000073": [], "fldSYN00000000074": "@SUM(3)" } },
+        "recSYN00000000075": { "createdAt": "2026-10-05T01:04:00.000Z", "fields": { "fldSYN00000000071": "Edge empty", "fldSYN00000000072": [], "fldSYN00000000073": [], "fldSYN00000000074": "<script>alert('x')</script>" } },
+        "recSYN00000000076": { "createdAt": "2026-10-05T01:05:00.000Z", "fields": { "fldSYN00000000071": "Edge known and external", "fldSYN00000000072": ["recSYN00000000065"], "fldSYN00000000073": ["recSYN00000000999"], "fldSYN00000000074": "literal café text" } },
+        "recSYN00000000077": { "createdAt": "2026-10-05T01:06:00.000Z", "fields": { "fldSYN00000000071": "Edge whitespace", "fldSYN00000000072": ["recSYN00000000066"], "fldSYN00000000073": [], "fldSYN00000000074": "+1+1" } },
+        "recSYN00000000078": { "createdAt": "2026-10-05T01:07:00.000Z", "fields": { "fldSYN00000000071": "Edge case", "fldSYN00000000072": ["recSYN00000000065"], "fldSYN00000000073": [], "fldSYN00000000074": "case-sensitive reference" } },
+        "recSYN00000000079": { "createdAt": "2026-10-05T01:08:00.000Z", "fields": { "fldSYN00000000071": "Edge quoted list", "fldSYN00000000072": ["recSYN00000000063", "recSYN00000000064", "recSYN00000000065"], "fldSYN00000000073": [], "fldSYN00000000074": "@literal" } }
+      }
+    }
+  ],
+  "views": [],
+  "forms": []
+}

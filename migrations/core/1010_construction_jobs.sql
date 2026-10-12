@@ -1,0 +1,2 @@
+CREATE TABLE construction_jobs(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,command_id TEXT NOT NULL UNIQUE,action TEXT NOT NULL,input_hash TEXT NOT NULL,input_json TEXT NOT NULL CHECK(json_valid(input_json)),state TEXT NOT NULL CHECK(state IN ('queued','running','complete','failed','cancelled')),step_command_id TEXT NOT NULL,lease_epoch INTEGER NOT NULL DEFAULT 0,lease_until TEXT,result_json TEXT,error TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE INDEX construction_jobs_due ON construction_jobs(state,lease_until,created_at);

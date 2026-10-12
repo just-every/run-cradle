@@ -1,0 +1,11 @@
+CREATE TABLE operation_mandates(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),data_json TEXT NOT NULL CHECK(json_valid(data_json)));
+CREATE INDEX operation_mandates_app ON operation_mandates(app_id,id);
+CREATE TABLE operation_cases(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),data_json TEXT NOT NULL CHECK(json_valid(data_json)),mandate_id TEXT NOT NULL REFERENCES operation_mandates(id),entity_id TEXT NOT NULL,subject_id TEXT NOT NULL,control_epoch INTEGER NOT NULL CHECK(control_epoch>=0),state TEXT NOT NULL);
+CREATE UNIQUE INDEX operation_cases_subject ON operation_cases(app_id,entity_id,subject_id,mandate_id);
+CREATE TABLE operation_wakes(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),data_json TEXT NOT NULL CHECK(json_valid(data_json)),case_id TEXT NOT NULL REFERENCES operation_cases(id),state TEXT NOT NULL,lease_until TEXT,lease_owner TEXT,epoch INTEGER NOT NULL);
+CREATE UNIQUE INDEX operation_one_lease ON operation_wakes(case_id) WHERE state='leased';
+CREATE INDEX operation_wakes_due ON operation_wakes(state,lease_until);
+CREATE TABLE operation_plans(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL,data_json TEXT NOT NULL CHECK(json_valid(data_json)));
+CREATE TABLE operation_verifications(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL,data_json TEXT NOT NULL CHECK(json_valid(data_json)));
+CREATE TABLE operation_cohorts(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL,data_json TEXT NOT NULL CHECK(json_valid(data_json)));
+CREATE TABLE operation_observations(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL,data_json TEXT NOT NULL CHECK(json_valid(data_json)));

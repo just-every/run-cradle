@@ -1,0 +1,12 @@
+import { useEffect, useState } from 'react'
+import type { Case } from '../../domains/operations'
+import { useCommand } from '../shared/api'
+import { CommandFeedback } from '../shared/presentation'
+const controls = { 'case.pause': { label: 'Pause', detail: 'Pause future work. Anything already sent will still be checked.' }, 'case.takeover': { label: 'Take over', detail: 'Stop automated work so you can handle the next step. Existing attempts remain tracked.' }, 'case.resume': { label: 'Resume', detail: 'Cradle will check current permissions, evidence and earlier attempts before acting again.' }, 'case.cancel': { label: 'Cancel work', detail: 'Cancel future work. This does not undo bookings, messages or other effects already sent.' } } as const
+export function CaseControls({ value, onChanged }: { value: Case; onChanged: () => void }) {
+  const [action, setAction] = useState<keyof typeof controls | null>(null), [reason, setReason] = useState('')
+  useEffect(() => { setAction(null); setReason('') }, [value.controlEpoch])
+  const command = useCommand<Case>(`case-control:${value.id}`)
+  useEffect(() => { if (command.result.state === 'committed') { setAction(null); onChanged() } }, [command.result.state])
+  return <section className="cr-detail"><h2>Control this work</h2>{action ? <form className="cr-form" onSubmit={event => { event.preventDefault(); void command.submit(`/api/v1/commands/${action}`, { caseId: value.id, caseVersion: value.version, reason }, [], value.controlEpoch) }}><p>{controls[action].detail}</p><label className="cr-field">Reason<textarea required value={reason} onChange={event => setReason(event.target.value)} /></label><button className="cr-button" disabled={!reason.trim() || !['idle', 'failed'].includes(command.result.state)}>{controls[action].label}</button><button type="button" className="cr-button cr-button--quiet" onClick={() => setAction(null)}>Keep current state</button></form> : <div className="cr-actions">{(Object.entries(controls) as [keyof typeof controls, typeof controls[keyof typeof controls]][]).map(([key, control]) => { const permission = value.allowedActions.find(item => item.action === key); return permission && <button key={key} className="cr-button cr-button--quiet" disabled={!permission.enabled} title={permission.reason ?? undefined} onClick={() => { setAction(key); setReason('') }}>{control.label}</button> })}</div>}<CommandFeedback {...command} /></section>
+}

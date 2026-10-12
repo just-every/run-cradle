@@ -1,0 +1,3 @@
+CREATE TABLE evidence_staging (id TEXT PRIMARY KEY NOT NULL,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,purpose TEXT NOT NULL CHECK(purpose IN ('import','source')),label TEXT NOT NULL DEFAULT '',version INTEGER NOT NULL DEFAULT 1,schema_version INTEGER NOT NULL DEFAULT 1,lifecycle TEXT NOT NULL DEFAULT 'active' CHECK(lifecycle IN ('active','erased')),created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE INDEX evidence_staging_owner ON evidence_staging(app_id,owner_id,lifecycle);
+CREATE TABLE evidence_staging_files (id TEXT PRIMARY KEY NOT NULL,record_id TEXT NOT NULL REFERENCES evidence_staging(id),value TEXT NOT NULL REFERENCES evidence_files(id),position INTEGER NOT NULL);

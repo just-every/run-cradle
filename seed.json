@@ -1,0 +1,513 @@
+{
+  "id": "cradle",
+  "name": "Cradle",
+  "version": "0.1.0",
+  "maturity": "flagship-development-not-release-accepted",
+  "category": "records",
+  "spine": {
+    "id": "records",
+    "record": "table with typed fields and views"
+  },
+  "replaces": [
+    "Airtable",
+    "Smartsheet"
+  ],
+  "description": "A self-hosted records builder for one business: typed records, relationships, forms, saved views, reviewed base imports and portable exits, with an included launch-readiness template.",
+  "scope": "one business, one workspace; records builder with reviewed base imports and portable base exits; launch readiness is an included template with retained rights and data; repair navigation is opt-in and adds no authority",
+  "capabilities": [
+    {
+      "id": "records-builder",
+      "clauses": [
+        "RECORDS-001",
+        "APP-SCOPE-001",
+        "VIEW-001"
+      ]
+    },
+    {
+      "id": "public-landing",
+      "clauses": [
+        "HOME-002"
+      ]
+    },
+    {
+      "id": "operator-workspace",
+      "clauses": [
+        "OPS-001",
+        "OPS-002",
+        "OPS-003",
+        "OPS-004",
+        "OPS-005",
+        "OPS-006",
+        "VIEW-001",
+        "VIEW-002",
+        "VIEW-003",
+        "VIEW-004",
+        "VIEW-005",
+        "VIEW-006",
+        "VIEW-007",
+        "SET-001",
+        "SET-002",
+        "SET-003"
+      ]
+    },
+    {
+      "id": "campaign-portfolio",
+      "clauses": [
+        "CAMP-001",
+        "CAMP-002",
+        "CAMP-003",
+        "CAMP-004",
+        "CAMP-005",
+        "CAMP-006",
+        "CAMP-007",
+        "CAMP-008",
+        "CAMP-009",
+        "CAMP-010",
+        "CAMP-011",
+        "CAMP-012",
+        "CAMP-013",
+        "CAMP-014"
+      ]
+    },
+    {
+      "id": "deliverables-and-milestones",
+      "clauses": [
+        "DELIV-001",
+        "DELIV-002",
+        "DELIV-003",
+        "MILE-001",
+        "MILE-002",
+        "MILE-003",
+        "MILE-004",
+        "MILE-005",
+        "MILE-006"
+      ]
+    },
+    {
+      "id": "risk-and-decision-operations",
+      "clauses": [
+        "RISK-001",
+        "RISK-002",
+        "RISK-003",
+        "RISK-004",
+        "RISK-005",
+        "DEC-001",
+        "DEC-002",
+        "DEC-003",
+        "DEC-004",
+        "DEC-005",
+        "DEC-006",
+        "DEC-007",
+        "DEC-008"
+      ]
+    },
+    {
+      "id": "saved-lenses",
+      "clauses": [
+        "LENS-001",
+        "LENS-002",
+        "LENS-003",
+        "LENS-004",
+        "LENS-005",
+        "LENS-006",
+        "LENS-007"
+      ]
+    },
+    {
+      "id": "activity-and-comments",
+      "clauses": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003",
+        "ACT-004"
+      ]
+    },
+    {
+      "id": "visible-automation",
+      "clauses": [
+        "AUTO-001",
+        "AUTO-002",
+        "AUTO-003",
+        "AUTO-004",
+        "AUTO-005",
+        "AUTO-006",
+        "AUTO-007",
+        "AUTO-008",
+        "AUTO-009",
+        "AUTO-010",
+        "AUTO-011"
+      ]
+    },
+    {
+      "id": "notifications",
+      "clauses": [
+        "NOTIFY-001",
+        "NOTIFY-002",
+        "NOTIFY-003",
+        "NOTIFY-004",
+        "NOTIFY-005",
+        "NOTIFY-006",
+        "NOTIFY-007",
+        "NOTIFY-008"
+      ]
+    },
+    {
+      "id": "read-only-ai-assistance",
+      "clauses": [
+        "AI-001",
+        "AI-002",
+        "AI-003",
+        "AI-004",
+        "AI-005",
+        "AI-006"
+      ]
+    },
+    {
+      "id": "csv-import-and-portability",
+      "clauses": [
+        "IMPORT-001",
+        "IMPORT-002",
+        "IMPORT-003",
+        "IMPORT-004",
+        "IMPORT-005",
+        "DATA-001",
+        "DATA-002",
+        "DATA-003"
+      ]
+    },
+    {
+      "id": "reviewed-base-import",
+      "clauses": [
+        "RECORDS-005"
+      ]
+    },
+    {
+      "id": "portable-base-exits",
+      "clauses": [
+        "RECORDS-006"
+      ]
+    },
+    {
+      "id": "user-record-automations",
+      "clauses": [
+        "AUTO-USER-001",
+        "WEBHOOK-USER-001",
+        "API-USER-001"
+      ]
+    }
+  ],
+  "nonGoals": [
+    "multiple workspaces or tenants",
+    "public or embeddable views",
+    "bidirectional sync with spreadsheets or other SaaS tools",
+    "automatic dependency rescheduling or critical-path optimisation",
+    "general task management",
+    "notification channels other than in-app and email",
+    "editorial content calendars and customer-feedback tracking",
+    "native mobile applications",
+    "unrestricted runtime scripts, webhook effects or self-issued agent authority"
+  ],
+  "externals": [
+    {
+      "id": "transactional-mail",
+      "required": true,
+      "why": "Magic-link sign-in and the operator notifications in NOTIFY-002 must reach email addresses outside the deployment.",
+      "data": [
+        "recipient email",
+        "magic-link token or notification subject and body"
+      ],
+      "adapters": [
+        "mail.sender.v1"
+      ]
+    },
+    {
+      "id": "ai-provider",
+      "required": false,
+      "why": "The campaign briefs, risk readouts, and lens proposals in AI-001 require a model; with AI off under SET-002 the rest of the product is unchanged.",
+      "data": [
+        "context allowed by ai.campaign-context.v1",
+        "operator request"
+      ],
+      "adapters": [
+        "ai.provider.v1"
+      ]
+    },
+    {
+      "id": "gmail",
+      "required": false,
+      "why": "Owner-authorized Gmail connection for configured mail actions.",
+      "data": [
+        "authorized message content",
+        "mailbox metadata"
+      ],
+      "adapters": [
+        "gmail"
+      ]
+    },
+    {
+      "id": "google",
+      "required": false,
+      "why": "Owner-authorized Google Calendar connection for configured calendar actions.",
+      "data": [
+        "authorized calendar events"
+      ],
+      "adapters": [
+        "google-calendar"
+      ]
+    },
+    {
+      "id": "xero",
+      "required": false,
+      "why": "Owner-authorized Xero connection for configured accounting actions.",
+      "data": [
+        "authorized accounting records"
+      ],
+      "adapters": [
+        "xero"
+      ]
+    },
+    {
+      "id": "record-webhooks",
+      "required": false,
+      "requiredWhen": "A user enables a signed record webhook action",
+      "why": "Owner-selected receiver (owner-receiver) sends to custom destination record-automation-destination: An immutable encrypted public HTTPS receiver. The receiver belongs to the owner or their service; Cradle cannot perform its external action.",
+      "data": [
+        "Record reference identifiers",
+        "record event and version",
+        "delivery identity",
+        "signature and timestamp"
+      ],
+      "adapters": [
+        "automation.egress.v1"
+      ]
+    },
+    {
+      "id": "automation-slack",
+      "required": false,
+      "requiredWhen": "A user enables a Slack automation action",
+      "why": "Slack (slack) sends to provider destination incoming-webhook: An immutable encrypted Slack incoming webhook. Slack owns the selected workspace and message delivery.",
+      "data": [
+        "Owner-approved literal message text"
+      ],
+      "adapters": [
+        "automation.egress.v1"
+      ]
+    }
+  ],
+  "env": [
+    {
+      "name": "APP_ORIGIN",
+      "required": true,
+      "secret": false,
+      "why": "Canonical HTTPS origin for authentication links and redirects."
+    },
+    {
+      "name": "OWNER_EMAIL",
+      "required": true,
+      "secret": false,
+      "why": "Base operator-auth first-owner address; no implicit signup."
+    },
+    {
+      "name": "SETUP_TOKEN",
+      "required": false,
+      "secret": true,
+      "requiredWhen": "First-owner bootstrap on an empty Base auth store; remove after setup.",
+      "why": "One-use deployment bootstrap authority, independent of mail and sessions."
+    },
+    {
+      "name": "MAIL_PROVIDER",
+      "required": true,
+      "secret": false,
+      "why": "Explicit Base mail provider: development for local outbox, sendgrid or resend for hosting."
+    },
+    {
+      "name": "SESSION_SECRET",
+      "required": true,
+      "secret": true,
+      "why": "Base HMAC key for opaque credentials and product session-bound CSRF."
+    },
+    {
+      "name": "MAIL_FROM",
+      "required": true,
+      "secret": false,
+      "why": "Verified sender for magic links and operator notifications."
+    },
+    {
+      "name": "MAIL_PROVIDER_API_KEY",
+      "required": true,
+      "secret": true,
+      "why": "Authenticates the explicitly selected Base mail provider."
+    },
+    {
+      "name": "AI_PROVIDER_API_KEY",
+      "required": false,
+      "requiredWhen": "AI is enabled under SET-002 and the default ai.provider.v1 adapter is used",
+      "secret": true,
+      "why": "Authenticates the configured AI provider."
+    },
+    {
+      "name": "AI_MODEL",
+      "required": false,
+      "requiredWhen": "AI is enabled under SET-002 and the default ai.provider.v1 adapter is used",
+      "secret": false,
+      "why": "Selects the model recorded with AI usage."
+    },
+    {
+      "name": "EGRESS_RELAY_SECRET",
+      "required": false,
+      "requiredWhen": "A user enables a signed record webhook action",
+      "secret": true,
+      "why": "Authenticate Cradle to its trusted egress relay for Owner-selected receiver; load from server-side secret storage and never expose to browser code or logs."
+    },
+    {
+      "name": "CONNECTION_ENCRYPTION_KEY",
+      "required": false,
+      "requiredWhen": "A user enables a signed record webhook action",
+      "secret": true,
+      "why": "Encrypt private destination URLs and webhook signing keys for Owner-selected receiver; load from server-side secret storage and never expose to browser code or logs."
+    },
+    {
+      "name": "EGRESS_RELAY_URL",
+      "required": false,
+      "requiredWhen": "A webhook or Slack action is enabled",
+      "secret": false,
+      "why": "The owner-configured trusted HTTPS relay endpoint; no token appears in this URL."
+    }
+  ],
+  "deploy": {
+    "healthPath": "/health",
+    "operatorPath": "/app",
+    "apiPath": "/api",
+    "publicPaths": [
+      "/",
+      "/health",
+      "/signin",
+      "/auth/capabilities",
+      "/auth/request",
+      "/assets/",
+      "/favicon.ico",
+      "/apple-touch-icon.png",
+      "/rer-theme.css",
+      "/fonts/",
+      "/auth/confirm",
+      "/auth/bootstrap",
+      "/setup"
+    ]
+  },
+  "customFields": [
+    "campaign"
+  ],
+  "extensionPoints": {
+    "policies": [
+      "operator.management.v1",
+      "campaign.lifecycle.v1",
+      "campaign.health.v1",
+      "risk.escalation.v1",
+      "decision.queue-order.v1",
+      "decision.resolution.v1",
+      "notification.delivery.v1",
+      "ai.campaign-context.v1"
+    ],
+    "events": [
+      "campaign.created.v1",
+      "campaign.updated.v1",
+      "campaign.archived.v1",
+      "campaign.restored.v1",
+      "campaign.deleted.v1",
+      "deliverable.completed.v1",
+      "deliverable.reopened.v1",
+      "milestone.updated.v1",
+      "risk.created.v1",
+      "risk.updated.v1",
+      "risk.escalated.v1",
+      "risk.resolved.v1",
+      "decision.requested.v1",
+      "decision.assigned.v1",
+      "decision.resolved.v1",
+      "lens.saved.v1",
+      "comment.created.v1",
+      "import.committed.v1",
+      "operator.removed.v1",
+      "automation.run-failed.v1"
+    ],
+    "slots": [
+      "navigation.after.v1",
+      "dashboard.metrics.after.v1",
+      "campaign.grid.toolbar.after.v1",
+      "campaign.row.actions.v1",
+      "campaign.detail.after.v1",
+      "campaign.detail.sidebar.after.v1",
+      "risk.card.actions.v1",
+      "decision.detail.after.v1",
+      "lens.builder.after.v1",
+      "automation.card.after.v1",
+      "settings.panel.after.v1"
+    ],
+    "contributions": [
+      "app.routes.v1",
+      "app.pages.v1",
+      "app.navigation.v1",
+      "settings.sections.v1",
+      "jobs.commands.v1",
+      "schedules.cron.v1",
+      "queues.consumers.v1"
+    ],
+    "adapters": [
+      "mail.sender.v1",
+      "ai.provider.v1",
+      "automation.egress.v1"
+    ]
+  },
+  "limits": {
+    "status": "flagship-targets-not-load-tested",
+    "operators": 100,
+    "campaigns": 50000,
+    "campaignCustomFields": 50,
+    "deliverables": 500000,
+    "milestones": 250000,
+    "risks": 250000,
+    "decisions": 250000,
+    "savedLenses": 200,
+    "lensConditions": 20,
+    "automations": 100,
+    "bulkSelectionRecords": 500,
+    "csvImportBytes": 10485760,
+    "csvImportRows": 10000,
+    "csvImportMimeTypes": [
+      "text/csv",
+      "application/vnd.ms-excel",
+      "text/plain"
+    ],
+    "requestBodyBytes": 1048576,
+    "publicRequestsPerIpPerMinute": {
+      "/": 120,
+      "/health": 120,
+      "/signin": 120,
+      "/auth/request": 20,
+      "/assets/": 600,
+      "/favicon.ico": 120,
+      "/apple-touch-icon.png": 120,
+      "/rer-theme.css": 120,
+      "/auth/confirm": 20
+    },
+    "concurrentSessions": 40
+  },
+  "accessibility": {
+    "level": "WCAG 2.2 AA",
+    "status": "ui-ported-not-yet-audited"
+  },
+  "operatingCost": {
+    "status": "not measured against a production workload",
+    "currency": "USD",
+    "estimate": "Deployment and usage costs depend on the Cloudflare account plan, resource usage and selected mail and AI providers.",
+    "assumptions": "The account must support the declared Workers, D1, R2, Queues and SQLite-backed Durable Objects bindings. Confirm current plan eligibility, quotas and pricing before installing. Record-count limits are unmeasured capacity targets.",
+    "sources": [
+      "https://developers.cloudflare.com/workers/platform/pricing/",
+      "https://developers.cloudflare.com/workers/platform/limits/",
+      "https://developers.cloudflare.com/d1/platform/pricing/",
+      "https://developers.cloudflare.com/r2/pricing/",
+      "https://developers.cloudflare.com/queues/platform/pricing/",
+      "https://developers.cloudflare.com/durable-objects/platform/pricing/"
+    ]
+  }
+}

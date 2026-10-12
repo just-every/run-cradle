@@ -1,0 +1,1 @@
+{"extends":"../tsconfig.json","include":["../src/domains/authority/**/*.ts","../src/core/features/session/**/*.ts","../src/core/platform/environment.d.ts","../worker-configuration.d.ts"]}

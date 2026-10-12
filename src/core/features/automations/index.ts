@@ -1,0 +1,1 @@
+export { registerAutomationRoutes } from './routes'

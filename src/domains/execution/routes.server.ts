@@ -1,0 +1,11 @@
+import { Hono } from 'hono';
+import { createUlid } from '../../core/shared/ids';
+import { errorResponse, ApiError } from '../../core/registry/errors.server';
+import { z } from 'zod';
+import type { RequestContext } from '../authority/ports';
+import type { createExecutionService } from './service.server';
+import { attemptDTO, receiptDTO } from './repository.server';
+export function createExecutionHttp(service:ReturnType<typeof createExecutionService>,authenticate:(request:Request)=>Promise<RequestContext>){const app=new Hono();const id=z.string().regex(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+ app.get('/api/v1/runs/:id',async c=>{const requestId=createUlid();try{const ctx=await authenticate(c.req.raw),run=await service.read(ctx,id.parse(c.req.param('id')));return c.json({data:run,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}});}catch(error){return errorResponse(error,requestId,'execution.read');}});
+ app.get('/api/v1/runs/:id/attempts',async c=>{const requestId=createUlid();try{const ctx=await authenticate(c.req.raw),run=await service.read(ctx,id.parse(c.req.param('id')));if(c.req.query('cursor'))throw new ApiError('stale_cursor','Attempt page cursor is not current.');const rows=await service.repository.attempts(run.id);return c.json({data:{items:rows.map(attemptDTO),nextCursor:null,total:{kind:'exact',value:rows.length},evaluatedAt:ctx.now},meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}});}catch(error){return errorResponse(error,requestId,'execution.attempts');}});
+ app.get('/api/v1/receipts/:id',async c=>{const requestId=createUlid();try{const ctx=await authenticate(c.req.raw),receipt=await service.repository.receipt(id.parse(c.req.param('id')));if(!receipt)throw new ApiError('not_found','Receipt not found.');const attempt=await service.repository.attempt(receipt.attempt_id);if(!attempt)throw new ApiError('not_found','Receipt not found.');await service.read(ctx,attempt.run_id);return c.json({data:receiptDTO(receipt),meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}});}catch(error){return errorResponse(error,requestId,'execution.receipt');}});return app;}

@@ -1,0 +1,26 @@
+import './auth-support.mjs';
+import {fixture} from './auth-support.mjs';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const {createModelProfiles,createModelProfileReader}=await import('../src/domains/execution/profiles.server.ts');
+const {registerModelProfileCommands,MODEL_PROFILE_ENTITY_ID}=await import('../src/domains/execution/profile-commands.server.ts');
+const {createUlid}=await import('../src/core/shared/ids.ts');
+test('model configuration binds owner and exact revision; reads do not need inference configuration',async()=>{const f=fixture();try{
+ for(const name of ['0500_execution.sql','0501_connections.sql','0508_model_bindings.sql','0509_execution_collection_revisions.sql'])f.sql.exec(readFileSync(new URL('../migrations/core/'+name,import.meta.url),'utf8'));
+ const app=createUlid(),other=createUlid(),id=createUlid(),now=new Date().toISOString(),ctx={principal:{id:f.id,kind:'human'},now};let verified=0;
+ const input={adapterId:'openai',model:'gpt-6-luna',purposes:['analysis'],allowedFieldIds:[],credentialRef:null,state:'disabled',ceilingCallsPerDay:10,requestTimeoutSeconds:60,maximumCost:{minor:'100',currency:'USD',scale:2},evaluationIds:[]};
+ const profile={...input,id,version:1,createdAt:now,updatedAt:now};f.sql.prepare('INSERT INTO execution_model_profiles VALUES(?,?,?,?,?,?)').run(id,app,JSON.stringify(profile),1,now,now);
+ const policy={authorize:async(_ctx,r)=>({actor:{id:f.id,kind:'human'},action:r.action,appId:r.appId,guards:[],reservationMutations:[],reservationIds:[]})};
+ assert.equal((await createModelProfileReader({db:f.db,policy}).read(ctx,id)).state,'disabled');
+ const profiles=createModelProfiles({db:f.db,policy,admission:{},verify:async()=>{verified++}});let command;registerModelProfileCommands({register:d=>command=d},{db:f.db,profiles});
+ assert.throws(()=>command.input.parse({commandId:createUlid(),expected:[],input:{profile:input}}));
+ const base={commandId:createUlid(),expected:[{ref:{appId:app,entityId:MODEL_PROFILE_ENTITY_ID,recordId:id},version:1}],input:{id,profile:input}};
+ const plan=await command.prepare(ctx,base);assert.equal(plan.appId,app);assert.equal(plan.committedResult.version,2);assert.equal(verified,0);
+ await assert.rejects(command.prepare(ctx,{...base,input:{...base.input,appId:other}}),/another app/);
+ await assert.rejects(command.prepare(ctx,{...base,expected:[]}),/current model profile revision/);
+ await assert.rejects(profiles.prepare(ctx,createUlid(),other,input,id,1),/another app/);
+ await assert.rejects(profiles.prepare(ctx,createUlid(),app,{...input,state:'ready'}),/independent evaluation/);
+ assert.equal((await command.replayIdentity(ctx,base)).canonicalInputHash,plan.canonicalInputHash);
+ assert.equal(f.sql.prepare("SELECT revision FROM execution_collection_revisions WHERE name='profiles'").get().revision,2);
+ }finally{f.close();}});

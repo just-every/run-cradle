@@ -1,0 +1,2 @@
+CREATE TABLE repair_cancellations(id TEXT PRIMARY KEY NOT NULL,version INTEGER NOT NULL CHECK(version>0),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,lifecycle TEXT NOT NULL,schema_version INTEGER NOT NULL DEFAULT 1,visit_id TEXT NOT NULL UNIQUE REFERENCES repair_visits(id) ON DELETE RESTRICT,attempt_id TEXT NOT NULL,reason TEXT NOT NULL);
+CREATE INDEX repair_cancellations_lifecycle ON repair_cancellations(lifecycle,id);

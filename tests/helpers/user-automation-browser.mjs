@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict'
+
+export async function userAutomationBrowser(page,h,journey,width) {
+ const name=`Browser automation ${width}`
+ await page.goto(h.origin+'/app/automations')
+ await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/automations')
+ const panel=page.getByRole('region',{name:'Record automations'})
+ await panel.getByLabel(/^Application/).selectOption(h.appId)
+ await panel.getByLabel(/^Record type/).selectOption(h.entityId)
+ await panel.getByRole('button',{name:'New automation',exact:true}).click()
+ const form=page.getByRole('form',{name:'Automation definition'})
+ await form.getByLabel('Automation name',{exact:true}).fill(name)
+ await form.getByLabel(/^Recipient/).selectOption(h.operator)
+ const save=page.waitForResponse(response=>response.url().endsWith('/api/user-automations')&&response.request().method()==='POST')
+ await form.getByRole('button',{name:'Save automation',exact:true}).click()
+ const response=await save;assert.equal(response.status(),201)
+ const saved=(await response.json()).data.result.value
+ await panel.getByRole('heading',{name,exact:true}).waitFor()
+ await journey.capture('user-automation-saved')
+ await page.goto(`${h.origin}/app/records/${h.appId}/${h.entityId}`)
+ await page.getByRole('button',{name:'New record',exact:true}).click()
+ await page.getByLabel(/^Name(?:\s*\*)?$/).fill(`Browser trigger ${width}`)
+ await journey.command(page.getByRole('button',{name:'Save record',exact:true}),'record.create')
+ await page.getByRole('button',{name:'New record',exact:true}).waitFor()
+ const worker=await h.runtime.getWorker();await worker.scheduled({cron:'* * * * *'})
+ await page.goto(h.origin+'/app/automations')
+ await panel.getByLabel(/^Application/).selectOption(h.appId)
+ await panel.getByRole('button',{name:`Run history for ${name}`,exact:true}).click()
+ await panel.getByText('Complete',{exact:true}).waitFor()
+ await journey.capture('user-automation-complete')
+ await panel.getByRole('button',{name:`Edit ${name}`,exact:true}).click()
+ await form.getByLabel('Notification title',{exact:true}).fill('Another approved notification')
+ const edited=page.waitForResponse(response=>response.url().endsWith('/api/user-automations')&&response.request().method()==='POST')
+ await form.getByRole('button',{name:'Save automation',exact:true}).click()
+ assert.equal((await edited).status(),201)
+ const disabled=page.waitForResponse(response=>response.url().endsWith(`/api/user-automations/${saved.id}/disable`))
+ await panel.getByRole('button',{name:`Disable ${name}`,exact:true}).click()
+ assert.equal((await disabled).status(),200)
+ const before=(await h.request(`/api/user-automations/${saved.id}/runs`)).data.runs.length
+ const record=await h.create(`Disabled trigger ${width}`);await h.tick(record.commandId)
+ assert.equal((await h.request(`/api/user-automations/${saved.id}/runs`)).data.runs.length,before)
+ await journey.capture('user-automation-disabled')
+}

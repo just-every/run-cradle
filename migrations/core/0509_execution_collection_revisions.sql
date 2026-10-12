@@ -1,0 +1,14 @@
+CREATE TABLE execution_collection_revisions(name TEXT PRIMARY KEY,revision INTEGER NOT NULL);
+INSERT INTO execution_collection_revisions VALUES('connections',1),('attempts',1),('profiles',1),('calls',1);
+CREATE TRIGGER execution_connections_insert AFTER INSERT ON provider_connections BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='connections'; END;
+CREATE TRIGGER execution_connections_update AFTER UPDATE ON provider_connections BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='connections'; END;
+CREATE TRIGGER execution_connections_delete AFTER DELETE ON provider_connections BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='connections'; END;
+CREATE TRIGGER execution_attempts_insert AFTER INSERT ON execution_attempts BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='attempts'; END;
+CREATE TRIGGER execution_attempts_update AFTER UPDATE ON execution_attempts BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='attempts'; END;
+CREATE TRIGGER execution_attempts_delete AFTER DELETE ON execution_attempts BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='attempts'; END;
+CREATE TRIGGER execution_profiles_insert AFTER INSERT ON execution_model_profiles BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='profiles'; END;
+CREATE TRIGGER execution_profiles_update AFTER UPDATE ON execution_model_profiles BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='profiles'; END;
+CREATE TRIGGER execution_profiles_delete AFTER DELETE ON execution_model_profiles BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='profiles'; END;
+CREATE TRIGGER execution_calls_insert AFTER INSERT ON execution_model_calls BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='calls'; END;
+CREATE TRIGGER execution_calls_update AFTER UPDATE ON execution_model_calls BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='calls'; END;
+CREATE TRIGGER execution_calls_delete AFTER DELETE ON execution_model_calls BEGIN UPDATE execution_collection_revisions SET revision=revision+1 WHERE name='calls'; END;

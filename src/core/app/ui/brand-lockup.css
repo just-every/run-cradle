@@ -1,0 +1,5 @@
+/* Logo P3 lockup, proportioned as in the approved P3 card: a 52px mark box beside a 34px word (box 1.53em, gap 0.35em),
+   centred on the line. Wordmark: Lexend 600, tracking -0.01em, title case. */
+.brand-lockup { display: inline-flex; align-items: center; gap: 0.35em; line-height: 1; white-space: nowrap; }
+.brand-lockup-mark { flex: none; width: 1.53em; height: 1.53em; }
+.brand-lockup-word { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; }

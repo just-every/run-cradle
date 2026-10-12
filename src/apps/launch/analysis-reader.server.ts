@@ -1,0 +1,14 @@
+import type { RequestContext,PolicyPort } from '../../domains/authority/ports'
+import { LAUNCH_APP_ID } from './contracts'
+import { launchEntities } from './contracts'
+import { launchFieldIds } from './descriptors.server'
+import { AdmissionError } from '../../domains/admission/errors'
+export function createLaunchAnalysisReader(db:D1Database,policy:PolicyPort){
+ async function visible(ctx:RequestContext,row:Record<string,unknown>){
+  await policy.scope(ctx,{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,purpose:'read'})
+  const versions=JSON.parse(String(row.input_versions_json??'[]')) as {ref:{appId:string;entityId:string;recordId:string};version:number}[]
+  for(const revision of versions){const kind=Object.keys(launchEntities).find(kind=>launchEntities[kind as keyof typeof launchEntities]===revision.ref.entityId) as keyof typeof launchEntities|undefined;if(!kind||revision.ref.appId!==LAUNCH_APP_ID)throw new AdmissionError('forbidden','Analysis source is unavailable');const scope=await policy.scope(ctx,{appId:LAUNCH_APP_ID,entityId:revision.ref.entityId,purpose:'read'});if(Object.values(launchFieldIds[kind]).some(field=>!scope.readableFieldIds.includes(field)))throw new AdmissionError('forbidden','Analysis contains fields outside current authority');const table={campaign:'campaigns',risk:'risks',milestone:'milestones',deliverable:'deliverables',decision:'decisions',lens:'lenses'}[kind as 'campaign'];if(!table||!await db.prepare(`SELECT 1 FROM ${table} WHERE id=? AND (${scope.rowPredicate.sql})`).bind(revision.ref.recordId,...scope.rowPredicate.values).first())throw new AdmissionError('not_found','Analysis source is unavailable')}
+  return{id:row.id,createdAt:new Date(Number(row.created_at)).toISOString(),version:row.version,feature:row.feature,campaignId:row.subject_id,lensId:row.lens_id,lensDraft:row.lens_draft_json?JSON.parse(String(row.lens_draft_json)):null,content:row.content,proposedLens:row.proposed_lens_json?JSON.parse(String(row.proposed_lens_json)):null,inputVersions:versions,modelCallId:row.model_call_id,aiGenerated:true}
+ }
+ return{async get(ctx:RequestContext,id:string){const row=await db.prepare('SELECT * FROM launch_analyses WHERE id=?').bind(id).first<Record<string,unknown>>();if(!row)throw new AdmissionError('not_found','Analysis was not found');return visible(ctx,row)},async request(ctx:RequestContext,id:string){const row=await db.prepare('SELECT id,state,analysis_id,error_code,error_message FROM launch_analysis_requests WHERE id=? AND actor_id=?').bind(id,ctx.principal.id).first<Record<string,unknown>>();if(!row)throw new AdmissionError('not_found','Analysis request was not found');return{requestId:row.id,state:row.state,error:row.error_code?{code:row.error_code,message:row.error_message}:null,analysis:row.analysis_id?await this.get(ctx,String(row.analysis_id)):null}}}
+}

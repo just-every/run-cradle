@@ -1,0 +1,56 @@
+{
+  "fixtureId": "crm-example",
+  "hashAlgorithm": "SHA-256",
+  "artifacts": [
+    {
+      "path": "api/companies-page-1.json",
+      "sha256": "a8dd18318e0b1608ad0c418df95babbcb9347f665922fcbd2e247609d3564d0b",
+      "size": 547
+    },
+    {
+      "path": "api/companies-page-2.json",
+      "sha256": "ae2e595cda546501fd9e1b70e8f9809f453ae81e8f6f634292e448cc5af8ab6a",
+      "size": 194
+    },
+    {
+      "path": "api/contacts-page-1.json",
+      "sha256": "87fa4363c43addcffd459583615f36dec2720c37df74fb3987cffff474499cc2",
+      "size": 561
+    },
+    {
+      "path": "api/contacts-page-2.json",
+      "sha256": "abbf7c2226dda27744974a65ad7430f14c49d55a2b9be627b27669673445259b",
+      "size": 259
+    },
+    {
+      "path": "api/deals-page-1.json",
+      "sha256": "dd115428c07f5fc86ea7c762d021c77a9c3771b860761b16c81e3bcba09413f2",
+      "size": 557
+    },
+    {
+      "path": "api/deals-page-2.json",
+      "sha256": "f60b4c4ae2f4366b4a6503103d5d4f94a945e333703738a949a1a9c4d383a28d",
+      "size": 242
+    },
+    {
+      "path": "api/metadata.json",
+      "sha256": "9ab0231a05652450fdbb729073c3c94a6b182ca4f2e9a80fade458a72b37cdd5",
+      "size": 2778
+    },
+    {
+      "path": "csv/Companies-Grid view.csv",
+      "sha256": "59a7d677ce5b8414de257ce70af5feec9d3dc55894b102e15c396fa17fd8bfa9",
+      "size": 302
+    },
+    {
+      "path": "csv/Contacts-Grid view.csv",
+      "sha256": "5f8a07ad58aaae541a0134af331e11f7e266dc9d975eb91d52b2968f154199bf",
+      "size": 373
+    },
+    {
+      "path": "csv/Deals-Grid view.csv",
+      "sha256": "8b03779cc34b71ba0b411ded56324beb530765195ddbdaeb1b3d78ef16cc7c68",
+      "size": 330
+    }
+  ]
+}

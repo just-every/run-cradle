@@ -1,0 +1,13 @@
+import type { CellValue, Id, Instant, Ref, RevisionRef, Versioned } from '../../contracts/primitives';
+export type SourceRef={id:Id;version:number;sha256:string;ownerAppId:Id;effectiveAt:Instant|null;knownAt:Instant;sourceReleaseId:Id|null};
+export type EvidenceLink={sourceId:Id;sourceVersion:number;locator:{kind:'text';start:number;end:number}|{kind:'page';page:number;region?:number[]}|{kind:'field';path:string};observedAt:Instant};
+export type Source=Versioned & {kind:'text'|'email'|'file'|'form'|'connector'|'inspection';connectionId:Id|null;externalId:string|null;fileIds:Id[];sha256:string;receivedAt:Instant;effectiveAt:Instant|null;knownAt:Instant;ownerAppId:Id;retention:'until_explicit_deletion';accessibleContentUrl:string|null};
+export type Claim=Versioned & {subject:Ref|null;fieldId:Id|null;value:CellValue;evidence:EvidenceLink[];modelCallId:Id|null;state:'proposed'|'corroborated'|'disputed'|'superseded'|'erased';supersedesId:Id|null};
+export type Proposal=Versioned & {action:string;subject:RevisionRef;input:unknown;evidence:EvidenceLink[];reason:string;expiresAt:Instant;state:'proposed'|'accepted'|'rejected'|'stale';requiredAuthority:string[]};
+export type FileObject=Versioned & {filename:string;mediaType:string;bytes:number;sha256:string;state:'uploading'|'checking'|'available'|'rejected'|'erased';sourceId:Id|null;rejection:string|null};
+export type ContextArtifact={id:Id;sha256:string;purpose:string;sourceRefs:SourceRef[];fieldIds:Id[];expiresAt:Instant;providerDestination:string};
+export type DependencyKind='source'|'claim'|'proposal'|'canonical'|'decision'|'command'|'attempt'|'receipt'|'prompt'|'plan'|'strategy'|'reuse'|'candidate';
+export type DependencyNode={id:Id;appId:Id;kind:DependencyKind;objectId:Id;objectVersion:number;createdAt:Instant;invalidatedAt:Instant|null;erasedAt:Instant|null};
+export type Upload={file:FileObject;uploadUrl:string;method:'PUT';headers:Record<string,string>;expiresAt:Instant;maximumBytes:number};
+export type SourceCaptureInput={appId:Id;kind:'file'|'form'|'inspection';fileIds:Id[];text?:string;subject?:Ref;effectiveAt?:Instant};
+export type UploadBeginInput={appId:Id;filename:string;mediaType:string;bytes:number;sha256:string;subject?:Ref};

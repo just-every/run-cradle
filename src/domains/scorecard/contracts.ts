@@ -1,0 +1,6 @@
+import type {Versioned} from '../../contracts/primitives';
+export type Mode='live'|'sandbox'|'historical'|'shadow';
+export type MetricName='correction_rate'|'exception_rate'|'recovery_success'|'human_minutes'|'owner_interruptions'|'interruptions'|'repeated_work'|'touches'|'unknown_age'|'lead_time'|'cost';
+export type Observation=Versioned&{appId:string;caseId:string;cohortId:string;mode:Mode;role:string;metric:MetricName;numerator:string|null;denominator:string|null;unit:string;clockVersion:string;occurredAt:string;releaseId:string;sourceIds:string[];reason:string|null;provenance?:'derived'|'manual_adjudication';rawFactIds?:string[]};
+export type Cohort=Versioned&{appId:string;mode:Mode;window:{start:string;end:string};clockVersion:string;caseIds:string[];requiredRoles:string[];releaseIds:string[];complexity:string;fixedAt:string};
+export type Scorecard=Versioned&{mode:Mode;cohortId:string;releaseIds:string[];window:Cohort['window'];clockVersion:string;metrics:{name:MetricName;numerator:string|null;denominator:string|null;value:string|null;unit:string;role:string|null;missing:number;exclusions:{reason:string;count:number}[];provenance?:'derived'|'manual_adjudication';rawFactIds?:string[]}[];eligible:number;observed:number;open:number;failed:number;abandoned:number;cancelled:number;rightCensored:number;unknownState:number};

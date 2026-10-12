@@ -1,0 +1,36 @@
+import './typescript-loader.mjs'
+import assert from 'node:assert/strict'
+import {readFile,writeFile} from 'node:fs/promises'
+import {openImportD1} from './records-import-d1-runtime.mjs'
+import {loadDescriptorRegistry} from '../../src/domains/records/loader.server.ts'
+import {createApplicationEntityRegistry} from '../../src/core/app/composition/entities.server.ts'
+import {createPolicyPort} from '../../src/domains/authority/policy.server.ts'
+import {createBaseImportService} from '../../src/domains/records/base-transfer/service.server.ts'
+const [mode,format,directory,receiptPath]=process.argv.slice(2),runtime=await openImportD1(directory,mode==='start')
+try{
+ if(mode==='start'){
+  const {harness}=await import('./records-manual-harness.mjs'),{portableFixture,id}=await import('./base-exit-fixture.mjs'),{builder}=await import('./base-exit-runtime.mjs'),h=await harness({...runtime,close:()=>{}}),r=await h.runtime(),snapshot=portableFixture()
+  // Hand-specified restart workload; three original links include distinct Twins.
+  const extraNames=['Fourth','Fifth','Sixth','Seventh','Eighth','Ninth','Tenth','Eleventh','Twelfth','Thirteenth','Fourteenth','Fifteenth','Sixteenth','Seventeenth','Eighteenth','Nineteenth','Twentieth','Twenty-first','Twenty-second','Twenty-third','Twenty-fourth']
+  snapshot.base.tables[1].records.push(...extraNames.map((name,n)=>({id:id(100+n),values:{[id(21)]:name,[id(22)]:null,[id(23)]:null,[id(24)]:null,[id(25)]:null,[id(26)]:false}})))
+  let source,options={name:snapshot.base.name},ids
+  if(format==='json'){const {prepareJsonSource}=await import('../../src/domains/records/base-transfer/source-json.ts'),{createJsonIdentityPreflight}=await import('../../src/domains/records/base-transfer/json-identities.server.ts');source=prepareJsonSource({filename:'restart.json',bytes:new TextEncoder().encode(JSON.stringify(snapshot))});ids=await createJsonIdentityPreflight(h.db,r.registry).allocate(source)}
+  else{const {exportCsvSet}=await import('../../src/domains/records/base-transfer/export-csv-set.ts'),{prepareCsvSource,allocateImportIdentities}=await import('../../src/domains/records/base-transfer/source.ts'),{attachCorrespondence}=await import('../../src/domains/records/base-transfer/correspondence.ts'),set=exportCsvSet(snapshot);source=attachCorrespondence(prepareCsvSource(set.files.map(f=>({filename:f.filename,bytes:new TextEncoder().encode(f.csv)}))),{filename:'correspondence.json',bytes:new TextEncoder().encode(JSON.stringify(set.correspondence))});ids=allocateImportIdentities(source);options=set.options;const proposal=builder(source,options,ids);ids=proposal.identities;options={...options,correspondenceAcceptedFingerprint:proposal.correspondenceReview.fingerprint}}
+  const service=createBaseImportService(h.db,r.policy,r.registry,r.manual,builder),preview=await service.preview(source,options,ids),ack={fingerprint:preview.fingerprint,acceptLoss:true},review=await service.review(h.ctx,preview,ack),created=await service.adopt(h.ctx,review.reviewId,{...ack,physicalFingerprint:review.physicalFingerprint}),job=await service.resume(h.ctx,created.id)
+  assert.ok(job.checkpoint>0);assert.notEqual(job.state,'completed');await writeFile(receiptPath,JSON.stringify({ctx:h.ctx,jobId:job.id}));process.send({checkpoint:job.checkpoint});await new Promise(()=>{})
+ }else{
+  const {ctx,jobId}=JSON.parse(await readFile(receiptPath,'utf8')),registry=await loadDescriptorRegistry(runtime.db,[]),policy=createPolicyPort(runtime.db,createApplicationEntityRegistry(registry)),service=createBaseImportService(runtime.db,policy,registry,undefined,()=>{throw new Error('Stored restart cannot read upload or rerun mapping')})
+  let job=await service.resume(ctx,jobId),batches=0;while(job.state!=='completed'&&batches++<100)job=await service.resume(ctx,jobId);assert.equal(job.state,'completed');const status=await service.status(ctx,jobId);assert.equal(status.reconciliation.ok,true);assert.equal(status.progress.appliedRecords,27)
+  const contact=registry.list(job.destination).find(d=>d.schema.label==='Contacts'),company=registry.list(job.destination).find(d=>d.schema.label==='Companies'),name=contact.schema.fields.find(f=>f.label==='Name'),relation=contact.schema.fields.find(f=>f.label==='Company'),email=company.schema.fields.find(f=>f.label==='Business email'),rows=(await runtime.db.prepare(`SELECT "${contact.fields.get(name.id).column}" name,"${contact.fields.get(relation.id).column}" target FROM "${contact.table.tableId}" ORDER BY name`).all()).results,first=rows.find(r=>r.name==='First'),second=rows.find(r=>r.name==='Second');assert.notEqual(first.target,second.target);assert.equal((await runtime.db.prepare(`SELECT "${company.fields.get(email.id).column}" value FROM "${company.table.tableId}" WHERE id=?`).bind(first.target).first()).value,'business@example.test');assert.equal((await runtime.db.prepare(`SELECT "${company.fields.get(email.id).column}" value FROM "${company.table.tableId}" WHERE id=?`).bind(second.target).first()).value,null)
+  const originals=await service.originals(ctx,jobId);assert.equal(originals.length,format==='json'?1:3)
+  if(format==='json'){
+   // The restarted runtime uses the durable job alone; this oracle reads its
+   // retained review and original bytes only after resume has completed.
+   const binding=await runtime.db.prepare('SELECT operation_key FROM ik_jobs WHERE id=?').bind(jobId).first(),chunks=(await runtime.db.prepare('SELECT body FROM record_import_review_chunks WHERE review_id=? ORDER BY ordinal').bind(binding.operation_key).all()).results,review=JSON.parse(chunks.map(chunk=>chunk.body).join('')),input=JSON.parse(Buffer.from(originals[0].original.base64,'base64').toString('utf8'))
+   const {portableIdentityExpectation}=await import('./portable-identity-expectation.mjs'),{createRecordServices}=await import('../../src/domains/records/service.server.ts'),{createBaseExport}=await import('../../src/domains/records/base-transfer/export-json.server.ts'),{canonicalBaseSnapshot}=await import('../../src/domains/records/base-transfer/json-format.ts'),expected=portableIdentityExpectation(input,review.identities).snapshot,services=createRecordServices(runtime.db,registry,policy,'manual-schema-test-secret-long-enough'),exported=await createBaseExport(runtime.db,services)(ctx,job.destination)
+   assert.equal(exported.format,input.format);assert.equal(exported.version,input.version);assert.equal(canonicalBaseSnapshot(exported),canonicalBaseSnapshot(expected))
+  }
+  let undo=await service.undo(ctx,jobId);while(undo.state==='undoing')undo=await service.undo(ctx,jobId);assert.equal(undo.state,'undone');assert.equal((await service.status(ctx,jobId)).reconciliation.ok,true);assert.equal((await runtime.db.prepare(`SELECT COUNT(*) n FROM "${contact.table.tableId}"`).first()).n,0);assert.equal((await runtime.db.prepare(`SELECT COUNT(*) n FROM "${company.table.tableId}"`).first()).n,0);assert.equal((await service.originals(ctx,jobId)).length,originals.length)
+  await writeFile(receiptPath+'.result',JSON.stringify({records:status.progress.appliedRecords,references:status.report.tables.flatMap(t=>t.links).reduce((n,l)=>n+(l.materialized??l.resolved),0),reconciliation:status.reconciliation.ok,state:undo.state,originals:originals.length}))
+ }
+}finally{await runtime.close()}

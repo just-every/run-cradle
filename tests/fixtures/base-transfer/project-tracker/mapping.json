@@ -1,0 +1,62 @@
+{
+  "mappingVersion": "project-tracker-v1",
+  "baseLabel": "Project tracker",
+  "tables": [
+    {
+      "key": "projects",
+      "label": "Projects",
+      "sourceTableId": "tblSYN00000000031",
+      "csvFile": "Projects-Grid view.csv",
+      "primaryFieldKey": "name",
+      "fields": [
+        { "key": "name", "label": "Project", "csvColumn": "Project", "sourceFieldId": "fldSYN00000000031", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "status", "label": "Status", "csvColumn": "Status", "sourceFieldId": "fldSYN00000000032", "sourceType": "singleSelect", "targetType": "select", "optionsSource": "first-seen-plus-owner-preview" },
+        { "key": "started", "label": "Started", "csvColumn": "Started", "sourceFieldId": "fldSYN00000000033", "sourceType": "date", "targetType": "date", "dateConvention": "iso-calendar-date" },
+        { "key": "summary", "label": "Summary", "csvColumn": "Summary", "sourceFieldId": "fldSYN00000000034", "sourceType": "multilineText", "targetType": "text" },
+        { "key": "tasks", "label": "Tasks", "csvColumn": "Tasks", "sourceFieldId": "fldSYN00000000035", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "tasks", "cardinality": "many", "onDelete": "restrict", "primaryResolution": "exact-primary-label-list", "reciprocal": { "tableKey": "tasks", "fieldKey": "project" } }
+      ]
+    },
+    {
+      "key": "tasks",
+      "label": "Tasks",
+      "sourceTableId": "tblSYN00000000032",
+      "csvFile": "Tasks-Grid view.csv",
+      "primaryFieldKey": "title",
+      "fields": [
+        { "key": "title", "label": "Task", "csvColumn": "Task", "sourceFieldId": "fldSYN00000000041", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "project", "label": "Project", "csvColumn": "Project", "sourceFieldId": "fldSYN00000000042", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "projects", "cardinality": "one", "onDelete": "restrict", "primaryResolution": "exact-primary-label" },
+        { "key": "assignee", "label": "Assignee", "csvColumn": "Assignee", "sourceFieldId": "fldSYN00000000043", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "people", "cardinality": "one", "onDelete": "restrict", "primaryResolution": "exact-primary-label" },
+        { "key": "blockedBy", "label": "Blocked by", "csvColumn": "Blocked by", "sourceFieldId": "fldSYN00000000044", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "tasks", "cardinality": "many", "onDelete": "restrict", "primaryResolution": "exact-primary-label-list" },
+        { "key": "labelsText", "label": "Labels (source text)", "csvColumn": "Labels", "sourceFieldId": "fldSYN00000000045", "sourceType": "multipleSelects", "targetType": "text", "preserveLabelsInOrder": true, "separator": ", " },
+        { "key": "dueAtText", "label": "Due at (source text)", "csvColumn": "Due at", "sourceFieldId": "fldSYN00000000046", "sourceType": "dateTime", "targetType": "text", "preserveExact": true },
+        { "key": "description", "label": "Description", "csvColumn": "Description", "sourceFieldId": "fldSYN00000000047", "sourceType": "multilineText", "targetType": "text", "preserveNewlines": true },
+        { "key": "progressFormula", "label": "Progress formula", "csvColumn": "Progress formula", "sourceFieldId": "fldSYN00000000048", "sourceType": "formula", "targetType": "skip", "disposition": "notRecreated" },
+        { "key": "projectTaskCount", "label": "Project task count (rollup)", "csvColumn": "Project task count (rollup)", "sourceFieldId": "fldSYN00000000049", "sourceType": "rollup", "targetType": "skip", "disposition": "notRecreated" },
+        { "key": "attachments", "label": "Attachments", "csvColumn": "Attachments", "sourceFieldId": "fldSYN00000000050", "sourceType": "multipleAttachments", "targetType": "skip", "disposition": "skipNonempty" }
+      ]
+    },
+    {
+      "key": "people",
+      "label": "People",
+      "sourceTableId": "tblSYN00000000033",
+      "csvFile": "People-Grid view.csv",
+      "primaryFieldKey": "name",
+      "fields": [
+        { "key": "name", "label": "Name", "csvColumn": "Name", "sourceFieldId": "fldSYN00000000051", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "email", "label": "Email", "csvColumn": "Email", "sourceFieldId": "fldSYN00000000052", "sourceType": "email", "targetType": "text" },
+        { "key": "tasks", "label": "Tasks", "csvColumn": "Tasks", "sourceFieldId": "fldSYN00000000053", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "tasks", "cardinality": "many", "onDelete": "restrict", "primaryResolution": "exact-primary-label-list", "reciprocal": { "tableKey": "tasks", "fieldKey": "assignee" } }
+      ]
+    }
+  ],
+  "ownerPreviewChoices": {
+    "selectOptions": { "projects.status": ["Active", "Planned", "Done", "Paused"] },
+    "sourceMultiSelectOptions": {
+      "tasks.labelsText": {
+        "labelsInSourceOrder": ["Planning", "Needs review", "Finance", "Research", "Build", "Documentation", "Legacy"],
+        "unusedLabels": ["Legacy"],
+        "targetChoice": "text field with source labels joined by comma plus space"
+      }
+    },
+    "notes": "Paused is an explicit unused select owner-preview option. The API metadata preserves every declared select and multi-select option in source order. Labels is intentionally stored as one text field joined with comma plus space, preserving each used label's spelling and order; Legacy remains explicitly source-only metadata and is not recreated as a destination choice."
+  }
+}

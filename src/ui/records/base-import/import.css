@@ -1,0 +1,22 @@
+.cr-base-import { min-width: 0; max-width: 100%; }
+.cr-base-import p, .cr-base-import li, .cr-base-import code, .cr-base-import h1, .cr-base-import h2, .cr-base-import h3, .cr-base-import legend { overflow-wrap: anywhere; }
+.cr-base-import fieldset { min-width: 0; margin: 0; }
+.cr-import-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.cr-import-column { border: 1px solid #b8c8c0; border-radius: 6px; padding: 16px; }
+.cr-import-column legend { padding: 0 6px; font-weight: 600; }
+.cr-import-column .cr-field { margin: 12px 0; }
+.cr-import-column textarea, .cr-import-column select, .cr-import-column input { width: 100%; }
+.cr-import-column ul, .cr-import-diagnostics ul { padding-left: 20px; }
+.cr-import-diagnostics { border-left: 3px solid #b8c8c0; padding-left: 12px; }
+.cr-import-diagnostics li { margin-bottom: 12px; }
+.cr-import-ack { padding: 16px; border: 1px solid #b8c8c0; }
+.cr-import-boundary { border-left: 3px solid #b8c8c0; padding-left: 12px; color: #52645d; }
+.cr-base-import progress { width: 100%; accent-color: #173d32; }
+.cr-base-import input[type=file] { width: 100%; min-width: 0; }
+@media(max-width:600px) { .cr-import-column, .cr-import-ack { padding: 12px; } .cr-import-columns { grid-template-columns: 1fr; } }
+
+.cr-base-import details, .cr-base-import summary { min-width: 0; overflow-wrap: anywhere; }
+.cr-base-import select { min-width: 0; max-width: 100%; width: 100%; }
+.cr-receipt-marks { padding-left: 20px; }
+.cr-receipt-marks li { margin-bottom: 12px; }
+@media print { .operator-rail, .operator-mobile-header, .operator-skip, .cr-receipt-actions { display: none !important; } .cr-import-receipt .cr-card { break-inside: avoid; } }

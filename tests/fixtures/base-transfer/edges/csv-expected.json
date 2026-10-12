@@ -1,0 +1,50 @@
+{
+  "fixtureId": "edges",
+  "sourceFormat": "csv-set",
+  "groundTruth": "ground-truth.json",
+  "expectedNativeSchemaRef": "ground-truth.json#/nativeSchema",
+  "expectedNativeScalarRecordsRef": "ground-truth.json#/nativeRecords",
+  "expectedNativeLinksRef": "ground-truth.json#/nativeLinksByPath/csv",
+  "nativeRecordKeys": ["targets.twinFirst", "targets.twinSecond", "targets.comma", "targets.quoted", "targets.cafeArabic", "targets.space", "edges.duplicate", "edges.quote", "edges.comma", "edges.missing", "edges.empty", "edges.knownExternal", "edges.whitespace", "edges.case", "edges.quotedList"],
+  "rowsByTable": [
+    { "tableKey": "targets", "rowsRead": 6, "created": 6, "rejected": 0 },
+    { "tableKey": "edges", "rowsRead": 9, "created": 9, "rejected": 0 }
+  ],
+  "columnAccounting": [
+    { "fieldKey": "targets.name", "sourceValues": 6, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 6, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "targets.notes", "sourceValues": 6, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 6, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "edges.name", "sourceValues": 9, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 9, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "edges.targets", "sourceValues": 8, "converted": 9, "textChanges": 9, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 10 },
+    { "fieldKey": "edges.externalArchive", "sourceValues": 1, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 1, "skippedNonempty": 1, "linkRefsRead": 1 },
+    { "fieldKey": "edges.inertText", "sourceValues": 9, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 9, "notRecreated": 0, "skippedNonempty": 0 }
+  ],
+  "linkAccounting": {
+    "linkRefsRead": 11,
+    "resolved": 6,
+    "unresolved": 4,
+    "ambiguous": 1,
+    "references": [
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.duplicate", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 2, "rawReference": "Twin", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "ambiguous", "candidateRecordKeys": ["targets.twinFirst", "targets.twinSecond"] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.quote", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 3, "rawReference": "Quoted \"Entry\"", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "targets.quoted" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.comma", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 4, "rawReference": "Comma, Entry", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "targets.comma" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.missing", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 5, "rawReference": "Missing target", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "unresolved", "reason": "no exact primary label" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.knownExternal", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 7, "rawReference": "Café Δelta / العربية", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "targets.cafeArabic" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.whitespace", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 8, "rawReference": "Space Target ", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "unresolved", "reason": "trailing space is significant" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.case", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 9, "rawReference": "café Δelta / العربية", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "unresolved", "reason": "case is significant" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.quotedList", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 10, "rawReference": "Comma, Entry", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "targets.comma" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.quotedList", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 10, "rawReference": "Quoted \"Entry\"", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "targets.quoted" },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.quotedList", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 10, "rawReference": "Café Δelta / العربية", "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "resolution": "resolved", "targetRecordKey": "targets.cafeArabic" },
+      { "tableKey": "edges", "fieldKey": "externalArchive", "sourceRecordKey": "edges.knownExternal", "sourcePath": "csv/Edges-Grid view.csv", "physicalLine": 7, "rawReference": "Archive ticket 991", "targetTableId": "tblSYN00000000999", "targetPrimaryFieldKey": null, "resolution": "unresolved", "reason": "target table is absent from source subset" }
+    ]
+  },
+  "duplicatePrimaryValues": "ground-truth.json#/duplicatePrimaryValues",
+  "lookups": { "recognized": 0, "firstMismatch": null },
+  "reciprocalDisagreements": { "count": 0, "references": "ground-truth.json#/sourceReciprocalDisagreement/items" },
+  "sourcePathDifferences": [
+    "Targets-Grid view.csv begins with a UTF-8 BOM and uses CRLF record separators. The BOM is parsed away from the first header while remaining in the exact original bytes.",
+    "A CSV link to duplicate primary Twin is ambiguous and remains unlinked. The successful recorded API path links it to one record by opaque source ID; the retained JSON sample is invalid and has no expected native link result.",
+    "The CSV references Missing target, Space Target with one trailing space, and lowercase café. None matches a target primary label exactly. The recorded API path resolves the latter two by source IDs; Missing target remains unresolved because its ID is absent from the imported table records.",
+    "The external archive cell names Archive ticket 991 while API pages carry recSYN00000000999. Its declared target table tblSYN00000000999 is absent from source metadata, so the API path retains and reports the raw reference without a native link. The separate JSON sample has a dangling target-table reference and is rejected before writes.",
+    "The six exact nonambiguous target references resolve to the same six symbolic native links in the successful CSV and recorded API paths."
+  ]
+}

@@ -1,0 +1,30 @@
+import { RecordConflict } from './record-conflict'
+import { useEffect, useState } from 'react'
+import type { CellValue } from '../../contracts/primitives'
+import { RECORD_SCHEMA_ENTITY_ID, type EntitySchema, type RecordRow } from '../../domains/records/contracts'
+import { useCommand } from '../shared/api'
+import { CommandFeedback } from '../shared/presentation'
+import { FieldInput } from './record-fields'
+
+function equalValue(left:unknown,right:unknown):boolean {
+  if(Object.is(left,right))return true
+  if(left===null||right===null||typeof left!=='object'||typeof right!=='object')return false
+  if(Array.isArray(left)||Array.isArray(right))return Array.isArray(left)&&Array.isArray(right)&&left.length===right.length&&left.every((value,index)=>equalValue(value,right[index]))
+  const a=left as Record<string,unknown>,b=right as Record<string,unknown>,keys=Object.keys(a)
+  return keys.length===Object.keys(b).length&&keys.every(key=>Object.hasOwn(b,key)&&equalValue(a[key],b[key]))
+}
+/** Compare against the version explicitly accepted by the editor, including a
+ * reviewed concurrent version. Unchanged relations must not be rewritten. */
+export function recordEditorChanges(record:RecordRow,values:Record<string,CellValue>):Record<string,CellValue> {
+  return Object.fromEntries(Object.entries(values).filter(([id,value])=>{const cell=record.fields[id];return !equalValue(cell?.state==='value'?cell.value:null,value)}))
+}
+
+export function RecordEditor({ schema, record, onSaved, onCancel }: { schema: EntitySchema; record?: RecordRow; onSaved: () => void; onCancel: () => void }) {
+  const [baseRecord, setBaseRecord] = useState(record)
+  const [values, setValues] = useState<Record<string, CellValue>>(() => Object.fromEntries(schema.fields.filter(field => field.type !== 'computed' && !field.readOnly).map(field => { const cell = record?.fields[field.id]; return [field.id, cell?.state === 'value' ? cell.value : null] })))
+  const command = useCommand<RecordRow>(`record:${schema.appId}:${schema.id}:${record?.id ?? 'new'}`)
+  useEffect(() => { if (command.result.state === 'committed') onSaved() }, [command.result.state])
+  const conflict = command.result.state === 'failed' && command.result.error.detail.code === 'version_conflict'
+  const errors = command.result.state === 'failed' ? command.result.error.detail.issues : undefined
+  return <form className="cr-form cr-card" onSubmit={event => { event.preventDefault(); void command.submit(`/api/v1/commands/record.${record ? 'patch' : 'create'}`, record ? { ref: record.ref, changes: recordEditorChanges(baseRecord!,values) } : { appId: schema.appId, entityId: schema.id, values }, record ? [{ ref: record.ref, version: baseRecord!.version }] : [{ ref: { appId: schema.appId, entityId: RECORD_SCHEMA_ENTITY_ID,recordId:schema.id },version:schema.version }]) }}><h2>{record ? 'Edit record' : `New ${schema.label}`}</h2><p className="cr-muted">{record ? `Editing version ${baseRecord!.version}. Changes are checked against the current record.` : 'Only saved values become part of this operation.'}</p>{schema.fields.filter(field => field.type !== 'computed' && !field.readOnly).map(field => <FieldInput appId={schema.appId} subject={record?.ref} key={field.id} field={field} value={values[field.id] ?? null} onChange={value => setValues(current => ({ ...current, [field.id]: value }))} error={errors?.find(issue => issue.fieldId === field.id)?.message} />)}<CommandFeedback {...command} />{conflict && baseRecord && <RecordConflict schema={schema} original={baseRecord} proposed={values} onReviewed={current => { setBaseRecord(current); command.reset() }} />}<div className="cr-actions"><button className="cr-button" disabled={conflict || (command.result.state !== 'idle' && command.result.state !== 'failed')}>Save record</button><button className="cr-button cr-button--quiet" type="button" onClick={onCancel}>Close</button></div></form>
+}

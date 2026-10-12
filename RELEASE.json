@@ -1,0 +1,107 @@
+{
+  "version": "0.1.0",
+  "date": "2026-10-11",
+  "contractChanges": {
+    "BASE-ACCESS-002": {
+      "change": "added",
+      "summary": "Breaking transport semantic clarification of BASE-ACCESS-002. Full old/new wording: docs/contract-transition.md#base-access-002-transport-clarification--29-september-2026. Native document 303 with empty body and safe signin next is preserved; private Start functions independently return identifiable serialized signin redirects; protected HTTP APIs retain 401. No authorization expansion."
+    },
+    "APP-SCOPE-001": {
+      "change": "added",
+      "summary": "Exact legacy operator scope retained; new granular scopes inactive until explicit mapping."
+    },
+    "AGENT-AUTH-001": {
+      "change": "added",
+      "summary": "New grant-bound typed effects separate from retained read-only legacy analysis; no grants activated by upgrade."
+    },
+    "AGENT-CONTEXT-001": {
+      "change": "added",
+      "summary": "Durable agent jobs retain bounded individual calls; old analysis 60-second limit retained."
+    },
+    "CAPACITY-001": {
+      "change": "added",
+      "summary": "100 operators and 40 concurrent sessions are unmeasured acceptance targets; all retained record and latency targets remain."
+    },
+    "PORTFOLIO-PLAN-001": {
+      "change": "added",
+      "summary": "Independent checked resource planning added; no automatic legacy dependency rescheduling or effect authority."
+    },
+    "HOME-001": {
+      "change": "added",
+      "summary": "Public identity uses the persisted workspace name, including renames, rather than an independent configured heading; only that public name and description are disclosed."
+    },
+    "HOME-002": {
+      "change": "added",
+      "summary": "Supersedes HOME-001. The owner identity plate is replaced by a public product landing page at `/` with a hero of data streaming into one Projects screen, illustrated sections for tables, views, safe schema changes, the practical parts (CSV, automations, read-only AI) and ownership, and a closing call to action. Retained: no record content or public views, a link to `/signin`, the configurable credit to runeditrun.com with no telemetry or phone-home, and config-driven product and workspace names. Superseded: the former ban on a feature tour. Still excluded: pricing, testimonials, metrics and integrations the product does not ship. No new sessionless path or data change. See docs/contract-transition.md#public-product-landing--8-october-2026."
+    },
+    "VIEW-001": {
+      "change": "added",
+      "summary": "Records-first identity; launch readiness is the included template and repairs navigation is opt-in. All data and authority semantics retained. See docs/contract-transition.md#records-first-identity--6-october-2026."
+    },
+    "RECORDS-001": {
+      "change": "added",
+      "summary": "Names the records-builder capability without claiming the full records acceptance floor."
+    },
+    "AUTH-BASE-001": {
+      "change": "added",
+      "summary": "Base operator-auth owns hosted and local credentials. The shared installer bootstraps the owner and local sign-in uses its one-use development outbox; legacy product credentials and mail execution are retired."
+    },
+    "RECORDS-002": {
+      "change": "added",
+      "summary": "Manual schema construction and guarded impact-preview adoption, with existing migrations and current authority retained."
+    },
+    "RECORDS-003": {
+      "change": "added",
+      "summary": "Human labels, linked chips, saved grid/kanban/form views and bounded responsive accessibility journeys."
+    },
+    "RECORDS-004": {
+      "change": "added",
+      "summary": "Per-view typed CSV round-trip and three editable templates; no expansion to the wider planned records floor."
+    }
+  },
+  "extensionPointChanges": [],
+  "migrations": [
+    {
+      "id": "migrations/updates/9022_domain_rules_step_up.sql",
+      "buyerSteps": "Apply after 9021 in the updates group. The refreshed Base auth requires the additive domain-rule and step-up tables; existing operators, sessions and records stay unchanged."
+    },
+    {
+      "id": "migrations/base/9000_base_operator_auth.sql",
+      "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
+    },
+    {
+      "id": "migrations/base/9001_cradle_auth_projection.sql",
+      "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
+    },
+    {
+      "id": "migrations/core/1210_manual_records.sql",
+      "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
+    },
+    {
+      "id": "migrations/base/9002_development_outbox.sql",
+      "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
+    },
+    {
+      "id": "migrations/updates/9021_dev_sessions.sql",
+      "buyerSteps": "Apply after 9020 and before 9022 in the updates group; preserve all previously applied SQL and data. It rebuilds oa_sessions so Base can record local dev sessions, holding and restoring cradle_base_sessions around it, and adds oa_dev_credentials. Every existing session, mirrored product session and key keeps its id and stays valid; nobody signs in again."
+    },
+    {
+      "id": "migrations/updates/9012_retire_native_auth.sql",
+      "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
+    },
+    {
+      "id": "migrations/updates/9023_lifecycle_erasure.sql",
+      "buyerSteps": "Apply after 9022_domain_rules_step_up in the updates group, preserving all existing SQL bytes and migration receipts. This adds durable erasure and file-cleanup receipts without changing existing records or granting authority. Remove access before erasing an operator; erasure is complete only after its receipt confirms file deletion."
+    },
+    {
+      "id": "migrations/updates/9024_lifecycle_file_writes.sql",
+      "buyerSteps": "Apply after 9023. File writes reserve durable custody before R2 effects. Finish or explicitly recover an interrupted write before erasing personal data; a pending reservation must never be treated as completed erasure."
+    },
+    {
+      "id": "migrations/updates/9025_launch_search_identity.sql",
+      "buyerSteps": "Apply after 9024 while preserving canonical Launch records and prior migration history. The migration changes derived search maintenance to indexed row identities. Verify existing search results and the erasure/restore journey before accepting the upgrade."
+    }
+  ],
+  "breaking": true,
+  "agentUpdateInstructions": "Preserve all applied core migration bytes, existing records, identities, policy mappings and grants. Install frozen dependencies and use the local verification profiles documented in README.md. Review the BASE-ACCESS-002 transport clarification in docs/contract-transition.md; document and generated-function denials use their native protocols while HTTP APIs retain 401. Base installation adds migrations/base without replacing core history; existing Wrangler migration history requires reviewed hash adoption. Production uses Base cookies and two-step magic-link confirmation; legacy product cookies are not admitted by Base-configured installations. Remove SETUP_TOKEN after successful bootstrap. Keep new providers, scopes and grants inactive until explicitly authorized. Records-first navigation retains the launch template; enableRepairs is false by default and navigation grants no authority. See docs/installation.md and ACCEPTANCE.md for commands and remaining release gates. Local checks do not establish hosted readiness or full flagship acceptance. Apply the additive manual-records migration. Review every manual schema impact preview before adoption; use its recovery export for removed values. Configure OWNER_EMAIL before production setup; sign in through Base rather than a legacy product cookie. Local installs now use the shared installer and real Base sessions. Preserve private configuration permissions at 0600. Remove LOCAL_DEV_SESSION. Review the additive native credential retirement migration before upgrading. Hosting and RER admission require owner acceptance."
+}

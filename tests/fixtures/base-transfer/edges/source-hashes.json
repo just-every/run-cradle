@@ -1,0 +1,51 @@
+{
+  "fixtureId": "edges",
+  "hashAlgorithm": "SHA-256",
+  "artifacts": [
+    {
+      "path": "api/edges-page-1.json",
+      "sha256": "3aff8cd743978b1f8ea6a78d3937acd8d052df836d6750fb4202cd9ab5546348",
+      "size": 496
+    },
+    {
+      "path": "api/edges-page-2.json",
+      "sha256": "7a1ab1b6d2256f7c827212db3efb0671ff5a663b4d04dfb66d4b0e89c6224abf",
+      "size": 556
+    },
+    {
+      "path": "api/edges-page-3.json",
+      "sha256": "1150a833dfd9136d3ed649299f092a138bd6ca8ae04d4fba934cb12da7893ccc",
+      "size": 541
+    },
+    {
+      "path": "api/metadata.json",
+      "sha256": "76f6806ce82ba165d53ab5e8de9cb032afc57f705b7499ab65d9b71f99f98c91",
+      "size": 716
+    },
+    {
+      "path": "api/targets-page-1.json",
+      "sha256": "8210654f2e91b3dd7d5ce2cb4020ea5956fb82cb63c17f19876fc4244a88ff90",
+      "size": 400
+    },
+    {
+      "path": "api/targets-page-2.json",
+      "sha256": "a6d0b634dd855c692bdc3f0a81fa0a551bb4007818b79a271735d57094d3c1fa",
+      "size": 437
+    },
+    {
+      "path": "csv/Edges-Grid view.csv",
+      "sha256": "6054004b63bb783939c0ee2fd7884a94caf418c5e1f512f465a2c5ae08c20dab",
+      "size": 542
+    },
+    {
+      "path": "csv/Targets-Grid view.csv",
+      "sha256": "50856c0b62c5a6ce41b2a40157c87db4720352e3c42891d038c36340cc503a95",
+      "size": 226
+    },
+    {
+      "path": "json/base-snapshot-v1.json",
+      "sha256": "d763f768b05138f5fd16ad5433d364baadb82f45bc9176121c0a31d7a24b1d91",
+      "size": 4404
+    }
+  ]
+}

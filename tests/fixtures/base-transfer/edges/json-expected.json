@@ -1,0 +1,37 @@
+{
+  "fixtureId": "edges-json-invalid-negative",
+  "sourceFormat": "invalid-cradle-base-json-negative",
+  "sourcePath": "json/base-snapshot-v1.json",
+  "expectedOutcome": "rejected-before-writes",
+  "expectedWriteCounts": { "nativeSchemasCreated": 0, "nativeRecordsCreated": 0, "nativeLinksCreated": 0 },
+  "artifactAttestation": { "sha256": "d763f768b05138f5fd16ad5433d364baadb82f45bc9176121c0a31d7a24b1d91", "size": 4404 },
+  "formatEnvelope": {
+    "actual": { "format": "cradle-base-v1", "version": "absent" },
+    "required": { "format": "cradle-base", "version": 1 },
+    "reason": "The fixture declares the wrong format discriminator and omits the required numeric version."
+  },
+  "rawSnapshotInventory": {
+    "tables": ["Targets", "Edges"],
+    "recordsByTable": { "Targets": 6, "Edges": 9 },
+    "duplicatePrimaryValues": [{ "table": "Targets", "field": "Name", "value": "Twin", "sourceRecordIds": ["recSYN00000000061", "recSYN00000000062"] }],
+    "inventoryIsNotAnImportExpectation": true
+  },
+  "danglingReferences": [
+    {
+      "sourceRecordId": "recSYN00000000074",
+      "sourceFieldId": "fldSYN00000000072",
+      "targetTableId": "tblSYN00000000061",
+      "rawTargetRecordId": "recSYN00000000888",
+      "reason": "Target record ID is absent from the Targets table records."
+    },
+    {
+      "sourceRecordId": "recSYN00000000076",
+      "sourceFieldId": "fldSYN00000000073",
+      "targetTableId": "tblSYN00000000999",
+      "rawTargetRecordId": "recSYN00000000999",
+      "reason": "Target table ID is absent from the snapshot."
+    }
+  ],
+  "rejectionExpectation": "Reject the complete snapshot before writing schema, records, or links. The invalid format envelope is sufficient to reject; the dangling references are separately enumerated byte-level defects, not expected unresolved native links.",
+  "successPathBoundary": "This is not a successful JSON roundtrip or a source for native record/link equality. The Edges success-path expectations apply only to its literal CSV set and recorded API pages."
+}

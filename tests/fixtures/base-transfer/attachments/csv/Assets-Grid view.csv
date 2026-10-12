@@ -1,0 +1,6 @@
+Name,Files,Notes
+One file,brief.pdf (https://attachments.example.com/f/1/brief.pdf),Single file
+Several files,"photo-1.jpg (https://attachments.example.com/f/2/photo-1.jpg), photo-2.jpg (https://attachments.example.com/f/3/photo-2.jpg)",Two files
+Comma in name,"Smith, Jones contract.pdf (https://attachments.example.com/f/4/contract.pdf)",Comma inside the file name
+Empty,,No file
+Name only,scope.pdf,Name without a URL

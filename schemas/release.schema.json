@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "product",
+    "version",
+    "status",
+    "authorizedAt",
+    "contractTransitions",
+    "migrations",
+    "breakingChanges",
+    "extensionChanges",
+    "upgradeInstructions",
+    "verification"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "product": {
+      "const": "cradle"
+    },
+    "version": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "development",
+        "candidate",
+        "released"
+      ]
+    },
+    "authorizedAt": {
+      "type": "string"
+    },
+    "contractTransitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "meaning"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to": {
+            "type": "string"
+          },
+          "meaning": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "migrations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "breakingChanges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "extensionChanges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "upgradeInstructions": {
+      "type": "string"
+    },
+    "verification": {
+      "type": "object",
+      "required": [
+        "state",
+        "evidence"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "incomplete",
+            "passed",
+            "failed"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

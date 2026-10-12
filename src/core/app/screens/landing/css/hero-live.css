@@ -1,0 +1,22 @@
+/* What exists only while the hero moves: the light and ripples of each swoop in the art, and what cards bring into the Projects screen.
+   Every piece starts invisible; the motion layer (hero/motion) owns its opacity and its transform or dash offset. */
+
+/* The light on a swoop's trail (hero/fx): faint overlapping dashes on the swoop's own path in the art's SVG space, all ending just behind the card,
+   so the light is brightest there and tapers away behind it. */
+.lp .lp-trails { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.lp .lp-trails path { fill: none; stroke: rgba(226, 246, 128, 0.24); stroke-width: 9; stroke-linecap: round; }
+/* The ripple layer repeats the stage's geometry above the Projects screen (z-index 3), so the ripple shows over its edge. One element: a soft disc
+   of light that fades to nothing at its rim, drawn at 110 art units (hero/fx/rippleFrames.ts) and scaled as it opens. */
+.lp .lp-stage--front { z-index: 4; pointer-events: none; }
+.lp .lp-ripple { position: absolute; top: 0; left: 0; display: block; width: 7.161cqw; height: 7.161cqw; border-radius: 50%; opacity: 0; will-change: transform, opacity;
+  background: radial-gradient(closest-side, rgba(250, 254, 222, 0.8), rgba(226, 246, 128, 0.42) 38%, rgba(226, 246, 128, 0.14) 68%, rgba(226, 246, 128, 0)); }
+
+/* Arrivals in the grid pop from their own centre. */
+.lp .lp-arrive { transform-box: fill-box; transform-origin: center; }
+
+/* Arrivals in the side panel: a wash of light behind a card's content and the automation chip. */
+.lp .lp-flash { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: #e6f6a2; opacity: 0; text-decoration: none; }
+.lp .lp-auto, .lp .lp-auto-ring { position: absolute; right: 10px; bottom: 9px; width: 30px; height: 14px; border-radius: 7px; opacity: 0; text-decoration: none; }
+.lp .lp-auto { display: flex; align-items: center; justify-content: center; background: #d7f25b; }
+.lp .lp-auto svg { width: 10px; height: 10px; }
+.lp .lp-auto-ring { box-shadow: 0 0 0 1.5px #c5e53f; }

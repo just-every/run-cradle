@@ -1,0 +1,69 @@
+{
+  "fixtureId": "project-tracker",
+  "sourceFormat": "web-api-recorded-pages",
+  "groundTruth": "ground-truth.json",
+  "expectedNativeSchemaRef": "ground-truth.json#/nativeSchema",
+  "expectedNativeRecordsRef": "ground-truth.json#/nativeRecords",
+  "nativeRecordKeys": ["projects.apollo", "projects.orion", "tasks.draftScope", "tasks.reviewBudget", "tasks.researchInterviews", "tasks.buildPrototype", "people.avery", "people.blair", "people.casey"],
+  "pageAccounting": { "metadataPagesRead": 1, "recordPagesRead": 5, "requests": 6, "recordsRead": 9, "offsetChainVerified": true },
+  "rowsByTable": [
+    { "tableKey": "projects", "rowsRead": 2, "created": 2, "rejected": 0 },
+    { "tableKey": "tasks", "rowsRead": 4, "created": 4, "rejected": 0 },
+    { "tableKey": "people", "rowsRead": 3, "created": 3, "rejected": 0 }
+  ],
+  "columnAccounting": [
+    { "fieldKey": "projects.name", "sourceValues": 2, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 2, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "projects.status", "sourceValues": 2, "converted": 2, "textChanges": 2, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "projects.started", "sourceValues": 2, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "projects.summary", "sourceValues": 2, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 2, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "projects.tasks", "sourceValues": 2, "converted": 2, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 4 },
+    { "fieldKey": "tasks.title", "sourceValues": 4, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 4, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "tasks.project", "sourceValues": 4, "converted": 4, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 4 },
+    { "fieldKey": "tasks.assignee", "sourceValues": 4, "converted": 4, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 4 },
+    { "fieldKey": "tasks.blockedBy", "sourceValues": 2, "converted": 4, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 3 },
+    { "fieldKey": "tasks.labelsText", "sourceValues": 4, "converted": 4, "textChanges": 4, "unparseable": 0, "keptText": 4, "notRecreated": 0, "skippedNonempty": 0, "sourceOptionLabels": 7, "unusedSourceOptions": 1 },
+    { "fieldKey": "tasks.dueAtText", "sourceValues": 4, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 4, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "tasks.description", "sourceValues": 4, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 4, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "tasks.progressFormula", "sourceValues": 4, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 4, "skippedNonempty": 4 },
+    { "fieldKey": "tasks.projectTaskCount", "sourceValues": 4, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 4, "skippedNonempty": 4 },
+    { "fieldKey": "tasks.attachments", "sourceValues": 2, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 2 },
+    { "fieldKey": "people.name", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "people.email", "sourceValues": 3, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 3, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "people.tasks", "sourceValues": 3, "converted": 3, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 4 }
+  ],
+  "linkAccounting": {
+    "linkRefsRead": 19,
+    "resolved": 19,
+    "unresolved": 0,
+    "ambiguous": 0,
+    "referencesBySourceRow": [
+      { "tableKey": "projects", "fieldKey": "tasks", "sourceRecordKey": "projects.apollo", "sourceRecordId": "recSYN00000000031", "page": 1, "targetTableKey": "tasks", "targetPrimaryFieldKey": "title", "rawReferences": [{ "rawReference": "recSYN00000000041", "resolution": "resolved", "targetRecordKey": "tasks.draftScope" }, { "rawReference": "recSYN00000000042", "resolution": "resolved", "targetRecordKey": "tasks.reviewBudget" }, { "rawReference": "recSYN00000000043", "resolution": "resolved", "targetRecordKey": "tasks.researchInterviews" }] },
+      { "tableKey": "projects", "fieldKey": "tasks", "sourceRecordKey": "projects.orion", "sourceRecordId": "recSYN00000000032", "page": 1, "targetTableKey": "tasks", "targetPrimaryFieldKey": "title", "rawReferences": [{ "rawReference": "recSYN00000000044", "resolution": "resolved", "targetRecordKey": "tasks.buildPrototype" }] },
+      { "tableKey": "tasks", "fieldKey": "project", "sourceRecordKey": "tasks.draftScope", "sourceRecordId": "recSYN00000000041", "page": 1, "targetTableKey": "projects", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000031", "resolution": "resolved", "targetRecordKey": "projects.apollo" }] },
+      { "tableKey": "tasks", "fieldKey": "assignee", "sourceRecordKey": "tasks.draftScope", "sourceRecordId": "recSYN00000000041", "page": 1, "targetTableKey": "people", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000051", "resolution": "resolved", "targetRecordKey": "people.avery" }] },
+      { "tableKey": "tasks", "fieldKey": "blockedBy", "sourceRecordKey": "tasks.draftScope", "sourceRecordId": "recSYN00000000041", "page": 1, "targetTableKey": "tasks", "targetPrimaryFieldKey": "title", "rawReferences": [{ "rawReference": "recSYN00000000042", "resolution": "resolved", "targetRecordKey": "tasks.reviewBudget" }, { "rawReference": "recSYN00000000043", "resolution": "resolved", "targetRecordKey": "tasks.researchInterviews" }] },
+      { "tableKey": "tasks", "fieldKey": "project", "sourceRecordKey": "tasks.reviewBudget", "sourceRecordId": "recSYN00000000042", "page": 1, "targetTableKey": "projects", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000031", "resolution": "resolved", "targetRecordKey": "projects.apollo" }] },
+      { "tableKey": "tasks", "fieldKey": "assignee", "sourceRecordKey": "tasks.reviewBudget", "sourceRecordId": "recSYN00000000042", "page": 1, "targetTableKey": "people", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000052", "resolution": "resolved", "targetRecordKey": "people.blair" }] },
+      { "tableKey": "tasks", "fieldKey": "project", "sourceRecordKey": "tasks.researchInterviews", "sourceRecordId": "recSYN00000000043", "page": 2, "targetTableKey": "projects", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000031", "resolution": "resolved", "targetRecordKey": "projects.apollo" }] },
+      { "tableKey": "tasks", "fieldKey": "assignee", "sourceRecordKey": "tasks.researchInterviews", "sourceRecordId": "recSYN00000000043", "page": 2, "targetTableKey": "people", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000053", "resolution": "resolved", "targetRecordKey": "people.casey" }] },
+      { "tableKey": "tasks", "fieldKey": "project", "sourceRecordKey": "tasks.buildPrototype", "sourceRecordId": "recSYN00000000044", "page": 2, "targetTableKey": "projects", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000032", "resolution": "resolved", "targetRecordKey": "projects.orion" }] },
+      { "tableKey": "tasks", "fieldKey": "assignee", "sourceRecordKey": "tasks.buildPrototype", "sourceRecordId": "recSYN00000000044", "page": 2, "targetTableKey": "people", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000051", "resolution": "resolved", "targetRecordKey": "people.avery" }] },
+      { "tableKey": "tasks", "fieldKey": "blockedBy", "sourceRecordKey": "tasks.buildPrototype", "sourceRecordId": "recSYN00000000044", "page": 2, "targetTableKey": "tasks", "targetPrimaryFieldKey": "title", "rawReferences": [{ "rawReference": "recSYN00000000041", "resolution": "resolved", "targetRecordKey": "tasks.draftScope" }] },
+      { "tableKey": "people", "fieldKey": "tasks", "sourceRecordKey": "people.avery", "sourceRecordId": "recSYN00000000051", "page": 1, "targetTableKey": "tasks", "targetPrimaryFieldKey": "title", "rawReferences": [{ "rawReference": "recSYN00000000041", "resolution": "resolved", "targetRecordKey": "tasks.draftScope" }, { "rawReference": "recSYN00000000044", "resolution": "resolved", "targetRecordKey": "tasks.buildPrototype" }] },
+      { "tableKey": "people", "fieldKey": "tasks", "sourceRecordKey": "people.blair", "sourceRecordId": "recSYN00000000052", "page": 1, "targetTableKey": "tasks", "targetPrimaryFieldKey": "title", "rawReferences": [{ "rawReference": "recSYN00000000042", "resolution": "resolved", "targetRecordKey": "tasks.reviewBudget" }] },
+      { "tableKey": "people", "fieldKey": "tasks", "sourceRecordKey": "people.casey", "sourceRecordId": "recSYN00000000053", "page": 2, "targetTableKey": "tasks", "targetPrimaryFieldKey": "title", "rawReferences": [{ "rawReference": "recSYN00000000043", "resolution": "resolved", "targetRecordKey": "tasks.researchInterviews" }] }
+    ]
+  },
+  "lookups": { "recognized": 0, "firstMismatch": null },
+  "reciprocalDisagreements": { "count": 0, "references": "ground-truth.json#/sourceReciprocalDisagreement/items" },
+  "sourceCellDifferencesRef": "ground-truth.json#/sourceCellDifferences",
+  "sourcePathDifferences": [
+    "All four API Labels arrays are joined in source order with comma plus space to native text: [Planning, Needs review] -> Planning, Needs review; [Finance] -> Finance; [Research, Needs review] -> Research, Needs review; [Build, Documentation] -> Build, Documentation. This is four named array-to-text normalizations. The literal API page bytes retain each original array; the four CSV display strings already match the native text values without conversion.",
+    "Due at is a complete ISO date-time string in both sources and is retained byte-for-byte as text; no timezone conversion or date engine is expected.",
+    "Formula outputs differ in representation: the CSV shows percent display strings and the API returns numbers. Both named formula fields are counted as notRecreated; no formula engine is asserted.",
+    "Rollup values are shown as scalars in both paths and are counted as notRecreated; no rollup engine is asserted.",
+    "CSV attachment cells show filenames and API cells contain metadata objects. Both nonempty rows are skipped; no file bytes, URL access, or attachment storage is expected.",
+    "The Build prototype Description field contains the exact text First line, LF, Second line, CRLF, Third line in both paths.",
+    "Projects.Tasks and People.Tasks are source inverse columns, not additional native relation fields. Their eight references remain fully accounted; canonical Tasks.Project and Tasks.Assignee each store four links, and the expected inverse displays are listed separately in ground-truth.json#/derivedIncomingRelationValues."
+  ]
+}

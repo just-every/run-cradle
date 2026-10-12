@@ -1,0 +1,1 @@
+{"records":[{"id":"recSYN00000000051","createdTime":"2026-10-04T02:00:00.000Z","fields":{"Name":"Avery Example","Email":"avery@example.com","Tasks":["recSYN00000000041","recSYN00000000044"]}},{"id":"recSYN00000000052","createdTime":"2026-10-04T02:01:00.000Z","fields":{"Name":"Blair Example","Email":"blair@example.com","Tasks":["recSYN00000000042"]}}],"offset":"offPeople2"}

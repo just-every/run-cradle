@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "../src/domains/intelligence/**/*.ts",
+    "../src/domains/knowledge/**/*.ts",
+    "../worker-configuration.d.ts",
+    "../src/core/platform/environment.d.ts"
+  ]
+}

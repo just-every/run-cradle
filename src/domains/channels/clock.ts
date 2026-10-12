@@ -1,0 +1,8 @@
+/** Calendar arithmetic is explicit: storage and deadlines are UTC instants. */
+export function validTimezone(zone:string):boolean {try {new Intl.DateTimeFormat('en',{timeZone:zone}).format(0);return true}catch{return false}}
+export function localParts(at:number,zone:string){const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',weekday:'short',hourCycle:'h23'}).formatToParts(at).map(p=>[p.type,p.value]));return {date:`${p.year}-${p.month}-${p.day}`,minute:Number(p.hour)*60+Number(p.minute),weekday:p.weekday}}
+export function minute(value:string){if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(value))throw new Error('Quiet hours require HH:mm');return Number(value.slice(0,2))*60+Number(value.slice(3))}
+export function quietAt(at:number,zone:string,start:string,end:string){const t=localParts(at,zone).minute,s=minute(start),e=minute(end);return s===e?false:s<e?t>=s&&t<e:t>=s||t<e}
+/** Scan UTC minutes so skipped local times and repeated fall-back hours cannot invent instants. */
+export function deliveryTime(at:number,zone:string,start:string,end:string,urgent=false){if(urgent||!quietAt(at,zone,start,end))return at;let next=Math.floor(at/60000)*60000+60000;for(let i=0;i<3000;i++,next+=60000)if(!quietAt(next,zone,start,end))return next;throw new Error('Quiet hours have no end in the next 50 hours')}
+export function nextDigest(at:number,zone:string){let next=Math.floor(at/60000)*60000+60000;for(let i=0;i<11520;i++,next+=60000){const p=localParts(next,zone);if(p.weekday==='Mon'&&p.minute===540)return next}throw new Error('No Monday digest instant in eight days')}

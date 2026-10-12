@@ -1,0 +1,3 @@
+CREATE TABLE app_releases(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),state TEXT NOT NULL,source_hash TEXT NOT NULL,detail_json TEXT NOT NULL CHECK(json_valid(detail_json)),created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE live_app_releases(app_id TEXT PRIMARY KEY,release_id TEXT NOT NULL REFERENCES app_releases(id),source_hash TEXT NOT NULL,schema_revision TEXT NOT NULL,policy_version INTEGER NOT NULL,action_version INTEGER NOT NULL,deployment_id TEXT NOT NULL);
+CREATE TABLE release_recovery_plans(id TEXT PRIMARY KEY,app_id TEXT NOT NULL,release_id TEXT NOT NULL REFERENCES app_releases(id),detail_json TEXT NOT NULL CHECK(json_valid(detail_json)));

@@ -1,0 +1,115 @@
+/* Header and hero, ported from the approved 12ui hero: ribbons of data streaming from both sides into one calm Projects screen.
+   The ribbons and cards are inline SVG (hero/); headline, line, button and the Projects screen are live. */
+.lp { --hero-paper: #f2f2ea; --hero-ink: #0d302c; }
+
+.lp .lp-header { position: relative; z-index: 2; height: 105px; background: var(--hero-paper); }
+.lp .lp-header-row { display: flex; align-items: center; justify-content: space-between; width: 1292px; max-width: calc(100% - 100px); height: 100%; margin: 0 auto; }
+.lp .lp-brand { font-size: 42px; line-height: 1; }
+.lp .lp-brand--small { font-size: 24px; }
+.lp .lp-signin { padding: 8px 4px; font-size: 16px; font-weight: 600; }
+
+.lp .lp-hero { position: relative; height: 800px; overflow: hidden; background: var(--hero-paper); }
+.lp .lp-hero::after { content: ""; position: absolute; inset: auto 0 0 0; height: 60px; background: linear-gradient(rgba(243, 243, 238, 0), var(--paper)); pointer-events: none; }
+.lp .lp-hero-copy { position: relative; z-index: 2; width: 650px; max-width: 94%; margin: 11px auto 0; text-align: center; }
+.lp .lp-hero h1 { color: var(--hero-ink); font-family: var(--display); font-size: 62px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.04; text-wrap: balance; }
+.lp .lp-hero-copy p { max-width: 460px; margin: 23px auto 20px; color: #2b4a42; font-family: var(--display); font-size: 21px; font-weight: 300; line-height: 1.4; }
+/* What Cradle replaces, in the page's small muted text: one line at desktop, wrapping cleanly on a phone. */
+.lp .lp-hero-copy .lp-alt { max-width: none; margin: -6px auto 24px; color: var(--muted); font-family: var(--sans); font-size: 15px; font-weight: 400; line-height: 1.5; text-wrap: balance; }
+.lp .lp-hero-copy .lp-alt strong { font-weight: 600; }
+.lp .lp-open { display: inline-flex; align-items: center; justify-content: center; border-radius: 30px; background: #d4f166; padding: 14px 33px; color: #163e28; font-size: 18px; font-weight: 600; line-height: 1.4; }
+.lp .lp-open:hover { background: #cbea55; }
+
+/* The Projects screen the ribbons meet. Illustrative: it carries no record content. */
+.lp .lp-project { position: absolute; z-index: 3; top: 357px; left: calc(50% - 289px); display: flex; width: 580px; height: 324px; overflow: hidden; border: 1px solid #e8ebe2; border-radius: 14px; background: rgba(255, 255, 251, 0.91); box-shadow: 0 14px 28px rgba(49, 75, 52, 0.07); color: #344b50; }
+.lp .lp-rail { flex: none; width: 75px; padding: 18px 13px; background: linear-gradient(90deg, #0d4236, #184f41); }
+.lp .lp-rail-mark { width: 26px; height: 26px; margin-bottom: 2px; }
+.lp .lp-rail b { display: block; width: 39px; height: 8px; margin: 16px 0; border-radius: 8px; background: rgba(103, 151, 128, 0.4); }
+.lp .lp-rail b:first-of-type { width: 49px; background: #cde867; }
+.lp .lp-project-main { width: 100%; padding: 30px 17px; }
+.lp .lp-project-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
+.lp .lp-project-title { color: #24454a; font-family: var(--display); font-size: 22px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; }
+.lp .lp-project-tabs { display: flex; gap: 6px; }
+.lp .lp-project-tab { padding: 4px 12px; border-radius: 99px; background: #f1f3ed; color: #426168; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.lp .lp-project-tab--on { background: #d2ef65; }
+.lp .lp-project-layout { display: grid; grid-template-columns: 3fr 1.4fr; gap: 12px; }
+.lp .lp-project-grid { width: 100%; height: 225px; border: 1px solid #e0e6da; border-radius: 8px; background: #f9faf6; }
+.lp .lp-project-side { display: flex; flex-direction: column; gap: 8px; height: 225px; }
+.lp .lp-mini-card { position: relative; isolation: isolate; padding: 9px 10px; border: 1px solid #e5e9df; border-radius: 9px; background: #f7f8f3; }
+.lp .lp-mini-card i { display: block; height: 4px; margin: 6px 0; border-radius: 4px; background: #c6d0c0; }
+/* A line a card writes in (HeroSide.tsx): the slot is its quiet placeholder, the line lies over it and is written in from the left. */
+.lp .lp-mini-card .lp-slot { background: #e8ebe2; }
+.lp .lp-slot:first-child { width: 45%; }
+.lp .lp-slot > span { display: block; height: 100%; border-radius: inherit; background: #c6d0c0; transform-origin: left center; }
+.lp .lp-slot:first-child > span { background: #335c4f; }
+.lp .lp-mini-card--tall { flex: 0 0 66px; }
+.lp .lp-mini-card--bar { flex: 0 0 26px; padding-block: 4px; border: 0; background: #f0f2ea; }
+.lp .lp-mini-card--bar .lp-slot { background: #e2e6da; }
+.lp .lp-mini-card--chips { flex: 0 0 52px; }
+.lp .lp-mini-card--chips span { display: flex; gap: 6px; }
+.lp .lp-mini-card--chips b { width: 20px; height: 8px; border-radius: 8px; }
+.lp .lp-mini-card--ai { flex: 1; border-color: #d9e2d4; background: #e8eee3; }
+.lp .lp-mini-card--ai svg { width: 14px; height: 14px; margin-bottom: 4px; }
+.lp .lp-mini-card--ai i:first-of-type { background: #b5c79b; }
+/* The brief's placeholder lies under it, line for line. */
+.lp .lp-ai-body { position: relative; }
+.lp .lp-ai-ghost { position: absolute; inset: 0; padding: inherit; }
+.lp .lp-ai-ghost path { fill: #d3dccd; }
+.lp .lp-mini-card--ai .lp-ai-ghost i { background: #dae2d4; }
+
+/* With motion allowed, the screen opens sparse (hero/screen/opening.ts): each element that the motion opens otherwise than the still carries that
+   state as `--ot` (transform) and `--oo` (opacity), and the motion takes over from exactly it. With motion reduced the screen is the full still. */
+@media (prefers-reduced-motion: no-preference) {
+  .lp [data-opening] { transform: var(--ot); opacity: var(--oo); }
+}
+
+/* Wider than the approved art, the ribbons run on to the page edges and, nearing the viewer, the outermost sweep up out of the hero: soften them
+   into the paper where they leave its top edge, as its foot already is. Past 5120px, beyond the ribbons' reach (art/space.ts ART_REACH), fade
+   their cut ends into the paper too. */
+@media (min-width: 1537px) {
+  .lp .lp-hero::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(var(--hero-paper), rgba(242, 242, 234, 0) 56px); }
+}
+@media (min-width: 5121px) {
+  .lp .lp-hero::before { background: linear-gradient(var(--hero-paper), rgba(242, 242, 234, 0) 56px), linear-gradient(90deg, var(--hero-paper) calc(50% - 2560px), rgba(242, 242, 234, 0) calc(50% - 2360px), rgba(242, 242, 234, 0) calc(50% + 2360px), var(--hero-paper) calc(50% + 2560px)); }
+}
+
+@media (max-width: 1535px) {
+  .lp .lp-header-row { width: calc(100% - 100px); max-width: none; }
+}
+
+/* Under 1024: the hero stacks. Headline, line, button, then the art scaled to fit with the Projects screen overlapping it. */
+@media (max-width: 1023px) {
+  .lp .lp-header { height: 90px; }
+  .lp .lp-header-row { width: auto; margin: 0 28px; }
+  .lp .lp-brand { font-size: 34px; }
+  .lp .lp-hero { display: flex; flex-direction: column; height: auto; padding-bottom: 48px; }
+  .lp .lp-hero::after, .lp .lp-hero::before { display: none; }
+  .lp .lp-hero-copy { width: auto; max-width: 700px; margin: 20px auto 25px; padding: 0 24px; }
+  .lp .lp-hero h1 { font-size: 52px; }
+  .lp .lp-hero-copy p { font-size: 19px; }
+  .lp .lp-project { position: relative; top: auto; left: auto; order: 4; width: calc(100% - 90px); height: auto; min-height: 310px; margin: -21% auto 0; }
+}
+@media (max-width: 599px) {
+  .lp .lp-header { height: 78px; }
+  .lp .lp-header-row { margin: 0 20px; }
+  .lp .lp-brand { font-size: 28px; }
+  .lp .lp-signin { font-size: 15px; }
+  .lp .lp-hero-copy { margin: 18px auto 30px; padding: 0 20px; }
+  .lp .lp-hero h1 { font-size: 34px; letter-spacing: -0.03em; }
+  .lp .lp-hero-copy p { font-size: 17px; }
+  .lp .lp-hero-copy .lp-alt { font-size: 14px; }
+  .lp .lp-open { font-size: 16px; min-height: 48px; }
+  /* The screen's top edge meets the scene at art y 560 (of 175 to 905), so the top lanes dive under it and the lower ones run beneath it. */
+  .lp .lp-project { width: calc(100% - 36px); min-height: 0; margin-top: calc(var(--stage) * -345 / 1536); }
+  .lp .lp-rail { width: 47px; padding: 13px 6px; }
+  .lp .lp-rail-mark { width: 24px; height: 24px; }
+  .lp .lp-rail b { width: 28px; }
+  .lp .lp-rail b:first-of-type { width: 32px; }
+  .lp .lp-project-main { padding: 18px 10px; }
+  .lp .lp-project-title { font-size: 17px; }
+  .lp .lp-project-layout { grid-template-columns: 1fr; }
+  .lp .lp-project-side { flex-direction: row; height: auto; }
+  .lp .lp-mini-card { flex: 1; }
+  .lp .lp-mini-card--bar, .lp .lp-mini-card--chips { display: none; }
+  .lp .lp-project-grid { height: 180px; }
+  .lp .lp-project-tab { padding: 4px 10px; }
+}

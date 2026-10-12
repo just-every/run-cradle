@@ -1,0 +1,50 @@
+{
+  "fixtureId": "edges",
+  "sourceFormat": "web-api-recorded-pages",
+  "groundTruth": "ground-truth.json",
+  "expectedNativeSchemaRef": "ground-truth.json#/nativeSchema",
+  "expectedNativeScalarRecordsRef": "ground-truth.json#/nativeRecords",
+  "expectedNativeLinksRef": "ground-truth.json#/nativeLinksByPath/api",
+  "nativeRecordKeys": ["targets.twinFirst", "targets.twinSecond", "targets.comma", "targets.quoted", "targets.cafeArabic", "targets.space", "edges.duplicate", "edges.quote", "edges.comma", "edges.missing", "edges.empty", "edges.knownExternal", "edges.whitespace", "edges.case", "edges.quotedList"],
+  "pageAccounting": { "metadataPagesRead": 1, "recordPagesRead": 5, "requests": 6, "recordsRead": 15, "offsetChainVerified": true },
+  "rowsByTable": [
+    { "tableKey": "targets", "rowsRead": 6, "created": 6, "rejected": 0 },
+    { "tableKey": "edges", "rowsRead": 9, "created": 9, "rejected": 0 }
+  ],
+  "columnAccounting": [
+    { "fieldKey": "targets.name", "sourceValues": 6, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 6, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "targets.notes", "sourceValues": 6, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 6, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "edges.name", "sourceValues": 9, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 9, "notRecreated": 0, "skippedNonempty": 0 },
+    { "fieldKey": "edges.targets", "sourceValues": 8, "converted": 9, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 0, "skippedNonempty": 0, "linkRefsRead": 10 },
+    { "fieldKey": "edges.externalArchive", "sourceValues": 1, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 0, "notRecreated": 1, "skippedNonempty": 1, "linkRefsRead": 1 },
+    { "fieldKey": "edges.inertText", "sourceValues": 9, "converted": 0, "textChanges": 0, "unparseable": 0, "keptText": 9, "notRecreated": 0, "skippedNonempty": 0 }
+  ],
+  "linkAccounting": {
+    "linkRefsRead": 11,
+    "resolved": 9,
+    "unresolved": 2,
+    "ambiguous": 0,
+    "referencesBySourceRow": [
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.duplicate", "sourceRecordId": "recSYN00000000071", "page": 1, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000061", "resolution": "resolved", "targetRecordKey": "targets.twinFirst" }] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.quote", "sourceRecordId": "recSYN00000000072", "page": 1, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000064", "resolution": "resolved", "targetRecordKey": "targets.quoted" }] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.comma", "sourceRecordId": "recSYN00000000073", "page": 1, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000063", "resolution": "resolved", "targetRecordKey": "targets.comma" }] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.missing", "sourceRecordId": "recSYN00000000074", "page": 2, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000888", "resolution": "unresolved", "reason": "record ID absent from target table" }] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.knownExternal", "sourceRecordId": "recSYN00000000076", "page": 2, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000065", "resolution": "resolved", "targetRecordKey": "targets.cafeArabic" }] },
+      { "tableKey": "edges", "fieldKey": "externalArchive", "sourceRecordKey": "edges.knownExternal", "sourceRecordId": "recSYN00000000076", "page": 2, "targetTableId": "tblSYN00000000999", "targetPrimaryFieldKey": null, "rawReferences": [{ "rawReference": "recSYN00000000999", "resolution": "unresolved", "reason": "target table ID is absent from metadata table list" }] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.whitespace", "sourceRecordId": "recSYN00000000077", "page": 3, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000066", "resolution": "resolved", "targetRecordKey": "targets.space" }] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.case", "sourceRecordId": "recSYN00000000078", "page": 3, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000065", "resolution": "resolved", "targetRecordKey": "targets.cafeArabic" }] },
+      { "tableKey": "edges", "fieldKey": "targets", "sourceRecordKey": "edges.quotedList", "sourceRecordId": "recSYN00000000079", "page": 3, "targetTableKey": "targets", "targetPrimaryFieldKey": "name", "rawReferences": [{ "rawReference": "recSYN00000000063", "resolution": "resolved", "targetRecordKey": "targets.comma" }, { "rawReference": "recSYN00000000064", "resolution": "resolved", "targetRecordKey": "targets.quoted" }, { "rawReference": "recSYN00000000065", "resolution": "resolved", "targetRecordKey": "targets.cafeArabic" }] }
+    ]
+  },
+  "duplicatePrimaryValues": "ground-truth.json#/duplicatePrimaryValues",
+  "lookups": { "recognized": 0, "firstMismatch": null },
+  "reciprocalDisagreements": { "count": 0, "references": "ground-truth.json#/sourceReciprocalDisagreement/items" },
+  "sourcePathDifferences": [
+    "Recorded API references use source record IDs and resolve the `Twin` link to recSYN00000000061 despite duplicate primary labels. CSV label `Twin` is ambiguous and remains unlinked. The separate JSON artifact is a negative fixture and has no expected native links.",
+    "The missing target ID recSYN00000000888 is not present in the Targets pages. The API External archive item points to table ID tblSYN00000000999, which is not in metadata. Both raw references remain in API accounting with no native link.",
+    "API IDs resolve Space Target and Café Δelta / العربية exactly. In CSV the trailing-space and lowercase labels remain unresolved under exact matching.",
+    "The six exact nonambiguous target references resolve to the same six symbolic native links in the successful CSV and recorded API paths; API IDs preserve the three references CSV cannot resolve.",
+    "Every formula-looking, HTML-looking, non-ASCII, and RTL value in the successful API path is plain source text and is expected byte-for-byte in native text fields.",
+    "The retained JSON sample declares `format` as `cradle-base-v1` and omits `version: 1`; it also contains one target ID absent from the declared Targets records and a relation to a target table absent from the snapshot. It is expected to reject before any schema, record, or relation writes."
+  ]
+}

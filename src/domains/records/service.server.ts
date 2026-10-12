@@ -1,0 +1,12 @@
+import type { RecordMutationEffects } from './effects.server';
+import type { RecordAttachmentPort } from './attachments.server';
+import type { DescriptorRegistry } from './descriptors.server';
+import type { PolicyPort } from '../authority/ports';
+import type { RecordDetailPort } from './query.server';
+import { createRecordReader } from './query.server';
+import { createRecordWriter } from './change.server';
+import { createRecordMetadata } from './metadata.server';
+import { createBulkService } from './bulk.server';
+import { createRecordSearch } from './search.server';
+import { validateExpressionGraph } from './formulas';
+export function createRecordServices(db: D1Database, descriptors: DescriptorRegistry, policy: PolicyPort, cursorSecret: string, details?: RecordDetailPort, attachments?: RecordAttachmentPort, effects?: RecordMutationEffects) { validateExpressionGraph(descriptors.list().map(d => d.schema)); const reader = createRecordReader(db, descriptors, policy, cursorSecret, details, attachments), writer = createRecordWriter(db, descriptors, policy, reader, attachments, effects), metadata = createRecordMetadata(db, descriptors, policy, reader, cursorSecret), bulk = createBulkService(db, reader, writer, policy, cursorSecret); return { reader, writer, metadata, bulk, descriptors, policy, search: createRecordSearch(descriptors, policy, reader) }; }

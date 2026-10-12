@@ -1,0 +1,7 @@
+import { registerTable } from '../admission/sql.server';
+export const runsTable = registerTable('execution_runs', ['id','app_id','origin_command_id','request_json','actor_json','state','version','control_epoch','lease_owner','lease_expires_at','lease_epoch','next_wake_at','retry_of','first_failure_at','retry_count','cause_identity','failure_json','created_at','updated_at']);
+export const attemptsTable = registerTable('execution_attempts', ['id','run_id','command_id','connection_id','action','provider','idempotency_key','input_hash','payload_erased_at','authority_hash','authorization_json','sealed_input','reconcile_input','state','version','lease_epoch','reservation_ids_json','started_at','finished_at','first_possible_effect_at','external_id','receipt_id','next_check_at','unknown_deadline','custodian_id','escalated_at','created_at','updated_at']);
+export const receiptsTable = registerTable('execution_receipts', ['id','attempt_id','provider','external_id','status','evidence_file_id','observed_at','reconciled_at','method','message','result_json','created_at','updated_at','version']);
+export const runAttemptsTable = registerTable('execution_run_attempts', ['run_id','attempt_id']);
+export const modelProfilesTable = registerTable('execution_model_profiles', ['id','app_id','profile_json','version','created_at','updated_at']);
+export const modelCallsTable = registerTable('execution_model_calls', ['id','run_id','profile_id','call_json','version','created_at','updated_at']);

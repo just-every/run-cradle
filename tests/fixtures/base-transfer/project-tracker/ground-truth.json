@@ -1,0 +1,112 @@
+{
+  "fixtureId": "project-tracker",
+  "synthetic": true,
+  "nativeIdentityAliases": {
+    "policy": "Bind these aliases once to native ULIDs returned by schema adoption and row creation. No expected native ULID is guessed.",
+    "tables": ["projects", "tasks", "people"],
+    "fields": ["projects.name", "projects.status", "projects.started", "projects.summary", "tasks.title", "tasks.project", "tasks.assignee", "tasks.blockedBy", "tasks.labelsText", "tasks.dueAtText", "tasks.description", "people.name", "people.email"],
+    "incomingRelations": ["projects.tasks", "people.tasks"],
+    "records": ["projects.apollo", "projects.orion", "tasks.draftScope", "tasks.reviewBudget", "tasks.researchInterviews", "tasks.buildPrototype", "people.avery", "people.blair", "people.casey"]
+  },
+  "nativeSchema": {
+    "tableOrder": ["projects", "tasks", "people"],
+    "tables": [
+      { "key": "projects", "label": "Projects", "primaryFieldKey": "name", "fields": [
+        { "key": "name", "label": "Project", "type": "text", "primary": true },
+        { "key": "status", "label": "Status", "type": "select", "options": ["Active", "Planned", "Done", "Paused"] },
+        { "key": "started", "label": "Started", "type": "date" },
+        { "key": "summary", "label": "Summary", "type": "text" }
+      ], "incomingRelations": [
+        { "key": "tasks", "label": "Tasks", "sourceTableKey": "tasks", "sourceFieldKey": "project" }
+      ] },
+      { "key": "tasks", "label": "Tasks", "primaryFieldKey": "title", "fields": [
+        { "key": "title", "label": "Task", "type": "text", "primary": true },
+        { "key": "project", "label": "Project", "type": "relation", "targetTableKey": "projects", "cardinality": "one", "onDelete": "restrict", "inverseFieldKey": "tasks", "canonicalForSourceImport": true },
+        { "key": "assignee", "label": "Assignee", "type": "relation", "targetTableKey": "people", "cardinality": "one", "onDelete": "restrict", "inverseFieldKey": "tasks", "canonicalForSourceImport": true },
+        { "key": "blockedBy", "label": "Blocked by", "type": "relation", "targetTableKey": "tasks", "cardinality": "many", "onDelete": "restrict", "selfRelation": true },
+        { "key": "labelsText", "label": "Labels (source text)", "type": "text", "sourceType": "multipleSelects", "sourceLabelSeparator": ", " },
+        { "key": "dueAtText", "label": "Due at (source text)", "type": "text", "sourceType": "dateTime", "preserveExact": true },
+        { "key": "description", "label": "Description", "type": "text", "preserveNewlines": true }
+      ] },
+      { "key": "people", "label": "People", "primaryFieldKey": "name", "fields": [
+        { "key": "name", "label": "Name", "type": "text", "primary": true },
+        { "key": "email", "label": "Email", "type": "text" }
+      ], "incomingRelations": [
+        { "key": "tasks", "label": "Tasks", "sourceTableKey": "tasks", "sourceFieldKey": "assignee" }
+      ] }
+    ]
+  },
+  "sourceOnlyOptions": [
+    { "tableKey": "tasks", "fieldKey": "labelsText", "sourceType": "multipleSelects", "sourceLabelsInOrder": ["Planning", "Needs review", "Finance", "Research", "Build", "Documentation", "Legacy"], "unusedLabels": ["Legacy"], "disposition": "retained-in-source-metadata-only-because-native-target-is-text" }
+  ],
+  "sourceOnlyColumns": [
+    { "tableKey": "tasks", "fieldKey": "progressFormula", "sourceLabel": "Progress formula", "sourceType": "formula", "disposition": "notRecreated", "valuesByRecordKey": { "tasks.draftScope": "75%", "tasks.reviewBudget": "50%", "tasks.researchInterviews": "100%", "tasks.buildPrototype": "0%" } },
+    { "tableKey": "tasks", "fieldKey": "projectTaskCount", "sourceLabel": "Project task count (rollup)", "sourceType": "rollup", "disposition": "notRecreated", "valuesByRecordKey": { "tasks.draftScope": "3", "tasks.reviewBudget": "3", "tasks.researchInterviews": "3", "tasks.buildPrototype": "1" } },
+    { "tableKey": "tasks", "fieldKey": "attachments", "sourceLabel": "Attachments", "sourceType": "multipleAttachments", "disposition": "skipNonempty", "nonemptyRows": ["tasks.draftScope", "tasks.researchInterviews"], "nonemptyItems": 2 }
+  ],
+  "sourceIdentityAliases": [
+    { "recordKey": "projects.apollo", "tableKey": "projects", "csv": { "path": "csv/Projects-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000031", "recordId": "recSYN00000000031" } },
+    { "recordKey": "projects.orion", "tableKey": "projects", "csv": { "path": "csv/Projects-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000031", "recordId": "recSYN00000000032" } },
+    { "recordKey": "tasks.draftScope", "tableKey": "tasks", "csv": { "path": "csv/Tasks-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000032", "recordId": "recSYN00000000041" } },
+    { "recordKey": "tasks.reviewBudget", "tableKey": "tasks", "csv": { "path": "csv/Tasks-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000032", "recordId": "recSYN00000000042" } },
+    { "recordKey": "tasks.researchInterviews", "tableKey": "tasks", "csv": { "path": "csv/Tasks-Grid view.csv", "physicalLine": 4 }, "api": { "tableId": "tblSYN00000000032", "recordId": "recSYN00000000043" } },
+    { "recordKey": "tasks.buildPrototype", "tableKey": "tasks", "csv": { "path": "csv/Tasks-Grid view.csv", "physicalLine": 5 }, "api": { "tableId": "tblSYN00000000032", "recordId": "recSYN00000000044" } },
+    { "recordKey": "people.avery", "tableKey": "people", "csv": { "path": "csv/People-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000033", "recordId": "recSYN00000000051" } },
+    { "recordKey": "people.blair", "tableKey": "people", "csv": { "path": "csv/People-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000033", "recordId": "recSYN00000000052" } },
+    { "recordKey": "people.casey", "tableKey": "people", "csv": { "path": "csv/People-Grid view.csv", "physicalLine": 4 }, "api": { "tableId": "tblSYN00000000033", "recordId": "recSYN00000000053" } }
+  ],
+  "nativeRecords": [
+    { "recordKey": "projects.apollo", "tableKey": "projects", "fields": { "name": "Apollo", "status": "Active", "started": "2026-09-01", "summary": "Internal planning track" }, "links": {} },
+    { "recordKey": "projects.orion", "tableKey": "projects", "fields": { "name": "Orion", "status": "Planned", "started": "2026-10-01", "summary": "Prototype and review" }, "links": {} },
+    { "recordKey": "tasks.draftScope", "tableKey": "tasks", "fields": { "title": "Draft scope", "labelsText": "Planning, Needs review", "dueAtText": "2026-10-18T13:30:00+10:00", "description": "Outline boundary and milestones." }, "links": { "project": "projects.apollo", "assignee": "people.avery", "blockedBy": ["tasks.reviewBudget", "tasks.researchInterviews"] } },
+    { "recordKey": "tasks.reviewBudget", "tableKey": "tasks", "fields": { "title": "Review budget", "labelsText": "Finance", "dueAtText": "2026-10-20T09:15:00+10:00", "description": "Check estimates." }, "links": { "project": "projects.apollo", "assignee": "people.blair", "blockedBy": [] } },
+    { "recordKey": "tasks.researchInterviews", "tableKey": "tasks", "fields": { "title": "Research interviews", "labelsText": "Research, Needs review", "dueAtText": "2026-10-21T11:00:00+10:00", "description": "Recruit participants." }, "links": { "project": "projects.apollo", "assignee": "people.casey", "blockedBy": [] } },
+    { "recordKey": "tasks.buildPrototype", "tableKey": "tasks", "fields": { "title": "Build prototype", "labelsText": "Build, Documentation", "dueAtText": "2026-10-29T16:45:30.250Z", "description": "First line\nSecond line\r\nThird line" }, "links": { "project": "projects.orion", "assignee": "people.avery", "blockedBy": ["tasks.draftScope"] } },
+    { "recordKey": "people.avery", "tableKey": "people", "fields": { "name": "Avery Example", "email": "avery@example.com" }, "links": {} },
+    { "recordKey": "people.blair", "tableKey": "people", "fields": { "name": "Blair Example", "email": "blair@example.com" }, "links": {} },
+    { "recordKey": "people.casey", "tableKey": "people", "fields": { "name": "Casey Example", "email": "casey@example.com" }, "links": {} }
+  ],
+  "derivedIncomingRelationValues": {
+    "projects.apollo.tasks": ["tasks.draftScope", "tasks.reviewBudget", "tasks.researchInterviews"],
+    "projects.orion.tasks": ["tasks.buildPrototype"],
+    "people.avery.tasks": ["tasks.draftScope", "tasks.buildPrototype"],
+    "people.blair.tasks": ["tasks.reviewBudget"],
+    "people.casey.tasks": ["tasks.researchInterviews"]
+  },
+  "sourceReciprocalDisagreement": { "count": 0, "items": [] },
+  "sourceCellDifferences": [
+    { "fieldKey": "tasks.labelsText", "values": [
+      { "recordKey": "tasks.draftScope", "csvRaw": "Planning, Needs review", "apiRaw": ["Planning", "Needs review"], "native": "Planning, Needs review" },
+      { "recordKey": "tasks.reviewBudget", "csvRaw": "Finance", "apiRaw": ["Finance"], "native": "Finance" },
+      { "recordKey": "tasks.researchInterviews", "csvRaw": "Research, Needs review", "apiRaw": ["Research", "Needs review"], "native": "Research, Needs review" },
+      { "recordKey": "tasks.buildPrototype", "csvRaw": "Build, Documentation", "apiRaw": ["Build", "Documentation"], "native": "Build, Documentation" }
+    ] },
+    { "fieldKey": "tasks.dueAtText", "values": [
+      { "recordKey": "tasks.draftScope", "csvRaw": "2026-10-18T13:30:00+10:00", "apiRaw": "2026-10-18T13:30:00+10:00", "native": "2026-10-18T13:30:00+10:00" },
+      { "recordKey": "tasks.reviewBudget", "csvRaw": "2026-10-20T09:15:00+10:00", "apiRaw": "2026-10-20T09:15:00+10:00", "native": "2026-10-20T09:15:00+10:00" },
+      { "recordKey": "tasks.researchInterviews", "csvRaw": "2026-10-21T11:00:00+10:00", "apiRaw": "2026-10-21T11:00:00+10:00", "native": "2026-10-21T11:00:00+10:00" },
+      { "recordKey": "tasks.buildPrototype", "csvRaw": "2026-10-29T16:45:30.250Z", "apiRaw": "2026-10-29T16:45:30.250Z", "native": "2026-10-29T16:45:30.250Z" }
+    ] },
+    { "fieldKey": "tasks.progressFormula", "disposition": "notRecreated", "values": [
+      { "recordKey": "tasks.draftScope", "csvRaw": "75%", "apiRaw": 0.75 },
+      { "recordKey": "tasks.reviewBudget", "csvRaw": "50%", "apiRaw": 0.5 },
+      { "recordKey": "tasks.researchInterviews", "csvRaw": "100%", "apiRaw": 1 },
+      { "recordKey": "tasks.buildPrototype", "csvRaw": "0%", "apiRaw": 0 }
+    ] },
+    { "fieldKey": "tasks.projectTaskCount", "disposition": "notRecreated", "values": [
+      { "recordKey": "tasks.draftScope", "csvRaw": "3", "apiRaw": 3 },
+      { "recordKey": "tasks.reviewBudget", "csvRaw": "3", "apiRaw": 3 },
+      { "recordKey": "tasks.researchInterviews", "csvRaw": "3", "apiRaw": 3 },
+      { "recordKey": "tasks.buildPrototype", "csvRaw": "1", "apiRaw": 1 }
+    ] },
+    { "fieldKey": "tasks.attachments", "disposition": "skipNonempty", "values": [
+      { "recordKey": "tasks.draftScope", "csvRaw": "scope.pdf", "apiRawFilenames": ["scope.pdf"] },
+      { "recordKey": "tasks.reviewBudget", "csvRaw": "", "apiRawFilenames": [] },
+      { "recordKey": "tasks.researchInterviews", "csvRaw": "interview-notes.pdf", "apiRawFilenames": ["interview-notes.pdf"] },
+      { "recordKey": "tasks.buildPrototype", "csvRaw": "", "apiRawFilenames": [] }
+    ] },
+    { "fieldKey": "tasks.description", "values": [
+      { "recordKey": "tasks.buildPrototype", "csvRaw": "First line\nSecond line\r\nThird line", "apiRaw": "First line\nSecond line\r\nThird line", "native": "First line\nSecond line\r\nThird line" }
+    ] }
+  ]
+}

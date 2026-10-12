@@ -1,0 +1,1 @@
+export { registerLensRoutes } from './routes'

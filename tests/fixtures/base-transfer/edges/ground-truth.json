@@ -1,0 +1,89 @@
+{
+  "fixtureId": "edges",
+  "synthetic": true,
+  "nativeIdentityAliases": {
+    "policy": "Bind these aliases once to native ULIDs returned by schema adoption and row creation. No expected native ULID is guessed.",
+    "tables": ["targets", "edges"],
+    "fields": ["targets.name", "targets.notes", "edges.name", "edges.targets", "edges.inertText"],
+    "records": ["targets.twinFirst", "targets.twinSecond", "targets.comma", "targets.quoted", "targets.cafeArabic", "targets.space", "edges.duplicate", "edges.quote", "edges.comma", "edges.missing", "edges.empty", "edges.knownExternal", "edges.whitespace", "edges.case", "edges.quotedList"]
+  },
+  "nativeSchema": {
+    "tableOrder": ["targets", "edges"],
+    "tables": [
+      { "key": "targets", "label": "Targets", "primaryFieldKey": "name", "fields": [
+        { "key": "name", "label": "Name", "type": "text", "primary": true },
+        { "key": "notes", "label": "Notes", "type": "text", "preserveExact": true }
+      ] },
+      { "key": "edges", "label": "Edges", "primaryFieldKey": "name", "fields": [
+        { "key": "name", "label": "Edge", "type": "text", "primary": true },
+        { "key": "targets", "label": "Targets", "type": "relation", "targetTableKey": "targets", "cardinality": "many", "onDelete": "restrict" },
+        { "key": "inertText", "label": "Inert text", "type": "text", "preserveExact": true }
+      ] }
+    ]
+  },
+  "sourceOnlyColumns": [
+    { "tableKey": "edges", "fieldKey": "externalArchive", "sourceLabel": "External archive item", "sourceType": "multipleRecordLinks", "targetTableId": "tblSYN00000000999", "disposition": "unresolved-missing-target-table", "nonemptyRows": ["edges.knownExternal"] }
+  ],
+  "sourceIdentityAliases": [
+    { "recordKey": "targets.twinFirst", "tableKey": "targets", "csv": { "path": "csv/Targets-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000061", "recordId": "recSYN00000000061" } },
+    { "recordKey": "targets.twinSecond", "tableKey": "targets", "csv": { "path": "csv/Targets-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000061", "recordId": "recSYN00000000062" } },
+    { "recordKey": "targets.comma", "tableKey": "targets", "csv": { "path": "csv/Targets-Grid view.csv", "physicalLine": 4 }, "api": { "tableId": "tblSYN00000000061", "recordId": "recSYN00000000063" } },
+    { "recordKey": "targets.quoted", "tableKey": "targets", "csv": { "path": "csv/Targets-Grid view.csv", "physicalLine": 5 }, "api": { "tableId": "tblSYN00000000061", "recordId": "recSYN00000000064" } },
+    { "recordKey": "targets.cafeArabic", "tableKey": "targets", "csv": { "path": "csv/Targets-Grid view.csv", "physicalLine": 6 }, "api": { "tableId": "tblSYN00000000061", "recordId": "recSYN00000000065" } },
+    { "recordKey": "targets.space", "tableKey": "targets", "csv": { "path": "csv/Targets-Grid view.csv", "physicalLine": 7 }, "api": { "tableId": "tblSYN00000000061", "recordId": "recSYN00000000066" } },
+    { "recordKey": "edges.duplicate", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 2 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000071" } },
+    { "recordKey": "edges.quote", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 3 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000072" } },
+    { "recordKey": "edges.comma", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 4 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000073" } },
+    { "recordKey": "edges.missing", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 5 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000074" } },
+    { "recordKey": "edges.empty", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 6 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000075" } },
+    { "recordKey": "edges.knownExternal", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 7 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000076" } },
+    { "recordKey": "edges.whitespace", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 8 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000077" } },
+    { "recordKey": "edges.case", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 9 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000078" } },
+    { "recordKey": "edges.quotedList", "tableKey": "edges", "csv": { "path": "csv/Edges-Grid view.csv", "physicalLine": 10 }, "api": { "tableId": "tblSYN00000000062", "recordId": "recSYN00000000079" } }
+  ],
+  "nativeRecords": [
+    { "recordKey": "targets.twinFirst", "tableKey": "targets", "fields": { "name": "Twin", "notes": "=SUM(1,1)" } },
+    { "recordKey": "targets.twinSecond", "tableKey": "targets", "fields": { "name": "Twin", "notes": "+1+1" } },
+    { "recordKey": "targets.comma", "tableKey": "targets", "fields": { "name": "Comma, Entry", "notes": "Café Δelta — العربية" } },
+    { "recordKey": "targets.quoted", "tableKey": "targets", "fields": { "name": "Quoted \"Entry\"", "notes": "<script>alert('x')</script>" } },
+    { "recordKey": "targets.cafeArabic", "tableKey": "targets", "fields": { "name": "Café Δelta / العربية", "notes": "שלום — مرحبا" } },
+    { "recordKey": "targets.space", "tableKey": "targets", "fields": { "name": "Space Target", "notes": "@example literal" } },
+    { "recordKey": "edges.duplicate", "tableKey": "edges", "fields": { "name": "Edge duplicate", "inertText": "=SUM(1,1)" } },
+    { "recordKey": "edges.quote", "tableKey": "edges", "fields": { "name": "Edge quote", "inertText": "+1+1" } },
+    { "recordKey": "edges.comma", "tableKey": "edges", "fields": { "name": "Edge comma", "inertText": "-2+3" } },
+    { "recordKey": "edges.missing", "tableKey": "edges", "fields": { "name": "Edge missing", "inertText": "@SUM(3)" } },
+    { "recordKey": "edges.empty", "tableKey": "edges", "fields": { "name": "Edge empty", "inertText": "<script>alert('x')</script>" } },
+    { "recordKey": "edges.knownExternal", "tableKey": "edges", "fields": { "name": "Edge known and external", "inertText": "literal café text" } },
+    { "recordKey": "edges.whitespace", "tableKey": "edges", "fields": { "name": "Edge whitespace", "inertText": "+1+1" } },
+    { "recordKey": "edges.case", "tableKey": "edges", "fields": { "name": "Edge case", "inertText": "case-sensitive reference" } },
+    { "recordKey": "edges.quotedList", "tableKey": "edges", "fields": { "name": "Edge quoted list", "inertText": "@literal" } }
+  ],
+  "nativeLinksByPath": {
+    "csv": {
+      "edges.duplicate.targets": [],
+      "edges.quote.targets": ["targets.quoted"],
+      "edges.comma.targets": ["targets.comma"],
+      "edges.missing.targets": [],
+      "edges.empty.targets": [],
+      "edges.knownExternal.targets": ["targets.cafeArabic"],
+      "edges.whitespace.targets": [],
+      "edges.case.targets": [],
+      "edges.quotedList.targets": ["targets.comma", "targets.quoted", "targets.cafeArabic"]
+    },
+    "api": {
+      "edges.duplicate.targets": ["targets.twinFirst"],
+      "edges.quote.targets": ["targets.quoted"],
+      "edges.comma.targets": ["targets.comma"],
+      "edges.missing.targets": [],
+      "edges.empty.targets": [],
+      "edges.knownExternal.targets": ["targets.cafeArabic"],
+      "edges.whitespace.targets": ["targets.space"],
+      "edges.case.targets": ["targets.cafeArabic"],
+      "edges.quotedList.targets": ["targets.comma", "targets.quoted", "targets.cafeArabic"]
+    }
+  },
+  "duplicatePrimaryValues": [
+    { "tableKey": "targets", "primaryFieldKey": "name", "value": "Twin", "recordKeys": ["targets.twinFirst", "targets.twinSecond"], "distinctSourceIds": ["recSYN00000000061", "recSYN00000000062"] }
+  ],
+  "sourceReciprocalDisagreement": { "count": 0, "items": [] }
+}

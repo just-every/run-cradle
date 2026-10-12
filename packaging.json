@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "project": {
+    "schema": 1,
+    "projectId": "just-every/cradle",
+    "name": "Cradle",
+    "sourceRepository": "https://github.com/just-every/cradle",
+    "license": "MIT",
+    "deployment": {
+      "target": "cloudflare-workers",
+      "artifactFile": "rer-worker-artifact.json"
+    },
+    "operations": {
+      "setup": "node scripts/rer.mjs install && PLAYWRIGHT_SKIP_BROWSER_GC=1 pnpm exec playwright install --with-deps chromium",
+      "build": "node scripts/rer.mjs build",
+      "verify": "node scripts/rer.mjs verify",
+      "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly.",
+      "artifact": "node scripts/build-delivery-artifact.mjs"
+    },
+    "verification": {
+      "sensitivePaths": [
+        "src/domains/authority/**",
+        "src/core/platform/**",
+        "scripts/installer/**",
+        "src/core/features/editor/**",
+        "src/editor/**",
+        "scripts/delivery/**",
+        "rer-setup.json",
+        "packaging.json"
+      ],
+      "migrationDirectories": [
+        "migrations/core",
+        "migrations/base",
+        "migrations/import",
+        "migrations/updates"
+      ],
+      "guidanceFiles": [
+        "CONTRACT.md",
+        "BASELINE.md",
+        "README.md"
+      ],
+      "testPatterns": [
+        "tests/*.mjs"
+      ]
+    }
+  },
+  "managed": {
+    "workflowRef": "runeditrun/delivery/.github/workflows/trusted-build.yml@bf7a25abb44bec1457a7bc738ff63921d90fb52e",
+    "artifactFile": "rer-worker-artifact.json",
+    "buildProfile": "project",
+    "verificationProfiles": [
+      "full"
+    ]
+  },
+  "edition": {
+    "manifestFile": "edition.json",
+    "componentId": "just-every/cradle"
+  },
+  "setup": {
+    "manifestFile": "rer-setup.json"
+  },
+  "artifact": {
+    "specInputs": {
+      "publicVariableNames": [
+        "APP_ORIGIN",
+        "AUTH_ORIGIN",
+        "OWNER_EMAIL",
+        "OWNER_NAME",
+        "MAIL_FROM",
+        "MAIL_PROVIDER",
+        "WORKSPACE_NAME",
+        "WORKSPACE_TIMEZONE",
+        "WORKSPACE_CURRENCY",
+        "RER_MANAGEMENT_ORIGIN",
+        "RER_INSTALLATION_ID",
+        "RER_OWNER_CLAIM_ISSUER",
+        "RER_OWNER_CLAIM_INSTALLATION_ID",
+        "RER_OWNER_CLAIM_APP_ORIGIN",
+        "RER_OWNER_CLAIM_PUBLIC_KEYS",
+        "RER_EDITOR_ENABLED",
+        "RER_DEPLOY_SOURCE",
+        "RER_DEPLOY_FINGERPRINT",
+        "INSTALLATION_RELEASE_ID",
+        "EGRESS_RELAY_URL"
+      ],
+      "secretNames": [
+        "SESSION_SECRET",
+        "SETUP_TOKEN",
+        "CONNECTION_ENCRYPTION_KEY"
+      ],
+      "optionalSecretNames": [
+        "MAIL_PROVIDER_API_KEY",
+        "AI_PROVIDER_API_KEY",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "XERO_CLIENT_ID",
+        "XERO_CLIENT_SECRET",
+        "EGRESS_RELAY_SECRET",
+        "CANDIDATE_RUNNER_TOKEN",
+        "CANDIDATE_DEPLOY_TOKEN"
+      ],
+      "migrationPrefix": "",
+      "extraMigrationDirectories": [
+        {
+          "binding": "DB",
+          "path": "migrations/base",
+          "prefix": ""
+        },
+        {
+          "binding": "DB",
+          "path": "migrations/import",
+          "prefix": ""
+        },
+        {
+          "binding": "DB",
+          "path": "migrations/updates",
+          "prefix": ""
+        }
+      ],
+      "providerEffects": [
+        "outbound-mail",
+        "outbound-webhooks",
+        "ai",
+        "google",
+        "xero"
+      ],
+      "surfaces": {
+        "app": {
+          "path": "/signin",
+          "originVariable": "APP_ORIGIN",
+          "readiness": [
+            {
+              "path": "/signin",
+              "statuses": [
+                200
+              ],
+              "pendingSetupStatuses": [
+                503
+              ]
+            }
+          ]
+        }
+      },
+      "healthPath": "/health",
+      "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly."
+    }
+  }
+}

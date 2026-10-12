@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["../src/domains/channels/**/*.ts", "channels-runtime-entry.ts", "../worker-configuration.d.ts", "../src/**/*.d.ts"]
+}

@@ -1,0 +1,29 @@
+{
+  "fixtureId": "crm-example",
+  "kind": "synthetic-documentation-shaped",
+  "baseId": "appSYN00000000001",
+  "groundTruth": "ground-truth.json",
+  "mapping": "mapping.json",
+  "csvFiles": [
+    { "path": "csv/Companies-Grid view.csv", "tableKey": "companies" },
+    { "path": "csv/Contacts-Grid view.csv", "tableKey": "contacts" },
+    { "path": "csv/Deals-Grid view.csv", "tableKey": "deals" }
+  ],
+  "api": {
+    "metadata": { "path": "api/metadata.json", "requestPath": "/meta/bases/appSYN00000000001/tables" },
+    "tables": [
+      { "tableKey": "companies", "tableId": "tblSYN00000000001", "requestPath": "/v0/appSYN00000000001/tblSYN00000000001", "pages": [
+        { "path": "api/companies-page-1.json", "offset": null, "nextOffset": "offCRMCo2" },
+        { "path": "api/companies-page-2.json", "offset": "offCRMCo2", "nextOffset": null }
+      ] },
+      { "tableKey": "contacts", "tableId": "tblSYN00000000002", "requestPath": "/v0/appSYN00000000001/tblSYN00000000002", "pages": [
+        { "path": "api/contacts-page-1.json", "offset": null, "nextOffset": "offCRMCon2" },
+        { "path": "api/contacts-page-2.json", "offset": "offCRMCon2", "nextOffset": null }
+      ] },
+      { "tableKey": "deals", "tableId": "tblSYN00000000003", "requestPath": "/v0/appSYN00000000001/tblSYN00000000003", "pages": [
+        { "path": "api/deals-page-1.json", "offset": null, "nextOffset": "offCRMDeal2" },
+        { "path": "api/deals-page-2.json", "offset": "offCRMDeal2", "nextOffset": null }
+      ] }
+    ]
+  }
+}

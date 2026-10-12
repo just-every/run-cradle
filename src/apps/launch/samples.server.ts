@@ -1,0 +1,27 @@
+import { integration } from './domain.server'
+import type { CommandInput } from '../../contracts/primitives'
+import type { RequestContext } from '../../domains/authority/ports'
+import { registerTable,eq,trustedPredicate } from '../../domains/admission/sql.server'
+import { createUlid } from '../../core/shared/ids'
+import { sampleData } from '../../core/features/sample-data/data'
+import { tables,type LaunchRow } from './storage.server'
+import { launchTables,type LaunchKind } from './descriptors.server'
+import { emptyChange,plan,capacity,fail,type LaunchContext } from './domain.server'
+const installations=registerTable('sample_installations',['id','created_at','updated_at','version','installed_by_id','source_hash'])
+const provenance=registerTable('launch_sample_records',['installation_id','table_name','record_id','original_json'])
+export async function prepareSamples(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,operation:string){
+ const set=emptyChange(),now=Date.parse(ctx.now)
+ if(operation==='remove'){
+  const id=String(input.input.installationId),records=(await context.db.prepare('SELECT * FROM launch_sample_records WHERE installation_id=?').bind(id).all<{table_name:string;record_id:string;original_json:string}>()).results;if(!records.length)fail('Sample installation was not found')
+  const ids=new Set(records.map(r=>r.record_id)),campaigns=records.filter(r=>r.table_name==='campaigns')
+  for(const r of records){const kind=(Object.entries(launchTables).find(([,table])=>table===r.table_name)?.[0]) as LaunchKind|undefined;if(!kind)fail('Unknown sample table');const current=await context.db.prepare(`SELECT * FROM ${tables[kind!].tableId} WHERE id=?`).bind(r.record_id).first<LaunchRow>();const original=JSON.parse(r.original_json) as Record<string,unknown>;if(!current||Object.keys(original).some(key=>current[key]!==original[key]))fail(`Sample ${r.table_name} ${r.record_id} has been edited`);set.guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${tables[kind!].tableId} WHERE id=? AND version=?)`,[r.record_id,current!.version]))}
+  for(const campaign of campaigns){for(const table of ['deliverables','milestones','risks','decisions','comments']){const children=await context.db.prepare(`SELECT id FROM ${table} WHERE campaign_id=?`).bind(campaign.record_id).all<{id:string}>();if(children.results.some(r=>!ids.has(r.id)))fail(`Sample campaign ${campaign.record_id} contains added ${table}`);set.guards.push(trustedPredicate(`(SELECT COUNT(*) FROM ${table} WHERE campaign_id=?)=?`,[campaign.record_id,children.results.length]))}const effects=await integration(context,'deleteCampaign')(ctx,campaign.record_id);set.guards.push(...effects.guards);set.mutations.push(...effects.mutations,{kind:'delete',table:tables.campaign,where:eq(tables.campaign,'id',campaign.record_id),expectedRows:1})}
+  set.mutations.push({kind:'delete',table:installations,where:eq(installations,'id',id),expectedRows:1});return plan(context,ctx,input,'launch.samples.remove',set,{removedIds:[...ids]},'campaign')
+ }
+ const installationId=createUlid(),ids=new Map<string,string>(),records:{kind:LaunchKind;row:LaunchRow}[]=[]
+ for(const kind of ['campaign','deliverable','milestone','risk','decision'] as const){const source=sampleData[kind==='campaign'?'campaigns':kind==='deliverable'?'deliverables':kind==='milestone'?'milestones':kind==='risk'?'risks':'decisions'];await capacity(context.db,set,kind,source.length);for(const item of source)ids.set(item.id,createUlid())}
+ for(const kind of ['campaign','deliverable','milestone','risk','decision'] as const){const source=sampleData[kind==='campaign'?'campaigns':kind==='deliverable'?'deliverables':kind==='milestone'?'milestones':kind==='risk'?'risks':'decisions'];for(const sourceItem of source){const item=sourceItem as unknown as Record<string,unknown>;const row:LaunchRow={id:ids.get(String(item.id))!,created_at:now,updated_at:now,version:1};for(const[key,value]of Object.entries(item)){const column=key.replace(/[A-Z]/g,c=>'_'+c.toLowerCase());if(!tables[kind].writableColumnIds.includes(column)||['id','created_at','updated_at','version'].includes(column))continue;if(column.endsWith('_id'))row[column]=value===null?null:ids.get(String(value))??ctx.principal.humanId;else if(column.endsWith('_at')||column==='due_at')row[column]=value===null?null:Date.parse(String(value));else row[column]=value as string|number|null}if(kind==='campaign'){row.code=`SAMPLE-${String(item.code)}-${installationId.slice(-5)}`;row.health_updated_at=now;row.health_set_by_id=ctx.principal.humanId}records.push({kind,row})}}
+ set.mutations.push({kind:'insert',table:installations,row:{id:installationId,created_at:now,updated_at:now,version:1,installed_by_id:ctx.principal.humanId,source_hash:'explicit-launch-examples:'+installationId}})
+ for(const{kind,row}of records)set.mutations.push({kind:'insert',table:tables[kind],row},{kind:'insert',table:provenance,row:{installation_id:installationId,table_name:tables[kind].tableId,record_id:row.id,original_json:JSON.stringify(row)}})
+ set.audit.push({action:'launch.samples.install',subject:null,changes:[],sourceIds:[],personalContentRefs:[]});return plan(context,ctx,input,'launch.samples.install',set,{installationId,recordIds:records.map(r=>r.row.id)},'campaign')
+}

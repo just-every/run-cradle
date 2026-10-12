@@ -1,0 +1,7 @@
+import { useState } from 'react'
+import { readApi } from '../shared/api'
+export function ExportBase({appId}:{appId:string}){
+ const [busy,setBusy]=useState(false),[error,setError]=useState('')
+ async function download(format:'json'|'csv-set'){setBusy(true);setError('');try{const {data}=await readApi<{filename:string;content:string;encoding:'utf8'|'base64';contentType:string}>('/api/v1/records/base-export',{method:'POST',body:JSON.stringify({appId,format})});const content=data.encoding==='base64'?Uint8Array.from(atob(data.content),c=>c.charCodeAt(0)):data.content,url=URL.createObjectURL(new Blob([content],{type:data.contentType})),a=document.createElement('a');a.href=url;a.download=data.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(error){setError(error instanceof Error?error.message:'Base export failed.')}finally{setBusy(false)}}
+ return <details className="cr-export-base"><summary>Export base</summary><p>JSON preserves record identities, schema, saved views and forms. CSV exports every table for review with primary-value links.</p><button className="cr-button cr-button--quiet" type="button" disabled={busy} onClick={()=>void download('json')}>Download base JSON</button><button className="cr-button cr-button--quiet" type="button" disabled={busy} onClick={()=>void download('csv-set')}>Download all tables as CSV</button>{busy&&<p role="status">Preparing the complete base…</p>}{error&&<p role="alert" className="cr-error">{error}</p>}</details>
+}

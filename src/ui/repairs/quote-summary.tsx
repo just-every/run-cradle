@@ -1,0 +1,8 @@
+import { quoteSourceHref } from './navigation'
+import type { Quote } from '../../apps/repairs/contracts'
+import { LinkedRecord } from '../records/linked-record'
+import { money, Timestamp } from '../shared/presentation'
+export function QuoteSummary({ quote }: { quote: Quote }) {
+  const expired = Date.parse(quote.expiresAt) <= Date.now()
+  return <article className="cr-card"><header className="cr-page-header"><h3><LinkedRecord reference={quote.contractor.ref} /></h3><span className="cr-tag">{expired ? 'Expired' : quote.state}</span></header><p className="cr-amount">{money(quote.total)}</p><p>{quote.taxIncluded ? 'Tax included' : 'Tax not included — a tax-inclusive total is required before approval'} · quote version {quote.version}</p><ul>{quote.lineItems.map((item, index) => <li key={index}>{item.description} — {money(item.total)}</li>)}</ul>{quote.exclusions.length > 0 && <details className="cr-detail"><summary>Excluded work</summary><ul>{quote.exclusions.map((item, index) => <li key={index}>{item}</li>)}</ul></details>}<p>Expires <Timestamp value={quote.expiresAt} /></p>{quote.offeredSlot && <p>Offered visit: <Timestamp value={quote.offeredSlot.start} /> – <Timestamp value={quote.offeredSlot.end} />. This slot is not reserved.</p>}<details className="cr-detail"><summary>Supporting evidence and exact version</summary>{quote.evidence.map((evidence, index) => <p key={index}><a href={quoteSourceHref(evidence.sourceId,evidence.sourceVersion,quote.workOrder.ref)}>Source {index + 1}, version {evidence.sourceVersion}</a></p>)}<p>Scope hash {quote.scopeHash}</p></details></article>
+}

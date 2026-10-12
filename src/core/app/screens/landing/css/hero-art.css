@@ -1,0 +1,50 @@
+/* The hero's vector art. `.lp-hero-art` is the frame, `.lp-stage` the 1536 x 730 composition inside it (a size container, so every length
+   in it can be written in cqw and scales with the art), `.lp-back` the ribbons (with their travelling light), fragments and swoop effects that sit behind the cards, and `.lp-cards` the cards in perspective.
+   The ribbons and fragments carry on past both sides of the stage, in the same art units, far enough to fill a 5120px-wide screen
+   (hero/art/space.ts); the hero's overflow clips what a narrower screen does not show, so every width starts from the same markup.
+   Server-rendered markup is the finished frame; the motion layer only animates it. */
+.lp .lp-hero-art { position: absolute; top: 70px; left: calc(50% - 768px); width: 1536px; height: 730px; pointer-events: none; }
+.lp .lp-stage { position: absolute; inset: 0; container-type: inline-size; }
+.lp .lp-back { position: absolute; inset: 0; }
+.lp .lp-ribbons { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+@media (max-width: 1023px) {
+  .lp .lp-hero-art { position: relative; top: auto; left: auto; order: 3; width: 100%; height: auto; margin-top: -35px; aspect-ratio: 1536 / 730; }
+}
+@media (max-width: 599px) {
+  /* Phones show the whole scene a little wider than the viewport and run the phone scene's cards (layout.ts) along its top lanes, above the
+     Projects screen, which covers the lower lanes. `--stage` is the scene's width; the screen's top meets the scene at art y 560. */
+  .lp .lp-hero { --stage: 106vw; }
+  .lp .lp-hero-art { height: calc(var(--stage) * 730 / 1536); margin-top: -20px; aspect-ratio: auto; overflow: hidden; }
+  .lp .lp-stage { inset: 0 auto 0 50%; width: var(--stage); transform: translateX(-50%); }
+}
+
+/* `.lp-frags` is always as large as the art, so the percentages on its fragments resolve against the art whatever else styles it. */
+.lp .lp-frags { position: absolute; inset: 0; }
+.lp .lp-frags i { position: absolute; display: block; border-radius: 2px; }
+/* The fragments beyond the approved art show only on screens wide enough to reach them: each carries in `data-from` the width its band of
+   screen width starts above (hero/reach.ts), and these rules mirror those bands. */
+.lp .lp-frags i[data-from] { display: none; }
+@media (width > 1536px) { .lp .lp-frags i[data-from="1536"] { display: block; } }
+@media (width > 1920px) { .lp .lp-frags i[data-from="1920"] { display: block; } }
+@media (width > 2560px) { .lp .lp-frags i[data-from="2560"] { display: block; } }
+@media (width > 3072px) { .lp .lp-frags i[data-from="3072"] { display: block; } }
+@media (width > 3840px) { .lp .lp-frags i[data-from="3840"] { display: block; } }
+@media (width > 4480px) { .lp .lp-frags i[data-from="4480"] { display: block; } }
+
+/* Cards live in one 3D scene: `.lp-cards` is the camera (its perspective and vanishing point, the centre of the Projects screen, are set inline), each `.lp-fc`
+   carries its translate3d / rotate pose, laid out at its nearest size so it is only ever scaled down. The SVG draws the card with its shadow pre-softened as
+   stacked shapes, so nothing is filtered or blurred; the veil pales the card as it recedes. Each card carries its frame of the composed still as custom
+   properties (cards/still.ts): `--w --h --t --o --vo` for the wide scene and, for the cards the phone scene moves, `--pw --ph --pt --po --pvo`. */
+.lp .lp-cards { position: absolute; inset: 0; }
+.lp .lp-fc { position: absolute; top: 0; left: 0; width: var(--w); height: var(--h); transform: var(--t); opacity: var(--o); will-change: transform, opacity; }
+.lp .lp-fc svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lp .lp-fc-veil { position: absolute; inset: 0; background: var(--hero-paper); opacity: var(--vo); pointer-events: none; will-change: opacity; }
+/* Phones run the phone scene (cards/visits.ts): four places above the Projects screen, which covers the rest of the scene, where the cards take turns,
+   drawn larger. A card the phone still shows has `data-phone="still"`; one that only takes its turn once motion runs has `data-phone="later"` and is not
+   displayed until then; the cards whose arrivals land on panels a phone hides take no part. */
+@media (max-width: 599px) {
+  .lp .lp-fc { width: var(--pw); height: var(--ph); transform: var(--pt); opacity: var(--po); }
+  .lp .lp-fc-veil { opacity: var(--pvo); }
+  .lp .lp-fc:not([data-phone]), .lp .lp-cards:not([data-live]) .lp-fc[data-phone="later"] { display: none; }
+}

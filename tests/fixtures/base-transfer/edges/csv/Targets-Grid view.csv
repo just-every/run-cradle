@@ -1,0 +1,7 @@
+﻿Name,Notes
+Twin,"=SUM(1,1)"
+Twin,+1+1
+"Comma, Entry",Café Δelta — العربية
+"Quoted ""Entry""",<script>alert('x')</script>
+Café Δelta / العربية,שלום — مرحبا
+Space Target,@example literal

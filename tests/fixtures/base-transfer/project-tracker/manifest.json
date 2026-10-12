@@ -1,0 +1,28 @@
+{
+  "fixtureId": "project-tracker",
+  "kind": "synthetic-documentation-shaped",
+  "baseId": "appSYN00000000031",
+  "groundTruth": "ground-truth.json",
+  "mapping": "mapping.json",
+  "csvFiles": [
+    { "path": "csv/Projects-Grid view.csv", "tableKey": "projects" },
+    { "path": "csv/Tasks-Grid view.csv", "tableKey": "tasks" },
+    { "path": "csv/People-Grid view.csv", "tableKey": "people" }
+  ],
+  "api": {
+    "metadata": { "path": "api/metadata.json", "requestPath": "/meta/bases/appSYN00000000031/tables" },
+    "tables": [
+      { "tableKey": "projects", "tableId": "tblSYN00000000031", "requestPath": "/v0/appSYN00000000031/tblSYN00000000031", "pages": [
+        { "path": "api/projects-page-1.json", "offset": null, "nextOffset": null }
+      ] },
+      { "tableKey": "tasks", "tableId": "tblSYN00000000032", "requestPath": "/v0/appSYN00000000031/tblSYN00000000032", "pages": [
+        { "path": "api/tasks-page-1.json", "offset": null, "nextOffset": "offTask2" },
+        { "path": "api/tasks-page-2.json", "offset": "offTask2", "nextOffset": null }
+      ] },
+      { "tableKey": "people", "tableId": "tblSYN00000000033", "requestPath": "/v0/appSYN00000000031/tblSYN00000000033", "pages": [
+        { "path": "api/people-page-1.json", "offset": null, "nextOffset": "offPeople2" },
+        { "path": "api/people-page-2.json", "offset": "offPeople2", "nextOffset": null }
+      ] }
+    ]
+  }
+}

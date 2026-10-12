@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "target": "ES2023",
+    "verbatimModuleSyntax": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "vite/client",
+      "@cloudflare/workers-types",
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/drizzle-schema.typecheck.ts",
+    "worker-configuration.d.ts",
+    "tests/bindings.typecheck.ts",
+    "tests/client-contracts.typecheck.ts"
+  ]
+}

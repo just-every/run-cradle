@@ -1,0 +1,13 @@
+import { serializePortableBase } from './json-validation'
+import { Hono } from 'hono'
+import { z } from 'zod'
+import { Buffer } from 'node:buffer'
+import type { RequestContext } from '../../authority/ports'
+import { createUlid } from '../../../core/shared/ids'
+import { readJsonBody } from '../../../core/registry/body'
+import { errorResponse } from '../../../core/registry/errors.server'
+import { AdmissionError } from '../../admission/errors'
+import { idSchema } from '../validators'
+import type { createBaseExport } from './export-json.server'
+import { csvSetDownload,safeDownloadName } from './export-csv-set'
+export function baseExportHttp(exportBase:ReturnType<typeof createBaseExport>,authenticate:(request:Request,ingress:RequestContext['ingress'],id:string)=>Promise<RequestContext>){const app=new Hono();app.all('*',async c=>{const request=c.req.raw,url=new URL(request.url),id=createUlid();try{const ctx=await authenticate(request,'http',id);if(request.method!=='POST'||request.headers.get('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin request is required.');const input=z.object({appId:idSchema,format:z.enum(['json','csv-set'])}).strict().parse(await readJsonBody(request,4096)),snapshot=await exportBase(ctx,input.appId),data=input.format==='json'?{filename:safeDownloadName(snapshot.base.name)+'.cradle.json',content:serializePortableBase(snapshot),encoding:'utf8',contentType:'application/json'}:(()=>{const download=csvSetDownload(snapshot);return {filename:download.filename,content:Buffer.from(download.bytes).toString('base64'),encoding:'base64',contentType:'application/zip'}})();return c.json({data,meta:{requestId:id,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},200,{'cache-control':'no-store'})}catch(error){return errorResponse(error,id,request.method+' '+url.pathname)}});return app}

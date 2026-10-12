@@ -1,0 +1,50 @@
+export {}
+declare global {
+  namespace Cloudflare {
+    interface Env {
+      RER_MANAGEMENT_ORIGIN?: string
+      RER_INSTALLATION_ID?: string
+      RER_OWNER_CLAIM_ISSUER?: string
+      RER_OWNER_CLAIM_INSTALLATION_ID?: string
+      RER_OWNER_CLAIM_APP_ORIGIN?: string
+      RER_OWNER_CLAIM_PUBLIC_KEYS?: string
+      RER_EDITOR_ENABLED?: string
+      INSTALLATION: DurableObjectNamespace
+      OWNER_EMAIL?: string
+      SETUP_TOKEN?: string
+      RER_DEV_ORIGIN?: string
+      RER_DEV_KEY?: string
+      RER_DEV_IDENTITY?: string
+      AUTH_LOCAL?: string
+      AUTH_ORIGIN?: string
+      WORKSPACE_NAME?: string
+      WORKSPACE_TIMEZONE?: string
+      WORKSPACE_CURRENCY?: string
+      MAIL_PROVIDER?: 'sendgrid' | 'resend' | 'development'
+      RER_DEPLOY_SOURCE?: string
+      RER_DEPLOY_FINGERPRINT?: string
+      RER_VERSION?: { id: string }
+      APP_ORIGIN?: string
+      SESSION_SECRET?: string
+      MAIL_FROM?: string
+      MAIL_PROVIDER_API_KEY?: string
+      AI_PROVIDER_API_KEY?: string
+      AI_MODEL?: string
+      CANDIDATE_RUNNER_URL?: string
+      CANDIDATE_RUNNER_TOKEN?: string
+      CANDIDATE_DEPLOY_TOKEN?: string
+      CANDIDATE_RUNNER_PUBLIC_KEY?: string
+      CONNECTION_ENCRYPTION_KEY_VERSION?: string
+      NOTIFICATION_MAIL_CONNECTION_ID?: string
+      INSTALLATION_RELEASE_ID?: string
+      GOOGLE_CLIENT_ID?: string
+      GOOGLE_CLIENT_SECRET?: string
+      XERO_CLIENT_ID?: string
+      XERO_CLIENT_SECRET?: string
+      CONNECTION_ENCRYPTION_KEY?: string
+      EGRESS_RELAY_URL?: string
+      EGRESS_RELAY_SECRET?: string
+      SETUP_OPERATOR_EMAIL?: string
+    }
+  }
+}

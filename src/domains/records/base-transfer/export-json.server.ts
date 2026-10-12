@@ -1,0 +1,55 @@
+import type { RequestContext } from '../../authority/ports'
+import type { createRecordServices } from '../service.server'
+import type { Field,Filter } from '../contracts'
+import type { CellValue } from '../../../contracts/primitives'
+import type { PortableBase,PortableField } from './json-format'
+import { validatePortableBase } from './json-validation'
+import { snapshotTables } from '../manual/snapshot.server'
+import { assertGuards } from '../fence.server'
+import { trustedPredicate } from '../../admission/sql.server'
+import { AdmissionError } from '../../admission/errors'
+
+function portableField(field:Field):PortableField {
+ const {id,label,type,required,unique}=field
+ if(!['text','url','number','date','boolean','select','relation','computed'].includes(type))throw new AdmissionError('validation',`${label}: this field type has no base JSON representation.`)
+ if(field.expression&&(field.expression.kind!=='rollup'||field.expression.aggregate!=='lookup'||field.expression.filter))throw new AdmissionError('validation',`${label}: only native lookup definitions are portable.`)
+ return {id,label,type:type as PortableField['type'],required,unique,...(field.options?{options:field.options.map(o=>({id:o.id,label:o.label}))}:{}),...(field.relation?{relation:{tableId:field.relation.entityId,cardinality:field.relation.cardinality,onDelete:field.relation.onDelete as 'restrict'}}:{}),...(field.expression?.kind==='rollup'?{lookup:{relationFieldId:field.expression.relationFieldId,valueFieldId:field.expression.valueFieldId},resultType:field.resultType as PortableField['resultType']}: {})}
+}
+function portableValue(field:Field,value:CellValue):string|boolean|null|string[]{if(field.type!=='relation')return value as string|boolean|null;const refs=value===null?[]:Array.isArray(value)?value:[value];if(refs.some(ref=>typeof ref!=='object'||!ref||!('recordId'in ref)||ref.appId!==field.relation!.ownerAppId||ref.entityId!==field.relation!.entityId))throw new AdmissionError('validation','Link value does not match its field.');const ids=refs.map(ref=>(ref as {recordId:string}).recordId);return field.relation!.cardinality==='many'?ids:ids[0]??null}
+/** No projection can silently turn a restricted base into a partial export. */
+export function createBaseExport(db:D1Database,services:ReturnType<typeof createRecordServices>){
+ return async function exportBase(ctx:RequestContext,appId:string):Promise<PortableBase>{
+  const {descriptors,policy,reader,metadata}=services
+  const base=await db.prepare('SELECT name,version,release_id FROM manual_record_bases WHERE id=?').bind(appId).first<{name:string;version:number;release_id:string}>()
+  if(!base)throw new AdmissionError('not_found','Base export is available for records-builder bases.')
+  const release=await db.prepare('SELECT detail_json FROM manual_record_releases WHERE id=? AND app_id=?').bind(base.release_id,appId).first<{detail_json:string}>()
+  if(!release)throw new AdmissionError('schema_conflict','Base schema order is unavailable.')
+  const schemas=(JSON.parse(release.detail_json) as {schemas:{id:string}[]}).schemas
+  // Production also registers private source-staging storage for this app.
+  // Only the adopted base tables belong in its complete portable export.
+  const adoptedIds=new Set(schemas.map(schema=>schema.id)),registered=descriptors.list(appId).filter(d=>adoptedIds.has(d.schema.id))
+  if(!registered.length)throw new AdmissionError('not_found','Base has no tables.')
+  const ordered=schemas.map(schema=>registered.find(d=>d.schema.id===schema.id))
+  if(ordered.length!==registered.length||ordered.some(d=>!d)||new Set(ordered).size!==ordered.length)throw new AdmissionError('schema_conflict','Base schema order changed.')
+  const guards=[trustedPredicate('EXISTS(SELECT 1 FROM manual_record_bases WHERE id=? AND name=? AND version=? AND release_id=?)',[appId,base.name,base.version,base.release_id]),trustedPredicate('(SELECT COUNT(*) FROM record_schemas WHERE app_id=?)=?',[appId,registered.length])]
+  const scopes=new Map<string,Awaited<ReturnType<typeof policy.scope>>>()
+  for(const d of registered){const scope=await policy.scope(ctx,{appId,entityId:d.schema.id,purpose:'export'});if(!scope.unrestrictedRows||d.schema.fields.some(f=>!scope.readableFieldIds.includes(f.id)))throw new AdmissionError('forbidden','A complete base export requires export access to every row and field in every table.');scopes.set(d.schema.id,scope);guards.push(...scope.currentAuthorityGuards)}
+  // Fence raw complete row/join sets, including insertions into an empty table.
+  const capture=await snapshotTables(db,registered);guards.push(...capture.guards)
+  const revision=await reader.revision(),tables:PortableBase['base']['tables']=[]
+  for(const d of ordered){const schema=d!.schema as NonNullable<typeof d>['schema'] & {primaryFieldId?:string;incomingRelations?:PortableBase['base']['tables'][number]['incomingRelations']},records:PortableBase['base']['tables'][number]['records']=[];let cursor:string|undefined
+   do{const page=await reader.query(ctx,scopes.get(schema.id)!,{fields:schema.fields.map(f=>f.id),includeArchived:true,limit:200,cursor});for(const row of page.items){if(row.lifecycle!=='active')throw new AdmissionError('validation','This base contains a lifecycle state not represented by base JSON.');const values:PortableBase['base']['tables'][number]['records'][number]['values']={};for(const field of schema.fields){const cell=row.fields[field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','A base export contains a restricted or unavailable value.');values[field.id]=portableValue(field,cell.value)}records.push({id:row.id,values})};cursor=page.nextCursor??undefined}while(cursor)
+   for(const field of schema.fields)if(field.relation?.ownerAppId&&field.relation.ownerAppId!==appId)throw new AdmissionError('forbidden','A base export cannot include a relationship to another base.')
+   tables.push({id:schema.id,label:schema.label,primaryFieldId:schema.primaryFieldId??schema.fields[0]!.id,fields:schema.fields.map(portableField),incomingRelations:(schema.incomingRelations??[]).map(r=>({id:r.id,label:r.label,sourceEntityId:r.sourceEntityId,sourceFieldId:r.sourceFieldId})),records:records.sort((a,b)=>a.id.localeCompare(b.id))})
+  }
+  const views:PortableBase['base']['views']=[],forms:PortableBase['base']['forms']=[]
+  // Capture and fence the whole metadata set, not only the caller-visible subset.
+  for(const kind of ['record_views','record_forms'] as const){const expression=`(SELECT COALESCE(json_group_array(json_object('id',id,'definition',definition_json${kind==='record_views'?",'visibility',visibility,'owner',owner_id":''})), '[]') FROM (SELECT * FROM ${kind} WHERE app_id=? ORDER BY id))`,row=await db.prepare(`SELECT ${expression} AS snapshot`).bind(appId).first<{snapshot:string}>();guards.push(trustedPredicate(`${expression}=?`,[appId,row!.snapshot]));const entries=JSON.parse(row!.snapshot) as {id:string;visibility?:string}[]
+   for(const entry of entries){if(kind==='record_views'){if(entry.visibility==='deleted')continue;const view=await metadata.readView(ctx,entry.id);views.push({id:view.id,tableId:view.entityId,name:view.name,display:view.display,fields:[...view.fields],filter:structuredClone(view.filter) as Filter,sort:view.sort.map(s=>({fieldId:s.fieldId,direction:s.direction})),groupBy:[...view.groupBy],layout:{...view.layout},visibility:view.visibility})}else {const form=await metadata.readForm(ctx,entry.id);if(form.submitAction!=='record.create')throw new AdmissionError('validation','A source-mapped form cannot be exported as a portable base form.');forms.push({id:form.id,tableId:form.entityId,title:form.title,fields:form.fields.map(f=>({fieldId:f.fieldId,label:f.label,help:f.help,required:f.required})),submitAction:'record.create',authenticated:true})}}
+  }
+  const result=validatePortableBase({format:'cradle-base',version:1,envelope:{capturedAt:ctx.now},base:{id:appId,name:base.name,tables,views,forms}})
+  if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during base export. Export again.')
+  await assertGuards(db,guards)
+  return result
+ }
+}

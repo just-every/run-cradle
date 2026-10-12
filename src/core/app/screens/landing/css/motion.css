@@ -1,0 +1,13 @@
+/* Motion is decoration only: the ribbon strands drift a few pixels. Nothing is hidden, faded in or revealed on scroll,
+   so content is always fully visible, with or without motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .lp .lp-strand--left, .lp .lp-strand--right { animation: lp-drift 9s ease-in-out infinite alternate; }
+  .lp .lp-strand--right { animation-name: lp-drift-flipped; }
+  .lp .lp-cta-strand { animation: lp-sway 9s ease-in-out infinite alternate; }
+  .lp .lp-cta-strand--r { animation-name: lp-sway-flipped; }
+  .lp .lp-go, .lp .lp-open { transition: background-color 0.18s; }
+}
+@keyframes lp-drift { from { transform: translateY(-50%) translateX(0); } to { transform: translateY(-50%) translateX(14px); } }
+@keyframes lp-drift-flipped { from { transform: translateY(-50%) scaleX(-1) translateX(0); } to { transform: translateY(-50%) scaleX(-1) translateX(14px); } }
+@keyframes lp-sway { from { transform: translateY(0); } to { transform: translateY(8px); } }
+@keyframes lp-sway-flipped { from { transform: scaleX(-1) translateY(0); } to { transform: scaleX(-1) translateY(8px); } }

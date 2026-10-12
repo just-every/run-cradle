@@ -1,0 +1,35 @@
+/* The practical parts: a plain hairline-separated list. Copy and a small card per row; no second card, no grid of cards. */
+.lp .lp-grid--list { align-items: start; }
+.lp .lp-intro { grid-column: 1 / span 4; position: sticky; top: 64px; align-self: start; }
+.lp .lp-intro p:not(.lp-eyebrow) { max-width: 22em; color: var(--muted); }
+.lp .lp-list { grid-column: 5 / 13; margin-left: 48px; }
+.lp .lp-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 48px; align-items: center; padding-block: 48px; border-top: 1px solid var(--line); }
+.lp .lp-row:first-child { padding-top: 0; border-top: 0; }
+.lp .lp-row:last-child { padding-bottom: 0; }
+.lp .lp-row h3 { margin-bottom: 16px; color: var(--ink-deep); font-family: var(--display); font-size: 23px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.2; }
+.lp .lp-row p { color: var(--muted); font-size: 16px; line-height: 1.6; }
+
+.lp .lp-mini { padding: 24px; border: 1px solid rgba(18, 55, 46, 0.05); border-radius: 20px; background: var(--card); box-shadow: var(--shadow); font-size: 15px; }
+.lp .lp-lab { display: block; margin-bottom: 16px; color: var(--soft); font-size: 13px; font-weight: 600; }
+.lp .lp-tally { display: flex; flex-wrap: wrap; gap: 8px; }
+.lp .lp-chip--new { background: #cde6cf; color: #1f5a3a; }
+.lp .lp-chip--upd { background: #f5ebae; color: #5a4a07; }
+.lp .lp-chip--err { background: #f6d9d2; color: #823626; }
+.lp .lp-ln { display: flex; flex-direction: column; gap: 2px; padding-block: 12px; border-top: 1px solid var(--line); }
+.lp .lp-lab + .lp-ln { padding-top: 0; border-top: 0; }
+.lp .lp-ln strong { font-weight: 600; line-height: 1.4; }
+.lp .lp-ln span { color: var(--muted); font-size: 14px; line-height: 1.4; }
+.lp .lp-foot { margin-top: 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.lp .lp-ai-tag { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px; padding: 6px 12px; border-radius: 99px; background: #e6def6; color: #4a3a7a; font-size: 13px; font-weight: 600; line-height: 1.2; }
+.lp .lp-ai-tag .lp-ic { width: 13px; height: 13px; }
+.lp .lp-quote { color: var(--ink); font-size: 15px; line-height: 1.5; }
+.lp .lp-row .lp-quote { color: var(--ink); font-size: 15px; }
+
+@media (max-width: 900px) {
+  .lp .lp-grid--list { gap: 48px; }
+  .lp .lp-intro { position: static; }
+  .lp .lp-list { margin-left: 0; }
+  .lp .lp-row { grid-template-columns: 1fr; gap: 24px; }
+}
+
+.lp .lp-nowrap { white-space: nowrap; }

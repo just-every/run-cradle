@@ -1,0 +1,16 @@
+import {z} from 'zod';
+import {link} from '../evidence/validators';
+import {cellValueSchema} from '../records/validators';
+import {idSchema as id,revisionSchema,refSchema} from '../../core/registry/validation';
+const text=z.string().trim().min(1).max(10000),json=z.json();
+export const prepareInput=z.object({appId:id,outcome:text,sourceIds:z.array(id).max(100),constraints:z.array(text).max(100)}).strict();
+export const controlInput=z.object({caseId:id,reason:text,caseVersion:z.number().int().positive().optional()}).strict();
+export const correctInput=controlInput.extend({claimId:id,claimVersion:z.number().int().positive(),replacement:cellValueSchema,evidence:z.array(link).min(1).max(100)}).strict();
+export const activateInput=z.object({mandateId:id,mandateVersion:z.number().int().positive(),confirmedImpactHash:z.string().regex(/^[a-f0-9]{64}$/),grantIds:z.array(id).max(100)}).strict();
+export const money=z.object({minor:z.string().regex(/^(0|[1-9][0-9]*)$/),currency:z.string().regex(/^[A-Z]{3}$/),scale:z.number().int().min(0).max(6)}).strict();
+export const budget=z.object({limit:z.array(money),reserved:z.array(money),consumed:z.array(money),modelCallsRemaining:z.number().int().nonnegative(),timeRemainingSeconds:z.number().int().nonnegative(),accountingAsOf:z.iso.datetime()}).strict();
+export const impact=z.object({summary:text,spend:z.array(money),commitments:z.array(text),affected:z.array(refSchema),accessChanges:z.array(text),egress:z.array(z.object({destination:text,fields:z.array(id),purpose:text}).strict()),uncertainty:z.array(text)}).strict();
+export const specification=z.object({appId:id,objective:text,eligibleEntities:z.array(id).min(1),sourceIds:z.array(id),constraints:z.array(text),actionIds:z.array(text),grants:z.record(z.string(),z.object({grantId:id,grantVersion:z.number().int().positive(),purpose:text.optional(),fieldIds:z.array(id).optional()}).strict()),deadline:z.iso.datetime().nullable(),budget,verification:z.object({verifierId:text,version:z.number().int().positive(),requiredEvidence:z.array(text).min(1),target:json}).strict(),stallAfterMinutes:z.number().int().positive(),reviewCadenceMinutes:z.number().int().min(1).max(10080),escalateTo:z.array(id).min(1),impact,unanswered:z.array(z.object({id,question:text,recipientId:id,consequence:text}).strict())}).strict();
+export const reviseInput=z.object({mandateId:id,specification,reason:text}).strict();
+export const nextActionSchema=z.object({rationaleSummary:text,sourceIds:z.array(id),alternatives:z.array(z.object({action:text,reason:text}).strict()).max(20),selected:z.object({action:text,input:json,expected:z.array(revisionSchema).max(100),expectedOutcome:text}).strict().nullable(),nextWakeAt:z.iso.datetime().nullable(),recommendation:text,needsDecision:z.boolean()}).strict();
+export const actionSchemas={'mandate.prepare':prepareInput,'mandate.activate':activateInput,'mandate.revise':reviseInput,'case.pause':controlInput,'case.takeover':controlInput,'case.resume':controlInput,'case.cancel':controlInput,'case.wake':controlInput,'case.correct':correctInput};

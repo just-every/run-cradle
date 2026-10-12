@@ -1,0 +1,63 @@
+{
+  "mappingVersion": "crm-example-v1",
+  "baseLabel": "Customer relationships",
+  "tables": [
+    {
+      "key": "companies",
+      "label": "Companies",
+      "sourceTableId": "tblSYN00000000001",
+      "csvFile": "Companies-Grid view.csv",
+      "primaryFieldKey": "name",
+      "fields": [
+        { "key": "name", "label": "Company", "csvColumn": "Company", "sourceFieldId": "fldSYN00000000001", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "industry", "label": "Industry", "csvColumn": "Industry", "sourceFieldId": "fldSYN00000000002", "sourceType": "singleSelect", "targetType": "select", "optionsSource": "first-seen-plus-owner-preview" },
+        { "key": "employees", "label": "Employees", "csvColumn": "Employees", "sourceFieldId": "fldSYN00000000003", "sourceType": "number", "targetType": "number" },
+        { "key": "annualRevenue", "label": "Annual revenue", "csvColumn": "Annual revenue", "sourceFieldId": "fldSYN00000000004", "sourceType": "currency", "targetType": "number", "numericDisplay": "exact-decimal-string" },
+        { "key": "founded", "label": "Founded", "csvColumn": "Founded", "sourceFieldId": "fldSYN00000000005", "sourceType": "date", "targetType": "date", "dateConvention": "iso-calendar-date" },
+        { "key": "active", "label": "Active", "csvColumn": "Active", "sourceFieldId": "fldSYN00000000006", "sourceType": "checkbox", "targetType": "boolean" },
+        { "key": "contacts", "label": "Contacts", "csvColumn": "Contacts", "sourceFieldId": "fldSYN00000000007", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "contacts", "cardinality": "many", "onDelete": "restrict", "primaryResolution": "exact-primary-label-list", "reciprocal": { "tableKey": "contacts", "fieldKey": "company" } }
+      ]
+    },
+    {
+      "key": "contacts",
+      "label": "Contacts",
+      "sourceTableId": "tblSYN00000000002",
+      "csvFile": "Contacts-Grid view.csv",
+      "primaryFieldKey": "name",
+      "fields": [
+        { "key": "name", "label": "Full name", "csvColumn": "Full name", "sourceFieldId": "fldSYN00000000011", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "email", "label": "Email", "csvColumn": "Email", "sourceFieldId": "fldSYN00000000012", "sourceType": "email", "targetType": "text" },
+        { "key": "phone", "label": "Phone", "csvColumn": "Phone", "sourceFieldId": "fldSYN00000000013", "sourceType": "phoneNumber", "targetType": "text" },
+        { "key": "website", "label": "Website", "csvColumn": "Website", "sourceFieldId": "fldSYN00000000014", "sourceType": "url", "targetType": "text", "preserveExact": true },
+        { "key": "kind", "label": "Kind", "csvColumn": "Kind", "sourceFieldId": "fldSYN00000000015", "sourceType": "singleSelect", "targetType": "select", "optionsSource": "first-seen-plus-owner-preview" },
+        { "key": "active", "label": "Active", "csvColumn": "Active", "sourceFieldId": "fldSYN00000000016", "sourceType": "checkbox", "targetType": "boolean" },
+        { "key": "company", "label": "Company", "csvColumn": "Company", "sourceFieldId": "fldSYN00000000017", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "companies", "cardinality": "one", "onDelete": "restrict", "primaryResolution": "exact-primary-label" }
+      ]
+    },
+    {
+      "key": "deals",
+      "label": "Deals",
+      "sourceTableId": "tblSYN00000000003",
+      "csvFile": "Deals-Grid view.csv",
+      "primaryFieldKey": "name",
+      "fields": [
+        { "key": "name", "label": "Deal", "csvColumn": "Deal", "sourceFieldId": "fldSYN00000000021", "sourceType": "singleLineText", "targetType": "text", "primary": true },
+        { "key": "company", "label": "Company", "csvColumn": "Company", "sourceFieldId": "fldSYN00000000022", "sourceType": "multipleRecordLinks", "targetType": "relation", "targetTableKey": "companies", "cardinality": "one", "onDelete": "restrict", "primaryResolution": "exact-primary-label" },
+        { "key": "stage", "label": "Stage", "csvColumn": "Stage", "sourceFieldId": "fldSYN00000000023", "sourceType": "singleSelect", "targetType": "select", "optionsSource": "first-seen-plus-owner-preview" },
+        { "key": "amount", "label": "Amount", "csvColumn": "Amount", "sourceFieldId": "fldSYN00000000024", "sourceType": "currency", "targetType": "number", "numericDisplay": "exact-decimal-string" },
+        { "key": "probability", "label": "Probability", "csvColumn": "Probability", "sourceFieldId": "fldSYN00000000025", "sourceType": "percent", "targetType": "number", "numericDisplay": "exact-decimal-fraction" },
+        { "key": "closeDate", "label": "Close date", "csvColumn": "Close date", "sourceFieldId": "fldSYN00000000026", "sourceType": "date", "targetType": "date", "dateConvention": "iso-calendar-date" },
+        { "key": "won", "label": "Won", "csvColumn": "Won", "sourceFieldId": "fldSYN00000000027", "sourceType": "checkbox", "targetType": "boolean" },
+        { "key": "companyName", "label": "Company name (lookup)", "csvColumn": "Company name (lookup)", "sourceFieldId": "fldSYN00000000028", "sourceType": "multipleLookupValues", "targetType": "computed", "computedKind": "lookup", "recomputeFrom": { "relationFieldKey": "company", "valueFieldKey": "name" } }
+      ]
+    }
+  ],
+  "ownerPreviewChoices": {
+    "selectOptions": {
+      "companies.industry": ["Software", "Healthcare", "Retail", "Public sector"],
+      "contacts.kind": ["Customer", "Partner", "Lead", "Former vendor"],
+      "deals.stage": ["Qualified", "Negotiation", "New", "Closed lost"]
+    },
+    "notes": "The final option in each list is unused by records and cannot be inferred from CSV cell values. These are explicit editable owner-preview choices; API metadata also supplies its own unused choice."
+  }
+}

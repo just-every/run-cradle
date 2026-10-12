@@ -1,0 +1,3 @@
+import {AdmissionError} from '../../domains/admission/errors';
+/** Decimal provider/source text to exact minor units; no binary floating-point money. */
+export function decimalMinor(value:string,scale:number):bigint{if(!/^[0-9]+(?:\.[0-9]+)?$/.test(value))throw new AdmissionError('validation','Invalid exact decimal amount');const [whole,fraction='']=value.split('.');if(fraction.length>scale&&/[1-9]/.test(fraction.slice(scale)))throw new AdmissionError('validation','Amount has sub-minor precision');return BigInt(whole!)*10n**BigInt(scale)+BigInt(fraction.slice(0,scale).padEnd(scale,'0')||'0');}

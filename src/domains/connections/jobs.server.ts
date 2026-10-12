@@ -1,0 +1,33 @@
+import { createUlid } from '../../core/shared/ids';
+import { canonical,sha256 } from '../../adapters/crypto.server';
+import type { RequestContext,PolicyPort } from '../authority/ports';
+import type { AdmissionPort,AdmissionPlan } from '../admission/ports';
+import { and,eq,registerTable,trustedPredicate } from '../admission/sql.server';
+import { createOutboxReader,settleOutbox } from '../admission/outbox.server';
+import type { createConnectionService } from './service.server';
+type Action='connection.check'|'connection.sync'|'connection.revoke';
+type Job={id:string;command_id:string;connection_id:string;app_id:string;action:Action;actor_json:string;state:string;version:number;lease_owner:string|null;lease_expires_at:string|null};
+export const connectionJobsTable=registerTable('connection_jobs',['id','command_id','connection_id','action','actor_json','state','version','lease_owner','lease_expires_at','result_json','failure_json','created_at','updated_at']);
+export type ConnectionJobDependencies={db:D1Database;admission:AdmissionPort;policy:PolicyPort;service:ReturnType<typeof createConnectionService>|((ctx:RequestContext)=>ReturnType<typeof createConnectionService>);releaseId(ctx:RequestContext,appId:string):Promise<string>;backgroundContext(jobId:string):Promise<RequestContext>};
+/** Only fixed read/check/intake and revocation operations. This queue cannot send mail, book, or invoice. */
+export function createConnectionJobs(d:ConnectionJobDependencies){
+ const outbox=createOutboxReader(d.db),service=(ctx:RequestContext)=>typeof d.service==='function'?d.service(ctx):d.service;
+ const get=(id:string)=>d.db.prepare('SELECT j.*,c.app_id FROM connection_jobs j JOIN provider_connections c ON c.id=j.connection_id WHERE j.id=?').bind(id).first<Job>();
+ async function prepare(ctx:RequestContext,commandId:string,connectionId:string,action:Action):Promise<AdmissionPlan<{jobId:string;connectionId:string}>>{
+  await service(ctx).read(ctx,connectionId);const row=await d.db.prepare('SELECT app_id FROM provider_connections WHERE id=?').bind(connectionId).first<{app_id:string}>();if(!row)throw new Error('Connection missing');
+  const hash=await sha256(canonical({connectionId})),permit=await d.policy.authorize(ctx,{appId:row.app_id,action,expected:[],cost:[],connectionId,inputHash:hash,commandId}),now=new Date().toISOString(),id=createUlid();
+  const revoke=action==='connection.revoke'?await service(ctx).prepareRevocation(ctx,commandId,connectionId):null;
+  return {commandId,action,appId:row.app_id,canonicalInputHash:hash,permit,guards:revoke?.guards??[],mutations:[...(revoke?.mutations??[]),{kind:'insert',table:connectionJobsTable,row:{id,command_id:commandId,connection_id:connectionId,action,actor_json:canonical(ctx.principal),state:'queued',version:1,created_at:now,updated_at:now}}],audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[{action:'connection.operation',version:1,input:{jobId:id},notBefore:now,grantId:null,subject:null,sourceReleaseId:await d.releaseId(ctx,row.app_id),causeRunIds:[]}],committedResult:{jobId:id,connectionId}};
+ }
+ async function run(ctx:RequestContext,id:string){let job=await get(id);if(!job)throw new Error('Connection operation missing');if(job.state==='completed'||job.state==='failed')return;
+  const now=new Date().toISOString(),owner=createUlid(),permit=await d.policy.authorize(ctx,{appId:job.app_id,action:job.action,expected:[],cost:[],connectionId:job.connection_id,inputHash:await sha256(id)});
+  await d.admission.commit(ctx,{commandId:createUlid(),action:permit.action,appId:job.app_id,canonicalInputHash:await sha256(canonical({id,owner})),permit,guards:[],mutations:[{kind:'update',table:connectionJobsTable,set:{state:'running',lease_owner:owner,lease_expires_at:new Date(Date.now()+90_000).toISOString(),version:job.version+1,updated_at:now},where:and(eq(connectionJobsTable,'id',id),eq(connectionJobsTable,'version',job.version),trustedPredicate('(lease_expires_at IS NULL OR lease_expires_at<=?)',[now])),expectedRows:1}],audit:[],events:[],outbox:[],committedResult:{jobId:id,owner}});
+  job=(await get(id))!;ctx={...ctx,requestId:job.id};let result:unknown=null,failure:unknown=null;
+  try{result=await(job.action==='connection.revoke'?service(ctx).remoteRevoke(ctx,job.connection_id):job.action==='connection.check'?service(ctx).check(ctx,job.connection_id):service(ctx).sync(ctx,job.connection_id));}catch{failure={requestId:ctx.requestId,operation:job.action,code:'connection_operation_failed',message:'Connection operation did not complete. Check provider configuration and current scope.',retry:'after_change'};}
+  const finish=await d.policy.authorize(ctx,{appId:job.app_id,action:job.action,expected:[],cost:[],connectionId:job.connection_id,inputHash:await sha256(id)});
+  await d.admission.commit(ctx,{commandId:createUlid(),action:finish.action,appId:job.app_id,canonicalInputHash:await sha256(canonical({id,owner,failure})),permit:finish,guards:[],mutations:[{kind:'update',table:connectionJobsTable,set:{state:failure?'failed':'completed',result_json:canonical(result),failure_json:failure?canonical(failure):null,lease_owner:null,lease_expires_at:null,version:job.version+1,updated_at:new Date().toISOString()},where:and(eq(connectionJobsTable,'id',id),eq(connectionJobsTable,'version',job.version),eq(connectionJobsTable,'lease_owner',owner)),expectedRows:1}],audit:[],events:[],outbox:[],committedResult:{jobId:id,state:failure?'failed':'completed'}});
+ }
+ async function dispatch(outboxId:string){const entry=await outbox.get(outboxId),input=entry?.input;if(!entry||entry.action!=='connection.operation'||!input||typeof input!=='object'||Array.isArray(input)||typeof input.jobId!=='string')throw new Error('Invalid connection outbox');const ctx=await d.backgroundContext(input.jobId);await run(ctx,input.jobId);if(entry.state==='pending'){const job=(await get(input.jobId))!,permit=await d.policy.authorize(ctx,{appId:job.app_id,action:job.action,expected:[],cost:[],connectionId:job.connection_id,inputHash:await sha256(outboxId)});await d.admission.commit(ctx,{commandId:createUlid(),action:permit.action,appId:job.app_id,canonicalInputHash:await sha256(outboxId),permit,guards:[],mutations:[settleOutbox(entry.id,'dispatched',new Date().toISOString())],audit:[],events:[],outbox:[],committedResult:{jobId:job.id}});}}
+ async function scheduled(){for(const entry of await outbox.due(new Date().toISOString()))if(entry.action==='connection.operation')await dispatch(entry.id);}
+ return {prepare,run,dispatch,scheduled};
+}

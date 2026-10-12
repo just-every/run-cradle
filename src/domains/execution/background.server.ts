@@ -1,0 +1,13 @@
+import type { Principal,RequestContext } from '../authority/ports';
+import { principalGuards } from '../authority/guards.server';
+import { resolveBackgroundContext } from '../authority/background.server';
+import type { EffectRequest } from './contracts';
+import { ApiError } from '../../core/registry/errors';
+export function createExecutionBackground(db:D1Database,internal?:{notification?(deliveryId:string):Promise<RequestContext>}){
+ async function actorContext(actor:Principal,requestId:string,ingress:'queue'|'schedule'):Promise<RequestContext>{const now=new Date().toISOString();if(actor.sessionId){const row=await db.prepare('SELECT expires_at FROM authority_sessions WHERE id=? AND principal_id=? AND revoked_at IS NULL').bind(actor.sessionId,actor.id).first<{expires_at:number}>();if(!row)throw new ApiError('signed_out','Original background actor session is no longer current.');const ctx={principal:{...actor,expiresAt:new Date(row.expires_at).toISOString()},requestId,now,ingress};for(const guard of principalGuards(ctx))if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())throw new ApiError('signed_out','Original background actor authority expired.');return ctx;}
+  if(!actor.credentialId)throw new ApiError('forbidden','Background work has no persisted scoped actor.');const c=await db.prepare('SELECT audience FROM authority_credentials WHERE id=? AND principal_id=?').bind(actor.credentialId,actor.id).first<{audience:string}>();if(!c)throw new ApiError('forbidden','Background credential is unavailable.');return resolveBackgroundContext(db,{credentialId:actor.credentialId,principalId:actor.id,requestId,audience:c.audience,ingress});
+ }
+ async function run(runId:string,ingress:'queue'|'schedule'){const row=await db.prepare('SELECT actor_json,request_json FROM execution_runs WHERE id=?').bind(runId).first<{actor_json:string;request_json:string}>();if(!row?.actor_json)throw new ApiError('unconfigured','Original run actor is unavailable.');const request=JSON.parse(row.request_json) as EffectRequest,actor=JSON.parse(row.actor_json) as Principal;if(request.action==='notification.email.send'){if(!internal?.notification)throw new ApiError('unconfigured','Notification background authority is unavailable.');return internal.notification(request.trigger.slice('notification:'.length));}return actorContext(actor,runId,ingress);}
+ async function connectionJob(id:string){const row=await db.prepare('SELECT actor_json FROM connection_jobs WHERE id=?').bind(id).first<{actor_json:string}>();if(!row)throw new ApiError('not_found','Connection job missing.');return actorContext(JSON.parse(row.actor_json),id,'schedule');}
+ return {run,connectionJob};
+}

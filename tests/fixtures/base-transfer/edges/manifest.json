@@ -1,0 +1,26 @@
+{
+  "fixtureId": "edges",
+  "kind": "synthetic-documentation-shaped",
+  "baseId": "appSYN00000000061",
+  "groundTruth": "ground-truth.json",
+  "mapping": "mapping.json",
+  "csvFiles": [
+    { "path": "csv/Targets-Grid view.csv", "tableKey": "targets", "bom": true },
+    { "path": "csv/Edges-Grid view.csv", "tableKey": "edges", "bom": false }
+  ],
+  "api": {
+    "metadata": { "path": "api/metadata.json", "requestPath": "/meta/bases/appSYN00000000061/tables" },
+    "tables": [
+      { "tableKey": "targets", "tableId": "tblSYN00000000061", "requestPath": "/v0/appSYN00000000061/tblSYN00000000061", "pages": [
+        { "path": "api/targets-page-1.json", "offset": null, "nextOffset": "offTarget2" },
+        { "path": "api/targets-page-2.json", "offset": "offTarget2", "nextOffset": null }
+      ] },
+      { "tableKey": "edges", "tableId": "tblSYN00000000062", "requestPath": "/v0/appSYN00000000061/tblSYN00000000062", "pages": [
+        { "path": "api/edges-page-1.json", "offset": null, "nextOffset": "offEdge2" },
+        { "path": "api/edges-page-2.json", "offset": "offEdge2", "nextOffset": "offEdge3" },
+        { "path": "api/edges-page-3.json", "offset": "offEdge3", "nextOffset": null }
+      ] }
+    ]
+  },
+  "jsonSnapshot": { "path": "json/base-snapshot-v1.json", "format": "cradle-base-v1", "expectedOutcome": "rejected-before-writes", "invalidEnvelope": true, "containsDanglingTargetRecord": true, "containsMissingTargetTable": true }
+}

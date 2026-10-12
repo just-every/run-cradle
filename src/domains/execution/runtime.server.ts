@@ -1,0 +1,51 @@
+import type { RequestContext,AuthConfiguration } from '../authority/ports';
+import { createNotificationMailAuthority } from '../channels/mail-authority.server';
+import { createApiKeyWriter } from '../connections/api-keys.server';
+import { createWebhookPlanner } from '../connections/webhook-plan.server';
+import { createConnectionService } from '../connections/service.server';
+import { createCredentialAccess } from '../connections/credential-access.server';
+import type { OAuthConfiguration,OAuthProvider } from '../connections/oauth.server';
+import { environmentKeyring } from '../connections/crypto.server';
+import { resendAdapter } from '../../adapters/resend.server';
+import { calendarAdapter } from '../../adapters/calendar.server';
+import { xeroAdapter } from '../../adapters/xero.server';
+import { openaiAdapter } from '../../adapters/openai.server';
+import { gmailPoller,type MailIntakePort } from '../../adapters/gmail.server';
+import type { ProviderAdapter } from '../../adapters/contracts';
+import { createExecutionService } from './service.server';
+import { createExecutionHandlers } from './handlers.server';
+import { createExecutionBackground } from './background.server';
+import { createExecutionBudget } from './budget-bridge.server';
+import { privatePayloadStore } from './payloads.server';
+import type { ExecutionDependencies } from './ports';
+import type { ModelSchema } from './model-ports';
+import type { EffectRequest } from './contracts';
+import { ApiError } from '../../core/registry/errors';
+export type ProviderRuntimeOptions=Pick<ExecutionDependencies,'db'|'admission'|'policy'|'workspaceId'|'currentGuards'|'observations'> & {
+ bucket:R2Bucket;auth:AuthConfiguration;keyVersion:string;encryptionKey(version:string):string|undefined;
+ /** Explicit provider-secret allowlist, never the full environment binding object. */
+ secrets:ReadonlyMap<string,{dispatch?:string;readback?:string}>;
+ oauth(provider:OAuthProvider):OAuthConfiguration;schemas:ReadonlyMap<string,ModelSchema>;
+ webhookSecrets?:ReadonlyMap<string,{provider:'resend'|'xero';secret:string}>;
+ webhookObservation?:Parameters<typeof createWebhookPlanner>[2];
+ intake?(ctx:RequestContext,connectionId:string):Promise<{port:MailIntakePort;scope:unknown;pageToken:string|null}>;
+};
+export function createProviderRuntime(o:ProviderRuntimeOptions){
+ const keyring=environmentKeyring(o.keyVersion,o.encryptionKey),payloads=privatePayloadStore(o.bucket,o.db),notification=createNotificationMailAuthority(o.db),credentialAccess=createCredentialAccess(o.db,o.policy);
+ const background=createExecutionBackground(o.db,{notification:notification.context});
+ function connections(ctx:RequestContext){return createConnectionService({db:o.db,admission:o.admission,policy:o.policy,workspaceId:o.workspaceId,keyring,appOrigin:o.auth.appOrigin,context:async()=>ctx,oauth:o.oauth,secret:async(ref,purpose)=>o.secrets.get(ref)?.[purpose],credentialAuthority:async(context,id,purpose,operation)=>{
+  if(operation.attemptId){const saved=await o.db.prepare('SELECT a.connection_id,r.actor_json,r.request_json FROM execution_attempts a JOIN execution_runs r ON r.id=a.run_id WHERE a.id=?').bind(operation.attemptId).first<{connection_id:string;actor_json:string;request_json:string}>();if(saved&&saved.connection_id===id&&JSON.parse(saved.actor_json).id===context.principal.id){const r=JSON.parse(saved.request_json) as EffectRequest;if(r.action==='notification.email.send')return notification.authorize(context,r,'reconcile');}}
+  return credentialAccess(context,id,purpose,operation);
+ },sync:async(context,id)=>{if(!o.intake)throw new ApiError('unconfigured','Scoped Gmail source intake is unavailable.');const configured=await o.intake(context,id),service=connections(context);await gmailPoller(service.credentials,configured.port)(id,configured.scope,configured.pageToken,new Date(Date.now()+60000).toISOString(),{jobId:context.requestId});}});}
+ const dependencies:ExecutionDependencies={db:o.db,admission:o.admission,policy:o.policy,workspaceId:o.workspaceId,keyring,payloads,...createExecutionBudget(o.db),observations:o.observations,notificationMailAuthority:notification.authorize,backgroundContext:background.run,
+  currentGuards:async(ctx,r,mode)=>r.action==='notification.email.send'?[...(await notification.authorize(ctx,r,mode)).guards]:o.currentGuards(ctx,r,mode),
+  adapters:ctx=>{const credentials=connections(ctx).credentials;return new Map<string,ProviderAdapter>([['resend',resendAdapter(credentials)],['google-calendar',calendarAdapter(credentials)],['xero',xeroAdapter(credentials)],['openai',openaiAdapter(credentials,(value,sourceIds,name)=>{const schema=o.schemas.get(name);if(!schema)throw new Error('Unregistered model output schema');return schema.validate(value,sourceIds);})]]);}
+ };
+ const execution=createExecutionService(dependencies),handlers=createExecutionHandlers(dependencies);
+ async function webhook(connectionId:string,provider:'resend'|'xero',body:unknown){let permit:Awaited<ReturnType<typeof execution.reconciliationPermit>>|undefined;const guards:import('../admission/ports').SqlPredicate[]=[];
+  const planner=createWebhookPlanner(o.db,async(id,runId)=>{const ctx=await background.run(runId,'queue');const scoped=await execution.reconciliationPermit(ctx,runId);if(permit&&permit.actor.id!==scoped.actor.id)throw new ApiError('forbidden','Webhook batch spans authorities.');permit=scoped;guards.push(...scoped.guards);return ctx;},o.webhookObservation);
+  const plan=await planner(connectionId,provider,body);if(!permit)throw new ApiError('forbidden','Webhook has no bound authority.');return {...plan,permit,guards:[...plan.guards,...guards]};
+ }
+ async function webhookSecret(connectionId:string,provider:'resend'|'xero'){const configured=o.webhookSecrets?.get(connectionId);if(!configured||configured.provider!==provider)throw new ApiError('unconfigured','Connection webhook signing secret is unavailable.');const row=await o.db.prepare('SELECT id FROM provider_connections WHERE id=? AND adapter_id=? AND state=? AND revoked_at IS NULL').bind(connectionId,provider,'connected').first();if(!row)throw new ApiError('forbidden','Webhook connection is not current.');return configured.secret;}
+ return {execution,handlers,dependencies,connections,keyring,background,webhook,webhookSecret,writeCredentials:createApiKeyWriter({...o,keyring}),notificationAuthority:notification};
+}

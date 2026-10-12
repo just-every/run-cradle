@@ -1,0 +1,22 @@
+import { Hono } from 'hono'
+import { z } from 'zod'
+import { listGrants } from './grant-list.server'
+import type { AuthConfiguration, PolicyPort, RequestContext } from './ports'
+import { createAuthorityReads } from './reads.server'
+import { createProductAuth } from './product-auth.server'
+import { principalGuards } from './guards.server'
+import { and } from '../admission/sql.server'
+import { AuthorityError } from './errors'
+import { idSchema } from './validators'
+export const createAuthorityRouter=(db:D1Database,policy:PolicyPort,configuration:AuthConfiguration,authenticate:(request:Request,ingress:'http')=>Promise<RequestContext>)=>{
+ const router=new Hono(),reads=createAuthorityReads(db,policy),auth=createProductAuth(db,configuration)
+ const reply=(ctx:RequestContext,data:unknown)=>({data,meta:{requestId:ctx.requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.requestId}})
+ router.get('/session',async c=>{const ctx=await authenticate(c.req.raw,'http'),guard=and(...principalGuards(ctx));const member=await db.prepare(`SELECT o.id,o.name,o.email,p.state,p.version,p.created_at,p.updated_at FROM operators o JOIN authority_principals p ON p.human_id=o.id WHERE p.id=? AND (${guard.sql})`).bind(ctx.principal.id,...guard.values).first<{id:string;name:string;email:string;state:string;version:number;created_at:number;updated_at:number}>();if(!member)throw new AuthorityError('signed_out','A human session is required.',401);const scopes=await db.prepare(`SELECT app_id AS appId,policy_id AS policyId,legacy FROM authority_memberships WHERE principal_id=? AND state='active' AND (${guard.sql})`).bind(ctx.principal.id,...guard.values).all<{appId:string;policyId:string;legacy:number}>();const workspace=await db.prepare('SELECT id,name FROM workspace LIMIT 1').first<{id:string;name:string}>();if(!workspace)throw new AuthorityError('unconfigured','Workspace setup is incomplete.',503);c.header('Cache-Control','no-store');return c.json(reply(ctx,{member:{id:member.id,name:member.name,email:member.email,state:member.state,version:member.version,createdAt:new Date(member.created_at).toISOString(),updatedAt:new Date(member.updated_at).toISOString(),scopes:scopes.results.map(s=>({...s,legacy:!!s.legacy}))},workspace,appIds:scopes.results.map(s=>s.appId),csrfToken:await auth.csrf(c.req.raw)}))})
+ router.get('/authority/invite-policies',async c=>{const ctx=await authenticate(c.req.raw,'http'),appId=idSchema.parse(c.req.query('appId')),permit=await policy.authorize(ctx,{appId,action:'member.invite',expected:[],cost:[],inputHash:''}),guard=and(...permit.guards);const rows=await db.prepare(`SELECT p.id,p.name,p.rules_json FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active' AND (${guard.sql})`).bind(ctx.principal.id,appId,...guard.values).all<{id:string;name:string;rules_json:string}>();return c.json(reply(ctx,rows.results.map(row=>({id:row.id,appId,name:row.name,summary:'The selected app access currently held by the inviter; no access to other apps.',actions:[...new Set((JSON.parse(row.rules_json) as import('./contracts').Policy['rules']).filter(r=>r.effect==='allow'&&r.principals.some(p=>p.id===ctx.principal.id)).flatMap(r=>r.actions))]}))))})
+ router.get('/authority/capabilities',async c=>{const ctx=await authenticate(c.req.raw,'http'),appId=idSchema.parse(c.req.query('appId'));c.header('Cache-Control','no-store');return c.json(reply(ctx,await reads.capabilities(ctx,appId)))})
+ router.get('/members',async c=>{const ctx=await authenticate(c.req.raw,'http'),appId=idSchema.parse(c.req.query('appId'));c.header('Cache-Control','no-store');return c.json(reply(ctx,await reads.members(ctx,appId)))})
+ router.get('/grants',async c=>{const ctx=await authenticate(c.req.raw,'http'),query=z.object({appId:idSchema,limit:z.coerce.number().int().min(1).max(200).default(100),cursor:z.string().max(4096).optional()}).strict().parse(c.req.query());c.header('Cache-Control','no-store');return c.json(reply(ctx,await listGrants(db,policy,configuration.sessionSecret,ctx,query)))})
+ router.get('/grants/:id',async c=>{const ctx=await authenticate(c.req.raw,'http');c.header('Cache-Control','no-store');return c.json(reply(ctx,await reads.grant(ctx,idSchema.parse(c.req.param('id')))))})
+ router.get('/policies/:id',async c=>{const ctx=await authenticate(c.req.raw,'http');c.header('Cache-Control','no-store');return c.json(reply(ctx,await reads.policy(ctx,idSchema.parse(c.req.param('id')))))})
+ return router
+}

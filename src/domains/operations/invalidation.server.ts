@@ -1,0 +1,13 @@
+import type {OperationsRepository} from './repository.server';
+import type {RequestContext} from '../authority/ports';
+import type {Case,Wake} from './contracts';
+import {registerTable,trustedPredicate} from '../admission/sql.server';
+import {createUlid} from '../../core/shared/ids';
+const invalidations=registerTable('operation_source_invalidations',['case_id','source_id','source_version','created_at']);
+/** An authorized source-change event, never an ordinary read, reopens previously verified work. */
+export function createOperationInvalidationHandler(repo:OperationsRepository){return async(ctx:RequestContext,changed:{id:string;version:number;appId:string}[])=>{
+ const affected:string[]=[];for(const source of changed){const cases=await repo.all<Case>(ctx,'cases',source.appId);for(const c of cases){if(!c.sourceIds.includes(source.id)||!['active','waiting','blocked','verified'].includes(c.state))continue;if(await repo.d.db.prepare('SELECT 1 FROM operation_source_invalidations WHERE case_id=? AND source_id=? AND source_version=?').bind(c.id,source.id,source.version).first())continue;const mandate=await repo.getMandate(ctx,c.mandateId);if(mandate.state!=='active'||mandate.version!==c.mandateVersion)continue;
+ const next:Case={...c,version:c.version+1,updatedAt:ctx.now,state:'active',controlEpoch:c.controlEpoch+1,planRevisionId:null,nextWakeAt:ctx.now,stopReason:'evidence_changed',nextStep:'Refresh changed evidence, reconcile outstanding effects and revise the plan.',freshness:{...c.freshness,staleSourceIds:[...new Set([...c.freshness.staleSourceIds,source.id])],unknowns:['A changed source invalidates the previous objective check.']}};
+ const mutations=[repo.mutation('cases',c.appId,next,c.version),{kind:'insert' as const,table:invalidations,row:{case_id:c.id,source_id:source.id,source_version:source.version,created_at:ctx.now}}];const wakes=await repo.d.db.prepare("SELECT data_json FROM operation_wakes WHERE case_id=? AND state IN ('queued','leased')").bind(c.id).all<{data_json:string}>();for(const row of wakes.results){const w:Wake=JSON.parse(row.data_json);mutations.push(repo.mutation('wakes',c.appId,{...w,version:w.version+1,updatedAt:ctx.now,state:'blocked',leaseOwner:null,leaseUntil:null,failure:'evidence_changed'},w.version));}
+ const plan=await repo.plan(ctx,createUlid(),'case.wake',c.appId,{caseId:c.id,source},next,mutations,[repo.caseGuard(c),repo.mandateGuard(mandate),trustedPredicate('EXISTS(SELECT 1 FROM evidence_sources WHERE id=? AND current_version=? AND erased_at IS NULL)',[source.id,source.version])],ctx.principal.kind==='human'?undefined:mandate.grants['case.wake'],[await repo.d.environment.subjectRevision(ctx,c)]);await repo.d.admission.commit(ctx,plan);affected.push(c.id);
+ }}return affected;};}

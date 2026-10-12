@@ -1,0 +1,5 @@
+import type { ImportOptions } from '../../../domains/records/base-transfer/contracts'
+
+export function ImportMappingFile({disabled,onLoad,onError}:{disabled:boolean;onLoad:(options:ImportOptions,file:File)=>void;onError:(message:string)=>void}) {
+ return <label className="cr-field">CSV review choices (optional import-options.json)<input aria-label="CSV review choices (optional import-options.json)" type="file" accept=".json,application/json" disabled={disabled} onChange={async event=>{const file=event.target.files?.[0];if(!file)return;try{if(file.size>200*1048576)throw new Error('CSV review choices exceed 200 MiB.');const value=JSON.parse(await file.text());if(!value||typeof value!=='object'||typeof value.name!=='string'||!value.tables)throw new Error('Choose the import-options.json from this CSV set.');const {correspondenceAcceptedFingerprint:_,...proposals}=value;onLoad(proposals,file)}catch(error){onError(error instanceof Error?error.message:'Could not read CSV review choices.')}}} /><small>Load the public type, option and derived incoming mappings before preview. Review and edit every choice on the next screen.</small></label>
+}

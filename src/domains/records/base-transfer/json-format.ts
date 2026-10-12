@@ -1,0 +1,18 @@
+import { z } from 'zod'
+import { idSchema, filterSchema } from '../validators'
+const label=z.string().min(1).max(200)
+/** Native schema/view names are trimmed by their write contracts. Reject, never normalize. */
+export const canonicalMetadataLabel=(maximum:number)=>z.string().min(1).max(maximum).regex(/^\S(?:[\s\S]*\S)?$/u,'Metadata label must be canonical: no leading or trailing whitespace')
+const scalarType=z.enum(['text','url','number','date','boolean','select'])
+export const portableFieldSchema=z.object({id:idSchema,label:canonicalMetadataLabel(200),type:z.enum(['text','url','number','date','boolean','select','relation','computed']),required:z.boolean(),unique:z.boolean(),options:z.array(z.object({id:idSchema,label}).strict()).max(10000).optional(),relation:z.object({tableId:idSchema,cardinality:z.enum(['one','many']),onDelete:z.literal('restrict')}).strict().optional(),lookup:z.object({relationFieldId:idSchema,valueFieldId:idSchema}).strict().optional(),resultType:scalarType.optional()}).strict()
+const valueSchema=z.union([z.null(),z.string(),z.boolean(),z.array(idSchema).max(10000)])
+export const portableViewSchema=z.object({id:idSchema,tableId:idSchema,name:canonicalMetadataLabel(200),display:z.enum(['grid','cards','board','calendar','timeline','agenda']),fields:z.array(idSchema).max(80),filter:filterSchema,sort:z.array(z.object({fieldId:idSchema,direction:z.enum(['asc','desc'])}).strict()).max(10),groupBy:z.array(idSchema).max(5),layout:z.object({titleFieldId:idSchema,startFieldId:idSchema.optional(),endFieldId:idSchema.optional(),boardFieldId:idSchema.optional()}).strict(),visibility:z.enum(['private','app'])}).strict()
+export const portableFormSchema=z.object({id:idSchema,tableId:idSchema,title:label,fields:z.array(z.object({fieldId:idSchema,label:z.string().max(200),help:z.string().max(2000),required:z.boolean()}).strict()).max(80),submitAction:z.literal('record.create'),authenticated:z.literal(true)}).strict()
+export const portableBaseSchema=z.object({format:z.literal('cradle-base'),version:z.literal(1),envelope:z.object({capturedAt:z.string().datetime()}).strict(),base:z.object({id:idSchema,name:canonicalMetadataLabel(120),tables:z.array(z.object({id:idSchema,label:canonicalMetadataLabel(120),primaryFieldId:idSchema,fields:z.array(portableFieldSchema).min(1).max(80),incomingRelations:z.array(z.object({id:idSchema,label,sourceEntityId:idSchema,sourceFieldId:idSchema}).strict()).max(80),records:z.array(z.object({id:idSchema,values:z.record(idSchema,valueSchema)}).strict()).max(10000)}).strict()).min(1).max(20),views:z.array(portableViewSchema).max(10000),forms:z.array(portableFormSchema).max(10000)}).strict()}).strict()
+export type PortableBase=z.infer<typeof portableBaseSchema>
+export type PortableField=z.infer<typeof portableFieldSchema>
+export type PortableView=z.infer<typeof portableViewSchema>
+export type PortableForm=z.infer<typeof portableFormSchema>
+/** The capture instant is the only envelope difference in a fresh-install round trip. */
+export function canonicalBaseSnapshot(snapshot:PortableBase):string{return stable(snapshot.base)}
+function stable(value:unknown):string {if(value===null||typeof value!=='object')return JSON.stringify(value);if(Array.isArray(value))return '['+value.map(stable).join(',')+']';return '{'+Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([key,value])=>JSON.stringify(key)+':'+stable(value)).join(',')+'}'}

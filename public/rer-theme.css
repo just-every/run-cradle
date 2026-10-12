@@ -1,0 +1,22 @@
+/* Cradle's theme for Base's installer, sign-in confirmation and /setup frames,
+   taken from the landing tokens (src/core/app/screens/landing/css/base.css):
+   paper, ink, ink-deep, lime, card, muted, eyebrow; Lexend headlines and
+   Cradle Sans text, both already served from /fonts. */
+@font-face { font-family: Lexend; src: url('/fonts/lexend.woff2') format('woff2'); font-display: swap; font-weight: 100 900; }
+@font-face { font-family: "Cradle Sans"; src: url('/fonts/cradle-sans.ttf') format('truetype'); font-display: swap; font-weight: 400; }
+@font-face { font-family: "Cradle Sans"; src: url('/fonts/cradle-sans-semibold.ttf') format('truetype'); font-display: swap; font-weight: 600 800; }
+:root {
+  --rer-font-body: "Cradle Sans", ui-sans-serif, system-ui, sans-serif;
+  --rer-font-heading: Lexend, ui-sans-serif, system-ui, sans-serif;
+  --rer-page: #f3f3ee;
+  --rer-surface: #fffefd;
+  --rer-text: #12372e;
+  --rer-muted: #52695f;
+  --rer-border: #6d8178;
+  --rer-focus: #0d302c;
+  --rer-accent: #d7f25b;
+  --rer-accent-text: #12372e;
+  --rer-link: #3f6b36;
+  --rer-radius: 24px;
+  --rer-logo: url('/apple-touch-icon.png');
+}

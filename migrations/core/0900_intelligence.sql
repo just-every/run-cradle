@@ -1,0 +1,11 @@
+CREATE TABLE intelligence_snapshots (id TEXT PRIMARY KEY,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),state TEXT NOT NULL,data_json TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE intelligence_problems (id TEXT PRIMARY KEY,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),state TEXT NOT NULL,data_json TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE intelligence_strategies (id TEXT PRIMARY KEY,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,problem_id TEXT NOT NULL REFERENCES intelligence_problems(id),version INTEGER NOT NULL CHECK(version>0),state TEXT NOT NULL,data_json TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE INDEX intelligence_strategy_problem ON intelligence_strategies(problem_id,state);
+CREATE TABLE intelligence_investigations (id TEXT PRIMARY KEY,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),state TEXT NOT NULL,data_json TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE intelligence_explorations (id TEXT PRIMARY KEY,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),state TEXT NOT NULL,data_json TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE knowledge_fact_revisions (id TEXT NOT NULL,version INTEGER NOT NULL,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,known_at TEXT NOT NULL,effective_at TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,PRIMARY KEY(id,version));
+CREATE INDEX knowledge_fact_cutoff ON knowledge_fact_revisions(app_id,known_at,effective_at);
+CREATE TABLE knowledge_procedures (id TEXT PRIMARY KEY,app_id TEXT NOT NULL,owner_id TEXT NOT NULL,version INTEGER NOT NULL CHECK(version>0),state TEXT NOT NULL,data_json TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE knowledge_dependencies (id TEXT PRIMARY KEY,app_id TEXT NOT NULL,parent_id TEXT NOT NULL,child_id TEXT NOT NULL,invalidated_at TEXT);
+CREATE INDEX knowledge_dependency_parent ON knowledge_dependencies(app_id,parent_id);

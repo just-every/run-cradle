@@ -1,0 +1,19 @@
+/* The ribbon is used in three roles only: the carry out of the hero, one strand entering each close-up, and the converging pair under the closing button. */
+.lp .lp-carry { position: relative; height: clamp(80px, 9vw, 130px); margin-top: calc(-1 * clamp(20px, 3.5vw, 50px)); pointer-events: none; }
+.lp .lp-carry svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp #tables { padding-top: 48px; }
+
+.lp .lp-strand { position: absolute; top: 50%; z-index: 0; width: min(260px, 26vw); aspect-ratio: 3 / 2; pointer-events: none; }
+.lp .lp-strand--right { right: calc(-1 * min(260px, 26vw) + 40px); transform: translateY(-50%) scaleX(-1); }
+.lp .lp-strand--left { left: calc(-1 * min(260px, 26vw) + 40px); transform: translateY(-50%); }
+
+@media (max-width: 900px) {
+  .lp .lp-strand { width: 150px; }
+  .lp .lp-strand--right { right: -70px; }
+  .lp .lp-strand--left { left: -70px; }
+}
+@media (max-width: 640px) {
+  .lp .lp-strand { width: 120px; }
+  .lp .lp-strand--right { right: -100px; }
+  .lp .lp-strand--left { left: -100px; }
+}

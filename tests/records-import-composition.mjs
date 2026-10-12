@@ -1,0 +1,19 @@
+import './helpers/typescript-loader.mjs'
+import assert from 'node:assert/strict'
+import {contract} from './contract.mjs'
+import {harness} from './helpers/records-manual-harness.mjs'
+import {createUlid} from '../src/core/shared/ids.ts'
+import {createServerFoundation} from '../src/core/app/foundation.server.ts'
+import {createRecordsComposition} from '../src/core/app/composition/records.server.ts'
+import {prepareCsvSource,allocateImportIdentities} from '../src/domains/records/base-transfer/source.ts'
+import {previewBaseImport} from '../src/domains/records/base-transfer/plan.ts'
+contract('RECORDS-005 RECORDS-002','real composition uses inert admission for import and preserves ordinary manual queue wake',async()=>{
+ const h=await harness();try{const sent=[],origin='https://composition.example.test',platform={bindings:{DB:h.db,WORK_QUEUE:{send:async body=>sent.push(body),sendBatch:async bodies=>sent.push(...bodies)}},auth:{configuration:{appOrigin:origin,sessionSecret:'composition-test-session-secret-32-bytes',mode:'production'}}},foundation=await createServerFoundation(platform,{descriptors:[],admissionGuards:()=>[]});assert.notEqual(foundation.inertAdmission,foundation.admission)
+  // Authentication is independently covered by real Base-cookie tests; here an
+  // established fixture context isolates the actual composition/admission wiring.
+  const records=createRecordsComposition(platform,{...foundation,authenticate:async()=>h.ctx}),due=createUlid();await h.db.prepare("INSERT INTO channel_deliveries(id,operator_id,kind,state,due_at,created_at,updated_at,version) VALUES(?,?,'test','queued',0,0,0,1)").bind(due,h.owner).run()
+  const bytes=new TextEncoder().encode('Name\nImported\n'),source=prepareCsvSource([{filename:'Values.csv',bytes}]),options={name:'Composition import'},preview=previewBaseImport(source,options,allocateImportIdentities(source)),form=new FormData();form.append('files',new Blob([bytes],{type:'text/csv'}),'Values.csv');form.set('options',JSON.stringify(options));form.set('identities',JSON.stringify(preview.identities));form.set('fingerprint',preview.fingerprint);form.set('acceptLoss','true')
+  const reviewed=await records.baseImportHttp.fetch(new Request(origin+'/api/v1/records/base-import/review',{method:'POST',headers:{origin},body:form}));assert.equal(reviewed.status,200,await reviewed.clone().text());const review=(await reviewed.json()).data,jsonRequest=(path,value)=>new Request(origin+path,{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(value)}),adopted=await records.baseImportHttp.fetch(jsonRequest('/api/v1/records/base-import/adopt',{reviewId:review.reviewId,fingerprint:preview.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true}));assert.equal(adopted.status,200,await adopted.clone().text());assert.equal((await adopted.json()).data.state,'queued');assert.deepEqual(sent,[]);assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM runtime_queue_publications').first()).n,0)
+  const schema={appId:createUlid(),name:'Ordinary manual base',tables:[{id:createUlid(),label:'Ordinary',fields:[{id:createUlid(),label:'Name',type:'text',required:false,unique:false}]}]},normalReview=await records.manualHttp.fetch(jsonRequest('/api/v1/records/schema-preview',schema));assert.equal(normalReview.status,200,await normalReview.clone().text());const impact=(await normalReview.json()).data,normal=await records.manualHttp.fetch(jsonRequest('/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:impact.id}}));assert.equal(normal.status,200,await normal.clone().text());assert.deepEqual(sent,[{kind:'cradle.channels.wake.v1'}]);assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM runtime_queue_publications').first()).n,1)
+ }finally{h.close()}
+})
