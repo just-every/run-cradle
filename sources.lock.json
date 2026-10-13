@@ -4642,7 +4642,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-ui.css": {
-      "sha256": "9466913bcb9b39f66827bd9dcb97b9aebfc7c7621739a5ffce0eba37c4e64675",
+      "sha256": "a14a90d0069cf548cd0ceb5e485ed7971a76fdb29a3b6b1e0e28d0f81b86e8b1",
       "executable": false
     },
     "src/core/features/risks/index.ts": {
