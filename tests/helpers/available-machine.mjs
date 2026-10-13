@@ -1,6 +1,6 @@
 import {loadavg} from 'node:os'
 import {setTimeout} from 'node:timers/promises'
-import {servingLoadThreshold} from '../../scripts/base-cli/cli/server-resources.mjs'
+import {servingLoadThreshold} from '@runeditrun/rer/server-resources'
 
 // Follow machine admission before starting a real browser or serving process.
 // The CLI retains its own resource guard and is invoked only once.

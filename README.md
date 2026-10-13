@@ -2,7 +2,7 @@
 
 Cradle is a self-hosted records workspace with manual tables, linked records,
 imports and exports, Launch planning, repair workflows, automations and an
-owner-controlled editor. Public source: [just-every/cradle](https://github.com/just-every/cradle).
+owner-controlled editor. Public source: [just-every/run-cradle](https://github.com/just-every/run-cradle).
 
 ## Run it on your computer
 
@@ -17,7 +17,7 @@ npx -y @runeditrun/rer cli install
 without npm. Then clone Cradle and start it:
 
 ```sh
-git clone https://github.com/just-every/cradle.git
+git clone https://github.com/just-every/run-cradle.git cradle
 cd cradle && rer dev
 ```
 

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 
 // These callers already hold a real session. Sign-in's navigation link is
-// Back to home; use that current UI before exercising Start's installed router.
+// Back to home, a plain link to the Lobby at / (server HTML outside the router);
+// from sign-in, Start's installed router navigates into the app without a reload.
 // This runs inside the callers' tagged browser contracts, including test:start.
 export async function navigateFromSignInToApp(page) {
   await page.waitForURL('**/signin')
@@ -24,10 +25,6 @@ export async function navigateFromSignInToApp(page) {
   try {
     await assertRoute('/signin', ['__root__', '/signin'])
     const timeOrigin = await page.evaluate(() => performance.timeOrigin)
-    await home.click()
-    await page.waitForURL(url => url.pathname === '/')
-    await page.getByRole('link', { name: 'Sign in', exact: true }).waitFor()
-    await assertRoute('/', ['__root__', '/'])
     // Start installs this very instance during hydration. navigate invokes the
     // real route loaders and generated transport without creating another router.
     await router.evaluate(current => current.navigate({ to: '/app' }))

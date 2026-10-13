@@ -1,0 +1,8 @@
+# Brief A: a workshop tool library.
+Base: Workshop tool library
+Members: Name (text, primary, required), Email (text), Joined date (date), Active (checkbox)
+Tools: Name (text, primary, required), Category (select: Hand tool | Power tool | Garden | Woodwork), Condition (select: Good | Worn | Needs repair), Deposit amount (number)
+Loans: Tool (link to Tools), Member (link to Members), Out date (date), Due date (date), Returned (checkbox), Member email (lookup of Member's Email)
+Repairs: Tool (link to Tools), Reported date (date), Status (select: Reported | In progress | Fixed), Note (text)
+Views: a grid of each table; a board of Repairs by Status
+Forms: a form for Loans titled "Lend a tool"

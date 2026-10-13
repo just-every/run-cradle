@@ -1,10 +1,10 @@
-import { Link } from '@tanstack/react-router'
 import { useRef } from 'react'
+import { DocsMore } from './parts/DocsMore'
 import { HeroScreen } from './HeroScreen'
 import { HeroArt } from './hero/HeroArt'
 import { useHeroMotion } from './hero/motion/useHeroMotion'
 
-/** The approved hero: the headline, the owner's `landingMessage` from `src/ext/config.ts`, a plain line naming what Cradle replaces, one button, and ribbons of data streaming into one calm Projects screen, with cards floating on them that are drawn into it one by one, each bringing something into the screen as it lands. The art is inline SVG; its motion starts on the client from exactly the server's still and never hides anything before it does. */
+/** The approved hero: the headline, the owner's `landingMessage` from `src/ext/config.ts`, a plain line naming what Cradle replaces, one button (Run Cradle, to the Run page) and a link to the docs, and ribbons of data streaming into one calm Projects screen, with cards floating on them that are drawn into it one by one, each bringing something into the screen as it lands. The art is inline SVG; its motion starts on the client from exactly the server's still and never hides anything before it does. */
 export function Hero({ landingMessage }: { landingMessage: string }) {
   const root = useRef<HTMLElement>(null)
   const live = useHeroMotion(root)
@@ -14,7 +14,10 @@ export function Hero({ landingMessage }: { landingMessage: string }) {
       <h1 id="hero-title">Everything comes together in one place.</h1>
       <p>{landingMessage}</p>
       <p className="lp-alt">100% free, open source alternative to <strong>Airtable</strong> and <strong>Smartsheet</strong></p>
-      <Link className="lp-open" to="/signin">Open your workspace</Link>
+      <div className="lp-actions">
+        <a className="lp-open" href="/run">Run Cradle</a>
+        <DocsMore slug="" size="lead">Read the docs</DocsMore>
+      </div>
     </div>
     <HeroScreen live={live} />
   </section>

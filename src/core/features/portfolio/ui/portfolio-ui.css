@@ -1,5 +1,4 @@
 .portfolio-page {
-  --muted-foreground: #52645d;
   padding: 26px 30px 38px;
 }
 .portfolio-page h2,
@@ -55,7 +54,7 @@
   min-height: 116px;
   padding: 18px;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: var(--r-card);
   background: var(--card);
 }
 .portfolio-metric p {
@@ -86,7 +85,7 @@
 .portfolio-section-card {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: var(--r-card);
   background: var(--card);
 }
 .portfolio-section-card > header {
@@ -236,7 +235,8 @@
   min-width: 0;
   gap: 6px;
 }
-.portfolio-person > span {
+.portfolio-person > span,
+.portfolio-page .portfolio-person > span {
   display: grid;
   width: 22px;
   height: 22px;
@@ -402,29 +402,27 @@
 .portfolio-view-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 8px;
 }
 .portfolio-view-tabs button {
-  min-height: 32px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--muted-foreground);
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--tab);
+  color: var(--tab-ink);
   font: inherit;
-  font-size: 0.72rem;
-  font-weight: 750;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
 }
 .portfolio-view-tabs button:hover {
-  background: #f5f5f0;
+  background: #e3e8de;
   color: var(--foreground);
 }
 .portfolio-view-tabs button[aria-selected="true"] {
-  border-color: #d7deda;
-  background: var(--card);
-  color: var(--foreground);
-  box-shadow: 0 1px 2px rgb(28 48 43 / 4%);
+  background: var(--lime);
+  color: var(--ink-deep);
 }
 .portfolio-grid-filters {
   display: flex;
@@ -444,7 +442,7 @@
   max-width: 146px;
   min-height: 32px;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--r-field);
   background: var(--card);
   color: var(--foreground);
   font: inherit;
@@ -501,7 +499,7 @@
   background: #fafbf7;
 }
 .portfolio-campaign-table tbody tr.is-selected {
-  background: var(--accent);
+  background: var(--ok-row);
 }
 .portfolio-campaign-table tbody tr:last-child th,
 .portfolio-campaign-table tbody tr:last-child td {
@@ -510,9 +508,9 @@
 .portfolio-inspect-button,
 .portfolio-campaign-cards button {
   min-height: 29px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
+  padding: 0 12px;
+  border: 1px solid var(--input-line);
+  border-radius: var(--r-pill);
   background: var(--card);
   color: #34524c;
   font: inherit;
@@ -564,7 +562,7 @@
   height: 30px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--r-field);
   background: var(--card);
   color: var(--foreground);
   font-size: 1.25rem;
@@ -604,7 +602,7 @@
 .portfolio-inspector .portfolio-health {
   margin: 20px 0;
 }
-.portfolio-inspector > .operator-button {
+.portfolio-inspector > .cr-button {
   width: 100%;
 }
 .portfolio-detail-hero {
@@ -612,7 +610,7 @@
   min-height: 154px;
   padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: var(--r-card);
   background: linear-gradient(130deg, var(--card) 0%, var(--background) 100%);
 }
 .portfolio-detail-hero h2 {
@@ -640,7 +638,7 @@
   margin: 14px 0;
   padding: 10px 12px;
   border: 1px solid #f0b4a8;
-  border-radius: 6px;
+  border-radius: var(--r-tile);
   background: #fff0ec;
   color: #903f32;
   font-size: 0.77rem;
@@ -802,7 +800,7 @@
 .portfolio-edit-panel {
   margin: 16px 0;
   border: 1px solid #aebf97;
-  border-radius: 9px;
+  border-radius: var(--r-card);
   background: var(--background);
 }
 .portfolio-edit-panel header {
@@ -842,7 +840,7 @@
 .portfolio-edit-panel textarea {
   width: 100%;
   border: 1px solid #cbd4d1;
-  border-radius: 6px;
+  border-radius: var(--r-tile);
   background: var(--card);
   color: var(--foreground);
   font: inherit;
@@ -1015,12 +1013,12 @@
     gap: 10px;
     padding: 13px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--r-field);
     background: var(--card);
   }
   .portfolio-campaign-cards > li.is-selected {
     border-color: var(--border);
-    background: var(--accent);
+    background: var(--ok-row);
   }
   .portfolio-campaign-cards > li > div:first-child {
     display: grid;
@@ -1050,7 +1048,7 @@
     padding: 18px 16px 24px;
     border: 0;
     border-top: 1px solid var(--border);
-    border-radius: 14px 14px 0 0;
+    border-radius: var(--r-card) var(--r-card) 0 0;
     box-shadow: 0 -14px 38px rgb(28 48 43 / 16%);
   }
   dialog.portfolio-inspector::backdrop { background: rgb(18 55 46 / 18%); }
@@ -1104,8 +1102,8 @@
   }
 }
 /* Shared launch application adopts the approved Cradle type, rules and daylight. */
-.portfolio-page h2,.portfolio-page h3,.portfolio-inspector h2{font-family:var(--font-display);font-weight:500;letter-spacing:-.02em}.portfolio-section-card,.portfolio-metric,.portfolio-table-wrap{border-radius:0;background:rgba(255,255,255,.16)}.portfolio-metric strong{font-family:var(--font-display);font-weight:400}.portfolio-page button,.portfolio-page input,.portfolio-page select{min-height:44px;border-radius:0}.portfolio-page .portfolio-home-intro h2,.portfolio-page .portfolio-overview-hero h2{font-size:36px}.portfolio-page{padding-top:32px}
-.portfolio-detail-hero{border-radius:0;background:transparent}.portfolio-section-card > header h2{font-size:23px}.portfolio-section-card > header{min-height:70px}.portfolio-page button:focus-visible,.portfolio-page input:focus-visible,.portfolio-page select:focus-visible{outline:3px solid #ae732b;outline-offset:3px}
+.portfolio-page h2,.portfolio-page h3,.portfolio-inspector h2{font-family:var(--font-display);font-weight:500;letter-spacing:-.02em}.portfolio-metric strong{font-family:var(--font-display);font-weight:500}.portfolio-page button,.portfolio-page input,.portfolio-page select{min-height:44px}.portfolio-page .portfolio-home-intro h2,.portfolio-page .portfolio-overview-hero h2{font-size:36px}.portfolio-page{padding-top:8px}
+.portfolio-detail-hero{border-radius:0;background:transparent}.portfolio-section-card > header h2{font-size:23px}.portfolio-section-card > header{min-height:70px}
 .portfolio-collapsible>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px;padding:18px;cursor:pointer}.portfolio-collapsible>summary:before{content:'＋';font-size:14px}.portfolio-collapsible[open]>summary:before{content:'−'}.portfolio-collapsible>summary h2{font:400 23px var(--font-display);margin:0;flex:1}.portfolio-collapsible>summary a{font-size:13px}.portfolio-health--stale{background:#eee9dc;padding:14px;border-left:2px solid #9a6a2d}.portfolio-health--stale>strong{font-size:13px;color:#77511f}.portfolio-health--stale>small{display:block;color:#6a665b;margin-top:8px;font-size:12px}@media(max-width:760px){.portfolio-detail-layout{display:flex;flex-direction:column;gap:16px}.portfolio-detail-main,.portfolio-detail-side{display:contents}.portfolio-priority-decisions{order:5}.portfolio-priority-work{order:10}.portfolio-priority-risks{order:15}.portfolio-priority-milestones{order:20}.portfolio-priority-details{order:30}.portfolio-priority-history{order:40}.portfolio-priority-decisions.portfolio-collapsible{order:35}}
 
 /* Launch walkthrough: controls and actions stay in their owning panels. */

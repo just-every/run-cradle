@@ -9,7 +9,7 @@ const running=new WeakSet()
 export async function withRerDevelopment(copy,origin,run){
  if(running.has(copy)||hasRuntimeBindings(copy.source))return run()
  await availableMachine()
- const app=spawn(process.execPath,['scripts/rer.mjs','dev','--login','--non-interactive','--json'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
+ const app=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--login','--non-interactive','--json'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
  let output='';for(const stream of [app.stdout,app.stderr])stream.on('data',chunk=>output+=chunk)
  const ended=new Promise(resolve=>app.once('close',resolve))
  const events=()=>output.split('\n').flatMap(line=>{try{return [JSON.parse(line)]}catch{return []}})
@@ -25,7 +25,7 @@ export async function withRerDevelopment(copy,origin,run){
   assert.equal(ready().signInUrl,origin+'/__dev/outbox','The actual app exposes ordinary outbox sign-in')
   running.add(copy)
   return await run()
- }finally{running.delete(copy);await copy.rer(['dev','--stop']);await ended;await copy.log.writeFile(output);console.log('RECOVERY_COMMAND '+JSON.stringify({installation:copy.source,program:'node',args:['scripts/rer.mjs','dev','--login','--non-interactive','--json'],exitCode:app.exitCode}))}
+ }finally{running.delete(copy);await copy.rer(['dev','--stop']);await ended;await copy.log.writeFile(output);console.log('RECOVERY_COMMAND '+JSON.stringify({installation:copy.source,program:'node',args:['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--login','--non-interactive','--json'],exitCode:app.exitCode}))}
 }
 
 export async function outboxSession(origin,key){

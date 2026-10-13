@@ -24,10 +24,13 @@ export function createMcpTransport(ports: CommandTransportPorts) {
       else if(message.method==='tools/call') {
         const params=message.params as {name?:unknown;arguments?:unknown}|undefined
         if(!params||typeof params.name!=='string')throw new ApiError('validation','A tool name and typed arguments are required.')
-        const command=ports.commands.get(params.name)
-        if(!command||!await command.visible(ctx))throw new ApiError('not_found','Tool is not available.')
-        const receipt=await command.execute(ctx,params.arguments)
-        result={content:[{type:'text',text:JSON.stringify({result:receipt.result,consistencyToken:receipt.consistencyToken})}],isError:false}
+        const query=ports.commands.query(params.name),command=ports.commands.get(params.name)
+        if(query&&query.visible(ctx))result={content:[{type:'text',text:JSON.stringify({result:await query.run(ctx,params.arguments??{})})}],isError:false}
+        else {
+          if(!command||!await command.visible(ctx))throw new ApiError('not_found','Tool is not available.')
+          const receipt=await command.execute(ctx,params.arguments)
+          result={content:[{type:'text',text:JSON.stringify({result:receipt.result,consistencyToken:receipt.consistencyToken})}],isError:false}
+        }
       } else return Response.json({jsonrpc:'2.0',id:message.id??null,error:{code:-32601,message:'Method not found'}},{headers:{'x-request-id':requestId}})
       return Response.json({jsonrpc:'2.0',id:message.id??null,result},{headers:{'x-request-id':requestId,'cache-control':'no-store'}})
     } catch(error){return errorResponse(error,requestId,'mcp')}

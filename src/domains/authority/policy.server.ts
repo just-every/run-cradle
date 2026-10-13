@@ -1,7 +1,7 @@
 import { and, or, trustedPredicate, identifier } from '../admission/sql.server'
 import type { SqlPredicate } from '../admission/ports'
 import type { GrantSpec, Policy } from './contracts'
-import type { AuthorizationRequest, PolicyPort, PolicyScope, RequestContext, DecisionAuthorityPort } from './ports'
+import type { AuthorityPermit, AuthorizationRequest, PolicyPort, PolicyScope, RequestContext, DecisionAuthorityPort } from './ports'
 import { principalGuards } from './guards.server'
 import { compileFilter, type EntityRegistry } from './scope.server'
 import { grantSpecSchema, policyRuleSchema, moneySchema } from './validators'
@@ -29,6 +29,14 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     }
     return {rules:rules.filter(r=>r.principals.some(p=>p.id===ctx.principal.id&&p.kind===ctx.principal.kind)),guards,version:row.version}
   }
+  const proposerPermit=async(ctx:RequestContext,request:AuthorizationRequest):Promise<AuthorityPermit>=>{
+    if(ctx.principal.proposer?.appId!==request.appId||!['schema.propose','schema.withdraw'].includes(request.action)||request.cost.length||request.grantId||request.connectionId)return denied()
+    const credential=await db.prepare('SELECT scopes_json FROM authority_credentials WHERE id=? AND principal_id=?').bind(ctx.principal.credentialId,ctx.principal.id).first<{scopes_json:string}>()
+    if(!credential||!(JSON.parse(credential.scopes_json) as {appId:string;actions:string[]}[]).some(s=>s.appId===request.appId&&s.actions.includes('schema.propose')))return denied()
+    const guards=principalGuards(ctx),check=and(...guards)
+    if(!await db.prepare(`SELECT 1 WHERE ${check.sql}`).bind(...check.values).first())return denied()
+    return {actor:{id:ctx.principal.id,kind:ctx.principal.kind},action:request.action,appId:request.appId,grantId:null,grantVersion:null,policyVersion:0,validUntil:ctx.principal.expiresAt,guards,reservationMutations:[],reservationIds:[]}
+  }
   const scope:PolicyPort['scope']=async(ctx,request)=>{
     const loaded=await load(ctx,request.appId),entity=registry.get(request.appId,request.entityId)
     if(!entity)return denied()
@@ -53,6 +61,9 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     // The binding was read from durable server-owned delegation state, never a request role.
     if(ctx.principal.delegationGrant&&!request.grantId)
       request={...request,grantId:ctx.principal.delegationGrant.id,grantVersion:ctx.principal.delegationGrant.version}
+    // An issuer view only reads; a proposing key may only propose or withdraw for its own base.
+    if(ctx.principal.viaProposer)return denied()
+    if(ctx.principal.proposer)return proposerPermit(ctx,request)
     request.cost.forEach(cost=>moneySchema.parse(cost))
     const audMicros=request.cost.filter(c=>c.currency==='AUD').reduce((sum,c)=>sum+canonicalInteger(c.minor)*10n**BigInt(6-c.scale),0n)
     const loaded=await load(ctx,request.appId),guards:SqlPredicate[]=[...loaded.guards]

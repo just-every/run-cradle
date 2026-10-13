@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react'
+import type { PropsWithChildren, ReactNode } from 'react'
 
 import { useOperatorSession } from '../../features/portfolio/ui'
 import { OperatorShell, ResourceBoundary } from '../ui/operator'
@@ -6,9 +6,10 @@ import { OperatorShell, ResourceBoundary } from '../ui/operator'
 type OperatorFeaturePageProps = PropsWithChildren<{
   currentPath: string
   title: string
+  description?: ReactNode
 }>
 
-export const OperatorFeaturePage = ({ children, currentPath, title }: OperatorFeaturePageProps) => {
+export const OperatorFeaturePage = ({ children, currentPath, title, description }: OperatorFeaturePageProps) => {
   const session = useOperatorSession()
 
   if (session.resource.state !== 'ready') {
@@ -32,6 +33,7 @@ export const OperatorFeaturePage = ({ children, currentPath, title }: OperatorFe
         workspaceName: session.resource.data.workspace.name,
       }}
       title={title}
+      description={description}
     >
       {children}
     </OperatorShell>

@@ -1,7 +1,7 @@
 import {lstat} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {relative} from 'node:path';
-import {RerError,refuse} from '../base-cli/cli/errors.mjs';
+import {RerError,refuse} from '@runeditrun/rer/errors';
 
 async function run({root,path,store,signal,operationToken},direction){
  if(direction==='export'&&await lstat(path).catch(error=>{if(error.code==='ENOENT')return null;throw error;}))throw refuse('Export requires a new archive path.');

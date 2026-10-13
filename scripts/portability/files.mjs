@@ -3,7 +3,7 @@ import {constants} from 'node:fs';
 import {dirname} from 'node:path';
 import {Readable} from 'node:stream';
 import {randomUUID} from 'node:crypto';
-import {readArchive} from '../base-cli/modules/portability/index.mjs';
+import {readArchive} from '@runeditrun/rer/modules/portability';
 
 export async function* archiveRecords(path){
  const file=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);

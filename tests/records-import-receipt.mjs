@@ -94,5 +94,22 @@ contract('RECORDS-005','move-in receipt and skipped-attachment manifest come fro
   assert.equal(lines.length,declared.skipped,'One manifest line per skipped nonempty cell')
   assert.deepEqual(lines.map(line=>({rowOrdinal:Number(line['row ordinal']),primary:line['primary value'],parsed:line.parsed==='yes',...(line.parsed==='yes'?{names:JSON.parse(line['file names']),urls:JSON.parse(line['source urls'])}:{})})),truth.manifest)
   assert.ok(lines.every(line=>/expire/.test(line.note)),'Every line says source links can expire')
+
+  // A malformed item before a valid URL must not become part of its file name.
+  const mixed=[
+   'a.pdf (http://a.example/6/a.pdf), b.pdf (https://a.example/6/b.pdf)',
+   'a.pdf (missing URL), b.pdf (https://a.example/6/b.pdf)',
+   'a.pdf (mailto:owner@example.test); b.pdf (https://a.example/6/b.pdf)',
+   'Smith, Jones (signed).pdf (https://a.example/contract.pdf), b.pdf (https://a.example/6/b.pdf)',
+  ],mixedFile='Mixed attachments.csv'
+  const mixedBytes=Buffer.from(['Name,Files',...mixed.map((raw,i)=>`${i+1},"${raw.replaceAll('"','""')}"`)].join('\r\n')+'\r\n')
+  const mixedJob=await adoptUpload(h,[{name:mixedFile,bytes:mixedBytes}],{name:'Mixed attachments',tables:{[mixedFile]:{columns:{'column-2':{sourceKind:'multipleAttachments',skip:true}}}}})
+  await finish(h,mixedJob.job.id,'resume','completed')
+  const mixedLines=await manifest(h,mixedJob.job.id,mixedFile,'column-2')
+  assert.deepEqual(mixedLines.map(line=>line['raw cell text']),mixed)
+  assert.deepEqual(mixedLines.map(line=>[line.parsed,line['file names'],line['source urls']]),[
+   ['no','',''],['no','',''],['no','',''],
+   ['yes',JSON.stringify(['Smith, Jones (signed).pdf','b.pdf']),JSON.stringify(['https://a.example/contract.pdf','https://a.example/6/b.pdf'])],
+  ])
  }finally{await h.close()}
 })

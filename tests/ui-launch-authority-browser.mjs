@@ -92,8 +92,8 @@ try {
     await page.getByRole('heading',{name:sample.name,exact:true}).waitFor()
     // Replay a real generated client request with a currently valid repair-only session.
     page.on('request',request=>{if(request.url().includes('/_serverFn/')&&new URL(request.url()).searchParams.has('payload'))receipt.generatedRequests.push({url:request.url(),headers:request.headers()})})
-    await page.goto(`${h.origin}/`)
-    await page.getByRole('link',{name:'Sign in',exact:true}).click()
+    await page.goto(`${h.origin}/docs`)
+    await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click()
     await navigateFromSignInToApp(page)
     await page.getByText('Live campaigns',{exact:true}).waitFor()
     const wire=receipt.generatedRequests.find(request=>new URL(request.url).searchParams.get('payload').includes('/api/portfolio'))

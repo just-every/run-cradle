@@ -18,7 +18,7 @@ export async function localInstallerJourney(copy,_browser,{identity=false}={}){
  await command(['setup','--non-interactive']);assert.ok((await readFile(path.join(copy.source,'.dev.vars'))).equals(before),'Repeat setup retains exact private bytes')
  const origin=`http://127.0.0.1:${port}`
  await availableMachine()
- const app=spawn(process.execPath,['scripts/rer.mjs','dev',...(identity?[]:['--login']),'--non-interactive'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
+ const app=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs','dev',...(identity?[]:['--login']),'--non-interactive'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
  const capture=observeChild(app)
  const close=async()=>{if(app.exitCode===null&&app.signalCode===null)await command(['dev','--stop']);await capture.close}
  try{

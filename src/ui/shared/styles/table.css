@@ -1,0 +1,21 @@
+/* Tables sit inside a card: no outer frame, typed headers, hairline rows. */
+.cr-table-wrap { max-width: 100%; overflow: auto; border-radius: var(--r-tile); }
+.cr-table { width: 100%; border-collapse: collapse; color: var(--ink); font-size: 15px; text-align: left; }
+.cr-table th { padding: 0 16px 16px; color: var(--ink); font-size: 14px; font-weight: 600; line-height: 1.3; vertical-align: bottom; white-space: nowrap; }
+.cr-table th .cr-th-type { display: block; margin-top: 4px; color: var(--soft); font-size: 13px; font-weight: 400; }
+.cr-table td { max-width: 400px; padding: 18px 16px; border-top: 1px solid var(--line); vertical-align: middle; line-height: 1.45; }
+.cr-table tbody tr:hover > td { background: var(--tile); }
+.cr-table a { color: var(--ink); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
+.cr-table a:hover { text-decoration-color: currentColor; }
+
+/* Value chips by tone, link chips and the selection cell. */
+.cr-record-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 5px 12px; border-radius: var(--r-pill); background: var(--sage); color: var(--ink); font-size: 13px; font-weight: 600; line-height: 1.2; text-decoration: none; overflow-wrap: anywhere; }
+.cr-record-chip + .cr-record-chip { margin-left: 6px; }
+.cr-record-chip--coral { background: var(--chip-coral); color: var(--chip-coral-ink); }
+.cr-record-chip--butter { background: var(--chip-butter); color: var(--chip-butter-ink); }
+.cr-record-chip--mint { background: var(--chip-mint); color: var(--chip-mint-ink); }
+.cr-record-chip--lilac { background: var(--chip-lilac); color: var(--chip-lilac-ink); }
+a.cr-record-chip, .cr-table a.cr-record-chip { color: var(--ink); text-decoration: none; }
+a.cr-record-chip:hover { background: #c7d9c6; }
+.cr-record-chip svg { flex: none; }
+.cr-selection { display: grid; min-width: 44px; min-height: 44px; place-items: center; cursor: pointer; }

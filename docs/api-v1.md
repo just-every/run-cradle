@@ -70,3 +70,7 @@ members, policy, grants, other keys or the owner.
 Key management and automation-definition routes are browser-owner operations at
 `/api/user-keys` and `/api/user-automations`; they require the actual owner session
 and CSRF token, and cannot be invoked by an API key.
+
+A **proposing key**, issued in the same panel, is a different kind of key: it
+lets an agent propose a new base or a schema change for you to review, and it
+reaches only the proposal door. See [Agent proposals](agent-proposals.md).

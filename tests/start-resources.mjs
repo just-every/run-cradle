@@ -25,7 +25,7 @@ const maliciousResources = [
   '/api/campaigns/..\\settings', '/api/campaigns#fragment', '/api/campaigns/extra/path',
 ]
 
-contract('VIEW-004 AUTH-BASE-001 HOME-002', 'unavailable Start record documents are not found while native auth and the generated resource boundary remain intact', async (context) => {
+contract('VIEW-004 AUTH-BASE-001 DOCS-001', 'unavailable Start record documents are not found while native auth and the generated resource boundary remain intact', async (context) => {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-start-resources-'))
   let worker, browser, output = ''
   const evidence = { documents: [], wire: [], browser: [] }
@@ -99,9 +99,9 @@ const get = (url, session = cookie) => request(`${origin}${url}`, { redirect: 'm
     const page = await browserContext.newPage(), errors = []
     page.on('pageerror', error => errors.push(error.message))
     page.on('request', req => { if (req.url().includes('/_serverFn/') && new URL(req.url()).searchParams.has('payload')) dataWire = { url: req.url(), headers: req.headers() } })
-    await page.goto(`${origin}/`)
+    await page.goto(`${origin}/docs`)
     const timeOrigin = await page.evaluate(() => performance.timeOrigin)
-    await page.getByRole('link', { name: 'Sign in', exact: true }).click()
+    await page.getByRole('banner').getByRole('link', { name: 'Sign in', exact: true }).click()
     await page.waitForURL('**/signin')
     await navigateFromSignInToApp(page)
     await page.waitForURL('**/app')

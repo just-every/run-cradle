@@ -1,0 +1,12 @@
+/* Links from the landing into the published guide: an underlined text link, larger beside a button, quiet inside a section. */
+.lp .lp-more { display: inline-block; padding-block: 6px; color: var(--ink-deep); font-size: 15px; font-weight: 600; line-height: 1.4; text-decoration: underline 1.5px color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 5px; }
+.lp .lp-more:hover { text-decoration-color: currentColor; }
+.lp .lp-more--lead { font-size: 18px; }
+.lp .lp-more-row { display: flex; flex-wrap: wrap; gap: 4px 24px; margin-top: 16px; }
+.lp .lp-panel .lp-more { color: #fff; }
+.lp .lp-row .lp-more { margin-top: 12px; }
+.lp .lp-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 28px; }
+.lp .lp-close-more { position: relative; z-index: 1; margin-top: -28px; text-align: center; }
+@media (max-width: 640px) {
+  .lp .lp-close-more { margin-top: 24px; }
+}

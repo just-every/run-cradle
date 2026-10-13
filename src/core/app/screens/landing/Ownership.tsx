@@ -1,3 +1,4 @@
+import { DocsMore } from './parts/DocsMore'
 import { Icon } from './parts/Icon'
 
 const tiles = [['Worker', 'the app'], ['D1', 'your records'], ['R2', 'your files']] as const
@@ -12,6 +13,7 @@ export function Ownership() {
           <h2 id="ownership-title">Yours to run and change.</h2>
           <p>Cradle runs in your own Cloudflare account as one Worker with D1 and R2. It is MIT licensed and sends no telemetry.</p>
           <p>Change the source, schema and screens with your own coding agents. Updates keep what you changed.</p>
+          <div className="lp-more-row"><DocsMore slug="install">Install it</DocsMore><DocsMore slug="leaving">Leave with your data</DocsMore></div>
         </div>
         <div className="lp-art" aria-hidden="true">
           <div className="lp-acct">

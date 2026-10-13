@@ -12,6 +12,11 @@ import { createRecordsCsv } from '../../../domains/records/csv.server'
 import { recordsCsvHttp } from '../../../domains/records/csv-http.server'
 import { createManualSchemas } from '../../../domains/records/manual/service.server'
 import { manualSchemaHttp } from '../../../domains/records/manual/http.server'
+import { createReleaseCore } from '../../../domains/records/manual/release.server'
+import { createProposalAgent } from '../../../domains/records/manual/proposal-agent.server'
+import { createProposalReview } from '../../../domains/records/manual/proposal-review.server'
+import { registerProposalTools } from '../../../domains/records/manual/proposal-commands.server'
+import { proposalHttp } from '../../../domains/records/manual/proposal-http.server'
 import { registerRecordActions, createAuthorizedRecordCreatePreparer } from '../../../domains/records/actions.server'
 import { registerRecordFormActions } from '../../../domains/records/form-actions.server'
 import type { Platform } from '../../platform'
@@ -56,6 +61,8 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
   registerRecordFormActions(foundation.commands,{metadata:services.metadata,policy,prepareCreate:createAuthorizedRecordCreatePreparer(services)})
   const manual=createManualSchemas(db,policy,admission,descriptors)
   const importManual=createManualSchemas(db,policy,foundation.inertAdmission,descriptors)
+  const releaseCore=createReleaseCore(db,policy,admission,descriptors),proposalReview=createProposalReview(db,policy,admission,releaseCore)
+  registerProposalTools(foundation.commands,createProposalAgent(db,policy,descriptors,releaseCore))
   const jsonIdentities=createJsonIdentityPreflight(db,descriptors)
   const baseImport=createBaseImportService(db,policy,descriptors,importManual,(source,options,ids)=>source.format==='cradle-base-v1'?previewJsonImport(source,options,ids):previewBaseImport(source,options,ids))
   const audit=createAuditReader(db,policy,(ctx,ref)=>deps.access.checkReference(ctx,ref,[],'read'),{
@@ -75,7 +82,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
       return {subject,fieldIds}
     },
   })
-  return {deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(createRecordsCsv(db,services,admission),foundation.authenticate),manualHttp:manualSchemaHttp(manual,foundation.authenticate),
+  return {deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(createRecordsCsv(db,services,admission),foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
     http:createRecordHttp({...services,authenticate:foundation.authenticate}),
     historyHttp:createEvidenceHistoryHttp({...deps,authenticate,audit,cursorSecret:platform.auth.configuration.sessionSecret}),
   }

@@ -1,6 +1,6 @@
 # Cradle handover
 
-Public source: https://github.com/just-every/cradle.
+Public source: https://github.com/just-every/run-cradle.
 
 Use README.md and AGENTS.md's rer commands for every checkout. The native product
 runs on one emitted Cloudflare Worker with Hono HTTP families and TanStack Start
@@ -13,10 +13,10 @@ columns recompute. Restore does not reauthorize credentials or background effect
 A fresh owner is admitted through the ordinary setup/sign-in path. Historical
 imports retain original custody and require explicit continuation.
 
-`node scripts/rer.mjs verify` is the full local product wall. The optional Docker
+`rer verify` is the full local product wall. The optional Docker
 runner is separate. Source locks are refreshed through `pnpm source:lock`; delivery
-metadata and workflow are generated from packaging.json. A clean-history export
-is the publication candidate, under just-every/cradle.
+metadata and workflow are generated from packaging.json. Development and
+releases happen in the public repository just-every/run-cradle.
 
 Local checks, exact-head CI and publication scans establish their stated source
 and local-runtime boundaries. Hosted management/editor installation, account

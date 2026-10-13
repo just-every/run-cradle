@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SigninRouteImport } from './routes/signin'
@@ -18,6 +17,8 @@ import { Route as AppAutomationsRouteImport } from './routes/app.automations'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppOverviewRouteImport } from './routes/app.overview'
 import { Route as AppSearchRouteImport } from './routes/app.search'
+import { Route as DocsIndexRouteImport } from './routes/docs.index'
+import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
 import { Route as AppApprovalsIndexRouteImport } from './routes/app.approvals.index'
 import { Route as AppApprovalsDecisionIdRouteImport } from './routes/app.approvals.$decisionId'
 import { Route as AppCampaignsIndexRouteImport } from './routes/app.campaigns.index'
@@ -50,11 +51,6 @@ import { Route as AppRepairsIntakesIntakeIdRouteImport } from './routes/app.repa
 import { Route as AppRecordsAppIdEntityIdIndexRouteImport } from './routes/app.records.$appId.$entityId.index'
 import { Route as AppRecordsAppIdEntityIdRecordIdRouteImport } from './routes/app.records.$appId.$entityId.$recordId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -94,6 +90,16 @@ const AppSearchRoute = AppSearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => AppRoute,
+} as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/docs/',
+  path: '/docs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsSlugRoute = DocsSlugRouteImport.update({
+  id: '/docs/$slug',
+  path: '/docs/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppApprovalsIndexRoute = AppApprovalsIndexRouteImport.update({
   id: '/approvals/',
@@ -258,7 +264,6 @@ const AppRecordsAppIdEntityIdRecordIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/setup': typeof SetupRoute
   '/signin': typeof SigninRoute
@@ -266,7 +271,9 @@ export interface FileRoutesByFullPath {
   '/app/notifications': typeof AppNotificationsRoute
   '/app/overview': typeof AppOverviewRoute
   '/app/search': typeof AppSearchRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/app/': typeof AppIndexRoute
+  '/docs/': typeof DocsIndexRoute
   '/app/approvals/$decisionId': typeof AppApprovalsDecisionIdRoute
   '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
   '/app/cases/$caseId': typeof AppCasesCaseIdRoute
@@ -300,14 +307,15 @@ export interface FileRoutesByFullPath {
   '/app/records/$appId/$entityId/': typeof AppRecordsAppIdEntityIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/setup': typeof SetupRoute
   '/signin': typeof SigninRoute
   '/app/automations': typeof AppAutomationsRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/overview': typeof AppOverviewRoute
   '/app/search': typeof AppSearchRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/app': typeof AppIndexRoute
+  '/docs': typeof DocsIndexRoute
   '/app/approvals/$decisionId': typeof AppApprovalsDecisionIdRoute
   '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
   '/app/cases/$caseId': typeof AppCasesCaseIdRoute
@@ -342,7 +350,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/setup': typeof SetupRoute
   '/signin': typeof SigninRoute
@@ -350,7 +357,9 @@ export interface FileRoutesById {
   '/app/notifications': typeof AppNotificationsRoute
   '/app/overview': typeof AppOverviewRoute
   '/app/search': typeof AppSearchRoute
+  '/docs/$slug': typeof DocsSlugRoute
   '/app/': typeof AppIndexRoute
+  '/docs/': typeof DocsIndexRoute
   '/app/approvals/$decisionId': typeof AppApprovalsDecisionIdRoute
   '/app/campaigns/$campaignId': typeof AppCampaignsCampaignIdRoute
   '/app/cases/$caseId': typeof AppCasesCaseIdRoute
@@ -386,7 +395,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/app'
     | '/setup'
     | '/signin'
@@ -394,7 +402,9 @@ export interface FileRouteTypes {
     | '/app/notifications'
     | '/app/overview'
     | '/app/search'
+    | '/docs/$slug'
     | '/app/'
+    | '/docs/'
     | '/app/approvals/$decisionId'
     | '/app/campaigns/$campaignId'
     | '/app/cases/$caseId'
@@ -428,14 +438,15 @@ export interface FileRouteTypes {
     | '/app/records/$appId/$entityId/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/setup'
     | '/signin'
     | '/app/automations'
     | '/app/notifications'
     | '/app/overview'
     | '/app/search'
+    | '/docs/$slug'
     | '/app'
+    | '/docs'
     | '/app/approvals/$decisionId'
     | '/app/campaigns/$campaignId'
     | '/app/cases/$caseId'
@@ -469,7 +480,6 @@ export interface FileRouteTypes {
     | '/app/records/$appId/$entityId'
   id:
     | '__root__'
-    | '/'
     | '/app'
     | '/setup'
     | '/signin'
@@ -477,7 +487,9 @@ export interface FileRouteTypes {
     | '/app/notifications'
     | '/app/overview'
     | '/app/search'
+    | '/docs/$slug'
     | '/app/'
+    | '/docs/'
     | '/app/approvals/$decisionId'
     | '/app/campaigns/$campaignId'
     | '/app/cases/$caseId'
@@ -512,21 +524,15 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   SetupRoute: typeof SetupRoute
   SigninRoute: typeof SigninRoute
+  DocsSlugRoute: typeof DocsSlugRoute
+  DocsIndexRoute: typeof DocsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/app': {
       id: '/app'
       path: '/app'
@@ -582,6 +588,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/search'
       preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/docs/': {
+      id: '/docs/'
+      path: '/docs'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs/$slug': {
+      id: '/docs/$slug'
+      path: '/docs/$slug'
+      fullPath: '/docs/$slug'
+      preLoaderRoute: typeof DocsSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/app/approvals/': {
       id: '/app/approvals/'
@@ -893,10 +913,11 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   SetupRoute: SetupRoute,
   SigninRoute: SigninRoute,
+  DocsSlugRoute: DocsSlugRoute,
+  DocsIndexRoute: DocsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

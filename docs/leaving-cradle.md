@@ -50,8 +50,8 @@ The existing **Export CSV** action exports only the current view's selected reco
 
 ## Whole-installation archive maintenance
 
-Use `node scripts/rer.mjs export --output exports/workspace.rer` and, in an empty
-installation, `node scripts/rer.mjs import --input exports/workspace.rer --yes`.
+Use `rer export --output exports/workspace.rer` and, in an empty
+installation, `rer import --input exports/workspace.rer --yes`.
 These commands cover the installation DB and FILES through Base portability,
 including generated-column schema and recomputed values. Stop the app first.
 See [installation archives](installation-archives.md) for credential exclusions,

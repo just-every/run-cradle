@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { createRedaction, credentialValues } from '../../scripts/base-onboarding/redaction.mjs'
+import { createRedaction, credentialValues } from '@runeditrun/rer/redaction'
 import { checkoutDevKey } from './dev-gate.mjs'
 
 // Raw startup streams remain in memory. Save only a drained capture redacted

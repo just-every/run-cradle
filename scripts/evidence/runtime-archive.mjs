@@ -6,7 +6,7 @@ import {join} from 'node:path'
 import {tmpdir,loadavg} from 'node:os'
 import {createServer} from 'node:net'
 import {checkoutDevKey} from '../../tests/helpers/dev-gate.mjs'
-import {readSettings} from '../base-onboarding/adapter-settings.mjs'
+import {readSettings} from '@runeditrun/rer/adapter-settings'
 import {scanEvidence} from './runtime-secret-scan.mjs'
 // Actual install/export proof, independent of source-dev startup admission.
 const execute=promisify(execFile),root=process.cwd(),evidence=process.env.CRADLE_EVIDENCE
@@ -14,7 +14,7 @@ assert.ok(evidence);assert.ok(loadavg()[0]<=36)
 const temporary=await mkdtemp(join(tmpdir(),'cradle-archive-secret-')),copy=join(temporary,'source')
 const logs=[],archiveContents=[],env={...process.env,CI:'true',RER_SERVER_JOURNEY:'1',WRANGLER_SEND_METRICS:'false'}
 delete env.RER_LOCAL_OPERATION
-const run=async args=>{try{const result=await execute(process.execPath,['scripts/rer.mjs',...args,'--json'],{cwd:copy,env,maxBuffer:32*1024*1024});logs.push({kind:'rer '+args[0],body:result.stdout+result.stderr});return result}catch(error){logs.push({kind:'rer '+args[0]+' failed',body:String(error.stdout??'')+String(error.stderr??'')});throw Error('Actual archive proof command failed; raw child output withheld')}}
+const run=async args=>{try{const result=await execute(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs',...args,'--json'],{cwd:copy,env,maxBuffer:32*1024*1024});logs.push({kind:'rer '+args[0],body:result.stdout+result.stderr});return result}catch(error){logs.push({kind:'rer '+args[0]+' failed',body:String(error.stdout??'')+String(error.stderr??'')});throw Error('Actual archive proof command failed; raw child output withheld')}}
 let values,key,completed=false
 try{
  await execute('git',['clone','--quiet','--no-hardlinks',root,copy]);await symlink(join(root,'node_modules'),join(copy,'node_modules'))

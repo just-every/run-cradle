@@ -47,6 +47,8 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('operation_recovery_reviews','assignee_id=?','recovery reviews assigned to them'),
  place('operation_configurations','adopted_by=?','configurations they adopted'),
  ...['intelligence_explorations','intelligence_investigations','intelligence_problems','intelligence_snapshots','intelligence_strategies','knowledge_procedures','manual_record_bases','manual_record_previews','manual_record_releases'].map(table=>place(table,'owner_id=?',`${table.replaceAll('_',' ')} they own`)),
+ place('record_schema_proposals','issuer_id=? OR decided_by=?','agent proposals they issued keys for or decided'),
+ place('authority_schema_proposers','issuer_id=?','proposing keys they issued'),
  place('sample_installations','installed_by_id=?','sample data they installed'),
  place('execution_runs',`json_extract(actor_json,'$.id')=?`,'runs they started'),
  place('command_admissions',`actor_id=? OR ${refs('result_json')}`,'commands they issued or that name them as the result'),

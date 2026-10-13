@@ -1,15 +1,15 @@
 import {join} from 'node:path';
 import {readFile} from 'node:fs/promises';
-import {localInstaller} from '../base-onboarding/adapter.mjs';
-import {readSettings} from '../base-onboarding/adapter-settings.mjs';
+import {localInstaller} from '@runeditrun/rer/local-installer';
+import {readSettings} from '@runeditrun/rer/adapter-settings';
 import {features} from './ui/seed.mjs';
 import {prepareHostingMail} from './hosting-mail.mjs';
 import {claimOwner} from './owner.mjs';
-import {commandAdapter as createCommandAdapter} from '../base-cli/cli/adapter.mjs';
-import {developmentTarget,previewTarget} from '../base-onboarding/operator-installer.mjs';
-import {installOperator} from '../base-onboarding/operator-install.mjs';
-import {selectLocalState} from '../base-onboarding/local/state.mjs';
-import {operatorPrerequisites} from '../base-onboarding/operator-prerequisites.mjs';
+import {commandAdapter as createCommandAdapter} from '@runeditrun/rer/adapter';
+import {developmentTarget,previewTarget} from '@runeditrun/rer/operator-installer';
+import {installOperator} from '@runeditrun/rer/operator-install';
+import {selectLocalState} from '@runeditrun/rer/local/state';
+import {operatorPrerequisites} from '@runeditrun/rer/operator-prerequisites';
 import {deploy} from './deploy.mjs';
 import {portability} from '../portability/local.mjs';
 
@@ -59,5 +59,10 @@ export const commandAdapter=createCommandAdapter(adapter,{
  // for the dev layer, and the one kept end-to-end email-link test.
  devIdentity:{entry:'src/server.dev.ts',output:['dist'],emailLinkTest:'tests/ui-local-signin.mjs'},
  localOnlyKeys:['RER_DEV_ORIGIN','RER_DEV_IDENTITY'],
+ // The static run site at run-cradle.com: the approved homepage with Run Cradle, /run and the docs.
+ site:{entry:'src/site/pages.tsx',output:'dist/site',declaration:'deploy-site.json',config:'vite.site.config.ts'},
+ // The installed instance's hydrating public pages. The Lobby at / is plain server HTML, and the hosted
+ // check's store holds only migrations/core, without the first-run record the Lobby reads.
+ publicPages:['/docs','/docs/install','/signin'],
  input:{names:{email:'OWNER_EMAIL',name:'OWNER_NAME'},defaults:()=>({target:'local'})},
 });

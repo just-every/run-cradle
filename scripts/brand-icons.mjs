@@ -1,6 +1,7 @@
 // Writes the Cradle icon files from the one P3 geometry (src/core/app/ui/brand-geometry.ts):
 //   src/core/app/favicon.svg and public/favicon.ico (16, 32, 48), both the bare mark on a transparent background, and
-//   public/apple-touch-icon.png (180), the mark on the opaque dark tile (iOS renders transparency as black).
+//   public/apple-touch-icon.png (180), the mark on the opaque dark tile (iOS renders transparency as black), and
+//   public/brand/mark.svg, the mark for paper grounds, which public/rer-theme.css names as the installer's --rer-logo.
 // Run with `pnpm brand:icons`. PNGs are rendered with the repository's Playwright Chromium.
 import './typescript-loader.mjs'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -54,7 +55,9 @@ try {
   await writeFile(path.join(root, 'public/favicon.ico'), ico(images))
   // iOS rounds the touch icon itself, so it is the tile full-bleed (no transparent corners).
   await writeFile(path.join(root, 'public/apple-touch-icon.png'), await render(browser, p3Svg('tile', 0), appleTouchSize))
+  await mkdir(path.join(root, 'public/brand'), { recursive: true })
+  await writeFile(path.join(root, 'public/brand/mark.svg'), p3Svg('paper') + '\n')
 } finally {
   await browser.close()
 }
-console.log('wrote src/core/app/favicon.svg, public/favicon.ico, public/apple-touch-icon.png')
+console.log('wrote src/core/app/favicon.svg, public/favicon.ico, public/apple-touch-icon.png, public/brand/mark.svg')

@@ -32,7 +32,11 @@
     },
     "HOME-002": {
       "change": "added",
-      "summary": "Supersedes HOME-001. The owner identity plate is replaced by a public product landing page at `/` with a hero of data streaming into one Projects screen, illustrated sections for tables, views, safe schema changes, the practical parts (CSV, automations, read-only AI) and ownership, and a closing call to action. Retained: no record content or public views, a link to `/signin`, the configurable credit to runeditrun.com with no telemetry or phone-home, and config-driven product and workspace names. Superseded: the former ban on a feature tour. Still excluded: pricing, testimonials, metrics and integrations the product does not ship. No new sessionless path or data change. See docs/contract-transition.md#public-product-landing--8-october-2026."
+      "summary": "Supersedes HOME-001. The owner identity plate is replaced by a public product landing page at `/` with a hero of data streaming into one Projects screen, illustrated sections for tables, views, safe schema changes, the practical parts (CSV, automations, read-only AI) and ownership, and a closing call to action. Retained: no record content or public views, a link to `/signin`, the configurable credit to runeditrun.com with no telemetry or phone-home, and config-driven product and workspace names. Superseded: the former ban on a feature tour. Still excluded: pricing, testimonials, metrics and integrations the product does not ship. No new sessionless path or data change. See docs/contract-transition.md#public-product-landing--8-october-2026. Amended 12 October 2026 with DOCS-001: the landing and the docs share one header and footer; the header links Docs, the source repository and Sign in; the hero and closing call to action link to the docs, at least two sections link to the guide page on their subject, and the footer adds Docs, Source, Sign in and an MIT licence link. Nothing the clause required is removed; the new links are same-site or plain outbound anchors, so the page still loads nothing from another origin and gains no sessionless path."
+    },
+    "DOCS-001": {
+      "change": "added",
+      "summary": "New clause. Every page in docs/site.json is served without a session at /docs and /docs/<slug> inside the same header and footer as the landing, each page links to its source on GitHub, an unlisted slug is a genuine 404 and no third-party resource loads. The docs routes and their /docs and /docs/ public paths already existed; this records them as a guaranteed, tested surface. package.json now names the public repository so the Edit this page links and repository links in the pages are built. No data or migration change."
     },
     "VIEW-001": {
       "change": "added",
@@ -57,6 +61,10 @@
     "RECORDS-004": {
       "change": "added",
       "summary": "Per-view typed CSV round-trip and three editable templates; no expansion to the wider planned records floor."
+    },
+    "RECORDS-007": {
+      "change": "added",
+      "summary": "Agent-proposed schema changes: an owner-issued proposing key (one base, 30-day maximum, revocable, digest only) reaches only the proposal door over REST and MCP, proposes schema, views and forms with an impact preview, and cannot adopt, read records or manage keys. Only the owner adopts through release.adopt with the existing recheck; proposal text is inert. No existing clause is weakened."
     }
   },
   "extensionPointChanges": [],
@@ -100,6 +108,10 @@
     {
       "id": "migrations/updates/9025_launch_search_identity.sql",
       "buyerSteps": "Apply after 9024 while preserving canonical Launch records and prior migration history. The migration changes derived search maintenance to indexed row identities. Verify existing search results and the erasure/restore journey before accepting the upgrade."
+    },
+    {
+      "id": "migrations/updates/9026_schema_proposals.sql",
+      "buyerSteps": "Apply after 9025 in the updates group, preserving all applied SQL. It adds proposing-key bindings and stored agent proposals; existing records, views, forms, keys, grants and memberships are unchanged. Installation archives never carry proposing-key bindings."
     }
   ],
   "breaking": true,

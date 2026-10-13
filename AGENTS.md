@@ -5,15 +5,15 @@
 Use Node 22.20.0 and pnpm 10.12.4. Start a checkout through these commands:
 
 ```sh
-node scripts/rer.mjs install
-node scripts/rer.mjs setup --answers answers.json --non-interactive
-node scripts/rer.mjs dev
-node scripts/rer.mjs verify
-node scripts/rer.mjs reset --yes
-node scripts/rer.mjs export --output exports/workspace.rer
-node scripts/rer.mjs import --input exports/workspace.rer --yes
-node scripts/rer.mjs deploy --dry-run
-node scripts/rer.mjs describe
+rer install
+rer setup --answers answers.json --non-interactive
+rer dev
+rer verify
+rer reset --yes
+rer export --output exports/workspace.rer
+rer import --input exports/workspace.rer --yes
+rer deploy --dry-run
+rer describe
 ```
 
 `answers.json` is an owner-only (0600) JSON file with `OWNER_EMAIL` and optional
@@ -24,7 +24,7 @@ credential). A dev badge switches between the owner, signed out and the personas
 them or `signed-out`. `dev --login` turns that off and uses the ordinary outbox: open
 the `RER_SIGN_IN` URL, choose the newest sign-in message and confirm it. Finish
 first-run details at `/setup`. Stop serving
-with `node scripts/rer.mjs dev --stop` before verify, reset or data movement. Export
+with `rer dev --stop` before verify, reset or data movement. Export
 before resetting data you want to keep. Deploy without `--dry-run` only when the
 owner explicitly requests it and supplies the declared account configuration.
 
@@ -150,7 +150,7 @@ find-or-create behavior and preservation of existing resources before claiming i
 
 Use README.md and actual package scripts for installation, local development,
 verification, provisioning, deployment and data export/restore. Do not infer
-provisioning from `node scripts/rer.mjs setup`, automatic deployment from a push, previews from a
+provisioning from `rer setup`, automatic deployment from a push, previews from a
 PR, or account-free operation from a command name. Run only implemented commands
 within session authority and record missing release capabilities in HANDOVER.md.
 

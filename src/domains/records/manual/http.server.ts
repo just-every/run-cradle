@@ -7,7 +7,8 @@ import { AdmissionError } from '../../admission/errors'
 import { idSchema } from '../validators'
 import type { RequestContext } from '../../authority/ports'
 import type { createManualSchemas } from './service.server'
-export function manualSchemaHttp(service:ReturnType<typeof createManualSchemas>,authenticate:(request:Request,ingress:RequestContext['ingress'],id:string)=>Promise<RequestContext>){
+import type { createProposalReview } from './proposal-review.server'
+export function manualSchemaHttp(service:ReturnType<typeof createManualSchemas>,review:ReturnType<typeof createProposalReview>,authenticate:(request:Request,ingress:RequestContext['ingress'],id:string)=>Promise<RequestContext>){
  const app=new Hono()
  app.all('*',async c=>{const request=c.req.raw,url=new URL(request.url),id=createUlid();try{
   const ctx=await authenticate(request,'http',id)
@@ -17,8 +18,13 @@ export function manualSchemaHttp(service:ReturnType<typeof createManualSchemas>,
   let data:unknown
   if(request.method==='POST'&&url.pathname==='/api/v1/records/schema-preview')data=await service.preview(ctx,await readJsonBody(request))
   else if(request.method==='POST'&&url.pathname==='/api/v1/commands/release.adopt'){
-   const input=z.object({commandId:idSchema,expected:z.array(z.unknown()).max(0),input:z.object({kind:z.literal('manual_schema'),previewId:idSchema}).strict()}).strict().parse(await readJsonBody(request))
-   data=(await service.adopt(ctx,input.commandId,input.input.previewId)).result
+   const input=z.object({commandId:idSchema,expected:z.array(z.unknown()).max(0),input:z.discriminatedUnion('kind',[z.object({kind:z.literal('manual_schema'),previewId:idSchema}).strict(),z.object({kind:z.literal('agent_proposal'),proposalId:idSchema}).strict()])}).strict().parse(await readJsonBody(request))
+   data=(input.input.kind==='manual_schema'?await service.adopt(ctx,input.commandId,input.input.previewId):await review.adopt(ctx,input.commandId,input.input.proposalId)).result
+  }else if(request.method==='GET'&&url.pathname==='/api/v1/records/proposals')data=await review.list(ctx)
+  else if(request.method==='GET'&&/^\/api\/v1\/records\/proposals\/[^/]+$/.test(url.pathname))data=await review.detail(ctx,idSchema.parse(url.pathname.split('/').at(-1)))
+  else if(request.method==='POST'&&/^\/api\/v1\/records\/proposals\/[^/]+\/decline$/.test(url.pathname)){
+   const input=z.object({commandId:idSchema,note:z.string().trim().max(2000).default('')}).strict().parse(await readJsonBody(request))
+   data=await review.decline(ctx,input.commandId,idSchema.parse(url.pathname.split('/').at(-2)),input.note)
   }else if(request.method==='GET'&&/^\/api\/v1\/records\/bases\/[^/]+$/.test(url.pathname))data=await service.read(ctx,idSchema.parse(url.pathname.split('/').at(-1)))
   else if(request.method==='GET'&&/^\/api\/v1\/records\/releases\/[^/]+\/recovery$/.test(url.pathname))data=await service.recovery(ctx,idSchema.parse(url.pathname.split('/').at(-2)))
   else throw new AdmissionError('not_found','Unknown manual schema route.')

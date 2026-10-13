@@ -1,4 +1,4 @@
-import {PortabilityError} from '../base-cli/modules/portability/index.mjs';
+import {PortabilityError} from '@runeditrun/rer/modules/portability';
 /** Installation data is complete; credentials and automatic dispatch never transfer. */
 export const transient = ['Durable Object initialization cache', 'WORK_QUEUE deliveries', 'local caches and logs'];
 export const portabilityPolicy = {
@@ -7,7 +7,7 @@ export const portabilityPolicy = {
   'sessions','authority_sessions','authority_magic_tokens','authority_credentials','authority_rate_limits',
   'cradle_base_operators','cradle_base_sessions','connection_credentials','connection_oauth_states',
   'runtime_transfer_credentials','admission_outbox','portability_%',
-  'authority_delegations','record_automation_destinations','record_automation_context','integration_tokens',
+  'authority_delegations','authority_schema_proposers','record_automation_destinations','record_automation_context','integration_tokens',
   'ik_stages','ik_d1_assertions','ik_d1_publication_fences','ik_d1_staging%',
   'ik_d1_native_staging%','ik_d1_preparation_receipts',
  ],

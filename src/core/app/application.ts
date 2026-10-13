@@ -11,6 +11,8 @@ import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { createUserKeyService } from '../../domains/authority/user-keys.server'
 import { createUserKeysHttp } from '../../domains/authority/user-keys-http.server'
+import { createProposerKeyService } from '../../domains/authority/proposer-keys.server'
+import { createProposerKeysHttp } from '../../domains/authority/proposer-keys-http.server'
 
 import { registerAutomationRoutes } from '../features/automations'
 import { registerCampaignRoutes } from '../features/campaigns'
@@ -67,6 +69,10 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
     createUserKeyService(platform.bindings.DB,foundation.policy,foundation.admission,platform.auth.configuration.appOrigin),
     request=>foundation.authenticate(request,'http',createUlid()),
   ))
+  app.route('/api/proposer-keys',createProposerKeysHttp(
+    createProposerKeyService(platform.bindings.DB,foundation.policy,foundation.admission,platform.auth.configuration.appOrigin),
+    request=>foundation.authenticate(request,'http',createUlid()),
+  ))
   app.route('/api/user-automations',automations.http)
   app.route('/api/v1/launch', createLaunchOwnersRouter(platform.bindings.DB, foundation))
   for (const path of ['/api/v1/connections/setup', '/api/v1/connections/:id/credentials']) app.all(path, context => providers.setupHttp.fetch(context.req.raw))
@@ -77,7 +83,8 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   for (const path of ['/api/v1/records/export-csv','/api/v1/records/import-preview','/api/v1/commands/records.import-commit']) app.all(path, context => records.csvHttp.fetch(context.req.raw))
   app.all('/api/v1/records/base-export', context => records.baseExportHttp.fetch(context.req.raw))
   app.all('/api/v1/records/base-import/*', context => records.baseImportHttp.fetch(context.req.raw))
-  for (const path of ['/api/v1/records/schema-preview','/api/v1/records/bases/:appId','/api/v1/records/releases/:releaseId/recovery','/api/v1/records/releases/:releaseId/recovery/*','/api/v1/commands/release.adopt']) app.all(path, context => records.manualHttp.fetch(context.req.raw))
+  for (const path of ['/api/v1/records/schema-preview','/api/v1/records/bases/:appId','/api/v1/records/releases/:releaseId/recovery','/api/v1/records/releases/:releaseId/recovery/*','/api/v1/commands/release.adopt','/api/v1/records/proposals','/api/v1/records/proposals/:id','/api/v1/records/proposals/:id/decline']) app.all(path, context => records.manualHttp.fetch(context.req.raw))
+  for (const path of ['/api/v1/proposals','/api/v1/proposals/*']) app.all(path, context => records.proposalHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/apps', '/api/v1/apps/:appId/forms', '/api/v1/apps/:appId/entities', '/api/v1/apps/:appId/entities/*', '/api/v1/apps/:appId/views', '/api/v1/views/*', '/api/v1/forms/*']) app.all(path, context => records.http.fetch(context.req.raw))
   for (const path of ['/api/v1/history', '/api/v1/comments']) app.all(path, context => records.historyHttp.fetch(context.req.raw))
   app.all('/api/v1/repairs/intake-context', context => repairIntake.http.fetch(context.req.raw))

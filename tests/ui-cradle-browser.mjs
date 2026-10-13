@@ -39,7 +39,7 @@ try {
     page.on('request', request => { if (!request.url().startsWith(origin)) external.push(request.url()) })
     await page.goto(origin); await page.waitForLoadState('networkidle')
     assert.equal(await page.getByRole('link', { name: 'Sign in', exact: true }).count(), 1)
-    assert.equal(await page.getByRole('navigation').count(), 0, 'Public identity has no operator navigation')
+    assert.equal(await page.getByRole('navigation').count(), 0, 'The Lobby has no operator navigation')
     if (accessibilityEvidence) await auditAccessibility(page, { screen: 'public-home', width, output })
     else await page.screenshot({ path: path.join(output, `public-${width}.png`), fullPage: true })
     assert.deepEqual(external, [], 'Public view must be self-hosted')

@@ -16,6 +16,8 @@ import { createSessionReader } from '../features/session/service'
 import { createPlatform } from '../platform'
 import { createApplication } from './application'
 import { getServerExtensionConfig } from './mount-server'
+import { installedHomeResponse } from './installed-home.server'
+import { noTransformDocument } from './document-cache.server'
 import type { AppEnv } from './types'
 
 export const isHonoRequest = (path: string) => path === '/mcp' || path.startsWith('/oauth/') || path.startsWith('/webhooks/') || path === '/health' || path === '/api' || path.startsWith('/api/') || path === '/auth' || path.startsWith('/auth/')
@@ -56,15 +58,18 @@ export default {
       if (!await createSessionReader(platform).getIdentity(request)) return platform.auth.redirectToSignIn(request)
     }
 
-    if (path.startsWith('/assets/') || path.startsWith('/fonts/') || path === '/favicon.ico' || path === '/apple-touch-icon.png' || path === '/rer-theme.css' || (import.meta.env.DEV && (path === '/@vite/client' || path === '/@id/virtual:tanstack-start-dev-client-entry' || path.startsWith('/src/') || path.startsWith('/node_modules/.vite/deps/') || path.startsWith('/node_modules/.pnpm/') || path === '/@react-refresh' || path === '/@tanstack-start/styles.css'))) return bindings.ASSETS.fetch(request)
+    if (path.startsWith('/assets/') || path.startsWith('/fonts/') || path === '/favicon.ico' || path === '/apple-touch-icon.png' || path === '/brand/mark.svg' || path === '/brand/band.svg' || path === '/rer-theme.css' || (import.meta.env.DEV && (path === '/@vite/client' || path === '/@id/virtual:tanstack-start-dev-client-entry' || path.startsWith('/@id/__x00__virtual:cradle-docs') || path.startsWith('/src/') || path.startsWith('/node_modules/.vite/deps/') || path.startsWith('/node_modules/.pnpm/') || path === '/@react-refresh' || path === '/@tanstack-start/styles.css'))) return bindings.ASSETS.fetch(request)
+    // The installed variant: the claim state and the Lobby at /, before the document renderer.
+    const home = await installedHomeResponse(request, bindings)
+    if (home) return home
     const document=editorDocumentHeaders(await start.fetch(request),bindings)
     if (path === '/setup') {
       const headers=new Headers(document.headers)
-      headers.set('cache-control','private, no-store')
+      headers.set('cache-control','private, no-store, no-transform')
       headers.append('vary','Cookie')
       return new Response(document.body,{status:document.status,statusText:document.statusText,headers})
     }
-    return document
+    return noTransformDocument(document)
 
     } catch (error) { return errorResponse(error, createUlid(), 'runtime.fetch') }
   },

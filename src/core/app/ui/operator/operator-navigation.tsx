@@ -15,6 +15,6 @@ export function OperatorNavigation(props: NavigationProps & { unreadNotification
 export function LaunchNavigation(props: NavigationProps & { items: Item[] }) {
   return <details className="operator-work-views" open={/^\/app\/(campaigns|launch|overview|milestones|risks|decisions|lenses|automations)/.test(props.currentPath)}><summary>Launch views</summary><p className="operator-nav-heading">Included template</p><nav aria-label="Launch readiness">{props.items.map(item => <NavigationLink key={item.href} item={item} {...props} />)}</nav></details>
 }
-export function UtilityNavigation({ unreadNotifications, onNavigate, items }: { unreadNotifications: number; onNavigate?: () => void; items: Item[] }) {
-  return <nav className="operator-utilities" aria-label="Workspace utilities">{items.map(item => <Link key={item.href} to={item.href} onClick={onNavigate}><OperatorIcon name={item.icon} /><span>{item.label}</span>{item.icon === 'bell' && unreadNotifications > 0 && <span aria-label={`${unreadNotifications} unread`}>{unreadNotifications}</span>}</Link>)}</nav>
+export function UtilityNavigation({ unreadNotifications, onNavigate, items, currentPath }: { unreadNotifications: number; onNavigate?: () => void; items: Item[]; currentPath: string }) {
+  return <nav className="operator-utilities" aria-label="Workspace utilities">{items.map(item => <Link key={item.href} to={item.href} onClick={onNavigate} aria-current={currentPath === item.href || currentPath.startsWith(`${item.href}/`) ? 'page' : undefined}><OperatorIcon name={item.icon} /><span>{item.label}</span>{item.icon === 'bell' && unreadNotifications > 0 && <span aria-label={`${unreadNotifications} unread`}>{unreadNotifications}</span>}</Link>)}</nav>
 }

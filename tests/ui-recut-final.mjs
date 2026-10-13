@@ -10,11 +10,12 @@ import {accessibilityContextOptions,accessibilityWidths} from './helpers/accessi
 import {freePort} from './helpers/free-port.mjs'
 
 const output=path.resolve(process.env.CRADLE_RECUT_OUTPUT??'../evidence/recut-final')
-async function comfortableGap(above,below){
- const first=await above.boundingBox(),second=await below.boundingBox()
- assert.ok(first&&second,'Both reviewed elements must be visible')
- const gap=second.y-first.y-first.height
- assert.ok(gap>=16&&gap<=64,JSON.stringify({gap,first,second}));return gap
+// The second element follows the first: below it, or (on wide screens) beside it at the right.
+async function comfortableGap(first,next){
+ const a=await first.boundingBox(),b=await next.boundingBox()
+ assert.ok(a&&b,'Both reviewed elements must be visible')
+ const below=b.y>=a.y+a.height-1,gap=below?b.y-a.y-a.height:b.x-a.x-a.width
+ assert.ok(gap>=16&&gap<=64,JSON.stringify({gap,below,a,b}));return gap
 }
 async function capture(page,j,name){
  await j.capture(name)
@@ -49,14 +50,14 @@ contract('RECORDS-003] [BASE-PUBLIC-003','final records review preserves spacing
     await j.action(page.getByRole('button',{name:'Add table',exact:true}));await page.getByLabel('Table name',{exact:true}).fill('Deals');await page.getByLabel('Field name',{exact:true}).fill('Deal')
     await j.field('Value','number');await j.field('Company link','relation',async editor=>editor.getByLabel('Linked table',{exact:true}).selectOption({label:'Companies'}))
     const base=await j.adopt();await j.record({Company:'Acme Co'});await j.table('Deals');await j.record({Deal:'First deal',Value:'12','Company link':{link:'Acme Co'}})
-    const dealsUrl=page.url(),heading=page.getByRole('heading',{name:'Deals',level:2,exact:true}),saved=page.locator('details').filter({has:page.locator('summary').filter({hasText:/^Saved views$/})})
-    const closedGap=await comfortableGap(saved,heading);await capture(page,j,'records-deals-closed')
+    const dealsUrl=page.url(),heading=page.getByRole('heading',{name:'Deals',level:2,exact:true}),saved=page.getByRole('button',{name:'Saved views',exact:true}),cardHead=page.locator('.cr-records-card-head'),toolbar=page.locator('.cr-records-toolbar'),savedPanel=page.getByRole('group',{name:'Saved views',exact:true})
+    await heading.waitFor();const closedGap=await comfortableGap(cardHead,toolbar);await capture(page,j,'records-deals-closed')
     await j.action(page.getByText('Forms',{exact:true}));await page.getByRole('heading',{name:'No forms for these records',level:2,exact:true}).waitFor();await capture(page,j,'records-forms-empty');await j.action(page.getByText('Forms',{exact:true}))
     await j.action(page.getByRole('button',{name:'Save view',exact:true}));const editor=page.locator('form.cr-card').filter({has:page.getByRole('heading',{name:'Save this work view',exact:true})})
     await editor.getByLabel('Name',{exact:true}).fill('Reviewed deals');const view=await j.command(editor.getByRole('button',{name:'Save view',exact:true}),'view.save')
-    await page.reload();await j.action(saved.locator('summary'));await page.getByLabel('Saved view',{exact:true}).selectOption(view.id);await page.getByRole('heading',{name:'Reviewed deals',level:2,exact:true}).waitFor()
+    await page.reload();await j.action(saved);await page.getByLabel('Saved view',{exact:true}).selectOption(view.id);await page.getByRole('heading',{name:'Reviewed deals',level:2,exact:true}).waitFor()
     const result=page.locator('.cr-saved-view-result');await savedGridRecord(result)
-    const openGap=await comfortableGap(saved,heading);await capture(page,j,'records-deals-open');await j.action(saved.locator('summary'))
+    const openGap=await comfortableGap(toolbar,savedPanel);await capture(page,j,'records-deals-open');await j.action(saved)
     await j.action(page.locator('table.cr-table').getByRole('link',{name:'First deal',exact:true}));await page.getByRole('heading',{name:'First deal',level:1,exact:true}).waitFor()
     const relation=page.locator('.cr-record-relation'),linkHeading=page.getByRole('heading',{name:'Company link',level:2,exact:true}),companyLink=relation.getByRole('link',{name:'Acme Co',exact:true})
     // LinkedRecord loads its own schema and record after the detail heading is rendered.
@@ -67,7 +68,7 @@ contract('RECORDS-003] [BASE-PUBLIC-003','final records review preserves spacing
     await capture(page,j,'record-detail');await j.action(back);await heading.waitFor();await j.action(page.locator('table.cr-table').getByRole('link',{name:'First deal',exact:true}));await linkHeading.waitFor()
     await j.action(companyLink);await page.getByRole('heading',{name:'Acme Co',level:1,exact:true}).waitFor();await capture(page,j,'company-link-reached')
     await j.action(page.getByRole('link',{name:'← Back to records',exact:true}));await page.getByRole('heading',{name:'Companies',level:2,exact:true}).waitFor()
-    await page.goto(dealsUrl);await j.action(saved.locator('summary'));await page.getByLabel('Saved view',{exact:true}).selectOption(view.id);await page.getByRole('heading',{name:'Reviewed deals',level:2,exact:true}).waitFor();await savedGridRecord(result);await capture(page,j,'saved-view-retained')
+    await page.goto(dealsUrl);await j.action(saved);await page.getByLabel('Saved view',{exact:true}).selectOption(view.id);await page.getByRole('heading',{name:'Reviewed deals',level:2,exact:true}).waitFor();await savedGridRecord(result);await capture(page,j,'saved-view-retained')
     assert.deepEqual(consoleErrors,[],`${width}: console errors`);assert.deepEqual(externalRequests,[],`${width}: external requests`)
     receipts.push({width,baseId:base.appId,viewId:view.id,closedGap,openGap,relationGap,consoleErrors,externalRequests,checkpoints:j.checkpoints})
    }finally{await context.close()}

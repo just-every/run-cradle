@@ -1,4 +1,4 @@
-/* The closing call to action and the footer. */
+/* The closing call to action. The footer is the shared site footer (src/core/app/site). */
 .lp .lp-close { position: relative; padding-block: calc(var(--section-pad) + 24px) var(--section-pad); text-align: center; }
 .lp .lp-close h2 { max-width: 12em; margin-inline: auto; }
 .lp .lp-close p { max-width: 26em; margin: 0 auto 16px; color: var(--muted); }
@@ -8,22 +8,10 @@
 .lp .lp-go { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 16px 32px; border-radius: 99px; background: var(--lime); color: var(--ink-deep); font-size: 18px; font-weight: 600; line-height: 1.3; box-shadow: 0 8px 24px rgba(160, 190, 40, 0.28); }
 .lp .lp-go:hover { background: #cbe84b; }
 
-.lp .lp-footer { padding-block: 48px 64px; border-top: 1px solid var(--line); }
-.lp .lp-footer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 32px; }
-.lp .lp-links { display: flex; flex-wrap: wrap; gap: 16px 32px; font-size: 15px; font-weight: 600; }
-.lp .lp-links a { display: inline-block; padding-block: 8px; color: var(--muted); }
-.lp .lp-links a:hover { color: var(--ink-deep); }
-.lp .lp-credit p { justify-content: flex-end; color: var(--muted); }
-.lp .lp-credit a { color: var(--muted); }
-.lp .lp-credit-mark { flex: none; width: 22px; height: 22px; }
-
 @media (max-width: 900px) {
   .lp .lp-cta-strand { height: 160px; margin-inline: -32px; }
 }
 @media (max-width: 640px) {
   .lp .lp-cta-strand { display: none; }
   .lp .lp-go { width: min(100%, 320px); }
-  .lp .lp-footer-row { flex-direction: column; align-items: flex-start; gap: 24px; }
-  .lp .lp-links { gap: 8px 24px; }
-  .lp .lp-credit p { justify-content: flex-start; }
 }

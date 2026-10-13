@@ -30,6 +30,12 @@
       ]
     },
     {
+      "id": "public-docs",
+      "clauses": [
+        "DOCS-001"
+      ]
+    },
+    {
       "id": "operator-workspace",
       "clauses": [
         "OPS-001",
@@ -387,11 +393,16 @@
       "/assets/",
       "/favicon.ico",
       "/apple-touch-icon.png",
+      "/brand/mark.svg",
+      "/brand/band.svg",
       "/rer-theme.css",
       "/fonts/",
       "/auth/confirm",
       "/auth/bootstrap",
-      "/setup"
+      "/setup",
+      "/setup/state",
+      "/docs",
+      "/docs/"
     ]
   },
   "customFields": [
@@ -487,6 +498,7 @@
       "/assets/": 600,
       "/favicon.ico": 120,
       "/apple-touch-icon.png": 120,
+      "/brand/mark.svg": 120,
       "/rer-theme.css": 120,
       "/auth/confirm": 20
     },

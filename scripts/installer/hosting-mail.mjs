@@ -1,6 +1,6 @@
 import {join} from 'node:path'
-import {readSettings} from '../base-onboarding/adapter-settings.mjs'
-import {privateDirectory,writePrivateFile} from '../base-onboarding/private-files.mjs'
+import {readSettings} from '@runeditrun/rer/adapter-settings'
+import {privateDirectory,writePrivateFile} from '@runeditrun/rer/private-files'
 
 /** The one manifest names runtime bindings. Local trials keep their own sink. */
 export async function prepareHostingMail(context){

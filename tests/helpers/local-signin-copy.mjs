@@ -29,5 +29,7 @@ export async function freshLocalCopy(){
    throw Object.assign(new Error(`Fresh clone ${args[1]??'command'} exited ${error.code??'unknown'}${events.length?': '+events.map(event=>event.code).join(', '):''}${reason?' ('+reason+(frames.length?' at '+frames.join(', '):'')+')':''}.`),{exitCode:Number(error.code),errorCode:events[0]?.code,errorLocation})
   }
  }
- return {root,source,log,environment,node:(args)=>execute(process.execPath,args),command:(args,env)=>execute('pnpm',args,env),rer:(args)=>execute(process.execPath,['scripts/rer.mjs',...args,'--json']),readVars:async()=>Object.fromEntries((await readFile(path.join(source,'.dev.vars'),'utf8')).trim().split('\n').map(line=>{const i=line.indexOf('=');let value=line.slice(i+1);if(value.startsWith('"'))value=JSON.parse(value);return[line.slice(0,i),value]}))}
+ // Package mode: rer is the clone's locked devDependency, so the copy installs before its first rer verb.
+ await execute('pnpm',['install','--frozen-lockfile'])
+ return {root,source,log,environment,node:(args)=>execute(process.execPath,args),command:(args,env)=>execute('pnpm',args,env),rer:(args)=>execute(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs',...args,'--json']),readVars:async()=>Object.fromEntries((await readFile(path.join(source,'.dev.vars'),'utf8')).trim().split('\n').map(line=>{const i=line.indexOf('=');let value=line.slice(i+1);if(value.startsWith('"'))value=JSON.parse(value);return[line.slice(0,i),value]}))}
 }

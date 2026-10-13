@@ -71,9 +71,9 @@ try {
     page.on('requestfailed',request=>failed.push({url:request.url(),error:request.failure()}))
     page.on('response',response=>{if(response.status()>=400)responses.push({url:response.url(),status:response.status()})})
     page.on('request',request=>{paths.add(new URL(request.url()).pathname);if(request.isNavigationRequest()&&request.frame()===page.mainFrame())navigations++})
-    await page.goto(origin);await page.getByRole('link',{name:'Sign in',exact:true}).waitFor();await page.waitForLoadState('networkidle')
+    await page.goto(origin+'/docs');await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).waitFor();await page.waitForLoadState('networkidle')
     const time=await page.evaluate(()=>performance.timeOrigin)
-    await page.getByRole('link',{name:'Sign in',exact:true}).click();await page.waitForURL('**/signin');await page.waitForLoadState('networkidle')
+    await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click();await page.waitForURL('**/signin');await page.waitForLoadState('networkidle')
     await navigateFromSignInToApp(page);await page.waitForURL('**/app');await page.getByText('Live campaigns',{exact:true}).waitFor();await page.waitForLoadState('networkidle')
     assert.equal(await page.evaluate(()=>performance.timeOrigin),time);assert.equal(navigations,1)
     for(const route of ['/app', '/app/overview','/app/campaigns',`/app/campaigns/${target.id}`,'/app/lenses/risks','/app/lenses/timeline','/app/settings','/app/notifications','/app/automations']) {

@@ -104,19 +104,19 @@ be recognised as stale. Raw database imports also bypass product safeguards.
 Recovery rehearsal (run from a disposable installation, with serving stopped). Set `PORT` to its configured local port; `answers.json` contains the returning owner email. The truncated import is expected to exit 1; continue with the original archive:
 
 ```sh
-node scripts/rer.mjs dev --stop --json
-node scripts/rer.mjs export --output exports/first.rer --non-interactive --json
-node scripts/rer.mjs reset --yes --non-interactive --json
+rer dev --stop --json
+rer export --output exports/first.rer --non-interactive --json
+rer reset --yes --non-interactive --json
 pnpm run db:migrate:local
 node --input-type=module -e "import {readFile,writeFile} from 'node:fs/promises'; await writeFile('truncated.rer',(await readFile('exports/first.rer','utf8')).split('\n').slice(0,-2).join('\n')+'\n',{mode:0o600})"
-node scripts/rer.mjs import --input truncated.rer --yes --non-interactive --json
-node scripts/rer.mjs import --input exports/first.rer --yes --non-interactive --json
-node scripts/rer.mjs setup --answers answers.json --port "$PORT" --non-interactive --json
-node scripts/rer.mjs dev --login --non-interactive --json
+rer import --input truncated.rer --yes --non-interactive --json
+rer import --input exports/first.rer --yes --non-interactive --json
+rer setup --answers answers.json --port "$PORT" --non-interactive --json
+rer dev --login --non-interactive --json
 ```
 
 `truncated.rer` is a scratch copy of `exports/first.rer` with its closing line removed.
-While the final dev command is serving, run `node scripts/rer.mjs outbox --json` in a second terminal. Keep the outbox and one-use sign-in link private.
+While the final dev command is serving, run `rer outbox --json` in a second terminal. Keep the outbox and one-use sign-in link private.
 The first import must refuse and leave the empty target unchanged. The second
 imports the original complete archive. Open the newly printed outbox, sign in as
 the installation owner, and edit a restored record. The targeted

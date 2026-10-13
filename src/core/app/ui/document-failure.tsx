@@ -4,6 +4,7 @@ import type { CurrentSession } from '../../shared/session'
 import type { SeedConfig } from '../../shared/config'
 import { OperatorShell } from './operator'
 import { PublicLayout } from './public-layout'
+import { CradleArt } from '../../../ui/shared/cradle-art'
 
 export const documentForbiddenMessage = 'Your current access does not permit this page.'
 
@@ -13,13 +14,13 @@ export function DocumentFailure({ error, retry, session, config, path }: {
   useEditorLeafReady(path)
   const forbidden = error instanceof Error && error.message === documentForbiddenMessage
   const content = <section className="cr-state cr-document-failure" role="alert">
-    <p className="cr-eyebrow">{forbidden ? 'Access changed' : 'Could not load'}</p>
+    <span className={`cr-tag ${forbidden ? 'cr-tag--access' : 'cr-tag--error'}`}>{forbidden ? 'Access changed' : 'Could not load'}</span>
     <h1>{forbidden ? 'This page is outside your access' : 'Could not load this page'}</h1>
     <p>{forbidden ? documentForbiddenMessage : 'The current page data could not be read. Try again to check the latest state.'}</p>
     <p className="cr-muted">Page: {path}</p>
     <div className="cr-actions"><button className="cr-button" onClick={retry}>Retry</button><a className="cr-button cr-button--quiet" href="/app/records">Open records</a><a className="cr-link" href="/app">Return home</a></div>
   </section>
-  return session ? <OperatorShell currentPath={path} title="Page unavailable" identity={{ name: session.operator.name, initials: session.operator.initials, workspaceName: session.workspace.name, unreadNotifications: session.unreadNotifications }}><div className="cr-page">{content}</div></OperatorShell> : <PublicLayout config={config}>{content}</PublicLayout>
+  return session ? <OperatorShell currentPath={path} title="Page unavailable" identity={{ name: session.operator.name, initials: session.operator.initials, workspaceName: session.workspace.name, unreadNotifications: session.unreadNotifications }}><div className="cr-page"><div className="cr-state-art"><CradleArt variant="broken" />{content}</div></div></OperatorShell> : <PublicLayout config={config}>{content}</PublicLayout>
 }
 
 // Use the same boundary for server-rendered child loader failures and client

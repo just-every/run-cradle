@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {PortabilityError} from '../base-cli/modules/portability/index.mjs';
+import {PortabilityError} from '@runeditrun/rer/modules/portability';
 
 /** Private execution envelopes are configuration-bound and never installation data.
  * Verify retained uploads against their write-time digest, not a new digest of

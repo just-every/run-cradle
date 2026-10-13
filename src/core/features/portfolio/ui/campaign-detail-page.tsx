@@ -166,11 +166,11 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
       session={session.resource.data}
       actions={
         <>
-          <a className="operator-button" href="/app/campaigns">
+          <a className="cr-button cr-button--quiet" href="/app/campaigns">
             Back to grid
           </a>
           <button
-            className="operator-button operator-button--primary"
+            className="cr-button"
             type="button"
             onClick={() => {
               setMutationError(null);
@@ -273,7 +273,7 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
               </label>
               <footer>
                 <button
-                  className="operator-button"
+                  className="cr-button cr-button--quiet"
                   type="button"
                   disabled={saving}
                   onClick={() => setEditing(false)}
@@ -281,7 +281,7 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
                   Cancel
                 </button>
                 <button
-                  className="operator-button operator-button--primary"
+                  className="cr-button"
                   type="submit"
                   disabled={saving}
                 >

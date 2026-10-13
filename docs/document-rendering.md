@@ -42,7 +42,7 @@ Root's focused verification at
 `tests/start-runtime.mjs`, `tests/start-resources.mjs`, `tests/http-smoke.mjs` and
 `tests/migration-history.mjs` checks. The Start checks exercise real documents
 and generated `/_serverFn/` transport on the emitted Worker. Before merging a
-candidate, its own full `node scripts/rer.mjs verify` must pass and include the
+candidate, its own full `rer verify` must pass and include the
 Start and migration stages. The final Cradle-6 report records that exact release
 identity and CI run; these local receipts alone do not assert full-wall or
 hosted acceptance.

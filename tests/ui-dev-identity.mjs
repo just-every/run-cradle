@@ -13,7 +13,7 @@ import {outboxSession} from './helpers/rer-development.mjs'
 import {bindings} from './helpers/rer-data-fixture.mjs'
 import {signInAs} from '../vendor/base/modules/operator-auth/dev/sign-in-as.mjs'
 import {rebind} from './helpers/rer-archive-integrity.mjs'
-import {sha256,canonicalJson} from '../scripts/base-cli/modules/portability/index.mjs'
+import {sha256,canonicalJson} from '@runeditrun/rer/modules/portability'
 
 // A tunnel or reverse proxy rewrites the Host header to the local origin, so the origin
 // looks local. Only the key can tell this request from the person at the terminal.

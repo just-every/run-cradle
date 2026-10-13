@@ -26,6 +26,7 @@ type OperatorShellProps = PropsWithChildren<{
   currentPath: string;
   identity: OperatorShellIdentity;
   title?: string;
+  description?: ReactNode;
   actions?: ReactNode;
 }>;
 
@@ -76,7 +77,7 @@ const OperatorRail = ({
       onNavigate={onNavigate}
     />
     {showLaunch && <LaunchNavigation items={launch} currentPath={currentPath} onNavigate={onNavigate} />}
-    <UtilityNavigation items={utilities} unreadNotifications={identity.unreadNotifications} onNavigate={onNavigate} />
+    <UtilityNavigation items={utilities} currentPath={currentPath} unreadNotifications={identity.unreadNotifications} onNavigate={onNavigate} />
     <div className="operator-rail-footer">
       <span className="operator-avatar" aria-hidden="true">
         {identity.initials}
@@ -95,6 +96,7 @@ export const OperatorShell = ({
   currentPath,
   identity,
   title,
+  description,
   actions,
 }: OperatorShellProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -159,6 +161,7 @@ export const OperatorShell = ({
             <div>
               <p className="operator-page-kicker">{identity.workspaceName}</p>
               {title ? <h1>{title}</h1> : null}
+              {description ? <p className="operator-page-description">{description}</p> : null}
             </div>
             {actions ? (
               <div className="operator-page-actions">{actions}</div>

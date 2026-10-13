@@ -1,7 +1,7 @@
 import {createRequire} from 'node:module';
 import {join} from 'node:path';
-import {PortabilityError} from '../base-cli/modules/portability/index.mjs';
-import {catalogue,policy} from '../base-cli/modules/portability/catalogue.mjs';
+import {PortabilityError} from '@runeditrun/rer/modules/portability';
+import {catalogue,policy} from '@runeditrun/rer/modules/portability/catalogue';
 import {archiveRecords} from './files.mjs';
 const quote=name=>'"'+name.replaceAll('"','""')+'"';
 const normalize=sql=>sql.replace(/;\s*$/,'').replace(/\s+/g,' ').trim();

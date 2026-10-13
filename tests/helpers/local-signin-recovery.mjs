@@ -27,8 +27,8 @@ export async function verifyIdentityAndRecovery({browser,context,page,viewport,o
     for(const name of ['North Quay','Cedar']) {
       await rename(name)
       await publicPage.goto(origin+'/')
-      await publicPage.getByRole('link',{name:`Sign in to ${name}`,exact:true}).waitFor()
-      assert.equal(await publicPage.getByRole('link',{name:`Sign in to ${name}`,exact:true}).count(),1)
+      await publicPage.getByRole('link',{name:'Sign in',exact:true}).waitFor()
+      assert.ok((await publicPage.locator('body').innerText()).includes(name),'The Lobby names the persisted rename')
       await capture(publicPage,`identity-${name.replace(' ','-').toLowerCase()}`,`identity-${name.replace(' ','-').toLowerCase()}-${viewport.width}.png`)
       await publicPage.goto(origin+'/signin')
       assert.equal(await publicPage.getByLabel('Email address').isVisible(),true)

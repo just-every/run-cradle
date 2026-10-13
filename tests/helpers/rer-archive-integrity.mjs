@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import {writeFile} from 'node:fs/promises'
 import {join} from 'node:path'
 import {createHash} from 'node:crypto'
-import {makePart,ContentVerifier,ArchiveVerifier} from '../../scripts/base-cli/modules/portability/format.mjs'
+import {makePart,ContentVerifier,ArchiveVerifier} from '@runeditrun/rer/modules/portability/format'
 import {bindings,ownedData} from './rer-data-fixture.mjs'
 /** Re-sign a deliberately altered archive's content and whole-archive digests, so a
  * refusal can only come from the deeper check the caller is proving. */

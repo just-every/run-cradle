@@ -63,9 +63,9 @@ test('the Worker seeds and serves the real portfolio spine locally', async (cont
   assert.equal(health.status, 200)
   assert.deepEqual(await health.json(), { status: 'ok', database: 'available' })
 
-  const landing = await fetch(`${baseUrl}/`)
-  assert.equal(landing.status, 200)
-  assert.match(await landing.text(), /id="root"/)
+  const lobby = await fetch(`${baseUrl}/`)
+  assert.equal(lobby.status, 200)
+  assert.match(await lobby.text(), /<a class="btn" href="\/(?:setup|signin)">/)
 
   const signInPage = await fetch(`${baseUrl}/signin`)
   assert.equal(signInPage.status, 200)

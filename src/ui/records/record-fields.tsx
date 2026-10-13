@@ -9,14 +9,24 @@ import type { Member } from '../../domains/authority/contracts'
 import { useResource } from '../shared/api'
 import { money } from '../shared/presentation'
 
+const toneByMeaning: Record<string, ChipTone> = { high: 'coral', blocked: 'coral', critical: 'coral', lost: 'coral', medium: 'butter', 'in progress': 'butter', qualified: 'butter', low: 'mint', ready: 'mint', done: 'mint', won: 'mint', planning: 'lilac', new: 'lilac' }
+const toneCycle = ['lilac', 'butter', 'mint', 'coral'] as const
+export type ChipTone = typeof toneCycle[number]
+/** A select option's chip colour: by meaning where known, otherwise by option order. */
+export function chipTone(field: Field, optionId: string): ChipTone {
+  const index = field.options?.findIndex(option => option.id === optionId) ?? -1
+  const label = index >= 0 ? field.options![index]!.label.trim().toLowerCase() : ''
+  return toneByMeaning[label] ?? toneCycle[Math.max(index, 0) % toneCycle.length]!
+}
 export function CellDisplay({ cell, field, appId }: { cell: Cell | undefined; field?: Field; appId?: string }) {
   if (!cell) return <span className="cr-muted">Not recorded</span>
   if (cell.state === 'redacted') return <span className="cr-muted">{cell.reason === 'erased' ? 'Erased' : 'Restricted'}</span>
   if (cell.state === 'unavailable') return <span title={cell.message} className="cr-error">Unavailable · {cell.message}</span>
   const value = cell.value
   if (value === null) return <span className="cr-muted">Not set</span>
-  if (typeof value === 'boolean') return <>{value ? 'Yes' : 'No'}</>
-  if (field?.type === 'select' || field?.type === 'multi_select' || field?.type === 'computed' && field.resultType === 'select') { const ids = Array.isArray(value) ? value : [value]; return <>{ids.map((id, index) => <span className="cr-record-chip" key={index}>{index ? ', ' : ''}{field.options?.find(option => option.id === id)?.label ?? <span className="cr-error">Option unavailable</span>}</span>)}</> }
+  if (typeof value === 'boolean') return value ? <>Yes</> : <span className="cr-muted">No</span>
+  if (field?.type === 'select' || field?.type === 'multi_select' || field?.type === 'computed' && field.resultType === 'select') { const ids = Array.isArray(value) ? value : [value]; return <>{ids.map((id, index) => <span className={`cr-record-chip cr-record-chip--${typeof id === 'string' ? chipTone(field, id) : 'lilac'}`} key={index}>{index ? <span className="cr-sr-only">, </span> : null}{field.options?.find(option => option.id === id)?.label ?? <span className="cr-error">Option unavailable</span>}</span>)}</> }
+  if (field?.type === 'computed' && typeof value === 'string') return <span className="cr-derived">{value}</span>
   if (field?.type === 'person' && typeof value === 'string') return appId ? <PersonName appId={appId} id={value} /> : <span className="cr-error">Person lookup unavailable</span>
   if (typeof value === 'string') return <>{value}</>
   if ('minor' in value) return <>{money(value as Money)}</>

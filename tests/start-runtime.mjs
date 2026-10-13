@@ -34,7 +34,7 @@ const routesFor = ({ campaign, risk, milestone, decision, lens }) => [
   '/app/automations', '/app/notifications', '/app/settings', '/app/settings/workspace',
 ]
 
-contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-002', 'Start documents, real generated functions and APIs independently validate native sessions; domain data is fresh in SSR', async (context) => {
+contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real generated functions and APIs independently validate native sessions; domain data is fresh in SSR', async (context) => {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-start-'))
   let worker
   let browser
@@ -87,12 +87,12 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-002', 'Start documents, real genera
   for (const [document, marker] of fresh) assert.ok(bodyContent(await (await get(document)).text()).includes(marker), `${document} must SSR ${marker}`)
   for (const document of ['/','/signin']) {
     const publicHtml = await (await get(document, '')).text()
-    assert.match(publicHtml, /Migration workspace current/, 'HOME-002 publishes the current workspace identity name')
+    assert.match(publicHtml, /Migration workspace current/, 'The Lobby and sign-in publish the current workspace identity name')
     assert.doesNotMatch(publicHtml, /Migration (campaign|risk|milestone|decision|lens|automation|notification) current|Maya Chen|maya@northstar\.example/, 'Public identity exposes no private records or operator identity')
   }
   for (const document of ['/missing','/assets/missing.js','/@vite/client','/@id/virtual:tanstack-start-dev-client-entry','/@tanstack-start/styles.css','/src/core/app/styles.css','/app/missing','/api/missing']) for (const headers of [{}, { 'sec-fetch-mode': 'navigate' }]) assert.equal(await responseStatus(get(document, cookie, headers)),404,document)
   assert.equal(await new Promise((resolve, reject) => { http.get(`${origin}/health`, { headers: { host: 'unsupported.invalid' } }, response => { response.resume(); resolve(response.statusCode) }).on('error', reject) }), 404)
-  const landing = await (await get('/')).text(); const stylesheet = landing.match(/href="(\/assets\/[^\"]+\.css)"/)[1]
+  const signinDocument = await (await get('/signin')).text(); const stylesheet = signinDocument.match(/href="(\/assets\/[^\"]+\.css)"/)[1]
   const style = await get(stylesheet); assert.match(style.headers.get('content-type'), /text\/css/); assert.ok((await style.text()).length > 100)
   browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {})
   const captures = new Map()
@@ -103,8 +103,9 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-002', 'Start documents, real genera
     await browserContext.addCookies([{ name: cookie.split('=')[0], value: cookie.slice(cookie.indexOf('=')+1), url: origin }])
     const page = await browserContext.newPage(); const errors=[]; const failed=[]; let navigations=0; let publicNavigation=true
     page.on('response', response => { if (response.status() >= 400) console.error('START_HTTP_FAILURE', response.status(), response.url()) }); page.on('pageerror', error=>errors.push(error.message)); page.on('console', event=>{if(event.type()==='error')errors.push(event.text())}); page.on('requestfailed', request=>failed.push(request.url())); page.on('request', request=>{if(request.isNavigationRequest()&&request.frame()===page.mainFrame())navigations++; if(request.url().includes('/_serverFn/')){captures.set(request.url(),request.headers());if(publicNavigation)publicTransports.add(request.url())}})
-    await page.goto(`${origin}/`); const time = await page.evaluate(()=>performance.timeOrigin)
-    await page.getByRole('link',{name:'Sign in',exact:true}).click(); await page.waitForURL('**/signin');await page.waitForLoadState('networkidle');publicNavigation=false
+    // The docs are a public router document with the shared header's Sign in pill; the Lobby at / is plain HTML.
+    await page.goto(`${origin}/docs`); const time = await page.evaluate(()=>performance.timeOrigin)
+    await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click(); await page.waitForURL('**/signin');await page.waitForLoadState('networkidle');publicNavigation=false
     await navigateFromSignInToApp(page); await page.waitForURL('**/app')
     assert.equal(await page.evaluate(()=>performance.timeOrigin),time);assert.equal(navigations,1)
     await page.getByText('Live campaigns',{exact:true}).waitFor(); await page.waitForLoadState('networkidle')

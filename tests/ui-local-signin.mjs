@@ -77,9 +77,8 @@ async function freshViewport(viewport,evidence){
         observations.assertClean(undefined,label)
         if(!accessibilityEvidence&&screenshot)await page.screenshot({path:path.join(evidence,`${label}-${viewport.width}.png`),fullPage:true})
       }
-      await page.goto(origin+'/');await page.getByRole('heading',{level:1,name:'Everything comes together in one place.',exact:true}).waitFor();await page.getByRole('link',{name:'Sign in to My records',exact:true}).waitFor();await check('home-public')
-      assert.equal(await page.getByRole('heading',{level:1}).count(),1,'Landing has one h1')
-      assert.equal(await page.getByRole('link',{name:/runeditrun.com/}).getAttribute('href'),'https://runeditrun.com')
+      await page.goto(origin+'/');await page.getByRole('link',{name:'Finish setup',exact:true}).waitFor();await check('home-public')
+      assert.equal(await page.getByRole('heading',{level:1}).count(),1,'The Lobby has one h1')
       const signinResponse=await fetch(origin+'/signin',{redirect:'manual'});assert.equal(signinResponse.status,200,'Bare sign-in renders without a canonical search redirect')
       const html=await signinResponse.text();assert.match(html,/id="signin-email"/);assert.doesNotMatch(html,/Checking sign-in|Welcome back|Continue with local development identity/)
       await page.goto(origin+'/signin');await page.waitForLoadState('networkidle');observations.assertClean(undefined,'sign-in bootstrap');await page.getByLabel('Email address').fill('local-owner@example.test');await check('signin')
@@ -196,7 +195,7 @@ async function freshViewport(viewport,evidence){
        const deep=await context.request.get(origin+'/app/records',{maxRedirects:0});assert.equal(new URL(deep.headers().location,origin).pathname,'/setup')
        // Drive the real mounted router through its public navigation method:
        // client document transport must enforce the same unfinished state.
-       await page.goto(origin+'/');await navigateClient('/app/records');await page.waitForURL(origin+'/setup')
+       await page.goto(origin+'/docs');await navigateClient('/app/records');await page.waitForURL(origin+'/setup')
        await check('setup');await accessibilityAction(page,page.getByRole('button',{name:'Open my workspace',exact:true}))
       }
       await page.waitForURL(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()

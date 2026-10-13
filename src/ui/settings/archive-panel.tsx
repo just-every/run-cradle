@@ -5,7 +5,7 @@ type ArchiveProgress = { id: string; kind: 'export'; state: 'queued' | 'running'
 export function ArchivePanel() {
   const command = useCommand<{ id: string; state: 'queued' }>('installation-export')
   const jobId = command.result.state === 'committed' ? command.result.value.id : 'runId' in command.result ? command.result.runId : undefined
-  return <section className="cr-section"><h2>Export your installation</h2><p>Create a portable archive of the data and source you are permitted to export. Connections and delegated authority need explicit review when restoring elsewhere.</p><button className="cr-button cr-button--quiet" disabled={!['idle', 'failed'].includes(command.result.state)} onClick={() => void command.submit('/api/v1/commands/export.start', { scope: 'installation', format: 'archive' }, [])}>Prepare archive</button>{command.result.state !== 'committed' && <CommandFeedback {...command} />}{jobId && <ArchiveStatus id={jobId} />}</section>
+  return <section className="cr-card cr-archive"><h2>Export your installation</h2><p>Create a portable archive of the data and source you are permitted to export. Connections and delegated authority need explicit review when restoring elsewhere.</p><button className="cr-button cr-button--quiet" disabled={!['idle', 'failed'].includes(command.result.state)} onClick={() => void command.submit('/api/v1/commands/export.start', { scope: 'installation', format: 'archive' }, [])}>Prepare archive</button>{command.result.state !== 'committed' && <CommandFeedback {...command} />}{jobId && <ArchiveStatus id={jobId} />}</section>
 }
 function ArchiveStatus({ id }: { id: string }) {
   const archive = useResource<ArchiveProgress>(`/api/v1/archive-jobs/${id}`)

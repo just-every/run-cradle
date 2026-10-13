@@ -1,6 +1,6 @@
 import {join} from 'node:path';
 import {createRequire} from 'node:module';
-import {createPortability,PortabilityError} from '../base-cli/modules/portability/index.mjs';
+import {createPortability,PortabilityError} from '@runeditrun/rer/modules/portability';
 import {installationBucket} from './bucket.mjs';
 import {portabilityPolicy,transient} from './policy.mjs';
 import {archiveRecords,exportFile,importFile} from './files.mjs';

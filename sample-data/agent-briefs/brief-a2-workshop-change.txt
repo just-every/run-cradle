@@ -1,0 +1,4 @@
+# Second proposal for the adopted workshop base, made while it holds records.
+Change: Workshop tool library
+Tools: add Shelf location (text)
+Views: a grid of Tools sorted by Shelf location

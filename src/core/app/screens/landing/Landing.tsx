@@ -3,11 +3,11 @@ import { Closing } from './Closing'
 import { Hero } from './Hero'
 import { Ownership } from './Ownership'
 import { Practical } from './Practical'
-import { SiteFooter } from './SiteFooter'
-import { SiteHeader } from './SiteHeader'
 import { Tables } from './Tables'
 import { Views } from './Views'
 import { Defs } from './parts/Defs'
+import { SiteFooter } from '../../site/SiteFooter'
+import { SiteHeader } from '../../site/SiteHeader'
 import './css/base.css'
 import './css/hero.css'
 import './css/hero-art.css'
@@ -17,20 +17,20 @@ import './css/sections.css'
 import './css/practical.css'
 import './css/ownership.css'
 import './css/closing.css'
+import './css/docs-links.css'
 import './css/motion.css'
 
 export type LandingProps = {
   productName: string
-  workspaceName: string
   landingMessage: string
   showCredit: boolean
 }
 
-/** The public product page at `/`. Static copy and illustrations plus the four values the owner configures. */
-export function Landing({ productName, workspaceName, landingMessage, showCredit }: LandingProps) {
+/** The approved product page, served at `/` of the run site (run-cradle.com; src/site/pages.tsx). Static copy and illustrations plus the values the owner configures. */
+export function Landing({ productName, landingMessage, showCredit }: LandingProps) {
   return <div className="lp">
     <Defs />
-    <SiteHeader productName={productName} />
+    <SiteHeader productName={productName} page="home" />
     <main>
       <Hero landingMessage={landingMessage} />
       <div className="lp-carry" aria-hidden="true">
@@ -48,8 +48,8 @@ export function Landing({ productName, workspaceName, landingMessage, showCredit
       <Changes />
       <Practical />
       <Ownership />
-      <Closing workspaceName={workspaceName} />
+      <Closing />
     </main>
-    <SiteFooter productName={productName} showCredit={showCredit} />
+    <SiteFooter productName={productName} showCredit={showCredit} page="home" />
   </div>
 }

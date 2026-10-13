@@ -87,7 +87,7 @@ export const CampaignInspector = ({
     </dl>
     <CampaignHealth campaign={campaign} />
     <a
-      className="operator-button operator-button--primary"
+      className="cr-button"
       href={campaignHref(campaign.id)}
     >
       Open campaign

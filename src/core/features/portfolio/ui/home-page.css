@@ -1,2 +1,19 @@
-.cr-home-records .cr-muted,
-.cr-home-records + .operator-resource-state > p { color: #52645d; }
+/* Home: the Records builder welcome card with Cradle's artwork. */
+.cr-home-records { padding-top: 8px; padding-bottom: 16px; }
+.cr-welcome { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr); align-items: center; gap: 40px; max-width: 1280px; padding: 56px 48px; }
+.cr-welcome h2 { max-width: 15em; margin: 0 0 20px; font-size: 44px; line-height: 1.08; letter-spacing: -.025em; text-wrap: balance; }
+.cr-welcome-copy > p:not(.cr-eyebrow) { max-width: 46ch; margin: 0 0 28px; color: var(--ink); font-size: 18px; text-wrap: pretty; }
+.cr-welcome-copy > p.cr-welcome-hint { max-width: none; margin: 24px 0 0; color: var(--muted); font-size: 15px; }
+.cr-welcome-art svg { display: block; width: 100%; max-width: 600px; height: auto; margin-inline: auto; }
+
+@media (max-width: 1100px) {
+  .cr-welcome { grid-template-columns: 1fr; }
+  .cr-welcome-art { order: -1; max-width: 520px; }
+}
+@media (max-width: 760px) {
+  .cr-home-records { padding-top: 0; }
+  .cr-welcome { grid-template-columns: 1fr; gap: 16px; padding: 24px; }
+  .cr-welcome-copy > p:not(.cr-eyebrow) { font-size: 16px; }
+  .cr-welcome-art { order: -1; }
+  .cr-welcome h2 { font-size: 30px; }
+}

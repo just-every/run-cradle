@@ -17,10 +17,11 @@ export function Timestamp({ value }: { value: string | null }) {
   const client = useSyncExternalStore(noTimestampSubscription, () => true, () => false)
   return value ? <time dateTime={value}>{client ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : new Date(value).toISOString()}</time> : <span>Not recorded</span>
 }
+const stateTone = { loading: '', signed_out: 'cr-tag--access', forbidden: 'cr-tag--access', not_found: 'cr-tag--warn', failed: 'cr-tag--error' } as const
 export function ResourceState<T>({ resource, operation, retry, children }: { resource: Resource<T>; operation: string; retry: () => void; children: (data: T) => ReactNode }) {
   if (resource.state === 'ready') return <>{children(resource.data)}</>
   const titles = { loading: `Loading ${operation}`, signed_out: 'Please sign in again', forbidden: 'This work is outside your access', not_found: `${operation} is unavailable`, failed: `Could not load ${operation}` }
-  return <section className="cr-state" aria-live="polite" aria-busy={resource.state === 'loading'}><span className="cr-eyebrow">{resource.state === 'loading' ? 'One moment' : 'Current state'}</span><h2>{titles[resource.state]}</h2>{'error' in resource && <p>{resource.error.message}</p>}{resource.state === 'signed_out' ? <a className="cr-button" href="/signin">Sign in</a> : resource.state === 'failed' ? <button className="cr-button" onClick={retry}>Try reading again</button> : null}</section>
+  return <section className="cr-state" aria-live="polite" aria-busy={resource.state === 'loading'}><span className={`cr-tag ${stateTone[resource.state]}`}>{resource.state === 'loading' ? 'One moment' : 'Current state'}</span><h2>{titles[resource.state]}</h2>{'error' in resource && <p>{resource.error.message}</p>}{resource.state === 'signed_out' ? <a className="cr-button" href="/signin">Sign in</a> : resource.state === 'failed' ? <button className="cr-button" onClick={retry}>Try reading again</button> : null}</section>
 }
 export function Empty({ title, children, action, headingLevel = 3 }: { title: string; children: ReactNode; action?: ReactNode; headingLevel?: 2 | 3 | 4 }) {
   const Heading = headingLevel === 2 ? 'h2' : headingLevel === 4 ? 'h4' : 'h3'

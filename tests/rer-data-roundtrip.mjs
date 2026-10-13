@@ -15,7 +15,7 @@ import {freshLocalCopy} from './helpers/local-signin-copy.mjs';
 import {bindings,seedData,visibleData,ownedData} from './helpers/rer-data-fixture.mjs';
 import {restoredSignIn} from './helpers/rer-restored-signin.mjs';
 import {sourceAuthority} from './helpers/rer-source-authority.mjs';
-import {sha256,canonicalJson} from '../scripts/base-cli/modules/portability/index.mjs';
+import {sha256,canonicalJson} from '@runeditrun/rer/modules/portability';
 const semantics=records=>({tables:records[0].tables,excludedColumns:records[0].excludedColumns,objects:records[0].objects,payloads:records[0].payloads,requiredConfiguration:records[0].requiredConfiguration,items:records.filter(r=>r.kind==='part').flatMap(p=>p.items)});
 const archive=async(root,name)=>JSON.parse('['+(await readFile(join(root,name),'utf8')).trim().split('\n').join(',')+']');
 contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES fresh-install restore, authority hold and confirmed reset',async()=>{

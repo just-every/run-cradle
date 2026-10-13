@@ -17,3 +17,9 @@ export function impactChangeLabel(change: string, fields: Field[]) {
   }
   return change
 }
+
+const otherFieldTypes: Partial<Record<Field['type'], string>> = { instant: 'Date and time', money: 'Money', multi_select: 'Multi-select', person: 'Person', attachment: 'Attachment' }
+/** The type subtitle a table header shows under each field name. */
+export function fieldTypeLabel(field: Field) {
+  return manualFieldTypes.find(([value]) => value === field.type)?.[1] ?? otherFieldTypes[field.type] ?? field.type
+}

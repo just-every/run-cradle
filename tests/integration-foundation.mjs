@@ -40,7 +40,7 @@ test('typed command transport reauthenticates, validates, delegates exactly once
 test('MCP uses the same typed command with fresh machine authentication and filtered discovery',async()=>{
   const { createMcpTransport }=await import('../src/core/registry/mcp.ts')
   let auth=0,executions=0
-  const transport=createMcpTransport({commands:{discover:async()=>[{action:'record.patch',description:'Edit permitted record',inputSchema:{type:'object'}}],get:name=>name==='record.patch'?{visible:async()=>true,execute:async()=>{executions++;return{result:{state:'accepted',runId:'durable'},consistencyToken:'token'}}}:undefined},admission:{},authenticate:async(_req,ingress)=>{auth++;assert.equal(ingress,'mcp');return{principal:{kind:'agent'}}}})
+  const transport=createMcpTransport({commands:{discover:async()=>[{action:'record.patch',description:'Edit permitted record',inputSchema:{type:'object'}}],get:name=>name==='record.patch'?{visible:async()=>true,execute:async()=>{executions++;return{result:{state:'accepted',runId:'durable'},consistencyToken:'token'}}}:undefined,query:()=>undefined},admission:{},authenticate:async(_req,ingress)=>{auth++;assert.equal(ingress,'mcp');return{principal:{kind:'agent'}}}})
   const request=(method,params,credential=true)=>new Request('https://app.example/mcp',{method:'POST',headers:{'content-type':'application/json',...(credential?{authorization:'Bearer scoped'}:{})},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})})
   assert.equal((await transport(request('tools/list',{},false))).status,401)
   const list=await(await transport(request('tools/list',{}))).json();assert.equal(list.result.tools.length,1)

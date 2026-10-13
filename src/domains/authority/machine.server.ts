@@ -7,15 +7,18 @@ import { denied, AuthorityError } from './errors'
 import { canonicalJson } from './grants.server'
 import { z } from 'zod'
 import { delegatedPrincipal } from './delegation.server'
+import { bindProposer } from './proposer.server'
 import { DEV_CREDENTIAL_KIND, devCredentials, isDevMinted, mintedInDevSession } from './dev-credentials.server'
 const scopeSchema=z.array(z.object({appId:z.string(),actions:z.array(z.string()).min(1).max(100),purposes:z.array(z.string()).max(100)}).strict()).min(1).max(100)
 const credentials=registerTable('authority_credentials',['id','principal_id','token_hash','audience','scopes_json','created_at','expires_at','revoked_at','version','authentication_epoch'])
 /** `devGate` admits a request holding the local dev key; a deployed Worker has none, so dev-minted credentials are refused there. */
-export const resolveMachinePrincipal=async(db:D1Database,request:Request,audience:string,devGate?:(request:Request)=>Promise<boolean>):Promise<Principal>=>{
+/** `audiences[0]` is the door; a later audience is a key confined to a narrower door (a proposing key). */
+export const resolveMachinePrincipal=async(db:D1Database,request:Request,audience:string|readonly [string,...string[]],devGate?:(request:Request)=>Promise<boolean>):Promise<Principal>=>{
+  const audiences=typeof audience==='string'?[audience]:[...audience]
   const auth=request.headers.get('authorization');if(!auth||!/^Bearer [A-Za-z0-9_-]{43}$/.test(auth))throw new AuthorityError('signed_out','A machine credential is required.',401)
-  const now=Date.now(),row=await db.prepare(`SELECT c.id,c.principal_id,c.created_at,c.expires_at,p.kind,p.human_id,p.authentication_epoch FROM authority_credentials c JOIN authority_principals p ON p.id=c.principal_id WHERE c.token_hash=? AND c.audience=? AND c.revoked_at IS NULL AND c.expires_at>? AND p.state='active' AND p.authentication_epoch=c.authentication_epoch`).bind(await digest(auth.slice(7)),audience,now).first<{id:string;principal_id:string;created_at:number;expires_at:number;kind:Principal['kind'];human_id:string|null;authentication_epoch:number}>()
+  const now=Date.now(),row=await db.prepare(`SELECT c.id,c.principal_id,c.created_at,c.expires_at,c.audience,p.kind,p.human_id,p.authentication_epoch FROM authority_credentials c JOIN authority_principals p ON p.id=c.principal_id WHERE c.token_hash=? AND c.audience IN (${audiences.map(()=>'?').join(',')}) AND c.revoked_at IS NULL AND c.expires_at>? AND p.state='active' AND p.authentication_epoch=c.authentication_epoch`).bind(await digest(auth.slice(7)),...audiences,now).first<{id:string;principal_id:string;created_at:number;expires_at:number;audience:string;kind:Principal['kind'];human_id:string|null;authentication_epoch:number}>()
   if(!row||(await isDevMinted(db,row.id)&&!await devGate?.(request)))throw new AuthorityError('signed_out','The machine credential is invalid or expired.',401)
-  return delegatedPrincipal(db,{id:row.principal_id,kind:row.kind,humanId:row.human_id,sessionId:null,credentialId:row.id,issuedAt:new Date(row.created_at).toISOString(),expiresAt:new Date(row.expires_at).toISOString(),authenticationEpoch:row.authentication_epoch})
+  return bindProposer(db,await delegatedPrincipal(db,{id:row.principal_id,kind:row.kind,humanId:row.human_id,sessionId:null,credentialId:row.id,issuedAt:new Date(row.created_at).toISOString(),expiresAt:new Date(row.expires_at).toISOString(),authenticationEpoch:row.authentication_epoch}),row.audience!==audiences[0])
 }
 export const createMachineService=(db:D1Database,policy:PolicyPort,admission:AdmissionPort,
  revocationEffects?: (ctx:RequestContext,appId:string,id:string)=>Promise<{guards:SqlPredicate[];mutations:SqlMutation[]}>)=>({

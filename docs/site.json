@@ -1,0 +1,60 @@
+{
+  "sections": [
+    {
+      "title": "Start here",
+      "pages": [
+        {
+          "slug": "",
+          "source": "docs/overview.md",
+          "label": "Overview"
+        },
+        {
+          "slug": "install",
+          "source": "docs/install.md",
+          "label": "Install"
+        }
+      ]
+    },
+    {
+      "title": "Your records",
+      "pages": [
+        {
+          "slug": "importing",
+          "source": "docs/importing.md",
+          "label": "Importing a base"
+        },
+        {
+          "slug": "automations",
+          "source": "docs/user-automations.md",
+          "label": "Record automations"
+        },
+        {
+          "slug": "api",
+          "source": "docs/api-v1.md",
+          "label": "API"
+        }
+      ]
+    },
+    {
+      "title": "Moving your data",
+      "pages": [
+        {
+          "slug": "leaving",
+          "source": "docs/leaving-cradle.md",
+          "label": "Leaving and coming back"
+        },
+        {
+          "slug": "archives",
+          "source": "docs/installation-archives.md",
+          "label": "Installation archives"
+        }
+      ]
+    }
+  ],
+  "githubOnly": [
+    {
+      "source": "docs/installation.md",
+      "reason": "Maintainer installation notes naming every private setting; the site's Install page covers the owner's steps"
+    }
+  ]
+}

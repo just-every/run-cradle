@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 
-contract('AUTH-BASE-001 HOME-002 BASE-ACCESS-002', 'emitted production rejects development sender/viewer and public identity follows persisted renames without private data',async()=>{
+contract('AUTH-BASE-001 HOME-003 BASE-ACCESS-002', 'emitted production rejects development sender/viewer and public identity follows persisted renames without private data',async()=>{
  const h=await launchBaseAuthorityRuntime()
  try {
   const owner=await h.bootstrap()
@@ -12,7 +12,7 @@ contract('AUTH-BASE-001 HOME-002 BASE-ACCESS-002', 'emitted production rejects d
   assert.equal(session.launchInUse,false,'Shipped empty launch definitions are not use')
   await h.db.prepare("UPDATE workspace SET name='Renamed records',version=version+1 WHERE id='workspace'").run()
   const front=await(await h.request('/')).text(),signin=await(await h.request('/signin')).text()
-  assert.match(front,/<h1[^>]*>.*Everything comes together in one place\..*<\/h1>/);assert.match(front,/Sign in to Renamed records/)
+  assert.ok(front.includes('Renamed records'),'The Lobby names the persisted rename');assert.match(front,/<a class="btn" href="\/signin">/)
   assert.match(signin,/id="signin-email"/);assert.doesNotMatch(signin,/Welcome back|Checking sign-in|Continue with local development identity/)
   for(const html of [front,signin])assert.doesNotMatch(html,/owner@example\.test|Launch owner/,'Public identity exposes no private operator identity')
   assert.equal((await(await h.request('/api/session',{headers:{cookie:owner.cookie}})).json()).workspace.name,'Renamed records')

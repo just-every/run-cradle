@@ -34,7 +34,9 @@ contract('AUTO-USER-001','real admitted record triggers run notify/email/update 
   await h.db.prepare('UPDATE authority_delegations SET revoked_at=? WHERE automation_id=?').bind(Date.now(),loop.id).run()
   const pending=await h.patch((await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${afterDisable.record.ref.recordId}`)).data.record,{[h.statusId]:'after revocation'})
   await h.tick(pending.data.commandId)
-  const revoked=(await h.request(`/api/user-automations/${loop.id}/runs`)).data.runs
+  // Real queue delivery may still be executing the run; wait (bounded) until no run is in flight.
+  let revoked=[]
+  for(let attempt=0;attempt<40;attempt++){revoked=(await h.request(`/api/user-automations/${loop.id}/runs`)).data.runs;if(!revoked.some(run=>['Queued','Running'].includes(run.state)))break;await new Promise(resolve=>setTimeout(resolve,250))}
   assert.ok(revoked.some(run=>run.state==='Cancelled'))
  }finally{await h.close()}
 })

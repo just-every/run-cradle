@@ -51,7 +51,8 @@
     },
     {
       "binding": "MAIL_PROVIDER",
-      "environment": "MAIL_PROVIDER"
+      "environment": "MAIL_PROVIDER",
+      "verifyStandIn": "resend"
     },
     {
       "binding": "MAIL_PROVIDER_API_KEY",

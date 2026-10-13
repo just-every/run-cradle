@@ -8,10 +8,22 @@ export type ManifestLine = { sourceFile: string; rowOrdinal: number; sourceLine?
  * only when the whole cell reads as `name (https://…)` items separated by ", ".
  * Any other text is kept raw and marked not parsed; nothing is guessed. */
 export function parseCsvAttachmentCell(raw:string):ParsedAttachments {
- const item=/([^\r\n]+?) \((https:\/\/[^\s()]+)\)(?:, |$)/y,names:string[]=[],urls:string[]=[]
+ const fail={parsed:false as const,reason:'Not parsed: the cell does not read as file name (https URL) items.'}
+ // Recognize each item before checking its URL, so an unsupported first URL
+ // cannot be consumed as part of the next item's name. Commas and balanced
+ // parentheses inside names are retained, but embedded URLs are never names.
+ const item=/((?:[^()\r\n]|\([^()\r\n]*\))+?) \(([^()\r\n]*)\)(?:, |$)/y,names:string[]=[],urls:string[]=[]
  let offset=0
- while(offset<raw.length){item.lastIndex=offset;const match=item.exec(raw);if(!match)break;names.push(match[1]!);urls.push(match[2]!);offset=item.lastIndex}
- return names.length&&offset===raw.length&&!raw.endsWith(', ')?{parsed:true,names,urls}:{parsed:false,reason:'Not parsed: the cell does not read as file name (https URL) items.'}
+ while(offset<raw.length){
+  item.lastIndex=offset
+  const match=item.exec(raw)
+  if(!match)return fail
+  const name=match[1]!,url=match[2]!
+  if(!name.trim()||/(?:[a-z][a-z0-9+.-]*:\/\/|\(\s*[a-z][a-z0-9+.-]*:)/i.test(name)||!/^https:\/\/[^/?#]+/.test(url)||/[\s\\]/.test(url))return fail
+  try{if(!new URL(url).hostname)return fail}catch{return fail}
+  names.push(name);urls.push(url);offset=item.lastIndex
+ }
+ return names.length&&!raw.endsWith(', ')?{parsed:true,names,urls}:fail
 }
 /** Airtable's Web API documents an attachment value as an array of objects with
  * `filename` and `url`. Anything else stays raw and unparsed. */

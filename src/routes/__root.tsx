@@ -23,5 +23,5 @@ function DocumentShell({ children }: { children: ReactNode }) {
 function NotFoundPage() {
   useEditorLeafReady(typeof location==='undefined'?'not-found':location.pathname)
   const { config } = Route.useRouteContext()
-  return <PublicLayout config={config}><main className="cr-identity"><p className="cr-eyebrow">404</p><h1>Page not found</h1><p>No page exists at this address. Check the link or return to your workspace.</p><Link className="cr-button" to="/app">Open workspace</Link><p><Link className="cr-link" to="/">Return to {config.workspaceName}</Link></p></main></PublicLayout>
+  return <PublicLayout config={config} ribbon="short"><section className="cr-identity cr-identity--center"><span className="cr-tag">404</span><h1>Page not found</h1><p>No page exists at this address. Check the link or return to your workspace.</p><Link className="cr-button cr-button--go" to="/app">Open workspace</Link><div className="cr-identity-links"><a className="cr-link" href="/">Return to {config.workspaceName}</a></div></section></PublicLayout>
 }

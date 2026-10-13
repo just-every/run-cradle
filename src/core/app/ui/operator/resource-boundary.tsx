@@ -18,6 +18,15 @@ type ResourceBoundaryProps = PropsWithChildren<{
   actions?: ReactNode;
 }>;
 
+const tones: Record<ResourceBoundaryState, string> = {
+  loading: "",
+  empty: "",
+  "not-found": "cr-tag--warn",
+  "signed-out": "cr-tag--access",
+  forbidden: "cr-tag--access",
+  failed: "cr-tag--error",
+};
+
 const copyFor = (
   state: ResourceBoundaryState,
   operation: string,
@@ -79,27 +88,20 @@ export const ResourceBoundary = ({
 
   return (
     <section
-      className={`operator-resource-state operator-resource-state--${state}`}
+      className="cr-state cr-state--boundary"
       aria-live={state === "loading" ? "polite" : "assertive"}
     >
-      <p>{copy.eyebrow}</p>
+      <span className={`cr-tag ${tones[state]}`}>{copy.eyebrow}</span>
       <h2>{copy.title}</h2>
       <p>{copy.description}</p>
-      <div className="operator-resource-actions">
+      <div className="cr-actions">
         {state === "signed-out" ? (
-          <a
-            className="operator-button operator-button--primary"
-            href="/signin"
-          >
+          <a className="cr-button" href="/signin">
             Sign in
           </a>
         ) : null}
         {state === "failed" && onRetry ? (
-          <button
-            className="operator-button operator-button--primary"
-            type="button"
-            onClick={onRetry}
-          >
+          <button className="cr-button" type="button" onClick={onRetry}>
             Retry
           </button>
         ) : null}

@@ -4,6 +4,7 @@ import type { EntitySchema } from '../../domains/records/contracts'
 import { createUlid } from '../../core/shared/ids'
 import { readApi, useResource } from '../shared/api'
 import { ResourceState, Empty, Timestamp } from '../shared/presentation'
+import { ProposerKeys } from './proposer-keys-panel'
 
 type Key={id:string;name:string;createdAt:string;expiresAt:string;revokedAt:string|null;entityIds:string[];scopes:{appId:string;actions:string[];purposes:string[]}[]}
 type Issued={id:string;secret:string;name:string;expiresAt:string}
@@ -14,7 +15,7 @@ export function ApiKeysPanel() {
  return <section className="cr-section"><h2>API keys</h2><p>Give a connected service access to one record type. Keys expire and can be revoked. Your current data policy also applies.</p>
   <ResourceState resource={apps.resource} operation="applications" retry={apps.refresh}>{page=><>
    <label className="cr-field">Application<select value={appId} onChange={e=>setAppId(e.target.value)}><option value="">Choose an application</option>{page.items.map(app=><option key={app.id} value={app.id}>{app.name}</option>)}</select></label>
-   {appId&&<AppKeys key={appId} appId={appId}/>}</>}</ResourceState></section>
+   {appId&&<AppKeys key={appId} appId={appId}/>}</>}</ResourceState><ProposerKeys/></section>
 }
 
 function AppKeys({appId}:{appId:string}) {

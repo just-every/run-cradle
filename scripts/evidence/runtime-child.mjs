@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {createRedaction} from '../base-onboarding/redaction.mjs'
+import {createRedaction} from '@runeditrun/rer/redaction'
 
 /** Preserve raw streams in memory; parse complete JSON lines separately. */
 export function observeChild(child){

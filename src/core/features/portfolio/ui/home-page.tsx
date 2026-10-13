@@ -1,4 +1,5 @@
 import "./home-page.css";
+import { CradleArt } from "../../../../ui/shared/cradle-art";
 import { ResourceBoundary } from "../../../app/ui/operator";
 
 import { decodePortfolio, useApiResource } from "./portfolio-api";
@@ -156,5 +157,5 @@ const HomeContent = () => {
 export const HomePage = () => <HomeContent />;
 
 function RecordsIntro() {
-  return <section className="cr-page cr-home-records"><p className="cr-eyebrow">Records builder</p><h2>Your business, organised your way.</h2><p>Start from a template or build your own tables and fields in Records. Then add your records, connect them and choose a view.</p><a className="cr-button" href="/app/records">Open records</a><a className="cr-button cr-button--quiet" href="/app/records/?import=base">Import a base</a><p>Choose Create base to build your own, or browse the editable templates.</p></section>
+  return <section className="cr-page cr-home-records"><div className="cr-card cr-welcome"><div className="cr-welcome-copy"><p className="cr-eyebrow">Records builder</p><h2>Your business, organised your way.</h2><p>Start from a template or build your own tables and fields in Records. Then add your records, connect them and choose a view.</p><div className="cr-actions"><a className="cr-button" href="/app/records">Open records</a><a className="cr-button cr-button--quiet" href="/app/records/?import=base">Import a base</a></div><p className="cr-welcome-hint">Choose Create base to build your own, or browse the editable templates.</p></div><div className="cr-welcome-art"><CradleArt variant="welcome" /></div></div></section>
 }

@@ -1,0 +1,7 @@
+# Brief B: a volunteer shift roster.
+Base: Volunteer shift roster
+Volunteers: Name (text, primary, required), Email (text), Phone (text)
+Shifts: Date (date, required), Role (select: Kitchen | Front desk | Delivery | Cleanup), Slots (number)
+Signups: Volunteer (link to Volunteers), Shift (link to Shifts), Confirmed (checkbox)
+Views: a grid of each table; a calendar-ordered grid of Shifts by Date
+Forms: a form for Signups titled "Sign up for a shift"

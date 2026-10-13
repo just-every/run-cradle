@@ -16,7 +16,7 @@ import {observeChild,childDiagnostic} from './runtime-child.mjs'
 import {scanEvidence} from './runtime-secret-scan.mjs'
 import {createHmac} from 'node:crypto'
 import {artifactExports} from './runtime-artifact.mjs'
-import {readSettings} from '../base-onboarding/adapter-settings.mjs'
+import {readSettings} from '@runeditrun/rer/adapter-settings'
 const execute=promisify(execFile),root=process.cwd(),evidence=process.env.CRADLE_EVIDENCE
 assert.ok(evidence,'CRADLE_EVIDENCE is required')
 const temp=await mkdtemp(join(tmpdir(),'cradle-runtime-proof-')),copy=join(temp,'source')
@@ -28,7 +28,7 @@ const captureText=body=>{for(const match of body.matchAll(/(?:[?&]token=|"csrfTo
 const observeFetch=async(...args)=>{const response=await fetch(...args);captureIssued(response.headers.get('set-cookie')?.split(';')[0]);const body=await response.clone().text();captureText(body);return response}
 let app,setup,appCapture,setupCapture,origin,artifact,eventResult,modeOutput='',modeVerb,modeCaptured=false,setupOutput='',setupCaptured=false,devKey,noWriteMutation=false
 const capacity=async()=>{const deadline=Date.now()+60000;while(loadavg()[0]>36){if(Date.now()>=deadline)throw Error('Capacity remained above load 36 for 60 seconds; no next mode started');console.log('Runtime evidence waiting for load <=36; observed '+loadavg()[0]);await new Promise(resolve=>setTimeout(resolve,10000))}}
-const command=async args=>{try{const result=await execute(process.execPath,['scripts/rer.mjs',...args,'--json'],{cwd:copy,env,maxBuffer:32*1024*1024});capturedLogs.push({kind:'rer '+args[0],body:result.stdout+result.stderr});return result}catch(error){capturedLogs.push({kind:'rer '+args[0]+' failed',body:String(error.stdout??'')+String(error.stderr??'')});throw Error('rer evidence command failed; raw child output withheld')}}
+const command=async args=>{try{const result=await execute(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs',...args,'--json'],{cwd:copy,env,maxBuffer:32*1024*1024});capturedLogs.push({kind:'rer '+args[0],body:result.stdout+result.stderr});return result}catch(error){capturedLogs.push({kind:'rer '+args[0]+' failed',body:String(error.stdout??'')+String(error.stderr??'')});throw Error('rer evidence command failed; raw child output withheld')}}
 // All diagnostics redact complete child output only after both pipes have drained.
 const diagnose=async(phase,child,capture)=>{
  const values=(await readSettings(copy,{file:'.dev.vars'}).catch(()=>({values:{}}))).values
@@ -53,7 +53,7 @@ try{
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));origin=`http://127.0.0.1:${port}`
  await writeFile(join(copy,'answers.json'),JSON.stringify({OWNER_EMAIL:'maya@northstar.example'}),{mode:0o600})
  // Setup's app is transient. Observe it while its real hook serves owner claim/sign-in.
- setup=spawn(process.execPath,['scripts/rer.mjs','setup','--answers','answers.json','--port',String(port),'--non-interactive','--json'],{cwd:copy,env,stdio:['ignore','pipe','pipe']})
+ setup=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs','setup','--answers','answers.json','--port',String(port),'--non-interactive','--json'],{cwd:copy,env,stdio:['ignore','pipe','pipe']})
  setupCapture=observeChild(setup);children.push({child:setup,capture:setupCapture})
  let observed=false
  const setupDeadline=Date.now()+180000
@@ -73,7 +73,7 @@ try{
  const dbRun=async callback=>{const {getPlatformProxy}=require('wrangler');const p=await getPlatformProxy({configPath:join(copy,'wrangler.jsonc'),persist:{path:join(copy,'.wrangler/state/v3')},remoteBindings:false});try{return await callback(p.env.DB)}finally{await p.dispose()}}
  for(const verb of ['dev','preview']){
   await capacity();modeOutput='';modeVerb=verb;modeCaptured=false;
-  app=spawn(process.execPath,['scripts/rer.mjs',verb,...(verb==='dev'?['--login']:[]),'--non-interactive','--json'],{cwd:copy,env,stdio:['ignore','pipe','pipe']})
+  app=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs',verb,...(verb==='dev'?['--login']:[]),'--non-interactive','--json'],{cwd:copy,env,stdio:['ignore','pipe','pipe']})
   appCapture=observeChild(app);children.push({child:app,capture:appCapture})
   const ready=()=>appCapture.events.some(event=>event.event==='ready'),failed=()=>appCapture.events.some(event=>event.event==='error')
   for(let i=0;i<1200&&!ready()&&!failed()&&!appCapture.drained;i++)await new Promise(resolve=>setTimeout(resolve,100))

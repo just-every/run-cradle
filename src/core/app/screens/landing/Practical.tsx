@@ -1,3 +1,4 @@
+import { DocsMore } from './parts/DocsMore'
 import { Icon } from './parts/Icon'
 
 /** The practical parts: three hairline-separated rows, each a Display heading and body beside one small card. Quiet hours are a notification setting, so they are a footer line, not an automation. */
@@ -11,11 +12,11 @@ export function Practical() {
       </div>
       <div className="lp-list">
         <div className="lp-row">
-          <div><h3>CSV in, CSV out</h3><p>Import a CSV and see what will be created, updated or rejected before anything is saved. Export any view to CSV, with the columns you see.</p></div>
+          <div><h3>CSV in, CSV out</h3><p>Import a CSV and see what will be created, updated or rejected before anything is saved. Export any view to CSV, with the columns you see.</p><DocsMore slug="importing">Importing a base</DocsMore></div>
           <div className="lp-mini" aria-hidden="true"><span className="lp-lab">Import preview</span><div className="lp-tally"><span className="lp-chip lp-chip--new">12 new</span><span className="lp-chip lp-chip--upd">3 updated</span><span className="lp-chip lp-chip--err">1 error</span></div></div>
         </div>
         <div className="lp-row">
-          <div><h3>Automations you can see</h3><p>Automations run on a product event or a schedule, and every run is recorded. Notifications arrive in the app and by email, and most email waits out your quiet hours.</p></div>
+          <div><h3>Automations you can see</h3><p>Automations run on a product event or a schedule, and every run is recorded. Notifications arrive in the app and by email, and most email waits out your quiet hours.</p><DocsMore slug="automations">How record automations work</DocsMore></div>
           <div className="lp-mini" aria-hidden="true"><span className="lp-lab">Automations</span>
             <div className="lp-ln"><strong>When a risk becomes Critical</strong><span>Escalate the risk</span></div>
             <div className="lp-ln"><strong>Every day at 08:00</strong><span>Ask launch owners for readiness</span></div>

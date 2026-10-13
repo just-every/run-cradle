@@ -1,0 +1,45 @@
+/* Pill buttons, tabs, toolbar chips and status tags. */
+.cr-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border: 1px solid transparent; border-radius: var(--r-pill); background: var(--primary); color: var(--primary-foreground); font: 600 14px/1.2 var(--font-sans); text-align: center; text-decoration: none; cursor: pointer; overflow-wrap: anywhere; }
+.cr-button:hover { background: #16443d; }
+.cr-button--quiet { border-color: var(--input-line); background: var(--card); color: var(--ink); }
+.cr-button--quiet:hover { background: var(--tile); }
+.cr-button--go { background: var(--lime); color: var(--ink-deep); }
+.cr-button--go:hover { background: var(--lime-hover); }
+.cr-button--add { border: 1.5px dashed #9fb2a6; background: transparent; color: var(--muted); }
+.cr-button--add:hover { background: var(--tile); color: var(--ink); }
+.cr-button--danger { background: var(--chip-coral-ink); color: #fff; }
+.cr-button--danger:hover { background: #6d2c1f; }
+.cr-button:disabled { opacity: .48; cursor: not-allowed; }
+.cr-button:disabled:hover { background: var(--primary); }
+.cr-button--quiet:disabled:hover { background: var(--card); }
+.cr-button[aria-expanded="true"].cr-button--quiet { background: var(--tile); border-color: var(--ink); }
+
+/* Tabs: base, table and schema-table switchers. Selected is lime. */
+.cr-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.cr-tab { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 6px 16px; border: 0; border-radius: var(--r-pill); background: var(--tab); color: var(--tab-ink); font: 600 14px/1.2 var(--font-sans); text-decoration: none; cursor: pointer; overflow-wrap: anywhere; }
+.cr-tab:hover { background: #e3e8de; color: var(--ink); }
+.cr-tab[aria-current="page"], .cr-tab[aria-pressed="true"] { background: var(--lime); color: var(--ink-deep); }
+
+/* Toolbar chips: filters, menus and toggles above a table. */
+.cr-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--card); color: var(--muted); font: 600 13px/1.2 var(--font-sans); white-space: nowrap; cursor: pointer; }
+.cr-chip:hover, .cr-chip[aria-expanded="true"] { background: var(--tile); color: var(--ink); border-color: var(--input-line); }
+.cr-chip svg { flex: none; }
+.cr-chip--saved { border-color: transparent; background: var(--lime); color: var(--ink-deep); }
+.cr-chip-select { padding: 0 0 0 12px; cursor: default; }
+.cr-chip-select label { cursor: pointer; }
+.cr-chip-select label + span { margin-left: -6px; }
+.cr-chip-select select { min-height: 30px; padding: 0 30px 0 0; border: 0; border-radius: var(--r-pill); background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%2352695f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E") no-repeat right 12px center; color: inherit; font: inherit; appearance: none; cursor: pointer; }
+.cr-chip-select select:focus-visible { outline-offset: 4px; }
+.cr-toggle { display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px; border: 0; background: transparent; color: var(--muted); font: 600 14px/1.2 var(--font-sans); text-decoration: none; text-underline-offset: 4px; cursor: pointer; }
+.cr-toggle:hover, .cr-toggle[aria-expanded="true"] { color: var(--ink); text-decoration: underline; }
+
+/* Status tags and the pill eyebrows on state cards. */
+.cr-tag { display: inline-flex; align-items: center; width: fit-content; padding: 5px 12px; border-radius: var(--r-pill); background: var(--sage); color: var(--ink); font: 600 12px/1.2 var(--font-sans); letter-spacing: 0; text-transform: none; }
+.cr-tag--warn { background: var(--chip-butter); color: var(--chip-butter-ink); }
+.cr-tag--error { background: var(--chip-coral); color: var(--chip-coral-ink); }
+.cr-tag--access { background: var(--chip-lilac); color: var(--chip-lilac-ink); }
+.cr-tag--ok { background: var(--chip-mint); color: var(--chip-mint-ink); }
+
+@media (max-width: 760px) {
+  .cr-actions > .cr-button { flex: 1 1 auto; }
+}

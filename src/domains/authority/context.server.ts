@@ -7,14 +7,17 @@ import { principalGuards } from './guards.server'
 import { and } from '../admission/sql.server'
 import type { EntityRegistry } from './scope.server'
 import { createReferenceAccess } from './reference.server'
+import { isProposalDoor, proposalAudience, refuseOutsideDoor } from './proposer.server'
 import type { Ref } from '../../contracts/primitives'
 export const createRequestContextFactory=(db:D1Database,configuration:AuthConfiguration)=>{
  return async(request:Request,ingress:RequestContext['ingress']='http'):Promise<RequestContext>=>{
   // Resolve each request against Base authentication and current application authority.
   const auth=createProductAuth(db,configuration)
   const machine=ingress==='mcp'||request.headers.has('authorization')
-  const principal=machine?await resolveMachinePrincipal(db,request,`${configuration.appOrigin}${ingress==='mcp'?'/mcp':'/api/v1'}`,configuration.devCredentialGate):(await auth.current(request))?.principal
+  const principal=machine?await resolveMachinePrincipal(db,request,[`${configuration.appOrigin}${ingress==='mcp'?'/mcp':'/api/v1'}`,proposalAudience(configuration.appOrigin)],configuration.devCredentialGate):(await auth.current(request))?.principal
   if(!principal)throw new AuthorityError('signed_out','Sign in to continue.',401)
+  // A proposing key reaches only its own door; elsewhere it gets the answer for a missing route.
+  if(principal.proposer&&!isProposalDoor(new URL(request.url).pathname))await refuseOutsideDoor(request)
   if(!machine&&!['GET','HEAD','OPTIONS'].includes(request.method))await auth.requireCsrf(request)
   return {principal,requestId:createUlid(),now:new Date().toISOString(),ingress}
  }
@@ -22,6 +25,8 @@ export const createRequestContextFactory=(db:D1Database,configuration:AuthConfig
 export const createReplayAccess=(db:D1Database,policy:PolicyPort,registry:EntityRegistry)=>({async authorizeReplay(ctx:RequestContext,command:{appId:string;action:string;actorId:string;commandId:string;result?:unknown;provenance?:{policyVersion:number;grantId:string|null;grantVersion:number|null;subjects:{ref:Ref;fieldIds:string[]}[]}}){
  if(command.actorId!==ctx.principal.id)throw new AuthorityError('not_found','Command not found.',404)
  const guards=and(...principalGuards(ctx));if(!await db.prepare(`SELECT 1 WHERE ${guards.sql}`).bind(...guards.values).first())throw new AuthorityError('signed_out','Current authentication is required.',401)
+ // A proposing key replays only its own proposal commands; it holds no membership.
+ if(ctx.principal.proposer){if(command.appId!==ctx.principal.proposer.appId||!['schema.propose','schema.withdraw'].includes(command.action))throw new AuthorityError('not_found','Command not found.',404);return}
  const membership=await db.prepare(`SELECT p.version FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active'`).bind(ctx.principal.id,command.appId).first<{version:number}>()
  if(!membership||!command.provenance)throw new AuthorityError('not_found','Command is not visible under current policy.',404)
  const check=createReferenceAccess(db,policy,registry)

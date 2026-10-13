@@ -1,12 +1,6 @@
-/* Header and hero, ported from the approved 12ui hero: ribbons of data streaming from both sides into one calm Projects screen.
+/* Hero, ported from the approved 12ui hero: ribbons of data streaming from both sides into one calm Projects screen.
    The ribbons and cards are inline SVG (hero/); headline, line, button and the Projects screen are live. */
 .lp { --hero-paper: #f2f2ea; --hero-ink: #0d302c; }
-
-.lp .lp-header { position: relative; z-index: 2; height: 105px; background: var(--hero-paper); }
-.lp .lp-header-row { display: flex; align-items: center; justify-content: space-between; width: 1292px; max-width: calc(100% - 100px); height: 100%; margin: 0 auto; }
-.lp .lp-brand { font-size: 42px; line-height: 1; }
-.lp .lp-brand--small { font-size: 24px; }
-.lp .lp-signin { padding: 8px 4px; font-size: 16px; font-weight: 600; }
 
 .lp .lp-hero { position: relative; height: 800px; overflow: hidden; background: var(--hero-paper); }
 .lp .lp-hero::after { content: ""; position: absolute; inset: auto 0 0 0; height: 60px; background: linear-gradient(rgba(243, 243, 238, 0), var(--paper)); pointer-events: none; }
@@ -72,15 +66,8 @@
   .lp .lp-hero::before { background: linear-gradient(var(--hero-paper), rgba(242, 242, 234, 0) 56px), linear-gradient(90deg, var(--hero-paper) calc(50% - 2560px), rgba(242, 242, 234, 0) calc(50% - 2360px), rgba(242, 242, 234, 0) calc(50% + 2360px), var(--hero-paper) calc(50% + 2560px)); }
 }
 
-@media (max-width: 1535px) {
-  .lp .lp-header-row { width: calc(100% - 100px); max-width: none; }
-}
-
 /* Under 1024: the hero stacks. Headline, line, button, then the art scaled to fit with the Projects screen overlapping it. */
 @media (max-width: 1023px) {
-  .lp .lp-header { height: 90px; }
-  .lp .lp-header-row { width: auto; margin: 0 28px; }
-  .lp .lp-brand { font-size: 34px; }
   .lp .lp-hero { display: flex; flex-direction: column; height: auto; padding-bottom: 48px; }
   .lp .lp-hero::after, .lp .lp-hero::before { display: none; }
   .lp .lp-hero-copy { width: auto; max-width: 700px; margin: 20px auto 25px; padding: 0 24px; }
@@ -89,10 +76,6 @@
   .lp .lp-project { position: relative; top: auto; left: auto; order: 4; width: calc(100% - 90px); height: auto; min-height: 310px; margin: -21% auto 0; }
 }
 @media (max-width: 599px) {
-  .lp .lp-header { height: 78px; }
-  .lp .lp-header-row { margin: 0 20px; }
-  .lp .lp-brand { font-size: 28px; }
-  .lp .lp-signin { font-size: 15px; }
   .lp .lp-hero-copy { margin: 18px auto 30px; padding: 0 20px; }
   .lp .lp-hero h1 { font-size: 34px; letter-spacing: -0.03em; }
   .lp .lp-hero-copy p { font-size: 17px; }

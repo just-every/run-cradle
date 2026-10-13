@@ -1,0 +1,198 @@
+/* Docs: pages rendered from the repository's Markdown (docs/site.json), between the site's header and footer (src/core/app/site), in the landing's type: Lexend headings,
+   Cradle Sans text, ink on paper, lime only for the current page, the title's strand, bullets, step numbers and callout icons.
+   Everything is scoped to .docs-site; the colour tokens are the app's (src/core/app/styles.css), which match the landing's. */
+.docs-site { min-height: 100dvh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); font-size: 17px; line-height: 1.6; --page: 1292px; --gutter: 50px; }
+.docs-site a { color: inherit; text-decoration: none; }
+.docs-site ul { margin: 0; padding: 0; list-style: none; }
+.docs-site p { margin: 0; }
+.docs-skip { position: absolute; left: 12px; top: -80px; z-index: 10; padding: 12px 16px; border-radius: 12px; background: var(--card); }
+.docs-skip:focus { top: 12px; }
+
+/* Layout: navigation card | page | contents. The navigation shows from 861px, the contents column from 1200px. */
+.docs-site .docs-shell { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: clamp(36px, 4.6vw, 67px); width: calc(100% - 2 * var(--gutter)); max-width: var(--page); margin: 0 auto; padding: clamp(24px, 3vw, 36px) 0 clamp(64px, 7vw, 112px); }
+.docs-site .docs-main { --measure: 44rem; min-width: 0; }
+.docs-site .docs-main:focus { outline: none; }
+.docs-site :is(.docs-sidebar, .docs-toc) { position: sticky; top: 24px; align-self: start; max-height: calc(100vh - 48px); overflow-y: auto; }
+
+/* Page head: the eyebrow, the Lexend title (the page's one h1) and a short ribbon strand. */
+.docs-site .docs-page-head { margin-bottom: 36px; }
+.docs-site .docs-eyebrow { margin-bottom: 10px; color: var(--eyebrow); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; line-height: 1.4; text-transform: uppercase; }
+.docs-site .docs-title { max-width: 18em; margin: 0; color: var(--ink-deep); font: 500 clamp(38px, 4.2vw, 60px)/1.05 var(--font-display); letter-spacing: -0.025em; text-wrap: balance; overflow-wrap: anywhere; scroll-margin-top: 24px; }
+.docs-site .docs-strand { display: block; width: 120px; height: 22px; margin-top: 16px; overflow: visible; }
+.docs-site .docs-strand path { fill: none; stroke-linecap: round; }
+.docs-site .docs-strand path:first-child { stroke: var(--lime); stroke-width: 6; }
+.docs-site .docs-strand path:last-child { stroke: var(--ink); stroke-width: 2; opacity: .55; }
+
+/* Section navigation: a white card; each group's label in small capitals, then its pages; the current page sits on a pale tab with a lime bar. */
+.docs-site .docs-sidebar { padding: 20px 14px 22px; border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--card) 70%, transparent); }
+.docs-site .docs-nav-group + .docs-nav-group { margin-top: 26px; }
+.docs-site .docs-nav-section { margin: 0 0 8px 14px; color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.docs-site .docs-nav-group ul { display: grid; gap: 2px; }
+.docs-site .docs-nav-group a { position: relative; display: block; padding: 9px 14px; border-radius: 9px; font-size: 17px; line-height: 1.35; transition: background-color 0.18s; }
+.docs-site .docs-nav-group a:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.docs-site .docs-nav-group a[aria-current="page"] { background: var(--tab); color: var(--ink-deep); font-weight: 600; }
+.docs-site .docs-nav-group a[aria-current="page"]::before { content: ""; position: absolute; top: 6px; bottom: 6px; left: 0; width: 4px; border-radius: 4px; background: var(--lime); }
+
+/* Prose: 17px on one measure that every block shares, headings' rules and tables included; a table wider than the measure
+   scrolls inside it. Paragraphs avoid orphans and headings balance. */
+.docs-site .docs-prose { color: var(--ink); font-size: 17px; line-height: 1.7; overflow-wrap: break-word; }
+.docs-site .docs-prose > * { max-width: var(--measure); }
+.docs-site .docs-prose :is(p, li) { text-wrap: pretty; }
+.docs-site .docs-prose :is(p, ul, ol, blockquote, .docs-code-block, .docs-table, .docs-callout) { margin: 0 0 1.15em; }
+.docs-site .docs-prose > p:first-child { margin-bottom: 1.4em; padding-bottom: 1.4em; border-bottom: 1px solid var(--line); color: var(--soft); font-size: 22px; line-height: 1.55; }
+.docs-site .docs-prose ul { padding-left: 1.4em; list-style: disc; }
+.docs-site .docs-prose ul > li::marker { color: var(--eyebrow); font-size: 1.1em; }
+.docs-site .docs-prose li + li { margin-top: 0.4em; }
+
+/* Numbered steps: each item of an ordered list hangs from a lime disc with its number in ink. */
+.docs-site .docs-prose ol { padding-left: 0; list-style: none; counter-reset: docs-step; }
+.docs-site .docs-prose ol > li { position: relative; min-height: 34px; padding-left: 50px; counter-increment: docs-step; }
+.docs-site .docs-prose ol > li::before { content: counter(docs-step); position: absolute; top: -2.5px; left: 0; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--lime); color: var(--ink); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+.docs-site .docs-prose ol > li + li { margin-top: 0.85em; }
+.docs-site .docs-prose li > :is(ul, ol) { margin: 0.4em 0 0; }
+.docs-site .docs-prose li > p { margin-bottom: 0.5em; }
+.docs-site .docs-prose :is(h2, h3, h4, h5, h6) { color: var(--ink-deep); font-family: var(--font-display); letter-spacing: -0.02em; scroll-margin-top: 24px; text-wrap: balance; }
+.docs-site .docs-prose h2 { margin: 1.7em 0 0.55em; font-size: clamp(26px, 2.4vw, 34px); font-weight: 500; line-height: 1.12; }
+.docs-site .docs-prose > p:first-child + h2 { margin-top: 1.1em; }
+.docs-site .docs-prose h3 { margin: 1.8em 0 0.45em; font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em; }
+.docs-site .docs-prose :is(h4, h5, h6) { margin: 1.5em 0 0.4em; font-size: 18px; font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+.docs-site .docs-prose > :first-child { margin-top: 0; }
+.docs-site .docs-prose :is(strong, b) { font-weight: 700; }
+.docs-site .docs-prose hr { margin: 2.4em 0; border: 0; border-top: 1px solid var(--line); }
+
+/* Links in the text: ink, underlined, the underline turning green on hover. External links end in an arrow bound to their last word (docs/build/hast.ts). */
+.docs-site .docs-prose a { color: var(--ink); font-weight: 500; text-decoration: underline 1.5px; text-underline-offset: 4px; transition: text-decoration-color 0.18s; }
+.docs-site .docs-prose a:hover { text-decoration-color: var(--eyebrow); }
+.docs-site .docs-prose .docs-nowrap { white-space: nowrap; }
+.docs-site .docs-prose .docs-external::after { content: "\2197" / ""; display: inline-block; margin-left: 0.12em; font-size: 0.8em; text-decoration: none; }
+
+/* Code: inline on a warm tint, on one line when short and otherwise wrapping only where docs/build/inline-code.ts allows; blocks
+   on dark ink, each line kept whole, scrolling sideways when one cannot fit, with a lighter edge showing there is more. Strings
+   and numbers are lime; in shell blocks keywords stay plain, so every command reads the same. */
+.docs-site .docs-prose code { padding: 0.12em 0.38em; border-radius: 6px; background: var(--tab); color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84em; }
+.docs-site .docs-prose .docs-code-line, .docs-site .docs-prose .docs-code-words > span { white-space: nowrap; }
+.docs-site .docs-code-block { overflow: hidden; border-radius: 14px; background: #0d302c; box-shadow: var(--shadow); }
+.docs-site .docs-code-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px 0; color: #9fb8ab; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.docs-site .docs-copy { min-height: 28px; padding: 0 2px; border: 0; background: none; color: var(--lime); font: 600 13px/1 var(--font-sans); letter-spacing: 0.02em; text-transform: none; cursor: pointer; }
+.docs-site .docs-copy:hover { text-decoration: underline; text-underline-offset: 4px; }
+.docs-site .docs-copy:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 4px; }
+.docs-site .docs-prose pre { margin: 0; overflow-x: auto; padding: 6px 22px 20px; background:
+    linear-gradient(to right, #0d302c 30%, transparent) left / 40px 100% no-repeat local,
+    linear-gradient(to left, #0d302c 30%, transparent) right / 40px 100% no-repeat local,
+    linear-gradient(to right, #2f5c4c, transparent) left / 16px 100% no-repeat scroll,
+    linear-gradient(to left, #2f5c4c, transparent) right / 16px 100% no-repeat scroll,
+    #0d302c;
+  color: #edf3eb; white-space: pre; }
+.docs-site .docs-prose pre:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+.docs-site .docs-prose pre code { display: block; width: max-content; min-width: 100%; padding: 0; border-radius: 0; background: none; color: inherit; font-size: 15px; line-height: 1.65; white-space: inherit; }
+.docs-site .docs-prose pre [class*="hljs-"] { color: inherit; background: none; font-style: normal; font-weight: inherit; }
+.docs-site .docs-prose pre :is(.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-section, .hljs-title, .hljs-name) { color: #fff; font-weight: 700; }
+.docs-site .docs-prose pre :is(.language-bash, .language-sh, .language-shell, .language-zsh) :is(.hljs-keyword, .hljs-built_in, .hljs-literal) { color: inherit; font-weight: inherit; }
+.docs-site .docs-prose pre :is(.hljs-string, .hljs-number, .hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable) { color: #d7f25b; }
+.docs-site .docs-prose pre :is(.hljs-comment, .hljs-quote, .hljs-meta) { color: #9fb8ab; font-style: italic; }
+
+/* Tables: a heavy ink rule under the header, hairlines between rows; the wrapper scrolls only when a table cannot fit. A column
+   aligned right or centre in the Markdown (numbers, step lists) keeps each value on one line. */
+.docs-site .docs-table { overflow-x: auto; background:
+    linear-gradient(to right, var(--paper) 30%, transparent) left / 40px 100% no-repeat local,
+    linear-gradient(to left, var(--paper) 30%, transparent) right / 40px 100% no-repeat local,
+    linear-gradient(to right, #d6ddd3, transparent) left / 14px 100% no-repeat scroll,
+    linear-gradient(to left, #d6ddd3, transparent) right / 14px 100% no-repeat scroll; }
+.docs-site .docs-table table { width: 100%; border-collapse: collapse; font-size: 15.5px; line-height: 1.55; }
+.docs-site .docs-table :is(th, td) { padding: 10px 16px 10px 0; text-align: left; vertical-align: top; }
+.docs-site .docs-table :is(th, td):last-child { padding-right: 0; }
+.docs-site .docs-table th { font-weight: 600; border-bottom: 2px solid var(--ink); }
+.docs-site .docs-table td { border-bottom: 1px solid var(--line); }
+.docs-site .docs-table:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; border-radius: 6px; }
+.docs-site .docs-table .docs-align-left { text-align: left; }
+.docs-site .docs-table .docs-align-center { text-align: center; }
+.docs-site .docs-table .docs-align-right { text-align: right; }
+.docs-site .docs-table :is(.docs-align-center, .docs-align-right) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Callouts (GitHub alerts) on a pale green row with an icon: an "i" on a lime disc for a note, tip or important point, and an "!"
+   on a lime triangle, on butter, for a warning or caution. Quotes take a lime rule. */
+.docs-site .docs-callout { position: relative; padding: 20px 24px 20px 66px; border-radius: 12px; background: var(--ok-row); }
+.docs-site .docs-callout::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 4px; border-radius: 12px 0 0 12px; background: var(--lime); }
+.docs-site .docs-callout::before { content: ""; position: absolute; top: 20px; left: 22px; width: 28px; height: 28px; background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='13' fill='%23d7f25b'/%3E%3Ccircle cx='14' cy='8.6' r='1.9' fill='%230d302c'/%3E%3Crect x='12.3' y='12' width='3.4' height='9.5' rx='1.7' fill='%230d302c'/%3E%3C/svg%3E"); }
+.docs-site .docs-callout:is(.docs-callout--warning, .docs-callout--caution) { background: #fbf0d4; }
+.docs-site .docs-callout:is(.docs-callout--warning, .docs-callout--caution)::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath d='M14 3.2 26 24.6H2Z' fill='%23d7f25b' stroke='%23d7f25b' stroke-width='2.4' stroke-linejoin='round'/%3E%3Crect x='12.4' y='10' width='3.2' height='8.6' rx='1.6' fill='%230d302c'/%3E%3Ccircle cx='14' cy='21.4' r='1.8' fill='%230d302c'/%3E%3C/svg%3E"); }
+.docs-site .docs-callout > :last-child { margin-bottom: 0; }
+.docs-site .docs-prose .docs-callout-label { margin-bottom: 0.25em; font-weight: 600; }
+.docs-site .docs-prose .docs-callout code { background: color-mix(in srgb, var(--lime) 22%, var(--card)); }
+.docs-site .docs-prose blockquote { padding-left: 18px; border-left: 4px solid var(--lime); color: var(--soft); }
+.docs-site .docs-prose blockquote > :last-child { margin-bottom: 0; }
+
+/* On this page */
+.docs-site .docs-toc { padding: 4px 0 24px 28px; border-left: 1px solid var(--line); }
+.docs-site .docs-toc-title { margin-bottom: 12px; color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.docs-site :is(.docs-toc, .docs-toc-compact) a { display: block; padding: 5px 0; color: var(--soft); font-size: 15px; line-height: 1.4; transition: color 0.18s; }
+.docs-site :is(.docs-toc, .docs-toc-compact) a:hover { color: var(--ink); text-decoration: underline 1.5px var(--eyebrow); text-underline-offset: 4px; }
+.docs-site .docs-toc a { position: relative; }
+.docs-site .docs-toc a[aria-current="location"] { color: var(--ink-deep); font-weight: 600; }
+.docs-site .docs-toc a[aria-current="location"]::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: -29px; width: 4px; border-radius: 4px; background: var(--lime); }
+.docs-site :is(.docs-toc, .docs-toc-compact) ul ul { margin: 2px 0 6px; padding-left: 14px; border-left: 1.5px solid var(--line); }
+
+/* The phone menu and the compact contents list: a full-width white bar with a hairline that opens a paper card. */
+.docs-site :is(.docs-menu, .docs-toc-compact) { margin-bottom: 24px; }
+.docs-site :is(.docs-menu, .docs-toc-compact) summary { display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); font-size: 16px; font-weight: 600; cursor: pointer; list-style: none; }
+.docs-site :is(.docs-menu, .docs-toc-compact) summary::-webkit-details-marker { display: none; }
+.docs-site :is(.docs-menu, .docs-toc-compact) summary::after { content: ""; width: 8px; height: 8px; margin: -3px 2px 0 auto; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+.docs-site .docs-menu details[open] > summary::after, .docs-site .docs-toc-compact[open] > summary::after { margin-top: 4px; transform: rotate(225deg); }
+.docs-site .docs-menu-label { flex: none; color: var(--soft); font-weight: 500; white-space: nowrap; }
+.docs-site .docs-menu-current { min-width: 0; overflow: hidden; padding-left: 14px; border-left: 1px solid var(--line); color: var(--ink-deep); text-overflow: ellipsis; white-space: nowrap; }
+.docs-site .docs-menu-list, .docs-site .docs-toc-compact[open] > ul { margin-top: 12px; padding: 18px 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); box-shadow: var(--shadow); }
+.docs-site .docs-toc-compact[open] > ul { padding-left: 22px; }
+
+/* Previous and next: two white cards with a hairline, the next one's text and arrow on the right. */
+.docs-site .docs-pager { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; max-width: var(--measure); margin-top: clamp(40px, 5vw, 64px); }
+.docs-site .docs-pager-card { display: flex; align-items: center; gap: 18px; min-height: 72px; padding: 14px 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); transition: border-color 0.18s, box-shadow 0.18s; }
+.docs-site .docs-pager-card:hover { border-color: var(--ink); box-shadow: var(--shadow); }
+.docs-site .docs-pager-card--next { grid-column: 2; justify-content: space-between; text-align: right; }
+.docs-site .docs-pager-text { display: grid; }
+.docs-site .docs-pager-label { color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; line-height: 1.3; text-transform: uppercase; }
+.docs-site .docs-pager-title { font-size: 18px; font-weight: 600; line-height: 1.3; }
+.docs-site .docs-pager-arrow { font-size: 22px; line-height: 1; }
+.docs-site .docs-source { max-width: var(--measure); margin-top: 26px; font-size: 15px; }
+.docs-site .docs-source a { color: var(--soft); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 5px; }
+.docs-site .docs-source a:hover { color: var(--ink); text-decoration-color: var(--ink); }
+
+@media (max-width: 1023px) {
+  .docs-site { --gutter: 28px; }
+}
+@media (max-width: 599px) {
+  .docs-site { --gutter: 20px; }
+}
+@media (max-width: 860px) {
+  .docs-site .docs-sidebar { display: none; }
+}
+@media (min-width: 861px) {
+  .docs-site .docs-shell { grid-template-columns: 270px minmax(0, 1fr); }
+  .docs-site .docs-menu { display: none; }
+}
+@media (max-width: 1199px) {
+  .docs-site .docs-toc { display: none; }
+}
+@media (min-width: 1200px) {
+  .docs-site .docs-shell { grid-template-columns: 270px minmax(0, 1fr) 232px; }
+  .docs-site .docs-toc-compact { display: none; }
+}
+@media (max-width: 560px) {
+  .docs-site .docs-title { font-size: clamp(28px, 8.4vw, 44px); }
+  .docs-site .docs-prose > p:first-child { font-size: 19px; }
+  .docs-site .docs-pager { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .docs-site .docs-pager-card--next { grid-column: 1; }
+  .docs-site .docs-callout { padding: 16px 18px 16px 56px; }
+  .docs-site .docs-prose pre { padding: 6px 16px 16px; }
+  .docs-site .docs-code-bar { padding: 10px 16px 0; }
+  .docs-site .docs-prose pre code { font-size: 14px; }
+  /* A code block in a list gives up the list's indent on a phone and spans the text column, so a continued command fits. */
+  .docs-site .docs-prose ul > li > .docs-code-block { margin-left: -1.4em; }
+  .docs-site .docs-prose ol > li > .docs-code-block { margin-left: -46px; }
+  .docs-site .docs-callout::before { left: 16px; top: 17px; }
+  .docs-site .docs-prose ol > li { padding-left: 46px; }
+  .docs-site .docs-prose ol > li::before { top: -0.5px; width: 30px; height: 30px; font-size: 15px; }
+}
+@media (max-width: 359px) {
+  .docs-site .docs-prose pre { padding: 6px 10px 10px; }
+  .docs-site .docs-prose pre code { font-size: 12px; }
+}

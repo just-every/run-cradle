@@ -1,7 +1,7 @@
 # Managed admission
 
-The intended public project is `just-every/cradle`. Publication remains with the
-owner. Ordinary
+The project `just-every/cradle` is developed in the public repository
+`just-every/run-cradle`. Publication remains with the owner. Ordinary
 local installation and owner-account deployment remain available through the
 README. Managed installation uses the same Base operator-auth credentials and
 Cradle owner policy.
@@ -18,15 +18,15 @@ canonical setup bytes. Preserve every already-applied migration byte.
 The managed workflow is dispatch-only and pins the trusted reusable workflow to
 `bf7a25abb44bec1457a7bc738ff63921d90fb52e`. It declares full verification. The
 project profile runs its source-owned setup, build, verify and artifact operations.
-The project operations use `node scripts/rer.mjs install`, `build`, and `verify`.
+The project operations use `rer install`, `build`, and `verify`.
 The rer CLI selects the declared Node runtime. Browser preparation is explicit in
 the producer setup command; artifact packaging uses the actual delivery producer.
 
 To prepare the artifact locally with the pinned tools, run:
 
 ```sh
-node scripts/rer.mjs install
-node scripts/rer.mjs build
+rer install
+rer build
 pnpm delivery:artifact
 ```
 

@@ -3,7 +3,8 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
-import { archiveOutputGuard } from './scripts/base-onboarding/archive-output.mjs'
+import { docsSite } from './src/core/features/docs/build/plugin.ts'
+import { archiveOutputGuard } from '@runeditrun/rer/archive-output'
 
 // Only `vite dev` loads the local-only entry and the checkout's dev key; a build
 // keeps the deployed main and never sees either (rer build checks its output).
@@ -24,6 +25,7 @@ export default defineConfig(({ command, isPreview }) => ({
     cloudflare({ inspectorPort: false, viteEnvironment: { name: 'ssr' }, persistState: { path: process.env.CRADLE_PERSIST_PATH || '.wrangler/state' },
       ...(command === 'serve' && !isPreview ? { config: serve } : process.env.RER_DEV_ORIGIN ? { config: { vars: local('RER_DEV_ORIGIN') } } : {}),
     }),
+    docsSite(),
     tanstackStart({ prerender: { enabled: false, autoStaticPathsDiscovery: false, crawlLinks: false } }),
     react(),
     tailwindcss(),

@@ -15,7 +15,7 @@ function Setup(){
       <div className="cr-field"><label htmlFor="setup-name">Workspace name</label><input id="setup-name" name="name" defaultValue={workspace.name} required maxLength={200}/></div>
       <div className="cr-field"><label htmlFor="setup-timezone">Timezone</label><input id="setup-timezone" name="timezone" defaultValue={workspace.timezone} required/></div>
       <div className="cr-field"><label htmlFor="setup-currency">Currency</label><input id="setup-currency" name="currency" defaultValue={workspace.currency} required pattern="[A-Z]{3}"/></div>
-      <button className="cr-button">Open my workspace</button>
+      <button className="cr-button cr-button--go">Open my workspace</button>
     </form>
   </section></PublicLayout>
 }
