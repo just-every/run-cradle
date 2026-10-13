@@ -1,3 +1,15 @@
+<p align="center">
+  <a href="https://run-cradle.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.webp">
+      <source media="(prefers-color-scheme: light)" srcset=".github/assets/banner-light.webp">
+      <img src=".github/assets/banner-light.webp" width="100%" alt="Cradle: Everything comes together in one place. 100% free, open source alternative to Airtable and Smartsheet.">
+    </picture>
+  </a>
+</p>
+
+<p align="center"><a href="https://run-cradle.com">run-cradle.com</a> · <a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
+
 # Cradle
 
 Cradle is a self-hosted records workspace with manual tables, linked records,
