@@ -7982,7 +7982,7 @@
       "executable": false
     },
     "tests/helpers/install-legacy-fixture.mjs": {
-      "sha256": "015fd07406bd8a5584daed1ee3b3bedef4a8db8d4d56b18e6d98acdd609a9a4d",
+      "sha256": "74d5abd3fb31fe4427e697507c067ad00d3d5fd335d793b55562d8b38ac726c7",
       "executable": false
     },
     "tests/helpers/json-schema-assert.mjs": {
@@ -7990,7 +7990,7 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "3269fbc660400e597b488addff0bf70fe8f4ad760c9b2c57b1efdb78175f56c3",
+      "sha256": "6121a9c6a77ac02ed11baf8c8ccf9705829c8f6ea702a0b2cca035a7de51397a",
       "executable": false
     },
     "tests/helpers/launch-base-authority-runtime.mjs": {
@@ -9002,7 +9002,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "622a898c8168d989bff5ae955a5debc8acd1cb82b7c86a2bab4484b8c5b5ac14",
+      "sha256": "e84e44ba788fe5a100c78947c572f55145a29765cf1bccdda0a13c440c67e6db",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
