@@ -10,6 +10,7 @@ import { unstable_getMiniflareWorkerOptions } from 'wrangler'
 import { productionBindings } from './production-bindings.mjs'
 import {legacyCookieFixture} from './legacy-cookie-fixture.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
+import { localRuntimeTls } from './local-runtime-tls.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
@@ -21,6 +22,7 @@ export async function launchBaseAuthorityRuntime() {
   let runtime
   const close = async () => { try { await runtime?.dispose() } finally { await rm(directory, { recursive: true, force: true }) } }
   try {
+    const tls = await localRuntimeTls(directory)
     const sql = []
     for (const folder of ['migrations/core', 'migrations/base', 'migrations/import', 'migrations/updates']) {
       for (const file of (await readdir(folder)).filter(file => file.endsWith('.sql')).sort()) sql.push(await readFile(path.join(folder, file), 'utf8'))
@@ -35,7 +37,7 @@ export async function launchBaseAuthorityRuntime() {
     const optionsFor = changes => {
       const current = { ...options.bindings, ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, modules, modulesRoot, bindings: current, outboundService: async request => {
+      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, ...tls, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, modules, modulesRoot, bindings: current, outboundService: async request => {
         assert.equal(request.url, 'https://api.sendgrid.com/v3/mail/send', 'Only the selected test mail provider may be contacted')
         deliveries.push(await request.json())
         return new Response(null, { status: 202, headers: { 'x-message-id': 'test-only-launch-mail-receipt' } })
@@ -52,9 +54,11 @@ export async function launchBaseAuthorityRuntime() {
     bindings.APP_ORIGIN = origin
     await runtime.setOptions(optionsFor({}))
     let db = await runtime.getD1Database('DB')
+    // An empty SNI keeps native IP verification independent of the HTTP Host.
+    // Fresh connections isolate Host probes and avoid stale sockets after reloads.
     const dispatch = (url, init = {}) => new Promise((resolve, reject) => {
       const target = new URL(url)
-      const request = httpsRequest({ hostname: '127.0.0.1', port, path: target.pathname + target.search, method: init.method ?? 'GET', rejectUnauthorized: false, headers: { host: target.host, 'cf-connecting-ip': '192.0.2.61', ...init.headers } }, response => {
+      const request = httpsRequest({ hostname: '127.0.0.1', port, path: target.pathname + target.search, method: init.method ?? 'GET', agent: false, rejectUnauthorized: true, ca: tls.httpsCert, servername: '', headers: { host: target.host, 'cf-connecting-ip': '192.0.2.61', ...init.headers } }, response => {
         const chunks = []; response.on('data', data => chunks.push(data)); response.on('end', () => resolve(new Response(Buffer.concat(chunks), { status: response.statusCode, headers: response.headers })))
       })
       request.on('error', reject); if (init.body) request.write(init.body); request.end()

@@ -13,6 +13,7 @@ import { unstable_getMiniflareWorkerOptions } from 'wrangler'
 import { installLegacyFixture } from './install-legacy-fixture.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
+import { localRuntimeTls } from './local-runtime-tls.mjs'
 const { createUlid } = await import('../../src/core/shared/ids.ts')
 const { LAUNCH_APP_ID, launchEntities } = await import('../../src/apps/launch/contracts.ts')
 const { launchFieldIds } = await import('../../src/apps/launch/descriptors.server.ts')
@@ -27,11 +28,14 @@ export async function launchAuthorityRuntime(overrides = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-authority-'))
   let runtime, logs = ''
   const close = async () => {
-    if (runtime) await runtime.dispose()
-    if (process.env.CRADLE_AUTHORITY_EVIDENCE) { await mkdir(process.env.CRADLE_AUTHORITY_EVIDENCE, { recursive: true }); await writeFile(path.join(process.env.CRADLE_AUTHORITY_EVIDENCE, 'worker.log'), logs) }
-    await rm(directory, { recursive: true, force: true })
+    try {
+      if (runtime) await runtime.dispose()
+      if (process.env.CRADLE_AUTHORITY_EVIDENCE) { await mkdir(process.env.CRADLE_AUTHORITY_EVIDENCE, { recursive: true }); await writeFile(path.join(process.env.CRADLE_AUTHORITY_EVIDENCE, 'worker.log'), logs) }
+    } finally { await rm(directory, { recursive: true, force: true }) }
   }
   try {
+    const initialHttps = overrides.APP_ORIGIN?.startsWith('https:') ?? false
+    let tls = initialHttps ? await localRuntimeTls(directory) : undefined
     // Fresh regression databases apply the exact ordered SQL in one local D1
     // invocation. The unchanged migration suites verify Wrangler migration history.
     const migrations = migrationInventory()
@@ -49,23 +53,29 @@ export async function launchAuthorityRuntime(overrides = {}) {
     const { modulesRules, ...options } = workerOptions
     const modules = [main, ...(await readdir(modulesRoot, { recursive: true })).filter(file => /\.m?js$/.test(file)).map(file => path.join(modulesRoot, file)).filter(file => file !== main)].map(file => ({ type: 'ESModule', path: file }))
     const bindings = { ...options.bindings, AUTH_LOCAL: 'true', OWNER_EMAIL:'maya@northstar.example', MAIL_PROVIDER:'development', MAIL_FROM:'auth@localhost.test', SESSION_SECRET: configuration.sessionSecret, APP_ORIGIN: origin, ...overrides }
-    const optionsFor = (changes = {}, https = overrides.APP_ORIGIN?.startsWith('https:') ?? false) => {
+    const optionsFor = (changes = {}, https = initialHttps) => {
       const current = { ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const result = convertV4MiniflareOptions({ host:'127.0.0.1',port,https,inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,modules,modulesRoot,bindings:current},...externalWorkers] })
+      const result = convertV4MiniflareOptions({ host:'127.0.0.1',port,https,...(https ? tls : {}),inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,modules,modulesRoot,bindings:current},...externalWorkers] })
       for (const worker of result.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
       return result
     }
     let runtimeOptions = optionsFor()
-    const reconfigure = async (changes, https) => { runtimeOptions = optionsFor(changes, https); await runtime.setOptions(runtimeOptions) }
+    const reconfigure = async (changes, https = initialHttps) => {
+      if (https && !tls) tls = await localRuntimeTls(directory)
+      runtimeOptions = optionsFor(changes, https)
+      await runtime.setOptions(runtimeOptions)
+    }
     runtime = new Miniflare(runtimeOptions)
     logs += `Emitted Worker listening at ${await runtime.ready}\n`
     const db = await runtime.getD1Database('DB')
     // Send real HTTP/TLS to our listener with the canonical Host. Miniflare's
     // dispatchFetch rewrites the URL to its proxy origin and cannot prove this guard.
+    // An empty SNI keeps native IP verification independent of the HTTP Host.
+    // Fresh connections isolate Host probes and avoid stale sockets after reloads.
     const dispatch = (url, init = {}) => new Promise((resolve, reject) => {
       const target = new URL(url), send = runtimeOptions.https ? httpsRequest : httpRequest
-      const request = send({hostname:'127.0.0.1',port,path:target.pathname+target.search,method:init.method??'GET',rejectUnauthorized:false,headers:{host:target.host,...init.headers}}, response => {
+      const request = send({hostname:'127.0.0.1',port,path:target.pathname+target.search,method:init.method??'GET',agent:false,rejectUnauthorized:true,ca:tls?.httpsCert,servername:'',headers:{host:target.host,...init.headers}}, response => {
         const chunks=[];response.on('data',data=>chunks.push(data));response.on('end',()=>resolve(new Response(Buffer.concat(chunks),{status:response.statusCode,headers:response.headers})))
       })
       request.on('error',reject);if(init.body)request.write(init.body);request.end()
