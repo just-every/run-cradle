@@ -1,4 +1,4 @@
-import test from 'node:test'
+import test,{after,before,describe} from 'node:test'
 import assert from 'node:assert/strict'
 import {setup,value,campaign,expected} from './helpers/launch-installed.mjs'
 const {launchEntities}=await import('../src/apps/launch/contracts.ts')
@@ -31,8 +31,12 @@ test('[AI-004/005/006] emitted worker retains failed-call usage, preserves recor
  }finally{await h.close()}
 })
 
-test('[AI-004] actual provider timeout records an unavailable result without persisting analysis',{timeout:85000},async()=>{
- let timer,calls=0
- const h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');calls++;return new Promise(resolve=>{timer=setTimeout(()=>resolve(completed({content:'Too late',proposedLens:null})),65000)})}})
- try{const c=await campaign(h,'TIMEOUT');await enable(h,2);const accepted=value(await h.command('launch.analysis.request',{feature:'campaign-brief',campaignId:c.id})),started=Date.now();await h.tick();const elapsed=Date.now()-started,row=(await h.read('/api/v1/launch/analysis-requests/'+accepted.requestId)).data;assert.ok(elapsed>=59000&&elapsed<64000,`deadline elapsed ${elapsed}: ${JSON.stringify(row)}, calls=${calls}`);assert.equal(calls,1);assert.equal(row.state,'Failed');assert.equal(row.error.code,'provider_unavailable');assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_analyses').first()).n,0)}finally{clearTimeout(timer);await h.close()}
+describe('[AI-004] provider timeout fixture',()=>{
+ let h,timer,calls=0
+ // Install the fresh emitted Worker before timing its real provider deadline.
+ before(async()=>{h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');calls++;return new Promise(resolve=>{timer=setTimeout(()=>resolve(completed({content:'Too late',proposedLens:null})),65000)})}})})
+ after(async()=>{clearTimeout(timer);await h?.close()})
+ test('[AI-004] actual provider timeout records an unavailable result without persisting analysis',{timeout:85000},async()=>{
+  const c=await campaign(h,'TIMEOUT');await enable(h,2);const accepted=value(await h.command('launch.analysis.request',{feature:'campaign-brief',campaignId:c.id})),started=Date.now();await h.tick();const elapsed=Date.now()-started,row=(await h.read('/api/v1/launch/analysis-requests/'+accepted.requestId)).data;assert.ok(elapsed>=59000&&elapsed<64000,`deadline elapsed ${elapsed}: ${JSON.stringify(row)}, calls=${calls}`);assert.equal(calls,1);assert.equal(row.state,'Failed');assert.equal(row.error.code,'provider_unavailable');assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_analyses').first()).n,0)
+ })
 })
