@@ -36,7 +36,7 @@ export const createAutomationService = (platform: Platform) => {
           runCount30Days: recentFinished.length,
           lastRunAt: lastRun?.finishedAt ?? lastRun?.startedAt ?? lastRun?.queuedAt ?? null,
           lastRunStatus: lastRun?.state ?? null,
-          failure: lastRun?.state === 'Failed' && lastRun.errorCode && lastRun.errorMessage
+          failure: lastRun && ['Failed', 'Unknown'].includes(lastRun.state) && lastRun.errorCode && lastRun.errorMessage
             ? { code: lastRun.errorCode, message: lastRun.errorMessage }
             : null,
         }

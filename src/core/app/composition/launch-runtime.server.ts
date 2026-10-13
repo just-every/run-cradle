@@ -12,13 +12,16 @@ import { createChannelsIntegration } from '../../../domains/channels/integration
 import { createChannelSchedules } from '../../../domains/channels/schedules.server'
 import { createLegacyDigestProjection } from '../../../domains/channels/digest.server'
 import { prepareAnalysisRequest,executeAnalysisRequest } from '../../../apps/launch/analysis-requests.server'
+import { launchAnalysisContext } from '../../../apps/launch/analysis.server'
 import { createLaunchModelProvider } from '../../../apps/launch/model-provider.server'
 import { createLaunchAnalysisReader } from '../../../apps/launch/analysis-reader.server'
 import { launchCommandSchema,LAUNCH_APP_ID } from '../../../apps/launch/contracts'
 import { canonicalHash } from '../../../domains/admission/canonical'
 import { createUlid } from '../../shared/ids'
 import { ApiError } from '../../registry/errors'
-import type { DomainEvent } from '../../../domains/admission/ports'
+import type { DomainEvent,SqlMutation } from '../../../domains/admission/ports'
+import { registerTable,eq } from '../../../domains/admission/sql.server'
+const briefTable=registerTable('launch_brief_context',['campaign_id','context_hash','last_requested_at'])
 
 export function createInstalledLaunch(platform:Platform,foundation:ServerFoundation,clock=()=>new Date()){
  const db=platform.bindings.DB,channels=createChannelsIntegration(db),context={db,policy:foundation.policy,integration:channels,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID)}
@@ -38,16 +41,31 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
  const automation=createLegacyAutomationRuntime(context,foundation.admission,{releaseId:context.releaseId??'',authority:service.authority,context:service.context,async external(ctx,input){
   if(input.action==='digest'&&input.run.definition.shipped_key==='weekly-digest')return{...await schedules.digest(ctx,project),state:'Complete',result:{delivered:'weekly-digest'} as Json,outbox:[]}
   if(input.action!=='request-ai-analysis')return customEffects(ctx,input)
+  const mutations:SqlMutation[]=[],completed:string[]=[],skipped:string[]=[]
   for(const campaignId of input.run.definition.shipped_key?input.run.subjectIds:[String((input.input as Record<string,unknown>).campaignId)]){
    const scoped=await service.context(ctx,input.run,campaignId)
    const id=(await canonicalHash({key:input.idempotencyKey,campaignId,retryRun:input.run.retryOf?input.run.id:null})).slice(0,26).toUpperCase(),old=await db.prepare('SELECT state,error_code,error_message FROM launch_analysis_requests WHERE id=?').bind(id).first<{state:string;error_code:string|null;error_message:string|null}>()
-   if(old?.state==='Complete')continue
+   const prior=input.run.definition.shipped_key==='campaign-brief'?await db.prepare('SELECT context_hash FROM launch_brief_context WHERE campaign_id=?').bind(campaignId).first<{context_hash:string}>():null
+   if(!old&&input.run.definition.shipped_key==='campaign-brief'){
+    const source=await launchAnalysisContext(scoped,ctx,{feature:'campaign-brief',campaignId}),hash=await canonicalHash(JSON.parse(JSON.stringify(source.data),(key,value)=>key==='version'?undefined:value))
+    // A peer may have failed after this campaign completed. Its immutable request is
+    // authoritative even when the bulk action never committed its context summary.
+    const completedPrior=await db.prepare("SELECT a.context_hash FROM launch_analysis_requests r JOIN launch_analyses a ON a.id=r.analysis_id JOIN automation_runs run ON run.id=r.automation_run_id WHERE r.state='Complete' AND a.subject_id=? AND a.feature='campaign-brief' AND json_extract(run.definition_json,'$.definition.shipped_key')='campaign-brief' ORDER BY r.updated_at DESC,r.id DESC LIMIT 1").bind(campaignId).first<{context_hash:string|null}>()
+    if((completedPrior?.context_hash??prior?.context_hash)===hash){skipped.push(campaignId);continue}
+   }
    if(old?.state==='Failed')throw new ApiError('provider_unavailable',old.error_message??'Analysis failed')
    if(!old){const p=await prepareAnalysisRequest(scoped,ctx,{commandId:id,expected:[],input:{...(input.run.definition.shipped_key==='campaign-brief'?{feature:'campaign-brief',campaignId}:{feature:'campaign-brief',...input.input as Record<string,unknown>})}},release());p.outbox=[];await foundation.admission.commit(ctx,p)}
-   await executeAnalysis(id,{ctx,context:scoped as typeof context})
+   if(old?.state!=='Complete')await executeAnalysis(id,{ctx,context:scoped as typeof context})
    const outcome=await db.prepare('SELECT state FROM launch_analysis_requests WHERE id=?').bind(id).first<{state:string}>();if(outcome?.state!=='Complete')return{guards:[],mutations:[],outbox:[],state:'Waiting',result:{requestId:id,state:outcome?.state??'Unknown'} as Json}
+   completed.push(campaignId)
+   if(input.run.definition.shipped_key==='campaign-brief'){
+    const analysis=await db.prepare("SELECT a.context_hash FROM launch_analysis_requests r JOIN launch_analyses a ON a.id=r.analysis_id WHERE r.id=? AND r.state='Complete' AND a.subject_id=? AND a.feature='campaign-brief'").bind(id,campaignId).first<{context_hash:string|null}>()
+    if(!analysis?.context_hash)throw new Error('Completed campaign brief requires its persisted immutable analysis')
+    const values={context_hash:analysis.context_hash,last_requested_at:Date.parse(ctx.now)}
+    mutations.push(prior?{kind:'update',table:briefTable,set:values,where:eq(briefTable,'campaign_id',campaignId),expectedRows:1}:{kind:'insert',table:briefTable,row:{campaign_id:campaignId,...values}})
+   }
   }
-  return{guards:[],mutations:[],outbox:[],state:'Complete',result:{analyses:input.run.subjectIds.length} as Json}
+  return{guards:[],mutations,outbox:[],state:'Complete',result:{analyses:completed.length,campaignIds:completed,skippedCampaignIds:skipped,...completed.length===0?{skipped:'unchanged-context'}:{}} as Json}
  }})
  const schema=launchCommandSchema('analysis.request')
  foundation.commands.register({action:'launch.analysis.request',description:'Request a read-only launch analysis',inputSchema:z.toJSONSchema(schema) as Json,input:schema,
