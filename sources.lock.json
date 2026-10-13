@@ -3350,7 +3350,7 @@
       "executable": false
     },
     "src/apps/launch/automation-runtime.server.ts": {
-      "sha256": "e93359b7f62b552abe6a193b373290bf5ed4e4ebca4c90ca95e7ad42acf729bc",
+      "sha256": "b5f88884bceb49469943ca9946f2b6f80a3f6793c3f3fe1a8485157cfa82d40f",
       "executable": false
     },
     "src/apps/launch/automations.server.ts": {
@@ -8367,6 +8367,10 @@
     },
     "tests/launch-installed-event-control.mjs": {
       "sha256": "d7ad34d2675aebbbc53236a5be2b13fe3e4173a6f30267995a52fcb7293bcf60",
+      "executable": false
+    },
+    "tests/launch-installed-network-cancel.mjs": {
+      "sha256": "0306784295b4d82b2bac01300d7dcf019be7ece853c4c88f12fe7c73b0208240",
       "executable": false
     },
     "tests/launch-installed-retries.mjs": {
