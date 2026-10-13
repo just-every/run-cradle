@@ -3,7 +3,6 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import {pathToFileURL} from 'node:url'
-// Existing emitted build required. Run from repo with its TS loader and --test-concurrency=1.
 // Fixtures and setting changes use public commands; D1 is a read-only observation door.
 const repo=path.resolve(process.env.CRADLE_REPO??process.cwd())
 const fromRepo=file=>import(pathToFileURL(path.join(repo,file)).href)
@@ -31,15 +30,16 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
   const owner=(await h.db.prepare("SELECT id FROM operators WHERE email='import-owner@example.test'").first()).id
   const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first())
-  await command('settings.update',{version:settings.version,changes:{timezone:'UTC'}})
+  await command('settings.update',{version:settings.version,changes:{timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
   const readiness=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='launch-readiness'").first()
   assert.ok(readiness,'Native setup must install the readiness definition')
   await command('launch.automation.enable',{id:readiness.id},expected('automation',readiness))
   const config=JSON.parse(readiness.trigger_config_json)
   const campaign=await command('launch.campaign.create',{fields:{code:'SCHEDULED',name:'Scheduled held-out campaign',ownerId:owner,startDate:monday,launchDate:monday,objective:'Exercise emitted scheduler',statusSummary:'Ready',phase:'Planning',status:'On track',health:70,budgetMinor:100,spendMinor:0,tags:[],customFields:{}}})
   const milestone=await command('launch.milestone.create',{fields:{campaignId:campaign.id,title:'Scheduled held-out launch',ownerId:owner,type:'Launch',status:'Not started',startDate:monday,endDate:null,conflictReason:null}})
+  const later=await command('launch.milestone.create',{fields:{campaignId:campaign.id,title:'Beyond configured lead days',ownerId:owner,type:'Launch',status:'Not started',startDate:'2026-10-23',endDate:null,conflictReason:null}})
   const worker=await h.runtime.getWorker()
-  const tick=at=>worker.scheduled({scheduledTime:Date.parse(at),cron:'* * * * *'})
+  const tick=at=>worker.scheduled({scheduledTime:Date.parse(at)-345*60000,cron:'* * * * *'})
   const count=async(sql,...params)=>Number((await h.db.prepare(sql).bind(...params).first()).n)
   async function snapshot(){return{
    readiness:await count("SELECT COUNT(*) n FROM launch_readiness WHERE milestone_id=? AND state='Outstanding'",milestone.id),
@@ -50,12 +50,16 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   }}
   await t.test('MILE-004 AUTO-011: configured local readiness schedule creates one request and mail',async st=>{
    const before=await snapshot(),at=monday+'T'+String(config.hour).padStart(2,'0')+':05:00.000Z'
+   await tick(monday+'T07:59:59.000Z');assert.deepEqual(await snapshot(),before)
    await tick(at)
+   assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0)
    const first=await snapshot();st.diagnostic(JSON.stringify({at,before,first}))
    assert.equal(first.readiness,before.readiness+1,'emitted scheduled handler produced no readiness request')
    assert.equal(first.mailOutbox,before.mailOutbox+1,'readiness has no development-mail outbox counterpart')
    await tick(at)
    const duplicate=await snapshot();assert.equal(duplicate.readiness,first.readiness);assert.equal(duplicate.mailOutbox,first.mailOutbox)
+   const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
+   await tick('2026-10-20T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
   })
   await t.test('NOTIFY-004: enabled Monday digest creates one notification/delivery and mail',async st=>{
    const automation=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='weekly-digest'").first()
@@ -63,16 +67,24 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    await command('launch.automation.enable',{id:automation.id},expected('automation',automation))
    const digestSettings=await h.db.prepare("SELECT version FROM channel_digest_settings WHERE id='digest'").first()
    await command('digest.update',{version:digestSettings.version,recipientIds:[owner]})
-   const before=await snapshot(),at=monday+'T09:05:00.000Z'
+   const cutoffCampaign=async(code,name,launchDate)=>command('launch.campaign.create',{fields:{code,name,ownerId:owner,startDate:monday,launchDate,objective:'Digest cutoff',statusSummary:'Ready',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+   await cutoffCampaign('DAY30','Included at thirty days','2026-11-18');await cutoffCampaign('DAY31','Outside thirty days','2026-11-19')
+   const archived=await cutoffCampaign('ARCHIVED','Archived launch excluded',monday);await command('launch.campaign.archive',{id:archived.id},expected('campaign',archived))
+   const quiet=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:quiet.version,changes:{quietHoursStart:'09:00',quietHoursEnd:'10:00'}})
+   const before=await snapshot(),at=monday+'T09:00:00.000Z'
+   await tick(monday+'T08:59:59.000Z');assert.equal((await snapshot()).digest,before.digest)
    await tick(at)
    const first=await snapshot();st.diagnostic(JSON.stringify({at,before,first}))
    assert.equal(first.digest,before.digest+1,'emitted scheduled handler produced no weekly digest delivery')
    assert.equal(first.mailOutbox,before.mailOutbox+1,'digest has no development-mail outbox counterpart')
-   await tick(at);await tick(monday+'T09:15:00.000Z')
+   await tick(at);await tick(monday+'T09:14:59.000Z');await tick(monday+'T09:15:00.000Z')
    const duplicate=await snapshot();assert.equal(duplicate.digest,first.digest);assert.equal(duplicate.mailOutbox,first.mailOutbox)
+   await tick('2026-10-26T09:15:00.000Z');assert.equal((await snapshot()).digest,first.digest,'Outside window must not create next week digest')
+   const address=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner).first()).email.trim().toLowerCase();assert.equal(await count('SELECT count(*) n FROM channel_events WHERE event_id=?','digest:'+monday+':'+address),1)
+   const mail=JSON.parse((await h.db.prepare("SELECT message FROM rer_mail_development_outbox WHERE json_extract(message,'$.subject')='Weekly portfolio digest' ORDER BY sequence DESC LIMIT 1").first()).message);assert.ok(mail.text.includes('Scheduled held-out campaign'));assert.ok(!mail.text.includes('Archived launch excluded'));const launches=mail.text.split('Launches in the next 30 days')[1].split('Open High and Critical risks')[0];assert.ok(launches.includes('Included at thirty days'));assert.ok(!launches.includes('Outside thirty days'))
   })
   await t.test('NOTIFY-008: unresolved decision due plus fifteen minutes notifies once and re-arms',async st=>{
-   const dueAt=monday+'T09:50:00.000Z'
+   const dueAt=monday+'T09:50:00.000+05:45'
    const decision=await command('launch.decision.create',{fields:{campaignId:campaign.id,riskId:null,supersedesId:null,title:'Scheduled held-out decision',requesterId:owner,assigneeId:null,priority:'High',dueAt,recommendation:'Review before launch',impact:'Launch readiness'}})
    const before=await snapshot()
    await tick(monday+'T10:04:59.000Z')
@@ -82,7 +94,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    assert.equal(first.overdue,before.overdue+1,'emitted scheduled handler produced no overdue decision delivery')
    assert.equal(first.mailOutbox,before.mailOutbox+1,'overdue decision has no development-mail outbox counterpart')
    await tick(monday+'T10:05:00.000Z');assert.equal((await snapshot()).overdue,first.overdue)
-   await command('launch.decision.patch',{id:decision.id,changes:{dueAt:monday+'T11:50:00.000Z'}},expected('decision',decision))
+   await command('launch.decision.patch',{id:decision.id,changes:{dueAt:monday+'T11:50:00.000+05:45'}},expected('decision',decision))
    await tick(monday+'T12:05:00.000Z')
    const rearmed=await snapshot();st.diagnostic(JSON.stringify({rearmed}))
    assert.equal(rearmed.overdue,first.overdue+1);assert.equal(rearmed.mailOutbox,first.mailOutbox+1)
