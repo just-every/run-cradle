@@ -7,4 +7,3 @@ export const value=response=>response.data.value
 export async function campaign(h,code='WORK'){const operator=(await h.db.prepare('SELECT human_id FROM authority_principals WHERE id=?').bind(h.owner.owner).first()).human_id;return value(await h.command('launch.campaign.create',{fields:{code,name:'Launch '+code,ownerId:operator,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Launch safely',statusSummary:'Manual',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}}))}
 export async function waitFor(read,predicate){for(let n=0;n<40;n++){const result=await read();if(predicate(result))return result;await new Promise(r=>setTimeout(r,200))}assert.fail('Committed work did not finish within eight seconds')}
 export const expected=(entity,row)=>[{ref:{appId,entityId:entity,recordId:row.id},version:row.version}]
-
