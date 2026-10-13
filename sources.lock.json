@@ -3630,7 +3630,7 @@
       "executable": false
     },
     "src/apps/launch/automation-runtime.server.ts": {
-      "sha256": "98806c098ea33845ffe412e702245c90106c57bdecfb4bc5705d242e3358d393",
+      "sha256": "ec1629e68548406c66a192a7e4987d8a3709efa41160cd04f9a0a76d19873b98",
       "executable": false
     },
     "src/apps/launch/automations.server.ts": {
@@ -4082,7 +4082,7 @@
       "executable": false
     },
     "src/core/app/composition/launch-runtime.server.ts": {
-      "sha256": "5bf6f899f3e2ad7aacc03d0255f81472730f2b45d7dd5f75c0ca0f98c8069843",
+      "sha256": "d3e0e7a6f1b53bced90fd7f216fddbc730265699797552d02a1149ac5d59db0d",
       "executable": false
     },
     "src/core/app/composition/launch.server.ts": {
@@ -8754,7 +8754,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "41fbc1ff5192138953f956dab707b5d4b13109aea7ce61f80ef52505af594b74",
+      "sha256": "87890d221eac1ee8be386dc878df2395e2d68e5b1cf86327b6852b4052881c18",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
