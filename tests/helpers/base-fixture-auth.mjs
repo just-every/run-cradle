@@ -25,7 +25,7 @@ export async function adoptFixtureOperators(db) {
 }
 export async function createFixtureAuth(db, configuration, principalId) {
  if(!await db.prepare("SELECT 1 FROM sqlite_master WHERE name='oa_operators'").first()){
-  for(const name of ['base/9000_base_operator_auth.sql','base/9001_cradle_auth_projection.sql','base/9002_development_outbox.sql','updates/9021_dev_sessions.sql','updates/9022_domain_rules_step_up.sql']){
+  for(const name of ['base/9000_base_operator_auth.sql','base/9001_cradle_auth_projection.sql','base/9002_development_outbox.sql','updates/9021_dev_sessions.sql','updates/9022_domain_rules_step_up.sql','updates/9026_provider_setup_lifecycle.sql']){
    const sql=await readFile(new URL('../../migrations/'+name,import.meta.url),'utf8')
    await db.exec(sql.replace(/^\s*--.*$/gm,'').replaceAll('\n',' '))
   }

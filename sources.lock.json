@@ -3485,20 +3485,20 @@
       "sha256": "18ebe4a3e1b98160b5b1d9bd53a1866c3d4d3adbbe471ba420e74a14e1bdc67c",
       "executable": false
     },
-    "scripts/portability/files.mjs": {
-      "sha256": "a5b64b41c8cacc7ae3fc4e2961e0e6b514a6e46b9022887bf490f82439379db0",
-      "executable": false
-    },
     "scripts/portability/local.mjs": {
-      "sha256": "2f73baf189e81fe8f629690b7ec819720b293fe081060a902462716c6b9822a2",
+      "sha256": "bd2b0991d12450c5f0a7d9c6a5ee803192be40dc8bef6fcb10e77efa70f0e0bd",
       "executable": false
     },
     "scripts/portability/policy.mjs": {
       "sha256": "e661e32958e015c5774b23775f03ee747399d49d2d177ee7234e7c850422c1fe",
       "executable": false
     },
+    "scripts/portability/preflight.mjs": {
+      "sha256": "814afa505dc60e2bcba67f9e9191941330b27885d091f3d0f01dea6b1b01d81a",
+      "executable": false
+    },
     "scripts/portability/records.mjs": {
-      "sha256": "f49607ec3b49d53d917ee043d163f03698e222aae9d1bba25d757d43d3c4ccbb",
+      "sha256": "aac65b450825a85afafe33117c55831b0a569fa12fdf2765dc0c850565cad235",
       "executable": false
     },
     "scripts/portability/search.mjs": {
@@ -3506,7 +3506,7 @@
       "executable": false
     },
     "scripts/portability/worker.mjs": {
-      "sha256": "68e862458eb917df9853615ca35502337b90bbddf33f9fede50c5db1268ff76d",
+      "sha256": "e5a839dcfbf574b10602d75684754d4cd97b8aea5f535b9863967a822254991e",
       "executable": false
     },
     "scripts/review-fixture-20261002.mjs": {
@@ -8158,7 +8158,7 @@
       "executable": false
     },
     "tests/helpers/base-fixture-auth.mjs": {
-      "sha256": "eaef1e24d98705e5bdb6b1a78d94b3170958328cbb223ab5997f4a4b46189667",
+      "sha256": "cf1297fcfaae3ff5795b5e01ccc6f2c058d9be2922e5be0bfc824ff320cb54a5",
       "executable": false
     },
     "tests/helpers/base-http-session.mjs": {
