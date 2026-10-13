@@ -1,3 +1,5 @@
+import {attachmentText} from './attachment-text.server'
+import {AuthorityError} from '../authority/errors'
 import {STAGING_ENTITY} from '../evidence/staging.server'
 import {scrubWholeTokens} from './identity-match'
 import type {IdentityCopy} from './identity-redaction.server'
@@ -12,12 +14,12 @@ export async function classifyIdentityObjects(db:D1Database,bucket:R2Bucket,inpu
  do{
   const page=await bucket.list({cursor})
   for(const object of page.objects){
-   const body=await bucket.get(object.key);if(!body)continue
-   const text=new TextDecoder().decode(await body.arrayBuffer());let decoded=text
-   try{decoded=JSON.stringify(JSON.parse(text))}catch{/* Non-JSON files are scanned as decoded text. */}
-   const hay=[text,decoded,JSON.stringify([object.key,body.customMetadata,body.httpMetadata])]
+   const body=await bucket.get(object.key);if(!body)throw new AuthorityError('version_conflict',`Erasure cannot inspect missing R2 object ${await keyDigest(object.key)}; no identity was erased.`,409)
+   const file=await db.prepare('SELECT id,media_type FROM evidence_files WHERE object_key=?').bind(object.key).first<{id:string;media_type:string}>()
+   let decoded:string[]
+   try{decoded=attachmentText(new Uint8Array(await body.arrayBuffer()),body.httpMetadata?.contentType??file?.media_type??'',body.httpMetadata?.contentEncoding)}catch{throw new AuthorityError('version_conflict',`Erasure cannot inspect R2 object ${await keyDigest(object.key)}: unsupported, corrupt or uninspectable attachment. Resolve its custody before erasure; no identity was erased.`,409)}
+   const hay=[...decoded,JSON.stringify([object.key,body.customMetadata,body.httpMetadata])]
    if(!hay.some(value=>input.matches.some(match=>value.includes(match))))continue
-   const file=await db.prepare('SELECT id FROM evidence_files WHERE object_key=?').bind(object.key).first<{id:string}>()
    const whole=hay.some(value=>scrubWholeTokens(value,input.matches,input.label,input.others).changed>0)
    if(whole&&owned.has(object.key)){erase.push({key:object.key,fileId:file?.id??null});continue}
    const store=file?`R2 file ${file.id}`:`R2 object ${await keyDigest(object.key)}`

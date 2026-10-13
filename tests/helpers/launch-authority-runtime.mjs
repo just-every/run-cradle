@@ -1,11 +1,9 @@
-import { migrationInventory } from '../../scripts/migration-groups.mjs'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:net'
 import { request as httpsRequest } from 'node:https'
 import { request as httpRequest } from 'node:http'
-import { spawnSync } from 'node:child_process'
-import { mkdtemp, rm, mkdir, writeFile, readdir, readFile } from 'node:fs/promises'
+import { mkdtemp, rm, mkdir, writeFile, readdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
@@ -13,6 +11,7 @@ import { unstable_getMiniflareWorkerOptions } from 'wrangler'
 import { installLegacyFixture } from './install-legacy-fixture.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
+import { migrateFixture } from './migrate-fixture.mjs'
 const { createUlid } = await import('../../src/core/shared/ids.ts')
 const { LAUNCH_APP_ID, launchEntities } = await import('../../src/apps/launch/contracts.ts')
 const { launchFieldIds } = await import('../../src/apps/launch/descriptors.server.ts')
@@ -32,14 +31,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=tr
     await rm(directory, { recursive: true, force: true })
   }
   try {
-    // Fresh regression databases apply the exact ordered SQL in one local D1
-    // invocation. The unchanged migration suites verify Wrangler migration history.
-    const migrations = migrationInventory()
-    assert.ok(migrations.length > 0)
-    const migrationFile = path.join(directory,'fresh-schema.sql')
-    await writeFile(migrationFile,migrations.map(migration => migration.sql).join('\n'))
-    const migration = spawnSync('pnpm', ['exec', 'wrangler', 'd1', 'execute', 'cradle', '--local', '--persist-to', directory, '--file', migrationFile], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
-    assert.equal(migration.status, 0, migration.stderr + migration.stdout)
+    migrateFixture(directory)
     const owner = await installLegacyFixture(directory, { installedLaunchDefinitions, installationOwner })
     const configuration = { appOrigin: origin, sessionSecret: 'synthetic-launch-authority-test-signing-key', mode: 'development' }
     // One actual emitted Worker owns HTTP, assets and the local D1 binding.

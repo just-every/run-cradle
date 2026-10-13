@@ -1,3 +1,4 @@
+import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -20,7 +21,7 @@ contract('RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume
     for (const width of accessibilityWidths) {
       const context = await browser.newContext(accessibilityContextOptions({ viewport: { width, height: width === 390 ? 844 : 900 } }))
       try {
-        await context.addCookies([{ name: 'operator_session_local', value: runtime.cookie.slice('operator_session_local='.length), url: runtime.origin }])
+        await context.addCookies(browserCookies(runtime.cookie,runtime.origin))
         const page = await context.newPage(), journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
         const consoleErrors = [], externalRequests = [], batchCheckpoints = []
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()) })

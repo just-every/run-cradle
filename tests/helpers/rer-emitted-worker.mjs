@@ -20,13 +20,18 @@ export async function withRerEmittedWorker(copy,origin,run){
  let calls=0;config.workers[0].dev??={};config.workers[0].dev.outboundService={type:'fetcher',handler(){calls++;throw new Error('Local lifecycle rehearsal prohibits outbound network')}}
  const logs=[];class PrivateLog extends Log{log(message){logs.push(message)}}
  config.log=new PrivateLog(LogLevel.INFO);config.handleStructuredLogs=message=>logs.push(JSON.stringify(message))
- const runtime=new Miniflare(config);let detach
+ let runtime,detach
+ const start=async()=>{runtime=new Miniflare(config);await runtime.ready;detach=useRuntimeBindings(copy.source,{DB:await runtime.getD1Database('DB'),FILES:await runtime.getR2Bucket('FILES')})}
+ const stop=async()=>{detach?.();detach=undefined;const owned=runtime;runtime=undefined;await owned?.dispose()}
+ // Public offline CLI transfers must own the persisted bindings exclusively.
+ // Release this exact Worker, then resume its unchanged configuration and port.
+ const offline=async action=>{await stop();try{return await action()}finally{await start()}}
  try{
-  await runtime.ready;detach=useRuntimeBindings(copy.source,{DB:await runtime.getD1Database('DB'),FILES:await runtime.getR2Bucket('FILES')})
-  const result=await run(runtime)
+  await start()
+  const result=await run(runtime,{offline})
   assert.equal(calls,0,'Native lifecycle proof made no external calls')
   return result
- }finally{detach?.();try{await runtime.dispose()}finally{await copy.log.writeFile(logs.join('\n')+'\n')}}
+ }finally{try{await stop()}finally{await copy.log.writeFile(logs.join('\n')+'\n')}}
 }
 
 /** Rer issues the ordinary private owner message; native emitted auth redeems it. */

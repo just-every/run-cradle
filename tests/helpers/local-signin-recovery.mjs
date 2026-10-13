@@ -1,3 +1,4 @@
+import {assertNoBrowserSession} from './session-cookies.mjs'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import {accessibilityCaptureOnly,accessibilityContextOptions,accessibilityEvidence,auditAccessibility} from './accessibility-evidence.mjs'
@@ -44,7 +45,7 @@ export async function verifyIdentityAndRecovery({browser,context,page,viewport,o
       await publicPage.getByRole('heading',{name:'This link is invalid or expired',exact:true}).waitFor()
       assert.equal(await publicPage.getByRole('button',{name:'Confirm',exact:true}).count(),0)
       assert.equal(await publicPage.getByRole('link',{name:'Request a new link',exact:true}).getAttribute('href'),'/signin')
-      assert.equal((await anonymous.cookies()).some(cookie=>cookie.name==='operator_session_local'),false)
+      await assertNoBrowserSession(anonymous,origin)
       await capture(publicPage,'confirm-reused',`confirm-reused-${viewport.width}.png`)
     }
   } finally {await rename('My records');await anonymous.close()}

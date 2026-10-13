@@ -1,3 +1,4 @@
+import {assertNoBrowserSession,assertHttpOnlyBrowserSession} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, readFile, lstat, writeFile, rm, readdir, rename, mkdtemp } from 'node:fs/promises'
 import path from 'node:path'
@@ -127,8 +128,7 @@ async function freshViewport(viewport,evidence){
        await nativePage.waitForURL(url=>url.origin===origin&&url.pathname==='/signin'&&url.searchParams.get('notice')==='sent'&&url.searchParams.get('returnTo')===(returnTo==='/app'?null:returnTo))
        await nativePage.getByRole('heading',{name:'Request received',exact:true}).waitFor()
        await nativePage.getByRole('status').waitFor()
-       assert.equal((await nativeContext.cookies()).some(cookie=>cookie.name==='operator_session_local'),false,'A pre-hydration request creates no session')
-       assert.equal((await nativeContext.request.get(origin+'/auth/session')).status(),401,'A notice grants no session')
+       await assertNoBrowserSession(nativeContext,origin,[gate.name])
        return nativePage.getByRole('status').innerText()
       }
       const requestedDestination='/app'
@@ -148,7 +148,7 @@ async function freshViewport(viewport,evidence){
        await accessibilityAction(nativePage,nativePage.getByRole('link',{name:'Read message',exact:true}).first())
        await accessibilityAction(nativePage,nativePage.getByRole('link',{name:'Open this link',exact:true}))
        await nativePage.getByRole('heading',{name:'Confirm sign-in to Cradle',exact:true}).waitFor()
-       assert.equal((await nativeContext.cookies()).some(cookie=>cookie.name==='operator_session_local'),false,'Native outbox navigation and confirmation preview create no session')
+       await assertNoBrowserSession(nativeContext,origin,[gate.name])
        await page.goto(origin+'/__dev/outbox')
       }else{
        const requested=page.waitForResponse(response=>new URL(response.url()).pathname==='/auth/request'&&response.request().method()==='POST')
@@ -168,7 +168,7 @@ async function freshViewport(viewport,evidence){
       assert.equal((await fetch(origin+'/app',{redirect:'manual'})).status,303)
       await accessibilityAction(page,page.getByRole('link',{name:'Open this link',exact:true}))
       await page.getByRole('heading',{name:'Confirm sign-in to Cradle',exact:true}).waitFor();await check('confirm')
-      assert.equal((await context.cookies()).some(cookie=>cookie.name==='operator_session_local'),false)
+      await assertNoBrowserSession(context,origin,[gate.name])
       if(viewport.width===1440){
        await nativePage.goto(link);await accessibilityAction(nativePage,nativePage.getByRole('button',{name:'Confirm',exact:true}));await nativePage.waitForURL(origin+(viewport.width===1440?'/setup':'/app'))
        await nativePage.getByLabel('Workspace name',{exact:true}).waitFor()
@@ -188,7 +188,7 @@ async function freshViewport(viewport,evidence){
        }else{if(!accessibilityCaptureOnly)assert.equal(await nativePage.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await nativePage.screenshot({path:path.join(evidence,'setup-1440.png'),fullPage:true})}
        await accessibilityAction(nativePage,nativePage.getByRole('button',{name:'Open my workspace',exact:true}));await nativePage.waitForURL(origin+'/app')
        await nativePage.getByRole('link',{name:'Open records',exact:true}).waitFor()
-       const cookies=await nativeContext.cookies();assert.ok(cookies.some(cookie=>cookie.name==='operator_session_local'&&cookie.httpOnly),'The ordinary confirmation POST works without JavaScript')
+       const cookies=await nativeContext.cookies();await assertHttpOnlyBrowserSession(nativeContext,origin)
        await context.addCookies(cookies);await nativeContext.close();await page.goto(origin+'/app')
       }else {
        await accessibilityAction(page,page.getByRole('button',{name:'Confirm',exact:true}));await page.waitForURL(origin+'/setup')
@@ -222,7 +222,7 @@ async function freshViewport(viewport,evidence){
       assert.doesNotMatch(homeHtml,/This work is outside your access|loopback_required/)
       await check('signed-in')
       if(accessibilityEvidence&&!accessibilityCaptureOnly&&viewport.width===768)receipt.navigationDrawer=await verifyNavigationDrawerWithKeyboard(page,{output:evidence,screen:'signin-navigation-drawer'})
-      const cookies=await context.cookies();assert.ok(cookies.some(cookie=>cookie.name==='operator_session_local'&&cookie.httpOnly))
+      await assertHttpOnlyBrowserSession(context,origin)
       const replay=await fetch(origin+'/auth/confirm',{method:'POST',redirect:'manual',headers:{origin,'content-type':'application/json'},body:JSON.stringify({token:new URL(link).searchParams.get('token')})});assert.equal(replay.status,400)
       await accessibilityAction(page,page.getByRole('link',{name:'Import a base',exact:true}));await page.getByRole('heading',{name:'Import a base',exact:true}).waitFor();await check('import-base')
       await page.goto(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()

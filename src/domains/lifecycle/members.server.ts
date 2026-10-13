@@ -1,6 +1,8 @@
+import {prepareImportCustody} from './import-custody.server'
 import {requireQuiescentFiles} from './file-writes.server'
 import type {RequestContext} from '../authority/ports'
 import type {MemberLifecyclePort} from '../authority/members.server'
+import type {DescriptorRegistry} from '../records/descriptors.server'
 import {AuthorityError} from '../authority/errors'
 import {createMemberEvidenceErasure} from '../evidence/member-erasure.server'
 import {effects,append,removeRows,updateRows} from './changes.server'
@@ -10,7 +12,7 @@ import {memberIdentityPlaces} from './member-identity-places'
 import {otherIdentities} from './other-identities.server'
 import {retainCleanup} from './cleanup.server'
 
-export function memberLifecycle(db:D1Database,bucket:R2Bucket):MemberLifecyclePort{
+export function memberLifecycle(db:D1Database,bucket:R2Bucket,registry:DescriptorRegistry):MemberLifecyclePort{
  return {
  async prepareRemoval(ctx,id){const change=effects()
   await updateRows(db,change,'launch_readiness',{state:'Cancelled',updated_at:Date.parse(ctx.now)},"owner_id=? AND state='Outstanding'",[id])
@@ -33,7 +35,8 @@ export function memberLifecycle(db:D1Database,bucket:R2Bucket):MemberLifecyclePo
   if(needles.some(needle=>label.includes(needle)||`erased-${id}@invalid.invalid`.includes(needle)))throw new AuthorityError('version_conflict','Anonymous identity would retain an original literal; resolve the replacement-label conflict before erasure.',409)
   await requireQuiescentFiles(db,change)
   const others=await otherIdentities(db,id,needles)
-  const {planned,residual}=await redactIdentityCopies(db,change,{person:{id,email:person.email},needles,label,places:memberIdentityPlaces,others,keep})
+  const custody=await prepareImportCustody(db,registry,change,ctx,{id,...person},others)
+  const {planned,residual}=await redactIdentityCopies(db,change,{person:{id,email:person.email},needles,label,places:[...memberIdentityPlaces,...custody.places],others,keep,managedTables:custody.managedTables})
   const objects=await classifyIdentityObjects(db,bucket,{personId:id,matches:[...new Set(needles.flatMap(needle=>[needle,JSON.stringify(needle).slice(1,-1)]))],label,others})
   const unresolved=[...residual,...objects.residual].filter(copy=>!keep.has(copy.store))
   if(unresolved.length)throw new AuthorityError('version_conflict',`Erasure found the name or email outside this person's own records: ${unresolved.map(copy=>`${copy.store} (${copy.rows} ${copy.reason.replaceAll('_',' ')})`).join('; ')}. Edit those copies, or confirm they are not this person's identity to leave them unchanged; no identity was erased.`,409,{erasureCopies:unresolved})
@@ -48,7 +51,7 @@ export function memberLifecycle(db:D1Database,bucket:R2Bucket):MemberLifecyclePo
   for(const row of encrypted.results){for(const value of [row.sealed_input,row.reconcile_input]){if(value){const ref=JSON.parse(value).payloadRef;if(ref?.key)keys.push(ref.key)}}await updateRows(db,change,'execution_attempts',{sealed_input:null,reconcile_input:null,payload_erased_at:ctx.now},'id=?',[row.id])}
   const app=(await db.prepare('SELECT app_id FROM authority_memberships WHERE principal_id=? ORDER BY app_id LIMIT 1').bind(id).first<{app_id:string}>())!
   retainCleanup(change,{id,appId:app.app_id,kind:'member',subjectId:id,label,now:ctx.now,keys})
-  return {...change,plan:{places:[...planned,{store:'R2 private intake files',action:'delete' as const,rows:objects.erase.length,reason:'their own uploads that carry their identity'},{store:'R2 execution inputs',action:'delete' as const,rows:encrypted.results.length,reason:'captured inputs of runs they started or held'}],kept:[...residual,...objects.residual]}}
+  return {...change,commit:custody.commit,plan:{places:[...planned,...custody.custodyPlaces,{store:'R2 private intake files',action:'delete' as const,rows:objects.erase.length,reason:'their own uploads that carry their identity'},{store:'R2 execution inputs',action:'delete' as const,rows:encrypted.results.length,reason:'captured inputs of runs they started or held'}],kept:[...residual,...objects.residual]}}
  },
  }
 }

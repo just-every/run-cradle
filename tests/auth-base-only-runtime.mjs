@@ -1,13 +1,13 @@
 import './helpers/typescript-loader.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, writeFile, rm, readdir, readFile } from 'node:fs/promises'
-import { spawnSync } from 'node:child_process'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { baseEmittedRuntime } from './helpers/base-emitted-runtime.mjs'
 import { productionBindings } from './helpers/production-bindings.mjs'
 import {legacyCookieFixture} from './helpers/legacy-cookie-fixture.mjs'
+import { migrateFixture } from './helpers/migrate-fixture.mjs'
 
 const origin = productionBindings.APP_ORIGIN
 const secret = 'test-only-base-secret-with-at-least-32-characters'
@@ -17,20 +17,8 @@ async function withInstallation(owner, run, overrides = {}, providerStatus = 202
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-base-required-'))
   let runtime
   const deliveries = []
-  const cli = args => {
-    const result = spawnSync('pnpm', ['exec', 'wrangler', ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
-    assert.equal(result.status, 0, result.stderr || result.stdout)
-  }
   try {
-    // Apply the unchanged ordered migration SQL to a fresh synthetic database;
-    // the separate existing migration suites verify Wrangler's applied ledger.
-    const sql = []
-    for (const folder of ['migrations/core', 'migrations/base', 'migrations/import', 'migrations/updates']) {
-      for (const file of (await readdir(folder)).filter(file => file.endsWith('.sql')).sort()) sql.push(await readFile(path.join(folder, file), 'utf8'))
-    }
-    const schema = path.join(directory, 'fresh-schema.sql')
-    await writeFile(schema, sql.join('\n'))
-    cli(['d1', 'execute', 'cradle', '--local', '--persist-to', directory, '--file', schema])
+    migrateFixture(directory)
     runtime = await baseEmittedRuntime(directory, 0, {
       ...productionBindings, SESSION_SECRET: secret, SETUP_TOKEN: secret,
       ...(owner?.trim() ? { MAIL_PROVIDER: 'sendgrid' } : {}),

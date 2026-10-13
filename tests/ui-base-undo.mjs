@@ -1,3 +1,4 @@
+import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
 import path from 'node:path'
@@ -18,7 +19,7 @@ contract('RECORDS-002 RECORDS-005','real browser scalar edit, multi-batch undo i
   for(const width of accessibilityWidths){
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}}))
    try{
-    await context.addCookies([{name:'operator_session_local',value:runtime.cookie.slice('operator_session_local='.length),url:runtime.origin}]);const page=await context.newPage(),journey=recordsJourney(page,runtime.origin,output,width,{allAxe:true}),observations=browserObservations(page,runtime.origin)
+    await context.addCookies(browserCookies(runtime.cookie,runtime.origin));const page=await context.newPage(),journey=recordsJourney(page,runtime.origin,output,width,{allAxe:true}),observations=browserObservations(page,runtime.origin)
     const visit=async url=>{await page.waitForLoadState('networkidle');await page.goto(url);await page.waitForLoadState('networkidle')}
     await visit(runtime.origin+'/app/records/?import=base');await page.getByLabel('Base name',{exact:true}).fill('Preserved undo '+width)
     const bytes=Buffer.from('Name,Links\r\n'+Array.from({length:45},(_,i)=>'Original row '+(i+1)+',Original row '+((i+1)%45+1)).join('\r\n')+'\r\n');await page.getByLabel('CSV files',{exact:true}).setInputFiles({name:'Rows.csv',mimeType:'text/csv',buffer:bytes})

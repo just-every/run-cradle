@@ -27,19 +27,22 @@ export async function recordsImportBrowserRuntime(port=18847,network={}) {
   for(const migration of migrationInventory())await db.exec(migration.sql.replace(/^\s*--.*$/gm,'').replaceAll('\n',' '))
   await runtime.ready
   const post=(route,body)=>fetch(origin+route,{method:'POST',redirect:'manual',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)})
+  const returnedCookies=response=>response.headers.getSetCookie().map(header=>header.split(';')[0]).join('; ')
   const bootstrap=await post('/auth/bootstrap',{token:credentials.setup,displayName:options.name,returnTo:'/app'})
   assert.equal(bootstrap.status,303)
-  await completeFirstRun(origin,bootstrap.headers.get('set-cookie').split(';')[0])
-  const initialized=await fetch(origin+'/app',{headers:{cookie:bootstrap.headers.get('set-cookie').split(';')[0]}});assert.equal(initialized.status,200);await initialized.arrayBuffer()
+  await completeFirstRun(origin,returnedCookies(bootstrap))
+  const initialized=await fetch(origin+'/app',{headers:{cookie:returnedCookies(bootstrap)}});assert.equal(initialized.status,200);await initialized.arrayBuffer()
   assert.equal((await post('/auth/magic-link',{email:options.email,returnTo:'/app'})).status,202)
   const row=await db.prepare('SELECT message FROM rer_mail_development_outbox ORDER BY sequence DESC LIMIT 1').first()
   const message=JSON.parse(row.message),text=message.text,link=new URL(text.match(/http:\/\/[^\s]+/)[0])
   const response=await post('/auth/confirm',{token:link.searchParams.get('token')})
   assert.equal(response.status,303)
-  const cookie=response.headers.get('set-cookie').split(';')[0]
-  assert.ok(cookie.startsWith('operator_session_local='),'Base issues the actual local session cookie')
-  const home=await fetch(origin+'/app',{headers:{cookie}})
+  const cookie=returnedCookies(response);assert.ok(cookie,'Magic-link confirmation returns session cookies')
+  const session=await fetch(origin+'/auth/session',{redirect:'manual',headers:{cookie}});assert.equal(session.status,200,'Returned cookies authenticate the owner')
+  const operator=(await session.json()).operator;assert.equal(operator.email,options.email);assert.equal(operator.role,'owner')
+  const home=await fetch(origin+'/app',{redirect:'manual',headers:{cookie}})
   assert.equal(home.status,200,'Workspace establishes its native owner projection');await home.arrayBuffer()
+  const apps=await fetch(origin+'/api/v1/apps',{redirect:'manual',headers:{cookie}});assert.equal(apps.status,200,'Confirmed owner can use the authenticated product API');assert.ok(Array.isArray((await apps.json()).data.items))
   return {get runtime(){return runtime},get db(){return db},origin,cookie,
   /** Stop the Worker process and start a new one over the same persisted D1. */
   async restart(){await runtime.dispose();runtime=await emittedRuntime(directory,port,environment,network.outbound);db=await runtime.getD1Database('DB');await runtime.ready},

@@ -2,7 +2,7 @@ import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {PortabilityError} from '@runeditrun/rer/modules/portability';
 import {catalogue,policy} from '@runeditrun/rer/modules/portability/catalogue';
-import {archiveRecords} from './files.mjs';
+import {fileRecords} from '@runeditrun/rer/modules/portability/files';
 const quote=name=>'"'+name.replaceAll('"','""')+'"';
 const normalize=sql=>sql.replace(/;\s*$/,'').replace(/\s+/g,' ').trim();
 const refuse=code=>{throw new PortabilityError(code,409);};
@@ -26,7 +26,7 @@ export async function derivedSearch(db){
 /** Integrity is checked by Base before any destination schema is changed. */
 export async function prepareRecordRestore(db,root,path,config){
  let manifest;const current=[],groups=[];
- for await(const record of archiveRecords(path)){
+ for await(const record of fileRecords(path)){
   if(record.kind==='manifest')manifest=record;
   if(record.kind!=='part')continue;
   for(const item of record.items){

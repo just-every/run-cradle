@@ -1,3 +1,4 @@
+import {sessionCookieWithToken} from './helpers/session-cookies.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import assert from 'node:assert/strict'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
@@ -27,7 +28,7 @@ contract('BASE-OPS-004','emitted event exports preserve durable failure state wi
       await runtime.ready
       const {cookie}=await baseHttpSession(origin)
       await db.exec(authoritySessionControlsSql(member,Date.now()))
-      for(const control of ['',`operator_session_local=${expiredToken}`,`operator_session_local=${revokedToken}`,cookie])for(const route of ['/api/v1','/api/v1/session','/api/v1/migration/unknown']){
+      for(const control of ['',sessionCookieWithToken(cookie,expiredToken),sessionCookieWithToken(cookie,revokedToken),cookie])for(const route of ['/api/v1','/api/v1/session','/api/v1/migration/unknown']){
         const response=await fetch(origin+route,{headers:control?{cookie:control}:{}}),body=await response.text()
         assert.equal(response.status,control===cookie?(route.endsWith('/session')?200:404):401,route)
         if(control!==cookie)assert.doesNotMatch(body,/Maya Chen|maya@|Northstar/)

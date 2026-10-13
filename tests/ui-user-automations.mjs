@@ -1,3 +1,4 @@
+import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
 import path from 'node:path'
@@ -18,7 +19,7 @@ contract('AUTOMATIONS-USER-UI-001','owners issue and revoke keys, edit record au
   for(const width of [1440,390]) {
    const context=await browser.newContext({viewport:{width,height:width===390?844:900}})
    try {
-    await context.addCookies([{name:'operator_session_local',value:h.cookie.slice('operator_session_local='.length),url:h.origin}])
+    await context.addCookies(browserCookies(h.cookie,h.origin))
     const page=await context.newPage(),journey=recordsJourney(page,h.origin,output,width)
     let consoleErrors=0;page.on('console',message=>{if(message.type()==='error')consoleErrors++})
     await userKeyBrowser(page,h,journey,width)

@@ -1,3 +1,4 @@
+import {gateCookie} from './helpers/dev-gate.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,rm,rename,mkdtemp,readFile,writeFile,copyFile} from 'node:fs/promises'
 import http from 'node:http'
@@ -72,7 +73,11 @@ async function journey(viewport,evidence){
   proxy=await forwardingProxy(origin)
   for(const route of ['/auth/dev/enter?as=owner','/__dev/personas','/__dev/outbox'])assert.equal(await status(fetch(proxy.origin+route,{redirect:'manual'})),404,`${route} answers 404 through a forwarding proxy without the key`)
   assert.equal(await status(fetch(proxy.origin+'/__dev/key',{method:'POST',headers:{'content-type':'application/json',origin:proxy.origin},body:JSON.stringify({key:'wrong-'.repeat(8)})})),404,'A wrong key buys no cookie')
-  const owner=await signInAs({origin,key,as:'owner'}),sessionOnly=owner.cookies.find(cookie=>cookie.name==='operator_session_local')
+  const owner=await signInAs({origin,key,as:'owner'}),gate=await gateCookie(origin,key)
+  const sessionCookies=owner.cookies.filter(cookie=>cookie.value&&cookie.name!==gate.name)
+  assert.equal(sessionCookies.length,1,'Dev sign-in issued one session in addition to the gate')
+  const [sessionOnly]=sessionCookies
+  assert.equal(await status(fetch(origin+'/auth/session',{headers:{cookie:`${sessionOnly.name}=${sessionOnly.value}`,'x-rer-dev-key':key}})),200,'The actual issued session authenticates when the dev gate is present')
   const hold=await fetch(proxy.origin+'/app',{redirect:'manual',headers:{cookie:`${sessionOnly.name}=${sessionOnly.value}`}})
   assert.equal(hold.status,303);assert.equal(new URL(hold.headers.get('location'),origin).pathname,'/signin','A dev session without the key counts for nothing');await hold.body?.cancel()
 

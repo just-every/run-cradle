@@ -2,12 +2,15 @@ import {lstat} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {relative} from 'node:path';
 import {RerError,refuse} from '@runeditrun/rer/errors';
+import {preflightImport,transferFailure} from './preflight.mjs';
 
-async function run({root,path,store,signal,operationToken},direction){
+async function run({root,path,journal,store,signal,operationToken},direction){
  if(direction==='export'&&await lstat(path).catch(error=>{if(error.code==='ENOENT')return null;throw error;}))throw refuse('Export requires a new archive path.');
+ if(direction==='import')try{await preflightImport(path,journal);}
+ catch(error){const receipt=transferFailure(error);throw new RerError(receipt.code,`Archive operation refused or failed (${receipt.reason}${receipt.location?'; '+receipt.location:''}${receipt.frames?.length?' at '+receipt.frames.join(', '):''}).`,receipt.exitCode);}
  await store.run('Applying all Cradle data migrations','pnpm',['run','db:migrate:local'],{cwd:root,signal,env:{...process.env,RER_LOCAL_OPERATION:operationToken,WRANGLER_SEND_METRICS:'false'}});
  const child=store.spawn(direction==='export'?'Exporting installation data':'Restoring installation data',process.execPath,
-  [fileURLToPath(new URL('./worker.mjs',import.meta.url)),direction,JSON.stringify({root,path})],{cwd:root,signal,env:{...process.env,WRANGLER_SEND_METRICS:'false'}});
+  [fileURLToPath(new URL('./worker.mjs',import.meta.url)),direction,JSON.stringify({root,path,journal})],{cwd:root,signal,env:{...process.env,WRANGLER_SEND_METRICS:'false'}});
  let output='';child.stdout.on('data',chunk=>{output+=chunk;});
  const closed=new Promise(resolve=>child.once('close',(code,signal)=>resolve({code,signal})));
  await new Promise(resolve=>{child.once('exit',resolve);child.once('error',resolve);});await store.stop(child);
