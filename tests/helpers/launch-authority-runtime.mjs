@@ -20,7 +20,7 @@ const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.
 const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
-export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=true,installedLaunchDefinitions=false} = {}) {
+export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=true,installedLaunchDefinitions=false,installationOwner=false} = {}) {
   const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
   const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
   assert.equal(available,true,'Authority test listener must be unoccupied')
@@ -40,7 +40,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=tr
     await writeFile(migrationFile,migrations.map(migration => migration.sql).join('\n'))
     const migration = spawnSync('pnpm', ['exec', 'wrangler', 'd1', 'execute', 'cradle', '--local', '--persist-to', directory, '--file', migrationFile], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
     assert.equal(migration.status, 0, migration.stderr + migration.stdout)
-    const owner = await installLegacyFixture(directory, { installedLaunchDefinitions })
+    const owner = await installLegacyFixture(directory, { installedLaunchDefinitions, installationOwner })
     const configuration = { appOrigin: origin, sessionSecret: 'synthetic-launch-authority-test-signing-key', mode: 'development' }
     // One actual emitted Worker owns HTTP, assets and the local D1 binding.
     // Database assertions use that same binding, avoiding competing SQLite owners.

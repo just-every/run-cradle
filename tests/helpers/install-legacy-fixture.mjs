@@ -1,5 +1,7 @@
 import './typescript-loader.mjs'
 const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.ts')
+const { LAUNCH_APP_ID } = await import('../../src/apps/launch/contracts.ts')
+const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 // Explicit test-only invocation of the existing sample repository. The fixture
 // bytes and production repository are unchanged; no public setup endpoint exists.
 import assert from 'node:assert/strict'
@@ -11,7 +13,7 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 
 const moduleUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
 const transpile = source => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } }).outputText
-export async function installLegacyFixture(directory, { installedLaunchDefinitions = false } = {}) {
+export async function installLegacyFixture(directory, { installedLaunchDefinitions = false, installationOwner = false } = {}) {
   const common = moduleUrl(transpile(await readFile(new URL('../../src/core/features/shared/repository.ts', import.meta.url), 'utf8')))
   const repositorySource = await readFile(new URL('../../src/core/features/sample-data/repository.ts', import.meta.url), 'utf8')
   const repository = await import(moduleUrl(transpile(repositorySource).replace("'../shared/repository'", JSON.stringify(common))))
@@ -31,6 +33,17 @@ export async function installLegacyFixture(directory, { installedLaunchDefinitio
     await db.prepare("INSERT OR IGNORE INTO authority_principals(id,kind,human_id,state,created_at,updated_at) SELECT id,'human',id,'active',created_at,updated_at FROM operators").run()
     const ownerId = fixture.operators.slice().sort((a,b) => a.id.localeCompare(b.id))[0].id
     await db.batch(await prepareLaunchSetup(db, ownerId))
+    if (installationOwner) {
+      // Review the existing exact launch mappings through the production legacy
+      // initializer before Base adopts identities and issues any credentials.
+      const policies = (await db.prepare('SELECT * FROM authority_policies WHERE app_id=? ORDER BY id').bind(LAUNCH_APP_ID).all()).results.map(row => ({
+        id: row.id, appId: row.app_id, name: row.name, rules: JSON.parse(row.rules_json), version: row.version,
+        createdAt: new Date(row.created_at).toISOString(), updatedAt: new Date(row.updated_at).toISOString(),
+      }))
+      const memberships = (await db.prepare('SELECT principal_id,policy_id FROM authority_memberships WHERE app_id=? ORDER BY principal_id').bind(LAUNCH_APP_ID).all()).results.map(row => ({ memberId: row.principal_id, policyId: row.policy_id }))
+      assert.ok(policies.length && memberships.length, 'Installation owner requires existing launch mappings')
+      await initializeLegacyAuthority(db, { initialOwnerId: ownerId, launchAppId: LAUNCH_APP_ID, policies, memberships })
+    }
     if(await db.prepare("SELECT 1 FROM sqlite_master WHERE name='oa_operators'").first()) await adoptFixtureOperators(db)
     // This is an already configured portfolio, including its ordinary members.
     // Fresh owner fixtures still complete the real native /setup form.

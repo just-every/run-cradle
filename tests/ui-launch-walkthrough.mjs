@@ -14,7 +14,7 @@ import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
 contract('VIEW-004', '[VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
-const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true})
+const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003']}
 let browser
 const command=async(action,input,expected=[])=>{
