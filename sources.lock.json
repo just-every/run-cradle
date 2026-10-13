@@ -5206,11 +5206,11 @@
       "executable": false
     },
     "src/domains/channels/local-delivery.server.ts": {
-      "sha256": "d0db93a45d77aa6533650bdafe14688aa4244261278b2602b446dafe9b5a71cb",
+      "sha256": "e7f63177e95447d736655ee326ada8c587df0389891e6e9279b81c7a42d2ac8c",
       "executable": false
     },
     "src/domains/channels/mail-authority.server.ts": {
-      "sha256": "5dfa70068597e9e33def2e6c5b644ba9d8625ce68676f5353635b58f1909ab8a",
+      "sha256": "e73818e6dbf12b5f0d36659174334cf84000140fde3cbaa2a1eddc430333cafa",
       "executable": false
     },
     "src/domains/channels/mail-bridge.server.ts": {
@@ -5218,7 +5218,7 @@
       "executable": false
     },
     "src/domains/channels/ports.ts": {
-      "sha256": "22917503a2950252539263d4a2083e15c886f9a51ce1867e5dc1a3e4f3bae188",
+      "sha256": "55f7b2bdd10d566d6e3635d1a342721b464ae4c245d80f6aa81eb105250f1925",
       "executable": false
     },
     "src/domains/channels/recipient.server.ts": {
@@ -5251,6 +5251,10 @@
     },
     "src/domains/channels/schema.ts": {
       "sha256": "324a8df46dfb4e442b65c210d871118dd9c7a8461ead2d519c877edb04bc7261",
+      "executable": false
+    },
+    "src/domains/channels/send-guards.server.ts": {
+      "sha256": "d61653af1eb04d4c831223f08d1ce3f5a355297a59ab58687442096e903c2601",
       "executable": false
     },
     "src/domains/channels/settings.server.ts": {
@@ -8494,7 +8498,7 @@
       "executable": false
     },
     "tests/migration-events.mjs": {
-      "sha256": "28578f916c8df540a2607b2fc026dbb93fa209fe74a7be5e69d2b96c03192a63",
+      "sha256": "c017b1f42b2205732dddca39a9b1fe130ec42d36cb1cd1ecbd0fbffa539b3c34",
       "executable": false
     },
     "tests/migration-history.mjs": {
