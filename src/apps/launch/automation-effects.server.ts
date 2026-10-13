@@ -20,7 +20,7 @@ const message=z.object({campaignId:z.string().optional(),operatorId:z.string(),s
 /** Prepared business effects and actual configured mail share each saved action key. */
 export function createLaunchAutomationEffects(env:PlatformBindings,scoped:LegacyAutomationPorts['context']):LegacyAutomationPorts['external']{
  return async(ctx,input):ReturnType<LegacyAutomationPorts['external']>=>{
-  const context=await scoped(ctx,input.run),db=context.db,raw=input.input as Record<string,unknown>,campaignId=String(raw.campaignId??input.run.subjectIds[0]??''),campaign=await load(db,'campaign',campaignId)
+  const context=await scoped(ctx,input.run),db=context.db,raw=input.input as Record<string,unknown>,campaignId=String(raw.campaignId??raw.subjectId??input.run.subjectIds[0]??''),campaign=await load(db,'campaign',campaignId)
   const permit=await context.policy.authorize(ctx,{appId:LAUNCH_APP_ID,action:'launch.campaign.patch',expected:[{ref:ref('campaign',campaignId),version:campaign.version}],fieldIds:Object.values(launchFieldIds.campaign),cost:[],inputHash:await canonicalHash(input.input),commandId:ctx.requestId}),guards=[...permit.guards,trustedPredicate('EXISTS(SELECT 1 FROM campaigns WHERE id=? AND version=? AND archived_at IS NULL)',[campaignId,campaign.version])]
   if(input.action==='create-decision'){
    const fields=decisionFields.parse({...raw,campaignId}),plan=await prepareRecord(context,ctx,{commandId:createUlid(),expected:[],input:{fields}},'decision','create')
@@ -31,7 +31,7 @@ export function createLaunchAutomationEffects(env:PlatformBindings,scoped:Legacy
    return{guards,mutations:[{kind:'insert',table:activityTable,row:{id:createUlid(),created_at:Date.parse(ctx.now),updated_at:Date.parse(ctx.now),version:1,campaign_id:campaignId,subject_id:campaignId,actor_id:null,automation_run_id:input.run.id,type:'automation.activity',field_name:null,previous_value:null,next_value:null,message:text}}],outbox:[],state:'Complete',result:{activity:true}}
   }
   if(input.action==='notify-operator'){
-   const operatorId=z.string().parse(raw.operatorId),notification=await context.integration.notification!(ctx,{kind:'record-automation',operatorId,campaignId,subjectId:campaignId,eventId:input.idempotencyKey,runId:input.run.id,delivery:'in-app'})
+   const operatorId=z.string().parse(raw.operatorId),notification=await context.integration.notification!(ctx,{kind:'record-automation',operatorId,campaignId,subjectId:campaignId,eventId:input.idempotencyKey,runId:input.run.id,delivery:'in-app',title:String(raw.title),body:String(raw.body)})
    return{guards:[...guards,...notification.guards],mutations:[...notification.mutations],outbox:[],state:'Complete',result:{notificationId:notification.notificationId??null}}
   }
   if(input.action!=='send-email')throw new ApiError('unconfigured',`Automation action ${input.action} is not configured`)

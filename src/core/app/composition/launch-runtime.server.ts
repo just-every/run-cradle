@@ -26,8 +26,9 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
  const service=createLegacyAutomationAuthority(context,clock),schedules=createChannelSchedules(db,channels),project=createLegacyDigestProjection(db)
  const analysis=createLaunchAnalysisReader(db,foundation.policy)
  async function executeAnalysis(id:string,provided?:{ctx:RequestContext;context:typeof context}){
-  const row=await db.prepare('SELECT authority_json,state FROM launch_analysis_requests WHERE id=?').bind(id).first<{authority_json:string|null;state:string}>()
+  const row=await db.prepare('SELECT authority_json,state,updated_at FROM launch_analysis_requests WHERE id=?').bind(id).first<{authority_json:string|null;state:string;updated_at:number}>()
   if(row?.state==='Complete')return
+  if(row?.state==='Running')return{state:'Running'}
   if(!row?.authority_json)throw new ApiError('forbidden','Original analysis requesting authority is unavailable')
   const ctx=provided?.ctx??{principal:JSON.parse(row.authority_json) as Principal,requestId:id,now:clock().toISOString(),ingress:'queue' as const}
   const source=provided?.context??context
@@ -37,13 +38,14 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
  const automation=createLegacyAutomationRuntime(context,foundation.admission,{releaseId:context.releaseId??'',authority:service.authority,context:service.context,async external(ctx,input){
   if(input.action==='digest'&&input.run.definition.shipped_key==='weekly-digest')return{...await schedules.digest(ctx,project),state:'Complete',result:{delivered:'weekly-digest'} as Json,outbox:[]}
   if(input.action!=='request-ai-analysis')return customEffects(ctx,input)
-  for(const campaignId of input.run.subjectIds){
+  for(const campaignId of input.run.definition.shipped_key?input.run.subjectIds:[String((input.input as Record<string,unknown>).campaignId)]){
    const scoped=await service.context(ctx,input.run,campaignId)
    const id=(await canonicalHash({key:input.idempotencyKey,campaignId})).slice(0,26).toUpperCase(),old=await db.prepare('SELECT state,error_code,error_message FROM launch_analysis_requests WHERE id=?').bind(id).first<{state:string;error_code:string|null;error_message:string|null}>()
    if(old?.state==='Complete')continue
    if(old?.state==='Failed')throw new ApiError('provider_unavailable',old.error_message??'Analysis failed')
    if(!old){const p=await prepareAnalysisRequest(scoped,ctx,{commandId:id,expected:[],input:{...(input.run.definition.shipped_key==='campaign-brief'?{feature:'campaign-brief',campaignId}:{feature:'campaign-brief',...input.input as Record<string,unknown>})}},release());p.outbox=[];await foundation.admission.commit(ctx,p)}
    await executeAnalysis(id,{ctx,context:scoped as typeof context})
+   const outcome=await db.prepare('SELECT state FROM launch_analysis_requests WHERE id=?').bind(id).first<{state:string}>();if(outcome?.state!=='Complete')return{guards:[],mutations:[],outbox:[],state:'Waiting',result:{requestId:id,state:outcome?.state??'Unknown'} as Json}
   }
   return{guards:[],mutations:[],outbox:[],state:'Complete',result:{analyses:input.run.subjectIds.length} as Json}
  }})
@@ -62,7 +64,7 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
   else throw new ApiError('validation','Invalid launch queue lineage')
   await db.prepare("UPDATE admission_outbox SET state='dispatched',updated_at=? WHERE id=? AND state='pending'").bind(clock().toISOString(),entry.id).run()
  }
- async function scheduled(){release();await events();await automation.schedule(service.scheduleContext());const ctx=service.scheduleContext(),effects=await schedules.overdue(ctx)
+ async function scheduled(){release();await db.prepare("UPDATE launch_analysis_requests SET state='Unknown',error_code='provider_unavailable',error_message='Provider outcome was lost after the 60-second deadline; no analysis was stored',updated_at=?,version=version+1 WHERE state='Running' AND updated_at<?").bind(clock().getTime(),clock().getTime()-60000).run();await db.prepare("UPDATE launch_model_calls SET state='unavailable',error_code='provider_unavailable',error_message='Provider outcome was lost after its deadline',updated_at=? WHERE state='running' AND request_id IN (SELECT id FROM launch_analysis_requests WHERE state='Unknown')").bind(clock().getTime()).run();await events();await automation.schedule(service.scheduleContext());const ctx=service.scheduleContext(),effects=await schedules.overdue(ctx)
   if(effects.mutations.length){const action='launch.notification.schedule';await foundation.admission.commit(ctx,{commandId:createUlid(),action,appId:LAUNCH_APP_ID,canonicalInputHash:await canonicalHash({at:ctx.now,effects}),permit:{actor:{id:ctx.principal.id,kind:'system'},action,appId:LAUNCH_APP_ID,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards:effects.guards,reservationMutations:[],reservationIds:[]},guards:[],mutations:effects.mutations,audit:[],events:[],outbox:[],committedResult:{scheduled:true}})}
   const due=await db.prepare("SELECT id,action,input_json FROM admission_outbox WHERE state='pending' AND action IN ('launch.automation.execute','launch.analysis.execute') AND not_before<=? ORDER BY not_before,id LIMIT 200").bind(clock().toISOString()).all<{id:string;action:string;input_json:string}>();for(const row of due.results)await dispatch({...row,input:JSON.parse(row.input_json)})
  }

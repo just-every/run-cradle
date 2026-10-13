@@ -15,6 +15,7 @@ import { launchFieldIds } from './descriptors.server'
 type Context=ModelContextArtifact & {text:string}
 /** Optional installer-configured AI; one durable call admission is shared across features. */
 export function createLaunchModelProvider(context:LaunchContext,env:{AI_PROVIDER_API_KEY?:string;AI_MODEL?:string}):LegacyAnalysisPorts{
+ env={AI_PROVIDER_API_KEY:env.AI_PROVIDER_API_KEY?.trim(),AI_MODEL:env.AI_MODEL?.trim()}
  const adapter=openaiAdapter({async resolve(){if(!env.AI_PROVIDER_API_KEY)throw new ApiError('unconfigured','AI_PROVIDER_API_KEY is required');return{token:env.AI_PROVIDER_API_KEY,accountId:'installation',scopes:['responses']}}},value=>launchAnalysisSchema.validate(value,[]))
  return{
   async profile(){if(!env.AI_PROVIDER_API_KEY||!env.AI_MODEL)throw new ApiError('unconfigured','AI_PROVIDER_API_KEY and AI_MODEL are required');return{profileId:'installation-launch',maximumCost:{currency:'USD',scale:6,minor:'0'}}},
@@ -28,7 +29,7 @@ export function createLaunchModelProvider(context:LaunchContext,env:{AI_PROVIDER
    const settings=await context.db.prepare('SELECT ai_enabled,ai_daily_ceiling,timezone,version FROM workspace_settings LIMIT 1').first<{ai_enabled:number;ai_daily_ceiling:number;timezone:string;version:number}>()
    if(!settings?.ai_enabled)throw new ApiError('unconfigured','AI is disabled; enable a configured provider in settings')
    const permit=await context.policy.authorize(ctx,{appId:LAUNCH_APP_ID,action:'launch.analysis.request',expected:[],cost:[],inputHash:artifact.sha256,commandId:id,targetEntityId:launchEntities.campaign,fieldIds:Object.values(launchFieldIds.campaign)}),guard=and(...permit.guards)
-   const started=Date.now(),day=localDate(ctx.now,settings.timezone),data=JSON.parse(artifact.text),subject=data.campaign?{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:data.campaign.id}:data.lens?{appId:LAUNCH_APP_ID,entityId:launchEntities.lens,recordId:data.lens.id}:null
+   const started=Date.now(),day=localDate(ctx.now,settings.timezone)
    const admitted=await context.db.prepare(`INSERT INTO launch_model_calls(id,created_at,updated_at,local_day,feature,model,request_id,state)
     SELECT ?,?,?,?,?,?,?, 'running' WHERE (SELECT count(*) FROM launch_model_calls WHERE local_day=?)<?
     AND EXISTS(SELECT 1 FROM workspace_settings WHERE version=? AND ai_enabled=1) AND (${guard.sql})`)
