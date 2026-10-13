@@ -1,8 +1,7 @@
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
 import { request as httpsRequest } from 'node:https'
-import { mkdtemp, readdir, readFile, writeFile, rm } from 'node:fs/promises'
+import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
@@ -10,6 +9,7 @@ import { unstable_getMiniflareWorkerOptions } from 'wrangler'
 import { productionBindings } from './production-bindings.mjs'
 import {legacyCookieFixture} from './legacy-cookie-fixture.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
+import { migrateFixture } from './migrate-fixture.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
@@ -21,14 +21,7 @@ export async function launchBaseAuthorityRuntime() {
   let runtime
   const close = async () => { try { await runtime?.dispose() } finally { await rm(directory, { recursive: true, force: true }) } }
   try {
-    const sql = []
-    for (const folder of ['migrations/core', 'migrations/base', 'migrations/import', 'migrations/updates']) {
-      for (const file of (await readdir(folder)).filter(file => file.endsWith('.sql')).sort()) sql.push(await readFile(path.join(folder, file), 'utf8'))
-    }
-    const schema = path.join(directory, 'fresh-schema.sql')
-    await writeFile(schema, sql.join('\n'))
-    const migration = spawnSync('pnpm', ['exec', 'wrangler', 'd1', 'execute', 'cradle', '--local', '--persist-to', directory, '--file', schema], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
-    assert.equal(migration.status, 0, migration.stderr + migration.stdout)
+    migrateFixture(directory)
     const { workerOptions, main, externalWorkers } = unstable_getMiniflareWorkerOptions('dist/server/wrangler.json')
     const modulesRoot = path.dirname(main), { modulesRules, ...options } = workerOptions
     const modules = [main, ...(await readdir(modulesRoot, { recursive: true })).filter(file => /\.m?js$/.test(file)).map(file => path.join(modulesRoot, file)).filter(file => file !== main)].map(file => ({ type: 'ESModule', path: file }))
