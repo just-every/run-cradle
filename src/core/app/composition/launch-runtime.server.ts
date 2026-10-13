@@ -20,7 +20,7 @@ import { canonicalHash } from '../../../domains/admission/canonical'
 import { createUlid } from '../../shared/ids'
 import { ApiError } from '../../registry/errors'
 import type { DomainEvent,SqlMutation } from '../../../domains/admission/ports'
-import { registerTable,eq } from '../../../domains/admission/sql.server'
+import { registerTable,eq,trustedPredicate } from '../../../domains/admission/sql.server'
 const briefTable=registerTable('launch_brief_context',['campaign_id','context_hash','last_requested_at'])
 
 export function createInstalledLaunch(platform:Platform,foundation:ServerFoundation,clock=()=>new Date()){
@@ -73,7 +73,27 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
   replayIdentity:async(_ctx,input)=>({appId:LAUNCH_APP_ID,canonicalInputHash:await canonicalHash({input:input.input,expected:input.expected})}),
   prepare:(ctx,input)=>prepareAnalysisRequest(context,ctx,input as CommandInput<Record<string,unknown>>,release())})
  async function events(commandId?:string){release();const rows=await db.prepare(`SELECT * FROM admission_events e WHERE app_id=? AND NOT EXISTS(SELECT 1 FROM launch_event_dispatches d WHERE d.event_id=e.id) ${commandId?'AND command_id=?':''} ORDER BY created_at,id LIMIT 200`).bind(LAUNCH_APP_ID,...commandId?[commandId]:[]).all<{id:string;name:string;version:number;subject_json:string|null;payload_json:string;cause_run_ids_json:string}>()
-  for(const e of rows.results){await automation.event(service.eventContext(e.id),e.id,{name:e.name,version:e.version,subject:e.subject_json?JSON.parse(e.subject_json):null,payload:JSON.parse(e.payload_json),causeRunIds:JSON.parse(e.cause_run_ids_json)} as DomainEvent);await db.prepare('INSERT OR IGNORE INTO launch_event_dispatches(event_id,processed_at) VALUES(?,?)').bind(e.id,clock().toISOString()).run()}
+  for(const e of rows.results){
+   // Lifecycle erasure retains the event identity with this exact JSON-null pair.
+   // Consume only its dispatch receipt; never restore or rewrite erased event data.
+   if(e.subject_json==='null'&&e.payload_json==='null'){await consumeRedactedEvent(e.id);continue}
+   try{
+    const event={name:e.name,version:e.version,subject:e.subject_json?JSON.parse(e.subject_json):null,payload:JSON.parse(e.payload_json),causeRunIds:JSON.parse(e.cause_run_ids_json)} as DomainEvent
+    if(event.payload===null)throw new ApiError('validation','Launch event payload is null without lifecycle redaction')
+    const unchanged=trustedPredicate('EXISTS(SELECT 1 FROM admission_events WHERE id=? AND app_id=? AND subject_json IS ? AND payload_json=? AND cause_run_ids_json=?)',[e.id,LAUNCH_APP_ID,e.subject_json,e.payload_json,e.cause_run_ids_json])
+    await automation.event(service.eventContext(e.id),e.id,event,unchanged)
+   }catch(error){
+    // Erasure can win after the read. Trigger commits fence the original event;
+    // only a now-redacted event may turn that refusal into safe consumption.
+    if(!await consumeRedactedEvent(e.id))throw error
+    continue
+   }
+   await db.prepare('INSERT OR IGNORE INTO launch_event_dispatches(event_id,processed_at) VALUES(?,?)').bind(e.id,clock().toISOString()).run()
+  }
+ }
+ async function consumeRedactedEvent(id:string){
+  await db.prepare("INSERT OR IGNORE INTO launch_event_dispatches(event_id,processed_at) SELECT id,? FROM admission_events WHERE id=? AND app_id=? AND subject_json='null' AND payload_json='null'").bind(clock().toISOString(),id,LAUNCH_APP_ID).run()
+  return Boolean(await db.prepare("SELECT 1 FROM admission_events e JOIN launch_event_dispatches d ON d.event_id=e.id WHERE e.id=? AND e.app_id=? AND e.subject_json='null' AND e.payload_json='null'").bind(id,LAUNCH_APP_ID).first())
  }
  async function dispatch(entry:{id:string;action:string;input:Json}){
   release();const input=entry.input as {runId?:string;requestId?:string}
