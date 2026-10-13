@@ -1,0 +1,52 @@
+# Installed launch work
+
+The emitted Worker publishes committed launch events to WORK_QUEUE and also scans
+unprocessed events and due work on its scheduled handler. Cloudflare Cron must run
+every minute. Scheduled evaluation uses the controller's scheduled time, the
+workspace timezone, and retained run keys. Queues are transport: their redelivery
+cannot create a second logical run or repeat a completed action.
+
+The four installed definitions retain their fixed actions. Readiness lead days
+and evaluation hour use the existing readiness settings command. Weekly digest
+must be enabled explicitly; it uses normalized recipients and the local Monday
+09:00–09:15 window. Decision overdue reminders evaluate due time plus 15 minutes.
+Local development mail writes the actual Base development outbox in the same
+transaction as delivery; `rer outbox` displays these notifications.
+
+## Optional read-only AI
+
+Set `AI_PROVIDER_API_KEY` as a Worker secret and `AI_MODEL` as the actual OpenAI
+Responses model identifier. In Settings, enable AI and choose the daily call
+ceiling. Configuration readiness does not claim a measured successful call.
+Manual records, notifications and deterministic automations work without AI.
+Campaign brief, risk readout and lens proposal controls are on the existing
+campaign, risks lens and lens builder screens. A lens proposal remains a draft
+until an operator explicitly saves it. Requests retain current source authority;
+comments and custom-field values are excluded from provider context.
+
+Every admitted call reserves one slot atomically across all three features for
+the workspace's local date. A request has a 60-second deadline. A lost, refused,
+unavailable or invalid provider response produces a visible request failure and
+no analysis. It is never blindly resubmitted. Usage retains actual model, tokens,
+duration and result. Missing reported cost stays unknown. Completed requests drop
+queued credential identifiers; installation archives exclude those identifiers
+and cancel pending requests. The usage ledger links to existing requests; erasing
+a request removes that link while preserving anonymous historical counts.
+
+A configured `INSTALLATION_RELEASE_ID` is used as background source provenance.
+Otherwise the emitted Worker records the SHA-256 digest of its actual launch,
+composition and channel source inputs, embedded at build time.
+
+Owner-defined launch automations retain their approving session identity and
+recheck current operator, session, membership, policy and recipient authority.
+Save them again after their approving session expires. Transport refusals that
+are safe to retry reuse the original action key at 1, 5, 15, 30 and 60 minutes
+from first failure. An uncertain external delivery stays Unknown for review and
+is never automatically resent. A manual retry creates a linked run, preserving
+completed steps and the original run.
+
+The configured OpenAI Responses adapter supplies token usage but does not report
+an invoice charge. Those calls therefore show Unknown cost, never an estimate or
+zero. Aggregation preserves any reported-cost values supplied by a supported
+adapter; one missing charge makes that aggregate unknown. Settings filters calls
+and aggregates through the caller's current analysis-source visibility.

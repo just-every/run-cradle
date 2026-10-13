@@ -1,3 +1,5 @@
+import {createLocalChannelDelivery} from '../../../domains/channels/local-delivery.server'
+import {localMailEnabled} from '../../platform/local-auth.server'
 import seed from '../../../../seed.json'
 import { measureChannelLimits } from '../../../domains/channels/limits.server'
 import { ApiError } from '../../registry/errors'
@@ -18,7 +20,7 @@ export function createChannelsComposition(platform: Platform, foundation: Server
   const db = platform.bindings.DB
   const profiles = createModelProfileReader({ db, policy: foundation.policy })
   const configuration = createConfigurationEvidence({
-    db,
+    db,policy:foundation.policy,
     connection: (ctx, id) => providers.connections(ctx).read(ctx, id),
     profile: profiles.read,
     async platform() {
@@ -29,7 +31,8 @@ export function createChannelsComposition(platform: Platform, foundation: Server
         ...(!env.MAIL_FROM ? ['MAIL_FROM'] : []),
         ...(!env.INSTALLATION_RELEASE_ID ? ['INSTALLATION_RELEASE_ID'] : []),
       ]
-      return { capabilities: [], requiredSetup, limits: await measureChannelLimits(db, seed.limits) }
+      const aiMissing=[...(!env.AI_PROVIDER_API_KEY?['AI_PROVIDER_API_KEY']:[]),...(!env.AI_MODEL?['AI_MODEL']:[])]
+      return { capabilities: [{id:'ai.provider.v1',state:aiMissing.length?'unconfigured' as const:'ready' as const,checkedAt:null,missing:aiMissing,reason:'Configuration permits enabling AI; measured results are recorded separately.',supportedActions:['launch.campaign-brief','launch.risk-readout','launch.lens-proposal']}], requiredSetup, limits: await measureChannelLimits(db, seed.limits) }
     },
   })
   const dependencies = { db, policy: foundation.policy, configuration }
@@ -53,6 +56,6 @@ export function createChannelsComposition(platform: Platform, foundation: Server
     if (!row) throw new ApiError('unconfigured', 'The configured notification sender connection is unavailable.')
     return { ...row, from: env.MAIL_FROM, releaseId: env.INSTALLATION_RELEASE_ID }
   } })
-  const delivery = createChannelDelivery(db, foundation.admission, mail)
+  const delivery = localMailEnabled(platform.bindings)&&platform.bindings.MAIL_PROVIDER==='development'?createLocalChannelDelivery(platform.bindings,foundation.admission):createChannelDelivery(db, foundation.admission, mail)
   return { ...services, configuration, http, delivery }
 }

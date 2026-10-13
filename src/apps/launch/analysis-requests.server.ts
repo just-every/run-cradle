@@ -5,10 +5,10 @@ import { registerTable,eq,trustedPredicate } from '../../domains/admission/sql.s
 import { createUlid } from '../../core/shared/ids'
 import { emptyChange,plan,fail,type LaunchContext } from './domain.server'
 import { prepareAnalysis,prepareAnalysisTask,type LegacyAnalysisPorts } from './analysis.server'
-const requests=registerTable('launch_analysis_requests',['id','created_at','updated_at','version','actor_id','state','input_json','task_json','analysis_id','error_code','error_message'])
+const requests=registerTable('launch_analysis_requests',['id','created_at','updated_at','version','actor_id','state','input_json','task_json','analysis_id','error_code','error_message','authority_json','automation_run_id'])
 export async function prepareAnalysisRequest(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,releaseId:string){
  const settings=await context.db.prepare('SELECT ai_enabled FROM workspace_settings LIMIT 1').first<{ai_enabled:number}>();if(!settings?.ai_enabled)fail('AI is disabled; enable a configured provider in settings')
- const now=Date.parse(ctx.now),set=emptyChange();set.mutations.push({kind:'insert',table:requests,row:{id:input.commandId,created_at:now,updated_at:now,version:1,actor_id:ctx.principal.id,state:'Queued',input_json:JSON.stringify(input.input),analysis_id:null,error_code:null,error_message:null}})
+ const now=Date.parse(ctx.now),set=emptyChange();set.mutations.push({kind:'insert',table:requests,row:{id:input.commandId,created_at:now,updated_at:now,version:1,actor_id:ctx.principal.id,automation_run_id:ctx.principal.kind==='system'?ctx.principal.credentialId:null,authority_json:JSON.stringify(ctx.principal),state:'Queued',input_json:JSON.stringify(input.input),analysis_id:null,error_code:null,error_message:null}})
  const p=await plan(context,ctx,input,'launch.analysis.request',set,{requestId:input.commandId,state:'Queued'},'campaign')
  p.outbox=[{action:'launch.analysis.execute',version:1,input:{requestId:input.commandId},notBefore:ctx.now,grantId:p.permit.grantId,subject:input.expected[0]??null,sourceReleaseId:releaseId,causeRunIds:[]}];return p
 }

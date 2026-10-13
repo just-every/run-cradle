@@ -1,3 +1,6 @@
+import {createHash} from 'node:crypto'
+import {readdirSync,readFileSync} from 'node:fs'
+import {join} from 'node:path'
 import { cloudflare } from '@cloudflare/vite-plugin'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react from '@vitejs/plugin-react'
@@ -11,7 +14,12 @@ import { archiveOutputGuard } from '@runeditrun/rer/archive-output'
 const local = (name: string) => process.env[name] ? { [name]: process.env[name] } : {}
 const serve = { main: './src/server.dev.ts', vars: { ...local('RER_DEV_ORIGIN'), ...local('RER_DEV_KEY'), ...local('RER_DEV_IDENTITY') } }
 
+const launchSourceHash=createHash('sha256')
+for(const root of ['src/apps/launch','src/core/app/composition','src/domains/channels'])for(const name of readdirSync(root,{recursive:true}).map(String).filter(name=>name.endsWith('.ts')).sort()){launchSourceHash.update(join(root,name));launchSourceHash.update(readFileSync(join(root,name)))}
+const launchSourceRelease=`sha256:${launchSourceHash.digest('hex')}`
+
 export default defineConfig(({ command, isPreview }) => ({
+  define:{__LAUNCH_SOURCE_RELEASE__:JSON.stringify(launchSourceRelease)},
   server: {
     fs: {
       strict: true,

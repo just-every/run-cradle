@@ -12,7 +12,7 @@ export const portabilityPolicy = {
   'ik_d1_native_staging%','ik_d1_preparation_receipts',
  ],
  derivedTables:['launch_search'],
- secretColumns:{execution_attempts:['sealed_input','reconcile_input']},
+ secretColumns:{execution_attempts:['sealed_input','reconcile_input'],launch_analysis_requests:['authority_json'],launch_automation_authorities:['principal_json']},
  replaceableTables:['authority_principals','execution_collection_revisions','channel_mail_authority','channel_digest_settings','cradle_restore','cradle_first_run'],
  requiredConfiguration:['OWNER_EMAIL','OWNER_NAME','SESSION_SECRET','SETUP_TOKEN','APP_ORIGIN','AUTH_ORIGIN','MAIL_FROM','MAIL_PROVIDER','CONNECTION_ENCRYPTION_KEY'],
  buckets:{FILES:{}},
@@ -53,6 +53,8 @@ export const portabilityPolicy = {
    row.state='removed';
   }
   if(table==='authority_grants')row.restore_hold=1;
+  if(table==='launch_analysis_requests'){row.authority_json=null;if(['Queued','Running','Unknown'].includes(row.state)){row.state='Failed';row.error_code='forbidden';row.error_message='Restored analyses require a new operator request';}}
+  if(table==='launch_automation_authorities')row.principal_json=null;
   if(table==='automations')row.enabled=0;
   if(table==='record_automation_versions')row.credential_id=null;
   if(table==='record_automation_events')row.state='complete';

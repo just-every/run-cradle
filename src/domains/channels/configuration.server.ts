@@ -1,9 +1,11 @@
+import {createLaunchUsage} from '../../apps/launch/usage.server'
+import type {PolicyPort} from '../authority/ports'
 import type {Capability} from '../../contracts/primitives'
 import type {RequestContext} from '../authority/ports'
 import type {Connection} from '../connections/contracts'
 import type {ModelProfile,ModelCall} from '../execution/contracts'
 import type {ConfigurationEvidence} from './contracts'
-export type ConfigurationPorts={db:D1Database;connection(ctx:RequestContext,id:string):Promise<Connection>;profile(ctx:RequestContext,id:string):Promise<ModelProfile>;platform(ctx:RequestContext):Promise<{capabilities:Capability[];requiredSetup:string[];limits:ConfigurationEvidence['limits']}>}
+export type ConfigurationPorts={db:D1Database;policy?:PolicyPort;connection(ctx:RequestContext,id:string):Promise<Connection>;profile(ctx:RequestContext,id:string):Promise<ModelProfile>;platform(ctx:RequestContext):Promise<{capabilities:Capability[];requiredSetup:string[];limits:ConfigurationEvidence['limits']}>}
 /** All providers are projected through their own current read authorization. GET never probes a provider. */
 export function createConfigurationEvidence(p:ConfigurationPorts){return async(ctx:RequestContext):Promise<ConfigurationEvidence>=>{
  const platform=await p.platform(ctx),connections:Connection[]=[],profiles:ModelProfile[]=[]
@@ -15,5 +17,6 @@ export function createConfigurationEvidence(p:ConfigurationPorts){return async(c
  const mail=connections.filter(c=>c.adapterId==='resend'),model=profiles.filter(p=>p.state==='ready'),capabilities=[...platform.capabilities,...connections.map(c=>c.capability)]
  capabilities.push({id:'mail.sender.v1',state:mail.some(c=>c.capability.state==='ready')?'ready':mail.some(c=>c.state==='unavailable')?'unavailable':'unconfigured',checkedAt:mail.map(c=>c.capability.checkedAt).filter((v):v is string=>v!==null).sort().at(-1)??null,missing:mail.length?mail.flatMap(c=>c.capability.missing):['mail.sender.v1 connection'],reason:mail.length?'Availability reflects the last actual provider observation.':'No permitted transactional mail connection is configured.',supportedActions:['notification.email.send']})
  capabilities.push({id:'ai.provider.v1',state:model.length&&latest?.state==='succeeded'?'ready':latest&&latest.state!=='running'?'unavailable':profiles.length?'disabled':'unconfigured',checkedAt:latest?.updatedAt??null,missing:model.length&&latest?.state==='succeeded'?[]:['enabled evaluated model profile with successful measured request'],reason:model.length?'Evaluated configuration exists; request results and usage remain independently recorded.':'Optional AI is unavailable; manual work remains available.',supportedActions:model.flatMap(p=>p.purposes)})
- return {...platform,capabilities,connectionIds:connections.map(c=>c.id),modelProfileIds:profiles.map(p=>p.id),usage}
+ const launchUsage=p.policy?(await createLaunchUsage(p.db,p.policy)(ctx)).usage:[]
+ return {...platform,capabilities,connectionIds:connections.map(c=>c.id),modelProfileIds:profiles.map(p=>p.id),usage:[...usage,...launchUsage]}
 }}

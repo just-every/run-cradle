@@ -1,3 +1,4 @@
+import {AnalysisPanel} from '../../../../ui/launch/analysis-panel'
 import { campaignLifecycle } from '../../../../apps/launch/lifecycle'
 import { RelatedRecords } from '../../../../ui/launch/related-records';
 import { CampaignActions } from '../../../../ui/launch/campaign-actions';
@@ -470,7 +471,7 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
             </SectionCard>
           </aside>
         </section>
-<CampaignActions campaign={campaign} />
+<CampaignActions campaign={campaign} /><AnalysisPanel feature="campaign-brief" campaignId={campaign.id} />
       </div>
     </PortfolioPageShell>
   );

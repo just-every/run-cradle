@@ -1,5 +1,5 @@
 import type { Capability, Instant } from '../../contracts/primitives'
 export type Preferences={id:string;version:number;timezone:string|null;mutedKinds:string[];digestEnabled:boolean|null;progressEnabled:boolean;updatedAt:Instant|null}
 export type WorkspaceChanges={workspaceName?:string;timezone?:string;currency?:string;quietHoursStart?:string;quietHoursEnd?:string;aiEnabled?:boolean;aiDailyCeiling?:number}
-export type ConfigurationEvidence={capabilities:Capability[];modelProfileIds:string[];connectionIds:string[];requiredSetup:string[];limits:{name:string;current:number|null;maximum:number}[];usage:{purpose:string;requests:number;inputTokens:number|null;outputTokens:number|null;cost:unknown|null}[]}
+export type ConfigurationEvidence={capabilities:Capability[];modelProfileIds:string[];connectionIds:string[];requiredSetup:string[];limits:{name:string;current:number|null;maximum:number}[];usage:{day?:string;purpose:string;requests:number;inputTokens:number|null;outputTokens:number|null;cost:unknown|null}[]}
 export type ChannelNotification={id:string;version:number;kind:string;title:string;body:string;createdAt:Instant;updatedAt:Instant;readAt:Instant|null;subject:{kind:string;id:string|null;label:string;available:boolean};deliveryState:string|null;failure:string|null}

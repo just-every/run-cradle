@@ -1,0 +1,14 @@
+-- Durable launch dispatch, retry and optional analysis bookkeeping.
+CREATE TABLE launch_event_dispatches(event_id TEXT PRIMARY KEY REFERENCES admission_events(id) ON DELETE CASCADE,processed_at TEXT NOT NULL);
+CREATE TABLE launch_automation_retries(run_id TEXT PRIMARY KEY REFERENCES automation_runs(id),first_failed_at INTEGER NOT NULL,retries INTEGER NOT NULL,next_at INTEGER,error_code TEXT NOT NULL,error_message TEXT NOT NULL);
+ALTER TABLE launch_analysis_requests ADD COLUMN authority_json TEXT;
+CREATE TABLE launch_model_calls(id TEXT PRIMARY KEY,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,local_day TEXT NOT NULL,feature TEXT NOT NULL,model TEXT NOT NULL,request_id TEXT REFERENCES launch_analysis_requests(id) ON DELETE SET NULL,state TEXT NOT NULL,input_tokens INTEGER,output_tokens INTEGER,reported_cost_json TEXT,duration_ms INTEGER,error_code TEXT,error_message TEXT);
+CREATE INDEX launch_model_calls_day ON launch_model_calls(local_day,feature);
+ALTER TABLE launch_analysis_requests ADD COLUMN automation_run_id TEXT REFERENCES automation_runs(id) ON DELETE SET NULL;
+CREATE TABLE launch_automation_authorities(automation_id TEXT NOT NULL REFERENCES automations(id) ON DELETE CASCADE,definition_version INTEGER NOT NULL,principal_json TEXT,PRIMARY KEY(automation_id,definition_version));
+CREATE TRIGGER launch_analysis_authority_terminal AFTER UPDATE OF state ON launch_analysis_requests WHEN NEW.state IN ('Complete','Failed','Unknown') BEGIN UPDATE launch_analysis_requests SET authority_json=NULL WHERE id=NEW.id; END;
+CREATE TRIGGER launch_authority_removed AFTER UPDATE OF state ON authority_principals WHEN NEW.state<>'active' BEGIN
+ UPDATE launch_analysis_requests SET authority_json=NULL,state=CASE WHEN state IN ('Queued','Running') THEN 'Failed' ELSE state END,error_code=CASE WHEN state IN ('Queued','Running') THEN 'forbidden' ELSE error_code END,error_message=CASE WHEN state IN ('Queued','Running') THEN 'Requesting authority was removed' ELSE error_message END WHERE actor_id=NEW.id OR json_extract(authority_json,'$.id')=NEW.id;
+ UPDATE launch_automation_authorities SET principal_json=NULL WHERE json_extract(principal_json,'$.id')=NEW.id;
+END;
+CREATE TABLE launch_action_effects(effect_key TEXT PRIMARY KEY,run_id TEXT NOT NULL REFERENCES automation_runs(id) ON DELETE CASCADE,state TEXT NOT NULL,attempts INTEGER NOT NULL,updated_at INTEGER NOT NULL,result_json TEXT);
