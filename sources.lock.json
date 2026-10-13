@@ -2269,16 +2269,12 @@
       "sha256": "ab7186f4b923ea2b3decdabd5bb680a34ffa9f87558809911664413fe5dc0fac",
       "executable": false
     },
-    ".github/scripts/run-site-probe.mjs": {
-      "sha256": "d60d722937e94794097f00be93835cfdd2f9c15fc27d6db282b3ce99f8af10b0",
-      "executable": false
-    },
     ".github/workflows/rer-managed.yml": {
       "sha256": "920dbd1a5899a25ee90866b2cdb6badd20c67ce141bceb3fe7de96fadf0c0a7d",
       "executable": false
     },
-    ".github/workflows/run-site-probe.yml": {
-      "sha256": "13a757de8496aae6423565b116bf3d378293541aee34b00fbaf8424fdfe4087c",
+    ".github/workflows/run-site.yml": {
+      "sha256": "1466e0cc78eeee30a85f1602c0b4bbb74f053fc9f1aa723635c5f0fc5a0f19b0",
       "executable": false
     },
     ".github/workflows/verify.yml": {
