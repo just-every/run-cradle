@@ -89,6 +89,11 @@
     "tailwind-merge": "^3.6.0",
     "zod": "^4.3.6"
   },
+  "pnpm": {
+    "overrides": {
+      "sharp": "0.35.5"
+    }
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@cloudflare/vite-plugin": "1.54.5",
