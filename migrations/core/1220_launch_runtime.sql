@@ -1,5 +1,7 @@
 -- Durable launch dispatch, retry and optional analysis bookkeeping.
 CREATE TABLE launch_event_dispatches(event_id TEXT PRIMARY KEY REFERENCES admission_events(id) ON DELETE CASCADE,processed_at TEXT NOT NULL);
+-- Installing dispatch must not replay historical mutations. New admissions carry their enabled definition snapshot.
+INSERT INTO launch_event_dispatches(event_id,processed_at) SELECT id,created_at FROM admission_events WHERE app_id='00000000000000000000000700';
 CREATE TABLE launch_automation_retries(run_id TEXT PRIMARY KEY REFERENCES automation_runs(id),first_failed_at INTEGER NOT NULL,retries INTEGER NOT NULL,next_at INTEGER,error_code TEXT NOT NULL,error_message TEXT NOT NULL);
 ALTER TABLE launch_analysis_requests ADD COLUMN authority_json TEXT;
 CREATE TABLE launch_model_calls(id TEXT PRIMARY KEY,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,local_day TEXT NOT NULL,feature TEXT NOT NULL,model TEXT NOT NULL,request_id TEXT REFERENCES launch_analysis_requests(id) ON DELETE SET NULL,state TEXT NOT NULL,input_tokens INTEGER,output_tokens INTEGER,reported_cost_json TEXT,duration_ms INTEGER,error_code TEXT,error_message TEXT);

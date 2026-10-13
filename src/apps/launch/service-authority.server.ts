@@ -19,14 +19,14 @@ const denied=(message:string):never=>{throw new AdmissionError('forbidden',messa
 export function createLegacyAutomationAuthority(base:LaunchContext,clock=()=>new Date()){
  const issued=new WeakMap<RequestContext,{eventId?:string;runId?:string;schedule?:true}>()
  function issue(binding:{eventId?:string;runId?:string;schedule?:true}):RequestContext{const now=clock().toISOString(),ctx:RequestContext={principal:{id:actorId,kind:'system',humanId:null,sessionId:null,credentialId:binding.runId??null,issuedAt:now,expiresAt:new Date(Date.parse(now)+60000).toISOString(),authenticationEpoch:1},requestId:createUlid(),now,ingress:binding.schedule?'schedule':'queue'};issued.set(ctx,binding);return ctx}
- async function verify(ctx:RequestContext,run:LegacyAutomationRun,trigger=false,replay=false):Promise<SqlPredicate[]>{
+ async function verify(ctx:RequestContext,run:LegacyAutomationRun,trigger=false,replay=false,terminalFailure=false):Promise<SqlPredicate[]>{
   const binding=issued.get(ctx);if(!binding||ctx.principal.id!==actorId||ctx.principal.kind!=='system'||ctx.principal.expiresAt<=clock().toISOString())return denied('Only a live internal launch service context may use retained automation authority')
   if(run.definition.shipped_key&&!['critical-risk','launch-readiness','campaign-brief','weekly-digest'].includes(String(run.definition.shipped_key)))return denied('This definition has no retained deterministic service capability')
   const definition=await base.db.prepare('SELECT * FROM automations WHERE id=?').bind(run.automationId).first<Record<string,unknown>>()
   if(!definition||replay&&!definition.enabled||definition.shipped_key!==run.definition.shipped_key||trigger&&(!definition.enabled||Number(definition.definition_version)!==run.definitionVersion||await canonicalHash(definition)!==await canonicalHash(run.definition)))return denied('Shipped definition changed, was disabled, or was substituted')
   const key=String(definition.shipped_key),actions=JSON.parse(String(run.definition.actions_json));if(definition.shipped_key&&JSON.stringify(actions)!==JSON.stringify([{command:({'critical-risk':'escalate-risk','launch-readiness':'readiness','campaign-brief':'request-ai-analysis','weekly-digest':'digest'} as Record<string,string>)[key]}]))return denied('The retained service action was substituted and cannot be changed')
   const guards=[trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND version=?)',[run.automationId,Number(definition.version)])]
-  if(!definition.shipped_key)guards.push(...(await automationDelegation(base,ctx,run)).guards)
+  if(!definition.shipped_key&&!terminalFailure)guards.push(...(await automationDelegation(base,ctx,run)).guards)
   if(trigger){
    if(!definition.shipped_key){if(definition.trigger_type==='event'){if(binding.eventId!==run.triggerKey||!await base.db.prepare('SELECT 1 FROM admission_events WHERE id=? AND app_id=?').bind(binding.eventId,LAUNCH_APP_ID).first())return denied('Automation requires its committed source event')}else if(!binding.schedule)return denied('Automation requires its saved schedule')}
    else
@@ -46,7 +46,7 @@ export function createLegacyAutomationAuthority(base:LaunchContext,clock=()=>new
   return guards
  }
  const permit=(ctx:RequestContext,action:string,guards:SqlPredicate[]):AuthorityPermit=>({actor:{id:actorId,kind:'system'},action,appId:LAUNCH_APP_ID,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards,reservationMutations:[],reservationIds:[]})
- const authority:LegacyAutomationPorts['authority']=async(ctx,input)=>permit(ctx,input.action,await verify(ctx,input.run,input.action==='launch.automation.trigger'))
+ const authority:LegacyAutomationPorts['authority']=async(ctx,input)=>permit(ctx,input.action,await verify(ctx,input.run,input.action==='launch.automation.trigger',false,input.terminalFailure===true))
  const context:LegacyAutomationPorts['context']=async(ctx,run,subjectId)=>{
   await verify(ctx,run)
   if(!run.definition.shipped_key){

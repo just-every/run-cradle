@@ -35,13 +35,15 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     const optionsFor = changes => {
       const current = { ...options.bindings, ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...automaticQueues?{}:{queueConsumers:{}}, modules, modulesRoot, bindings: current, outboundService: async request => {
-        if(providerFetch)return providerFetch(request)
+      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...automaticQueues?{}:{queueConsumers:{}}, modules, modulesRoot, bindings: current }, ...externalWorkers] })
+      for (const worker of config.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
+      config.workers[0].dev??={}
+      config.workers[0].dev.outboundService={type:'fetcher',handler:async request=>{
+        if(providerFetch){try{return await providerFetch(request)}catch(error){console.error('Provider edge rejected',request.method,request.url,error.message);throw error}}
         assert.equal(request.url, 'https://api.sendgrid.com/v3/mail/send', 'Only the selected test mail provider may be contacted')
         deliveries.push(await request.json())
         return new Response(null, { status: 202, headers: { 'x-message-id': 'test-only-launch-mail-receipt' } })
-      } }, ...externalWorkers] })
-      for (const worker of config.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
+      }}
       return config
     }
     runtime = new Miniflare(optionsFor({}))

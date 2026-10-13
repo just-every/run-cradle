@@ -20,7 +20,7 @@ test('[AI-001/002/003 SET-002] existing campaign, risks, lens builder and settin
   page.on('pageerror',error=>errors.push(error.message))
   await context.addCookies([{name:h.owner.cookie.split('=')[0],value:h.owner.cookie.slice(h.owner.cookie.indexOf('=')+1),url:h.origin}])
   await page.goto(h.origin+'/app/campaigns/'+c.id)
-  await page.getByRole('button',{name:'Request campaign brief',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:/AI is disabled/})).toBeVisible();assert.equal(calls,0)
+  await page.getByRole('button',{name:'Request campaign brief',exact:true}).click();await expect(page.getByRole('status').filter({hasText:/AI is disabled/})).toBeVisible();assert.equal(calls,0)
   await page.goto(h.origin+'/app/settings#ai');await page.getByRole('button',{name:'Enable AI',exact:true}).click();await expect(page.getByRole('button',{name:'Disable AI',exact:true})).toBeVisible()
   const output=process.env.CRADLE_LAUNCH_EVIDENCE??path.join(tmpdir(),'cradle-installed-launch');await mkdir(output,{recursive:true})
   for(const [route,feature]of[['/app/campaigns/'+c.id,'campaign-brief'],['/app/lenses/risks','risk-readout'],['/app/lenses/new','lens-proposal']]){

@@ -50,3 +50,10 @@ an invoice charge. Those calls therefore show Unknown cost, never an estimate or
 zero. Aggregation preserves any reported-cost values supplied by a supported
 adapter; one missing charge makes that aggregate unknown. Settings filters calls
 and aggregates through the caller's current analysis-source visibility.
+
+Settings lists the most recent 100 currently visible calls. Day and feature
+aggregates cover all currently visible history, using shared source scopes and
+SQL aggregation. Anonymous metrics retained after request erasure are not exposed
+as identifiable calls. Events capture the enabled definition versions at commit;
+disabled definitions do not acquire old events when enabled later. Installing the
+dispatcher marks historical events processed rather than replaying past changes.

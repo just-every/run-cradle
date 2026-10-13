@@ -84,7 +84,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const mail=JSON.parse((await h.db.prepare("SELECT message FROM rer_mail_development_outbox WHERE json_extract(message,'$.subject')='Weekly portfolio digest' ORDER BY sequence DESC LIMIT 1").first()).message);assert.ok(mail.text.includes('Scheduled held-out campaign'));assert.ok(!mail.text.includes('Archived launch excluded'));const launches=mail.text.split('Launches in the next 30 days')[1].split('Open High and Critical risks')[0];assert.ok(launches.includes('Included at thirty days'));assert.ok(!launches.includes('Outside thirty days'))
   })
   await t.test('NOTIFY-008: unresolved decision due plus fifteen minutes notifies once and re-arms',async st=>{
-   const dueAt=monday+'T09:50:00.000+05:45'
+   const dueAt=new Date(monday+'T09:50:00.000+05:45').toISOString()
    const decision=await command('launch.decision.create',{fields:{campaignId:campaign.id,riskId:null,supersedesId:null,title:'Scheduled held-out decision',requesterId:owner,assigneeId:null,priority:'High',dueAt,recommendation:'Review before launch',impact:'Launch readiness'}})
    const before=await snapshot()
    await tick(monday+'T10:04:59.000Z')
@@ -94,7 +94,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    assert.equal(first.overdue,before.overdue+1,'emitted scheduled handler produced no overdue decision delivery')
    assert.equal(first.mailOutbox,before.mailOutbox+1,'overdue decision has no development-mail outbox counterpart')
    await tick(monday+'T10:05:00.000Z');assert.equal((await snapshot()).overdue,first.overdue)
-   await command('launch.decision.patch',{id:decision.id,changes:{dueAt:monday+'T11:50:00.000+05:45'}},expected('decision',decision))
+   await command('launch.decision.patch',{id:decision.id,changes:{dueAt:new Date(monday+'T11:50:00.000+05:45').toISOString()}},expected('decision',decision))
    await tick(monday+'T12:05:00.000Z')
    const rearmed=await snapshot();st.diagnostic(JSON.stringify({rearmed}))
    assert.equal(rearmed.overdue,first.overdue+1);assert.equal(rearmed.mailOutbox,first.mailOutbox+1)

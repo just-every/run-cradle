@@ -20,7 +20,7 @@ const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.
 const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
-export async function launchAuthorityRuntime(overrides = {}) {
+export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=true} = {}) {
   const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
   const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
   assert.equal(available,true,'Authority test listener must be unoccupied')
@@ -52,7 +52,7 @@ export async function launchAuthorityRuntime(overrides = {}) {
     const optionsFor = (changes = {}, https = overrides.APP_ORIGIN?.startsWith('https:') ?? false) => {
       const current = { ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const result = convertV4MiniflareOptions({ host:'127.0.0.1',port,https,inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,modules,modulesRoot,bindings:current},...externalWorkers] })
+      const result = convertV4MiniflareOptions({ host:'127.0.0.1',port,https,inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,...automaticQueues?{}:{queueConsumers:{}},modules,modulesRoot,bindings:current},...externalWorkers] })
       for (const worker of result.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
       return result
     }

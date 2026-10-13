@@ -14,8 +14,9 @@ export function createLocalChannelDelivery(env:PlatformBindings,admission:Admiss
  return{async scheduled(now=Date.now()){
   const due=await db.prepare("SELECT id FROM channel_deliveries WHERE state IN ('queued','held') AND run_id IS NULL AND due_at<=? ORDER BY due_at,id LIMIT 100").bind(now).all<{id:string}>()
   for(const item of due.results){
+   if(!await db.prepare("SELECT 1 FROM channel_deliveries WHERE id=? AND state IN ('queued','held') AND due_at<=?").bind(item.id,now).first())continue
    const ctx=await authority.context(item.id);ctx.now=new Date(now).toISOString();ctx.principal.expiresAt=new Date(now+60000).toISOString()
-   const envelope=await authority.envelope(item.id,now),guards=[...envelope.guards],mutations:import('../admission/ports').SqlMutation[]=[]
+   const envelope=await authority.envelope(item.id,now),guards=[...envelope.guards,trustedPredicate('EXISTS(SELECT 1 FROM operators WHERE id=? AND active=1 AND email=?)',[envelope.operatorId,envelope.to])],mutations:import('../admission/ports').SqlMutation[]=[]
    for(const row of envelope.rows){
     const n=await db.prepare('SELECT subject_id FROM notifications WHERE id=? AND unavailable=0').bind(row.notification_id).first<{subject_id:string}>()
     const access=n?await legacyRecipientGuards(db,{kind:row.kind as NotificationKind,operatorId:row.operator_id,campaignId:row.campaign_id,subjectId:n.subject_id,eventId:row.id},ctx.now):null
