@@ -5238,7 +5238,7 @@
       "executable": false
     },
     "src/domains/authority/context.server.ts": {
-      "sha256": "73b52d645c0b460c458386445e46cef4bd5687202fba77aa79e6c40150af04b1",
+      "sha256": "c3cb7475fe6f769f7f5d0c31f19af0a7a5fead1639b92ec480c4537081edb9f2",
       "executable": false
     },
     "src/domains/authority/contracts.ts": {
@@ -5287,6 +5287,10 @@
     },
     "src/domains/authority/member-management.server.ts": {
       "sha256": "e8f8181dc03366ba58ec5fe14a82d3e1bc966d315c7fa707866d34e4f5a9a2b0",
+      "executable": false
+    },
+    "src/domains/authority/member-replay.server.ts": {
+      "sha256": "062d08dd959ce2351b93a8a9d58c566ac5274929ca74a12a8ad0feb2b9167981",
       "executable": false
     },
     "src/domains/authority/members.server.ts": {
