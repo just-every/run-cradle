@@ -11,11 +11,18 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 
 const moduleUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
 const transpile = source => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } }).outputText
-export async function installLegacyFixture(directory) {
+export async function installLegacyFixture(directory, { installedLaunchDefinitions = false } = {}) {
   const common = moduleUrl(transpile(await readFile(new URL('../../src/core/features/shared/repository.ts', import.meta.url), 'utf8')))
   const repositorySource = await readFile(new URL('../../src/core/features/sample-data/repository.ts', import.meta.url), 'utf8')
   const repository = await import(moduleUrl(transpile(repositorySource).replace("'../shared/repository'", JSON.stringify(common))))
   const fixture = JSON.parse(await readFile(new URL('../../sample-data/cradle.json', import.meta.url), 'utf8'))
+  // The walkthrough exercises shipped definitions through public commands. Let
+  // the real installer create their canonical IDs instead of adopting sample IDs.
+  if (installedLaunchDefinitions) {
+    fixture.lenses = []
+    fixture.automations = []
+    fixture.automationRuns = []
+  }
   const runtime = new Miniflare(convertV4MiniflareOptions({ modules: true, script: 'export default { fetch() { return new Response(null, {status:404}) } }', d1Databases: { DB: '00000000-0000-0000-0000-000000000000' }, resourcePersistencePath: path.join(directory, 'v3') }))
   try {
     const db = await runtime.getD1Database('DB')
