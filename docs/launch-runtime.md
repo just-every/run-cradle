@@ -33,17 +33,43 @@ queued credential identifiers; installation archives exclude those identifiers
 and cancel pending requests. The usage ledger links to existing requests; erasing
 a request removes that link while preserving anonymous historical counts.
 
-A configured `INSTALLATION_RELEASE_ID` is used as background source provenance.
+A nonempty, trimmed `INSTALLATION_RELEASE_ID` takes precedence as background source provenance.
 Otherwise the emitted Worker records the SHA-256 digest of its actual launch,
-composition and channel source inputs, embedded at build time.
+composition and channel source inputs, embedded at build time. Direct source
+loading without the build define or a configured release has no source release;
+it does not invent one. Authorized documents and manual work can still compose,
+while analysis requests, automation retries, event and queue dispatch, and
+scheduled processing retain their existing missing-release refusals.
 
 Owner-defined launch automations retain their approving session identity and
 recheck current operator, session, membership, policy and recipient authority.
 Save them again after their approving session expires. Transport refusals that
 are safe to retry reuse the original action key at 1, 5, 15, 30 and 60 minutes
 from first failure. An uncertain external delivery stays Unknown for review and
-is never automatically resent. A manual retry creates a linked run, preserving
-completed steps and the original run.
+is never automatically or manually resent. A manual retry of a Failed run creates
+a linked run, preserving completed steps and the original run.
+
+## Uncertain delivery contract — 14 October 2026
+
+The owner accepted an explicit exception to AUTO-007's former promise to retry
+every transport failure. An uncertain SendGrid submission retains the action and
+run as Unknown, with their error code and message visible in Automation Monitor.
+It creates no automatic retry and AUTO-009 permits manual retry only for Failed
+runs. Known safe transport failures retain the five absolute retry offsets and
+the original action keys; completed actions and the original run remain intact.
+NOTIFY-003 follows the same distinction between confirmed failure and uncertainty.
+
+An action key is local evidence, not a SendGrid idempotency guarantee. The current
+SendGrid adapter provides no reconciliation operation that can authorize resending
+an Unknown outcome. Reviewing provider evidence does not itself unlock a Cradle
+retry; a future continuation path would need provider-specific reconciliation or
+idempotency evidence proving that continuation is safe. A SendGrid acceptance
+receipt proves submission acceptance, not mailbox delivery. This clarification
+changes retry eligibility only; it adds no provider, authority, data migration or
+delivery guarantee. The existing installed retry checks cover safe retry timing,
+preserved completed actions, visible Unknown outcomes and rejected manual resend.
+
+## Usage reporting
 
 The configured OpenAI Responses adapter supplies token usage but does not report
 an invoice charge. Those calls therefore show Unknown cost, never an estimate or

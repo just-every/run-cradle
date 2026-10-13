@@ -2,6 +2,18 @@
   "version": "0.1.0",
   "date": "2026-10-11",
   "contractChanges": {
+    "AUTO-007": {
+      "change": "added",
+      "summary": "Owner-accepted clarification on 14 October 2026: the former unconditional transport retry promise applies only to failures known safe to retry. Uncertain SendGrid submissions retain visible Unknown action/run states and error details, with no automatic or manual resend. Existing safe retries retain their absolute 1, 5, 15, 30 and 60 minute offsets and action keys. Local action keys do not establish SendGrid idempotency; no reconciliation or exactly-once capability is claimed. See docs/launch-runtime.md#uncertain-delivery-contract--14-october-2026."
+    },
+    "AUTO-009": {
+      "change": "added",
+      "summary": "Clarifies the AUTO-007 uncertain-outcome exception: manual retry accepts only Failed runs, creates a linked retryOf run and retains original evidence and completed actions. Unknown runs cannot be manually resent; this adds no reconciliation operation or provider-side idempotency guarantee."
+    },
+    "NOTIFY-003": {
+      "change": "added",
+      "summary": "Clarifies that delivery retries follow AUTO-007's safe-retry requirement. Uncertain submission remains visibly Unknown instead of being converted to a confirmed failure eligible for resend. SendGrid acceptance is not proof of mailbox delivery; the in-app notification remains available. No new provider, authority or migration is introduced."
+    },
     "BASE-ACCESS-002": {
       "change": "added",
       "summary": "Breaking transport semantic clarification of BASE-ACCESS-002. Full old/new wording: docs/contract-transition.md#base-access-002-transport-clarification--29-september-2026. Native document 303 with empty body and safe signin next is preserved; private Start functions independently return identifiable serialized signin redirects; protected HTTP APIs retain 401. No authorization expansion."
