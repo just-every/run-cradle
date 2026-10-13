@@ -1,4 +1,5 @@
 import {restoreCheckpoint} from './restore-checkpoint.server'
+import {preparePortabilityCustody} from './portability-custody.server'
 import {inspectImportReports} from './import-reports.server'
 import {inspectImportHistory} from './import-history.server'
 import {importInventory} from './import-inventory.server'
@@ -23,6 +24,7 @@ import {operatorErasureTarget} from './import-operator-target.server'
 /** Decode and attribute import custody before native mutation. Exact email and
  * operator ID identify the person; a name alone never assigns another row. */
 export async function prepareImportCustody(db:D1Database,registry:DescriptorRegistry,change:Effects,ctx:RequestContext,person:{id:string;name:string;email:string},others:string[]){
+ const transfers=await preparePortabilityCustody(db,change)
  // The request's admitted registry retains source-owned physical mappings and
  // protection alongside imported schemas. Recompiling with no sources invents
  // generic tables for retained launch/repair entities and aborts privacy checks.
@@ -77,7 +79,7 @@ export async function prepareImportCustody(db:D1Database,registry:DescriptorRegi
   await removeRows(db,change,'record_import_review_chunks','review_id=?',[id])
   await removeRows(db,change,'record_import_reviews','id=?',[id])
  }
- const managedTables=new Set((await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND (name GLOB 'ik_*' OR name IN ('record_import_reviews','record_import_review_chunks'))").all<{name:string}>()).results.map(r=>r.name))
+ const managedTables=new Set([...transfers.managedTables,...(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND (name GLOB 'ik_*' OR name IN ('record_import_reviews','record_import_review_chunks'))").all<{name:string}>()).results.map(r=>r.name)])
  // Fence all reviewed bytes and the destination inventory, including clean jobs.
  // The kit independently fences plans, originals, native before-images and scope.
  change.guards.push(trustedPredicate("(SELECT json_group_array(json_array(id,detail_json,detail_hash)) FROM (SELECT id,detail_json,detail_hash FROM record_import_reviews ORDER BY id))=?",[(await db.prepare('SELECT json_group_array(json_array(id,detail_json,detail_hash)) snapshot FROM (SELECT id,detail_json,detail_hash FROM record_import_reviews ORDER BY id)').first<{snapshot:string}>())!.snapshot]))
@@ -86,12 +88,12 @@ export async function prepareImportCustody(db:D1Database,registry:DescriptorRegi
   if(content.some(text=>matches(text,[person.name])))throw new AuthorityError('version_conflict','Import original contains an unattributed name; no identity was erased.',409)
   return false
  }}
- const custodyPlaces=[...['record_import_reviews','record_import_review_chunks'].map(store=>({store,action:'delete' as const,rows:change.mutations.filter(m=>m.kind==='delete'&&m.table.tableId===store).reduce((n,m)=>n+(m.kind==='delete'?m.expectedRows:0),0),reason:'raw import review/report custody withdrawn for the erased identity'}))]
+ const custodyPlaces=[...transfers.places,...['record_import_reviews','record_import_review_chunks'].map(store=>({store,action:'delete' as const,rows:change.mutations.filter(m=>m.kind==='delete'&&m.table.tableId===store).reduce((n,m)=>n+(m.kind==='delete'?m.expectedRows:0),0),reason:'raw import review/report custody withdrawn for the erased identity'}))]
  return {places,managedTables,custodyPlaces,async commit(statements:readonly Statement[],authority:readonly SqlPredicate[],fallbackDestination:string){
-  const checkpoint=await restoreCheckpoint(db)
+  const checkpoint=[...transfers.statements,...await restoreCheckpoint(db)]
   const predicate=and(...authority),context=(destination:string):D1ImportContext=>({destination,namespace:'operator-erasure',mappingVersion:'cradle-native-base-v1',storage:{database:db,targets},authorization:{principalId:ctx.principal.id,predicate:()=>({sql:predicate.sql,params:[...predicate.values]})}})
   const input:D1ImportPerson={target:{kind:'operator',id:person.id},values,related}
   const scopes=destinations.length?destinations:[fallbackDestination]
-  await retireD1ImportCustody(input,statements.map(s=>({sql:s.sql,params:s.values})),context(scopes[0]!),checkpoint,scopes.slice(1).map(destination=>({person:input,context:context(destination)})),finalInventory)
+  await retireD1ImportCustody(input,statements.map(s=>({sql:s.sql,params:s.values})),context(scopes[0]!),checkpoint,scopes.slice(1).map(destination=>({person:input,context:context(destination)})),[...finalInventory,...transfers.final])
  }}
 }

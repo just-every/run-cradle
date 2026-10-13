@@ -112,6 +112,7 @@ export async function unrelatedImport(copy,origin,cookie){
 
 export async function capturePersonalArchive(copy,identity){
  await copy.rer(['export','--output','exports/before-erasure.rer','--non-interactive'])
+ await bindings(copy.source,async({DB})=>{const jobs=(await DB.prepare("SELECT phase,metadata FROM rer_portability_jobs WHERE kind='export'").all()).results;assert.ok(jobs.some(job=>job.phase==='aborted'&&hasIdentityCopy(job.metadata)),'Real CLI leaves terminal private manifest custody for public erasure to retire')})
  const records=await readArchive(copy.source,'exports/before-erasure.rer'),items=records.filter(record=>record.kind==='part').flatMap(part=>part.items)
  assert.ok(items.some(item=>item.kind==='row'&&hasIdentityCopy(JSON.stringify(item.row))),'Pre-erasure archive contains personal DB cells')
  assert.ok(items.some(item=>item.kind==='row'&&item.table==='ik_originals'&&item.row.name===erasedEmail),'Real archived original filename identifies the whole-custody retirement fixture')

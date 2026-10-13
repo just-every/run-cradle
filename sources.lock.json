@@ -2694,7 +2694,7 @@
       "executable": false
     },
     "docs/privacy/operator-erasure.md": {
-      "sha256": "e766c1a3c71b357b02d251acec74fe3026eb98b4d533e7ea8629704eeb2b7fd4",
+      "sha256": "32ebee885cb8d8f438bb0c8adba9961b8386281f6b2189d7224f4d3a1da1b2da",
       "executable": false
     },
     "docs/research.md": {
@@ -6082,11 +6082,15 @@
       "executable": false
     },
     "src/domains/lifecycle/cleanup.server.ts": {
-      "sha256": "1d7a5b33be281d9c74303c9eec6094b6aad4641281b5dade0721936588cfc50d",
+      "sha256": "c501a4f6f7a16356a0e5d2696a4b174655944078cad46f02ccec9b34fcb2fe10",
       "executable": false
     },
     "src/domains/lifecycle/file-writes.server.ts": {
       "sha256": "464b3a784462337265ad63ec3304e563b8d785d7a11b6673f06ef8c79c7bc77d",
+      "executable": false
+    },
+    "src/domains/lifecycle/finish-member-erasure.server.ts": {
+      "sha256": "c1c64eeaf6844c66d7f1c9b1f48fabfa1a1724d41b693f62b2d88cff7e2fcee9",
       "executable": false
     },
     "src/domains/lifecycle/identity-match.ts": {
@@ -6102,7 +6106,7 @@
       "executable": false
     },
     "src/domains/lifecycle/import-custody.server.ts": {
-      "sha256": "f3c044a2842f058a1686755a4bbf0eef4887ab15c74d3e2d8596af5158d73f71",
+      "sha256": "ad917912e9abaa6d9498f41cda5defcbeea81a6cc8e528ec83251a97e54b7e4a",
       "executable": false
     },
     "src/domains/lifecycle/import-history.server.ts": {
@@ -6145,8 +6149,12 @@
       "sha256": "5bc70f53290ce0e3f4bb47399fb3b16a159151166b9c04e63318463b18912add",
       "executable": false
     },
+    "src/domains/lifecycle/portability-custody.server.ts": {
+      "sha256": "3f91e133826856ed4ec58656967185bab385364d876e4bc72c1c0b3b0c413cad",
+      "executable": false
+    },
     "src/domains/lifecycle/restore-checkpoint.server.ts": {
-      "sha256": "a947cd3b4e3ead52fcf09000e24572d672a95a612f1f872350dd81427eefa7e1",
+      "sha256": "e21fcb56076f0f4b597adc7da2f1cf4d93c7fe96e53cbb1916187be2ceb9effa",
       "executable": false
     },
     "src/domains/operations/admission-bridge.server.ts": {
@@ -8210,7 +8218,7 @@
       "executable": false
     },
     "tests/helpers/erasure-checkpoint.mjs": {
-      "sha256": "49d555a1c8249bebe1b0ab91f22ac4c5b02c9217d3dd6e99492771ad79747dc5",
+      "sha256": "957fc70ac5cb6eee5f00c4debe75dfa1f18f8ae9637581bf356e3312f5ac62fa",
       "executable": false
     },
     "tests/helpers/erasure-custody.mjs": {
@@ -8282,7 +8290,7 @@
       "executable": false
     },
     "tests/helpers/lifecycle-erasure-fixture.mjs": {
-      "sha256": "b31bb158e949ceae9c1e3d752ffba78e709a0bd67c376ce1b7dfc8725ed09928",
+      "sha256": "5647f6daec70d0e104ffef93b94fb46533259acd9f5c36cb181892e7c378ad01",
       "executable": false
     },
     "tests/helpers/local-installer-diagnostic.mjs": {
@@ -8462,7 +8470,7 @@
       "executable": false
     },
     "tests/helpers/rer-erasure-archive.mjs": {
-      "sha256": "207277779de55295e687b95ac38c43b89d5d4ff9f97543edcedf757fab72b30d",
+      "sha256": "1462bdf7234dc417c08a1b9f3c0a1405cb62489ed88633a913aacde823a21199",
       "executable": false
     },
     "tests/helpers/rer-erasure-race.mjs": {
@@ -8718,7 +8726,7 @@
       "executable": false
     },
     "tests/lifecycle-erasure.mjs": {
-      "sha256": "39d39fdef9804e24b55af4aea0df4f1c46f11a30f96fdb989cf0545df77f2f99",
+      "sha256": "31b10933df0703549ace1b6d31b5b471027e6ceaf4c3c78f3fdac304da26413c",
       "executable": false
     },
     "tests/local-auth-runtime.mjs": {

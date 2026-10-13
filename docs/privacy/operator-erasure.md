@@ -3,6 +3,18 @@ removal. A successful response is confirmed only after all planned object delete
 have completed. Whole-token matching and explicit ownership remain mandatory;
 other people's native rows, files and independent import jobs are preserved.
 
+Completed or aborted installation transfer artifacts are invalidated under Base's
+erasure contract: snapshot/staging tables, archived parts and manifest metadata
+are retired together. These are temporary whole-installation copies, separate
+from the native records and import-kit originals, plans, provenance and undo
+reports that erasure preserves for unrelated people. Active installation transfers
+must finish or be cancelled before erasure starts. If one starts during object
+deletion, the erasure receipt remains pending until it finishes or is cancelled;
+other cleanup jobs can continue. Final confirmation retires terminal copies again
+and advances the checkpoint atomically, preventing a delayed export from publishing
+an object listing captured before cleanup. The first erasure also initializes its
+checkpoint in the native transaction, even if no installation transfer has run.
+
 Attachment inspection decodes complete gzip and zlib deflate payloads with a
 32 MiB expansion limit and fatal UTF-8 decoding for textual files; CSV cells are
 parsed with the production CSV parser. PDF inspection admits a bounded text-only

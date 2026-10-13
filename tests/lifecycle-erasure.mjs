@@ -16,6 +16,21 @@ import {derivedSearch} from '../scripts/portability/records.mjs'
 import {portableRecordSchema} from '../src/domains/records/portable-schema.server.ts'
 import {objectBucket} from './helpers/erasure-attachments.mjs'
 
+contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installation transfer creates its checkpoint atomically',async()=>{
+ const h=await fixture()
+ try{
+  const {draft}=await h.create(),appId=draft.appId;await h.assign(appId)
+  assert.equal(h.sql.prepare('SELECT count(*) n FROM rer_portability_state').get().n,0)
+  assert.equal((await h.send('remove',{appId},h.sql.prepare('SELECT version FROM authority_principals WHERE id=?').get(h.person).version)).status,200)
+  const version=h.sql.prepare('SELECT version FROM authority_principals WHERE id=?').get(h.person).version,response=await h.send('erase',{appId},version)
+  const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));assert.equal(body.data.value.confirmed,true)
+  const state=h.sql.prepare('SELECT source_identity,epoch FROM rer_portability_state').get()
+  assert.ok(state.source_identity&&state.epoch>0);assert.equal(h.sql.prepare('SELECT epoch FROM rer_portability_epochs WHERE source=?').get(state.source_identity).epoch,state.epoch)
+  assert.ok(h.sql.prepare('SELECT count(*) n FROM rer_portability_journal WHERE source=?').get(state.source_identity).n>0)
+  assert.deepEqual(await custodyMatches(h,[identity.name,identity.email]),{matches:0,stores:[]})
+ }finally{h.close()}
+})
+
 contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decodes compressed files, retires custody atomically, preserves controls and fences old archives',async()=>{
  await checkpointParity()
  const h=await fixture();let target
@@ -34,7 +49,7 @@ contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decode
   const removed=await h.send('remove',{appId},memberVersion);assert.equal(removed.status,200,await removed.clone().text())
   const version=(await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(h.person).first()).version
   const content=identity.name+' '+identity.email
-  const personal=[await h.file(compressedPdf(content)),await h.file(encodedText(content,'gzip'),{type:'text/plain',encoding:'gzip'}),await h.file(encodedText(content,'deflate'),{type:'text/plain',encoding:'deflate'})]
+  const personal=[await h.file(compressedPdf(content),{key:'private/'+identity.email+'/attachment.pdf'}),await h.file(encodedText(content,'gzip'),{type:'text/plain',encoding:'gzip'}),await h.file(encodedText(content,'deflate'),{type:'text/plain',encoding:'deflate'})]
   const other=await h.file(compressedPdf(control.name+' '+control.email),{owner:h.owner})
   const cleanFiles=h.bucket.snapshot().filter(([key])=>key===other.key),cleanRows=JSON.stringify((await h.db.prepare('SELECT * FROM "'+unrelated.table+'" ORDER BY id').all()).results)
   const cleanCustody=()=>JSON.stringify(h.sql.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name GLOB 'ik_*' ORDER BY name").all().flatMap(({name})=>{const cols=h.sql.prepare('PRAGMA table_info("'+name+'")').all().map(c=>c.name);const field=cols.includes('job_id')?'job_id':name==='ik_jobs'?'id':null;return field?[[name,h.sql.prepare('SELECT * FROM "'+name+'" WHERE "'+field+'"=?').all(unrelated.job.id)]]:[]}))
@@ -55,17 +70,49 @@ contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decode
    const before=h.snapshot(),objects=h.bucket.snapshot(),response=await erase();assert.notEqual(response.status,200)
    assert.equal(h.snapshot(),before,'Late failure rolls back all native and import scopes');assert.deepEqual(h.bucket.snapshot(),objects);h.sql.exec('DROP TRIGGER privacy_race')
   }
-  // Capture a real pre-erasure archive, then remove its local transfer custody.
+  // Capture a real pre-erasure archive. CLI abort leaves private manifest metadata;
+  // erasure must retire that custody itself, alongside a completed local snapshot.
   // The downloaded archive stays outside the installation and cannot be deleted
   // by erasure; the restore checkpoint is what prevents its return.
   const portability=await createPortability({db:h.db,buckets:{FILES:h.bucket},policy:{...portabilityPolicy,derivedTables:await derivedSearch(h.db)}}),exportId=await portability.exports.create('privacy-test')
   while((await portability.exports.status(exportId)).phase!=='complete')await portability.exports.advance(exportId,{maxParts:100})
   const archive=(await new Response(await portability.exports.download(exportId)).text()).trim().split('\n').map(JSON.parse)
   await portability.exports.abort(exportId)
+  assert.ok(h.sql.prepare('SELECT metadata FROM rer_portability_jobs WHERE id=?').get(exportId).metadata.includes(identity.email),'Real export abort retains a personal object key in its manifest')
+  const completedExport=await portability.exports.create('privacy-test')
+  const refuseActive=async()=>{const before=h.snapshot(),objects=h.bucket.snapshot(),response=await erase();assert.equal(response.status,409);assert.match((await response.json()).error.message,/active installation transfers/);assert.equal(h.snapshot(),before);assert.deepEqual(h.bucket.snapshot(),objects)}
+  await refuseActive()
+  while((await portability.exports.status(completedExport)).phase!=='complete')await portability.exports.advance(completedExport,{maxParts:100})
+  const stagedImport=await portability.imports.create(archive[0],'privacy-test');await portability.imports.uploadPart(stagedImport,0,archive.find(record=>record.kind==='part'));await refuseActive();await portability.imports.abort(stagedImport)
+  // Transfers starting after inspection must roll back native writes, and custody
+  // introduced by a later retirement trigger must roll back the entire batch too.
+  for(const [table,event,condition] of [['operators','UPDATE',`NEW.id='${h.person}' AND NEW.email<>OLD.email`],['ik_d1_erasure_journal','INSERT','1']]){
+   h.sql.exec(`CREATE TRIGGER privacy_transfer_race AFTER ${event} ON ${table} WHEN ${condition} BEGIN INSERT INTO rer_portability_jobs(id,kind,actor,phase,metadata) VALUES('racing-transfer','import','owner','staging','{}'); END`)
+   const before=h.snapshot(),objects=h.bucket.snapshot(),response=await erase();assert.notEqual(response.status,200);assert.equal(h.snapshot(),before,'Late transfer rolls back native erasure, transfer invalidation and checkpoint');assert.deepEqual(h.bucket.snapshot(),objects);h.sql.exec('DROP TRIGGER privacy_transfer_race')
+  }
   const runtime=await h.runtime(),authority=await importAuthority(h.db,runtime.policy,h.ctx,mixed.preview.identities.appId)
   const stale={destination:mixed.preview.identities.appId,namespace:'mixed-custody',mappingVersion:'cradle-native-base-v1',storage:{database:h.db,targets:createNativeImportTarget(runtime.registry)},authorization:{principalId:h.owner,predicate:()=>authority},reviewedFingerprint:mixed.job.fingerprint}
   assert.equal((await stored(mixed.job.id,stale)).plan.entries.length,2)
-  const response=await erase(),body=await response.json();assert.equal(response.status,200,JSON.stringify(body));assert.equal(body.data.value.confirmed,true)
+  const retainedDownload=await portability.exports.download(completedExport)
+  // Real transfers can start while R2 deletion is outside the native transaction.
+  // Keep one completed archive and one active export at that boundary.
+  const deleteObject=h.bucket.delete.bind(h.bucket);let cleanupExport,activeCleanupExport,cleanupArchive
+  h.bucket.delete=async key=>{if(!cleanupExport){cleanupExport=await portability.exports.create('cleanup-race');while((await portability.exports.status(cleanupExport)).phase!=='complete')await portability.exports.advance(cleanupExport,{maxParts:100});cleanupArchive=(await new Response(await portability.exports.download(cleanupExport)).text()).trim().split('\n').map(JSON.parse);assert.ok(JSON.stringify(cleanupArchive[0]).includes(identity.email));activeCleanupExport=await portability.exports.create('active-cleanup-race')}return deleteObject(key)}
+  const response=await erase(),body=await response.json();assert.equal(response.status,200,JSON.stringify(body));assert.equal(body.data.value.confirmed,false);assert.equal(body.data.value.erasureState,'pending','Active transfer during blob deletion prevents confirmation')
+  h.bucket.delete=deleteObject
+  assert.equal(h.sql.prepare('SELECT epoch FROM rer_portability_state').get().epoch,cleanupArchive[0].epoch,'Pending cleanup does not advance its final checkpoint')
+  const pending=await h.resumeErasure();assert.equal(pending.status,200,await pending.clone().text());assert.equal((await pending.json()).data.state,'pending')
+  await portability.exports.abort(activeCleanupExport)
+  h.sql.exec("CREATE TRIGGER privacy_cleanup_race AFTER UPDATE ON lifecycle_erasures WHEN NEW.state='complete' BEGIN INSERT INTO rer_portability_jobs(id,kind,actor,phase,metadata) VALUES('late-cleanup-transfer','export','owner','building','{}'); END")
+  const beforeCleanup=h.snapshot(),failedCleanup=await h.resumeErasure();assert.notEqual(failedCleanup.status,200);assert.equal(h.snapshot(),beforeCleanup,'Late cleanup transfer rolls back invalidation, receipt completion and final checkpoint');h.sql.exec('DROP TRIGGER privacy_cleanup_race')
+  for(const resumed of await Promise.all([h.resumeErasure(),h.resumeErasure()])){assert.equal(resumed.status,200);assert.equal((await resumed.json()).data.state,'complete','Concurrent receipt resumes after the active transfer is cancelled are safe')}
+  assert.equal(h.sql.prepare('SELECT count(*) n FROM rer_portability_jobs').get().n,0,'Erasure retires complete and aborted installation transfers')
+  assert.equal(h.sql.prepare("SELECT count(*) n FROM sqlite_master WHERE name GLOB 'rer_portability_snap_*' OR name GLOB 'rer_portability_stage_*'").get().n,0,'Snapshot and staging tables are dropped atomically')
+  await assert.rejects(portability.exports.download(completedExport),error=>error.code==='job_not_found')
+  await assert.rejects(portability.exports.advance(exportId),error=>error.code==='job_not_found')
+  await assert.rejects(new Response(retainedDownload).text(),error=>error.code==='part_missing','A download opened before erasure cannot finish its invalidated archive')
+  const finalEpoch=h.sql.prepare('SELECT epoch FROM rer_portability_state').get().epoch,postCompletion=await portability.exports.create('after-confirmation')
+  assert.equal((await h.resumeErasure()).status,200);assert.equal(h.sql.prepare('SELECT epoch FROM rer_portability_state').get().epoch,finalEpoch,'Completed receipt replay cannot advance the checkpoint or invalidate a new transfer');assert.equal((await portability.exports.status(postCompletion)).phase,'building');await portability.exports.abort(postCompletion)
   for(const file of personal)assert.equal(await h.bucket.head(file.key),null)
   assert.deepEqual(h.bucket.snapshot().filter(([key])=>key===other.key),cleanFiles,'Unrelated compressed PDF bytes and metadata remain exact')
   assert.equal(JSON.stringify((await h.db.prepare('SELECT * FROM "'+unrelated.table+'" ORDER BY id').all()).results),cleanRows)
@@ -84,10 +131,12 @@ contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decode
   const state=h.sql.prepare('SELECT source_identity,epoch FROM rer_portability_state').get(),later={sourceIdentity:state.source_identity,epoch:state.epoch,journal:h.sql.prepare('SELECT tombstone FROM rer_portability_journal WHERE source=? ORDER BY tombstone').all(state.source_identity).map(r=>r.tombstone)}
   assert.ok(later.epoch>archive[0].epoch)
   // The current database rejects its old checkpoint before any restore write.
-  async function refused(api,options){const id=await api.imports.create(archive[0],'privacy-test');try{for(const part of archive.filter(r=>r.kind==='part'))await api.imports.uploadPart(id,part.index,part);await assert.rejects(api.imports.finalize(id,{...archive.at(-1),...options}),error=>error.code==='erasure_epoch')}finally{await api.imports.abort(id)}}
+  async function refused(api,options,candidate=archive){const id=await api.imports.create(candidate[0],'privacy-test');try{for(const part of candidate.filter(r=>r.kind==='part'))await api.imports.uploadPart(id,part.index,part);await assert.rejects(api.imports.finalize(id,{...candidate.at(-1),...options}),error=>error.code==='erasure_epoch')}finally{await api.imports.abort(id)}}
   await refused(portability,{})
+  await refused(portability,{},cleanupArchive)
   target=migratedD1();for(const plan of portableRecordSchema([h.sql.prepare('SELECT schema_json FROM record_schemas').all().map(r=>JSON.parse(r.schema_json))]))target.sql.exec(plan.sql);const fresh=await createPortability({db:target.db,buckets:{FILES:objectBucket()},policy:{...portabilityPolicy,derivedTables:await derivedSearch(target.db)}})
   await refused(fresh,{laterJournal:later})
+  await refused(fresh,{laterJournal:later},cleanupArchive)
   assert.equal(target.sql.prepare('SELECT count(*) n FROM operators').get().n,0,'Later journal refuses old archive on a fresh target')
   console.log('ERASURE_CUSTODY_COUNTS '+JSON.stringify({before:beforeCounts,journals:journals.map(j=>({...j,stores_json:JSON.parse(j.stores_json)})),after:beforeCounts.map(({store})=>({store,rows:h.sql.prepare('SELECT count(*) n FROM '+store).get().n}))}))
  }finally{target?.close();h.close()}
