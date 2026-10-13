@@ -4090,7 +4090,7 @@
       "executable": false
     },
     "src/core/app/composition/lifecycle.server.ts": {
-      "sha256": "1c0fd66b41652adc08e94812a14c19909e48159b4164e9bebcb60994b365f55d",
+      "sha256": "3df9acdf34a1f9b9ced71fd603e13a1613ac50ec4ca6dc775dd439746fb67d43",
       "executable": false
     },
     "src/core/app/composition/providers.server.ts": {
