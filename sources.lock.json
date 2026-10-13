@@ -8746,7 +8746,7 @@
       "executable": false
     },
     "tests/migration-browser.mjs": {
-      "sha256": "4e90cea2eaa5b0636893d1c93c8b2681180c8a289c72bacd3ad6b8e6e1e48595",
+      "sha256": "fcea6ba92576a42159705b80e6cdf22c87b266625462c607af8182ec6f2f8b25",
       "executable": false
     },
     "tests/migration-events.mjs": {

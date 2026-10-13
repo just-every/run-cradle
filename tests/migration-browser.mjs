@@ -1,4 +1,5 @@
 import {baseHttpSession} from './helpers/base-http-session.mjs'
+import {testDevKey} from './helpers/dev-gate.mjs'
 import { contract } from './contract.mjs'
 import { versionedSessionProof } from './helpers/versioned-session-proof.mjs'
 import { navigateFromSignInToApp } from './helpers/public-app-navigation.mjs'
@@ -21,7 +22,7 @@ assert.ok(evidence, 'Evidence directory is required')
 await mkdir(evidence, { recursive: true })
 contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-002', `${mode} browser transport, Origin and document boundaries`, async()=>{
 const directory = await mkdtemp(path.join(tmpdir(), 'cradle-migration-browser-'))
-const variables = `APP_ORIGIN=${origin}\nAUTH_LOCAL=true\nOWNER_EMAIL=maya@northstar.example\nMAIL_PROVIDER=development\nMAIL_FROM=auth@localhost.test\nSESSION_SECRET=test-only-session-secret-32-characters-long\n`
+const variables = `APP_ORIGIN=${origin}\nAUTH_LOCAL=true\nRER_DEV_KEY=${testDevKey}\nOWNER_EMAIL=maya@northstar.example\nMAIL_PROVIDER=development\nMAIL_FROM=auth@localhost.test\nSESSION_SECRET=test-only-session-secret-32-characters-long\n`
 let worker, browser, output = '', oldVariables, oldEmittedVariables
 try {
   assert.equal(await fetch(origin).catch(() => null), null, 'Refuse occupied port')
