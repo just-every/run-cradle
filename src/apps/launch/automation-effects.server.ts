@@ -24,7 +24,7 @@ export function createLaunchAutomationEffects(env:PlatformBindings,scoped:Legacy
   const permit=await context.policy.authorize(ctx,{appId:LAUNCH_APP_ID,action:'launch.campaign.patch',expected:[{ref:ref('campaign',campaignId),version:campaign.version}],fieldIds:Object.values(launchFieldIds.campaign),cost:[],inputHash:await canonicalHash(input.input),commandId:ctx.requestId}),guards=[...permit.guards,trustedPredicate('EXISTS(SELECT 1 FROM campaigns WHERE id=? AND version=? AND archived_at IS NULL)',[campaignId,campaign.version])]
   if(input.action==='create-decision'){
    const fields=decisionFields.parse({...raw,campaignId}),plan=await prepareRecord(context,ctx,{commandId:createUlid(),expected:[],input:{fields}},'decision','create')
-   return{guards:[...guards,...plan.guards],mutations:plan.mutations,outbox:[...plan.outbox],state:'Complete',result:plan.committedResult}
+   return{guards:[...guards,...plan.guards],mutations:[...plan.mutations],outbox:[...plan.outbox],state:'Complete',result:plan.committedResult}
   }
   if(input.action==='add-activity'){
    const text=z.string().min(1).max(10000).parse(raw.message)
@@ -32,14 +32,14 @@ export function createLaunchAutomationEffects(env:PlatformBindings,scoped:Legacy
   }
   if(input.action==='notify-operator'){
    const operatorId=z.string().parse(raw.operatorId),notification=await context.integration.notification!(ctx,{kind:'record-automation',operatorId,campaignId,subjectId:campaignId,eventId:input.idempotencyKey,runId:input.run.id,delivery:'in-app'})
-   return{guards:[...guards,...notification.guards],mutations:notification.mutations,outbox:[],state:'Complete',result:{notificationId:notification.notificationId??null}}
+   return{guards:[...guards,...notification.guards],mutations:[...notification.mutations],outbox:[],state:'Complete',result:{notificationId:notification.notificationId??null}}
   }
   if(input.action!=='send-email')throw new ApiError('unconfigured',`Automation action ${input.action} is not configured`)
   const mail=message.parse({...raw,campaignId}),recipient=await db.prepare('SELECT email FROM operators WHERE id=? AND active=1').bind(mail.operatorId).first<{email:string}>(),access=await legacyRecipientGuards(db,{kind:'record-automation',operatorId:mail.operatorId,campaignId,subjectId:campaignId,eventId:input.idempotencyKey},ctx.now)
   if(!recipient||!access)throw new ApiError('forbidden','Mail recipient no longer has campaign access')
   guards.push(...access,trustedPredicate('EXISTS(SELECT 1 FROM operators WHERE id=? AND active=1 AND email=?)',[mail.operatorId,recipient.email]))
   if(!env.MAIL_PROVIDER||!env.MAIL_FROM||env.MAIL_PROVIDER==='development'&&!localMailEnabled(env)||env.MAIL_PROVIDER!=='development'&&!env.MAIL_PROVIDER_API_KEY)throw new ApiError('unconfigured','Configure the installation mail sender before using email actions')
-  const envelope={deliveryId:input.idempotencyKey,from:env.MAIL_FROM,to:[recipient.email],subject:mail.subject,text:mail.text}
+  const envelope={deliveryId:input.idempotencyKey,from:env.MAIL_FROM,to:[recipient.email],subject:mail.subject,text:mail.text,html:undefined,headers:undefined}
   if(env.MAIL_PROVIDER==='development'){
    const old=await db.prepare('SELECT id FROM rer_mail_development_outbox WHERE id=?').bind(input.idempotencyKey).first()
    return{guards,mutations:old?[]:[{kind:'insert',table:outbox,row:{id:input.idempotencyKey,created_at:Date.parse(ctx.now),message:JSON.stringify(envelope)}}],outbox:[],state:'Complete',result:{deliveryId:input.idempotencyKey,status:'development'}}

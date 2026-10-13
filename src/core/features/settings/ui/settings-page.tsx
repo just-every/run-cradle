@@ -1,3 +1,4 @@
+import {ReadinessSettings} from '../../../../ui/settings/readiness-settings'
 import {LaunchAiSettings} from '../../../../ui/settings/launch-ai-settings'
 import { LazySettingsPanel } from '../../../../ui/settings/lazy-settings-panel'
 import { PreferencesPanel } from '../../../../ui/settings/preferences-panel'
@@ -47,7 +48,7 @@ export const SettingsPage = () => {
         <section className="cr-card cr-capability" id="ai">{!current.ai.configured && <span className="cr-tag cr-tag--warn">Not configured</span>}<h2>AI</h2><p className="cr-muted">{current.ai.configured ? current.ai.enabled ? 'AI is configured and enabled. Outputs remain read-only.' : 'AI is configured but disabled.' : 'AI is not configured. Set the installation provider and model.'}</p><LaunchAiSettings /></section>
         <section className="cr-card cr-capability">{!current.email.configured && <span className="cr-tag cr-tag--warn">Not configured</span>}<h2>Email</h2><p className="cr-muted">{current.email.configured ? 'Email delivery is configured; failed deliveries remain visible here.' : 'Email is not configured. The workspace owner needs to connect an email provider.'}</p>{current.email.deliveries ? <Details title="Delivery status" values={current.email.deliveries} level={3} /> : null}</section>
       </div>
-      <Details title="Profile" values={current.profile} /><Details title="Appearance" values={current.appearance} /><Details title="Security" values={current.security} /><Details title="Data & storage" values={current.dataStorage} />
+      <ReadinessSettings/><Details title="Profile" values={current.profile} /><Details title="Appearance" values={current.appearance} /><Details title="Security" values={current.security} /><Details title="Data & storage" values={current.dataStorage} />
     </div>
     <div className="cr-settings-side">
       <ArchivePanel />
