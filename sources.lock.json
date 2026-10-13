@@ -10334,7 +10334,7 @@
       "executable": false
     },
     "vendor/base/modules/mail/src/core/validation.mjs": {
-      "sha256": "c1f54ba93abdead716f8e647aa5ac05af0b47bafa2055e67682393d16791e89d",
+      "sha256": "f640092d747185b640b50311b125e76fe857edb6d0d805b7eb0c3c568b0ea4eb",
       "executable": false
     },
     "vendor/base/modules/mail/src/development/index.d.mts": {
@@ -10358,7 +10358,7 @@
       "executable": false
     },
     "vendor/base/modules/mail/src/development/viewer.mjs": {
-      "sha256": "8c8c7575c2364151501d1725515b90fa662be039422837643d89f6668f241627",
+      "sha256": "b5ac3214007b8dfbf548ddc879edeafa8c182c0328b4d7c3ff919539af030b0d",
       "executable": false
     },
     "vendor/base/modules/mail/src/doctor/common.mjs": {
@@ -10414,7 +10414,7 @@
       "executable": false
     },
     "vendor/base/modules/mail/src/inbound/headers.mjs": {
-      "sha256": "79673d562647f4e15e7fe10ca3b13241acd5b2cc25a651a32918cee45e02235c",
+      "sha256": "a4b8eb4fbc6f5ba896d63d79ac5c8ac17ea9c533ec215ac5e804c94ad8b51253",
       "executable": false
     },
     "vendor/base/modules/mail/src/inbound/index.mjs": {
