@@ -15,7 +15,9 @@ process.stdout.write(fs.readFileSync(process.argv[1] + '/sentinel.txt', 'utf8'))
 `;
 
 export function deniedHostFileRead(path) {
-  return `assert.throws(() => fs.readFileSync(${JSON.stringify(path)}), { code: /^(ENOENT|EACCES|EPERM)$/ });`;
+  // Preserve the exact path while making the literal safe in JavaScript and HTML.
+  const literal = JSON.stringify(path).replace(/[<>&\u2028\u2029]/g, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`);
+  return `assert.throws(() => fs.readFileSync(${literal}), { code: /^(ENOENT|EACCES|EPERM)$/ });`;
 }
 
 // A local Docker volume lives on the daemon host, even with a remote DOCKER_HOST.

@@ -4,6 +4,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { contract } from './contract.mjs'
 import { migratedD1 } from './helpers/sqlite-d1.mjs'
+import { htmlText as text } from './helpers/html-review.mjs'
 const { campaignLifecycle } = await import('../src/apps/launch/lifecycle.ts')
 const { validateDomain, emptyChange } = await import('../src/apps/launch/domain.server.ts')
 const { CreateCampaign } = await import('../src/ui/launch/create-campaign.tsx')
@@ -14,7 +15,6 @@ const { createMilestoneRepository } = await import('../src/core/features/milesto
 const owner = '00000000000000000000000001'
 const insert = (db, table, row) => db.prepare(`INSERT INTO ${table} (${Object.keys(row).join(',')}) VALUES (${Object.keys(row).map(() => '?').join(',')})`).bind(...Object.values(row)).run()
 const render = (component, data, props = {}) => renderToStaticMarkup(createElement(DocumentDataContext.Provider, { value: data }, createElement(component, props)))
-const text = html => html.replace(/<[^>]+>/g, '')
 
 contract('CAMP-002', 'Replacing the current lifecycle changes the actual campaign selectors and command validation together', async () => {
  const h = migratedD1(), prior = { ...campaignLifecycle }

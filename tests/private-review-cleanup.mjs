@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { contract } from './contract.mjs'
+import { htmlLinks } from './helpers/html-review.mjs'
 
 contract('AUTH-BASE-001 HOME-002 SET-001 NOTIFY-002', 'production sign-in returns home and settings retain independent notification readiness', async () => {
   const { launchBaseAuthorityRuntime } = await import('./helpers/launch-base-authority-runtime.mjs')
@@ -9,8 +10,7 @@ contract('AUTH-BASE-001 HOME-002 SET-001 NOTIFY-002', 'production sign-in return
     const signin = await h.request('/signin')
     assert.equal(signin.status, 200)
     const html = await signin.text()
-    const links = [...html.matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)]
-      .map(([, href, label]) => ({ href, label: label.replace(/<[^>]+>/g, '').trim() }))
+    const links = htmlLinks(html)
     assert.deepEqual(links.filter(link => link.href.startsWith('/')), [{ href: '/', label: 'Back to home' }])
     assert.doesNotMatch(html, /Open workspace|Return to Cradle|Continue with local development identity/)
     assert.equal(signin.headers.get('set-cookie'), null)

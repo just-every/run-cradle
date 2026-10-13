@@ -11,6 +11,7 @@ import path from 'node:path'
 import { chromium } from '@playwright/test'
 import { contract } from './contract.mjs'
 import {freePort} from './helpers/free-port.mjs'
+import { bodyText } from './helpers/html-review.mjs'
 
 // D1 CLI controls can outlast pooled keepalive; use independently closed HTTP connections.
 const request = (url, init = {}) => fetch(url, { ...init, headers: { ...init.headers, connection: 'close' } })
@@ -26,7 +27,6 @@ const responseStatus = async (pending) => {
   await response.arrayBuffer()
   return response.status
 }
-const bodyContent = (html) => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<!--[\s\S]*?-->/g, '')
 const routesFor = ({ campaign, risk, milestone, decision, lens }) => [
   '/app', '/app/overview', '/app/campaigns', `/app/campaigns/${campaign}`,
   '/app/lenses/risks', `/app/risks/${risk}`, '/app/lenses/timeline', `/app/milestones/${milestone}`,
@@ -77,14 +77,14 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
   for (const api of ['/api/session','/api/status','/api/workspace','/api/portfolio','/api/campaigns','/api/risks/lens','/api/milestones/timeline','/api/lenses','/api/decisions','/api/automations','/api/notifications','/api/settings','/api/search?q=se']) assert.equal(await responseStatus(get(api)), 200, api)
   const deliverable = (await json(`/api/campaigns/${ids.campaign}`)).deliverables[0]
   for (const control of ['', `operator_session_local=${expiredToken}`, `operator_session_local=${revokedToken}`, cookie]) { const response = await request(`${origin}/api/deliverables/${deliverable.id}/toggle-completion`, { method: 'POST', headers: { ...(control ? { cookie: control } : {}), 'content-type': 'application/json', origin, 'x-csrf-token': csrfToken }, body: JSON.stringify({ version: deliverable.version }) }); const body = await response.text(); assert.equal(response.status, control === cookie ? 200 : 401, body) }
-  for (const document of documents) { const response = await get(document); assert.equal(response.status, 200, document); const html = bodyContent(await response.text()); assert.match(html, /Maya Chen/); assert.doesNotMatch(html, /Loading (workspace|campaign|risk|milestone|decision|automation|your notifications)/i, document) }
+  for (const document of documents) { const response = await get(document); assert.equal(response.status, 200, document); const html = bodyText(await response.text()); assert.match(html, /Maya Chen/); assert.doesNotMatch(html, /Loading (workspace|campaign|risk|milestone|decision|automation|your notifications)/i, document) }
   // Change authoritative rows, then demand the new values in body HTML, not just serialized loader data.
   sql(`UPDATE campaigns SET name='Migration campaign current' WHERE id='${ids.campaign}'; UPDATE risks SET title='Migration risk current' WHERE id='${ids.risk}'; UPDATE milestones SET title='Migration milestone current' WHERE id='${ids.milestone}'; UPDATE decisions SET title='Migration decision current' WHERE id='${ids.decision}'; UPDATE lenses SET name='Migration lens current' WHERE id='${ids.lens}'; UPDATE automations SET name='Migration automation current'; UPDATE notifications SET title='Migration notification current'; UPDATE workspace SET name='Migration workspace current'`)
   const addedLens = await request(`${origin}/api/lenses`, { method: 'POST', headers: { cookie, 'content-type': 'application/json', origin, 'x-csrf-token': csrfToken }, body: JSON.stringify({ name: 'Migration catalog addition', description: 'SSR count freshness control', recordType: 'Risk', conditions: [], sort: { field: 'severity', direction: 'desc' }, fields: ['title', 'severity'], display: 'Cards' }) })
   assert.equal(addedLens.status, 201)
   await addedLens.arrayBuffer()
   const fresh = [['/app','Migration campaign current'],['/app/overview','Migration campaign current'],['/app/campaigns','Migration campaign current'],[`/app/campaigns/${ids.campaign}`,'Migration campaign current'],['/app/lenses/risks','Migration risk current'],[`/app/risks/${ids.risk}`,'Migration risk current'],['/app/lenses/timeline','Migration milestone current'],[`/app/milestones/${ids.milestone}`,'Migration milestone current'],[`/app/lenses/${ids.lens}/edit`,'Migration lens current'],['/app/decisions','Migration decision current'],[`/app/decisions/${ids.decision}`,'Migration decision current'],['/app/automations','Migration automation current'],['/app/notifications','Migration notification current'],['/app/settings','Migration workspace current'],['/app/settings/workspace','Migration workspace current'],['/app/lenses/new',`${lenses.lenses.length + 1} saved lenses available`]]
-  for (const [document, marker] of fresh) assert.ok(bodyContent(await (await get(document)).text()).includes(marker), `${document} must SSR ${marker}`)
+  for (const [document, marker] of fresh) assert.ok(bodyText(await (await get(document)).text()).includes(marker), `${document} must SSR ${marker}`)
   for (const document of ['/','/signin']) {
     const publicHtml = await (await get(document, '')).text()
     assert.match(publicHtml, /Migration workspace current/, 'The Lobby and sign-in publish the current workspace identity name')

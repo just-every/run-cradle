@@ -102,6 +102,7 @@
     "esbuild": "0.28.1",
     "highlight.js": "10.7.3",
     "miniflare": "5.20260907.0-alpha",
+    "parse5": "8.0.1",
     "react-markdown": "6.0.3",
     "remark-gfm": "1.0.0",
     "tailwindcss": "^4.2.0",

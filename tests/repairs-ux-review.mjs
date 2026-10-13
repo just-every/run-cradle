@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtemp, mkdir, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
+import { hasHtmlElement } from './helpers/html-review.mjs'
 const require=createRequire(import.meta.url),{build}=require('../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild')
 await mkdir('.wrangler',{recursive:true})
 const directory=await mkdtemp(resolve('.wrangler/ux-ssr-'))
@@ -51,7 +52,7 @@ test('recognized source envelope exposes original text first without losing or i
  assert.equal(parsed.original,original);assert.equal(parsed.terms,JSON.stringify(terms))
  const page=html(r.SourceText,{text:captured,manualQuote:true})
  assert.ok(page.indexOf('Written quotation')<page.indexOf('<details'))
- assert.match(page,/&lt;script&gt;/);assert.doesNotMatch(page,/<script>/)
+ assert.match(page,/&lt;script&gt;/);assert.equal(hasHtmlElement(page, 'script'), false)
  assert.match(page,/Manual quote transcription/);assert.match(page,/Recorded terms and technical details/)
  for(const text of ['An ordinary original source '+JSON.stringify(terms),captured+'broken',captured.replace('"taxIncluded":true','"taxIncluded":"true"')]){
   assert.equal(r.splitManualQuoteSource(text),null)
