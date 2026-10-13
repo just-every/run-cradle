@@ -2269,6 +2269,14 @@
       "sha256": "ab7186f4b923ea2b3decdabd5bb680a34ffa9f87558809911664413fe5dc0fac",
       "executable": false
     },
+    ".github/assets/banner-dark.webp": {
+      "sha256": "3acd808ad6ff0e61868267ae34b63f44888822644c37f282030c20fc3f68df26",
+      "executable": false
+    },
+    ".github/assets/banner-light.webp": {
+      "sha256": "9ec7691b888b251428266760a119b4519ac6282844c1e019f9cb7412db652670",
+      "executable": false
+    },
     ".github/workflows/rer-managed.yml": {
       "sha256": "920dbd1a5899a25ee90866b2cdb6badd20c67ce141bceb3fe7de96fadf0c0a7d",
       "executable": false
@@ -2958,7 +2966,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "e8a42d6f800ad24897459df2d8af1054eb42ac6e5567e1071e396bf7484f86f4",
+      "sha256": "79527184b399aab2060f265edb9ddd1213b4fadf3e3c808489529e129c762c10",
       "executable": false
     },
     "RELEASE.json": {
