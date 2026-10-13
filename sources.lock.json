@@ -8730,7 +8730,7 @@
       "executable": false
     },
     "tests/launch-installed-ai-failures.mjs": {
-      "sha256": "9d0425ef7a11c5f35f5d45342fd60716700f8c63afd19973986ee1798e33ad26",
+      "sha256": "99154f6b0f29fa81f61aa4f23dff57d454e25be534c4be60ff11780068fb1540",
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
