@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "parent": null,
   "edition": "just-every/cradle",
-  "manifest": "d6996d2b942fc451ae20eca760e773abf59382c249d7f10d80e49dee71cedf92",
+  "manifest": "70662076ec8c8caf4fac90976d6eafe93590e1f6436b223d1f99e706f01ec52c",
   "toolchain": {
     "id": "runeditrun/edition-authoring",
     "version": "1.1.0",
@@ -116,20 +116,30 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
           "path": "modules/operator-auth",
           "paths": [
             "README.md",
             "accounts/adapter.mjs",
             "accounts/admin.mjs",
+            "accounts/credentials.mjs",
+            "accounts/editor-owner.mjs",
             "accounts/index.d.mts",
             "accounts/index.mjs",
+            "accounts/native.d.mts",
+            "accounts/native.mjs",
             "accounts/oa.mjs",
+            "accounts/provider-control.mjs",
+            "accounts/provider-pin.mjs",
             "accounts/roles.mjs",
+            "accounts/schema/dependency-setup.sql",
             "accounts/schema/dev-sessions.sql",
             "accounts/schema/domain-rules-step-up.sql",
             "accounts/schema/invitation-cancellation.sql",
             "accounts/schema/operator-auth.sql",
+            "accounts/schema/provider-control.sql",
+            "accounts/schema/provider-pins.sql",
+            "accounts/settings-page.mjs",
             "accounts/store.mjs",
             "branding.mjs",
             "config.mjs",
@@ -138,6 +148,7 @@
             "conformance/index.mjs",
             "conformance/presentation.mjs",
             "crypto.mjs",
+            "dev-admission.d.mts",
             "dev-admission.mjs",
             "dev-gate.mjs",
             "dev/badge.mjs",
@@ -147,12 +158,16 @@
             "dev/sign-in-as.d.mts",
             "dev/sign-in-as.mjs",
             "docs/README.md",
+            "docs/native-accounts.md",
             "docs/tanstack-start.md",
             "docs/vite-spa.md",
             "errors.mjs",
             "http.mjs",
             "identity/admission.mjs",
+            "identity/after-confirm.mjs",
             "identity/email-link/confirmation.mjs",
+            "identity/email-link/index.d.mts",
+            "identity/email-link/index.mjs",
             "identity/email-link/message.mjs",
             "identity/index.d.mts",
             "identity/index.mjs",
@@ -173,10 +188,12 @@
             "index.mjs",
             "input.mjs",
             "local-cli.mjs",
+            "loopback.mjs",
             "page.mjs",
             "policy.mjs",
             "routes.mjs",
             "service.mjs",
+            "signin/index.d.mts",
             "signin/index.mjs"
           ]
         },
@@ -194,6 +211,14 @@
             "originPath": "accounts/admin.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/accounts/credentials.mjs",
+            "originPath": "accounts/credentials.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/editor-owner.mjs",
+            "originPath": "accounts/editor-owner.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/accounts/index.d.mts",
             "originPath": "accounts/index.d.mts"
           },
@@ -202,12 +227,32 @@
             "originPath": "accounts/index.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/accounts/native.d.mts",
+            "originPath": "accounts/native.d.mts"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/native.mjs",
+            "originPath": "accounts/native.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/accounts/oa.mjs",
             "originPath": "accounts/oa.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/accounts/provider-control.mjs",
+            "originPath": "accounts/provider-control.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/provider-pin.mjs",
+            "originPath": "accounts/provider-pin.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/accounts/roles.mjs",
             "originPath": "accounts/roles.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/schema/dependency-setup.sql",
+            "originPath": "accounts/schema/dependency-setup.sql"
           },
           {
             "path": "vendor/base/modules/operator-auth/accounts/schema/dev-sessions.sql",
@@ -224,6 +269,18 @@
           {
             "path": "vendor/base/modules/operator-auth/accounts/schema/operator-auth.sql",
             "originPath": "accounts/schema/operator-auth.sql"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/schema/provider-control.sql",
+            "originPath": "accounts/schema/provider-control.sql"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/schema/provider-pins.sql",
+            "originPath": "accounts/schema/provider-pins.sql"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/settings-page.mjs",
+            "originPath": "accounts/settings-page.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/accounts/store.mjs",
@@ -256,6 +313,10 @@
           {
             "path": "vendor/base/modules/operator-auth/crypto.mjs",
             "originPath": "crypto.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/dev-admission.d.mts",
+            "originPath": "dev-admission.d.mts"
           },
           {
             "path": "vendor/base/modules/operator-auth/dev-admission.mjs",
@@ -294,6 +355,10 @@
             "originPath": "docs/README.md"
           },
           {
+            "path": "vendor/base/modules/operator-auth/docs/native-accounts.md",
+            "originPath": "docs/native-accounts.md"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/docs/tanstack-start.md",
             "originPath": "docs/tanstack-start.md"
           },
@@ -314,8 +379,20 @@
             "originPath": "identity/admission.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/identity/after-confirm.mjs",
+            "originPath": "identity/after-confirm.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/identity/email-link/confirmation.mjs",
             "originPath": "identity/email-link/confirmation.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/identity/email-link/index.d.mts",
+            "originPath": "identity/email-link/index.d.mts"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/identity/email-link/index.mjs",
+            "originPath": "identity/email-link/index.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/identity/email-link/message.mjs",
@@ -398,6 +475,10 @@
             "originPath": "local-cli.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/loopback.mjs",
+            "originPath": "loopback.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/page.mjs",
             "originPath": "page.mjs"
           },
@@ -414,15 +495,19 @@
             "originPath": "service.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/signin/index.d.mts",
+            "originPath": "signin/index.d.mts"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/signin/index.mjs",
             "originPath": "signin/index.mjs"
           }
         ]
       },
       "baseline": {
-        "key": "6094fea25afc39ef25109842a145aa35b7b5202ef87fc2275d019699f535e44e",
-        "digest": "d27a9cac0aa817e470bfa94cf2797d24f8b1a4a3e9609ea9782a25b4644c5508",
-        "sha256": "b8357e6a7b3a3f292e4aaea8723e2c4acd0f07ed1f7571731463278c7f45f9c7"
+        "key": "e9e17f998a9213eef3d53717291af5d64ececb793eec2d753d76ff15bbc1e60e",
+        "digest": "ff26aabc6972975930bfb62b7879549f5bfef7ccca99b3eb024624f1a7985fcd",
+        "sha256": "7c258b292e4c2765484c89e5b51e0847d9dead41fc7d96be0a73fa030ac2af53"
       }
     },
     {
@@ -1911,13 +1996,15 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
           "path": "modules/owner-claim",
           "paths": [
             "README.md",
+            "idp.mjs",
             "index.d.mts",
             "index.mjs",
             "page.mjs",
+            "schema/idp.sql",
             "schema/owner-claim.sql",
             "transaction.mjs",
             "verify.mjs"
@@ -1927,6 +2014,10 @@
           {
             "path": "vendor/base/modules/owner-claim/README.md",
             "originPath": "README.md"
+          },
+          {
+            "path": "vendor/base/modules/owner-claim/idp.mjs",
+            "originPath": "idp.mjs"
           },
           {
             "path": "vendor/base/modules/owner-claim/index.d.mts",
@@ -1939,6 +2030,10 @@
           {
             "path": "vendor/base/modules/owner-claim/page.mjs",
             "originPath": "page.mjs"
+          },
+          {
+            "path": "vendor/base/modules/owner-claim/schema/idp.sql",
+            "originPath": "schema/idp.sql"
           },
           {
             "path": "vendor/base/modules/owner-claim/schema/owner-claim.sql",
@@ -1955,9 +2050,9 @@
         ]
       },
       "baseline": {
-        "key": "372f4bc5555777b1f9557436a48cce68effa06189d3bbca23cb16693b39625f6",
-        "digest": "95b3834343c2cb8801c932670086df2ea3f96bfcb57402abc94b2637b9dac021",
-        "sha256": "7d49ede921b33de863fdff465583a5f94a74d3bf47e072f7bf35dc69a27e0aaa"
+        "key": "304ae86150337bd7c906558e8393e5ca4eb1e9bd35289f9d0a54f333d3b55c90",
+        "digest": "81b287ce77722a001c09e04656879c7b54f3fd53e2d4d56cca44bde3a0d30ce1",
+        "sha256": "abfd92354663eb7f8541607cc881ff2217c8a93e5cb4888d0cc6faca6e0d174d"
       }
     },
     {
@@ -2307,6 +2402,94 @@
         "digest": "10f48f5472d34c82346aa9dba8955542ce32044b0d3f9cf6ed79d24a2425bdd0",
         "sha256": "d582a4c3e065df8dc5f675e2fb802409f3cf91db34a2fe83e79d3b17f5eedccd"
       }
+    },
+    {
+      "id": "runeditrun/base-dependencies",
+      "source": {
+        "kind": "local",
+        "paths": [
+          "vendor/base/modules/dependencies"
+        ],
+        "origin": {
+          "repository": "https://github.com/runeditrun/base.git",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "path": "modules/dependencies",
+          "paths": [
+            "README.md",
+            "approval.mjs",
+            "auth.mjs",
+            "authority.mjs",
+            "crypto.mjs",
+            "index.d.mts",
+            "index.mjs",
+            "logout.mjs",
+            "native.mjs",
+            "protocol.mjs",
+            "schema/approval-attempt.sql",
+            "schema/dependencies.sql",
+            "store.mjs"
+          ]
+        },
+        "mappings": [
+          {
+            "path": "vendor/base/modules/dependencies/README.md",
+            "originPath": "README.md"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/approval.mjs",
+            "originPath": "approval.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/auth.mjs",
+            "originPath": "auth.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/authority.mjs",
+            "originPath": "authority.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/crypto.mjs",
+            "originPath": "crypto.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/index.d.mts",
+            "originPath": "index.d.mts"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/index.mjs",
+            "originPath": "index.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/logout.mjs",
+            "originPath": "logout.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/native.mjs",
+            "originPath": "native.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/protocol.mjs",
+            "originPath": "protocol.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/schema/approval-attempt.sql",
+            "originPath": "schema/approval-attempt.sql"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/schema/dependencies.sql",
+            "originPath": "schema/dependencies.sql"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/store.mjs",
+            "originPath": "store.mjs"
+          }
+        ]
+      },
+      "baseline": {
+        "key": "2f8a0748954f5c91735fffe68da0815876288f09f5964bb08d71e744ef760c9b",
+        "digest": "ac35a5941a786fc5757e82dceb0239a485b4a4c34652724449f34205c26d910b",
+        "sha256": "e2d7218c6f2687981afa1f20059a906f444ee7dea52cd307febf014c6caf42a7"
+      }
     }
   ],
   "files": {
@@ -2539,7 +2722,7 @@
       "executable": false
     },
     "edition.json": {
-      "sha256": "d6996d2b942fc451ae20eca760e773abf59382c249d7f10d80e49dee71cedf92",
+      "sha256": "70662076ec8c8caf4fac90976d6eafe93590e1f6436b223d1f99e706f01ec52c",
       "executable": false
     },
     "HANDOVER.md": {
@@ -2936,6 +3119,10 @@
     },
     "migrations/updates/9025_launch_search_identity.sql": {
       "sha256": "707b8155445abc362dd758fb5137b8f255182106037edcb19ec03de504b375c8",
+      "executable": false
+    },
+    "migrations/updates/9026_provider_setup_lifecycle.sql": {
+      "sha256": "d57ebc779e2db0ad06706db9884d9ee9077ca9ca3ca1a8536e1fd73b9ca9c581",
       "executable": false
     },
     "migrations/updates/9026_schema_proposals.sql": {
@@ -9086,6 +9273,58 @@
       "sha256": "2f5076ef027045b9e0e72df8aa61ca8551e54b1877d531656d6e7985b2c32324",
       "executable": false
     },
+    "vendor/base/modules/dependencies/approval.mjs": {
+      "sha256": "41599909a5a8d5c2b31db98a06d7fbcc3ea47564c9643c9dd8e20062eaebafbd",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/auth.mjs": {
+      "sha256": "57e53a75c99cd1f06fd6a7103f232bd4530c089bf15f17094afe8448e2ceca93",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/authority.mjs": {
+      "sha256": "fe89cd1fb7da306cf145b8ef3ebe160902f4e4a82284681eccb97193c68e8750",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/crypto.mjs": {
+      "sha256": "8dc3397e90b6f8ec1dad81ba68da6e1a5e966ddd8c1b9ace943e964098fea950",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/index.d.mts": {
+      "sha256": "667f8fd42fb7319b5d43c5cced539ad0ad13bfca46887c45b52c1bee19ef7a22",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/index.mjs": {
+      "sha256": "403205efea3e027bfead18c93912275f9aa38471e13796b01481f8286dbf1597",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/logout.mjs": {
+      "sha256": "3bfa236ead120187b96da5f05e94861da682eb8419954a97ac594ff2de49ceb0",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/native.mjs": {
+      "sha256": "746b101f850bbf8ab18070352bb4920e2ab7252978b2594e9b4aa66e021534ce",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/protocol.mjs": {
+      "sha256": "851fedce4fbf2840fd75ace7b0216677d3d9f36cebe885dd39be0902009d2816",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/README.md": {
+      "sha256": "0360447fa552c02ebcd86053fe29dbf9ca386bdaf280012c5ff29a9fc8ef812d",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/schema/approval-attempt.sql": {
+      "sha256": "7d3742369189b69ea28bdc000097f150f83221c6474f7e177c7b5590691b67e9",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/schema/dependencies.sql": {
+      "sha256": "3481d8aef870a9eda153a1617e99bb71a408e61a25dea92bb132efa7dd1c2526",
+      "executable": false
+    },
+    "vendor/base/modules/dependencies/store.mjs": {
+      "sha256": "1d102b080d60634fe28da383c80d32a191b9b99cd94600168d6071ac25f0a606",
+      "executable": false
+    },
     "vendor/base/modules/deploy-kit/artifact.mjs": {
       "sha256": "9122b57c76ccff076101b7d87da36e577fad3c8659c3c3e74fa22efefb516211",
       "executable": false
@@ -10195,27 +10434,55 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/adapter.mjs": {
-      "sha256": "fa6e5590c336221144b759e9001e5faca82f2578fe83dca4b36685f012e4e693",
+      "sha256": "989fca51e86ecc80cb150661b6d6cb8b6a57f82a85eb408d1fa6286a8372a3aa",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/admin.mjs": {
-      "sha256": "5a654d03050565ea61ca4ec39b1f13368c06865288454a9ffe198cbdcdf424a7",
+      "sha256": "ad164e6b03136b67407e6f0b9ac7089dbcad505f65c07ac05c991705e17c69b1",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/credentials.mjs": {
+      "sha256": "da7b4825fd3ec58fd0310083762fdad67a094b407629fe76406f7f8ce11c1517",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/editor-owner.mjs": {
+      "sha256": "ed47e235de1fc52aa4b92e9ab60be5f7fbb07d8f29a5fc3d3c0b3e86702c4da7",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/index.d.mts": {
-      "sha256": "70524ac95bafd50ae5bf195222c5ff933f43ca2def2e98292049aaddc99fc1f8",
+      "sha256": "bea6399182774eaa7a2269aa1575679af98ec5d3340325098edac4aac2445cc0",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/index.mjs": {
-      "sha256": "7891ecd3b9eb9e834358d80edf29eda08f8c7faf3b3752e24f79a4cab09cab42",
+      "sha256": "f6510c4c973812299256c9ecaf5a8e6736f874400eeddf1cba98ae548e754ebd",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/native.d.mts": {
+      "sha256": "ab920e7d3d35119dec57cc80ade5e8e9144e0a7a5c79880dc2b2511c52544051",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/native.mjs": {
+      "sha256": "e1f15e6ef75b90c343af0a491ff45d342fe46ce027fb370eb045e80bf43947ef",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/oa.mjs": {
-      "sha256": "5a195a69c5e1e58c9868790aa98c5b76220c0551f5729f3a6c97a079f099b02d",
+      "sha256": "84508f8c507d12d3df4cd0d683baa8bbd5a3b60522bd08d31cf49ebb92a72aa1",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/provider-control.mjs": {
+      "sha256": "753a21fd66170fb3bfac89a1aa0af3a47e881be53cbcb346696c8ec8a4facb5a",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/provider-pin.mjs": {
+      "sha256": "ebc398d4c8dc573fdc724c3d1a7d790b9b9fbb7e18043eafdc4400ffce84aac6",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/roles.mjs": {
       "sha256": "9c4ab78154db3c38bac35e101b3411afe610c3892f58384a84d9e8516384810e",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/schema/dependency-setup.sql": {
+      "sha256": "7b36f7e1fb0991fe3e808613d911393bbad3386ead06427082c69a48c5738108",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/schema/dev-sessions.sql": {
@@ -10231,19 +10498,31 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/schema/operator-auth.sql": {
-      "sha256": "a3a586a6b095cae80501c3f22fd8df98f4140e0281bc08f3b944c818a977ecde",
+      "sha256": "389e6fc3201a73ab5e7280bbe4fdb793b652b84f157e444bab48cc3c25eb8c41",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/schema/provider-control.sql": {
+      "sha256": "f19cc7a792538a8ff36d87760a3cad58fccab0316984488d1834af14fbf37cfe",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/schema/provider-pins.sql": {
+      "sha256": "f0cfb6b3740869fd098ee449efb25807f8b1ef51c353fd07bafeb00ce38aeb63",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/settings-page.mjs": {
+      "sha256": "3036524d91e838e63654748b6fe0c8671c8590bc6632eb9990fc2b518e1bbcc7",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/store.mjs": {
-      "sha256": "6afbcdc5df41b8483defcbbacf69d086d22a7c880482fe337a0464daeb66fbed",
+      "sha256": "c6ea4f85cc62bbe9c4d0827a99df1051755be5c1a11498f2017534d37e43ad4a",
       "executable": false
     },
     "vendor/base/modules/operator-auth/branding.mjs": {
-      "sha256": "644fb1f1873b77dbae239de2d3d3a9c6e5bf82942b8ad509536eaf8e71e522a7",
+      "sha256": "fc88270b035fcf5a44bbc8383a1939d89742189c4d410c1ca825d9af3e2f85cb",
       "executable": false
     },
     "vendor/base/modules/operator-auth/config.mjs": {
-      "sha256": "0f57f69f3acc16633bf59950c6ead79121623b8cbc9f6883748add089dcc0c9e",
+      "sha256": "2299c5081b0e8731572c34066e4f9421c997f44b8c3ecd85944a54e1e2fda122",
       "executable": false
     },
     "vendor/base/modules/operator-auth/conformance/index.d.mts": {
@@ -10251,7 +10530,7 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/conformance/index.mjs": {
-      "sha256": "a0617178d1f8cc795f1559eb3e213733ee1dd307869cc20d02c544fd6378c0d0",
+      "sha256": "b744282e573caa1a45748f92b76ccfdb608bda506eafb6bda276cc7ad12a4d99",
       "executable": false
     },
     "vendor/base/modules/operator-auth/conformance/presentation.mjs": {
@@ -10259,11 +10538,15 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/conformance/README.md": {
-      "sha256": "8ff3bf82c885df67e19abf1940273d64fb46f1f5765e0e4a27f286b621490e37",
+      "sha256": "62b9e2dea277cd62ba0ddfd0ec9246bab7347de0d6c367971af209dae03163e6",
       "executable": false
     },
     "vendor/base/modules/operator-auth/crypto.mjs": {
       "sha256": "c9a843518d9223ec91698060bacd5a44cd0c4361adaa6b09c05be69f11a828b8",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/dev-admission.d.mts": {
+      "sha256": "4fa20898bba75ecf5a09005fd4ea3ae520f8a43b4b2cca5ecb5069443cd72d1d",
       "executable": false
     },
     "vendor/base/modules/operator-auth/dev-admission.mjs": {
@@ -10271,11 +10554,11 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/dev-gate.mjs": {
-      "sha256": "7b8e04432fe3cd467a113f4568e7fb1dc666043a63f3e4872617f459f794712d",
+      "sha256": "efff8220a192d8def2a9642fa14429958a103c9c887b052882c621a5ca343c54",
       "executable": false
     },
     "vendor/base/modules/operator-auth/dev/badge.mjs": {
-      "sha256": "a21071f5c345fafb0470b606a8afd2ace1a287e4492e085463fa1cba2996ce32",
+      "sha256": "4c020304e411be6d87fcf12e6c84b27385e357ff9b84f45a1ed3a50fdf7dd933",
       "executable": false
     },
     "vendor/base/modules/operator-auth/dev/index.d.mts": {
@@ -10283,7 +10566,7 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/dev/index.mjs": {
-      "sha256": "9df236bfe03ccab9c1d142e64a4de0c83d0cd4f27cf5904d574e228738396e7f",
+      "sha256": "e9882a4a3c4cc75246f29a98d8e3fc251208875c0e31e0e5f32b5715717e289c",
       "executable": false
     },
     "vendor/base/modules/operator-auth/dev/personas.mjs": {
@@ -10296,6 +10579,10 @@
     },
     "vendor/base/modules/operator-auth/dev/sign-in-as.mjs": {
       "sha256": "c41b8030fc95b3fa401976322fb433ad547ff659471d5d5344eb120849e9b34a",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/docs/native-accounts.md": {
+      "sha256": "068f1c664d3e6ac55942f2ea0db5791dd9656b3607b456aacb69c8c8480d701c",
       "executable": false
     },
     "vendor/base/modules/operator-auth/docs/README.md": {
@@ -10315,15 +10602,27 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/http.mjs": {
-      "sha256": "eb95dcb02bc2e2c4729f60727ba7e7a6a4dc9733b533a3e76f205e709bd0201d",
+      "sha256": "caf5ddf8b50070b1339afd6f19e3ef3c73677cc7726a355fbac5cda371f09b53",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/admission.mjs": {
-      "sha256": "ac5d3a81cbe0185447632dbe7b9e417a8507f07c7ec3cccf91f74a32829f8d04",
+      "sha256": "a9247a655bf71c606cb1a9a3eae97202f7e4cde8695252f06ab4dff151e1dd39",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/identity/after-confirm.mjs": {
+      "sha256": "cb43ccb5fdb90ad1739ac581d5deb6b15fd4e490f91a658c06693d7e8f83b2d4",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/email-link/confirmation.mjs": {
       "sha256": "20e3d8e91bb3562801abf762d84e93629c01469b89e646320e232946793e1499",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/identity/email-link/index.d.mts": {
+      "sha256": "0c6209f3f74a0b483f428d5a457b8f9fa60c1ed8249b819f0098603947353f97",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/identity/email-link/index.mjs": {
+      "sha256": "eadf57db13711637de084d763ad4fa2bfcc3c7b5896e33665bb0767112eefb2b",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/email-link/message.mjs": {
@@ -10331,7 +10630,7 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/index.d.mts": {
-      "sha256": "740d93a59ef568ad3b65e85796d4acc3de3b2333cff958eba871be774498deac",
+      "sha256": "5c7b8c2bf70f7a1e57dd53110ab88e4be8a46297d8838405763a3e95870a0b88",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/index.mjs": {
@@ -10343,7 +10642,7 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/config.mjs": {
-      "sha256": "f38385f3f62f43469458f8f47b4175755fe5bb0a53be5dc7bb60d3a74ac67a6f",
+      "sha256": "da65b4a181b68f5cc703af6d9702db9851efe81cfefe25ef9988790f3debac8e",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/crypto.mjs": {
@@ -10355,27 +10654,27 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/index.d.mts": {
-      "sha256": "666be89c22c8c2d825a797aab85f3e7d713266f347c95a9a62774e5b05173fc1",
+      "sha256": "e4b8e2a583daf21e024355c77f5399c0d7184aff69b81cd1266681de05f91922",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/index.mjs": {
-      "sha256": "dcb729ad24fa1d7a793d30493a0a7d086f5628bcc6bad539b5c74193ec546c59",
+      "sha256": "0781a4b6ce711874454fd37432e1a5c961512d95a2f97b6a64fd56746a12d3db",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/jwt.mjs": {
-      "sha256": "92826fa9738aae48c72af86fc7ac0a880f17a399176577d55ba5873b022f5536",
+      "sha256": "b66750270020887f31339122c08ee9a55a7c6057486777e629d18bf7678d8562",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/network.mjs": {
-      "sha256": "ee906ff3b434a2722a53d4650d6beb226d92adb3ce0ebefea504f3970847d684",
+      "sha256": "fabd93891da5a2d90ca6a4a97ea56f5cad07cdb4390aacfe1e9eda8f1ec31130",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/presets.mjs": {
-      "sha256": "5a3b39a1b52f0411801587fe8876b38079b099019f6b6592bf074f7f394b45ed",
+      "sha256": "8fdfa82f855de54cd984ff700a396a2a89c870f724faeaa4f74a6dcd131c240c",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/README.md": {
-      "sha256": "7c2645ff1510458f9d7ef51aa865c8c0da8f26a11bf5f57a339d2d0e0be16f01",
+      "sha256": "21fa1fec41b1d36ecf18ac47f091b9924a1e7e7c8523b848bd159124f1d5cf0e",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/schema/oidc.sql": {
@@ -10383,7 +10682,7 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/oidc/store.mjs": {
-      "sha256": "38324e70569f9da12672d63a02efa31b8e06f55ce6ea5c3e0ba0a024ba6e20ca",
+      "sha256": "9395f0d0a2a7dd23e8ee59c819a65583510a0dbd5c230541751cda121b99a9a3",
       "executable": false
     },
     "vendor/base/modules/operator-auth/identity/principal.mjs": {
@@ -10391,11 +10690,11 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/index.d.mts": {
-      "sha256": "8cc6876b91b09466794b0b197c766188603145b9c2f46617d34ef704035823ea",
+      "sha256": "c119c88904d3a39b6758655757dc68ca370b2c08adf191a66dc4fe8d222692fe",
       "executable": false
     },
     "vendor/base/modules/operator-auth/index.mjs": {
-      "sha256": "85d9d8e3219b72f574f762800767728f9e930788842a9b2fef80fd6fd5564b13",
+      "sha256": "d788203c0e82f4d4e22df8884f592bc9134bdbedaee29bb416f7eee9fc82b0c1",
       "executable": false
     },
     "vendor/base/modules/operator-auth/input.mjs": {
@@ -10404,6 +10703,10 @@
     },
     "vendor/base/modules/operator-auth/local-cli.mjs": {
       "sha256": "b10dafbf33fc4f342e2c3c6db343afd353c3e6264208216a6155d50e71d1f19a",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/loopback.mjs": {
+      "sha256": "13b32a076bce23a3124be1745202c18eda553f298fad3d9f5cb93ac61aee3115",
       "executable": false
     },
     "vendor/base/modules/operator-auth/page.mjs": {
@@ -10415,27 +10718,35 @@
       "executable": false
     },
     "vendor/base/modules/operator-auth/README.md": {
-      "sha256": "d10c23ecc9adc92ddfdd81c3558d6fa9a28f00fae0b637d6ca73fe8051503e58",
+      "sha256": "90ed6b62dd5557e517392ef62837d1059f0c44f701db2bbf205974369c4483e9",
       "executable": false
     },
     "vendor/base/modules/operator-auth/routes.mjs": {
-      "sha256": "ec5e9e22ed541ccc2924da2d411a4b54981af1b8809fcde04187c654bb2f082e",
+      "sha256": "4b8682c89f66fa7e0df4c66554131fbd317f7a7c61272ff576e40e0ee13ece13",
       "executable": false
     },
     "vendor/base/modules/operator-auth/service.mjs": {
-      "sha256": "a367c3d066bfedce2bc373098f5c7738c08545b2d0e36ebc410ef1f80bb1a13e",
+      "sha256": "be4aee5deb9c18101acafe98f896faad0c282a795ccb85a4016e46f4d8d1f584",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/signin/index.d.mts": {
+      "sha256": "220f869fbe7e93a293f6cde24bec0f3fd9639289b7548353b9904b4085f94a6a",
       "executable": false
     },
     "vendor/base/modules/operator-auth/signin/index.mjs": {
       "sha256": "81693b4faae8dbb9ac0662ca51f54855b4ebf043d21df97cf6ec8d5ec2012315",
       "executable": false
     },
+    "vendor/base/modules/owner-claim/idp.mjs": {
+      "sha256": "edb09dfeb0b66849cd84b651099d46c6420d1dc3f270446ae96595d91754d3e6",
+      "executable": false
+    },
     "vendor/base/modules/owner-claim/index.d.mts": {
-      "sha256": "62b73bae51da53154364f046546abc0a31812aa728ff5654ec07f1768979a8f0",
+      "sha256": "33fc8d1b756cb2c0a4317ea4dbc29ae704dd137f76993278859d98ae5e9ad184",
       "executable": false
     },
     "vendor/base/modules/owner-claim/index.mjs": {
-      "sha256": "80d2ca1bafa16e78a524224fb334645e11d4049426c7f9ce7eff013c6ff46cc1",
+      "sha256": "71e4b0f9f967981146dd1daa5f6b14ab30f577adac4901c8e3d47bb8a5a76991",
       "executable": false
     },
     "vendor/base/modules/owner-claim/page.mjs": {
@@ -10446,16 +10757,20 @@
       "sha256": "400d900fbe0981f9e6e27ff40b7913ebb140680bd045167cfb9ddb2a45a4c890",
       "executable": false
     },
+    "vendor/base/modules/owner-claim/schema/idp.sql": {
+      "sha256": "a870102648a2226b18a2fe8168d096389b698af88333d112fa8137e582fc2b33",
+      "executable": false
+    },
     "vendor/base/modules/owner-claim/schema/owner-claim.sql": {
       "sha256": "c3ffe653727bb4867b064dc2489df5013613f08f4b5998d2fe2b6a8485cdb815",
       "executable": false
     },
     "vendor/base/modules/owner-claim/transaction.mjs": {
-      "sha256": "c3198c8ac52e6493a4b39dac55c1021f7c57ccd9b25694ce617f4267f4a0380b",
+      "sha256": "ca36db33042d7778d518b407bd9b403dd4bac82d4b89d81beeb78ed47421cca2",
       "executable": false
     },
     "vendor/base/modules/owner-claim/verify.mjs": {
-      "sha256": "7378d81d2b453d7dea9cecb94f99ccbbbebc4455f02617146f844ed1151f7ad0",
+      "sha256": "a1cc5094a30415c60f739b67ad2eda40750e8d963d199fad45bdd562f7d0248b",
       "executable": false
     },
     "vendor/base/PROVENANCE.json": {

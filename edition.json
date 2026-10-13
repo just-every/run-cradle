@@ -110,20 +110,30 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
           "path": "modules/operator-auth",
           "paths": [
             "README.md",
             "accounts/adapter.mjs",
             "accounts/admin.mjs",
+            "accounts/credentials.mjs",
+            "accounts/editor-owner.mjs",
             "accounts/index.d.mts",
             "accounts/index.mjs",
+            "accounts/native.d.mts",
+            "accounts/native.mjs",
             "accounts/oa.mjs",
+            "accounts/provider-control.mjs",
+            "accounts/provider-pin.mjs",
             "accounts/roles.mjs",
+            "accounts/schema/dependency-setup.sql",
             "accounts/schema/dev-sessions.sql",
             "accounts/schema/domain-rules-step-up.sql",
             "accounts/schema/invitation-cancellation.sql",
             "accounts/schema/operator-auth.sql",
+            "accounts/schema/provider-control.sql",
+            "accounts/schema/provider-pins.sql",
+            "accounts/settings-page.mjs",
             "accounts/store.mjs",
             "branding.mjs",
             "config.mjs",
@@ -132,6 +142,7 @@
             "conformance/index.mjs",
             "conformance/presentation.mjs",
             "crypto.mjs",
+            "dev-admission.d.mts",
             "dev-admission.mjs",
             "dev-gate.mjs",
             "dev/badge.mjs",
@@ -141,12 +152,16 @@
             "dev/sign-in-as.d.mts",
             "dev/sign-in-as.mjs",
             "docs/README.md",
+            "docs/native-accounts.md",
             "docs/tanstack-start.md",
             "docs/vite-spa.md",
             "errors.mjs",
             "http.mjs",
             "identity/admission.mjs",
+            "identity/after-confirm.mjs",
             "identity/email-link/confirmation.mjs",
+            "identity/email-link/index.d.mts",
+            "identity/email-link/index.mjs",
             "identity/email-link/message.mjs",
             "identity/index.d.mts",
             "identity/index.mjs",
@@ -167,10 +182,12 @@
             "index.mjs",
             "input.mjs",
             "local-cli.mjs",
+            "loopback.mjs",
             "page.mjs",
             "policy.mjs",
             "routes.mjs",
             "service.mjs",
+            "signin/index.d.mts",
             "signin/index.mjs"
           ]
         },
@@ -188,6 +205,14 @@
             "originPath": "accounts/admin.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/accounts/credentials.mjs",
+            "originPath": "accounts/credentials.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/editor-owner.mjs",
+            "originPath": "accounts/editor-owner.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/accounts/index.d.mts",
             "originPath": "accounts/index.d.mts"
           },
@@ -196,12 +221,32 @@
             "originPath": "accounts/index.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/accounts/native.d.mts",
+            "originPath": "accounts/native.d.mts"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/native.mjs",
+            "originPath": "accounts/native.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/accounts/oa.mjs",
             "originPath": "accounts/oa.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/accounts/provider-control.mjs",
+            "originPath": "accounts/provider-control.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/provider-pin.mjs",
+            "originPath": "accounts/provider-pin.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/accounts/roles.mjs",
             "originPath": "accounts/roles.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/schema/dependency-setup.sql",
+            "originPath": "accounts/schema/dependency-setup.sql"
           },
           {
             "path": "vendor/base/modules/operator-auth/accounts/schema/dev-sessions.sql",
@@ -218,6 +263,18 @@
           {
             "path": "vendor/base/modules/operator-auth/accounts/schema/operator-auth.sql",
             "originPath": "accounts/schema/operator-auth.sql"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/schema/provider-control.sql",
+            "originPath": "accounts/schema/provider-control.sql"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/schema/provider-pins.sql",
+            "originPath": "accounts/schema/provider-pins.sql"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/settings-page.mjs",
+            "originPath": "accounts/settings-page.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/accounts/store.mjs",
@@ -250,6 +307,10 @@
           {
             "path": "vendor/base/modules/operator-auth/crypto.mjs",
             "originPath": "crypto.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/dev-admission.d.mts",
+            "originPath": "dev-admission.d.mts"
           },
           {
             "path": "vendor/base/modules/operator-auth/dev-admission.mjs",
@@ -288,6 +349,10 @@
             "originPath": "docs/README.md"
           },
           {
+            "path": "vendor/base/modules/operator-auth/docs/native-accounts.md",
+            "originPath": "docs/native-accounts.md"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/docs/tanstack-start.md",
             "originPath": "docs/tanstack-start.md"
           },
@@ -308,8 +373,20 @@
             "originPath": "identity/admission.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/identity/after-confirm.mjs",
+            "originPath": "identity/after-confirm.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/identity/email-link/confirmation.mjs",
             "originPath": "identity/email-link/confirmation.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/identity/email-link/index.d.mts",
+            "originPath": "identity/email-link/index.d.mts"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/identity/email-link/index.mjs",
+            "originPath": "identity/email-link/index.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/identity/email-link/message.mjs",
@@ -392,6 +469,10 @@
             "originPath": "local-cli.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/loopback.mjs",
+            "originPath": "loopback.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/page.mjs",
             "originPath": "page.mjs"
           },
@@ -406,6 +487,10 @@
           {
             "path": "vendor/base/modules/operator-auth/service.mjs",
             "originPath": "service.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/signin/index.d.mts",
+            "originPath": "signin/index.d.mts"
           },
           {
             "path": "vendor/base/modules/operator-auth/signin/index.mjs",
@@ -1885,13 +1970,15 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
           "path": "modules/owner-claim",
           "paths": [
             "README.md",
+            "idp.mjs",
             "index.d.mts",
             "index.mjs",
             "page.mjs",
+            "schema/idp.sql",
             "schema/owner-claim.sql",
             "transaction.mjs",
             "verify.mjs"
@@ -1901,6 +1988,10 @@
           {
             "path": "vendor/base/modules/owner-claim/README.md",
             "originPath": "README.md"
+          },
+          {
+            "path": "vendor/base/modules/owner-claim/idp.mjs",
+            "originPath": "idp.mjs"
           },
           {
             "path": "vendor/base/modules/owner-claim/index.d.mts",
@@ -1913,6 +2004,10 @@
           {
             "path": "vendor/base/modules/owner-claim/page.mjs",
             "originPath": "page.mjs"
+          },
+          {
+            "path": "vendor/base/modules/owner-claim/schema/idp.sql",
+            "originPath": "schema/idp.sql"
           },
           {
             "path": "vendor/base/modules/owner-claim/schema/owner-claim.sql",
@@ -2257,6 +2352,90 @@
           {
             "path": "src/base/theme-frame.ts",
             "originPath": "theme-frame.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "runeditrun/base-dependencies",
+      "role": "module",
+      "source": {
+        "kind": "local",
+        "paths": [
+          "vendor/base/modules/dependencies"
+        ],
+        "origin": {
+          "repository": "https://github.com/runeditrun/base.git",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "path": "modules/dependencies",
+          "paths": [
+            "README.md",
+            "approval.mjs",
+            "auth.mjs",
+            "authority.mjs",
+            "crypto.mjs",
+            "index.d.mts",
+            "index.mjs",
+            "logout.mjs",
+            "native.mjs",
+            "protocol.mjs",
+            "schema/approval-attempt.sql",
+            "schema/dependencies.sql",
+            "store.mjs"
+          ]
+        },
+        "mappings": [
+          {
+            "path": "vendor/base/modules/dependencies/README.md",
+            "originPath": "README.md"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/approval.mjs",
+            "originPath": "approval.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/auth.mjs",
+            "originPath": "auth.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/authority.mjs",
+            "originPath": "authority.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/crypto.mjs",
+            "originPath": "crypto.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/index.d.mts",
+            "originPath": "index.d.mts"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/index.mjs",
+            "originPath": "index.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/logout.mjs",
+            "originPath": "logout.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/native.mjs",
+            "originPath": "native.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/protocol.mjs",
+            "originPath": "protocol.mjs"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/schema/approval-attempt.sql",
+            "originPath": "schema/approval-attempt.sql"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/schema/dependencies.sql",
+            "originPath": "schema/dependencies.sql"
+          },
+          {
+            "path": "vendor/base/modules/dependencies/store.mjs",
+            "originPath": "store.mjs"
           }
         ]
       }
