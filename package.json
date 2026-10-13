@@ -60,7 +60,7 @@
     "test:admission:browser": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-admission-editor.mjs",
     "build:app": "vite build",
     "check:types": "tsc --noEmit",
-    "verify:app": "pnpm build:app && pnpm check:types && pnpm test:smoke && pnpm test:start && pnpm test:integration && pnpm test:domains && pnpm test:repairs && pnpm test:ui && pnpm test:repairs:browser && pnpm test:migration && pnpm test:records && pnpm test:launch && pnpm test:foundation && pnpm test:base && pnpm test:records:release && pnpm test:records:browser && pnpm test:local && pnpm test:dev-identity && pnpm test:launch:walkthrough && pnpm test:recut:browser && pnpm test:records:base-parser && pnpm test:records:base-native && pnpm test:records:base-browser && pnpm test:records:base-exits && pnpm test:records:base-exits-browser && pnpm test:user-automations && pnpm test:user-automations:browser && pnpm test:admission && pnpm test:admission:browser && pnpm test:contract && node tests/rer-data-roundtrip.mjs",
+    "verify:app": "pnpm build:app && pnpm check:types && pnpm test:smoke && pnpm test:start && pnpm test:integration && pnpm test:domains && pnpm test:lifecycle-erasure && pnpm test:execution-resolution && pnpm test:execution-resolution:browser && pnpm test:repairs && pnpm test:ui && pnpm test:repairs:browser && pnpm test:migration && pnpm test:records && pnpm test:launch && pnpm test:foundation && pnpm test:base && pnpm test:records:release && pnpm test:records:browser && pnpm test:local && pnpm test:dev-identity && pnpm test:launch:walkthrough && pnpm test:recut:browser && pnpm test:records:base-parser && pnpm test:records:base-native && pnpm test:records:base-browser && pnpm test:records:base-exits && pnpm test:records:base-exits-browser && pnpm test:user-automations && pnpm test:user-automations:browser && pnpm test:admission && pnpm test:admission:browser && pnpm test:contract && node tests/rer-data-roundtrip.mjs",
     "reset": "rer reset",
     "export": "rer export",
     "import": "rer import",
@@ -70,7 +70,10 @@
     "describe": "rer describe",
     "deps": "rer install",
     "rer": "rer",
-    "test:contract": "rer check --profile first-party"
+    "test:contract": "rer check --profile first-party",
+    "test:execution-resolution": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/execution-resolution.mjs",
+    "test:execution-resolution:browser": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-execution-resolution-browser.mjs",
+    "test:lifecycle-erasure": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/lifecycle-erasure.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

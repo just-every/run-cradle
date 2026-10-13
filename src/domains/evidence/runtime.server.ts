@@ -11,7 +11,7 @@ import {createSourceService} from './source.server';
 import {createFileService} from './files.server';
 import {createLineageService} from './lineage.server';
 import {createRecordContextService} from './record-context.server';
-import {createSourceStaging,STAGING_FILES,STAGING_TEXT,STAGING_ENTITY} from './staging.server';
+import {createSourceStaging} from './staging.server';
 import {createClaimService} from './claims.server';
 import {createProposalService} from './proposals.server';
 import {createExtractionService,type ExtractionEvaluation} from './extraction.server';
@@ -45,7 +45,6 @@ export function createEvidenceRuntime(deps:EvidenceDependencies,ports:EvidenceRu
  async function imports(ctx:RequestContext,appId:string,entityId:string,mergeFieldIds:string[]){const descriptor=ports.registry.get(appId,entityId),adapter=descriptor.legacy?await ports.legacyImportAdapter(ctx,descriptor):createRecordImportAdapter(deps.db,descriptor,deps.policy,ports.records.writer,mergeFieldIds,ports.records.reader);return createImportService(deps.db,deps.policy,deps.admission,adapter);}
  async function importByPreview(ctx:RequestContext,id:string){const p=await deps.db.prepare('SELECT app_id,entity_id,preview_json FROM portability_previews WHERE id=? AND actor_id=?').bind(id,ctx.principal.id).first<{app_id:string;entity_id:string;preview_json:string}>();if(!p)throw new Error('Preview not found');return imports(ctx,p.app_id,p.entity_id,JSON.parse(p.preview_json).mergeFieldIds??[]);}
  const archive=(ctx:RequestContext)=>createArchiveService(deps.db,deps.bucket,ports.archivePolicy(ctx),{policy:deps.policy,admission:deps.admission});
- const resolveCapture:EvidenceHttpDependencies['resolveCapture']=async(ctx,appId,subject,kind)=>{if(subject?.entityId===STAGING_ENTITY){if(subject.appId!==appId)throw new Error('Staging app differs');const fieldIds=kind==='file'?[STAGING_FILES]:[STAGING_FILES,STAGING_TEXT];await deps.access.prepareWrite(ctx,subject,fieldIds,kind==='file'?'upload':'capture');return{subject,fieldIds};}return ports.resolveBusinessCapture(ctx,appId,subject,kind);};
- const http=createEvidenceHttp({...deps,cursorSecret:ports.cursorSecret,authenticate:ports.authenticate,resolveCapture}),historyHttp=createEvidenceHistoryHttp({...deps,authenticate:ports.authenticate,audit:ports.audit,cursorSecret:ports.cursorSecret}),portabilityHttp=createPortabilityHttp({authenticate:ports.authenticate,archive,files,imports,importByPreview,deleteImport,preview:async(ctx,id)=>(await importByPreview(ctx,id)).readPreview(ctx,id)});
+ const http=createEvidenceHttp({...deps,cursorSecret:ports.cursorSecret,authenticate:ports.authenticate,resolveCapture:ports.resolveBusinessCapture}),historyHttp=createEvidenceHistoryHttp({...deps,authenticate:ports.authenticate,audit:ports.audit,cursorSecret:ports.cursorSecret}),portabilityHttp=createPortabilityHttp({authenticate:ports.authenticate,archive,files,imports,importByPreview,deleteImport,preview:async(ctx,id)=>(await importByPreview(ctx,id)).readPreview(ctx,id)});
  return{sources,files,lineage,recordContexts,staging,claims,proposals,extraction,comments,reader,evidence,detail,attachments,erasure,maintain,deleteImport,imports,importByPreview,archive,http,historyHttp,portabilityHttp};
 }

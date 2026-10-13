@@ -11,6 +11,9 @@ export async function eraseReversalEvidence(context: D1ImportContext, changedPla
   const {results:jobs}=await db.prepare("SELECT * FROM ik_jobs WHERE destination=? AND reversal_policy='preserve-conflicts' AND EXISTS(SELECT 1 FROM ik_d1_reversal_reports r WHERE r.job_id=ik_jobs.id)").bind(context.destination).all();
   const before=[guard(sql("(SELECT count(*) FROM ik_jobs j WHERE j.destination=? AND j.reversal_policy='preserve-conflicts' AND EXISTS(SELECT 1 FROM ik_d1_reversal_reports r WHERE r.job_id=j.id))=?",context.destination,jobs.length))],after:D1Sql[]=[];
   for(const raw of jobs){
+    // Cradle divergence: unrelated jobs must retain report bytes and undo exactly.
+    // Closure selects every affected source job in changedPlans before this call.
+    if(!changedPlans.has(raw.id))continue;
     const plan=(await loadPlans([raw],db,context.storage.targets.planCodec)).get(raw.id)!;
     const report=await eraseReport(raw,plan,changedPlans.get(raw.id)??plan,context);
     before.push(...report.before);after.push(...report.after);

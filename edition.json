@@ -882,7 +882,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
           "path": "modules/import-kit",
           "paths": [
             "CONTRACT.md",
@@ -918,6 +918,7 @@
             "src/d1/erasure-fragments.ts",
             "src/d1/erasure-index.ts",
             "src/d1/erasure-pages.ts",
+            "src/d1/erasure-related.ts",
             "src/d1/erasure-report.ts",
             "src/d1/erasure-schema.ts",
             "src/d1/erasure-snapshot.ts",
@@ -926,6 +927,7 @@
             "src/d1/erasure.ts",
             "src/d1/evolutions/0001-preserved-undo.ts",
             "src/d1/expected-state.ts",
+            "src/d1/field-redaction.ts",
             "src/d1/guards.ts",
             "src/d1/history.ts",
             "src/d1/index.ts",
@@ -958,7 +960,14 @@
             "src/d1/published-stream.ts",
             "src/d1/read-fence.ts",
             "src/d1/read-results.ts",
+            "src/d1/redacted-custody.ts",
             "src/d1/retained-values.ts",
+            "src/d1/retirement-schema.ts",
+            "src/d1/retirement-scope.ts",
+            "src/d1/retirement-tally.ts",
+            "src/d1/retirement.ts",
+            "src/d1/reversal-fence-schema.ts",
+            "src/d1/reversal-fence.ts",
             "src/d1/reverse.ts",
             "src/d1/reviewed-source.ts",
             "src/d1/sets.ts",
@@ -1175,6 +1184,10 @@
             "originPath": "src/d1/erasure-pages.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/d1/erasure-related.ts",
+            "originPath": "src/d1/erasure-related.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/d1/erasure-report.ts",
             "originPath": "src/d1/erasure-report.ts"
           },
@@ -1205,6 +1218,10 @@
           {
             "path": "vendor/base/modules/import-kit/src/d1/expected-state.ts",
             "originPath": "src/d1/expected-state.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/field-redaction.ts",
+            "originPath": "src/d1/field-redaction.ts"
           },
           {
             "path": "vendor/base/modules/import-kit/src/d1/guards.ts",
@@ -1335,8 +1352,36 @@
             "originPath": "src/d1/read-results.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/d1/redacted-custody.ts",
+            "originPath": "src/d1/redacted-custody.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/d1/retained-values.ts",
             "originPath": "src/d1/retained-values.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/retirement-schema.ts",
+            "originPath": "src/d1/retirement-schema.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/retirement-scope.ts",
+            "originPath": "src/d1/retirement-scope.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/retirement-tally.ts",
+            "originPath": "src/d1/retirement-tally.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/retirement.ts",
+            "originPath": "src/d1/retirement.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/reversal-fence-schema.ts",
+            "originPath": "src/d1/reversal-fence-schema.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/reversal-fence.ts",
+            "originPath": "src/d1/reversal-fence.ts"
           },
           {
             "path": "vendor/base/modules/import-kit/src/d1/reverse.ts",
