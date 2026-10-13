@@ -7990,7 +7990,7 @@
       "executable": false
     },
     "tests/helpers/launch-installed.mjs": {
-      "sha256": "0b80dc9c147a9143ee7f8c1de275c7ecb7e47d45d186a4d063c8f30f8382926f",
+      "sha256": "5027bbf4257bd94f9604a22981700e053dc7f4d27f09d7f5de273f1559f1c7be",
       "executable": false
     },
     "tests/helpers/launch-search-corpus.mjs": {
