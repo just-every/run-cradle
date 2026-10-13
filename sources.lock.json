@@ -2362,7 +2362,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "64ad76d854a59561508c721a0c1c03200b2fcaa6f88b79e38288f352d7621a64",
+      "sha256": "cba781c3c90306de39a2685c03b1be0e1c09fd41bef92611a9279dd37444be7e",
       "executable": false
     },
     "deploy-site.json": {
@@ -2438,7 +2438,7 @@
       "executable": false
     },
     "docs/launch-runtime.md": {
-      "sha256": "d20b643380411e3c09b24cdd99a7673844b57452ebe5c7831d3051606632bd41",
+      "sha256": "cdf8d95ab30bd5512e88cfa37c3211df386b22ccb134208fc1da6b976dbe8273",
       "executable": false
     },
     "docs/leaving-cradle.md": {
@@ -2970,7 +2970,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "6704981f63deb82001f7370864ac8aef7a2c5ecf50ab46cf61cac0e614c23812",
+      "sha256": "fa7e08e32f1c7c54e45d7106af1cf74016a71b75817050a7f9ab07a0cbc45697",
       "executable": false
     },
     "rer-project.json": {
@@ -3506,7 +3506,7 @@
       "executable": false
     },
     "src/apps/launch/source-release.server.ts": {
-      "sha256": "3aaebc0d733b464b7135666f2a69de7dbaaa5a8a06ef2c1e2dddc8014dd4d8a9",
+      "sha256": "bb0d86699af01286da89f38702d35cca91430500569af4a2778a9571a0b69d66",
       "executable": false
     },
     "src/apps/launch/sql-bindings.server.ts": {
