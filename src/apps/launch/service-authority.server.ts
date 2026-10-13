@@ -47,15 +47,15 @@ export function createLegacyAutomationAuthority(base:LaunchContext,clock=()=>new
  }
  const permit=(ctx:RequestContext,action:string,guards:SqlPredicate[]):AuthorityPermit=>({actor:{id:actorId,kind:'system'},action,appId:LAUNCH_APP_ID,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards,reservationMutations:[],reservationIds:[]})
  const authority:LegacyAutomationPorts['authority']=async(ctx,input)=>permit(ctx,input.action,await verify(ctx,input.run,input.action==='launch.automation.trigger'))
- const context:LegacyAutomationPorts['context']=async(ctx,run)=>{
+ const context:LegacyAutomationPorts['context']=async(ctx,run,subjectId)=>{
   await verify(ctx,run)
   if(!run.definition.shipped_key){
    const policy:PolicyPort={async scope(inner,request){await verify(inner,run);const source=await automationDelegation(base,inner,run);return base.policy.scope(source.human,request)},async authorize(inner,request){await verify(inner,run);const source=await automationDelegation(base,inner,run),approved=await base.policy.authorize(source.human,request);return{...approved,actor:{id:actorId,kind:'system'},guards:[...source.guards,...approved.guards],validUntil:inner.principal.expiresAt}}}
    return{...base,policy}
   }
   if(run.definition.shipped_key==='campaign-brief'){
-   if(run.subjectIds.length!==1)return denied('A campaign brief requires one campaign')
-   const policy:PolicyPort={async scope(inner,request){await verify(inner,run);return campaignOwnerScope(base.db,inner,run.subjectIds[0]!,request.entityId,request.purpose)},async authorize(inner,request){if(request.appId!==LAUNCH_APP_ID||request.action!=='launch.analysis.request'||request.cost.length)return denied('Brief capability is read-only');const scope=await campaignOwnerScope(base.db,inner,run.subjectIds[0]!,launchEntities.campaign,'provider_context');return permit(inner,request.action,[...await verify(inner,run),...scope.currentAuthorityGuards])}}
+   const campaignId=subjectId??run.subjectIds[0];if(!campaignId||!run.subjectIds.includes(campaignId))return denied('A campaign brief requires its saved campaign')
+   const policy:PolicyPort={async scope(inner,request){await verify(inner,run);return campaignOwnerScope(base.db,inner,campaignId,request.entityId,request.purpose)},async authorize(inner,request){if(request.appId!==LAUNCH_APP_ID||request.action!=='launch.analysis.request'||request.cost.length)return denied('Brief capability is read-only');const scope=await campaignOwnerScope(base.db,inner,campaignId,launchEntities.campaign,'provider_context');return permit(inner,request.action,[...await verify(inner,run),...scope.currentAuthorityGuards])}}
    return{...base,policy}
   }
   const policy:PolicyPort={async authorize(inner,request){const guards=[...await verify(inner,run),...await retainedRiskWriteGuards(base.db,inner,run,request)];return permit(inner,request.action,guards)},async scope(){return denied('Retained deterministic capability cannot read provider context or other records')}}

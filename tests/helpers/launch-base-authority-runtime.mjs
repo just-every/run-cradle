@@ -13,7 +13,7 @@ import {completeFirstRun} from './complete-first-run.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
-export async function launchBaseAuthorityRuntime({providerFetch,configuration={}}={}) {
+export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues=true}={}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-base-'))
   let port = Number(process.env.CRADLE_BASE_AUTHORITY_PORT ?? 0)
   const bindings = { ...productionBindings, APP_ORIGIN: 'https://cradle.authority.test', OWNER_EMAIL: 'owner@example.test', MAIL_PROVIDER: 'sendgrid', SESSION_SECRET: 'synthetic-base-authority-session-secret', SETUP_TOKEN: 'synthetic-base-authority-bootstrap-secret',...configuration }
@@ -35,7 +35,7 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     const optionsFor = changes => {
       const current = { ...options.bindings, ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, modules, modulesRoot, bindings: current, outboundService: async request => {
+      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...automaticQueues?{}:{queueConsumers:{}}, modules, modulesRoot, bindings: current, outboundService: async request => {
         if(providerFetch)return providerFetch(request)
         assert.equal(request.url, 'https://api.sendgrid.com/v3/mail/send', 'Only the selected test mail provider may be contacted')
         deliveries.push(await request.json())

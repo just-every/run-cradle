@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict'
+import {launchBaseAuthorityRuntime} from './launch-base-authority-runtime.mjs'
+const {createUlid}=await import('../../src/core/shared/ids.ts')
+const {LAUNCH_APP_ID:appId}=await import('../../src/apps/launch/contracts.ts')
+export async function setup(options){const h=await launchBaseAuthorityRuntime(options),owner=await h.bootstrap(),csrf=await h.request('/auth/csrf',{headers:{cookie:owner.cookie}}),token=(await csrf.json()).csrfToken;return Object.assign(h,{owner,async command(action,input,expected=[],status=200){const response=await h.post('/api/v1/commands/'+action,{commandId:createUlid(),input,expected},{cookie:owner.cookie,'x-csrf-token':token});assert.equal(response.status,status,await response.clone().text());return response.json()},async read(path){const response=await h.request(path,{headers:{cookie:owner.cookie}});assert.equal(response.status,200,await response.clone().text());return response.json()},async tick(at=Date.now()){return(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at})}})}
+export const value=response=>response.data.value
+export async function campaign(h,code='WORK'){const operator=(await h.db.prepare('SELECT human_id FROM authority_principals WHERE id=?').bind(h.owner.owner).first()).human_id;return value(await h.command('launch.campaign.create',{fields:{code,name:'Launch '+code,ownerId:operator,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Launch safely',statusSummary:'Manual',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}}))}
+export async function waitFor(read,predicate){for(let n=0;n<40;n++){const result=await read();if(predicate(result))return result;await new Promise(r=>setTimeout(r,200))}assert.fail('Committed work did not finish within eight seconds')}
+export const expected=(entity,row)=>[{ref:{appId,entityId:entity,recordId:row.id},version:row.version}]
+

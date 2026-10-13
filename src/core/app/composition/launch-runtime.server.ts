@@ -37,12 +37,12 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
  const automation=createLegacyAutomationRuntime(context,foundation.admission,{releaseId:context.releaseId??'',authority:service.authority,context:service.context,async external(ctx,input){
   if(input.action==='digest'&&input.run.definition.shipped_key==='weekly-digest')return{...await schedules.digest(ctx,project),state:'Complete',result:{delivered:'weekly-digest'} as Json,outbox:[]}
   if(input.action!=='request-ai-analysis')return customEffects(ctx,input)
-  const scoped=await service.context(ctx,input.run)
   for(const campaignId of input.run.subjectIds){
+   const scoped=await service.context(ctx,input.run,campaignId)
    const id=(await canonicalHash({key:input.idempotencyKey,campaignId})).slice(0,26).toUpperCase(),old=await db.prepare('SELECT state,error_code,error_message FROM launch_analysis_requests WHERE id=?').bind(id).first<{state:string;error_code:string|null;error_message:string|null}>()
    if(old?.state==='Complete')continue
    if(old?.state==='Failed')throw new ApiError('provider_unavailable',old.error_message??'Analysis failed')
-   if(!old){const p=await prepareAnalysisRequest(scoped,ctx,{commandId:id,expected:[],input:{...(input.run.definition.shipped_key==='campaign-brief'?{feature:'campaign-brief',campaignId}:input.input as Record<string,unknown>)}},release());p.outbox=[];await foundation.admission.commit(ctx,p)}
+   if(!old){const p=await prepareAnalysisRequest(scoped,ctx,{commandId:id,expected:[],input:{...(input.run.definition.shipped_key==='campaign-brief'?{feature:'campaign-brief',campaignId}:{feature:'campaign-brief',...input.input as Record<string,unknown>})}},release());p.outbox=[];await foundation.admission.commit(ctx,p)}
    await executeAnalysis(id,{ctx,context:scoped as typeof context})
   }
   return{guards:[],mutations:[],outbox:[],state:'Complete',result:{analyses:input.run.subjectIds.length} as Json}
