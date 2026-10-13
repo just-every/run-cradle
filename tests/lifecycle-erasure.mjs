@@ -4,7 +4,7 @@ import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {contract} from './contract.mjs'
 import {fixture,identity,control} from './helpers/lifecycle-erasure-fixture.mjs'
-import {compressedPdf,encodedText} from './helpers/erasure-attachments.mjs'
+import {compressedPdf,encodedText,gzipMetadata} from './helpers/erasure-attachments.mjs'
 import {beginStage} from '../vendor/base/modules/import-kit/src/d1/staging-lifecycle.ts'
 import {stored} from '../vendor/base/modules/import-kit/src/d1/jobs.ts'
 import {createNativeImportTarget} from '../src/domains/records/base-transfer/target.server.ts'
@@ -50,14 +50,16 @@ contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decode
   const version=(await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(h.person).first()).version
   const content=identity.name+' '+identity.email
   const personal=[await h.file(compressedPdf(content),{key:'private/'+identity.email+'/attachment.pdf'}),await h.file(encodedText(content,'gzip'),{type:'text/plain',encoding:'gzip'}),await h.file(encodedText(content,'deflate'),{type:'text/plain',encoding:'deflate'})]
+  for(const [bytes,encoding] of [[gzipMetadata('innocent',{name:content}),'gzip'],[Buffer.concat([encodedText('first ','gzip'),gzipMetadata('innocent',{comment:content})]),'gzip'],[gzipMetadata(encodedText('innocent','gzip'),{comment:content}),'gzip,gzip'],[encodedText(gzipMetadata('innocent',{name:content}),'deflate'),'gzip,deflate']])personal.push(await h.file(bytes,{type:'text/plain',encoding}))
   const other=await h.file(compressedPdf(control.name+' '+control.email),{owner:h.owner})
+  const otherGzip=await h.file(gzipMetadata('innocent',{name:control.name,comment:control.email}),{owner:h.owner,type:'text/plain',encoding:'gzip'}),cleanGzip=h.bucket.snapshot().filter(([key])=>key===otherGzip.key)
   const cleanFiles=h.bucket.snapshot().filter(([key])=>key===other.key),cleanRows=JSON.stringify((await h.db.prepare('SELECT * FROM "'+unrelated.table+'" ORDER BY id').all()).results)
   const cleanCustody=()=>JSON.stringify(h.sql.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name GLOB 'ik_*' ORDER BY name").all().flatMap(({name})=>{const cols=h.sql.prepare('PRAGMA table_info("'+name+'")').all().map(c=>c.name);const field=cols.includes('job_id')?'job_id':name==='ik_jobs'?'id':null;return field?[[name,h.sql.prepare('SELECT * FROM "'+name+'" WHERE "'+field+'"=?').all(unrelated.job.id)]]:[]}))
   const beforeIdentity=await custodyMatches(h,[identity.name,identity.email]);assert.ok(beforeIdentity.matches>0)
   const beforeClean=cleanCustody(),erase=()=>h.send('erase',{appId},version)
   // Opaque, corrupt and unknown encodings are explicit failures, with zero native
   // or custody mutation. The owner resolves only these temporary fixture objects.
-  for(const [bytes,type,encoding] of [[Buffer.from([0,255,1]),'application/octet-stream'],[compressedPdf(content,'LZWDecode'),'application/pdf'],[Buffer.from([0xff,0xfe,0]),'text/plain'],[Buffer.from('not gzip'),'text/plain','gzip'],[Buffer.from(content),'text/plain','br']]){
+  for(const [bytes,type,encoding] of [[Buffer.from([0,255,1]),'application/octet-stream'],[compressedPdf(content,'LZWDecode'),'application/pdf'],[Buffer.from([0xff,0xfe,0]),'text/plain'],[Buffer.from('not gzip'),'text/plain','gzip'],[Buffer.from(content),'text/plain','br'],[gzipMetadata('innocent',{extra:Buffer.from(content)}),'text/plain','gzip'],[encodedText(Buffer.concat([encodedText('first ','gzip'),gzipMetadata('innocent',{extra:Buffer.from(content)})]),'gzip'),'text/plain','gzip,gzip']]){
    const bad=await h.file(bytes,{type,encoding}),before=h.snapshot(),objects=h.bucket.snapshot(),response=await erase()
    assert.equal(response.status,409,await response.clone().text());assert.match((await response.json()).error.message,/cannot inspect/)
    assert.equal(h.snapshot(),before,'Refusal changes no native/custody/checkpoint row');assert.deepEqual(h.bucket.snapshot(),objects)
@@ -115,6 +117,7 @@ contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decode
   assert.equal((await h.resumeErasure()).status,200);assert.equal(h.sql.prepare('SELECT epoch FROM rer_portability_state').get().epoch,finalEpoch,'Completed receipt replay cannot advance the checkpoint or invalidate a new transfer');assert.equal((await portability.exports.status(postCompletion)).phase,'building');await portability.exports.abort(postCompletion)
   for(const file of personal)assert.equal(await h.bucket.head(file.key),null)
   assert.deepEqual(h.bucket.snapshot().filter(([key])=>key===other.key),cleanFiles,'Unrelated compressed PDF bytes and metadata remain exact')
+  assert.deepEqual(h.bucket.snapshot().filter(([key])=>key===otherGzip.key),cleanGzip,'Unrelated gzip header, payload and object metadata remain exact')
   assert.equal(JSON.stringify((await h.db.prepare('SELECT * FROM "'+unrelated.table+'" ORDER BY id').all()).results),cleanRows)
   assert.equal(peerBytes(),beforePeer,'Same-destination unrelated reversal report stays byte-identical');assert.equal((await peer.undo()).state,'undone')
   const afterIdentity=await custodyMatches(h,[identity.name,identity.email]);assert.deepEqual(afterIdentity,{matches:0,stores:[]});console.log('ERASURE_IDENTITY_MATCHES '+JSON.stringify({before:beforeIdentity,after:afterIdentity}))

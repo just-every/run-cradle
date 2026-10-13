@@ -17,7 +17,11 @@ checkpoint in the native transaction, even if no installation transfer has run.
 
 Attachment inspection decodes complete gzip and zlib deflate payloads with a
 32 MiB expansion limit and fatal UTF-8 decoding for textual files; CSV cells are
-parsed with the production CSV parser. PDF inspection admits a bounded text-only
+parsed with the production CSV parser. Gzip inspection includes every concatenated
+member's filename and comment, including nested content encodings, using Latin-1
+and lossless UTF-8 where valid. Gzip envelopes over 32 MiB, opaque extra fields,
+reserved flags, corrupt header/payload checksums and trailing bytes refuse before
+mutation. PDF inspection admits a bounded text-only
 subset of PDF 1.0–1.7: classic cross-reference tables, standard Helvetica/Courier/
 Times Type1 fonts, plain or Flate content streams, and text metadata. It parses
 escaped dictionary names, comments, and literal/hex/octal strings structurally;

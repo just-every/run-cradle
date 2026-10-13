@@ -2694,7 +2694,7 @@
       "executable": false
     },
     "docs/privacy/operator-erasure.md": {
-      "sha256": "32ebee885cb8d8f438bb0c8adba9961b8386281f6b2189d7224f4d3a1da1b2da",
+      "sha256": "2bae7c38f42aba50d87ea82572bc93136c98efc8ac9f7323067b72a90fa5cefe",
       "executable": false
     },
     "docs/research.md": {
@@ -6066,7 +6066,7 @@
       "executable": false
     },
     "src/domains/lifecycle/attachment-text.server.ts": {
-      "sha256": "cbf1333fdb65866a53add38d47caf166b1d826900282b3cb4d253618652708f7",
+      "sha256": "35a7bb418d06702f6e406776282d6e4654370f8d6f347f19bda0eaff2ece678d",
       "executable": false
     },
     "src/domains/lifecycle/campaign-history.server.ts": {
@@ -6091,6 +6091,10 @@
     },
     "src/domains/lifecycle/finish-member-erasure.server.ts": {
       "sha256": "c1c64eeaf6844c66d7f1c9b1f48fabfa1a1724d41b693f62b2d88cff7e2fcee9",
+      "executable": false
+    },
+    "src/domains/lifecycle/gzip-text.server.ts": {
+      "sha256": "f0373aa645bd17394a00d6827dc992dcacbe633293d3c8d6efdc5b8d47545ae6",
       "executable": false
     },
     "src/domains/lifecycle/identity-match.ts": {
@@ -8214,7 +8218,7 @@
       "executable": false
     },
     "tests/helpers/erasure-attachments.mjs": {
-      "sha256": "d48f87abb342e6f11df9a07148625e938f9f5bc3f8368e0ee6458e00fd95bbfe",
+      "sha256": "6a5d9b701c75582876ea31094d641f250d9c8cf47613156911966f722b5af06f",
       "executable": false
     },
     "tests/helpers/erasure-checkpoint.mjs": {
@@ -8474,7 +8478,7 @@
       "executable": false
     },
     "tests/helpers/rer-erasure-archive.mjs": {
-      "sha256": "1462bdf7234dc417c08a1b9f3c0a1405cb62489ed88633a913aacde823a21199",
+      "sha256": "4792a2abafca76bae6aebd3c8a867c84182ed0aee9fcb59985c1c6ff1a31b79e",
       "executable": false
     },
     "tests/helpers/rer-erasure-race.mjs": {
@@ -8510,7 +8514,7 @@
       "executable": false
     },
     "tests/helpers/rer-source-erasure.mjs": {
-      "sha256": "4217138e43ff86346b89268ad33fd2f6a6fea8eb77a313eb9ea41d36b22a539f",
+      "sha256": "8d704b2dc06b8cd806c484ce0186b2baacad9e432848bdb4fe25435b7a575e2e",
       "executable": false
     },
     "tests/helpers/rer-source-records.mjs": {
@@ -8730,7 +8734,7 @@
       "executable": false
     },
     "tests/lifecycle-erasure.mjs": {
-      "sha256": "31b10933df0703549ace1b6d31b5b471027e6ceaf4c3c78f3fdac304da26413c",
+      "sha256": "14e36f55bc6c9a2841b8307770464030ac0eaadde99579974a6d435d85b24810",
       "executable": false
     },
     "tests/local-auth-runtime.mjs": {
@@ -9174,7 +9178,7 @@
       "executable": false
     },
     "tests/rer-data-roundtrip.mjs": {
-      "sha256": "fad9e6d0e85c03723759fbb3e213970e4f828a88358b141f4ac748a9c082e86a",
+      "sha256": "c32ecbb1c32e72b0a0cd637d4c943f5489982fc8495d82a70ef9aef40f752bc2",
       "executable": false
     },
     "tests/runtime-configuration.mjs": {

@@ -17,3 +17,10 @@ export function objectBucket(){
  return {objects,async put(key,bytes,metadata={}){objects.set(key,{bytes:Buffer.from(typeof bytes==='string'?new TextEncoder().encode(bytes):bytes),httpMetadata:metadata.httpMetadata??{},customMetadata:metadata.customMetadata??{}})},async get(key,options){const v=objects.get(key);return v?body(key,v,options?.range):null},async head(key){const v=objects.get(key);return v?body(key,v):null},async list(){return {objects:[...objects].map(([key,v])=>body(key,v)),truncated:false}},async delete(key){for(const k of Array.isArray(key)?key:[key])objects.delete(k)},snapshot(){return [...objects].map(([key,v])=>[key,v.bytes.toString('base64'),v.httpMetadata,v.customMetadata]).sort()}}
 }
 export const encodedText=(text,encoding)=>encoding==='gzip'?gzipSync(Buffer.from(text)):deflateSync(Buffer.from(text))
+/** Real gzip optional fields; payload stays independent of envelope identity. */
+export function gzipMetadata(body,{name,comment,extra}={}){
+ const member=gzipSync(Buffer.from(body)),header=Buffer.from(member.subarray(0,10)),fields=[]
+ if(extra){header[3]|=4;const field=Buffer.alloc(6);field.writeUInt16LE(extra.length+4);field.write('PI',2);field.writeUInt16LE(extra.length,4);fields.push(field,extra)}
+ for(const [flag,value] of [[8,name],[16,comment]])if(value!==undefined){header[3]|=flag;fields.push(Buffer.from(value),Buffer.from([0]))}
+ return Buffer.concat([header,...fields,member.subarray(10)])
+}

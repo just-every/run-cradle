@@ -120,12 +120,23 @@ export async function capturePersonalArchive(copy,identity){
   const entry=records[0].objects.find(object=>object.key===key);assert.ok(entry,'Personal FILES object is archived')
   const bytes=Buffer.concat(items.filter(item=>item.kind==='object'&&item.key===key).sort((a,b)=>a.offset-b.offset).map(item=>Buffer.from(item.data,'base64')))
   assert.equal(bytes.length,entry.size)
+  if(index>=4){
+   let payload=bytes,headerIdentity=false
+   for(const encoding of entry.httpMetadata.contentEncoding.split(',').reverse()){
+    assert.equal(encoding,'gzip')
+    headerIdentity ||= payload.includes(Buffer.from(erasedName))&&payload.includes(Buffer.from(erasedEmail))
+    payload=gunzipSync(payload)
+   }
+   assert.equal(payload.toString('utf8'),'innocent header fixture','Header-only canary has no personal decoded payload')
+   assert.ok(headerIdentity,'Archived gzip envelope retains both personal metadata canaries')
+   continue
+  }
   let text
   if(index===1){const start=bytes.indexOf(Buffer.from('stream\n'))+7,end=bytes.indexOf(Buffer.from('\nendstream'),start);assert.ok(start>=7&&end>start);text=inflateSync(bytes.subarray(start,end)).toString('utf8')}
   else text=(index===2?gunzipSync(bytes):index===3?inflateSync(bytes):bytes).toString('utf8')
   assert.ok(text.includes(erasedName)&&text.includes(erasedEmail),'Decoded personal archive bytes contain both identity canaries')
  }
- console.log('PRE_ERASURE_PUBLIC_ARCHIVE: personal DB cells and 4 decoded personal FILES objects confirmed')
+ console.log('PRE_ERASURE_PUBLIC_ARCHIVE: personal DB cells, original 4 decoded personal FILES objects and 2 header-only gzip objects confirmed')
  return records[0]
 }
 

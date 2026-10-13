@@ -62,7 +62,7 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
   assert.equal(secrets.filter(value=>archiveBytes.includes(value)).length,0,'Installation archive contains no setup/session/connection secrets');
   console.log('ARCHIVE_SECRET_SCAN: '+secrets.length+' configured secret values; 0 matches');
   assert.ok(!hasIdentityCopy(archiveBytes),'Erased identity is absent from the whole archive');
-  assert.ok(!first[0].objects.some(object=>[erased.key,...erased.compressedKeys].includes(object.key)),'Later public archive omits all four personal FILES objects');
+  assert.ok(!first[0].objects.some(object=>[erased.key,...erased.compressedKeys].includes(object.key)),'Later public archive omits all personal FILES objects');
   assert.ok(first[0].objects.some(object=>object.key==='privacy/control-compressed.pdf'),'Later public archive retains the unrelated compressed control');
   assert.ok(!first[0].objects.some(object=>object.key.startsWith('execution/')),'Sealed execution bytes are omitted');
   await mkdir(join(target.source,'exports'),{mode:0o700,recursive:true});await copyFile(join(source.source,'exports/first.rer'),join(target.source,'exports/first.rer'));
