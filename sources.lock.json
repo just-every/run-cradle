@@ -2269,8 +2269,16 @@
       "sha256": "ab7186f4b923ea2b3decdabd5bb680a34ffa9f87558809911664413fe5dc0fac",
       "executable": false
     },
+    ".github/scripts/run-site-probe.mjs": {
+      "sha256": "d60d722937e94794097f00be93835cfdd2f9c15fc27d6db282b3ce99f8af10b0",
+      "executable": false
+    },
     ".github/workflows/rer-managed.yml": {
       "sha256": "920dbd1a5899a25ee90866b2cdb6badd20c67ce141bceb3fe7de96fadf0c0a7d",
+      "executable": false
+    },
+    ".github/workflows/run-site-probe.yml": {
+      "sha256": "13a757de8496aae6423565b116bf3d378293541aee34b00fbaf8424fdfe4087c",
       "executable": false
     },
     ".github/workflows/verify.yml": {
@@ -4118,7 +4126,7 @@
       "executable": false
     },
     "src/core/app/screens/landing/Ownership.tsx": {
-      "sha256": "dd2205c3af5883fb523a4f1b73e9a6e9ecd454fb42fd4bd639a99c3fb75047d7",
+      "sha256": "16e599b500ca7c710c9288e3909c157a0456747285deb3fa400e4008bd5971f6",
       "executable": false
     },
     "src/core/app/screens/landing/parts/ClientChip.tsx": {
