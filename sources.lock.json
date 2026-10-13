@@ -4642,7 +4642,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-ui.css": {
-      "sha256": "ac73d3b4c8d4ab3e3464abc76eb2929f5d49b89b878bdbb5c63a752d9a1cba8d",
+      "sha256": "9466913bcb9b39f66827bd9dcb97b9aebfc7c7621739a5ffce0eba37c4e64675",
       "executable": false
     },
     "src/core/features/risks/index.ts": {
@@ -7302,7 +7302,7 @@
       "executable": false
     },
     "src/ui/settings/launch-ai-settings.tsx": {
-      "sha256": "ef52e884d34b4f4aeb34e07c5f09449b3c9c14324ea202023c1b98ae706ddcab",
+      "sha256": "ea4d14d74f12fd09cb43456d3534299ce18dba061e064cda26ac2a240f6626af",
       "executable": false
     },
     "src/ui/settings/lazy-settings-panel.tsx": {
@@ -7999,6 +7999,10 @@
     },
     "tests/helpers/launch-decision-hydration.mjs": {
       "sha256": "09ead50dc757201bc1fd650d73a02ecee45ee2e8a5a306e37707602d0790e89d",
+      "executable": false
+    },
+    "tests/helpers/launch-disabled-ai-console.mjs": {
+      "sha256": "0bc358873766b78162e7ee56c640edfbffa10741de478703fae96f83381610b5",
       "executable": false
     },
     "tests/helpers/launch-installed.mjs": {
@@ -8998,7 +9002,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "c5cfffda48b408e10bc92d095565422cec33e1a1f4c29e3a036f56c46ded13ae",
+      "sha256": "622a898c8168d989bff5ae955a5debc8acd1cb82b7c86a2bab4484b8c5b5ac14",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
