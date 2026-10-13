@@ -1,3 +1,4 @@
+import {assertNoBrowserSession} from './session-cookies.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,mkdtemp,rename,rm} from 'node:fs/promises'
 import path from 'node:path'
@@ -14,7 +15,8 @@ export async function verifyExpiredLink({browser,viewport,evidence}){
   installation=await localInstallerJourney(copy,browser)
   const {origin}=installation
   context=await browser.newContext(accessibilityContextOptions({viewport,javaScriptEnabled:false}))
-  await context.addCookies([await gateCookie(origin,installation.key)])
+  const gate=await gateCookie(origin,installation.key)
+  await context.addCookies([gate])
   const page=await context.newPage()
   const sent=await context.request.post(origin+'/auth/request',{headers:{origin},data:{email:'local-owner@example.test',returnTo:'/app'}})
   assert.equal(sent.status(),200);assert.deepEqual(await sent.json(),{status:'accepted'})
@@ -28,7 +30,7 @@ export async function verifyExpiredLink({browser,viewport,evidence}){
   await page.getByRole('heading',{name:'This link is invalid or expired',exact:true}).waitFor()
   assert.equal(await page.getByRole('button',{name:'Confirm',exact:true}).count(),0)
   assert.equal(await page.getByRole('link',{name:'Request a new link',exact:true}).getAttribute('href'),'/signin')
-  assert.equal((await context.cookies()).some(cookie=>cookie.name==='operator_session_local'),false)
+  await assertNoBrowserSession(context,origin,[gate.name])
   if(accessibilityEvidence){
    const audit=await auditAccessibility(page,{screen:'confirm-expired',width:viewport.width,output:evidence})
    const severe=[...audit.axe.wcag22aa,...audit.axe.targetSize].filter(violation=>['serious','critical'].includes(violation.impact))

@@ -1,3 +1,4 @@
+import {unrelatedImport} from './rer-erasure-archive.mjs'
 import {compressedPdf,encodedText} from './erasure-attachments.mjs'
 import {mentionAuthorityControls} from './rer-mention-policy.mjs'
 import {erasureWriteRace} from './rer-erasure-race.mjs'
@@ -26,7 +27,7 @@ export async function identityMatches(root){return bindings(root,async({DB,FILES
  let cursor;do{const page=await FILES.list({cursor});for(const object of page.objects){const body=await FILES.get(object.key);if(!body)continue;objects++;objectBytes+=body.size;const text=new TextDecoder().decode(await body.arrayBuffer());if([JSON.stringify([object.key,body.customMetadata,body.httpMetadata]),text].some(copyIn))matches.push({table:'R2',column:'key-metadata-bytes',count:1})}cursor=page.truncated?page.cursor:undefined}while(cursor)
  return {tables,matches,contained,objects,objectBytes}
 })}
-export async function sourceErasure(copy,origin,prior,populate){
+export async function sourceErasure(copy,origin,prior,populate,restart){
  const identity=await bindings(copy.source,async({DB,FILES})=>{
   const base=id(),now=Date.now();await DB.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(base,erasedEmail,erasedName,now).run()
   const person=(await DB.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(base).first()).principal_id
@@ -55,6 +56,7 @@ export async function sourceErasure(copy,origin,prior,populate){
  })
  let before,opaqueFixture
  const started=Date.now()
+ let unrelated
  await withRerDevelopment(copy,origin,async()=>{
   const csrf=await fetch(origin+'/auth/csrf',{headers:{cookie:prior.cookie}}),csrfToken=(await csrf.json()).csrfToken
   const request=(body,action='erase')=>fetch(origin+'/api/v1/commands/member.'+action,{method:'POST',headers:{cookie:prior.cookie,origin,connection:'close','content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify(body)})
@@ -64,6 +66,7 @@ export async function sourceErasure(copy,origin,prior,populate){
   const removal={commandId:id(),expected:[{ref:{appId,entityId,recordId:identity.person},version:identity.version}],input:{memberId:identity.person,reason:'Owner removed access before erasure'}}
   const removed=await request(removal,'remove'),removedBody=await removed.json();assert.equal(removed.status,200,'Normal owner removal completes: '+JSON.stringify(removedBody.error??{}));assert.equal(removedBody.data.value.state,'removed')
   if(populate)await populate(identity)
+  unrelated=await unrelatedImport(copy,origin,prior.cookie)
   before=await identityMatches(copy.source);assert.ok(before.matches.length>=5,'Canaries reach multiple real stores before erasure');await retentionRows(copy.source,'before-operator-erasure');console.log('ERASURE_FILE_INVENTORY '+JSON.stringify({objects:before.objects,bytes:before.objectBytes}))
   const removedMention=await mention();await bindings(copy.source,async({DB})=>assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE subject_id=?').bind(removedMention).first()).n,0,'Removed mention notifies nobody'))
   const value={commandId:id(),expected:[{ref:{appId,entityId,recordId:identity.person},version:identity.version+1}],input:{memberId:identity.person,reason:'Owner confirmed permanent identity erasure'}}
@@ -71,7 +74,7 @@ export async function sourceErasure(copy,origin,prior,populate){
   // then let the fixture owner withdraw it while privacy inspection runs. A
   // distinct supported compressed control proves unrelated bytes survive.
   opaqueFixture=await bindings(copy.source,async({DB,FILES})=>{const row=await DB.prepare("SELECT * FROM evidence_files WHERE id='archive-file'").first();if(!row)return null;const object=await FILES.get(row.object_key);return {row,bytes:new Uint8Array(await object.arrayBuffer()),httpMetadata:object.httpMetadata,customMetadata:object.customMetadata}})
-  if(opaqueFixture){const refusal=await request({...value,commandId:id()}),detail=await refusal.json();assert.equal(refusal.status,409);assert.match(detail.error.message,/cannot inspect/);await bindings(copy.source,async({DB,FILES})=>{assert.equal((await DB.prepare('SELECT state FROM authority_principals WHERE id=?').bind(identity.person).first()).state,'removed');assert.deepEqual(new Uint8Array(await(await FILES.get(opaqueFixture.row.object_key)).arrayBuffer()),opaqueFixture.bytes);await FILES.delete(opaqueFixture.row.object_key);await DB.prepare('DELETE FROM evidence_files WHERE id=?').bind(opaqueFixture.row.id).run()})}
+  if(opaqueFixture){const refusal=await request({...value,commandId:id()}),detail=await refusal.json();assert.equal(refusal.status,409,'Opaque attachment refusal: '+(detail.error?.code??'missing error code'));assert.match(detail.error.message,/cannot inspect/);await bindings(copy.source,async({DB,FILES})=>{assert.equal((await DB.prepare('SELECT state FROM authority_principals WHERE id=?').bind(identity.person).first()).state,'removed');assert.deepEqual(new Uint8Array(await(await FILES.get(opaqueFixture.row.object_key)).arrayBuffer()),opaqueFixture.bytes);await FILES.delete(opaqueFixture.row.object_key);await DB.prepare('DELETE FROM evidence_files WHERE id=?').bind(opaqueFixture.row.id).run()})}
   const controlKey='privacy/control-compressed.pdf',controlBytes=compressedPdf('A different person: Control Reader, control-reader@example.test')
   await bindings(copy.source,async({FILES})=>FILES.put(controlKey,controlBytes,{httpMetadata:{contentType:'application/pdf'},customMetadata:{purpose:'unrelated privacy control'}}))
   const unmatched=await request({...value,expected:[{ref:{appId,entityId,recordId:id()},version:1}]});assert.equal(unmatched.status,400,'Missing member expected version is a typed validation refusal')
@@ -106,9 +109,11 @@ export async function sourceErasure(copy,origin,prior,populate){
   const erasedMention=await mention();await bindings(copy.source,async({DB})=>{assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE subject_id=?').bind(erasedMention).first()).n,0,'Erased mention notifies nobody');assert.equal((await DB.prepare('SELECT body FROM comments WHERE id=?').bind(erasedMention).first()).body,'Plain mention @'+identity.person)})
   const repeated=await request(value);assert.equal(repeated.status,200,'Lost erasure response safely replays')
   const second=await request({...value,commandId:id()});assert.equal(second.status,409,'Completed erasure cannot be repeated as a fresh operation')
+  await unrelated.verifyAndUndo()
   const removeAgain=await request({...removal,commandId:id()},'remove');assert.equal(removeAgain.status,409,'Erased identity cannot return through removal')
   const missing=await fetch(origin+'/api/v1/erasures/'+id(),{headers:{cookie:prior.cookie}});assert.equal(missing.status,404,'Unknown erasure receipt is a typed404')
  })
+ if(restart){await restart();await unrelated.verifyRestart()}
  // After proving privacy completion, restore the owner's known fixture bytes
  // for the separate archive corruption/roundtrip checks. No erased identity is
  // reintroduced and no opaque file was silently deemed inspectable.

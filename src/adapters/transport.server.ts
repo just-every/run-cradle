@@ -40,7 +40,8 @@ export class ProviderTransport {
     if (body) headers.set('content-type', args.form ? 'application/x-www-form-urlencoded' : 'application/json');
     const abort = new AbortController(); const timer = setTimeout(() => abort.abort(), Math.min(remaining, 60_000));
     try {
-      const response = await this.send(url.toString(), { method: route.method, headers, body, redirect: 'manual', signal: abort.signal });
+      const send = this.send;
+      const response = await send(url.toString(), { method: route.method, headers, body, redirect: 'manual', signal: abort.signal });
       if (response.status >= 300 && response.status < 400) throw new TransportError('redirect_denied');
       const cap = args.maxBytes ?? 2_000_000; const reader = response.body?.getReader(); let total = 0; const chunks: Uint8Array[] = [];
       if (reader) { for (;;) { const chunk = await reader.read(); if (chunk.done) break; total += chunk.value.length; if (total > cap) { await reader.cancel(); throw new TransportError('response_too_large'); } chunks.push(chunk.value); } }

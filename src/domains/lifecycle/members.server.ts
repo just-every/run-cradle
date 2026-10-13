@@ -2,6 +2,7 @@ import {prepareImportCustody} from './import-custody.server'
 import {requireQuiescentFiles} from './file-writes.server'
 import type {RequestContext} from '../authority/ports'
 import type {MemberLifecyclePort} from '../authority/members.server'
+import type {DescriptorRegistry} from '../records/descriptors.server'
 import {AuthorityError} from '../authority/errors'
 import {createMemberEvidenceErasure} from '../evidence/member-erasure.server'
 import {effects,append,removeRows,updateRows} from './changes.server'
@@ -11,7 +12,7 @@ import {memberIdentityPlaces} from './member-identity-places'
 import {otherIdentities} from './other-identities.server'
 import {retainCleanup} from './cleanup.server'
 
-export function memberLifecycle(db:D1Database,bucket:R2Bucket):MemberLifecyclePort{
+export function memberLifecycle(db:D1Database,bucket:R2Bucket,registry:DescriptorRegistry):MemberLifecyclePort{
  return {
  async prepareRemoval(ctx,id){const change=effects()
   await updateRows(db,change,'launch_readiness',{state:'Cancelled',updated_at:Date.parse(ctx.now)},"owner_id=? AND state='Outstanding'",[id])
@@ -34,7 +35,7 @@ export function memberLifecycle(db:D1Database,bucket:R2Bucket):MemberLifecyclePo
   if(needles.some(needle=>label.includes(needle)||`erased-${id}@invalid.invalid`.includes(needle)))throw new AuthorityError('version_conflict','Anonymous identity would retain an original literal; resolve the replacement-label conflict before erasure.',409)
   await requireQuiescentFiles(db,change)
   const others=await otherIdentities(db,id,needles)
-  const custody=await prepareImportCustody(db,change,ctx,{id,...person},others)
+  const custody=await prepareImportCustody(db,registry,change,ctx,{id,...person},others)
   const {planned,residual}=await redactIdentityCopies(db,change,{person:{id,email:person.email},needles,label,places:[...memberIdentityPlaces,...custody.places],others,keep,managedTables:custody.managedTables})
   const objects=await classifyIdentityObjects(db,bucket,{personId:id,matches:[...new Set(needles.flatMap(needle=>[needle,JSON.stringify(needle).slice(1,-1)]))],label,others})
   const unresolved=[...residual,...objects.residual].filter(copy=>!keep.has(copy.store))

@@ -46,23 +46,68 @@ export async function retirementUpgrade(copy){
  console.log('FORWARD_UPGRADE_9027_9028 '+JSON.stringify({priorLedgerRows:ledger.length,preservedTables:Object.keys(before).length,importJobs:before.ik_jobs.length,originals:before.ik_originals.length,provenance:before.ik_provenance.length,files:visible.objects.length,idempotentReplay:true}))
 }
 
-/** Real reviewed CSV import and undo leave personal originals/reversal custody. */
-export async function personalImport(origin,cookie){
+/** Exercise the actual public CSV review, adoption and resume doors. */
+async function reviewedCsv(origin,cookie,{filename,name,email,label,baseName=label}){
  const csrfToken=(await(await fetch(origin+'/auth/csrf',{headers:{cookie}})).json()).csrfToken
  const headers={cookie,origin,'x-csrf-token':csrfToken},base=origin+'/api/v1/records/base-import'
  const upload=async(route,preview)=>{
-  // An exact identity in the original filename selects whole-job retirement.
-  // The native table label remains neutral; the original upload header is real.
-  const form=new FormData();form.append('files',new Blob(['Name,Email\r\n'+erasedName+','+erasedEmail+'\r\n'],{type:'text/csv'}),erasedEmail);form.append('options',JSON.stringify({name:'Privacy custody',tables:{[erasedEmail]:{label:'Privacy records'}}}))
+  const form=new FormData();form.append('files',new Blob(['Name,Email\r\n'+name+','+email+'\r\n'],{type:'text/csv'}),filename);form.append('options',JSON.stringify({name:baseName,tables:{[filename]:{label}}}))
   if(preview){form.append('identities',JSON.stringify(preview.identities));form.append('fingerprint',preview.fingerprint);form.append('acceptLoss','true')}
-  const response=await fetch(base+route,{method:'POST',headers,body:form});assert.equal(response.status,200,'Personal reviewed CSV '+route);return(await response.json()).data
+  const response=await fetch(base+route,{method:'POST',headers,body:form});assert.equal(response.status,200,label+' reviewed CSV '+route);return(await response.json()).data
  }
- const post=async(route,input={})=>{const response=await fetch(base+route,{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(input)});assert.equal(response.status,200,'Personal import '+route);return(await response.json()).data}
+ const post=async(route,input={})=>{const response=await fetch(base+route,{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(input)});assert.equal(response.status,200,label+' import '+route);return(await response.json()).data}
  const preview=await upload('/preview'),review=await upload('/review',preview)
  let job=await post('/adopt',{reviewId:review.reviewId,fingerprint:review.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true})
  for(let n=0;n<40&&job.state!=='completed';n++)job=await post('/jobs/'+job.id+'/resume')
- assert.equal(job.state,'completed');assert.equal((await post('/jobs/'+job.id+'/undo')).state,'undone')
+ assert.equal(job.state,'completed')
+ return {job,preview,review,post}
+}
+
+export async function personalImport(origin,cookie){
+ // The exact personal original filename selects whole-job retirement.
+ const {job,post}=await reviewedCsv(origin,cookie,{filename:erasedEmail,name:erasedName,email:erasedEmail,label:'Privacy records',baseName:'Privacy custody'})
+ assert.equal((await post('/jobs/'+job.id+'/undo')).state,'undone')
  return job.id
+}
+
+/** An independent public import remains exact through erasure and undoable afterward. */
+export async function unrelatedImport(copy,origin,cookie){
+ const {job,preview,review,post}=await reviewedCsv(origin,cookie,{filename:'independent-control.csv',name:'Independent Reader',email:'independent-reader@example.test',label:'Independent custody'})
+ const appId=preview.identities.appId
+ const snapshot=()=>bindings(copy.source,async({DB})=>{
+  const entities=(await DB.prepare('SELECT id FROM record_schemas WHERE app_id=? ORDER BY id').bind(appId).all()).results
+  const tables=[]
+  for(const {id} of entities){
+   const found=(await DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name GLOB ? ORDER BY name").bind('r_'+id.toLowerCase()+'*').all()).results,native=[]
+   for(const table of found){const columns=(await DB.prepare('PRAGMA table_xinfo('+quote(table.name)+')').all()).results.map(column=>column.name);if(['id','schema_version','lifecycle'].every(column=>columns.includes(column)))native.push(table.name)}
+   assert.equal(native.length,1,'Each new CSV entity has exactly one native table');tables.push(native[0])
+  }
+  const rows=async(table,where='',values=[])=>{const statement=DB.prepare('SELECT * FROM '+quote(table)+where);return (await (values.length?statement.bind(...values):statement).all()).results.map(row=>JSON.stringify(row)).sort()}
+  const native=Object.fromEntries(await Promise.all(tables.map(async table=>[table,await rows(table)]))),custody={}
+  for(const {name} of (await DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name GLOB 'ik_*' ORDER BY name").all()).results){
+   const columns=(await DB.prepare('PRAGMA table_info('+quote(name)+')').all()).results.map(column=>column.name)
+   const field=columns.includes('job_id')?'job_id':name==='ik_jobs'?'id':null
+   if(field)custody[name]=await rows(name,' WHERE '+quote(field)+'=?',[job.id])
+  }
+  custody.record_import_revisions=await rows('record_import_revisions',' WHERE app_id=?',[appId])
+  custody.record_import_reviews=await rows('record_import_reviews',' WHERE id=?',[review.reviewId])
+  custody.record_import_review_chunks=await rows('record_import_review_chunks',' WHERE review_id=?',[review.reviewId])
+  return {native,custody}
+ })
+ const before=await snapshot(),nativeRows=Object.values(before.native).reduce((n,rows)=>n+rows.length,0),custodyRows=Object.values(before.custody).reduce((n,rows)=>n+rows.length,0)
+ assert.equal(nativeRows,1);assert.ok(before.custody.ik_originals.length>0);assert.ok(before.custody.ik_provenance.length>0)
+ let undone
+ async function verifyUndone(){
+  const response=await fetch(origin+'/api/v1/records/base-import/jobs/'+job.id,{headers:{cookie}});assert.equal(response.status,200);assert.equal((await response.json()).data.job.state,'undone')
+  const current=await snapshot();assert.deepEqual(current,undone,'Unrelated undone native rows and custody survive runtime restart byte-identically')
+  assert.equal(Object.values(current.native).reduce((n,rows)=>n+rows.length,0),0)
+ }
+ return {appId,async verifyAndUndo(){
+  assert.deepEqual(await snapshot(),before,'Unrelated native rows, originals, plans, provenance and review custody remain byte-identical after erasure')
+  assert.equal((await post('/jobs/'+job.id+'/undo')).state,'undone','Unrelated import remains undoable through real HTTP after erasure')
+  undone=await snapshot();await verifyUndone()
+  console.log('UNRELATED_IMPORT_PUBLIC_UNDO '+JSON.stringify({nativeRowsPreserved:nativeRows,custodyRowsPreserved:custodyRows,custodyStores:Object.keys(before.custody).length,nativeRowsAfterUndo:0,state:'undone'}))
+ },async verifyRestart(){await verifyUndone();console.log('UNRELATED_IMPORT_RESTART: public status undone; zero native rows; exact custody retained')}}
 }
 
 export async function capturePersonalArchive(copy,identity){

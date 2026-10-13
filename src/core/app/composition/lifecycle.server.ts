@@ -15,7 +15,7 @@ import {digest} from '../../../domains/authority/crypto.server'
 import {createUlid} from '../../shared/ids'
 import type {Json} from '../../../contracts/primitives'
 export function createLifecycleComposition(platform:Platform,foundation:ServerFoundation){
- const db=platform.bindings.DB,service=createMemberService(db,foundation.policy,memberLifecycle(db,platform.bindings.FILES)),cleanup=createLifecycleCleanup(db,platform.bindings.FILES)
+ const db=platform.bindings.DB,service=createMemberService(db,foundation.policy,memberLifecycle(db,platform.bindings.FILES,foundation.descriptors)),cleanup=createLifecycleCleanup(db,platform.bindings.FILES)
  const ref=z.object({appId:idSchema,entityId:idSchema,recordId:idSchema}).strict(),expected=z.array(z.object({ref,version:z.number().int().positive()}).strict()).min(1).max(100)
  const input=z.object({memberId:idSchema,reason:z.string().trim().min(1).max(2000),keepCopies:z.array(z.string().min(1).max(200)).max(500).optional()}).strict(),command=z.object({commandId:idSchema,expected,input}).strict()
  for(const operation of ['remove','erase'] as const){const action=`member.${operation}`

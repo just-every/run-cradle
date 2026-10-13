@@ -1,3 +1,4 @@
+import {sessionCookieWithToken} from './helpers/session-cookies.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {contract} from './contract.mjs'
@@ -44,7 +45,16 @@ contract('AUTH-BASE-001 BASE-ACCESS-002','a populated store from before dev iden
   const base=createOperatorAuth({db,config:{local:true,origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret,MAIL_FROM:'auth@localhost.test'},
    mailSender:createMailSender({provider:'development',mode:'development'},{outbox:createD1DevelopmentOutbox({db})}),clientIp:()=>'127.0.0.1'})
   const auth=createProductAuth(db,{appOrigin:origin,sessionSecret:secret,mode:'development',base,initializeBaseOwner:async()=>{}})
-  const cookie=token=>`operator_session_local=${token}`
+  // Discover the current cookie namespace from a real new email-link session;
+  // the upgrade proof below still authenticates the pre-upgrade persisted rows.
+  const post=route=>new Request(origin+route,{method:'POST',headers:{origin,host:new URL(origin).host}})
+  await base.requestMagicLink(post('/auth/magic-link'),{email:'owner@example.test',returnTo:'/app'})
+  const message=JSON.parse(sql.prepare('SELECT message FROM rer_mail_development_outbox ORDER BY sequence DESC LIMIT 1').get().message)
+  const link=new URL(message.text.match(/http:\/\/[^\s]+/)[0])
+  const issued=await base.confirmLink(post('/auth/confirm'),{token:link.searchParams.get('token')})
+  const issuedCookie=issued.cookie.split(';')[0]
+  assert.equal((await base.getSession(request(issuedCookie)))?.operator.email,'owner@example.test','The discovered cookie is a valid issued session')
+  const cookie=token=>sessionCookieWithToken(issuedCookie,token)
   assert.equal((await base.getSession(request(cookie(tokens.native))))?.id,'s-native','The native session is still valid')
   for(const kind of ['revoked','expired'])assert.equal(await base.getSession(request(cookie(tokens[kind]))),null,`The ${kind} session stays invalid`)
   const current=await auth.current(request(cookie(tokens.native)))

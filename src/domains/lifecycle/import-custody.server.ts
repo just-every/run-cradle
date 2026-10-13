@@ -2,7 +2,7 @@ import {restoreCheckpoint} from './restore-checkpoint.server'
 import {inspectImportReports} from './import-reports.server'
 import {inspectImportHistory} from './import-history.server'
 import {importInventory} from './import-inventory.server'
-import {loadDescriptorRegistry} from '../records/loader.server'
+import type {DescriptorRegistry} from '../records/descriptors.server'
 import {createNativeImportTarget} from '../records/base-transfer/target.server'
 import {loadPlans} from '../../../vendor/base/modules/import-kit/src/d1/plans'
 import {headerCells,retirementScope} from '../../../vendor/base/modules/import-kit/src/d1/retirement-scope'
@@ -22,8 +22,11 @@ import {operatorErasureTarget} from './import-operator-target.server'
 
 /** Decode and attribute import custody before native mutation. Exact email and
  * operator ID identify the person; a name alone never assigns another row. */
-export async function prepareImportCustody(db:D1Database,change:Effects,ctx:RequestContext,person:{id:string;name:string;email:string},others:string[]){
- const registry=await loadDescriptorRegistry(db,[]),native=createNativeImportTarget(registry),targets=operatorErasureTarget(native,person.id)
+export async function prepareImportCustody(db:D1Database,registry:DescriptorRegistry,change:Effects,ctx:RequestContext,person:{id:string;name:string;email:string},others:string[]){
+ // The request's admitted registry retains source-owned physical mappings and
+ // protection alongside imported schemas. Recompiling with no sources invents
+ // generic tables for retained launch/repair entities and aborts privacy checks.
+ const native=createNativeImportTarget(registry),targets=operatorErasureTarget(native,person.id)
  const matches=(value:unknown,literals=[person.email,person.id])=>scrubWholeTokens(typeof value==='string'?value:canonicalJson(value as never),literals,'',others).changed>0
  const jobs=(await db.prepare('SELECT * FROM ik_jobs ORDER BY destination,id').all<any>()).results
  const destinations=[...new Set(jobs.map(j=>j.destination as string).concat((await db.prepare('SELECT destination FROM ik_d1_staging UNION SELECT destination FROM ik_d1_native_staging UNION SELECT destination FROM ik_d1_streams UNION SELECT destination FROM ik_d1_stream_revisions UNION SELECT parent_destination FROM ik_d1_stream_origins').all<{destination:string}>()).results.map(r=>r.destination)))]
