@@ -2510,7 +2510,7 @@
       "executable": false
     },
     ".github/assets/media/preview.gif": {
-      "sha256": "4907cba1342f299492babec864a93ad08626978b163dabe6039fe97a9c3b2034",
+      "sha256": "35ebc787272a7238e90f35cb32d3bd104c4db3dd8eaf6628aa278fe2eab24cb7",
       "executable": false
     },
     ".github/assets/media/screen-1.webp": {
@@ -3238,7 +3238,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "5473e9972fa73cdd636bf7a59975a481bfaf0ced988d83fdf1c5089f5b5afe09",
+      "sha256": "dcdf427a2d88cf09decd151d9b26e2f9c1fe2c1a82d2c2bec1195115be6cda7a",
       "executable": false
     },
     "RELEASE.json": {

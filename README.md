@@ -11,9 +11,9 @@
 <p align="center"><a href="https://run-cradle.com">run-cradle.com</a> · <a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
 
 <p align="center">
-  <a href="https://justevery.com/#vol-cradle"><img src=".github/assets/media/preview.gif" width="800" alt="Cradle importing a base: three CSV files read and accepted, the import completed, and the imported Projects grid"></a>
+  <a href="https://justevery.com/#vol-cradle"><img src=".github/assets/media/preview.gif" width="800" alt="Cradle importing a base: the Projects CSV read with six rows accepted, the import running to completed, and the imported Projects grid"></a>
 </p>
-<p align="center"><a href="https://justevery.com/#vol-cradle"><b>Watch the full demo</b></a> · 45 seconds</p>
+<p align="center"><a href="https://justevery.com/#vol-cradle"><b>Watch the full demo</b></a> · 55 seconds</p>
 
 <p align="center">
   <img src=".github/assets/media/flow.webp" width="800" alt="One project, Harbour Street pop-up, as a table row, a board card and its own record page">
