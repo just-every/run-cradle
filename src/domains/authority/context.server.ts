@@ -9,6 +9,7 @@ import type { EntityRegistry } from './scope.server'
 import { createReferenceAccess } from './reference.server'
 import { isProposalDoor, proposalAudience, refuseOutsideDoor } from './proposer.server'
 import type { Ref } from '../../contracts/primitives'
+import { authorizeInvitationReplay } from './member-replay.server'
 export const createRequestContextFactory=(db:D1Database,configuration:AuthConfiguration)=>{
  return async(request:Request,ingress:RequestContext['ingress']='http'):Promise<RequestContext>=>{
   // Resolve each request against Base authentication and current application authority.
@@ -29,6 +30,7 @@ export const createReplayAccess=(db:D1Database,policy:PolicyPort,registry:Entity
  if(ctx.principal.proposer){if(command.appId!==ctx.principal.proposer.appId||!['schema.propose','schema.withdraw'].includes(command.action))throw new AuthorityError('not_found','Command not found.',404);return}
  const membership=await db.prepare(`SELECT p.version FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active'`).bind(ctx.principal.id,command.appId).first<{version:number}>()
  if(!membership||!command.provenance)throw new AuthorityError('not_found','Command is not visible under current policy.',404)
+ if(command.action==='member.invite')await authorizeInvitationReplay(db,ctx,command.appId,command.result)
  const check=createReferenceAccess(db,policy,registry)
  for(const subject of command.provenance.subjects)await check(ctx,subject.ref,subject.fieldIds,'read')
  if(command.provenance.grantId){const grant=await db.prepare(`SELECT 1 FROM authority_grants WHERE id=? AND delegate_id=? AND state='active' AND restore_hold=0 AND version=? AND expires_at>?`).bind(command.provenance.grantId,ctx.principal.id,command.provenance.grantVersion,Date.parse(ctx.now)).first();if(!grant)await policy.authorize(ctx,{appId:command.appId,action:'execution.read',expected:[],cost:[],inputHash:''})}

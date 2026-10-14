@@ -4,7 +4,7 @@ import { writeContext, createLegacyAutomationAuthority, createLegacyAutomationRu
 export { mutationSnapshot }
 
 export async function serviceOwnerFixture() {
- const h = await launchAuthorityRuntime()
+ const h = await launchAuthorityRuntime({}, {automaticQueues:false})
  try {
   const owner = await writeContext(h, h.ownerSession, createUlid())
   const requester = await h.addPerson({ name: 'Distinct risk requester' })

@@ -29,7 +29,7 @@ import type { AppEnv } from './types'
 
 export const createApplication = async (platform: Platform, config: SeedConfig) => {
   const app = new Hono<AppEnv>()
-  const {foundation,providers,records,channels,repairIntake,automations,lifecycle} = await createRuntime(platform)
+  const {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime} = await createRuntime(platform)
 
   app.onError(async (error, context) => {
     if (error instanceof ApiError || error instanceof AdmissionError) return errorResponse(error, createUlid(), context.req.method + ' ' + context.req.path)
@@ -74,6 +74,9 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
     request=>foundation.authenticate(request,'http',createUlid()),
   ))
   app.route('/api/user-automations',automations.http)
+  app.get('/api/v1/launch/usage',async c=>c.json({data:await launchRuntime.usage(await foundation.authenticate(c.req.raw,'http',createUlid())),meta:{requestId:createUlid(),apiVersion:'cradle.api.v1',evaluatedAt:new Date().toISOString(),consistencyToken:''}}))
+  app.get('/api/v1/launch/analysis-requests/:id',async c=>c.json({data:await launchRuntime.analysis.request(await foundation.authenticate(c.req.raw,'http',createUlid()),c.req.param('id')),meta:{requestId:createUlid(),apiVersion:'cradle.api.v1',evaluatedAt:new Date().toISOString(),consistencyToken:''}}))
+  app.get('/api/v1/launch/analyses/:id',async c=>c.json({data:await launchRuntime.analysis.get(await foundation.authenticate(c.req.raw,'http',createUlid()),c.req.param('id')),meta:{requestId:createUlid(),apiVersion:'cradle.api.v1',evaluatedAt:new Date().toISOString(),consistencyToken:''}}))
   app.route('/api/v1/launch', createLaunchOwnersRouter(platform.bindings.DB, foundation))
   for (const path of ['/api/v1/connections/setup', '/api/v1/connections/:id/credentials']) app.all(path, context => providers.setupHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/connections', '/api/v1/connections/:id/unknowns', '/api/v1/connections/:id/resolutions', '/api/v1/model-profiles', '/api/v1/model-calls']) app.all(path, context => providers.collectionsHttp.fetch(context.req.raw))

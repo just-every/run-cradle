@@ -13,10 +13,10 @@ import { migrateFixture } from './migrate-fixture.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
-export async function launchBaseAuthorityRuntime() {
+export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues=true}={}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-base-'))
   let port = Number(process.env.CRADLE_BASE_AUTHORITY_PORT ?? 0)
-  const bindings = { ...productionBindings, APP_ORIGIN: 'https://cradle.authority.test', OWNER_EMAIL: 'owner@example.test', MAIL_PROVIDER: 'sendgrid', SESSION_SECRET: 'synthetic-base-authority-session-secret', SETUP_TOKEN: 'synthetic-base-authority-bootstrap-secret' }
+  const bindings = { ...productionBindings, APP_ORIGIN: 'https://cradle.authority.test', OWNER_EMAIL: 'owner@example.test', MAIL_PROVIDER: 'sendgrid', SESSION_SECRET: 'synthetic-base-authority-session-secret', SETUP_TOKEN: 'synthetic-base-authority-bootstrap-secret',...configuration }
   const deliveries = []
   let runtime
   const close = async () => { try { await runtime?.dispose() } finally { await rm(directory, { recursive: true, force: true }) } }
@@ -28,12 +28,15 @@ export async function launchBaseAuthorityRuntime() {
     const optionsFor = changes => {
       const current = { ...options.bindings, ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, modules, modulesRoot, bindings: current, outboundService: async request => {
+      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...automaticQueues?{}:{queueConsumers:{}}, modules, modulesRoot, bindings: current }, ...externalWorkers] })
+      for (const worker of config.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
+      config.workers[0].dev??={}
+      config.workers[0].dev.outboundService={type:'fetcher',handler:async request=>{
+        if(providerFetch){try{return await providerFetch(request)}catch(error){console.error('Provider edge rejected',request.method,request.url,error.message);throw error}}
         assert.equal(request.url, 'https://api.sendgrid.com/v3/mail/send', 'Only the selected test mail provider may be contacted')
         deliveries.push(await request.json())
         return new Response(null, { status: 202, headers: { 'x-message-id': 'test-only-launch-mail-receipt' } })
-      } }, ...externalWorkers] })
-      for (const worker of config.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
+      }}
       return config
     }
     runtime = new Miniflare(optionsFor({}))
@@ -65,6 +68,6 @@ export async function launchBaseAuthorityRuntime() {
       return { cookie, owner: owner.principal_id }
     }
     const nativeCredential = owner => legacyCookieFixture(db,owner)
-    return { origin, get db() { return db }, deliveries, bindings, request, post, dispatch, bootstrap, nativeCredential, reconfigure: async changes => { await runtime.setOptions(optionsFor(changes)); db = await runtime.getD1Database('DB') }, close }
+    return { origin, get runtime(){return runtime}, get db() { return db }, deliveries, bindings, request, post, dispatch, bootstrap, nativeCredential, reconfigure: async changes => { await runtime.setOptions(optionsFor(changes)); db = await runtime.getD1Database('DB') }, close }
   } catch (error) { await close(); throw error }
 }

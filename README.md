@@ -10,6 +10,30 @@
 
 <p align="center"><a href="https://run-cradle.com">run-cradle.com</a> · <a href="https://justevery.com">Part of Just Every</a> · <a href="LICENSE">MIT licensed</a></p>
 
+<p align="center">
+  <a href="https://justevery.com/#vol-cradle"><img src=".github/assets/media/preview.gif" width="800" alt="Cradle importing a base: three CSV files read and accepted, the import completed, and the imported Projects grid"></a>
+</p>
+<p align="center"><a href="https://justevery.com/#vol-cradle"><b>Watch the full demo</b></a> · 45 seconds</p>
+
+<p align="center">
+  <img src=".github/assets/media/flow.webp" width="800" alt="One project, Harbour Street pop-up, as a table row, a board card and its own record page">
+</p>
+
+<p align="center">
+  <img src=".github/assets/media/screen-1.webp" width="800" alt="Cradle's Records page: the Projects table with linked clients, status, lead, budget and due date for six projects"><br>
+  <sub>Records with linked tables, typed fields, filters and saved views.</sub>
+</p>
+
+<p align="center">
+  <img src=".github/assets/media/screen-2.webp" width="800" alt="The same projects as a Pipeline board grouped by status: Planned, In progress and Done"><br>
+  <sub>The same records as a board.</sub>
+</p>
+
+<p align="center">
+  <img src=".github/assets/media/screen-3.webp" width="800" alt="Cradle's New task form with a task typed, a choice of linked projects, priority and due date"><br>
+  <sub>And as a form anyone can fill in.</sub>
+</p>
+
 # Cradle
 
 Cradle is a self-hosted records workspace with manual tables, linked records,

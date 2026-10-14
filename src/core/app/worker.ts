@@ -85,6 +85,7 @@ export default {
         const body = message.body
         if (!body || typeof body !== 'object') throw new Error('Invalid queue envelope')
         if ('kind' in body && body.kind === 'cradle.channels.wake.v1') await events.channels()
+        else if ('kind' in body && body.kind === 'cradle.launch.events.v1' && 'commandId' in body && typeof body.commandId==='string') await events.launch(body.commandId)
         else if ('kind' in body && body.kind === 'cradle.records.automations.v1' && 'commandId' in body && typeof body.commandId==='string') await events.automations(body.commandId)
         else if ('kind' in body && body.kind === 'cradle.outbox.v1' && 'outboxId' in body && typeof body.outboxId === 'string') await events.dispatch(body.outboxId)
         else throw new Error('Unsupported queue envelope')
@@ -92,9 +93,10 @@ export default {
       } catch { message.retry({ delaySeconds: 30 }) }
     }
   },
-  async scheduled(_controller, bindings) {
+  async scheduled(controller, bindings) {
     const platform = createPlatform(bindings)
-    const events = createRuntimeEvents(platform, await createRuntime(platform))
+    const clock=()=>new Date(controller.scheduledTime)
+    const events = createRuntimeEvents(platform, await createRuntime(platform,clock),clock)
     await events.scheduled()
   },
 } satisfies ExportedHandler<AppEnv['Bindings']>
