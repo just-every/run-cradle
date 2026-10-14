@@ -2550,11 +2550,11 @@
       "executable": false
     },
     "AGENTS.consumer.md": {
-      "sha256": "d9a7ee71b0848fb57d03e367b6721275302cebf6fbbe3875f7c4ed2291017a9a",
+      "sha256": "2c0bcb17b0c7e1e1f9ca76f002be0b2291912c89fcddb348bc800ac630c99efc",
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "ee69871540edc743702da63eca5c9c2cfb7b781f9bfbddf7001588dee8c77347",
+      "sha256": "fc0eb36503d8eb83b60ca3a1a0d34fef9f3e6619c0366e17b46c19b24c4bdf60",
       "executable": false
     },
     "authoring/README.md": {
@@ -2674,7 +2674,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "def1a0e68c68918e1b6212f4c3757601a4ac209abb8f0c8103f9703ea4f7bab8",
+      "sha256": "84bd3803bf3c2151b4158afe86f0ccf848384143cd600cb8acc9e795e3c4c06a",
       "executable": false
     },
     "docs/installation-archives.md": {
@@ -2682,7 +2682,7 @@
       "executable": false
     },
     "docs/installation.md": {
-      "sha256": "365128b593b10ded8b21984fa8edd0aee15823069f95b51ce96ca0d38d8af702",
+      "sha256": "58e35ecef2e06cceebc8aca2dfbf1f81895b6caf32a152d4f7c4a38f79a97a4d",
       "executable": false
     },
     "docs/launch-readiness-20261002.md": {
@@ -3182,7 +3182,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "a1b685f6a0a786c52061cc68c15d36d038a37f99c0404eb853b671b142db573b",
+      "sha256": "5f7c7e30bced1eacd507cb6c947618064008c241e3b574353e42a85ace0e943b",
       "executable": false
     },
     "packaging.json": {
@@ -3194,7 +3194,7 @@
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "5776fd6f6ab6f144224692378295dada70fd29c177928cbc7f97260c056dd759",
+      "sha256": "fd92296577c857edcc423c8785813316bf04a03f87ce623c929c183cb1178074",
       "executable": false
     },
     "public/apple-touch-icon.png": {
@@ -3238,7 +3238,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "dcdf427a2d88cf09decd151d9b26e2f9c1fe2c1a82d2c2bec1195115be6cda7a",
+      "sha256": "b82867ae56ac9ab5aedb8e7256858324954620337ddf383e80839fce32ccf275",
       "executable": false
     },
     "RELEASE.json": {
@@ -3394,11 +3394,11 @@
       "executable": false
     },
     "scripts/deployment/deploy.mjs": {
-      "sha256": "785d5c293f82a973848c2a05a55b00c3d4ac76d58e35641434fac8211a0934dc",
+      "sha256": "e28b867093f0d5ac0b1cbdeb1dab6f3745a53d613c038b43d2206ea9bded0c63",
       "executable": false
     },
     "scripts/deployment/owner-artifact.mjs": {
-      "sha256": "557a61380e95db3297ca0077864f9d047e2dec7e3c1d0fb197b64e7f864537c3",
+      "sha256": "74d26dcd84f676bdb8af5dd86de139e452272859699b03c368bd46696cd9f93d",
       "executable": false
     },
     "scripts/edition-authoring/base-copies.mjs": {
@@ -3474,7 +3474,7 @@
       "executable": false
     },
     "scripts/installer/deploy.mjs": {
-      "sha256": "caa66e3e7868cfc185114aef6c3085509fbc68969951313bb50775947c04ebb0",
+      "sha256": "9fb1be6349cd8dfd827e1485acf5eaff5f575c1777af6ddd2a8b73e20e677716",
       "executable": false
     },
     "scripts/installer/hosting-mail.mjs": {
@@ -3638,7 +3638,7 @@
       "executable": false
     },
     "src/apps/launch/automation-runtime.server.ts": {
-      "sha256": "ec1629e68548406c66a192a7e4987d8a3709efa41160cd04f9a0a76d19873b98",
+      "sha256": "6fb70a25ee3a52d9d68ff76b8014671a728359ededad61fe73fc61dbf0e576cb",
       "executable": false
     },
     "src/apps/launch/automations.server.ts": {
@@ -3766,7 +3766,7 @@
       "executable": false
     },
     "src/apps/launch/service-authority.server.ts": {
-      "sha256": "1ac0e8abdc174733320dbac74c8203c1fe6b0473298f4512c6d7e9eefec3d778",
+      "sha256": "3f58843cdf4af5a60722eb353676071baec909f0a86aa3fabc5959bc7fa1c57e",
       "executable": false
     },
     "src/apps/launch/service-scope.server.ts": {
@@ -4090,7 +4090,7 @@
       "executable": false
     },
     "src/core/app/composition/launch-runtime.server.ts": {
-      "sha256": "d3e0e7a6f1b53bced90fd7f216fddbc730265699797552d02a1149ac5d59db0d",
+      "sha256": "aa212525ab7aa41b6b1d79496e008ebc9ca8b5cc5fafb60df9f1369cfb37ec7b",
       "executable": false
     },
     "src/core/app/composition/launch.server.ts": {
@@ -6218,7 +6218,7 @@
       "executable": false
     },
     "src/domains/lifecycle/inspection-budget.server.ts": {
-      "sha256": "f26e3c7aa1007746a95d4ee3781464bf52cc8af0d6de15b77a5fce3a95427ab0",
+      "sha256": "6d82ced78e18b564c7d3628e8f3d2f952d049775f133df22c6fd45baa283726d",
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
@@ -6234,15 +6234,15 @@
       "executable": false
     },
     "src/domains/lifecycle/pdf-envelope.server.ts": {
-      "sha256": "4aed1a9e58b82d3b8787a7ff0c7a361609d2cd5caeb5ae52fca7733c04ec2119",
+      "sha256": "136eeaddf2d005d0d0988af15767c77c99a438d185d301c6ed40b4aa8923ee2d",
       "executable": false
     },
     "src/domains/lifecycle/pdf-syntax.server.ts": {
-      "sha256": "ea20af34d2e6364fba0dd062cb14b4ce40bfda0695ebc04e1cd03f616b670582",
+      "sha256": "9031b346584a778865f17d1912026263b18eeeab66d49b0a03261b7631fab7d3",
       "executable": false
     },
     "src/domains/lifecycle/pdf-text.server.ts": {
-      "sha256": "d22fe21e235c19b52cb5d25edc68d81fdc7266d9d75aac21efa2e3502cce9daa",
+      "sha256": "2500bf69ea8e2f3c7b0488a42f066338bc8cf45b6d98e0f5a9fc80c5dae9cf8e",
       "executable": false
     },
     "src/domains/lifecycle/portability-custody.server.ts": {
