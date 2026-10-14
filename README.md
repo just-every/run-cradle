@@ -42,11 +42,12 @@ owner-controlled editor. Public source: [just-every/run-cradle](https://github.c
 
 ## Run it on your computer
 
-Install the `rer` command once. It needs Node 22 or later and pnpm on your PATH;
-Cradle is tested with Node **22.20.0** and pnpm **10.12.4**.
+Install the `rer` command once. It needs Node 22 or later; Cradle is tested with Node **22.20.0**.
+Cradle pins rer **0.2.5**, which provisions pnpm **10.12.4** automatically;
+you do not need to install pnpm first.
 
 ```sh
-npx -y @runeditrun/rer cli install
+npx -y @runeditrun/rer@0.2.5 cli install
 ```
 
 `curl -fsSL https://runeditrun.com/install.sh | sh` installs the same command
@@ -133,11 +134,22 @@ rer deploy --dry-run
 ```
 
 Dry-run validates the real owner-account artifact and makes no provider calls.
-An authorized deployment uses `pnpm run deploy -- --environment production`,
+An authorized deployment uses `rer deploy --environment production`,
 with the declared Cloudflare account, hosted email and private inputs. Provisioning,
 immutable migrations, Worker/assets upload and health use Base deploy-kit.
+After the healthy upload, rer automatically claims the designated owner and
+removes the one-time setup token. A repeat deploy keeps the existing owner;
+SETUP_TOKEN is not required after its recorded retirement.
 Provider configuration is described in [installation](docs/installation.md).
-A push does not deploy. For a local source export, run
+A push to public main redeploys the marketing site; it does not deploy your app.
+
+To update your installation, preserve owner customisations and merge the source
+update, then run `rer install`, `rer verify`, and (when authorized)
+`rer deploy --environment production`. To remove that hosted installation and
+its data, use `rer deploy --environment production --remove --yes`. Rer uses
+its deployment record and checks that the resources it created are gone.
+
+For a local source export, run
 `rer release --repo . --output ../cradle-export --clean-history`.
 Release never pushes or deploys. Use `describe` for commands and flags, `doctor`
 for local prerequisites, and `check --profile first-party` for the read-only

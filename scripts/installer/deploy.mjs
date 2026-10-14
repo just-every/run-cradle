@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {ownerWorkerName,ownerPlan} from '../../vendor/base/modules/deploy-kit/owner.mjs';
+import {ownerWorkerName,ownerPlan} from '@runeditrun/rer/modules/deploy-kit/owner';
 import {ownerArtifact} from '../deployment/owner-artifact.mjs';
 import {deployOwner} from '../deployment/deploy.mjs';
 import {adapter} from './local.mjs';

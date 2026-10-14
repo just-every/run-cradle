@@ -1,6 +1,6 @@
 # Install Cradle
 
-Cradle runs on your own computer first. You need Node 22.20.0 and pnpm 10.12.4, and a copy of the Cradle source.
+Cradle runs on your own computer first. You need Node 22.20.0, rer 0.2.5, and a copy of the Cradle source. Rer provisions pnpm 10.12.4; pnpm is not a prerequisite.
 
 ## Run it on your computer
 
@@ -50,4 +50,6 @@ rer build
 rer deploy --dry-run
 ```
 
-The dry run checks everything without contacting any provider. Publishing uses your own Cloudflare account and a hosted email provider; the setup questions name each setting it needs. A push never deploys on its own.
+The dry run checks everything without contacting any provider. Publishing uses your own Cloudflare account and a hosted email provider; the setup questions name each setting it needs. Use `rer deploy --environment production` when authorized. Rer automatically claims the owner after health verification and retires SETUP_TOKEN; repeat deployment keeps the owner. A public-main push redeploys the marketing site, not your installation.
+
+To update, merge source updates while preserving customisations, then run `rer install`, `rer verify` and the authorized deploy command. To delete the hosted installation and its data, run `rer deploy --environment production --remove --yes`; only the resources in the deployment record are removed and read back as gone.

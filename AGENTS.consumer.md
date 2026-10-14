@@ -2,7 +2,7 @@
 
 ## Run it locally
 
-Use Node 22.20.0 and pnpm 10.12.4. Start a checkout through these commands:
+Use Node 22.20.0 and rer 0.2.5. Rer provisions pnpm 10.12.4 automatically. Start a checkout through these commands:
 
 ```sh
 rer install
