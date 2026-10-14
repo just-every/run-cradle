@@ -109,8 +109,9 @@ try {
   await action(page.getByRole('button',{name:'New campaign',exact:true}));await page.getByLabel('Campaign name',{exact:true}).fill('Cancelled draft');await action(page.getByRole('button',{name:'Cancel',exact:true}));await page.getByRole('heading',{name:'No campaigns yet',exact:true}).waitFor();assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM campaigns').first()).n,0);await action(page.getByRole('button',{name:'New campaign',exact:true}));assert.equal(await page.getByLabel('Campaign name',{exact:true}).inputValue(),'')
   await page.getByLabel('Phase',{exact:true}).selectOption('Planning');await page.getByLabel('Status',{exact:true}).selectOption('On track')
   if(viewport.width===1440)for(const name of ['Create campaign','Cancel'])assert.ok(await page.getByRole('button',{name,exact:true}).evaluate(el=>el.getBoundingClientRect().bottom<=innerHeight),`${name} visible`)
-  // React mounts this form after New campaign; wait for its date geometry without changing the compact-row assertion.
-  if(viewport.width===390) {await settledRow(page,page.getByLabel('Start date',{exact:true}),page.getByLabel('Launch date',{exact:true}));const dates=await page.getByLabel('Start date',{exact:true}).boundingBox(),launch=await page.getByLabel('Launch date',{exact:true}).boundingBox();assert.equal(dates.y,launch.y,'Phone dates share a compact row')}
+  // React mounts this form after New campaign and the owner list loads after it, moving the rows below.
+  // Wait for both, then read both date boxes in one frame without changing the compact-row assertion.
+  if(viewport.width===390) {await page.getByLabel('Owner',{exact:true}).waitFor();await settledRow(page,page.getByLabel('Start date',{exact:true}),page.getByLabel('Launch date',{exact:true}));const [dates,launch]=await page.evaluate(fields=>fields.map(field=>field.getBoundingClientRect().y),[await page.getByLabel('Start date',{exact:true}).elementHandle(),await page.getByLabel('Launch date',{exact:true}).elementHandle()]);assert.equal(dates,launch,'Phone dates share a compact row')}
   await capture('campaign-form')
   if(viewport.width===1440) {
    try {
