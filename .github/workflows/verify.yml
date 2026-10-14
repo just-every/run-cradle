@@ -7,19 +7,19 @@ permissions:
 concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: false
+env:
+  CI: 'true'
+  WRANGLER_SEND_METRICS: 'false'
 jobs:
-  verify:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Free unused runner SDK space
-        run: |
-          df -h .
-          sudo rm -rf /usr/local/lib/android
-          df -h .
+        run: sudo rm -rf /usr/local/lib/android
       - uses: pnpm/action-setup@v4
         with:
           version: 10.12.4
@@ -29,7 +29,61 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-workspace
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm verify
+      - name: Build, types and HTTP smoke
+        run: node scripts/verify-app.mjs build
+      - name: Pack production build
+        run: tar -czf /tmp/cradle-build.tgz dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: /tmp/cradle-build.tgz
+          retention-days: 1
+  tests:
+    name: verify-${{ matrix.group }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [launch, foundation, records, runtime]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Free unused runner SDK space
+        run: sudo rm -rf /usr/local/lib/android
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-workspace
+      - run: pnpm exec playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: production-build
+          path: /tmp/cradle-build
+      - name: Restore production build
+        run: tar -xzf /tmp/cradle-build/cradle-build.tgz
+      - name: Application checks
+        if: matrix.group != 'runtime'
+        run: node scripts/verify-app.mjs "${{ matrix.group }}"
+      - name: Runtime, hosted output and hydration
+        if: matrix.group == 'runtime'
+        run: pnpm verify
         env:
-          CI: 'true'
-          WRANGLER_SEND_METRICS: 'false'
+          CRADLE_VERIFY_GROUP: runtime
+  verify:
+    needs: [build, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every verification worker
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          TEST_RESULT: ${{ needs.tests.result }}
+        run: test "$BUILD_RESULT" = success && test "$TEST_RESULT" = success
