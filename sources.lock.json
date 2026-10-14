@@ -8622,7 +8622,7 @@
       "executable": false
     },
     "tests/helpers/rer-source-erasure.mjs": {
-      "sha256": "8d704b2dc06b8cd806c484ce0186b2baacad9e432848bdb4fe25435b7a575e2e",
+      "sha256": "93a3b47f64597cd285aebbfb16da90e8b1977531a77c9ba0ae2a7669ba577225",
       "executable": false
     },
     "tests/helpers/rer-source-records.mjs": {
