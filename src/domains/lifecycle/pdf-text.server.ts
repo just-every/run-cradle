@@ -84,7 +84,7 @@ export function pdfText(bytes:Uint8Array,budget:InspectionBudget):string[]{
    budget.charge(inflated.buffer.length);decoded=inflated.buffer
   }
   const bytes=decoded,text=budget.build(bytes.length,()=>latin(bytes)),content=contentText(text,fonts,budget)
-  out.push(text);textRuns.push(...content.text);glyphRuns.push(...content.glyphs)
+  out.push(text);for(const run of content.text)textRuns.push(run);for(const run of content.glyphs)glyphRuns.push(run)
  }
  function pageTree(value:PdfValue|undefined,parent:string|undefined,inheritedFonts:Set<string>,inheritedBox:boolean,depth=0):number{
   if(!isRef(value)||pages.has(value.key)||depth>64)throw new Error('invalid PDF page tree')

@@ -10,5 +10,6 @@ export class InspectionBudget{
  charge(units:number){this.used+=units;if(this.used>INSPECTION_BUDGET)throw new Error('attachment exceeds the inspection memory budget')}
  /** Charges an upper bound of a string's length before it is built. */
  build(length:number,make:()=>string){this.charge(length+SLOT);return make()}
- keep(out:string[],values:readonly string[]){for(const value of values)this.charge(value.length+SLOT);out.push(...values)}
+ // A loop, not push(...values): a document can hold more strings than call arguments allow.
+ keep(out:string[],values:readonly string[]){for(const value of values){this.charge(value.length+SLOT);out.push(value)}}
 }

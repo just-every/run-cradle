@@ -9,7 +9,7 @@ export function attachmentText(input:Uint8Array,mediaType:string,encoding?:strin
  for(const part of (encoding??'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean).reverse()){
   if(part==='identity')continue
   if(part!=='gzip'&&part!=='deflate')throw new Error('unsupported content encoding')
-  if(part==='gzip'){const decoded=gzipText(bytes,budget);metadata.push(...decoded.text);bytes=decoded.buffer;continue}
+  if(part==='gzip'){const decoded=gzipText(bytes,budget);for(const text of decoded.text)metadata.push(text);bytes=decoded.buffer;continue}
   const decoded=inflateSync(bytes,{maxOutputLength:Math.max(1,budget.left),info:true}) as unknown as {buffer:Uint8Array;engine:{bytesWritten:number}}
   if(decoded.engine.bytesWritten!==bytes.length)throw new Error('uninspectable trailing compressed attachment data')
   budget.charge(decoded.buffer.length);bytes=decoded.buffer
