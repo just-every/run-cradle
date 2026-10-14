@@ -9386,7 +9386,7 @@
       "executable": false
     },
     "tests/ui-execution-resolution-browser.mjs": {
-      "sha256": "45655833c7564150e954e6ad267235f4b774b93792d8992c8bf97f17674d432e",
+      "sha256": "4aa10cce0980fa55f9d56ffc7cad005698aa7ab30d1284f824df8b4a25abc949",
       "executable": false
     },
     "tests/ui-launch-authority-browser.mjs": {

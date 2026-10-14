@@ -23,7 +23,8 @@ try{
  const db=await runtime.getD1Database('DB'),members=(await db.prepare('SELECT id,email FROM operators ORDER BY id').all()).results,viewer=members.find(m=>m.id!==operator)
  assert.ok(viewer)
  const fixture=await executionResolutionFixture(db,[operator,viewer.id],{appId:REPAIRS_APP_ID}),session=await baseHttpSession(origin,members.find(m=>m.id===operator).email),viewSession=await baseHttpSession(origin,viewer.email)
- const request=(route,body,who=session)=>fetch(origin+route,{method:body?'POST':'GET',headers:{origin,'content-type':'application/json',...(who?{cookie:who.cookie,'x-csrf-token':who.csrfToken}:{})},...(body?{body:JSON.stringify(body)}:{})})
+ // workerd closes an unread rejected POST body; do not reuse that socket for the next authority probe.
+ const request=(route,body,who=session)=>fetch(origin+route,{method:body?'POST':'GET',headers:{origin,connection:'close','content-type':'application/json',...(who?{cookie:who.cookie,'x-csrf-token':who.csrfToken}:{})},...(body?{body:JSON.stringify(body)}:{})})
  const envelope=(a,outcome='done')=>({commandId:createUlid(),expected:[],input:{attemptId:a.attemptId,expectedVersion:a.version,outcome,evidence:{summary:'Written confirmation from the recipient, retained with this decision.',reference:'case/receipt-742'}}})
  const direct=await fixture.unknown(),command=envelope(direct)
  for(const [role,who,status] of [['signed-out',null,401],['viewer',viewSession,403]]){const response=await request('/api/v1/commands/attempt.resolve',command,who);assert.equal(response.status,status,await response.clone().text());checks.push({role,status:response.status})}
