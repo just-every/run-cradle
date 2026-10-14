@@ -28,7 +28,6 @@ jobs:
           node-version: 22.20.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-workspace
-      - run: pnpm exec playwright install --with-deps chromium
       - name: Build, types and HTTP smoke
         run: node scripts/verify-app.mjs build
       - name: Pack production build
@@ -46,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [launch, foundation, records, runtime]
+        group: [launch, foundation, records, identity, runtime]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -71,7 +70,7 @@ jobs:
       - name: Application checks
         if: matrix.group != 'runtime'
         run: node scripts/verify-app.mjs "${{ matrix.group }}"
-      - name: Runtime, hosted output and hydration
+      - name: Archive, hosted output and hydration
         if: matrix.group == 'runtime'
         run: pnpm verify
         env:
