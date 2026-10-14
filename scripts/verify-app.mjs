@@ -13,8 +13,8 @@ const environment = {...process.env};
 delete environment.CRADLE_VERIFY_GROUP;
 for (const command of commands) {
   console.log(`VERIFY_COMMAND ${command}`);
-  const [program, ...args] = command.split(' ');
-  const result = spawnSync(program, args, {stdio: 'inherit', env: environment});
+  // Keep the original package script's shell semantics, including pnpm.cmd.
+  const result = spawnSync(command, {shell: true, stdio: 'inherit', env: environment});
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
