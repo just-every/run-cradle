@@ -17,14 +17,25 @@ export function isWholeToken(text:string,start:number,length:number){
 }
 /** Literals in replacement order: longer first so a name inside its own email is consumed with the email. */
 export const replacementOrder=(literals:readonly string[])=>[...new Set(literals)].filter(Boolean).sort((a,b)=>b.length-a.length)
+/** Whole-token literal occurrences in scan order; masked spans (other people's names) are skipped. */
+function* wholeTokens(text:string,literals:readonly string[],masks:readonly string[]){
+ const ordered=replacementOrder(literals),guards=replacementOrder(masks),all=[...ordered,...guards],next=all.map(()=>-1);let i=0
+ while(i<text.length){
+  // Jump to the nearest start of any literal or mask; nothing between can match.
+  for(const [k,value] of all.entries())if(next[k]!==text.length&&next[k]!<i){const at=text.indexOf(value,i);next[k]=at<0?text.length:at}
+  i=Math.min(text.length,...next);if(i===text.length)break
+  const mask=guards.find(m=>text.startsWith(m,i));if(mask){i+=mask.length;continue}
+  const literal=ordered.find(l=>text.startsWith(l,i)&&isWholeToken(text,i,l.length))
+  if(literal){yield {start:i,length:literal.length};i+=literal.length;continue}
+  i++
+ }
+}
 /** Rewrites whole-token occurrences only; masked spans (other people's names) are copied unchanged. */
 export function scrubWholeTokens(text:string,literals:readonly string[],label:string,masks:readonly string[]){
- const ordered=replacementOrder(literals),guards=replacementOrder(masks);let out='',i=0,changed=0
- while(i<text.length){
-  const mask=guards.find(m=>text.startsWith(m,i));if(mask){out+=mask;i+=mask.length;continue}
-  const literal=ordered.find(l=>text.startsWith(l,i)&&isWholeToken(text,i,l.length))
-  if(literal){out+=label;i+=literal.length;changed++;continue}
-  out+=text[i];i++
- }
- return {text:out,changed}
+ const parts:string[]=[];let at=0,changed=0
+ for(const token of wholeTokens(text,literals,masks)){parts.push(text.slice(at,token.start),label);at=token.start+token.length;changed++}
+ parts.push(text.slice(at))
+ return {text:parts.join(''),changed}
 }
+/** Detection without building a rewritten copy (attachments can be megabytes). */
+export const hasWholeToken=(text:string,literals:readonly string[],masks:readonly string[])=>!wholeTokens(text,literals,masks).next().done

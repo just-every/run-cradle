@@ -51,6 +51,7 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('authority_schema_proposers','issuer_id=?','proposing keys they issued'),
  place('sample_installations','installed_by_id=?','sample data they installed'),
  place('execution_runs',`json_extract(actor_json,'$.id')=?`,'runs they started'),
+ place('execution_receipts',`method='human_evidence' AND json_extract(result_json,'$.humanResolution.actorId')=?`,'effect resolutions they recorded'),
  place('command_admissions',`actor_id=? OR ${refs('result_json')}`,'commands they issued or that name them as the result'),
  place('admission_audit',`actor_id=? OR ${refs('subject_json')} OR ${refs('changes_json')} OR ${refs('personal_refs_json')}`,'audit entries they acted in or that reference them'),
  place('admission_events',`${refs('subject_json')} OR ${refs('payload_json')}`,'events that reference them'),
