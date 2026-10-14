@@ -96,7 +96,7 @@ Stop the app and verify:
 
 ```sh
 rer dev --stop
-PLAYWRIGHT_SKIP_BROWSER_GC=1 pnpm exec playwright install chromium
+PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium
 rer verify
 ```
 
