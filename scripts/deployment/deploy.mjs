@@ -11,7 +11,7 @@ import {ownerDeclaration} from './declaration.mjs';
 export async function deployOwner(args=process.argv.slice(2),env=process.env,{root=process.cwd(),fetch=globalThis.fetch}={}){
  const {values}=parseArgs({args,strict:true,options:{environment:{type:'string',default:'production'}}});
  const declaration=await ownerDeclaration(root,env);
- const inputs=['CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN'];
+ const inputs=['CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN',...declaration.secrets.filter(input=>input.binding!=='SETUP_TOKEN').map(input=>input.environment)];
  const missing=inputs.filter(key=>!env[key]?.trim());
  if(missing.length){const error=new Error('missing-input');error.inputs=missing;throw error;}
  if(!['sendgrid','resend'].includes(env.MAIL_PROVIDER))throw new Error('invalid-mail-provider');

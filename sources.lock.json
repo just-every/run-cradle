@@ -3394,7 +3394,7 @@
       "executable": false
     },
     "scripts/deployment/deploy.mjs": {
-      "sha256": "e28b867093f0d5ac0b1cbdeb1dab6f3745a53d613c038b43d2206ea9bded0c63",
+      "sha256": "e298a89f38a344d34795090e754ad629e4bcdd2f6f127960278327eb5c430c26",
       "executable": false
     },
     "scripts/deployment/owner-artifact.mjs": {
