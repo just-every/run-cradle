@@ -43,6 +43,7 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
   if(input.action!=='request-ai-analysis')return customEffects(ctx,input)
   const mutations:SqlMutation[]=[],completed:string[]=[],skipped:string[]=[]
   for(const campaignId of input.run.definition.shipped_key?input.run.subjectIds:[String((input.input as Record<string,unknown>).campaignId)]){
+   const ctx=service.dispatchContext(input.run.id)
    const scoped=await service.context(ctx,input.run,campaignId)
    const id=(await canonicalHash({key:input.idempotencyKey,campaignId,retryRun:input.run.retryOf?input.run.id:null})).slice(0,26).toUpperCase(),old=await db.prepare('SELECT state,error_code,error_message FROM launch_analysis_requests WHERE id=?').bind(id).first<{state:string;error_code:string|null;error_message:string|null}>()
    const prior=input.run.definition.shipped_key==='campaign-brief'?await db.prepare('SELECT context_hash FROM launch_brief_context WHERE campaign_id=?').bind(campaignId).first<{context_hash:string}>():null
@@ -97,7 +98,7 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
  }
  async function dispatch(entry:{id:string;action:string;input:Json}){
   release();const input=entry.input as {runId?:string;requestId?:string}
-  if(entry.action==='launch.automation.execute'&&input.runId){try{const outcome=await automation.execute(service.dispatchContext(input.runId),input.runId);if('state'in outcome&&outcome.state==='Waiting'&&!('retryAt'in outcome))return}catch(error){const row=await db.prepare('SELECT state FROM automation_runs WHERE id=?').bind(input.runId).first<{state:string}>();if(!row||row.state!=='Failed')throw error}}
+  if(entry.action==='launch.automation.execute'&&input.runId){try{const outcome=await automation.execute(()=>service.dispatchContext(input.runId!),input.runId);if('state'in outcome&&outcome.state==='Waiting'&&!('retryAt'in outcome))return}catch(error){const row=await db.prepare('SELECT state FROM automation_runs WHERE id=?').bind(input.runId).first<{state:string}>();if(!row||row.state!=='Failed')throw error}}
   else if(entry.action==='launch.analysis.execute'&&input.requestId){try{const outcome=await executeAnalysis(input.requestId);if(outcome&&'state'in outcome&&outcome.state==='Running')return}catch(error){const row=await db.prepare('SELECT state FROM launch_analysis_requests WHERE id=?').bind(input.requestId).first<{state:string}>();if(!row||!['Failed','Unknown'].includes(row.state))throw error}}
   else throw new ApiError('validation','Invalid launch queue lineage')
   await db.prepare("UPDATE admission_outbox SET state='dispatched',updated_at=? WHERE id=? AND state='pending'").bind(clock().toISOString(),entry.id).run()

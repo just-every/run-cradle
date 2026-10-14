@@ -1,3 +1,4 @@
+import type {InspectionBudget} from './inspection-budget.server'
 export type PdfName={kind:'name';value:string}
 export type PdfString={kind:'string';value:string;fontText?:string}
 export type PdfRef={kind:'ref';key:string}
@@ -50,7 +51,7 @@ function stringText(buffer:Bytes):PdfString{
 export class PdfSyntax{
  at:number
  private tokens=0
- constructor(readonly text:string,start=0,readonly end=text.length){this.at=start}
+ constructor(readonly text:string,private readonly budget:InspectionBudget,start=0,readonly end=text.length){this.at=start}
  skip(){
   while(this.at<this.end){
    if(white(this.text[this.at]))this.at++
@@ -68,10 +69,13 @@ export class PdfSyntax{
   return value
  }
  hasWord(word:string){this.skip();return this.text.startsWith(word,this.at)&&this.at+word.length<=this.end&&delimiter(this.text[this.at+word.length])}
- number(){const word=this.word();if(!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(word))throw new Error('invalid PDF number');const value=Number(word);if(!Number.isFinite(value))throw new Error('invalid PDF number');return value}
+ number(){this.budget.charge(64);const word=this.word();if(!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(word))throw new Error('invalid PDF number');const value=Number(word);if(!Number.isFinite(value))throw new Error('invalid PDF number');return value}
  value(depth=0):PdfValue{
   this.skip();this.count();if(depth>64||this.at>=this.end)throw new Error('PDF nesting or truncation limit')
   const c=this.text[this.at]!
+  // Charge before allocating values or their collection slots. Number parsing
+  // also charges xref/header scalars and reference lookahead through number().
+  if(!/[+\-.\d]/.test(c))this.budget.charge(c==='['||c==='<'&&this.text[this.at+1]==='<'?128:64)
   if(c==='/'){
    this.at++;const value=new Bytes()
    while(this.at<this.end&&!delimiter(this.text[this.at])){

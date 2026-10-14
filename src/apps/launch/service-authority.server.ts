@@ -18,7 +18,7 @@ const denied=(message:string):never=>{throw new AdmissionError('forbidden',messa
 /** Server-only capability for the two retained deterministic shipped automations. Never accepts a caller identity. */
 export function createLegacyAutomationAuthority(base:LaunchContext,clock=()=>new Date()){
  const issued=new WeakMap<RequestContext,{eventId?:string;runId?:string;schedule?:true}>()
- function issue(binding:{eventId?:string;runId?:string;schedule?:true}):RequestContext{const now=clock().toISOString(),ctx:RequestContext={principal:{id:actorId,kind:'system',humanId:null,sessionId:null,credentialId:binding.runId??null,issuedAt:now,expiresAt:new Date(Date.parse(now)+60000).toISOString(),authenticationEpoch:1},requestId:createUlid(),now,ingress:binding.schedule?'schedule':'queue'};issued.set(ctx,binding);return ctx}
+ function issue(binding:{eventId?:string;runId?:string;schedule?:true},lifetimeMs=60000):RequestContext{const now=clock().toISOString(),ctx:RequestContext={principal:{id:actorId,kind:'system',humanId:null,sessionId:null,credentialId:binding.runId??null,issuedAt:now,expiresAt:new Date(Date.parse(now)+lifetimeMs).toISOString(),authenticationEpoch:1},requestId:createUlid(),now,ingress:binding.schedule?'schedule':'queue'};issued.set(ctx,binding);return ctx}
  async function verify(ctx:RequestContext,run:LegacyAutomationRun,trigger=false,replay=false,terminalFailure=false):Promise<SqlPredicate[]>{
   const binding=issued.get(ctx);if(!binding||ctx.principal.id!==actorId||ctx.principal.kind!=='system'||ctx.principal.expiresAt<=clock().toISOString())return denied('Only a live internal launch service context may use retained automation authority')
   if(run.definition.shipped_key&&!['critical-risk','launch-readiness','campaign-brief','weekly-digest'].includes(String(run.definition.shipped_key)))return denied('This definition has no retained deterministic service capability')
@@ -77,5 +77,7 @@ export function createLegacyAutomationAuthority(base:LaunchContext,clock=()=>new
   const row=await base.db.prepare('SELECT * FROM automation_runs WHERE id=?').bind(runId).first<Record<string,unknown>>();if(!row)return denied('Stored run is unavailable');const data=JSON.parse(String(row.definition_json))
   await verify(ctx,{id:runId,automationId:String(row.automation_id),definitionVersion:Number(row.definition_version),definition:data.definition,subjectIds:data.subjectIds,causeRunIds:JSON.parse(String(row.cause_run_ids_json)),triggerKey:String(row.trigger_key),retryOf:row.retry_of?String(row.retry_of):null},false,true)
  }
- return{authority,context,authorizeReplay,eventContext:(eventId:string)=>issue({eventId}),scheduleContext:()=>issue({schedule:true}),dispatchContext:(runId:string)=>issue({runId})}
+ // A single dispatch phase allows the 60-second provider deadline plus bounded admission time.
+ // Fresh phases still verify the saved run and current policy; expiry is never renewed in place.
+ return{authority,context,authorizeReplay,eventContext:(eventId:string)=>issue({eventId}),scheduleContext:()=>issue({schedule:true}),dispatchContext:(runId:string)=>issue({runId},90000)}
 }

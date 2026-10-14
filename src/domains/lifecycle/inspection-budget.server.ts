@@ -1,6 +1,7 @@
-/** One fixed memory budget per inspected attachment. Every decoded buffer and every
- * text copy kept for matching is charged before it is created; exceeding it refuses
- * the attachment instead of growing the Worker toward its isolate memory limit. */
+/** One fixed memory budget per inspected attachment. Decoded buffers, retained parsed
+ * values and text copies kept for matching are charged before they are created;
+ * exceeding it refuses the attachment instead of growing the Worker toward its
+ * isolate memory limit. */
 export const INSPECTION_BUDGET=32*1024*1024
 // Charged for every kept string on top of its characters (object header and slot).
 const SLOT=16

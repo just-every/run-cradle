@@ -11,7 +11,7 @@ function numeric(values:PdfValue[],count:number){if(values.length!==count||value
 /** Text-only content grammar. Unknown operators include inline images, drawing
  * paths, XObjects, marked content and extension operators: all are refused. */
 function contentText(text:string,fonts:Set<string>,budget:InspectionBudget){
- const parser=new PdfSyntax(text),out:string[]=[],glyphs:string[]=[];let operands:PdfValue[]=[],inText=false,font=false,saves=0
+ const parser=new PdfSyntax(text,budget),out:string[]=[],glyphs:string[]=[];let operands:PdfValue[]=[],inText=false,font=false,saves=0
  const numbers:Record<string,number>={Td:2,TD:2,Tm:6,Tc:1,Tw:1,Tz:1,TL:1,Tr:1,Ts:1}
  const graphics:Record<string,number>={cm:6,g:1,G:1,rg:3,RG:3,k:4,K:4}
  function shown(value:PdfValue|undefined){
@@ -47,7 +47,7 @@ function contentText(text:string,fonts:Set<string>,budget:InspectionBudget){
  * page tree, standard Type1 fonts, optional text Info, and raw/Flate text streams.
  * Whitelists are contextual; nothing unsupported is silently skipped. */
 export function pdfText(bytes:Uint8Array,budget:InspectionBudget):string[]{
- const file=budget.build(bytes.length,()=>latin(bytes)),{objects,trailer}=pdfEnvelope(file),used=new Set<string>(),pages=new Set<string>(),out=[file],textRuns:string[]=[],glyphRuns:string[]=[]
+ const file=budget.build(bytes.length,()=>latin(bytes)),{objects,trailer}=pdfEnvelope(file,budget),used=new Set<string>(),pages=new Set<string>(),out=[file],textRuns:string[]=[],glyphRuns:string[]=[]
  function resolve(value:PdfValue|undefined):PdfValue|undefined{
   if(!isRef(value))return value
   const object=objects.get(value.key);if(!object||object.stream!==undefined)throw new Error('invalid PDF dictionary reference')
