@@ -3550,7 +3550,7 @@
       "executable": false
     },
     "scripts/verify-app.mjs": {
-      "sha256": "a846a45e0b32fd225ae3c7f661dee6d44c0ae1c2f0c6344807153f7ff9512b5a",
+      "sha256": "9a305644ae97b09d1b618c7e23b7d58dc867c29bfc1ba9a8fd838a98ce75835d",
       "executable": false
     },
     "scripts/verify-groups.mjs": {
