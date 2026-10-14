@@ -22,7 +22,7 @@ export async function deployOwner(args=process.argv.slice(2),env=process.env,{ro
  const state=await settleOwnerState({api,target,statePath});
  const current={...declaration,secrets:declaration.secrets.filter(input=>!state.retiredSecrets?.includes(input.binding))};
  const plan=ownerPlan(target,current,artifact);
- const {receipt,created}=await ownerDeploy({api,target,plan,artifact,statePath,env,fetch});
+ const {receipt,created}=await ownerDeploy({api,target,plan,artifact,statePath,env,fetch,declaredSecrets:ownerPlan(target,declaration,artifact).secrets});
  return {ok:true,origin:receipt.origin,versionId:receipt.provider.versionId,created,state:statePath};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
