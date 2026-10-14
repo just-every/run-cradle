@@ -1,10 +1,20 @@
 # Install Cradle
 
 The maintained public source is [just-every/run-cradle](https://github.com/just-every/run-cradle).
-Follow README.md's computer journey with Node 22.20.0 and rer 0.2.5 through
-`rer install`, `setup`, and `dev`. `rer-setup.json` is the one
-manifest for owner, workspace and provider inputs. Open the printed `RER_OPEN`
-URL (`dev --login` uses the Base outbox instead) and finish `/setup`. Setup retains existing private bytes and owners. Rer provisions pnpm 10.12.4 automatically; no pnpm prerequisite is required.
+Start with the same three commands as the README:
+
+```sh
+npm install -g @runeditrun/rer
+git clone https://github.com/just-every/run-cradle.git cradle
+cd cradle && rer dev
+```
+
+Rer installs the pinned Node and pnpm; neither is a separate prerequisite.
+`rer dev` installs dependencies and prepares a local owner automatically. Open the
+printed `RER_OPEN` URL and finish `/setup`. Local `rer setup` is optional after
+zero-setup `rer dev`; `rer-setup.json` declares owner, workspace and provider inputs.
+Setup retains existing private bytes and owners. `rer dev --login` uses the local
+outbox instead of development identity.
 
 The installer and Base's sign-in confirmation page wear Cradle's own look through one
 file, `public/rer-theme.css` (tokens from the landing page and the fonts and mark the
@@ -28,9 +38,10 @@ MAIL_PROVIDER (SendGrid or Resend) and MAIL_PROVIDER_API_KEY. Other provider sec
 are optional and are named in rer-setup.json and packaging.json. A trusted HTTPS
 egress relay with matching EGRESS_RELAY_SECRET is required for webhook and Slack
 actions. Connections and automation approvals are explicit. No local outbox is
-served remotely. Rer generates the first SETUP_TOKEN, claims the designated owner
-after upload and health verification, and retires the token. A recorded existing
-owner is kept; later deployments do not require SETUP_TOKEN.
+served remotely. At deploy, rer automatically claims the hosted owner designated
+by `OWNER_EMAIL` after upload and health verification. Open `/signin` and sign in
+using the emailed link. There is no manual setup-token step. A recorded existing
+owner is kept on later deployments.
 
 `rer deploy --dry-run` builds and validates without provider
 calls. `rer deploy --environment production` provisions deterministic

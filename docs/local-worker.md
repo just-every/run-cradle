@@ -1,8 +1,10 @@
 # Local Worker
 
 Start through the commands in [Run it on your computer](../README.md#run-it-on-your-computer):
-`rer install`, `setup`, then `dev`. Sign in through the development
-outbox printed by dev. Finish first-run details at `/setup`.
+`rer dev` installs dependencies, prepares a local owner and starts the app. Open
+the printed `RER_OPEN` URL to land signed in. Local `rer setup` is optional;
+`rer dev --login` uses the development outbox instead. Finish first-run details at
+`/setup`. Rer installs the pinned Node and pnpm automatically.
 
 Dev serves current source with HMR. `rer preview` builds and serves
 fixed production output. Both use the canonical `.wrangler/state/v3` database and

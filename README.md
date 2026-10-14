@@ -42,21 +42,17 @@ owner-controlled editor. Public source: [just-every/run-cradle](https://github.c
 
 ## Run it on your computer
 
-Install the `rer` command once. It needs Node 22 or later; Cradle is tested with Node **22.20.0**.
-Cradle pins rer **0.2.5**, which provisions pnpm **10.12.4** automatically;
-you do not need to install pnpm first.
+Install the `rer` command once, clone Cradle, and start it:
 
 ```sh
-npx -y @runeditrun/rer@0.2.5 cli install
-```
-
-`curl -fsSL https://runeditrun.com/install.sh | sh` installs the same command
-without npm. Then clone Cradle and start it:
-
-```sh
+npm install -g @runeditrun/rer
 git clone https://github.com/just-every/run-cradle.git cradle
 cd cradle && rer dev
 ```
+
+Rer installs the pinned Node and pnpm for you; neither needs a separate install
+or a particular version beforehand.
+`curl -fsSL https://runeditrun.com/install.sh | sh` installs the command without npm.
 
 The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
 (`owner@cradle.test`), applies the migrations, starts the app and prints
@@ -65,8 +61,8 @@ URL on this computer: it carries this checkout's dev key in its fragment (treat 
 as a credential), and the browser lands signed in as the owner. `rer dev --stop`
 stops the app; the next `rer dev` keeps your data and owner.
 
-To choose your own owner details instead, run setup before the first `rer dev`
-with a private `answers.json` file (mode 0600), for example:
+Local `rer setup` is optional after zero-setup `rer dev`. To choose your own
+owner details from the start, run setup before the first `rer dev` with a private `answers.json` file (mode 0600), for example:
 
 ```json
 {"OWNER_EMAIL":"owner@example.com","OWNER_NAME":"Owner","WORKSPACE_NAME":"My records","WORKSPACE_TIMEZONE":"Australia/Brisbane","WORKSPACE_CURRENCY":"AUD"}
@@ -137,9 +133,10 @@ Dry-run validates the real owner-account artifact and makes no provider calls.
 An authorized deployment uses `rer deploy --environment production`,
 with the declared Cloudflare account, hosted email and private inputs. Provisioning,
 immutable migrations, Worker/assets upload and health use Base deploy-kit.
-After the healthy upload, rer automatically claims the designated owner and
-removes the one-time setup token. A repeat deploy keeps the existing owner;
-SETUP_TOKEN is not required after its recorded retirement.
+Set `OWNER_EMAIL` to the hosted owner’s email address in your private deployment
+configuration. After the healthy upload, rer automatically claims that owner;
+open `/signin` and sign in using the emailed link. There is no manual setup-token
+step. A repeat deploy keeps the existing owner.
 Provider configuration is described in [installation](docs/installation.md).
 A push to public main redeploys the marketing site; it does not deploy your app.
 

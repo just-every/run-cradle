@@ -1,33 +1,29 @@
 # Install Cradle
 
-Cradle runs on your own computer first. You need Node 22.20.0, rer 0.2.5, and a copy of the Cradle source. Rer provisions pnpm 10.12.4; pnpm is not a prerequisite.
+Cradle runs on your own computer first. Rer installs the pinned Node and pnpm
+for you; neither needs a separate install or a particular version beforehand.
 
 ## Run it on your computer
 
-1. Install the pinned dependencies from the source folder:
+```sh
+npm install -g @runeditrun/rer
+git clone https://github.com/just-every/run-cradle.git cradle
+cd cradle && rer dev
+```
 
-   ```sh
-   rer install
-   ```
+The first `rer dev` installs the dependencies, creates a local owner, applies
+migrations and starts the app. Open the `RER_OPEN` address it prints. The browser
+lands signed in as you. Treat that address as a password: it carries this copy's
+development key. Finish your workspace details at `/setup`; you can change them
+later in Settings.
 
-2. Create a private `answers.json` file (readable only by you) with your email, name and workspace details:
+Local `rer setup` is optional after zero-setup `rer dev`. To choose your own owner
+details before the first launch, use the private answers file described in the
+[README](../README.md#run-it-on-your-computer).
 
-   ```json
-   {"OWNER_EMAIL":"owner@example.com","OWNER_NAME":"Owner","WORKSPACE_NAME":"My records","WORKSPACE_TIMEZONE":"Australia/Brisbane","WORKSPACE_CURRENCY":"AUD"}
-   ```
-
-3. Set up the workspace, then start it:
-
-   ```sh
-   rer setup --answers answers.json --non-interactive
-   rer dev
-   ```
-
-4. Open the `RER_OPEN` address it prints. The browser lands signed in as you. Treat that address as a password: it carries this copy's development key.
-
-5. Finish your workspace details at `/setup`. You can change them later in Settings.
-
-No email is sent on your computer. `dev --login` signs in through the local development outbox instead: open the address it prints, choose the newest message and confirm.
+No email is sent on your computer. `rer dev --login` signs in through the local
+development outbox instead: open the address it prints, choose the newest message
+and confirm.
 
 Stop the app with `rer dev --stop`.
 
@@ -50,6 +46,6 @@ rer build
 rer deploy --dry-run
 ```
 
-The dry run checks everything without contacting any provider. Publishing uses your own Cloudflare account and a hosted email provider; the setup questions name each setting it needs. Use `rer deploy --environment production` when authorized. Rer automatically claims the owner after health verification and retires SETUP_TOKEN; repeat deployment keeps the owner. A public-main push redeploys the marketing site, not your installation.
+The dry run checks everything without contacting any provider. Publishing uses your own Cloudflare account and a hosted email provider; the setup questions name each setting it needs. Use `rer deploy --environment production` when authorized. Set `OWNER_EMAIL` to the hosted owner’s email in your private deployment configuration. Rer automatically claims that owner after health verification; open `/signin` and sign in using the emailed link. There is no manual setup-token step. Repeat deployment keeps the owner. A public-main push redeploys the marketing site, not your installation.
 
 To update, merge source updates while preserving customisations, then run `rer install`, `rer verify` and the authorized deploy command. To delete the hosted installation and its data, run `rer deploy --environment production --remove --yes`; only the resources in the deployment record are removed and read back as gone.
