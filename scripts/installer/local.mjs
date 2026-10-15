@@ -33,12 +33,12 @@ const lifecycle=localInstaller({
  async hosting(context){
   if(context.input.target!=='remote')return;
   const {vars,input,store,hostedMail}=context;
-  if(!hostedMail.MAIL_FROM||!hostedMail.MAIL_PROVIDER_API_KEY||!hostedMail.MAIL_PROVIDER||hostedMail.MAIL_PROVIDER==='development')throw context.fail('deploy');
+  if(!hostedMail.MAIL_FROM||!['rer','sendgrid','resend'].includes(hostedMail.MAIL_PROVIDER)||(hostedMail.MAIL_PROVIDER==='rer'?(!hostedMail.MAIL_API_KEY||!hostedMail.MAIL_RELAY_URL):!hostedMail.MAIL_PROVIDER_API_KEY))throw context.fail('deploy');
   const policy=JSON.parse(await readFile(join(context.root,'packaging.json'),'utf8')).artifact.specInputs;
   const names=[...policy.secretNames,...policy.optionalSecretNames,...policy.publicVariableNames];
   const bindings=Object.fromEntries(names.filter(name=>typeof vars[name]==='string'&&vars[name]).map(name=>[name,vars[name]]));
   const env={...process.env,...bindings,...hostedMail,CLOUDFLARE_ACCOUNT_ID:input.accountId,CLOUDFLARE_API_TOKEN:input.apiToken};
-  store.addSecrets([input.apiToken,hostedMail.MAIL_PROVIDER_API_KEY]);
+  store.addSecrets([input.apiToken,hostedMail.MAIL_PROVIDER_API_KEY,hostedMail.MAIL_API_KEY]);
   await context.run('Deploying to your Cloudflare account',process.execPath,['scripts/deployment/deploy.mjs'],{step:'deploy',env});
   const {receipt}=JSON.parse(await readFile(join(context.root,'.rer/deploy/production.json'),'utf8'));
   if(new URL(receipt.origin).protocol!=='https:')throw context.fail('deploy');

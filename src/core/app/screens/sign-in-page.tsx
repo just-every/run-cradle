@@ -8,7 +8,7 @@ import {signInErrors,type SignInSearch} from './sign-in-search'
 
 export function SignInPage({publicDocument,search}:{publicDocument:PublicDocument;search:SignInSearch}){
  const configured=useSeedConfig(),config={...configured,workspaceName:publicDocument.workspaceName??configured.workspaceName}
- const [error,setError]=useState(''),[email,setEmail]=useState(''),[submitting,setSubmitting]=useState(false),[accepted,setAccepted]=useState(false)
+ const [error,setError]=useState(''),[email,setEmail]=useState(search.login_hint??''),[submitting,setSubmitting]=useState(false),[accepted,setAccepted]=useState(false)
  const noticeError=search.notice&&Object.hasOwn(signInErrors,search.notice)?signInErrors[search.notice as keyof typeof signInErrors]:''
  const requestReceived=publicDocument.ownerClaimed&&publicDocument.magicLink&&(accepted||search.notice==='sent')
  // Defaults belong to the form, not the validated URL: adding search here

@@ -6,8 +6,15 @@ import {automationQuietHours} from './helpers/automation-quiet-hours.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
 contract('AUTO-USER-001','real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
- const h=await userAutomationRuntime(18952)
+ const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[]
+ const h=await userAutomationRuntime(18952,{outbound:async request=>{
+  assert.equal(request.url,relay);assert.equal(request.headers.get('authorization'),'Bearer synthetic-record-relay-key')
+  delivered.push(await request.json());return new Response(null,{status:202})
+ }})
+ const providerMessages=h.mailMessages
+ h.mailMessages=async()=>[...await providerMessages(),...delivered]
  try {
+  await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined,MAIL_API_KEY:'synthetic-record-relay-key',MAIL_RELAY_URL:relay})
   const settings=(await h.request('/api/v1/settings')).data
   await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}}}})
   const save={commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{
@@ -25,7 +32,7 @@ contract('AUTO-USER-001','real admitted record triggers run notify/email/update 
   const record=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.ref.recordId}`)).data.record
   assert.equal(record.fields[h.statusId].value,'review')
   assert.equal((await h.db.prepare('SELECT count(*) AS n FROM channel_events WHERE event_id IN (SELECT id FROM launch_automation_actions WHERE run_id=?)').bind(runs[0].id).first()).n,1)
-  assert.equal((await h.mailMessages()).filter(message=>message.subject==='New item').length,1)
+  assert.deepEqual(delivered,[{to:'import-owner@example.test',subject:'New item',text:'Open Cradle to review the new item.'}])
   const beforeDisable=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.length
   await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
   await automationQuietHours(h,save.definition)

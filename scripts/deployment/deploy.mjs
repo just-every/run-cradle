@@ -14,7 +14,7 @@ export async function deployOwner(args=process.argv.slice(2),env=process.env,{ro
  const inputs=['CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN',...declaration.secrets.filter(input=>input.binding!=='SETUP_TOKEN').map(input=>input.environment)];
  const missing=inputs.filter(key=>!env[key]?.trim());
  if(missing.length){const error=new Error('missing-input');error.inputs=missing;throw error;}
- if(!['sendgrid','resend'].includes(env.MAIL_PROVIDER))throw new Error('invalid-mail-provider');
+ if(!['rer','sendgrid','resend'].includes(env.MAIL_PROVIDER))throw new Error('invalid-mail-provider');
  const artifact=await ownerArtifact(root);
  const api=cloudflare({accountId:env.CLOUDFLARE_ACCOUNT_ID,token:env.CLOUDFLARE_API_TOKEN,fetch});
  const target=await ownerTarget(api,{project:declaration.project,environment:values.environment});

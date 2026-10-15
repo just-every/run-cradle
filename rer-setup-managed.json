@@ -9,7 +9,7 @@
     {
       "id": "hosting-mail",
       "label": "Email delivery",
-      "help": "Choose an email provider and its verified sender for hosted sign-in and notifications."
+      "help": "Managed mail needs no provider account. For your own hosting, choose a provider and verified sender."
     },
     {
       "id": "egress",
@@ -91,6 +91,10 @@
       "default": "resend",
       "options": [
         {
+          "value": "rer",
+          "label": "RER managed mail"
+        },
+        {
           "value": "sendgrid",
           "label": "SendGrid"
         },
@@ -103,11 +107,18 @@
     },
     {
       "name": "MAIL_FROM",
-      "label": "Verified sender email for hosting",
+      "label": "Sender email",
       "kind": "email",
       "required": false,
       "group": "hosting-mail",
       "presentations": [
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "rer"
+          },
+          "required": true
+        },
         {
           "when": {
             "field": "MAIL_PROVIDER",
@@ -123,6 +134,30 @@
           "required": true
         }
       ]
+    },
+    {
+      "name": "MAIL_RELAY_URL",
+      "label": "Managed mail relay URL",
+      "kind": "url",
+      "required": true,
+      "when": {
+        "field": "MAIL_PROVIDER",
+        "equals": "rer"
+      },
+      "group": "hosting-mail"
+    },
+    {
+      "name": "MAIL_API_KEY",
+      "label": "Managed mail credential",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": true,
+      "input": "entered",
+      "when": {
+        "field": "MAIL_PROVIDER",
+        "equals": "rer"
+      },
+      "group": "hosting-mail"
     },
     {
       "name": "MAIL_PROVIDER_API_KEY",

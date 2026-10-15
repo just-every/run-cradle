@@ -8,6 +8,7 @@ import {activityTable} from './storage.server'
 import {prepareRecord} from './records.server'
 import {legacyRecipientGuards} from '../../domains/channels/recipient.server'
 import {createMailSender} from '../../../vendor/base/modules/mail/index.mjs'
+import {hostedMailConfigured,hostedMailConfig} from '../../core/platform/hosted-mail.server'
 import {localMailEnabled} from '../../core/platform/local-auth.server'
 import {registerTable,and,trustedPredicate} from '../../domains/admission/sql.server'
 import {canonicalHash} from '../../domains/admission/canonical'
@@ -38,8 +39,8 @@ export function createLaunchAutomationEffects(env:PlatformBindings,scoped:Legacy
   const mail=message.parse({campaignId,operatorId:raw.operatorId,subject:raw.title,text:raw.body}),recipient=await db.prepare('SELECT email FROM operators WHERE id=? AND active=1').bind(mail.operatorId).first<{email:string}>(),access=await legacyRecipientGuards(db,{kind:'record-automation',operatorId:mail.operatorId,campaignId,subjectId:campaignId,eventId:input.idempotencyKey},ctx.now)
   if(!recipient||!access)throw new ApiError('forbidden','Mail recipient no longer has campaign access')
   guards.push(...access,trustedPredicate('EXISTS(SELECT 1 FROM operators WHERE id=? AND active=1 AND email=?)',[mail.operatorId,recipient.email]))
-  if(!env.MAIL_PROVIDER||!env.MAIL_FROM||env.MAIL_PROVIDER==='development'&&!localMailEnabled(env)||env.MAIL_PROVIDER!=='development'&&!env.MAIL_PROVIDER_API_KEY)throw new ApiError('unconfigured','Configure the installation mail sender before using email actions')
-  const envelope={deliveryId:input.idempotencyKey,from:env.MAIL_FROM,to:[recipient.email],subject:mail.subject,text:mail.text,html:'<pre>'+mail.text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</pre>',headers:{}}
+  if(!(env.MAIL_PROVIDER==='development'&&localMailEnabled(env)&&env.MAIL_FROM)&&!hostedMailConfigured(env))throw new ApiError('unconfigured','Configure the installation mail sender before using email actions')
+  const envelope={deliveryId:input.idempotencyKey,from:env.MAIL_FROM!,to:[recipient.email],subject:mail.subject,text:mail.text,html:'<pre>'+mail.text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</pre>',headers:{}}
   if(env.MAIL_PROVIDER==='development'){
    const old=await db.prepare('SELECT id FROM rer_mail_development_outbox WHERE id=?').bind(input.idempotencyKey).first()
    return{guards,mutations:old?[]:[{kind:'insert',table:outbox,row:{id:input.idempotencyKey,created_at:Date.parse(ctx.now),message:JSON.stringify(envelope)}}],outbox:[],state:'Complete',result:{deliveryId:input.idempotencyKey,status:'development'}}
@@ -52,7 +53,7 @@ export function createLaunchAutomationEffects(env:PlatformBindings,scoped:Legacy
   const guard=and(...guards),now=Date.parse(ctx.now)
   const claim=old?await db.prepare(`UPDATE launch_action_effects SET state='Sending',attempts=attempts+1,updated_at=? WHERE effect_key=? AND state='Failed' AND attempts=? AND (${guard.sql})`).bind(now,input.idempotencyKey,old.attempts,...guard.values).run():await db.prepare(`INSERT INTO launch_action_effects(effect_key,run_id,state,attempts,updated_at) SELECT ?,?,'Sending',1,? WHERE (${guard.sql})`).bind(input.idempotencyKey,input.run.id,now,...guard.values).run()
   if(!claim.meta.changes)throw new ApiError('forbidden','Mail authority changed before dispatch')
-  const result=await createMailSender({provider:env.MAIL_PROVIDER,mode:'production',apiKey:env.MAIL_PROVIDER_API_KEY}).send(envelope)
+  const result=await createMailSender(hostedMailConfig(env)!).send(envelope)
   const state=result.status==='accepted'?'Complete':result.status==='uncertain'?'Unknown':'Failed'
   await db.prepare('UPDATE launch_action_effects SET state=?,result_json=?,updated_at=? WHERE effect_key=?').bind(state,JSON.stringify(result),Date.parse(ctx.now),input.idempotencyKey).run()
   if(result.status==='rate_limited')throw new ApiError('rate_limited','Mail provider rate limited this delivery')

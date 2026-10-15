@@ -9,11 +9,12 @@ import { unstable_getMiniflareWorkerOptions } from 'wrangler'
 import { productionBindings } from './production-bindings.mjs'
 import {legacyCookieFixture} from './legacy-cookie-fixture.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
+import {mailEdgeEntry} from './mail-edge-entry.mjs'
 import { migrateFixture } from './migrate-fixture.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
-export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues=true}={}) {
+export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues=true,inspectMailRedirects=false}={}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-base-'))
   let port = Number(process.env.CRADLE_BASE_AUTHORITY_PORT ?? 0)
   const bindings = { ...productionBindings, APP_ORIGIN: 'https://cradle.authority.test', OWNER_EMAIL: 'owner@example.test', MAIL_PROVIDER: 'sendgrid', SESSION_SECRET: 'synthetic-base-authority-session-secret', SETUP_TOKEN: 'synthetic-base-authority-bootstrap-secret',...configuration }
@@ -25,6 +26,7 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     const { workerOptions, main, externalWorkers } = unstable_getMiniflareWorkerOptions('dist/server/wrangler.json')
     const modulesRoot = path.dirname(main), { modulesRules, ...options } = workerOptions
     const modules = [main, ...(await readdir(modulesRoot, { recursive: true })).filter(file => /\.m?js$/.test(file)).map(file => path.join(modulesRoot, file)).filter(file => file !== main)].map(file => ({ type: 'ESModule', path: file }))
+    if(inspectMailRedirects)modules.unshift(mailEdgeEntry(main))
     const optionsFor = changes => {
       const current = { ...options.bindings, ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]

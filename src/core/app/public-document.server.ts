@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:workers'
+import {hostedMailConfigured} from '../platform/hosted-mail.server'
 import { createBaseAuth } from '../platform/base-auth.server'
 
 /** Only the identity plate name and sign-in capabilities are public. */
@@ -15,7 +16,7 @@ export async function publicDocument({ identity = false }: { identity?: boolean 
     workspaceName,
     ownerClaimed: !!await env.DB.prepare('SELECT singleton FROM oa_bootstrap WHERE singleton=1').first(),
     ...(identity ? { identityProviders: (await createBaseAuth(env).providers?.list() ?? []).filter(provider => provider.visible).map(({ label, startPath }) => ({ label, startPath })) } : {}),
-    magicLink: !!(env.MAIL_FROM && (env.MAIL_PROVIDER && env.MAIL_PROVIDER !== 'development' && env.MAIL_PROVIDER_API_KEY)),
+    magicLink: hostedMailConfigured(env),
   }
 }
 export type PublicDocument = Awaited<ReturnType<typeof publicDocument>>

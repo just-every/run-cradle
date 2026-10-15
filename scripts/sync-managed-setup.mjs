@@ -11,10 +11,10 @@ const json = value => `${JSON.stringify(value, null, 2)}\n`;
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const config = JSON.parse(await read('packaging.json'));
 
-// The local installer always uses its development outbox. The hosted form must
+// Local development opens through the checkout key. The hosted form must
 // offer only providers accepted by the production Worker, with their inputs.
 const hosted = JSON.parse(await read('rer-setup.json'));
-hosted.groups.find(group => group.id === 'hosting-mail').help = 'Choose an email provider and its verified sender for hosted sign-in and notifications.';
+hosted.groups.find(group => group.id === 'hosting-mail').help = 'Managed mail needs no provider account. For your own hosting, choose a provider and verified sender.';
 hosted.fields.find(field => field.name === 'OWNER_EMAIL').help = 'Use your Run Edit Run account email to claim this workspace and sign in.';
 const provider = hosted.fields.find(field => field.name === 'MAIL_PROVIDER');
 provider.required = true;
@@ -41,5 +41,5 @@ for (const [path, expected] of outputs) {
     await writeFile(url, expected);
   }
 }
-await loadSetupManifest(root, config.setup);
+await loadSetupManifest(root, config.setup, config.artifact.specInputs.mail);
 console.log(`Managed setup ${check ? 'matches' : 'generated from'} Base's build-derived deployment specification (${spec.migrations.length} migrations).`);

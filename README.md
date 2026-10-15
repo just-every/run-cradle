@@ -48,16 +48,16 @@ later** first: download the installer for your computer from
 Check `node --version` shows v22 or later; npm comes with Node.
 
 Install the `rer` command once per computer. These are the Run page's two
-installer choices, pinned here to Cradle's **rer 0.2.22**:
+installer choices, pinned here to Cradle's **rer 0.2.23**:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.22 sh
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
 ```
 
 Or, with npm:
 
 ```sh
-npm install -g @runeditrun/rer@0.2.22
+npm install -g @runeditrun/rer@0.2.23
 ```
 
 Both installers need Node first. Rer installs the project's pinned Node 22.20.0
@@ -157,7 +157,9 @@ source, dependencies, exports and deployment receipts survive.
 
 ## Build and host
 
-Hosting uses your Cloudflare account and Resend or SendGrid for email. Before
+Managed hosting sends sign-in and automation email through Run Edit Run; no
+mail provider account or API key is needed. Free and Assisted hosting use your
+Cloudflare account and Resend or SendGrid for email. Before
 deploying, create an owner-only file outside this checkout, following the
 [complete hosting instructions](docs/installation.md#host-it-online). Set
 `OWNER_EMAIL` to an address you can receive mail at, and supply `MAIL_PROVIDER`,

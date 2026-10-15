@@ -82,7 +82,8 @@
         "RER_DEPLOY_FINGERPRINT",
         "INSTALLATION_RELEASE_ID",
         "EGRESS_RELAY_URL",
-        "IDENTITY_PROVIDER"
+        "IDENTITY_PROVIDER",
+        "MAIL_RELAY_URL"
       ],
       "secretNames": [
         "SESSION_SECRET",
@@ -98,7 +99,8 @@
         "XERO_CLIENT_SECRET",
         "EGRESS_RELAY_SECRET",
         "CANDIDATE_RUNNER_TOKEN",
-        "CANDIDATE_DEPLOY_TOKEN"
+        "CANDIDATE_DEPLOY_TOKEN",
+        "MAIL_API_KEY"
       ],
       "migrationPrefix": "",
       "providerEffects": [
@@ -126,7 +128,12 @@
         }
       },
       "healthPath": "/health",
-      "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly."
+      "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly.",
+      "mail": {
+        "providers": [
+          "rer"
+        ]
+      }
     }
   }
 }

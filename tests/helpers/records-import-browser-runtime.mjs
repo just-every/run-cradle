@@ -46,7 +46,7 @@ export async function recordsImportBrowserRuntime(port=18847,network={}) {
   const apps=await fetch(origin+'/api/v1/apps',{redirect:'manual',headers:{cookie}});assert.equal(apps.status,200,'Confirmed owner can use the authenticated product API');assert.ok(Array.isArray((await apps.json()).data.items))
   return {get runtime(){return runtime},get db(){return db},origin,cookie,mailMessages:()=>fixtureMessages(origin),
   /** Stop the Worker process and start a new one over the same persisted D1. */
-  async restart(bindingChanges={}){await runtime.dispose();Object.assign(environment,bindingChanges);runtime=await emittedRuntime(directory,port,environment,mail.fetch);db=await runtime.getD1Database('DB');await runtime.ready},
+  async restart(bindingChanges={}){await runtime.dispose();Object.assign(environment,bindingChanges);for(const key of Object.keys(environment))if(environment[key]===undefined)delete environment[key];runtime=await emittedRuntime(directory,port,environment,mail.fetch);db=await runtime.getD1Database('DB');await runtime.ready},
   async descriptors(){
    // The native local installation includes the product's source-owned schemas.
    // Use its actual descriptors, as createLaunchFoundation does; an empty source

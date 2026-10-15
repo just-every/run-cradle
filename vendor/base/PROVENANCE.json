@@ -90,7 +90,7 @@
       ]
     },
     "runeditrun/base-mail": {
-      "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
       "path": "modules/mail",
       "paths": [
         ".gitignore",
@@ -106,6 +106,15 @@
         "src/adapters/cloudflare/headers.mjs",
         "src/adapters/cloudflare/index.mjs",
         "src/adapters/cloudflare/response.mjs",
+        "src/adapters/messaging/README.md",
+        "src/adapters/messaging/contract.mjs",
+        "src/adapters/messaging/event-schema.mjs",
+        "src/adapters/messaging/index.mjs",
+        "src/adapters/messaging/jws.mjs",
+        "src/adapters/messaging/request.mjs",
+        "src/adapters/messaging/serialize.mjs",
+        "src/adapters/rer/contract.mjs",
+        "src/adapters/rer/index.mjs",
         "src/adapters/resend/README.md",
         "src/adapters/resend/index.mjs",
         "src/adapters/resend/response.mjs",
@@ -121,8 +130,6 @@
         "src/development/index.mjs",
         "src/development/outbox.mjs",
         "src/development/schema.sql",
-        "src/development/viewer-html.mjs",
-        "src/development/viewer.mjs",
         "src/doctor/README.md",
         "src/doctor/common.mjs",
         "src/doctor/dns.mjs",
@@ -131,6 +138,8 @@
         "src/doctor/receive.mjs",
         "src/doctor/records.mjs",
         "src/events/README.md",
+        "src/events/d1-schema.sql",
+        "src/events/d1-storage.mjs",
         "src/events/index.mjs",
         "src/events/intake.mjs",
         "src/events/storage.mjs",
@@ -358,6 +367,32 @@
         "release.mjs",
         "sources.mjs",
         "updates.mjs"
+      ]
+    },
+    "runeditrun/base-delivery-producer": {
+      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "path": ".",
+      "paths": [
+        "modules/delivery-producer/artifact.mjs",
+        "modules/delivery-producer/bindings.mjs",
+        "modules/delivery-producer/capabilities.mjs",
+        "modules/delivery-producer/cli.mjs",
+        "modules/delivery-producer/declarations.mjs",
+        "modules/delivery-producer/export.mjs",
+        "modules/delivery-producer/generators/integration.mjs",
+        "modules/delivery-producer/generators/managed.mjs",
+        "modules/delivery-producer/generators/project.mjs",
+        "modules/delivery-producer/generators/validation.mjs",
+        "modules/delivery-producer/migrations.mjs",
+        "modules/delivery-producer/package.mjs",
+        "modules/delivery-producer/paths.mjs",
+        "modules/delivery-producer/payloads.mjs",
+        "modules/delivery-producer/setup-manifest.mjs",
+        "modules/delivery-producer/spec.mjs",
+        "schema/SETUP.schema.json",
+        "schema/json-schema.mjs",
+        "schema/setup-validation.mjs",
+        "modules/delivery-producer/mail.mjs"
       ]
     }
   },

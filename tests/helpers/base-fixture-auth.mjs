@@ -35,7 +35,13 @@ export async function createFixtureAuth(db, configuration, principalId) {
  }else await adoptFixtureOperators(db)
  const {appOrigin:origin,sessionSecret}=configuration
  const outbox=createD1DevelopmentOutbox({db})
- const base=createOperatorAuth({db,config:{local:true,origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:sessionSecret,MAIL_FROM:'auth@localhost.test'},mailSender:createMailSender({provider:'development',mode:'development'},{outbox}),clientIp:()=> '127.0.0.1'})
+ const mailSender=createMailSender({provider:'sendgrid',mode:'production',apiKey:'synthetic-fixture-provider-key'},{fetch:async(url,init)=>{
+  assert.equal(url,'https://api.sendgrid.com/v3/mail/send')
+  const body=JSON.parse(init.body)
+  await outbox.put({deliveryId:crypto.randomUUID(),from:body.from.email,to:body.personalizations[0].to.map(to=>to.email),subject:body.subject,text:body.content.find(part=>part.type==='text/plain').value})
+  return new Response(null,{status:202})
+ }})
+ const base=createOperatorAuth({db,config:{local:true,origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:sessionSecret,MAIL_FROM:'auth@localhost.test'},mailSender,clientIp:()=> '127.0.0.1'})
  configuration.base=base
  // These fixtures have already installed their workspace and policy data.
  configuration.initializeBaseOwner=async()=>{}

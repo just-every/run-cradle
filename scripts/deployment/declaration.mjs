@@ -13,5 +13,7 @@ export async function ownerDeclaration(root,env){
   if(!env[name]&&!(name==='EGRESS_RELAY_SECRET'&&env.EGRESS_RELAY_URL))continue
   declaration.secrets.push({binding:name,environment:name});bound.add(name)
  }
+ const mailNames=env.MAIL_PROVIDER==='rer'?['MAIL_API_KEY','MAIL_RELAY_URL']:['MAIL_PROVIDER_API_KEY']
+ for(const name of mailNames)if(!bound.has(name))declaration.secrets.push({binding:name,environment:name})
  return declaration
 }

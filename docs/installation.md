@@ -4,7 +4,7 @@ Start with [the quick install guide](install.md). Use macOS, Linux or Windows
 with WSL2, with Git installed. **Install Node 22 or later before rer**: download
 and run your computer's installer from [nodejs.org](https://nodejs.org/en/download),
 then open a new terminal and check `node --version`. npm comes with Node.
-Cradle uses **rer 0.2.22**. The quick guide gives both Run page installer choices,
+Cradle uses **rer 0.2.23**. The quick guide gives both Run page installer choices,
 pinned to that version. Both need Node first; rer installs this project's pinned
 Node 22.20.0 and pnpm 10.12.4 for project commands. You need not install pnpm
 separately.
@@ -42,7 +42,10 @@ MAIL_FROM=cradle@example.com
 MAIL_PROVIDER_API_KEY=synthetic-your-email-provider-api-key
 ```
 
-Use `MAIL_PROVIDER=sendgrid` if that is your provider. The file contains one
+Managed hosting configures the RER mail relay automatically, including its sender
+and private installation credential. You do not need a mail provider account or
+enter a key. The settings above apply to Free or Assisted hosting on your own
+account. Use `MAIL_PROVIDER=sendgrid` if that is your provider. The file contains one
 `KEY=VALUE` per line, without `export` or spaces around `=`. Blank lines and `#`
 comments are allowed. It must be a regular file, not a symlink; keep it out of git.
 Values in this file take precedence over values in your shell environment.

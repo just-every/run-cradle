@@ -4,9 +4,28 @@ import {setup,value,campaign,waitFor,expected} from './helpers/launch-installed.
 const {launchEntities}=await import('../src/apps/launch/contracts.ts')
 
 test('[AUTO-007/009] installed ordered actions retry transport failures at absolute offsets, preserve completed effects and link manual retry',async()=>{
- const attempts=[];let response=429
- const h=await setup({configuration:{MAIL_PROVIDER:'sendgrid',MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:'test-network-edge-only'},providerFetch:async request=>{assert.equal(request.url,'https://api.sendgrid.com/v3/mail/send');attempts.push(await request.json());return new Response(null,{status:response,headers:response===202?{'x-message-id':'accepted-network-edge'}:{}})}})
+ for(const provider of ['sendgrid','rer']) {
+ const attempts=[];let response=202
+ const relay='https://mail.rer.example.test/api/managed-mail/send'
+ const h=await setup({inspectMailRedirects:true,configuration:{MAIL_PROVIDER:provider,MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:provider==='sendgrid'?'test-network-edge-only':undefined,MAIL_API_KEY:provider==='rer'?'synthetic-relay-credential':undefined,MAIL_RELAY_URL:provider==='rer'?relay:undefined},providerFetch:async request=>{
+  assert.equal(request.url,provider==='rer'?relay:'https://api.sendgrid.com/v3/mail/send')
+  assert.equal(request.headers.get('x-test-redirect-mode'),'manual')
+  assert.equal(request.headers.get('authorization'),'Bearer '+(provider==='rer'?'synthetic-relay-credential':'test-network-edge-only'))
+  const body=await request.json();attempts.push(body)
+  if(provider==='rer'){
+   assert.deepEqual(Object.keys(body).sort(),body.html?['html','subject','text','to']:['subject','text','to'])
+   assert.equal(body.to,'owner@example.test');assert.ok(body.subject&&body.text)
+   assert.equal(request.headers.get('auto-submitted'),null)
+  }
+  return new Response(null,{status:response,headers:response===202?{'x-message-id':'accepted-network-edge'}:response===429?{'Retry-After':'60'}:response===302?{Location:'https://refused.example.test/steal'}:{}})
+ }})
  try{
+  const hinted=await h.request('/signin?login_hint=owner%40example.test')
+  assert.equal(hinted.status,200);assert.match(await hinted.text(),/type="email"[^>]*value="owner@example.test"/)
+  assert.equal(attempts.length,0,'A login hint cannot submit mail')
+  assert.equal((await h.post('/auth/magic-link',{email:'owner@example.test',returnTo:'/app'})).status,202)
+  assert.equal(attempts.length,1,'Base sign-in mail used the configured network edge')
+  attempts.length=0;response=429
   // These transport outcomes require an open delivery window at every test-run time.
   const settings=(await h.read('/api/v1/settings')).data
   assert.equal((await h.command('settings.update',{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}})).data.state,'committed')
@@ -34,11 +53,24 @@ test('[AUTO-007/009] installed ordered actions retry transport failures at absol
   assert.deepEqual(copied.map(a=>a.idempotency_key),keys);assert.deepEqual(copied.slice(0,3).map(a=>({key:a.idempotency_key,state:a.state,result:a.result_json,finishedAt:a.finished_at})),completedActions.map(a=>({key:a.idempotency_key,state:a.state,result:a.result_json,finishedAt:a.finished_at})));assert.equal(copied[3].state,'Complete');assert.equal(attempts.length,7)
   assert.equal((await h.db.prepare("SELECT count(*) n FROM activity_entries WHERE message='Exactly one completed action'").first()).n,1)
   // A definitive provider refusal never schedules a transport retry.
-  response=400
-  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(c.id).first();await h.command('launch.campaign.patch',{id:c.id,changes:{statusSummary:'Permanent refusal'}},expected(launchEntities.campaign,current))
-  const refused=await waitFor(()=>h.db.prepare("SELECT * FROM automation_runs WHERE automation_id=? AND retry_of IS NULL AND id<>? ORDER BY created_at DESC LIMIT 1").bind(definition.id,failed.id).first(),r=>r?.state==='Failed')
+  let previousRefusal=failed.id
+  for(const refusal of (provider==='rer'?[400,302,401]:[400,401])){
+  response=refusal
+  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(c.id).first();await h.command('launch.campaign.patch',{id:c.id,changes:{statusSummary:'Permanent refusal '+refusal}},expected(launchEntities.campaign,current))
+  const refused=await waitFor(()=>h.db.prepare("SELECT * FROM automation_runs WHERE automation_id=? AND retry_of IS NULL AND id<>? ORDER BY created_at DESC LIMIT 1").bind(definition.id,failed.id).first(),r=>r?.state==='Failed'&&r?.id!==previousRefusal)
+  previousRefusal=refused.id
   assert.equal(refused.error_code,'provider_refused');assert.equal(await h.db.prepare('SELECT 1 FROM launch_automation_retries WHERE run_id=?').bind(refused.id).first(),null)
+  const visible=(await h.read('/api/automations')).automations.find(a=>a.id===definition.id)
+  assert.equal(visible.lastRunStatus,'Failed');assert.match(visible.failure.message,/Mail provider rejected/)
+  assert.doesNotMatch(visible.failure.message,/synthetic-relay-credential|Bearer|stack|TypeError/)
+  }
+  if(provider==='rer'){
+   await h.reconfigure({MAIL_API_KEY:undefined})
+   assert.equal((await h.request('/health')).status,503)
+   assert.equal((await h.post('/auth/magic-link',{email:'owner@example.test'})).status,503)
+  }
  }finally{await h.close()}
+ }
 })
 
 test('[AUTO-007/009 AUTO-USER-001] uncertain SendGrid delivery stays visible without unsafe automatic or manual resend',async()=>{

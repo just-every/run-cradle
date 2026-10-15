@@ -688,7 +688,11 @@
       ]
     }
   ],
-  "publicVariables": {},
+  "publicVariables": {
+    "MAIL_PROVIDER": "",
+    "MAIL_FROM": "",
+    "MAIL_RELAY_URL": ""
+  },
   "secretNames": [
     "SESSION_SECRET",
     "SETUP_TOKEN",
@@ -703,7 +707,8 @@
     "XERO_CLIENT_SECRET",
     "EGRESS_RELAY_SECRET",
     "CANDIDATE_RUNNER_TOKEN",
-    "CANDIDATE_DEPLOY_TOKEN"
+    "CANDIDATE_DEPLOY_TOKEN",
+    "MAIL_API_KEY"
   ],
   "schedules": [
     "* * * * *"
@@ -741,5 +746,10 @@
         }
       ]
     }
+  },
+  "mail": {
+    "providers": [
+      "rer"
+    ]
   }
 }

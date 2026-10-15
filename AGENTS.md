@@ -2,8 +2,8 @@
 
 ## Run it locally
 
-Install Node 22 or later before installing the package-pinned rer 0.2.22
-(`npm install -g @runeditrun/rer@0.2.22`). Rer then provisions this project’s
+Install Node 22 or later before installing the package-pinned rer 0.2.23
+(`npm install -g @runeditrun/rer@0.2.23`). Rer then provisions this project’s
 pinned Node 22.20.0 and pnpm 10.12.4. See the README for platform prerequisites
 and the alternative installer. Start a checkout through these commands:
 
