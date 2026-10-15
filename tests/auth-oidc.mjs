@@ -13,14 +13,21 @@ async function ready(t){
  await r.link();return r
 }
 test('OIDC: optional pull-link shares the email owner, admits only existing people and retains product policy',async t=>{
- const r=await oidcRuntime(t,emitted)
+ const r=await oidcRuntime(t,emitted,issuer+'/')
  const discovery=await r.call('/.well-known/rer-dependencies');assert.equal(discovery.status,200)
- assert.equal((await discovery.json()).dependencies[0].optional,true)
+ const dependency=(await discovery.json()).dependencies[0]
+ assert.equal(dependency.optional,true);assert.equal(dependency.provider,issuer)
  assert.equal((await r.call('/auth/oidc/auth/start',{})).status,403)
  const owner=await r.call('/auth/bootstrap',{token:r.bindings.SETUP_TOKEN,displayName:'Owner'});assert.equal(owner.status,303)
  const native=await r.proof();assert.equal((await r.call('/auth/session',undefined,native)).status,200)
- if(!emitted){r.bindings.IDENTITY_PROVIDER='invalid';assert.equal((await r.call('/.well-known/rer-dependencies')).status,503);assert.equal((await r.call('/auth/session',undefined,await r.proof())).status,200)}
- r.bindings.IDENTITY_PROVIDER=issuer
+ if(!emitted){
+  for(const invalid of ['invalid','http://identity.example.com/','https://user:password@identity.example.com/','https://identity.example.com/path','https://identity.example.com/path/..','https://identity.example.com/?query=1','https://identity.example.com/#fragment','https://identity.example.com/?','https://identity.example.com/#']){
+   r.bindings.IDENTITY_PROVIDER=invalid
+   const refused=await r.call('/.well-known/rer-dependencies');assert.equal(refused.status,503,invalid);assert.equal((await refused.json()).error,'invalid_identity_provider')
+  }
+  assert.equal((await r.call('/auth/session',undefined,await r.proof())).status,200)
+ }
+ r.bindings.IDENTITY_PROVIDER=issuer+'/'
  assert.equal((await r.call('/auth/dependencies/relink',{issuer},native)).status,200);await r.link()
  assert.equal((await r.call('/auth/oidc/auth/start',{})).status,403,'existing installation stays off after linking')
  if(emitted)assert.doesNotMatch(await(await r.call('/signin')).text(),/action="\/auth\/oidc\/auth\/start"/)

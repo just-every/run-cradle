@@ -14,12 +14,13 @@ export function isDependencyRequest(path: string): boolean {
 export async function dependencyResponse(request: Request, env: PlatformBindings, auth: OperatorAuth): Promise<Response | null> {
   if (!isDependencyRequest(new URL(request.url).pathname)) return null
   const config = baseAuthConfig(env)
-  const provider = env.IDENTITY_PROVIDER?.trim() || undefined
+  let provider = env.IDENTITY_PROVIDER?.trim() || undefined
   // Validate this optional answer at its own door; email recovery remains available.
   if (provider) {
     try {
       const url = new URL(provider)
-      if (url.origin !== provider || url.protocol !== 'https:' || url.username || url.password) throw new Error()
+      if ((provider !== url.origin && provider !== url.origin + '/') || url.protocol !== 'https:' || url.username || url.password) throw new Error()
+      provider = url.origin
     } catch {
       return Response.json({ error: 'invalid_identity_provider' }, { status: 503, headers: securityHeaders() })
     }
