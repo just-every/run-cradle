@@ -15,6 +15,7 @@ export const verifyCommands = [
   {"group": "foundation", "command": "pnpm test:migration"},
   {"group": "foundation", "command": "pnpm test:records"},
   {"group": "launch", "command": "pnpm test:launch"},
+  {"group": "launch", "command": "pnpm test:launch:doors"},
   {"group": "foundation", "command": "node --test tests/improvements-flow.mjs"},
   {"group": "foundation", "command": "pnpm test:foundation"},
   {"group": "foundation", "command": "pnpm test:base"},

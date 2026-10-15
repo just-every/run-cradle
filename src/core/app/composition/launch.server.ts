@@ -29,7 +29,7 @@ export async function createLaunchFoundation(platform: Platform) {
   })
   const channelEffects=createChannelsIntegration(platform.bindings.DB)
   const handlers=createLaunchHandlers({db:platform.bindings.DB,policy:foundation.policy,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID),integration:{...channelEffects,async deleteCampaign(ctx,id){return campaignErasure(platform.bindings.DB,ctx,id)}}})
-  const actions = (Object.keys(launchInputs) as LaunchAction[]).filter(action => !['analysis.request','samples.remove'].includes(action))
+  const actions = (Object.keys(launchInputs) as LaunchAction[]).filter(action => action !== 'analysis.request')
   for(const action of actions){
     const prepare=handlers[action]
     if(!prepare)throw new Error(`Required launch handler missing: ${action}`)

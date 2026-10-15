@@ -6,6 +6,7 @@ import type {Platform} from '../../platform'
 import type {ServerFoundation} from '../foundation.server'
 import {createMemberService,erasureInput} from '../../../domains/authority/members.server'
 import {memberLifecycle} from '../../../domains/lifecycle/members.server'
+import {createOwnershipTransfer} from '../../../domains/authority/ownership.server'
 import {createLifecycleCleanup} from '../../../domains/lifecycle/cleanup.server'
 import {idSchema} from '../../../domains/authority/validators'
 import {readBoundedJson} from '../../../domains/authority/http.server'
@@ -37,6 +38,12 @@ export function createLifecycleComposition(platform:Platform,foundation:ServerFo
    },
   })
  }
+ const transfer=createOwnershipTransfer(db,foundation.policy),transferCommand=z.object({commandId:idSchema,expected,input:z.object({memberId:idSchema}).strict()}).strict()
+ foundation.commands.register({action:'member.transfer-ownership',description:'Hand installation ownership to another active member.',inputSchema:z.toJSONSchema(transferCommand) as Json,input:transferCommand,
+  visible:ctx=>visible(ctx,'member.transfer-ownership'),
+  replayIdentity:async(_ctx,value)=>{const subject=value.expected.find(e=>e.ref.recordId===value.input.memberId);if(!subject)throw new AuthorityError('validation','The current member version is required.',400);return {appId:subject.ref.appId,canonicalInputHash:await digest(canonicalJson({memberId:value.input.memberId,expectedVersion:subject.version}))}},
+  prepare:async(ctx,value)=>{const subject=value.expected.find(e=>e.ref.recordId===value.input.memberId);if(!subject)throw new AuthorityError('validation','The current member version is required.',400);return transfer(ctx,value.commandId,subject.ref.appId,value.input.memberId,subject.version)},
+ })
  const http=new Hono()
  http.onError((error,c)=>errorResponse(error,createUlid(),c.req.method+' '+c.req.path))
  http.post('/api/v1/commands/member.erase',async c=>{
@@ -54,6 +61,16 @@ export function createLifecycleComposition(platform:Platform,foundation:ServerFo
   if(receipt.result.state!=='committed')return c.json({data:receipt.result})
   const result=await cleanup.advance(value.input.id)
   return c.json({data:{...receipt.result,value:{...(receipt.result.state==='committed'?receipt.result.value as object:{}),confirmed:result.state==='complete',erasureState:result.state}},meta:{requestId:ctx.requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:receipt.consistencyToken}},200,{'cache-control':'no-store'})
+ })
+ // Removing samples erases each sample campaign like a deletion; finish their stored-file cleanup.
+ http.post('/api/v1/commands/launch.samples.remove',async c=>{
+  const request=c.req.raw,ctx=await foundation.authenticate(request,'http',createUlid())
+  if(request.headers.get('origin')!==new URL(request.url).origin)throw new AuthorityError('forbidden','A same-origin request is required.',403)
+  const value=launchCommandSchema('samples.remove').parse(await readBoundedJson(request,16384)),receipt=await foundation.commands.get('launch.samples.remove')!.execute(ctx,value)
+  if(receipt.result.state!=='committed')return c.json({data:receipt.result})
+  const removed=(receipt.result.value as {removedIds:string[]}).removedIds,receipts=(await db.prepare("SELECT id FROM lifecycle_erasures WHERE subject_kind='campaign' AND id IN (SELECT value FROM json_each(?))").bind(JSON.stringify(removed)).all<{id:string}>()).results
+  for(const erasure of receipts)await cleanup.advance(erasure.id)
+  return c.json({data:receipt.result,meta:{requestId:ctx.requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:receipt.consistencyToken}},200,{'cache-control':'no-store'})
  })
  http.get('/api/v1/erasures/:id',async c=>{const ctx=await foundation.authenticate(c.req.raw,'http',createUlid()),id=idSchema.parse(c.req.param('id'));await cleanup.status(ctx,foundation.policy,id);await cleanup.advance(id);return c.json({data:await cleanup.status(ctx,foundation.policy,id)})})
  return {http,cleanup}

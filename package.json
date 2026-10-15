@@ -38,6 +38,7 @@
     "test:records": "node --test --test-concurrency=1 tests/records-domain.mjs tests/records-forms.mjs tests/records-formulas.mjs tests/records-relations.mjs tests/records-transport.mjs",
     "verify:authoring": "pnpm verify && pnpm test:runner",
     "test:launch": "node --test --test-concurrency=1 tests/launch-*.mjs",
+    "test:launch:doors": "node tests/ui-launch-operator-doors.mjs",
     "test:foundation": "node --test --test-concurrency=1 tests/foundation-shell.mjs tests/repairs-ux-review.mjs tests/ui-campaign-work-heading.mjs",
     "test:base": "node --test --test-concurrency=1 tests/base-installation.mjs tests/base-queue-consumers.mjs tests/auth-base-only.mjs tests/auth-base-only-runtime.mjs tests/authoring-profile.mjs tests/private-review-cleanup.mjs tests/authoring-host-file.mjs tests/deployment-plan-preview.mjs tests/dev-sessions-upgrade.mjs",
     "test:records:release": "node --import ./tests/helpers/typescript-loader.mjs --test tests/records-manual-release.mjs tests/records-manual-roundtrip.mjs tests/records-csv-fence.mjs",
@@ -94,13 +95,13 @@
     "@cloudflare/vite-plugin": "1.54.5",
     "@cloudflare/workers-types": "5.20260908.1",
     "@playwright/test": "1.63.0",
-    "@runeditrun/rer": "0.2.6",
+    "@runeditrun/rer": "0.2.7",
     "@tailwindcss/vite": "^4.2.0",
     "@types/node": "26.6.4",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
     "@vitejs/plugin-react": "6.1.1",
-    "ajv": "8.17.1",
+    "ajv": "8.18.0",
     "ajv-formats": "3.0.1",
     "esbuild": "0.28.1",
     "highlight.js": "10.7.3",
@@ -111,5 +112,11 @@
     "typescript": "5.9.3",
     "vite": "8.2.2",
     "wrangler": "4.129.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici": "7.29.1",
+      "sharp": "0.35.5"
+    }
   }
 }

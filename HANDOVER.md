@@ -32,7 +32,7 @@ Private installer/key folders and export archives are denied. New Base copies
 are refreshed with export-cli and refresh-base; their existing exact-copy
 inventory and source origins remain authoritative.
 
-Apply `migrations/updates/9022_domain_rules_step_up.sql` after 9021. All earlier
-migrations retain their bytes. The seed's real rer journeys declare
+Apply the `migrations/updates` group in order through
+`9030_legacy_sample_ulids.sql` (the latest); all earlier migrations retain their bytes. The seed's real rer journeys declare
 `RER_SERVER_JOURNEY=1`. The uninvoked isolated browser scripts
 `tests/ui-command-identity.mjs` and `tests/ui-local-draft.mjs` were removed.

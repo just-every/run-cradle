@@ -8,6 +8,7 @@ import { createProvidersComposition } from './providers.server'
 import { createRecordsComposition } from './records.server'
 import { createRepairIntakeComposition } from './repair-intake.server'
 import { createAutomationsComposition } from './automations.server'
+import { createLaunchImportComposition } from './launch-imports.server'
 import { ensureRecordAutomationTriggers } from '../../../domains/automations/capture.server'
 /** Each request resolves admitted schema pointers and current authority anew. */
 export async function createRuntime(platform:Platform,clock=()=>new Date()){
@@ -21,6 +22,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records)
- return {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch}
+ const launchImports=createLaunchImportComposition(platform,foundation,records)
+ return {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
 export type Runtime=Awaited<ReturnType<typeof createRuntime>>

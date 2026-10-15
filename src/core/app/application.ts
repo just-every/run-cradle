@@ -1,6 +1,7 @@
 import { createAuthorityRouter } from '../../domains/authority/routes'
 import { authorizeLaunchProjection } from '../../apps/launch/projection-authority.server'
 import { createLaunchOwnersRouter } from '../../apps/launch/owners.server'
+import { createLaunchSettingsRouter } from '../../apps/launch/settings-http.server'
 import { AdmissionError } from '../../domains/admission/errors'
 import { createRuntime } from './composition/runtime.server'
 import { ApiError, errorResponse } from '../registry/errors.server'
@@ -22,6 +23,7 @@ import { registerMilestoneRoutes } from '../features/milestones'
 import { registerPortfolioRoutes } from '../features/portfolio'
 import { registerRiskRoutes } from '../features/risks'
 import { registerSearchRoutes } from '../features/search'
+import { registerExportRoutes } from '../features/exports/routes'
 import { registerSessionRoutes } from '../features/session'
 import type { Platform } from '../platform'
 import type { SeedConfig } from '../shared/config'
@@ -29,7 +31,7 @@ import type { AppEnv } from './types'
 
 export const createApplication = async (platform: Platform, config: SeedConfig) => {
   const app = new Hono<AppEnv>()
-  const {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime} = await createRuntime(platform)
+  const {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime,launchImports} = await createRuntime(platform)
 
   app.onError(async (error, context) => {
     if (error instanceof ApiError || error instanceof AdmissionError) return errorResponse(error, createUlid(), context.req.method + ' ' + context.req.path)
@@ -78,6 +80,8 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   app.get('/api/v1/launch/analysis-requests/:id',async c=>c.json({data:await launchRuntime.analysis.request(await foundation.authenticate(c.req.raw,'http',createUlid()),c.req.param('id')),meta:{requestId:createUlid(),apiVersion:'cradle.api.v1',evaluatedAt:new Date().toISOString(),consistencyToken:''}}))
   app.get('/api/v1/launch/analyses/:id',async c=>c.json({data:await launchRuntime.analysis.get(await foundation.authenticate(c.req.raw,'http',createUlid()),c.req.param('id')),meta:{requestId:createUlid(),apiVersion:'cradle.api.v1',evaluatedAt:new Date().toISOString(),consistencyToken:''}}))
   app.route('/api/v1/launch', createLaunchOwnersRouter(platform.bindings.DB, foundation))
+  app.route('/api/v1/launch', createLaunchSettingsRouter(platform.bindings.DB, foundation))
+  for (const path of ['/api/v1/launch/imports', '/api/v1/launch/imports/*']) app.all(path, context => launchImports.fetch(context.req.raw))
   for (const path of ['/api/v1/connections/setup', '/api/v1/connections/:id/credentials']) app.all(path, context => providers.setupHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/connections', '/api/v1/connections/:id/unknowns', '/api/v1/connections/:id/resolutions', '/api/v1/model-profiles', '/api/v1/model-calls']) app.all(path, context => providers.collectionsHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/connections/:id', '/oauth/*', '/webhooks/*']) app.all(path, context => providers.connectionHttp.fetch(context.req.raw))
@@ -95,7 +99,7 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   for (const path of ['/api/v1/intakes', '/api/v1/intakes/*', '/api/v1/repairs/intake-context']) app.all(path, context => repairIntake.http.fetch(context.req.raw))
   for (const path of ['/api/notifications', '/api/notifications/*', '/api/settings', '/api/workspace', '/api/v1/notifications', '/api/v1/settings', '/api/v1/preferences', '/api/v1/deliveries']) app.all(path, context => channels.http.fetch(context.req.raw))
   app.all('/mcp', context => foundation.mcp(context.req.raw))
-  for(const path of ['/api/v1/commands/member.erase','/api/v1/commands/launch.campaign.delete','/api/v1/erasures/:id']) app.all(path,context=>lifecycle.http.fetch(context.req.raw))
+  for(const path of ['/api/v1/commands/member.erase','/api/v1/commands/launch.campaign.delete','/api/v1/commands/launch.samples.remove','/api/v1/erasures/:id']) app.all(path,context=>lifecycle.http.fetch(context.req.raw))
   app.route('/api/v1/commands', foundation.http)
   app.get('/api/v1/actions', async context => {
     const requestId = createUlid()
@@ -110,7 +114,7 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   // share this boundary. Mutations still use canonical atomic admission below.
   const launch = new Hono<AppEnv>()
   launch.use('*', async (context, next) => {
-    if (!/^\/api\/(portfolio|campaigns|deliverables|risks|milestones|lenses|decisions|automations|search)(\/|$)/.test(context.req.path)) return next()
+    if (!/^\/api\/(portfolio|campaigns|deliverables|risks|milestones|lenses|decisions|automations|search|exports)(\/|$)/.test(context.req.path)) return next()
     const ctx = await foundation.authenticate(context.req.raw, 'http', createUlid())
     const recheck = await authorizeLaunchProjection(platform.bindings.DB, foundation.policy, ctx)
     await next()
@@ -125,6 +129,7 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   registerDecisionRoutes(launch, platform)
   registerAutomationRoutes(launch, platform)
   registerSearchRoutes(launch, platform)
+  registerExportRoutes(launch, platform)
   app.route('/', launch)
 
   app.use('/api/v1/*', async (context, next) => {

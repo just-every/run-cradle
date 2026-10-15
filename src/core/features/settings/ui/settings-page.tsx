@@ -1,6 +1,9 @@
 import {ReadinessSettings} from '../../../../ui/settings/readiness-settings'
 import {LaunchAiSettings} from '../../../../ui/settings/launch-ai-settings'
 import { LazySettingsPanel } from '../../../../ui/settings/lazy-settings-panel'
+import { CustomFieldsPanel } from '../../../../ui/settings/custom-fields-panel'
+import { ImportsPanel } from '../../../../ui/settings/imports-panel'
+import { SampleDataPanel } from '../../../../ui/settings/sample-data-panel'
 import { PreferencesPanel } from '../../../../ui/settings/preferences-panel'
 import { UsagePanel } from '../../../../ui/settings/usage-panel'
 import { ConnectionPanel } from '../../../../ui/settings/connection-panel'
@@ -56,6 +59,9 @@ export const SettingsPage = () => {
         <details className="cr-detail"><summary>Your notifications</summary><PreferencesPanel /></details>
         <details className="cr-detail" onToggle={event=>setKeysOpen(event.currentTarget.open)}><summary>API keys</summary>{keysOpen&&<ApiKeysPanel />}</details>
         <details className="cr-detail"><summary>Usage and model availability</summary><UsagePanel /></details>
+        <LazySettingsPanel title="Custom fields"><CustomFieldsPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Imports"><ImportsPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Sample data"><SampleDataPanel /></LazySettingsPanel>
         <LazySettingsPanel title="People and authority"><AccessPanel /></LazySettingsPanel>
         <details className="cr-detail" onToggle={event => setConnectionsOpen(event.currentTarget.open)}><summary>Connections</summary>{connectionsOpen && <ConnectionPanel />}</details>
       </div>
