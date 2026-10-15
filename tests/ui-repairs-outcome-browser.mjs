@@ -5,17 +5,19 @@ import {tmpdir} from 'node:os'
 import {chromium} from '@playwright/test'
 import {repairOutcomeFixture} from './repair-outcome-fixture.mjs'
 import {repairFlow} from './repair-outcome-flow.mjs'
+import {captureRepairFailure} from './repair-browser-diagnostics.mjs'
 import {browserRepairJourney} from './repair-outcome-browser-journey.mjs'
 import {auditAccessibility} from './helpers/accessibility-evidence.mjs'
 const output=process.env.CRADLE_UI_EVIDENCE??path.join(tmpdir(),'cradle-repair-outcome-evidence')
 await mkdir(output,{recursive:true})
 const h=await repairOutcomeFixture(),flow=repairFlow(h),browser=await chromium.launch({headless:true})
-const results=[]
+const results=[],observations=[]
 try{
  const {grant}=await h.issuedGrant()
  const context=await browser.newContext({viewport:{width:390,height:844},locale:'en-AU',timezoneId:'Australia/Brisbane'})
  await context.addCookies([{name:h.ownerSession.cookie.split('=')[0],value:h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
  const page=await context.newPage(),mutations=[],acceptanceRequests=[]
+ page.on('response',async response=>{const pathname=new URL(response.url()).pathname;if(!pathname.startsWith('/api/v1/commands/'))return;let body;try{body=await response.json()}catch{}observations.push({path:pathname,status:response.status(),state:body?.data?.state,acceptance:body?.data?.result?.storeAcceptance,error:body?.error?.message})})
  page.on('request',r=>{if(r.method()==='POST'&&r.url().includes('/commands/'))mutations.push(r.url());if(r.method()==='POST'&&r.url().endsWith('/commands/repair.store-acceptance'))acceptanceRequests.push(r.postDataJSON().commandId)})
  async function audit(name){for(const width of [1440,390]){await page.setViewportSize({width,height:width===390?844:900});await page.waitForLoadState('networkidle');await writeFile(path.join(output,`repair-layout-${name}-${width}.json`),JSON.stringify(await page.evaluate(()=>{const link=document.querySelector('a[href^="/app/cases/"]');const nodes=[link,link?.parentElement,link?.parentElement?.nextElementSibling,link?.parentElement?.nextElementSibling?.querySelector('h2')];return {fonts:document.fonts.status,nodes:nodes.filter(Boolean).map(node=>{const style=getComputedStyle(node),rect=node.getBoundingClientRect();return {tag:node.tagName,className:node.className,text:node.textContent.slice(0,80),rect:{x:rect.x,y:rect.y,width:rect.width,height:rect.height},display:style.display,lineHeight:style.lineHeight,fontFamily:style.fontFamily,fontSize:style.fontSize,marginTop:style.marginTop,marginBottom:style.marginBottom,minHeight:style.minHeight}})}}),null,2));const result=await auditAccessibility(page,{screen:name,width,output});assert.equal(result.layout.pageOverflow,false);assert.deepEqual([...result.axe.wcag22aa,...result.axe.targetSize].map(v=>v.id),[]);results.push({screen:name,width,overflow:result.layout.pageOverflow})}}
  // Device-only photo intake still uses the actual emitted document and R2 upload path.
@@ -79,4 +81,4 @@ try{
  await context.close()
  const journeys=[];for(const width of [1440,390])journeys.push(await browserRepairJourney(browser,width,output))
  await writeFile(path.join(output,'result.json'),JSON.stringify({journeys,states:results,acceptanceKeys:{committed:lostKey,notCommitted:uncommittedKey},externalProviders:'network-edge doubles; actual adapters and credential/execution paths'},null,2))
-}finally{await browser.close();await h.close()}
+}catch(error){await captureRepairFailure(browser,output,error,'acceptance');await writeFile(path.join(output,'failure-command-observations.json'),JSON.stringify(observations,null,2));throw error}finally{await browser.close();await h.close()}

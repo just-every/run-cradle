@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {captureRepairFailure} from './repair-browser-diagnostics.mjs'
 import {repairOutcomeFixture} from './repair-outcome-fixture.mjs'
 import {auditAccessibility} from './helpers/accessibility-evidence.mjs'
 const photo=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZlYQAAAAASUVORK5CYII=','base64')
@@ -140,5 +141,5 @@ export async function browserRepairJourney(browser,width,output){
   assert.equal((await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n,1)
   trace.receiptId=state.accounting.receiptId
   return trace
- }finally{for(const context of contexts)await context.close();await h.close()}
+ }catch(error){await captureRepairFailure(browser,output,error,`journey-${width}`);throw error}finally{for(const context of contexts)await context.close();await h.close()}
 }

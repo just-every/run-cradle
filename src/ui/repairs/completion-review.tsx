@@ -15,7 +15,13 @@ export function CompletionReview({ repairId, onChanged }: { repairId: string; on
   useEffect(() => { setChecked(false); setAccepted(null); setReadySources({}) }, [version])
   const [online,setOnline]=useState(true)
   useEffect(()=>{const off=()=>{setOnline(false);setChecked(false)},on=()=>{setOnline(true);setChecked(false);review.refresh()};window.addEventListener('offline',off);window.addEventListener('online',on);setOnline(navigator.onLine);return()=>{window.removeEventListener('offline',off);window.removeEventListener('online',on)}},[review.refresh])
-  useEffect(() => { if (command.result.state === 'committed') onChanged() }, [command.result.state])
+  useEffect(() => {
+    if(command.result.state!=='committed'||review.resource.state!=='ready')return
+    const receipt=command.result.value
+    // A readback may describe an older accepted claim. Keep that original receipt
+    // visible while the current changed claim awaits its own fresh inspection.
+    if(receipt.storeAcceptance?.claimId===review.resource.data.claim.id&&receipt.workOrder.version>=review.resource.data.workOrder.version)onChanged()
+  }, [command.result.state,review.resource.state,version])
   return <ResourceState resource={review.resource} operation="contractor completion claim" retry={review.refresh}>{data => {
     const sources = Array.from(new Map(data.claim.evidence.map(evidence => [evidence.sourceId, evidence.sourceVersion])).entries())
     const busy = !online || working || [capture.result.state, command.result.state].some(state => ['unknown', 'pending', 'submitting'].includes(state))
