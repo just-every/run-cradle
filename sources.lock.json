@@ -8501,7 +8501,7 @@
       "executable": false
     },
     "tests/helpers/base-fixture-auth.mjs": {
-      "sha256": "cf1297fcfaae3ff5795b5e01ccc6f2c058d9be2922e5be0bfc824ff320cb54a5",
+      "sha256": "2a62e2c7183cc8547224f5823a5c6030fc86f7f17a869ab2719f75426ea2d5ed",
       "executable": false
     },
     "tests/helpers/base-http-session.mjs": {

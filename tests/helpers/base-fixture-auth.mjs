@@ -20,6 +20,9 @@ export async function adoptFixtureOperators(db) {
    WHERE NOT EXISTS(SELECT 1 FROM cradle_base_operators b WHERE b.principal_id=p.id)`),
   db.prepare(`INSERT OR IGNORE INTO cradle_base_operators(base_id,principal_id)
    SELECT o.id,p.id FROM operators o JOIN authority_principals p ON p.human_id=o.id`),
+  db.prepare(`INSERT OR IGNORE INTO oa_bootstrap(singleton,claim_id,claimed_at)
+   SELECT 1,'imported-existing-installation',unixepoch('subsec')*1000
+   WHERE EXISTS(SELECT 1 FROM operators)`),
   db.prepare(trigger.sql),
  ])
 }
