@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {spawnSync} from 'node:child_process'
 import {emittedRuntime} from './helpers/emitted-runtime.mjs'
+import {createFixtureMail} from './helpers/fixture-mail.mjs'
 import {installLegacyFixture} from './helpers/install-legacy-fixture.mjs'
 import {installUiRepairsFixture} from './ui-repairs-fixture.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
@@ -17,12 +18,13 @@ const {repairDescriptors}=await import('../src/apps/repairs/descriptors.ts')
 const {environmentKeyring,seal}=await import('../src/domains/connections/crypto.server.ts')
 export async function repairOutcomeFixture(){
  const directory=await mkdtemp(path.join(tmpdir(),'cradle-repair-outcome-')),port=await freePort(),origin=`http://127.0.0.1:${port}`,edge=repairProviderEdge()
- let runtime
+ let runtime,mail
  try{
+  mail=await createFixtureMail(port,edge.fetch)
   const migration=spawnSync(process.execPath,['scripts/migrate-local.mjs','--persist-to',directory],{encoding:'utf8',maxBuffer:16*1024*1024});assert.equal(migration.status,0,migration.stderr+migration.stdout)
   const owner=await installLegacyFixture(directory,{installationOwner:true}),fixture=await installUiRepairsFixture(directory,owner)
   const key=Buffer.alloc(32,9).toString('base64url')
-  runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long',APP_ORIGIN:origin,CONNECTION_ENCRYPTION_KEY_VERSION:'test',CONNECTION_ENCRYPTION_KEY:key},edge.fetch)
+  runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long',APP_ORIGIN:origin,CONNECTION_ENCRYPTION_KEY_VERSION:'test',CONNECTION_ENCRYPTION_KEY:key,...mail.bindings},mail.fetch)
   await runtime.ready
   const db=await runtime.getD1Database('DB'),now=new Date().toISOString(),manager='01ARZ3NDEKTSV4RRFFQ69G5FAB',other='01ARZ3NDEKTSV4RRFFQ69G5FAC'
   const policy=(await db.prepare('SELECT p.* FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(owner,model.REPAIRS_APP_ID).first())
@@ -54,6 +56,6 @@ export async function repairOutcomeFixture(){
    return {grant:issued.value,spec}
   }
   async function waitAttempt(id){for(let i=0;i<100;i++){const row=await db.prepare('SELECT * FROM execution_attempts WHERE id=?').bind(id).first();if(row&&['confirmed','refused','unknown'].includes(row.state))return row;await new Promise(resolve=>setTimeout(resolve,100))}throw new Error('Provider attempt did not settle')}
-  return {...model,db,runtime,origin,edge,fixture,owner,manager,other,rules,policyId:policy.id,ownerSession,managerSession,otherSession,connections,read,post,source,ref,issuedGrant,waitAttempt,id:createUlid,close:async()=>{await runtime.dispose();await rm(directory,{recursive:true,force:true})}}
- }catch(error){await runtime?.dispose();await rm(directory,{recursive:true,force:true});throw error}
+  return {...model,db,runtime,origin,edge,fixture,owner,manager,other,rules,policyId:policy.id,ownerSession,managerSession,otherSession,connections,read,post,source,ref,issuedGrant,waitAttempt,id:createUlid,close:async()=>{try{await runtime.dispose()}finally{await mail.close();await rm(directory,{recursive:true,force:true})}}}
+ }catch(error){try{await runtime?.dispose()}finally{await mail?.close();await rm(directory,{recursive:true,force:true})}throw error}
 }

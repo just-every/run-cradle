@@ -1,37 +1,52 @@
 name: Verify
 on:
   push:
+    branches: ['**']
   pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      tier:
+        type: string
+        default: push
+      timeout:
+        type: number
+        default: 12
 permissions:
   contents: read
 concurrency:
-  group: verify-${{ github.ref }}
-  cancel-in-progress: false
+  group: seed-verify-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 env:
   CI: 'true'
   WRANGLER_SEND_METRICS: 'false'
+  PLAYWRIGHT_SKIP_BROWSER_GC: '1'
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Free unused runner SDK space
-        run: sudo rm -rf /usr/local/lib/android
-      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
-          version: 10.12.4
-      - uses: actions/setup-node@v4
+          node-version: '22.20.0'
+          package-manager-cache: false
+      - id: plan
+        env:
+          TIER: ${{ inputs.tier || 'push' }}
+        run: echo "matrix=$(node scripts/verify-ci.mjs --matrix "$TIER")" >> "$GITHUB_OUTPUT"
+      - run: npm install --global pnpm@10.12.4
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
-          node-version: 22.20.0
-          cache: pnpm
+          path: ~/.local/share/pnpm/store
+          key: seed-ubuntu24-${{ runner.arch }}-browser-false-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
       - run: pnpm install --frozen-lockfile --ignore-workspace
-      - name: Build and types
+      - name: Build, types and managed specification
         run: node scripts/verify-app.mjs build
-      - name: Check managed deployment specification
-        run: pnpm check:deployment-spec
       - name: Pack production build
         run: tar -czf /tmp/cradle-build.tgz dist
       - uses: actions/upload-artifact@v4
@@ -39,52 +54,59 @@ jobs:
           name: production-build
           path: /tmp/cradle-build.tgz
           retention-days: 1
-  tests:
-    name: verify-${{ matrix.group }}
+  shards:
+    name: verify-${{ matrix.name }}
     needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout || 12 }}
     strategy:
       fail-fast: false
-      matrix:
-        group: [launch, foundation, records, identity, runtime]
+      matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Free unused runner SDK space
-        run: sudo rm -rf /usr/local/lib/android
-      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
-          version: 10.12.4
-      - uses: actions/setup-node@v4
+          node-version: '22.20.0'
+          package-manager-cache: false
+      - run: npm install --global pnpm@10.12.4
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
-          node-version: 22.20.0
-          cache: pnpm
+          path: |
+            ~/.local/share/pnpm/store
+            ~/.cache/ms-playwright
+          key: seed-ubuntu24-${{ runner.arch }}-browser-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
       - run: pnpm install --frozen-lockfile --ignore-workspace
-      - run: pnpm exec playwright install --with-deps chromium
+      - name: Install Chromium and system libraries
+        if: matrix.browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Reserve disk for native runtime journeys
+        run: |
+          free_kib() { df -Pk "$GITHUB_WORKSPACE" | awk 'END { print $4 }'; }
+          for unused_tools in /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL; do
+            if [ "$(free_kib)" -ge "$((20 * 1024 * 1024))" ]; then break; fi
+            sudo rm -rf -- "$unused_tools"
+          done
       - uses: actions/download-artifact@v4
         with:
           name: production-build
           path: /tmp/cradle-build
       - name: Restore production build
         run: tar -xzf /tmp/cradle-build/cradle-build.tgz
-      - name: Application checks
-        if: matrix.group != 'runtime'
-        run: node scripts/verify-app.mjs "${{ matrix.group }}"
-      - name: Archive, hosted output and hydration
-        if: matrix.group == 'runtime'
-        run: pnpm verify
+      - name: Run this shard
         env:
-          CRADLE_VERIFY_GROUP: runtime
+          SHARD: ${{ matrix.name }}
+        run: node scripts/verify-ci.mjs "$SHARD"
   verify:
-    needs: [build, tests]
+    needs: [build, shards]
     if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
     steps:
       - name: Require every verification worker
         env:
-          BUILD_RESULT: ${{ needs.build.result }}
-          TEST_RESULT: ${{ needs.tests.result }}
-        run: test "$BUILD_RESULT" = success && test "$TEST_RESULT" = success
+          BUILD: ${{ needs.build.result }}
+          SHARDS: ${{ needs.shards.result }}
+        run: test "$BUILD" = success && test "$SHARDS" = success

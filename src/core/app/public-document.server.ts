@@ -1,6 +1,5 @@
 import { env } from 'cloudflare:workers'
 import { createBaseAuth } from '../platform/base-auth.server'
-import { localMailEnabled } from '../platform/local-auth.server'
 
 /** Only the identity plate name and sign-in capabilities are public. */
 export async function publicDocument({ identity = false }: { identity?: boolean } = {}) {
@@ -14,9 +13,9 @@ export async function publicDocument({ identity = false }: { identity?: boolean 
   }
   return {
     workspaceName,
+    ownerClaimed: !!await env.DB.prepare('SELECT singleton FROM oa_bootstrap WHERE singleton=1').first(),
     ...(identity ? { identityProviders: (await createBaseAuth(env).providers?.list() ?? []).filter(provider => provider.visible).map(({ label, startPath }) => ({ label, startPath })) } : {}),
-    developmentOutbox: localMailEnabled(env) && env.MAIL_PROVIDER === 'development',
-    magicLink: !!(env.MAIL_FROM && ((localMailEnabled(env) && env.MAIL_PROVIDER === 'development') || (env.MAIL_PROVIDER && env.MAIL_PROVIDER_API_KEY))),
+    magicLink: !!(env.MAIL_FROM && (env.MAIL_PROVIDER && env.MAIL_PROVIDER !== 'development' && env.MAIL_PROVIDER_API_KEY)),
   }
 }
 export type PublicDocument = Awaited<ReturnType<typeof publicDocument>>

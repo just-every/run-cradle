@@ -47,19 +47,25 @@ later** first: download the installer for your computer from
 [nodejs.org](https://nodejs.org/en/download), run it, then open a new terminal.
 Check `node --version` shows v22 or later; npm comes with Node.
 
-Install the `rer` command (Cradle uses **rer 0.2.20**), clone Cradle, and start it:
+Install the `rer` command once per computer. These are the Run page's two
+installer choices, pinned here to Cradle's **rer 0.2.22**:
 
 ```sh
-npm install -g @runeditrun/rer@0.2.20
-git clone https://github.com/just-every/run-cradle.git cradle
-cd cradle && rer dev
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.22 sh
 ```
 
-Rer then provisions this project’s pinned Node 22.20.0 and pnpm 10.12.4.
-The alternative installer also requires Node first; pin the same rer release:
+Or, with npm:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.20 sh
+npm install -g @runeditrun/rer@0.2.22
+```
+
+Both installers need Node first. Rer installs the project's pinned Node 22.20.0
+and pnpm 10.12.4 for project commands; you do not install pnpm separately. Then:
+
+```sh
+git clone https://github.com/just-every/run-cradle.git cradle
+cd cradle && rer dev
 ```
 
 The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
@@ -98,7 +104,7 @@ dependencies on their own; there is no install lifecycle hook.
 Managed Configure reads `management/integration/deployment-spec.json` and the
 digest-bound `rer-setup-managed.json` directly from this repository. The hosted
 form offers Resend or SendGrid and requires its verified sender and API key;
-local setup keeps the development outbox. After changing build configuration,
+local setup sends no external email. After changing build configuration,
 migrations or setup fields, run `pnpm build:app && pnpm deployment:spec` and commit
 the generated spec, hosted manifest and `rer-project.json`. CI checks for drift
 with `pnpm check:deployment-spec` after building.
@@ -111,23 +117,35 @@ PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium
 rer verify
 ```
 
-Verification checks product types, real Worker/D1 flows, browsers, the command
-contract, Base copies, the recursive portable onboarding suite and DB/FILES
-movement, within a 200-test seed budget. The isolated Docker runner described in
+Local verification checks product types, real Worker/D1 flows, browsers, the
+command contract, Base copies and DB/FILES movement, within a 200-test seed
+budget. Push CI runs these in parallel shards; the slow installer and portable
+fresh-clone journeys run on release tags and nightly. See the
+[verification guide](docs/verification.md) for the split and timing evidence.
+The isolated Docker runner described in
 [authoring](authoring/README.md) has a separate operational acceptance path.
 No provider credentials are needed for local use.
 
 ## Reset and move data
 
-Stop dev/preview first. Keep the archive outside the reset inventory:
+In Settings → **Export your installation**, choose **Prepare archive**, wait
+until it is verified, then **Download verified archive**. The `.rer` download uses
+the same format as `rer export`; keep your source checkout separately. See
+[installation archives](docs/installation-archives.md) for restoring a download.
+
+For the command-line path, stop dev/preview first. Keep the archive outside the
+reset inventory:
 
 ```sh
 rer export --output exports/workspace.rer
 rer reset --yes
 rer import --input exports/workspace.rer --yes
-rer setup --answers answers.json --non-interactive
 rer dev
 ```
+
+`rer dev` recreates local configuration and the local owner after import; no
+`answers.json` is needed. To choose an owner email instead, run
+`rer setup --owner-email you@example.com` before `rer dev`.
 
 Import requires an empty destination and explicit confirmation. DB business
 cells, including recomputed generated columns, and FILES bytes/metadata transfer.
@@ -154,22 +172,16 @@ rer deploy --environment production --env-file "$HOME/cradle-production.env"
 
 Dry-run builds and validates locally without provider calls. Deployment creates the
 resources, applies migrations, uploads the app and checks health, then claims the
-hosted owner. Open `/signin` on the hosted URL and use the emailed link. You can
-also sign in without email, using the same checkout and Cloudflare credentials:
-
-```sh
-rer signin --environment production --env-file "$HOME/cradle-production.env"
-```
-
-Open the printed link within 15 minutes; it works once for the recorded owner.
-Treat it as a password. This also lets the owner correct a wrong email in Settings.
+hosted owner. Open `/signin` on the hosted URL and use the emailed link.
+A deployment must complete owner claim before sign-in works. If deploy reports an
+incomplete owner claim, resolve the reported cause and complete deployment first.
 Repeat deployment keeps the existing owner and secrets; changing `OWNER_EMAIL`
 in the file alone does not replace that owner.
 A push to public main redeploys the marketing site; it does not deploy your app.
 
 To update, preserve customisations, merge source updates, run `rer install` and
 `rer verify`, then deploy with the same environment and private file. Keep
-`.rer/deploy` records for updates, sign-in and removal. To delete the hosted
+`.rer/deploy` records for updates and removal. To delete the hosted
 installation **and its data**, first keep any exports you need, then run:
 
 ```sh
@@ -183,7 +195,9 @@ For a local source export, run
 `rer release --repo . --output ../cradle-export --clean-history`.
 Release never pushes or deploys. Use `describe` for commands and flags, `doctor`
 for local prerequisites, and `check --profile first-party` for the read-only
-contract check before dependencies or configuration exist.
+contract check before dependencies or configuration exist. Before the first
+`rer dev` (including after reset/import), `doctor` can exit 3 for local inputs
+that `rer dev` will create; this alone does not mean an imported archive failed.
 
 [CONTRACT.md](CONTRACT.md) records product guarantees; [BASELINE.md](BASELINE.md)
 records security and operational requirements. [HANDOVER.md](HANDOVER.md) states

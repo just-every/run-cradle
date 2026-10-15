@@ -1,9 +1,10 @@
+import {installationArchive} from './helpers/installation-archive.mjs'
 import assert from 'node:assert/strict'
 import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 import { completeFirstRun } from './helpers/complete-first-run.mjs'
 
-contract('HOME-003', 'The installed Lobby recognizes the owner claim before workspace setup is completed', async () => {
+contract('HOME-003 BASE-DATA-001 RECORDS-006', 'The installed Lobby recognizes the owner claim before workspace setup is completed', async () => {
   const h = await launchBaseAuthorityRuntime()
   try {
     const state = async () => {
@@ -42,5 +43,7 @@ contract('HOME-003', 'The installed Lobby recognizes the owner claim before work
     assert.ok(claimed.includes('Northwind'), 'The Lobby names the persisted workspace')
     assert.doesNotMatch(claimed, /href="\/setup"|<script/)
     assert.equal((await h.request('/setup/state', { method: 'POST' })).status, 405)
+    const owner=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators').first()).principal_id
+    await installationArchive(h,{cookie,owner})
   } finally { await h.close() }
 })

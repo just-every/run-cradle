@@ -9,17 +9,24 @@ pnpm 10.12.4.
 
 ## Run it on your computer
 
+Install rer once per computer using either Run page installer, pinned to
+Cradle's rer 0.2.22:
+
 ```sh
-npm install -g @runeditrun/rer@0.2.20
-git clone https://github.com/just-every/run-cradle.git cradle
-cd cradle && rer dev
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.22 sh
 ```
 
-Cradle uses rer 0.2.20. The alternative installer also requires Node first;
-pin the same rer release:
+Or:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.20 sh
+npm install -g @runeditrun/rer@0.2.22
+```
+
+Both choices require Node first. Then clone Cradle and start it:
+
+```sh
+git clone https://github.com/just-every/run-cradle.git cradle
+cd cradle && rer dev
 ```
 
 The first `rer dev` installs the dependencies, creates a local owner, applies
@@ -39,13 +46,19 @@ Stop the app with `rer dev --stop`.
 
 ## Move or reset your data
 
-Export before you reset anything you want to keep:
+Stop dev/preview first. Export before you reset anything you want to keep:
 
 ```sh
 rer export --output exports/workspace.rer
 rer reset --yes
 rer import --input exports/workspace.rer --yes
+rer dev
 ```
+
+`rer dev` recreates local configuration and the local owner; no answers file is
+needed. To choose an owner email, run `rer setup --owner-email you@example.com`
+before starting dev. `rer doctor` can report missing local inputs before dev has
+created them, including after reset/import.
 
 Import needs an empty installation and your confirmation. [Installation archives](installation-archives.md) explains what moves and what you approve again.
 
@@ -63,14 +76,9 @@ rer deploy --environment production --env-file "$HOME/cradle-production.env"
 ```
 
 Dry-run builds and validates locally without provider calls. A healthy deployment
-claims the owner automatically. Open `/signin` on its hosted URL for an email link,
-or use the same checkout and Cloudflare credentials to sign in without email:
-
-```sh
-rer signin --environment production --env-file "$HOME/cradle-production.env"
-```
-
-Open the printed link within 15 minutes; it works once for the recorded owner.
+claims the owner automatically. After deployment completes, open `/signin` on
+its hosted URL and confirm the emailed link. A failed owner claim must be resolved
+by completing deployment before sign-in can work.
 Repeat deployment keeps the existing owner and secrets. A public-main push
 redeploys the marketing site, not your installation.
 

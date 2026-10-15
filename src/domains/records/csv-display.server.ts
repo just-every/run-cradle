@@ -16,7 +16,8 @@ export function displayCsvValue(field:Field,value:CellValue):string {
   if(label===undefined)throw new AdmissionError('validation',`${field.label}: a select option is unavailable.`)
   return label
  }).join(', ')
- return typeof value==='string'||typeof value==='boolean'?String(value):JSON.stringify(value)
+ if(typeof value==='boolean')return value?'Yes':'No'
+ return typeof value==='string'?value:JSON.stringify(value)
 }
 
 /** Label reads require their own export scope, including the target's primary field. */

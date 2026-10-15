@@ -27,6 +27,7 @@ export async function exerciseCsv(page,j,origin,width){
    assert.deepEqual([body.data.updates,body.data.unchanged],[1,1])
    assert.equal(await preview.getByRole('cell',{name:/^(?:Change\s*)?Rejected$/}).count(),rejected)
    assert.match(text,/Number:.*number/);assert.match(text,/Checked:.*true.*false/)
+   const invalidRow=preview.getByRole('row').filter({hasText:'Bad number'});assert.equal(await invalidRow.getByRole('listitem').count(),2,'One rejected row lists both invalid fields')
    assert.doesNotMatch(text,/invalid_format|invalid_type|Expected canonical/)
   }
   await j.capture(rejected?'csv-mixed-preview':expected?'csv-preview':'csv-idempotent-preview')
@@ -46,7 +47,7 @@ export async function exerciseCsv(page,j,origin,width){
  const editor=page.locator('form.cr-card').filter({has:page.getByRole('heading',{name:'Save this work view'})})
  await editor.getByLabel('Name',{exact:true}).fill('All imported rows')
  const view=await j.command(editor.getByRole('button',{name:'Save view',exact:true}),'view.save')
- await page.reload();await j.action(page.getByText('Saved views',{exact:true}));await page.getByLabel('Saved view',{exact:true}).selectOption(view.id)
+ await page.reload();await j.action(page.getByRole('navigation',{name:'Saved views',exact:true}).getByRole('button',{name:view.name,exact:true}))
  await page.getByRole('heading',{name:'All imported rows',exact:true}).waitFor()
  const section=page.locator('section.cr-section').filter({has:page.getByRole('heading',{name:'All imported rows',exact:true})})
  const pending=page.waitForEvent('download');await j.action(section.getByRole('button',{name:'Export CSV',exact:true}))
@@ -58,7 +59,7 @@ export async function exerciseCsv(page,j,origin,width){
  const roundtrip=await readFile(await(await pending2).path(),'utf8');assert.equal(roundtrip,exported);await j.capture('csv-roundtrip')
  const mixed=encodeCsv(['Key','Text','Number','Checked'],[
   ['row-000','Changed','12','true'],['row-001',samples[1],'0','false'],['New row','New','2','false'],
-  ['Bad number','','not-a-number','false'],['Bad checkbox','','1','maybe'],['Duplicate','','1','false'],['Duplicate','','2','false'],
+  ['Bad number','','not-a-number','maybe'],['Bad checkbox','','1','maybe'],['Duplicate','','1','false'],['Duplicate','','2','false'],
  ])
  await importCsv(mixed,1,4);await j.capture('csv-mixed-imported')
  return {source:source.appId,destination:target.appId,rows:205,exactRoundtrip:true,idempotent:true,mixedRowsImported:true}

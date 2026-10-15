@@ -8,7 +8,7 @@ export type CsvImportRow = {
   values: Record<string, CellValue>
   operation: 'create' | 'update' | 'unchanged'
 }
-export type CsvImportRejection = { row: number; label: string; message: string }
+export type CsvImportRejection = { row: number; label: string; message: string; problems?: string[] }
 export type CsvImportSummary = { creates: number; updates: number; unchanged: number; rejected: number }
 export type CsvImportPreview = CsvImportSummary & {
   id: string

@@ -1,11 +1,44 @@
 # Installation archives
 
-Use the public `rer export` and `rer import` commands described in RUN-LOCALLY.md.
+As the installation owner, open Settings → **Export your installation**, choose
+**Prepare archive**, and keep the page open while it prepares the archive. When
+it says the archive is prepared and verified, choose **Download verified archive**.
+If preparation stops with an error, correct the reported problem and use
+**Continue preparing archive**, or prepare a new archive if the job was aborted.
+The download is a private `cradle-installation-….rer` file containing installation
+data and files in the same format as `rer export`.
+
+Keep your source checkout, customisations and private deployment configuration
+separately. The `.rer` file is a data archive, not a source-code bundle. Uploaded
+source originals stored as business records can be included; that does not replace
+the application checkout needed to run them.
+
+To restore a Settings download, use an empty checkout of the matching Cradle
+source. Copy the downloaded file into that checkout as `exports/workspace.rer`,
+then run:
+
+```sh
+rer install
+rer import --input exports/workspace.rer --yes
+rer dev
+```
+
+Do not start dev in the destination before import: it must be empty. For an
+existing local installation, stop dev/preview, save any data you need, and run
+`rer reset --yes` before import. `rer dev` recreates local configuration and the
+local owner; no `answers.json` is required. To choose the returning owner email,
+run `rer setup --owner-email you@example.com` after import and before dev.
+Review imported access, reconnect private services and approve held automations
+before using them. `rer doctor` may exit 3 for local configuration missing before
+that first dev launch; this alone does not show that archive import failed.
+
+The public `rer export` and `rer import` commands are also described in
+[Run it locally](../RUN-LOCALLY.md).
 The maintained Base portability module owns the archive format, bounded streaming,
 checksums, atomic D1 restore and R2 object custody. Cradle supplies its real DB/FILES
 bindings and operational data policy. All ordered migration groups are applied.
-Write archives beneath the protected `exports/` directory, for example
-`--output exports/workspace.rer`; the public CLI enforces this output location.
+Write CLI archives beneath the protected `exports/` directory, for example
+`--output exports/workspace.rer`, or to a private path outside the checkout.
 
 Business records, schema, views, forms, source originals, attribution, audits and
 history retain their IDs. FILES bytes and metadata transfer. Launch search is derived
@@ -26,14 +59,16 @@ require explicit continuation after restore.
 
 Import requires explicit confirmation and an empty target. Only actual migration
 bootstrap rows are replaceable. A populated installation is refused. Private settings
-and hosting credentials are supplied separately. After import, run setup with your
-owner email and use the ordinary Base sign-in. Fresh admission transfers the archived
-installation owner's exact application permissions and current manual-base control.
+and hosting credentials are supplied separately. After import, start local dev
+as above, or optionally choose an owner email with setup first. Fresh admission
+transfers the archived installation owner's exact application permissions and current manual-base control.
 It preserves historical actor IDs, row ownership, policy records and other users'
 inactive memberships. Reinvitations and renewed automation approvals are explicit.
 
-Remote installation archives are not exposed by this CLI adapter. Hosted API exports,
-CSV and base JSON have their own documented scopes; see leaving-cradle.md.
+The Settings download works through the signed-in installation, including a hosted
+installation. The CLI adapter imports into local storage; it does not restore
+directly into hosted resources. CSV and base JSON have their own documented
+scopes; see [leaving Cradle](leaving-cradle.md).
 
 Each available evidence file carries its byte count and SHA-256 in D1. Export
 compares those values with the actual stored bytes; a mismatch refuses the archive
@@ -101,7 +136,7 @@ seed policy remains an owner decision. The refreshed Base auth/schema retains
 this existing seed policy. A pre-erasure archive restored to a new store without a later erasure journal cannot
 be recognised as stale. Raw database imports also bypass product safeguards.
 
-Recovery rehearsal (run from a disposable installation, with serving stopped). Set `PORT` to its configured local port; `answers.json` contains the returning owner email. The truncated import is expected to exit 1; continue with the original archive:
+Recovery rehearsal (run from a disposable installation, with serving stopped). Set `PORT` to its configured local port. The truncated import is expected to exit 1; continue with the original archive:
 
 ```sh
 rer dev --stop --json
@@ -111,18 +146,19 @@ pnpm run db:migrate:local
 node --input-type=module -e "import {readFile,writeFile} from 'node:fs/promises'; await writeFile('truncated.rer',(await readFile('exports/first.rer','utf8')).split('\n').slice(0,-2).join('\n')+'\n',{mode:0o600})"
 rer import --input truncated.rer --yes --non-interactive --json
 rer import --input exports/first.rer --yes --non-interactive --json
-rer setup --answers answers.json --port "$PORT" --non-interactive --json
+rer setup --owner-email you@example.com --port "$PORT" --non-interactive --json
 rer dev --non-interactive --json
 ```
 
 `truncated.rer` is a scratch copy of `exports/first.rer` with its closing line removed.
 Open the final dev command’s private `openUrl` from its ready event. It signs in
-the configured local owner; `rer outbox` is retired in rer 0.2.20.
+the configured local owner. No local mail viewer or printed email sign-in link
+is needed.
 The first import must refuse and leave the empty target unchanged. The second
 imports the original complete archive. Edit a restored record as the installation
 owner. The targeted `tests/rer-data-roundtrip.mjs` journey verifies the command
-steps and all archived table cells and file metadata, and also exercises an
-ordinary one-use owner email session through the native development outbox.
+steps and all archived table cells and file metadata, including fresh owner
+admission.
 Local evidence does not establish hosted D1/R2 performance or remote recovery.
 
 Audit and history have no age-based pruning in the current implementation:

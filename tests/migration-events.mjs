@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { emittedRuntime } from './helpers/emitted-runtime.mjs'
+import {createFixtureMail} from './helpers/fixture-mail.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
 import { expiredToken, revokedToken, authoritySessionControlsSql } from './helpers/session-controls.mjs'
 import { contract } from './contract.mjs'
@@ -13,14 +14,15 @@ import {freePort} from './helpers/free-port.mjs'
 
 contract('BASE-OPS-004','emitted event exports preserve durable failure state without external sending',async(context)=>{
   const directory=await mkdtemp(path.join(tmpdir(),'cradle-events-')),port=Number(process.env.CRADLE_TEST_PORT ?? await freePort())
-  let runtime,outbound=0
+  let runtime,mail,outbound=0
   const networkEdge=()=>{outbound++;throw new Error('Event regression prohibits external sending')}
-  const bindings={APP_ORIGIN:`http://127.0.0.1:${port}`,AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long'}
+  const bindings={APP_ORIGIN:`http://127.0.0.1:${port}`,AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long'}
   try {
+    mail=await createFixtureMail(port,networkEdge)
     const migration=spawnSync(process.execPath, ['scripts/migrate-local.mjs', '--persist-to', directory],{encoding:'utf8',maxBuffer:16*1024*1024})
     assert.equal(migration.status,0,migration.stderr||migration.stdout)
     const member=await installLegacyFixture(directory)
-    runtime=await emittedRuntime(directory,port,bindings,networkEdge)
+    runtime=await emittedRuntime(directory,port,{...bindings,...mail.bindings},mail.fetch)
     const worker=await runtime.getWorker()
     let db=await runtime.getD1Database('DB')
     await context.test('[BASE-ACCESS-002] versioned API known and unknown members independently check session controls',async()=>{
@@ -46,7 +48,7 @@ contract('BASE-OPS-004','emitted event exports preserve durable failure state wi
     assert.deepEqual(afterQueue,afterScheduled)
     const invalid=await worker.queue('cradle-work',[{id:'invalid-envelope',timestamp:Date.now(),attempts:1,body:{kind:'invalid'}}])
     assert.ok(JSON.stringify(invalid).includes('invalid-envelope'))
-    // Development mail is now explicitly configured. Retain the original missing
+    // Sign-in mail uses the isolated provider edge. Retain the original missing
     // notification-sender case through the provider composition as well.
     await runtime.dispose()
     runtime=await emittedRuntime(directory,port,{...bindings,MAIL_PROVIDER:'resend',MAIL_PROVIDER_API_KEY:'test-network-edge-only'},networkEdge)
@@ -64,5 +66,5 @@ contract('BASE-OPS-004','emitted event exports preserve durable failure state wi
     const evidence={scheduled,queue,invalid,afterScheduled,afterQueue,missingSenderScheduled,missingSenderQueue,afterMissingSenderScheduled,afterMissingSenderQueue,outbound,externalSending:'none; malformed local work and missing provider sender configuration durably fail deliveries'}
     if(process.env.CRADLE_EVENT_EVIDENCE)await writeFile(process.env.CRADLE_EVENT_EVIDENCE,JSON.stringify(evidence,null,2))
     console.log(JSON.stringify(evidence))
-  } finally {if(runtime)await runtime.dispose();await rm(directory,{recursive:true,force:true})}
+  } finally {try{if(runtime)await runtime.dispose()}finally{await mail?.close();await rm(directory,{recursive:true,force:true})}}
 })

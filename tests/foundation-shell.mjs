@@ -15,7 +15,7 @@ const port = Number(process.env.CRADLE_FOUNDATION_PORT ?? await freePort())
 const origin = `http://127.0.0.1:${port}`
 const output = process.env.CRADLE_FOUNDATION_EVIDENCE ?? path.join(tmpdir(), 'cradle-foundation-evidence')
 
-test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed responsive shell, records-first navigation, 404 and Base sign-in with a loopback-only outbox', async () => {
+test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed responsive shell, records-first navigation, 404 and Base sign-in without a mail viewer', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-foundation-'))
   let worker, browser, production
   const receipt = { commit: spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim(), routes: [], errors: [], remoteIdentityHidden: false }
@@ -86,8 +86,8 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
     const keyless=await fetch(`${origin}/__dev/outbox`)
     assert.equal(keyless.status,404,'The outbox needs the local dev key');await keyless.body.cancel()
     const localOutbox=await fetch(`${origin}/__dev/outbox`,withDevKey())
-    assert.equal(localOutbox.status,200);await localOutbox.body.cancel()
-    await page.getByRole('link',{name:'Open development outbox',exact:true}).waitFor()
+    assert.equal(localOutbox.status,404);await localOutbox.body.cancel()
+    assert.equal(await page.getByRole('link',{name:'Open development outbox',exact:true}).count(),0)
     production=await launchBaseAuthorityRuntime()
     // The network edge maps a synthetic browser domain to the actual emitted
     // HTTPS Worker. Its canonical hosted configuration selects real Base mail.
@@ -98,7 +98,7 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
     })
     await page.goto('https://cradle.example.test/signin')
     await page.waitForLoadState('networkidle')
-    await page.getByRole('button',{name:'Send sign-in link',exact:true}).waitFor()
+    await page.getByRole('heading',{name:'Owner setup is incomplete',exact:true}).waitFor()
     assert.equal(await page.getByRole('link',{name:'Open development outbox',exact:true}).count(),0)
     const remoteOutbox=await production.request('/__dev/outbox')
     assert.equal(remoteOutbox.status,404);await remoteOutbox.body.cancel()

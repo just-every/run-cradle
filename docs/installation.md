@@ -1,18 +1,13 @@
 # Install Cradle
 
 Start with [the quick install guide](install.md). Use macOS, Linux or Windows
-with WSL2, with Git installed. **Node 22 or later is required before installing rer**:
-download and run your computer's installer from [nodejs.org](https://nodejs.org/en/download),
+with WSL2, with Git installed. **Install Node 22 or later before rer**: download
+and run your computer's installer from [nodejs.org](https://nodejs.org/en/download),
 then open a new terminal and check `node --version`. npm comes with Node.
-Cradle uses **rer 0.2.20**. Rer then provisions this project’s pinned Node
-22.20.0 and pnpm 10.12.4; the alternative curl installer in the quick guide
-also requires Node first.
-
-```sh
-npm install -g @runeditrun/rer@0.2.20
-git clone https://github.com/just-every/run-cradle.git cradle
-cd cradle && rer dev
-```
+Cradle uses **rer 0.2.22**. The quick guide gives both Run page installer choices,
+pinned to that version. Both need Node first; rer installs this project's pinned
+Node 22.20.0 and pnpm 10.12.4 for project commands. You need not install pnpm
+separately.
 
 The first `rer dev` installs dependencies, prepares a local owner and starts the
 app. Open its `RER_OPEN` URL and finish `/setup`. Treat the URL as a password.
@@ -84,20 +79,12 @@ A public-main push deploys the marketing site, not your hosted workspace.
 ## Sign in to your hosted workspace
 
 Open `/signin` on the hosted URL, enter your owner email, and confirm the emailed
-link. Hosted use requires a real mail provider; the local outbox is not served.
+link. Hosted use requires a real mail provider.
 
-If mail is unavailable or the owner email is wrong, use rer 0.2.20 from the checkout
-that deployed this environment, with the same Cloudflare credentials:
-
-```sh
-rer signin --environment production --env-file "$HOME/cradle-production.env"
-```
-
-Rer prints a link once and does not save it. Open it within 15 minutes; it works
-once, only for the recorded owner, and its use appears in the audit log. Treat it
-as a password. Once signed in, the owner can correct their email in Settings.
-This needs a completed deployment and the owner sign-in database migration; if rer
-reports that migration missing, update Cradle and deploy before trying again.
+Wait for deployment to finish owner claim before signing in. If deployment
+reports an incomplete claim, resolve its reported cause and complete deployment.
+A healthy URL alone does not prove that the owner was claimed. Check the configured
+mail provider and verified sender if a completed installation cannot deliver mail.
 
 ## Optional connections
 
@@ -107,7 +94,7 @@ a matching `EGRESS_RELAY_SECRET`. Other service credentials are optional; see
 before use. Ordinary records work needs no AI provider.
 
 The setup flow can save hosted mail answers in private `data/hosting-mail.json`
-while keeping local email in the outbox. The direct deploy commands above read
+without sending local email externally. The direct deploy commands above read
 your shell environment or `--env-file`; you do not need to create or edit that
 JSON file for this path.
 

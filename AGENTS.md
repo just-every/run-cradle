@@ -2,25 +2,27 @@
 
 ## Run it locally
 
-Install Node 22 or later before installing the package-pinned rer 0.2.20
-(`npm install -g @runeditrun/rer@0.2.20`). Rer then provisions this project’s
+Install Node 22 or later before installing the package-pinned rer 0.2.22
+(`npm install -g @runeditrun/rer@0.2.22`). Rer then provisions this project’s
 pinned Node 22.20.0 and pnpm 10.12.4. See the README for platform prerequisites
 and the alternative installer. Start a checkout through these commands:
 
 ```sh
-rer install
-rer setup --answers answers.json --non-interactive
 rer dev
+rer dev --stop
 rer verify
-rer reset --yes
 rer export --output exports/workspace.rer
+rer reset --yes
 rer import --input exports/workspace.rer --yes
 rer deploy --dry-run
 rer describe
 ```
 
-`answers.json` is an owner-only (0600) JSON file with `OWNER_EMAIL` and optional
-manifest answers; see README.md. `dev` opens signed in: open the `RER_OPEN` URL it
+`rer dev` installs dependencies and prepares the local owner automatically; no
+answers file is needed, including after reset/import. Optional
+`rer setup --owner-email you@example.com` chooses an owner email before launch;
+`--answers` accepts an owner-only (0600) JSON file with manifest answers. See
+README.md. `dev` opens signed in: open the `RER_OPEN` URL it
 prints on this computer (it carries this checkout's dev key, so treat it as a
 credential). A dev badge switches between the owner, signed out and the personas
 `admin@dev.localhost` and `member@dev.localhost`; `dev --as PERSONA` starts as one of

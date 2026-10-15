@@ -59,8 +59,8 @@
       "summary": "Names the records-builder capability without claiming the full records acceptance floor."
     },
     "AUTH-BASE-001": {
-      "change": "added",
-      "summary": "Base operator-auth owns hosted and local credentials. The shared installer bootstraps the owner and local sign-in uses its one-use development outbox; legacy product credentials and mail execution are retired."
+      "change": "changed",
+      "summary": "Standalone local sign-in uses the checkout key and real Base dev sessions; the captured-mail sender and inbox page are retired. Hosted /signin names incomplete owner claim and missing or failed email configuration without claiming a request was received. Mail tests retain doubles only at their provider edge. Demo files and host remain owned by the demo lane."
     },
     "RECORDS-002": {
       "change": "added",
@@ -71,8 +71,8 @@
       "summary": "Human labels, linked chips, saved grid/kanban/form views and bounded responsive accessibility journeys."
     },
     "RECORDS-004": {
-      "change": "added",
-      "summary": "Per-view typed CSV round-trip and three editable templates; no expansion to the wider planned records floor."
+      "change": "changed",
+      "summary": "Launch readiness opens its included base without creating a duplicate; manual templates retain preview and adoption. View CSV checkbox values use Yes/No, accepted by the existing importer."
     },
     "RECORDS-007": {
       "change": "added",
@@ -89,6 +89,14 @@
     "VIEW-007": {
       "change": "changed",
       "summary": "15 October 2026: launch collections (campaign grid, decision queue, lens list, launch reader) page with a keyset cursor over the requested sort and the record ID instead of a numeric offset, so records added or removed between pages neither repeat nor skip others. Cursor strings from earlier pages are not accepted; clients restart from the first page."
+    },
+    "VIEW-005": {
+      "change": "changed",
+      "summary": "Global search includes every authorized base, with current row and field checks and canonical record detail links. Launch archive filtering is retained; inaccessible fields never produce matches."
+    },
+    "RECORDS-006": {
+      "change": "changed",
+      "summary": "Settings prepares and downloads a verified installation .rer archive using the maintained CLI portability format and privacy policy. Only the current installation owner has this door; credentials and private connections remain excluded, and source is kept separately."
     }
   },
   "extensionPointChanges": [],
@@ -156,6 +164,10 @@
     {
       "id": "migrations/updates/9034_owner_signin.sql",
       "buyerSteps": "Apply after 9033, preserving all previous migration bytes. This adds Base\u2019s single-use, expiring owner sign-in grant table. Run rer install with the exact 0.2.20 pin and redeploy before using rer signin."
+    },
+    {
+      "id": "migrations/updates/9035_launch_display_names.sql",
+      "buyerSteps": "Apply after 9034. Changes only retained Launch display labels and declared primary fields; record IDs, values and authority remain unchanged."
     }
   ],
   "breaking": true,

@@ -17,8 +17,8 @@ email. Message text is an explicit literal; there is no executable template or
 arbitrary code. Updates to read-only or computed fields are refused. A causal
 chain cannot execute the same automation again; suppressed runs remain visible.
 
-Local email appears in the ordinary Base development outbox. Hosted email needs
-the installation's configured verified mail sender. Webhook bodies contain the
+Email needs the installation's configured verified mail sender. Local use has
+no captured-mail inbox or outbox page; in-app notifications work without email. Webhook bodies contain the
 record reference, event, version and delivery identity, rather than record field
 values. Slack sends the owner's explicitly approved literal message.
 

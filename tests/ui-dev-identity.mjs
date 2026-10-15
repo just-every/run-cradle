@@ -10,7 +10,8 @@ import {freshLocalCopy} from './helpers/local-signin-copy.mjs'
 import {localInstallerJourney} from './helpers/local-installer-journey.mjs'
 import {browserObservations} from './helpers/browser-observations.mjs'
 import {availableMachine} from './helpers/available-machine.mjs'
-import {outboxSession} from './helpers/rer-development.mjs'
+import {baseHttpSession} from './helpers/base-http-session.mjs'
+import {withRerEmittedWorker} from './helpers/rer-emitted-worker.mjs'
 import {bindings} from './helpers/rer-data-fixture.mjs'
 import {signInAs} from '../vendor/base/modules/operator-auth/dev/sign-in-as.mjs'
 import {rebind} from './helpers/rer-archive-integrity.mjs'
@@ -34,7 +35,7 @@ async function journey(viewport,evidence){
  try{
   await availableMachine()
   browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
-  installation=await localInstallerJourney(copy,browser,{identity:true})
+  installation=await localInstallerJourney(copy,browser)
   const {origin,key,openUrl}=installation
   assert.ok(openUrl?.startsWith(origin+'/')&&new URL(openUrl).hash.startsWith('#rer-dev='),'dev prints the one-time key exchange link')
   await mkdir(evidence,{recursive:true})
@@ -72,6 +73,7 @@ async function journey(viewport,evidence){
   phase='forwarded requests'
   proxy=await forwardingProxy(origin)
   for(const route of ['/auth/dev/enter?as=owner','/__dev/personas','/__dev/outbox'])assert.equal(await status(fetch(proxy.origin+route,{redirect:'manual'})),404,`${route} answers 404 through a forwarding proxy without the key`)
+  assert.equal(await status(fetch(origin+'/__dev/outbox',{headers:{'x-rer-dev-key':key}})),404,'Captured mail has no local page, even with the checkout key')
   assert.equal(await status(fetch(proxy.origin+'/__dev/key',{method:'POST',headers:{'content-type':'application/json',origin:proxy.origin},body:JSON.stringify({key:'wrong-'.repeat(8)})})),404,'A wrong key buys no cookie')
   const owner=await signInAs({origin,key,as:'owner'}),gate=await gateCookie(origin,key)
   const sessionCookies=owner.cookies.filter(cookie=>cookie.value&&cookie.name!==gate.name)
@@ -95,16 +97,18 @@ async function journey(viewport,evidence){
   assert.equal(await status(fetch(origin+route,{headers:{...bearer(devKey.secret),'x-rer-dev-key':key}})),200,'A dev-minted key works on a request carrying the key')
   assert.equal(await status(fetch(origin+route,{headers:bearer(devKey.secret)})),401,'A dev-minted key is refused without the key')
   assert.equal(await status(fetch(proxy.origin+route,{headers:bearer(devKey.secret)})),401,'A dev-minted key is refused through a forwarding proxy')
-  // An ordinary session (a real email link) mints an ordinary key: unchanged, no key needed.
-  const asked=await fetch(origin+'/auth/magic-link',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({email:'local-owner@example.test',returnTo:'/app'})});assert.equal(asked.status,202);await asked.body?.cancel()
-  const ordinary=await outboxSession(origin,key),ordinaryCsrf=(await (await fetch(origin+'/auth/csrf',{headers:{cookie:ordinary.cookie}})).json()).csrfToken
-  const plainKey=await issue('Minted in an ordinary session',ordinary.cookie,ordinaryCsrf)
+  // Keep the actual CLI/dev credential proof above. Ordinary credentials use
+  // the same emitted application with only its paid mail transport captured.
+  await context.close();await installation.close();installation=undefined
+  let plainKey
+  await withRerEmittedWorker(copy,origin,async()=>{
+  const ordinary=await baseHttpSession(origin,'local-owner@example.test')
+  plainKey=await issue('Minted in an ordinary session',ordinary.cookie,ordinary.csrfToken)
   assert.equal(await status(fetch(origin+route,{headers:bearer(plainKey.secret)})),200,'An ordinary-session key keeps working without the key')
   assert.equal(await status(fetch(proxy.origin+route,{headers:bearer(plainKey.secret)})),200,'And through a forwarding proxy')
   const recorded=await bindings(copy.source,async({DB})=>(await DB.prepare("SELECT id FROM oa_dev_credentials WHERE credential='authority_credentials'").all()).results.map(row=>row.id))
   assert.deepEqual(recorded,[devKey.id],'Only the key minted in the dev session is recorded as dev-minted')
-  await context.close()
-  await installation.close();installation=undefined
+  },{mail:true})
 
   phase='export drops dev credentials'
   await copy.rer(['export','--output','exports/dev.rer','--non-interactive'])

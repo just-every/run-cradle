@@ -6,6 +6,7 @@ import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {chromium} from '@playwright/test'
 import {emittedRuntime} from './helpers/emitted-runtime.mjs'
+import {createFixtureMail} from './helpers/fixture-mail.mjs'
 import {installLegacyFixture} from './helpers/install-legacy-fixture.mjs'
 import {executionResolutionFixture} from './helpers/execution-resolution-fixture.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
@@ -13,12 +14,13 @@ import {freePort} from './helpers/free-port.mjs'
 import {REPAIRS_APP_ID} from '../src/apps/repairs/model.ts'
 import {createUlid} from '../src/core/shared/ids.ts'
 const directory=await mkdtemp(path.join(tmpdir(),'cradle-human-resolution-')),output=process.env.CRADLE_RESOLUTION_EVIDENCE??path.resolve('test-results/execution-resolution'),port=await freePort(),origin=`http://127.0.0.1:${port}`
-let runtime,browser
+let runtime,browser,mail
 const checks=[],pages=[],network=[]
 try{
+ mail=await createFixtureMail(port,async()=>{throw new Error('Human decisions must make no external request')})
  const migration=spawnSync(process.execPath,['scripts/migrate-local.mjs','--persist-to',directory],{encoding:'utf8',maxBuffer:32*1024*1024});assert.equal(migration.status,0,migration.stderr)
  const operator=await installLegacyFixture(directory)
- runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-human-evidence-session-secret-32-bytes',APP_ORIGIN:origin},async()=>{throw new Error('Human decisions must make no external request')})
+ runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-human-evidence-session-secret-32-bytes',APP_ORIGIN:origin,...mail.bindings},mail.fetch)
  await runtime.ready
  const db=await runtime.getD1Database('DB'),members=(await db.prepare('SELECT id,email FROM operators ORDER BY id').all()).results,viewer=members.find(m=>m.id!==operator)
  assert.ok(viewer)
@@ -71,4 +73,7 @@ try{
  const screens=[]
  for(const {page,width,errors} of pages){if(page.isClosed())continue;await page.screenshot({path:path.join(output,`failure-${width}.png`),fullPage:true});screens.push({width,errors,alerts:await page.getByRole('alert').allTextContents(),commands:await page.getByRole('status').allTextContents()})}
  await writeFile(path.join(output,'failure.json'),JSON.stringify({error:String(error),screens,network},null,2));throw error
-}finally{await writeFile(path.join(output,'network-status.json'),JSON.stringify(network,null,2)).catch(()=>{});await browser?.close();await runtime?.dispose();await rm(directory,{recursive:true,force:true})}
+}finally{
+ await writeFile(path.join(output,'network-status.json'),JSON.stringify(network,null,2)).catch(()=>{})
+ try{await browser?.close()}finally{try{await runtime?.dispose()}finally{await mail?.close();await rm(directory,{recursive:true,force:true})}}
+}

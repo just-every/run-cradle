@@ -50,10 +50,10 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     let db = await runtime.getD1Database('DB')
     const dispatch = (url, init = {}) => new Promise((resolve, reject) => {
       const target = new URL(url)
-      const request = httpsRequest({ hostname: '127.0.0.1', port, path: target.pathname + target.search, method: init.method ?? 'GET', rejectUnauthorized: false, headers: { host: target.host, 'cf-connecting-ip': '192.0.2.61', ...init.headers } }, response => {
+      const request = httpsRequest({ agent: false, hostname: '127.0.0.1', port, path: target.pathname + target.search, method: init.method ?? 'GET', rejectUnauthorized: false, headers: { host: target.host, 'cf-connecting-ip': '192.0.2.61', ...init.headers } }, response => {
         const chunks = []; response.on('data', data => chunks.push(data)); response.on('end', () => resolve(new Response(Buffer.concat(chunks), { status: response.statusCode, headers: response.headers })))
       })
-      request.on('error', reject); if (init.body) request.write(init.body); request.end()
+      request.on('error', error => { error.message += ' (' + (init.method ?? 'GET') + ' ' + target.pathname + ')'; reject(error) }); if (init.body) request.write(init.body); request.end()
     })
     const request = (route, init = {}) => dispatch(origin + route, init)
     const post = (route, body, headers = {}) => request(route, { method: 'POST', headers: { origin, 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) })

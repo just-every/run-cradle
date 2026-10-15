@@ -7,18 +7,21 @@ import {availableMachine} from './available-machine.mjs'
 import {checkoutDevKey} from './dev-gate.mjs'
 import {observeChild} from '../../scripts/evidence/runtime-child.mjs'
 import {saveInstallerStartupDiagnostic} from './local-installer-diagnostic.mjs'
-/** Setup, then dev. Identity callers redeem RER_OPEN; ordinary email callers leave it unused and request their own links through the app. */
-export async function localInstallerJourney(copy,_browser,{identity=false}={}){
+/** Run the installed CLI; zero-setup callers let rer dev create its own local owner and settings. */
+export async function localInstallerJourney(copy,_browser,{zeroSetup=false}={}){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
- const answers=path.join(copy.source,'answers.json')
- await writeFile(answers,JSON.stringify({OWNER_EMAIL:'local-owner@example.test',OWNER_NAME:'Local Owner',WORKSPACE_NAME:'My records',WORKSPACE_TIMEZONE:'Australia/Brisbane',WORKSPACE_CURRENCY:'AUD'}),{mode:0o600})
  const command=async args=>copy.rer(args)
- await command(['check','--profile','first-party']);await command(['install','--non-interactive']);await command(['setup','--answers','answers.json','--port',String(port),'--non-interactive'])
- const before=await readFile(path.join(copy.source,'.dev.vars'))
- await command(['setup','--non-interactive']);assert.ok((await readFile(path.join(copy.source,'.dev.vars'))).equals(before),'Repeat setup retains exact private bytes')
+ await command(['check','--profile','first-party']);await command(['install','--non-interactive'])
+ if(!zeroSetup){
+  const answers=path.join(copy.source,'answers.json')
+  await writeFile(answers,JSON.stringify({OWNER_EMAIL:'local-owner@example.test',OWNER_NAME:'Local Owner',WORKSPACE_NAME:'My records',WORKSPACE_TIMEZONE:'Australia/Brisbane',WORKSPACE_CURRENCY:'AUD'}),{mode:0o600})
+  await command(['setup','--answers','answers.json','--port',String(port),'--non-interactive'])
+  const before=await readFile(path.join(copy.source,'.dev.vars'))
+  await command(['setup','--non-interactive']);assert.ok((await readFile(path.join(copy.source,'.dev.vars'))).equals(before),'Repeat setup retains exact private bytes')
+ }
  const origin=`http://127.0.0.1:${port}`
  await availableMachine()
- const app=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--non-interactive'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
+ const app=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--port',String(port),'--non-interactive'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
  const capture=observeChild(app)
  const close=async()=>{if(app.exitCode===null&&app.signalCode===null)await command(['dev','--stop']);await capture.close}
  try{
@@ -30,11 +33,10 @@ export async function localInstallerJourney(copy,_browser,{identity=false}={}){
   let output=capture.output()
   assert.ok(output.includes(`RER_READY ${origin}`),'Health-gated dev readiness')
   for(let i=0;i<50&&!/^RER_OPEN \S+$/m.test(output);i++){await new Promise(resolve=>setTimeout(resolve,100));output=capture.output()}
-  if(identity){assert.match(output,/^RER_SIGNED_IN \S+@\S+$/m,'Dev names the identity the browser will hold');assert.equal(output.includes('RER_SIGN_IN '),false,'Dev identity replaces the outbox sign-in line')}
-  else{
-   assert.match(output,/^RER_OPEN \S+$/m,'Dev exposes its current automatic sign-in link')
-   assert.equal((await fetch(origin+'/api/session')).status,401,'An unused dev link grants no session to the ordinary email journey')
-  }
+  assert.match(output,/^RER_SIGNED_IN \S+@\S+$/m,'Dev names the identity the browser will hold')
+  assert.equal(output.includes('RER_SIGN_IN '),false,'Dev never prints an email sign-in link')
+  assert.match(output,/^RER_OPEN \S+$/m,'Dev exposes its current key exchange link')
+  assert.equal((await fetch(origin+'/api/session')).status,401,'The unused dev link grants no browser authority')
   return {origin,close,output:()=>capture.output(),key:await checkoutDevKey(copy.source),openUrl:/^RER_OPEN (\S+)$/m.exec(output)?.[1]}
  }catch(error){await close();const diagnostic=await saveInstallerStartupDiagnostic(copy,app,capture);throw new Error(error.message+'; drained dev startup diagnostic: '+diagnostic.redactedTail,{cause:error})}
 }

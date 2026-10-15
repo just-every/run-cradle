@@ -2,7 +2,7 @@ import {localRuntimeBindings} from '../platform/local-auth.server'
 import {firstRunResponse} from '../features/setup/server'
 import {editorConfigResponse,editorDocumentHeaders} from '../features/editor/server'
 import {signedOwnerClaim} from '../platform/owner-claim.server'
-import { developmentOutboxResponse } from '../platform/development-outbox.server'
+import { localKeyResponse } from '../platform/local-key.server'
 import { dependencyResponse, isDependencyRequest } from '../platform/dependencies.server'
 import { createBaseAuth, createAuthHandler } from '../platform/base-auth.server'
 export { InstallationCoordinator } from '../platform/installation.server'
@@ -38,8 +38,8 @@ export default {
     if(path==='/api/editor/config')return request.method==='GET'?editorConfigResponse(request,bindings):new Response(null,{status:405,headers:{allow:'GET','cache-control':'no-store'}})
     const claim = await signedOwnerClaim(request,bindings)
     if (claim) return claim
-    const outbox = await developmentOutboxResponse(request, bindings)
-    if (outbox) return outbox
+    const keyExchange = await localKeyResponse(request, bindings)
+    if (keyExchange) return keyExchange
     if (path === '/health') {
       const health = await checkHealth(bindings)
       return Response.json(health.status === 'ok' ? { status: 'ok', database: 'available', ...(bindings.RER_VERSION ? {ok:true,deployment:{sourceSha:bindings.RER_DEPLOY_SOURCE,fingerprint:bindings.RER_DEPLOY_FINGERPRINT,versionId:bindings.RER_VERSION.id}} : {}) } : health, { status: health.status === 'ok' ? 200 : 503 })
@@ -53,7 +53,10 @@ export default {
       const response=await createAuthHandler(base)(request)
       if (response) return response
     }
-    const missing = configurationFaults(bindings)
+    // Public document assets must remain available while sign-in explains configuration.
+    if (path.startsWith('/assets/') || path.startsWith('/fonts/') || path === '/favicon.ico' || path === '/apple-touch-icon.png' || path === '/brand/mark.svg' || path === '/brand/band.svg' || path === '/rer-theme.css' || (import.meta.env.DEV && (path === '/@vite/client' || path === '/@id/virtual:tanstack-start-dev-client-entry' || path.startsWith('/@id/__x00__virtual:cradle-docs') || path.startsWith('/src/') || path.startsWith('/node_modules/.vite/deps/') || path.startsWith('/node_modules/.pnpm/') || path === '/@react-refresh' || path === '/@tanstack-start/styles.css'))) return bindings.ASSETS.fetch(request)
+    // Sign-in must explain missing email setup even while the private app is unavailable.
+    const missing = configurationFaults(bindings).filter(fault=>!(['/signin','/auth/request'].includes(path)&&fault.startsWith('MAIL_')))
     if (path !== '/health' && missing.length) return Response.json({ error: { code: 'unconfigured', message: 'Required installation configuration is missing or invalid.', missing } }, { status: 503 })
     const platform = createPlatform(bindings)
     if (isHonoRequest(path)) return (await createApplication(platform, getServerExtensionConfig())).fetch(request, bindings, executionContext)
@@ -63,7 +66,7 @@ export default {
       if (!await createSessionReader(platform).getIdentity(request)) return platform.auth.redirectToSignIn(request)
     }
 
-    if (path.startsWith('/assets/') || path.startsWith('/fonts/') || path === '/favicon.ico' || path === '/apple-touch-icon.png' || path === '/brand/mark.svg' || path === '/brand/band.svg' || path === '/rer-theme.css' || (import.meta.env.DEV && (path === '/@vite/client' || path === '/@id/virtual:tanstack-start-dev-client-entry' || path.startsWith('/@id/__x00__virtual:cradle-docs') || path.startsWith('/src/') || path.startsWith('/node_modules/.vite/deps/') || path.startsWith('/node_modules/.pnpm/') || path === '/@react-refresh' || path === '/@tanstack-start/styles.css'))) return bindings.ASSETS.fetch(request)
+
     // The installed variant: the claim state and the Lobby at /, before the document renderer.
     const home = await installedHomeResponse(request, bindings)
     if (home) return home

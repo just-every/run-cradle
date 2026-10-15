@@ -21,9 +21,9 @@ export function baseAuthConfig(env: PlatformBindings): AuthConfig {
 export function createBaseAuth(env: PlatformBindings): OperatorAuth {
   const config = baseAuthConfig(env)
   if (env.MAIL_PROVIDER === 'development' && !capturedMailEnabled(env)) throw new ApiError('unconfigured', 'Development mail requires explicit local configuration.')
-  const mailSender = env.MAIL_PROVIDER === 'development' && capturedMailEnabled(env)
+  const mailSender = env.MAIL_PROVIDER === 'development' && env.RER_DEMO === '1'
     ? createMailSender({ provider: 'development', mode: 'development' }, { outbox: createD1DevelopmentOutbox({ db: env.DB }) })
-    : env.MAIL_PROVIDER && env.MAIL_PROVIDER_API_KEY
+    : env.MAIL_PROVIDER && env.MAIL_PROVIDER !== 'development' && env.MAIL_PROVIDER_API_KEY
     ? createMailSender({ provider: env.MAIL_PROVIDER, mode: 'production', apiKey: env.MAIL_PROVIDER_API_KEY }) : undefined
   return createOperatorAuth({ db: env.DB, config, mailSender, clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
 }

@@ -53,15 +53,16 @@ export async function previewCsvRows(
     let label = primaryColumn ? cells[primaryColumn.index]!.trim() : merge ? cells[merge.index]!.trim() : ''
     if (!label) label = `CSV row ${row}`
     try {
-      if (key.error) throw new AdmissionError('validation', key.error)
-      if (counts.get(key.key!)! > 1) throw new AdmissionError('validation', 'The matching value appears more than once in this CSV. Give each row a unique matching value.')
-      const matches = existing.filter(record => {
+      const problems: string[] = []
+      if (key.error) problems.push(key.error)
+      if (key.key !== undefined && counts.get(key.key)! > 1) problems.push('The matching value appears more than once in this CSV. Give each row a unique matching value.')
+      const matches = key.key === undefined ? [] : existing.filter(record => {
         if (byId) return record.id === key.key
         const cell = record.fields[merge!.field.id]
         return cell?.state === 'value' && canonical(cell.value) === key.key
       })
-      if (byId && matches.length !== 1) throw new AdmissionError('forbidden', 'An original record is unavailable. Recovery updates only currently accessible existing records.')
-      if (matches.length > 1) throw new AdmissionError('validation', 'The matching value identifies several records. Choose a unique matching field.')
+      if (byId && !key.error && matches.length !== 1) throw new AdmissionError('forbidden', 'An original record is unavailable. Recovery updates only currently accessible existing records.')
+      if (matches.length > 1) problems.push('The matching value identifies several records. Choose a unique matching field.')
       const prior = matches[0], values: Record<string, CellValue> = {}
       if (!primaryColumn && primary && prior?.fields[primary.id]?.state === 'value') {
         const cell = prior.fields[primary.id]!
@@ -69,11 +70,26 @@ export async function previewCsvRows(
       }
       for (const { field, index: column } of mapped) {
         const raw = cells[column]!
-        values[field.id] = byId ? decodeCsvValue(field, raw)
-          : field.type === 'relation' ? await labels.resolve(field, raw) : decodeDisplayCsvValue(field, raw)
+        try {
+          values[field.id] = byId ? decodeCsvValue(field, raw)
+            : field.type === 'relation' ? await labels.resolve(field, raw) : decodeDisplayCsvValue(field, raw)
+        } catch (error) {
+          if (!(error instanceof AdmissionError) || error.code !== 'validation') throw error
+          problems.push(error.message)
+        }
       }
       if (!prior) for (const field of descriptor.schema.fields)
-        if (field.required && field.type !== 'computed' && !(field.id in values)) validateCsvCell(field, null)
+        if (field.required && field.type !== 'computed' && !mapped.some(mapping => mapping.field.id === field.id)) {
+          try { validateCsvCell(field, null) } catch (error) {
+            if (!(error instanceof AdmissionError) || error.code !== 'validation') throw error
+            problems.push(error.message)
+          }
+        }
+      if (problems.length) {
+        const uniqueProblems = [...new Set(problems)]
+        errors.push({ row, label, message: uniqueProblems.join(' '), problems: uniqueProblems })
+        continue
+      }
       const changed = Object.fromEntries(Object.entries(values).filter(([id, value]) => {
         const cell = prior?.fields[id]
         return !prior || cell?.state !== 'value' || canonical(cell.value) !== canonical(value)

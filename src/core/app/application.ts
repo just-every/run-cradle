@@ -1,3 +1,4 @@
+import {installationArchiveHttp} from '../../domains/portability/installation-http.server'
 import { createAuthorityRouter } from '../../domains/authority/routes'
 import { authorizeLaunchProjection } from '../../apps/launch/projection-authority.server'
 import { createLaunchOwnersRouter } from '../../apps/launch/owners.server'
@@ -101,6 +102,8 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   for (const path of ['/api/notifications', '/api/notifications/*', '/api/settings', '/api/workspace', '/api/v1/notifications', '/api/v1/settings', '/api/v1/preferences', '/api/v1/deliveries']) app.all(path, context => channels.http.fetch(context.req.raw))
   app.all('/mcp', context => foundation.mcp(context.req.raw))
   for(const path of ['/api/v1/commands/member.erase','/api/v1/commands/launch.campaign.delete','/api/v1/commands/launch.samples.remove','/api/v1/erasures/:id']) app.all(path,context=>lifecycle.http.fetch(context.req.raw))
+  const archives=installationArchiveHttp(platform,foundation)
+  for(const path of ['/api/v1/commands/export.start','/api/v1/archive-jobs/*'])app.all(path,c=>archives.fetch(c.req.raw))
   app.route('/api/v1/commands', foundation.http)
   app.get('/api/v1/actions', async context => {
     const requestId = createUlid()
@@ -115,7 +118,7 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   // share this boundary. Mutations still use canonical atomic admission below.
   const launch = new Hono<AppEnv>()
   launch.use('*', async (context, next) => {
-    if (!/^\/api\/(portfolio|campaigns|deliverables|risks|milestones|lenses|decisions|automations|search|exports)(\/|$)/.test(context.req.path)) return next()
+    if (!/^\/api\/(portfolio|campaigns|deliverables|risks|milestones|lenses|decisions|automations|exports)(\/|$)/.test(context.req.path)) return next()
     const ctx = await foundation.authenticate(context.req.raw, 'http', createUlid())
     const recheck = await authorizeLaunchProjection(platform.bindings.DB, foundation.policy, ctx)
     await next()
@@ -129,7 +132,7 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   registerLensRoutes(launch, platform)
   registerDecisionRoutes(launch, platform)
   registerAutomationRoutes(launch, platform)
-  registerSearchRoutes(launch, platform)
+  registerSearchRoutes(app, platform.bindings.DB, records.services, foundation.authenticate)
   registerExportRoutes(launch, platform)
   app.route('/', launch)
 

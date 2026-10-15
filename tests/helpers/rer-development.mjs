@@ -2,7 +2,7 @@ import {hasRuntimeBindings} from './rer-data-fixture.mjs'
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
 import {availableMachine} from './available-machine.mjs'
-import {checkoutDevKey,withDevKey} from './dev-gate.mjs'
+import {checkoutDevKey} from './dev-gate.mjs'
 
 const running=new WeakSet()
 /** Check the public dev protocol without redeeming its automatic sign-in link. */
@@ -29,17 +29,4 @@ export async function withRerDevelopment(copy,origin,run){
   running.add(copy)
   return await run()
  }finally{running.delete(copy);await copy.rer(['dev','--stop']);await ended;await copy.log.writeFile(output);console.log('RECOVERY_COMMAND '+JSON.stringify({installation:copy.source,program:'node',args:['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--non-interactive','--json'],exitCode:app.exitCode}))}
-}
-
-export async function outboxSession(origin,key){
- const gated=withDevKey({},key)
- const outbox=await(await fetch(origin+'/__dev/outbox',gated)).text()
- const message=/href="([^"<>]*\?message=[^"<>]*)"/.exec(outbox)?.[1];assert.ok(message,'Real owner message exists')
- const detail=await(await fetch(new URL(message.replaceAll('&amp;','&'),origin),gated)).text()
- const link=/href="([^"<>]*\/auth\/confirm\?[^"<>]+)"/.exec(detail)?.[1];assert.ok(link,'Real Base link exists')
- const token=new URL(link.replaceAll('&amp;','&'),origin).searchParams.get('token')
- const response=await fetch(origin+'/auth/confirm',{method:'POST',redirect:'manual',headers:{origin,'content-type':'application/json'},body:JSON.stringify({token})})
- assert.equal(response.status,303,'Ordinary one-use confirmation admits the owner')
- const cookie=response.headers.get('set-cookie')?.split(';')[0];assert.ok(cookie,'Ordinary Base session is issued')
- return {cookie,token}
 }
