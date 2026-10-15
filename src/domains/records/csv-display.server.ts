@@ -4,8 +4,9 @@ import type { SqlPredicate } from '../admission/ports'
 import { AdmissionError } from '../admission/errors'
 import type { Field } from './contracts'
 import type { createRecordServices } from './service.server'
-import { validateCell } from './validators'
+import { validateCsvCell } from './csv-validation'
 import { parseLinkCell } from './base-transfer/parse'
+import { ImportInputError } from './base-transfer/input-error'
 
 export function displayCsvValue(field:Field,value:CellValue):string {
  if(value===null)return ''
@@ -42,7 +43,7 @@ export function createCsvLabels(services:ReturnType<typeof createRecordServices>
  }
  const candidates=new Map<string,Promise<Map<string,Ref[]>>>()
  async function resolve(field:Field,raw:string):Promise<CellValue>{
-  if(raw==='')return validateCell(field,field.relation!.cardinality==='many'?[]:null)
+  if(raw==='')return validateCsvCell(field,field.relation!.cardinality==='many'?[]:null)
   const key=field.relation!.ownerAppId+':'+field.relation!.entityId
   let pending=candidates.get(key)
   if(!pending){pending=(async()=>{
@@ -50,12 +51,17 @@ export function createCsvLabels(services:ReturnType<typeof createRecordServices>
    do{const page=await services.reader.query(ctx,t.scope,{fields:[t.field.id],limit:200,cursor,includeArchived:true});for(const row of page.items){const cell=row.fields[t.field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','A linked record label is restricted or unavailable.');const text=displayCsvValue(t.field,cell.value),matches=byLabel.get(text)??[];matches.push(row.ref);byLabel.set(text,matches)}cursor=page.nextCursor??undefined}while(cursor)
    return byLabel
   })();candidates.set(key,pending)}
-  const byLabel=await pending,refs=(field.relation!.cardinality==='many'?parseLinkCell(raw):[raw]).map(text=>{
+  let texts:string[]
+  try{texts=field.relation!.cardinality==='many'?parseLinkCell(raw):[raw]}catch(error){
+   if(!(error instanceof ImportInputError))throw error
+   throw new AdmissionError('validation',`${field.label}: ${error.message}. Use the linked record format from a view CSV export.`)
+  }
+  const byLabel=await pending,refs=texts.map(text=>{
    const matches=byLabel.get(text)??[]
    if(matches.length!==1)throw new AdmissionError('validation',`${field.label}: ${JSON.stringify(text)} ${matches.length?'matches several linked records; choose an unambiguous value':'was not found among available linked records'}.`)
    return matches[0]!
   })
-  return validateCell(field,field.relation!.cardinality==='many'?refs:refs[0]!)
+  return validateCsvCell(field,field.relation!.cardinality==='many'?refs:refs[0]!)
  }
  return {resolve,async display(field:Field,value:CellValue){
   if(value===null)return ''
@@ -70,5 +76,5 @@ export function decodeDisplayCsvValue(field:Field,raw:string):CellValue{
  if(field.type==='select')value=raw===''?null:field.options?.find(option=>option.label===raw)?.id??raw
  else if(field.type==='boolean')value=raw===''?null:raw==='true'||raw==='Yes'?true:raw==='false'||raw==='No'?false:raw
  else if(field.type!=='text'&&raw==='')value=null
- return validateCell(field,value)
+ return validateCsvCell(field,value)
 }

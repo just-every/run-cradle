@@ -7,7 +7,10 @@ or post a Slack message. Approve it for up to 30 days. Save again to renew or ed
 it. Disable cancels queued runs and stops further actions. Existing runs keep
 the definition version captured when their triggering change committed.
 
-Run history shows each action and its final outcome. Current owner, policy,
+Run history shows each action and its final outcome. Email raised during the
+workspace quiet hours (18:00–08:00 by default, in its timezone) is shown as
+**Held** with the release time. It is sent when quiet hours end, after current
+authority is checked again. Later ordered actions wait with it. Current owner, policy,
 record, credential and recipient authority is rechecked before effects. A member
 must still be able to read the triggering record to receive a notification or
 email. Message text is an explicit literal; there is no executable template or
@@ -32,6 +35,16 @@ verification.
 An **Unknown** action may already have been accepted. The automation does not
 resend it. Check the receiver's delivery receipt before taking further action.
 Failures before dispatch and rejected responses are recorded separately.
+
+## Scheduled Launch actions
+
+In Automations, open **Launch scheduled automations** and choose **New scheduled
+automation**. Select a Launch campaign, a daily or weekly time in the workspace
+timezone, and an activity, notification or email action. Create a Launch campaign
+in Records first if the list is empty. The monitor shows the readable schedule
+and run history. Scheduled email observes quiet hours too; authentication email
+and the shipped weekly digest keep their existing exceptions. Other bases use
+the created and updated record triggers described above.
 
 ## Trusted egress relay
 

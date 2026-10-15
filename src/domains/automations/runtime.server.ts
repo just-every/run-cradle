@@ -1,13 +1,14 @@
 import type { PolicyPort,RequestContext } from '../authority/ports'
 import type { DescriptorRegistry } from '../records/descriptors.server'
 import { resolveBackgroundContext } from '../authority/background.server'
+import { automationEmailDue } from './email-timing.server'
 import { AuthorityError } from '../authority/errors'
 import { and,identifier,trustedPredicate } from '../admission/sql.server'
 import { createAutomationRunStore,runSnapshot,type AutomationRun } from './run-store.server'
 import type { createAutomationEffects } from './effects.server'
 
 export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:string;policy:PolicyPort;
- descriptors:DescriptorRegistry;effects:ReturnType<typeof createAutomationEffects>}) {
+ descriptors:DescriptorRegistry;effects:ReturnType<typeof createAutomationEffects>;clock?:()=>Date}) {
  const store=createAutomationRunStore(deps.db)
  async function context(run:AutomationRun,ingress:'queue'|'schedule'):Promise<RequestContext> {
   if(!run.credential_id)throw new AuthorityError('grant_revoked','Automation approval is unavailable.')
@@ -52,6 +53,10 @@ export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:stri
     }
     if(action.kind==='update'&&!scope.writableFieldIds.includes(action.fieldId))
      throw new AuthorityError('forbidden','Automation field is no longer writable.')
+    if(action.kind==='email') {
+     const now=(deps.clock?.()??new Date()).getTime(),due=await automationEmailDue(deps.db,now)
+     if(due>now){await store.hold(step.id,due);return}
+    }
     claimed=await store.claim(run,step,guard)
     if(!claimed)return
     const outcome=await deps.effects.execute(ctx,run,step,action,scope,subject,row.version,authorize)

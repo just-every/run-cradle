@@ -14,7 +14,7 @@ export function manualSchemaHttp(service:ReturnType<typeof createManualSchemas>,
   const ctx=await authenticate(request,'http',id)
   if(request.method!=='GET'&&request.headers.get('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin owner request is required.')
   const csv=url.pathname.match(/^\/api\/v1\/records\/releases\/([^/]+)\/recovery\/([^/]+)\.csv$/)
-  if(request.method==='GET'&&csv){const recovery=await service.recovery(ctx,idSchema.parse(csv[1])),table=recovery.tables.find(t=>t.entityId===idSchema.parse(csv[2]));if(!table)throw new AdmissionError('not_found','Recovery table not found.');return new Response(table.csv,{headers:{'content-type':'text/csv;charset=utf-8','content-disposition':'attachment; filename="schema-recovery.csv"','cache-control':'no-store'}})}
+  if(request.method==='GET'&&csv){const recovery=await service.recovery(ctx,idSchema.parse(csv[1])),table=recovery.tables.find(t=>t.entityId===idSchema.parse(csv[2]));if(!table)throw new AdmissionError('not_found','Recovery table not found.');return new Response(table.csv,{headers:{'content-type':'text/csv;charset=utf-8','content-disposition':`attachment; filename="schema-recovery.csv"; filename*=UTF-8''${encodeURIComponent(table.name+'-recovery.csv')}`,'cache-control':'no-store'}})}
   let data:unknown
   if(request.method==='POST'&&url.pathname==='/api/v1/records/schema-preview')data=await service.preview(ctx,await readJsonBody(request))
   else if(request.method==='POST'&&url.pathname==='/api/v1/commands/release.adopt'){

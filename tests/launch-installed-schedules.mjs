@@ -99,6 +99,31 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const rearmed=await snapshot();st.diagnostic(JSON.stringify({rearmed}))
    assert.equal(rearmed.overdue,first.overdue+1);assert.equal(rearmed.mailOutbox,first.mailOutbox+1)
   })
+  // Owner-authored schedules use the same public save command and emitted cron as shipped definitions.
+  // Keep these within the existing schedule journey instead of adding registration-only tests.
+  const localDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kathmandu',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()+86400000))
+  const weekday=new Date(localDate+'T12:00:00Z').getUTCDay()
+  for(const fixture of [
+   {name:'Daily campaign note',rule:'daily 09:57',at:localDate+'T09:57:00.000Z',after:localDate+'T10:02:00.000Z',message:'Daily owner-authored schedule fired'},
+   {name:'Weekly campaign note',rule:`weekly ${weekday} 23:55`,at:localDate+'T23:55:00.000Z',after:new Date(Date.parse(localDate+'T23:55:00Z')+10*60000).toISOString(),message:'Weekly owner-authored schedule fired'},
+  ]) {
+   const saved=await command('launch.automation.save',{definition:{name:fixture.name,enabled:true,
+    trigger:{kind:'schedule',localRule:fixture.rule,timezone:'Asia/Kathmandu'},actions:[{command:'add-activity',input:{campaignId:campaign.id,message:fixture.message}}]}})
+   const countEffects=()=>count('SELECT count(*) n FROM activity_entries WHERE automation_run_id IN (SELECT id FROM automation_runs WHERE automation_id=?)',saved.id)
+   const notDue=new Date(Date.parse(fixture.at)-1000).toISOString()
+   await tick(notDue);assert.equal(await countEffects(),0)
+   await tick(fixture.after)
+   if(!await countEffects())t.diagnostic(JSON.stringify({schedule:fixture.name,saved,definition:await h.db.prepare('SELECT id,enabled,trigger_type,trigger_config_json FROM automations WHERE id=?').bind(saved.id).first(),at:fixture.after,runs:(await h.db.prepare('SELECT state,error_code,error_message,trigger_key FROM automation_runs WHERE automation_id=?').bind(saved.id).all()).results,actions:(await h.db.prepare('SELECT state,error_code,error_message FROM launch_automation_actions WHERE run_id IN (SELECT id FROM automation_runs WHERE automation_id=?)').bind(saved.id).all()).results}))
+   assert.equal(await countEffects(),1,'Created schedule must fire across an hour or midnight boundary')
+   await tick(fixture.after);assert.equal(await countEffects(),1,'Repeated cron must preserve one effect per schedule occurrence')
+   const monitor=await fetch(h.origin+'/api/automations',{headers:{cookie:h.cookie}})
+   assert.equal(monitor.status,200)
+   const visible=(await monitor.json()).automations.find(item=>item.id===saved.id)
+   assert.ok(visible);assert.equal(visible.runCount30Days,1);assert.equal(visible.lastRunStatus,'Succeeded')
+   await command('launch.automation.disable',{id:saved.id},expected('automation',saved))
+  }
+  const invalid=await fetch(h.origin+'/api/v1/commands/launch.automation.save',{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({commandId:createUlid(),expected:[],input:{definition:{name:'Missing trigger',enabled:true,actions:[{command:'add-activity',input:{campaignId:campaign.id,message:'Must never run'}}]}}})})
+  assert.equal(invalid.status,400,'An enabled automation without a trigger must be rejected before saving')
   assert.equal(outbound,0,'The scheduled sentinel must remain offline')
  }finally{await h.close()}
 })

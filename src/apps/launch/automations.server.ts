@@ -1,3 +1,4 @@
+import { parseSchedule } from './schedule'
 import type { CommandInput,Json } from '../../contracts/primitives'
 import type { RequestContext } from '../../domains/authority/ports'
 import { registerTable,eq,trustedPredicate } from '../../domains/admission/sql.server'
@@ -16,13 +17,20 @@ export async function prepareAutomation(context:LaunchContext,ctx:RequestContext
  }
  const id=String(input.input.id??createUlid()),before=input.input.id?await load(context.db,'automation',id):null;if(before)versionGuard(set,'automation',before,input.expected)
  if(operation==='enable'||operation==='disable'){
-  if(!before)fail('Automation was not found');const enabled=operation==='enable'?1:0;set.mutations.push({kind:'update',table:tables.automation,set:{enabled,version:before!.version+1,definition_version:Number(before!.definition_version)+1,updated_at:now},where:eq(tables.automation,'id',id),expectedRows:1})
+  if(!before)fail('Automation was not found');
+  if(operation==='enable') {
+   const config=JSON.parse(String(before!.trigger_config_json))
+   const events=[config.event,...(Array.isArray(config.events)?config.events:[])].filter(Boolean)
+   if(before!.trigger_type==='event'&&(!events.length||events.some(event=>!declaredEvents.includes(String(event).endsWith('.v1')?String(event):String(event)+'.v1'))))fail('Configure a declared product event before enabling this automation')
+   if(before!.trigger_type==='schedule'&&!before!.shipped_key&&!parseSchedule(String(config.localRule)))fail('Configure a daily, weekly or hourly schedule before enabling this automation')
+  }
+  const enabled=operation==='enable'?1:0;set.mutations.push({kind:'update',table:tables.automation,set:{enabled,version:before!.version+1,definition_version:Number(before!.definition_version)+1,updated_at:now},where:eq(tables.automation,'id',id),expectedRows:1})
   if(enabled&&!before!.shipped_key)set.mutations.push({kind:'insert',table:authorities,row:{automation_id:id,definition_version:Number(before!.definition_version)+1,principal_json:JSON.stringify(ctx.principal)}})
   if(!enabled){const runs=await context.db.prepare("SELECT id,version FROM automation_runs WHERE automation_id=? AND state='Queued'").bind(id).all<{id:string;version:number}>();set.guards.push(trustedPredicate("(SELECT COUNT(*) FROM automation_runs WHERE automation_id=? AND state='Queued')=?",[id,runs.results.length]));for(const run of runs.results)set.mutations.push({kind:'update',table:runTable,set:{state:'Cancelled',version:run.version+1,updated_at:now,finished_at:now},where:eq(runTable,'id',run.id),expectedRows:1})}
   recordChange(set,ctx,'automation',before,{...before!,enabled,version:before!.version+1,updated_at:now},`automation.${operation}`)
   return plan(context,ctx,input,`launch.automation.${operation}`,set,{...toWire(before!),enabled:Boolean(enabled),version:before!.version+1,definitionVersion:Number(before!.definition_version)+1},'automation')
  }
  if(before?.shipped_key)fail('Shipped automations only permit enable/disable; readiness lead time/hour are workspace settings')
- const definition=automationDefinition.parse(input.input.definition);if(definition.trigger.kind==='event'&&!declaredEvents.includes(definition.trigger.event))fail('Undeclared product event');if(definition.trigger.kind==='schedule'){new Intl.DateTimeFormat('en',{timeZone:definition.trigger.timezone});if(!/^(hourly|daily (?:[01]\d|2[0-3]):[0-5]\d|weekly [0-6] (?:[01]\d|2[0-3]):[0-5]\d)$/.test(definition.trigger.localRule))fail('Schedule must be hourly, daily HH:mm or weekly d HH:mm; more than hourly is forbidden')}
+ const definition=automationDefinition.parse(input.input.definition);if(definition.trigger.kind==='event'&&!declaredEvents.includes(definition.trigger.event))fail('Undeclared product event');if(definition.trigger.kind==='schedule'){new Intl.DateTimeFormat('en',{timeZone:definition.trigger.timezone});if(!parseSchedule(definition.trigger.localRule))fail('Schedule must be hourly, daily HH:mm or weekly d HH:mm; more than hourly is forbidden')}
  const row={id,created_at:before?.created_at??now,updated_at:now,version:(before?.version??0)+1,name:definition.name,trigger_type:definition.trigger.kind,trigger_config_json:JSON.stringify(definition.trigger),actions_json:JSON.stringify(definition.actions),enabled:Number(definition.enabled),definition_version:Number(before?.definition_version??0)+1,shipped_key:null};set.mutations.push(before?{kind:'update',table:tables.automation,set:row,where:eq(tables.automation,'id',id),expectedRows:1}:{kind:'insert',table:tables.automation,row});set.mutations.push({kind:'insert',table:authorities,row:{automation_id:id,definition_version:row.definition_version,principal_json:JSON.stringify(ctx.principal)}});recordChange(set,ctx,'automation',before,row,'automation.saved');return plan(context,ctx,input,'launch.automation.save',set,{...definition,id,version:row.version,definitionVersion:row.definition_version,createdAt:new Date(row.created_at).toISOString(),updatedAt:ctx.now} as Json,'automation')
 }

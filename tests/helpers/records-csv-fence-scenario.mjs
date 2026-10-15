@@ -14,14 +14,15 @@ export async function csvFenceScenario(h){
   if(/^SELECT 1\b/.test(sql)){const bind=statement.bind.bind(statement);statement.bind=(...args)=>{assert.ok(args.length<=100);reads.push({sql,values:args});return bind(...args)}}
   return statement
  }
- const first=await r.csv.preview(h.ctx,input);assert.equal(first.creates,205);await r.csv.commit(h.ctx,createUlid(),first.id)
- const repeated=await r.csv.preview(h.ctx,input);assert.equal(repeated.unchanged,205);assert.equal(repeated.creates,0)
+ const mixed={...input,csv:input.csv+'"Rejected","Bad number","not-a-number","false"\r\n'}
+ const first=await r.csv.preview(h.ctx,mixed);assert.equal(first.creates,205);assert.equal(first.rejected,1);assert.equal(first.errors[0].row,207);await r.csv.commit(h.ctx,createUlid(),first.id)
+ const repeated=await r.csv.preview(h.ctx,mixed);assert.equal(repeated.unchanged,205);assert.equal(repeated.creates,0);assert.equal(repeated.rejected,1)
  const exported=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query:{sort:[{fieldId:schema.fields[0].id,direction:'asc'}]}});assert.equal(exported.csv,input.csv)
  assert.ok(reads.some(read=>read.sql.includes('json_each')&&JSON.parse(read.values[0]).some(group=>group.length===205)),'The final statement checks all 205 per-row predicates')
  const descriptor=r.registry.get(draft.appId,schema.id),last=await prepare(`SELECT id FROM "${descriptor.table.tableId}" ORDER BY "${descriptor.fields.get(schema.fields[0].id).column}" DESC LIMIT 1`).first()
  await prepare(`UPDATE "${descriptor.table.tableId}" SET version=version+1 WHERE id=?`).bind(last.id).run()
  await assert.rejects(r.csv.commit(h.ctx,createUlid(),repeated.id),/stale/)
- const latest=await r.csv.preview(h.ctx,input)
+ const latest=await r.csv.preview(h.ctx,mixed)
  let revoked=false
  h.db.prepare=sql=>{const statement=prepare(sql);if(/^SELECT 1\b/.test(sql)&&sql.includes('json_each')){const bind=statement.bind.bind(statement);statement.bind=(...values)=>{const bound=bind(...values),first=bound.first.bind(bound);bound.first=async(...args)=>{await prepare('UPDATE authority_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),h.session).run();revoked=true;return first(...args)};return bound}}return statement}
  await assert.rejects(r.csv.commit(h.ctx,createUlid(),latest.id),/stale/);assert.equal(revoked,true)

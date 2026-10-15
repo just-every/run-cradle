@@ -18,7 +18,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  validateAuthConfiguration(platform.auth.configuration)
  const records=createRecordsComposition(platform,foundation)
  await ensureRecordAutomationTriggers(platform.bindings.DB,foundation.descriptors)
- const automations=createAutomationsComposition(platform,foundation)
+ const automations=createAutomationsComposition(platform,foundation,clock)
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)

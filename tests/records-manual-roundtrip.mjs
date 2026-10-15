@@ -8,14 +8,14 @@ import {recordsCsvHttp} from '../src/domains/records/csv-http.server.ts'
 import {manualSchemaHttp} from '../src/domains/records/manual/http.server.ts'
 import {baseExportHttp} from '../src/domains/records/base-transfer/export-http.server.ts'
 import {createBaseExport} from '../src/domains/records/base-transfer/export-json.server.ts'
-import {parseCsv} from '../src/domains/portability/csv.ts'
+import {parseCsv,encodeCsv} from '../src/domains/portability/csv.ts'
 import {csvDownloadEntries} from './helpers/base-csv-download.mjs'
 
 test('RECORDS-001 RECORDS-004 fresh table CSV restores nullable select labels, real links and recomputed lookup exactly',async()=>{
  const h=await harness();try{
   const draft=templateBase('crm'),companies=draft.tables[0],contacts=draft.tables[1],tier=newField('Tier','select');tier.options=[{id:createUlid(),label:'Premier, 北'},{id:createUlid(),label:'Standard'}];companies.fields.push(tier)
   const lookup=newField('Company tier','computed');Object.assign(lookup,{readOnly:true,resultType:'select',options:tier.options,expression:{kind:'rollup',aggregate:'lookup',relationFieldId:contacts.fields[2].id,valueFieldId:tier.id}})
-  const choice=newField('Choice','select');choice.options=[{id:createUlid(),label:'\\N'},{id:createUlid(),label:'a "label"\nnext'}];contacts.fields.push(lookup,choice,newField('Number','number'),newField('Due','date'),newField('Checked','boolean'))
+  const choice=newField('Choice','select');choice.options=[{id:createUlid(),label:'\\N'},{id:createUlid(),label:'a "label"\nnext'}];contacts.fields.push(lookup,choice,newField('Number','number'),newField('Due','date'),newField('Checked','boolean'),newField('Website','url'))
   const {r}=await h.create(draft),company=r.registry.get(draft.appId,companies.id).schema,contact=r.registry.get(draft.appId,contacts.id).schema,linked=[]
   for(let n=0;n<2;n++)linked.push(await add(h,r,company,{[company.fields[0].id]:`Company ${n}`,[tier.id]:tier.options[n].id}))
   for(let n=0;n<3;n++)await add(h,r,contact,{[contact.fields[0].id]:`Contact ${n}`,[contact.fields[1].id]:n===0?'comma, "北"\nline':'',[contact.fields[2].id]:linked[n]?.ref??null,[choice.id]:choice.options[n]?.id??null,[contact.fields[6].id]:n===0?'0':null,[contact.fields[7].id]:n===0?'2027-01-15':null,[contact.fields[8].id]:n===0?false:n===1?true:null})
@@ -27,7 +27,40 @@ test('RECORDS-001 RECORDS-004 fresh table CSV restores nullable select labels, r
   for(let n=0;n<3;n++){assert.deepEqual(rows.items[n].fields[ids.get(contact.fields[2].id)].value,linked[n]?.ref??null);assert.equal(rows.items[n].fields[ids.get(lookup.id)].value,tier.options[n]?.id??null);assert.equal(rows.items[n].fields[ids.get(choice.id)].value,fresh.fields.find(f=>f.id===ids.get(choice.id)).options[n]?.id??null)}
   assert.notEqual(fresh.fields.find(f=>f.id===ids.get(choice.id)).options[0].id,choice.options[0].id);assert.equal((await live.csv.preview(h.ctx,request)).unchanged,3)
   const restored=await live.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:fresh.id,query:{sort:[{fieldId:fresh.fields[0].id,direction:'asc'}]}});assert.equal(restored.csv,csv.csv)
-  await add(h,live,live.registry.get(draft.appId,company.id).schema,{[company.fields[0].id]:'Company 0',[tier.id]:tier.options[0].id});await assert.rejects(live.csv.preview(h.ctx,request),/matches several linked records/)
+  const [name,,,,,,number,due,checked,website]=fresh.fields
+  const http=recordsCsvHttp(live.csv,async()=>h.ctx),origin='https://records.example.test'
+  async function call(path,input){const response=await http.fetch(new Request(origin+path,{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(input)}));const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));return body.data}
+  const mixed={appId:draft.appId,entityId:fresh.id,mergeFieldId:name.id,mapping:[name,number,due,checked,website].map(f=>({column:f.label,fieldId:f.id})),csv:encodeCsv([name,number,due,checked,website].map(f=>f.label),[
+   ['Contact 0','12','2027-01-15','false','https://example.test'],
+   ['Contact 1','','','true',''],
+   ['New contact','25','2027-02-01','true','https://new.example.test'],
+   ['Bad website','1','','false','not a url'],
+   ['Bad amount','not-a-number','','false',''],
+   ['Bad date','1','2027-02-30','false',''],
+   ['Bad checkbox','1','','maybe',''],
+   ['Duplicate','1','','false',''],['Duplicate','2','','false',''],
+   ['','1','','false','']
+  ])}
+  const mixedPlan=await call('/api/v1/records/import-preview',mixed)
+  assert.deepEqual([mixedPlan.creates,mixedPlan.updates,mixedPlan.unchanged,mixedPlan.rejected],[1,1,1,7])
+  assert.deepEqual(mixedPlan.errors.map(e=>e.row),[5,6,7,8,9,10,11])
+  assert.match(mixedPlan.errors.find(e=>e.row===5).message,/Website:.*https?:/)
+  assert.match(mixedPlan.errors.find(e=>e.row===6).message,/Number:.*number/)
+  assert.match(mixedPlan.errors.find(e=>e.row===7).message,/Due:.*YYYY-MM-DD/)
+  assert.match(mixedPlan.errors.find(e=>e.row===8).message,/Checked:.*true.*false/)
+  assert.doesNotMatch(JSON.stringify(mixedPlan.errors),/invalid_format|invalid_type|Expected canonical|\\"code\\"/)
+  assert.deepEqual(mixedPlan.rows.map(row=>row.label),['Contact 0','Contact 1','New contact'])
+  assert.equal((await live.services.reader.query(h.ctx,scope,{})).items.length,3,'Preview writes no records')
+  const commandId=createUlid(),commitInput={commandId,expected:[],input:{previewId:mixedPlan.id}},committed=await call('/api/v1/commands/records.import-commit',commitInput)
+  assert.deepEqual([committed.value.creates,committed.value.updates,committed.value.unchanged,committed.value.rejected],[1,1,1,7])
+  assert.deepEqual(await call('/api/v1/commands/records.import-commit',commitInput),committed)
+  const imported=(await live.services.reader.query(h.ctx,scope,{})).items
+  assert.equal(imported.length,4);assert.equal(imported.find(row=>row.fields[name.id].value==='Contact 0').fields[number.id].value,'12')
+  assert.ok(imported.every(row=>!String(row.fields[name.id].value).startsWith('Bad ')))
+  const rejectedOnly=await call('/api/v1/records/import-preview',{...mixed,csv:encodeCsv([name,number,due,checked,website].map(f=>f.label),[['Rejected','bad','','false','']])})
+  await assert.rejects(live.csv.commit(h.ctx,createUlid(),rejectedOnly.id),/no valid rows/i)
+  await add(h,live,live.registry.get(draft.appId,company.id).schema,{[company.fields[0].id]:'Company 0',[tier.id]:tier.options[0].id})
+  const ambiguous=await live.csv.preview(h.ctx,request);assert.equal(ambiguous.rejected,1);assert.match(ambiguous.errors[0].message,/matches several linked records/);assert.equal(ambiguous.unchanged+ambiguous.updates,2)
  }finally{h.close()}
 })
 
@@ -46,7 +79,10 @@ test('RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and
   const manual=manualSchemaHttp(r.manual,{},auth),preview=await call(manual,'/api/v1/records/schema-preview',edit)
   assert.equal(preview.impacts.find(i=>i.entityId===company.id).count,0)
   assert.equal(preview.impacts.find(i=>i.entityId===schema.id).count,2)
-  await call(manual,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}})
+  const adopted=await call(manual,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}})
+  const recoveryResponse=await manual.fetch(new Request(`${origin}/api/v1/records/releases/${adopted.value.releaseId}/recovery/${schema.id}.csv`)),recovery=parseCsv(new TextEncoder().encode(await recoveryResponse.text()))
+  assert.equal(recoveryResponse.status,200);assert.match(recoveryResponse.headers.get('content-type'),/text\/csv/);assert.deepEqual(recovery.headers,['_record_id',...schema.fields.filter(field=>field.type!=='computed').map(field=>field.label)]);assert.deepEqual(recovery.rows.map(row=>row[recovery.headers.indexOf(won.label)]).sort(),['false','true'])
+  assert.equal(new Set(recovery.rows.map(row=>row[0])).size,2)
   let live=await h.runtime(),http=createRecordHttp({...live.services,authenticate:auth}),views=(await call(http,`/api/v1/apps/${draft.appId}/views`)).items
   assert.deepEqual(new Set(views.map(v=>v.id)),new Set([grid.id,board.id]))
   const kept=views.find(v=>v.id===grid.id);assert.deepEqual(kept.fields,[link.id,key.id,due.id]);assert.deepEqual(kept.sort,[{fieldId:amount.id,direction:'desc'}]);assert.deepEqual(kept.filter,{kind:'all',conditions:[definition.filter.conditions[1]]});assert.equal(views.find(v=>v.id===board.id).display,'board')

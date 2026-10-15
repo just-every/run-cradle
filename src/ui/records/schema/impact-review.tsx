@@ -25,6 +25,6 @@ export function SchemaImpactReview({ appId, impacts, schemas, access, recovery }
       <ul className="cr-change-list">{impact.changes.map(change => { const kind = changeKind(change); return <li key={change}><span className={`cr-change-icon cr-change-icon--${kind}`}><UiIcon name={changeIcon[kind]} size={12} /></span><span>{impactChangeLabel(change, schemas.find(schema => schema.id === impact.entityId)?.fields ?? [])}</span></li> })}</ul>
       {impact.recordIds.length > 0 && <details className="cr-detail"><summary>Affected record identities</summary><ul>{impact.recordIds.map(id => <li key={id}><a className="cr-link" href={`/app/records/${appId}/${impact.entityId}/${id}`}>{id}</a></li>)}</ul></details>}
     </article> })}</div>
-    <p className="cr-recovery"><UiIcon name="check" size={18} /><span><strong>Recovery:</strong> {recovery}</span></p>
+    {impacts.some(impact => impact.removedFields.length > 0) && <p className="cr-recovery"><UiIcon name="check" size={18} /><span><strong>Recovery:</strong> {recovery}</span></p>}
   </>
 }

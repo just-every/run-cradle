@@ -1,17 +1,70 @@
 import { useEffect, useState } from 'react'
 import type { EntitySchema } from '../../domains/records/contracts'
-import type { CellValue } from '../../contracts/primitives'
+import type { CsvImportPreview, CsvImportSummary } from '../../domains/records/csv-import-contracts'
 import { parseCsv } from '../../domains/portability/csv'
 import { readApi, useCommand } from '../shared/api'
-import { CellDisplay } from './record-fields'
 import { CommandFeedback } from '../shared/presentation'
-type Preview={id:string;creates:number;updates:number;unchanged:number;rows:{id:string;operation:string;values:Record<string,CellValue>}[]}
-export function ManualImport({schema,onClose,onSaved}:{schema:EntitySchema;onClose:()=>void;onSaved:()=>void}){
- const [csv,setCsv]=useState(''),[headers,setHeaders]=useState<string[]>([]),[mapping,setMapping]=useState<Record<string,string>>({}),[merge,setMerge]=useState(''),[preview,setPreview]=useState<Preview|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false)
- const [offset,setOffset]=useState(0)
- const command=useCommand(`manual-import:${schema.appId}:${schema.id}`),fields=schema.fields.filter(f=>!f.readOnly&&f.type!=='computed')
- useEffect(()=>{if(command.result.state==='committed')onSaved()},[command.result.state])
- async function load(file:File){setError('');try{const bytes=new Uint8Array(await file.arrayBuffer()),parsed=parseCsv(bytes),text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);setCsv(text);setHeaders(parsed.headers);setMapping(Object.fromEntries(parsed.headers.map(header=>[header,fields.find(f=>f.label===header)?.id??''])))}catch(e){setError(e instanceof Error?e.message:'Could not read CSV.')}}
- async function prepare(){setBusy(true);setError('');try{setPreview((await readApi<Preview>('/api/v1/records/import-preview',{method:'POST',body:JSON.stringify({appId:schema.appId,entityId:schema.id,csv,mapping:Object.entries(mapping).filter(([,id])=>id).map(([column,fieldId])=>({column,fieldId})),mergeFieldId:merge})})).data)}catch(e){setError(e instanceof Error?e.message:'Import preview failed.')}finally{setBusy(false)}}
- return <section className="cr-card cr-stack"><header className="cr-page-header"><h2>Import {schema.label}</h2><button className="cr-button cr-button--quiet" onClick={onClose}>Close import</button></header><p>Match records by a unique value to make repeated imports idempotent. Empty text stays empty; numbers use exact decimals; checkboxes use true or false. Exported \N means not set. Links require exported reference JSON and current access. Lookups are calculated and must be skipped.</p>{!preview?<form className="cr-form" onSubmit={e=>{e.preventDefault();void prepare()}}><label className="cr-field">CSV file<input type="file" accept=".csv,text/csv" onChange={e=>{if(e.target.files?.[0])void load(e.target.files[0])}} /></label>{headers.map(header=><label className="cr-field" key={header}>{header}<select value={mapping[header]??''} onChange={e=>setMapping({...mapping,[header]:e.target.value})}><option value="">Skip column</option>{fields.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}</select></label>)}<label className="cr-field">Match existing records by<select required value={merge} onChange={e=>setMerge(e.target.value)}><option value="">Choose a unique column</option>{headers.includes('_record_id')&&<option value="_record_id">Original record ID (recovery only)</option>}{fields.filter(f=>Object.values(mapping).includes(f.id)&&['text','number','date','select'].includes(f.type)).map(f=><option key={f.id} value={f.id}>{f.label}</option>)}</select></label><button className="cr-button" disabled={!csv||!merge||busy}>Preview import</button></form>:<><h3>Review import</h3><p>{preview.creates} new · {preview.updates} updated · {preview.unchanged} unchanged</p><div className="cr-table-wrap" role="region" tabIndex={0} aria-label="CSV import changes"><table className="cr-table"><thead><tr><th>Record</th><th>Change</th><th>Values</th></tr></thead><tbody>{preview.rows.slice(offset,offset+50).map(row=><tr key={row.id}><td>{row.id}</td><td>{row.operation}</td><td>{Object.entries(row.values).map(([id,value])=><p key={id}>{schema.fields.find(f=>f.id===id)?.label}: <CellDisplay cell={{state:'value',value}} field={schema.fields.find(f=>f.id===id)} appId={schema.appId} /></p>)}</td></tr>)}</tbody></table></div><div className="cr-actions"><span>Showing {Math.min(offset+1,preview.rows.length)}–{Math.min(offset+50,preview.rows.length)} of {preview.rows.length} changes</span>{offset>0&&<button type="button" className="cr-button cr-button--quiet" onClick={()=>setOffset(0)}>First changes</button>}{offset+50<preview.rows.length&&<button type="button" className="cr-button cr-button--quiet" onClick={()=>setOffset(offset+50)}>Next changes</button>}</div><label className="cr-choice"><input type="checkbox" checked={confirm} onChange={e=>setConfirm(e.target.checked)} />Import these reviewed changes</label><div className="cr-actions"><button className="cr-button" disabled={!confirm||!['idle','failed'].includes(command.result.state)} onClick={()=>void command.submit('/api/v1/commands/records.import-commit',{previewId:preview.id},[])}>Import records</button><button className="cr-button cr-button--quiet" onClick={()=>{setPreview(null);setConfirm(false);command.reset()}}>Change import</button></div><CommandFeedback {...command} /></>}{error&&<p role="alert" className="cr-error">{error}</p>}</section>
+import { ManualImportPreview } from './manual-import-preview'
+
+export function ManualImport({ schema, onClose, onSaved }: {
+  schema: EntitySchema; onClose: () => void; onSaved: (summary: CsvImportSummary) => void
+}) {
+  const [csv, setCsv] = useState(''), [headers, setHeaders] = useState<string[]>([])
+  const [mapping, setMapping] = useState<Record<string, string>>({}), [merge, setMerge] = useState('')
+  const [preview, setPreview] = useState<CsvImportPreview | null>(null), [error, setError] = useState('')
+  const [busy, setBusy] = useState(false), [confirmed, setConfirmed] = useState(false)
+  const command = useCommand<CsvImportSummary>(`manual-import:${schema.appId}:${schema.id}`)
+  const fields = schema.fields.filter(field => !field.readOnly && field.type !== 'computed')
+  const committing = ['submitting', 'pending', 'unknown'].includes(command.result.state)
+  useEffect(() => {
+    if (command.result.state === 'committed') onSaved(command.result.value)
+  }, [command.result.state])
+
+  async function load(file: File) {
+    setError(''); setCsv(''); setHeaders([]); setMerge('')
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer()), parsed = parseCsv(bytes)
+      setCsv(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); setHeaders(parsed.headers)
+      setMapping(Object.fromEntries(parsed.headers.map(header => [header, fields.find(field => field.label === header)?.id ?? ''])))
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not read CSV.') }
+  }
+  async function prepare() {
+    setBusy(true); setError('')
+    try {
+      setPreview((await readApi<CsvImportPreview>('/api/v1/records/import-preview', { method: 'POST', body: JSON.stringify({
+        appId: schema.appId, entityId: schema.id, csv,
+        mapping: Object.entries(mapping).filter(([, id]) => id).map(([column, fieldId]) => ({ column, fieldId })), mergeFieldId: merge,
+      }) })).data)
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Import preview failed.') }
+    finally { setBusy(false) }
+  }
+  return <section className="cr-card cr-stack">
+    <header className="cr-page-header"><h2>Import {schema.label}</h2><button className="cr-button cr-button--quiet" disabled={busy || committing} onClick={onClose}>Close import</button></header>
+    <p>Match records by a unique column, then review what will change. Valid rows can be imported while rejected rows wait for correction.</p>
+    {!preview ? <form className="cr-form" onSubmit={event => { event.preventDefault(); void prepare() }}>
+      <fieldset disabled={busy}><legend>Match columns</legend>
+        <label className="cr-field">CSV file<input type="file" accept=".csv,text/csv" onChange={event => { if (event.target.files?.[0]) void load(event.target.files[0]) }} /></label>
+        {headers.map(header => <label className="cr-field" key={header}>{header}<select value={mapping[header] ?? ''} onChange={event => setMapping({ ...mapping, [header]: event.target.value })}>
+          <option value="">Skip column</option>{fields.map(field => <option key={field.id} value={field.id}>{field.label}</option>)}
+        </select></label>)}
+        <label className="cr-field">Match existing records by<select required value={merge} onChange={event => setMerge(event.target.value)}>
+          <option value="">Choose a unique column</option>{headers.includes('_record_id') && <option value="_record_id">Original record ID (recovery only)</option>}
+          {fields.filter(field => Object.values(mapping).includes(field.id) && ['text', 'number', 'date', 'select'].includes(field.type)).map(field => <option key={field.id} value={field.id}>{field.label}</option>)}
+        </select></label>
+      </fieldset>
+      <button className="cr-button" disabled={!csv || !merge || busy}>Preview import</button>
+    </form> : <>
+      <h3>Review import</h3>
+      <p>{preview.creates} new · {preview.updates} updated · {preview.unchanged} unchanged · {preview.rejected} rejected</p>
+      <ManualImportPreview key={preview.id} schema={schema} preview={preview} />
+      {preview.rejected > 0 && <p>Rejected rows will be skipped. Correct them in your CSV and preview again to include them.</p>}
+      {preview.rows.length > 0 ? <>
+        <label className="cr-choice"><input type="checkbox" disabled={committing} checked={confirmed} onChange={event => setConfirmed(event.target.checked)} />Import these reviewed changes</label>
+        <button className="cr-button" disabled={!confirmed || !['idle', 'failed'].includes(command.result.state)} onClick={() => void command.submit('/api/v1/commands/records.import-commit', { previewId: preview.id }, [])}>Import records</button>
+      </> : <p role="alert" className="cr-error">No valid rows to import. Correct the rejected rows and preview again.</p>}
+      <button className="cr-button cr-button--quiet" disabled={committing} onClick={() => { setPreview(null); setConfirmed(false); command.reset() }}>Change import</button>
+      <CommandFeedback {...command} />
+    </>}
+    {error && <p role="alert" className="cr-error">{error}</p>}
+  </section>
 }

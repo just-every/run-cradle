@@ -1,5 +1,5 @@
 import { exportContext, formatWorkspaceCell } from './csv-export.server'
-import { createCsvLabels, displayCsvValue, decodeDisplayCsvValue } from './csv-display.server'
+import { createCsvLabels, displayCsvValue } from './csv-display.server'
 import { z } from 'zod'
 import type { RequestContext } from '../authority/ports'
 import type { AdmissionPort, SqlPredicate, SqlMutation } from '../admission/ports'
@@ -9,31 +9,14 @@ import { AdmissionError } from '../admission/errors'
 import { createUlid } from '../../core/shared/ids'
 import { parseCsv, encodeCsv } from '../portability/csv'
 import type { createRecordServices } from './service.server'
-import { querySchema, idSchema, validateCell } from './validators'
-import type { Field } from './contracts'
-import type { CellValue } from '../../contracts/primitives'
+import { querySchema, idSchema } from './validators'
+export { decodeCsvValue, encodeCsvValue } from './csv-values'
+import { previewCsvRows } from './csv-preview-rows.server'
+import type { CsvImportPreview } from './csv-import-contracts'
 import { assertGuards } from './fence.server'
 const stored=registerTable('record_csv_previews',['id','app_id','entity_id','owner_id','detail_json','expires_at','command_id'])
 export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024),mapping:z.array(z.object({column:z.string(),fieldId:idSchema}).strict()).min(1).max(80),mergeFieldId:z.union([idSchema,z.literal('_record_id')])}).strict()
-type ImportRow={id:string;version:number|null;values:Record<string,CellValue>;operation:'create'|'update'|'unchanged'}
-type Preview={id:string;appId:string;entityId:string;rows:ImportRow[];guards:SqlPredicate[];expiresAt:string;creates:number;updates:number;unchanged:number}
-export function decodeCsvValue(field:Field,raw:string):CellValue {
- if(field.type==='computed')throw new AdmissionError('validation',`${field.label} is computed and cannot be imported.`)
- if(raw==='\\N')return validateCell(field,null)
- if(raw.startsWith('\\\\'))raw=raw.slice(1)
- let value:unknown=raw
- if(field.type==='boolean')value=raw===''?null:raw==='true'?true:raw==='false'?false:raw
- else if(field.type==='select')value=raw===''?null:(field.options?.find(o=>o.label===raw)??field.options?.find(o=>o.id===raw))?.id??raw
- else if(field.type==='relation') {try{value=raw===''?null:JSON.parse(raw)}catch{throw new AdmissionError('validation',`${field.label}: links require exported reference JSON; labels alone cannot identify records.`)}}
- else if(field.type!=='text'&&raw==='')value=null
- return validateCell(field,value)
-}
-export function encodeCsvValue(field:Field,value:CellValue):string {
- if(value===null)return '\\N'
- if(field.type==='select'||field.type==='computed'&&field.resultType==='select')value=field.options?.find(o=>o.id===value)?.label??String(value)
- if(typeof value==='string')return value.startsWith('\\')?'\\'+value:value
- return typeof value==='boolean'?String(value):JSON.stringify(value)
-}
+type Preview=CsvImportPreview & {guards:SqlPredicate[]}
 export function createRecordsCsv(db:D1Database,services:ReturnType<typeof createRecordServices>,admission:AdmissionPort){
  const {reader,writer,policy,descriptors,metadata}=services
  async function exportCsv(ctx:RequestContext,input:unknown){
@@ -67,22 +50,11 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   const existing=[];let cursor:string|undefined
   do{const page=await reader.query(ctx,scope,{limit:200,cursor});existing.push(...page.items);cursor=page.nextCursor??undefined}while(cursor)
   const labelGuards:SqlPredicate[]=[],labels=createCsvLabels(services,ctx,labelGuards)
-  const seen=new Set<string>(),rows:ImportRow[]=[]
-  for(const cells of csv.rows){
-   const values:Record<string,CellValue>={}
-   for(const mapping of request.mapping){const field=d.fields.get(mapping.fieldId)?.field;if(!field||!scope.readableFieldIds.includes(field.id)||!scope.writableFieldIds.includes(field.id))throw new AdmissionError('forbidden','Mapped field is unavailable.');const raw=cells[csv.headers.indexOf(mapping.column)]!;values[field.id]=byId?decodeCsvValue(field,raw):field.type==='relation'?await labels.resolve(field,raw):decodeDisplayCsvValue(field,raw)}
-   const key=byId?cells[csv.headers.indexOf('_record_id')]!:canonical(values[merge!.id]);if((byId?!idSchema.safeParse(key).success:values[merge!.id]===null||values[merge!.id]==='')||seen.has(key))throw new AdmissionError('validation','Merge keys must be nonempty and unique within the CSV.');seen.add(key)
-   const matches=existing.filter(r=>{if(byId)return r.id===key;const cell=r.fields[merge!.id];return cell?.state==='value'&&canonical(cell.value)===key})
-   if(byId&&matches.length!==1)throw new AdmissionError('forbidden','An original record is unavailable. Recovery updates only currently accessible existing records.')
-   if(matches.length>1)throw new AdmissionError('validation','Merge key matches more than one record.')
-   const prior=matches[0],changed=Object.fromEntries(Object.entries(values).filter(([id,value])=>!prior||((cell)=>cell?.state!=='value'||canonical(cell.value)!==canonical(value))(prior.fields[id])))
-   rows.push({id:prior?.id??createUlid(),version:prior?.version??null,values:changed,operation:prior?Object.keys(changed).length?'update':'unchanged':'create'})
-  }
-  const guards=[...scope.currentAuthorityGuards,...labelGuards,rowGuard]
-  for(const row of rows){const change=row.version===null?await writer.prepareCreate(ctx,scope,row.values,row.id):await writer.prepareChange(ctx,scope,{ref:{appId:request.appId,entityId:request.entityId,recordId:row.id},expectedVersion:row.version,changes:row.values});guards.push(...change.guards)}
+  const {rows,errors,guards:rowGuards}=await previewCsvRows(ctx,request,csv,d,scope,existing,writer,labels)
+  const guards=[...scope.currentAuthorityGuards,...labelGuards,rowGuard,...rowGuards]
   const permit=await policy.authorize(ctx,{appId:request.appId,targetEntityId:request.entityId,fieldIds:request.mapping.map(m=>m.fieldId),action:'import.preview',expected:[],cost:[],inputHash:await canonicalHash(request)})
   guards.push(...permit.guards);await assertGuards(db,guards)
-  const result:Preview={id:createUlid(),appId:request.appId,entityId:request.entityId,rows,guards,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString(),creates:rows.filter(r=>r.operation==='create').length,updates:rows.filter(r=>r.operation==='update').length,unchanged:rows.filter(r=>r.operation==='unchanged').length}
+  const result:Preview={id:createUlid(),appId:request.appId,entityId:request.entityId,rows,errors,rejected:errors.length,guards,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString(),creates:rows.filter(r=>r.operation==='create').length,updates:rows.filter(r=>r.operation==='update').length,unchanged:rows.filter(r=>r.operation==='unchanged').length}
   await db.prepare('INSERT INTO record_csv_previews(id,app_id,entity_id,owner_id,detail_json,expires_at) VALUES(?,?,?,?,?,?)').bind(result.id,result.appId,result.entityId,ctx.principal.id,canonical(result),result.expiresAt).run()
   await assertGuards(db,guards)
   const {guards:_,...publicResult}=result;return publicResult
@@ -90,6 +62,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
  async function commit(ctx:RequestContext,commandId:string,id:string){
   const row=await db.prepare('SELECT detail_json FROM record_csv_previews WHERE id=? AND owner_id=?').bind(id,ctx.principal.id).first<{detail_json:string}>();if(!row)throw new AdmissionError('not_found','Import preview not found.')
   const p=JSON.parse(row.detail_json) as Preview;p.guards=p.guards.map(g=>trustedPredicate(g.sql,g.values));const hash=await canonicalHash({previewId:id}),replay=await admission.replay(ctx,commandId,'import.commit',p.appId,hash);if(replay)return replay
+  if(!p.rows.length)throw new AdmissionError('validation','This import has no valid rows. Correct the rejected rows and preview again.')
   if(p.expiresAt<=ctx.now)throw new AdmissionError('version_conflict','Import preview expired.')
   await assertGuards(db,p.guards)
   const scope=await policy.scope(ctx,{appId:p.appId,entityId:p.entityId,purpose:'read'}),guards=[...p.guards],mutations:SqlMutation[]=[],audit=[]
@@ -102,7 +75,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   }
   const permit=await policy.authorize(ctx,{appId:p.appId,targetEntityId:p.entityId,action:'import.commit',expected:[],cost:[],inputHash:hash})
   mutations.push({kind:'update',table:stored,set:{command_id:commandId},where:trustedPredicate('id=? AND command_id IS NULL AND expires_at>?',[id,ctx.now]),expectedRows:1})
-  return admission.commit(ctx,{commandId,action:'import.commit',appId:p.appId,canonicalInputHash:hash,permit,guards,mutations,audit,events:[],outbox:[],committedResult:{id,creates:p.creates,updates:p.updates,unchanged:p.unchanged}})
+  return admission.commit(ctx,{commandId,action:'import.commit',appId:p.appId,canonicalInputHash:hash,permit,guards,mutations,audit,events:[],outbox:[],committedResult:{id,creates:p.creates,updates:p.updates,unchanged:p.unchanged,rejected:p.rejected}})
  }
  return {exportCsv,preview,commit}
 }

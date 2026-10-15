@@ -5,7 +5,7 @@ import type { Field } from './contracts'
 export async function exportContext(db:D1Database,name:string,capturedAt:string,fields:Field[]) {
  const workspace=await db.prepare('SELECT currency,timezone FROM workspace LIMIT 1').first<{currency:string;timezone:string}>()
  if(fields.some(f=>['money','instant'].includes(f.resultType??f.type))&&!workspace)throw new AdmissionError('unconfigured','Workspace currency and timezone are required for this export.')
- const filename=[name,workspace?.currency,capturedAt].filter(Boolean).join(' — ').replace(/[\/:*?"<>|]/g,'-')+'.csv'
+ const filename=[name,fields.some(f=>(f.resultType??f.type)==='money')?workspace?.currency:null,workspace?new Intl.DateTimeFormat('sv-SE',{timeZone:workspace.timezone,dateStyle:'short',timeStyle:'medium'}).format(new Date(capturedAt))+' '+workspace.timezone:capturedAt].filter(Boolean).join(' — ').replace(/[\/:*?"<>|]/g,'-')+'.csv'
  return {name,capturedAt,currency:workspace?.currency??null,timezone:workspace?.timezone??null,filename}
 }
 export function formatWorkspaceCell(field:Field,value:CellValue,context:Awaited<ReturnType<typeof exportContext>>,encode:()=>string):string {

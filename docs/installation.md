@@ -1,13 +1,15 @@
 # Install Cradle
 
-Start with [the quick install guide](install.md). **Node 22 or later is required**:
+Start with [the quick install guide](install.md). Use macOS, Linux or Windows
+with WSL2, with Git installed. **Node 22 or later is required before installing rer**:
 download and run your computer's installer from [nodejs.org](https://nodejs.org/en/download),
 then open a new terminal and check `node --version`. npm comes with Node.
-Cradle uses **rer 0.2.19**. Rer prepares the pinned project tools and pnpm after
-Node is installed; the curl installer also needs Node first.
+Cradle uses **rer 0.2.20**. Rer then provisions this project’s pinned Node
+22.20.0 and pnpm 10.12.4; the alternative curl installer in the quick guide
+also requires Node first.
 
 ```sh
-npm install -g @runeditrun/rer@0.2.19
+npm install -g @runeditrun/rer@0.2.20
 git clone https://github.com/just-every/run-cradle.git cradle
 cd cradle && rer dev
 ```
@@ -84,7 +86,7 @@ A public-main push deploys the marketing site, not your hosted workspace.
 Open `/signin` on the hosted URL, enter your owner email, and confirm the emailed
 link. Hosted use requires a real mail provider; the local outbox is not served.
 
-If mail is unavailable or the owner email is wrong, use rer 0.2.19 from the checkout
+If mail is unavailable or the owner email is wrong, use rer 0.2.20 from the checkout
 that deployed this environment, with the same Cloudflare credentials:
 
 ```sh

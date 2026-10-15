@@ -42,21 +42,25 @@ owner-controlled editor. Public source: [just-every/run-cradle](https://github.c
 
 ## Run it on your computer
 
-Install **Node 22 or later** first: download the installer for your computer from
+Use macOS, Linux or Windows with WSL2, with Git installed. Install **Node 22 or
+later** first: download the installer for your computer from
 [nodejs.org](https://nodejs.org/en/download), run it, then open a new terminal.
 Check `node --version` shows v22 or later; npm comes with Node.
 
-Install the `rer` command (Cradle uses **rer 0.2.19**), clone Cradle, and start it:
+Install the `rer` command (Cradle uses **rer 0.2.20**), clone Cradle, and start it:
 
 ```sh
-npm install -g @runeditrun/rer@0.2.19
+npm install -g @runeditrun/rer@0.2.20
 git clone https://github.com/just-every/run-cradle.git cradle
 cd cradle && rer dev
 ```
 
-Rer prepares the pinned project tools and pnpm after Node is installed.
-`curl -fsSL https://runeditrun.com/install.sh | sh` is an alternative installer
-for the command; it also requires Node first.
+Rer then provisions this project’s pinned Node 22.20.0 and pnpm 10.12.4.
+The alternative installer also requires Node first; pin the same rer release:
+
+```sh
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.20 sh
+```
 
 The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
 (`owner@cradle.test`), applies the migrations, starts the app and prints

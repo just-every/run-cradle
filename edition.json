@@ -32,7 +32,8 @@
           "vite.site.config.ts",
           "deploy-site.json",
           "public/brand/band.svg",
-          "tests/installed-home.mjs"
+          "tests/installed-home.mjs",
+          "base-copies.json"
         ]
       }
     },
@@ -110,7 +111,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "revision": "e17843562355e1b6e5068289c8e037951fbc8d3d",
           "path": "modules/operator-auth",
           "paths": [
             "README.md",
@@ -118,11 +119,13 @@
             "accounts/admin.mjs",
             "accounts/credentials.mjs",
             "accounts/editor-owner.mjs",
+            "accounts/email-change.mjs",
             "accounts/index.d.mts",
             "accounts/index.mjs",
             "accounts/native.d.mts",
             "accounts/native.mjs",
             "accounts/oa.mjs",
+            "accounts/owner-signin.mjs",
             "accounts/provider-control.mjs",
             "accounts/provider-pin.mjs",
             "accounts/roles.mjs",
@@ -131,6 +134,7 @@
             "accounts/schema/domain-rules-step-up.sql",
             "accounts/schema/invitation-cancellation.sql",
             "accounts/schema/operator-auth.sql",
+            "accounts/schema/owner-signin.sql",
             "accounts/schema/provider-control.sql",
             "accounts/schema/provider-pins.sql",
             "accounts/settings-page.mjs",
@@ -142,6 +146,7 @@
             "conformance/index.mjs",
             "conformance/presentation.mjs",
             "crypto.mjs",
+            "csp.mjs",
             "dev-admission.d.mts",
             "dev-admission.mjs",
             "dev-gate.mjs",
@@ -183,8 +188,10 @@
             "input.mjs",
             "local-cli.mjs",
             "loopback.mjs",
+            "owner-signin-grant.mjs",
             "page.mjs",
             "policy.mjs",
+            "rejected-response.mjs",
             "routes.mjs",
             "service.mjs",
             "signin/index.d.mts",
@@ -213,6 +220,10 @@
             "originPath": "accounts/editor-owner.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/accounts/email-change.mjs",
+            "originPath": "accounts/email-change.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/accounts/index.d.mts",
             "originPath": "accounts/index.d.mts"
           },
@@ -231,6 +242,10 @@
           {
             "path": "vendor/base/modules/operator-auth/accounts/oa.mjs",
             "originPath": "accounts/oa.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/owner-signin.mjs",
+            "originPath": "accounts/owner-signin.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/accounts/provider-control.mjs",
@@ -263,6 +278,10 @@
           {
             "path": "vendor/base/modules/operator-auth/accounts/schema/operator-auth.sql",
             "originPath": "accounts/schema/operator-auth.sql"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/schema/owner-signin.sql",
+            "originPath": "accounts/schema/owner-signin.sql"
           },
           {
             "path": "vendor/base/modules/operator-auth/accounts/schema/provider-control.sql",
@@ -307,6 +326,10 @@
           {
             "path": "vendor/base/modules/operator-auth/crypto.mjs",
             "originPath": "crypto.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/csp.mjs",
+            "originPath": "csp.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/dev-admission.d.mts",
@@ -473,12 +496,20 @@
             "originPath": "loopback.mjs"
           },
           {
+            "path": "vendor/base/modules/operator-auth/owner-signin-grant.mjs",
+            "originPath": "owner-signin-grant.mjs"
+          },
+          {
             "path": "vendor/base/modules/operator-auth/page.mjs",
             "originPath": "page.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/policy.mjs",
             "originPath": "policy.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/rejected-response.mjs",
+            "originPath": "rejected-response.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/routes.mjs",
@@ -1970,7 +2001,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "revision": "e17843562355e1b6e5068289c8e037951fbc8d3d",
           "path": "modules/owner-claim",
           "paths": [
             "README.md",

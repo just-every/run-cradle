@@ -1,3 +1,5 @@
+import { dueSchedule } from './schedule'
+import { automationEmailDue } from '../../domains/automations/email-timing.server'
 import type { Json } from '../../contracts/primitives'
 import type { RequestContext,AuthorityPermit } from '../../domains/authority/ports'
 import type { AdmissionPort,AdmissionPlan,DomainEvent,SqlMutation,SqlPredicate,OutboxCommand } from '../../domains/admission/ports'
@@ -50,18 +52,22 @@ export function createLegacyAutomationRuntime(context:LaunchContext,admission:Ad
   for(const d of definitions.results){const config=JSON.parse(String(d.trigger_config_json));let due=false,key=date
    if(d.shipped_key==='launch-readiness')due=hour===Number(config.hour??8)&&minute<15
    else if(d.shipped_key==='weekly-digest')due=parts.weekday==='Mon'&&hour===9&&minute<15
-   else if(config.localRule==='hourly'){due=minute<15;key+=`T${parts.hour}`}
-   else{const m=/^(daily|weekly ([0-6])) (\d\d):(\d\d)$/.exec(String(config.localRule));if(m){const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];due=(!m[2]||parts.weekday===weekdays[Number(m[2])])&&hour===Number(m[3])&&minute>=Number(m[4])&&minute<Number(m[4])+15}}
+   else{const scheduled=dueSchedule(Date.parse(ctx.now),String(config.timezone??settings.timezone),String(config.localRule));due=scheduled!==null;if(scheduled)key=scheduled}
    if(due&&['launch-readiness','weekly-digest'].includes(String(d.shipped_key))&&await context.db.prepare('SELECT 1 FROM automation_runs WHERE automation_id=? AND trigger_key=? LIMIT 1').bind(d.id,`schedule:${key}`).first())continue
    if(due)runs.push(await trigger(ctx,d,`schedule:${key}`,[]))
   }return runs
  }
  async function executeOne(ctx:RequestContext,runId:string,nextContext:()=>RequestContext){
   const row=await context.db.prepare('SELECT * FROM automation_runs WHERE id=?').bind(runId).first<Record<string,unknown>>();if(!row)throw new Error('Automation run was not found');if(['Succeeded','Failed','Cancelled','Suppressed'].includes(String(row.state)))return{runId,state:row.state};const run=storedRun(row),current=await load(context.db,'automation',run.automationId),set=emptyChange(),startedAt=Date.parse(ctx.now);let now=startedAt
-  if(!current.enabled&&row.state==='Queued'||await archived(run)){set.guards.push(trustedPredicate('EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND version=?)',[runId,Number(row.version)]));set.mutations.push({kind:'update',table:runTable,set:{state:'Cancelled',version:Number(row.version)+1,finished_at:now,updated_at:now},where:eq(runTable,'id',runId),expectedRows:1});return admission.commit(ctx,await makePlan(ctx,run,set,'launch.automation.execute',{runId,state:'Cancelled'}))}
+  if(!current.enabled||await archived(run)){set.guards.push(trustedPredicate('EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND version=?)',[runId,Number(row.version)]));set.mutations.push({kind:'update',table:runTable,set:{state:'Cancelled',version:Number(row.version)+1,finished_at:now,updated_at:now},where:eq(runTable,'id',runId),expectedRows:1});return admission.commit(ctx,await makePlan(ctx,run,set,'launch.automation.execute',{runId,state:'Cancelled'}))}
   const retry=await context.db.prepare('SELECT next_at FROM launch_automation_retries WHERE run_id=?').bind(runId).first<{next_at:number|null}>();if(retry?.next_at&&retry.next_at>now)return{runId,state:'Waiting',retryAt:new Date(retry.next_at).toISOString()}
   const pending=await context.db.prepare("SELECT * FROM launch_automation_actions WHERE run_id=? AND state!='Complete' ORDER BY position LIMIT 1").bind(runId).first<Record<string,unknown>>();if(!pending){set.guards.push(trustedPredicate('EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND version=?)',[runId,Number(row.version)]));set.mutations.push({kind:'update',table:runTable,set:{state:'Succeeded',version:Number(row.version)+1,finished_at:now,updated_at:now},where:eq(runTable,'id',runId),expectedRows:1});return admission.commit(ctx,await makePlan(ctx,run,set,'launch.automation.execute',{runId,state:'Succeeded'}))}
   const saved=JSON.parse(String(run.definition.actions_json)) as {command:string;input?:Json}[],action=saved[Number(pending.position)]!,scoped=await ports.context(ctx,run);let state:'Complete'|'Waiting'|'Unknown'='Complete',result:Json=null,outbox:OutboxCommand[]=[]
+  if(action.command==='send-email'&&!await context.db.prepare('SELECT 1 FROM launch_action_effects WHERE effect_key=?').bind(String(pending.idempotency_key)).first()) {
+   const due=await automationEmailDue(context.db,now)
+   if(due>now){await context.db.prepare("UPDATE launch_automation_actions SET result_json=? WHERE id=? AND state='Pending'")
+    .bind(JSON.stringify({heldUntil:new Date(due).toISOString()}),String(pending.id)).run();return {runId,state:'Waiting'}}
+  }
   if(row.state==='Queued'&&['request-ai-analysis','send-email'].includes(action.command)){
    const start=emptyChange();start.guards.push(trustedPredicate("EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND version=? AND state='Queued')",[runId,Number(row.version)]))
    start.mutations.push({kind:'update',table:runTable,set:{state:'Running',version:Number(row.version)+1,started_at:now,updated_at:now},where:eq(runTable,'id',runId),expectedRows:1})

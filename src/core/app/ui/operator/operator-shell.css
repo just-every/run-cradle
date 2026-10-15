@@ -25,6 +25,7 @@
 .operator-account-copy strong { font-size: 14px; font-weight: 600; }
 .operator-account-copy small { color: var(--rail-muted); font-size: 12px; }
 .operator-main { min-width: 0; margin-left: 220px; }
+body:has(> #rer-dev-badge) :is(.operator-rail, .operator-mobile-header) { top: 48px; }
 
 /* Page header: the title on paper, kicker above, quiet actions at the right edge. */
 .operator-page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; padding: 32px 40px 24px; }
