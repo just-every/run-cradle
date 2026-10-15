@@ -7492,8 +7492,12 @@
       "sha256": "44adf0ee41db1a8d8f9cebe8f9c191a33ab4f1feda9178e343ef0725e2ef0a52",
       "executable": false
     },
+    "src/ui/automations/launch-campaign-picker.tsx": {
+      "sha256": "9a2cb1a9d7927c6124fd2855d801c20748e49e94a14c00ddc1e76bec6cd28213",
+      "executable": false
+    },
     "src/ui/automations/launch-schedule-editor.tsx": {
-      "sha256": "f042af5f4411663758c15f8ea81be5e45d9760089435dfa8a6a3609b18b94ad1",
+      "sha256": "8cef65aca5dcd8edbdc28df1877b5d706d8529ae5852ead27054352544675c70",
       "executable": false
     },
     "src/ui/automations/run-history.tsx": {
@@ -8913,7 +8917,7 @@
       "executable": false
     },
     "tests/helpers/user-automation-browser.mjs": {
-      "sha256": "5774188e29b597020ed873dc6ea60b945cadf4c68370fffa26dfa5d0cdc60d1a",
+      "sha256": "14050f5ba26aa6ac45348dede62864dc40ef9ae0359f9bb804077ae12d61d1a9",
       "executable": false
     },
     "tests/helpers/user-automation-runtime.mjs": {
@@ -8922,6 +8926,10 @@
     },
     "tests/helpers/user-key-browser.mjs": {
       "sha256": "74447d11d4b6292b12c59f10d6c06cbf8efe716cd5a3984d8ea6ecc33a3d016e",
+      "executable": false
+    },
+    "tests/helpers/user-schedule-browser.mjs": {
+      "sha256": "5649f7fdc31bbe66a922fe382519d8de41a22a56db16e34aadfdac8049c44d47",
       "executable": false
     },
     "tests/helpers/versioned-session-proof.mjs": {

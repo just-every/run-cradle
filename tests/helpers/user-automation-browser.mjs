@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {userScheduleBrowser} from './user-schedule-browser.mjs'
 
 export async function userAutomationBrowser(page,h,journey,width) {
  const name=`Browser automation ${width}`
@@ -45,4 +46,5 @@ export async function userAutomationBrowser(page,h,journey,width) {
  const record=await h.create(`Disabled trigger ${width}`);await h.tick(record.commandId)
  assert.equal((await h.request(`/api/user-automations/${saved.id}/runs`)).data.runs.length,before)
  await journey.capture('user-automation-disabled')
+ await userScheduleBrowser(page,h,journey,width)
 }
