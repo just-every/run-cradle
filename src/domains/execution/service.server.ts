@@ -27,8 +27,8 @@ export function createExecutionService(d:ExecutionDependencies) {
  const requestOf=(run:RunRow)=>JSON.parse(run.request_json) as EffectRequest;
  async function authorizationRequest(ctx:RequestContext,r:EffectRequest,cost=r.cost,commandId=createUlid(),attemptId?:string):Promise<AuthorizationRequest>{return {appId:r.appId,action:r.action,expected:r.expected,cost,connectionId:r.connectionId,inputHash:await sha256(canonical(r)),commandId,attemptId,purpose:r.purpose??r.context?.purpose??r.action,fieldIds:r.fieldIds??r.context?.fieldIds??[],modelCalls:r.provider==='openai'?1:0,wallSeconds:Math.max(1,Math.ceil(Math.min(60000,Date.parse(r.deadline)-Date.now())/1000)),quantity:1,...(r.grantId?{grantId:r.grantId,grantVersion:r.grantVersion??undefined}:{})};}
  async function authorize(ctx:RequestContext,r:EffectRequest,mode:'dispatch'|'reconcile'|'read'|'cancel',cost=r.cost,commandId=createUlid(),attemptId?:string){if(r.action==='notification.email.send'){if(!d.notificationMailAuthority)throw new Error('Notification mail authority is not configured');return d.notificationMailAuthority(ctx,r,mode);}if(ctx.principal.kind!=='human'&&mode!=='dispatch'){if(d.reconciliationAuthority)return d.reconciliationAuthority(ctx,r,mode==='cancel'?'run.cancel':`execution.${mode}`);}const authorization={appId:r.appId,action:mode==='dispatch'?r.action:mode==='cancel'?'run.cancel':`execution.${mode}`,expected:r.expected,cost,connectionId:r.connectionId,inputHash:await sha256(canonical(r)),commandId,attemptId,purpose:r.purpose??r.context?.purpose??r.action,fieldIds:r.fieldIds??r.context?.fieldIds??[],...(mode==='dispatch'&&cost.length?{modelCalls:r.provider==='openai'?1:0,wallSeconds:Math.max(1,Math.ceil(Math.min(60000,Date.parse(r.deadline)-Date.now())/1000)),quantity:1}:{}),...(mode==='dispatch'&&r.grantId?{grantId:r.grantId,grantVersion:r.grantVersion??undefined}:{})};return d.policy.authorize({...ctx,now:new Date().toISOString()},authorization);}
- async function commit(ctx:RequestContext,r:EffectRequest,mode:'dispatch'|'reconcile'|'cancel',mutations:SqlMutation[],result:unknown,guards:AdmissionPlan<unknown>['guards']=[],permit?:AdmissionPlan<unknown>['permit'],commandId=createUlid()){
-  const p=permit??await authorize(ctx,r,mode,[],commandId);return d.admission.commit(ctx,{commandId,action:p.action,appId:r.appId,canonicalInputHash:await sha256(canonical({mode,result})),permit:p,guards,mutations,audit:[{action:p.action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:result});
+ async function commit(ctx:RequestContext,r:EffectRequest,mode:'dispatch'|'reconcile'|'cancel',mutations:SqlMutation[],result:unknown,guards:AdmissionPlan<unknown>['guards']=[],permit?:AdmissionPlan<unknown>['permit'],commandId=createUlid(),audit:AdmissionPlan<unknown>['audit']=[]){
+  const p=permit??await authorize(ctx,r,mode,[],commandId);return d.admission.commit(ctx,{commandId,action:p.action,appId:r.appId,canonicalInputHash:await sha256(canonical({mode,result})),permit:p,guards,mutations,audit:[{action:p.action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]},...audit],events:[],outbox:[],committedResult:result});
  }
  async function prepare(ctx:RequestContext,commandId:string,raw:EffectRequest){return prepareEffect(ctx,commandId,raw);}
  async function prepareEffect(ctx:RequestContext,commandId:string,raw:EffectRequest,identity:ExecutionGuardIdentity={idempotencyKey:`cradle/${commandId}`}):Promise<AdmissionPlan<{runId:string;attemptId:string}>> {
@@ -66,16 +66,21 @@ export function createExecutionService(d:ExecutionDependencies) {
   if(liveRun.lease_epoch!==run.lease_epoch||liveAttempt.version!==a.version){await commit(ctx,r,'reconcile',[{kind:'insert',table:receiptsTable,row}],{receiptId:id,state:result.state,lateObservation:true});return receiptDTO(row);}
   run=liveRun;
   const observed=d.observations?await d.observations(ctx,{attemptId:a.id,connectionId:a.connection_id,kind:result.state==='confirmed'?'accepted':result.state==='refused'?'refused':'unknown',receiptId:id,retryAt:retry?next:null,failureCode:result.state==='refused'?result.code:null,message}):{guards:[],mutations:[]};
-  const settlement=await d.settlement(ctx,r,JSON.parse(a.reservation_ids_json),result,{commandId:JSON.parse(a.authorization_json??'{}').commandId??run.origin_command_id,attemptId:a.id,inputHash:a.authority_hash??''});
+  try{
+  const settlement=await d.settlement(ctx,r,JSON.parse(a.reservation_ids_json),result,{commandId:JSON.parse(a.authorization_json??'{}').commandId??run.origin_command_id,attemptId:a.id,inputHash:a.authority_hash??'',...(reconciled===true?{readback:{receiptId:id,previousReceiptId:a.receipt_id}}:{})});
+  if(settlement.reconciliations?.length)row.result_json=canonical({...result,budgetReconciliation:settlement.reconciliations});
   const mutations:SqlMutation[]=[{kind:'insert',table:receiptsTable,row},
    {kind:'update',table:attemptsTable,set:{state:result.state,version:a.version+1,external_id:row.external_id,receipt_id:id,next_check_at:next,finished_at:result.state==='unknown'?null:now,updated_at:now},where:and(eq(attemptsTable,'id',a.id),eq(attemptsTable,'version',a.version)),expectedRows:1},
    {kind:'update',table:runsTable,set:{state:run.state==='cancelled'?'cancelled':runState,version:run.version+1,lease_owner:null,lease_expires_at:null,next_wake_at:next,first_failure_at:result.state==='refused'?firstFailure:run.first_failure_at,retry_count:retry?run.retry_count+1:run.retry_count,updated_at:now,failure_json:result.state==='refused'?canonical({requestId:ctx.requestId,operation:r.action,code:'provider_refused',message,retry:retry?'read':'after_change'}):null},where:and(eq(runsTable,'id',run.id),eq(runsTable,'version',run.version),eq(runsTable,'lease_epoch',run.lease_epoch)),expectedRows:1},...settlement.mutations,...observed.mutations];
-  try{await commit(ctx,r,'reconcile',mutations,{receiptId:id,state:result.state},[...settlement.guards,...observed.guards]);}
+  await commit(ctx,r,'reconcile',mutations,{receiptId:id,state:result.state},[...settlement.guards,...observed.guards],undefined,createUlid(),settlement.reconciliations?.length?[{action:'execution.budget-reconciled',subject:null,changes:[],sourceIds:[],personalContentRefs:[id]}]:[]);
+  }
   catch(error){
    // The admission's version check is atomic. A human or another worker may win
    // after our reads; preserve this provider observation without settling twice.
    const current=await requiredAttempt(a.id);
    if(!error||typeof error!=='object'||!('code'in error)||error.code!=='version_conflict'||current.version===a.version)throw error;
+   // A losing plan did not apply its accounting. Retain only the provider observation.
+   row.result_json=canonical(result);
    await commit(ctx,r,'reconcile',[{kind:'insert',table:receiptsTable,row}],{receiptId:id,state:result.state,lateObservation:true});
   }
   return receiptDTO(row);
