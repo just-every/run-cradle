@@ -133,7 +133,22 @@
         "providers": [
           "rer"
         ]
-      }
+      },
+      "wranglerFile": "wrangler.jsonc",
+      "extraMigrationDirectories": [
+        {
+          "binding": "DB",
+          "path": "migrations/base"
+        },
+        {
+          "binding": "DB",
+          "path": "migrations/import"
+        },
+        {
+          "binding": "DB",
+          "path": "migrations/updates"
+        }
+      ]
     }
   }
 }

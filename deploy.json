@@ -50,15 +50,6 @@
       "environment": "OWNER_EMAIL"
     },
     {
-      "binding": "MAIL_FROM",
-      "environment": "MAIL_FROM"
-    },
-    {
-      "binding": "MAIL_PROVIDER",
-      "environment": "MAIL_PROVIDER",
-      "verifyStandIn": "resend"
-    },
-    {
       "binding": "CONNECTION_ENCRYPTION_KEY",
       "environment": "CONNECTION_ENCRYPTION_KEY"
     }
