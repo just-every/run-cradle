@@ -2649,7 +2649,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "275ca373a3565fcabafa963a9c37262e3a847d9558842d75723b5aaa05a2618c",
+      "sha256": "429307856f5323e908f5319a3e2d54cb7822d5235fce7e6ff23c6a9209b6f31a",
       "executable": false
     },
     "DEMO.md": {
@@ -3313,7 +3313,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "9dfb99b8ebd5f0f82eb53efc36e29ad68871715be3cea0c5bb0a297f69d5e887",
+      "sha256": "63faa85b1ec7ef34f82e1fbcc3e56eaaa9e611c9c0b2671978c9de80d4b84eda",
       "executable": false
     },
     "rer-project.json": {
@@ -4277,7 +4277,7 @@
       "executable": false
     },
     "src/core/app/installed-home.server.ts": {
-      "sha256": "0f641950d5867aa00df386724f55ed140ec298d73b0db5767fa529205f51c8f5",
+      "sha256": "a297878e355dc4c37f593aa595a0d23fb227d999d4feb28dafa92da41d2fc803",
       "executable": false
     },
     "src/core/app/loaders.ts": {
@@ -8941,7 +8941,7 @@
       "executable": false
     },
     "tests/installed-home.mjs": {
-      "sha256": "5b326b86430c60b0c75760e23d28f8399a49fe1d8745301c699c16b6278ce61c",
+      "sha256": "c211d3e9c68f580491e100b4cdf50206c3b81e2db5488eba6eedaa6158354452",
       "executable": false
     },
     "tests/intelligence-fixture.mjs": {
