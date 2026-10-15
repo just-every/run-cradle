@@ -9,6 +9,7 @@ import path from 'node:path'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 import { unstable_getMiniflareWorkerOptions } from 'wrangler'
 import { installLegacyFixture } from './install-legacy-fixture.mjs'
+import {createFixtureMail,fixtureMessages} from './fixture-mail.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 import { migrateFixture } from './migrate-fixture.mjs'
@@ -19,18 +20,19 @@ const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.
 const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
-export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=true,installedLaunchDefinitions=false,installationOwner=false} = {}) {
+export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=true,installedLaunchDefinitions=false,installationOwner=false,providerFetch} = {}) {
   const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
   const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
   assert.equal(available,true,'Authority test listener must be unoccupied')
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-authority-'))
-  let runtime, logs = ''
+  let runtime, mail, logs = ''
   const close = async () => {
-    if (runtime) await runtime.dispose()
+    try { if (runtime) await runtime.dispose() } finally { await mail?.close() }
     if (process.env.CRADLE_AUTHORITY_EVIDENCE) { await mkdir(process.env.CRADLE_AUTHORITY_EVIDENCE, { recursive: true }); await writeFile(path.join(process.env.CRADLE_AUTHORITY_EVIDENCE, 'worker.log'), logs) }
     await rm(directory, { recursive: true, force: true })
   }
   try {
+    if(!overrides.MAIL_PROVIDER||overrides.MAIL_PROVIDER==='development')mail=await createFixtureMail(port,providerFetch)
     migrateFixture(directory)
     const owner = await installLegacyFixture(directory, { installedLaunchDefinitions, installationOwner })
     const configuration = { appOrigin: origin, sessionSecret: 'synthetic-launch-authority-test-signing-key', mode: 'development' }
@@ -43,9 +45,17 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=tr
     const bindings = { ...options.bindings, AUTH_LOCAL: 'true', OWNER_EMAIL:'maya@northstar.example', MAIL_PROVIDER:'development', MAIL_FROM:'auth@localhost.test', SESSION_SECRET: configuration.sessionSecret, APP_ORIGIN: origin, ...overrides }
     const optionsFor = (changes = {}, https = overrides.APP_ORIGIN?.startsWith('https:') ?? false) => {
       const current = { ...bindings, ...changes }
+      const captureMail=current.AUTH_LOCAL==='true'&&current.MAIL_PROVIDER==='development'
+      if(captureMail){
+        assert.ok(mail,'Development mail fixture must be configured explicitly before reloading')
+        Object.assign(current,mail.bindings)
+      }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
       const result = convertV4MiniflareOptions({ host:'127.0.0.1',port,https,inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,...automaticQueues?{}:{queueConsumers:{}},modules,modulesRoot,bindings:current},...externalWorkers] })
       for (const worker of result.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
+      const rejectNetwork=()=>{throw new Error('Unexpected external request blocked by authority fixture')}
+      result.workers[0].dev??={}
+      result.workers[0].dev.outboundService={type:'fetcher',handler:captureMail?mail.fetch:providerFetch??rejectNetwork}
       return result
     }
     let runtimeOptions = optionsFor()
@@ -81,6 +91,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=tr
       const auth=await createFixtureAuth(db,configuration,id)
       return { id, policyId, rules, session: await auth.signIn(id) }
     }
-    return { db, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, runtime, reconfigure, dispatch }
+    const mailMessages=()=>{if(!mail)throw new Error('Mail capture is not configured for this explicit provider fixture');return fixtureMessages(origin)}
+    return { mailMessages, db, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, runtime, reconfigure, dispatch }
   } catch (error) { await close(); throw error }
 }

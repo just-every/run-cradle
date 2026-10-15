@@ -25,7 +25,7 @@ contract('AUTO-USER-001','real admitted record triggers run notify/email/update 
   const record=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.ref.recordId}`)).data.record
   assert.equal(record.fields[h.statusId].value,'review')
   assert.equal((await h.db.prepare('SELECT count(*) AS n FROM channel_events WHERE event_id IN (SELECT id FROM launch_automation_actions WHERE run_id=?)').bind(runs[0].id).first()).n,1)
-  assert.equal((await h.db.prepare("SELECT count(*) AS n FROM rer_mail_development_outbox WHERE json_extract(message,'$.subject')='New item'").first()).n,1)
+  assert.equal((await h.mailMessages()).filter(message=>message.subject==='New item').length,1)
   const beforeDisable=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.length
   await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
   await automationQuietHours(h,save.definition)

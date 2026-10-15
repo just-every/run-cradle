@@ -8493,7 +8493,7 @@
       "executable": false
     },
     "tests/helpers/admission-runtime.mjs": {
-      "sha256": "c821ae1e4f680d1bcc505611b496aab52a7c3593f110260df1295c7aadca1bef",
+      "sha256": "bc1a8e9b16a9200336fcd05da78be0f78e8805d9d25df7af1bf2538c9fecf8a5",
       "executable": false
     },
     "tests/helpers/authoring-host-file.mjs": {
@@ -8505,7 +8505,7 @@
       "executable": false
     },
     "tests/helpers/automation-quiet-hours.mjs": {
-      "sha256": "5a14f4091f1597ac8c24f98b2ec3c22b6dcecb73e8abb48f2270618a92a91085",
+      "sha256": "a41e6e0275602aaffe95b49d3266342892fab49eae13eff404ce947aa9744871",
       "executable": false
     },
     "tests/helpers/available-machine.mjs": {
@@ -8637,7 +8637,7 @@
       "executable": false
     },
     "tests/helpers/import-effects.mjs": {
-      "sha256": "80763ac062bc0a21c53ac9758e22fa408f923d54b4dc478a9166a6a0e1c45f85",
+      "sha256": "f9156388ee1746227f3cc68db75cd8b938a5962b79d9319de18d34fbb1bdf13f",
       "executable": false
     },
     "tests/helpers/install-legacy-fixture.mjs": {
@@ -8653,7 +8653,7 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "c1b2604d39d9c5197f517e0cf05920e2c3e67d2fec3e0bbcf0ecbdbd93d743c0",
+      "sha256": "669f611718617610669893fc8b7618a69e3b225747e0724627762bca9c545f74",
       "executable": false
     },
     "tests/helpers/launch-base-authority-runtime.mjs": {
@@ -8817,7 +8817,7 @@
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
-      "sha256": "afbc24b8b32ad204180135b18930d5e03f42e293bab1559a6d1dd31177653e01",
+      "sha256": "c2e21eea8bf66e24627af2c05e0727168050f18025cf33c7ef5ac017ed3034f3",
       "executable": false
     },
     "tests/helpers/records-import-crash-child.mjs": {
@@ -9025,7 +9025,7 @@
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
-      "sha256": "219b31881a21257e94a2e0e27e2db0bc73546355f55b8e59a6b16cb7138e9b76",
+      "sha256": "ab39c8b98de742f6a942ac20ae60b2cbd316dce2b3225c38d343eab4261fce57",
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
@@ -9033,7 +9033,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "7baa60e8d9d681a63a731eb332afe0ca4ebb66b07c7e05f7a48cc0a2d08ba5e5",
+      "sha256": "b6307a164ec24d581da3b4d33f000478b955ae0d012bcabcc5bfc9ed1fe120c1",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
@@ -9049,7 +9049,7 @@
       "executable": false
     },
     "tests/launch-scoped-authority.mjs": {
-      "sha256": "9e3029fd980e847c57760c2704c02c62fb979b4ed457dbe239ec6d0f0b79ea3e",
+      "sha256": "f85123a6573c7c62796453a530a92144d068b2c80de833ea109583563784043a",
       "executable": false
     },
     "tests/launch-search-authority.mjs": {
@@ -9365,7 +9365,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "7f9b209f3158ff16716d31679282ce915cf8f566c795192ba563e8ff36094886",
+      "sha256": "f446346894522adf74fb848dc9df6ef3f9b3d4918d7ee34f9291ba2b601dd393",
       "executable": false
     },
     "tests/ui-launch-optional-browser.mjs": {
@@ -9409,7 +9409,7 @@
       "executable": false
     },
     "tests/user-automations.mjs": {
-      "sha256": "96588efeafd6154b1f2b061bc8e80a1e4fcab392ecf5b716219ed7a0603c9628",
+      "sha256": "dbe0d790b49069e7432de86c03d5071a32ff67b63e847d7ff01f25fff18e3c9c",
       "executable": false
     },
     "tests/user-webhooks.mjs": {

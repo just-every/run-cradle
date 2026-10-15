@@ -17,6 +17,10 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
  let outbound=0
  const h=await recordsImportBrowserRuntime(await freePort(),{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
  try{
+  // Sign-in uses the real provider request at the test edge. This scheduler
+  // journey then exercises the existing local notification delivery path;
+  // its persisted messages contain notifications, never sign-in links.
+  await h.restart({MAIL_PROVIDER:'development'})
   const csrfResponse=await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})
   assert.equal(csrfResponse.status,200)
   const {csrfToken}=await csrfResponse.json()

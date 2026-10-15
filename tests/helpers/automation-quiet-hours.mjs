@@ -15,7 +15,7 @@ export async function automationQuietHours(h,definition) {
  const created=await h.create('Quiet-hour record')
  await h.tick(created.commandId)
  const runs=()=>h.request(`/api/user-automations/${saved.id}/runs`).then(reply=>reply.data.runs)
- const mailCount=async()=>Number((await h.db.prepare("SELECT count(*) n FROM rer_mail_development_outbox WHERE json_extract(message,'$.subject')='Quiet-hour item'").first()).n)
+ const mailCount=async()=>(await h.mailMessages()).filter(message=>message.subject==='Quiet-hour item').length
  const held=(await runs())[0]
  assert.equal(held.state,'Held');assert.equal(held.recordLabel,'Quiet-hour record');assert.equal(Date.parse(held.heldUntil),end.getTime())
  assert.equal(await mailCount(),0)

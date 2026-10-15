@@ -12,12 +12,12 @@ import {previewBaseImport} from '../../src/domains/records/base-transfer/plan.ts
 import {portableFixture} from './base-exit-fixture.mjs'
 
 const base='/api/v1/records/base-import'
-/** Every row an automation, notification, mail or delivery effect would leave. */
+/** Observe every automation, notification, provider-mail and delivery effect. */
 export async function effectCounts(h,edge){
  const count=async table=>(await h.db.prepare(`SELECT count(*) AS n FROM ${table}`).first()).n
  return {events:await count('record_automation_events'),runs:await count('automation_runs'),
   notifications:await count('channel_events')+await count('channel_notifications')+await count('notifications'),
-  mail:await count('rer_mail_development_outbox'),deliveries:await count('integration_deliveries'),relay:edge.received.length}
+  mail:(await h.mailMessages()).length,deliveries:await count('integration_deliveries'),relay:edge.received.length}
 }
 export async function csvFiles(fixture){
  const root=new URL(`../fixtures/base-transfer/${fixture}/`,import.meta.url),manifest=JSON.parse(await readFile(new URL('manifest.json',root),'utf8'))

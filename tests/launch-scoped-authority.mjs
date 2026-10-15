@@ -43,11 +43,11 @@ test('[BASE-ACCESS-004 RECORDS-001] every retained launch transport enforces cur
     const milestone = (await body(await h.request(h.ownerSession, '/api/milestones/timeline'))).items[0]
     const decision = (await body(await h.request(h.ownerSession, '/api/decisions'))).items[0]
     const lens = (await body(await h.request(h.ownerSession, '/api/lenses'))).items[0]
-    const routes = ['/api/portfolio','/api/campaigns',`/api/campaigns/${first.id}`,'/api/risks/lens',`/api/risks/${risk.id}`,'/api/milestones/timeline',`/api/milestones/${milestone.id}`,'/api/decisions',`/api/decisions/${decision.id}`,'/api/lenses',`/api/lenses/${lens.id}`,'/api/automations','/api/automations/runs','/api/search?q=launch','/api/v1/launch/owners']
+    const routes = ['/api/portfolio','/api/campaigns',`/api/campaigns/${first.id}`,'/api/risks/lens',`/api/risks/${risk.id}`,'/api/milestones/timeline',`/api/milestones/${milestone.id}`,'/api/decisions',`/api/decisions/${decision.id}`,'/api/lenses',`/api/lenses/${lens.id}`,'/api/automations','/api/automations/runs','/api/v1/launch/owners']
     const full = await h.addPerson({ name: 'Explicit launch colleague' })
     const legacyManager=await h.addPerson({name:'Retained legacy operator',legacy:true})
     const membersPath = `/api/v1/members?appId=${LAUNCH_APP_ID}`, grantsPath = `/api/v1/grants?appId=${LAUNCH_APP_ID}`, capabilitiesPath = `/api/v1/authority/capabilities?appId=${LAUNCH_APP_ID}`
-    const authorityState = async () => Object.fromEntries(await Promise.all(['authority_grants','authority_policies','authority_memberships','command_admissions','admission_audit','admission_outbox','rer_mail_development_outbox'].map(async table => [table, (await h.db.prepare(`SELECT count(*) AS n FROM ${table}`).first()).n])))
+    const authorityState = async () => ({mail:(await h.mailMessages()).length,...Object.fromEntries(await Promise.all(['authority_grants','authority_policies','authority_memberships','command_admissions','admission_audit','admission_outbox'].map(async table => [table, (await h.db.prepare(`SELECT count(*) AS n FROM ${table}`).first()).n])))})
     const beforeCapabilities = await authorityState()
     for (const session of [h.ownerSession, legacyManager.session]) {
       const members = (await body(await h.request(session, membersPath))).data
@@ -132,6 +132,11 @@ test('[BASE-ACCESS-004 RECORDS-001] every retained launch transport enforces cur
       const create = await h.request(person.session,'/api/v1/commands/launch.campaign.create',{ method:'POST',body:JSON.stringify({ commandId:createUlid(),expected:[],input:{fields:{code:'DENIED',name:'Unauthorized',ownerId:h.owner,startDate:'2026-10-01',launchDate:'2026-12-01',objective:'No',statusSummary:'No',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}} }) })
       assert.equal(create.status,403)
     }
+    // Global search now searches each authorized table independently; it no longer
+    // requires the full legacy launch projection. Check readable rows, not that gate.
+    const searchCampaigns=async session=>(await body(await h.request(session,`/api/search?q=${encodeURIComponent(first.code)}`))).items.filter(hit=>hit.appId===LAUNCH_APP_ID&&hit.entityId===launchEntities.campaign)
+    for(const person of [full,hidden,limited,linkedHidden])assert.deepEqual((await searchCampaigns(person.session)).map(hit=>hit.id),[first.id],'Global search retains the readable campaign under narrower rows or fields')
+    for(const person of [repair,revoked])assert.deepEqual(await searchCampaigns(person.session),[],'Global search exposes no campaign outside current membership')
     assert.equal((await h.request(repair.session,`${campaignsPath}/${first.id}`)).status,403)
     const masked = await body(await h.request(hidden.session,`${campaignsPath}/${first.id}`))
     assert.equal(masked.data.record.fields[launchFieldIds.campaign.objective].state,'redacted')

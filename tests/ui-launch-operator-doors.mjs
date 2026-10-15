@@ -150,10 +150,12 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    if (width === 1440) {
     await page.getByText('Confirm it is you first.').waitFor()
     await b.capture('ownership-confirm-first')
+    const previousMail=(await h.mailMessages()).length
     await page.getByRole('button', { name: 'Email me a confirmation link' }).click()
     await page.getByText('Check your email for the confirmation link.').waitFor()
-    const mail = JSON.parse((await h.db.prepare('SELECT message FROM rer_mail_development_outbox ORDER BY sequence DESC LIMIT 1').first()).message)
-    await page.goto(mail.text.match(/https?:\/\/\S+/)[0])
+    const links=(await h.mailMessages()).slice(previousMail).flatMap(message=>[...message.content.find(part=>part.type==='text/plain').value.matchAll(/https?:\/\/\S+/g)].map(match=>new URL(match[0]))).filter(url=>url.pathname==='/auth/confirm')
+    assert.equal(links.length,1,'The fresh owner step-up delivers exactly one confirmation link')
+    await page.goto(links[0].href)
     await page.locator('form[action="/auth/confirm"] button').click()
     await page.waitForURL(/\/app\/settings/)
     await openPeople()
