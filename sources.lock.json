@@ -5287,7 +5287,7 @@
       "executable": false
     },
     "src/core/platform/hosted-mail.server.ts": {
-      "sha256": "8a1ca9a41b396f3585b3fd0c9bac83af52228c8707c4672751fde096e72651c3",
+      "sha256": "a2b30a560d223494e00f275eec11fc9fcc0e4f0c0c7fa26ece656508a1ea3587",
       "executable": false
     },
     "src/core/platform/index.ts": {
