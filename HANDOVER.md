@@ -34,7 +34,7 @@ are refreshed with export-cli and refresh-base; their existing exact-copy
 inventory and source origins remain authoritative.
 
 Apply the `migrations/updates` group in order through
-`9030_legacy_sample_ulids.sql` (the latest); all earlier migrations retain their bytes. The seed's real rer journeys declare
+`9031_installation_owner_guard.sql` (the latest); all earlier migrations retain their bytes. The seed's real rer journeys declare
 `RER_SERVER_JOURNEY=1`. The uninvoked isolated browser scripts
 `tests/ui-command-identity.mjs` and `tests/ui-local-draft.mjs` were removed.
 

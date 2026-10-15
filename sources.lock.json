@@ -2758,7 +2758,7 @@
       "executable": false
     },
     "HANDOVER.md": {
-      "sha256": "2b7ca4391b63b09aac92c852c092ca1ededd993f241cee80ef7cf37eb223ce2f",
+      "sha256": "9ade013fc659a6620c0e1f62beafc8a2ed32e7e5fd12a51fe7fe177355a7cc1a",
       "executable": false
     },
     "LICENSE": {
@@ -3181,6 +3181,10 @@
       "sha256": "9bbfae15501881168596bf59c475ac1d2f74a05e29ea1d8d119ff03cb522e5a6",
       "executable": false
     },
+    "migrations/updates/9031_installation_owner_guard.sql": {
+      "sha256": "30b0a78227637d7d31507e60510b9701ddf723d6ac27d5f0d3386777abfbd74f",
+      "executable": false
+    },
     "OPERATIONS.json": {
       "sha256": "284c185f980784d740abd49dc2c8c89723740e30590a61056569f093a82f0e58",
       "executable": false
@@ -3246,7 +3250,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "3b89a7b5a1499da93ceb933a8db88b7eaddd1da0b01a99635079a8e51c26baab",
+      "sha256": "a58562d2c7d87b9adda875951fda304459dfd38df6a97cdcf6f0faf60a7811af",
       "executable": false
     },
     "rer-project.json": {
@@ -8894,7 +8898,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "7eb5c0efa307d20dc98cf10a54c483379eac6072a9f4be1c1d77294ff424c201",
+      "sha256": "98ee42faf1b274babf88e0ee6923bfe8a2dd9c1aca3b36d1b0798b01204b1f71",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
