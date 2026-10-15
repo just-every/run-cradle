@@ -4725,7 +4725,7 @@
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.tsx": {
-      "sha256": "ce8aff4aba6f8ca0adb30ad9a946cca62bc67d4b6a34b2739ba85da5a0dce63d",
+      "sha256": "44e4eb63e54bfe2843990adb5c8a98288bb1d843af548d94ca10fb7171f297e7",
       "executable": false
     },
     "src/core/app/ui/operator/resource-boundary.tsx": {

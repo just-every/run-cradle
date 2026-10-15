@@ -116,7 +116,9 @@ export const OperatorShell = ({
 
   return (
     <div className="operator-shell">
-      <a className="operator-skip" href="#main-content">Skip to content</a>
+      <nav aria-label="Skip links">
+        <a className="operator-skip" href="#main-content">Skip to content</a>
+      </nav>
       <aside className="operator-rail">
         <OperatorRail currentPath={currentPath} identity={identity} />
       </aside>
