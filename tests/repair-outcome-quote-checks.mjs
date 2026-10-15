@@ -32,6 +32,7 @@ export async function quoteFaults(h,flow){
  await h.db.prepare('UPDATE repair_quotes SET tax_included=1 WHERE id=?').bind(q.quoteId).run()
  await h.db.prepare("UPDATE repair_credentials SET valid_until='2000-01-01T00:00:00.000Z' WHERE contractor_id=? AND kind='licence'").bind(q.contractor.ref.recordId).run();await denied(409,'invalid_transition')
  await h.db.prepare("UPDATE repair_credentials SET valid_until='2099-01-01T00:00:00.000Z' WHERE contractor_id=? AND kind='licence'").bind(q.contractor.ref.recordId).run()
+ await h.db.prepare('INSERT INTO evidence_source_versions(id,source_id,version,sha256,content,file_ids,known_at) SELECT ?,source_id,2,sha256,content,file_ids,known_at FROM evidence_source_versions WHERE source_id=? AND version=1').bind(h.id(),q.evidence.sourceId).run()
  await h.db.prepare('UPDATE evidence_sources SET current_version=2 WHERE id=?').bind(q.evidence.sourceId).run();await denied(409,'stale_evidence')
  await h.db.prepare('UPDATE evidence_sources SET current_version=1 WHERE id=?').bind(q.evidence.sourceId).run()
  const selected=await selectQuote(h,q);q.decision=selected.value.decision;assert.equal(selected.value.quote.state,'selected');assert.ok(q.decision)

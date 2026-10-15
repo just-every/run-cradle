@@ -20,7 +20,7 @@ export async function receiptAuthority(h,grant,receiptId){
  await h.post('grant.revoke',{grantId:grant.id,reason:'Stop future provider work after the completed receipt'},[{ref:h.repairRef('workOrders',grant.id),version:grant.version}])
  assert.deepEqual(await h.read(route),before,'Grant revocation retains readable original effect evidence')
  await h.db.prepare("UPDATE authority_principals SET state='removed' WHERE id=?").bind(h.owner).run()
- const {body}=await expectRead(h,route,403);assert.equal(body.error.code,'forbidden')
+ const {body}=await expectRead(h,route,401);assert.equal(body.error.code,'signed_out');assert.equal(body.data,undefined);assert.ok(!JSON.stringify(body).includes(receiptId),'Removed principal receives no receipt identity')
  await h.db.prepare("UPDATE authority_principals SET state='active' WHERE id=?").bind(h.owner).run()
  assert.deepEqual(await h.read(route),before)
 }
