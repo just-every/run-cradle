@@ -7722,7 +7722,7 @@
       "executable": false
     },
     "src/ui/repairs/operation-actions.tsx": {
-      "sha256": "1c70582eb9259c8eb6b1533e5242e8007e6b5f268c6d735bd2f1b31aef759467",
+      "sha256": "f1d4d832e4c2d6fbaa5e1a15522f6d50caf36fe7be1b5c4cb50348c19888d14e",
       "executable": false
     },
     "src/ui/repairs/quote-summary.tsx": {
@@ -7730,7 +7730,7 @@
       "executable": false
     },
     "src/ui/repairs/repairs-page.tsx": {
-      "sha256": "4e33ed9407d4027a2d75974dc0825715019d8622ad0e587849fe061635fd64a8",
+      "sha256": "d8f6e90dc77730100bf5245ed51fc31694e9887863a0b4fdbbd72e5abc6c4a6c",
       "executable": false
     },
     "src/ui/search/search-page.tsx": {
@@ -7970,7 +7970,7 @@
       "executable": false
     },
     "tests/authority-reservations.mjs": {
-      "sha256": "3b9fe9c9e8c275fbce8f472946ca2cc19a16754f16182631b3561786760cd7d7",
+      "sha256": "ec937ce477f53c55359b444f5485a65af0d941c6a3437d045399704ddaadcf21",
       "executable": false
     },
     "tests/authority-typecheck.json": {
