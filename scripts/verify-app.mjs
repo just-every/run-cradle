@@ -1,5 +1,6 @@
 import {spawnSync} from 'node:child_process';
 import {verifyCommands} from './verify-groups.mjs';
+import {enforceTestBudget} from '../tests/helpers/test-budget.mjs';
 
 // CI's runtime worker keeps rer's hosted-output and hydration checks after its
 // application commands. With no selection, local rer verify runs every group.
@@ -8,6 +9,7 @@ if (group !== undefined && !verifyCommands.some(item => item.group === group)) {
   console.error(`Unknown verification group: ${group}`);
   process.exit(1);
 }
+if (group !== 'build') await enforceTestBudget();
 const commands = verifyCommands.filter(item => group === undefined || item.group === group).map(item => item.command);
 const environment = {...process.env};
 delete environment.CRADLE_VERIFY_GROUP;

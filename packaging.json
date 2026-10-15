@@ -57,7 +57,7 @@
     "componentId": "just-every/cradle"
   },
   "setup": {
-    "manifestFile": "rer-setup.json"
+    "manifestFile": "rer-setup-managed.json"
   },
   "artifact": {
     "specInputs": {

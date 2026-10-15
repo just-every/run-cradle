@@ -88,6 +88,14 @@ the same data. Choose a loopback port with `--port`; an occupied port fails.
 `rer install` (or `pnpm install --frozen-lockfile`) installs the pinned
 dependencies on their own; there is no install lifecycle hook.
 
+Managed Configure reads `management/integration/deployment-spec.json` and the
+digest-bound `rer-setup-managed.json` directly from this repository. The hosted
+form offers Resend or SendGrid and requires its verified sender and API key;
+local setup keeps the development outbox. After changing build configuration,
+migrations or setup fields, run `pnpm build:app && pnpm deployment:spec` and commit
+the generated spec, hosted manifest and `rer-project.json`. CI checks for drift
+with `pnpm check:deployment-spec` after building.
+
 Stop the app and verify:
 
 ```sh
@@ -98,9 +106,9 @@ rer verify
 
 Verification checks product types, real Worker/D1 flows, browsers, the command
 contract, Base copies, the recursive portable onboarding suite and DB/FILES
-movement. The optional `pnpm verify:authoring` also needs the isolated Docker
-runner described in [authoring](authoring/README.md). It is separate from ordinary
-installation. No provider credentials are needed for local use.
+movement, within a 200-test seed budget. The isolated Docker runner described in
+[authoring](authoring/README.md) has a separate operational acceptance path.
+No provider credentials are needed for local use.
 
 ## Reset and move data
 

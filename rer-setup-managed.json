@@ -1,0 +1,251 @@
+{
+  "schema": 1,
+  "title": "Cradle",
+  "groups": [
+    {
+      "id": "owner",
+      "label": "Your workspace"
+    },
+    {
+      "id": "hosting-mail",
+      "label": "Email delivery",
+      "help": "Choose an email provider and its verified sender for hosted sign-in and notifications."
+    },
+    {
+      "id": "egress",
+      "label": "Optional outbound automation delivery",
+      "help": "Use your trusted HTTPS relay for webhook and Slack actions."
+    },
+    {
+      "id": "service-connections",
+      "label": "Optional service connections",
+      "help": "Leave these blank unless you use the corresponding Google, Xero, AI or candidate service. Connect and approve each service separately in your workspace."
+    }
+  ],
+  "fields": [
+    {
+      "name": "OWNER_EMAIL",
+      "label": "Owner email",
+      "help": "Use your Run Edit Run account email to claim this workspace and sign in.",
+      "kind": "email",
+      "required": true,
+      "prefill": "account-email",
+      "group": "owner"
+    },
+    {
+      "name": "OWNER_NAME",
+      "label": "Your name",
+      "kind": "text",
+      "required": true,
+      "default": "Owner",
+      "group": "owner"
+    },
+    {
+      "name": "WORKSPACE_NAME",
+      "label": "Workspace name",
+      "kind": "text",
+      "required": true,
+      "default": "Cradle records",
+      "group": "owner"
+    },
+    {
+      "name": "WORKSPACE_TIMEZONE",
+      "label": "Timezone",
+      "kind": "timezone",
+      "required": true,
+      "default": "UTC",
+      "group": "owner"
+    },
+    {
+      "name": "WORKSPACE_CURRENCY",
+      "label": "Currency",
+      "kind": "text",
+      "required": true,
+      "default": "USD",
+      "group": "owner"
+    },
+    {
+      "name": "SESSION_SECRET",
+      "label": "Session secret",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "input": "managed",
+      "generate": "hex",
+      "group": "owner"
+    },
+    {
+      "name": "SETUP_TOKEN",
+      "label": "Setup token",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "generate": "hex",
+      "group": "owner"
+    },
+    {
+      "name": "MAIL_PROVIDER",
+      "label": "Email delivery",
+      "kind": "select",
+      "required": true,
+      "default": "resend",
+      "options": [
+        {
+          "value": "sendgrid",
+          "label": "SendGrid"
+        },
+        {
+          "value": "resend",
+          "label": "Resend"
+        }
+      ],
+      "group": "hosting-mail"
+    },
+    {
+      "name": "MAIL_FROM",
+      "label": "Verified sender email for hosting",
+      "kind": "email",
+      "required": false,
+      "group": "hosting-mail",
+      "presentations": [
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "sendgrid"
+          },
+          "required": true
+        },
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "resend"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "MAIL_PROVIDER_API_KEY",
+      "label": "Email provider API key for hosting",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "hosting-mail",
+      "presentations": [
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "sendgrid"
+          },
+          "required": true
+        },
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "resend"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "CONNECTION_ENCRYPTION_KEY",
+      "label": "Connection encryption key",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "input": "managed",
+      "generate": "base64",
+      "group": "owner"
+    },
+    {
+      "name": "EGRESS_RELAY_URL",
+      "label": "Trusted HTTPS relay URL",
+      "kind": "url",
+      "required": false,
+      "group": "egress"
+    },
+    {
+      "name": "EGRESS_RELAY_SECRET",
+      "label": "Relay credential",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "egress"
+    },
+    {
+      "name": "AI_PROVIDER_API_KEY",
+      "label": "AI service API key",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "GOOGLE_CLIENT_ID",
+      "label": "Google OAuth client ID",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "GOOGLE_CLIENT_SECRET",
+      "label": "Google OAuth client secret",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "XERO_CLIENT_ID",
+      "label": "Xero OAuth client ID",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "XERO_CLIENT_SECRET",
+      "label": "Xero OAuth client secret",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "CANDIDATE_RUNNER_TOKEN",
+      "label": "Candidate runner credential",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "CANDIDATE_DEPLOY_TOKEN",
+      "label": "Candidate delivery credential",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    }
+  ],
+  "steps": [
+    {
+      "type": "owner-claim",
+      "mode": "signed",
+      "emailField": "OWNER_EMAIL",
+      "tokenField": "SETUP_TOKEN",
+      "path": "/auth/owner-claim"
+    }
+  ]
+}
