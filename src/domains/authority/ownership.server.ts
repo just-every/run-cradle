@@ -17,7 +17,8 @@ const STEP_UP_MS = 600_000
 
 /** The installation owner can hand ownership to another active member (OPS-002). The new
  * owner becomes the installation and Base owner with the owner's own app scopes; the former
- * owner keeps their access until they remove themselves. Base requires a fresh step-up. */
+ * owner becomes a Base admin, so exactly one owner remains, and keeps their app access until
+ * they remove themselves. Base requires a fresh step-up. */
 export function createOwnershipTransfer(db: D1Database, policy: PolicyPort) {
  return async function transfer(ctx: RequestContext, commandId: string, appId: string, memberId: string, expectedVersion: number): Promise<AdmissionPlan<unknown>> {
   if (ctx.principal.kind !== 'human' || !ctx.principal.baseSessionId) return denied('Ownership handover requires a current operator session.')
@@ -42,7 +43,11 @@ export function createOwnershipTransfer(db: D1Database, policy: PolicyPort) {
    { kind: 'update', table: principals, set: { initial_owner: 1, version: target.version + 1, updated_at: now }, where: trustedPredicate("id=? AND version=? AND state='active'", [memberId, target.version]), expectedRows: 1 },
    { kind: 'update', table: principals, set: { initial_owner: 0, version: actor.version + 1, updated_at: now }, where: trustedPredicate("id=? AND version=? AND initial_owner=1 AND state='active'", [ctx.principal.id, actor.version]), expectedRows: 1 },
   ]
-  if (target.base_id !== actor.base_id) mutations.push({ kind: 'update', table: baseOperators, set: { role: 'owner' }, where: trustedPredicate("id=? AND status='active'", [target.base_id]), expectedRows: 1 })
+  // Promote before demoting: Base refuses to leave no active owner. Each role change bumps the
+  // operator and principal versions, so it follows the principal updates above.
+  if (target.base_id !== actor.base_id) mutations.push(
+   { kind: 'update', table: baseOperators, set: { role: 'owner' }, where: trustedPredicate("id=? AND status='active'", [target.base_id]), expectedRows: 1 },
+   { kind: 'update', table: baseOperators, set: { role: 'admin' }, where: trustedPredicate("id=? AND role='owner' AND status='active'", [actor.base_id]), expectedRows: 1 })
   // The new owner receives the owner's exact scope in every app the owner holds.
   const scopes = (await db.prepare(`SELECT m.app_id,m.legacy,m.version,p.id AS policy_id,p.name,p.rules_json,p.version AS policy_version,t.version AS target_version
    FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id LEFT JOIN authority_memberships t ON t.principal_id=? AND t.app_id=m.app_id

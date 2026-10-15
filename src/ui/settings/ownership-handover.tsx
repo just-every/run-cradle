@@ -17,7 +17,7 @@ export function OwnershipHandover({ member, appId, onDone, onCancel }: { member:
   setProof(response?.ok ? 'sent' : 'failed')
  }
  return <div className="cr-form">
-  <p>{member.name} becomes the installation owner with your access in every application. You keep your access until you remove yourself, which you can do once you no longer own campaigns or hold assigned decisions.</p>
+  <p>{member.name} becomes the installation owner with your access in every application. You become an admin and are signed out; sign in again to keep your access until you remove yourself, which you can do once you no longer own campaigns or hold assigned decisions.</p>
   {needsProof ? <div className="cr-notice" role="status"><p>Confirm it is you first. We email a link to your own address; open it in this browser, then hand over within 10 minutes.</p>{proof === 'sent' ? <p>Check your email for the confirmation link.</p> : <button type="button" className="cr-button cr-button--quiet" disabled={proof === 'sending'} onClick={() => void sendProof()}>Email me a confirmation link</button>}{proof === 'failed' && <p className="cr-error">The confirmation email could not be sent. Try again.</p>}</div> : <CommandFeedback {...command} />}
   <div className="cr-actions"><button type="button" className="cr-button" disabled={['submitting', 'pending', 'unknown'].includes(command.result.state)} onClick={() => { command.reset(); void command.submit('/api/v1/commands/member.transfer-ownership', { memberId: member.id }, [{ ref: { appId, entityId: AUTHORITY_ENTITY_IDS.member, recordId: member.id }, version: member.version }]) }}>Hand over ownership to {member.name}</button><button type="button" className="cr-button cr-button--quiet" onClick={onCancel}>Cancel</button></div>
  </div>
