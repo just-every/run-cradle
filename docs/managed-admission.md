@@ -16,7 +16,7 @@ or deploys. The generated `rer-project.json` records the SHA-256 digest of the
 canonical setup bytes. Preserve every already-applied migration byte.
 
 The managed workflow is dispatch-only and pins the trusted reusable workflow to
-`bf7a25abb44bec1457a7bc738ff63921d90fb52e`. It declares full verification. The
+`86c8b37399c901bffd9a240dbd1148a65ec83b34`. It declares full verification. The
 project profile runs its source-owned setup, build, verify and artifact operations.
 The project operations use `rer install`, `build`, and `verify`.
 The rer CLI selects the declared Node runtime. Browser preparation is explicit in
