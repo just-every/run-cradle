@@ -35,3 +35,5 @@ export {createReferenceAccess} from '../src/domains/authority/reference.server';
 export * from '../src/apps/repairs/quote-runtime.server'
 
 export {createEvidenceHttp} from '../src/domains/evidence/http.server';
+
+export {registerExecutionCommands} from '../src/domains/execution/commands.server';

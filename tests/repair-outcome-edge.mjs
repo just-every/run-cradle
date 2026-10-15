@@ -3,10 +3,10 @@ export function repairProviderEdge(){
  const events=new Map(),invoices=new Map(),calls=[]
  let booking='confirmed',cancellation='confirmed',accounting='confirmed'
  const response=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json'}})
- async function fetch(request){const url=new URL(request.url);calls.push({method:request.method,path:url.pathname,key:request.headers.get('idempotency-key')})
+ async function fetch(request){const url=new URL(request.url),call={method:request.method,path:url.pathname,key:request.headers.get('idempotency-key')};calls.push(call)
   if(url.hostname==='www.googleapis.com'&&url.pathname.includes('/calendar/v3/calendars/')){
-   if(request.method==='POST'){const body=await request.json();if(booking==='refused')return response({error:{message:'Slot unavailable'}},400);events.set(body.id,{...body,status:'confirmed',etag:'fixture-etag'});if(booking==='unknown')return response({error:'response lost'},503);return response(events.get(body.id))}
-   if(request.method==='DELETE'){if(cancellation==='refused')return response({error:'Cannot cancel'},400);const id=url.pathname.split('/').at(-1),item=events.get(id);if(item)events.set(id,{...item,status:'cancelled'});return cancellation==='unknown'?response({},503):new Response(null,{status:204})}
+   if(request.method==='POST'){const body=await request.json();call.eventId=body.id;if(booking==='rate-limited')return response({error:{message:'Rate limit prevented booking'}},429);if(booking==='refused')return response({error:{message:'Slot unavailable'}},400);events.set(body.id,{...body,status:'confirmed',etag:'fixture-etag'});if(booking==='unknown')return response({error:'response lost'},503);return response(events.get(body.id))}
+   if(request.method==='DELETE'){if(cancellation==='rate-limited')return response({error:{message:'Rate limit prevented cancellation'}},429);if(cancellation==='refused')return response({error:'Cannot cancel'},400);const id=url.pathname.split('/').at(-1),item=events.get(id);if(item)events.set(id,{...item,status:'cancelled'});return cancellation==='unknown'?response({},503):new Response(null,{status:204})}
    const id=url.pathname.split('/').at(-1);return events.has(id)?response(events.get(id)):response({items:[...events.values()]})
   }
   if(url.hostname==='api.xero.com'&&url.pathname==='/connections')return response([{tenantId:'00000000-0000-4000-8000-000000000001'}])

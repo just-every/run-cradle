@@ -40,7 +40,7 @@ export function createRepairIntakeComposition(platform: Platform, foundation: Se
   d.providerConfiguration=(ctx,request)=>configuration.configuration(ctx,{connectionId:request.connectionId,subject:request.businessBinding!.subject})
   execution=createRepairExecutionBridge({db:deps.db,execution:providers.execution,configuration:configuration.configuration,accountingCapability:configuration.accountingCapability,currentAgreement:currentRepairAgreement(d),commitment:validateRepairCommitment(d)})
   const ordinaryGuards=providers.dependencies.currentGuards
-  providers.dependencies.currentGuards=async(ctx,request,mode)=>[...await ordinaryGuards(ctx,request,mode),...(request.businessBinding?.kind==='repair'?await repairEffectGuards(d)(ctx,request,mode):[])]
+  providers.dependencies.currentGuards=async(ctx,request,mode,identity)=>[...await ordinaryGuards(ctx,request,mode,identity),...(request.businessBinding?.kind==='repair'?await repairEffectGuards(d)(ctx,request,mode,identity):[])]
   registerRepairCommands(foundation.commands,d)
   registerRepairAccountingMapping(foundation.commands,d)
   const caseDeps=d

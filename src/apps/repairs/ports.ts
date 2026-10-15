@@ -9,7 +9,8 @@ export type RepairEffect={expected:RevisionRef[];authority:{grantId:string;grant
 /** X bridge must preserve its durable preparation, actual capabilities and explicit contractor-agreement semantics. */
 export interface RepairExecutionPort {
  prepare(ctx:RequestContext,request:RepairEffect):Promise<AdmissionPlan<{runId:string;attemptId:string}>>;
- read(ctx:RequestContext,attemptId:string):Promise<{attempt:Attempt;runState?:Run['state'];receiptId:string|null;receiptVersion?:number|null;externalId:string|null;contractorAccepted:boolean;accountingReadback:boolean;guards:SqlPredicate[]}>;
+ read(ctx:RequestContext,attemptId:string):Promise<{attempt:Attempt;runState:Run['state'];receiptId:string|null;receiptVersion?:number|null;externalId:string|null;contractorAccepted:boolean;accountingReadback:boolean;guards:SqlPredicate[]}>;
+ cancellationAttempts(ctx:RequestContext,visitId:string):Promise<{attemptIds:string[];guards:SqlPredicate[]}>;
  accountingCapability(ctx:RequestContext):Promise<'ready'|'unconfigured'|'unavailable'>;
 }
 export interface RepairCasePort {
