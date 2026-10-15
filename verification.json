@@ -126,14 +126,6 @@
       ]
     },
     {
-      "name": "dev-identity",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:dev-identity"
-      ]
-    },
-    {
       "name": "runtime",
       "browser": true,
       "hosted": true,
@@ -151,6 +143,14 @@
       "hosted": false,
       "commands": [
         "node tests/ui-local-signin.mjs"
+      ]
+    },
+    {
+      "name": "dev-identity",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:dev-identity"
       ]
     },
     {

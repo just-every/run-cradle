@@ -16,7 +16,8 @@ so newly added files join the same public suite automatically. Browser shards
 install Chromium; their dependency/browser cache keys are separate from tool-only
 shards. Disk cleanup runs only if the runner has less than 20 GiB free.
 
-The slow browser installer and full portable-installation restore journeys run on
+The fresh-clone browser installer, dev-identity archive rehearsal and full
+portable-installation restore journeys run on
 `v*` release tags, nightly at 03:23 UTC, and through manual **Nightly journeys**.
 That workflow includes every push shard too. Their 45-minute worker allowance is
 separate from the push workers' 12-minute limit. A normal `rer verify` still runs

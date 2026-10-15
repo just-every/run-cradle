@@ -2801,7 +2801,7 @@
       "executable": false
     },
     "docs/verification.md": {
-      "sha256": "6036d01ec794b3632ec7e4577ca629b21183b5c70c03624648c100d2d90c516a",
+      "sha256": "f8ff9ae347275de418d44c69cb0b699543611920683ee81755ac893c86e5e890",
       "executable": false
     },
     "docs/workflows.md": {
@@ -10953,7 +10953,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "2fc33d67df4c5dbf1d82a4ef1fdbd8362a7d820fb09b99737ff47c65295511eb",
+      "sha256": "8b1e63440bf53cc4e30b8b4236ceb51b199451e75823b99b6171544fac89b137",
       "executable": false
     },
     "vite.config.ts": {
