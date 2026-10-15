@@ -8038,7 +8038,7 @@
       "executable": false
     },
     "tests/business-decisions-d1.mjs": {
-      "sha256": "c1018ccf3f381899abddc2476ce517493110676354c965a264632bf7ef8a055d",
+      "sha256": "30bf740d5069853d4eb6cf864c41aed32fbb7193495a8e9a0a42b8db8f31c08f",
       "executable": false
     },
     "tests/channels-runtime-entry.ts": {
