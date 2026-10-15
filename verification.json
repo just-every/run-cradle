@@ -92,8 +92,23 @@
       "commands": [
         "pnpm test:records:release",
         "pnpm test:records:base-native",
-        "pnpm test:records:base-exits",
         "pnpm test:admission"
+      ]
+    },
+    {
+      "name": "records-exits",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-json-metadata-native.mjs tests/records-base-json-http.mjs tests/records-base-required.mjs tests/records-base-export-policy.mjs tests/records-base-metadata-conflicts.mjs tests/records-base-edge-return.mjs tests/records-base-exit-restart.mjs tests/records-csv-correspondence-http.mjs"
+      ]
+    },
+    {
+      "name": "records-roundtrips",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-exits.mjs"
       ]
     },
     {
