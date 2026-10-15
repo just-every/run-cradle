@@ -3186,7 +3186,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "0f96e40c25215cbd7f19522aa3dc61ff2249eddd5203dfde95becf8ab5ff6880",
+      "sha256": "d4551f44b5468061bb95063101d4e57c5263d3bad3557916b567bd98c70a38ad",
       "executable": false
     },
     "packaging.json": {
@@ -3198,7 +3198,7 @@
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "7d33391387325384e16d9a07c946282f4f68ad35913dc4f310c3e7ae16e2510a",
+      "sha256": "87c132ef2627d56b8654ef1ef230a77b8d9f3338921b050110c3059b1d86a53f",
       "executable": false
     },
     "public/apple-touch-icon.png": {
@@ -4082,7 +4082,7 @@
       "executable": false
     },
     "src/core/app/application.ts": {
-      "sha256": "962bc667f4365869e4959e972912820f7df4447a0ff8145ca9327eecdaf10259",
+      "sha256": "6099b740a06be7ce5e640ec273966a0cd87c8ecf959fa059ee9b44019a6868f5",
       "executable": false
     },
     "src/core/app/composition/admission-wake.server.ts": {
@@ -4677,6 +4677,18 @@
       "sha256": "c40c27aaf6b63c31921f10a5b398dafef82fb8b4ab0b95d4411dc78b513b7d56",
       "executable": false
     },
+    "src/core/features/csv-export/lens-rows.ts": {
+      "sha256": "9eb88122f2bb670f0f06cc68a2b2eaf83854275c1eb653ebbfb54918e6f43340",
+      "executable": false
+    },
+    "src/core/features/csv-export/routes.ts": {
+      "sha256": "ad2e309d3e018da91c185a86413933c67dc8a93448939d038b95c0b245bcf502",
+      "executable": false
+    },
+    "src/core/features/csv-export/workspace-format.ts": {
+      "sha256": "3e5d5f108155c1a4803778c9259c492e17ecf83d385b046d6e5a06a6f64ce759",
+      "executable": false
+    },
     "src/core/features/decisions/index.ts": {
       "sha256": "f6937a4bc1d157e3cb40f436f26a560b4306d2b10f31322820a65dae631a9dec",
       "executable": false
@@ -4819,18 +4831,6 @@
     },
     "src/core/features/editor/server.ts": {
       "sha256": "d2f5c212bbb831f32d9bf2d41cbe57fab6bd5486ecc2c8f2fc3ce4cd4e83c67a",
-      "executable": false
-    },
-    "src/core/features/exports/lens-rows.ts": {
-      "sha256": "9eb88122f2bb670f0f06cc68a2b2eaf83854275c1eb653ebbfb54918e6f43340",
-      "executable": false
-    },
-    "src/core/features/exports/routes.ts": {
-      "sha256": "ad2e309d3e018da91c185a86413933c67dc8a93448939d038b95c0b245bcf502",
-      "executable": false
-    },
-    "src/core/features/exports/workspace-format.ts": {
-      "sha256": "3e5d5f108155c1a4803778c9259c492e17ecf83d385b046d6e5a06a6f64ce759",
       "executable": false
     },
     "src/core/features/lenses/index.ts": {
