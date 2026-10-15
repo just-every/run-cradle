@@ -25,7 +25,7 @@ export async function exerciseCsv(page,j,origin,width){
   assert.ok(text.includes(body.data.rows[0].label));assert.ok(!text.includes(body.data.rows[0].id))
   if(rejected){
    assert.deepEqual([body.data.updates,body.data.unchanged],[1,1])
-   assert.equal(await preview.getByRole('cell',{name:'Rejected',exact:true}).count(),rejected)
+   assert.equal(await preview.getByRole('cell',{name:/^(?:Change\s*)?Rejected$/}).count(),rejected)
    assert.match(text,/Number:.*number/);assert.match(text,/Checked:.*true.*false/)
    assert.doesNotMatch(text,/invalid_format|invalid_type|Expected canonical/)
   }
