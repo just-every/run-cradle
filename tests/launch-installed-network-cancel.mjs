@@ -9,6 +9,9 @@ test('[AUTO-003/004] disabling an automation distinguishes a started external ef
  const h=await setup({automaticQueues:false,configuration:{MAIL_PROVIDER:'sendgrid',MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:'network-edge-only'},providerFetch:async request=>{assert.equal(request.url,'https://api.sendgrid.com/v3/mail/send');calls++;seen();await held;return new Response(null,{status:202,headers:{'x-message-id':'controlled-mail'}})}})
  let dispatch
  try{
+  // Exercise cancellation after provider delivery starts, independently of wall-clock quiet hours.
+  const settings=(await h.read('/api/v1/settings')).data
+  assert.equal((await h.command('settings.update',{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}})).data.state,'committed')
   const c=await campaign(h,'INFLIGHT'),owner=(await h.db.prepare('SELECT owner_id FROM campaigns WHERE id=?').bind(c.id).first()).owner_id
   const definition=value(await h.command('launch.automation.save',{definition:{name:'Started mail',enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'send-email',input:{operatorId:owner,subjectId:c.id,title:'Started mail effect',body:'The original effect finishes once'}}]}}))
   const change=await h.command('launch.campaign.patch',{id:c.id,changes:{statusSummary:'Start mail'}},expected(launchEntities.campaign,c)),worker=await h.runtime.getWorker()

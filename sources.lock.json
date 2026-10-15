@@ -8965,11 +8965,11 @@
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
-      "sha256": "0306784295b4d82b2bac01300d7dcf019be7ece853c4c88f12fe7c73b0208240",
+      "sha256": "70c3e8b724171cd17a655651267f78b70ada34a8d98654f97ff145baaff1b017",
       "executable": false
     },
     "tests/launch-installed-retries.mjs": {
-      "sha256": "a424401b139f12ab61bd32a69a13b32d5dd2815713bd5c2d8fb4a6051890c8b3",
+      "sha256": "670193e77f9d93ef6608da9604a7c61ffe47da29321f2fcef6157c458ee42d23",
       "executable": false
     },
     "tests/launch-installed-runtime.mjs": {

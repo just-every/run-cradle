@@ -7,6 +7,9 @@ test('[AUTO-007/009] installed ordered actions retry transport failures at absol
  const attempts=[];let response=429
  const h=await setup({configuration:{MAIL_PROVIDER:'sendgrid',MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:'test-network-edge-only'},providerFetch:async request=>{assert.equal(request.url,'https://api.sendgrid.com/v3/mail/send');attempts.push(await request.json());return new Response(null,{status:response,headers:response===202?{'x-message-id':'accepted-network-edge'}:{}})}})
  try{
+  // These transport outcomes require an open delivery window at every test-run time.
+  const settings=(await h.read('/api/v1/settings')).data
+  assert.equal((await h.command('settings.update',{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}})).data.state,'committed')
   const c=await campaign(h,'RETRY'),operator=(await h.db.prepare('SELECT owner_id FROM campaigns WHERE id=?').bind(c.id).first()).owner_id
   const definition=value(await h.command('launch.automation.save',{definition:{name:'Ordered delivery',enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'add-activity',input:{campaignId:c.id,message:'Exactly one completed action'}},{command:'notify-operator',input:{operatorId:operator,subjectId:c.id,title:'Ordered action notice',body:'Recorded before transport'}},{command:'create-decision',input:{campaignId:c.id,riskId:null,supersedesId:null,title:'Ordered action decision',requesterId:operator,assigneeId:null,priority:'High',dueAt:new Date(Date.now()+86400000).toISOString(),recommendation:'Review',impact:'Delivery proof'}},{command:'send-email',input:{operatorId:operator,subjectId:c.id,title:'Launch update',body:'Actual configured transport'}}]}}))
   await h.command('launch.campaign.patch',{id:c.id,changes:{statusSummary:'Trigger transport'}},expected(launchEntities.campaign,c))
@@ -42,6 +45,8 @@ test('[AUTO-007/009 AUTO-USER-001] uncertain SendGrid delivery stays visible wit
  let calls=0
  const h=await setup({automaticQueues:false,configuration:{MAIL_PROVIDER:'sendgrid',MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:'network-edge-only'},providerFetch:async request=>{assert.equal(request.url,'https://api.sendgrid.com/v3/mail/send');calls++;return new Response(null,{status:503})}})
  try{
+  const settings=(await h.read('/api/v1/settings')).data
+  assert.equal((await h.command('settings.update',{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}})).data.state,'committed')
   const c=await campaign(h,'UNCERTAIN'),owner=(await h.db.prepare('SELECT owner_id FROM campaigns WHERE id=?').bind(c.id).first()).owner_id
   const definition=value(await h.command('launch.automation.save',{definition:{name:'Uncertain delivery',enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'add-activity',input:{campaignId:c.id,message:'Completed before uncertainty'}},{command:'send-email',input:{operatorId:owner,subjectId:c.id,title:'Uncertain launch mail',body:'Retain original delivery'}}]}}))
   await h.command('launch.campaign.patch',{id:c.id,changes:{statusSummary:'Trigger uncertain delivery'}},expected(launchEntities.campaign,c))
