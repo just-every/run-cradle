@@ -67,13 +67,20 @@ test('OIDC: disabling during token exchange fences the callback and revocation s
 })
 test('OIDC: member sign-in creates no grant and current product restrictions still deny access',async t=>{
  const r=await ready(t),native=await r.proof()
+ // The owner's first product visit initializes the workspace through its real
+ // installation coordinator before an invited member can enter it.
+ if(emitted)assert.equal((await r.call('/api/session',undefined,native)).status,200)
  assert.equal((await r.call('/auth/invite',{email:'member@example.com',displayName:'Member',role:'member'},native)).status,202)
  const before=await r.db.prepare('SELECT count(*) n FROM authority_grants').first()
  const signed=await r.finish(await r.begin(),{sub:'member-subject',email:'member@example.com'})
  assert.equal(signed.status,303,await signed.clone().text());const session=cookie(signed)
  assert.equal((await r.db.prepare('SELECT count(*) n FROM authority_grants').first()).n,before.n)
  const member=await r.db.prepare("SELECT p.id FROM authority_principals p JOIN operators o ON o.id=p.human_id WHERE o.email='member@example.com'").first()
- if(emitted){assert.equal((await r.call('/api/session',undefined,session)).status,200)}else{
+ assert.equal((await r.db.prepare('SELECT count(*) n FROM authority_memberships WHERE principal_id=?').bind(member.id).first()).n,0)
+ if(emitted){
+  assert.equal((await r.call('/api/session',undefined,session)).status,200)
+  assert.equal((await r.call('/api/portfolio',undefined,session)).status,403,'identity admission grants no Launch data access')
+ }else{
   const {createBaseSessionReader}=await import('../src/domains/authority/base-session.server.ts')
   const platform=r.platform(),reader=createBaseSessionReader(r.db,platform.auth.configuration,platform.auth.configuration.base)
   assert.ok(await reader(new Request(origin+'/app',{headers:{cookie:session}})))

@@ -2,14 +2,14 @@ import type {RequestContext,PolicyPort} from '../../domains/authority/ports';
 import type {AdmissionPlan,AdmissionPort,SqlPredicate} from '../../domains/admission/ports';
 import type {RecordPort} from '../../domains/records/ports';
 import type {EvidencePort} from '../../domains/evidence/ports';
-import type {EffectRequest,Attempt} from '../../domains/execution/contracts';
+import type {EffectRequest,Attempt,Run} from '../../domains/execution/contracts';
 import type {CommandInput,RevisionRef,Json} from '../../contracts/primitives';
 import type {RepairCase} from './contracts';
 export type RepairEffect={expected:RevisionRef[];authority:{grantId:string;grantVersion:number;purpose:string;fieldIds:string[]};kind:'quote_request'|'booking'|'cancel_booking'|'invoice_handoff';connectionId:string;subject:RevisionRef;input:Json;commandId:string;controlEpoch?:number;cost:EffectRequest['cost']};
 /** X bridge must preserve its durable preparation, actual capabilities and explicit contractor-agreement semantics. */
 export interface RepairExecutionPort {
  prepare(ctx:RequestContext,request:RepairEffect):Promise<AdmissionPlan<{runId:string;attemptId:string}>>;
- read(ctx:RequestContext,attemptId:string):Promise<{attempt:Attempt;receiptId:string|null;receiptVersion?:number|null;externalId:string|null;contractorAccepted:boolean;accountingReadback:boolean;guards:SqlPredicate[]}>;
+ read(ctx:RequestContext,attemptId:string):Promise<{attempt:Attempt;runState?:Run['state'];receiptId:string|null;receiptVersion?:number|null;externalId:string|null;contractorAccepted:boolean;accountingReadback:boolean;guards:SqlPredicate[]}>;
  accountingCapability(ctx:RequestContext):Promise<'ready'|'unconfigured'|'unavailable'>;
 }
 export interface RepairCasePort {

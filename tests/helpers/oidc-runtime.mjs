@@ -14,7 +14,8 @@ export async function oidcRuntime(t,emitted=false) {
  const idp=await provider({issuer,clientId:'cradle-client',redirectUri:origin+'/auth/oidc/auth/callback',alg:'ES256',method:'private_key_jwt',rerInterfaces:['oidc-provider@1.0.0'],claims:{email_verified_at:Math.floor(Date.now()/1000)}})
  let transport,gate,ownerGrant,db=fixture?.db
  const network=async(input,init={})=>{
-  const request=input instanceof Request?input:new Request(String(input),init),url=request.url
+  // Miniflare supplies its own Request class at the outbound network edge.
+  const request=typeof input==='string'||input instanceof URL?new Request(String(input),init):input,url=request.url
   if(url==='https://api.sendgrid.com/v3/mail/send'){mails.push(await request.json());return new Response(null,{status:202})}
   if(url===issuer+'/.well-known/rer-provider')return Response.json({issuer,interface:'oidc-provider@1',version:1,initiate:issuer+'/link',redeem:issuer+'/redeem',deregister:issuer+'/remove'})
   if(url===issuer+'/redeem'){
@@ -35,7 +36,9 @@ export async function oidcRuntime(t,emitted=false) {
   const dir=await mkdtemp(join(tmpdir(),'cradle-oidc-'));migrateFixture(dir)
   const runtime=await baseEmittedRuntime(dir,0,{...productionBindings,...bindings,IDENTITY_PROVIDER:issuer},network),worker=await runtime.getWorker();db=await runtime.getD1Database('DB');
   t.after(async()=>{await runtime.dispose();await rm(dir,{recursive:true,force:true})})
-  transport=req=>worker.fetch(origin+'/__test_envelope',{method:'POST',body:JSON.stringify({url:req.url,method:req.method,headers:Object.fromEntries(req.headers),...(req.method==='POST'?{body:req._body}:{})})})
+  // Observe each actual auth response. Following its 303 would send a bodyless
+  // GET back through the JSON envelope and hide the redirect and session cookie.
+  transport=req=>worker.fetch(origin+'/__test_envelope',{method:'POST',redirect:'manual',body:JSON.stringify({url:req.url,method:req.method,headers:Object.fromEntries(req.headers),...(req.method==='POST'?{body:req._body}:{})})})
  }else{
   t.after(()=>fixture.close());bindings.DB=fixture.db
   const previous=globalThis.fetch;globalThis.fetch=network;t.after(()=>{globalThis.fetch=previous})

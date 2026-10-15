@@ -11,6 +11,7 @@ import { canonicalJson } from './grants.server'
 import { revalidateReservations } from './reservation-binding.server'
 import { proposedRowPredicate } from './proposed-row.server'
 import { canonicalInteger, reserveBudgets } from './budget.server'
+import { providerGrantIssuerGuards } from './provider-grant.server'
 /** Shared membership fence; capacity planning may measure this exact template. */
 export const membershipPolicyGuard=(ctx:RequestContext,appId:string,row:{id:string;version:number;membership_version:number})=>trustedPredicate(`EXISTS(SELECT 1 FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active' AND m.version=? AND p.id=? AND p.version=?)`,[ctx.principal.id,appId,row.membership_version,row.id,row.version])
 export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:DecisionAuthorityPort):PolicyPort=>{
@@ -106,6 +107,7 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
       if(!spec.actions.includes(request.action)||(request.transition&&!spec.allowedTransitions.includes(request.transition)))return denied()
       for(const target of request.expected){const s=spec.scope.find(s=>s.entityId===target.ref.entityId);if(!s||s.recordIds&&!s.recordIds.includes(target.ref.recordId))return denied();if(s.filter){const entity=registry.get(request.appId,target.ref.entityId)!;const predicate=compileFilter(s.filter,entity,ctx.now);guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${predicate.sql}))`,[target.ref.recordId,...predicate.values]))}}
       if(request.connectionId&&!spec.providerScopes.some(s=>s.connectionId===request.connectionId&&!!request.purpose&&s.purposes.includes(request.purpose)&&(request.fieldIds??[]).every(f=>s.fields.includes(f))))return denied()
+      if(request.connectionId)guards.push(...await providerGrantIssuerGuards(db,registry,ctx,request,row.issuer_id,spec))
       const amounts=new Map<string,string>()
       for(const cost of request.cost){const cap=spec.perAction.find(v=>v.currency===cost.currency&&v.scale===cost.scale);if(!cap||canonicalInteger(cost.minor)>canonicalInteger(cap.minor))return denied('The per-action monetary ceiling is exceeded.');const unit=`money:${cost.currency}:${cost.scale}`;const total=BigInt(amounts.get(unit)??'0')+canonicalInteger(cost.minor);if(total>canonicalInteger(cap.minor))return denied('The combined per-action ceiling is exceeded.');amounts.set(unit,total.toString())}
       for(const [unit,value]of [['modelCalls',request.modelCalls??0],['wallSeconds',request.wallSeconds??0],['quantity',request.quantity??0]] as const){if(!Number.isSafeInteger(value)||value<0)return denied();if(value)amounts.set(unit,String(value))}

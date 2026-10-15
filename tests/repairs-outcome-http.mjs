@@ -25,7 +25,7 @@ test('mounted emitted repair journey enforces exact approval, grants, independen
   await flow.handoff(q,earlyInvoice,{status:503})
   await h.post('repair.configure-accounting',{connectionId:h.connections.xero,expectedVersion:0,contacts:{'SYNTHETIC-UI-SUPPLIER':'00000000-0000-4000-8000-000000000002'},allowedAccountCodes:['400'],allowedTaxTypes:['INPUT']})
   const latest=await h.ref('workOrders',q.workId)
-  await h.post('repair.record-invoice',{...earlyInvoice.input,workOrder:latest},[latest],{status:409})
+  const duplicate=await h.post('repair.record-invoice',{...earlyInvoice.input,workOrder:latest},[latest],{status:400});assert.equal(duplicate.body.error.code,'validation');assert.equal((await h.db.prepare('SELECT count(*) n FROM repair_invoices WHERE work_order_id=?').bind(q.workId).first()).n,1)
   const handoff=await flow.handoff(q,earlyInvoice),accounted=await h.waitAttempt(handoff.value.attemptId);assert.equal(accounted.state,'confirmed')
   const requestsBefore=h.edge.calls.filter(c=>c.method==='POST'||c.method==='PUT').length
   await Promise.all([flow.handoff(q,earlyInvoice,{status:409}),flow.handoff(q,earlyInvoice,{status:409})])
@@ -80,7 +80,7 @@ test('permitted routine booking and failed or uncertain accounting keep original
    const mismatched=await flow.invoice(q,{payeeId:'WRONG-SUPPLIER'})
    const before=h.edge.calls.length;await flow.handoff(q,mismatched,{status:400});assert.equal(h.edge.calls.length,before)
    const invoice=await flow.invoice(q),duplicateEvidence=await h.source('Same supplier invoice delivered a second time'),workOrder=await h.ref('workOrders',q.workId)
-   await h.post('repair.record-invoice',{...invoice.input,workOrder,sourceId:duplicateEvidence.sourceId,evidence:[duplicateEvidence]},[workOrder],{status:409})
+   const duplicate=await h.post('repair.record-invoice',{...invoice.input,workOrder,sourceId:duplicateEvidence.sourceId,evidence:[duplicateEvidence]},[workOrder],{status:400});assert.equal(duplicate.body.error.code,'validation');assert.equal((await h.db.prepare('SELECT count(*) n FROM repair_invoices WHERE payee_id=? AND invoice_number=?').bind(invoice.input.payeeId,invoice.input.invoiceNumber).first()).n,1)
    h.edge.setAccounting(mode)
    const handoff=await flow.handoff(q,invoice),attempt=await h.waitAttempt(handoff.value.attemptId);assert.equal(attempt.state,mode)
    await flow.handoff(q,invoice,{status:409})

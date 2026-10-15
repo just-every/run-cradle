@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os'
 import {chromium} from '@playwright/test'
 import {repairOutcomeFixture} from './repair-outcome-fixture.mjs'
 import {repairFlow} from './repair-outcome-flow.mjs'
+import {browserRepairJourney} from './repair-outcome-browser-journey.mjs'
 import {auditAccessibility} from './helpers/accessibility-evidence.mjs'
 const output=process.env.CRADLE_UI_EVIDENCE??path.join(tmpdir(),'cradle-repair-outcome-evidence')
 await mkdir(output,{recursive:true})
@@ -16,7 +17,7 @@ try{
  await context.addCookies([{name:h.ownerSession.cookie.split('=')[0],value:h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
  const page=await context.newPage(),mutations=[]
  page.on('request',r=>{if(r.method()==='POST'&&r.url().includes('/commands/'))mutations.push(r.url())})
- async function audit(name){for(const width of [1440,390]){await page.setViewportSize({width,height:width===390?844:900});await page.waitForLoadState('networkidle');const result=await auditAccessibility(page,{screen:name,width,output});assert.equal(result.layout.pageOverflow,false);assert.deepEqual([...result.axe.wcag22aa,...result.axe.targetSize].filter(v=>['serious','critical'].includes(v.impact)).map(v=>v.id),[]);results.push({screen:name,width,overflow:result.layout.pageOverflow})}}
+ async function audit(name){for(const width of [1440,390]){await page.setViewportSize({width,height:width===390?844:900});await page.waitForLoadState('networkidle');const result=await auditAccessibility(page,{screen:name,width,output});assert.equal(result.layout.pageOverflow,false);assert.deepEqual([...result.axe.wcag22aa,...result.axe.targetSize].map(v=>v.id),[]);results.push({screen:name,width,overflow:result.layout.pageOverflow})}}
  // Device-only photo intake still uses the actual emitted document and R2 upload path.
  await page.goto(h.origin+'/app/repairs/new');await page.getByLabel('Describe the problem',{exact:true}).waitFor()
  await context.setOffline(true)
@@ -74,5 +75,6 @@ try{
  assert.equal(await page.getByRole('button',{name:'Accept physical repair',exact:true}).isDisabled(),true)
  await audit('repair-changed-claim-review')
  await context.close()
- await writeFile(path.join(output,'result.json'),JSON.stringify({states:results,acceptanceKeys:{committed:lostKey,notCommitted:uncommittedKey},externalProviders:'network-edge doubles; actual adapters and credential/execution paths'},null,2))
+ const journeys=[];for(const width of [1440,390])journeys.push(await browserRepairJourney(browser,width,output))
+ await writeFile(path.join(output,'result.json'),JSON.stringify({journeys,states:results,acceptanceKeys:{committed:lostKey,notCommitted:uncommittedKey},externalProviders:'network-edge doubles; actual adapters and credential/execution paths'},null,2))
 }finally{await browser.close();await h.close()}

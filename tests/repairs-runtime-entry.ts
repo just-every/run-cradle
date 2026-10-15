@@ -15,6 +15,7 @@ export {environmentKeyring} from '../src/domains/connections/crypto.server';
 export {base64url} from '../src/adapters/crypto.server';
 
 export {createCommandRegistry} from '../src/core/registry/commands';
+export {createCommandHttp} from '../src/core/registry/http';
 export {createReplayAccess} from '../src/domains/authority/context.server';
 export {createApplicationEntityRegistry} from '../src/core/app/composition/entities.server';
 

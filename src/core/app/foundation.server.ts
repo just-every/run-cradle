@@ -1,3 +1,4 @@
+import { createGrantCommands } from '../../domains/authority/grant-commands.server'
 import { createRepairDecisionAuthority } from '../../domains/decisions/authority.server'
 import {erasureAdmissionGuard} from '../../domains/lifecycle/file-writes.server'
 import { createNotificationReplay } from '../../domains/channels/replay.server'
@@ -43,6 +44,7 @@ export async function createServerFoundation(platform: Platform, inputs: {
     return {...context,requestId,consistencyToken:request.headers.get('x-cradle-consistency')??undefined}
   }
   const commands=createCommandRegistry(admission)
+  for(const command of createGrantCommands(db,policy))commands.register(command as import('../registry/commands').CommandDefinition<unknown,unknown>)
   const transport={commands,admission,authenticate}
   return {descriptors,entities,policy,admission,inertAdmission,commands,authenticate,http:createCommandHttp(transport),mcp:createMcpTransport(transport)}
 }
