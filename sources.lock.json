@@ -7326,7 +7326,7 @@
       "executable": false
     },
     "src/ui/approvals/decision-review.tsx": {
-      "sha256": "4cb9790786473b0d8b1f6e64feb5902937fc965c223f418612a6d35a6521a0c9",
+      "sha256": "558cbebf8d104cca18e453d26d3b33e461ba050c9610eb9a3e4ad899873d46c7",
       "executable": false
     },
     "src/ui/automations/action-editor.tsx": {
@@ -9443,6 +9443,10 @@
     },
     "tests/releases-sqlite.mjs": {
       "sha256": "965120040b20b2f82784a27d10d8bb5fbb9b55d15167cc249dc78123accc4904",
+      "executable": false
+    },
+    "tests/repair-browser-cancellation.mjs": {
+      "sha256": "96400807c04a2306ccd6dd70654d0daea038e24c676b478326e30b644494f82b",
       "executable": false
     },
     "tests/repair-browser-diagnostics.mjs": {
