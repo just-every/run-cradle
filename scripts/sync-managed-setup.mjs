@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {deploymentSpec} from './delivery/base/spec.mjs';
 import {loadSetupManifest} from './delivery/base/setup-manifest.mjs';
 import {generateProjectDescriptor} from './delivery/base/generators/project.mjs';
+import {managedOwnerDeclaration} from './deployment/declaration.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const check = process.argv.includes('--check');
@@ -28,6 +29,7 @@ const descriptor = {
   setup: {path: setupPath, sha256: createHash('sha256').update(setupBytes).digest('hex')},
 };
 const outputs = [
+  ['deploy-owner.json', json(await managedOwnerDeclaration(root))],
   [setupPath, setupBytes],
   ['management/integration/deployment-spec.json', json(spec)],
   ['rer-project.json', json(descriptor)],

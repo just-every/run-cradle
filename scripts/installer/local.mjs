@@ -54,6 +54,7 @@ export const adapter={...lifecycle,
 export const {install}=adapter;
 export const commandAdapter=createCommandAdapter(adapter,{
  dev:developmentTarget,preview:previewTarget,verify:['pnpm',['run','verify:app']],deploy,portability,
+ deployDeclaration:'deploy-owner.json',
  settings:['.dev.vars','.dev.vars.previous','data/hosting-mail.json'],setup:{manifestFile:'rer-setup.json'},browserModule:'scripts/installer/ui/seed.mjs',product:'Cradle',
  // Local dev identity: the local-only Worker entry, the build output rer build scans
  // for the dev layer, and the one kept end-to-end email-link test.

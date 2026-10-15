@@ -2859,6 +2859,10 @@
       "sha256": "005a5cc7a54dc9ff0b0e6198db9cecae48142c0ffc5cb5941a8a0f1e96d6d890",
       "executable": false
     },
+    "deploy-owner.json": {
+      "sha256": "d8ddf4dff10664c4e45dafbf0c1bf7e030849b880c4258ba9f96dfc126bd8227",
+      "executable": false
+    },
     "deploy-site.json": {
       "sha256": "be979f6ee3b4b8b4f229932817ebe82e71e1f711fbce0fd488cbcb4921dc9e85",
       "executable": false
@@ -3692,7 +3696,7 @@
       "executable": false
     },
     "scripts/deployment/declaration.mjs": {
-      "sha256": "386f351622fe4e86c77e1de6d4cad60e63eac5dd24f1406c59e6dc3ffeaad526",
+      "sha256": "24a89cc2b83b103684a6d2a5dfa0e1d7fa2f991bca61ab27f43d585d91938427",
       "executable": false
     },
     "scripts/deployment/deploy.mjs": {
@@ -3784,7 +3788,7 @@
       "executable": false
     },
     "scripts/installer/local.mjs": {
-      "sha256": "d649a11a2af60ca8f3482fe89caec2cc32ef0ec8b112cbcd5219dd918c816d68",
+      "sha256": "4df45409fb0b1d2dceb8d4ec28aa74f02032fe5ba29a8eba34190d0f5173f7ed",
       "executable": false
     },
     "scripts/installer/owner.mjs": {
@@ -3844,7 +3848,7 @@
       "executable": false
     },
     "scripts/sync-managed-setup.mjs": {
-      "sha256": "bd73144ec7288557402b40ad8bc08787c6b0413d4e9f659a498ccbc397895e20",
+      "sha256": "f7b21c4c8c42073095d8612a84993e769f2520f6abcf81168c5fc14d7c4564ab",
       "executable": false
     },
     "scripts/typescript-loader.mjs": {
