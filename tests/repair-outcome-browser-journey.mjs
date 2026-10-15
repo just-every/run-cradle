@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {quoteApproveAndAgree} from './repair-browser-quote.mjs'
 import {captureRepairFailure} from './repair-browser-diagnostics.mjs'
 import {repairOutcomeFixture} from './repair-outcome-fixture.mjs'
 import {auditAccessibility} from './helpers/accessibility-evidence.mjs'
@@ -31,33 +32,46 @@ export async function browserRepairJourney(browser,width,output){
   assert.equal(new URL(page.url()).pathname,`/app/repairs/${trace.workOrderId}`)
   await page.getByRole('radio',{name:'UI test licensed refrigeration',exact:true}).check()
   await command(page,'repair.assign-contractor',()=>page.getByRole('button',{name:'Select contractor',exact:true}).click())
-  await page.getByLabel('Work item 1',{exact:true}).fill('Restore cooling')
-  await page.getByLabel('Line 1 amount (AUD)',{exact:true}).fill('2000.01')
-  await page.getByLabel('Total (AUD)',{exact:true}).fill('2000.01')
-  await page.getByLabel('Tax is included in this total',{exact:true}).check()
-  await page.getByLabel('Quote expires (UTC)',{exact:true}).fill('2099-01-01T00:00')
-  await page.getByLabel('Offered visit start (UTC, optional)',{exact:true}).fill('2090-01-01T01:00')
-  await page.getByLabel('Offered visit end (UTC, optional)',{exact:true}).fill('2090-01-01T02:00')
-  await page.getByLabel('Original quote evidence',{exact:true}).fill('Supplier offers full cooling repair, tax included, for AUD 2000.01 and the stated visit.')
-  const quote=await command(page,'repair.record-quote',()=>page.getByRole('button',{name:'Record quote evidence',exact:true}).click())
-  trace.quoteId=quote.id
-  const selected=await command(page,'repair.select-quote',()=>page.getByRole('button',{name:/Select exact quote/}).click())
-  trace.decisionId=selected.decision.id
-  await manager.page.goto(h.origin+'/app/approvals')
-  await manager.page.getByRole('link',{name:'Review decision',exact:true}).click()
-  assert.equal(new URL(manager.page.url()).pathname,`/app/approvals/${trace.decisionId}`)
-  await audit(manager.page,'designated-approval')
-  await command(manager.page,'decision.outcome',()=>manager.page.getByRole('button',{name:/^Approve /}).click())
+  Object.assign(trace,await quoteApproveAndAgree({page,manager,h,command,audit}))
+  await page.getByLabel('Provider connection',{exact:true}).selectOption(h.connections.calendar)
+  if(width===390)h.edge.setBooking('refused')
+  const priorBooking=await command(page,'repair.book-visit',()=>page.getByRole('button',{name:'Book visit',exact:true}).click())
+  trace.priorBooking=priorBooking
+  assert.equal((await h.waitAttempt(priorBooking.attemptId)).state,width===390?'refused':'confirmed')
   await page.getByRole('button',{name:'Refresh',exact:true}).click()
-  await page.getByLabel('Contractor agreement evidence',{exact:true}).fill('Contractor confirms the exact offered visit and accepted scope.')
-  await command(page,'repair.record-slot-agreement',()=>page.getByRole('button',{name:'Record contractor agreement',exact:true}).click())
+  const visit=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Contractor visit',exact:true})}).last()
+  await command(page,'repair.reconcile-effect',()=>visit.getByRole('button',{name:'Apply observed receipt',exact:true}).click())
+  if(width===1440){
+   await page.getByLabel('Provider connection',{exact:true}).selectOption(h.connections.calendar)
+   await page.getByLabel('Cancellation reason',{exact:true}).fill('Contractor cannot attend the agreed time; store requests a fresh reviewed appointment.')
+   const cancellation=await command(page,'repair.cancel-visit',()=>page.getByRole('button',{name:'Cancel booked visit',exact:true}).click())
+   trace.cancellation=cancellation
+   assert.equal((await h.waitAttempt(cancellation.attemptId)).state,'confirmed')
+   await page.getByRole('button',{name:'Refresh',exact:true}).click()
+   const cancelled=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Visit cancellation',exact:true})})
+   await command(page,'repair.reconcile-effect',()=>cancelled.getByRole('button',{name:'Apply observed receipt',exact:true}).click())
+  }
+  await page.getByText('Reschedule with a new quote',{exact:true}).click()
+  await page.getByLabel('Work to quote again',{exact:true}).fill('Restore cooling at a newly agreed visit after the original appointment closed.')
+  await page.getByLabel('Rescheduling reason and contractor evidence',{exact:true}).fill('The contractor offers a new appointment. The store requests a fresh exact quote and designated review.')
+  await audit(page,width===1440?'cancelled-reschedule':'refused-reschedule')
+  await command(page,'repair.revise-scope',()=>page.getByRole('button',{name:'Reopen quote review for rescheduling',exact:true}).click())
+  const previous={quoteId:trace.quoteId,decisionId:trace.decisionId}
+  const revised=await h.read(`/api/v1/repairs/${trace.workOrderId}`)
+  assert.equal(revised.stage,'quotes');assert.equal(revised.quotes.find(quote=>quote.id===previous.quoteId).state,'superseded')
+  assert.equal((await h.read(`/api/v1/decisions/${previous.decisionId}/review`,h.managerSession)).decision.state,'stale')
+  Object.assign(trace,await quoteApproveAndAgree({page,manager,h,command,audit,rescheduled:true}))
+  assert.notEqual(trace.quoteId,previous.quoteId);assert.notEqual(trace.decisionId,previous.decisionId)
+  trace.superseded=previous
+  h.edge.setBooking('confirmed')
   await page.getByLabel('Provider connection',{exact:true}).selectOption(h.connections.calendar)
   const booking=await command(page,'repair.book-visit',()=>page.getByRole('button',{name:'Book visit',exact:true}).click())
   trace.booking=booking
+  assert.notEqual(booking.attemptId,priorBooking.attemptId)
   assert.equal((await h.waitAttempt(booking.attemptId)).state,'confirmed')
   await page.getByRole('button',{name:'Refresh',exact:true}).click()
-  const visit=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Contractor visit',exact:true})})
-  await command(page,'repair.reconcile-effect',()=>visit.getByRole('button',{name:'Apply observed receipt',exact:true}).click())
+  const currentVisit=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Contractor visit',exact:true})}).filter({hasText:booking.attemptId})
+  await command(page,'repair.reconcile-effect',()=>currentVisit.getByRole('button',{name:'Apply observed receipt',exact:true}).click())
   await audit(page,'booked-receipt')
   await page.getByLabel('Contractor completion report',{exact:true}).fill('Contractor reports completed cooling repair; store must independently test.')
   const claim=await command(page,'repair.record-completion',()=>page.getByRole('button',{name:'Record contractor completion claim',exact:true}).click())

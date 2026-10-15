@@ -53,6 +53,12 @@ try{
  await audit('repair-accepted-receipt')
  // Alternate: no prior commit. Keep original key while authority and the claim change.
  await h.db.prepare("UPDATE authority_grants SET state='active',version=? WHERE id=?").bind(grant.version,grant.id).run()
+ await page.getByRole('button',{name:'Review current completion claim',exact:true}).click()
+ await page.getByRole('heading',{name:'Check the physical repair'}).waitFor()
+ assert.equal(await page.getByLabel('I checked the physical result against this completion claim.').isChecked(),false)
+ assert.equal(await page.getByLabel('Your observation',{exact:true}).inputValue(),'')
+ assert.equal(await page.getByRole('button',{name:'Accept physical repair',exact:true}).isDisabled(),true)
+ await page.screenshot({path:path.join(output,'fresh-review-after-committed-loss.png'),fullPage:true})
  const alternate=await flow.quoted('200000');await flow.agreement(alternate);const booked=await flow.book(alternate);await h.waitAttempt(booked.value.attemptId);await flow.claim(alternate,booked.value.visitId)
  await page.goto(h.origin+`/app/repairs/${alternate.workId}`);await page.getByRole('heading',{name:'Check the physical repair'}).waitFor()
  await page.getByLabel('The repair works',{exact:true}).check();await page.getByLabel('Your observation',{exact:true}).fill('Initial inspection before revised report');await page.getByLabel('I checked the physical result against this completion claim.').check()
