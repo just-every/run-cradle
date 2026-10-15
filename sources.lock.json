@@ -4910,7 +4910,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-detail-page.tsx": {
-      "sha256": "ad09727d68bc3c7a50bc91c70a7c7d4ce42d461f12ffa6b6d7d08792178a896e",
+      "sha256": "3acf62ed498558bfc933643e7649005fc88281e30c103e2cb8b9199813a82161",
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-grid-controls.tsx": {
@@ -7350,7 +7350,7 @@
       "executable": false
     },
     "src/ui/launch/campaign-custom-fields.tsx": {
-      "sha256": "48a78fa2f06074318914d0a0418e5948dfce7f465433db603dd97b8ce2353f31",
+      "sha256": "678712bd98d6f16aa8a5f21c23dae7aa176d91ff037cca86b938f23f43e2b58d",
       "executable": false
     },
     "src/ui/launch/create-campaign.tsx": {
@@ -7370,7 +7370,7 @@
       "executable": false
     },
     "src/ui/launch/launch-operator.css": {
-      "sha256": "a9d1d68a5d853bb8c5892d726ea873237c9267b70cbcb583c1ead4293eba3c98",
+      "sha256": "223a22958e7807aa700b72f564b51332a556177fec78df258b15b1d4703d0a76",
       "executable": false
     },
     "src/ui/launch/owner-picker.tsx": {
@@ -9494,7 +9494,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "c42c5dd23d15fe155b941930a1602b06d1d175be6e51aa700683e79c58416bab",
+      "sha256": "d53a3f383bb5bc4d934426055f42d4eb90e273e211668894dfdd6abb02285654",
       "executable": false
     },
     "tests/ui-launch-optional-browser.mjs": {

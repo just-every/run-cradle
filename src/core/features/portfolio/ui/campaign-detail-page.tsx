@@ -341,9 +341,10 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
                   </dd>
                 </div>
               </dl>
-            </SectionCard>
-            <SectionCard title="Custom fields" className="launch-custom-fields">
-              <CampaignCustomFields campaign={campaign} fields={detail.resource.data.customFields} onSaved={detail.retry} />
+              <section className="launch-custom-fields" aria-labelledby="campaign-custom-fields-title">
+                <h3 id="campaign-custom-fields-title">Custom fields</h3>
+                <CampaignCustomFields campaign={campaign} fields={detail.resource.data.customFields} onSaved={detail.retry} />
+              </section>
             </SectionCard>
             <SectionCard title="Deliverables" className="portfolio-priority-work">
               <RelatedRecords kind="deliverable" campaignId={campaign.id} records={deliverables} onChanged={detail.retry} />

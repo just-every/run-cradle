@@ -3,6 +3,7 @@ import { LAUNCH_APP_ID, launchEntities } from '../../apps/launch/contracts'
 import type { CampaignCustomField } from '../../core/features/portfolio/ui/portfolio-types'
 import { useCommand } from '../shared/api'
 import { CommandFeedback } from '../shared/presentation'
+import './launch-operator.css'
 
 type Value = CampaignCustomField['value']
 const shown = (value: Value) => value === null ? 'Not set' : Array.isArray(value) ? value.join(', ') || 'Not set' : typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value
