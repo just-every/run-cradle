@@ -8,6 +8,7 @@ import {prepareFixture} from './helpers/records-import-fixture.mjs'
 import {id} from './helpers/base-exit-fixture.mjs'
 import {effectCounts,csvFiles,adoptUpload,adopt,reviewRecordedSource,jobAction,jobStatus,finish,armTable,drain,rekeyedPortable} from './helpers/import-effects.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
+import {LAUNCH_APP_ID,launchEntities} from '../src/apps/launch/contracts.ts'
 
 contract('RECORDS-005 AUTO-USER-001','import job writes fire no automation, notification, mail or webhook for CSV, recorded API and native JSON sources across restart, rollback and undo; owner edits still fire once',async()=>{
  let edge,h
@@ -16,6 +17,14 @@ contract('RECORDS-005 AUTO-USER-001','import job writes fire no automation, noti
   edge=await automationNetworkEdge()
   h=await userAutomationRuntime(18961,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
    EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})
+  // The full scheduler stays active; independent workspace schedules are disabled
+  // through the owner's command so only import and record-trigger effects are measured.
+  const schedules=(await h.db.prepare("SELECT id,version FROM automations WHERE trigger_type='schedule' AND enabled=1").all()).results
+  for(const schedule of schedules){
+   const disabled=(await h.request('/api/v1/commands/launch.automation.disable',{method:'POST',body:{commandId:createUlid(),
+    expected:[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.automation,recordId:schedule.id},version:schedule.version}],input:{id:schedule.id}}})).data
+   assert.equal(disabled.state,'committed');assert.equal(disabled.value.enabled,false)
+  }
   /** Each job step is followed by the scheduled handler, so captured work would have run. */
   const step=async(name,action)=>{
    const before=await effectCounts(h,edge),value=await action();await drain(h)
