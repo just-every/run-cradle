@@ -7705,7 +7705,7 @@
       "executable": false
     },
     "src/ui/records/base-import/correspondence-file.tsx": {
-      "sha256": "73b494e94f94e1ca42bffa46185e4dbd3ea98d04f986d80ee8df7da7157858dc",
+      "sha256": "4b5697d8b2127c95f7652501d56c2e338b2d69946d6975721dc644a6e52d3a3b",
       "executable": false
     },
     "src/ui/records/base-import/correspondence-review.tsx": {
@@ -7741,11 +7741,11 @@
       "executable": false
     },
     "src/ui/records/base-import/mapping-file.tsx": {
-      "sha256": "1702e5f4cf82a7dde372c6c5131bb196f93fcf26bb4cc7e9ba8dc56ec2ec5933",
+      "sha256": "1fa98a20afe9ad95731b7326de69508328faa4aa745faef1991d4616034d488b",
       "executable": false
     },
     "src/ui/records/base-import/preview.tsx": {
-      "sha256": "9afb52162769d8f6e8eb950a43df24ba946ce58ddab07f784935b7636e2821e5",
+      "sha256": "9021cb80180844ffe42d62d26c4170721994a5c3fedae914f8ebc2397d142d5a",
       "executable": false
     },
     "src/ui/records/base-import/projection-editor.tsx": {
