@@ -8929,7 +8929,7 @@
       "executable": false
     },
     "tests/helpers/user-schedule-browser.mjs": {
-      "sha256": "5649f7fdc31bbe66a922fe382519d8de41a22a56db16e34aadfdac8049c44d47",
+      "sha256": "b0713ad06736e513a1cb11505c6528f82bb91feb29c0701d87bfd18f85adf8c7",
       "executable": false
     },
     "tests/helpers/versioned-session-proof.mjs": {

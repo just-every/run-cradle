@@ -19,12 +19,12 @@ export async function userScheduleBrowser(page,h,journey,width) {
  const form=page.getByRole('form',{name:'Scheduled automation definition'})
  await form.getByLabel('Scheduled automation name',{exact:true}).fill(automationName)
  if(width===390){
-  await form.getByLabel('Repeat',{exact:true}).selectOption('weekly')
+  await form.getByLabel(/^Repeat/).selectOption('weekly')
   const weekday=new Date(`${local.year}-${local.month}-${local.day}T12:00:00Z`).getUTCDay()
-  await form.getByLabel('Day',{exact:true}).selectOption(String(weekday))
+  await form.getByLabel(/^Day/).selectOption(String(weekday))
  }
  await form.getByLabel(/^Time ·/).fill(`${local.hour}:${local.minute}`)
- await form.getByLabel('Launch campaign',{exact:true}).selectOption({label:campaignName})
+ await form.getByLabel(/^Launch campaign/).selectOption({label:campaignName})
  await form.getByLabel('Message',{exact:true}).fill(`Activity from ${automationName}`)
  const saved=await journey.command(form.getByRole('button',{name:'Save scheduled automation',exact:true}),'launch.automation.save')
  await page.getByRole('heading',{name:automationName,exact:true}).waitFor()
