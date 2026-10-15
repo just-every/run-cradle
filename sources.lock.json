@@ -7370,7 +7370,7 @@
       "executable": false
     },
     "src/ui/launch/launch-operator.css": {
-      "sha256": "2acab5984d5643e34a447ad441cad08fb54bcbb7a5c2b5a35c87f02fb42a842d",
+      "sha256": "a9d1d68a5d853bb8c5892d726ea873237c9267b70cbcb583c1ead4293eba3c98",
       "executable": false
     },
     "src/ui/launch/owner-picker.tsx": {

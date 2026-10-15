@@ -29,4 +29,9 @@
 @media (max-width: 767px) {
   .launch-grid-selection, .launch-grid-actions { padding-inline: 16px; }
   .launch-bulk-form > .cr-button { flex: 1 1 100%; }
+  .launch-import-rows thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .launch-import-rows, .launch-import-rows tbody, .launch-import-rows tr, .launch-import-rows td { display: block; width: 100%; }
+  .launch-import-rows tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .launch-import-rows td { padding: 2px 0; border: 0; overflow-wrap: anywhere; }
+  .launch-import-rows td:first-child::before { content: 'CSV row '; }
 }
