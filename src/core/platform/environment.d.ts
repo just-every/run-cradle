@@ -2,6 +2,8 @@ export {}
 declare global {
   namespace Cloudflare {
     interface Env {
+      RER_DEMO?: string
+      RER_DEMO_EXPIRES?: string
       RER_MANAGEMENT_ORIGIN?: string
       RER_INSTALLATION_ID?: string
       RER_OWNER_CLAIM_ISSUER?: string

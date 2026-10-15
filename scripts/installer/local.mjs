@@ -27,7 +27,7 @@ const lifecycle=localInstaller({
  },
  secrets:{keepExisting:true,originKey:'APP_ORIGIN',values:({origin})=>({AUTH_LOCAL:'true',AUTH_ORIGIN:origin,APP_ORIGIN:origin,MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test'})},
  build:['pnpm',['run','build:app']],
- migrate:['pnpm',['run','db:migrate:local']],
+ migrate:({demo})=>['pnpm',['run','db:migrate:local',...(demo?['--persist-to',demo.state]:[])]],
  start:previewTarget,
  owner:claimOwner,signIn:{emailKey:'OWNER_EMAIL',returnTo:'/setup'},
  async hosting(context){
@@ -46,7 +46,7 @@ const lifecycle=localInstaller({
  },
 });
 export const adapter={...lifecycle,
- localPrerequisites:async({root,vars,email})=>vars.AUTH_LOCAL==='true'&&vars.MAIL_PROVIDER==='development'&&Boolean(vars.SESSION_SECRET)&&await operatorPrerequisites(root,email),
+ localPrerequisites:async({root,vars,email,demo})=>vars.AUTH_LOCAL==='true'&&vars.MAIL_PROVIDER==='development'&&Boolean(vars.SESSION_SECRET)&&(demo||await operatorPrerequisites(root,email)),
  install:(root,input,store,onApp,signal)=>input.target==='remote'
   ? lifecycle.install(root,input,store,onApp,signal)
   : installOperator(root,input,store,onApp,signal,lifecycle.hooks),

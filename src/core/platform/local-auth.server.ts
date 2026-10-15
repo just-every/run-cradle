@@ -1,3 +1,4 @@
+import { demoBindings } from '../../demo/bindings.server'
 import type { PlatformBindings } from './bindings'
 import { isLoopbackHostname } from '../shared/loopback'
 
@@ -12,6 +13,7 @@ export function localMailEnabled(env: PlatformBindings): boolean {
 
 /** The managed command chooses a local origin; hosted bindings remain authoritative. */
 export function localRuntimeBindings(env: PlatformBindings): PlatformBindings {
+  env = demoBindings(env)
   if (!localMailEnabled(env) || !env.RER_DEV_ORIGIN) return env
   try {
     const origin = new URL(env.RER_DEV_ORIGIN)
@@ -19,3 +21,6 @@ export function localRuntimeBindings(env: PlatformBindings): PlatformBindings {
     return { ...env, APP_ORIGIN: origin.origin, AUTH_ORIGIN: origin.origin }
   } catch { return env }
 }
+
+/** Demo mail is captured even on the hosted HTTPS origin. */
+export const capturedMailEnabled = (env: PlatformBindings) => env.RER_DEMO === '1' || localMailEnabled(env)

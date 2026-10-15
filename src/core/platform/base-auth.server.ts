@@ -1,7 +1,7 @@
 import { createOperatorAuth, createAuthHandler } from '../../../vendor/base/modules/operator-auth/index.mjs'
 import { createMailSender } from '../../../vendor/base/modules/mail/index.mjs'
 import { createD1DevelopmentOutbox } from '../../../vendor/base/modules/mail/src/development/index.mjs'
-import { localMailEnabled } from './local-auth.server'
+import { localMailEnabled, capturedMailEnabled } from './local-auth.server'
 import type { PlatformBindings } from './bindings'
 import type { AuthConfig, OperatorAuth } from '../../../vendor/base/modules/operator-auth/index.mjs'
 import { ApiError } from '../registry/errors'
@@ -20,8 +20,8 @@ export function baseAuthConfig(env: PlatformBindings): AuthConfig {
 /** Base owns credentials, bootstrap, mail and session admission. */
 export function createBaseAuth(env: PlatformBindings): OperatorAuth {
   const config = baseAuthConfig(env)
-  if (env.MAIL_PROVIDER === 'development' && !config.local) throw new ApiError('unconfigured', 'Development mail requires explicit local configuration.')
-  const mailSender = env.MAIL_PROVIDER === 'development' && config.local
+  if (env.MAIL_PROVIDER === 'development' && !capturedMailEnabled(env)) throw new ApiError('unconfigured', 'Development mail requires explicit local configuration.')
+  const mailSender = env.MAIL_PROVIDER === 'development' && capturedMailEnabled(env)
     ? createMailSender({ provider: 'development', mode: 'development' }, { outbox: createD1DevelopmentOutbox({ db: env.DB }) })
     : env.MAIL_PROVIDER && env.MAIL_PROVIDER_API_KEY
     ? createMailSender({ provider: env.MAIL_PROVIDER, mode: 'production', apiKey: env.MAIL_PROVIDER_API_KEY }) : undefined

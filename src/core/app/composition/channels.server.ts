@@ -1,5 +1,5 @@
 import {createLocalChannelDelivery} from '../../../domains/channels/local-delivery.server'
-import {localMailEnabled} from '../../platform/local-auth.server'
+import {capturedMailEnabled} from '../../platform/local-auth.server'
 import seed from '../../../../seed.json'
 import { measureChannelLimits } from '../../../domains/channels/limits.server'
 import { ApiError } from '../../registry/errors'
@@ -56,6 +56,6 @@ export function createChannelsComposition(platform: Platform, foundation: Server
     if (!row) throw new ApiError('unconfigured', 'The configured notification sender connection is unavailable.')
     return { ...row, from: env.MAIL_FROM, releaseId: env.INSTALLATION_RELEASE_ID }
   } })
-  const delivery = localMailEnabled(platform.bindings)&&platform.bindings.MAIL_PROVIDER==='development'?createLocalChannelDelivery(platform.bindings,foundation.admission):createChannelDelivery(db, foundation.admission, mail)
+  const delivery = capturedMailEnabled(platform.bindings)&&platform.bindings.MAIL_PROVIDER==='development'?createLocalChannelDelivery(platform.bindings,foundation.admission):createChannelDelivery(db, foundation.admission, mail)
   return { ...services, configuration, http, delivery }
 }
