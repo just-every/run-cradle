@@ -2,9 +2,17 @@ import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {repairOutcomeFixture} from './repair-outcome-fixture.mjs'
 import {repairFlow} from './repair-outcome-flow.mjs'
+import {manualAdmission} from './repair-outcome-manual.mjs'
+import {historicalReports,manualControls,contractorSelection} from './repair-outcome-history-controls.mjs'
+import {manualQuotes,quoteFaults} from './repair-outcome-quote-checks.mjs'
+import {receiptAuthority} from './repair-outcome-grant-checks.mjs'
+import {invoiceConstraints} from './repair-outcome-invoice-checks.mjs'
 test('mounted emitted repair journey enforces exact approval, grants, independent store acceptance and one accounting receipt',async()=>{
  const h=await repairOutcomeFixture(),flow=repairFlow(h)
  try{
+  const manual=await manualAdmission(h)
+  await manualControls(h,await historicalReports(h))
+  await manualQuotes(h,await contractorSelection(h,manual))
   const issued=await h.issuedGrant()
   for(const minor of ['199999','200000']){const routine=await flow.quoted(minor);assert.equal(routine.decision,null);await flow.agreement(routine);await h.db.prepare("UPDATE authority_grants SET state='revoked' WHERE id=?").bind(issued.grant.id).run();await flow.book(routine,{status:403});await h.db.prepare("UPDATE authority_grants SET state='active' WHERE id=?").bind(issued.grant.id).run()}
   assert.equal(h.edge.calls.length,0,'Threshold never grants provider authority')
@@ -34,6 +42,7 @@ test('mounted emitted repair journey enforces exact approval, grants, independen
   assert.equal(repaired.accounting.state,'handed_off');assert.ok(repaired.accounting.receiptId);assert.ok(repaired.accounting.externalId)
   assert.equal(h.edge.invoices.size,1);assert.equal(h.edge.calls.filter(c=>c.method==='POST'||c.method==='PUT').length,requestsBefore)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM repair_handoffs WHERE work_order_id=?').bind(q.workId).first()).n,1)
+  await receiptAuthority(h,issued.grant,repaired.accounting.receiptId)
  }finally{await h.close()}
 })
 test('mounted repair refuses stale business terms, resolves unknown original booking and distinguishes cancellation refusal',async()=>{
@@ -41,6 +50,7 @@ test('mounted repair refuses stale business terms, resolves unknown original boo
  try{
   const {spec}=await h.issuedGrant()
   await h.post('grant.prepare',{spec:{...spec,providerScopes:[{...spec.providerScopes[0],fields:[h.id()]}]}},[],{status:403})
+  await quoteFaults(h,flow)
   const q=await flow.quoted();await flow.approve(q);await flow.agreement(q)
   await h.db.prepare('UPDATE repair_contractors SET version=version+1 WHERE id=?').bind(q.contractor.ref.recordId).run()
   await flow.book(q,{status:409});assert.equal(h.edge.calls.length,0)
@@ -79,6 +89,7 @@ test('permitted routine booking and failed or uncertain accounting keep original
    await flow.claim(q,booking.value.visitId);const acceptance=await flow.acceptance(q);await h.post('repair.store-acceptance',acceptance.input,acceptance.expected)
    const mismatched=await flow.invoice(q,{payeeId:'WRONG-SUPPLIER'})
    const before=h.edge.calls.length;await flow.handoff(q,mismatched,{status:400});assert.equal(h.edge.calls.length,before)
+   await invoiceConstraints(h,flow,q,mismatched)
    const invoice=await flow.invoice(q),duplicateEvidence=await h.source('Same supplier invoice delivered a second time'),workOrder=await h.ref('workOrders',q.workId)
    const duplicate=await h.post('repair.record-invoice',{...invoice.input,workOrder,sourceId:duplicateEvidence.sourceId,evidence:[duplicateEvidence]},[workOrder],{status:400});assert.equal(duplicate.body.error.code,'validation');assert.equal((await h.db.prepare('SELECT count(*) n FROM repair_invoices WHERE payee_id=? AND invoice_number=?').bind(invoice.input.payeeId,invoice.input.invoiceNumber).first()).n,1)
    h.edge.setAccounting(mode)
