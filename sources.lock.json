@@ -3218,7 +3218,7 @@
       "executable": false
     },
     "packaging.json": {
-      "sha256": "cd52a8ca14ea83c394da0f9e1755869cb462057c38ceada915b734bcbb907dbe",
+      "sha256": "caac35d3672d7b8d228246bfd445baaf3e97dc61662126156db8950d905a89a8",
       "executable": false
     },
     "PLAN.md": {
@@ -3278,7 +3278,7 @@
       "executable": false
     },
     "rer-project.json": {
-      "sha256": "81e7effd4e206aa795eebda71361b5d387fdd369bae52e97c876f9d980742588",
+      "sha256": "a730e9908602ab95a31fc7f9ebc9ddb6d15913a85c64aacb930e0e05ee82c612",
       "executable": false
     },
     "rer-setup-managed.json": {

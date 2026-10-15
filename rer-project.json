@@ -9,9 +9,9 @@
     "artifactFile": "rer-worker-artifact.json"
   },
   "operations": {
-    "setup": "pnpm install --frozen-lockfile && pnpm exec rer install && PLAYWRIGHT_SKIP_BROWSER_GC=1 pnpm exec playwright install --with-deps chromium",
+    "setup": "pnpm install --frozen-lockfile && pnpm exec rer install",
     "build": "pnpm exec rer build",
-    "verify": "pnpm exec rer verify",
+    "verify": "pnpm exec rer check --profile first-party && pnpm source:check && pnpm check:deployment-spec",
     "artifact": "node scripts/build-delivery-artifact.mjs",
     "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly."
   },
