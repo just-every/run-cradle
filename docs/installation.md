@@ -1,63 +1,129 @@
 # Install Cradle
 
-The maintained public source is [just-every/run-cradle](https://github.com/just-every/run-cradle).
-Start with the same three commands as the README:
+Start with [the quick install guide](install.md). **Node 22 or later is required**:
+download and run your computer's installer from [nodejs.org](https://nodejs.org/en/download),
+then open a new terminal and check `node --version`. npm comes with Node.
+Cradle uses **rer 0.2.19**. Rer prepares the pinned project tools and pnpm after
+Node is installed; the curl installer also needs Node first.
 
 ```sh
-npm install -g @runeditrun/rer
+npm install -g @runeditrun/rer@0.2.19
 git clone https://github.com/just-every/run-cradle.git cradle
 cd cradle && rer dev
 ```
 
-Rer installs the pinned Node and pnpm; neither is a separate prerequisite.
-`rer dev` installs dependencies and prepares a local owner automatically. Open the
-printed `RER_OPEN` URL and finish `/setup`. Local `rer setup` is optional after
-zero-setup `rer dev`; `rer-setup.json` declares owner, workspace and provider inputs.
-Setup retains existing private bytes and owners. `rer dev --login` uses the local
-outbox instead of development identity.
+The first `rer dev` installs dependencies, prepares a local owner and starts the
+app. Open its `RER_OPEN` URL and finish `/setup`. Treat the URL as a password.
+Local `rer setup` is optional; see the [README](../README.md#run-it-on-your-computer)
+to choose owner details before the first launch. `rer dev --login` uses the local
+email outbox instead of the development sign-in. No email is sent locally.
 
-The installer and Base's sign-in confirmation page wear Cradle's own look through one
-file, `public/rer-theme.css` (tokens from the landing page and the fonts and mark the
-app already serves). It is declared as `theme` in `scripts/installer/seed.mjs` and as
-`branding.theme` in `src/core/platform/base-auth.server.ts`, and the Worker lists
-`/rer-theme.css` among its static paths. Cradle's own fonts stay declared in
-`src/core/app/styles.css`; no Base default replaces them. Beyond those tokens, the
-installer's browser module (`scripts/installer/ui/seed.mjs`) adds Cradle's layout: the
-forest Manual setup card, the ribbon behind the lower third (`scripts/installer/ui/background.svg`)
-and the footer. It adds a stylesheet and decorative nodes only; Base's copies stay unchanged.
+## Host it online
 
-The application uses DB (D1), FILES (R2), WORK_QUEUE and the INSTALLATION Durable
-Object. Canonical local persistence is `.wrangler/state`; private local settings
-are `.dev.vars` (0600). Private hosting email inputs are `data/hosting-mail.json`.
-Builds exclude private settings and restore them exactly. Ambiguous legacy data
-placement is refused for explicit recovery; never delete it to make setup pass.
+You need your Cloudflare account ID and an API token permitted to provision and
+manage this app's Worker, D1 database, R2 bucket and queue. You also need a Resend
+or SendGrid API key and a sender address verified with that provider.
 
-Hosted deployment requires the owner's Cloudflare account/token, OWNER_EMAIL,
-SESSION_SECRET, CONNECTION_ENCRYPTION_KEY, hosted MAIL_FROM,
-MAIL_PROVIDER (SendGrid or Resend) and MAIL_PROVIDER_API_KEY. Other provider secrets
-are optional and are named in rer-setup.json and packaging.json. A trusted HTTPS
-egress relay with matching EGRESS_RELAY_SECRET is required for webhook and Slack
-actions. Connections and automation approvals are explicit. No local outbox is
-served remotely. At deploy, rer automatically claims the hosted owner designated
-by `OWNER_EMAIL` after upload and health verification. Open `/signin` and sign in
-using the emailed link. There is no manual setup-token step. A recorded existing
-owner is kept on later deployments.
+Create a file outside the repository, owned by your user with permissions 0600.
+The example below keeps it in your home directory. Create the file privately
+before opening it in your text editor:
 
-`rer deploy --dry-run` builds and validates without provider
-calls. `rer deploy --environment production` provisions deterministic
-resources, validates the immutable migration ledger, packages Worker/assets,
-applies migrations, publishes and checks health. It records `.rer/deploy` receipts.
-Only run this when hosting is authorized. The signed managed owner-claim and
-editor paths use the declared installation issuer/origin/key ring and native
-current owner authority. Local proof does not establish hosted management or
-real provider acceptance.
+```sh
+umask 077
+touch "$HOME/cradle-production.env"
+chmod 600 "$HOME/cradle-production.env"
+```
 
-Use `rer describe`, `doctor`, and `check --profile first-party`
-for command capabilities, local diagnostics and structural checks. See
-installation-archives.md for atomic data movement and restore approval policy.
+Put these settings in the file, replacing every example value with your own:
 
-For an update, preserve customisations and merge source changes, run `rer install`
-and `rer verify`, then deploy when authorized. Removal is
-`rer deploy --environment production --remove --yes`: this deletes the Worker and
-recorded D1, R2 and queue resources, including their data, and reads them back as
-gone. Keep `.rer/deploy` receipts for update and removal.
+```text
+CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
+CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
+OWNER_EMAIL=owner@example.com
+MAIL_PROVIDER=resend
+MAIL_FROM=cradle@example.com
+MAIL_PROVIDER_API_KEY=your-email-provider-api-key
+```
+
+Use `MAIL_PROVIDER=sendgrid` if that is your provider. The file contains one
+`KEY=VALUE` per line, without `export` or spaces around `=`. Blank lines and `#`
+comments are allowed. It must be a regular file, not a symlink; keep it out of git.
+Values in this file take precedence over values in your shell environment.
+
+**Always set `OWNER_EMAIL` to an address you can receive mail at.** Deploy does
+not ask setup questions. Without this setting, a new deployment can copy the local
+trial owner, `owner@cradle.test`, which cannot receive sign-in email. Local
+`.dev.vars` is for local use; do not copy it into the hosting file.
+
+The app also requires `SESSION_SECRET` and `CONNECTION_ENCRYPTION_KEY`. Rer
+creates fresh values for missing generated secrets on a new deployment, so you
+can leave them out of the file. It also creates a one-time `SETUP_TOKEN`, claims
+the hosted owner after health verification, and removes that token. There is no
+manual setup-token step. Existing hosted secrets and owner are preserved on
+repeat deploys; editing the file alone does not rotate them or change that owner.
+
+Run from your Cradle checkout:
+
+```sh
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --dry-run
+rer deploy --environment production --env-file "$HOME/cradle-production.env"
+```
+
+Dry-run builds and validates locally without provider calls. Deployment provisions
+the resources, applies migrations, uploads the Worker and assets, checks health
+and claims the owner. It saves the deployment records under `.rer/deploy`; keep
+these with the checkout. The application uses D1 for records, R2 for files, a queue
+for background jobs and an Installation Durable Object for coordination.
+
+`production` is the default environment. You can choose another environment name;
+use that same name and its credentials for subsequent deploys, sign-in and removal.
+A public-main push deploys the marketing site, not your hosted workspace.
+
+## Sign in to your hosted workspace
+
+Open `/signin` on the hosted URL, enter your owner email, and confirm the emailed
+link. Hosted use requires a real mail provider; the local outbox is not served.
+
+If mail is unavailable or the owner email is wrong, use rer 0.2.19 from the checkout
+that deployed this environment, with the same Cloudflare credentials:
+
+```sh
+rer signin --environment production --env-file "$HOME/cradle-production.env"
+```
+
+Rer prints a link once and does not save it. Open it within 15 minutes; it works
+once, only for the recorded owner, and its use appears in the audit log. Treat it
+as a password. Once signed in, the owner can correct their email in Settings.
+This needs a completed deployment and the owner sign-in database migration; if rer
+reports that migration missing, update Cradle and deploy before trying again.
+
+## Optional connections
+
+Webhook and Slack actions need a trusted HTTPS relay with `EGRESS_RELAY_URL` and
+a matching `EGRESS_RELAY_SECRET`. Other service credentials are optional; see
+`rer-setup.json` for their names. Connect and approve each service in the workspace
+before use. Ordinary records work needs no AI provider.
+
+The setup flow can save hosted mail answers in private `data/hosting-mail.json`
+while keeping local email in the outbox. The direct deploy commands above read
+your shell environment or `--env-file`; you do not need to create or edit that
+JSON file for this path.
+
+## Update or remove
+
+Preserve customisations and merge source updates, run `rer install` and
+`rer verify`, then deploy with the same environment and private file.
+Use `rer describe`, `rer doctor` and `rer check --profile first-party` for command
+help, local diagnostics and structural checks. [Installation archives](installation-archives.md)
+explains data movement and what needs approval after restore.
+
+To delete your hosted installation **and its data**, save any exports you need
+first, then run:
+
+```sh
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --remove --yes
+```
+
+`rer deploy --remove --yes` defaults to production. Removal deletes the Worker
+and recorded storage and queue resources, including their data, and checks that
+they are gone. Keep `.rer/deploy` so rer can identify the resources it created.

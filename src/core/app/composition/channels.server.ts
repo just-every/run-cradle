@@ -36,7 +36,7 @@ export function createChannelsComposition(platform: Platform, foundation: Server
     },
   })
   const dependencies = { db, policy: foundation.policy, configuration }
-  const services = registerChannelCommands(foundation.commands, dependencies,async(ctx,ref)=>{
+  const access: Parameters<typeof registerChannelCommands>[2] = async(ctx,ref)=>{
     if(!ref.subjectId||!ref.subjectType)return false
     try{
       const scope=await foundation.policy.scope(ctx,{appId:ref.appId,entityId:ref.subjectType,purpose:'read'})
@@ -47,8 +47,9 @@ export function createChannelsComposition(platform: Platform, foundation: Server
       return !!await db.prepare(`SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${scope.rowPredicate.sql})`)
        .bind(ref.subjectId,...scope.rowPredicate.values).first()
     }catch{return false}
-  })
-  const http = createChannelHttp({ ...dependencies, commands: foundation.commands, authenticate: request => foundation.authenticate(request, 'http', createUlid()) })
+  }
+  const services = registerChannelCommands(foundation.commands, dependencies,access)
+  const http = createChannelHttp({ ...dependencies, access, commands: foundation.commands, authenticate: request => foundation.authenticate(request, 'http', createUlid()) })
   const mail = createChannelMailBridge({ authority: providers.notificationAuthority, execution: providers.execution, async connection() {
     const env = platform.bindings
     if (!env.NOTIFICATION_MAIL_CONNECTION_ID || !env.MAIL_FROM || !env.INSTALLATION_RELEASE_ID) throw new ApiError('unconfigured', 'Notification mail requires its explicit connection, sender and installation release.')

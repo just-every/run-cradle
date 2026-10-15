@@ -33,9 +33,9 @@ export type BudgetReconciliation={reservationId:string;grantId:string;unit:strin
  * Other actions keep their reservations; any resulting overrun remains visible and blocks new admission. */
 export const reconcileReleasedReservation=async(db:D1Database,id:string,actual:string,now:number)=>{
  const row=await db.prepare('SELECT r.*,b.ceiling,b.consumed,b.reserved,b.version AS budget_version FROM authority_reservations r JOIN authority_budgets b ON b.grant_id=r.grant_id AND b.unit=r.unit WHERE r.id=?').bind(id).first<{grant_id:string;unit:string;amount:string;state:string;ceiling:string;consumed:string;reserved:string;budget_version:number}>()
- if(!row||row.state!=='released')throw new AuthorityError('version_conflict','Released reservation changed before readback reconciliation.',409)
+ if(!row||row.state!=='released')throw new AuthorityError('version_conflict','Released reservation changed before evidence reconciliation.',409)
  const actualN=canonicalInteger(actual)
- if(actualN>canonicalInteger(row.amount))throw new AuthorityError('budget_exhausted','Readback settlement exceeds the original admitted amount.',409)
+ if(actualN>canonicalInteger(row.amount))throw new AuthorityError('budget_exhausted','Evidence settlement exceeds the original admitted amount.',409)
  const reservation=trustedPredicate("id=? AND state='released' AND grant_id=? AND unit=? AND amount=?",[id,row.grant_id,row.unit,row.amount])
  const guards=[trustedPredicate(`EXISTS(SELECT 1 FROM authority_reservations WHERE ${reservation.sql})`,reservation.values)],mutations:SqlMutation[]=[]
  if(actualN===0n)return {guards,mutations,reconciliation:null}

@@ -31,7 +31,7 @@
 
 <p align="center">
   <img src=".github/assets/media/screen-3.webp" width="800" alt="Cradle's New task form with a task typed, a choice of linked projects, priority and due date"><br>
-  <sub>And as a form anyone can fill in.</sub>
+  <sub>And as a form people can fill in after signing in with permission.</sub>
 </p>
 
 # Cradle
@@ -42,17 +42,21 @@ owner-controlled editor. Public source: [just-every/run-cradle](https://github.c
 
 ## Run it on your computer
 
-Install the `rer` command once, clone Cradle, and start it:
+Install **Node 22 or later** first: download the installer for your computer from
+[nodejs.org](https://nodejs.org/en/download), run it, then open a new terminal.
+Check `node --version` shows v22 or later; npm comes with Node.
+
+Install the `rer` command (Cradle uses **rer 0.2.19**), clone Cradle, and start it:
 
 ```sh
-npm install -g @runeditrun/rer
+npm install -g @runeditrun/rer@0.2.19
 git clone https://github.com/just-every/run-cradle.git cradle
 cd cradle && rer dev
 ```
 
-Rer installs the pinned Node and pnpm for you; neither needs a separate install
-or a particular version beforehand.
-`curl -fsSL https://runeditrun.com/install.sh | sh` installs the command without npm.
+Rer prepares the pinned project tools and pnpm after Node is installed.
+`curl -fsSL https://runeditrun.com/install.sh | sh` is an alternative installer
+for the command; it also requires Node first.
 
 The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
 (`owner@cradle.test`), applies the migrations, starts the app and prints
@@ -132,27 +136,45 @@ source, dependencies, exports and deployment receipts survive.
 
 ## Build and host
 
+Hosting uses your Cloudflare account and Resend or SendGrid for email. Before
+deploying, create an owner-only file outside this checkout, following the
+[complete hosting instructions](docs/installation.md#host-it-online). Set
+`OWNER_EMAIL` to an address you can receive mail at, and supply `MAIL_PROVIDER`,
+`MAIL_FROM` and `MAIL_PROVIDER_API_KEY`. Deploy does not ask setup questions.
+Always pass this file: otherwise a new deployment may copy the local trial owner,
+`owner@cradle.test`, which cannot receive sign-in email.
+
 ```sh
-rer build
-rer deploy --dry-run
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --dry-run
+rer deploy --environment production --env-file "$HOME/cradle-production.env"
 ```
 
-Dry-run validates the real owner-account artifact and makes no provider calls.
-An authorized deployment uses `rer deploy --environment production`,
-with the declared Cloudflare account, hosted email and private inputs. Provisioning,
-immutable migrations, Worker/assets upload and health use Base deploy-kit.
-Set `OWNER_EMAIL` to the hosted owner’s email address in your private deployment
-configuration. After the healthy upload, rer automatically claims that owner;
-open `/signin` and sign in using the emailed link. There is no manual setup-token
-step. A repeat deploy keeps the existing owner.
-Provider configuration is described in [installation](docs/installation.md).
+Dry-run builds and validates locally without provider calls. Deployment creates the
+resources, applies migrations, uploads the app and checks health, then claims the
+hosted owner. Open `/signin` on the hosted URL and use the emailed link. You can
+also sign in without email, using the same checkout and Cloudflare credentials:
+
+```sh
+rer signin --environment production --env-file "$HOME/cradle-production.env"
+```
+
+Open the printed link within 15 minutes; it works once for the recorded owner.
+Treat it as a password. This also lets the owner correct a wrong email in Settings.
+Repeat deployment keeps the existing owner and secrets; changing `OWNER_EMAIL`
+in the file alone does not replace that owner.
 A push to public main redeploys the marketing site; it does not deploy your app.
 
-To update your installation, preserve owner customisations and merge the source
-update, then run `rer install`, `rer verify`, and (when authorized)
-`rer deploy --environment production`. To remove that hosted installation and
-its data, use `rer deploy --environment production --remove --yes`. Rer uses
-its deployment record and checks that the resources it created are gone.
+To update, preserve customisations, merge source updates, run `rer install` and
+`rer verify`, then deploy with the same environment and private file. Keep
+`.rer/deploy` records for updates, sign-in and removal. To delete the hosted
+installation **and its data**, first keep any exports you need, then run:
+
+```sh
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --remove --yes
+```
+
+`rer deploy --remove --yes` uses production by default. Rer removes the resources
+listed in that environment's deployment record and checks that they are gone.
 
 For a local source export, run
 `rer release --repo . --output ../cradle-export --clean-history`.

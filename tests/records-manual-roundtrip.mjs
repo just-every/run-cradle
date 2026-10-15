@@ -3,6 +3,13 @@ import assert from 'node:assert/strict'
 import {harness,add} from './helpers/records-manual-harness.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {templateBase,newField} from '../src/ui/records/schema/templates.ts'
+import {createRecordHttp} from '../src/domains/records/routes.server.ts'
+import {recordsCsvHttp} from '../src/domains/records/csv-http.server.ts'
+import {manualSchemaHttp} from '../src/domains/records/manual/http.server.ts'
+import {baseExportHttp} from '../src/domains/records/base-transfer/export-http.server.ts'
+import {createBaseExport} from '../src/domains/records/base-transfer/export-json.server.ts'
+import {parseCsv} from '../src/domains/portability/csv.ts'
+import {csvDownloadEntries} from './helpers/base-csv-download.mjs'
 
 test('RECORDS-001 RECORDS-004 fresh table CSV restores nullable select labels, real links and recomputed lookup exactly',async()=>{
  const h=await harness();try{
@@ -14,24 +21,54 @@ test('RECORDS-001 RECORDS-004 fresh table CSV restores nullable select labels, r
   for(let n=0;n<3;n++)await add(h,r,contact,{[contact.fields[0].id]:`Contact ${n}`,[contact.fields[1].id]:n===0?'comma, "北"\nline':'',[contact.fields[2].id]:linked[n]?.ref??null,[choice.id]:choice.options[n]?.id??null,[contact.fields[6].id]:n===0?'0':null,[contact.fields[7].id]:n===0?'2027-01-15':null,[contact.fields[8].id]:n===0?false:n===1?true:null})
   const edit=await r.manual.read(h.ctx,draft.appId),ids=new Map(contact.fields.map(f=>[f.id,createUlid()])),fresh={id:createUlid(),label:'Fresh contacts',fields:contact.fields.map(f=>({...f,id:ids.get(f.id),...(f.type==='select'?{options:f.options.map(option=>({...option,id:createUlid()}))}:{}),...(f.expression?{expression:{...f.expression,relationFieldId:ids.get(f.expression.relationFieldId)}}:{})}))};edit.tables.push(fresh)
   const preview=await r.manual.preview(h.ctx,edit);await r.manual.adopt(h.ctx,createUlid(),preview.id);const live=await h.runtime(),sort=[{fieldId:contact.fields[0].id,direction:'asc'}],csv=await live.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:contact.id,query:{sort}})
-  assert.match(csv.csv,/Premier, 北/);assert.match(csv.csv,/\\\\N/)
+  assert.match(csv.csv,/Premier, 北/);assert.match(csv.csv,/Company 0/);assert.doesNotMatch(csv.csv,/recordId|appId/)
   const request={appId:draft.appId,entityId:fresh.id,csv:csv.csv,mapping:fresh.fields.filter(f=>f.type!=='computed').map(f=>({column:f.label,fieldId:f.id})),mergeFieldId:fresh.fields[0].id},plan=await live.csv.preview(h.ctx,request);assert.equal(plan.creates,3);await live.csv.commit(h.ctx,createUlid(),plan.id)
   const scope=await live.policy.scope(h.ctx,{appId:draft.appId,entityId:fresh.id,purpose:'read'}),rows=await live.services.reader.query(h.ctx,scope,{sort:[{fieldId:fresh.fields[0].id,direction:'asc'}]})
   for(let n=0;n<3;n++){assert.deepEqual(rows.items[n].fields[ids.get(contact.fields[2].id)].value,linked[n]?.ref??null);assert.equal(rows.items[n].fields[ids.get(lookup.id)].value,tier.options[n]?.id??null);assert.equal(rows.items[n].fields[ids.get(choice.id)].value,fresh.fields.find(f=>f.id===ids.get(choice.id)).options[n]?.id??null)}
   assert.notEqual(fresh.fields.find(f=>f.id===ids.get(choice.id)).options[0].id,choice.options[0].id);assert.equal((await live.csv.preview(h.ctx,request)).unchanged,3)
   const restored=await live.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:fresh.id,query:{sort:[{fieldId:fresh.fields[0].id,direction:'asc'}]}});assert.equal(restored.csv,csv.csv)
+  await add(h,live,live.registry.get(draft.appId,company.id).schema,{[company.fields[0].id]:'Company 0',[tier.id]:tier.options[0].id});await assert.rejects(live.csv.preview(h.ctx,request),/matches several linked records/)
  }finally{h.close()}
 })
 
-test('RECORDS-001 RECORDS-003 hidden saved view grouping keys are fetched without expanding exported visible columns',async()=>{
+test('RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and board survive field removal and export current view CSV, base JSON and all-table CSV through HTTP',async()=>{
  const h=await harness();try{
-  const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[2].id).schema,key=schema.fields[0],group=schema.fields[2]
-  for(let n=0;n<2;n++)await add(h,r,schema,{[key.id]:`Deal ${n}`,[group.id]:group.options[n].id})
-  const view={appId:draft.appId,entityId:schema.id,name:'Titles only',display:'board',fields:[key.id],filter:{kind:'all',conditions:[]},sort:[],groupBy:[group.id],layout:{titleFieldId:key.id,boardFieldId:group.id},visibility:'private',shipped:false}
-  const prepared=await r.services.metadata.prepareView(h.ctx,view),saved=prepared.value
-  await h.db.prepare('INSERT INTO record_views(id,app_id,entity_id,owner_id,version,visibility,definition_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)').bind(saved.id,saved.appId,saved.entityId,h.owner,saved.version,saved.visibility,JSON.stringify(saved),saved.createdAt,saved.updatedAt).run()
-  const queried=await r.services.metadata.viewQuery(h.ctx,saved,{});assert.deepEqual(queried.view.fields,[key.id]);assert.equal(new Set(queried.records.items.map(row=>row.fields[group.id].value)).size,2)
-  const exported=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,viewId:saved.id,query:{}});assert.ok(exported.csv.startsWith('"Deal"\r\n'));assert.doesNotMatch(exported.csv,/Stage|Qualified/)
+  const {draft,r}=await h.create(),company=r.registry.get(draft.appId,draft.tables[0].id).schema,schema=r.registry.get(draft.appId,draft.tables[2].id).schema,[key,amount,group,due,won,link]=schema.fields
+  const northgate=await add(h,r,company,{[company.fields[0].id]:'Northgate'})
+  for(let n=0;n<2;n++)await add(h,r,schema,{[key.id]:`Deal ${n}`,[amount.id]:String(n),[group.id]:group.options[n].id,[won.id]:n===0,[link.id]:northgate.ref})
+  const definition={appId:draft.appId,entityId:schema.id,name:'Open deals',display:'grid',fields:[link.id,key.id,won.id,due.id],filter:{kind:'all',conditions:[{kind:'any',conditions:[{kind:'condition',fieldId:won.id,op:'eq',value:true}]},{kind:'condition',fieldId:group.id,op:'ne',value:group.options.at(-1).id}]},sort:[{fieldId:won.id,direction:'desc'},{fieldId:amount.id,direction:'desc'}],groupBy:[group.id],layout:{titleFieldId:key.id},visibility:'private',shipped:false}
+  const save=async view=>(await r.commands.get('view.save').execute(h.ctx,{commandId:createUlid(),expected:[],input:{view}})).result.value
+  const grid=await save(definition),board=await save({...definition,name:'Pipeline',display:'board',fields:[key.id],filter:{kind:'all',conditions:[]},layout:{titleFieldId:key.id,boardFieldId:group.id}})
+  const form=(await r.commands.get('form.save').execute(h.ctx,{commandId:createUlid(),expected:[],input:{form:{appId:draft.appId,entityId:schema.id,title:'Deal entry',fields:schema.fields.filter(f=>!['computed','relation'].includes(f.type)).map(f=>({fieldId:f.id,label:f.label,help:'',required:f.required})),submitAction:'record.create',authenticated:true}}})).result.value
+  const auth=async()=>h.ctx,origin='https://records.example.test'
+  const call=async(http,path,input,status=200)=>{const response=await http.fetch(new Request(origin+path,{method:input===undefined?'GET':'POST',headers:{origin,'content-type':'application/json'},...(input===undefined?{}:{body:JSON.stringify(input)})}));assert.equal(response.status,status,await response.clone().text());return (await response.json()).data}
+  const edit=await r.manual.read(h.ctx,draft.appId);edit.tables.find(t=>t.id===schema.id).fields=edit.tables.find(t=>t.id===schema.id).fields.filter(f=>f.id!==won.id)
+  const manual=manualSchemaHttp(r.manual,{},auth),preview=await call(manual,'/api/v1/records/schema-preview',edit)
+  assert.equal(preview.impacts.find(i=>i.entityId===company.id).count,0)
+  assert.equal(preview.impacts.find(i=>i.entityId===schema.id).count,2)
+  await call(manual,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}})
+  let live=await h.runtime(),http=createRecordHttp({...live.services,authenticate:auth}),views=(await call(http,`/api/v1/apps/${draft.appId}/views`)).items
+  assert.deepEqual(new Set(views.map(v=>v.id)),new Set([grid.id,board.id]))
+  const kept=views.find(v=>v.id===grid.id);assert.deepEqual(kept.fields,[link.id,key.id,due.id]);assert.deepEqual(kept.sort,[{fieldId:amount.id,direction:'desc'}]);assert.deepEqual(kept.filter,{kind:'all',conditions:[definition.filter.conditions[1]]});assert.equal(views.find(v=>v.id===board.id).display,'board')
+  const queried=await call(http,`/api/v1/views/${board.id}/query`,{});assert.deepEqual(queried.view.fields,[key.id]);assert.equal(new Set(queried.records.items.map(row=>row.fields[group.id].value)).size,2)
+  const csv=recordsCsvHttp(live.csv,auth),exported=await call(csv,'/api/v1/records/export-csv',{appId:draft.appId,entityId:schema.id,viewId:grid.id,query:{}}),parsed=parseCsv(new TextEncoder().encode(exported.csv))
+  const visible=await call(http,`/api/v1/views/${grid.id}/query`,{});assert.deepEqual(parsed.headers,['Company','Deal','Close date']);assert.deepEqual(parsed.rows,visible.records.items.map(row=>['Northgate',row.fields[key.id].value,'']));assert.doesNotMatch(exported.csv,/recordId|appId|\\N/)
+  const titles=await call(csv,'/api/v1/records/export-csv',{appId:draft.appId,entityId:schema.id,viewId:board.id,query:{}});assert.ok(titles.csv.startsWith('"Deal"\r\n'));assert.doesNotMatch(titles.csv,/Stage|Qualified/)
+  async function exports(runtime){const endpoint=baseExportHttp(createBaseExport(h.db,runtime.services),auth);for(const format of ['json','csv-set']){const result=await call(endpoint,'/api/v1/records/base-export',{appId:draft.appId,format}),bytes=Buffer.from(result.content,result.encoding==='base64'?'base64':'utf8');if(format==='json'){const native=JSON.parse(bytes.toString());assert.equal(native.base.views.length,2);assert.equal(native.base.forms.length,1);assert.ok(native.base.forms[0].fields.every(f=>f.fieldId!==won.id));assert.equal(native.base.tables.find(t=>t.id===schema.id).records.length,2);assert.ok(native.base.tables.find(t=>t.id===schema.id).fields.every(f=>f.id!==won.id))}else{const entries=csvDownloadEntries(bytes),deals=entries.find(e=>e.name.includes('Deals')&&e.name.endsWith('.csv'));assert.ok(deals);assert.match(new TextDecoder().decode(deals.bytes),/Northgate/);assert.doesNotMatch(new TextDecoder().decode(deals.bytes),/"Won"/)}}}
+  const currentForm=await call(http,`/api/v1/forms/${form.id}`);assert.ok(currentForm.fields.every(f=>f.fieldId!==won.id))
+  await exports(live)
+  // Recreate definitions left by the previous release: current-schema reads must repair these too.
+  for(const [table,original] of [['record_views',grid],['record_views',board],['record_forms',form]]){const stored=await h.db.prepare(`SELECT version FROM ${table} WHERE id=?`).bind(original.id).first();await h.db.prepare(`UPDATE ${table} SET definition_json=? WHERE id=?`).bind(JSON.stringify({...original,version:stored.version}),original.id).run()}
+  views=(await call(http,`/api/v1/apps/${draft.appId}/views`)).items;assert.equal(views.length,2);assert.ok(views.every(v=>!v.fields.includes(won.id)));await exports(live)
+  // Removing the board grouping field keeps the saved identity as a usable grid.
+  const next=await live.manual.read(h.ctx,draft.appId);next.tables.find(t=>t.id===schema.id).fields=next.tables.find(t=>t.id===schema.id).fields.filter(f=>f.id!==group.id)
+  const nextPreview=await live.manual.preview(h.ctx,next);await live.manual.adopt(h.ctx,createUlid(),nextPreview.id);live=await h.runtime();http=createRecordHttp({...live.services,authenticate:auth})
+  const repaired=await call(http,`/api/v1/views/${board.id}`);assert.equal(repaired.display,'grid');assert.deepEqual(repaired.groupBy,[]);assert.ok(!repaired.layout.boardFieldId);await call(http,`/api/v1/views/${board.id}/query`,{});await exports(live)
+  // Surviving policy-restricted fields are still refused, never pruned from views.
+  const policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(draft.appId).first(),rules=JSON.parse(policy.rules_json);for(const rule of rules)if(rule.entityId===company.id)rule.readableFields=rule.readableFields.filter(id=>id!==company.fields[0].id)
+  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run();live=await h.runtime()
+  await call(recordsCsvHttp(live.csv,auth),'/api/v1/records/export-csv',{appId:draft.appId,entityId:schema.id,viewId:grid.id,query:{}},403)
+  await call(baseExportHttp(createBaseExport(h.db,live.services),auth),'/api/v1/records/base-export',{appId:draft.appId,format:'json'},403)
  }finally{h.close()}
 })
 

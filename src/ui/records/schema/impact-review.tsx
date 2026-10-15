@@ -20,8 +20,8 @@ export function SchemaImpactReview({ appId, impacts, schemas, access, recovery }
   return <>
     <h3>Review schema changes</h3><p className="cr-muted">{access}</p>
     <RemovalStats impacts={impacts} />
-    <div className="cr-impact-grid">{impacts.map(impact => { const removesValues = impact.removedFields.some(field => field.populated > 0); return <article className="cr-tile cr-impact" key={impact.entityId}>
-      <header><h4>{impact.label}</h4><span className={`cr-tag ${removesValues ? 'cr-tag--warn' : 'cr-tag--ok'}`}>{impact.count} affected records</span></header>
+    <div className="cr-impact-grid">{impacts.filter(impact => impact.changes.length > 0).map(impact => { const removesValues = impact.removedFields.some(field => field.populated > 0); return <article className="cr-tile cr-impact" key={impact.entityId}>
+      <header><h4>{impact.label}</h4><span className={`cr-tag ${removesValues ? 'cr-tag--warn' : 'cr-tag--ok'}`}>{impact.count} {impact.count === 1 ? 'affected record' : 'affected records'}</span></header>
       <ul className="cr-change-list">{impact.changes.map(change => { const kind = changeKind(change); return <li key={change}><span className={`cr-change-icon cr-change-icon--${kind}`}><UiIcon name={changeIcon[kind]} size={12} /></span><span>{impactChangeLabel(change, schemas.find(schema => schema.id === impact.entityId)?.fields ?? [])}</span></li> })}</ul>
       {impact.recordIds.length > 0 && <details className="cr-detail"><summary>Affected record identities</summary><ul>{impact.recordIds.map(id => <li key={id}><a className="cr-link" href={`/app/records/${appId}/${impact.entityId}/${id}`}>{id}</a></li>)}</ul></details>}
     </article> })}</div>

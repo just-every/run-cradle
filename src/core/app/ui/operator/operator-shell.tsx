@@ -34,6 +34,7 @@ const records: Item[] = [
   { label: 'Home', href: '/app', icon: 'home' },
   { label: 'Records', href: '/app/records', icon: 'grid' },
   { label: 'App studio', href: '/app/operations/studio', icon: 'studio' },
+  { label: 'Automations', href: '/app/automations', icon: 'automation' },
 ]
 const launch: Item[] = [
   { label: 'Overview', href: '/app/overview', icon: 'overview' },
@@ -42,7 +43,6 @@ const launch: Item[] = [
   { label: 'Timeline', href: '/app/lenses/timeline', icon: 'timeline' },
   { label: 'New lens', href: '/app/lenses/new', icon: 'lens' },
   { label: 'Decisions', href: '/app/decisions', icon: 'decision' },
-  { label: 'Automations', href: '/app/automations', icon: 'automation' },
 ]
 const utilities: Item[] = [
   { label: 'Search', href: '/app/search', icon: 'lens' },
@@ -60,7 +60,7 @@ const OperatorRail = ({
   onNavigate?: () => void;
 }) => {
  const session = useDocumentSession() as (ReturnType<typeof useDocumentSession> & { launchInUse?: boolean })
- const showLaunch = /^\/app\/(campaigns|launch|overview|milestones|risks|decisions|lenses|automations)/.test(currentPath) || session?.launchInUse === true
+ const showLaunch = /^\/app\/(campaigns|launch|overview|milestones|risks|decisions|lenses)/.test(currentPath) || session?.launchInUse === true
  return (
   <div className="operator-rail-content">
     <Link

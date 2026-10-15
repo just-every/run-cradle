@@ -14,7 +14,7 @@ export type ExecutionDependencies = {
  adapters: ReadonlyMap<string, ProviderAdapter> | ((ctx:RequestContext)=>ReadonlyMap<string,ProviderAdapter>);
  // Source/schema/release/control guards are evaluated in R's atomic boundary.
  currentGuards(ctx: RequestContext, request: EffectRequest, mode: 'dispatch' | 'reconcile', identity?:ExecutionGuardIdentity): Promise<SqlPredicate[]>;
- settlement(ctx: RequestContext, request: EffectRequest, reservationIds: string[], result: ProviderResult, binding:{commandId:string;attemptId:string;inputHash:string;readback?:{receiptId:string;previousReceiptId:string|null}}): Promise<{guards:SqlPredicate[];mutations:SqlMutation[];reconciliations?:import('../authority/settlement.server').ReadbackBudgetReconciliation[]}>;
+ settlement(ctx: RequestContext, request: EffectRequest, reservationIds: string[], result: ProviderResult, binding:{commandId:string;attemptId:string;inputHash:string;readback?:{receiptId:string;previousReceiptId:string|null};humanEvidence?:{receiptId:string;previousReceiptId:string|null}}): Promise<{guards:SqlPredicate[];mutations:SqlMutation[];reconciliations?:import('../authority/settlement.server').EvidenceBudgetReconciliation[]}>;
  budget(ctx: RequestContext, request: EffectRequest, reservationIds: string[]): Promise<Budget>;
  backgroundContext(runId: string, ingress: 'queue' | 'schedule'): Promise<RequestContext>;
 };

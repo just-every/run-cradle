@@ -1,4 +1,5 @@
 import { exportContext, formatWorkspaceCell } from './csv-export.server'
+import { createCsvLabels, displayCsvValue, decodeDisplayCsvValue } from './csv-display.server'
 import { z } from 'zod'
 import type { RequestContext } from '../authority/ports'
 import type { AdmissionPort, SqlPredicate, SqlMutation } from '../admission/ports'
@@ -43,9 +44,10 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   const query=view?{fields:view.fields,sort:view.sort,filter:view.filter,groupBy:view.groupBy}:request.query
   const fields=(query.fields??d.schema.fields.map(f=>f.id)).map(id=>{const field=d.schema.fields.find(f=>f.id===id);if(!field||!scope.readableFieldIds.includes(id))throw new AdmissionError('forbidden','An export field is unavailable.');return field})
   const context=await exportContext(db,view?.name??d.schema.label,ctx.now,fields)
+  const guards=[...scope.currentAuthorityGuards],labels=createCsvLabels(services,ctx,guards)
   const revision=await reader.revision(),rows:string[][]=[];let cursor:string|undefined
-  do{const page=await reader.query(ctx,scope,{...query,limit:200,cursor});for(const row of page.items)rows.push(fields.map(field=>{const cell=row.fields[field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.');return formatWorkspaceCell(field,cell.value,context,()=>!d.schema.physicalRevision.startsWith('manual_')&&field.type==='select'?String(cell.value??''):encodeCsvValue(field,cell.value))}));cursor=page.nextCursor??undefined;}while(cursor)
-  await assertGuards(db,scope.currentAuthorityGuards)
+  do{const page=await reader.query(ctx,scope,{...query,limit:200,cursor});for(const row of page.items)rows.push(await Promise.all(fields.map(async field=>{const cell=row.fields[field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.');if(field.type==='relation')return labels.display(field,cell.value);return formatWorkspaceCell(field,cell.value,context,()=>!d.schema.physicalRevision.startsWith('manual_')&&field.type==='select'?String(cell.value??''):displayCsvValue(field,cell.value))})));cursor=page.nextCursor??undefined;}while(cursor)
+  await assertGuards(db,guards)
   if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during export. Export again.')
   return {csv:encodeCsv(fields.map(f=>f.label),rows),filename:context.filename,count:rows.length,capture:context}
  }
@@ -64,10 +66,11 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   const rowGuard=trustedPredicate(`${expression}=?`,[...scope.rowPredicate.values,snapshot!.value])
   const existing=[];let cursor:string|undefined
   do{const page=await reader.query(ctx,scope,{limit:200,cursor});existing.push(...page.items);cursor=page.nextCursor??undefined}while(cursor)
+  const labelGuards:SqlPredicate[]=[],labels=createCsvLabels(services,ctx,labelGuards)
   const seen=new Set<string>(),rows:ImportRow[]=[]
   for(const cells of csv.rows){
    const values:Record<string,CellValue>={}
-   for(const mapping of request.mapping){const field=d.fields.get(mapping.fieldId)?.field;if(!field||!scope.readableFieldIds.includes(field.id)||!scope.writableFieldIds.includes(field.id))throw new AdmissionError('forbidden','Mapped field is unavailable.');values[field.id]=decodeCsvValue(field,cells[csv.headers.indexOf(mapping.column)]!)}
+   for(const mapping of request.mapping){const field=d.fields.get(mapping.fieldId)?.field;if(!field||!scope.readableFieldIds.includes(field.id)||!scope.writableFieldIds.includes(field.id))throw new AdmissionError('forbidden','Mapped field is unavailable.');const raw=cells[csv.headers.indexOf(mapping.column)]!;values[field.id]=byId?decodeCsvValue(field,raw):field.type==='relation'?await labels.resolve(field,raw):decodeDisplayCsvValue(field,raw)}
    const key=byId?cells[csv.headers.indexOf('_record_id')]!:canonical(values[merge!.id]);if((byId?!idSchema.safeParse(key).success:values[merge!.id]===null||values[merge!.id]==='')||seen.has(key))throw new AdmissionError('validation','Merge keys must be nonempty and unique within the CSV.');seen.add(key)
    const matches=existing.filter(r=>{if(byId)return r.id===key;const cell=r.fields[merge!.id];return cell?.state==='value'&&canonical(cell.value)===key})
    if(byId&&matches.length!==1)throw new AdmissionError('forbidden','An original record is unavailable. Recovery updates only currently accessible existing records.')
@@ -75,7 +78,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
    const prior=matches[0],changed=Object.fromEntries(Object.entries(values).filter(([id,value])=>!prior||((cell)=>cell?.state!=='value'||canonical(cell.value)!==canonical(value))(prior.fields[id])))
    rows.push({id:prior?.id??createUlid(),version:prior?.version??null,values:changed,operation:prior?Object.keys(changed).length?'update':'unchanged':'create'})
   }
-  const guards=[...scope.currentAuthorityGuards,rowGuard]
+  const guards=[...scope.currentAuthorityGuards,...labelGuards,rowGuard]
   for(const row of rows){const change=row.version===null?await writer.prepareCreate(ctx,scope,row.values,row.id):await writer.prepareChange(ctx,scope,{ref:{appId:request.appId,entityId:request.entityId,recordId:row.id},expectedVersion:row.version,changes:row.values});guards.push(...change.guards)}
   const permit=await policy.authorize(ctx,{appId:request.appId,targetEntityId:request.entityId,fieldIds:request.mapping.map(m=>m.fieldId),action:'import.preview',expected:[],cost:[],inputHash:await canonicalHash(request)})
   guards.push(...permit.guards);await assertGuards(db,guards)

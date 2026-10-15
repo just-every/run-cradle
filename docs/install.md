@@ -1,15 +1,20 @@
 # Install Cradle
 
-Cradle runs on your own computer first. Rer installs the pinned Node and pnpm
-for you; neither needs a separate install or a particular version beforehand.
+Cradle runs on your own computer first. **Node 22 or later is required.**
+Download the installer for your computer from [nodejs.org](https://nodejs.org/en/download),
+run it, then open a new terminal. `node --version` should show v22 or later; npm
+comes with Node. Rer prepares the project tools and pnpm after that.
 
 ## Run it on your computer
 
 ```sh
-npm install -g @runeditrun/rer
+npm install -g @runeditrun/rer@0.2.19
 git clone https://github.com/just-every/run-cradle.git cradle
 cd cradle && rer dev
 ```
+
+Cradle uses rer 0.2.19. The alternative installer,
+`curl -fsSL https://runeditrun.com/install.sh | sh`, also needs Node first.
 
 The first `rer dev` installs the dependencies, creates a local owner, applies
 migrations and starts the app. Open the `RER_OPEN` address it prints. The browser
@@ -41,11 +46,37 @@ Import needs an empty installation and your confirmation. [Installation archives
 
 ## Host it online
 
+Follow the [hosting instructions](installation.md#host-it-online) to create a
+private configuration file (mode 0600) with your Cloudflare credentials, receiving
+owner email and email provider settings. Deploy does not ask setup questions.
+Always set `OWNER_EMAIL` explicitly: the local trial address `owner@cradle.test`
+cannot receive mail.
+
 ```sh
-rer build
-rer deploy --dry-run
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --dry-run
+rer deploy --environment production --env-file "$HOME/cradle-production.env"
 ```
 
-The dry run checks everything without contacting any provider. Publishing uses your own Cloudflare account and a hosted email provider; the setup questions name each setting it needs. Use `rer deploy --environment production` when authorized. Set `OWNER_EMAIL` to the hosted owner’s email in your private deployment configuration. Rer automatically claims that owner after health verification; open `/signin` and sign in using the emailed link. There is no manual setup-token step. Repeat deployment keeps the owner. A public-main push redeploys the marketing site, not your installation.
+Dry-run builds and validates locally without provider calls. A healthy deployment
+claims the owner automatically. Open `/signin` on its hosted URL for an email link,
+or use the same checkout and Cloudflare credentials to sign in without email:
 
-To update, merge source updates while preserving customisations, then run `rer install`, `rer verify` and the authorized deploy command. To delete the hosted installation and its data, run `rer deploy --environment production --remove --yes`; only the resources in the deployment record are removed and read back as gone.
+```sh
+rer signin --environment production --env-file "$HOME/cradle-production.env"
+```
+
+Open the printed link within 15 minutes; it works once for the recorded owner.
+Repeat deployment keeps the existing owner and secrets. A public-main push
+redeploys the marketing site, not your installation.
+
+To update, preserve customisations, merge source updates, run `rer install` and
+`rer verify`, then deploy with the same environment and private file. Keep the
+`.rer/deploy` records. To delete the hosted installation **and its data**, save
+any exports you need first, then run:
+
+```sh
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --remove --yes
+```
+
+`rer deploy --remove --yes` defaults to production. Rer removes only the resources
+listed in that environment's deployment record and checks that they are gone.

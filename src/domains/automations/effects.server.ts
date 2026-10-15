@@ -7,7 +7,7 @@ import { createChannelsIntegration } from '../channels/integration.server'
 import { automationRecipient } from './recipients.server'
 import { canonicalHash } from '../admission/canonical'
 import { AuthorityError } from '../authority/errors'
-import { createMailSender } from '../../../vendor/base/modules/mail/index.mjs'
+import { createMailSender, MailValidationError } from '../../../vendor/base/modules/mail/index.mjs'
 import { createD1DevelopmentOutbox } from '../../../vendor/base/modules/mail/src/development/index.mjs'
 import { localMailEnabled } from '../../core/platform/local-auth.server'
 import { IntegrationsRepository } from '../../../vendor/base/modules/integrations/core/repository.ts'
@@ -58,15 +58,23 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
     if(!env.MAIL_FROM||!env.MAIL_PROVIDER||env.MAIL_PROVIDER==='development'&&!local
      ||env.MAIL_PROVIDER!=='development'&&!env.MAIL_PROVIDER_API_KEY)
      throw new AuthorityError('unconfigured','Configure the installation mail sender before using email actions.',503)
-    const mail=env.MAIL_PROVIDER==='development'?createMailSender({provider:'development',mode:'development'},
-      {outbox:createD1DevelopmentOutbox({db})}):createMailSender({provider:env.MAIL_PROVIDER,mode:'production',apiKey:env.MAIL_PROVIDER_API_KEY})
-    await authorize()
-    if(!await db.prepare(`SELECT 1 WHERE ${recipient.guard.sql}`).bind(...recipient.guard.values).first())
-     throw new AuthorityError('forbidden','Recipient authority changed before dispatch.')
-    const result=await mail.send({deliveryId:step.id,from:env.MAIL_FROM,to:[recipient.email],subject:action.subject,
-     text:action.text,html:'',headers:{}})
-    return {state:['accepted','development'].includes(result.status)?'Complete':result.status==='uncertain'?'Unknown':'Failed',
-     result:{deliveryId:step.id,status:result.status},...(['accepted','development'].includes(result.status)?{}:{errorCode:'mail_'+result.status})}
+    try {
+     const mail=env.MAIL_PROVIDER==='development'?createMailSender({provider:'development',mode:'development'},
+       {outbox:createD1DevelopmentOutbox({db})}):createMailSender({provider:env.MAIL_PROVIDER,mode:'production',apiKey:env.MAIL_PROVIDER_API_KEY})
+     await authorize()
+     if(!await db.prepare(`SELECT 1 WHERE ${recipient.guard.sql}`).bind(...recipient.guard.values).first())
+      throw new AuthorityError('forbidden','Recipient authority changed before dispatch.')
+     const result=await mail.send({deliveryId:step.id,from:env.MAIL_FROM,to:[recipient.email],subject:action.subject,
+      text:action.text})
+     return {state:['accepted','development'].includes(result.status)?'Complete':result.status==='uncertain'?'Unknown':'Failed',
+      result:{deliveryId:step.id,status:result.status,provider:result.provider,providerMessageId:result.providerMessageId,
+       ...(result.code?{code:result.code}:{})},...(['accepted','development'].includes(result.status)?{}:{errorCode:'mail_'+result.status})}
+    } catch(error) {
+     // Base validates before dispatch. A malformed envelope is a known failure,
+     // not evidence that a provider might have accepted an effect.
+     if(error instanceof MailValidationError)return {state:'Failed',result:{deliveryId:step.id},errorCode:'mail_'+error.code}
+     throw error
+    }
    }
    const delivery=deps.destinations.delivery(ref.appId,authorize)
    await authorize()

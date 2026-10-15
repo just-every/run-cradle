@@ -2,17 +2,17 @@ import { trustedPredicate } from '../admission/sql.server'
 import type { SqlPredicate, SqlMutation } from '../admission/ports'
 import { settleReservation, reconcileReleasedReservation, type BudgetReconciliation } from './budget.server'
 import type { RequestContext } from './ports'
-export type ReleasedReadback={receiptId:string;previousReceiptId:string;releaseReceiptId:string}
-export type ReadbackBudgetReconciliation=BudgetReconciliation&ReleasedReadback
-/** Unknown/partial outcomes retain the full reservation. Confirmed metering is supplied by the adapter's validated receipt. */
-export const prepareSettlement=async(db:D1Database,ctx:RequestContext,reservationIds:readonly string[],outcome:{state:'confirmed'|'refused'|'partial'|'unknown';actualByUnit?:ReadonlyMap<string,string>;definitiveNonEffect?:boolean;releasedReadback?:ReleasedReadback})=>{
- const guards:SqlPredicate[]=[],mutations:SqlMutation[]=[],reconciliations:ReadbackBudgetReconciliation[]=[]
+export type ReleasedSettlementEvidence={receiptId:string;previousReceiptId:string;releaseReceiptId:string}
+export type EvidenceBudgetReconciliation=BudgetReconciliation&ReleasedSettlementEvidence
+/** Unknown/partial outcomes retain capacity. Validated provider results or human evidence settle the original effect. */
+export const prepareSettlement=async(db:D1Database,ctx:RequestContext,reservationIds:readonly string[],outcome:{state:'confirmed'|'refused'|'partial'|'unknown';actualByUnit?:ReadonlyMap<string,string>;definitiveNonEffect?:boolean;releasedEvidence?:ReleasedSettlementEvidence})=>{
+ const guards:SqlPredicate[]=[],mutations:SqlMutation[]=[],reconciliations:EvidenceBudgetReconciliation[]=[]
  if(outcome.state==='unknown'||outcome.state==='partial'||outcome.state==='refused'&&!outcome.definitiveNonEffect)return {guards,mutations,reconciliations}
  for(const id of reservationIds){
   const row=await db.prepare('SELECT unit,amount,state FROM authority_reservations WHERE id=?').bind(id).first<{unit:string;amount:string;state:string}>();if(!row)throw new Error('Reservation is missing.')
   const actual=outcome.state==='refused'?'0':outcome.actualByUnit?.get(row.unit);if(actual===undefined)continue
-  const plan:{guards:SqlPredicate[];mutations:SqlMutation[];reconciliation?:BudgetReconciliation|null}=row.state==='released'&&outcome.releasedReadback?await reconcileReleasedReservation(db,id,actual,Date.parse(ctx.now)):await settleReservation(db,id,actual,Date.parse(ctx.now))
-  if(plan.reconciliation)reconciliations.push({...plan.reconciliation,...outcome.releasedReadback!})
+  const plan:{guards:SqlPredicate[];mutations:SqlMutation[];reconciliation?:BudgetReconciliation|null}=row.state==='released'&&outcome.releasedEvidence?await reconcileReleasedReservation(db,id,actual,Date.parse(ctx.now)):await settleReservation(db,id,actual,Date.parse(ctx.now))
+  if(plan.reconciliation)reconciliations.push({...plan.reconciliation,...outcome.releasedEvidence!})
   guards.push(...plan.guards);mutations.push(...plan.mutations)
  }
  return {guards,mutations,reconciliations}

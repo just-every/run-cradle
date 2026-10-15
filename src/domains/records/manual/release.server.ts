@@ -11,8 +11,9 @@ import type { ManualPreview, SchemaDraft } from './contracts'
 import { ownerRules, bases, policies, memberships } from './authority.server'
 import { snapshotTables } from './snapshot.server'
 import { assertGuards } from '../fence.server'
+import { snapshotViews, prepareViewRemovals, prepareFormRemovals, type ViewSnapshot } from './view-removal.server'
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
-export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]> }
+export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[] }
 /** Whose authority a preview is computed under: `reader` reads every affected table as `ownerId`. */
 export type PreviewAuthority={permit:AuthorityPermit;reader:RequestContext;ownerId:string;expiresAt:string}
 
@@ -49,7 +50,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    }
   }
   try{await compileSchemaSet(schemas,registry,removals)}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Schema compilation failed.')}
-  const snapshot=await snapshotTables(db,prior)
+  const snapshot=await snapshotTables(db,prior),viewSnapshot=await snapshotViews(db,draft.appId)
   const impacts=schemas.map(schema=>{const old=prior.find(p=>p.schema.id===schema.id),rows=old?snapshot.rows[old.table.tableId]!:[],changes:string[]=[]
    if(!old)changes.push(`Create table ${schema.label}`)
    else if(old.schema.label!==schema.label)changes.push(`Rename table ${old.schema.label} to ${schema.label}`)
@@ -57,8 +58,8 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    if(canonical(schema.incomingRelations??[])!==canonical(old?.schema.incomingRelations??[]))changes.push(`Incoming relationship sections: ${(schema.incomingRelations??[]).map(r=>r.label).join(', ')||'none'}`)
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(!before)changes.push(`Add ${field.label} (${field.type==='computed'?'lookup':field.type})`);else if(before.label!==field.label)changes.push(`Rename ${before.label} to ${field.label}`)}
    const removedFields=(old?.schema.fields??[]).filter(f=>removals[schema.id]!.includes(f.id)).map(f=>({id:f.id,label:f.label,populated:old!.fields.get(f.id)!.join?new Set((snapshot.rows[old!.fields.get(f.id)!.join!.table.tableId]??[]).map(row=>row.record_id)).size:rows.filter(row=>row[old!.fields.get(f.id)!.column]!==null&&row[old!.fields.get(f.id)!.column]!==undefined).length}))
-   changes.push(...removedFields.map(f=>`Remove ${f.label}: ${f.populated} stored values leave the live table`))
-   return {entityId:schema.id,label:schema.label,changes:changes.length?changes:['Preserve fields and retarget incoming links'],recordIds:rows.map(r=>String(r.id)),count:rows.length,removedFields}
+   changes.push(...removedFields.map(f=>`Remove ${f.label}: ${f.populated} stored ${f.populated===1?'value leaves':'values leave'} the live table`))
+   return {entityId:schema.id,label:schema.label,changes,recordIds:changes.length?rows.map(r=>String(r.id)):[],count:changes.length?rows.length:0,removedFields}
   })
   const currentPolicy=base?await db.prepare("SELECT p.id,p.version,p.rules_json FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.app_id=? AND m.principal_id=? AND m.state='active'").bind(draft.appId,ownerId).first<{id:string;version:number;rules_json:string}>():null
   if(currentPolicy){
@@ -70,7 +71,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
     if(!ownerAllows.length||ownerAllows.some(rule=>rule.principals.length!==1))throw new AdmissionError('validation','Adding fields requires a dedicated owner field policy. Shared field policies must be reviewed by the owner before this schema change.')
    }
   }
-  return {id,appId:draft.appId,name:draft.name,schemas,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values remain in retained physical tables and the authenticated release recovery download. Restore them into a new field through a reviewed CSV import matched by Original record ID. Newer records are not rolled back.',access:'Only your current owner membership is updated for the fields explicitly added here. No other application, person, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,trustedPredicate('(SELECT COUNT(*) FROM record_schemas WHERE app_id=?)=?',[draft.appId,prior.length])],prior:prior.map(p=>p.schema),removals,policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows}
+  return {id,appId:draft.appId,name:draft.name,schemas,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values are kept for recovery. Download the recovery CSV after applying this change. You can import them into a new field using Original record ID; newer records stay unchanged.',access:'Only your current owner membership is updated for the fields explicitly added here. No other application, person, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,...viewSnapshot.guards,trustedPredicate('(SELECT COUNT(*) FROM record_schemas WHERE app_id=?)=?',[draft.appId,prior.length])],prior:prior.map(p=>p.schema),removals,policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows,viewSnapshots:viewSnapshot.views,formSnapshots:viewSnapshot.forms}
  }
  /** Apply a reviewed preview atomically as the adopting owner, with any extra rows of the same release. */
  async function applyRelease(ctx:RequestContext,input:{commandId:string;hash:string;releaseId?:string;detail:StoredPreview;previewId:string;permit:AuthorityPermit;mutations:SqlMutation[];audit:AuditFact[];provenance?:Record<string,unknown>}){
@@ -86,7 +87,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    rules=current.map(rule=>{const next=detail.schemas.find(s=>s.id===rule.entityId),old=detail.prior.find(s=>s.id===rule.entityId);if(!next||!old)return rule;const added=next.fields.filter(f=>!old.fields.some(p=>p.id===f.id));const owned=rule.effect==='allow'&&rule.principals.length===1&&rule.principals[0]!.id===ctx.principal.id;return {...rule,readableFields:[...rule.readableFields.filter(id=>next.fields.some(f=>f.id===id)),...(owned?added.map(f=>f.id):[])],writableFields:[...rule.writableFields.filter(id=>next.fields.some(f=>f.id===id)),...(owned?added.filter(f=>f.type!=='computed').map(f=>f.id):[])]}})
    rules.push(...ownerRules(ctx.principal.id,detail.schemas.filter(s=>!detail.prior.some(p=>p.id===s.id))).filter(rule=>detail.schemas.some(s=>s.id===rule.entityId)))
   }
-  const mutations:SqlMutation[]=[...activation.mutations]
+  const mutations:SqlMutation[]=[...activation.mutations,...prepareViewRemovals(detail.viewSnapshots??[],detail.schemas,detail.removals,ctx.now),...prepareFormRemovals(detail.formSnapshots??[],detail.schemas,detail.removals,ctx.now)]
   mutations.push(detail.policy?{kind:'update',table:policies,set:{rules_json:canonical(rules),version:detail.policy.version+1,updated_at:time},where:trustedPredicate('id=? AND version=?',[policyId,detail.policy.version]),expectedRows:1}:{kind:'insert',table:policies,row:{id:policyId,app_id:detail.appId,name:'Manual base owner',rules_json:canonical(rules),version:1,created_at:time,updated_at:time}})
   if(!detail.policy)mutations.push({kind:'insert',table:memberships,row:{principal_id:ctx.principal.id,app_id:detail.appId,policy_id:policyId,legacy:0,state:'active',version:1}})
   const baseRow={id:detail.appId,owner_id:ctx.principal.id,name:detail.name,version:detail.baseVersion+1,release_id:releaseId,updated_at:ctx.now}
@@ -96,4 +97,4 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
  }
  return {buildPreview,applyRelease,assertGuards:(guards:readonly SqlPredicate[])=>assertGuards(db,guards)}
 }
-export function publicPreview(d:StoredPreview):ManualPreview {const {guards,adoptionGuards,prior,removals,policy,baseVersion,snapshots,...publicFields}=d;return publicFields}
+export function publicPreview(d:StoredPreview):ManualPreview {const {guards,adoptionGuards,prior,removals,policy,baseVersion,snapshots,viewSnapshots,formSnapshots,...publicFields}=d;return publicFields}
