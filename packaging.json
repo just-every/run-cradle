@@ -81,7 +81,8 @@
         "RER_DEPLOY_SOURCE",
         "RER_DEPLOY_FINGERPRINT",
         "INSTALLATION_RELEASE_ID",
-        "EGRESS_RELAY_URL"
+        "EGRESS_RELAY_URL",
+        "IDENTITY_PROVIDER"
       ],
       "secretNames": [
         "SESSION_SECRET",

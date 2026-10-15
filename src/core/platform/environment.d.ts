@@ -10,6 +10,7 @@ declare global {
       RER_OWNER_CLAIM_PUBLIC_KEYS?: string
       RER_EDITOR_ENABLED?: string
       INSTALLATION: DurableObjectNamespace
+      IDENTITY_PROVIDER?: string
       OWNER_EMAIL?: string
       SETUP_TOKEN?: string
       RER_DEV_ORIGIN?: string

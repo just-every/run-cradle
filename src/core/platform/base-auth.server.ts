@@ -13,7 +13,7 @@ export function baseAuthConfig(env: PlatformBindings): AuthConfig {
     local: localMailEnabled(env), branding: { productName: 'Cradle', signInPath: '/signin', theme: '/rer-theme.css' },
     origin: env.APP_ORIGIN ?? '', OWNER_EMAIL: env.OWNER_EMAIL,
     SESSION_SECRET: env.SESSION_SECRET ?? '', SETUP_TOKEN: env.SETUP_TOKEN,
-    MAIL_FROM: env.MAIL_FROM,
+    MAIL_FROM: env.MAIL_FROM, dependencies: true,
   }
 }
 

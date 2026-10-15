@@ -70,19 +70,21 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     if(ctx.principal.kind!=='human'&&/^(grant\.|policy\.|member\.|credential\.)/.test(request.action))return denied('Only an authorized human can manage authority.')
     if(ctx.principal.credentialId){const c=await db.prepare('SELECT scopes_json FROM authority_credentials WHERE id=?').bind(ctx.principal.credentialId).first<{scopes_json:string}>();const scopes=JSON.parse(c!.scopes_json) as {appId:string;actions:string[];purposes:string[]}[];if(!scopes.some(s=>s.appId===request.appId&&s.actions.includes(request.action)&&(!request.purpose||s.purposes.includes(request.purpose))))return denied()}
     const readOnly=['execution.read','execution.reconcile','model.read','connection.read','connection.reconcile'].includes(request.action)&&request.cost.length===0;
-    const metadataOrControl=readOnly||['run.cancel','connection.configure','connection.begin-consent','connection.revoke','connection.check'].includes(request.action)&&request.cost.length===0;
+    const metadataOrControl=readOnly||['run.cancel','attempt.reconcile','attempt.recover','connection.configure','connection.begin-consent','connection.revoke','connection.check'].includes(request.action)&&request.cost.length===0;
     if(request.proposedRows?.some(p=>p.entityId!==request.targetEntityId)||request.expected.some(e=>e.ref.appId!==request.appId))return denied()
     const entities=request.targetEntityId?[request.targetEntityId]:request.expected.length?[...new Set(request.expected.map(r=>r.ref.entityId))]:[...new Set(loaded.rules.filter(r=>r.actions.includes(request.action)).map(r=>r.entityId))]
     if(!entities.length)return denied()
+    const knownFields=new Set(entities.flatMap(id=>registry.get(request.appId,id)?.fields.map(f=>f.id)??[]))
+    if(request.fieldIds?.some(id=>!knownFields.has(id)))return denied()
     for(const entityId of entities){
       const entity=registry.get(request.appId,entityId);if(!entity)return denied()
+      const entityFieldIds=request.fieldIds?.filter(id=>entity.fields.some(f=>f.id===id))
       const applicable=loaded.rules.filter(r=>r.entityId===entityId&&r.actions.includes(request.action))
-      const allowed=applicable.filter(r=>r.effect==='allow'&&(!request.fieldIds||request.fieldIds.every(f=>(readOnly?r.readableFields:r.writableFields).includes(f))))
+      const allowed=applicable.filter(r=>r.effect==='allow'&&(!entityFieldIds||entityFieldIds.every(f=>(readOnly?r.readableFields:r.writableFields).includes(f))))
       if(!allowed.length)return denied()
       const deniedRows=or(...applicable.filter(r=>r.effect==='deny').map(r=>compileFilter(r.rows,entity,ctx.now)))
       const rows=and(...(entity.appColumn?[trustedPredicate(`${identifier(entity.table)}.${identifier(entity.appColumn)}=?`,[request.appId])]:[]),or(...allowed.map(r=>compileFilter(r.rows,entity,ctx.now))),trustedPredicate(`NOT (${deniedRows.sql})`,deniedRows.values))
       const expected=request.expected.filter(r=>r.ref.entityId===entityId), proposed=request.proposedRows?.filter(r=>r.entityId===entityId)??[]
-      if(request.fieldIds?.some(id=>!entity.fields.some(f=>f.id===id)))return denied()
       for(const target of proposed)guards.push(proposedRowPredicate(entity,target.row,rows))
       for(const target of expected){if(target.ref.appId!==request.appId)return denied();guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${rows.sql}))`,[target.ref.recordId,...rows.values]))}
       // Unbound create/admin permission must be unconditional, never inferred from some visible row.

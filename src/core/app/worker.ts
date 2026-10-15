@@ -3,6 +3,7 @@ import {firstRunResponse} from '../features/setup/server'
 import {editorConfigResponse,editorDocumentHeaders} from '../features/editor/server'
 import {signedOwnerClaim} from '../platform/owner-claim.server'
 import { developmentOutboxResponse } from '../platform/development-outbox.server'
+import { dependencyResponse, isDependencyRequest } from '../platform/dependencies.server'
 import { createBaseAuth, createAuthHandler } from '../platform/base-auth.server'
 export { InstallationCoordinator } from '../platform/installation.server'
 import { createRuntimeEvents } from './composition/events.server'
@@ -42,6 +43,10 @@ export default {
     if (path === '/health') {
       const health = await checkHealth(bindings)
       return Response.json(health.status === 'ok' ? { status: 'ok', database: 'available', ...(bindings.RER_VERSION ? {ok:true,deployment:{sourceSha:bindings.RER_DEPLOY_SOURCE,fingerprint:bindings.RER_DEPLOY_FINGERPRINT,versionId:bindings.RER_VERSION.id}} : {}) } : health, { status: health.status === 'ok' ? 200 : 503 })
+    }
+    if (isDependencyRequest(path)) {
+      const response = await dependencyResponse(request, bindings, createBaseAuth(bindings))
+      if (response) return response
     }
     if (path.startsWith('/auth/') && !['/auth/capabilities','/auth/request','/auth/csrf','/auth/sign-out','/auth/sessions'].includes(path) && !/^\/auth\/sessions\/[^/]+\/revoke$/.test(path)) {
       const base=createBaseAuth(bindings)!

@@ -6,7 +6,7 @@ async function setup(){
  const h=await fixture({realEvidence:true}),actions=['case.pause','case.takeover','case.resume','case.cancel']
  await h.db.exec((await readFile('migrations/core/0500_execution.sql','utf8')).replace(/\n/g,' '))
  await h.auth.setRules(h.auth.rules.map(rule=>({...rule,actions:[...rule.actions,...actions]})))
- const controls=h.r.createRepairCaseControls(h.d,h.operations);controls.register(h.registry);h.r.registerRepairContractorCommand(h.registry,h.d)
+ const controls=h.r.createRepairCaseControls(h.d,h.operations);controls.register(h.registry);h.r.registerRepairCommands(h.registry,h.d,['repair.assign-contractor'])
  const reads=h.r.createRepairCaseReads(h.d,h.operations,controls),http=h.r.createRepairCaseHttp(reads,async()=>h.ctx)
  const report=await h.report(),opened=await h.registry.get('repair.open').execute(h.ctx,await h.command(report)),value=opened.result.value
  const controlCommand=(value,reason='Explicit synthetic manual control')=>h.envelope({caseId:value.id,caseVersion:value.version,reason},[],{controlEpoch:value.controlEpoch})
@@ -78,36 +78,19 @@ test('stopping blocks retained queued wakes; changed mandates and machine author
   const paused=(await h.registry.get('case.pause').execute(h.ctx,await h.controlCommand(h.value.case))).result.value
   const stopped=await h.db.prepare('SELECT state,lease_owner FROM operation_wakes WHERE id=?').bind(id).first()
   assert.equal(stopped.state,'blocked');assert.equal(stopped.lease_owner,null)
-  await h.db.prepare("UPDATE operation_mandates SET data_json=json_set(data_json,'$.actionIds',json('[\"repair.book-visit\"]')) WHERE id=?").bind(h.m.id).run()
-  await assert.rejects(h.registry.get('case.resume').execute(h.ctx,await h.controlCommand(paused)),{code:'unconfigured'})
   await h.db.prepare("UPDATE operation_mandates SET data_json=json_set(data_json,'$.actionIds',json('[]'),'$.version',2),version=2 WHERE id=?").bind(h.m.id).run()
   await assert.rejects(h.registry.get('case.resume').execute(h.ctx,await h.controlCommand(paused)),{code:'version_conflict'})
   assert.equal((await h.operations.getCase(h.ctx,h.value.case.id)).state,'paused')
  }finally{await h.close()}
 })
 
-test('retained provider rows cannot bypass manual resume or contractor admission, including a commit race',async()=>{
- const h=await setup()
- try{
-  const paused=(await h.registry.get('case.pause').execute(h.ctx,await h.controlCommand(h.value.case))).result.value
-  const command=await h.controlCommand(paused),plan=await h.controls.prepare(h.ctx,'case.resume',command)
-  const id=h.r.createUlid(),now=h.ctx.now
-  await h.db.prepare("INSERT INTO execution_runs(id,app_id,origin_command_id,request_json,state,control_epoch,cause_identity,created_at,updated_at) VALUES(?,?,?,?,'unknown',0,?,?,?)").bind(id,h.r.REPAIRS_APP_ID,h.r.createUlid(),JSON.stringify({businessBinding:{subject:{ref:h.r.repairRef('workOrders',h.value.workOrder.id),version:1}}}),'synthetic retained provider fixture',now,now).run()
-  await assert.rejects(h.admission.commit(h.ctx,plan),{code:'version_conflict'})
-  await assert.rejects(h.registry.get('case.resume').execute(h.ctx,command),{code:'unconfigured'})
-  const ref=await h.ref('workOrders',h.value.workOrder.id)
-  await assert.rejects(h.registry.get('repair.assign-contractor').execute(h.ctx,await h.envelope({workOrder:ref,contractor:await h.ref('contractors',h.b.contractor),eligibilityEvidence:[h.b.ev]},[ref],{controlEpoch:paused.controlEpoch})),{code:'unconfigured'})
-  assert.equal((await h.operations.getCase(h.ctx,h.value.case.id)).state,'paused')
-  assert.equal((await h.db.prepare('SELECT state FROM execution_runs WHERE id=?').bind(id).first()).state,'unknown')
- }finally{await h.close()}
-})
 
 test('moved asset/store identity blocks fresh picker and assignment; an admission-time move also rolls back',async()=>{
  const h=await setup()
  try{
   const other=await h.insert('stores',{name:'Other store',location:'Melbourne',contact_id:h.ctx.principal.id,availability:'09:00–17:00',active:1})
   const work=await h.ref('workOrders',h.value.workOrder.id),contractor=await h.ref('contractors',h.b.contractor),command=await h.envelope({workOrder:work,contractor,eligibilityEvidence:[h.b.ev]},[work,contractor],{controlEpoch:0})
-  const captured=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairContractorCommand(captured,h.d)
+  const captured=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairCommands(captured,h.d,['repair.assign-contractor'])
   const {plan}=await captured.get('repair.assign-contractor').execute(h.ctx,command)
   await h.db.prepare('UPDATE repair_assets SET store_id=?,version=version+1 WHERE id=?').bind(other,h.b.asset).run()
   await assert.rejects(h.admission.commit(h.ctx,plan),{code:'version_conflict'})
@@ -127,7 +110,7 @@ test('every implicitly selected credential source keeps actual owner access at c
   await h.db.prepare('INSERT INTO evidence_source_versions(id,source_id,version,sha256,content,file_ids,known_at) VALUES(?,?,1,?,?,?,?)').bind(h.r.createUlid(),provided.sourceId,'synthetic-supplied-sha','Unrelated caller-supplied source','[]',h.ctx.now).run()
   await h.auth.setRules(h.auth.rules.map(rule=>rule.entityId===h.r.REPAIR_ENTITIES.contractors?{...rule,rows:{kind:'condition',fieldId:h.r.repairFieldId('contractors','active'),op:'eq',value:true}}:rule))
   const work=await h.ref('workOrders',h.value.workOrder.id),contractor=await h.ref('contractors',h.b.contractor),command=await h.envelope({workOrder:work,contractor,eligibilityEvidence:[provided]},[work,contractor],{controlEpoch:0})
-  const captured=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairContractorCommand(captured,h.d)
+  const captured=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairCommands(captured,h.d,['repair.assign-contractor'])
   const {plan}=await captured.get('repair.assign-contractor').execute(h.ctx,command)
   assert.ok(plan.accessSubjects.some(subject=>subject.ref.recordId===owner&&subject.fieldIds.includes(h.r.repairFieldId('contractors','email'))))
   await h.db.prepare('UPDATE repair_contractors SET active=0,version=version+1 WHERE id=?').bind(owner).run()

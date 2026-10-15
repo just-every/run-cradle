@@ -1,3 +1,4 @@
+import { createRepairDecisionAuthority } from '../../domains/decisions/authority.server'
 import {erasureAdmissionGuard} from '../../domains/lifecycle/file-writes.server'
 import { createNotificationReplay } from '../../domains/channels/replay.server'
 import { NOTIFICATION_PRINCIPAL } from '../../domains/channels/mail-authority.server'
@@ -26,7 +27,7 @@ export async function createServerFoundation(platform: Platform, inputs: {
   const descriptors=await loadDescriptorRegistry(platform.bindings.DB, inputs.descriptors)
   const entities=createApplicationEntityRegistry(descriptors)
   const db=platform.bindings.DB
-  const policy=createMemberManagementPolicy(db,createPolicyPort(db,entities))
+  const policy=createMemberManagementPolicy(db,createPolicyPort(db,entities,createRepairDecisionAuthority(db)))
   const ordinaryReplay=createReplayAccess(db,policy,entities)
   const notificationReplay=createNotificationReplay(db)
   const inertAdmission=createAdmissionService(db,{

@@ -7,6 +7,7 @@
  * `appliedBy` names the module that writes a place's mutation; the rest are generic.
  */
 import {STAGING_ENTITY} from '../evidence/staging.server'
+import {authIdentityPlaces} from './auth-identity-places'
 export type IdentityPerson={id:string;email:string}
 export type IdentityPlace={table:string;where:string;values:(person:IdentityPerson)=>string[];action:'scrub'|'set'|'delete';columns?:string[];set?:(label:string,person:IdentityPerson)=>Record<string,string|null>;appliedBy?:string;reason:string}
 const byId=(where:string,reason:string,action:IdentityPlace['action']='scrub'):IdentityPlace=>({table:'',where,values:person=>Array.from(where.matchAll(/\?/g),()=>person.id),action,reason})
@@ -43,6 +44,7 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('portability_jobs','actor_id=?','transfers they ran'),
  place('repair_completion_claims','author_id=?','repair completion claims they wrote'),
  place('repair_acceptances','actor_id=?','repair acceptances they gave'),
+ place('repair_accounting_mappings','actor_id=?','accountant mappings they configured'),
  place('repair_slot_agreements','actor_id=?','repair slot agreements they made'),
  place('operation_recovery_reviews','assignee_id=?','recovery reviews assigned to them'),
  place('operation_configurations','adopted_by=?','configurations they adopted'),
@@ -61,7 +63,7 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  {...byId('operator_id=?','their notification deliveries','delete'),table:'channel_deliveries'},
  {...byId('operator_id=?','their notifications','delete'),table:'notifications'},
  {...byId('operator_id=?','their notification preferences','delete'),table:'channel_preferences'},
- {...byId(`operator_id ${base}`,'their external sign-in identities','delete'),table:'oa_external_identities'},
+ ...authIdentityPlaces,
  {table:'rer_mail_development_outbox',where:`CASE WHEN json_valid(message) THEN EXISTS(SELECT 1 FROM json_tree(message,'$.to') WHERE type='text' AND (atom=? OR substr(atom,-length(?)-2)=('<'||?||'>'))) ELSE 0 END`,values:person=>[person.email,person.email,person.email],action:'delete',reason:'development mail addressed to them'},
 ]
 /** Columns that hold another person's identity: a copy there is never this person's. */

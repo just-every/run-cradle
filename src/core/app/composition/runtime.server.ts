@@ -21,7 +21,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const automations=createAutomationsComposition(platform,foundation)
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
- const repairIntake=createRepairIntakeComposition(platform,foundation,records)
+ const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)
  const launchImports=createLaunchImportComposition(platform,foundation,records)
  return {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }

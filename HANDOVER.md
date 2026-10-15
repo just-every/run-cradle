@@ -34,7 +34,8 @@ are refreshed with export-cli and refresh-base; their existing exact-copy
 inventory and source origins remain authoritative.
 
 Apply the `migrations/updates` group in order through
-`9030_legacy_sample_ulids.sql` (the latest); all earlier migrations retain their bytes. The seed's real rer journeys declare
+`9032_oidc_dependencies.sql` (the latest); repair accounting mappings are added by
+`migrations/core/9031_repair_accounting_mapping.sql`. All earlier migrations retain their bytes. The seed's real rer journeys declare
 `RER_SERVER_JOURNEY=1`. The uninvoked isolated browser scripts
 `tests/ui-command-identity.mjs` and `tests/ui-local-draft.mjs` were removed.
 
@@ -43,3 +44,12 @@ dev-only advisories in undici (<7.29.1) and sharp (<0.35.5) arrive through
 miniflare 5.20260907.0-alpha, the local test runtime; they are not in the deployed
 Worker. Overriding them changes miniflare's pnpm instance path, which tests load
 directly, so they are left for the next miniflare/wrangler upgrade. ajv moved to 8.18.0.
+
+
+Optional OIDC uses the existing Base `/auth` door. Set `IDENTITY_PROVIDER` to the
+HTTPS origin of a provider implementing the Base identity dependency contract, then
+use the signed-in owner's `/auth/settings/identity` page to approve or disable the
+link. A new installation with no approved provider keeps email sign-in unchanged.
+Removing an environment value does not revoke an already approved link; disable
+or unlink it in identity settings. Existing Cradle membership and current grants
+remain authoritative after either sign-in method.

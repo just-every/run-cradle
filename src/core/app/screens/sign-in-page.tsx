@@ -35,6 +35,10 @@ export function SignInPage({publicDocument,search}:{publicDocument:PublicDocumen
     <div className="cr-field"><label htmlFor="signin-email">Email address</label><input name="email" autoComplete="email" id="signin-email" type="email" value={email} onChange={event=>setEmail(event.target.value)} required/></div>
     <button className="cr-button cr-button--go" disabled={submitting}>{submitting?'Requesting link…':'Send sign-in link'}</button>
    </form>:<p>Magic-link sign-in is not configured. The workspace owner needs to configure email delivery.</p>}
+  {!requestReceived&&publicDocument.identityProviders?.map(provider=><form key={provider.startPath} method="post" action={provider.startPath}>
+   <input type="hidden" name="returnTo" value={returnTo}/>
+   <button className="cr-button cr-button--quiet">Continue with {provider.label}</button>
+  </form>)}
   <div className="cr-identity-links">
    {publicDocument.developmentOutbox&&<a className="cr-link" href="/__dev/outbox">Open development outbox</a>}
    <a className="cr-link" href="/">Back to home</a>

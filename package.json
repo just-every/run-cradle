@@ -32,7 +32,7 @@
     "test:runner": "node scripts/test-runner.mjs",
     "test:migration": "node --test --test-concurrency=1 tests/migration-events.mjs tests/migration-history.mjs",
     "test:migration:browser": "node tests/migration-browser.mjs",
-    "test:repairs": "node --test --test-concurrency=1 tests/repairs-intake-identity.mjs tests/repairs-intake-runtime.mjs tests/repairs-case-runtime.mjs tests/repairs-controls-runtime.mjs tests/repairs-quotes-runtime.mjs tests/repairs-source-versions.mjs tests/repairs-d1.mjs tests/repairs-faults-d1.mjs tests/repairs-security-d1.mjs tests/repairs-execution-d1.mjs",
+    "test:repairs": "node --test --test-concurrency=1 tests/repairs-intake-identity.mjs tests/repairs-intake-runtime.mjs tests/repairs-case-runtime.mjs tests/repairs-controls-runtime.mjs tests/repairs-quotes-runtime.mjs tests/repairs-source-versions.mjs tests/repairs-d1.mjs tests/repairs-faults-d1.mjs tests/repairs-security-d1.mjs tests/repairs-execution-d1.mjs tests/repairs-outcome-http.mjs",
     "test:repairs:browser": "node tests/ui-repairs-browser.mjs",
     "test:a11y": "node tests/accessibility-campaign.mjs",
     "test:records": "node --test --test-concurrency=1 tests/records-domain.mjs tests/records-forms.mjs tests/records-formulas.mjs tests/records-relations.mjs tests/records-transport.mjs",
@@ -74,7 +74,9 @@
     "test:contract": "rer check --profile first-party",
     "test:execution-resolution": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/execution-resolution.mjs",
     "test:execution-resolution:browser": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-execution-resolution-browser.mjs",
-    "test:lifecycle-erasure": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/lifecycle-erasure.mjs"
+    "test:lifecycle-erasure": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/lifecycle-erasure.mjs tests/lifecycle-identity-security.mjs",
+    "test:repairs:outcome": "node tests/ui-repairs-outcome-browser.mjs",
+    "test:oidc": "CRADLE_OIDC_EMITTED=1 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/auth-oidc.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",
@@ -95,7 +97,7 @@
     "@cloudflare/vite-plugin": "1.54.5",
     "@cloudflare/workers-types": "5.20260908.1",
     "@playwright/test": "1.63.0",
-    "@runeditrun/rer": "0.2.7",
+    "@runeditrun/rer": "0.2.12",
     "@tailwindcss/vite": "^4.2.0",
     "@types/node": "26.6.4",
     "@types/react": "19.2.18",
