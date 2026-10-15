@@ -3966,7 +3966,7 @@
       "executable": false
     },
     "src/apps/repairs/operation-read.server.ts": {
-      "sha256": "6afeaf46e827ff3b7aac063bdacc2a596c1f1113efe04f27fa196f073c7c34b3",
+      "sha256": "4426ac493040ab2938b8170b907b4238bf518e501bdf00c9c19290fdcc71416a",
       "executable": false
     },
     "src/apps/repairs/ports.ts": {
@@ -7749,6 +7749,10 @@
       "sha256": "1f1582926318478ae04b1e2ac65a265b2c552aecc1080b07232d8d3ca01b6dd6",
       "executable": false
     },
+    "src/ui/repairs/reschedule-review.tsx": {
+      "sha256": "e901e4644da90760c652a0fecaec09fd5f8a6f15aa5ab04844490627f5a049a9",
+      "executable": false
+    },
     "src/ui/search/search-page.tsx": {
       "sha256": "bbfd1f397334f24d285f485870c24381155ac0a8bb215de2d1482cd3700ff8cb",
       "executable": false
@@ -9445,6 +9449,10 @@
       "sha256": "450480e64241f74103969e4ce520872c69c22d48af5eeedb52438462c9cf34d8",
       "executable": false
     },
+    "tests/repair-browser-quote.mjs": {
+      "sha256": "d71bb28f37889b48a89865876c6b299a028d75b2ace2b014814fa7699fb79c68",
+      "executable": false
+    },
     "tests/repair-case-fixture.mjs": {
       "sha256": "7858821563f4bf250c901514a13877b634a73573e6ff2ecf8782f15dc48b419e",
       "executable": false
@@ -9454,7 +9462,7 @@
       "executable": false
     },
     "tests/repair-outcome-browser-journey.mjs": {
-      "sha256": "43e94fffaf839de7c9440181404ef78ba11354e5e0910c0cc69906a29213746e",
+      "sha256": "d66282d34d2cc8777b838874bd68a80188b1ff23f0a42f17bfed8476a19f6b95",
       "executable": false
     },
     "tests/repair-outcome-edge.mjs": {

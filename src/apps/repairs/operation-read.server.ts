@@ -6,6 +6,7 @@ import { revision } from './context.server'
 import { REPAIRS_APP_ID } from './model'
 import type { RepairActionInput } from './contracts'
 import type { EvidenceLink } from '../../domains/evidence/contracts'
+import { terminalRefusal } from './effect-state'
 /** Current, policy-scoped operation inputs and durable external identities for the detail screen. */
 export function createRepairOperationRead(d:RepairDependencies){const repo=createRepairRepository(d)
  return async(ctx:RequestContext,id:string)=>{
@@ -17,10 +18,14 @@ export function createRepairOperationRead(d:RepairDependencies){const repo=creat
   const effects=[]
   for(const [kind,rows] of [['visit',visits],['handoff',handoffs]] as const)for(const row of rows){
    const cancellation=kind==='visit'?(await repo.list(ctx,'cancellations',trustedPredicate('visit_id=?',[row.id])))[0]:null
-   const cancellationResult=cancellation?await d.execution.read(ctx,str(cancellation,'attempt_id')):null
-   const failedCancellation=cancellationResult?.attempt.state==='refused'?cancellationResult.attempt:null
+   const history=kind==='visit'?await d.execution.cancellationAttempts(ctx,row.id):null
+   const cancellationIds=[...new Set([...(cancellation?[str(cancellation,'attempt_id')]:[]),...(history?.attemptIds??[])])]
+   const cancellations=await Promise.all(cancellationIds.map(attemptId=>d.execution.read(ctx,attemptId)))
+   // Match reconciliation: an earlier provider success outranks a later refusal.
+   const cancellationResult=cancellations.find(item=>item.attempt.state==='confirmed')??cancellations.find(item=>!terminalRefusal(item))??cancellations[0]
+   const failedCancellation=cancellationResult&&terminalRefusal(cancellationResult)?cancellationResult.attempt:null
    const observed=cancellationResult&&!failedCancellation?cancellationResult:await d.execution.read(ctx,str(row,'attempt_id'))
-   effects.push({kind,record:revision(kind==='visit'?'visits':'handoffs',row),state:row.lifecycle,cancellation:!!cancellation&&!failedCancellation,failedCancellation,attempt:observed.attempt,runState:observed.runState,receiptId:observed.receiptId,externalId:observed.externalId,contractorAccepted:observed.contractorAccepted})
+   effects.push({kind,record:revision(kind==='visit'?'visits':'handoffs',row),state:row.lifecycle,cancellation:!!cancellationResult&&!failedCancellation,failedCancellation,attempt:observed.attempt,runState:observed.runState,receiptId:observed.receiptId,externalId:observed.externalId,contractorAccepted:observed.contractorAccepted})
   }
   const selected=work.quote_id?await repo.load(ctx,'quotes',str(work,'quote_id')):null
   const agreements=selected?await repo.list(ctx,'agreements',trustedPredicate('quote_id=? AND quote_version=?',[selected.id,String(selected.version)])):[]

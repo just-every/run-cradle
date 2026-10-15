@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {cancelAndObserveRetry} from './repair-browser-cancellation.mjs'
 import {quoteApproveAndAgree} from './repair-browser-quote.mjs'
 import {captureRepairFailure} from './repair-browser-diagnostics.mjs'
 import {repairOutcomeFixture} from './repair-outcome-fixture.mjs'
@@ -33,7 +34,7 @@ export async function browserRepairJourney(browser,width,output){
   await page.getByRole('radio',{name:'UI test licensed refrigeration',exact:true}).check()
   await command(page,'repair.assign-contractor',()=>page.getByRole('button',{name:'Select contractor',exact:true}).click())
   Object.assign(trace,await quoteApproveAndAgree({page,manager,h,command,audit}))
-  await page.getByLabel('Provider connection',{exact:true}).selectOption(h.connections.calendar)
+  await page.getByRole('combobox',{name:'Provider connection',exact:true}).selectOption(h.connections.calendar)
   if(width===390)h.edge.setBooking('refused')
   const priorBooking=await command(page,'repair.book-visit',()=>page.getByRole('button',{name:'Book visit',exact:true}).click())
   trace.priorBooking=priorBooking
@@ -41,16 +42,7 @@ export async function browserRepairJourney(browser,width,output){
   await page.getByRole('button',{name:'Refresh',exact:true}).click()
   const visit=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Contractor visit',exact:true})}).last()
   await command(page,'repair.reconcile-effect',()=>visit.getByRole('button',{name:'Apply observed receipt',exact:true}).click())
-  if(width===1440){
-   await page.getByLabel('Provider connection',{exact:true}).selectOption(h.connections.calendar)
-   await page.getByLabel('Cancellation reason',{exact:true}).fill('Contractor cannot attend the agreed time; store requests a fresh reviewed appointment.')
-   const cancellation=await command(page,'repair.cancel-visit',()=>page.getByRole('button',{name:'Cancel booked visit',exact:true}).click())
-   trace.cancellation=cancellation
-   assert.equal((await h.waitAttempt(cancellation.attemptId)).state,'confirmed')
-   await page.getByRole('button',{name:'Refresh',exact:true}).click()
-   const cancelled=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Visit cancellation',exact:true})})
-   await command(page,'repair.reconcile-effect',()=>cancelled.getByRole('button',{name:'Apply observed receipt',exact:true}).click())
-  }
+  if(width===1440)trace.cancellation=await cancelAndObserveRetry({page,h,command,audit,workId:trace.workOrderId,booking:priorBooking})
   await page.getByText('Reschedule with a new quote',{exact:true}).click()
   await page.getByLabel('Work to quote again',{exact:true}).fill('Restore cooling at a newly agreed visit after the original appointment closed.')
   await page.getByLabel('Rescheduling reason and contractor evidence',{exact:true}).fill('The contractor offers a new appointment. The store requests a fresh exact quote and designated review.')
@@ -64,7 +56,7 @@ export async function browserRepairJourney(browser,width,output){
   assert.notEqual(trace.quoteId,previous.quoteId);assert.notEqual(trace.decisionId,previous.decisionId)
   trace.superseded=previous
   h.edge.setBooking('confirmed')
-  await page.getByLabel('Provider connection',{exact:true}).selectOption(h.connections.calendar)
+  await page.getByRole('combobox',{name:'Provider connection',exact:true}).selectOption(h.connections.calendar)
   const booking=await command(page,'repair.book-visit',()=>page.getByRole('button',{name:'Book visit',exact:true}).click())
   trace.booking=booking
   assert.notEqual(booking.attemptId,priorBooking.attemptId)
@@ -103,7 +95,7 @@ export async function browserRepairJourney(browser,width,output){
   }
   const invoice=await command(page,'repair.record-invoice',()=>page.getByRole('button',{name:'Record evidenced invoice',exact:true}).click())
   trace.invoiceId=invoice.invoiceId
-  await page.getByLabel('Provider connection',{exact:true}).selectOption(h.connections.xero)
+  await page.getByRole('combobox',{name:'Provider connection',exact:true}).selectOption(h.connections.xero)
   await page.getByText('Accountant mappings · owner setup',{exact:true}).click()
   await page.getByLabel('Supplier payee identity 1',{exact:true}).fill('SYNTHETIC-UI-SUPPLIER')
   await page.getByLabel('Xero contact identity 1',{exact:true}).fill('00000000-0000-4000-8000-000000000002')
@@ -111,6 +103,7 @@ export async function browserRepairJourney(browser,width,output){
   await page.getByLabel('Approved tax types (one per line)',{exact:true}).fill('INPUT')
   await command(page,'repair.configure-accounting',()=>page.getByRole('button',{name:'Save accountant mappings',exact:true}).click())
   if(width===390){
+   await page.getByRole('combobox',{name:'Provider connection',exact:true}).selectOption(h.connections.xero)
    const calls=h.edge.calls.length,refused=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/repair.handoff-invoice'))
    await page.getByRole('button',{name:'Hand invoice to accounting',exact:true}).click()
    const response=await refused;assert.equal(response.status(),400)
@@ -129,6 +122,7 @@ export async function browserRepairJourney(browser,width,output){
   }
   // A known refusal is recoverable through the same business binding and provider key.
   if(width===390)h.edge.setAccounting('refused')
+  await page.getByRole('combobox',{name:'Provider connection',exact:true}).selectOption(h.connections.xero)
   let handoff=await command(page,'repair.handoff-invoice',()=>page.getByRole('button',{name:'Hand invoice to accounting',exact:true}).click())
   trace.handoff=handoff
   assert.equal((await h.waitAttempt(handoff.attemptId)).state,width===390?'refused':'confirmed')
