@@ -8582,6 +8582,10 @@
       "sha256": "2ad3b77f4b4702d63834b554a6c1b4342f2fb74094c22bf8d63ba94c6ec0f079",
       "executable": false
     },
+    "tests/helpers/base-exit-launch-draft.mjs": {
+      "sha256": "772753b908f59d11cfe55f54fdcee9317722d574d487c466d0a9ddbe1d4d876a",
+      "executable": false
+    },
     "tests/helpers/base-exit-preview-service.mjs": {
       "sha256": "58bf87cf69d178b2fda75e5e40fdaa6b3dd5ec020939cf9d1afaf11852a3a29a",
       "executable": false
@@ -9191,7 +9195,7 @@
       "executable": false
     },
     "tests/records-base-exits.mjs": {
-      "sha256": "e315c56710877ff2f3c2d7ec8d823fa58d95e25337b103f52ba8351fde97f36c",
+      "sha256": "ac8176c05775d15d2503db37e3b56e2d37c0b01ebb6965f9b82b1fa171fdeddc",
       "executable": false
     },
     "tests/records-base-export-policy.mjs": {
