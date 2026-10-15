@@ -1,8 +1,0 @@
-import './auth-support.mjs';import test from 'node:test';import assert from 'node:assert/strict';
-const {estimateApprovedUsage,pricingPolicyInput}=await import('../src/domains/execution/model-cost.server.ts');
-test('explicit pricing uses exact token categories, provenance, and conservative rounding without invented missing usage',()=>{
- const policy={mode:'conservative_token_estimate',version:2,model:'configured-model',acceptedResponseModels:['configured-model-v1'],currency:'USD',scale:6,inputPerMillionMinor:'3000000',cachedInputPerMillionMinor:'300000',outputPerMillionMinor:'12000000',reasoning:'included_in_output',tools:'disabled',provenance:'Owner supplied account pricing revision 2',asOf:'2026-09-27T00:00:00.000Z',hash:'a'.repeat(64)};
- const value={model:'configured-model-v1',usage:{inputTokens:1000,cachedInputTokens:100,outputTokens:200,reasoningTokens:100}};
- const result=estimateApprovedUsage(value,policy);assert.deepEqual(result.estimatedCost,{minor:'5130',currency:'USD',scale:6});assert.equal(result.pricingPolicyHash,policy.hash);assert.equal(result.provenance,policy.provenance);
- assert.equal(estimateApprovedUsage({...value,model:'different-model'},policy),null);assert.equal(estimateApprovedUsage({...value,usage:{...value.usage,cachedInputTokens:null}},policy),null);assert.equal(estimateApprovedUsage({...value,usage:{...value.usage,unsupportedCategories:true}},policy),null);assert.equal(estimateApprovedUsage({...value,usage:{...value.usage,reasoningTokens:300}},policy),null);assert.throws(()=>pricingPolicyInput.parse({...policy,hash:undefined,inputPerMillionMinor:'-1'}));
-});

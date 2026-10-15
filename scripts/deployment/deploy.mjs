@@ -22,10 +22,11 @@ export async function deployOwner(args=process.argv.slice(2),env=process.env,{ro
  const state=await settleOwnerState({api,target,statePath});
  const current={...declaration,secrets:declaration.secrets.filter(input=>!state.retiredSecrets?.includes(input.binding))};
  const plan=ownerPlan(target,current,artifact);
- const {receipt,created}=await ownerDeploy({api,target,plan,artifact,statePath,env,fetch,declaredSecrets:ownerPlan(target,declaration,artifact).secrets});
- return {ok:true,origin:receipt.origin,versionId:receipt.provider.versionId,created,state:statePath};
+ const {receipt,created,sentSecrets}=await ownerDeploy({api,target,plan,artifact,statePath,env,fetch,declaredSecrets:ownerPlan(target,declaration,artifact).secrets});
+ return {ok:true,origin:receipt.origin,versionId:receipt.provider.versionId,created,state:statePath,
+  ...(sentSecrets.includes('SETUP_TOKEN')?{setupToken:env.SETUP_TOKEN}:{})};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
- try{console.log(JSON.stringify(await deployOwner()));}
+ try{const {setupToken,...result}=await deployOwner();console.log(JSON.stringify(result));}
  catch(error){console.error(JSON.stringify(report(error)));process.exitCode=1;}
 }

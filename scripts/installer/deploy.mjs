@@ -18,5 +18,5 @@ export async function deploy({root,options,store,signal,operationToken}){
   return {dryRun:true,deployed:false,migrations:artifact.migrations.length};
  }
  const result=await deployOwner(['--environment',environment],process.env,{root});
- return {deployed:true,origin:result.origin,state:result.state};
+ return {deployed:true,origin:result.origin,state:result.state,setupToken:result.setupToken};
 }

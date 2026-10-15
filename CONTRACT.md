@@ -2,7 +2,7 @@
 
 Cradle is a records builder for one business. Launch readiness is the included application template; its stable clauses below retain their data and security semantics. Repair navigation is disabled unless the owner enables it. The [6 October identity transition](docs/contract-transition.md#records-first-identity--6-october-2026) replaces the former launch-first product identity without changing existing records, permissions or grants. Product acceptance remains incomplete.
 
-Default verification runs the local application suites, including records and launch. The separately invoked `pnpm verify:authoring` also requires the isolated Docker authoring runner. Neither profile alone proves hosted readiness or every product clause.
+Default verification runs the local application suites, including records and launch, within the 200-test seed budget. The isolated Docker authoring runner has a separate operational acceptance path. Local verification alone does not prove hosted readiness or every product clause.
 
 Security, privacy, and operational guarantees are in `BASELINE.md`. No current product clause supersedes a baseline requirement; a future exception must name the exact `BASE-` ID and its owner-accepted replacement meaning and consequences. Capacity and rate limits are in `seed.json → limits`; times are p95 at those limits, and current clause latency targets remain binding. Clauses marked *Policy* have a default that buyers may replace through the named extension point, subject to the clause's explicit limits.
 

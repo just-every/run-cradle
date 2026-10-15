@@ -42,7 +42,7 @@
     ]
   },
   "setup": {
-    "path": "rer-setup.json",
-    "sha256": "ec6b8fc7f656d46e487d96013ccd299bb80141a6e4a522743cccb6ae264a00b7"
+    "path": "rer-setup-managed.json",
+    "sha256": "d438e17cb0e71a9fb5b306c6c6fa91ded3f2238cd8acc913b5526e68557f4bc6"
   }
 }
