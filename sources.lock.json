@@ -8474,7 +8474,7 @@
       "executable": false
     },
     "tests/helpers/launch-installed.mjs": {
-      "sha256": "5027bbf4257bd94f9604a22981700e053dc7f4d27f09d7f5de273f1559f1c7be",
+      "sha256": "87f20d00f3109be3cbaacb8bd45efb22dd378fe82c5b7d8b934c64784cee2853",
       "executable": false
     },
     "tests/helpers/launch-search-corpus.mjs": {
