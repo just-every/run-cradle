@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import {expectRead} from './repair-outcome-manual.mjs'
+const {AUTHORITY_ENTITY_IDS}=await import('../src/domains/authority/contracts.ts')
+const grantRef=(appId,recordId)=>({appId,entityId:AUTHORITY_ENTITY_IDS.grant,recordId})
 
 export async function issueReviewedGrant(h,spec){
- const prepared=await h.post('grant.prepare',{spec}),expected=[{ref:h.repairRef('workOrders',prepared.value.id),version:1}]
+ const prepared=await h.post('grant.prepare',{spec}),expected=[{ref:grantRef(spec.appId,prepared.value.id),version:1}]
  const input={grantId:prepared.value.id,confirmedImpactHash:prepared.value.impactHash}
  const wrong=await h.post('grant.issue',{...input,confirmedImpactHash:'0'.repeat(64)},expected,{status:409})
  assert.equal(wrong.body.error.code,'version_conflict')
@@ -17,7 +19,7 @@ export async function issueReviewedGrant(h,spec){
 }
 export async function receiptAuthority(h,grant,receiptId){
  const route='/api/v1/receipts/'+receiptId,before=await h.read(route)
- await h.post('grant.revoke',{grantId:grant.id,reason:'Stop future provider work after the completed receipt'},[{ref:h.repairRef('workOrders',grant.id),version:grant.version}])
+ await h.post('grant.revoke',{grantId:grant.id,reason:'Stop future provider work after the completed receipt'},[{ref:grantRef(grant.appId,grant.id),version:grant.version}])
  assert.deepEqual(await h.read(route),before,'Grant revocation retains readable original effect evidence')
  await h.db.prepare("UPDATE authority_principals SET state='removed' WHERE id=?").bind(h.owner).run()
  const {body}=await expectRead(h,route,401);assert.equal(body.error.code,'signed_out');assert.equal(body.data,undefined);assert.ok(!JSON.stringify(body).includes(receiptId),'Removed principal receives no receipt identity')

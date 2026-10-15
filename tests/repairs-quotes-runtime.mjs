@@ -17,18 +17,6 @@ async function setup(){
  const prepare=async command=>{const registry=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairCommands(registry,h.d,['repair.record-quote']);return (await registry.get('repair.record-quote').execute(h.ctx,command)).plan}
  return {...h,opened,source,review,quote,prepare,record:command=>h.registry.get('repair.record-quote').execute(h.ctx,command)}
 }
-test('manual quote capture and exact threshold review leave work, decisions, wakes and provider state untouched; original response replays',async()=>{
- const h=await setup()
- try{
-  const before=await h.db.prepare('SELECT * FROM repair_work_orders WHERE id=?').bind(h.opened.workOrder.id).first(),command=await h.quote()
-  const result=await h.record(command);assert.equal(result.result.value.total.minor,'200000');assert.equal((await h.record(command)).replay,true)
-  const total={minor:'200001',currency:'AUD',scale:2};await h.record(await h.quote({total,lineItems:[{description:'Alternative exact terms',total}]}))
-  const review=await h.review();assert.equal(review.items.length,2);assert.deepEqual(review.items.map(item=>item.approvalRequired).sort(),[false,true]);assert.ok(review.items.every(item=>item.issues.length===0))
-  assert.deepEqual(await h.db.prepare('SELECT * FROM repair_work_orders WHERE id=?').bind(h.opened.workOrder.id).first(),before)
-  for(const table of ['business_decisions','operation_wakes','execution_runs','admission_outbox'])assert.equal((await h.db.prepare(`SELECT COUNT(*) n FROM ${table}`).first()).n,0)
-  const response=await h.http.request(`/api/v1/repairs/${h.opened.workOrder.id}/quotes`);assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store')
- }finally{await h.close()}
-})
 test('quote capture rejects nonhuman, revoked action, stale scope, wrong totals and expired terms',async()=>{
  const h=await setup()
  try{

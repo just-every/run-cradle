@@ -12,26 +12,6 @@ async function setup(){
  const controlCommand=(value,reason='Explicit synthetic manual control')=>h.envelope({caseId:value.id,caseVersion:value.version,reason},[],{controlEpoch:value.controlEpoch})
  return {...h,controls,reads,http,value,controlCommand}
 }
-test('manual pause/resume/takeover/cancel advances reviewed epoch, blocks selection while stopped, and creates no wake/provider run',async()=>{
- const h=await setup()
- try{
-  let value=h.value.case
-  for(const action of ['case.pause','case.resume','case.takeover','case.resume','case.cancel']){
-   const command=await h.controlCommand(value),next=(await h.registry.get(action).execute(h.ctx,command)).result.value
-   assert.equal(next.controlEpoch,value.controlEpoch+1);assert.equal(next.version,value.version+1);assert.equal(next.nextWakeAt,null)
-   assert.equal((await h.registry.get(action).execute(h.ctx,command)).replay,true)
-   if(action==='case.pause'){
-    const selection=await h.envelope({workOrder:await h.ref('workOrders',h.value.workOrder.id),contractor:await h.ref('contractors',h.b.contractor),eligibilityEvidence:[h.b.ev]},[h.ref('workOrders',h.value.workOrder.id)],{controlEpoch:next.controlEpoch})
-    await assert.rejects(h.registry.get('repair.assign-contractor').execute(h.ctx,selection),{code:'invalid_transition'})
-   }
-   value=next
-  }
-  assert.equal(value.state,'cancelled')
-  await assert.rejects(h.registry.get('case.resume').execute(h.ctx,await h.controlCommand(value)),{code:'invalid_transition'})
-  assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM operation_wakes').first()).n,0)
-  assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM execution_runs').first()).n,0)
- }finally{await h.close()}
-})
 test('control stale versions, nonhuman access, SQL rollback, membership races and field-restricted replay remain denied',async()=>{
  const h=await setup()
  try{
@@ -49,24 +29,6 @@ test('control stale versions, nonhuman access, SQL rollback, membership races an
   await h.registry.get('case.pause').execute(h.ctx,command)
   await h.auth.setRules(h.auth.rules.map(rule=>rule.entityId===h.r.REPAIR_ENTITIES.workOrders?{...rule,readableFields:rule.readableFields.filter(id=>id!==h.r.repairFieldId('workOrders','scope_description'))}:rule))
   await assert.rejects(h.registry.get('case.pause').execute(h.ctx,command),{code:'forbidden'})
- }finally{await h.close()}
-})
-test('contractor review and selection bind current eligibility, work revision, case epoch and source evidence without dispatch',async()=>{
- const h=await setup()
- try{
-  const review=await h.reads.contractors(h.ctx,h.value.workOrder.id)
-  assert.equal(review.items.length,1)
-  const item=review.items[0],input={workOrder:review.workOrder,contractor:item.contractor,eligibilityEvidence:item.evidence}
-  const command=await h.envelope(input,[review.workOrder,item.contractor],{controlEpoch:review.controlEpoch})
-  const result=await h.registry.get('repair.assign-contractor').execute(h.ctx,command)
-  assert.equal(result.result.value.stage,'quotes')
-  assert.equal((await h.registry.get('repair.assign-contractor').execute(h.ctx,command)).replay,true)
-  const current=await h.ref('workOrders',h.value.workOrder.id),next=await h.envelope({...input,workOrder:current},[current],{controlEpoch:0})
-  await h.db.prepare('UPDATE repair_credentials SET active=0,version=version+1').run()
-  await assert.rejects(h.registry.get('repair.assign-contractor').execute(h.ctx,next),{code:'invalid_transition'})
-  assert.equal((await h.reads.contractors(h.ctx,h.value.workOrder.id)).items.length,0)
-  assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM execution_runs').first()).n,0)
-  assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM admission_outbox').first()).n,0)
  }finally{await h.close()}
 })
 

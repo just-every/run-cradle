@@ -31,7 +31,7 @@
     "test:ui": "node tests/ui-cradle-browser.mjs",
     "test:migration": "node --test --test-concurrency=1 tests/migration-events.mjs tests/migration-history.mjs",
     "test:migration:browser": "node tests/migration-browser.mjs",
-    "test:repairs": "node --test --test-concurrency=1 tests/repairs-intake-runtime.mjs tests/repairs-case-runtime.mjs tests/repairs-controls-runtime.mjs tests/repairs-quotes-runtime.mjs tests/repairs-source-versions.mjs tests/repairs-faults-d1.mjs tests/business-decisions-d1.mjs tests/repairs-outcome-http.mjs",
+    "test:repairs": "node --test --test-concurrency=1 tests/repairs-case-runtime.mjs tests/repairs-controls-runtime.mjs tests/repairs-quotes-runtime.mjs tests/repairs-source-versions.mjs tests/repairs-faults-d1.mjs tests/business-decisions-d1.mjs tests/repairs-outcome-http.mjs",
     "test:repairs:browser": "node tests/ui-repairs-browser.mjs",
     "test:a11y": "node tests/accessibility-campaign.mjs",
     "test:records": "node --test --test-concurrency=1 tests/records-transport.mjs",

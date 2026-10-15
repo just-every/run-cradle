@@ -46,7 +46,7 @@ export async function manualAdmission(h){
  const intake=await h.db.prepare('SELECT * FROM repair_intakes WHERE id=?').bind(submitted.value.id).first()
  assert.equal(intake.lifecycle,'admitted');assert.equal(intake.case_id,repair.case.id);assert.equal(intake.work_order_id,repair.workOrder.id)
  const work=await h.db.prepare('SELECT * FROM repair_work_orders WHERE id=?').bind(repair.workOrder.id).first(),job=await h.db.prepare('SELECT * FROM repair_jobs WHERE id=?').bind(work.job_id).first()
- assert.equal(work.intake_id,intake.id);assert.equal(work.case_id,repair.case.id);assert.equal(job.intake_id,intake.id)
+ assert.equal(work.intake_id,intake.id);assert.equal(work.case_id,repair.case.id);assert.equal(job.intake_id,intake.id);assert.equal(job.case_id,repair.case.id)
  assert.equal((await h.read(`/api/v1/repairs/${repair.workOrder.id}`)).stage,'triage')
  const currentCase=await h.read(`/api/v1/cases/${repair.case.id}`)
  assert.ok(currentCase.allowedActions.every(a=>['case.pause','case.resume','case.takeover','case.cancel'].includes(a.action)),'Manual controls confer no autonomous actions')
@@ -57,5 +57,6 @@ export async function manualAdmission(h){
  assert.equal((await h.post('repair.open',command.input,command.expected,{commandId:opened.commandId,status:404})).body.error.code,'not_found')
  await expectRead(h,`/api/v1/cases/${repair.case.id}`,403)
  await membership(h,'active');await noManualEffects(h)
+ for(const table of ['repair_intakes','operation_cases','repair_jobs','repair_work_orders'])assert.equal((await h.db.prepare(`SELECT count(*) n FROM ${table}`).first()).n,1,`${table} after replay and refusals`)
  return repair
 }
