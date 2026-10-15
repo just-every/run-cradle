@@ -39,8 +39,9 @@ export function createLaunchAutomationEffects(env:PlatformBindings,scoped:Legacy
   const mail=message.parse({campaignId,operatorId:raw.operatorId,subject:raw.title,text:raw.body}),recipient=await db.prepare('SELECT email FROM operators WHERE id=? AND active=1').bind(mail.operatorId).first<{email:string}>(),access=await legacyRecipientGuards(db,{kind:'record-automation',operatorId:mail.operatorId,campaignId,subjectId:campaignId,eventId:input.idempotencyKey},ctx.now)
   if(!recipient||!access)throw new ApiError('forbidden','Mail recipient no longer has campaign access')
   guards.push(...access,trustedPredicate('EXISTS(SELECT 1 FROM operators WHERE id=? AND active=1 AND email=?)',[mail.operatorId,recipient.email]))
-  if(!(env.MAIL_PROVIDER==='development'&&localMailEnabled(env)&&env.MAIL_FROM)&&!hostedMailConfigured(env))throw new ApiError('unconfigured','Configure the installation mail sender before using email actions')
+  if(!(env.MAIL_PROVIDER==='development'&&(env.RER_DEMO==='1'||localMailEnabled(env))&&env.MAIL_FROM)&&!hostedMailConfigured(env))throw new ApiError('unconfigured','Configure the installation mail sender before using email actions')
   const envelope={deliveryId:input.idempotencyKey,from:env.MAIL_FROM!,to:[recipient.email],subject:mail.subject,text:mail.text,html:'<pre>'+mail.text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</pre>',headers:{}}
+  if(env.MAIL_PROVIDER==='development'&&env.RER_DEMO==='1')return{guards,mutations:[],outbox:[],state:'Complete',result:{deliveryId:input.idempotencyKey,status:'development'}}
   if(env.MAIL_PROVIDER==='development'){
    const old=await db.prepare('SELECT id FROM rer_mail_development_outbox WHERE id=?').bind(input.idempotencyKey).first()
    return{guards,mutations:old?[]:[{kind:'insert',table:outbox,row:{id:input.idempotencyKey,created_at:Date.parse(ctx.now),message:JSON.stringify(envelope)}}],outbox:[],state:'Complete',result:{deliveryId:input.idempotencyKey,status:'development'}}

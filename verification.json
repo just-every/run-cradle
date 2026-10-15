@@ -146,14 +146,6 @@
       ]
     },
     {
-      "name": "dev-identity",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:dev-identity"
-      ]
-    },
-    {
       "name": "portable-installation",
       "browser": false,
       "hosted": false,

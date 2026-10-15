@@ -111,7 +111,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "e17843562355e1b6e5068289c8e037951fbc8d3d",
+          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
           "path": "modules/operator-auth",
           "paths": [
             "README.md",
@@ -150,7 +150,7 @@
             "dev-admission.d.mts",
             "dev-admission.mjs",
             "dev-gate.mjs",
-            "dev/badge.mjs",
+            "dev/cli-session.mjs",
             "dev/index.d.mts",
             "dev/index.mjs",
             "dev/personas.mjs",
@@ -344,8 +344,8 @@
             "originPath": "dev-gate.mjs"
           },
           {
-            "path": "vendor/base/modules/operator-auth/dev/badge.mjs",
-            "originPath": "dev/badge.mjs"
+            "path": "vendor/base/modules/operator-auth/dev/cli-session.mjs",
+            "originPath": "dev/cli-session.mjs"
           },
           {
             "path": "vendor/base/modules/operator-auth/dev/index.d.mts",
@@ -879,7 +879,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
           "path": "modules/deploy-kit",
           "paths": [
             "README.md",
@@ -888,18 +888,30 @@
             "check.mjs",
             "cli.mjs",
             "container-config.mjs",
+            "d1-import.mjs",
             "default-stage.mjs",
             "deploy.mjs",
+            "diagnostics.mjs",
+            "env-file.mjs",
             "health-request.mjs",
             "health.mjs",
             "index.mjs",
             "local-only.mjs",
+            "migration-ledger.mjs",
             "migrations.mjs",
             "owner-cli.mjs",
+            "owner-remove.mjs",
+            "owner-secret-names.mjs",
+            "owner-secret.mjs",
+            "owner-signin.mjs",
             "owner.mjs",
             "prepare.mjs",
+            "provider-transport.mjs",
             "provider.mjs",
             "queue-consumer.mjs",
+            "r2-object-transport.mjs",
+            "r2-objects.mjs",
+            "readiness-window.mjs",
             "receipt.mjs",
             "render.mjs",
             "resources.mjs",
@@ -909,6 +921,7 @@
             "sql-tokens.mjs",
             "teardown.mjs",
             "templates.mjs",
+            "uploaded-worker.mjs",
             "validation.mjs",
             "worker.mjs"
           ]
@@ -939,12 +952,24 @@
             "originPath": "container-config.mjs"
           },
           {
+            "path": "vendor/base/modules/deploy-kit/d1-import.mjs",
+            "originPath": "d1-import.mjs"
+          },
+          {
             "path": "vendor/base/modules/deploy-kit/default-stage.mjs",
             "originPath": "default-stage.mjs"
           },
           {
             "path": "vendor/base/modules/deploy-kit/deploy.mjs",
             "originPath": "deploy.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/diagnostics.mjs",
+            "originPath": "diagnostics.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/env-file.mjs",
+            "originPath": "env-file.mjs"
           },
           {
             "path": "vendor/base/modules/deploy-kit/health-request.mjs",
@@ -963,12 +988,32 @@
             "originPath": "local-only.mjs"
           },
           {
+            "path": "vendor/base/modules/deploy-kit/migration-ledger.mjs",
+            "originPath": "migration-ledger.mjs"
+          },
+          {
             "path": "vendor/base/modules/deploy-kit/migrations.mjs",
             "originPath": "migrations.mjs"
           },
           {
             "path": "vendor/base/modules/deploy-kit/owner-cli.mjs",
             "originPath": "owner-cli.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/owner-remove.mjs",
+            "originPath": "owner-remove.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/owner-secret-names.mjs",
+            "originPath": "owner-secret-names.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/owner-secret.mjs",
+            "originPath": "owner-secret.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/owner-signin.mjs",
+            "originPath": "owner-signin.mjs"
           },
           {
             "path": "vendor/base/modules/deploy-kit/owner.mjs",
@@ -979,12 +1024,28 @@
             "originPath": "prepare.mjs"
           },
           {
+            "path": "vendor/base/modules/deploy-kit/provider-transport.mjs",
+            "originPath": "provider-transport.mjs"
+          },
+          {
             "path": "vendor/base/modules/deploy-kit/provider.mjs",
             "originPath": "provider.mjs"
           },
           {
             "path": "vendor/base/modules/deploy-kit/queue-consumer.mjs",
             "originPath": "queue-consumer.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/r2-object-transport.mjs",
+            "originPath": "r2-object-transport.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/r2-objects.mjs",
+            "originPath": "r2-objects.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/readiness-window.mjs",
+            "originPath": "readiness-window.mjs"
           },
           {
             "path": "vendor/base/modules/deploy-kit/receipt.mjs",
@@ -1023,6 +1084,10 @@
             "originPath": "templates.mjs"
           },
           {
+            "path": "vendor/base/modules/deploy-kit/uploaded-worker.mjs",
+            "originPath": "uploaded-worker.mjs"
+          },
+          {
             "path": "vendor/base/modules/deploy-kit/validation.mjs",
             "originPath": "validation.mjs"
           },
@@ -1043,7 +1108,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
           "path": "modules/import-kit",
           "paths": [
             "CONTRACT.md",
@@ -1079,10 +1144,15 @@
             "src/d1/erasure-fragments.ts",
             "src/d1/erasure-index.ts",
             "src/d1/erasure-pages.ts",
+            "src/d1/erasure-progress-schema.ts",
+            "src/d1/erasure-progress.ts",
             "src/d1/erasure-related.ts",
             "src/d1/erasure-report.ts",
             "src/d1/erasure-schema.ts",
+            "src/d1/erasure-selection.ts",
             "src/d1/erasure-snapshot.ts",
+            "src/d1/erasure-stage.ts",
+            "src/d1/erasure-step.ts",
             "src/d1/erasure-values.ts",
             "src/d1/erasure-writes.ts",
             "src/d1/erasure.ts",
@@ -1098,6 +1168,7 @@
             "src/d1/native-staging-admission.ts",
             "src/d1/native-staging-context.ts",
             "src/d1/native-staging-lifecycle.ts",
+            "src/d1/native-staging-offset.ts",
             "src/d1/native-staging-publication.ts",
             "src/d1/native-staging-rows.ts",
             "src/d1/native-staging-schema.ts",
@@ -1113,6 +1184,12 @@
             "src/d1/preparation-reader.ts",
             "src/d1/preparation-schema.ts",
             "src/d1/preparation-state.ts",
+            "src/d1/preparation-step-combine.ts",
+            "src/d1/preparation-step-control.ts",
+            "src/d1/preparation-step-hash.ts",
+            "src/d1/preparation-step-pages.ts",
+            "src/d1/preparation-steps-schema.ts",
+            "src/d1/preparation-steps.ts",
             "src/d1/preparations.ts",
             "src/d1/preserved-reverse.ts",
             "src/d1/provenance-set.ts",
@@ -1122,9 +1199,12 @@
             "src/d1/read-fence.ts",
             "src/d1/read-results.ts",
             "src/d1/redacted-custody.ts",
+            "src/d1/redaction-step.ts",
             "src/d1/retained-values.ts",
+            "src/d1/retirement-bounded.ts",
             "src/d1/retirement-schema.ts",
             "src/d1/retirement-scope.ts",
+            "src/d1/retirement-steps.ts",
             "src/d1/retirement-tally.ts",
             "src/d1/retirement.ts",
             "src/d1/reversal-fence-schema.ts",
@@ -1184,6 +1264,7 @@
             "src/provenance/identity.ts",
             "src/provenance/json-snapshot.ts",
             "src/provenance/numeric-credentials.ts",
+            "src/provenance/resumable-sha256.ts",
             "src/provenance/validate-json.ts",
             "src/readers/README.md",
             "src/readers/api-policy.ts",
@@ -1345,6 +1426,14 @@
             "originPath": "src/d1/erasure-pages.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/d1/erasure-progress-schema.ts",
+            "originPath": "src/d1/erasure-progress-schema.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/erasure-progress.ts",
+            "originPath": "src/d1/erasure-progress.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/d1/erasure-related.ts",
             "originPath": "src/d1/erasure-related.ts"
           },
@@ -1357,8 +1446,20 @@
             "originPath": "src/d1/erasure-schema.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/d1/erasure-selection.ts",
+            "originPath": "src/d1/erasure-selection.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/d1/erasure-snapshot.ts",
             "originPath": "src/d1/erasure-snapshot.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/erasure-stage.ts",
+            "originPath": "src/d1/erasure-stage.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/erasure-step.ts",
+            "originPath": "src/d1/erasure-step.ts"
           },
           {
             "path": "vendor/base/modules/import-kit/src/d1/erasure-values.ts",
@@ -1421,6 +1522,10 @@
             "originPath": "src/d1/native-staging-lifecycle.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/d1/native-staging-offset.ts",
+            "originPath": "src/d1/native-staging-offset.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/d1/native-staging-publication.ts",
             "originPath": "src/d1/native-staging-publication.ts"
           },
@@ -1481,6 +1586,30 @@
             "originPath": "src/d1/preparation-state.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/d1/preparation-step-combine.ts",
+            "originPath": "src/d1/preparation-step-combine.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/preparation-step-control.ts",
+            "originPath": "src/d1/preparation-step-control.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/preparation-step-hash.ts",
+            "originPath": "src/d1/preparation-step-hash.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/preparation-step-pages.ts",
+            "originPath": "src/d1/preparation-step-pages.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/preparation-steps-schema.ts",
+            "originPath": "src/d1/preparation-steps-schema.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/preparation-steps.ts",
+            "originPath": "src/d1/preparation-steps.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/d1/preparations.ts",
             "originPath": "src/d1/preparations.ts"
           },
@@ -1517,8 +1646,16 @@
             "originPath": "src/d1/redacted-custody.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/d1/redaction-step.ts",
+            "originPath": "src/d1/redaction-step.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/d1/retained-values.ts",
             "originPath": "src/d1/retained-values.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/retirement-bounded.ts",
+            "originPath": "src/d1/retirement-bounded.ts"
           },
           {
             "path": "vendor/base/modules/import-kit/src/d1/retirement-schema.ts",
@@ -1527,6 +1664,10 @@
           {
             "path": "vendor/base/modules/import-kit/src/d1/retirement-scope.ts",
             "originPath": "src/d1/retirement-scope.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/d1/retirement-steps.ts",
+            "originPath": "src/d1/retirement-steps.ts"
           },
           {
             "path": "vendor/base/modules/import-kit/src/d1/retirement-tally.ts",
@@ -1765,6 +1906,10 @@
             "originPath": "src/provenance/numeric-credentials.ts"
           },
           {
+            "path": "vendor/base/modules/import-kit/src/provenance/resumable-sha256.ts",
+            "originPath": "src/provenance/resumable-sha256.ts"
+          },
+          {
             "path": "vendor/base/modules/import-kit/src/provenance/validate-json.ts",
             "originPath": "src/provenance/validate-json.ts"
           },
@@ -1877,7 +2022,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
           "path": "modules/integrations",
           "paths": [
             "README.md",
@@ -2046,7 +2191,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "e17843562355e1b6e5068289c8e037951fbc8d3d",
+          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
           "path": "modules/owner-claim",
           "paths": [
             "README.md",
@@ -2447,7 +2592,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
           "path": "modules/dependencies",
           "paths": [
             "README.md",

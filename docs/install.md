@@ -10,16 +10,16 @@ pnpm 10.12.4.
 ## Run it on your computer
 
 Install rer once per computer using either Run page installer, pinned to
-Cradle's rer 0.2.22:
+Cradle's rer 0.2.23:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.22 sh
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
 ```
 
 Or:
 
 ```sh
-npm install -g @runeditrun/rer@0.2.22
+npm install -g @runeditrun/rer@0.2.23
 ```
 
 Both choices require Node first. Then clone Cradle and start it:

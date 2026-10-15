@@ -8,7 +8,7 @@ import { deliveries } from './tables.server'
 import { canonicalHash } from '../admission/canonical'
 import { createUlid } from '../../core/shared/ids'
 const outbox=registerTable('rer_mail_development_outbox',['id','created_at','message'])
-/** Explicit local mail selection writes the same Base outbox used by sign-in, atomically with delivery. */
+/** Local notification capture stays available to installed development workflows; demos retain no payload. */
 export function createLocalChannelDelivery(env:PlatformBindings,admission:AdmissionPort){
  const db=env.DB,authority=createNotificationMailAuthority(db)
  async function prepare(ctx:RequestContext,id:string):Promise<AdmissionPlan<{deliveryId:string;state:string}>>{
@@ -19,7 +19,7 @@ export function createLocalChannelDelivery(env:PlatformBindings,admission:Admiss
     mutations.push({kind:'update',table:deliveries,set:{state:'delivered',version:row.version+1,updated_at:now,attempts:row.attempts+1,receipt_id:`development:${id}`},where:trustedPredicate('id=? AND version=?',[row.id,row.version]),expectedRows:1})
    }
    const message={deliveryId:id,from:env.MAIL_FROM,to:[envelope.to],subject:envelope.subject,text:envelope.text}
-   mutations.push({kind:'insert',table:outbox,row:{id:`notification:${id}`,created_at:now,message:JSON.stringify(message)}})
+   if(env.RER_DEMO!=='1')mutations.push({kind:'insert',table:outbox,row:{id:`notification:${id}`,created_at:now,message:JSON.stringify(message)}})
    return {commandId:createUlid(),appId:NOTIFICATION_APP,action:'notification.email.send',canonicalInputHash:await canonicalHash(message),permit,guards,mutations,audit:[],events:[],outbox:[],committedResult:{deliveryId:id,state:'delivered'}}
  }
  return{async scheduled(now=Date.now()){

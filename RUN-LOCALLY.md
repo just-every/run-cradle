@@ -2,13 +2,13 @@
 
 Install Node 22 or later and Git first; see the [quick guide](docs/install.md).
 Install `rer` once per computer with either Run page installer, pinned here to
-Cradle's rer 0.2.22:
+Cradle's rer 0.2.23:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.22 sh
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
 ```
 
-Or `npm install -g @runeditrun/rer@0.2.22`. Rer installs the project's pinned
+Or `npm install -g @runeditrun/rer@0.2.23`. Rer installs the project's pinned
 Node 22.20.0 and pnpm 10.12.4 for project commands. This checkout uses its exact
 `@runeditrun/rer` devDependency; `OPERATIONS.json` and the package aliases dispatch
 to `rer VERB`.
@@ -142,7 +142,7 @@ after the application health check. With dev identity it then prints
 checkout's dev key in its fragment: opening it signs the browser in through a
 real dev session, and the key is removed from the address bar and kept only as a
 host-only cookie. Treat that line as a credential and open it only on this
-computer. A dev-only badge switches between the owner, signed out and the
+computer. Use `rer dev --as` to switch between the owner, signed out and the
 seed's personas (`admin@dev.localhost` and so on). `dev --as PERSONA` starts as
 another persona or `signed-out`; `dev --login` aliases automatic owner sign-in.
 No mail viewer or printed email sign-in link is part of local development.

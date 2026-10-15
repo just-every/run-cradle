@@ -24,7 +24,7 @@ answers file is needed, including after reset/import. Optional
 `--answers` accepts an owner-only (0600) JSON file with manifest answers. See
 README.md. `dev` opens signed in: open the `RER_OPEN` URL it
 prints on this computer (it carries this checkout's dev key, so treat it as a
-credential). A dev badge switches between the owner, signed out and the personas
+credential). Use `rer dev --as` to switch between the owner, signed out and the personas
 `admin@dev.localhost` and `member@dev.localhost`; `dev --as PERSONA` starts as one of
 them or `signed-out`. `dev --login` aliases automatic owner sign-in; open its
 `RER_OPEN` URL. Finish

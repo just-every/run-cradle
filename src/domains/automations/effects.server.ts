@@ -8,7 +8,6 @@ import { automationRecipient } from './recipients.server'
 import { canonicalHash } from '../admission/canonical'
 import { AuthorityError } from '../authority/errors'
 import { createMailSender, MailValidationError } from '../../../vendor/base/modules/mail/index.mjs'
-import { createD1DevelopmentOutbox } from '../../../vendor/base/modules/mail/src/development/index.mjs'
 import {hostedMailConfigured,hostedMailConfig} from '../../core/platform/hosted-mail.server'
 import { localMailEnabled } from '../../core/platform/local-auth.server'
 import { IntegrationsRepository } from '../../../vendor/base/modules/integrations/core/repository.ts'
@@ -55,12 +54,11 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
    }
    if(action.kind==='email') {
     const recipient=await automationRecipient(db,deps.entities,ctx,{...ref,operatorId:action.operatorId})
-    const env=deps.env,local=localMailEnabled(env)
+    const env=deps.env,local=env.RER_DEMO==='1'||localMailEnabled(env)
     if(!(env.MAIL_PROVIDER==='development'&&local&&env.MAIL_FROM)&&!hostedMailConfigured(env))
      throw new AuthorityError('unconfigured','Configure the installation mail sender before using email actions.',503)
     try {
-     const mail=env.MAIL_PROVIDER==='development'?createMailSender({provider:'development',mode:'development'},
-       {outbox:createD1DevelopmentOutbox({db})}):createMailSender(hostedMailConfig(env)!)
+     const mail=env.MAIL_PROVIDER==='development'?createMailSender({provider:'development',mode:'development'}):createMailSender(hostedMailConfig(env)!)
      await authorize()
      if(!await db.prepare(`SELECT 1 WHERE ${recipient.guard.sql}`).bind(...recipient.guard.values).first())
       throw new AuthorityError('forbidden','Recipient authority changed before dispatch.')

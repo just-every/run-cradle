@@ -22,5 +22,5 @@ export function localRuntimeBindings(env: PlatformBindings): PlatformBindings {
   } catch { return env }
 }
 
-/** Demo mail is captured even on the hosted HTTPS origin. */
+/** Demo mail is silently suppressed by Base on local and hosted origins. */
 export const capturedMailEnabled = (env: PlatformBindings) => env.RER_DEMO === '1' || localMailEnabled(env)

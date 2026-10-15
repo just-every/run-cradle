@@ -89,7 +89,7 @@ rer dev
 
 Setup prepares the real owner, migrations and private settings and exits with no
 app running. A second setup reuses the saved answers, owner and exact private
-bytes. A dev badge switches between the owner, signed out and the personas
+bytes. Use `rer dev --as` to switch between the owner, signed out and the personas
 `admin@dev.localhost` and `member@dev.localhost`; `rer dev --as PERSONA` starts as
 one of them or `signed-out`. `rer dev --login` is an alias for the same automatic
 owner sign-in; open its `RER_OPEN` URL. No email is sent locally. Keys minted in a

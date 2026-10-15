@@ -4,7 +4,8 @@ import type { PlatformBindings } from '../core/platform/bindings'
 export function demoBindings(env: PlatformBindings): PlatformBindings {
   if (env.RER_DEMO !== '1') return env
   return { ...env, MAIL_PROVIDER: 'development', MAIL_FROM: 'Cradle demo <demo@demo.invalid>',
-    MAIL_PROVIDER_API_KEY: undefined, AI_PROVIDER_API_KEY: undefined, AI_MODEL: undefined,
+    MAIL_PROVIDER_API_KEY: undefined, MAIL_API_KEY: undefined, MAIL_RELAY_URL: undefined,
+    AI_PROVIDER_API_KEY: undefined, AI_MODEL: undefined,
     GOOGLE_CLIENT_ID: undefined, GOOGLE_CLIENT_SECRET: undefined,
     XERO_CLIENT_ID: undefined, XERO_CLIENT_SECRET: undefined,
     EGRESS_RELAY_URL: undefined, EGRESS_RELAY_SECRET: undefined,

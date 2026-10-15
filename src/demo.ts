@@ -4,6 +4,7 @@ import { createPlatform } from './core/platform'
 import { createLaunchFoundation } from './core/app/composition/launch.server'
 import { createUlid } from './core/shared/ids'
 import { sampleData } from './core/features/sample-data/data'
+import { seedActivity } from './demo/activity.server'
 import { seedMembers } from './demo/members.server'
 
 /** Run the installed samples command under the admitted owner's current session. */
@@ -27,15 +28,16 @@ export async function seedDemo(env: PlatformBindings, { ownerEmail, now }: { own
   const ctx: RequestContext = { principal: { id:owner.id,kind:'human',humanId:owner.id,sessionId:current!.session_id,baseSessionId:owner.sessionId,
     credentialId:null,issuedAt:new Date(owner.created_at).toISOString(),expiresAt:new Date(owner.expires_at).toISOString(),authenticationEpoch:owner.epoch },
     requestId:'00000000000000000000000DEM',now:now.toISOString(),ingress:'http' }
+  const foundation = await createLaunchFoundation(platform)
   if (!await db.prepare('SELECT 1 FROM sample_installations LIMIT 1').first()) {
-    const foundation = await createLaunchFoundation(platform)
     const receipt = await foundation.commands.get('launch.samples.install')!.execute(ctx,{commandId:'00000000000000000000000DEM',expected:[],input:{}})
     if (receipt.result.state !== 'committed') throw new Error('Demo sample installation did not commit')
   }
   await seedMembers(db, now, owner.id)
+  await seedActivity(db, foundation, ctx)
   await db.batch([
     db.prepare("UPDATE workspace SET name=?,timezone=?,currency=? WHERE id='workspace'").bind(sampleData.workspace.name,sampleData.workspace.timezone,sampleData.workspace.currency),
-    db.prepare('UPDATE workspace_settings SET workspace_name=?,timezone=?,currency=?,ai_enabled=0').bind(sampleData.workspace.name,sampleData.workspace.timezone,sampleData.workspace.currency),
+    db.prepare('UPDATE workspace_settings SET workspace_name=?,timezone=?,currency=?,ai_enabled=1').bind(sampleData.workspace.name,sampleData.workspace.timezone,sampleData.workspace.currency),
     db.prepare('UPDATE cradle_first_run SET completed_at=? WHERE singleton=1').bind(now.getTime()),
   ])
 }

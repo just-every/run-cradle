@@ -1,3 +1,4 @@
+import {demoAnalysis} from '../../demo/analysis.server'
 import {sharedBindings} from './sql-bindings.server'
 import {analysisSourceGuards} from './analysis-source.server'
 import type { LegacyAnalysisPorts } from './analysis.server'
@@ -17,14 +18,15 @@ import { launchFieldIds } from './descriptors.server'
 
 type Context=ModelContextArtifact & {text:string;versions:import('../../contracts/primitives').RevisionRef[]}
 /** Optional installer-configured AI; one durable call admission is shared across features. */
-export function createLaunchModelProvider(context:LaunchContext,env:{AI_PROVIDER_API_KEY?:string;AI_MODEL?:string}):LegacyAnalysisPorts{
- env={AI_PROVIDER_API_KEY:env.AI_PROVIDER_API_KEY?.trim(),AI_MODEL:env.AI_MODEL?.trim()}
+export function createLaunchModelProvider(context:LaunchContext,env:{AI_PROVIDER_API_KEY?:string;AI_MODEL?:string;RER_DEMO?:string}):LegacyAnalysisPorts{
+ const demo = env.RER_DEMO === '1'
+ env={...env,AI_PROVIDER_API_KEY:env.AI_PROVIDER_API_KEY?.trim(),AI_MODEL:demo?'demo-analysis':env.AI_MODEL?.trim()}
  const adapter=openaiAdapter({async resolve(){if(!env.AI_PROVIDER_API_KEY)throw new ApiError('unconfigured','AI_PROVIDER_API_KEY is required');return{token:env.AI_PROVIDER_API_KEY,accountId:'installation',scopes:['responses']}}},value=>launchAnalysisSchema.validate(value,[]),new ProviderTransport((input,init)=>fetch(input,init)))
  return{
-  async profile(){if(!env.AI_PROVIDER_API_KEY||!env.AI_MODEL)throw new ApiError('unconfigured','AI_PROVIDER_API_KEY and AI_MODEL are required');return{profileId:'installation-launch',maximumCost:{currency:'USD',scale:6,minor:'0'}}},
+  async profile(){if(!demo&&(!env.AI_PROVIDER_API_KEY||!env.AI_MODEL))throw new ApiError('unconfigured','AI_PROVIDER_API_KEY and AI_MODEL are required');return{profileId:'installation-launch',maximumCost:{currency:'USD',scale:6,minor:'0'}}},
   async context(_ctx,input){const text=JSON.stringify(input.data),sha256=await canonicalHash(input.data);return{id:sha256,sha256,purpose:input.purpose,sourceRefs:[],fieldIds:input.fieldIds,expiresAt:input.expiresAt,providerDestination:'https://api.openai.com/v1/responses',text,versions:input.versions} as Context},
   model:{async generate(ctx,task,validate){
-   if(!env.AI_MODEL||!env.AI_PROVIDER_API_KEY)throw new ApiError('unconfigured','AI_PROVIDER_API_KEY and AI_MODEL are required')
+   if(!demo&&(!env.AI_MODEL||!env.AI_PROVIDER_API_KEY))throw new ApiError('unconfigured','AI_PROVIDER_API_KEY and AI_MODEL are required')
    const artifact=task.context as Context
    if(!artifact.text||await canonicalHash(JSON.parse(artifact.text))!==artifact.sha256)throw new ApiError('validation','Analysis context integrity failed')
    const id=task.requestId!,prior=await context.db.prepare('SELECT state FROM launch_model_calls WHERE id=?').bind(id).first()
@@ -34,16 +36,17 @@ export function createLaunchModelProvider(context:LaunchContext,env:{AI_PROVIDER
    const permit=await context.policy.authorize(ctx,{appId:LAUNCH_APP_ID,action:'launch.analysis.request',expected:[],cost:[],inputHash:artifact.sha256,commandId:id,targetEntityId:launchEntities.campaign,fieldIds:Object.values(launchFieldIds.campaign)}),guard=and(...permit.guards,...await analysisSourceGuards(context,ctx,artifact.versions))
    const started=Date.now(),day=localDate(ctx.now,settings.timezone),bindings=sharedBindings(),p=bindings.bind
    const admitted=await context.db.prepare(`INSERT INTO launch_model_calls(id,created_at,updated_at,local_day,feature,model,request_id,state)
-    SELECT ${p(id)},${p(started)},${p(started)},${p(day)},${p(task.purpose)},${p(env.AI_MODEL)},${p(id)}, 'running' WHERE (SELECT count(*) FROM launch_model_calls WHERE local_day=${p(day)})<${p(settings.ai_daily_ceiling)}
+    SELECT ${p(id)},${p(started)},${p(started)},${p(day)},${p(task.purpose)},${p(env.AI_MODEL!)},${p(id)}, 'running' WHERE (SELECT count(*) FROM launch_model_calls WHERE local_day=${p(day)})<${p(settings.ai_daily_ceiling)}
     AND EXISTS(SELECT 1 FROM workspace_settings WHERE version=${p(settings.version)} AND ai_enabled=1) AND (${bindings.predicate(guard)})`)
     .bind(...bindings.values).run()
    if(!admitted.meta.changes)throw new ApiError('budget_exhausted',`AI daily ceiling of ${settings.ai_daily_ceiling} calls reached, or current authority changed`)
-   const call:ModelCall={id,version:1,createdAt:new Date(started).toISOString(),updatedAt:new Date(started).toISOString(),profileId:'installation-launch',model:env.AI_MODEL,feature:task.purpose,subject:null,sourceVersions:[],state:'running',inputTokens:null,outputTokens:null,reportedCost:null,durationMs:null,providerRequestId:null,outputArtifactId:null}
+   const call:ModelCall={id,version:1,createdAt:new Date(started).toISOString(),updatedAt:new Date(started).toISOString(),profileId:'installation-launch',model:env.AI_MODEL!,feature:task.purpose,subject:null,sourceVersions:[],state:'running',inputTokens:null,outputTokens:null,reportedCost:null,durationMs:null,providerRequestId:null,outputArtifactId:null}
    let code:string|null=null,message:string|null=null
    try{
-    const result=await adapter.execute({attemptId:id,commandId:id,connectionId:'installation-launch',idempotencyKey:id,canonicalInputHash:artifact.sha256,deadline:new Date(started+60000).toISOString(),firstPossibleEffectAt:new Date(started).toISOString(),externalId:null,input:{model:env.AI_MODEL,purpose:task.purpose,instructions:launchAnalysisSchema.instructions,context:artifact.text,schemaName:'launch_analysis_v1',schema:launchAnalysisSchema.schema,maxOutputTokens:8000,authorizedSourceIds:[]} as Json})
+    const send=()=>adapter.execute({attemptId:id,commandId:id,connectionId:'installation-launch',idempotencyKey:id,canonicalInputHash:artifact.sha256,deadline:new Date(started+60000).toISOString(),firstPossibleEffectAt:new Date(started).toISOString(),externalId:null,input:{model:env.AI_MODEL,purpose:task.purpose,instructions:launchAnalysisSchema.instructions,context:artifact.text,schemaName:'launch_analysis_v1',schema:launchAnalysisSchema.schema,maxOutputTokens:8000,authorizedSourceIds:[]} as Json})
+    const result=demo?await demoAnalysis(send,artifact.text,id):await send()
     const value=('value'in result?result.value:null) as {usage?:{inputTokens:number;outputTokens:number};model?:string;output?:unknown;reportedCost?:import('../../contracts/primitives').Money|null}|null
-    call.reportedCost=value?.reportedCost??null;call.inputTokens=value?.usage?.inputTokens??null;call.outputTokens=value?.usage?.outputTokens??null;call.model=value?.model??env.AI_MODEL
+    call.reportedCost=value?.reportedCost??null;call.inputTokens=value?.usage?.inputTokens??null;call.outputTokens=value?.usage?.outputTokens??null;call.model=value?.model??env.AI_MODEL!
     if(result.state!=='confirmed'){call.state=result.state==='partial'?'invalid':result.state==='refused'?'refused':'unavailable';throw new ApiError(result.state==='refused'?(result.code==='rate_limited'?'rate_limited':'provider_refused'):result.state==='partial'?'invalid_provider_output':'provider_unavailable',result.message)}
     const output=validate(value?.output);call.state='succeeded';call.providerRequestId=result.requestId
     return{value:output,call,sourceRefs:task.context.sourceRefs}

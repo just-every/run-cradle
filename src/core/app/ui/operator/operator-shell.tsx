@@ -69,7 +69,7 @@ const OperatorRail = ({
       onClick={onNavigate}
       aria-label={`${identity.workspaceName} home`}
     >
-      <BrandLockup className="operator-brand-lockup" name="Cradle" variant="dark" />
+      <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
     </Link>
     <OperatorNavigation items={records}
       currentPath={currentPath}
@@ -136,7 +136,7 @@ export const OperatorShell = ({
           <span />
         </button>
         <Link className="operator-mobile-brand" to="/app">
-          <BrandLockup className="operator-brand-lockup" name="Cradle" variant="dark" />
+          <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
         </Link>
         <Link
           className="operator-mobile-bell"

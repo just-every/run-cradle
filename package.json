@@ -42,7 +42,6 @@
     "test:records:release": "node --import ./tests/helpers/typescript-loader.mjs --test tests/records-manual-release.mjs tests/records-manual-roundtrip.mjs tests/records-csv-fence.mjs",
     "test:records:browser": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-records-builder.mjs",
     "test:local": "node --test --test-concurrency=1 tests/installed-home.mjs tests/public-document-runtime.mjs tests/local-auth-runtime.mjs && node tests/ui-local-signin.mjs",
-    "test:dev-identity": "node tests/ui-dev-identity.mjs",
     "test:launch:walkthrough": "node tests/ui-launch-walkthrough.mjs",
     "test:recut:browser": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-recut-final.mjs",
     "test:records:base-native": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-import-preview-auth.mjs tests/records-import-d1.mjs tests/records-import-fixtures-d1.mjs tests/records-import-content-native.mjs tests/records-import-undo-restart.mjs tests/records-import-undo-d1.mjs tests/records-import-migration.mjs",

@@ -1,4 +1,4 @@
-import { demoSockets } from './src/modules/demo/vite.mjs'
+import { demoSockets } from './vendor/base/modules/demo/vite.mjs'
 import {createHash} from 'node:crypto'
 import {readdirSync,readFileSync} from 'node:fs'
 import {join} from 'node:path'

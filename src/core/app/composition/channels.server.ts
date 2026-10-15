@@ -31,7 +31,7 @@ export function createChannelsComposition(platform: Platform, foundation: Server
         ...(!env.MAIL_FROM ? ['MAIL_FROM'] : []),
         ...(!env.INSTALLATION_RELEASE_ID ? ['INSTALLATION_RELEASE_ID'] : []),
       ]
-      const aiMissing=[...(!env.AI_PROVIDER_API_KEY?.trim()?['AI_PROVIDER_API_KEY']:[]),...(!env.AI_MODEL?.trim()?['AI_MODEL']:[])]
+      const aiMissing=env.RER_DEMO==='1'?[]:[...(!env.AI_PROVIDER_API_KEY?.trim()?['AI_PROVIDER_API_KEY']:[]),...(!env.AI_MODEL?.trim()?['AI_MODEL']:[])]
       const mailConfigured = platform.auth.configuration.baseMailConfigured === true
       return { capabilities: [{id:'mail.sender.v1',state:mailConfigured?'ready' as const:'unconfigured' as const,checkedAt:null,missing:mailConfigured?[]:['installation mail provider, sender and API key'],reason:mailConfigured?'The installation mail sender is configured. Provider acceptance and delivery are recorded separately.':'Configure the installation mail sender.',supportedActions:['notification.email.send']},{id:'ai.provider.v1',state:aiMissing.length?'unconfigured' as const:'ready' as const,checkedAt:null,missing:aiMissing,reason:'Configuration permits enabling AI; measured results are recorded separately.',supportedActions:['launch.campaign-brief','launch.risk-readout','launch.lens-proposal']}], requiredSetup, limits: await measureChannelLimits(db, seed.limits) }
     },
