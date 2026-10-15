@@ -15,8 +15,8 @@ try{
  const {grant}=await h.issuedGrant()
  const context=await browser.newContext({viewport:{width:390,height:844},locale:'en-AU',timezoneId:'Australia/Brisbane'})
  await context.addCookies([{name:h.ownerSession.cookie.split('=')[0],value:h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
- const page=await context.newPage(),mutations=[]
- page.on('request',r=>{if(r.method()==='POST'&&r.url().includes('/commands/'))mutations.push(r.url())})
+ const page=await context.newPage(),mutations=[],acceptanceRequests=[]
+ page.on('request',r=>{if(r.method()==='POST'&&r.url().includes('/commands/'))mutations.push(r.url());if(r.method()==='POST'&&r.url().endsWith('/commands/repair.store-acceptance'))acceptanceRequests.push(r.postDataJSON().commandId)})
  async function audit(name){for(const width of [1440,390]){await page.setViewportSize({width,height:width===390?844:900});await page.waitForLoadState('networkidle');const result=await auditAccessibility(page,{screen:name,width,output});assert.equal(result.layout.pageOverflow,false);assert.deepEqual([...result.axe.wcag22aa,...result.axe.targetSize].map(v=>v.id),[]);results.push({screen:name,width,overflow:result.layout.pageOverflow})}}
  // Device-only photo intake still uses the actual emitted document and R2 upload path.
  await page.goto(h.origin+'/app/repairs/new');await page.getByLabel('Describe the problem',{exact:true}).waitFor()
@@ -67,6 +67,8 @@ try{
  assert.equal((await h.db.prepare('SELECT count(*) n FROM repair_acceptances WHERE work_order_id=?').bind(alternate.workId).first()).n,0)
  await page.getByRole('button',{name:'Retry original request',exact:true}).click()
  await page.getByText(/record changed|Repair record changed|grant is not current/i).first().waitFor()
+ assert.equal(acceptanceRequests.at(-1),uncommittedKey,'An explicit retry retains the original uncommitted acceptance identity')
+ assert.equal(acceptanceRequests.filter(id=>id===lostKey).length,1,'A committed lost response is read back without another acceptance submission')
  assert.equal((await h.db.prepare('SELECT count(*) n FROM command_admissions WHERE command_id=?').bind(uncommittedKey).first()).n,0)
  await h.db.prepare("UPDATE authority_grants SET state='active',version=? WHERE id=?").bind(grant.version,grant.id).run()
  await page.getByRole('button',{name:'Refresh',exact:true}).click()

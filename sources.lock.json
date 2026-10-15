@@ -9442,7 +9442,7 @@
       "executable": false
     },
     "tests/repair-outcome-fixture.mjs": {
-      "sha256": "dd0dfa128d6c0c893f0a3f3e741baa8ad9ebd8f3127a6415a6e10e1d4dee246d",
+      "sha256": "89196ebb56b99ff345e07fe3c54f3685d029941c3d9bbd4bbcc6a6759a6d6526",
       "executable": false
     },
     "tests/repair-outcome-flow.mjs": {
@@ -9610,7 +9610,7 @@
       "executable": false
     },
     "tests/ui-repairs-outcome-browser.mjs": {
-      "sha256": "ff57a41e6da23fd0e4c5e4d3d1d387d7d2338d7a92c58b92796915ae7bbdf317",
+      "sha256": "066faa68eca09df1036c900d5f7a23bfc35d8c6c0b504ebf1cdea1547a796c28",
       "executable": false
     },
     "tests/ui-user-automations.mjs": {
