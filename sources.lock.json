@@ -8774,7 +8774,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "98ee42faf1b274babf88e0ee6923bfe8a2dd9c1aca3b36d1b0798b01204b1f71",
+      "sha256": "7baa60e8d9d681a63a731eb332afe0ca4ebb66b07c7e05f7a48cc0a2d08ba5e5",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {

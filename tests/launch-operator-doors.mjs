@@ -114,10 +114,13 @@ test('[OPS-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh 
  const roleOf = id => h.db.prepare('SELECT p.initial_owner,o.role FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=?').bind(id).first()
  // The confirmation link completes in the owner's own session.
  const confirm = async session => {
+  const previous = await h.db.prepare('SELECT COALESCE(MAX(sequence),0) AS sequence FROM rer_mail_development_outbox').first('sequence')
   const asked = await h.request(session, '/auth/step-up', { method: 'POST', body: JSON.stringify({ action: 'owner:transfer', returnTo: '/app/settings' }) })
   assert.equal(asked.status, 202, await asked.text())
-  const mail = JSON.parse((await h.db.prepare('SELECT message FROM rer_mail_development_outbox ORDER BY sequence DESC LIMIT 1').first()).message)
-  const token = new URL(mail.text.match(/https?:\/\/\S+/)[0]).searchParams.get('token')
+  const messages = (await h.db.prepare('SELECT message FROM rer_mail_development_outbox WHERE sequence>? ORDER BY sequence').bind(previous).all()).results
+  const links = messages.flatMap(row => [...JSON.parse(row.message).text.matchAll(/https?:\/\/\S+/g)].map(match => new URL(match[0]))).filter(url => url.pathname === '/auth/confirm')
+  assert.equal(links.length, 1, 'The fresh step-up request captures one confirmation link, independent of queued notifications')
+  const token = links[0].searchParams.get('token')
   assert.equal((await h.request(session, '/auth/confirm', { method: 'POST', body: JSON.stringify({ token }), redirect: 'manual' })).status, 303)
  }
  const target = await member()
