@@ -61,8 +61,8 @@ export const commandAdapter=createCommandAdapter(adapter,{
  localOnlyKeys:['RER_DEV_ORIGIN','RER_DEV_IDENTITY'],
  // The static run site at run-cradle.com: the approved homepage with Run Cradle, /run and the docs.
  site:{entry:'src/site/pages.tsx',output:'dist/site',declaration:'deploy-site.json',config:'vite.site.config.ts'},
- // The installed instance's hydrating public pages. The Lobby at / is plain server HTML, and the hosted
- // check's store holds only migrations/core, without the first-run record the Lobby reads.
+ // The installed instance's hydrating public pages. The Lobby at / is plain server
+ // HTML; the fresh hosted check has no first-run owner record for it to display.
  publicPages:['/docs','/docs/install','/signin'],
  input:{names:{email:'OWNER_EMAIL',name:'OWNER_NAME'},defaults:()=>({target:'local'})},
 });

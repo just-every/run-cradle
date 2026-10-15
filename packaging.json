@@ -101,23 +101,6 @@
         "CANDIDATE_DEPLOY_TOKEN"
       ],
       "migrationPrefix": "",
-      "extraMigrationDirectories": [
-        {
-          "binding": "DB",
-          "path": "migrations/base",
-          "prefix": ""
-        },
-        {
-          "binding": "DB",
-          "path": "migrations/import",
-          "prefix": ""
-        },
-        {
-          "binding": "DB",
-          "path": "migrations/updates",
-          "prefix": ""
-        }
-      ],
       "providerEffects": [
         "outbound-mail",
         "outbound-webhooks",

@@ -74,10 +74,26 @@ try {
     const related=await h.db.prepare('SELECT id,campaign_id,owner_id,title FROM deliverables WHERE title=?').bind(`Delivery notes ${width}`).first()
     assert.equal(related.campaign_id,row.id);assert.equal(related.owner_id,h.owner);receipt.related.push(related)
     await capture(page,'created-deliverable',width)
-    // Real router failure text includes the requested path. No response stubbing.
-    await page.goto(`${h.origin}/app/approvals/${'LongUnavailableApproval'.repeat(14)}`)
-    await page.locator('.cr-state').getByText(/No API route matches/).waitFor()
+    // The mounted repair API validates decision IDs. Exercise its real failure
+    // state with a long URL, then its missing-record state with a valid ULID.
+    const invalidDecision='LongUnavailableApproval'.repeat(14)
+    const invalid=await h.request(h.ownerSession,`/api/v1/decisions/${invalidDecision}/review`)
+    assert.equal(invalid.status,400)
+    const invalidFailure=(await invalid.json()).error
+    assert.equal(invalidFailure.code,'validation')
+    await page.goto(`${h.origin}/app/approvals/${invalidDecision}`)
+    await page.locator('.cr-state').getByText(invalidFailure.message,{exact:true}).waitFor()
+    assert.equal(await page.locator('.cr-state button').isVisible(),true,'A failed read offers another attempt')
     await capture(page,'long-resource-error',width)
+    const missingDecision='0'.repeat(26)
+    const missing=await h.request(h.ownerSession,`/api/v1/decisions/${missingDecision}/review`)
+    assert.equal(missing.status,404)
+    const missingFailure=(await missing.json()).error
+    assert.equal(missingFailure.code,'not_found')
+    await page.goto(`${h.origin}/app/approvals/${missingDecision}`)
+    await page.locator('.cr-state').getByText(missingFailure.message,{exact:true}).waitFor()
+    assert.equal(await page.locator('.cr-state button').count(),0,'A missing record does not offer a futile retry')
+    await capture(page,'missing-resource',width)
     // A real local D1 failure during document read must keep the October frame.
     await h.db.prepare('ALTER TABLE campaigns RENAME TO unavailable_campaigns').run()
     try {
