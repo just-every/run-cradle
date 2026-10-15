@@ -2525,7 +2525,7 @@
   ],
   "files": {
     ".dev.vars.example": {
-      "sha256": "ab7186f4b923ea2b3decdabd5bb680a34ffa9f87558809911664413fe5dc0fac",
+      "sha256": "7c85ffd89b289b6990726b47970a765429fff7ab0171ed2fa9cf6f1c4ffb2112",
       "executable": false
     },
     ".github/assets/banner-dark.webp": {
@@ -2645,7 +2645,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "20a18969808985154d42384077e31824db316d54fe0f9f6a8d1f4239c90939cc",
+      "sha256": "777bf8e3704fd92d0e93b3dc0f16f0eef4021618784534c96ef34217a8040b4c",
       "executable": false
     },
     "CLAUDE.md": {
@@ -2733,7 +2733,7 @@
       "executable": false
     },
     "docs/installation.md": {
-      "sha256": "cfc9c192ffea93d4c783a087422e0685fd668598e6dbae463920eac59da6e9f3",
+      "sha256": "553165d31288a4fece5bbf5247b2750057bfafb71da6916b5950a925d80ba82c",
       "executable": false
     },
     "docs/launch-readiness-20261002.md": {
@@ -8941,7 +8941,7 @@
       "executable": false
     },
     "tests/helpers/session-controls.mjs": {
-      "sha256": "6eab874bf2efe9eb5f426216427c31e6aa2618503d49e65ced15ec7e3408e2bc",
+      "sha256": "a9c4b2742a7c97788ff3cc49bc6bc279f54dbe73ca13eea0af4fc26d4ca4465b",
       "executable": false
     },
     "tests/helpers/session-cookies.mjs": {

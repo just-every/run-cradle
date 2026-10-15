@@ -35,11 +35,11 @@ Put these settings in the file, replacing every example value with your own:
 
 ```text
 CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
-CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
+CLOUDFLARE_API_TOKEN=synthetic-your-cloudflare-api-token
 OWNER_EMAIL=owner@example.com
 MAIL_PROVIDER=resend
 MAIL_FROM=cradle@example.com
-MAIL_PROVIDER_API_KEY=your-email-provider-api-key
+MAIL_PROVIDER_API_KEY=synthetic-your-email-provider-api-key
 ```
 
 Use `MAIL_PROVIDER=sendgrid` if that is your provider. The file contains one
