@@ -34,8 +34,16 @@ export async function withRerEmittedWorker(copy,origin,run){
  }finally{try{await stop()}finally{await copy.log.writeFile(logs.join('\n')+'\n')}}
 }
 
-/** Rer issues the ordinary private owner message; native emitted auth redeems it. */
+/** Issue an ordinary email link on the emitted app; callers redeem its private outbox message. */
 export async function withNativeOutbox(copy,origin,run){
- await withRerDevelopment(copy,origin,async()=>{await copy.rer(['outbox'])})
- return withRerEmittedWorker(copy,origin,run)
+ await withRerDevelopment(copy,origin,async()=>{})
+ return withRerEmittedWorker(copy,origin,async(...args)=>{
+  assert.equal((await fetch(origin+'/api/session')).status,401,'No automatic dev session enters the ordinary email journey')
+  const {OWNER_EMAIL}=await copy.readVars()
+  assert.ok(OWNER_EMAIL,'Setup declares the owner email')
+  const sent=await fetch(origin+'/auth/request',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({email:OWNER_EMAIL,returnTo:'/app'})})
+  assert.equal(sent.status,200,'The emitted app accepts an ordinary email-link request')
+  assert.deepEqual(await sent.json(),{status:'accepted'})
+  return run(...args)
+ })
 }

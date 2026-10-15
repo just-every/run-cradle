@@ -17,8 +17,8 @@ cd cradle && rer dev
 The first `rer dev` installs dependencies, prepares a local owner and starts the
 app. Open its `RER_OPEN` URL and finish `/setup`. Treat the URL as a password.
 Local `rer setup` is optional; see the [README](../README.md#run-it-on-your-computer)
-to choose owner details before the first launch. `rer dev --login` uses the local
-email outbox instead of the development sign-in. No email is sent locally.
+to choose owner details before the first launch. `rer dev --login` aliases the
+same automatic owner sign-in. No email is sent locally.
 
 ## Host it online
 

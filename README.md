@@ -85,9 +85,8 @@ Setup prepares the real owner, migrations and private settings and exits with no
 app running. A second setup reuses the saved answers, owner and exact private
 bytes. A dev badge switches between the owner, signed out and the personas
 `admin@dev.localhost` and `member@dev.localhost`; `rer dev --as PERSONA` starts as
-one of them or `signed-out`. `rer dev --login` turns dev identity off and prints
-`RER_SIGN_IN` for the ordinary local outbox: open it, choose the newest sign-in
-message, follow its link and confirm. No email is sent locally. Keys minted in a
+one of them or `signed-out`. `rer dev --login` is an alias for the same automatic
+owner sign-in; open its `RER_OPEN` URL. No email is sent locally. Keys minted in a
 dev session work only with this checkout's dev key and never travel in an export.
 Finish your first-run details at `/setup`; other app routes take you there until
 completed. Later `/setup` opens the app. Settings remain editable.

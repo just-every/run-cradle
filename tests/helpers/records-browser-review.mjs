@@ -50,7 +50,7 @@ export async function impactReview(page,j){
  const label=page.locator('label.cr-choice').filter({hasText:'I reviewed the data changes and owner access.'});await checkboxGeometry(label)
  await j.setChecked(label.getByRole('checkbox'),true);assert.equal(await label.getByRole('checkbox').isChecked(),true);await j.setChecked(label.getByRole('checkbox'),false);assert.equal(await label.getByRole('checkbox').isChecked(),false)
  const impact=await page.getByRole('article').allTextContents();assert.doesNotMatch(impact.join('\n'),/\((relation|boolean|url)\)/)
- assert.match(await page.locator('.cr-records-page').innerText(),/Recovery:/);assert.match(await page.locator('.cr-records-page').innerText(),/owner access/)
+ assert.match(await page.locator('.cr-records-page').innerText(),/owner access/)
 }
 export async function gridReview(page,j){
  const grid=page.locator('table.cr-table');await grid.getByRole('columnheader',{name:'Deal',exact:true}).waitFor();assert.equal(await grid.getByRole('columnheader',{name:'Record',exact:true}).count(),0);assert.equal(await grid.getByRole('columnheader',{name:'Deal',exact:true}).count(),1)

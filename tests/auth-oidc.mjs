@@ -37,6 +37,12 @@ test('OIDC: optional pull-link shares the email owner, admits only existing peop
  const accepted=await r.finish(await r.begin('//evil.example/'));assert.equal(accepted.status,303,await accepted.clone().text());assert.equal(accepted.headers.get('location'),'/app')
  const session=cookie(accepted);assert.equal((await r.call('/auth/session',undefined,session)).status,200)
  if(emitted){assert.equal((await r.call('/api/session',undefined,session)).status,200)}else{assert.ok(await r.platform().auth.configuration.base.getSession(new Request(origin+'/auth/session',{headers:{cookie:session}})));assert.equal((await r.db.prepare('SELECT count(*) n FROM oa_operators').first()).n,1)}
+ r.idp.options.transport=async uri=>uri.endsWith('/.well-known/openid-configuration')?new Response(null,{status:404}):undefined
+ assert.equal((await r.call('/auth/oidc/auth/start',{})).status,502)
+ if(emitted)assert.doesNotMatch(await(await r.call('/signin')).text(),/action="\/auth\/oidc\/auth\/start"/,'unreachable provider is hidden')
+ r.idp.options.transport=undefined
+ await r.begin()
+ if(emitted)assert.match(await(await r.call('/signin')).text(),/action="\/auth\/oidc\/auth\/start"/,'recovered provider is visible')
  assert.equal((await r.call('/auth/session',undefined,await r.proof())).status,200)
  assert.equal((await r.call('/auth/settings/identity',{idpSignIn:false},native)).status,200)
  assert.equal((await r.call('/auth/session',undefined,session)).status,401)
@@ -58,7 +64,20 @@ test('OIDC: state, nonce, issuer, signature and PKCE bind the actual callback; r
  const path='/auth/oidc/auth/callback?'+new URLSearchParams(grant)
  const accepted=await r.call(path,undefined,start.binding);assert.equal(accepted.status,303,await accepted.clone().text())
  const replay=await r.call(path,undefined,start.binding);assert.equal(replay.status,400);assert.ok(!cookie(replay)?.includes('operator_session='))
- const broken=await r.begin();broken.authorization.searchParams.set('code_challenge','bad-challenge');assert.equal((await r.finish(broken)).status,502)
+ const beforeSessions=await r.db.prepare('SELECT count(*) n FROM oa_sessions').first()
+ const health=async()=>{const response=await r.call('/auth/providers',undefined,r.owner);assert.equal(response.status,200);return response.json()}
+ const beforeHealth=await health();assert.equal(beforeHealth.find(provider=>provider.id==='auth')?.healthy,true)
+ const broken=await r.begin();broken.authorization.searchParams.set('code_challenge','bad-challenge')
+ const rejected=await r.finish(broken);assert.equal(rejected.status,400);assert.equal((await rejected.json()).error,'oidc_invalid_response')
+ assert.ok(!cookie(rejected)?.includes('operator_session='))
+ assert.deepEqual(await r.db.prepare('SELECT count(*) n FROM oa_sessions').first(),beforeSessions)
+ assert.deepEqual(await health(),beforeHealth,'invalid grant does not change provider health')
+ const outage=await r.begin()
+ r.idp.options.transport=async uri=>uri.endsWith('/token')?new Response(null,{status:503}):undefined
+ const unavailable=await r.finish(outage);assert.equal(unavailable.status,502);assert.equal((await unavailable.json()).error,'oidc_provider_unavailable')
+ assert.ok(!cookie(unavailable)?.includes('operator_session='))
+ assert.deepEqual(await r.db.prepare('SELECT count(*) n FROM oa_sessions').first(),beforeSessions)
+ assert.equal((await health()).find(provider=>provider.id==='auth')?.healthy,false,'provider outage invalidates exchange health')
 })
 test('OIDC: disabling during token exchange fences the callback and revocation survives re-enable',async t=>{
  const r=await ready(t),signed=await r.finish(await r.begin());assert.equal(signed.status,303)
@@ -71,6 +90,7 @@ test('OIDC: disabling during token exchange fences the callback and revocation s
  assert.equal((await r.call('/auth/session',undefined,fresh)).status,401)
  assert.equal((await r.call('/auth/oidc/auth/start',{})).status,403)
  assert.equal((await r.call('/auth/session',undefined,native)).status,200)
+ if(emitted)assert.doesNotMatch(await(await r.call('/signin')).text(),/action="\/auth\/oidc\/auth\/start"/,'unlinked provider is hidden')
 })
 test('OIDC: member sign-in creates no grant and current product restrictions still deny access',async t=>{
  const r=await ready(t),native=await r.proof()

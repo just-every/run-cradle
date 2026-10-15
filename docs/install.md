@@ -32,9 +32,8 @@ Local `rer setup` is optional after zero-setup `rer dev`. To choose your own own
 details before the first launch, use the private answers file described in the
 [README](../README.md#run-it-on-your-computer).
 
-No email is sent on your computer. `rer dev --login` signs in through the local
-development outbox instead: open the address it prints, choose the newest message
-and confirm.
+No email is sent on your computer. `rer dev --login` is an alias for automatic
+owner sign-in; open its `RER_OPEN` URL too.
 
 Stop the app with `rer dev --stop`.
 

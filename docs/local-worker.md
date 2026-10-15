@@ -3,7 +3,7 @@
 Start through the commands in [Run it on your computer](../README.md#run-it-on-your-computer):
 `rer dev` installs dependencies, prepares a local owner and starts the app. Open
 the printed `RER_OPEN` URL to land signed in. Local `rer setup` is optional;
-`rer dev --login` uses the development outbox instead. Finish first-run details at
+`rer dev --login` aliases automatic owner sign-in. Finish first-run details at
 `/setup`. Rer installs the pinned Node and pnpm automatically.
 
 Dev serves current source with HMR. `rer preview` builds and serves

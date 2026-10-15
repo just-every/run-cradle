@@ -112,16 +112,17 @@ node --input-type=module -e "import {readFile,writeFile} from 'node:fs/promises'
 rer import --input truncated.rer --yes --non-interactive --json
 rer import --input exports/first.rer --yes --non-interactive --json
 rer setup --answers answers.json --port "$PORT" --non-interactive --json
-rer dev --login --non-interactive --json
+rer dev --non-interactive --json
 ```
 
 `truncated.rer` is a scratch copy of `exports/first.rer` with its closing line removed.
-While the final dev command is serving, run `rer outbox --json` in a second terminal. Keep the outbox and one-use sign-in link private.
+Open the final dev command’s private `openUrl` from its ready event. It signs in
+the configured local owner; `rer outbox` is retired in rer 0.2.20.
 The first import must refuse and leave the empty target unchanged. The second
-imports the original complete archive. Open the newly printed outbox, sign in as
-the installation owner, and edit a restored record. The targeted
-`tests/rer-data-roundtrip.mjs` journey performs these same command steps, verifies
-all archived table cells and file metadata, and exercises the fresh owner session.
+imports the original complete archive. Edit a restored record as the installation
+owner. The targeted `tests/rer-data-roundtrip.mjs` journey verifies the command
+steps and all archived table cells and file metadata, and also exercises an
+ordinary one-use owner email session through the native development outbox.
 Local evidence does not establish hosted D1/R2 performance or remote recovery.
 
 Audit and history have no age-based pruning in the current implementation:

@@ -11,7 +11,7 @@ and evaluation hour use the existing readiness settings command. Weekly digest
 must be enabled explicitly; it uses normalized recipients and the local Monday
 09:00–09:15 window. Decision overdue reminders evaluate due time plus 15 minutes.
 Local development mail writes the actual Base development outbox in the same
-transaction as delivery; `rer outbox` displays these notifications.
+transaction as delivery. The `rer outbox` CLI command is retired in rer 0.2.20.
 
 ## Optional read-only AI
 

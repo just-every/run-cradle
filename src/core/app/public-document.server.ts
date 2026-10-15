@@ -14,7 +14,7 @@ export async function publicDocument({ identity = false }: { identity?: boolean 
   }
   return {
     workspaceName,
-    ...(identity ? { identityProviders: (await createBaseAuth(env).providers?.list() ?? []).filter(provider => provider.visible && provider.linked).map(({ label, startPath }) => ({ label, startPath })) } : {}),
+    ...(identity ? { identityProviders: (await createBaseAuth(env).providers?.list() ?? []).filter(provider => provider.visible).map(({ label, startPath }) => ({ label, startPath })) } : {}),
     developmentOutbox: localMailEnabled(env) && env.MAIL_PROVIDER === 'development',
     magicLink: !!(env.MAIL_FROM && ((localMailEnabled(env) && env.MAIL_PROVIDER === 'development') || (env.MAIL_PROVIDER && env.MAIL_PROVIDER_API_KEY))),
   }

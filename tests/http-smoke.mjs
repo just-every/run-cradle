@@ -200,7 +200,8 @@ test('the Worker seeds and serves the real portfolio spine locally', async (cont
 
   const settings = await (await request('/api/settings')).json()
   assert.equal(settings.settings.ai.status, 'disabled')
-  assert.equal(settings.settings.mail.status, 'unavailable')
+  assert.equal(settings.settings.mail.status, 'ready', 'Settings recognizes the configured installation sender')
+  assert.equal(settings.settings.email.configured, true, 'The Email card agrees with the live mail configuration')
 
   const search = await (await request('/api/search?q=security')).json()
   assert.ok(search.items.some((item) => item.recordType === 'Campaign'))
