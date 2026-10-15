@@ -143,7 +143,7 @@ export async function browserRepairJourney(browser,width,output){
   await page.getByText('Handed off to accounting. This is not a payment confirmation.',{exact:true}).waitFor()
   await audit(page,'durable-accounting-receipt')
   const state=await h.read(`/api/v1/repairs/${trace.workOrderId}`)
-  assert.equal(state.accounting.state,'handed_off');assert.ok(state.accounting.receiptId);assert.equal(h.edge.invoices.size,1)
+  assert.equal(state.accounting.state,'handed_off');assert.ok(state.accounting.receiptId);assert.equal(h.edge.invoices.size,1);assert.deepEqual(state.blockers,[])
   const persisted=await h.db.prepare('SELECT i.id intake_id,w.id work_id,w.case_id FROM repair_intakes i JOIN repair_work_orders w ON w.intake_id=i.id WHERE i.id=?').bind(trace.intakeId).first()
   assert.equal(persisted.work_id,trace.workOrderId);assert.equal(persisted.case_id,trace.caseId)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n,1)
