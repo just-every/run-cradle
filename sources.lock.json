@@ -7750,7 +7750,7 @@
       "executable": false
     },
     "src/ui/records/record-table.tsx": {
-      "sha256": "ff39951fe4109fc42c421f558d809380291080c38323cdbe53005cec3bc5fc40",
+      "sha256": "8886b206746be8fcd41dfc5aa7212ac4388738d92074e133e0a000e91517a262",
       "executable": false
     },
     "src/ui/records/record-toolbar.tsx": {
