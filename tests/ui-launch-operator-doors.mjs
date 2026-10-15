@@ -160,8 +160,13 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
     await row(successorName).getByRole('button', { name: 'Make owner' }).click()
     await page.getByRole('button', { name: `Hand over ownership to ${successorName}` }).click()
    }
-   await row(successorName).getByText('Owner', { exact: true }).waitFor()
+   // Handing over makes the former owner a Base admin, which ends their sessions; they sign in again to finish leaving.
+   await page.getByText('Please sign in again').waitFor()
    assert.equal(await h.db.prepare('SELECT initial_owner FROM authority_principals WHERE id=?').bind(successor.id).first('initial_owner'), 1)
+   actor = { id: actor.id, session: await h.signIn(actor.id) }
+   await context.addCookies([{ name: actor.session.cookie.split('=')[0], value: actor.session.cookie.slice(actor.session.cookie.indexOf('=') + 1), url: h.origin }])
+   await openPeople()
+   await row(successorName).getByText('Owner', { exact: true }).waitFor()
    await b.capture('ownership-handed-over')
    for (const decision of (await h.db.prepare("SELECT id,version FROM decisions WHERE assignee_id=? AND state IN ('Awaiting approval','In review')").bind(actor.id).all()).results)
     await b.command('launch.decision.assign', { id: decision.id, assigneeId: successor.id }, [{ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities.decision, recordId: decision.id }, version: decision.version }])

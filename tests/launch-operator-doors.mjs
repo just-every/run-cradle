@@ -106,10 +106,20 @@ test('[VIEW-007] campaign pages follow a keyset cursor: a record added before th
  assert.deepEqual([...first.items.map(item => item.id), ...rest], before, 'Every existing record appears once and in order')
 })
 
-test('[OPS-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation and then removes themselves', async () => {
+test('[OPS-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, and the former owner removes themselves', async () => {
  const person = await h.addPerson({ name: 'Alex Successor' })
- const member = async () => (await call(`/api/v1/members?appId=${LAUNCH_APP_ID}`)).body.data.items.find(item => item.id === person.id)
+ const member = async (id = person.id, session = h.ownerSession) => (await call(`/api/v1/members?appId=${LAUNCH_APP_ID}`, {}, session)).body.data.items.find(item => item.id === id)
  const memberRef = row => [{ ref: { appId: LAUNCH_APP_ID, entityId: '00000000000000000000000101', recordId: row.id }, version: row.version }]
+ const owners = async () => (await h.db.prepare("SELECT p.id FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.state='active' AND (p.initial_owner=1 OR (o.role='owner' AND o.status='active'))").all()).results.map(row => row.id)
+ const roleOf = id => h.db.prepare('SELECT p.initial_owner,o.role FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=?').bind(id).first()
+ // The confirmation link completes in the owner's own session.
+ const confirm = async session => {
+  const asked = await h.request(session, '/auth/step-up', { method: 'POST', body: JSON.stringify({ action: 'owner:transfer', returnTo: '/app/settings' }) })
+  assert.equal(asked.status, 202, await asked.text())
+  const mail = JSON.parse((await h.db.prepare('SELECT message FROM rer_mail_development_outbox ORDER BY sequence DESC LIMIT 1').first()).message)
+  const token = new URL(mail.text.match(/https?:\/\/\S+/)[0]).searchParams.get('token')
+  assert.equal((await h.request(session, '/auth/confirm', { method: 'POST', body: JSON.stringify({ token }), redirect: 'manual' })).status, 303)
+ }
  const target = await member()
  assert.equal(target.allowedActions.find(action => action.action === 'member.transfer-ownership').enabled, true)
 
@@ -121,28 +131,43 @@ test('[OPS-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh 
  const self = await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(h.owner).first()
  assert.equal((await command('member.transfer-ownership', { memberId: h.owner }, memberRef({ id: h.owner, version: self.version }), person.session)).status, 403)
 
- // The confirmation link completes in the owner's own session.
- const asked = await h.request(h.ownerSession, '/auth/step-up', { method: 'POST', body: JSON.stringify({ action: 'owner:transfer', returnTo: '/app/settings' }) })
- assert.equal(asked.status, 202, await asked.text())
- const mail = JSON.parse((await h.db.prepare('SELECT message FROM rer_mail_development_outbox ORDER BY sequence DESC LIMIT 1').first()).message)
- const token = new URL(mail.text.match(/https?:\/\/\S+/)[0]).searchParams.get('token')
- assert.equal((await h.request(h.ownerSession, '/auth/confirm', { method: 'POST', body: JSON.stringify({ token }), redirect: 'manual' })).status, 303)
+ // The owner cannot leave without handing over first.
+ const ownerLeaves = await command('member.remove', { memberId: h.owner, reason: 'Leaving' }, memberRef(await member(h.owner)))
+ assert.equal(ownerLeaves.status, 403, JSON.stringify(ownerLeaves.body))
+
+ await confirm(h.ownerSession)
  const handed = await command('member.transfer-ownership', { memberId: person.id }, memberRef(target))
  assert.equal(handed.status, 200, JSON.stringify(handed.body))
- assert.deepEqual(await h.db.prepare('SELECT p.initial_owner,o.role FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=?').bind(person.id).first(), { initial_owner: 1, role: 'owner' })
- assert.equal(await h.db.prepare('SELECT initial_owner FROM authority_principals WHERE id=?').bind(h.owner).first('initial_owner'), 0)
- assert.equal((await member()).owner, true)
+ assert.deepEqual(await roleOf(person.id), { initial_owner: 1, role: 'owner' })
+ assert.deepEqual(await roleOf(h.owner), { initial_owner: 0, role: 'admin' }, 'The former owner becomes a Base admin in the same commit')
+ assert.deepEqual(await owners(), [person.id], 'Exactly one owner remains')
+ assert.equal((await h.request(h.ownerSession, '/api/v1/session')).status, 401, 'Losing the owner role ends the former owner\'s sessions, as any Base role change does')
+ assert.equal((await h.request(person.session, `/api/v1/members?appId=${LAUNCH_APP_ID}`)).status, 401, 'Becoming owner ends the new owner\'s older sessions, as any Base role change does')
 
- // The former owner can now leave once their campaigns move to someone else.
- const formerSelf = async () => (await call(`/api/v1/members?appId=${LAUNCH_APP_ID}`)).body.data.items.find(item => item.id === h.owner)
- const blocked = await command('member.remove', { memberId: h.owner, reason: 'Handing the workspace over' }, memberRef(await formerSelf()))
+ // The new owner cannot remove themselves and leave the installation without an owner.
+ const owner = await h.signIn(person.id)
+ assert.equal((await member(person.id, owner)).owner, true)
+ const ownerless = await command('member.remove', { memberId: person.id, reason: 'Leaving' }, memberRef(await member(person.id, owner)), owner)
+ assert.equal(ownerless.status, 403, JSON.stringify(ownerless.body))
+ assert.deepEqual(await owners(), [person.id])
+
+ // The former owner signs in again with their app access and can leave once their campaigns move to someone else.
+ const former = await h.signIn(h.owner)
+ const formerSelf = () => member(h.owner, former)
+ const blocked = await command('member.remove', { memberId: h.owner, reason: 'Handing the workspace over' }, memberRef(await formerSelf()), former)
  assert.equal(blocked.status, 409, JSON.stringify(blocked.body))
  const owned = (await h.db.prepare('SELECT id,version FROM campaigns WHERE owner_id=? AND archived_at IS NULL').bind(h.owner).all()).results
- assert.equal((await command('launch.bulk.apply', { recordType: 'Campaign', ids: owned.map(row => row.id), change: { kind: 'field', field: 'ownerId', value: person.id } }, owned.map(campaignRef))).status, 200)
+ assert.equal((await command('launch.bulk.apply', { recordType: 'Campaign', ids: owned.map(row => row.id), change: { kind: 'field', field: 'ownerId', value: person.id } }, owned.map(campaignRef), former)).status, 200)
  for (const decision of (await h.db.prepare("SELECT id,version FROM decisions WHERE assignee_id=? AND state IN ('Awaiting approval','In review')").bind(h.owner).all()).results)
-  assert.equal((await command('launch.decision.assign', { id: decision.id, assigneeId: person.id }, [{ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities.decision, recordId: decision.id }, version: decision.version }])).status, 200)
- const removed = await command('member.remove', { memberId: h.owner, reason: 'Handing the workspace over' }, memberRef(await formerSelf()))
+  assert.equal((await command('launch.decision.assign', { id: decision.id, assigneeId: person.id }, [{ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities.decision, recordId: decision.id }, version: decision.version }], former)).status, 200)
+ const removed = await command('member.remove', { memberId: h.owner, reason: 'Handing the workspace over' }, memberRef(await formerSelf()), former)
  assert.equal(removed.status, 200, JSON.stringify(removed.body))
- assert.equal((await h.request(h.ownerSession, '/api/v1/session')).status, 401, 'The former owner is signed out everywhere')
- assert.equal((await h.request(person.session, `/api/v1/members?appId=${LAUNCH_APP_ID}`)).status, 401, 'Becoming owner ends the new owner\'s older sessions, as any Base role change does')
+ assert.equal((await h.request(former, '/api/v1/session')).status, 401, 'The former owner is signed out everywhere')
+
+ // Ownership can still be handed on: the new owner hands over to a third member.
+ const next = await h.addPerson({ name: 'Jo Next' })
+ await confirm(owner)
+ const again = await command('member.transfer-ownership', { memberId: next.id }, memberRef(await member(next.id, owner)), owner)
+ assert.equal(again.status, 200, JSON.stringify(again.body))
+ assert.deepEqual(await owners(), [next.id])
 })

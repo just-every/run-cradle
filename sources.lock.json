@@ -3254,7 +3254,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "ea5f58ca479c678c27b0e8b5006b7970d47ecf9938a00d89fca15441c5c00bac",
+      "sha256": "67d92adae7037057e799e7dbfc6c9a5bb0ccf856afefc39b8d1a29e7cd5cfe80",
       "executable": false
     },
     "rer-project.json": {
@@ -5370,11 +5370,11 @@
       "executable": false
     },
     "src/domains/authority/members.server.ts": {
-      "sha256": "4d0bd68bf2b1b9e1cf68232fbea883bac9344a81c1d344e01a9d7b1599342d58",
+      "sha256": "cd897869583983efdcda13556c2e9127c4d6eb4d28aa0a094cedf6eb50851ea7",
       "executable": false
     },
     "src/domains/authority/ownership.server.ts": {
-      "sha256": "96a78af1c03d95beb7ca45bc707fce41faece80cdac11f7b0820ee77548339f7",
+      "sha256": "eb406db062ad51131273d831c5e0e2801c1d93d51a652b9e4da30962de13748f",
       "executable": false
     },
     "src/domains/authority/pending-app.server.ts": {
@@ -5426,7 +5426,7 @@
       "executable": false
     },
     "src/domains/authority/reads.server.ts": {
-      "sha256": "eafab53c2224be00b2cf7686f9101f845b3b5ea06f03abc78109f1b0c85abf6a",
+      "sha256": "94673a27d67d1be7767c91d774f4afe4b94af5aca1ee75e3cd83812a28b99897",
       "executable": false
     },
     "src/domains/authority/reference.server.ts": {
@@ -7794,7 +7794,7 @@
       "executable": false
     },
     "src/ui/settings/ownership-handover.tsx": {
-      "sha256": "84f5a695dfd17d986e9f0de8f45fc7c5d429a63f0ef260a730b8a417ed128582",
+      "sha256": "c66f87bc20e4ffffe5b324a425a054da62e88023ae2a0120c2759191a60db3cb",
       "executable": false
     },
     "src/ui/settings/preferences-panel.tsx": {
@@ -8954,7 +8954,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "e484b736e8b806792cbd71fb423cf83cec481807593cce66735966396905820a",
+      "sha256": "7eb5c0efa307d20dc98cf10a54c483379eac6072a9f4be1c1d77294ff424c201",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
@@ -9578,7 +9578,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "d53a3f383bb5bc4d934426055f42d4eb90e273e211668894dfdd6abb02285654",
+      "sha256": "7f9b209f3158ff16716d31679282ce915cf8f566c795192ba563e8ff36094886",
       "executable": false
     },
     "tests/ui-launch-optional-browser.mjs": {
