@@ -5150,7 +5150,7 @@
       "executable": false
     },
     "src/core/platform/dependencies.server.ts": {
-      "sha256": "245280c08ea7971e833271e247512c6dda92a21fd0e3d47734f20d9b707c8376",
+      "sha256": "b20fd162385d5b8713f828409e9407d98ea13023afa37d47ccc1291a9651b88b",
       "executable": false
     },
     "src/core/platform/dev-personas.ts": {
@@ -7958,7 +7958,7 @@
       "executable": false
     },
     "tests/auth-oidc.mjs": {
-      "sha256": "6f45a9f6a1ee851ddc0635922fa53cde24b79d2b33c61c9e4f535c93f52cc86b",
+      "sha256": "b3198713ba7fc5e34aaafc2a00f6f4bbb4df45c1aa433a1977569a02f3b59da5",
       "executable": false
     },
     "tests/auth-support.mjs": {
@@ -8542,7 +8542,7 @@
       "executable": false
     },
     "tests/helpers/oidc-runtime.mjs": {
-      "sha256": "b7262885e3999dc442479a7d798642d7a8850a7c0c03cd94176894f4d7345947",
+      "sha256": "ac4055f94b5b626760f7baf7c26e4c9bfe32d3b9b7c5ffc731ed968b4d5c3e1a",
       "executable": false
     },
     "tests/helpers/portable-identity-expectation.mjs": {
