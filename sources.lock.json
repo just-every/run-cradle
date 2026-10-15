@@ -4580,7 +4580,7 @@
       "executable": false
     },
     "src/core/app/screens/landing/Hero.tsx": {
-      "sha256": "2165e50fcae40d086b374c6d6af67a2df3e48f391ba2374ec269c48aae3330fa",
+      "sha256": "bc0945e685afc750e4d44525894f76d9a56e52c903551625212222645c33de4c",
       "executable": false
     },
     "src/core/app/screens/landing/hero/art/camera.ts": {
