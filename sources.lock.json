@@ -7985,7 +7985,7 @@
       "executable": false
     },
     "src/ui/settings/archive-panel.tsx": {
-      "sha256": "b4c2a125d6eb450390400ac01269f7f6fd4e95a0f740958205188c8b17d09573",
+      "sha256": "b809f044babf2fda8f7c3c232e487a1e6fba1eca95cf192c80663f4ebcf683fa",
       "executable": false
     },
     "src/ui/settings/connection-actions.tsx": {
