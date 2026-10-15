@@ -26,6 +26,7 @@ export async function userScheduleBrowser(page,h,journey,width) {
  await form.getByLabel(/^Time ·/).fill(`${local.hour}:${local.minute}`)
  await form.getByLabel(/^Launch campaign/).selectOption({label:campaignName})
  await form.getByLabel('Message',{exact:true}).fill(`Activity from ${automationName}`)
+ await journey.capture('user-schedule-definition')
  const saved=await journey.command(form.getByRole('button',{name:'Save scheduled automation',exact:true}),'launch.automation.save')
  await page.getByRole('heading',{name:automationName,exact:true}).waitFor()
  await journey.capture('user-schedule-saved')

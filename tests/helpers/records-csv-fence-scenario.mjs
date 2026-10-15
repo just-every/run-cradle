@@ -17,7 +17,10 @@ export async function csvFenceScenario(h){
  const mixed={...input,csv:input.csv+'"Rejected","Bad number","not-a-number","false"\r\n'}
  const first=await r.csv.preview(h.ctx,mixed);assert.equal(first.creates,205);assert.equal(first.rejected,1);assert.equal(first.errors[0].row,207);await r.csv.commit(h.ctx,createUlid(),first.id)
  const repeated=await r.csv.preview(h.ctx,mixed);assert.equal(repeated.unchanged,205);assert.equal(repeated.creates,0);assert.equal(repeated.rejected,1)
- const exported=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query:{sort:[{fieldId:schema.fields[0].id,direction:'asc'}]}});assert.equal(exported.csv,input.csv)
+ const exported=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query:{sort:[{fieldId:schema.fields[0].id,direction:'asc'}]}})
+ // View exports use the grid's boolean display; the raw import input stays false.
+ const expectedCsv=encodeCsv(schema.fields.map(f=>f.label),Array.from({length:205},(_,n)=>[`row-${String(n).padStart(3,'0')}`,`北, "${n}"\nline`,'0','No']))
+ assert.equal(exported.csv,expectedCsv)
  assert.ok(reads.some(read=>read.sql.includes('json_each')&&JSON.parse(read.values[0]).some(group=>group.length===205)),'The final statement checks all 205 per-row predicates')
  const descriptor=r.registry.get(draft.appId,schema.id),last=await prepare(`SELECT id FROM "${descriptor.table.tableId}" ORDER BY "${descriptor.fields.get(schema.fields[0].id).column}" DESC LIMIT 1`).first()
  await prepare(`UPDATE "${descriptor.table.tableId}" SET version=version+1 WHERE id=?`).bind(last.id).run()

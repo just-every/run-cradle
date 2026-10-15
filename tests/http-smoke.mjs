@@ -1,3 +1,4 @@
+import './helpers/typescript-loader.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
 import assert from 'node:assert/strict'
@@ -10,6 +11,7 @@ import {freePort} from './helpers/free-port.mjs'
 
 const port = Number(process.env.CRADLE_TEST_PORT ?? await freePort())
 const baseUrl = `http://127.0.0.1:${port}`
+const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
 
 const waitForWorker = async () => {
   const deadline = Date.now() + 15_000
@@ -203,8 +205,13 @@ test('the Worker seeds and serves the real portfolio spine locally', async (cont
   assert.equal(settings.settings.mail.status, 'ready', 'Settings recognizes the configured installation sender')
   assert.equal(settings.settings.email.configured, true, 'The Email card agrees with the live mail configuration')
 
-  const search = await (await request('/api/search?q=security')).json()
-  assert.ok(search.items.some((item) => item.recordType === 'Campaign'))
+  const searchResponse = await request('/api/search?q=security')
+  assert.equal(searchResponse.status, 200)
+  const search = await searchResponse.json()
+  const securityHit = search.items.find(item => item.appId === LAUNCH_APP_ID && item.entityId === launchEntities.campaign && item.id === security.id)
+  assert.ok(securityHit, 'Search finds the matching campaign by its stable record identity')
+  assert.equal(securityHit.name, securityDetail.campaign.name)
+  assert.equal(securityHit.href, `/app/records/${LAUNCH_APP_ID}/${launchEntities.campaign}/${security.id}`)
 
   const missingApiRoute = await request('/api/missing')
   assert.equal(missingApiRoute.status, 404)

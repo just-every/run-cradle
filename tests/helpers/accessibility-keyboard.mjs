@@ -134,7 +134,10 @@ export async function keyboardOrder(page) {
       return radioRepresentatives.get(owner)?.get(element.name) === element
     })
     let probe = 0
-    const expected = representatives.map(element => {
+    // A radio group contributes one expected Tab stop, but the browser can
+    // focus a different member on a later traversal of an unchecked group.
+    // Every eligible control needs its own unfocused style baseline.
+    const inventory = controls.map(element => {
       const key = `a11y-${probe++}`
       element.setAttribute('data-cradle-a11y-probe', key)
       const rect = element.getBoundingClientRect()
@@ -153,8 +156,18 @@ export async function keyboardOrder(page) {
         baselineStyle: style,
       }
     })
+    const representativeKeys = new Set(representatives.map(element => element.getAttribute('data-cradle-a11y-probe')))
+    const expected = inventory.filter(item => representativeKeys.has(item.key))
+    const baselineByKey = Object.fromEntries(inventory.map(item => [item.key, item.baselineStyle]))
+    const tabStopByKey = Object.fromEntries(controls.map(element => {
+      const key = element.getAttribute('data-cradle-a11y-probe')
+      const representative = element.tagName === 'INPUT' && element.type === 'radio' && element.name
+        ? radioRepresentatives.get(element.form || document)?.get(element.name)
+        : element
+      return [key, representative.getAttribute('data-cradle-a11y-probe')]
+    }))
     const startingFocusKey = original instanceof HTMLElement ? original.getAttribute('data-cradle-a11y-probe') : null
-    return { expected, originalProbe, priorScroll, priorTabIndex, startingFocus, startingFocusKey }
+    return { expected, baselineByKey, tabStopByKey, originalProbe, priorScroll, priorTabIndex, startingFocus, startingFocusKey }
   }, interactiveControlsSelector)
 
   if (state.skipped) return {
@@ -166,13 +179,14 @@ export async function keyboardOrder(page) {
     }))),
   }
 
-  const baselineByKey = Object.fromEntries(state.expected.map(item => [item.key, item.baselineStyle]))
+  const { baselineByKey, tabStopByKey } = state
   const focusStyles = []
   const visitedKeys = new Set()
+  const visitedControlKeys = new Set()
   try {
     for (let index = 0; index < state.expected.length * 4 + 12; index++) {
       await page.keyboard.press('Tab')
-      const focused = await page.evaluate(baselines => {
+      const focused = await page.evaluate(({ baselines, tabStops }) => {
         const styleSnapshot = element => {
           const style = getComputedStyle(element)
           return {
@@ -193,6 +207,7 @@ export async function keyboardOrder(page) {
         const key = element.getAttribute('data-cradle-a11y-probe')
         return {
           key,
+          tabStopKey: key ? tabStops[key] : null,
           tag: element.tagName.toLowerCase(),
           role: element.getAttribute('role') || '',
           name: (() => {
@@ -210,14 +225,15 @@ export async function keyboardOrder(page) {
           baselineStyle: key ? baselines[key] : null,
           inViewport: rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth,
         }
-      }, baselineByKey)
+      }, { baselines: baselineByKey, tabStops: tabStopByKey })
       if (!focused) break
-      if (focused.key && visitedKeys.has(focused.key)) {
+      if (focused.key && visitedControlKeys.has(focused.key)) {
         focusStyles.push({ ...focused, duplicateFocusStop: true, visibleFocusIndicator: focused.focusVisible && visibleFocusDelta(focused.style, focused.baselineStyle) })
         if (visitedKeys.size === state.expected.length) break
         continue
       }
-      if (focused.key) visitedKeys.add(focused.key)
+      if (focused.key) visitedControlKeys.add(focused.key)
+      if (focused.tabStopKey) visitedKeys.add(focused.tabStopKey)
       const item = {
         ...focused,
         visibleFocusIndicator: focused.focusVisible && (
@@ -248,7 +264,7 @@ export async function keyboardOrder(page) {
     traversalStart: state.startingFocus,
     traversalMethod: 'Independent action-inventory pass seeded once at document.body, then actual Tab key traversal; strict actions and fields continue from current focus',
     focusVisibleChecks: focusStyles,
-    focusSequence: focusStyles.map(({ key, tag, role, name, id, linkPath, linkHasQuery, type, inViewport, visibleFocusIndicator, duplicateFocusStop }) => ({ key, tag, role, name, id, linkPath, linkHasQuery, type, inViewport, visibleFocusIndicator, ...(duplicateFocusStop ? { duplicateFocusStop: true } : {}) })),
+    focusSequence: focusStyles.map(({ key, tabStopKey, tag, role, name, id, linkPath, linkHasQuery, type, inViewport, visibleFocusIndicator, duplicateFocusStop }) => ({ key, tabStopKey, tag, role, name, id, linkPath, linkHasQuery, type, inViewport, visibleFocusIndicator, ...(duplicateFocusStop ? { duplicateFocusStop: true } : {}) })),
     focusWithoutVisibleStyle: focusStyles.filter(item => !item.duplicateFocusStop && !item.visibleFocusIndicator),
     focusOutsideViewport: focusStyles.filter(item => !item.duplicateFocusStop && !item.inViewport),
     wrappedOrStopped: visitedKeys.size < state.expected.length,

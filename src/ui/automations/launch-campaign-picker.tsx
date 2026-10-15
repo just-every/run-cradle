@@ -30,7 +30,7 @@ export function LaunchCampaignPicker({value,onChange}:{value:string;onChange:(va
  },[cursor,revision])
  return <ResourceState resource={resource} operation="Launch campaigns" retry={retry}>{data=><div className="cr-stack">
   <label className="cr-field">Launch campaign<select required value={value} onChange={event=>onChange(event.target.value)}>
-   <option value="">Choose a campaign</option>{data.records.filter(record=>record.lifecycle!=='archived').map(record=><option key={record.id} value={record.id}>{recordLabel(record,{...data.schema,primaryFieldId:data.schema.fields.find(field=>field.label==='name')?.id})}</option>)}
+   <option value="">Choose a campaign</option>{data.records.filter(record=>record.lifecycle!=='archived').map(record=><option key={record.id} value={record.id}>{recordLabel(record,data.schema)}</option>)}
   </select>{!data.records.length&&<span>Create a Launch campaign in Records first.</span>}</label>
   {data.nextCursor&&<button type="button" className="cr-button cr-button--quiet" onClick={()=>setCursor(data.nextCursor!)}>Load more campaigns</button>}
  </div>}</ResourceState>

@@ -7533,7 +7533,7 @@
       "executable": false
     },
     "src/ui/automations/launch-campaign-picker.tsx": {
-      "sha256": "9a2cb1a9d7927c6124fd2855d801c20748e49e94a14c00ddc1e76bec6cd28213",
+      "sha256": "33650fb0ef41a7fa8cfa9d9df12d661f6acace20d6ffa0aa1f55423c5490084b",
       "executable": false
     },
     "src/ui/automations/launch-schedule-editor.tsx": {
@@ -8469,7 +8469,7 @@
       "executable": false
     },
     "tests/helpers/accessibility-keyboard.mjs": {
-      "sha256": "8a139eea87542ae078a45f936670bf0a5ea50e03882ca061131d54d8238f2e77",
+      "sha256": "7066f4d29e54031e441a3a32526334a915900b79146d9c849cdab194c6e4ee50",
       "executable": false
     },
     "tests/helpers/accessibility-modal-keyboard.mjs": {
@@ -8797,7 +8797,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-review.mjs": {
-      "sha256": "e855648daa13bf4f2fc9e6324dcfa95b025de0fc73c1c497c62765b69f0c2c81",
+      "sha256": "2e23ea7fc881bdd3f576811c98f12a19ce82768d18a457c387e8e82a273188b2",
       "executable": false
     },
     "tests/helpers/records-browser-runtime.mjs": {
@@ -8813,7 +8813,7 @@
       "executable": false
     },
     "tests/helpers/records-csv-fence-scenario.mjs": {
-      "sha256": "8014bde872d1d9a2a9069ea93c07f026f79c145885042e70218204855348e225",
+      "sha256": "b1751fa4d4b7f8f7939f86e004b417b9713869af9ed2b3ee8af1b37696023adb",
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
@@ -8977,7 +8977,7 @@
       "executable": false
     },
     "tests/helpers/user-schedule-browser.mjs": {
-      "sha256": "b0713ad06736e513a1cb11505c6528f82bb91feb29c0701d87bfd18f85adf8c7",
+      "sha256": "1ecdfe086f87ea11da485aa825755867ba332c0d1d29e0064dc898276da7ec1b",
       "executable": false
     },
     "tests/helpers/versioned-session-proof.mjs": {
@@ -8985,7 +8985,7 @@
       "executable": false
     },
     "tests/http-smoke.mjs": {
-      "sha256": "1411e8d42c492bbac59302d890ab6166f9b9d191df0a6aa14157f49e091437bc",
+      "sha256": "b6a2da0b409a0e359eb79f549438f4826c5a4a8e61e6559f9f010f68c7648d7c",
       "executable": false
     },
     "tests/installed-home.mjs": {
@@ -9113,7 +9113,7 @@
       "executable": false
     },
     "tests/public-document-runtime.mjs": {
-      "sha256": "abe0d9854c189836e44b29cde5a4c4d391b8e6d7d6e514da246b2faa61ea74f4",
+      "sha256": "fb343642577573514ba7a78f659a4bc19d787eef1bf56048c13c89df77d90d39",
       "executable": false
     },
     "tests/records-agent-proposals.mjs": {

@@ -15,6 +15,29 @@ async function checkboxGeometry(label){
  const geometry=await label.evaluate(element=>{const box=element.getBoundingClientRect(),input=element.querySelector('input').getBoundingClientRect();return {height:box.height,width:input.width,inputHeight:input.height,center:Math.abs(input.y+input.height/2-box.y-box.height/2)}})
  assert.ok(geometry.height>=44,JSON.stringify(geometry));assert.equal(geometry.width,20);assert.equal(geometry.inputHeight,20);assert.ok(geometry.center<=1,JSON.stringify(geometry))
 }
+async function templateChoices(page,j,origin){
+ const region=()=>page.getByRole('region',{name:'Start from a template',exact:true})
+ const readApps=async()=>{const response=await page.request.get(origin+'/api/v1/apps');assert.equal(response.status(),200);return(await response.json()).data.items}
+ const before=await readApps()
+ for(const name of ['Customer relationships','Project tracker']){
+  await j.action(region().getByRole('button',{name:`Use ${name}`,exact:true}))
+  await chooserHidden(page)
+  assert.equal(await page.getByLabel('Base name',{exact:true}).inputValue(),name,'A manual template must open its named schema draft')
+  await page.getByRole('navigation',{name:'Schema tables',exact:true}).waitFor()
+  await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}))
+  await region().waitFor()
+ }
+ const included=region().getByRole('link',{name:'Use Launch readiness',exact:true}),href=await included.getAttribute('href')
+ const existing=before.find(app=>app.entryUrl===href)
+ assert.ok(existing,'The included template must target an existing authorized base')
+ await j.action(included)
+ await page.waitForURL(new URL(href,origin).href)
+ const selected=page.getByRole('navigation',{name:'Application records',exact:true}).getByRole('link',{name:existing.name,exact:true})
+ await selected.waitFor();assert.equal(await selected.getAttribute('aria-current'),'page')
+ await page.getByRole('navigation',{name:'Record types',exact:true}).waitFor()
+ assert.deepEqual((await readApps()).map(app=>app.id),before.map(app=>app.id),'Using or cancelling a template must preserve the existing bases')
+ await page.goto(origin+'/app/records');await region().waitFor()
+}
 export async function homeReview(output){
  let h,browser
  const receipts=[]
@@ -28,7 +51,7 @@ export async function homeReview(output){
    assert.equal(await page.locator('.cr-home-records .cr-eyebrow').evaluate(e=>getComputedStyle(e).color),'rgb(63, 107, 54)')
    await j.capture('fresh-home');await j.action(page.getByRole('link',{name:'Open records',exact:true}));await page.getByRole('button',{name:'Create base',exact:true}).waitFor()
    const choose=await page.getByRole('heading',{name:'Choose an application',exact:true}).boundingBox(),templates=page.getByRole('region',{name:'Start from a template',exact:true}),t=await templates.boundingBox()
-   assert.ok(t.y>=choose.y+choose.height,JSON.stringify({choose,t}));assert.equal(await templates.getByRole('button',{name:/^Use /}).count(),3)
+   assert.ok(t.y>=choose.y+choose.height,JSON.stringify({choose,t}));await templateChoices(page,j,h.origin)
    await j.action(page.getByRole('button',{name:'Create base',exact:true}));await chooserHidden(page);await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await page.getByRole('navigation',{name:'Application records',exact:true}).waitFor();await j.capture('base-actions')
    await j.action(page.getByRole('button',{name:'Create base',exact:true}));await page.getByLabel('Base name',{exact:true}).fill(`Home records ${width}`);await page.getByLabel('Table name',{exact:true}).fill('Notes');await page.getByLabel('Field name',{exact:true}).fill('Note')
    const base=await j.adopt(),record=await j.record({Note:`Existing record ${width}`})
