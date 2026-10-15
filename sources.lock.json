@@ -9121,7 +9121,7 @@
       "executable": false
     },
     "tests/records-import-effects.mjs": {
-      "sha256": "4b5bd2ed412bdb07fcae526eab5fcaa57772bfcdfcc586a7ba8c702a6e16d8b6",
+      "sha256": "38b06e379e0210aba4bad0c4f072405a01999a06f71ab8636fc6e3da0d569cb4",
       "executable": false
     },
     "tests/records-import-fixtures-d1.mjs": {

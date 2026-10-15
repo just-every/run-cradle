@@ -17,6 +17,10 @@ contract('RECORDS-005 AUTO-USER-001','import job writes fire no automation, noti
   edge=await automationNetworkEdge()
   h=await userAutomationRuntime(18961,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
    EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})
+  // This case measures import suppression and immediate delivery, independently of wall-clock quiet hours.
+  const settings=(await h.request('/api/v1/settings')).data
+  const configured=(await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}}}})).data
+  assert.equal(configured.state,'committed')
   // The full scheduler stays active; independent workspace schedules are disabled
   // through the owner's command so only import and record-trigger effects are measured.
   const schedules=(await h.db.prepare("SELECT id,version FROM automations WHERE trigger_type='schedule' AND enabled=1").all()).results
