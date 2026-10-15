@@ -9329,7 +9329,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "0d238076d474a3a4650b66e2cff76b243618f181ef6626d38a98d4b717900e46",
+      "sha256": "2fe62e43d8ed5c3b69a24e585d7f01e53b827b865df817f584916e0114c023d9",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
