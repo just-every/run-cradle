@@ -106,7 +106,7 @@ test('[VIEW-007] campaign pages follow a keyset cursor: a record added before th
  assert.deepEqual([...first.items.map(item => item.id), ...rest], before, 'Every existing record appears once and in order')
 })
 
-test('[OPS-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, and the former owner removes themselves', async () => {
+test('[OPS-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, and Base operator routes cannot remove the owner', async () => {
  const person = await h.addPerson({ name: 'Alex Successor' })
  const member = async (id = person.id, session = h.ownerSession) => (await call(`/api/v1/members?appId=${LAUNCH_APP_ID}`, {}, session)).body.data.items.find(item => item.id === id)
  const memberRef = row => [{ ref: { appId: LAUNCH_APP_ID, entityId: '00000000000000000000000101', recordId: row.id }, version: row.version }]
@@ -170,4 +170,20 @@ test('[OPS-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh 
  const again = await command('member.transfer-ownership', { memberId: next.id }, memberRef(await member(next.id, owner)), owner)
  assert.equal(again.status, 200, JSON.stringify(again.body))
  assert.deepEqual(await owners(), [next.id])
+
+ // Base's own operator routes cannot leave the installation without an owner: a Base co-owner
+ // cannot deactivate or demote the installation owner, nor can the owner demote themselves.
+ const baseId = id => h.db.prepare('SELECT base_id FROM cradle_base_operators WHERE principal_id=?').bind(id).first('base_id')
+ const operator = async (session, route, body) => { const response = await h.request(session, route, { method: 'POST', body: JSON.stringify(body) }); return { status: response.status, body: await response.json().catch(() => null) } }
+ const current = await h.signIn(next.id)
+ await confirm(current)
+ assert.equal((await operator(current, '/auth/operator/role', { operatorId: await baseId(person.id), role: 'owner' })).status, 200)
+ const coOwner = await h.signIn(person.id)
+ await confirm(coOwner)
+ for (const [session, route, change] of [[coOwner, '/auth/operator/status', { status: 'inactive' }], [coOwner, '/auth/operator/role', { role: 'admin' }], [current, '/auth/operator/role', { role: 'admin' }]]) {
+  const refused = await operator(session, route, { operatorId: await baseId(next.id), ...change })
+  assert.deepEqual([refused.status, refused.body?.error], [409, 'last_owner'], `${route} ${JSON.stringify(change)}`)
+ }
+ assert.deepEqual(await roleOf(next.id), { initial_owner: 1, role: 'owner' }, 'The installation owner stays active and the Base owner')
+ assert.deepEqual((await h.db.prepare("SELECT id FROM authority_principals WHERE state='active' AND initial_owner=1").all()).results.map(row => row.id), [next.id])
 })
