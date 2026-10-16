@@ -1,11 +1,9 @@
 # Install Cradle
 
 Start with [the quick install guide](install.md). Use macOS, Linux or Windows
-with WSL2, with Git installed. **Install Node 22 or later before rer**: download
-and run your computer's installer from [nodejs.org](https://nodejs.org/en/download),
-then open a new terminal and check `node --version`. npm comes with Node.
-Cradle uses **rer 0.2.23**. The quick guide gives both Run page installer choices,
-pinned to that version. Both need Node first; rer installs this project's pinned
+with WSL2, with Git installed. You need no Node first: the installer brings its own.
+Cradle uses **rer 0.2.23**. The quick guide gives the two Run page lines; rer
+installs this project's pinned
 Node 22.20.0 and pnpm 10.12.4 for project commands. You need not install pnpm
 separately.
 

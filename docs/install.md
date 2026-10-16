@@ -1,20 +1,20 @@
 # Install Cradle
 
 Cradle runs on your own computer first: macOS, Linux or Windows with WSL2,
-with Git installed. **Node 22 or later is required before installing rer.**
-Download the installer for your computer from [nodejs.org](https://nodejs.org/en/download),
-run it, then open a new terminal. `node --version` should show v22 or later; npm
-comes with Node. Rer then provisions this project’s pinned Node 22.20.0 and
-pnpm 10.12.4.
+with Git installed. You need no Node first: the installer brings its own, and rer
+then provisions this project’s pinned Node 22.20.0 and pnpm 10.12.4.
 
 ## Run it on your computer
 
-Node first, then one line installs rer, clones Cradle and starts it. The
+Two lines install rer, clone Cradle and start it. The
 checkout runs Cradle's pinned rer 0.2.23:
 
 ```sh
-npx -y @runeditrun/rer dev just-every/run-cradle
+curl -fsSL https://runeditrun.com/install.sh | sh
+rer dev just-every/run-cradle
 ```
+
+The first line installs `rer` for you alone, with its own Node if you have none. It changes no shell settings: if it prints an `export PATH=…` line, run that line before the second. Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-cradle` does both lines in one.
 
 To start it again later, run `cd run-cradle && rer dev`. The first `rer dev` installs the dependencies, creates a local owner, applies
 migrations and starts the app. Open the `RER_OPEN` address it prints. The browser
