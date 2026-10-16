@@ -1,6 +1,6 @@
 # Leaving Cradle and coming back
 
-The records workspace gives you a complete base JSON download, a one-download CSV set, and the existing selected-view CSV. A whole-installation archive is a separate maintenance surface with the current integration boundary described below. None of these formats asserts that an unnamed destination can restore behavior it does not support.
+The records workspace gives you a complete base JSON download, a one-download CSV set, and the existing selected-view CSV. Settings also downloads a whole-installation archive; its restore path is described below. None of these formats asserts that an unnamed destination can restore behavior it does not support.
 
 The move-in receipt of every import job (see [importing](importing.md#move-in-receipt)) restates, from the job, what each of these exits keeps and what the import did not carry. Importing any of them back into Cradle starts no automations, notifications, mail or webhooks; only your later edits do. Hosted runs and real-account exports remain unproven.
 
@@ -50,12 +50,19 @@ The existing **Export CSV** action exports only the current view's selected reco
 
 ## Whole-installation archive maintenance
 
-Use `rer export --output exports/workspace.rer` and, in an empty
-installation, `rer import --input exports/workspace.rer --yes`.
+As the installation owner, use Settings → **Export your installation** →
+**Prepare archive**, then **Download verified archive**. Keep your source checkout
+and customisations separately; the `.rer` download contains data and files.
+
+Or use `rer export --output exports/workspace.rer`. Restore either download in an
+empty installation with `rer import --input exports/workspace.rer --yes`, then
+`rer dev`; no answers file is required.
 These commands cover the installation DB and FILES through Base portability,
 including generated-column schema and recomputed values. Stop the app first.
 See [installation archives](installation-archives.md) for credential exclusions,
-held jobs, fresh owner admission and explicit reapproval. Hosted transfer remains
-unsupported by this CLI; records JSON and CSV retain their scoped product paths.
+held jobs, fresh owner admission and explicit reapproval. Settings can download
+from the hosted installation; the CLI restores into local storage and does not
+restore directly into hosted resources. Records JSON and CSV retain their scoped
+product paths.
 
 Archives are format version 2 since the Base `da0c3b7` command refresh. An archive exported before that refresh is version 1 and a normal import refuses it (`restore_refused (legacy_archive_unverifiable)`): update the original installation and export again. Cradle's adapter does not yet support Base's `--legacy-v1` recovery.

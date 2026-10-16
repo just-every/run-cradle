@@ -38,7 +38,7 @@ export function createProviderRuntime(o:ProviderRuntimeOptions){
   return credentialAccess(context,id,purpose,operation);
  },sync:async(context,id)=>{if(!o.intake)throw new ApiError('unconfigured','Scoped Gmail source intake is unavailable.');const configured=await o.intake(context,id),service=connections(context);await gmailPoller(service.credentials,configured.port)(id,configured.scope,configured.pageToken,new Date(Date.now()+60000).toISOString(),{jobId:context.requestId});}});}
  const dependencies:ExecutionDependencies={db:o.db,admission:o.admission,policy:o.policy,workspaceId:o.workspaceId,keyring,payloads,...createExecutionBudget(o.db),observations:o.observations,notificationMailAuthority:notification.authorize,backgroundContext:background.run,
-  currentGuards:async(ctx,r,mode)=>r.action==='notification.email.send'?[...(await notification.authorize(ctx,r,mode)).guards]:o.currentGuards(ctx,r,mode),
+  currentGuards:async(ctx,r,mode,identity)=>r.action==='notification.email.send'?[...(await notification.authorize(ctx,r,mode)).guards]:o.currentGuards(ctx,r,mode,identity),
   adapters:ctx=>{const credentials=connections(ctx).credentials;return new Map<string,ProviderAdapter>([['resend',resendAdapter(credentials)],['google-calendar',calendarAdapter(credentials)],['xero',xeroAdapter(credentials)],['openai',openaiAdapter(credentials,(value,sourceIds,name)=>{const schema=o.schemas.get(name);if(!schema)throw new Error('Unregistered model output schema');return schema.validate(value,sourceIds);})]]);}
  };
  const execution=createExecutionService(dependencies),handlers=createExecutionHandlers(dependencies);

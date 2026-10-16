@@ -1,82 +1,160 @@
 # Importing a base
 
-Open **Records → Import a base**. Import creates a new base; it never merges into an existing one. You review source columns and loss accounting first, then the native schema impact, then adopt the release and apply the retained job. Ordinary import needs no AI provider or live source account connection.
+Open **Records → Import a base**. Import creates a new base; it does not merge
+into an existing one. You choose files, review the proposed tables and fields,
+review the schema changes, then adopt and run the import. No AI provider or live
+connection to your source account is needed.
 
-For an Airtable source, open each table's grid view, open the view menu and choose **Download CSV** as described in [the source view guide](https://support.airtable.com/articles/5189551686-getting-started-with-airtable-views). Download one file per table. A view CSV contains only that view's rows and columns: choose the full view you intend to move. Keep every original file. Select **1–20 CSV files together** so relationships can resolve across the complete selection. Filenames identify source tables throughout review; do not rename files between previews. You can rename destination tables and fields in the mapping.
+## Choose your files
 
-The other input is one Cradle base JSON file downloaded from **Export base → JSON**. Its exact format is `{"format":"cradle-base","version":1,...}`; [the committed schema](../schemas/cradle-base-v1.schema.json) describes its portable allowlist. Native JSON retains primary identities, field definitions, select choices including unused options, records and ID links, incoming relation metadata, saved views and forms. It enters the same review, schema-impact, release adoption and durable job flow. Native definitions remain intact during import; edit schema after import if you want to change types. A fresh installation preserves portable IDs. If any imported identity already exists, the whole copy receives one complete bijective ID map; every relation, lookup, select, view, filter and form reference follows that map. Operator identity, authority and internal storage metadata are never imported from this format.
+Upload **1–20 CSV files together**, one per table, so links can resolve across the
+whole selection. For Airtable, choose **Download CSV** from each table's grid view
+menu. A view export contains only that view's rows and columns, so choose the full
+view you want to move. Keep the originals and keep filenames unchanged between
+previews. You can rename destination tables and fields during review.
+
+You can instead upload one Cradle base JSON file from **Export base → JSON**.
+This keeps table and field definitions, select choices (including unused ones),
+records, links, lookups, saved views and signed-in forms. Types stay as exported;
+change them after import if needed. A fresh installation keeps the exported IDs.
+If an ID already exists, the copy receives new IDs and its references are updated
+together. User accounts, permissions and internal storage details do not transfer.
 
 ## Review the mapping
 
-CSV does not declare source field types. **Describe source behavior (optional)** lets you record a known formula, rollup, attachment or other source kind; the report names that as an owner declaration. It does not change the destination type or recreate source behavior. You can also retain known multiple-select choices, including unused choices, as source-only metadata. Without those declarations, CSV defaults are inferred only from values. Treat proposals as editable choices; review every column and the complete report, including its nonempty count, samples, valid types and reasons. The first CSV column is the primary field. Primary text used to resolve CSV links is the **exact raw source text**, before numeric/date/type conversion. Case and surrounding spaces are significant.
+CSV contains values, not full field definitions. Treat the proposed types as
+suggestions. Check every table's row totals and every column's name, type and
+samples, then review rejected rows, conversions, skipped values and link problems.
+The first column is the table's primary field: the name used to identify a row.
 
-| Source content | Native choice and exact rule |
+| Field | What to check |
 | --- | --- |
-| Text, URL, phone, collaborators, created-by and modified-by display | Text preserves exported text. URL is available when all values meet native HTTP/HTTPS URL validation. Account attribution is ordinary source text, never an operator or grant. |
-| Numbers, currency, percent, rating, duration, auto-number, count | Number stores an exact canonical decimal string. Optional outer whitespace, leading £/$/€/¥, comma groups of three and accounting parentheses are normalized. `50%` becomes `0.5`; undecorated `0.5` remains `0.5`. Invalid cells reject their row. Every changed representation is counted and listed, with its original value retained. |
-| Dates | ISO `YYYY-MM-DD`, or slash dates only after the owner explicitly chooses day-first or month-first. A preview never guesses the slash convention. Invalid dates reject the row. |
-| Date-time, multiple-select display | Text. Multiple-select API arrays are displayed in source order joined with comma and space; this representation change is named and counted. Neither timezone-aware date-time behavior nor multiple-select behavior is recreated. |
-| Checkbox | CSV accepts exactly `checked` or empty (true or false). Recorded API accepts true, false or absent (absent is false). Other text rejects the row. |
-| Single select | Choose Select and review the complete ordered choices. By default, distinct nonempty row values define the initial order for both CSV and recorded API sources. Source metadata choices remain in source-option accounting; explicitly set the full option list to retain or add unused choices. Empty is null. |
-| Linked record | Choose the imported target table and one or multiple linked records. The default is one when every cell has at most one reference, otherwise multiple. CSV compares exact raw target primary text. Recorded API and native JSON use source record IDs. No first-match resolution is permitted. |
-| Lookup | A declared API lookup defaults to Lookup when its actual ONE relation and target column reproduce **every exported row**. CSV proposes proven candidates; choose Lookup and its relation/value columns, or explicitly choose Text. The importer checks every row against recomputation. A single mismatch retains the column as Text and reports the first raw and derived mismatch. |
-| Formula or rollup | Parseable numeric scalar content defaults to Number; other content defaults to Text. Either choice remains editable. Formula and rollup definitions/behavior are named in the report and are not recreated. |
-| Attachments or buttons | Skipped by default, with every nonempty skipped cell counted. Attachment bytes and button actions are not imported. The raw original remains retained. |
+| Text and URL | Text keeps the exported value. URL requires valid HTTP/HTTPS addresses. People named in a source column stay text; they do not become workspace members. |
+| Number | Currency symbols, grouped thousands and accounting parentheses are normalized. `50%` becomes `0.5`. Invalid values reject the row; changed values are listed in the report with their originals. |
+| Date | ISO dates such as `2026-10-15` work directly. For slash dates, choose day-first or month-first explicitly. Invalid dates reject the row. |
+| Checkbox | CSV accepts `checked` or an empty cell, meaning true or false. Other text rejects the row. |
+| Select | Review the full ordered option list. Distinct nonempty CSV values supply the initial choices; add unused choices explicitly if you need them. Empty cells have no selection. |
+| Link | Choose **Link**, its target table, and one or multiple records. A column containing client names may initially be proposed as Select; change it to Link and choose Clients. |
+| Lookup | Choose the link and the field to look up. Cradle checks every exported value against the calculated result. If they differ, the column stays Text and the report shows the first mismatch. |
+| Formula or rollup | Values can become Number or Text. The formula or rollup itself is not recreated. |
+| Date-time or multiple select | Values can stay Text, but timezone-aware dates and multiple-select behavior are not recreated. |
+| Attachment or button | Skipped by default. Review the count of nonempty cells being skipped. File bytes and button actions are not imported. |
 
-Link cells are inner comma-separated lists, using RFC4180 quotation independently of the outer CSV: a primary containing a comma is `"North, Inc"`; a quote is doubled, as in `"The ""Quoted"" Company"`. An embedded newline also stays quoted. Empty link cells mean no reference. No whitespace is trimmed from a quoted reference. A target that is absent is unresolved; multiple exact target primary matches are ambiguous; a target row rejected for a scalar error cannot receive a materialized link. Self-links and cycles are applied after all accepted records exist.
+Use **Describe source behavior (optional)** to record known formulas, rollups,
+attachments or other source types that CSV cannot describe. This helps the loss
+report; it does not recreate the behavior or change the destination type. Known
+source multiple-select choices can also be recorded, including unused choices.
+Even unchanged text can lose behavior, so these losses still need acknowledgment.
 
-Opposite link columns are not automatically two independent writable relations. An exported CSV set supplies an explicit **Derived incoming source** choice for every projection; that source remains the sole canonical writer, retains its link order, and may have several separately named incoming projections. Load the exported `import-options.json` under **CSV review choices** before preview, then inspect or edit these public choices. For an ordinary CSV with no declared derived source, when a reciprocal pair is established, the ONE side is canonical; if both sides have the same cardinality, the earlier source column is canonical. Unique opposite columns with supporting reverse edges are a named inference assumption. Choose the reciprocal pair explicitly when candidates are ambiguous or their cells disagree completely. Every disagreement is reported. The inverse name is retained as a **derived incoming relation** computed from the canonical field, never a second drifting link column.
+### Resolve links
+
+CSV links match the target table's **exact original primary text**: case and
+surrounding spaces matter. For example, a Projects client value of `Tidewater`
+needs exactly one accepted Clients row named `Tidewater`. No match is unresolved;
+more than one match is ambiguous. A rejected target row cannot receive a link.
+Cradle never silently chooses the first match. Correct the source or mapping and
+preview again before continuing.
+
+A link cell can contain several comma-separated names. Quote a name containing a
+comma, for example `"North, Inc"`; double a quote inside a quoted name. These
+quotes are part of the cell's contents, in addition to any outer CSV quoting.
+An empty link cell means no link. Self-links and circular links are applied after
+the accepted records exist.
+
+For links shown in both directions, one column stores the links and the opposite
+column is calculated from it. Review the proposed pair and any disagreements.
+Choose explicitly when several pairs are possible. Exported CSV review choices
+name the original link column as **Derived incoming source**; its link order is
+kept. For ordinary CSV, a proven reciprocal pair uses the single-record side, or
+the earlier column when both sides allow the same number of links.
 
 ## Returning an exported CSV set
 
-For a complete typed CSV return, load both companion files from Cradle's ZIP: **CSV review choices** accepts `import-options.json`; **CSV correspondence** accepts `correspondence.json`. The latter binds exact CSV filenames/bytes to source row ordinals, individual link-token occurrences and typed empty-cell states. It proposes choices but accepts none. In **Review CSV correspondence**, inspect each candidate's CSV row and distinguishing values, change a target if needed, and press **Accept all correspondence proposals**. Every chosen target must be an exact primary match in the uploaded target table. Required/unique flags and complete empty-cell state annotations are applied only after acceptance. Primary/type/target/file/choice changes invalidate acceptance. Raw resolved/unresolved/ambiguous counts remain unchanged, with selected and materialized counts reported separately. No metadata can grant authority or point a write at an existing base. Additional incoming columns must match the canonical reverse links exactly, including valid empty projections. Complete metadata and explicit acceptance are required for a saved review over 80 CSV columns; options alone cannot bypass that limit. The absolute raw CSV bound is 160 columns, comprising at most 80 native fields and 80 proven incoming projections.
+Cradle's all-table CSV ZIP includes two companion files. Upload `import-options.json`
+under **CSV review choices**, and `correspondence.json` under **CSV correspondence**.
+They help restore types, options, empty values and exact link targets, including
+separate records with the same name. See the [leaving guide](leaving-cradle.md).
+
+Loading these files accepts no choices. In **Review CSV correspondence**, check
+each proposed row and target, correct any choices, then choose **Accept all
+correspondence proposals**. Targets must still match the primary text in the
+uploaded table. Changes to files, types, primary fields, targets or choices require
+acceptance again. Required/unique settings and distinctions between empty values
+are applied only after acceptance. Raw ambiguous-link counts remain visible even
+when you have explicitly chosen a target. Extra incoming link columns must agree
+with the original links, including empty cells.
 
 ## Review, apply, reconcile and return later
 
-1. Inspect row totals: rows read equals proposed creates plus rejected rows. Inspect conversion, skipped-column, lookup, unresolved-link, ambiguous-link and reciprocal reports. Change mappings and inspect the recomputed preview. Any change invalidates the previous acknowledgment.
-2. Explicitly acknowledge the current losses/errors. Preview itself has no database writes, including authentication housekeeping. A stale or missing signed-in workspace session projection asks you to open the workspace before previewing again.
-3. Review the existing native schema-impact screen and adopt through `release.adopt`. This creates the base schema and the retained import job; records are applied by the job, in bounded batches.
-4. Apply/resume the job and inspect its durable reconciliation. Download **report.json**. A completed transport request alone is not a successful reconciliation. Counts and native readback must agree; any missing, duplicate, extra or mismatched value remains visible.
-5. Return to the job using its ID. Resume uses only the retained job, mapping, reviewed plan and exact original bytes; it does not need the upload or the original parser process.
-6. Undo a completed import, or roll back a partial one. Continue the reversal until its terminal state and inspect conflicts. Imported record/link and saved-view/form effects are reversed when unchanged. Edited native records or metadata are kept and reported as conflicts. Incoming dependencies from another app preserve their referenced records internally; the screen and downloaded report disclose their identities only under current row, field and relationship read access. Otherwise the dependency remains visible as a redacted preservation reason, including after later access revocation. **The base schema stays**, as do exact original uploads, provenance and reports. Undo is not a schema deletion or erasure of custody evidence.
+1. Check that rows read equal proposed creates plus rejected rows. Review every conversion, skipped column and link problem. Changing the mapping requires a new preview and acknowledgment.
+2. Acknowledge the current losses and errors. Preview writes nothing. If asked to refresh your sign-in, open the workspace and return to preview.
+3. Review the schema-impact screen and adopt the changes. This creates the base's schema and a saved import job; the job adds records and links in batches.
+4. Apply or resume the job. Check its reconciliation and download **report.json**. A finished request alone does not mean the import reconciled: missing, duplicate, extra or mismatched values remain visible.
+5. Keep the job ID to return later. Resume uses the saved review and original files, so you do not need to upload them again. A schema review expires after 30 minutes before adoption; changed files, mappings or schema require a fresh review. Signing in again as the same owner preserves the reviewed work while rechecking access.
+6. To reverse it, undo a completed job or roll back a partial job. Continue until reversal finishes and inspect conflicts. Unchanged imported records, links, views and forms are reversed; later edits are kept and reported. Records needed by another base may also be kept. Details follow your current access; a restricted dependency is shown as a redacted reason. **The base schema, original files and reports stay.** Undo does not erase that evidence.
 
-Unchanged text can still lose source behavior: formula, rollup, date-time, collaborator and multiple-select mappings require explicit semantic-loss acknowledgment even when their converted-cell count is zero. Nested numeric lookup and rollup API values retain exact token digits; their inert Text representation does not pass through JavaScript number arithmetic.
+## Limits and refused files
 
-Wrong format/version, unknown native field type, unknown properties, duplicate IDs, dangling JSON links and capacity violations fail in preview before any write. JSON base/table/field names and saved-view names must already be canonical, without boundary whitespace; padded or colliding names and invalid label overrides are refused, never silently trimmed. Internal whitespace, business text, select-option and incoming-relation labels, and form text retain the whitespace allowed by their native contracts. Limits are 20 tables, 80 ordinary CSV columns per table, or 80 native fields plus up to 80 exact derived incoming projections in an exported CSV with complete correspondence, 10,000 rows per table, 10 MiB for each source CSV file or JSON table, 100,000 Unicode code points per cell and a 200 MiB native JSON file. The whole multipart upload, including metadata and mapping options, is limited to 201 MiB; the retained physical Kit plan has a separate inclusive 300,000,000-byte admission limit. UTF-8 is validated; BOM, CRLF and quoted multiline originals are retained byte-for-byte. Capacity diagnostics name the limit, allowed value and actual count; JSON table/file sizing avoids a whole oversized temporary encoding. Large inputs can also meet a lower runtime admission/storage bound; a refusal must remain explicit, never silently truncate.
+The limits are 20 tables, 10,000 rows per table, 10 MiB per CSV file or JSON table,
+100,000 Unicode code points per cell and 200 MiB per native JSON file. Ordinary
+CSV allows 80 columns per table. A complete exported CSV return can include 80
+fields plus 80 calculated incoming columns, with both companion files and explicit
+correspondence acceptance. Options alone do not unlock that larger limit. The
+whole upload, including companion files, is limited to 201 MiB.
 
-The Base import kit also limits the combined canonical plan to **300,000,000 bytes (300 MB)**, counting exact original custody, parsed rows and planned records/links. Preview checks the actual kit size and D1 admission budget before writing even a review; adoption rechecks the current plan and authority. The preview and saved schema review display the measured plan bytes and limit; an over-limit error also names both. Twenty individually valid 10 MiB files are not guaranteed to fit the combined plan cap. Use a smaller source view or a smaller self-contained table set when preview refuses it, and review unresolved links again; originals are never dropped or truncated to fit.
+There is also a combined **300,000,000-byte (300 MB)** limit for the saved import
+plan, including originals, parsed rows and planned records and links. Preview
+shows the measured size and checks available database capacity before saving a
+review; adoption checks again. Individually valid files may exceed the combined
+limit. If refused, choose a smaller source view or a smaller self-contained set of
+tables and review links again. Nothing is silently truncated.
 
-The logical preview fingerprint is hashed in bounded canonical chunks with the same bytes and ordering as before. Expanded source, planned values and reports are never joined into one preview string before the physical Kit admission check. Complete retained-review serialization follows that check; it is not a second physical-plan size limit. Direct review and adoption use the same physical admission boundary before schema or job writes.
+Invalid UTF-8, unsupported JSON versions or field types, unknown properties,
+duplicate IDs, broken JSON links and invalid names fail before import writes.
+Native names must not have leading/trailing spaces or collide with another name;
+they are not silently trimmed. Original file bytes are retained, including line
+endings and quoted multiline cells. The [base JSON schema](../schemas/cradle-base-v1.schema.json)
+describes the supported format.
 
 ## Import writes start no automations
 
-An import job writes records and links itself, in bounded batches; it does not run through the command path that Cradle's automation capture records. So a record-created or record-updated automation that you define on an imported table before the job finishes (notify, email, update a field or a signed webhook; Slack goes through the same capture but was not in the proof) does not fire for imported rows, and a scoped API key on the table changes nothing. This holds for applying a job, resuming it after the app restarts, rolling back a partial job and undoing a completed one, including the link phase, for CSV sets, recorded API pages and base JSON (also as a copy with a bijective ID map). Records you then create or edit by hand on the same tables fire each matching automation once, as usual. A whole-installation restore fires nothing either: restored automations come back disabled, as [installation archives](installation-archives.md) says.
-
-Proof: `tests/records-import-effects.mjs` drives the owner's doors (preview, review, adopt, job routes, the automations and key APIs, the development outbox and a test relay at the network edge) in local workerd with D1 and counts automation events, runs, notifications, outbox mail, integration deliveries and relay requests before and after every step; every import step leaves all six unchanged. `tests/rer-data-roundtrip.mjs` restores an archive holding an enabled updated-record automation, signs in as the owner, edits that record, and counts zero new events, runs, actions and notifications. Both run locally and in CI. A recorded API source has no upload door, so its review is retained in-process for the signed-in owner and then adopted and applied through the same job routes. A hosted run and a real Airtable export remain unproven.
+Applying, resuming, undoing or rolling back an import starts no automations,
+notifications, email or webhooks. Records you later create or edit by hand trigger
+their matching automations as usual. A [whole-installation restore](installation-archives.md)
+also sends nothing; restored automations remain disabled until approved again.
 
 ## Move-in receipt
 
-From the job screen, **Open move-in receipt** shows a printable page, and **Download receipt JSON** gives the same facts as a file. Both are built from the retained job, review and original files each time you open them, not from the screen's memory, so they work for completed, partial and undone jobs:
+From the job, choose **Open move-in receipt** for a printable page or **Download
+receipt JSON** for a file. Both read the saved job and originals, so they work for
+completed, partial and undone jobs. They show:
 
-- the job state (applied, partial, undone or failed) as of the time shown, and when the review was saved;
-- every source file by name with bytes and SHA-256, and the statement that the source was a file set you supplied (no claim about a live account);
-- per table: the source file, rows read = created + rejected, each rejected row with its reasons, and, for a partial job, the records and link cells not yet applied;
-- per link column: references read, resolved, unresolved and ambiguous;
-- every column declared (by you, or by recorded API metadata) as a formula, rollup, attachment, button or multiple-select, with its nonempty cells skipped, converted and kept as text;
-- the reconciliation result, and the reversal counts after undo;
-- a fixed **Not carried by this import** list (views, interfaces and dashboards; automations; permissions and sharing; comments and record history; attachment bytes; button actions; formula and rollup definitions), each with "rebuild in Cradle", "keep in the source" and "not needed" to mark on paper. Nothing you mark is stored;
-- what base JSON, a records CSV set, a per-view CSV and a whole-installation archive each keep, and that a record round trip is not a whole-business restore.
+- the job state and review date;
+- source filenames, sizes and checksums;
+- rows read, created and rejected, with reasons and any records or links still to apply;
+- resolved, unresolved and ambiguous links, conversions and skipped values;
+- reconciliation results and any reversal counts;
+- what each export format keeps, and what you must rebuild, keep in the source or decide you no longer need.
+
+A CSV import does not carry source views, interfaces, dashboards, automations,
+permissions, comments, history, attachment bytes, button actions, formula or
+rollup definitions. Cradle base JSON also keeps its own saved views and forms,
+as described above. A successful records transfer is not a whole-business restore.
+The receipt's paper checklist does not save your marks.
 
 ### Skipped attachments
 
-For every attachment column left skipped, the receipt offers **Download attachment list** (CSV): one line per nonempty cell with the source file, row ordinal, source line, the row's primary value, the column, the raw cell text and, when the cell can be read, the file names and source URLs as JSON arrays. The list is read again from the retained original bytes and fetches nothing. Its line count equals the column's skipped count in the report. Airtable's [view guide](https://support.airtable.com/articles/5189551686-getting-started-with-airtable-views) says a CSV attachment cell holds "a filename and URL", and its [attachment URL guide](https://support.airtable.com/articles/9671148410-airtable-attachment-url-behavior) reads the name as the text before `(`. Cradle parses a cell only when the whole cell reads as `file name (https URL)` items separated by comma and space; Airtable does not publish the separator for several files, so any other text is listed raw and marked not parsed. Recorded API values are parsed from the documented attachment objects (`filename`, `url`). Airtable says CSV attachment URLs expire after a few hours, so download the files from the source first, while it still allows it.
-
-Proof: `tests/records-import-receipt.mjs` checks the receipt and the list through the job routes for the CSV, recorded API and JSON sources against the handwritten fixture expectations, including a partial and an undone job, and an authored attachment fixture (one file, several files, a comma in a file name, an empty cell and a bare name). A browser journey through `rer dev` with outbox sign-in, from import to receipt at 1440 and 390 px, found no axe violations and no horizontal overflow.
+For skipped attachment columns, **Download attachment list** gives one CSV row per
+nonempty skipped cell, with the source file, row, primary value, column and original
+cell text. It includes filenames and URLs when they can be read, and marks other
+text as unparsed. It downloads no attachment bytes. Save files from your source
+before their links expire; Airtable CSV attachment URLs can expire after a few
+hours. Check the source's [attachment URL guide](https://support.airtable.com/articles/9671148410-airtable-attachment-url-behavior).
 
 ## What has been checked
 
-The committed corpus contains three **synthetic documentation-shaped** bases (customer relationships, project tracker and edge cases), not exports or API reads from a real account. Raw files, hashes, hand-written expectations and recorded API responses are under `tests/fixtures/base-transfer`. Fixture mappings explicitly declare source kinds and known source choices where the CSV lacks metadata; independent default-mapping tests also exercise formula/rollup content without those declarations. Recorded API ingestion is a product parser with an injected transport; there is no live API credential or source-account flow in the import screen.
-
-The edge CSV has six unambiguous native links. Two different records named `Twin` remain distinct, and a CSV link spelling `Twin` is ambiguous. The recorded API case has nine resolvable ID links; JSON preserves those identities. The full CSV return uses exported public correspondence and explicit target acceptance; raw duplicate labels remain reported as ambiguous. Without accepted correspondence, CSV loses the ambiguous ninth link. The [leaving guide](leaving-cradle.md) gives the exact metadata upload, review and acceptance steps. Local fixture evidence does not establish real-account, hosted or full product acceptance.
-
-The schema review displays the exact physical import-plan fingerprint and planning time. Adoption submits that displayed fingerprint and compares the current native plan and schema with the retained review before activating anything. A changed source, mapping, schema or physical plan requires another review. The logical mapping fingerprint remains a separate source-and-mapping acknowledgment. Before first schema adoption, the saved schema review expires after 30 minutes. Signing in again as the same owner rechecks the current session while preserving the reviewed data, schema and policy checks. A lost job-creation response can recover the existing job from the same review without parsing or mapping the files again.
+Local automated checks use synthetic CSV/JSON bases and recorded API responses,
+including duplicate names, links, reconciliation, undo, receipts and automation
+silence. The import screen has no live source-account or recorded-API upload flow.
+These checks and local browser journeys do not establish a real-account import,
+a hosted import or full product acceptance.

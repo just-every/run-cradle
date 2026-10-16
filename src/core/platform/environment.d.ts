@@ -2,6 +2,8 @@ export {}
 declare global {
   namespace Cloudflare {
     interface Env {
+      RER_DEMO?: string
+      RER_DEMO_EXPIRES?: string
       RER_MANAGEMENT_ORIGIN?: string
       RER_INSTALLATION_ID?: string
       RER_OWNER_CLAIM_ISSUER?: string
@@ -10,6 +12,7 @@ declare global {
       RER_OWNER_CLAIM_PUBLIC_KEYS?: string
       RER_EDITOR_ENABLED?: string
       INSTALLATION: DurableObjectNamespace
+      IDENTITY_PROVIDER?: string
       OWNER_EMAIL?: string
       SETUP_TOKEN?: string
       RER_DEV_ORIGIN?: string
@@ -20,7 +23,7 @@ declare global {
       WORKSPACE_NAME?: string
       WORKSPACE_TIMEZONE?: string
       WORKSPACE_CURRENCY?: string
-      MAIL_PROVIDER?: 'sendgrid' | 'resend' | 'development'
+      MAIL_PROVIDER?: 'rer' | 'sendgrid' | 'resend' | 'development'
       RER_DEPLOY_SOURCE?: string
       RER_DEPLOY_FINGERPRINT?: string
       RER_VERSION?: { id: string }
@@ -28,6 +31,8 @@ declare global {
       SESSION_SECRET?: string
       MAIL_FROM?: string
       MAIL_PROVIDER_API_KEY?: string
+      MAIL_API_KEY?: string
+      MAIL_RELAY_URL?: string
       AI_PROVIDER_API_KEY?: string
       AI_MODEL?: string
       CANDIDATE_RUNNER_URL?: string

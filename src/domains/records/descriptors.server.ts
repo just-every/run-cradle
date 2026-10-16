@@ -1,5 +1,5 @@
 import type { EntitySchema, Field } from './contracts';
-import type { TableHandle } from '../admission/ports';
+import type { SqlPredicate, TableHandle } from '../admission/ports';
 import { registerTable, identifier } from '../admission/sql.server';
 import { entitySchema } from './validators';
 export type FieldStorage = {
@@ -33,6 +33,12 @@ export type RecordWritePolicy = {
 };
 export type EntityDescriptor = {
     searchTable?: string;
+    /** Source-owned search fields and combined index; index use requires every contributing field. */
+    search?: {
+        fieldIds: readonly string[];
+        index?: { table: string; columns: readonly string[]; where?: SqlPredicate };
+        activeRows?: SqlPredicate;
+    };
     writePolicy?: RecordWritePolicy;
     schema: EntitySchema;
     table: TableHandle;

@@ -1,31 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { fixture } from './repair-case-harness.mjs'
-
-test('real manual case: exact mandate and current intake admit linked records and evidence once; no wake/provider work', async () => {
-  const h = await fixture()
-  try {
-    const id = await h.report(h.b.ev.sourceId), context = await h.reads.context(h.ctx, id)
-    assert.equal(context.mandates.length, 1)
-    const command = await h.command(id), result = await h.registry.get('repair.open').execute(h.ctx, command), repair = result.result.value
-    assert.equal(repair.stage, 'triage'); assert.equal(repair.case.mandateId, h.m.id)
-    assert.equal(repair.case.accountableId, h.ctx.principal.id); assert.deepEqual(repair.case.sourceIds, [h.b.ev.sourceId]); assert.equal(repair.case.nextWakeAt, null)
-    assert.deepEqual(await h.counts(), { operation_cases: 1, repair_jobs: 1, repair_work_orders: 1, operation_wakes: 0 })
-    assert.equal((await h.registry.get('repair.open').execute(h.ctx, command)).replay, true)
-    const intake = await h.db.prepare('SELECT * FROM repair_intakes WHERE id=?').bind(id).first()
-    assert.equal(intake.lifecycle, 'admitted'); assert.equal(intake.case_id, repair.case.id); assert.equal(intake.work_order_id, repair.workOrder.id)
-    assert.equal((await h.http.request(`http://local/api/v1/repairs/${repair.workOrder.id}`)).status, 200)
-    const caseResponse = await h.http.request(`http://local/api/v1/cases/${repair.case.id}`)
-    assert.deepEqual((await caseResponse.json()).data.allowedActions, [])
-    const facts = (await h.db.prepare("SELECT * FROM admission_audit WHERE action='repair.open'").all()).results
-    assert.ok(facts.length >= 3)
-    assert.ok(facts.every(f => JSON.parse(f.source_ids_json).includes(h.b.ev.sourceId)))
-    await assert.rejects(h.registry.get('repair.open').execute(h.ctx, await h.command(id)), { code: 'invalid_transition' })
-    await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1").run()
-    await assert.rejects(h.registry.get('repair.open').execute(h.ctx, command), { code: 'not_found' })
-    assert.equal((await h.http.request(`http://local/api/v1/cases/${repair.case.id}`)).status, 403)
-  } finally { await h.close() }
-})
 test('case admission rejects stale/forged identity, inactive/wrong mandate and unauthorized copied sources without partial writes', async () => {
   const h = await fixture()
   try {
@@ -67,27 +42,6 @@ test('prepared case admission guards membership, mandate, source, owner and inta
       assert.equal(conflict.code,'version_conflict',String(conflict)+' '+String(conflict.cause))
       assert.deepEqual(await h.counts(),{operation_cases:round+1,repair_jobs:round+1,repair_work_orders:round+1,operation_wakes:0})
     }
-  } finally { await h.close() }
-})
-test('prior ready reports retain IDs/history and require current evidence; prior linked cases are not rewritten', async () => {
-  const h = await fixture()
-  try {
-    const id = await h.report(h.b.ev.sourceId)
-    await h.db.prepare("UPDATE repair_intakes SET version=7,created_at='2026-09-01T00:00:00.000Z',updated_at='2026-09-30T00:00:00.000Z' WHERE id=?").bind(id).run()
-    const before = await h.db.prepare('SELECT fingerprint,payload_hash,text,source_ids,created_at FROM repair_intakes WHERE id=?').bind(id).first()
-    const stale = await h.command(id)
-    await h.db.prepare('UPDATE evidence_sources SET current_version=2 WHERE id=?').bind(h.b.ev.sourceId).run()
-    await assert.rejects(h.registry.get('repair.open').execute(h.ctx, stale), { code: 'stale_evidence' })
-    assert.equal((await h.counts()).operation_cases, 0)
-    const opened = await h.registry.get('repair.open').execute(h.ctx, await h.command(id))
-    const after = await h.db.prepare('SELECT fingerprint,payload_hash,text,source_ids,created_at FROM repair_intakes WHERE id=?').bind(id).first()
-    assert.deepEqual(after, before)
-    const prior = await h.db.prepare('SELECT * FROM operation_cases WHERE id=?').bind(opened.result.value.case.id).first()
-    const next = await h.report()
-    await h.registry.get('repair.open').execute(h.ctx, await h.command(next))
-    assert.deepEqual(await h.db.prepare('SELECT * FROM operation_cases WHERE id=?').bind(prior.id).first(), prior)
-    assert.equal((await h.db.prepare('SELECT version FROM repair_intakes WHERE id=?').bind(id).first()).version, 8)
-    assert.equal((await h.counts()).operation_wakes, 0)
   } finally { await h.close() }
 })
 

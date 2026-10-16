@@ -15,13 +15,17 @@ and advances the checkpoint atomically, preventing a delayed export from publish
 an object listing captured before cleanup. The first erasure also initializes its
 checkpoint in the native transaction, even if no installation transfer has run.
 
-Attachment inspection decodes complete gzip and zlib deflate payloads with a
-32 MiB expansion limit and fatal UTF-8 decoding for textual files; CSV cells are
-parsed with the production CSV parser. Gzip inspection includes every concatenated
+Attachment inspection works inside one fixed 32 MiB memory budget per object:
+the stored bytes, every decoded buffer and every text copy kept for matching are
+charged before they are built, and an object that needs more is uninspectable.
+It decodes complete gzip and zlib deflate payloads and textual files with fatal
+UTF-8 decoding. Doubled CSV quotes and JSON `\u`/`\/` escapes are scanned as extra
+decoded copies; a file that is not valid CSV or JSON is still scanned as text.
+Gzip inspection includes every concatenated
 member's filename and comment, including nested content encodings, using Latin-1
-and lossless UTF-8 where valid. Gzip envelopes over 32 MiB, opaque extra fields,
-reserved flags, corrupt header/payload checksums and trailing bytes refuse before
-mutation. PDF inspection admits a bounded text-only
+and lossless UTF-8 where valid. Opaque gzip extra fields,
+reserved flags, corrupt header/payload checksums and trailing bytes are uninspectable.
+PDF inspection admits a bounded text-only
 subset of PDF 1.0–1.7: classic cross-reference tables, standard Helvetica/Courier/
 Times Type1 fonts, plain or Flate content streams, and text metadata. It parses
 escaped dictionary names, comments, and literal/hex/octal strings structurally;
@@ -30,11 +34,15 @@ recognized syntax is accepted or refused according to its decoded meaning.
 Images, drawing operators, XObjects, custom or embedded fonts, annotations/forms,
 encryption, incremental revisions, object/xref streams, unknown dictionary fields,
 unsupported filters or parameters, non-ASCII font glyph bytes, malformed syntax,
-and trailing compressed payloads refuse before mutation. HTML/XML documents,
-binary images and opaque objects also refuse. This is a bounded inspection
-boundary, not a general PDF extractor or OCR service. The refusal names a key
-digest rather than private filenames. The owner must resolve unsupported custody
-before requesting erasure again; `keepCopies` cannot override decoding failures.
+and trailing compressed payloads are uninspectable, as are HTML/XML documents,
+binary images and opaque objects. This is a bounded inspection
+boundary, not a general PDF extractor or OCR service. Only the person's own files
+must be inspectable: an uninspectable file in their private source intake refuses
+before mutation, naming a key digest rather than its private filename, and
+`keepCopies` cannot override it. Another person's uninspectable file is checked by
+key and metadata only (a match there is a copy to resolve like any other); otherwise
+it stays byte-identical and the plan counts it under `kept` with reason
+`not_inspected`, so erasure completes without claiming to have searched it.
 
 Import custody uses the maintained Base import-kit retirement helper with a small
 atomic composition extension for multiple destinations. Exact email and operator
@@ -49,7 +57,19 @@ private preparations must be finished or cancelled first. This is a conservative
 refusal for all unfinished preparations outside retirement closure, including ones
 that might become inspectable after publication; they are never silently skipped.
 Identity found only in an unattributed reversible before-image or undo observation
-also refuses atomically. Independent clean undo reports remain byte-identical.
+also refuses atomically when it is their exact email or ID. Independent clean undo
+reports remain byte-identical. Their name alone in an import that does not carry
+their email or ID (an assignee column, a header, a review, an original file, a
+before-image or undo observation) is listed in `erasureCopies` under the store
+`import custody`, like a native copy they did not write. Because a name alone may
+belong to someone else, the owner confirms it with `keepCopies` and that custody
+stays unchanged while the erasure completes.
+
+Effect resolutions an operator recorded are among their identity places: whole-token
+copies of their name and email in the receipt's evidence are anonymised, while the
+decision, actor ID, time, file hash and original effect stay. Erasing a record
+subject replaces the evidence summary and reference on every receipt of its runs
+with `Erased.`.
 
 Additive migrations 9027 and 9028 install reversal fences and append-only
 retirement journals without editing applied migrations. Each journal counts

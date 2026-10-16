@@ -20,13 +20,15 @@ export async function prepareBulk(context:LaunchContext,ctx:RequestContext,input
  }
  const kind=({Campaign:'campaign',Risk:'risk',Milestone:'milestone',Decision:'decision'} as Record<string,LaunchKind>)[String(input.input.recordType)]!,ids=input.input.ids as string[],change=input.input.change as Record<string,unknown>;if(!ids.length||ids.length>500||new Set(ids).size!==ids.length)fail('Select 1–500 unique records')
  const snapshots:Snapshot[]=[]
+ // A rejected bulk change names the first record that fails, then changes nothing.
+ const named=async<T>(row:LaunchRow,prepare:()=>Promise<T>)=>{try{return await prepare()}catch(error){if(error instanceof AdmissionError&&error.code!=='version_conflict')throw new AdmissionError(error.code,`${row.name??row.title??row.id}${row.code?` (${row.code})`:''}: ${error.message}`);throw error}}
  for(const id of ids){const row=await load(context.db,kind,id);versionGuard(set,kind,row,input.expected);const tags=kind==='campaign'?(await context.db.prepare('SELECT tag FROM campaign_tags WHERE campaign_id=?').bind(id).all<{tag:string}>()).results.map(t=>t.tag):[],customFields=kind==='campaign'?Object.fromEntries((await context.db.prepare('SELECT field_id,value_json FROM launch_custom_values WHERE campaign_id=?').bind(id).all<{field_id:string;value_json:string}>()).results.map(v=>[v.field_id,JSON.parse(v.value_json)])):{}
   snapshots.push({kind,row,tags,customFields,afterVersion:row.version+1});let changes:Record<string,unknown>={};let action='patch'
   if(change.kind==='field')changes[String(change.field)]=change.value
   else if(change.kind==='tag-add'||change.kind==='tag-remove'){if(kind!=='campaign')fail('Tags belong to campaigns');changes.tags=change.kind==='tag-add'?[...new Set([...tags,String(change.value)])]:tags.filter(t=>t!==change.value)}
   else if(change.kind==='custom-field'){if(kind!=='campaign')fail('Custom fields belong to campaigns');changes.customFields={[String(change.fieldId)]:change.value};if(!(String(change.fieldId)in customFields))customFields[String(change.fieldId)]=null}
   else{if(kind!=='campaign')fail('Archive and restore target campaigns');action=String(change.kind)}
-  const command={...input,input:{id,changes}},p=kind==='campaign'?await prepareCampaign(context,ctx,command,action):await prepareRecord(context,ctx,command,kind,'patch');set.guards.push(...p.guards);set.mutations.push(...p.mutations);set.audit.push(...p.audit);set.changed.push(...p.changed??[])
+  const command={...input,input:{id,changes}},p=await named(row,()=>kind==='campaign'?prepareCampaign(context,ctx,command,action):prepareRecord(context,ctx,command,kind,'patch'));set.guards.push(...p.guards);set.mutations.push(...p.mutations);set.audit.push(...p.audit);set.changed.push(...p.changed??[])
  }
  const id=createUlid();set.mutations.push({kind:'insert',table:bulkTable,row:{id,created_at:now,actor_id:ctx.principal.id,expires_at:now+3600000,undone_at:null,snapshot_json:JSON.stringify(snapshots)}});set.audit.push({action:'launch.bulk.apply',subject:null,changes:[],sourceIds:[],personalContentRefs:[]});set.events.push({name:'bulk.updated',version:1,subject:null,payload:{ids},causeRunIds:[]});return plan(context,ctx,input,'launch.bulk.apply',set,{bulkId:id,count:ids.length,undoExpiresAt:new Date(now+3600000).toISOString()},kind)
 }

@@ -21,6 +21,7 @@ export function createChannelsIntegration(db:D1Database,project?:RecipientProjec
   if(project){const p=await project(ctx,input);effects.guards.push(...p.guards);text=p}
   else if(appId!=='00000000000000000000000700')throw new Error('Scoped notification recipient projection is required')
   else {const access=await legacyRecipientGuards(db,input,ctx.now);if(!access)return empty();effects.guards.push(...access)}
+  if(input.kind==='record-automation'&&input.title!==undefined&&input.body!==undefined)text={title:input.title,body:input.body}
   if(input.kind==='weekly-digest'){if(!input.body)throw new Error('Digest requires authorized portfolio projection');text={title:'Weekly portfolio digest',body:input.body}}
   const prefs=await db.prepare('SELECT version,timezone,muted_json,progress_enabled FROM channel_preferences WHERE operator_id=?').bind(input.operatorId).first<{version:number;timezone:string|null;muted_json:string;progress_enabled:number}>()
   if(input.kind==='progress'&&!prefs?.progress_enabled)return empty()

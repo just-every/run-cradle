@@ -1,12 +1,17 @@
 # Run it locally
 
-Install the `rer` command once: `npx -y @runeditrun/rer cli install`, or the
-installer script on the RER site (`curl -fsSL https://runeditrun.com/install.sh | sh`).
-`rer` runs every verb with the checkout's own pinned copy: a vendored
-`scripts/rer.mjs`, or in package mode the exact `@runeditrun/rer` devDependency in
-`node_modules`. The `OPERATIONS.json` argv and the `package.json` aliases are the
-machine contract (`node scripts/rer.mjs VERB` vendored, `rer VERB` in package
-mode), and `rer` runs them.
+Install Node 22 or later and Git first; see the [quick guide](docs/install.md).
+Install `rer` once per computer with either Run page installer, pinned here to
+Cradle's rer 0.2.23:
+
+```sh
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
+```
+
+Or `npm install -g @runeditrun/rer@0.2.23`. Rer installs the project's pinned
+Node 22.20.0 and pnpm 10.12.4 for project commands. This checkout uses its exact
+`@runeditrun/rer` devDependency; `OPERATIONS.json` and the package aliases dispatch
+to `rer VERB`.
 
 ## Launch with one command
 
@@ -76,14 +81,12 @@ this computer set differently (each distinct pin keeps its own copy), and about
 a checkout on another volume than your home folder, where pnpm cannot clone
 packages from its store.
 
-After `RER_READY`, a seed with dev identity prints `RER_SIGNED_IN EMAIL` and
-`RER_OPEN URL`: open that URL on this computer and the app opens signed in as
-the owner, at `/setup` until first-run is finished. Other seeds, and
-`dev --login`, print `RER_SIGN_IN URL` for the local outbox: open it, follow
-the newest ordinary sign-in link and finish first-run setup at `/setup`. Until
-first-run completion is stored durably, app routes send the signed-in owner to
-`/setup`; signed-out visitors sign in and return there. Once complete,
-`/setup` opens the app or settings. The local outbox sends no external email.
+After `RER_READY`, Cradle prints `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`.
+Open that private dev-key URL on this computer to enter as the local owner and
+finish `/setup`. `rer dev --login` aliases automatic owner sign-in; it does not
+open a mail viewer. No local inbox or outbox page is available, and no email is
+sent externally. App routes take the signed-in owner to `/setup` until first-run
+completion is stored durably; later `/setup` opens the app.
 
 The saved local port is used; a first setup saves the first free port from 8787. Explicit ports are decimal
 integers from 1 through 65535 and must be free; a busy requested port fails
@@ -130,9 +133,8 @@ root, inspect the live queue with
 
 For the real owner mailbox, `setup` can prompt instead of receiving
 `--owner-email` on the command line. Setup builds the app, applies local
-migrations, prepares the first owner, requests an ordinary sign-in message and
-stops its temporary app before it exits. Existing owner data and private
-settings are preserved on a repeated setup.
+migrations, prepares the first owner and stops its temporary app before it exits.
+Existing owner data and private settings are preserved on a repeated setup.
 
 Dev starts the real local app with assets and HMR and prints `RER_READY URL`
 after the application health check. With dev identity it then prints
@@ -140,13 +142,10 @@ after the application health check. With dev identity it then prints
 checkout's dev key in its fragment: opening it signs the browser in through a
 real dev session, and the key is removed from the address bar and kept only as a
 host-only cookie. Treat that line as a credential and open it only on this
-computer. A dev-only badge switches between the owner, signed out and the
+computer. Use `rer dev --as` to switch between the owner, signed out and the
 seed's personas (`admin@dev.localhost` and so on). `dev --as PERSONA` starts as
-another persona or `signed-out`; `dev --login` turns dev identity off and uses
-the outbox: it prints `RER_SIGN_IN URL` and a `RER_OPEN` URL that opens that
-outbox. Choose the newest ordinary sign-in message and follow its link. No
-external email is sent. A successful sign-in consumes the link once. Seeds
-without dev identity print only `RER_SIGN_IN URL` for the local outbox.
+another persona or `signed-out`; `dev --login` aliases automatic owner sign-in.
+No mail viewer or printed email sign-in link is part of local development.
 
 Dev and preview are managed servers. In a terminal the first invocation stays
 active while serving; without one, `rer dev` returns once the app is ready and
@@ -207,7 +206,9 @@ operations and ambiguous or linked state.
 
 Local export creates a private archive with an integrity receipt and explicit
 exclusions. Import validates the archive and restores into an empty destination.
-After import, run setup to establish the owner and local configuration. Auth,
+After import, run `rer dev` to recreate local configuration and the owner; no
+answers file is needed. To choose an owner email, run
+`rer setup --owner-email you@example.com` before dev. Auth,
 outbox, private settings and transient runtime state are excluded. Remote
 transfer is unsupported by the maintained references and fails visibly.
 
@@ -246,8 +247,8 @@ Local durable state is `.wrangler/state`; CLI bookkeeping is `.rer/local`,
 installer state is `.seed/installer`, and the default private settings file is
 `.dev.vars` with mode 0600. Setup writes this checkout's dev key to
 `.rer/local/dev-key.env` (mode 0600); a repeat setup keeps it and reset removes
-it, which also ends every browser's earlier dev cookie. Dev sign-in, personas
-and the development outbox answer only a request holding that key's cookie, so
+it, which also ends every browser's earlier dev cookie. Dev sign-in and personas
+answer only a request holding that key's cookie, so
 a tunnel or local proxy to the app cannot reach them; anything else returns 404.
 Any local user or process that can read the checkout can read the key and sign
 in as the owner. `rer deploy` refuses the key, and `rer build` refuses output
@@ -289,8 +290,7 @@ name, address and sign-in: run `rer dev` (or `rer door add`) in its new folder.
 A copy of a checkout gets a name of its own.
 
 `rer door status` shows the door and every checkout; `--json` gives the same
-as data and `--links` adds sign-in links that start a checkout and sign that
-browser in. While the door is enabled, `rer dev` sets a fresh checkout up at
+as data. While the door is enabled, `rer dev` sets a fresh checkout up at
 its door URL. An existing checkout moves with `rer dev --door`, which keeps its
 data and changes only its saved address; `rer dev --direct` moves it back, and
 `rer dev --port N` always serves directly at `http://127.0.0.1:N`. A checkout

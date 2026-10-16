@@ -11,9 +11,9 @@
       "artifactFile": "rer-worker-artifact.json"
     },
     "operations": {
-      "setup": "pnpm install --frozen-lockfile && pnpm exec rer install && PLAYWRIGHT_SKIP_BROWSER_GC=1 pnpm exec playwright install --with-deps chromium",
+      "setup": "pnpm install --frozen-lockfile && pnpm exec rer install",
       "build": "pnpm exec rer build",
-      "verify": "pnpm exec rer verify",
+      "verify": "pnpm exec rer check --profile first-party && pnpm source:check && pnpm check:deployment-spec",
       "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly.",
       "artifact": "node scripts/build-delivery-artifact.mjs"
     },
@@ -45,7 +45,7 @@
     }
   },
   "managed": {
-    "workflowRef": "runeditrun/delivery/.github/workflows/trusted-build.yml@bf7a25abb44bec1457a7bc738ff63921d90fb52e",
+    "workflowRef": "runeditrun/delivery/.github/workflows/trusted-build.yml@86c8b37399c901bffd9a240dbd1148a65ec83b34",
     "artifactFile": "rer-worker-artifact.json",
     "buildProfile": "project",
     "verificationProfiles": [
@@ -57,7 +57,7 @@
     "componentId": "just-every/cradle"
   },
   "setup": {
-    "manifestFile": "rer-setup.json"
+    "manifestFile": "rer-setup-managed.json"
   },
   "artifact": {
     "specInputs": {
@@ -81,7 +81,9 @@
         "RER_DEPLOY_SOURCE",
         "RER_DEPLOY_FINGERPRINT",
         "INSTALLATION_RELEASE_ID",
-        "EGRESS_RELAY_URL"
+        "EGRESS_RELAY_URL",
+        "IDENTITY_PROVIDER",
+        "MAIL_RELAY_URL"
       ],
       "secretNames": [
         "SESSION_SECRET",
@@ -97,26 +99,10 @@
         "XERO_CLIENT_SECRET",
         "EGRESS_RELAY_SECRET",
         "CANDIDATE_RUNNER_TOKEN",
-        "CANDIDATE_DEPLOY_TOKEN"
+        "CANDIDATE_DEPLOY_TOKEN",
+        "MAIL_API_KEY"
       ],
       "migrationPrefix": "",
-      "extraMigrationDirectories": [
-        {
-          "binding": "DB",
-          "path": "migrations/base",
-          "prefix": ""
-        },
-        {
-          "binding": "DB",
-          "path": "migrations/import",
-          "prefix": ""
-        },
-        {
-          "binding": "DB",
-          "path": "migrations/updates",
-          "prefix": ""
-        }
-      ],
       "providerEffects": [
         "outbound-mail",
         "outbound-webhooks",
@@ -142,7 +128,27 @@
         }
       },
       "healthPath": "/health",
-      "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly."
+      "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly.",
+      "mail": {
+        "providers": [
+          "rer"
+        ]
+      },
+      "wranglerFile": "wrangler.jsonc",
+      "extraMigrationDirectories": [
+        {
+          "binding": "DB",
+          "path": "migrations/base"
+        },
+        {
+          "binding": "DB",
+          "path": "migrations/import"
+        },
+        {
+          "binding": "DB",
+          "path": "migrations/updates"
+        }
+      ]
     }
   }
 }

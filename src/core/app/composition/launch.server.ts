@@ -1,3 +1,4 @@
+import {launchSourceRelease} from '../../../apps/launch/source-release.server'
 import {campaignErasure} from '../../../domains/lifecycle/campaigns.server'
 import {createLifecycleCleanup} from '../../../domains/lifecycle/cleanup.server'
 import { stagingDescriptor } from '../../../domains/evidence/staging.server'
@@ -27,8 +28,8 @@ export async function createLaunchFoundation(platform: Platform) {
     admissionGuards:()=>[trustedPredicate("NOT EXISTS(SELECT 1 FROM portability_fences WHERE name IN ('restore','snapshot'))")],
   })
   const channelEffects=createChannelsIntegration(platform.bindings.DB)
-  const handlers=createLaunchHandlers({db:platform.bindings.DB,policy:foundation.policy,integration:{...channelEffects,async deleteCampaign(ctx,id){return campaignErasure(platform.bindings.DB,ctx,id)}}})
-  const actions = (Object.keys(launchInputs) as LaunchAction[]).filter(action => !['analysis.request','samples.remove'].includes(action))
+  const handlers=createLaunchHandlers({db:platform.bindings.DB,policy:foundation.policy,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID),integration:{...channelEffects,async deleteCampaign(ctx,id){return campaignErasure(platform.bindings.DB,ctx,id)}}})
+  const actions = (Object.keys(launchInputs) as LaunchAction[]).filter(action => action !== 'analysis.request')
   for(const action of actions){
     const prepare=handlers[action]
     if(!prepare)throw new Error(`Required launch handler missing: ${action}`)

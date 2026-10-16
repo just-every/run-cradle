@@ -347,6 +347,7 @@ export const decodeCampaignDetail: Decoder<CampaignDetailResponse> = (
     activity: requiredArray(record, "campaign detail.activity").map(
       decodeActivity,
     ),
+    customFields: requiredArray(record, "campaign detail.customFields") as CampaignDetailResponse["customFields"],
   };
 };
 

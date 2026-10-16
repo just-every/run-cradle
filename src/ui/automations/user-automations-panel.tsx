@@ -29,7 +29,7 @@ function ApplicationAutomations({appId}:{appId:string}) {
  return <ResourceState resource={automations.resource} operation="record automations" retry={automations.refresh}>{data=><div className="cr-stack">
   <ResourceState resource={entities.resource} operation="record types" retry={entities.refresh}>{page=>{
    const chosen=page.items.find(entity=>entity.id===(editing&&editing!=='new'?editing.definition.entityId:entityId))
-   return <><div className="cr-toolbar"><label className="cr-field">Record type<select value={entityId} onChange={event=>{setEntityId(event.target.value);setEditing(null)}}><option value="">Choose a record type</option>{page.items.map(entity=><option key={entity.id} value={entity.id}>{entity.label}</option>)}</select></label>
+   return <><div className="cr-toolbar"><label className="cr-field">Record type<select value={entityId} onChange={event=>{setEntityId(event.target.value);setEditing(null)}}><option value="">Choose a record type</option>{page.items.filter(entity=>entity.id!=='00000000000000000000000408').map(entity=><option key={entity.id} value={entity.id}>{entity.label}</option>)}</select></label>
     <button className="cr-button" disabled={!entityId||busy} onClick={()=>setEditing('new')}>New automation</button></div>
     {editing&&chosen&&<AutomationDefinitionEditor key={editing==='new'?`new:${chosen.id}`:`${editing.id}:${editing.version}`} appId={appId} entity={chosen} existing={editing==='new'?undefined:editing}
      onSaved={()=>{setEditing(null);automations.refresh()}} onCancel={()=>setEditing(null)}/>}</>

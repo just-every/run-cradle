@@ -1,4 +1,9 @@
+import {ReadinessSettings} from '../../../../ui/settings/readiness-settings'
+import {LaunchAiSettings} from '../../../../ui/settings/launch-ai-settings'
 import { LazySettingsPanel } from '../../../../ui/settings/lazy-settings-panel'
+import { CustomFieldsPanel } from '../../../../ui/settings/custom-fields-panel'
+import { ImportsPanel } from '../../../../ui/settings/imports-panel'
+import { SampleDataPanel } from '../../../../ui/settings/sample-data-panel'
 import { PreferencesPanel } from '../../../../ui/settings/preferences-panel'
 import { UsagePanel } from '../../../../ui/settings/usage-panel'
 import { ConnectionPanel } from '../../../../ui/settings/connection-panel'
@@ -43,10 +48,10 @@ export const SettingsPage = () => {
     <div className="cr-settings-main">
       <form className="cr-card cr-settings-workspace" onSubmit={submit}><h2>Workspace</h2><div className="cr-form-grid">{field('name', 'Workspace name', 'text', true)}<WorkspaceChoice className="cr-settings-zone" label="Timezone" kind="timeZone" value={form.timezone} onChange={timezone => setForm({ ...form, timezone })} /><WorkspaceChoice className="cr-settings-currency" label="Currency" kind="currency" value={form.currency} onChange={currency => setForm({ ...form, currency })} />{field('quietHoursStart', 'Quiet hours start', 'time')}{field('quietHoursEnd', 'Quiet hours end', 'time')}</div>{saveError ? <p className="cr-error">{saveError}</p> : null}<button className="cr-button" disabled={isSaving}>{isSaving ? 'Saving…' : 'Save workspace'}</button></form>
       <div className="cr-settings-capabilities">
-        <section className="cr-card cr-capability" id="ai">{!current.ai.configured && <span className="cr-tag cr-tag--warn">Not configured</span>}<h2>AI</h2><p className="cr-muted">{current.ai.configured ? current.ai.enabled ? 'AI is configured and enabled. Outputs remain read-only.' : 'AI is configured but disabled.' : 'AI is not configured. Add and evaluate a model connection in Connections.'}</p>{current.ai.usage ? <Details title="AI usage" values={current.ai.usage} level={3} /> : null}</section>
+        <section className="cr-card cr-capability" id="ai">{!current.ai.configured && <span className="cr-tag cr-tag--warn">Not configured</span>}<h2>AI</h2><p className="cr-muted">{current.ai.configured ? current.ai.enabled ? 'AI is configured and enabled. Outputs remain read-only.' : 'AI is configured but disabled.' : 'AI is not configured. Set the installation provider and model.'}</p><LaunchAiSettings configured={current.ai.configured} /></section>
         <section className="cr-card cr-capability">{!current.email.configured && <span className="cr-tag cr-tag--warn">Not configured</span>}<h2>Email</h2><p className="cr-muted">{current.email.configured ? 'Email delivery is configured; failed deliveries remain visible here.' : 'Email is not configured. The workspace owner needs to connect an email provider.'}</p>{current.email.deliveries ? <Details title="Delivery status" values={current.email.deliveries} level={3} /> : null}</section>
       </div>
-      <Details title="Profile" values={current.profile} /><Details title="Appearance" values={current.appearance} /><Details title="Security" values={current.security} /><Details title="Data & storage" values={current.dataStorage} />
+      <ReadinessSettings/><Details title="Profile" values={current.profile} /><Details title="Appearance" values={current.appearance} /><Details title="Security" values={current.security} /><Details title="Data & storage" values={current.dataStorage} />
     </div>
     <div className="cr-settings-side">
       <ArchivePanel />
@@ -54,6 +59,9 @@ export const SettingsPage = () => {
         <details className="cr-detail"><summary>Your notifications</summary><PreferencesPanel /></details>
         <details className="cr-detail" onToggle={event=>setKeysOpen(event.currentTarget.open)}><summary>API keys</summary>{keysOpen&&<ApiKeysPanel />}</details>
         <details className="cr-detail"><summary>Usage and model availability</summary><UsagePanel /></details>
+        <LazySettingsPanel title="Custom fields"><CustomFieldsPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Imports"><ImportsPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Sample data"><SampleDataPanel /></LazySettingsPanel>
         <LazySettingsPanel title="People and authority"><AccessPanel /></LazySettingsPanel>
         <details className="cr-detail" onToggle={event => setConnectionsOpen(event.currentTarget.open)}><summary>Connections</summary>{connectionsOpen && <ConnectionPanel />}</details>
       </div>
