@@ -10868,7 +10868,7 @@
       "executable": false
     },
     "vendor/base/modules/mail/src/core/validation.mjs": {
-      "sha256": "fa1f79579a96fc7b12964d9515e98135993c18ea1af23922779139abc4221571",
+      "sha256": "1ac30f2e2675b2b9e38f6c1e2c62800164beae540e62912f05bf93d09b8eb4fe",
       "executable": false
     },
     "vendor/base/modules/mail/src/development/index.d.mts": {
@@ -10948,7 +10948,7 @@
       "executable": false
     },
     "vendor/base/modules/mail/src/inbound/headers.mjs": {
-      "sha256": "79673d562647f4e15e7fe10ca3b13241acd5b2cc25a651a32918cee45e02235c",
+      "sha256": "a4b8eb4fbc6f5ba896d63d79ac5c8ac17ea9c533ec215ac5e804c94ad8b51253",
       "executable": false
     },
     "vendor/base/modules/mail/src/inbound/index.mjs": {

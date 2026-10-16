@@ -47,16 +47,26 @@ export function validateConfig(config, dependencies = {}) {
   return config;
 }
 
+// Splits `Name <email>` or a bare `email` without a backtracking regex on caller-controlled text.
+function splitMailbox(text) {
+  if (!text.endsWith('>')) return /[<>]/.test(text) ? null : { email: text };
+  const open = text.lastIndexOf('<');
+  const inner = text.slice(open + 1, -1);
+  const name = text.slice(0, Math.max(open, 0)).trimEnd();
+  if (open < 0 || !inner || inner.includes('>') || /[\n\r\u2028\u2029]/u.test(name)) return null;
+  return { name, email: inner };
+}
+
 export function parseAddress(value) {
   bounded(value, 998, 'invalid_address');
-  const match = value.trim().match(/^(?:(.*?)\s*<([^<>]+)>|([^<>]+))$/u);
-  const email = (match?.[2] ?? match?.[3] ?? '').trim();
+  const match = splitMailbox(value.trim());
+  const email = (match?.email ?? '').trim();
   // Conservative mailbox subset; never serialize multiple mailboxes as one.
   const parts = email.split('@');
   if (parts.length !== 2 || !parts[0] || parts[0].length > 64 || email.length > 254 ||
       !/^[^\s@<>(),:;"\\]+$/u.test(parts[0]) || parts[0].startsWith('.') || parts[0].endsWith('.') || parts[0].includes('..') ||
       !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(parts[1])) fail('invalid_address');
-  let name = match?.[1]?.trim();
+  let name = match?.name?.trim();
   if (name?.startsWith('"') && name.endsWith('"')) name = name.slice(1, -1);
   if (name && /[<>"\\]/.test(name)) fail('invalid_address');
   return name ? { email, name } : { email };
