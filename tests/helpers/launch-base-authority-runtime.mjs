@@ -11,6 +11,7 @@ import {legacyCookieFixture} from './legacy-cookie-fixture.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 import {mailEdgeEntry} from './mail-edge-entry.mjs'
 import { migrateFixture } from './migrate-fixture.mjs'
+import { localRuntimeTls } from './local-runtime-tls.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
@@ -22,6 +23,7 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
   let runtime
   const close = async () => { try { await runtime?.dispose() } finally { await rm(directory, { recursive: true, force: true }) } }
   try {
+    const tls = await localRuntimeTls(directory)
     migrateFixture(directory)
     const { workerOptions, main, externalWorkers } = unstable_getMiniflareWorkerOptions('dist/server/wrangler.json')
     const modulesRoot = path.dirname(main), { modulesRules, ...options } = workerOptions
@@ -30,7 +32,7 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     const optionsFor = changes => {
       const current = { ...options.bindings, ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...automaticQueues?{}:{queueConsumers:{}}, modules, modulesRoot, bindings: current }, ...externalWorkers] })
+      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, ...tls, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...automaticQueues?{}:{queueConsumers:{}}, modules, modulesRoot, bindings: current }, ...externalWorkers] })
       for (const worker of config.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
       config.workers[0].dev??={}
       config.workers[0].dev.outboundService={type:'fetcher',handler:async request=>{
@@ -50,9 +52,11 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     bindings.APP_ORIGIN = origin
     await runtime.setOptions(optionsFor({}))
     let db = await runtime.getD1Database('DB')
+    // An empty SNI keeps native IP verification independent of the HTTP Host.
+    // Fresh connections isolate Host probes and avoid stale sockets after reloads.
     const dispatch = (url, init = {}) => new Promise((resolve, reject) => {
       const target = new URL(url)
-      const request = httpsRequest({ agent: false, hostname: '127.0.0.1', port, path: target.pathname + target.search, method: init.method ?? 'GET', rejectUnauthorized: false, headers: { host: target.host, 'cf-connecting-ip': '192.0.2.61', ...init.headers } }, response => {
+      const request = httpsRequest({ agent: false, hostname: '127.0.0.1', port, path: target.pathname + target.search, method: init.method ?? 'GET', rejectUnauthorized: true, ca: tls.httpsCert, servername: '', headers: { host: target.host, 'cf-connecting-ip': '192.0.2.61', ...init.headers } }, response => {
         const chunks = []; response.on('data', data => chunks.push(data)); response.on('end', () => resolve(new Response(Buffer.concat(chunks), { status: response.statusCode, headers: response.headers })))
       })
       request.on('error', error => { error.message += ' (' + (init.method ?? 'GET') + ' ' + target.pathname + ')'; reject(error) }); if (init.body) request.write(init.body); request.end()
