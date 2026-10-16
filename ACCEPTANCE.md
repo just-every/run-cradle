@@ -1,8 +1,8 @@
 # Cradle acceptance
 
-## Target contract — 16 October 2026
+## Target contract — 16 October 2026, revised 17 October 2026
 
-CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's acceptance evidence is listed below with its status, so a build round can work towards it. **63 done, 108 partial, 24 missing.** A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
+CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's acceptance evidence is listed below with its status, so a build round can work towards it. **63 done, 116 partial, 28 missing** of 207 clauses, after the 17 October revision that answered the first buyer review with twelve new clauses and sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
 
 
 ### Records, schema and the app model
@@ -16,6 +16,8 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | RECORDS-005 — Reviewed base import | Done | Native D1 import, restart, undo and receipt tests; desktop and phone move-in browser journeys. |
 | RECORDS-006 — Portable base exits | Done | Base JSON/CSV exit, fresh return and copy tests; Settings archive download journey. |
 | RECORDS-007 — Agent-proposed schema changes | Done | REST and MCP proposal door tests with the official MCP SDK client; 67 door cases. |
+| RECORDS-008 — Merge import into an existing table | Partial | A fixture vendor price list, as CSV and as .xlsx, is merged on SKU into a populated table. The preview and commit update exactly the matching records with the expected values, create the rest, resolve linked records by primary value, and refuse a mapped forbidden field and a repeated SKU. Undo restores every prior value. A cell another operator changed after the import is reported as a conflict on undo. A saved mapping applied to next week's fixture file produces the expected preview. A scheduled Google Sheet import, run at a fixed clock against a recorded API fixture, commits a clean run and holds one with a refused row. |
+| RECORDS-009 — Record templates and duplicate record | Partial | Duplicate journey, with and without links, where a field the operator cannot write is left empty. A template is applied from the grid and from an automation, and it creates its child records in one audited write. |
 | APP-SCOPE-001 — Explicit application scope | Done | Repeated setup and legacy mapping preserve explicit scopes and revocations. |
 | OWN-001 — Owned installation without seat charges | Done | Installer and whole-installation archive round trip on emitted workerd/D1/R2; Settings usage view. |
 | SCALE-001 — Operational scale | Partial | Declared load profile run against emitted workerd/D1 recording p50/p95/p99 and error rate, then an authorized hosted run. |
@@ -24,14 +26,16 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 
 | Clause | Status | Required evidence |
 | --- | --- | --- |
-| FIELD-001 — Complete field types | Partial | Builder journey creates one field of every type, writes valid and invalid values through UI, public form, REST and CSV, and re-imports the base export with every value equal. |
+| FIELD-001 — Complete field types | Partial | A builder journey creates one field of every type. It writes valid and invalid values through the UI, a public form, REST and CSV, then re-imports the base export with every value equal. A rich-text value using every listed format comes back byte-equal in Markdown after a base JSON export and re-import, a CSV export and re-import, and a REST read and write. A date-time field set to the viewer's local zone shows the same instant as 9:00 AM Eastern to a viewer in New York and 6:00 AM Pacific to a viewer in Los Angeles. Set to a fixed zone, it shows both viewers 9:00 AM Eastern. |
 | FIELD-002 — Field conversion and table deletion with preview | Missing | Conversion matrix test through `release.adopt` with lossy and lossless cases; delete-then-restore journey. |
 | FIELD-003 — Validation and conditional rules | Partial | Writes through UI, form, REST, import and automation refused with the rule's message; adoption preview counts existing violators. |
-| CALC-001 — Formula fields | Partial | Formula builder journey authoring each function family with previewed results; a broken formula shows its positioned error; the evaluator's results are checked against a fixture table. |
-| CALC-002 — Lookups across links | Partial | Manual round trip recomputes a lookup after the linked record changes; restricted linked fields are hidden from the lookup. |
+| FIELD-004 — Notify people when they're added to a user field | Missing | A journey and an emitted-worker test add an operator to an Assignee field and show that operator, and nobody else, notified once in-app and once by email. A fake Slack edge receives exactly one message. A self-assignment notifies no one. A bulk edit that keeps the same assignee sends nothing. A later comment on the record reaches the assignee. After the assignee loses read access, the next comment notifies nobody. Turning the option off stops further notices. |
+| CALC-001 — Formula fields | Partial | A formula builder journey authors one formula from each function family and checks the previewed results. A broken formula shows its positioned error. The evaluator passes CALC-005's reference fixture with every row equal. |
+| CALC-002 — Lookups across links | Partial | A manual round trip recomputes a lookup after the linked record changes, and restricted linked fields are hidden from the lookup. A conditional lookup that shows only open linked orders, sorted by date descending and limited to 3, returns exactly the expected three values, and it changes on the next read after one of those orders closes. |
 | CALC-003 — Rollups and counts | Partial | Builder journey adds a conditional rollup and a count; editing a linked record changes them on the next read. |
 | CALC-004 — Calculation consistency | Partial | Write-then-read test across UI, REST and export; cycle refused at adoption; timing at the SCALE-001 profile. |
-| FILE-001 — Attachments with previews | Partial | Upload, preview and download journey at 1440 and 390; a revoked operator's old link is refused; API upload round trip. |
+| CALC-005 — Airtable formula coverage | Partial | The evaluator returns the expected value for every row of the reference fixture through the formula field, REST and CSV export. A fixture-coverage check fails when any listed function has no row, and a translation check fails when any listed function is flagged as untranslatable on move-in. |
+| FILE-001 — Attachments with previews | Partial | An upload, preview and download journey runs at 1440 and 390, and a revoked operator's old link is refused. An API upload round trip passes, and so does a resumable multipart upload of a 1 GB fixture that is interrupted and resumed and then arrives equal by checksum. A file over each declared limit is refused naming the limit. |
 | FILE-002 — Attachments from connected file stores | Missing | Picker journeys against each provider's sandbox or a fake at the network edge; the reference survives export. |
 | FILE-003 — Attachments in exports, erasure and migration | Partial | Archive round trip with files equal by checksum; erasure test showing no remaining bytes; move-in receipt with zero skipped attachments. |
 
@@ -43,12 +47,14 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | VIEW-009 — Kanban | Partial | Board journey drags a card and the record's field changes; a read-only operator cannot drag. |
 | VIEW-010 — Calendar | Partial | Calendar journey creates, drags and opens records; the iCal feed returns the view's records and stops after revocation. |
 | VIEW-011 — Gallery | Partial | Gallery journey at 1440 and 390 with image covers. |
-| VIEW-012 — Timeline and Gantt | Partial | Timeline journey with grouping, dependency conflict marker and drag; a baseline compared after a move. |
+| VIEW-012 — Timeline and Gantt | Partial | A timeline journey groups records, shows the dependency conflict marker and drags a bar, and a baseline is compared after the move. A Gantt fixture of eight tasks, whose single longest dependency chain is known, highlights exactly those tasks as the critical path. After a task's duration changes so that a different chain becomes longest, the highlighted set becomes exactly that chain. Dragging one bar changes no other record's dates. |
 | VIEW-013 — Personal, locked and formatted views | Partial | View journey: personal view hidden from others, locked view refuses edits, summary values checked against the records, colour rule applied. |
 | VIEW-014 — Live multi-user editing | Partial | Two-browser journey: an edit in one appears in the other within 2 seconds; a stale concurrent edit shows the conflict. |
-| COLLAB-001 — Record comments and mentions | Partial | Comment-and-mention journey on a manual base; the mentioned operator's notification; erasure anonymises the author. |
+| VIEW-015 — Undo and redo | Partial | A grid journey pastes a 50×5 range, undoes it so every cell has its prior value, then redoes it so every cell has the pasted value. A fill-down, a bulk edit and a deletion are each undone and restored. After a second browser changes one pasted cell, undo reports that cell's conflict and applies nothing. A demoted operator's undo is refused. |
+| VIEW-016 — Find in view | Missing | A grid journey on a 5,000-record fixture finds a term and checks the reported count. Stepping through the matches reaches each matching cell. A hidden field's value is never matched. |
+| COLLAB-001 — Record comments and mentions | Partial | A comment-and-mention journey runs on a manual base. The mentioned operator is notified once in-app and once by email, and with a fake Slack, Teams or Nook edge connected, exactly one message reaches the mentioned person's chosen channel. The author edits their comment and the thread shows it as edited; another operator's edit is refused. Comment search finds the comment for an operator who can read the record. It returns nothing to an operator whose row policy hides the record, and the same holds through REST. Erasure anonymises the author. |
 | COLLAB-002 — Record history | Partial | History reads hide fields the reader cannot see; restore-from-history journey. |
-| COLLAB-003 — Watching and change notifications | Missing | Watch journey producing one digest; a revoked reader stops receiving notifications. |
+| COLLAB-003 — Watching and change notifications | Missing | A watch journey at a fixed clock produces one daily digest that lists every watched change. A watcher set to immediate delivery is notified of a change once in-app and once by email within 1 minute of the commit, and with a fake Slack edge connected, one Slack message arrives. A watcher's own change notifies nobody. A revoked reader stops receiving notifications. |
 
 ### Forms, interfaces and dashboards
 
@@ -57,13 +63,15 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | FORM-001 — Public shareable forms | Partial | Signed-out browser journey submits with an attachment and prefill; rate limit and Turnstile refusal; rotated link answers 404. |
 | FORM-002 — Conditional form logic | Partial | Conditional form journey; hidden fields are never written. |
 | FORM-003 — Embedded forms and views | Missing | Embed test on an allowed and a refused origin. |
-| IFACE-001 — Interface designer | Partial | Designer journey builds and publishes a three-page interface; a member sees it, a non-member does not; export and restore preserve it. |
+| IFACE-001 — Interface designer | Partial | A designer journey builds and publishes a three-page interface with a section, two tabs and a record picker; a member sees it and a non-member does not. The designer publishes v2, opens v1 read-only showing v1's layout, and restores v1, which becomes v3 with v1's layout and members see it on their next load. Export and restore preserve every version. |
 | IFACE-002 — Record review and approval screens | Partial | Approval journey works a queue of ten records; actions are policy-checked and audited. |
 | IFACE-003 — Charts and dashboards | Partial | Dashboard journey with each chart type checked against computed totals; drill-down lists exactly the counted records. |
 | IFACE-004 — Buttons and record actions | Partial | Button journey with confirmation; a forbidden user sees it disabled and the API refuses. |
 | IFACE-005 — External portals | Missing | Two external users each see only their own rows through the portal and REST; an attempt at another's record is refused. |
 | IFACE-006 — Templates and starting apps | Partial | Template adoption journey for each template; duplicate-base copy with an identity map. |
+| IFACE-007 — Per-component permissions and viewer filters | Missing | A field-technician list component makes Status and Notes editable and Amount view-only. For a technician whose base role can edit Amount, writing Status through the interface succeeds. Writing Amount is refused both in the UI and through the component's API call, and Amount stays editable to them in the grid. A component with adding and deleting off refuses both actions through its API. On a "Viewer's records" page, each of two technicians sees only the rows where they are the Assignee, through the page and its API calls. A request for the other technician's record is refused as missing. |
 | REPORT-001 — Scheduled reports | Missing | Scheduled report test at a fixed clock; a recipient with narrower policy receives fewer rows. |
+| REPORT-002 — Print and page layouts | Missing | A record prints to a PDF whose text contains every visible field and no hidden field. A packing-slip layout rendered for a batch of five records produces five pages, each with its own order lines and a barcode that decodes to that record's value. A label sheet places 30 records on one Avery 5160 page at the template's positions. A viewer with a narrower field policy gets the restricted fields empty. |
 
 ### Roles, permissions and sharing
 
@@ -71,12 +79,13 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | --- | --- | --- |
 | PERM-001 — Roles and base sharing | Partial | Role matrix test through REST and UI for each role; demotion fences an open session's next write. |
 | PERM-002 — Row and field rules | Done | Policy tests hide rows and fields across reads, history and search. |
-| PERM-003 — Action and schema authority | Done | Forbidden action refused through native and legacy HTTP; non-owner adoption refused. |
+| PERM-003 — Action and schema authority | Done | A forbidden action is refused through native and legacy HTTP, and adoption by a person PERM-009 does not allow is refused. |
 | PERM-004 — Preview access as a user | Partial | Preview journey shows the exact row/field diff a rule change causes for a chosen member. |
 | PERM-005 — Guests | Partial | Guest journey: one base visible, workspace navigation and search show nothing else. |
-| PERM-006 — Share links | Missing | Share-link test: password, expiry and revocation each refuse; hidden fields never appear in the payload. |
+| PERM-006 — Share links | Missing | In a share-link test, password, expiry and revocation each refuse, and hidden fields never appear in the payload. With CSV download off, the export endpoint refuses the link. With it on, the CSV holds exactly the shared rows and visible fields. |
 | PERM-007 — Company sign-in and provisioning | Partial | OIDC exchange test; SAML and SCIM tests against a local provider at the network edge. |
 | PERM-008 — Admin audit log | Partial | Audit export after a scripted sequence of admin actions lists each one once. |
+| PERM-009 — Who changes schema and views within a base | Partial | In a role journey, a base creator who is not the installation owner adds a "PO number" field and adopts it alone; the field appears to editors on their next read. The same creator's field deletion waits for the base owner's review, and the base owner adopts it. An editor creates and saves a collaborative view with a filter and grouping, and other members see it with no adoption step. An editor's attempt to add a field is refused through the UI and through the RECORDS-007 or REST schema door. A read-only member can save only a personal view. |
 
 ### Automations and follow-up
 
@@ -90,6 +99,7 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | AUTO-USER-006 — Run history and failure alerts | Partial | Failure test produces one notification with cause and link; an uncertain send offers no retry. |
 | AUTO-USER-007 — Scripts | Missing | Script test reads and writes allowed records, is refused a forbidden table, is stopped at the time limit and cannot reach an unapproved host. |
 | AUTO-USER-008 — Follow-up until done | Partial | Follow-up test at a fixed clock: reminder, update-request link updating a field, escalation and stop on completion; each recorded on the record. |
+| AUTO-USER-009 — Automation authorship and lifetime | Partial | An emitted-worker test at a fixed clock covers authorship, lifetime and policy: A base creator who is not the installation owner authors "New order → notify warehouse" and enables it. At day 31 and at day 91, a new order still fires it once, and the effect is recorded. When the creator is demoted to editor, the next new order produces no effect. The base owner is notified once, listing the automation. The base owner reassigns the automation to themselves, and the next order fires it again. Under an owner-set 90-day policy, warnings arrive on days 83 and 89, the automation pauses on day 90, and one renewal restores it. An editor's attempt to create or edit an automation is refused. |
 
 ### API, webhooks and integrations
 
@@ -97,7 +107,8 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | --- | --- | --- |
 | API-USER-001 — Scoped revocable keys | Done | API key tests across issue, use, revoke and expiry. |
 | API-USER-002 — Complete REST API | Partial | Contract test drives every endpoint from the generated OpenAPI document; a batch over limits is refused whole. |
-| API-USER-003 — OAuth for third-party apps | Missing | OAuth flow test with a local client: consent, scoped access, revocation. |
+| API-USER-003 — OAuth for third-party apps | Missing | An OAuth flow test with a local client enters the installation URL, discovers the endpoints, then covers consent, scoped access, a refresh after the access token expires, and revocation. A redirect URI that is not registered is refused. |
+| API-USER-004 — Long-lived integration keys and personal access tokens | Partial | A fixed-clock test over the lifetimes: A non-expiring integration key and a personal access token both still read and write at day 31 and day 91. Revoking either fails its next request. Demoting the token's operator to read-only refuses its next write. Under an owner-set 90-day policy, a key issued that day warns on days 83 and 89 and is refused on day 90. The listing shows the last-used time for each key and token. |
 | WEBHOOK-USER-001 — Private destinations and signed delivery | Done | Webhook and Slack delivery tests at the network edge. |
 | WEBHOOK-USER-002 — Change subscriptions | Missing | Subscription test receives a ping per change and replays the cursor without gaps or duplicates. |
 | MCP-001 — Live records for AI assistants | Partial | Official MCP SDK client test: allowed read and write, refused out-of-scope table, approval-required write held until approved. |
@@ -107,16 +118,17 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | INTEG-004 — Google Calendar and Outlook | Partial | Calendar sync test against a recorded provider edge: create, move, cancel and an external edit flagged for review. |
 | INTEG-005 — CRM, development and payment systems | Missing | One synced-table and one action test per system against recorded fixtures at the network edge. |
 | INTEG-006 — Twilio SMS | Missing | SMS action test with a Twilio fake: send, delivery callback, STOP suppresses later sends. |
-| INTEG-007 — Zapier, Make and Crank | Missing | Each published trigger and action exercised from a local Crank client. |
+| INTEG-007 — Zapier, Make and Crank | Missing | **Zapier.** The Zapier app's source lives in the repository, and the Zapier Platform CLI's `zapier test` runs every trigger, action and search in it against a local emitted installation, entering the installation URL in the auth fields and connecting through API-USER-003's OAuth. Fakes are allowed only at the network edge, and `zapier validate` passes. **Make.** The Make app's definition (base, connection, modules, RPCs and webhooks) lives in the repository. Each module runs through Make's app SDK tooling against the same local installation, and one authorized run of a published-app scenario on a hosted preview installation records Make's execution log. **Crank.** Each trigger and action runs from a local Crank client. **Moving a Zap.** A fixture Zap of the form Airtable New Record → Slack, re-pointed at Cradle, receives output with the same field-name keys. |
 
 ### Move-in, sync and recovery
 
 | Clause | Status | Required evidence |
 | --- | --- | --- |
-| MIGRATE-001 — Airtable move-in | Partial | Recorded-API move-in of a fixture base with every field type, formula families, attachments and views; receipt with zero unexplained losses; delta re-run; then one authorized real-account run. |
-| MIGRATE-002 — Smartsheet move-in | Missing | Recorded-API move-in of a fixture workspace with hierarchy and predecessors; receipt checked. |
-| MIGRATE-003 — Quickbase move-in | Missing | Recorded-API move-in of a fixture app; receipt checked. |
+| MIGRATE-001 — Airtable move-in | Partial | A recorded-API move-in of a fixture base runs through review. The base has: every field type, including single and multiple collaborator fields, created-by, last-modified-by, created-time and last-modified-time fields; CALC-005's reference formulas, attachments and every view type; a form; comments with @mentions by three different collaborators. Every covered formula translates, and every one evaluates equal to its exported value on every record; the check fails on any flag. People, metadata and comments meet MIGRATE-005's checks. The form and its fields are present. The receipt shows zero unexplained losses. A delta re-run imports exactly the changed records. Then one authorized real-account run. |
+| MIGRATE-002 — Smartsheet move-in | Missing | A recorded-API move-in of a fixture workspace with hierarchy, predecessors, contact columns, comments by two people and formulas from each Smartsheet function family. Every covered formula evaluates equal to its exported value. People and metadata meet MIGRATE-005's checks. The receipt is checked. |
+| MIGRATE-003 — Quickbase move-in | Missing | A recorded-API move-in of a fixture app with user fields, summary fields and formulas from each Quickbase function family. Every covered formula evaluates equal to its exported value. People and metadata meet MIGRATE-005's checks. The receipt is checked. |
 | MIGRATE-004 — Spreadsheet workbook move-in | Partial | Workbook fixture produces a reviewed proposal whose adopted base matches the workbook's values. |
+| MIGRATE-005 — People and provenance on move-in | Partial | A fixture move-in with three collaborators, two matching existing operators and one unmatched, checks: every user-field value, created-by and last-modified-by, and comment author maps to the matching operator; the unmatched person is kept by name and listed on the receipt, then becomes the operator in those same values once invited; created and last-modified times equal the source timestamps to the second; comments keep their authors, timestamps and order, and the import sends no notifications; a "my open requests" view shows each matched operator exactly their source rows; the ID map holds every source ID once, and the API finds each record by its source ID. |
 | SYNC-001 — Synced tables | Missing | Sync test against recorded sources: refresh counts, removed-source marking, and a two-way conflict surfaced. |
 | SYNC-002 — Warehouse export | Missing | Scheduled export test writes a correct incremental file to a local bucket. |
 | SNAP-001 — Automatic snapshots and point-in-time restore | Partial | Snapshot test at fixed clocks; restore-as-copy equals the snapshot; rollback receipt. |
@@ -142,7 +154,7 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 
 | Clause | Status | Required evidence |
 | --- | --- | --- |
-| AGENT-001 — Build a working base from the owner's files | Partial | Two held-out owner workbooks produce adopted bases whose records match the sources field for field; an injected instruction in a source file changes nothing. |
+| AGENT-001 — Build a working base from the owner's files | Partial | Two held-out owner workbooks produce adopted bases whose records match the sources field for field. In each workbook, a VLOOKUP or XLOOKUP column and a repeated-key column become a link or lookup field whose values equal the source cells. Each source formula column becomes a formula field that evaluates equal to the source on every row. Each workbook's proposal includes at least one view and one form drawn from its structure (a filtered sheet becomes a view, a header-only intake sheet becomes a form), a role per named owner column, and a starter automation for each status column. Each of these is adopted and exercised: the view returns the source's filtered rows, a form submission creates a record, and the automation fires on a status change. An injected instruction in a source file changes nothing. |
 | AGENT-002 — Test changes against live records before adoption | Partial | Impact-report test on a populated base: a formula change lists exactly the changed cells; a rule change lists exactly the newly disclosed fields; a stale report is refused. |
 | AGENT-003 — Rebuild an incumbent app, not just its rows | Partial | Fixture Airtable base with an interface and two automations: rebuilt proposals pass the same role journeys; the decision list names each untranslatable item. |
 | AGENT-004 — Operate a workflow to its outcome | Partial | Held-out continuation scenario on fixture records: outcome reached with every action inside the mandate; revocation mid-run stops new effects; an uncertain send is not repeated. |
