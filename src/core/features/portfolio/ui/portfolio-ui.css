@@ -570,6 +570,23 @@
   place-items: center;
   cursor: pointer;
 }
+.portfolio-inspector header > button {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.portfolio-inspector header > button::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 1px solid var(--border);
+  border-radius: var(--r-field);
+  background: var(--card);
+  content: "";
+  pointer-events: none;
+}
 .portfolio-inspector-status {
   display: flex;
   flex-wrap: wrap;

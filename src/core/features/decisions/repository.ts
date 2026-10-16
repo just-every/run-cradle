@@ -58,7 +58,7 @@ export const createDecisionRepository = (database: Database) => ({
   async list() {
     const rows = await queryAll<DecisionRow>(database, `${select}
       WHERE c.archived_at IS NULL AND d.state IN ('Awaiting approval', 'In review')
-      ORDER BY d.due_at < ? DESC, CASE d.priority WHEN 'Critical' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END, d.due_at ASC, d.created_at ASC, d.id ASC`, [Date.now()])
+      ORDER BY d.due_at < ? DESC, CASE d.priority WHEN 'Critical' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END, d.due_at ASC, d.id ASC`, [Date.now()])
     return rows.map(map)
   },
 

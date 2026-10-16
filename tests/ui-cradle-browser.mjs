@@ -87,7 +87,7 @@ try {
     await page.getByRole('heading', { name: 'Start with what you remember', exact: true }).waitFor()
     if (accessibilityEvidence) await auditAccessibility(page, { screen: 'search-empty', width, output })
     const search = async query => {
-      await page.getByLabel('Search launch records', { exact: true }).fill(query)
+      await page.getByLabel('Search all bases', { exact: true }).fill(query)
       const response = page.waitForResponse(response => new URL(response.url()).pathname === '/api/search' && new URL(response.url()).searchParams.get('q') === query)
       response.catch(() => {})
       await accessibilityAction(page, page.getByRole('button', { name: 'Search', exact: true }))
@@ -100,7 +100,7 @@ try {
     await search(`UI checked campaign ${width}`)
     const resultLink = page.getByRole('link', { name: `UI checked campaign ${width}`, exact: true })
     await resultLink.waitFor()
-    assert.equal(await resultLink.getAttribute('href'), `/app/campaigns/${campaigns.items[0].id}`, 'Search must return the campaign edited through its public form')
+    assert.equal(await resultLink.getAttribute('href'), `/app/records/00000000000000000000000700/00000000000000000000000701/${campaigns.items[0].id}`, 'Search must return the campaign edited through its public form')
     if (accessibilityEvidence) await auditAccessibility(page, { screen: 'search-record-result', width, output })
     await accessibilityAction(page, resultLink)
     await page.getByRole('heading', { name: `UI checked campaign ${width}`, exact: true }).waitFor()

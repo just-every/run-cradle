@@ -10,7 +10,7 @@ installation needs your decision about key lifetime first.
 
 ## Give an agent a proposing key
 
-1. Start Cradle with an ordinary sign-in: `rer dev --login`.
+1. Start Cradle with `rer dev` and open its private `RER_OPEN` URL.
    Open the `RER_SIGN_IN` URL it prints, follow the newest sign-in message and
    finish first-run setup. Issue keys from this kind of session. A key issued
    in a dev-identity session (the `RER_OPEN` link) only works together with the

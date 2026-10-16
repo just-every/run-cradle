@@ -34,6 +34,7 @@ const records: Item[] = [
   { label: 'Home', href: '/app', icon: 'home' },
   { label: 'Records', href: '/app/records', icon: 'grid' },
   { label: 'App studio', href: '/app/operations/studio', icon: 'studio' },
+  { label: 'Automations', href: '/app/automations', icon: 'automation' },
 ]
 const launch: Item[] = [
   { label: 'Overview', href: '/app/overview', icon: 'overview' },
@@ -42,7 +43,6 @@ const launch: Item[] = [
   { label: 'Timeline', href: '/app/lenses/timeline', icon: 'timeline' },
   { label: 'New lens', href: '/app/lenses/new', icon: 'lens' },
   { label: 'Decisions', href: '/app/decisions', icon: 'decision' },
-  { label: 'Automations', href: '/app/automations', icon: 'automation' },
 ]
 const utilities: Item[] = [
   { label: 'Search', href: '/app/search', icon: 'lens' },
@@ -60,7 +60,7 @@ const OperatorRail = ({
   onNavigate?: () => void;
 }) => {
  const session = useDocumentSession() as (ReturnType<typeof useDocumentSession> & { launchInUse?: boolean })
- const showLaunch = /^\/app\/(campaigns|launch|overview|milestones|risks|decisions|lenses|automations)/.test(currentPath) || session?.launchInUse === true
+ const showLaunch = /^\/app\/(campaigns|launch|overview|milestones|risks|decisions|lenses)/.test(currentPath) || session?.launchInUse === true
  return (
   <div className="operator-rail-content">
     <Link
@@ -69,7 +69,7 @@ const OperatorRail = ({
       onClick={onNavigate}
       aria-label={`${identity.workspaceName} home`}
     >
-      <BrandLockup className="operator-brand-lockup" name="Cradle" variant="dark" />
+      <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
     </Link>
     <OperatorNavigation items={records}
       currentPath={currentPath}
@@ -116,7 +116,9 @@ export const OperatorShell = ({
 
   return (
     <div className="operator-shell">
-      <a className="operator-skip" href="#main-content">Skip to content</a>
+      <nav aria-label="Skip links">
+        <a className="operator-skip" href="#main-content">Skip to content</a>
+      </nav>
       <aside className="operator-rail">
         <OperatorRail currentPath={currentPath} identity={identity} />
       </aside>
@@ -134,7 +136,7 @@ export const OperatorShell = ({
           <span />
         </button>
         <Link className="operator-mobile-brand" to="/app">
-          <BrandLockup className="operator-brand-lockup" name="Cradle" variant="dark" />
+          <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
         </Link>
         <Link
           className="operator-mobile-bell"

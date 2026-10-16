@@ -1,14 +1,47 @@
 import {join} from 'node:path';
+import {randomUUID} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {createPortability,PortabilityError} from '@runeditrun/rer/modules/portability';
 import {installationBucket} from './bucket.mjs';
 import {portabilityPolicy,transient} from './policy.mjs';
-import {archiveRecords,exportFile,importFile} from './files.mjs';
+import {exportArchive,importArchive} from '@runeditrun/rer/modules/portability/files';
+import {preflightImport,transferFailure} from './preflight.mjs';
 import {rebuildSearch} from './search.mjs';
 import {derivedSearch,prepareRecordRestore} from './records.mjs';
 
-async function run(direction,{root,path}){
- if(direction==='import')for await(const record of archiveRecords(path)){}
+async function importWithCustody(service,db,path,journal){
+ const actor='cradle-cli:'+randomUUID();let complete=false;
+ try{
+  const receipt=await importArchive({...service,imports:{...service.imports,create:manifest=>service.imports.create(manifest,actor)}},path,transient,journal);
+  complete=true;return receipt;
+ }finally{if(!complete){
+   // Reconcile by this invocation's actor even if create/abort committed but
+   // its acknowledgement failed. Never claim or retire another transfer.
+   const rows=(await db.prepare("SELECT id,phase FROM rer_portability_jobs WHERE actor=? AND kind='import'").bind(actor).all()).results;
+   if(rows.length>1)throw new PortabilityError('import_cleanup_owner');
+   const row=rows[0];
+   if(row&&row.phase!=='complete'){
+    if(row.phase!=='aborted')try{await service.imports.abort(row.id);}
+    catch(error){
+     if(!await db.prepare("SELECT 1 FROM rer_portability_jobs WHERE id=? AND actor=? AND kind='import' AND phase='aborted'").bind(row.id,actor).first())throw error;
+    }
+    // Base removes this job's staged copies, parts and owned files on abort,
+    // but retains the manifest. A refused CLI archive must retain no content,
+    // including personal filenames or object metadata in that manifest.
+    const result=await db.prepare(`DELETE FROM rer_portability_jobs WHERE id=? AND actor=? AND kind='import' AND phase='aborted'
+     AND NOT EXISTS(SELECT 1 FROM rer_portability_state WHERE import_job=?)
+     AND NOT EXISTS(SELECT 1 FROM rer_portability_owned WHERE job=?)
+     AND NOT EXISTS(SELECT 1 FROM rer_portability_parts WHERE job=?)
+     AND NOT EXISTS(SELECT 1 FROM rer_portability_segments WHERE job=?)
+     AND NOT EXISTS(SELECT 1 FROM sqlite_master s JOIN json_each(rer_portability_jobs.metadata,'$.copies') c
+      ON s.name=c.value OR s.name=c.value||'_meta' WHERE s.type='table')`).bind(row.id,actor,row.id,row.id,row.id,row.id).run();
+    if(result.meta.changes!==1)throw new PortabilityError('import_cleanup_failed');
+   }
+ }}
+}
+
+async function run(direction,{root,path,journal}){
+ if(direction==='import')await preflightImport(path,journal);
  const {getPlatformProxy}=createRequire(join(root,'package.json'))('wrangler');
  const proxy=await getPlatformProxy({configPath:join(root,'wrangler.jsonc'),persist:{path:join(root,'.wrangler/state/v3')},remoteBindings:false});
  let cleanup,complete=false;
@@ -18,20 +51,11 @@ async function run(direction,{root,path}){
   if(direction==='import')cleanup=await prepareRecordRestore(proxy.env.DB,root,path,portabilityPolicy);
   const config={...portabilityPolicy,derivedTables:await derivedSearch(proxy.env.DB)};
   const service=await createPortability({db:proxy.env.DB,buckets:{FILES:installationBucket(proxy.env.DB,proxy.env.FILES)},policy:config});
-  const receipt=await (direction==='export'?exportFile:importFile)(service,path,transient);
+  const receipt=direction==='export'?await exportArchive(service,path,transient):await importWithCustody(service,proxy.env.DB,path,journal);
   if(direction==='import')await rebuildSearch(proxy.env.DB,root);
   complete=true;
   return receipt;
  }finally{try{if(!complete)await cleanup?.();}finally{await proxy.dispose();}}
 }
 try{console.log(JSON.stringify({ok:true,...await run(process.argv[2],JSON.parse(process.argv[3]))}));}
-catch(error){
- const refused=error instanceof PortabilityError&&(error.status===409||['wrong_product','schema_mismatch','table_inventory','configuration_inventory'].includes(error.code));
- const exitCode=error.message==='archive_json'?2:refused||error.code==='EEXIST'?4:1;
- const reason=error instanceof PortabilityError?error.code.split(':')[0]:/^[A-Z_]+$/.test(error.code??'')?error.code:error.message==='archive_json'?'archive_json':/D1_ERROR/.test(error.message??'')?'database_error':'native_error';
- const fileId=error instanceof PortabilityError&&['stored_file_missing','stored_file_checksum'].includes(reason)?error.code.split(':')[1]:undefined;
- const names=error instanceof PortabilityError&&reason==='unsafe_integer'?error.code.split(':').slice(1):[];
- const location=names.length===2&&names.every(name=>/^[a-z_][a-z0-9_]{0,63}$/.test(name))?names.join('.'):undefined;
- const frames=reason==='native_error'||reason==='database_error'?[...new Set([...String(error.stack??'').matchAll(/\/(catalogue|copies|export|import|storage|format|worker|files|generated)\.mjs:(\d+):\d+/g)].map(match=>match[1]+'.mjs:'+match[2]))].slice(0,3):[];
- console.log(JSON.stringify({ok:false,code:exitCode===2?'invalid_archive':exitCode===4?'restore_refused':'transfer_failed',reason,...(location?{location}:{}),...(fileId&&/^[A-Za-z0-9_-]{1,128}$/.test(fileId)?{location:'file '+fileId}:{}),...(frames.length?{frames}:{}),exitCode}));process.exitCode=exitCode;
-}
+catch(error){const receipt=transferFailure(error);console.log(JSON.stringify(receipt));process.exitCode=receipt.exitCode;}

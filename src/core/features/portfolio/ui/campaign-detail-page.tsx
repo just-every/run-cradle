@@ -1,3 +1,5 @@
+import {AnalysisPanel} from '../../../../ui/launch/analysis-panel'
+import { CampaignCustomFields } from "../../../../ui/launch/campaign-custom-fields";
 import { campaignLifecycle } from '../../../../apps/launch/lifecycle'
 import { RelatedRecords } from '../../../../ui/launch/related-records';
 import { CampaignActions } from '../../../../ui/launch/campaign-actions';
@@ -339,6 +341,10 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
                   </dd>
                 </div>
               </dl>
+              <section className="launch-custom-fields" aria-labelledby="campaign-custom-fields-title">
+                <h3 id="campaign-custom-fields-title">Custom fields</h3>
+                <CampaignCustomFields campaign={campaign} fields={detail.resource.data.customFields} onSaved={detail.retry} />
+              </section>
             </SectionCard>
             <SectionCard title="Deliverables" className="portfolio-priority-work">
               <RelatedRecords kind="deliverable" campaignId={campaign.id} records={deliverables} onChanged={detail.retry} />
@@ -470,7 +476,7 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
             </SectionCard>
           </aside>
         </section>
-<CampaignActions campaign={campaign} />
+<CampaignActions campaign={campaign} /><AnalysisPanel feature="campaign-brief" campaignId={campaign.id} />
       </div>
     </PortfolioPageShell>
   );

@@ -20,3 +20,7 @@
 .cr-receipt-marks { padding-left: 20px; }
 .cr-receipt-marks li { margin-bottom: 12px; }
 @media print { .operator-rail, .operator-mobile-header, .operator-skip, .cr-receipt-actions { display: none !important; } .cr-import-receipt .cr-card { break-inside: avoid; } }
+
+.cr-import-column-details { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px; }
+.cr-import-column-details summary { cursor: pointer; padding: 8px 0; font-weight: 600; }
+.cr-import-columns { align-items: start; }

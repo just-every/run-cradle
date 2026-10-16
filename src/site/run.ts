@@ -6,7 +6,7 @@ export const run: RunData = {
   repository: 'https://github.com/just-every/run-cradle',
   clone: 'git clone https://github.com/just-every/run-cradle.git cradle',
   folder: 'cradle',
-  requirements: 'Needs Node 22 or later and pnpm 10.12.4, on macOS, Linux or Windows with WSL2.',
+  requirements: 'Runs on macOS, Linux or Windows with WSL2. Rer installs the pinned Node and pnpm for you. Local setup is optional after rer dev. To host it, deploy with OWNER_EMAIL; rer claims that owner automatically, then you sign in by email. No manual setup token is needed.',
   licence: 'MIT',
   docs: true,
   hosted: [],

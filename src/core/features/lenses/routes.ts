@@ -13,7 +13,7 @@ export const registerLensRoutes = (app: Hono<AppEnv>, platform: Platform) => {
   const service = createLensService(platform)
   app.get('/api/lenses', async (context) => {
     const lenses = await service.list()
-    const page=launchCollection(lenses,context.req.query('cursor'),context.req.query('limit'));return context.json({...page,lenses:page.items})
+    const page=launchCollection(lenses,context.req.query('cursor'),context.req.query('limit'),lens=>[lens.createdAt,lens.id],['asc','asc']);return context.json({...page,lenses:page.items})
   })
   app.get('/api/lenses/:id', async (context) => {
     const id = requirePathParam(context.req.param('id'), 'lens id')

@@ -6,7 +6,7 @@ import { denied } from './errors'
 import { LAUNCH_APP_ID } from '../../apps/launch/contracts'
 import { policyRuleSchema } from './validators'
 
-const actions=new Set(['member.read','member.invite','member.remove','member.erase'])
+const actions=new Set(['member.read','member.invite','member.remove','member.erase','member.transfer-ownership'])
 export type OperatorManagementPolicy=(ctx:RequestContext,input:{appId:string;action:string})=>Promise<{allowed:boolean;guards:SqlPredicate[]}>
 /** operator.management.v1: eligible operators may manage collaborators by default.
  * A deployment can supply a restrictive policy; durable conditions belong in guards. */

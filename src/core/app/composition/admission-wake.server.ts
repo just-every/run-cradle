@@ -9,9 +9,11 @@ export function withAdmissionWake(admission: AdmissionPort, db: D1Database, queu
       for(let offset=0;offset<rows.results.length;offset+=100)await queue.sendBatch(rows.results.slice(offset,offset+100).map(row=>({body:{kind:'cradle.outbox.v1',outboxId:row.id}})))
       const due=await db.prepare("SELECT 1 FROM channel_deliveries WHERE state='queued' AND due_at<=? LIMIT 1").bind(Date.now()).first()
       if(due)await queue.send({kind:'cradle.channels.wake.v1'})
+      const launch=await db.prepare("SELECT 1 FROM admission_events WHERE command_id=? AND app_id='00000000000000000000000700' LIMIT 1").bind(plan.commandId).first()
+      if(launch)await queue.send({kind:'cradle.launch.events.v1',commandId:plan.commandId})
       const records=await db.prepare("SELECT 1 FROM record_automation_events WHERE command_id=? AND state='pending' LIMIT 1").bind(plan.commandId).first()
       if(records)await queue.send({kind:'cradle.records.automations.v1',commandId:plan.commandId})
-      if(rows.results.length||due||records)await db.prepare("INSERT INTO runtime_queue_publications(command_id,state,attempts,checked_at,error_code) VALUES(?,'published',1,?,NULL) ON CONFLICT(command_id) DO UPDATE SET state='published',attempts=attempts+1,checked_at=excluded.checked_at,error_code=NULL").bind(plan.commandId,new Date().toISOString()).run()
+      if(rows.results.length||due||records||launch)await db.prepare("INSERT INTO runtime_queue_publications(command_id,state,attempts,checked_at,error_code) VALUES(?,'published',1,?,NULL) ON CONFLICT(command_id) DO UPDATE SET state='published',attempts=attempts+1,checked_at=excluded.checked_at,error_code=NULL").bind(plan.commandId,new Date().toISOString()).run()
     } catch {
       // The client receives the real admission outcome, never a claim that mail or
       // another external effect completed. Cron scans the original durable work.

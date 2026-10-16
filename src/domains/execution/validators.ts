@@ -6,3 +6,10 @@ export const effectRequestSchema = z.object({ businessBinding:z.object({kind:z.l
 export const runCancelSchema = z.object({ runId: id, reason: z.string().min(1).max(2000), expectedEpoch: z.number().int().nonnegative() }).strict();
 export const runRetrySchema = z.object({ runId: id }).strict();
 export const attemptReconcileSchema = z.object({ attemptId: id }).strict();
+
+export const attemptResolveSchema = z.object({
+ attemptId: id,
+ expectedVersion: z.number().int().positive(),
+ outcome: z.enum(['done', 'not_done']),
+ evidence: z.object({summary:z.string().trim().min(1).max(8000),reference:z.string().trim().min(1).max(2000),fileId:id.optional()}).strict(),
+}).strict();

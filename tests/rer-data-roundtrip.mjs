@@ -6,6 +6,7 @@ import {sourceCampaignDeletion} from './helpers/rer-source-campaign.mjs';
 import {randomBytes} from 'node:crypto';
 import {sourceErasure,identityMatches,hasIdentityCopy} from './helpers/rer-source-erasure.mjs';
 import {archiveIntegrity,rebind} from './helpers/rer-archive-integrity.mjs';
+import {retirementUpgrade,personalImport,capturePersonalArchive,refusedOldArchive,retiredPersonalImport} from './helpers/rer-erasure-archive.mjs';
 import assert from 'node:assert/strict';
 import {copyFile,readFile,readdir,writeFile,appendFile,rm,mkdir,mkdtemp,rename} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -48,10 +49,11 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
 
   assert.deepEqual(await authorityRows(),beforeUpgrade.authority,'Forward lifecycle migrations preserve every grant, membership and policy row');
   assert.deepEqual(await visibleData(source.source),beforeUpgrade.visible,'Forward lifecycle migrations preserve prior records, generated values, search and files');
-  let erased;
-  await withRerEmittedWorker(source,origin,async()=>{assert.equal((await fetch(origin+'/api/v1/apps',{headers:{cookie:prior.cookie}})).status,200);assert.deepEqual(await authorityRows(),beforeUpgrade.authority,'First public ingress after upgrade creates no authority rows or activation')
+  await retirementUpgrade(source);
+  let erased,oldManifest,personalJob;
+  await withRerEmittedWorker(source,origin,async(_runtime,{offline})=>{assert.equal((await fetch(origin+'/api/v1/apps',{headers:{cookie:prior.cookie}})).status,200);assert.deepEqual(await authorityRows(),beforeUpgrade.authority,'First public ingress after upgrade creates no authority rows or activation')
   console.log('FORWARD_UPGRADE_9023_9024_9025: prior populated D1; complete grants/memberships/policies and record/search/file snapshots equal');
-  erased=await sourceErasure(source,origin,prior);const csrfToken=(await(await fetch(origin+'/auth/csrf',{headers:{cookie:prior.cookie}})).json()).csrfToken;await privateExports({origin,cookie:prior.cookie,csrfToken,records:prior.records},'post-erasure');await sourceCampaignDeletion(source,origin,prior);});await retainedThroughClock(source,port);const before=await visibleData(source.source);
+  erased=await sourceErasure(source,origin,prior,async identity=>{personalJob=await personalImport(origin,prior.cookie);oldManifest=await offline(()=>capturePersonalArchive(source,identity))},()=>offline(async()=>{}));await retiredPersonalImport(source,personalJob);const csrfToken=(await(await fetch(origin+'/auth/csrf',{headers:{cookie:prior.cookie}})).json()).csrfToken;await privateExports({origin,cookie:prior.cookie,csrfToken,records:prior.records},'post-erasure');await sourceCampaignDeletion(source,origin,prior);});await retainedThroughClock(source,port);const before=await visibleData(source.source);
   assert.equal(await bindings(source.source,async({DB})=>(await DB.prepare('SELECT COUNT(*) AS n FROM automations WHERE id=? AND enabled=1').bind(prior.records.automationId).first()).n),1,'The archived updated-record automation is enabled in the source');
   await source.rer(['export','--output','exports/first.rer','--non-interactive']);
   const first=await archive(source.source,'exports/first.rer');
@@ -60,12 +62,15 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
   assert.equal(secrets.filter(value=>archiveBytes.includes(value)).length,0,'Installation archive contains no setup/session/connection secrets');
   console.log('ARCHIVE_SECRET_SCAN: '+secrets.length+' configured secret values; 0 matches');
   assert.ok(!hasIdentityCopy(archiveBytes),'Erased identity is absent from the whole archive');
+  assert.ok(!first[0].objects.some(object=>[erased.key,...erased.compressedKeys].includes(object.key)),'Later public archive omits all personal FILES objects');
+  assert.ok(first[0].objects.some(object=>object.key==='privacy/control-compressed.pdf'),'Later public archive retains the unrelated compressed control');
   assert.ok(!first[0].objects.some(object=>object.key.startsWith('execution/')),'Sealed execution bytes are omitted');
   await mkdir(join(target.source,'exports'),{mode:0o700,recursive:true});await copyFile(join(source.source,'exports/first.rer'),join(target.source,'exports/first.rer'));
   const damaged=structuredClone(first);damaged.at(-1).contentHash='0'.repeat(64);
   await writeFile(join(target.source,'damaged.rer'),damaged.map(r=>JSON.stringify(r)).join('\n')+'\n',{mode:0o600});
   await target.command(['run','db:migrate:local']);
   const empty=await ownedData(target.source,first[0].tables);
+  await refusedOldArchive(source,target,first,empty,oldManifest);
   await archiveIntegrity(source,target,first,empty);
   await assert.rejects(target.rer(['import','--input','damaged.rer','--yes','--non-interactive']),error=>error.exitCode===1&&error.errorCode==='transfer_failed','Integrity failure must refuse without committing business rows');
   assert.deepEqual(await ownedData(target.source,first[0].tables),empty,'Integrity failure changes no owned DB cell or FILES object');

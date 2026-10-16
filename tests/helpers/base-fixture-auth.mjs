@@ -20,19 +20,28 @@ export async function adoptFixtureOperators(db) {
    WHERE NOT EXISTS(SELECT 1 FROM cradle_base_operators b WHERE b.principal_id=p.id)`),
   db.prepare(`INSERT OR IGNORE INTO cradle_base_operators(base_id,principal_id)
    SELECT o.id,p.id FROM operators o JOIN authority_principals p ON p.human_id=o.id`),
+  db.prepare(`INSERT OR IGNORE INTO oa_bootstrap(singleton,claim_id,claimed_at)
+   SELECT 1,'imported-existing-installation',unixepoch('subsec')*1000
+   WHERE EXISTS(SELECT 1 FROM operators)`),
   db.prepare(trigger.sql),
  ])
 }
 export async function createFixtureAuth(db, configuration, principalId) {
  if(!await db.prepare("SELECT 1 FROM sqlite_master WHERE name='oa_operators'").first()){
-  for(const name of ['base/9000_base_operator_auth.sql','base/9001_cradle_auth_projection.sql','base/9002_development_outbox.sql','updates/9021_dev_sessions.sql','updates/9022_domain_rules_step_up.sql']){
+  for(const name of ['base/9000_base_operator_auth.sql','base/9001_cradle_auth_projection.sql','base/9002_development_outbox.sql','updates/9021_dev_sessions.sql','updates/9022_domain_rules_step_up.sql','updates/9026_provider_setup_lifecycle.sql']){
    const sql=await readFile(new URL('../../migrations/'+name,import.meta.url),'utf8')
    await db.exec(sql.replace(/^\s*--.*$/gm,'').replaceAll('\n',' '))
   }
  }else await adoptFixtureOperators(db)
  const {appOrigin:origin,sessionSecret}=configuration
  const outbox=createD1DevelopmentOutbox({db})
- const base=createOperatorAuth({db,config:{local:true,origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:sessionSecret,MAIL_FROM:'auth@localhost.test'},mailSender:createMailSender({provider:'development',mode:'development'},{outbox}),clientIp:()=> '127.0.0.1'})
+ const mailSender=createMailSender({provider:'sendgrid',mode:'production',apiKey:'synthetic-fixture-provider-key'},{fetch:async(url,init)=>{
+  assert.equal(url,'https://api.sendgrid.com/v3/mail/send')
+  const body=JSON.parse(init.body)
+  await outbox.put({deliveryId:crypto.randomUUID(),from:body.from.email,to:body.personalizations[0].to.map(to=>to.email),subject:body.subject,text:body.content.find(part=>part.type==='text/plain').value})
+  return new Response(null,{status:202})
+ }})
+ const base=createOperatorAuth({db,config:{local:true,origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:sessionSecret,MAIL_FROM:'auth@localhost.test'},mailSender,clientIp:()=> '127.0.0.1'})
  configuration.base=base
  // These fixtures have already installed their workspace and policy data.
  configuration.initializeBaseOwner=async()=>{}

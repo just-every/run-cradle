@@ -1,8 +1,9 @@
 import { env } from 'cloudflare:workers'
-import { localMailEnabled } from '../platform/local-auth.server'
+import {hostedMailConfigured} from '../platform/hosted-mail.server'
+import { createBaseAuth } from '../platform/base-auth.server'
 
 /** Only the identity plate name and sign-in capabilities are public. */
-export async function publicDocument() {
+export async function publicDocument({ identity = false }: { identity?: boolean } = {}) {
   let workspaceName: string | null = null
   try {
     const workspace = await env.DB.prepare("SELECT name FROM workspace WHERE id='workspace'").first<{name:string}>()
@@ -13,8 +14,9 @@ export async function publicDocument() {
   }
   return {
     workspaceName,
-    developmentOutbox: localMailEnabled(env) && env.MAIL_PROVIDER === 'development',
-    magicLink: !!(env.MAIL_FROM && ((localMailEnabled(env) && env.MAIL_PROVIDER === 'development') || (env.MAIL_PROVIDER && env.MAIL_PROVIDER_API_KEY))),
+    ownerClaimed: !!await env.DB.prepare('SELECT singleton FROM oa_bootstrap WHERE singleton=1').first(),
+    ...(identity ? { identityProviders: (await createBaseAuth(env).providers?.list() ?? []).filter(provider => provider.visible).map(({ label, startPath }) => ({ label, startPath })) } : {}),
+    magicLink: hostedMailConfigured(env),
   }
 }
 export type PublicDocument = Awaited<ReturnType<typeof publicDocument>>

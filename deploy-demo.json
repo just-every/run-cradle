@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "domain": "run-cradle.com",
+  "name": "Cradle",
+  "settings": {
+    "MAIL_PROVIDER": "development",
+    "MAIL_FROM": "Cradle demo <demo@demo.invalid>"
+  }
+}

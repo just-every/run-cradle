@@ -1,3 +1,4 @@
+import {browserCookies,sessionCookieWithToken} from './helpers/session-cookies.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import { expiredToken, revokedToken, authoritySessionControlsSql } from './helpers/session-controls.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
@@ -62,7 +63,7 @@ const get = (url, session = cookie) => request(`${origin}${url}`, { redirect: 'm
   const now = Date.now()
   command(['d1', 'execute', 'cradle', '--local', '--persist-to', directory, '--command', `INSERT INTO sessions (id,created_at,updated_at,version,operator_id,token,expires_at,revoked_at) VALUES ('resource-expired',${now},${now},1,'${session.operator.id}','resource-expired',${now-1},NULL),('resource-revoked',${now},${now},1,'${session.operator.id}','resource-revoked',${now+86400000},${now})`])
   command(['d1','execute','cradle','--local','--persist-to',directory,'--command',authoritySessionControlsSql(session.operator.id,now)])
-  const controls = [['valid', cookie], ['missing', ''], ['expired', `operator_session_local=${expiredToken}`], ['revoked', `operator_session_local=${revokedToken}`]]
+  const controls = [['valid', cookie], ['missing', ''], ['expired', sessionCookieWithToken(cookie,expiredToken)], ['revoked', sessionCookieWithToken(cookie,revokedToken)]]
   const families = {
     campaigns: (await json('/api/portfolio')).attention[0].id,
     risks: (await json('/api/risks/lens')).items[0].id,
@@ -95,7 +96,7 @@ const get = (url, session = cookie) => request(`${origin}${url}`, { redirect: 'm
   let dataWire
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
     const browserContext = await browser.newContext({ viewport })
-    await browserContext.addCookies([{ name: cookie.split('=')[0], value: cookie.slice(cookie.indexOf('=')+1), url: origin }])
+    await browserContext.addCookies(browserCookies(cookie,origin))
     const page = await browserContext.newPage(), errors = []
     page.on('pageerror', error => errors.push(error.message))
     page.on('request', req => { if (req.url().includes('/_serverFn/') && new URL(req.url()).searchParams.has('payload')) dataWire = { url: req.url(), headers: req.headers() } })

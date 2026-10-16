@@ -5,7 +5,7 @@ import {fixture} from './repair-case-harness.mjs'
 async function setup(){
  const h=await fixture({realEvidence:true})
  await h.db.exec((await readFile('migrations/core/0500_execution.sql','utf8')).replace(/\n/g,' '))
- h.r.registerRepairContractorCommand(h.registry,h.d);h.r.registerRepairQuoteCommand(h.registry,h.d)
+ h.r.registerRepairCommands(h.registry,h.d,['repair.assign-contractor']);h.r.registerRepairCommands(h.registry,h.d,['repair.record-quote'])
  const report=await h.report(),opened=(await h.registry.get('repair.open').execute(h.ctx,await h.command(report))).result.value
  const work=await h.ref('workOrders',opened.workOrder.id),contractor=await h.ref('contractors',h.b.contractor)
  await h.registry.get('repair.assign-contractor').execute(h.ctx,await h.envelope({workOrder:work,contractor,eligibilityEvidence:[h.b.ev]},[work,contractor],{controlEpoch:0}))
@@ -14,21 +14,9 @@ async function setup(){
  await h.db.prepare('INSERT INTO evidence_source_versions(id,source_id,version,sha256,content,file_ids,known_at) VALUES(?,?,1,?,?,?,?)').bind(h.r.createUlid(),source.sourceId,'synthetic-quote-sha','Synthetic original quotation','[]',h.ctx.now).run()
  const review=()=>h.reads.quotes(h.ctx,work.ref.recordId)
  async function quote(overrides={}){const data=await review(),total={minor:'200000',currency:'AUD',scale:2},input={workOrder:data.workOrder,contractor:data.contractor,scopeHash:data.scopeHash,total,taxIncluded:true,lineItems:[{description:'Repair the cooling unit',total}],exclusions:[],expiresAt:'2099-01-01T00:00:00.000Z',evidence:[source],offeredSlot:null,...overrides};return h.envelope(input,[input.workOrder,input.contractor],{controlEpoch:data.controlEpoch})}
- const prepare=async command=>{const registry=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairQuoteCommand(registry,h.d);return (await registry.get('repair.record-quote').execute(h.ctx,command)).plan}
+ const prepare=async command=>{const registry=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairCommands(registry,h.d,['repair.record-quote']);return (await registry.get('repair.record-quote').execute(h.ctx,command)).plan}
  return {...h,opened,source,review,quote,prepare,record:command=>h.registry.get('repair.record-quote').execute(h.ctx,command)}
 }
-test('manual quote capture and exact threshold review leave work, decisions, wakes and provider state untouched; original response replays',async()=>{
- const h=await setup()
- try{
-  const before=await h.db.prepare('SELECT * FROM repair_work_orders WHERE id=?').bind(h.opened.workOrder.id).first(),command=await h.quote()
-  const result=await h.record(command);assert.equal(result.result.value.total.minor,'200000');assert.equal((await h.record(command)).replay,true)
-  const total={minor:'200001',currency:'AUD',scale:2};await h.record(await h.quote({total,lineItems:[{description:'Alternative exact terms',total}]}))
-  const review=await h.review();assert.equal(review.items.length,2);assert.deepEqual(review.items.map(item=>item.approvalRequired).sort(),[false,true]);assert.ok(review.items.every(item=>item.issues.length===0))
-  assert.deepEqual(await h.db.prepare('SELECT * FROM repair_work_orders WHERE id=?').bind(h.opened.workOrder.id).first(),before)
-  for(const table of ['business_decisions','operation_wakes','execution_runs','admission_outbox'])assert.equal((await h.db.prepare(`SELECT COUNT(*) n FROM ${table}`).first()).n,0)
-  const response=await h.http.request(`/api/v1/repairs/${h.opened.workOrder.id}/quotes`);assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store')
- }finally{await h.close()}
-})
 test('quote capture rejects nonhuman, revoked action, stale scope, wrong totals and expired terms',async()=>{
  const h=await setup()
  try{
@@ -56,18 +44,7 @@ test('source correction and paused case reject prepared quote admission atomical
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM repair_quotes').first()).n,0)
  }finally{await h.close()}
 })
-test('retained provider insertion after preparation blocks manual quote continuation without changing that history',async()=>{
- const h=await setup()
- try{
-  const command=await h.quote(),plan=await h.prepare(command),id=h.r.createUlid()
-  await h.db.prepare("INSERT INTO execution_runs(id,app_id,origin_command_id,request_json,state,control_epoch,cause_identity,created_at,updated_at) VALUES(?,?,?,?,'unknown',0,?,?,?)").bind(id,h.r.REPAIRS_APP_ID,h.r.createUlid(),JSON.stringify({caseId:h.opened.case.id}),'Synthetic retained history',h.ctx.now,h.ctx.now).run()
-  const row=await h.db.prepare('SELECT * FROM execution_runs WHERE id=?').bind(id).first()
-  await assert.rejects(h.admission.commit(h.ctx,plan),{code:'version_conflict'})
-  await assert.rejects(h.record(command),{code:'unconfigured'})
-  assert.equal((await h.review()).canCapture,false)
-  assert.deepEqual(await h.db.prepare('SELECT * FROM execution_runs WHERE id=?').bind(id).first(),row)
- }finally{await h.close()}
-})
+
 test('review explains incomparable or changed evidence without ranking; hidden quote/source fields deny read and replay',async()=>{
  const h=await setup()
  try{

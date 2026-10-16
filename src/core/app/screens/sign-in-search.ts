@@ -14,7 +14,7 @@ export const signInErrors = {
   forbidden: 'The sign-in request could not be accepted. Use the form below to try again.',
 } as const
 export type SignInNotice = keyof typeof signInErrors | 'sent' | 'step_up_sent' | 'signed_out'
-export type SignInSearch = { notice?: SignInNotice; returnTo?: string }
+export type SignInSearch = { notice?: SignInNotice; returnTo?: string; login_hint?: string }
 
 function destination(value: unknown): string | undefined {
   if (typeof value !== 'string' || value.length > 2048 || !value.startsWith('/') || value.startsWith('//') || /[\\\x00-\x20\x7f]/.test(value)) return
@@ -31,5 +31,7 @@ function destination(value: unknown): string | undefined {
 export function normalizeSignInSearch(search: Record<string, unknown>): SignInSearch {
   const notice = typeof search.notice === 'string' && (['sent', 'step_up_sent', 'signed_out'].includes(search.notice) || Object.hasOwn(signInErrors, search.notice))
     ? search.notice as SignInNotice : undefined
-  return { notice, returnTo: destination(search.returnTo) ?? destination(search.next) }
+  const hint=typeof search.login_hint==='string'?search.login_hint.trim().toLowerCase():''
+  const login_hint=hint.length<=254&&/^[^\s@<>\x00-\x1f]+@[^\s@<>\x00-\x1f]+\.[^\s@<>\x00-\x1f]+$/.test(hint)?hint:undefined
+  return { notice, login_hint, returnTo: destination(search.returnTo) ?? destination(search.next) }
 }

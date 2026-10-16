@@ -35,9 +35,9 @@ const any=(items:Sql[]):Sql=>items.length?{sql:items.map(i=>`coalesce((${i.sql})
  * replacement per column; rows that also hold a longer word or another person's name are
  * rewritten per row only after the owner confirms that store, and only at whole tokens.
  */
-export async function redactIdentityCopies(db:D1Database,change:Effects,input:{person:IdentityPerson;needles:string[];label:string;places:IdentityPlace[];others:string[];keep:ReadonlySet<string>}){
+export async function redactIdentityCopies(db:D1Database,change:Effects,input:{person:IdentityPerson;needles:string[];label:string;places:IdentityPlace[];others:string[];keep:ReadonlySet<string>;managedTables?:ReadonlySet<string>}){
  const {needles,label,others}=input,matches=replacementOrder(needles.flatMap(needle=>[needle,escaped(needle)])),residual:IdentityCopy[]=[],planned:PlannedPlace[]=[]
- const tables=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND sql NOT LIKE 'CREATE VIRTUAL TABLE%' AND name NOT GLOB 'sqlite_*' AND name NOT GLOB '_cf_*' AND name NOT GLOB '*_fts*' AND (name NOT GLOB 'launch_search*' OR name='launch_search_rows')").all<{name:string}>()).results.map(t=>t.name).filter(name=>!name.startsWith('d1_migrations'))
+ const tables=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND sql NOT LIKE 'CREATE VIRTUAL TABLE%' AND name NOT GLOB 'sqlite_*' AND name NOT GLOB '_cf_*' AND name NOT GLOB '*_fts*' AND (name NOT GLOB 'launch_search*' OR name='launch_search_rows')").all<{name:string}>()).results.map(t=>t.name).filter(name=>!name.startsWith('d1_migrations')&&!input.managedTables?.has(name))
  const places=input.places.filter(p=>tables.includes(p.table)),link=(p:IdentityPlace):Sql=>({sql:p.where,values:p.values(input.person)})
  for(const p of places)planned.push({store:p.columns?`${p.table}.${p.columns.join(',')}`:p.table,action:p.action,rows:(await db.prepare(`SELECT count(*) n FROM ${identifier(p.table)} WHERE coalesce((${p.where}),0)`).bind(...link(p).values).first<{n:number}>())!.n,reason:p.reason})
  for(const name of tables){

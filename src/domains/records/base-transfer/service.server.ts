@@ -1,3 +1,4 @@
+import {AuthorityError} from '../../authority/errors'
 import { Buffer } from 'node:buffer'
 import {restoredJobAuthority} from './restored-job.server'
 import { requireCsvCapacityAcceptance } from './csv-capacity'
@@ -77,7 +78,11 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
  }
  async function jobBinding(ctx:RequestContext,id:string){
   const binding=await db.prepare('SELECT destination,namespace,principal_id,cradle_restore_hold FROM ik_jobs WHERE id=?').bind(id).first<{destination:string;namespace:string;principal_id:string;cradle_restore_hold:number}>()
-  if(!binding)throw new AdmissionError('not_found','Import job not found.')
+  if(!binding){
+   const retired=await db.prepare("SELECT destination,receipt_id FROM ik_d1_retirements WHERE id=? AND kind='job'").bind(id).first<{destination:string;receipt_id:string}>()
+   if(retired){await importAuthority(db,policy,ctx,retired.destination);throw new AuthorityError('version_conflict','Import custody was permanently retired by person erasure.',409,{retirementReceiptId:retired.receipt_id})}
+   throw new AdmissionError('not_found','Import job not found.')
+  }
   if(binding.principal_id!==ctx.principal.id)await restoredJobAuthority(db,ctx,id,binding.principal_id)
   return binding
  }
@@ -89,7 +94,7 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
  /** Reads the retained job once; status, report.json and the move-in receipt all use this. */
  async function inspect(ctx:RequestContext,id:string){
   const c=requestContext(await jobContext(ctx,id)),job=await readD1ImportJob(id,c),{plan}=await stored(id,c),readback=await readD1PersistedImport(c)
-  const row=await db.prepare('SELECT r.* FROM record_import_reviews r JOIN ik_jobs j ON j.operation_key=r.id AND j.destination=r.app_id WHERE j.id=? AND r.principal_id=j.principal_id').bind(job.id).first<StoredReview>();if(!row)throw new AdmissionError('not_found','Import report not found.');const {detail}=await loadReview(db,row.id,row.principal_id)
+  const row=await db.prepare('SELECT r.* FROM record_import_reviews r JOIN ik_jobs j ON j.operation_key=r.id AND j.destination=r.app_id WHERE j.id=? AND r.principal_id=j.principal_id').bind(job.id).first<StoredReview>();if(!row)throw new AdmissionError('version_conflict','The retained import report was withdrawn by privacy erasure. Remaining job effects can still resume or undo.');const {detail}=await loadReview(db,row.id,row.principal_id)
   const reconciliation:Reconciliation={ok:false,missing:[],duplicate:[],extra:[],mismatched:[]},expected=new Map<string,{hash:string;revision:string}>()
   // Active provenance is independently read by the kit under exact native/set guards.
   for(const p of readback.provenance.filter(p=>p.jobId===id&&!p.reversed)){const key=p.targetKind+':'+p.targetId;if(expected.has(key))reconciliation.duplicate.push(key);expected.set(key,{hash:p.valueHash,revision:p.appliedRevision})}

@@ -1,4 +1,5 @@
 import { localMailEnabled, localRuntimeBindings } from './local-auth.server'
+import {hostedMailConfigured} from './hosted-mail.server'
 import { createBaseAuth } from './base-auth.server'
 import { devGate } from '../../../vendor/base/modules/operator-auth/index.mjs'
 import type { AuthConfiguration } from '../../domains/authority/ports'
@@ -23,7 +24,7 @@ export const createPlatform = (input: PlatformBindings) => {
       },
       // Credentials minted in a dev session count only on a request holding this checkout's key.
       devCredentialGate: async (request: Request) => await devGate({ key: bindings.RER_DEV_KEY, origin: bindings.APP_ORIGIN ?? '', local: localMailEnabled(bindings) })?.admits(request) ?? false,
-      baseMailConfigured: !!(bindings.MAIL_FROM && ((localMailEnabled(bindings) && bindings.MAIL_PROVIDER === 'development') || (bindings.MAIL_PROVIDER && bindings.MAIL_PROVIDER_API_KEY))),
+      baseMailConfigured: !!(bindings.MAIL_FROM && ((bindings.RER_DEMO === '1' && bindings.MAIL_PROVIDER === 'development') || hostedMailConfigured(bindings))),
     } as AuthConfiguration,
     redirectToSignIn,
   },

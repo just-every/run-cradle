@@ -1,3 +1,4 @@
+import {sessionCookieWithToken} from './session-cookies.mjs'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
@@ -25,7 +26,7 @@ export async function versionedSessionProof({page,origin,cookie,directory,member
   }
   const before=snapshot()
   const report=[]
-  for(const [control,session] of [['valid',cookie],['missing',''],['expired',`operator_session_local=${expiredToken}`],['revoked',`operator_session_local=${revokedToken}`]]) {
+  for(const [control,session] of [['valid',cookie],['missing',''],['expired',sessionCookieWithToken(cookie,expiredToken)],['revoked',sessionCookieWithToken(cookie,revokedToken)]]) {
     const response=await fetch(wire.url,{headers:{...headers,...(session?{cookie:session}:{})}}),body=await response.text()
     assert.equal(response.status,200)
     await writeFile(path.join(evidence,'versioned-latest.json'),JSON.stringify({control,wire,status:response.status,body},null,2))

@@ -1,3 +1,5 @@
+import {unrelatedImport} from './rer-erasure-archive.mjs'
+import {compressedPdf,encodedText,gzipMetadata} from './erasure-attachments.mjs'
 import {mentionAuthorityControls} from './rer-mention-policy.mjs'
 import {erasureWriteRace} from './rer-erasure-race.mjs'
 import {retentionRows} from './rer-retention.mjs'
@@ -25,7 +27,7 @@ export async function identityMatches(root){return bindings(root,async({DB,FILES
  let cursor;do{const page=await FILES.list({cursor});for(const object of page.objects){const body=await FILES.get(object.key);if(!body)continue;objects++;objectBytes+=body.size;const text=new TextDecoder().decode(await body.arrayBuffer());if([JSON.stringify([object.key,body.customMetadata,body.httpMetadata]),text].some(copyIn))matches.push({table:'R2',column:'key-metadata-bytes',count:1})}cursor=page.truncated?page.cursor:undefined}while(cursor)
  return {tables,matches,contained,objects,objectBytes}
 })}
-export async function sourceErasure(copy,origin,prior,populate){
+export async function sourceErasure(copy,origin,prior,populate,restart){
  const identity=await bindings(copy.source,async({DB,FILES})=>{
   const base=id(),now=Date.now();await DB.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(base,erasedEmail,erasedName,now).run()
   const person=(await DB.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(base).first()).principal_id
@@ -44,10 +46,18 @@ export async function sourceErasure(copy,origin,prior,populate){
   const fileId=id(),key='private/'+fileId+'/'+erasedEmail,bytes=new TextEncoder().encode(erasedName+' '+erasedEmail),hash=createHash('sha256').update(bytes).digest('hex')
   await FILES.put(key,bytes,{sha256:hash,customMetadata:{person:erasedEmail},httpMetadata:{contentDisposition:'attachment; filename="'+erasedName+'"'}})
   await DB.prepare("INSERT INTO evidence_files(id,app_id,entity_id,record_id,field_ids,filename,media_type,bytes,sha256,object_key,state,version,created_at,updated_at) VALUES(?,?,?,?,'[]',?,'text/plain',?,?,?,'available',1,?,?)").bind(fileId,appId,'00000000000000000000000408',intake,erasedName+'.txt',bytes.length,hash,key,new Date(now).toISOString(),new Date(now).toISOString()).run()
-  return {person,campaign,key,intake,version:(await DB.prepare('SELECT version FROM authority_principals WHERE id=?').bind(person).first()).version}
+  const compressedKeys=[]
+  const headerIdentity=erasedName+' '+erasedEmail
+  for(const [body,type,encoding] of [[compressedPdf(erasedName+' '+erasedEmail),'application/pdf'],[encodedText(erasedName+' '+erasedEmail,'gzip'),'text/plain','gzip'],[encodedText(erasedName+' '+erasedEmail,'deflate'),'text/plain','deflate'],[gzipMetadata('innocent header fixture',{name:headerIdentity}),'text/plain','gzip'],[encodedText(Buffer.concat([encodedText('innocent ','gzip'),gzipMetadata('header fixture',{comment:headerIdentity})]),'gzip'),'text/plain','gzip,gzip']]){
+   const file=id(),objectKey='private/'+file+'/attachment',digest=createHash('sha256').update(body).digest('hex');compressedKeys.push(objectKey)
+   await FILES.put(objectKey,body,{httpMetadata:{contentType:type,...encoding?{contentEncoding:encoding}:{}}})
+   await DB.prepare("INSERT INTO evidence_files(id,app_id,entity_id,record_id,field_ids,filename,media_type,bytes,sha256,object_key,state,version,created_at,updated_at) VALUES(?,?,?,?,'[]','Private attachment',?,?,?,?,'available',1,?,?)").bind(file,appId,'00000000000000000000000408',intake,type,body.length,digest,objectKey,new Date(now).toISOString(),new Date(now).toISOString()).run()
+  }
+  return {person,campaign,key,intake,compressedKeys,version:(await DB.prepare('SELECT version FROM authority_principals WHERE id=?').bind(person).first()).version}
  })
- let before
+ let before,opaqueFixture
  const started=Date.now()
+ let unrelated
  await withRerDevelopment(copy,origin,async()=>{
   const csrf=await fetch(origin+'/auth/csrf',{headers:{cookie:prior.cookie}}),csrfToken=(await csrf.json()).csrfToken
   const request=(body,action='erase')=>fetch(origin+'/api/v1/commands/member.'+action,{method:'POST',headers:{cookie:prior.cookie,origin,connection:'close','content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify(body)})
@@ -57,9 +67,26 @@ export async function sourceErasure(copy,origin,prior,populate){
   const removal={commandId:id(),expected:[{ref:{appId,entityId,recordId:identity.person},version:identity.version}],input:{memberId:identity.person,reason:'Owner removed access before erasure'}}
   const removed=await request(removal,'remove'),removedBody=await removed.json();assert.equal(removed.status,200,'Normal owner removal completes: '+JSON.stringify(removedBody.error??{}));assert.equal(removedBody.data.value.state,'removed')
   if(populate)await populate(identity)
+  unrelated=await unrelatedImport(copy,origin,prior.cookie)
   before=await identityMatches(copy.source);assert.ok(before.matches.length>=5,'Canaries reach multiple real stores before erasure');await retentionRows(copy.source,'before-operator-erasure');console.log('ERASURE_FILE_INVENTORY '+JSON.stringify({objects:before.objects,bytes:before.objectBytes}))
   const removedMention=await mention();await bindings(copy.source,async({DB})=>assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE subject_id=?').bind(removedMention).first()).n,0,'Removed mention notifies nobody'))
   const value={commandId:id(),expected:[{ref:{appId,entityId,recordId:identity.person},version:identity.version+1}],input:{memberId:identity.person,reason:'Owner confirmed permanent identity erasure'}}
+  // This roundtrip fixture deliberately keeps an opaque binary on a campaign, not
+  // in the person's intake. It cannot be inspected and never blocks erasure: it
+  // stays byte-identical and is reported as not inspected. A distinct supported
+  // compressed control proves unrelated inspected bytes survive too.
+  opaqueFixture=await bindings(copy.source,async({DB,FILES})=>{const row=await DB.prepare("SELECT * FROM evidence_files WHERE id='archive-file'").first();if(!row)return null;const object=await FILES.get(row.object_key);return {row,bytes:new Uint8Array(await object.arrayBuffer()),httpMetadata:object.httpMetadata,customMetadata:object.customMetadata}})
+  if(opaqueFixture){const attempt=await request({...value,commandId:id()}),detail=await attempt.json();assert.equal(attempt.status,409,'Other copies still hold erasure: '+(detail.error?.code??'missing error code'));assert.doesNotMatch(detail.error.message,/cannot inspect/,'Another owner\'s opaque attachment never blocks erasure');await bindings(copy.source,async({DB,FILES})=>{assert.equal((await DB.prepare('SELECT state FROM authority_principals WHERE id=?').bind(identity.person).first()).state,'removed');assert.deepEqual(new Uint8Array(await(await FILES.get(opaqueFixture.row.object_key)).arrayBuffer()),opaqueFixture.bytes)})}
+  const controlKey='privacy/control-compressed.pdf',controlBytes=compressedPdf('A different person: Control Reader, control-reader@example.test')
+  await bindings(copy.source,async({FILES})=>FILES.put(controlKey,controlBytes,{httpMetadata:{contentType:'application/pdf'},customMetadata:{purpose:'unrelated privacy control'}}))
+  const headerControlKey='privacy/control-header.gz',headerControlBytes=gzipMetadata('innocent header fixture',{name:'Control Reader',comment:'control-reader@example.test'}),headerControlMetadata={httpMetadata:{contentType:'text/plain',contentEncoding:'gzip'},customMetadata:{purpose:'unrelated gzip envelope control'}}
+  await bindings(copy.source,async({FILES})=>FILES.put(headerControlKey,headerControlBytes,headerControlMetadata))
+  const opaqueHeaderKey='privacy/opaque-header.gz',opaqueHeaderBytes=gzipMetadata('innocent header fixture',{extra:Buffer.from(erasedName+' '+erasedEmail)})
+  await bindings(copy.source,async({FILES})=>FILES.put(opaqueHeaderKey,opaqueHeaderBytes,{httpMetadata:{contentType:'text/plain',contentEncoding:'gzip'}}))
+  // An unowned object whose opaque gzip extra field cannot be inspected is
+  // checked by key and metadata only; it is reported, not a refusal.
+  const headerAttempt=await request({...value,commandId:id()}),headerProblem=await headerAttempt.json();assert.equal(headerAttempt.status,409);assert.doesNotMatch(headerProblem.error.message,/cannot inspect/)
+  await bindings(copy.source,async({DB,FILES})=>{assert.equal((await DB.prepare('SELECT state FROM authority_principals WHERE id=?').bind(identity.person).first()).state,'removed');assert.deepEqual(new Uint8Array(await(await FILES.get(opaqueHeaderKey)).arrayBuffer()),new Uint8Array(opaqueHeaderBytes))})
   const unmatched=await request({...value,expected:[{ref:{appId,entityId,recordId:id()},version:1}]});assert.equal(unmatched.status,400,'Missing member expected version is a typed validation refusal')
   const mandate=id(),operationCase=id()
   await bindings(copy.source,async({DB})=>{await DB.prepare('INSERT INTO operation_mandates(id,app_id,version,data_json) VALUES(?,?,1,?)').bind(mandate,appId,'{}').run();await DB.prepare('INSERT INTO operation_cases(id,app_id,version,data_json,mandate_id,entity_id,subject_id,control_epoch,state) VALUES(?,?,1,?,?,?,?,1,?)').bind(operationCase,appId,JSON.stringify({updatedAt:new Date().toISOString(),name:erasedName}),mandate,entityId,identity.campaign,'observing').run()})
@@ -86,14 +113,22 @@ export async function sourceErasure(copy,origin,prior,populate){
   const buffered=fetch(origin+'/api/v1/commands/launch.comment.create',{method:'POST',headers:{cookie:prior.cookie,origin,connection:'close','content-type':'application/json','x-csrf-token':csrfToken},body:bufferedBody,duplex:'half'}).then(response=>({response}),error=>({error}));await new Promise(resolve=>setTimeout(resolve,300));
   const eraseStarted=Date.now(),response=await request(value).finally(unblock),body=await response.json();assert.equal(response.status,200,'Public owner erasure: '+(body.error?.code??''));assert.equal(body.data.value.confirmed,true,'Completion confirmed after blob deletion');console.log('OPERATOR_ERASURE_POST_CONFIRMED_MS: '+(Date.now()-eraseStarted));unblock();const bufferedResult=await buffered;assert.ifError(bufferedResult.error);const refusedBuffered=bufferedResult.response;assert.equal(refusedBuffered.status,409,'Owner request buffered before erasure cannot publish afterward');await bindings(copy.source,async({DB})=>assert.equal((await DB.prepare('SELECT count(*) n FROM comments WHERE body=?').bind(bufferedText).first()).n,0));console.log('ERASURE_BUFFERED_COMMAND: stale owner comment409/zero rows; fresh post-erasure mention succeeds')
   assert.equal(await objective(),ownerText,'Confirmed erasure leaves the owner\'s own text byte-for-byte unchanged');assert.ok(body.data.value.plan.places.some(place=>place.store==='comments'&&place.rows>0),'The receipt lists the identity places it touched')
+  await bindings(copy.source,async({FILES})=>assert.deepEqual(new Uint8Array(await(await FILES.get(controlKey)).arrayBuffer()),new Uint8Array(controlBytes),'Unrelated compressed control is byte-identical after erasure'))
+  assert.ok(body.data.value.plan.kept.find(copy=>copy.reason==='not_inspected')?.rows>=(opaqueFixture?2:1),'Uninspectable objects are reported in the plan: '+JSON.stringify(body.data.value.plan.kept))
+  await bindings(copy.source,async({FILES})=>{assert.deepEqual(new Uint8Array(await(await FILES.get(opaqueHeaderKey)).arrayBuffer()),new Uint8Array(opaqueHeaderBytes),'Unowned opaque object is left unchanged');if(opaqueFixture)assert.deepEqual(new Uint8Array(await(await FILES.get(opaqueFixture.row.object_key)).arrayBuffer()),opaqueFixture.bytes,'Opaque campaign attachment is left unchanged')
+   // Fixture cleanup: the opaque test object deliberately carried the erased identity.
+   await FILES.delete(opaqueHeaderKey)})
+  await bindings(copy.source,async({FILES})=>{const object=await FILES.get(headerControlKey);assert.ok(object);assert.deepEqual(new Uint8Array(await object.arrayBuffer()),new Uint8Array(headerControlBytes),'Unrelated gzip header and payload remain byte-identical');assert.deepEqual({httpMetadata:object.httpMetadata,customMetadata:object.customMetadata},headerControlMetadata,'Unrelated gzip object metadata remains exact')})
   const detail=await fetch(origin+'/api/campaigns/'+identity.campaign,{headers:{cookie:prior.cookie}});assert.equal(detail.status,200)
   const projected=await detail.json(),comment=projected.comments.find(comment=>comment.authorId===identity.person);assert.equal(comment.authorName,'Anonymous '+identity.person.slice(-8),'Retained comment renders the stable anonymous attribution')
   const erasedMention=await mention();await bindings(copy.source,async({DB})=>{assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE subject_id=?').bind(erasedMention).first()).n,0,'Erased mention notifies nobody');assert.equal((await DB.prepare('SELECT body FROM comments WHERE id=?').bind(erasedMention).first()).body,'Plain mention @'+identity.person)})
   const repeated=await request(value);assert.equal(repeated.status,200,'Lost erasure response safely replays')
   const second=await request({...value,commandId:id()});assert.equal(second.status,409,'Completed erasure cannot be repeated as a fresh operation')
+  await unrelated.verifyAndUndo()
   const removeAgain=await request({...removal,commandId:id()},'remove');assert.equal(removeAgain.status,409,'Erased identity cannot return through removal')
   const missing=await fetch(origin+'/api/v1/erasures/'+id(),{headers:{cookie:prior.cookie}});assert.equal(missing.status,404,'Unknown erasure receipt is a typed404')
  })
+ if(restart){await restart();await unrelated.verifyRestart()}
  const after=await identityMatches(copy.source);assert.deepEqual(after.matches,[],'Every SQLite table has zero original identity matches')
  await bindings(copy.source,async({DB,FILES})=>{
   assert.equal((await DB.prepare('SELECT state FROM authority_principals WHERE id=?').bind(identity.person).first()).state,'erased')
@@ -103,6 +138,7 @@ export async function sourceErasure(copy,origin,prior,populate){
   assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE operator_id=?').bind(identity.person).first()).n,0)
   assert.equal((await DB.prepare('SELECT count(*) n FROM channel_deliveries WHERE operator_id=?').bind(identity.person).first()).n,0)
   assert.equal(await FILES.head(identity.key),null,'Personal bytes deleted before confirmation')
+  for(const key of identity.compressedKeys)assert.equal(await FILES.head(key),null,'Neutral-key personal PDF/gzip/deflate, including header-only identity, deleted before confirmation')
  })
  await retentionRows(copy.source,'after-operator-erasure')
  console.log(`OPERATOR_ERASURE: ${after.tables} tables searched; ${before.matches.length} populated canary columns before; 0 after; ${Date.now()-started}ms including fixture preflight and complete scans; ${populate?'large attributed fixture; exact counts logged separately':'small fixture, manifest-scale unmeasured'}`)

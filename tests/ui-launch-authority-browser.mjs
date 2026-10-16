@@ -74,10 +74,28 @@ try {
     const related=await h.db.prepare('SELECT id,campaign_id,owner_id,title FROM deliverables WHERE title=?').bind(`Delivery notes ${width}`).first()
     assert.equal(related.campaign_id,row.id);assert.equal(related.owner_id,h.owner);receipt.related.push(related)
     await capture(page,'created-deliverable',width)
-    // Real router failure text includes the requested path. No response stubbing.
-    await page.goto(`${h.origin}/app/approvals/${'LongUnavailableApproval'.repeat(14)}`)
-    await page.locator('.cr-state').getByText(/No API route matches/).waitFor()
+    // The mounted repair API validates decision IDs. Exercise its real failure
+    // state with a long URL, then the launch operator's scoped denial for a
+    // valid decision ID. Authorization precedes any missing-record disclosure.
+    const invalidDecision='LongUnavailableApproval'.repeat(14)
+    const invalid=await h.request(h.ownerSession,`/api/v1/decisions/${invalidDecision}/review`)
+    assert.equal(invalid.status,400)
+    const invalidFailure=(await invalid.json()).error
+    assert.equal(invalidFailure.code,'validation')
+    await page.goto(`${h.origin}/app/approvals/${invalidDecision}`)
+    await page.locator('.cr-state').getByText(invalidFailure.message,{exact:true}).waitFor()
+    assert.equal(await page.locator('.cr-state button').isVisible(),true,'A failed read offers another attempt')
     await capture(page,'long-resource-error',width)
+    const unavailableDecision='0'.repeat(26)
+    const deniedDecision=await h.request(h.ownerSession,`/api/v1/decisions/${unavailableDecision}/review`)
+    assert.equal(deniedDecision.status,403)
+    const deniedFailure=(await deniedDecision.json()).error
+    assert.equal(deniedFailure.code,'forbidden')
+    await page.goto(`${h.origin}/app/approvals/${unavailableDecision}`)
+    await page.locator('.cr-state').getByText(deniedFailure.message,{exact:true}).waitFor()
+    assert.equal(await page.locator('.cr-state .cr-tag--access').isVisible(),true,'The resource presents an access state')
+    assert.equal(await page.locator('.cr-state button').count(),0,'An authority denial does not offer a futile retry')
+    await capture(page,'scoped-resource',width)
     // A real local D1 failure during document read must keep the October frame.
     await h.db.prepare('ALTER TABLE campaigns RENAME TO unavailable_campaigns').run()
     try {

@@ -1,4 +1,5 @@
-import { localMailEnabled } from './local-auth.server'
+import { localMailEnabled, capturedMailEnabled } from './local-auth.server'
+import {hostedMailFaults} from './hosted-mail.server'
 import type { PlatformBindings } from './bindings'
 
 export class ConfigurationError extends Error {
@@ -16,11 +17,8 @@ export function configurationFaults(bindings: PlatformBindings): string[] {
   // Development is an explicit installation mode, never inferred from a host header.
   for (const key of ['APP_ORIGIN', 'SESSION_SECRET'] as const) if (!bindings[key]?.trim()) faults.push(key)
   if (bindings.SESSION_SECRET && bindings.SESSION_SECRET.length < 32) faults.push('SESSION_SECRET (minimum 32 characters)')
-  if (!localMailEnabled(bindings)) {
-    for (const key of ['MAIL_FROM', 'MAIL_PROVIDER_API_KEY'] as const) if (!bindings[key]?.trim()) faults.push(key)
-  }
+  if (!(bindings.MAIL_PROVIDER==='development'&&capturedMailEnabled(bindings))) faults.push(...hostedMailFaults(bindings))
   if (hasOwner && !bindings.INSTALLATION?.get) faults.push('INSTALLATION')
-  if (hasOwner && bindings.MAIL_PROVIDER !== 'sendgrid' && bindings.MAIL_PROVIDER !== 'resend' && !(bindings.MAIL_PROVIDER === 'development' && localMailEnabled(bindings))) faults.push('MAIL_PROVIDER (sendgrid or resend)')
   if (bindings.APP_ORIGIN) {
     try {
       const origin = new URL(bindings.APP_ORIGIN)

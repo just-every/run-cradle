@@ -12,7 +12,7 @@ export const createRiskService = (platform: Platform) => {
     async listShippedLens(cursor?:string) {
       const page=await readShippedLens(platform.bindings.DB,'risks',cursor)
       const records=await Promise.all(page.items.map(item=>repository.find(String(item.id))))
-      return {name:page.name,description:page.description,risks:records.flatMap(record=>record?[record.risk]:[]),total:page.total.value,totalLabel:page.total.kind==='at_least'?'10,000+':String(page.total.value),nextCursor:page.nextCursor}
+      return {id:page.id,name:page.name,description:page.description,risks:records.flatMap(record=>record?[record.risk]:[]),total:page.total.value,totalLabel:page.total.kind==='at_least'?'10,000+':String(page.total.value),nextCursor:page.nextCursor}
     },
 
     async detail(id: string) {
