@@ -1,7 +1,7 @@
 export const product={name:'Cradle',slugPrefix:'cradle'};
 export const branding=product;
 export const features={hosting:true,artwork:false,github:false,localTrialWithoutEmail:true};
-export const readySummary=()=> 'Create your records workspace on this computer, then sign in through the development outbox. You can choose hosting in your own Cloudflare account.';
+export const readySummary=()=> 'Create your records workspace on this computer; rer dev then opens it signed in as the owner. You can choose hosting in your own Cloudflare account.';
 
 // Cradle's installer layout, beyond the colour and font tokens of public/rer-theme.css: the forest "Manual setup" card with a
 // ribbon at its foot beside the white step card, the public pages' ribbon valley across the lower third (background.svg, served

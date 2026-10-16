@@ -2751,6 +2751,10 @@
       "sha256": "892bfca1be56c309477fd2011044348173874cf4ed8e9d7f5c02e3fd2514e657",
       "executable": false
     },
+    ".github/assets/release/cradle-0.2.0-records-1440.png": {
+      "sha256": "ae7ea7e49a6a00684e51025a7ad5a0fde0ec79a0837f16dab814d41c9c72c1ed",
+      "executable": false
+    },
     ".github/workflows/rer-managed.yml": {
       "sha256": "aa2861c9983f2ab90dadcc6f455b0b5c3e1bbeae0b9d9fec9bd27e9de591cb9a",
       "executable": false
@@ -2772,7 +2776,7 @@
       "executable": false
     },
     ".gitignore": {
-      "sha256": "714d5d7bb276a043121741d96f6517598f12b5b9554c6814ecf6a97bb2941a01",
+      "sha256": "480419fe7c571956c776ad595f3d0d513b751e0a0b22e97c5cdc3c3377cd3e1a",
       "executable": false
     },
     ".node-version": {
@@ -2840,7 +2844,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "dc38e14936ef6e6094ed38971e5a5bcf9072c2a39110331b59b6b63bcc0a9501",
+      "sha256": "169cb688e560271c417f4dfe5f550b1a9617b09802320fe06a65d7d8b6416be7",
       "executable": false
     },
     "CLAUDE.md": {
@@ -3472,7 +3476,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "466fa377434e62f78eb31850d0a3ccfbb4a4ee99c55146fdc90fa42e2edc23fc",
+      "sha256": "f342a80e4fa36683d428a4eb6ea5d07070d609e4cb18a6255624bbb375ba24f4",
       "executable": false
     },
     "packaging.json": {
@@ -3532,7 +3536,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "8df5a39d925d3d7aa2703e675c7d427ddb3e5258a0a754a78604c5568535573d",
+      "sha256": "3e618b8a52cfc5fc3adcafd0afc1a928ca37553c0d7963946620b74367ad3325",
       "executable": false
     },
     "rer-project.json": {
@@ -3804,7 +3808,7 @@
       "executable": false
     },
     "scripts/installer/ui/seed.mjs": {
-      "sha256": "d83b8803ba29c4373cb9f1fb4d0f8ae4912aeecac633f417b690f8c262c02aa2",
+      "sha256": "5daae56b94f03e12023bbc96782686d84e76d02a51fb38cfeab35e5940ac0c2f",
       "executable": false
     },
     "scripts/migrate-local.mjs": {
@@ -3872,7 +3876,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "c2cf157e91e9dc35ded4c902d247527d0b3daf6a8ed82d894e43cf7bba89ec36",
+      "sha256": "e792a141af3b1819f6f44d745c7f62eca162f84366df560a6ccf989401c8e270",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {
