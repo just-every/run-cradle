@@ -1,35 +1,379 @@
 # CONTRACT.md — Cradle
 
-Cradle is a records builder for one business. Launch readiness is the included application template; its stable clauses below retain their data and security semantics. Repair navigation is disabled unless the owner enables it. The [6 October identity transition](docs/contract-transition.md#records-first-identity--6-october-2026) replaces the former launch-first product identity without changing existing records, permissions or grants. Product acceptance remains incomplete.
+Cradle is an owned replacement for Airtable, Smartsheet and Quickbase: relational tables with formulas, lookups and rollups, attachments, many views, an interface builder, automations, an API and permissions, so a team runs its operations on it. This contract describes **the product we are building towards**, not only what ships today; every clause carries its acceptance evidence and its current status, and the [status table](#status) at the end shows how close Cradle is. A clause marked `partial` or `missing` is a binding target for later build rounds, not a claim about the current release. The retained [Launch readiness](#included-application-launch-readiness) clauses are one included application built on the same records platform; repair navigation is disabled unless the owner enables it (APP-SCOPE-001).
 
-Default verification runs the local application suites, including records and launch, within the 200-test seed budget. The isolated Docker authoring runner has a separate operational acceptance path. Local verification alone does not prove hosted readiness or every product clause.
+**Buyer.** A US operations lead at a small or mid-size business (10–500 people) who runs inventory, vendors, requests, approvals, assets, events or field work in Airtable, Smartsheet or Quickbase, or in a tangle of spreadsheets, and wants the whole app (data, views, interfaces, automations, permissions) in an installation they own, priced in USD with no per-seat licence. US norms apply by default: USD currency, US date display with ISO 8601 storage and export (ACT-003), US federal holidays in date functions, E.164 phone storage with US formatting, and A2P 10DLC for SMS.
 
-Security, privacy, and operational guarantees are in `BASELINE.md`. No current product clause supersedes a baseline requirement; a future exception must name the exact `BASE-` ID and its owner-accepted replacement meaning and consequences. Capacity and rate limits are in `seed.json → limits`; times are p95 at those limits, and current clause latency targets remain binding. Clauses marked *Policy* have a default that buyers may replace through the named extension point, subject to the clause's explicit limits.
+**Switching bar.** A buyer of any named incumbent can move in (MIGRATE-001 to MIGRATE-004) and find the job they bought: records and calculations (FIELD, CALC, FILE), views and collaboration (VIEW, COLLAB), forms, interfaces and reporting (FORM, IFACE, REPORT), roles and sharing (PERM), automations and follow-up (AUTO-USER), API and integrations (API-USER, WEBHOOK-USER, MCP, INTEG), sync and recovery (SYNC, SNAP) and mobile (MOBILE). Beyond today's up-and-comers (Baserow, NocoDB, Grist), agents build, test and operate the app under the owner's control (AGENT).
 
-## Scope
+**Reading a clause.** Each clause states the behaviour a buyer gets, its *Acceptance* (the journey or test through a public door, meaning the operator UI at `/app`, a public form or portal, `/api/v1`, MCP, the CLI, or the emitted Worker's queue and schedule, that proves it) and its *Status*: `done` (implemented and exercised by the cited test), `partial` (some of the behaviour is implemented, cited, and the rest is named) or `missing`. Fakes are allowed only at the paid or network edge. Where a retained clause speaks of capabilities the product "ships" (for example HOME-002's landing copy), it means clauses whose status is `done`.
 
-One private workspace with typed records, relationships, forms and saved views. Operators open Records from the shared home, and use the included Launch readiness template for campaigns, deliverables, milestones, risks, decisions and saved lenses. Ordinary records work requires no AI provider. Existing launch analysis remains labelled and read-only.
+Security, privacy and operational guarantees are in `BASELINE.md`. No product clause supersedes a baseline requirement; a future exception must name the exact `BASE-` ID and its owner-accepted replacement meaning and consequences. Capacity and rate limits are in `seed.json → limits`; times are p95 at those limits. Clauses marked *Policy* have a default that buyers may replace through the named extension point, subject to the clause's explicit limits. `seed.json` describes the current release, including non-goals that some clauses here retire (public and embeddable views, sync, notification channels beyond in-app and email, native mobile apps, bounded scripts); each non-goal is removed from `seed.json` in the build round that delivers the clause replacing it. Default verification (`rer verify`) runs the local application suites within the 200-test seed budget; local verification alone does not prove hosted readiness.
 
-- **RECORDS-001 — Records builder.** Authenticated operators can discover only applications available under their current authority, open their typed records and views, and use the implemented record forms, relationships, bulk edits and CSV import. Every read and mutation rechecks server-side app/row/field/action policy. The wider schema-authoring and records-release floor remains in ACCEPTANCE.md; this clause is not a release-completion claim.
-- **RECORDS-002 — Manual schema adoption.** An owner can build tables with text, number, date, select, checkbox and linked-record fields, and define a lookup through a link, without an AI provider. Schema changes require an impact preview naming the changes, affected records and destructive value removal before the owner submits `release.adopt`. Adoption rechecks the preview against current schema, records and authority and applies the accepted change atomically. Unsupported table deletion and existing-field type conversion fail explicitly. Removed field values have an authorized recovery export; existing migration history is preserved.
-- **RECORDS-003 — Records views.** Authorized operators see human field and select labels and linked-record chips. A grid supports sort, filter and group; saved views preserve these choices, and kanban and form views use the same current records and server-side policy. The manual records journeys operate at desktop and narrow phone widths without horizontal page overflow and with no serious or critical axe findings in their tested states.
-- **RECORDS-004 — View CSV and templates.** An authorized view export contains its selected records in the view's query order and its visible fields in their displayed order. Import into an equivalent fresh table previews creates, updates and errors before committing and preserves typed values, select labels, nulls and linked references; lookups are recomputed. Customer relationships and Project tracker provide editable starting schemas through preview and adoption. Launch readiness opens the included base without creating a duplicate. Rollups, formula authoring, rare field types and the wider acceptance floor remain separately scoped.
-- **RECORDS-005 — Reviewed base import.** An authenticated owner previews 1–20 source CSV tables or one supported native base JSON with no database writes. Preview names every type conversion, rejected row, skipped nonempty value, unresolved or ambiguous reference and reciprocal disagreement; mapping changes invalidate acknowledgment. Explicit review and the existing schema-impact/release adoption path create a retained, bounded import job. Resume needs only current authority and job ID. Independent native reconciliation names missing, duplicate, extra and mismatched effects. Undo or partial rollback reverses unchanged imported record/link and saved view/form effects; edited effects remain conflicts, base schema and exact source custody remain. Wrong format/version/type, duplicate identities, dangling native links and capacity violations fail before writes. Import job writes, including restart, rollback and undo, start no automation, notification, mail or webhook, while later owner edits fire as usual, and every completed, partial or undone job yields a move-in receipt and skipped-attachment list built from the retained job. Synthetic and recorded-source checks do not claim a live source-account connection.
-- **RECORDS-006 — Portable base exits.** A complete base JSON export preserves ordered native tables/fields, primary identities, types/options/relations/lookups/incoming metadata, typed records and ID links, saved view and authenticated form definitions through a deliberate portable allowlist. Every table, field and included view/form requires current authority; complete row/join/schema/metadata sets and authority are fenced, and restricted or changed content fails closed. Fresh-install return through RECORDS-005 preserves canonical content and IDs except the documented capture envelope; an existing-install copy uses a complete bijective identity map. One CSV-set download contains every table and field, primary first, with raw primary-value link quotation and public review choices; explicitly reviewed, byte-bound correspondence preserves every record, ordered link and complete ordered select option list, including distinct duplicate-primary targets and null/empty/false values. Raw reference classifications remain truthful, and selected/materialized counts remain separate. Loading correspondence accepts no choices; ordinary CSV ambiguity never chooses a first match. CSV excludes saved views/forms and prior source custody. Existing per-view CSV keeps its scoped semantics. The current installation owner can prepare and download a verified whole-installation .rer archive in Settings, using the same format and privacy policy as rer export. Credentials and private connection settings are excluded; source is retained separately. Wider data lifecycle acceptance remains separately recorded.
-- **RECORDS-007 — Agent-proposed schema changes.** The installation owner can issue a proposing key: a one-time machine credential stored as a digest, for one manual base or a new one, expiring within 30 days and revocable from Settings. It reaches only the proposal door, whose REST and MCP faces run the same tools: read the schema the issuing owner may currently read, propose tables, typed fields, links, lookups, views and forms and receive the RECORDS-002 impact preview with affected-record counts but never record identities or values, and list, read or withdraw its own proposals. Every other route or tool answers as missing; the key cannot adopt, read or write records, manage keys or see another key's proposals. A proposal is inert: its names, help text and notes are stored text and create no grant, membership, credential, automation, connection, outbound call or outbox row. Only the owner's session adopts, through `release.adopt`, which rechecks the stored preview against current schema, records and the issuer's authority and requires the proposing key to be current; stale, declined, withdrawn and revoked-key proposals are refused and change nothing, and a replayed adoption returns its first result. The adoption audit row names the adopting owner, the proposal and the key, and the release records the preview hash. A proposal stays reviewable for 7 days and the owner may decline it with a note the agent can read. Model-authored proposals inside Cradle are not part of this clause.
+## Records, schema and the app model
+
+A **base** (an app) holds related tables. Every read and write goes through current server-side app, row, field and action policy. These clauses are the records core the rest of the product stands on; they were the first release and stay binding.
+
+- **RECORDS-001 — Records builder.** Authenticated operators discover only the bases their current authority allows, open their typed records and views, and use record forms, relationships, bulk edits and CSV import. Every read and mutation rechecks server-side app/row/field/action policy, so a revoked membership or a narrowed rule takes effect on the next request without a reload.
+  *Acceptance:* Native and legacy HTTP doors refuse forbidden reads and writes after a policy change; desktop and phone browser journeys open only authorized bases.
+  *Status:* done — tests/records-manual-release.mjs; tests/launch-scoped-authority.mjs; tests/launch-write-authority.mjs; tests/ui-records-builder.mjs.
+- **RECORDS-002 — Manual schema adoption.** An owner builds tables with typed fields, linked-record fields and lookups without an AI provider. Every schema change shows an impact preview naming the changes, the affected records and any destructive value removal before the owner submits `release.adopt`. Adoption rechecks the preview against current schema, records and authority and applies the accepted change atomically. Removed field values have an authorized recovery export; existing migration history is preserved. Field type conversion and table deletion follow FIELD-002.
+  *Acceptance:* Builder journey at 1440 and 390 adopts a table/field/link/lookup change; a stale preview, stale schema or lost authority is refused with nothing changed.
+  *Status:* done — tests/records-manual-release.mjs; tests/ui-records-builder.mjs; src/domains/records/manual/service.server.ts.
+- **RECORDS-003 — Records views.** Authorized operators see human field and select labels and linked-record chips. A grid supports sort, filter and group; saved views preserve those choices, and kanban and form views use the same current records and server-side policy. Records journeys operate at desktop and phone widths without horizontal page overflow and with no serious or critical axe findings in their tested states. The wider view set is VIEW-008 to VIEW-014.
+  *Acceptance:* Saved grid/board/form round trip and browser journeys at 1440 and 390 with axe.
+  *Status:* done — tests/records-manual-roundtrip.mjs; tests/ui-records-builder.mjs; tests/ui-recut-final.mjs.
+- **RECORDS-004 — View CSV and templates.** An authorized view export contains its selected records in the view's query order and its visible fields in their displayed order. Import into an equivalent fresh table previews creates, updates and errors before committing and preserves typed values, select labels, nulls and linked references; lookups are recomputed. Customer relationships and Project tracker provide editable starting schemas through preview and adoption; Launch readiness opens the included base without creating a duplicate. Formulas, rollups and the wider field set are CALC-001 to CALC-004 and FIELD-001.
+  *Acceptance:* Per-view CSV export compared field for field against a fresh-table re-import; template adoption journey.
+  *Status:* done — tests/records-csv-fence.mjs; tests/records-manual-roundtrip.mjs; src/ui/records/schema/templates.ts.
+- **RECORDS-005 — Reviewed base import.** An authenticated owner previews 1–20 source CSV tables or one supported native base JSON with no database writes. Preview names every type conversion, rejected row, skipped nonempty value, unresolved or ambiguous reference and reciprocal disagreement; mapping changes invalidate acknowledgment. Explicit review and the existing schema-impact/release adoption path create a retained, bounded import job. Resume needs only current authority and job ID. Independent native reconciliation names missing, duplicate, extra and mismatched effects. Undo or partial rollback reverses unchanged imported record/link and saved view/form effects; edited effects remain conflicts, base schema and exact source custody remain. Wrong format/version/type, duplicate identities, dangling native links and capacity violations fail before writes. Import job writes, including restart, rollback and undo, start no automation, notification, mail or webhook, while later owner edits fire as usual, and every completed, partial or undone job yields a move-in receipt and skipped-attachment list built from the retained job. Synthetic and recorded-source checks do not claim a live source-account connection. Live source-account connections are MIGRATE-001 to MIGRATE-004.
+  *Acceptance:* Native D1 import, restart, undo and receipt tests; desktop and phone move-in browser journeys.
+  *Status:* done — tests/records-import-d1.mjs; tests/records-import-undo-restart.mjs; tests/records-import-receipt.mjs; tests/ui-base-import.mjs; tests/ui-base-undo.mjs.
+- **RECORDS-006 — Portable base exits.** A complete base JSON export preserves ordered native tables/fields, primary identities, types/options/relations/lookups/incoming metadata, typed records and ID links, saved view and authenticated form definitions through a deliberate portable allowlist. Every table, field and included view/form requires current authority; complete row/join/schema/metadata sets and authority are fenced, and restricted or changed content fails closed. Fresh-install return through RECORDS-005 preserves canonical content and IDs except the documented capture envelope; an existing-install copy uses a complete bijective identity map. One CSV-set download contains every table and field, primary first, with raw primary-value link quotation and public review choices; explicitly reviewed, byte-bound correspondence preserves every record, ordered link and complete ordered select option list, including distinct duplicate-primary targets and null/empty/false values. Raw reference classifications remain truthful, and selected/materialized counts remain separate. Loading correspondence accepts no choices; ordinary CSV ambiguity never chooses a first match. CSV excludes saved views/forms and prior source custody. Existing per-view CSV keeps its scoped semantics. The current installation owner can prepare and download a verified whole-installation .rer archive in Settings, using the same format and privacy policy as rer export. Credentials and private connection settings are excluded; source is retained separately. Wider data lifecycle acceptance remains separately recorded. As formulas, attachments, interfaces and automations land, each joins this allowlist (FILE-003, IFACE-001, AUTO-USER-002) so an exit always carries the whole app.
+  *Acceptance:* Base JSON/CSV exit, fresh return and copy tests; Settings archive download journey.
+  *Status:* done — tests/records-base-exits.mjs; tests/records-base-edge-return.mjs; tests/ui-base-exits.mjs; tests/installed-home.mjs.
+- **RECORDS-007 — Agent-proposed schema changes.** The installation owner can issue a proposing key: a one-time machine credential stored as a digest, for one manual base or a new one, expiring within 30 days and revocable from Settings. It reaches only the proposal door, whose REST and MCP faces run the same tools: read the schema the issuing owner may currently read, propose tables, typed fields, links, lookups, views and forms and receive the RECORDS-002 impact preview with affected-record counts but never record identities or values, and list, read or withdraw its own proposals. Every other route or tool answers as missing; the key cannot adopt, read or write records, manage keys or see another key's proposals. A proposal is inert: its names, help text and notes are stored text and create no grant, membership, credential, automation, connection, outbound call or outbox row. Only the owner's session adopts, through `release.adopt`, which rechecks the stored preview against current schema, records and the issuer's authority and requires the proposing key to be current; stale, declined, withdrawn and revoked-key proposals are refused and change nothing, and a replayed adoption returns its first result. The adoption audit row names the adopting owner, the proposal and the key, and the release records the preview hash. A proposal stays reviewable for 7 days and the owner may decline it with a note the agent can read. Model-authored proposals inside Cradle are not part of this clause. Model-authored proposals from the owner's files are AGENT-001.
+  *Acceptance:* REST and MCP proposal door tests with the official MCP SDK client; 67 door cases.
+  *Status:* done — tests/records-agent-proposals.mjs.
 - **APP-SCOPE-001 — Explicit application scope.** Existing operators retain exactly their legacy launch rights. Enabling repair navigation in `src/ext/config.ts` grants no record visibility or actions and does not activate mandates, providers or background work. New scopes require explicit owner mapping.
+  *Acceptance:* Repeated setup and legacy mapping preserve explicit scopes and revocations.
+  *Status:* done — tests/launch-scoped-authority.mjs; tests/launch-setup-race.mjs.
+- **OWN-001 — Owned installation without seat charges.** Cradle runs in the buyer's own Cloudflare account (Worker, D1, R2, Queues) or on RER Managed hosting, under the MIT licence. Adding operators, guests or bases never adds a licence fee; the only costs are the buyer's infrastructure and any providers they connect, and Settings shows current usage against every declared limit in `seed.json`. The owner can export everything (RECORDS-006) and leave without a vendor's cooperation.
+  *Acceptance:* Installer and whole-installation archive round trip on emitted workerd/D1/R2; Settings usage view.
+  *Status:* done — scripts/installer/seed.mjs; tests/rer-data-roundtrip.mjs; tests/ui-launch-operator-doors.mjs.
+- **SCALE-001 — Operational scale.** A base holds at least 250,000 records per table and 500,000 per base, 500 fields per table and 50 tables per base. Grid open, filter, sort and group return the first page within 1 second p95 at those sizes; a single-record write commits within 300 ms p95; formula and rollup reads meet CALC-004. Limits are declared in `seed.json → limits`, measured rather than estimated, and a request beyond one is refused naming the limit, its value and the current count (DATA-003). Larger analytic workloads are served by SYNC-002, not by stretching a request.
+  *Acceptance:* Declared load profile run against emitted workerd/D1 recording p50/p95/p99 and error rate, then an authorized hosted run.
+  *Status:* partial — seed.json limits are recorded as flagship targets, not load-tested; src/domains/records/cursor.server.ts pages at 200.
 
-## Public landing
+## Fields, calculations and attachments
+
+The data model an Airtable, Smartsheet or Quickbase buyer already relies on: rich field types, formulas, lookups and rollups that stay correct as linked records change, and files stored with the record.
+
+- **FIELD-001 — Complete field types.** A table can hold single-line text, long text with basic rich formatting, number (integer and decimal with precision), currency (USD by default, any ISO 4217 code, stored as exact minor units), percent, date and date-time with time zone, duration, checkbox, single select and multiple select with colours, rating (1–10), email, US-first phone (stored E.164, shown (555) 123-4567), URL, user (one or many operators), linked record (one or many), lookup, rollup, count, formula, attachment, barcode (scanned or typed, Code 128/UPC/EAN/QR value), autonumber, created time, last-modified time, created by and last-modified by, and button (IFACE-004). Each type validates on every door (UI, form, API, import, automation) and exports and re-imports losslessly.
+  *Acceptance:* Builder journey creates one field of every type, writes valid and invalid values through UI, public form, REST and CSV, and re-imports the base export with every value equal.
+  *Status:* partial — src/domains/records/validators.ts:14 supports text, number, date, instant, money, boolean, select, multi_select, url, person, relation, attachment and computed; the manual builder authors text, number, date, select, checkbox and links (tests/records-manual-release.mjs). Long text, percent, duration, rating, email, phone, barcode, autonumber, created/modified metadata and button are absent.
+- **FIELD-002 — Field conversion and table deletion with preview.** An owner can convert a field to another type (text to select, select to linked record, number to currency, text to date and so on) and delete a field or table. The impact preview lists every value that converts, every value that would be lost with examples, and every formula, view, form, interface, automation and API key that depends on it; adoption keeps a recovery export and a deleted table or field stays restorable for 30 days (SNAP-002).
+  *Acceptance:* Conversion matrix test through `release.adopt` with lossy and lossless cases; delete-then-restore journey.
+  *Status:* missing — RECORDS-002 currently refuses existing-field type conversion and table deletion explicitly (src/domains/records/manual/service.server.ts).
+- **FIELD-003 — Validation and conditional rules.** Fields can be required, unique, bounded (min/max, length, pattern) and given defaults; table rules state conditions across fields ("Ship date is required when Status is Shipped"; "Discount above 20% needs Manager approval"). Rules are enforced on every write door with a message naming the rule, and a rule added to existing data reports the records that already break it before adoption.
+  *Acceptance:* Writes through UI, form, REST, import and automation refused with the rule's message; adoption preview counts existing violators.
+  *Status:* partial — src/domains/records/validators.ts:42 (typed, required, unique); src/domains/records/form-actions.server.ts:21; conditional cross-field rules absent.
+- **CALC-001 — Formula fields.** An owner or creator writes formulas in a familiar spreadsheet-style language: arithmetic, comparison, logical (IF, SWITCH, AND, OR), text (CONCATENATE, LEFT, RIGHT, MID, FIND, SUBSTITUTE, UPPER, LOWER, TRIM, REGEX_MATCH), number (ROUND, ABS, MIN, MAX, SUM), date (TODAY, NOW, DATEADD, DATETIME_DIFF, WORKDAY with US federal holidays, DATETIME_FORMAT) and record functions (RECORD_ID, CREATED_TIME). The editor autocompletes fields and functions, shows the result type, previews results on real records before adoption and names the field and position of any error. A cell whose formula cannot be computed shows why rather than a blank.
+  *Acceptance:* Formula builder journey authoring each function family with previewed results; a broken formula shows its positioned error; the evaluator's results are checked against a fixture table.
+  *Status:* partial — src/domains/records/formulas.ts:13 evaluates add/subtract/multiply/divide/concat/coalesce/eq/if/date_add/days_between with cycle and depth checks; the builder exposes no formula authoring.
+- **CALC-002 — Lookups across links.** A lookup field shows chosen fields of linked records through a link, recomputes from current linked values on read, and respects the reader's current row and field policy on the linked table.
+  *Acceptance:* Manual round trip recomputes a lookup after the linked record changes; restricted linked fields are hidden from the lookup.
+  *Status:* partial — lookup recomputation from current linked values is tested (src/domains/records/formulas.ts:8; tests/records-manual-roundtrip.mjs; tests/records-manual-release.mjs); a lookup read under a restricted linked-table policy has no test.
+- **CALC-003 — Rollups and counts.** A rollup aggregates a field across linked records with SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, COUNTALL, ARRAYJOIN, ARRAYUNIQUE, AND, OR, optionally only over linked records matching a condition; a count field counts linked records. Both are authored in the builder with previewed results.
+  *Acceptance:* Builder journey adds a conditional rollup and a count; editing a linked record changes them on the next read.
+  *Status:* partial — src/domains/records/validators.ts:14 rollup expression with sum/count/min/max/average/lookup and filter; src/domains/records/formulas.ts evaluation; no builder authoring or test.
+- **CALC-004 — Calculation consistency.** After any committed write, the next read anywhere (grid, interface, API, export, automation condition) returns calculated values that reflect it; cycles and depth over 64 are refused at adoption; a formula over 10,000 linked records still returns within 1 second p95 or states that it is unavailable with the reason. Calculated values are never written directly (`BASE-INPUT-001`).
+  *Acceptance:* Write-then-read test across UI, REST and export; cycle refused at adoption; timing at the SCALE-001 profile.
+  *Status:* partial — src/domains/records/formulas.ts validateExpressionGraph (cycle and depth 64); no cross-door consistency or timing test.
+- **FILE-001 — Attachments with previews.** An attachment field holds files up to 100 MB each, stored privately in the installation's R2. Images, PDFs, video, audio and Office documents show thumbnails and an in-app preview; downloads require current row and field authority and use short-lived links. Files can be added by upload, drag and drop, paste, phone camera (MOBILE-002), public form (FORM-001), API and automation.
+  *Acceptance:* Upload, preview and download journey at 1440 and 390; a revoked operator's old link is refused; API upload round trip.
+  *Status:* partial — src/domains/records/attachments.server.ts:4 and src/domains/evidence/attachments.server.ts:1 hold attachment custody and record projection; manual bases cannot author attachment fields and no preview journey exists.
+- **FILE-002 — Attachments from connected file stores.** An attachment can instead reference a file in Google Drive, Microsoft OneDrive/SharePoint, Dropbox, Box or [Chest](https://github.com/just-every/run-chest) through that store's picker, keeping the store's own sharing; Cradle shows name, type and thumbnail and never copies the file unless the owner asks.
+  *Acceptance:* Picker journeys against each provider's sandbox or a fake at the network edge; the reference survives export.
+  *Status:* missing — no code.
+- **FILE-003 — Attachments in exports, erasure and migration.** Base exports, whole-installation archives and Airtable move-in (MIGRATE-001) carry attachment bytes with checksums; erasing a record or person removes their files under `BASE-DATA-003`; the skipped-attachment list of RECORDS-005 becomes empty when every file arrived.
+  *Acceptance:* Archive round trip with files equal by checksum; erasure test showing no remaining bytes; move-in receipt with zero skipped attachments.
+  *Status:* partial — tests/rer-data-roundtrip.mjs carries files in whole-installation archives; tests/lifecycle-erasure.mjs erases R2 files; base JSON export and import list attachments as skipped (src/domains/records/base-transfer/attachment-manifest.ts).
+
+## Views, editing and collaboration
+
+Views are saved, permission-checked ways to see one table. VIEW-001 to VIEW-007 (in the Launch readiness section) are workspace-wide rules that apply to every base; VIEW-008 onward are the record views.
+
+- **VIEW-008 — Spreadsheet-grade grid editing.** In a grid, an operator edits cells inline, moves with the keyboard, selects ranges, copies and pastes ranges to and from Excel and Google Sheets, fills down, expands a row into its record, resizes, freezes, hides and reorders columns, and adds a record from the last row. A paste that breaks validation shows each failing cell and commits nothing until fixed.
+  *Acceptance:* Grid browser journey with keyboard-only editing, a pasted 50×5 range from clipboard text and a refused invalid paste.
+  *Status:* partial — src/ui/records/record-grid.tsx and src/ui/records/record-editor.tsx ship a grid and record editor; inline cell editing, ranges and paste are absent.
+- **VIEW-009 — Kanban.** A kanban view stacks records by any single select, user or single linked-record field, shows chosen fields and an attachment cover on each card, and lets an operator drag a card between stacks (an ordinary update under policy) and reorder within a stack.
+  *Acceptance:* Board journey drags a card and the record's field changes; a read-only operator cannot drag.
+  *Status:* partial — src/ui/records/record-board.tsx; tests/records-manual-roundtrip.mjs (saved board); drag and covers absent.
+- **VIEW-010 — Calendar.** A calendar view places records by a date or start/end date range in month, week and day layouts in the workspace time zone; dragging moves the dates; the view can be subscribed to as a private iCal feed URL (revocable) from Google Calendar or Outlook.
+  *Acceptance:* Calendar journey creates, drags and opens records; the iCal feed returns the view's records and stops after revocation.
+  *Status:* partial — src/ui/records/date-views.tsx:5 and src/domains/records/metadata.server.ts:18 render calendar metadata; no authoring journey, drag or feed.
+- **VIEW-011 — Gallery.** A gallery view shows records as cards led by an attachment cover image, with chosen fields and the same filter, sort and group as other views.
+  *Acceptance:* Gallery journey at 1440 and 390 with image covers.
+  *Status:* partial — src/domains/records/metadata.server.ts:18 (card metadata); no gallery view.
+- **VIEW-012 — Timeline and Gantt.** A timeline view lays records on a time axis by date or range, grouped by any field, with day, week, month, quarter and year zoom. A Gantt layout draws dependencies from a linked-record field, flags a record that starts before its predecessor ends, highlights the critical path, and lets an operator drag bars; moving one record never silently moves another. Baselines snapshot planned dates for comparison.
+  *Acceptance:* Timeline journey with grouping, dependency conflict marker and drag; a baseline compared after a move.
+  *Status:* partial — src/ui/records/date-views.tsx:7 renders timeline metadata as a date list; Launch readiness MILE-002/MILE-003 implement a milestone timeline with dependencies (src/apps/launch/milestones.server.ts).
+- **VIEW-013 — Personal, locked and formatted views.** Views are collaborative, personal or locked (only creators may change a locked view). Grouped views show per-group counts and a summary bar with sum, average, min, max, count, empty and percent-filled per column. Conditional formatting colours rows or cells by rules on field values.
+  *Acceptance:* View journey: personal view hidden from others, locked view refuses edits, summary values checked against the records, colour rule applied.
+  *Status:* partial — saved views with filter/sort/group/field order ship (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs); personal/locked views, summary bar and conditional formatting are absent.
+- **VIEW-014 — Live multi-user editing.** Two operators in the same view see each other's committed changes and new records within 2 seconds without reloading, see who else is viewing, and a write based on a stale version of a record is refused naming the current value rather than overwriting it.
+  *Acceptance:* Two-browser journey: an edit in one appears in the other within 2 seconds; a stale concurrent edit shows the conflict.
+  *Status:* partial — stale-version refusal exists (src/ui/records/record-conflict.tsx; VIEW-006); live propagation and presence are absent.
+- **COLLAB-001 — Record comments and mentions.** Every record in every base has a comment thread with @mentions of operators; a mention notifies that person in-app and by email (and in Slack, Teams or Nook when connected), comments are searchable by authorized readers, editable by their author and erased with the person under `BASE-DATA-003`.
+  *Acceptance:* Comment-and-mention journey on a manual base; the mentioned operator's notification; erasure anonymises the author.
+  *Status:* partial — src/domains/evidence/comments.server.ts and src/apps/launch/comments.server.ts (ACT-002/ACT-004 in the launch template); no manual-base comment journey.
+- **COLLAB-002 — Record history.** Each record shows who changed which field from what to what and when, including changes by automations, imports, API keys and agents, reprojected under the reader's current row and field policy; an authorized operator can restore a prior field value from history as an ordinary audited write.
+  *Acceptance:* History reads hide fields the reader cannot see; restore-from-history journey.
+  *Status:* partial — src/domains/evidence/history-http.server.ts; tests/evidence-read-privacy.mjs reproject history under current policy; restoring a value from history is absent.
+- **COLLAB-003 — Watching and change notifications.** An operator can watch a record, a view or a table and choose in-app, email, Slack, Teams or Nook delivery, immediately or as a daily digest; notifications follow NOTIFY-006's one-per-event and self-action rules and respect current read authority.
+  *Acceptance:* Watch journey producing one digest; a revoked reader stops receiving notifications.
+  *Status:* missing — launch-template notifications only (NOTIFY-001 to NOTIFY-008).
+
+## Forms, interfaces and dashboards
+
+Task-specific apps over the same records: intake, review screens, dashboards and portals. Survey-grade forms with branching, payments and response analytics are [Pencil](https://github.com/just-every/run-pencil)'s product; Pencil can write responses into a Cradle table through the API.
+
+- **FORM-001 — Public shareable forms.** A form view can be published at an unguessable public URL that needs no sign-in. Submitters see help text, required marks, attachments upload, linked-record pickers limited to what the form exposes, URL prefill and hidden fields; after submit they see a confirmation message or redirect and can receive an email copy. Submissions are rate-limited per IP, protected by Cloudflare Turnstile, size-bounded, and create records under the form owner's authority with no other read access. The owner can close, reopen, rotate or delete the link.
+  *Acceptance:* Signed-out browser journey submits with an attachment and prefill; rate limit and Turnstile refusal; rotated link answers 404.
+  *Status:* partial — src/domains/records/form-actions.server.ts:15 and src/ui/records/forms-panel.tsx ship authenticated saved forms; no public form door.
+- **FORM-002 — Conditional form logic.** Form fields show or hide on earlier answers, sections and pages group long forms, and validation follows FIELD-003 so a submission that breaks a rule is refused with the rule's message.
+  *Acceptance:* Conditional form journey; hidden fields are never written.
+  *Status:* partial — required form fields exist (src/domains/records/form-actions.server.ts:21); conditional visibility absent.
+- **FORM-003 — Embedded forms and views.** A form or a read-only view can be embedded in another site (for example a [Pane](https://github.com/just-every/run-pane) site) by iframe or script snippet, restricted to owner-listed origins, showing only the fields and records the share allows.
+  *Acceptance:* Embed test on an allowed and a refused origin.
+  *Status:* missing — seed.json nonGoals still list public or embeddable views for the current release.
+- **IFACE-001 — Interface designer.** An owner or creator builds interface pages from components bound to tables: grid, list, record detail, kanban, calendar, timeline, gallery, form, chart, number, text, filter controls and buttons, arranged on a responsive layout. Each page is published to chosen roles or people; its components only ever show what the viewer's own policy allows. Interfaces are versioned, previewed as a chosen user (PERM-004) before publishing and included in exports (RECORDS-006).
+  *Acceptance:* Designer journey builds and publishes a three-page interface; a member sees it, a non-member does not; export and restore preserve it.
+  *Status:* partial — saved views/forms and record detail pages ship (src/ui/records/record-detail-page.tsx; tests/ui-records-builder.mjs); construction machinery exists (src/domains/construction/service.server.ts:9); no page/layout editor.
+- **IFACE-002 — Record review and approval screens.** An interface can present a queue (records matching a condition) beside a record detail with approve, reject or custom action buttons that update named fields, add a comment and trigger automations, so an approver works through a list without touching the grid.
+  *Acceptance:* Approval journey works a queue of ten records; actions are policy-checked and audited.
+  *Status:* partial — registered form actions (src/domains/records/form-actions.server.ts:15); launch Decision Queue (DEC-002/DEC-003; tests/ui-launch-walkthrough.mjs) is a template-specific instance.
+- **IFACE-003 — Charts and dashboards.** Dashboards show bar, line, area, pie, scatter, number and pivot-table components over any table with filters and grouping, summing currency in USD or the field's currency, with drill-down into the matching records. A dashboard can be emailed or posted to Slack, Teams or Nook on a schedule as a snapshot (REPORT-001).
+  *Acceptance:* Dashboard journey with each chart type checked against computed totals; drill-down lists exactly the counted records.
+  *Status:* partial — template-specific Portfolio Overview (src/core/features/portfolio/ui/portfolio-overview-page.tsx; CAMP-006); configurable charts absent.
+- **IFACE-004 — Buttons and record actions.** A button field or interface button runs a configured action on its record: update fields, create linked records, open a prefilled form or URL, start an automation, or send for signature through [Inkwell](https://github.com/just-every/run-inkwell). It shows a confirmation when configured and is disabled for people whose policy forbids the action.
+  *Acceptance:* Button journey with confirmation; a forbidden user sees it disabled and the API refuses.
+  *Status:* partial — registered record/form actions share command services (src/domains/records/form-actions.server.ts:15); user-configurable buttons absent.
+- **IFACE-005 — External portals.** An interface can be shared with external people (clients, vendors, contractors) who sign in by magic link to a portal that shows only the records a rule ties to them (for example, where Vendor email equals the signed-in email), lets them submit and update allowed fields, and never shows the workspace, other bases or other external users.
+  *Acceptance:* Two external users each see only their own rows through the portal and REST; an attempt at another's record is refused.
+  *Status:* missing — no code.
+- **IFACE-006 — Templates and starting apps.** New bases start from editable templates through the same preview and adoption: Customer relationships, Project tracker and Launch readiness today, plus US SMB operations templates for inventory and orders, vendor and contract register, asset and equipment register, event planning, field operations tracker and content production. A whole base can be duplicated with or without records.
+  *Acceptance:* Template adoption journey for each template; duplicate-base copy with an identity map.
+  *Status:* partial — src/ui/records/schema/templates.ts ships Customer relationships and Project tracker; Launch readiness is included (tests/ui-records-builder.mjs; tests/records-manual-roundtrip.mjs); the further templates are absent; base copy via RECORDS-006.
+- **REPORT-001 — Scheduled reports.** Any view or dashboard can be sent on a schedule (daily, weekly, monthly, in the workspace time zone) to chosen operators by email, Slack, Teams or Nook as a summary with a CSV or PDF attachment, computed under the recipient's own read policy, with delivery recorded under NOTIFY-003's honesty rules.
+  *Acceptance:* Scheduled report test at a fixed clock; a recipient with narrower policy receives fewer rows.
+  *Status:* missing — only the launch weekly digest (NOTIFY-004; tests/launch-installed-schedules.mjs).
+
+## Roles, permissions and sharing
+
+Access is decided on the server for every door: UI, form, interface, REST, MCP, export, automation and agent.
+
+- **PERM-001 — Roles and base sharing.** Each base has owners, creators (change schema, views, interfaces and automations through review), editors, commenters and read-only members, plus custom roles built from actions; operators are added per base or per interface. A role change takes effect on the next request everywhere.
+  *Acceptance:* Role matrix test through REST and UI for each role; demotion fences an open session's next write.
+  *Status:* partial — explicit memberships and policy-scoped operations (src/domains/authority/member-management.server.ts; src/domains/authority/policy.server.ts; tests/user-api-keys.mjs; tests/evidence-read-privacy.mjs); named role presets and a commenter role are absent.
+- **PERM-002 — Row and field rules.** Rules restrict which records (by condition, including "assigned to me") and which fields each role can read and write; restricted cells are absent from reads, search, history, exports, lookups, formulas shown to that reader and API answers, and cannot be inferred from errors.
+  *Acceptance:* Policy tests hide rows and fields across reads, history and search.
+  *Status:* done — src/domains/authority/policy.server.ts; tests/evidence-read-privacy.mjs; tests/records-manual-release.mjs; tests/launch-search-authority.mjs.
+- **PERM-003 — Action and schema authority.** Create, update, delete, bulk edit, export, comment, run-button and schema-change rights are separate grants; schema changes always go through owner-reviewed adoption (RECORDS-002).
+  *Acceptance:* Forbidden action refused through native and legacy HTTP; non-owner adoption refused.
+  *Status:* done — src/domains/records/actions.server.ts:35; tests/launch-write-authority.mjs; tests/records-manual-release.mjs; tests/user-api-keys.mjs.
+- **PERM-004 — Preview access as a user.** An owner can view any base, view or interface as a chosen person or role before saving a rule change, and the preview shows which records and fields that person would gain or lose.
+  *Acceptance:* Preview journey shows the exact row/field diff a rule change causes for a chosen member.
+  *Status:* partial — policy impact preview (src/domains/authority/policies.server.ts:14); no view-as-user surface.
+- **PERM-005 — Guests.** An owner can invite a guest by email to one base or interface; guests see nothing else in the installation, cannot invite others and count against no licence.
+  *Acceptance:* Guest journey: one base visible, workspace navigation and search show nothing else.
+  *Status:* partial — per-app memberships exist (src/domains/authority/member-management.server.ts); guest invitation and isolation journey absent.
+- **PERM-006 — Share links.** A view, record or interface can be shared read-only by link with optional password, expiry, email-domain restriction and hidden fields; the link shows live data under the sharer's narrowed scope and stops at revocation.
+  *Acceptance:* Share-link test: password, expiry and revocation each refuse; hidden fields never appear in the payload.
+  *Status:* missing — public or embeddable views are a current-release non-goal in seed.json.
+- **PERM-007 — Company sign-in and provisioning.** Operators can sign in through the company's identity provider by OIDC or SAML ([Auth](https://github.com/just-every/run-auth), Okta, Microsoft Entra ID, Google Workspace) and be provisioned and deprovisioned by SCIM 2.0; deprovisioning ends sessions within 1 minute and keeps their records' attribution (OPS-004).
+  *Acceptance:* OIDC exchange test; SAML and SCIM tests against a local provider at the network edge.
+  *Status:* partial — optional OIDC (tests/auth-oidc.mjs); SAML and SCIM absent.
+- **PERM-008 — Admin audit log.** Owners see and export (CSV, JSON) an audit log of sign-ins, membership and role changes, schema adoptions, share-link and key issuance, exports, erasures and automation changes, filterable by person, base and time; the log survives subject erasure in anonymised form (`BASE-OPS-005`).
+  *Acceptance:* Audit export after a scripted sequence of admin actions lists each one once.
+  *Status:* partial — audit records exist under BASE-OPS-005 and adoption audit rows (RECORDS-007); no owner audit-log view or export.
+
+## Automations and follow-up
+
+Automations do work without someone starting it each time, and follow-up keeps work moving until the record's outcome is reached. AUTO-001 to AUTO-011 (Launch readiness section) govern the launch template's shipped automations; AUTO-USER clauses govern automations on every base.
+
+- **AUTO-USER-001 — Approved record triggers.** An installation owner with current app and record access can create, edit, disable and renew created/updated record triggers with ordered notify, email, update, webhook and Slack actions. Approval expires within 30 days. Each committed native change captures the enabled definition versions atomically. AUTO retains run/action history and the approved definition snapshot. Disable cancels queued work; lost issuer, app, subject, recipient or credential authority stops new effects. Repeated queue delivery preserves one logical run/effect. A repeated automation or excessive causal depth is recorded as Suppressed. External uncertainty is visible and never authorizes automatic resend.
+  *Acceptance:* Automation tests on emitted workerd; browser journey for definition and run history.
+  *Status:* done — tests/user-automations.mjs; tests/ui-user-automations.mjs; src/domains/automations/capture.server.ts.
+- **AUTO-USER-002 — Every trigger.** Automations start on: record created, record updated (optionally only for named fields), record enters or leaves a view's conditions, form submitted, button pressed, a schedule (every N minutes down to 15, hourly, daily, weekly, monthly, in the workspace time zone), a date field reaching an offset ("3 days before Due"), an inbound webhook with a signed secret, and an email arriving at the base's inbound address. Definitions travel in exports.
+  *Acceptance:* One emitted-worker test per trigger kind at a fixed clock; exported definitions restore disabled.
+  *Status:* partial — record created/updated triggers (tests/user-automations.mjs); launch-only schedules (src/apps/launch/automations.server.ts; tests/launch-installed-schedules.mjs); others absent.
+- **AUTO-USER-003 — Every action.** Actions: create record, update record, update many found records, find records, link records, delete record (with confirmation setting), send email through Base mail or the operator's connected Gmail or Microsoft 365 account, post to Slack, Teams or Nook, send a signed webhook, create or update a Google or Outlook calendar event, send an SMS through Twilio, request a signature through Inkwell, call another Run Edit Run product's API with a scoped key, generate with AI into a field (AI-FIELD-001) and run a bounded script (AUTO-USER-007). Each action's inputs can use values from the trigger and earlier steps.
+  *Acceptance:* Per-action tests with fakes only at the provider network edge; each records its effect and idempotency key.
+  *Status:* partial — update, notify, email, webhook and Slack actions (src/domains/automations/effects.server.ts:25; tests/user-automations.mjs; tests/user-webhooks.mjs); create-record and the rest are absent.
+- **AUTO-USER-004 — Conditions, branches and repeats.** A step can run only when conditions hold, an automation can branch into up to 10 paths, and a repeat step runs its actions once for each record found or each item in a list (up to 1,000 per run), with one run record and per-item results.
+  *Acceptance:* Branching and repeat test where each path's effect is checked and the per-item log names every item.
+  *Status:* partial — ordered multi-action execution (src/domains/automations/contracts.ts:12; src/domains/automations/runtime.server.ts); conditions, branches and repeats absent.
+- **AUTO-USER-005 — Test runs.** Before enabling, the builder tests the trigger against a chosen real record and each action in turn; external effects in a test run go only to the builder (their own email, a test channel) unless they confirm a live test, and the test result shows each step's input and output.
+  *Acceptance:* Builder journey tests every step; an external send in test mode reaches only the builder's destination.
+  *Status:* missing — run history exists; no dry-run workflow.
+- **AUTO-USER-006 — Run history and failure alerts.** Every run shows trigger, inputs, each step's result, records affected and the error of any failure. A failed run notifies the automation's owner in-app and by email (and Slack, Teams or Nook when chosen) once per failure kind per day, with the cause in plain words, a link to the run and a retry when the failure is safe to retry (AUTO-007's uncertain-delivery rule holds). Run counts per month are visible against the installation's limits.
+  *Acceptance:* Failure test produces one notification with cause and link; an uncertain send offers no retry.
+  *Status:* partial — durable run history and diagnosis (src/domains/automations/history.server.ts; src/ui/automations/run-history.tsx); failure notification to the enabling user absent.
+- **AUTO-USER-007 — Scripts.** Creators can add a JavaScript script step or script button that reads and writes records through the same policy-checked API, with a scoped token, a 30-second wall clock, bounded memory, and network access only to owner-approved destinations; the script source is versioned, reviewed at enable time and exported with the base.
+  *Acceptance:* Script test reads and writes allowed records, is refused a forbidden table, is stopped at the time limit and cannot reach an unapproved host.
+  *Status:* missing — seed.json nonGoals exclude unrestricted runtime scripts; a bounded sandbox is required instead.
+- **AUTO-USER-008 — Follow-up until done.** A follow-up rule names a condition that must become true for each matching record ("Status is Received by Ship date"), who is responsible (a user field) and how to chase: reminders before and after the due time, an update request that lets the person change named fields from a one-time link without signing in, and escalation to a named person after N reminders. Each record's follow-up stores next action, due time, responsible person, attempts, replies and completion evidence; it stops when the condition holds, the record leaves scope or authority lapses, and the person's reply is shown on the record.
+  *Acceptance:* Follow-up test at a fixed clock: reminder, update-request link updating a field, escalation and stop on completion; each recorded on the record.
+  *Status:* partial — launch readiness requests and overdue-decision follow-up (MILE-004, MILE-005, NOTIFY-008; tests/launch-installed-schedules.mjs); general follow-up rules absent.
+
+## API, webhooks and integrations
+
+The services the category runs on, named. Long-tail connectors come through [Crank](https://github.com/just-every/run-crank), Zapier or Make using Cradle's API and webhooks rather than a Cradle connector library.
+
+- **API-USER-001 — Scoped revocable keys.** The owner can issue a random one-time key for one app and entity, read access or approved create/update access, and an expiry within 30 days. Only a digest is stored. Ordinary `/api/v1` policy/admission remains authoritative; keys grant neither administrative authority nor browser sessions. Listing returns safe metadata. Key revocation, issuer policy/membership/epoch/owner changes and expiry fence current reads and atomic writes. Interrupted issuance cannot reveal the same secret again.
+  *Acceptance:* API key tests across issue, use, revoke and expiry.
+  *Status:* done — tests/user-api-keys.mjs; src/domains/authority/user-keys-http.server.ts.
+- **API-USER-002 — Complete REST API.** A documented REST API (OpenAPI 3.1 per base, generated from the live schema) lists, filters (by condition or formula), sorts, pages, gets, creates, updates, upserts by a merge field and deletes records in batches of up to 100, uploads attachments, reads and writes comments, and reads schema; schema writes go through the RECORDS-007 proposal path. Personal access tokens for operators carry their own policy; rate limits are declared per key and answered with 429 and Retry-After.
+  *Acceptance:* Contract test drives every endpoint from the generated OpenAPI document; a batch over limits is refused whole.
+  *Status:* partial — read/create/update record APIs (src/domains/records/routes.server.ts; tests/user-api-keys.mjs); delete, upsert, batch, attachments, comments, OpenAPI and personal tokens absent.
+- **API-USER-003 — OAuth for third-party apps.** Third-party apps (Zapier, Make, Crank, n8n) connect through OAuth 2.0 authorization code with PKCE and per-base scopes the owner approves; tokens are revocable from Settings and every call is audited.
+  *Acceptance:* OAuth flow test with a local client: consent, scoped access, revocation.
+  *Status:* missing — no code.
+- **WEBHOOK-USER-001 — Private destinations and signed delivery.** Webhook and Slack destination URLs are immutable encrypted configuration. A new webhook signing key is shown once and is never recoverable from history or later listing. Exact Base integrations prepare signatures and classify delivery. The trusted relay uses Base public-DNS-pinned verified TLS, HTTPS-only destinations, no redirects, bounded requests/responses and timeouts. Missing relay configuration fails visibly. The native relay command is source only; the owner provisions its HTTPS endpoint.
+  *Acceptance:* Webhook and Slack delivery tests at the network edge.
+  *Status:* done — tests/user-webhooks.mjs; src/domains/automations/destinations.server.ts.
+- **WEBHOOK-USER-002 — Change subscriptions.** An API client can subscribe to changes in a base, table or view and receive signed notifications, then fetch the ordered change payloads since its cursor, so an external system keeps in step without polling; a subscription expires after 7 days unless refreshed.
+  *Acceptance:* Subscription test receives a ping per change and replays the cursor without gaps or duplicates.
+  *Status:* missing — outbound automation webhooks only.
+- **MCP-001 — Live records for AI assistants.** Claude, ChatGPT and other MCP clients connect to a Cradle MCP server with an OAuth-scoped or owner-issued key and can search, read, create and update records, run views and propose schema changes, always under that key's policy; the owner can require approval before an agent's writes commit, and every agent call is audited with the client's name.
+  *Acceptance:* Official MCP SDK client test: allowed read and write, refused out-of-scope table, approval-required write held until approved.
+  *Status:* partial — the RECORDS-007 proposal door has REST and MCP faces for schema proposals (src/domains/authority/proposer.server.ts:5; tests/records-agent-proposals.mjs); live-record MCP tools absent.
+- **INTEG-001 — Slack, Microsoft Teams and Nook.** Besides webhook notifications, Cradle installs as a Slack app and a Teams app (OAuth, channel picker) and connects to [Nook](https://github.com/just-every/run-nook): automations post rich record messages with approve/reject buttons whose clicks are policy-checked writes by the clicking person, and record links unfurl for readers allowed to see them.
+  *Acceptance:* Interactive-button test with a fake Slack/Teams/Nook edge: the click updates the record as that person; an unauthorized clicker is refused.
+  *Status:* partial — Slack incoming-webhook notifications (WEBHOOK-USER-001; tests/user-webhooks.mjs); Slack app, Teams and Nook absent.
+- **INTEG-002 — Gmail and Microsoft 365 mail.** An operator connects Gmail or Microsoft 365 by OAuth; automations send from that mailbox with recipients limited to record fields and owner-listed domains, and each base can have an inbound address whose mail creates or updates records with attachments, sender and thread.
+  *Acceptance:* Send and inbound-mail tests with fakes at the provider edge; a recipient outside the allowed set is refused.
+  *Status:* partial — scoped Gmail read-only intake (src/adapters/gmail.server.ts:14); Base mail sends notifications; mailbox sending and inbound addresses absent.
+- **INTEG-003 — Google Sheets and Excel.** An owner imports .xlsx workbooks and Google Sheets (each sheet a table, types detected, links proposed from repeated values) and exports any view or base to .xlsx; a Google Sheet can be a synced source (SYNC-001).
+  *Acceptance:* Workbook import and export round trip with typed values; Sheets import against a recorded API fixture.
+  *Status:* partial — CSV move-in and export (src/domains/records/csv.server.ts; tests/records-manual-roundtrip.mjs); .xlsx and Google Sheets absent.
+- **INTEG-004 — Google Calendar and Outlook.** A date or range field can keep an event in a chosen Google or Outlook calendar in step with the record (create, move, cancel), with the event linking back; changes made in the calendar are shown for review rather than silently written back.
+  *Acceptance:* Calendar sync test against a recorded provider edge: create, move, cancel and an external edit flagged for review.
+  *Status:* partial — Google Calendar reserve/cancel/readback adapter (src/adapters/calendar.server.ts:7) used by repairs; no record calendar sync; Outlook absent.
+- **INTEG-005 — CRM, development and payment systems.** Synced tables (SYNC-001) and automation actions connect Salesforce and HubSpot (accounts, contacts, opportunities; [Orbit](https://github.com/just-every/run-orbit) for the Run Edit Run CRM), Jira, GitHub and [Vector](https://github.com/just-every/run-vector) (issues), and Stripe (customers, payments, invoices read-only; payment links created by action, the processor holding all money).
+  *Acceptance:* One synced-table and one action test per system against recorded fixtures at the network edge.
+  *Status:* missing — no code.
+- **INTEG-006 — Twilio SMS.** Automations send SMS through the owner's Twilio account and number to a phone field, with US A2P 10DLC registration status shown, STOP/HELP opt-out honoured and recorded on the record, and delivery status written back.
+  *Acceptance:* SMS action test with a Twilio fake: send, delivery callback, STOP suppresses later sends.
+  *Status:* missing — no code.
+- **INTEG-007 — Zapier, Make and Crank.** Cradle publishes triggers (new record, updated record, record enters view, form submitted) and actions (create, update, find records) for Zapier, Make and [Crank](https://github.com/just-every/run-crank) over API-USER-002, API-USER-003 and WEBHOOK-USER-002.
+  *Acceptance:* Each published trigger and action exercised from a local Crank client.
+  *Status:* missing — no code.
+
+## Move-in, sync and recovery
+
+A buyer of any named incumbent can bring their working app, not just their rows, and keep data from other systems in step.
+
+- **MIGRATE-001 — Airtable move-in.** With an Airtable personal access token (or a downloaded base export), Cradle reads every table, field, record, link, attachment, comment, view (type, filters, sorts, groups, hidden fields) and form; translates formulas, lookups and rollups into Cradle's language and flags any it cannot translate with the original text; lists interfaces and automations with a rebuild proposal for each (AGENT-003); and imports through RECORDS-005 review with a receipt naming every loss. A second run imports only what changed so the team can work in Airtable until cutover.
+  *Acceptance:* Recorded-API move-in of a fixture base with every field type, formula families, attachments and views; receipt with zero unexplained losses; delta re-run; then one authorized real-account run.
+  *Status:* partial — Airtable-shaped CSV and recorded-API import with attachment/behaviour loss receipts (src/domains/records/base-transfer/source-api.ts; tests/records-import-receipt.mjs); live connection, formula translation, attachments, comments and rebuild absent.
+- **MIGRATE-002 — Smartsheet move-in.** From a Smartsheet API token, Cradle imports sheets as tables with column types, row hierarchy (as a parent link), cross-sheet references as links, attachments, comments, Gantt predecessors as dependency links and forms, with a loss receipt.
+  *Acceptance:* Recorded-API move-in of a fixture workspace with hierarchy and predecessors; receipt checked.
+  *Status:* missing — CSV path only (RECORDS-005).
+- **MIGRATE-003 — Quickbase move-in.** From a Quickbase user token, Cradle imports tables, relationships, lookup and summary fields (as lookups and rollups), formula fields (translated or flagged), reports as views and file attachments, with a loss receipt.
+  *Acceptance:* Recorded-API move-in of a fixture app; receipt checked.
+  *Status:* missing — CSV path only (RECORDS-005).
+- **MIGRATE-004 — Spreadsheet workbook move-in.** A multi-sheet Excel or Google Sheets workbook becomes a base: one table per sheet, types detected, VLOOKUP/XLOOKUP and repeated-key columns proposed as links, simple formulas proposed as formula fields, all through review.
+  *Acceptance:* Workbook fixture produces a reviewed proposal whose adopted base matches the workbook's values.
+  *Status:* partial — multi-table CSV move-in with reviewed relationship mapping (RECORDS-005; tests/records-import-d1.mjs).
+- **SYNC-001 — Synced tables.** A table can be a one-way synced copy of another Cradle base's view, an Airtable table (to keep working in both during a move), a Google Sheet, a CSV/JSON URL, Salesforce, HubSpot, Jira or Stripe, refreshed on a schedule (down to 5 minutes) or on demand. Synced fields are read-only; local fields beside them are editable; each refresh records added, changed and removed counts and errors, and a source that disappears marks records rather than deleting them. Two Cradle bases can also sync both ways on chosen fields, with conflicts shown for a person to settle.
+  *Acceptance:* Sync test against recorded sources: refresh counts, removed-source marking, and a two-way conflict surfaced.
+  *Status:* missing — seed.json nonGoals exclude bidirectional sync for the current release.
+- **SYNC-002 — Warehouse export.** An owner can schedule a full or incremental export of chosen bases to the buyer's BigQuery, Snowflake or R2/S3 bucket as Parquet or CSV for analysis beyond the app.
+  *Acceptance:* Scheduled export test writes a correct incremental file to a local bucket.
+  *Status:* missing — no code.
+- **SNAP-001 — Automatic snapshots and point-in-time restore.** Each base is snapshotted automatically (hourly for 7 days, daily for 90 days) and on every schema adoption; an owner can browse a snapshot and restore it as a new base or roll the base back, with a receipt of what changed.
+  *Acceptance:* Snapshot test at fixed clocks; restore-as-copy equals the snapshot; rollback receipt.
+  *Status:* partial — manual verified whole-installation archives (src/domains/portability/archive.server.ts) and adoption snapshots (src/domains/records/manual/snapshot.server.ts); scheduled point-in-time recovery absent.
+- **SNAP-002 — Trash.** Deleted records, fields, tables, views and interfaces stay in a trash for 30 days, restorable by people with the right to delete them, with links and history intact; erasure under `BASE-DATA-003` bypasses the trash.
+  *Acceptance:* Delete-and-restore test for each kind; erasure leaves nothing in trash.
+  *Status:* missing — record deletion previews impact (src/domains/records/delete-impact.server.ts); no trash.
+
+## Mobile
+
+Operations happen away from desks. Mobile is part of the product, not a later port.
+
+- **MOBILE-001 — Complete phone web app.** Every records, view, form, interface, comment and automation-history journey works at 390 CSS px and 320 CSS px with no horizontal page overflow, touch targets of at least 24 px and no serious or critical axe findings.
+  *Acceptance:* Every browser journey above also runs at 390 and 320 with axe.
+  *Status:* partial — manual records and import journeys pass at 390 (tests/ui-records-builder.mjs; tests/ui-base-import.mjs); 320 px and the later journeys are not covered.
+- **MOBILE-002 — Installable app with camera and scanning.** Cradle installs as a progressive web app with web push notifications, camera capture into attachment fields, and barcode/QR scanning that finds or fills a barcode field.
+  *Acceptance:* PWA install and push test in Chromium; scanning test with an image fixture.
+  *Status:* missing — no code.
+- **MOBILE-003 — Native iOS and Android apps.** Native apps for iOS and Android, published under Run Edit Run's store accounts and pointed at the buyer's own installation, browse bases, views and interfaces, edit records, submit forms, comment, scan barcodes, receive push notifications and keep device-only drafts offline that reconcile on reconnect with the same stale-version and authority checks as the web (a draft never becomes a silent success).
+  *Acceptance:* Device-farm journeys on current iOS and Android: sign-in to a local installation, edit, offline draft and reconcile, push receipt.
+  *Status:* missing — seed.json nonGoals exclude native mobile applications for the current release; device-only drafts exist for repair intake only.
+
+## AI in the base
+
+AI features need a configured provider (Anthropic, OpenAI or another `ai.provider.v1` adapter); every record feature works without one. AI output is marked as AI-generated, budgeted (AI-005, AI-006) and never widens anyone's authority. AI-001 to AI-006 (Launch readiness section) remain binding for the launch template.
+
+- **AI-FIELD-001 — AI fields.** An AI field holds the result of a prompt over chosen fields of its record (summarize, classify into the field's options, extract a value, translate, draft a reply). It runs on demand, on change of its input fields or in bulk; it writes only its own field, marks results as AI-generated with the inputs' versions, never overwrites a person's manual edit to it, and counts against the daily AI ceiling.
+  *Acceptance:* AI field test with a fake provider at the network edge: bulk run, re-run on input change, manual edit preserved, ceiling refusal.
+  *Status:* missing — read-only analysis machinery for the launch template (src/domains/intelligence/service.server.ts) can be reused.
+- **AI-FIELD-002 — Document extraction.** An attachment (invoice, W-9, purchase order, receipt, certificate of insurance) can be read into named fields with each value's source location and confidence; low-confidence values are left for a person to confirm and nothing is written until they do or a rule allows it.
+  *Acceptance:* Extraction test on fixture PDFs: values, source highlights and confirmation gate.
+  *Status:* missing — no code.
+- **ASSIST-001 — Base assistant.** In any base, an operator asks questions in plain English ("orders over $5,000 shipped late in Texas this quarter") and gets an answer citing the records it used, drawn only from what that operator may read; the assistant can draft a view, chart, formula (with an explanation) or automation as an unsaved draft the operator saves or discards.
+  *Acceptance:* Assistant test with a fake provider: cited answer limited to readable records; drafted view saved only by the operator.
+  *Status:* partial — permissioned external schema proposals (src/domains/records/manual/proposal-agent.server.ts; tests/records-agent-proposals.mjs); in-product assistant absent.
+
+## Push further: agents that run the operation
+
+Beyond today's up-and-comers (Baserow's Kuma, Grist's assistant, Airtable's Omni), Cradle's agents build, check and operate the app on the owner's real data. Every agent is a permissioned client of the same rules (AGENT-007): it works only through grants the owner issues, its proposals are inert until a person adopts them, and imported documents never give it instructions or authority.
+
+- **AGENT-001 — Build a working base from the owner's files.** Given the owner's spreadsheets, CSVs, documents and (when connected) a Drive or Chest folder, the agent infers entities, field types, links, formulas, views, forms, roles and starter automations, imports a representative sample of real records into a preview, and presents the proposal with side-by-side source and result rows. The owner adopts through RECORDS-002/RECORDS-007; nothing is written to live data before adoption.
+  *Acceptance:* Two held-out owner workbooks produce adopted bases whose records match the sources field for field; an injected instruction in a source file changes nothing.
+  *Status:* partial — scripted proposals through the proposal door were adopted for two held-apart briefs (ACCEPTANCE.md General-purpose authoring; tests/records-agent-proposals.mjs); construction runner (src/domains/construction/build.server.ts); model-authored proposals from files not run.
+- **AGENT-002 — Test changes against live records before adoption.** For any proposed schema, formula, rule or automation change, the agent replays it against current records and roles and reports before/after values for every changed calculation, every broken dependency (formulas, views, interfaces, automations, API keys, synced tables) and every record or field a role would gain or lose. Adoption shows that report and is refused if the records changed since it was made.
+  *Acceptance:* Impact-report test on a populated base: a formula change lists exactly the changed cells; a rule change lists exactly the newly disclosed fields; a stale report is refused.
+  *Status:* partial — exact schema impact preview (src/domains/records/manual/service.server.ts:17) and policy impact preview (src/domains/authority/policies.server.ts:14); combined formula/role before-after report absent.
+- **AGENT-003 — Rebuild an incumbent app, not just its rows.** After MIGRATE-001/002/003, the agent rebuilds the source's interfaces, automations and permissions as Cradle proposals, runs representative role journeys and record comparisons in both systems, and lists every behaviour needing a human decision. Cutover is the owner's explicit step; external effects stay disabled until approved.
+  *Acceptance:* Fixture Airtable base with an interface and two automations: rebuilt proposals pass the same role journeys; the decision list names each untranslatable item.
+  *Status:* partial — migration previews, custody and agent schema proposals (src/domains/records/base-transfer/service.server.ts; src/domains/records/manual/proposal-agent.server.ts); behaviour reconstruction absent.
+- **AGENT-004 — Operate a workflow to its outcome.** The owner names an outcome over a view ("every purchase order received and invoiced by month end") and a mandate: which records, which fields the agent may update, which people and channels it may contact, a spend ceiling and an expiry. The agent traces linked records, finds missing evidence, sends approved requests, reads replies, updates allowed fields, and marks a record done only when the outcome is verified, pausing on conflicting authority or an uncertain external result and reporting progress daily.
+  *Acceptance:* Held-out continuation scenario on fixture records: outcome reached with every action inside the mandate; revocation mid-run stops new effects; an uncertain send is not repeated.
+  *Status:* partial — outcome and execution machinery for the included Repairs app (src/domains/operations/worker.server.ts; src/domains/execution/runtime.server.ts; tests/repairs-outcome-http.mjs); no general record-outcome steward.
+- **AGENT-005 — Repair broken automations and integrations.** When runs fail or a synced or connected system drifts (renamed field, expired token, changed schema, missing external IDs), the agent diagnoses the cause from run history and both sides' records, proposes a minimal fix as a reviewed change, and after adoption confirms both sides reconcile; it never retries an uncertain external effect without verification.
+  *Acceptance:* Fault-injection test: renamed field breaks an automation; the proposed fix is adopted and the next run succeeds; an uncertain webhook is reconciled, not resent.
+  *Status:* partial — failure history and external-effect readback (src/domains/automations/runtime.server.ts; src/domains/execution/runtime.server.ts:42); agent repair absent.
+- **AGENT-006 — Keep the data clean.** The agent finds likely duplicates, broken or one-sided links, inconsistent spellings of the same value and records that break rules, and proposes merges and normalizations as one reviewed bulk change with the records bulk service's preview, atomic commit and undo; it never merges or rewrites on its own.
+  *Acceptance:* Fixture base with seeded duplicates and variants: the proposed change fixes exactly them and undoes cleanly.
+  *Status:* missing — bulk preview/commit/undo exists to build on (src/domains/records/bulk.server.ts; tests/records-transport.mjs).
+- **AGENT-007 — Agent authority.** Agents act only through owner-issued, expiring, revocable grants naming bases, actions, fields, recipients, spend and quantity; a grant cannot be widened by the agent, by a proposal or by imported text; every agent action is audited with the grant; consequential actions above an owner-set threshold wait for a designated person.
+  *Acceptance:* Grant tests: out-of-scope action refused, expired and revoked grants stop work, above-threshold action held for the designated approver.
+  *Status:* partial — proposing keys (RECORDS-007; tests/records-agent-proposals.mjs) and repair mandates with designated-human approval (tests/repairs-outcome-http.mjs).
+
+## Honest boundaries
+
+What Cradle does not do, and how a buyer gets it. Each is a product line, not a gap to close.
+
+- **BOUND-001 — Separate products stay separate.** Cradle is the relational database and internal-app builder. It is not a project or work management suite (task inboxes, workload and resource planning across projects; no Run Edit Run product owns that category today, and buyers keep Asana, monday.com or ClickUp beside Cradle), a CRM ([Orbit](https://github.com/just-every/run-orbit)), a survey platform ([Pencil](https://github.com/just-every/run-pencil)), a wiki ([Slate](https://github.com/just-every/run-slate)), file storage ([Chest](https://github.com/just-every/run-chest)), team chat ([Nook](https://github.com/just-every/run-nook)), an issue tracker ([Vector](https://github.com/just-every/run-vector)), an automation platform ([Crank](https://github.com/just-every/run-crank)), an identity provider ([Auth](https://github.com/just-every/run-auth)) or a website builder ([Pane](https://github.com/just-every/run-pane)). It connects to each through the clauses above.
+  *Acceptance:* Docs and navigation link to the sibling for each named job; no Cradle surface claims it.
+  *Status:* partial — DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product.
+- **BOUND-002 — Not a regulated system of record.** Cradle is not an accounting ledger, payroll, EHR or payment processor. Money moves only through the buyer's processor (Stripe); ledgers stay in the buyer's accounting system. Cradle makes no HIPAA, PCI DSS or SOC 2 claim; a covered entity storing PHI needs its own hosting agreement (BAA) and its own assessment.
+  *Acceptance:* Docs state the boundary; no card number field type exists.
+  *Status:* partial — no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary.
+- **BOUND-003 — Bounded compute.** Formulas, scripts and automations run within declared time and memory bounds inside the Worker. Heavy analytics and long-running jobs run in the buyer's own warehouse or runtime (SYNC-002, API-USER-002), not in Cradle requests.
+  *Acceptance:* Script and formula limit tests (AUTO-USER-007, CALC-004).
+  *Status:* partial — formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built.
+- **BOUND-004 — Honest migration and delivery claims.** Cradle never says an app migrated because its rows did, never claims a message reached a person because a provider accepted it, and never resends an uncertain external effect; receipts name every loss and uncertainty.
+  *Acceptance:* Move-in receipts and uncertain-delivery tests.
+  *Status:* done — tests/records-import-receipt.mjs; tests/launch-installed-retries.mjs.
+- **BOUND-005 — One business per installation.** An installation serves one business with many bases; multiple tenants are separate installations, and moving a base between them uses RECORDS-006.
+  *Acceptance:* Base copy between two installations by JSON export and reviewed import.
+  *Status:* done — tests/records-base-exits.mjs.
+## Public landing and docs
 
 - **HOME-001 — Owner identity plate.** *Superseded by HOME-002 on 8 October 2026; the original wording is retained for history and is no longer a requirement.* At `/`, this internal tool presents a public identity plate using the persisted workspace name (including later renames), or the configured public workspace name when that name read is unavailable, description in `src/ext/config.ts`, and the configured theme tokens: the owner's workspace name, one configurable description of their records workspace, and a link to `/signin`. Its optional footer credit is visible by default and config can turn it off; when visible it names the configured product and links statically to `https://runeditrun.com`. The credit adds no telemetry or phone-home. The landing contains no record content, public views, pricing, feature tour, testimonials, or metrics.
+  *Status:* superseded (not counted).
 - **HOME-002 — Public product landing.** *Changed on 13 October 2026: the page moved from the installed `/` (now HOME-003) to the static run site.* At `/` of the run site (`https://run-cradle.com`, built by `rer build --site` from `src/site/pages.tsx`), Cradle presents its public product page using the configured theme tokens and the product's own type. It has a header, shared with the docs under DOCS-001, with the configured product name and links to `/docs` and to the public source repository (`https://github.com/just-every/run-cradle`); a hero with one heading, "Everything comes together in one place.", a supporting line that is the description in `src/ext/config.ts`, the plain line "100% free, open source alternative to Airtable and Smartsheet", a button **Run Cradle** to `/run`, a link to `/docs` and decorative illustrations of data streaming into one Projects screen; and sections, each with its own decorative illustration of Cradle's screens, for typed and linked tables, views, guarded schema changes, the practical parts (CSV import and export, visible automations, optional read-only AI) and self-hosted ownership that the owner customises with their own agents; at least two of those sections carry a quiet link to the published guide page on their subject (CSV import, automations, installing or leaving), and every `/docs` link on the page names a page published under DOCS-001. A closing call to action repeats **Run Cradle** to `/run` and links to `/docs`. The footer, also shared with the docs, carries the section anchors (which still reach the page from `/docs`), links to `/docs` and the source repository, an MIT licence link to `LICENSE` in that repository, and the credit. Its copy describes only capabilities this contract ships and shows no record content, public views, pricing, testimonials, customer logos, metrics or integrations the product does not ship. Its optional footer credit is visible by default and config can turn it off; when visible it names the configured product and links statically to `https://runeditrun.com`. The credit adds no telemetry or phone-home. Scroll motion never hides content: with reduced motion, without script, and after scrolling, every section is fully visible. The page loads no resource from another origin, links no instance-only route (`/signin`, `/setup`, `/app`, `/auth/*`) and reads no installation data. `/run` (Base's Run page) shows the two commands that run Cradle from `https://github.com/just-every/run-cradle`.
+  *Acceptance:* Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`.
+  *Status:* done — tests/foundation-shell.mjs; tests/ui-local-signin.mjs.
 - **HOME-003 — Installed Lobby.** *Changed on 16 October 2026: owner claim is independent of workspace first-run details.* An installed instance answers `/` with Base's shared Lobby (`src/base/lobby.ts`, edition identity in `src/identity.ts`): Cradle's lockup, one line and one button, **Finish setup** to `/setup` until Base records its durable owner claim (`oa_bootstrap`), then **Sign in** to `/signin` with a line naming the persisted workspace name (including later renames), or the configured public workspace name when that name read is unavailable. `GET /setup/state` answers exactly `{"state":"unclaimed"}` or `{"state":"claimed"}` from the same owner-claim record, with no session and `no-store`. Signed-in app visits still require first-run workspace details under SET-003. The Lobby is the same for every visitor, runs no script and reveals nothing else about the installation.
-
-## Public docs
+  *Acceptance:* Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`.
+  *Status:* done — tests/installed-home.mjs; tests/public-document-runtime.mjs.
 
 - **DOCS-001 — Public docs.** Every page listed in `docs/site.json` is served without a session at `/docs` (the first page) or `/docs/<slug>`, rendered from its Markdown file inside the same header and footer as the product page (HOME-002), with the Docs link marked as the current page, and with each page's source linked on GitHub at `https://github.com/just-every/run-cradle/edit/main/<file>`. The installed instance's header and footer also link `/signin`; the run site serves the same pages statically without it. A slug that is not listed is a genuine 404, never a redirect or an empty page. Links between pages and to repository files resolve at build time, and a broken link or anchor fails the build. A page loads no script, style, font or image from another origin; outbound links are plain anchors. The docs show no record content and add no sessionless path beyond `/docs` and `/docs/`.
+  *Acceptance:* Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`.
+  *Status:* done — tests/public-document-runtime.mjs; tests/start-resources.mjs.
 
-## Words this contract uses
+## Included application: Launch readiness
+
+Launch readiness is a complete application template on the records platform (campaigns, deliverables, milestones, risks, decisions, saved lenses, shipped automations, notifications and read-only AI analysis). Its clauses keep their data and security semantics. Some rules here are workspace-wide and apply to every base: sign-in (AUTH-BASE-001), operator management, time zone, removal, erasure and currency (OPS-002 to OPS-006), operator views (VIEW-001 to VIEW-007), dates and times (ACT-003) and capacity limits (DATA-003). OPS-001's equal-operator rule covers only the launch template; every other base uses roles and rules (PERM-001 to PERM-003). Clauses without a clause-tagged test are marked partial until a test through a public door names them.
+
+### Words this contract uses
 
 - **Operator** — a person with a session, invited under OPS-002. Every actor in this contract is an operator or an automation run.
 - **Active** and **archived** — a campaign's two lifecycle states (CAMP-002). **Non-archived** always means active.
@@ -37,156 +381,542 @@ One private workspace with typed records, relationships, forms and saved views. 
 - **Run** — one logical execution of an automation, keyed by automation, definition version, and trigger event or scheduled instant. An **attempt** is one transport delivery inside a run (AUTO-003).
 - **Derived** — a value computed from linked records on read. Derived values are never written directly; a request that writes one is rejected under `BASE-INPUT-001`.
 
-## Operators
+### Operators
 
 - **AUTH-BASE-001 — Install and sign in.** A new installation uses Base operator-auth to atomically bootstrap its configured first owner on an empty auth store using a deployment setup token. Mail and an existing owner session are not prerequisites. Base owns opaque credentials, one-use magic-link confirmation, active operator/version checks and host/origin admission. The setup ledger cannot be reset by replacing the token. Base mail explicitly selects the RER Managed relay, SendGrid or Resend; failure never selects a fallback provider or claims mailbox delivery. Cradle maps admitted identities to its existing product IDs and current app/row/field policy, and prepared mutations also fence Base session revocation. A fresh local owner runs `rer dev`, which establishes a real Base dev session through the checkout key; optional `rer setup` writes private credentials with mode 0600. The signed-in owner completes durable first-run details at `/setup`. Standalone local and hosted installs expose no captured-mail inbox or outbox page. Hosted sign-in requires a configured mail sender; failed delivery gives actionable guidance, and an unclaimed installation directs its host to finish rer deploy. A missing or blank `OWNER_EMAIL` fails closed during production setup and runtime configuration; it never selects legacy native-mail sign-in or accepts legacy product cookies.
+  *Acceptance:* Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`.
+  *Status:* done — tests/auth-base-only-runtime.mjs; tests/launch-production-composition.mjs; tests/local-auth-runtime.mjs.
 
 - **OPS-001 — Equal operators.** Every legacy launch operator can read every launch-template record and perform every mutation in that retained scope. New app access remains explicit under APP-SCOPE-001. The only restrictable action is inviting and removing operators, under `operator.management.v1`. There are no roles.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-production-composition.mjs; tests/launch-scoped-authority.mjs.
 - **OPS-002 — Management.** Operators are invited and removed in settings. The operator configured at setup can be removed only by themselves, so every operator record stays removable and erasable by an operator. Because the installation always keeps an active owner, that owner first hands ownership to another active member in settings — after a fresh email-link confirmation of their own identity — and can then remove themselves once they own no active campaign and hold no unresolved assigned decision. *Policy: `operator.management.v1`; default: any operator may invite or remove.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs; tests/ui-launch-operator-doors.mjs.
 - **OPS-003 — Workspace timezone.** Setup requires a valid IANA workspace timezone and rejects any other value with a validation error. Changing it re-renders every displayed time and moves the next fire time of every schedule in this contract; it leaves stored UTC timestamps byte-identical and moves no run already queued and no email already sent.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet.
 - **OPS-004 — Removing an operator.** Removing an operator ends their sessions within 1 minute, drops them from digest recipients, and cancels their outstanding readiness requests. Removal is rejected, naming each blocking record, while that operator owns an active campaign or is the assignee of an unresolved decision. Risks, deliverables, milestones, comments, activity entries, and AI analyses keep their attribution to the removed operator, and a lens condition naming them returns zero results rather than an error.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/owners.server.ts; no clause-tagged test yet.
 - **OPS-005 — Erasing an operator.** A removed operator can be erased under `BASE-DATA-003`. Erasure replaces their name and email with a stable anonymous label wherever they appear, deletes their notifications and delivery records, keeps the comments, activity entries, and decision outcomes they authored under that label, completes within 5 minutes, is confirmed when complete, and cannot be undone.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet.
 - **OPS-006 — Money.** Setup requires an ISO 4217 workspace currency. Budget and spend are stored as minor-unit integers in that currency and are displayed, summed, and exported in it. Changing the currency relabels stored amounts and never converts them.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet.
 
-## Operator views
+### Operator views
 
 - **VIEW-001 — Operating surfaces.** One Home at `/app` leads with Records and links to App studio. Launch readiness is grouped as an included template: Portfolio Overview, Campaign Grid, Risks Lens, Timeline Lens, Campaign Detail, Lens Builder, Decision Queue and Automation Monitor retain their routes in the same October theme and navigation shell. Repair navigation is opt-in. Unknown document routes return HTTP 404 with a useful not-found page.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/foundation-shell.mjs; tests/launch-authority-browser.mjs.
 - **VIEW-002 — Selected detail.** Selecting a campaign, risk, milestone, or decision shows that record's own fields and the records linked to it. No field and no identifier of a previously selected record stays visible.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **VIEW-003 — Cross-view consistency.** A read issued after a mutation's success response returns that mutation's committed state and the counts derived from it on Home, Portfolio Overview, Campaign Grid, Campaign Detail, every lens, Decision Queue, and Automation Monitor.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/reader.server.ts; no clause-tagged test yet.
 - **VIEW-004 — Explicit states.** Every collection and detail surface renders exactly one of loading, empty, not found, signed out, or failed. The failed state names the operation that failed and offers a retry; it renders no rows, no sample data, and no result of an earlier successful read. An action a policy forbids is refused with a stated reason and changes nothing.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-authority-browser.mjs; tests/ui-launch-walkthrough.mjs.
 - **VIEW-005 — Search.** Global search matches case-insensitive token prefixes across readable text, URL and select values in every authorized base, returning at most 20 results per table linked to their record detail. Launch readiness retains campaign name/code/summary and deliverable/risk/milestone/decision title search. Current row and field policy is rechecked before responding; inaccessible cells cannot produce matches. Comment text is excluded. Archived records are returned only when explicitly included. The existing 500ms response target remains.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-search-authority.mjs.
 - **VIEW-006 — Concurrent edits.** Every mutation of a campaign, deliverable, milestone, risk, decision, comment, lens, custom-field definition, automation, or workspace setting supplies that record's current version. A mutation carrying an older version returns 409, names the current version, and changes nothing.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/service-write.server.ts; no clause-tagged test yet.
 - **VIEW-007 — Paging and order.** A collection response returns at most 200 records with a cursor, applies the requested sort with the record ID as its final tiebreak so paging repeats and skips nothing, and reports an exact total up to 10,000 matches and `10,000+` beyond it. A result larger than one page states how many records are shown out of that total.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs.
 
-## Campaigns
+### Campaigns
 
 - **CAMP-001 — Record.** An operator can create, edit, archive, and delete a campaign. It requires a code, a name, an owner, a start date, and a launch date, and it also carries an objective, a status summary of at most 280 characters, a phase, a status, health, budget, spend, tags, and custom fields.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-authority-browser.mjs; tests/launch-optional-fields.mjs.
 - **CAMP-002 — Lifecycle.** A campaign is active or archived, and any operator can archive or restore one. Archiving deletes nothing. *Policy: `campaign.lifecycle.v1`; default phases: Planning, Build, Production, Review, Launch prep; default statuses: On track, Watch, At risk, Blocked; default launch-preparation phase: Launch prep.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **CAMP-003 — Validation.** A campaign's launch date must not fall before its start date, its health must be a whole number from 0 to 100, and its budget and spend must be zero or greater. Campaign codes are trimmed and unique case-insensitively. A mutation breaking any of these, or clearing the owner, start date, or launch date of an active campaign, is rejected with a validation error naming the field and changes nothing.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet.
 - **CAMP-004 — Detail and rollups.** Campaign detail shows the campaign's fields, its complete and total deliverable counts, its milestones, its open risks, its unresolved decisions, its comments, and its activity. Those counts are derived: they change only through a mutation to a linked record.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet.
 - **CAMP-005 — Health.** Health is shown with the operator who last set it and when. A campaign whose health has not been set in the last 14 days is marked stale. *Policy: `campaign.health.v1`; default: health and status change only through an explicit operator edit or an import row that maps the field. A replacement may derive health from linked records; no replacement may set it from AI output, which AI-003 forbids.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **CAMP-006 — Portfolio overview.** Portfolio Overview shows Live campaigns as the count of non-archived campaigns, Needs attention as the count of non-archived campaigns whose status is At risk or Blocked, Open decisions as the count of unresolved decisions on non-archived campaigns, and Portfolio health as the arithmetic mean of non-archived campaign health rounded half up to a whole number, or No data when there are none. It states how many campaigns in that mean are stale under CAMP-005.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/core/features/portfolio; no clause-tagged test yet.
 - **CAMP-007 — Grid.** Any operator can filter, group, sort, and choose visible fields in the campaign grid. Three built-in views ship: All active, every non-archived campaign; Launch prep, every non-archived campaign in the lifecycle policy's launch-preparation phase; and My campaigns, every non-archived campaign owned by the signed-in operator. Each re-queries on open and on refresh, and opening, filtering, grouping, or sorting a view changes no record.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet.
 - **CAMP-008 — Custom fields.** An operator can define, edit, and delete campaign custom fields of the types in `seed.json → customFields`, and those fields are available in grid display, filtering, lens conditions, CSV import, and CSV export. Deleting a definition deletes its stored values and is confirmed with the number of campaigns holding one.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-operator-doors.mjs.
 - **CAMP-009 — Archiving.** Archiving a campaign is allowed while it has open deliverables, milestones, risks, and decisions, and withdraws its work in one commit: its unresolved decisions leave Decision Queue, its risks and milestones leave every lens and the digest, its incomplete deliverables and milestones stop counting as overdue, it leaves the counts in CAMP-006 and every search that does not ask for archived campaigns, its outstanding readiness requests and every queued automation run whose subject is that campaign or one of its records are cancelled without executing an action, and email held under NOTIFY-002 for that campaign is dropped. Archiving completes and resolves nothing.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet.
 - **CAMP-010 — Restoring.** Restoring returns the campaign and every record archived with it to the state each had at archiving, and creates no notification, readiness request, or automation run for the archived period. CAMP-003 is applied at restore: a campaign whose owner was removed while it was archived must be given a current owner before it becomes active.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet.
 - **CAMP-011 — Deletion.** Deleting a campaign removes its deliverables, its milestones and their dependencies, its risks, decisions, comments, campaign activity, AI analyses, and import references under `BASE-DATA-003`. Deletion requires typing the campaign code to confirm and cannot be undone. Audit records survive with the campaign reference anonymised.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet.
 - **CAMP-012 — Risk rating.** A campaign's risk rating is derived as the highest severity among its open risks, or None when it has none, and is shown wherever the campaign is listed.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/campaign-projection.server.ts; no clause-tagged test yet.
 - **CAMP-013 — Bulk edit.** In the campaign grid and in any Grid or Cards lens an operator can select up to 500 records, including every record matching the current conditions, and apply one change to all of them: owner, phase, status, a tag added or removed, a custom-field value, archive, or restore. A bulk change commits for every selected record or none, is rejected naming the first record that fails validation, writes one activity entry on each changed record and one bulk entry naming the operator and the count, and can be undone once within 1 hour, restoring the prior value of every record it changed.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-write-authority.mjs; tests/ui-launch-operator-doors.mjs.
 - **CAMP-014 — Duplicating.** Duplicating a campaign copies its fields, tags, custom-field values, deliverables, and milestones under a new unique code, and copies no risks, decisions, comments, activity, notifications, or AI analyses. When the operator supplies a new launch date, every copied date shifts by the difference between it and the original launch date; otherwise dates are copied unchanged. The copy triggers no automation.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/duplicate.server.ts; no clause-tagged test yet.
 
-## Deliverables
+### Deliverables
 
 - **DELIV-001 — Record.** An operator can create, edit, and delete a deliverable. It belongs to exactly one campaign, requires a title and an owner, has an optional due date, and has a state of Open or Complete that starts Open.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **DELIV-002 — Completion.** Completing or reopening a deliverable records the operator and the time, adds a campaign activity entry, and changes the campaign's derived completion count in the same commit.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **DELIV-003 — Overdue.** An Open deliverable with a due date before the current date in the workspace timezone is marked overdue on campaign detail, in every lens and search result that contains it, and in CSV export. A deliverable due today is not overdue.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 
-## Milestones
+### Milestones
 
 - **MILE-001 — Record.** An operator can create, edit, and delete a milestone. It belongs to exactly one campaign, requires a title and an owner, has a type of Launch, Review, Approval, Decision, Event, or Publish, has a status of Not started, On track, Watch, At risk, Blocked, or Complete that starts Not started, and has either a single date or a start and end date whose end does not fall before its start.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
 - **MILE-002 — Timeline lens.** As shipped, Timeline Lens contains every milestone of every non-archived campaign, ordered by date ascending using the start date for a range and then by campaign code. A range is rendered as a range with both dates and a point as a point with one date. Month scale renders one column per calendar month and Quarter scale one per quarter in the workspace timezone; switching scale changes only the columns, never the milestone set. Every item links to its campaign detail and to its milestone detail.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
 - **MILE-003 — Dependencies.** An operator can name existing milestones in any campaign as predecessors of a milestone. A predecessor set that would create a cycle is rejected with a validation error and changes nothing. When a milestone starts before a predecessor ends, both carry a dependency-conflict marker on milestone detail and in Timeline Lens, and setting the later milestone's status to On track while that marker stands requires a reason of at least one non-whitespace character, recorded on the milestone and in campaign activity. Changing one milestone's date never changes another's.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
 - **MILE-004 — Readiness request.** A readiness request is an in-app notification addressed to a milestone's owner, Outstanding until that owner acknowledges it. Within 15 minutes of 08:00 each day in the workspace timezone the shipped readiness automation creates exactly one Outstanding request for every milestone of type Launch that is not Complete, whose campaign is non-archived, and whose date falls within the next 5 days, and that has no Outstanding request. A repeated evaluation creates no duplicate.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-schedules.mjs.
 - **MILE-005 — Readiness rescheduling.** Moving a Launch milestone's date out of the five-day window cancels its Outstanding request, and moving it inside the window creates one at the next daily evaluation. Completing or deleting the milestone, or archiving its campaign, cancels an Outstanding request. A milestone whose date has already passed receives no request.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/readiness.server.ts; no clause-tagged test yet.
 - **MILE-006 — Overdue.** An incomplete milestone whose date, or whose range end, falls before the current date in the workspace timezone is marked overdue wherever it appears.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
 
-## Risks
+### Risks
 
 - **RISK-001 — Record.** An operator can create, edit, and delete a risk. It belongs to exactly one campaign, requires a title and an owner, has a severity of Low, Medium, High, or Critical, has an optional due date, carries a signal and a mitigation as free text of at most 2,000 characters each — the signal being the evidence that raised the risk — and has a workflow state.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **RISK-002 — Lifecycle.** An open risk is Watching, In progress, Needs decision, or Escalated. Resolving it requires a resolution note of at least one non-whitespace character and records the operator and the time. Reopening a resolved risk returns it to Watching and keeps the previous resolution in activity.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **RISK-003 — Escalation.** An operator can escalate an open risk with a reason. In one commit the escalation sets the risk's state to Escalated, records the operator, reason, and time, and applies the escalation policy; the response carries any decision the policy created. *Policy: `risk.escalation.v1`; default: escalating a risk of severity Critical creates one unresolved decision of priority Critical linked to that risk unless an unresolved decision is already linked to it, and notifies the campaign owner. Escalating a lower severity creates no decision.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **RISK-004 — Isolation.** Escalating, updating, or resolving a risk changes that risk, the campaign activity entry ACT-001 requires, the campaign's derived rollups, and — when `risk.escalation.v1` fires — the one decision and one notification it creates. No other record changes; a linked decision changes only through `decision.resolution.v1`.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **RISK-005 — Shipped lens.** As shipped and before any operator edit, Risks Lens contains exactly the open risks of severity High or Critical whose campaign is non-archived and whose launch date is no later than 30 days from today in the workspace timezone, so a campaign already past its launch date stays in the lens. It orders Critical before High, then earliest due date, then risks without a due date, then campaign code, and shows severity, state, owner, due date, signal, mitigation, and campaign.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet.
 
-## Decisions
+### Decisions
 
 - **DEC-001 — Record.** An operator can create, edit, and delete a decision. It belongs to exactly one campaign, links to at most one risk and to at most one decision it supersedes, requires a title and a requester, and has a priority of Critical, High, Medium, or Low, a due time, a recommendation, an impact statement, an optional assignee, and a state of Awaiting approval, In review, Approved, Rejected, or Cancelled. Awaiting approval and In review are unresolved; the other three are terminal.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **DEC-002 — Queue.** Decision Queue contains exactly the unresolved decisions on non-archived campaigns. *Policy: `decision.queue-order.v1`; default order: overdue first, then priority Critical, High, Medium, Low, then earliest due time, then earliest creation time.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **DEC-003 — Approval.** Approving an unresolved decision records the approver, the time, the outcome, and an optional rationale, adds a campaign activity entry, applies `decision.resolution.v1`, and removes the decision from Decision Queue, all in one commit.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **DEC-004 — First outcome wins.** A request that approves, rejects, or cancels a decision is a mutation under VIEW-006. The first such outcome to commit is the decision's outcome; a later one against the older version returns 409 and changes nothing.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **DEC-005 — Assignment.** Any operator can assign or reassign an unresolved decision to a current operator, which records the operator and the time and notifies the new assignee. Assignment changes no other field.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **DEC-006 — Changes, rejection, and cancellation.** Requesting changes on an unresolved decision requires a rationale of at least one non-whitespace character, records the operator and the time, and sets the decision to In review. Rejecting or cancelling an unresolved decision also requires such a rationale and is a terminal outcome under DEC-004.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **DEC-007 — Linked-risk effect.** A decision outcome changes its linked risk only through the resolution policy, and no other decision action changes a risk. *Policy: `decision.resolution.v1`; default: approving moves a linked risk from Needs decision or Escalated to In progress; requesting changes, rejecting, and cancelling leave it unchanged. No decision outcome resolves a risk.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
 - **DEC-008 — Finality.** A terminal decision cannot be edited into another outcome; such a request is rejected and changes nothing. An operator can create a new decision that supersedes it under DEC-001, and each decision links to the other on both details.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/supersede.server.ts; no clause-tagged test yet.
 
-## Lenses
+### Lenses
 
 - **LENS-001 — Definition.** A lens has a name, a description, exactly one record type from Campaign, Risk, Milestone, or Decision, at most 20 conditions, a sort order, visible fields, and a display mode valid for its type: Grid for Campaign, Cards for Risk or Decision, Timeline or Agenda for Milestone. A lens with a mode its type does not allow is rejected on save.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
 - **LENS-002 — Preview.** Lens preview evaluates the unsaved definition against non-archived records, reports the exact matching count under VIEW-007 within 2 seconds, changes no record, and shows an explicit zero-results state.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
 - **LENS-003 — Save and share.** Saving a lens makes it available to every operator and records who saved it and when. Sharing produces a URL to the saved lens that requires an operator session; no lens URL is readable without one.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
 - **LENS-004 — Edit and delete.** An operator can edit a lens definition or delete the lens. Neither changes, archives, or deletes any record the lens displays or hides. A shipped lens cannot be deleted.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
 - **LENS-005 — Current results.** Opening or refreshing a lens re-evaluates it against non-archived records, and its result list, count, condition summary, and selected detail all describe that one evaluation.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
 - **LENS-006 — Shipped views.** Risks Lens and Timeline Lens ship as saved lenses. Operators can duplicate or edit them, and restoring either returns its definition to exactly the one in RISK-005 or MILE-002 without changing a record.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet.
 - **LENS-007 — Conditions.** A condition names one field of the lens's record type — campaign custom fields only on a Campaign lens — and one operator from equals, not equals, one of, contains, is empty, is not empty, before, after, and within the next N days, typed to that field: contains applies to text fields only, and the date operators to date fields only. Conditions combine with AND. A condition naming an unknown field, or an operator its field's type does not support, is rejected on preview and on save.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
 
-## Activity and comments
+### Activity and comments
 
 - **ACT-001 — Campaign activity.** Campaign activity is ordered newest first. It records every create, field change, archive, restore, and delete of the campaign and of its deliverables, milestones, risks, decisions, and comments, plus every import and every mutation made by an automation. Each entry carries its type, its subject's ID, the operator or the automation run that acted, the time, and for a field change the field name with its previous and new value. Campaign activity is the operator-visible view of the audit records in `BASE-OPS-005`: deleting a campaign removes this view, and those audit records survive with the campaign reference anonymised.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **ACT-002 — Comments.** An operator can add a plain-text comment to a campaign, and it appears in campaign activity. A comment changes no field of any record and triggers no automation and no AI call. An operator can delete a comment, which leaves a deletion entry in activity.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet.
 - **ACT-003 — Dates and times.** Every timestamp in the API and the export is ISO 8601 in UTC. Campaign, deliverable, and milestone dates are calendar dates evaluated from the start of that day in the workspace timezone; decision due times are instants. Every relative time exposes its absolute time as its accessible name.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **ACT-004 — Mentions.** A comment can mention a current operator, which notifies exactly that operator and changes no field of any record. A mention of a removed or erased operator renders as plain text and notifies nobody.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet.
 
-## Automations
+### Automations
 
 - **AUTO-001 — Definition.** An automation has a name, one trigger, an ordered list of actions, an enabled state, and a definition version that increments on every edit. A trigger is a product event declared in `seed.json → extensionPoints.events` or a schedule of at most one run per hour, and a shorter schedule is rejected on save. An action is one of `escalate-risk`, `create-decision`, `notify-operator`, `send-email`, `request-ai-analysis`, and `add-activity`, plus any command contributed through `jobs.commands.v1`.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/automations.server.ts; no clause-tagged test yet.
 - **AUTO-002 — Commit boundary.** An event automation is dispatched within 10 seconds of the mutation that raised its event committing. A rolled-back mutation dispatches nothing. A disabled automation runs on neither events nor schedules and records no run.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-runtime.mjs.
 - **AUTO-003 — One run per trigger.** One run exists per automation, definition version, and trigger event or scheduled instant; transport retries are attempts inside that run. Under `BASE-OPS-003`, a redelivered message reuses each action's idempotency key, so no decision, notification, analysis, or activity entry is created twice.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-event-control.mjs; tests/launch-installed-runtime.mjs.
 - **AUTO-004 — Definition changes.** A run records the definition version that created it. Editing an automation affects only later triggers. Disabling one cancels queued runs that have not started, recording each as Cancelled with no action executed.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-event-control.mjs; tests/launch-installed-network-cancel.mjs.
 - **AUTO-005 — Loop protection.** Every mutation made by an automation carries the ID of the run that made it, and a run inherits its cause's chain of run IDs. An event whose chain already contains a given automation starts no new run of it, and the suppression is recorded on the causing run. A chain is at most 10 runs deep, and an eleventh is recorded as Suppressed and not dispatched. Two runs triggered by the same event may finish in either order and neither waits for the other.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-event-control.mjs.
 - **AUTO-006 — Run history.** Every run records its automation version, trigger, subject, queued, started, and finished times, each attempted action with its result, the number of records it affected, and the error code and message of any failure. Run history is retained in full and paged under VIEW-007, and Automation Monitor shows each automation's success rate as finished successful runs divided by finished runs over the trailing 30 days, stating that window.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/automation-runtime.server.ts; no clause-tagged test yet.
 - **AUTO-007 — Transport retry.** An action with a transport failure known to be safe to retry is retried at 1, 5, 15, 30, and 60 minutes after its first failure. A retry re-executes only actions that have not completed and reuses their idempotency keys. When the fifth retry fails the run is marked Failed. An uncertain external outcome, including an uncertain SendGrid submission, leaves the action and run visibly Unknown with their error code and message; neither automatic nor manual retry resends it. A retained action key alone does not establish provider-side idempotency or a safe resend. The [14 October clarification](docs/launch-runtime.md#uncertain-delivery-contract--14-october-2026) records this owner-accepted exception to the former unconditional transport retry promise.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-retries.mjs.
 - **AUTO-008 — Failure that retrying cannot fix.** A validation error, a policy rejection, a schema failure, or a provider refusal fails the run immediately with no retry. Every Failed run is listed in Automation Monitor with its error code and message under `BASE-OPS-004`.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-event-control.mjs.
 - **AUTO-009 — Manual retry.** An operator can retry a Failed run. The retry is a new run linked to the original by `retryOf` that reuses the original action idempotency keys, so completed actions do not repeat, and the original run stays Failed and unchanged. Unknown runs are ineligible; manual retry cannot bypass AUTO-007's uncertain-outcome restriction.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-retries.mjs.
 - **AUTO-010 — Fan-out.** A mutation that changes many records at once — a bulk edit under CAMP-013 or a committed import under IMPORT-003 — dispatches at most one run per enabled automation, carrying the affected record IDs, rather than one run per record.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/bulk.server.ts; no clause-tagged test yet.
 - **AUTO-011 — Shipped automations.** The seed ships four automations. Critical risk escalation triggers when a risk's severity becomes Critical while the risk is open and not already Escalated, and its one action escalates that risk under RISK-003; it is enabled by default. Launch readiness runs on the schedule in MILE-004 and is enabled by default; its lead time, 5 days by default, and its evaluation hour, 08:00 by default, are editable in settings. Campaign brief triggers when a campaign is created or updated, at most once per campaign per hour, skipped when nothing in its AI-002 context changed since the last brief; it is enabled by default and dispatched only while AI is enabled under SET-002. The weekly portfolio digest runs on the schedule in NOTIFY-004 and is disabled by default. No other parameter of a shipped automation is editable, and each can be disabled.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-runtime.mjs; tests/launch-installed-schedules.mjs.
 
-## Notifications
+### Notifications
 
 - **NOTIFY-001 — In-app events.** An operator receives an in-app notification when a decision is assigned to them, when they are mentioned in a comment, when a Critical risk is escalated on a campaign they own, when a readiness request is created for them, and when an automation run they started fails. A Failed run that no operator started notifies the owner of the campaign it acted on, or every operator when the run has no campaign subject.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
 - **NOTIFY-002 — Email delivery.** Every in-app notification has an email counterpart routed by the delivery policy through `mail.sender.v1` against the workspace quiet hours in settings, which default to 18:00–08:00 in the workspace timezone. Authentication email and the weekly digest are never held. *Policy: `notification.delivery.v1`; default: a Critical risk escalation or a decision assignment is emailed within 60 seconds at any hour; every other email raised during quiet hours is held and sent within 60 seconds of quiet hours ending, as one message per operator.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
 - **NOTIFY-003 — Delivery failure.** Every outbound email has a delivery record linked to its notification and, when an automation sent it, to that run. A failed send, including an asynchronous bounce, is retried on the AUTO-007 schedule subject to its safe-retry requirement and then marked failed on both the delivery record and the notification, where settings lists it. An uncertain submission remains visibly Unknown under AUTO-007, rather than being treated as a confirmed failure that permits resend. SendGrid acceptance is not proof of mailbox delivery. The in-app notification stays available.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
 - **NOTIFY-004 — Digest.** When enabled, the weekly digest is sent within 15 minutes of 09:00 each Monday in the workspace timezone to the configured recipients, defaulting to every current operator, and once per recipient address however often that address appears. It itemises non-archived campaigns, launches in the next 30 days, open High and Critical risks, unresolved decisions, and runs that failed in the previous 7 days.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-schedules.mjs.
 - **NOTIFY-005 — Inbox.** The notification inbox lists an operator's notifications newest first and the navigation shell shows their unread count. A notification is unread for an operator until that operator opens it, an operator can mark one or all of their notifications read, and one operator's read state never changes another's. A notification whose subject has been archived or deleted is shown as unavailable rather than linking to a missing record.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
 - **NOTIFY-006 — One per event.** An operator receives at most one in-app notification and one email for a single product event however many of its roles they hold, is never notified of an action they took themselves, and a repeat of the same event on the same subject within 60 minutes updates the existing unread notification instead of creating another.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
 - **NOTIFY-007 — Muting.** In settings each operator can mute any notification kind for themselves. Muting stops the email for that kind for that operator only; the in-app notification is still created, and delivery to every other operator is unchanged.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/ui/settings/preferences-panel.tsx; no clause-tagged test yet.
 - **NOTIFY-008 — Overdue decisions.** A decision still unresolved 15 minutes after its due time notifies its assignee once, or its requester once when it has no assignee. Moving the due time later re-arms that notification once for the new time.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-schedules.mjs.
 
-## AI
+### AI
 
 - **AI-001 — Analyses.** An operator, or the shipped campaign-brief automation, can request a campaign brief, a risk readout, or a lens proposal. Each result is stored as an immutable AI analysis linked to its campaign, to the lens it was invoked from, or to its lens draft, marked as AI-generated wherever it appears, stamped with the time it was produced, and citing the ID and version of every entity in its input.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs.
 - **AI-002 — Context.** *Policy: `ai.campaign-context.v1`; default: a campaign brief receives the campaign's standard fields and its linked deliverables, milestones, open risks, and unresolved decisions; a risk readout receives the result set of the lens it was invoked from, capped at 200 risks; a lens proposal receives the supported field definitions and the operator's prompt. Comment text and custom-field values go to none of the three.*
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-runtime.mjs; tests/launch-installed-event-control.mjs.
 - **AI-003 — Human control.** AI output never changes a field of any record: it never completes a deliverable, moves a milestone, escalates or resolves a risk, resolves a decision, saves a lens, or sends a notification. A lens proposal stays an editable draft until an operator saves it.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs.
 - **AI-004 — Provider and failure.** AI calls go through `ai.provider.v1` with a 60-second timeout. A timeout, a response that fails its schema, or an unconfigured or unavailable provider stores no analysis and changes no field of any record. An operator-initiated request shows the provider's error code and message where it was requested; an automation-initiated one fails that run under AUTO-008. Every other automation, notification, mutation, and read proceeds unaffected.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-ai-failures.mjs.
 - **AI-005 — Usage.** Every AI call records its feature, model, input and output token counts, reported cost, subject, requesting operator or automation run, duration, and result. Settings shows call counts, token counts, and cost by day and by feature.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-ai-failures.mjs.
 - **AI-006 — Daily ceiling.** Settings holds a daily ceiling on AI calls, 200 by default, resetting at 00:00 in the workspace timezone. A call that would exceed it is refused with an error naming the ceiling, stores no analysis, and fails any run that requested it under AUTO-008. Non-AI work is unaffected.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-ai-failures.mjs.
 
-## Import
+### Import
 
 - **IMPORT-001 — CSV preview.** An operator can import a campaign, deliverable, or milestone CSV within the upload limits under `BASE-INPUT-003` and the row limit in `seed.json → limits`. The file must be UTF-8, comma-delimited, and carry a header row; a byte-order mark is accepted and anything else is rejected with a parse error. Import requires an explicit mapping from columns to fields and, before any record changes and within 60 seconds at the row limit, shows the number of creates, updates, and unchanged rows, every row error, and for each updated row the fields that will change with their stored and incoming values.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs; tests/ui-launch-operator-doors.mjs.
 - **IMPORT-002 — Merge keys.** A campaign row creates or updates a campaign by its unique code; a deliverable or milestone row creates or updates by campaign code plus title, and is a row error when that campaign is not already in the workspace. A merge key repeated inside the file, and a reference to an owner or select value that does not exist, are row errors. A value that is empty or only whitespace never overwrites a stored value.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs.
 - **IMPORT-003 — Commit.** Confirm is available only when every row is valid; one invalid row blocks the whole file and there is no partial import. Confirming commits every previewed row in one transaction, records an import record, and writes one activity entry on every campaign it created, updated, or whose deliverables or milestones it changed; any failure rolls back every row. A committed import cannot be rolled back, which is why IMPORT-001 shows every field it will change.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs.
 - **IMPORT-004 — Replay and staleness.** Preview returns a token that expires 30 minutes after it is issued and that confirm requires, together with an idempotency key. A record matched by the preview that changed before confirm makes confirm return 409 and require a new preview. Replaying a confirm with the same key within 24 hours returns the original result and creates no second record and no second activity entry.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs.
 - **IMPORT-005 — Stored file.** The uploaded file is stored with its import record and is downloadable by any operator. Deleting the import record deletes the file within 5 minutes.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs.
 
-## Settings
+### Settings
 
 - **SET-001 — Settings area.** Settings is one operator-only area with sections for the workspace (name, timezone, currency, quiet hours), operators, notification preferences, custom-field definitions, automations and digest recipients, AI, imports and failed email deliveries, and current usage against every limit in `seed.json → limits`. Changing a setting records the operator and the time and applies to work dispatched after the change; work already dispatched is unaffected.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-operator-doors.mjs.
 - **SET-002 — AI configuration.** AI is off until an operator enables it in settings while the configured `ai.provider.v1` adapter has every environment value in `seed.json → env`. While AI is off, an AI request is rejected with a message naming what is missing, the campaign-brief automation is not dispatched, and every other feature works unchanged.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs.
 - **SET-003 — First run and sample data.** A new deployment directs signed-in app visits to `/setup` until the owner confirms workspace details; completion survives setup reruns, and completed `/setup` visits open `/app`. It starts with the operator configured at setup, the configured timezone and currency, the two shipped lenses, the four shipped automations, and no campaigns, and every surface shows the empty state in VIEW-004. An operator can install and remove sample data in one action from settings; removal deletes only records the sample created and is refused, naming them, once any of those records has been edited.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/launch-operator-doors.mjs.
 
-## Data
+### Data
 
 - **DATA-001 — Export contents.** In addition to the archive guarantees in `BASE-DATA-001`, the export contains every workspace setting, operator, campaign, tag, custom-field definition and value, deliverable, milestone and dependency, risk, decision and supersede link, lens, comment, activity entry, notification, delivery record, automation definition and run, import record, AI analysis, and AI usage record as JSON, and every stored import file in its original form.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/domains/portability/archive.server.ts; no clause-tagged test yet.
 - **DATA-002 — CSV export.** An operator can export the campaign grid or any lens or queue result as CSV containing exactly the visible fields in their displayed order and exactly the records the current conditions select, with dates in the workspace timezone and money in the workspace currency, naming the view, the currency, and the instant it was taken. It is a one-way download and creates no sync relationship with any external system.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* done — tests/ui-launch-operator-doors.mjs.
 - **DATA-003 — Capacity limits.** A create, invitation, or import that would take the workspace past a limit in `seed.json → limits` is rejected with 409 naming the limit, its value, and the current count, and changes nothing. No record, row, or field is silently dropped or trimmed.
+  *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
+  *Status:* partial — implemented in src/apps/launch/storage.server.ts; no clause-tagged test yet.
 
-## Out of scope
+## Status
 
-Declared in `seed.json` as non-goals: multiple workspaces or tenants; public or embeddable views; bidirectional SaaS/spreadsheet sync; automatic launch dependency rescheduling or critical-path optimisation; general task management; notification channels other than in-app and email; editorial content calendars and customer-feedback tracking; native mobile applications; unrestricted runtime scripts, webhook effects or self-issued agent authority. Typed records, scoped permissions, formulas, rollups, private attachments and inspectable app construction are retained records requirements at the acceptance stages named in ACCEPTANCE.md, not excluded by the old launch-only scope.
+Judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests. **63 done, 108 partial, 24 missing** of 195 clauses; HOME-001 is superseded and not counted.
 
-
-### User record automations and API keys
-
-- **AUTO-USER-001 — Approved record triggers.** An installation owner with current app and record access can create, edit, disable and renew created/updated record triggers with ordered notify, email, update, webhook and Slack actions. Approval expires within 30 days. Each committed native change captures the enabled definition versions atomically. AUTO retains run/action history and the approved definition snapshot. Disable cancels queued work; lost issuer, app, subject, recipient or credential authority stops new effects. Repeated queue delivery preserves one logical run/effect. A repeated automation or excessive causal depth is recorded as Suppressed. External uncertainty is visible and never authorizes automatic resend.
-- **WEBHOOK-USER-001 — Private destinations and signed delivery.** Webhook and Slack destination URLs are immutable encrypted configuration. A new webhook signing key is shown once and is never recoverable from history or later listing. Exact Base integrations prepare signatures and classify delivery. The trusted relay uses Base public-DNS-pinned verified TLS, HTTPS-only destinations, no redirects, bounded requests/responses and timeouts. Missing relay configuration fails visibly. The native relay command is source only; the owner provisions its HTTPS endpoint.
-- **API-USER-001 — Scoped revocable keys.** The owner can issue a random one-time key for one app and entity, read access or approved create/update access, and an expiry within 30 days. Only a digest is stored. Ordinary `/api/v1` policy/admission remains authoritative; keys grant neither administrative authority nor browser sessions. Listing returns safe metadata. Key revocation, issuer policy/membership/epoch/owner changes and expiry fence current reads and atomic writes. Interrupted issuance cannot reveal the same secret again.
+| Clause | Status | Evidence |
+| --- | --- | --- |
+| RECORDS-001 — Records builder | done | tests/records-manual-release.mjs; tests/launch-scoped-authority.mjs; tests/launch-write-authority.mjs; tests/ui-records-builder.mjs |
+| RECORDS-002 — Manual schema adoption | done | tests/records-manual-release.mjs; tests/ui-records-builder.mjs; src/domains/records/manual/service.server.ts |
+| RECORDS-003 — Records views | done | tests/records-manual-roundtrip.mjs; tests/ui-records-builder.mjs; tests/ui-recut-final.mjs |
+| RECORDS-004 — View CSV and templates | done | tests/records-csv-fence.mjs; tests/records-manual-roundtrip.mjs; src/ui/records/schema/templates.ts |
+| RECORDS-005 — Reviewed base import | done | tests/records-import-d1.mjs; tests/records-import-undo-restart.mjs; tests/records-import-receipt.mjs; tests/ui-base-import.mjs; tests/ui-base-undo.mjs |
+| RECORDS-006 — Portable base exits | done | tests/records-base-exits.mjs; tests/records-base-edge-return.mjs; tests/ui-base-exits.mjs; tests/installed-home.mjs |
+| RECORDS-007 — Agent-proposed schema changes | done | tests/records-agent-proposals.mjs |
+| APP-SCOPE-001 — Explicit application scope | done | tests/launch-scoped-authority.mjs; tests/launch-setup-race.mjs |
+| OWN-001 — Owned installation without seat charges | done | scripts/installer/seed.mjs; tests/rer-data-roundtrip.mjs; tests/ui-launch-operator-doors.mjs |
+| SCALE-001 — Operational scale | partial | seed.json limits are recorded as flagship targets, not load-tested; src/domains/records/cursor.server.ts pages at 200 |
+| FIELD-001 — Complete field types | partial | src/domains/records/validators.ts:14 supports text, number, date, instant, money, boolean, select, multi_select, url, person, relation, attachment and computed; the manual builder authors text, number, date, select, checkbox and links (tests/records-manual-release.mjs). Long text, percent, duration, rating, email, phone, barcode, autonumber, created/modified metadata and button are absent |
+| FIELD-002 — Field conversion and table deletion with preview | missing | RECORDS-002 currently refuses existing-field type conversion and table deletion explicitly (src/domains/records/manual/service.server.ts) |
+| FIELD-003 — Validation and conditional rules | partial | src/domains/records/validators.ts:42 (typed, required, unique); src/domains/records/form-actions.server.ts:21; conditional cross-field rules absent |
+| CALC-001 — Formula fields | partial | src/domains/records/formulas.ts:13 evaluates add/subtract/multiply/divide/concat/coalesce/eq/if/date_add/days_between with cycle and depth checks; the builder exposes no formula authoring |
+| CALC-002 — Lookups across links | partial | lookup recomputation from current linked values is tested (src/domains/records/formulas.ts:8; tests/records-manual-roundtrip.mjs; tests/records-manual-release.mjs); a lookup read under a restricted linked-table policy has no test |
+| CALC-003 — Rollups and counts | partial | src/domains/records/validators.ts:14 rollup expression with sum/count/min/max/average/lookup and filter; src/domains/records/formulas.ts evaluation; no builder authoring or test |
+| CALC-004 — Calculation consistency | partial | src/domains/records/formulas.ts validateExpressionGraph (cycle and depth 64); no cross-door consistency or timing test |
+| FILE-001 — Attachments with previews | partial | src/domains/records/attachments.server.ts:4 and src/domains/evidence/attachments.server.ts:1 hold attachment custody and record projection; manual bases cannot author attachment fields and no preview journey exists |
+| FILE-002 — Attachments from connected file stores | missing | no code |
+| FILE-003 — Attachments in exports, erasure and migration | partial | tests/rer-data-roundtrip.mjs carries files in whole-installation archives; tests/lifecycle-erasure.mjs erases R2 files; base JSON export and import list attachments as skipped (src/domains/records/base-transfer/attachment-manifest.ts) |
+| VIEW-008 — Spreadsheet-grade grid editing | partial | src/ui/records/record-grid.tsx and src/ui/records/record-editor.tsx ship a grid and record editor; inline cell editing, ranges and paste are absent |
+| VIEW-009 — Kanban | partial | src/ui/records/record-board.tsx; tests/records-manual-roundtrip.mjs (saved board); drag and covers absent |
+| VIEW-010 — Calendar | partial | src/ui/records/date-views.tsx:5 and src/domains/records/metadata.server.ts:18 render calendar metadata; no authoring journey, drag or feed |
+| VIEW-011 — Gallery | partial | src/domains/records/metadata.server.ts:18 (card metadata); no gallery view |
+| VIEW-012 — Timeline and Gantt | partial | src/ui/records/date-views.tsx:7 renders timeline metadata as a date list; Launch readiness MILE-002/MILE-003 implement a milestone timeline with dependencies (src/apps/launch/milestones.server.ts) |
+| VIEW-013 — Personal, locked and formatted views | partial | saved views with filter/sort/group/field order ship (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs); personal/locked views, summary bar and conditional formatting are absent |
+| VIEW-014 — Live multi-user editing | partial | stale-version refusal exists (src/ui/records/record-conflict.tsx; VIEW-006); live propagation and presence are absent |
+| COLLAB-001 — Record comments and mentions | partial | src/domains/evidence/comments.server.ts and src/apps/launch/comments.server.ts (ACT-002/ACT-004 in the launch template); no manual-base comment journey |
+| COLLAB-002 — Record history | partial | src/domains/evidence/history-http.server.ts; tests/evidence-read-privacy.mjs reproject history under current policy; restoring a value from history is absent |
+| COLLAB-003 — Watching and change notifications | missing | launch-template notifications only (NOTIFY-001 to NOTIFY-008) |
+| FORM-001 — Public shareable forms | partial | src/domains/records/form-actions.server.ts:15 and src/ui/records/forms-panel.tsx ship authenticated saved forms; no public form door |
+| FORM-002 — Conditional form logic | partial | required form fields exist (src/domains/records/form-actions.server.ts:21); conditional visibility absent |
+| FORM-003 — Embedded forms and views | missing | seed.json nonGoals still list public or embeddable views for the current release |
+| IFACE-001 — Interface designer | partial | saved views/forms and record detail pages ship (src/ui/records/record-detail-page.tsx; tests/ui-records-builder.mjs); construction machinery exists (src/domains/construction/service.server.ts:9); no page/layout editor |
+| IFACE-002 — Record review and approval screens | partial | registered form actions (src/domains/records/form-actions.server.ts:15); launch Decision Queue (DEC-002/DEC-003; tests/ui-launch-walkthrough.mjs) is a template-specific instance |
+| IFACE-003 — Charts and dashboards | partial | template-specific Portfolio Overview (src/core/features/portfolio/ui/portfolio-overview-page.tsx; CAMP-006); configurable charts absent |
+| IFACE-004 — Buttons and record actions | partial | registered record/form actions share command services (src/domains/records/form-actions.server.ts:15); user-configurable buttons absent |
+| IFACE-005 — External portals | missing | no code |
+| IFACE-006 — Templates and starting apps | partial | src/ui/records/schema/templates.ts ships Customer relationships and Project tracker; Launch readiness is included (tests/ui-records-builder.mjs; tests/records-manual-roundtrip.mjs); the further templates are absent; base copy via RECORDS-006 |
+| REPORT-001 — Scheduled reports | missing | only the launch weekly digest (NOTIFY-004; tests/launch-installed-schedules.mjs) |
+| PERM-001 — Roles and base sharing | partial | explicit memberships and policy-scoped operations (src/domains/authority/member-management.server.ts; src/domains/authority/policy.server.ts; tests/user-api-keys.mjs; tests/evidence-read-privacy.mjs); named role presets and a commenter role are absent |
+| PERM-002 — Row and field rules | done | src/domains/authority/policy.server.ts; tests/evidence-read-privacy.mjs; tests/records-manual-release.mjs; tests/launch-search-authority.mjs |
+| PERM-003 — Action and schema authority | done | src/domains/records/actions.server.ts:35; tests/launch-write-authority.mjs; tests/records-manual-release.mjs; tests/user-api-keys.mjs |
+| PERM-004 — Preview access as a user | partial | policy impact preview (src/domains/authority/policies.server.ts:14); no view-as-user surface |
+| PERM-005 — Guests | partial | per-app memberships exist (src/domains/authority/member-management.server.ts); guest invitation and isolation journey absent |
+| PERM-006 — Share links | missing | public or embeddable views are a current-release non-goal in seed.json |
+| PERM-007 — Company sign-in and provisioning | partial | optional OIDC (tests/auth-oidc.mjs); SAML and SCIM absent |
+| PERM-008 — Admin audit log | partial | audit records exist under BASE-OPS-005 and adoption audit rows (RECORDS-007); no owner audit-log view or export |
+| AUTO-USER-001 — Approved record triggers | done | tests/user-automations.mjs; tests/ui-user-automations.mjs; src/domains/automations/capture.server.ts |
+| AUTO-USER-002 — Every trigger | partial | record created/updated triggers (tests/user-automations.mjs); launch-only schedules (src/apps/launch/automations.server.ts; tests/launch-installed-schedules.mjs); others absent |
+| AUTO-USER-003 — Every action | partial | update, notify, email, webhook and Slack actions (src/domains/automations/effects.server.ts:25; tests/user-automations.mjs; tests/user-webhooks.mjs); create-record and the rest are absent |
+| AUTO-USER-004 — Conditions, branches and repeats | partial | ordered multi-action execution (src/domains/automations/contracts.ts:12; src/domains/automations/runtime.server.ts); conditions, branches and repeats absent |
+| AUTO-USER-005 — Test runs | missing | run history exists; no dry-run workflow |
+| AUTO-USER-006 — Run history and failure alerts | partial | durable run history and diagnosis (src/domains/automations/history.server.ts; src/ui/automations/run-history.tsx); failure notification to the enabling user absent |
+| AUTO-USER-007 — Scripts | missing | seed.json nonGoals exclude unrestricted runtime scripts; a bounded sandbox is required instead |
+| AUTO-USER-008 — Follow-up until done | partial | launch readiness requests and overdue-decision follow-up (MILE-004, MILE-005, NOTIFY-008; tests/launch-installed-schedules.mjs); general follow-up rules absent |
+| API-USER-001 — Scoped revocable keys | done | tests/user-api-keys.mjs; src/domains/authority/user-keys-http.server.ts |
+| API-USER-002 — Complete REST API | partial | read/create/update record APIs (src/domains/records/routes.server.ts; tests/user-api-keys.mjs); delete, upsert, batch, attachments, comments, OpenAPI and personal tokens absent |
+| API-USER-003 — OAuth for third-party apps | missing | no code |
+| WEBHOOK-USER-001 — Private destinations and signed delivery | done | tests/user-webhooks.mjs; src/domains/automations/destinations.server.ts |
+| WEBHOOK-USER-002 — Change subscriptions | missing | outbound automation webhooks only |
+| MCP-001 — Live records for AI assistants | partial | the RECORDS-007 proposal door has REST and MCP faces for schema proposals (src/domains/authority/proposer.server.ts:5; tests/records-agent-proposals.mjs); live-record MCP tools absent |
+| INTEG-001 — Slack, Microsoft Teams and Nook | partial | Slack incoming-webhook notifications (WEBHOOK-USER-001; tests/user-webhooks.mjs); Slack app, Teams and Nook absent |
+| INTEG-002 — Gmail and Microsoft 365 mail | partial | scoped Gmail read-only intake (src/adapters/gmail.server.ts:14); Base mail sends notifications; mailbox sending and inbound addresses absent |
+| INTEG-003 — Google Sheets and Excel | partial | CSV move-in and export (src/domains/records/csv.server.ts; tests/records-manual-roundtrip.mjs); .xlsx and Google Sheets absent |
+| INTEG-004 — Google Calendar and Outlook | partial | Google Calendar reserve/cancel/readback adapter (src/adapters/calendar.server.ts:7) used by repairs; no record calendar sync; Outlook absent |
+| INTEG-005 — CRM, development and payment systems | missing | no code |
+| INTEG-006 — Twilio SMS | missing | no code |
+| INTEG-007 — Zapier, Make and Crank | missing | no code |
+| MIGRATE-001 — Airtable move-in | partial | Airtable-shaped CSV and recorded-API import with attachment/behaviour loss receipts (src/domains/records/base-transfer/source-api.ts; tests/records-import-receipt.mjs); live connection, formula translation, attachments, comments and rebuild absent |
+| MIGRATE-002 — Smartsheet move-in | missing | CSV path only (RECORDS-005) |
+| MIGRATE-003 — Quickbase move-in | missing | CSV path only (RECORDS-005) |
+| MIGRATE-004 — Spreadsheet workbook move-in | partial | multi-table CSV move-in with reviewed relationship mapping (RECORDS-005; tests/records-import-d1.mjs) |
+| SYNC-001 — Synced tables | missing | seed.json nonGoals exclude bidirectional sync for the current release |
+| SYNC-002 — Warehouse export | missing | no code |
+| SNAP-001 — Automatic snapshots and point-in-time restore | partial | manual verified whole-installation archives (src/domains/portability/archive.server.ts) and adoption snapshots (src/domains/records/manual/snapshot.server.ts); scheduled point-in-time recovery absent |
+| SNAP-002 — Trash | missing | record deletion previews impact (src/domains/records/delete-impact.server.ts); no trash |
+| MOBILE-001 — Complete phone web app | partial | manual records and import journeys pass at 390 (tests/ui-records-builder.mjs; tests/ui-base-import.mjs); 320 px and the later journeys are not covered |
+| MOBILE-002 — Installable app with camera and scanning | missing | no code |
+| MOBILE-003 — Native iOS and Android apps | missing | seed.json nonGoals exclude native mobile applications for the current release; device-only drafts exist for repair intake only |
+| AI-FIELD-001 — AI fields | missing | read-only analysis machinery for the launch template (src/domains/intelligence/service.server.ts) can be reused |
+| AI-FIELD-002 — Document extraction | missing | no code |
+| ASSIST-001 — Base assistant | partial | permissioned external schema proposals (src/domains/records/manual/proposal-agent.server.ts; tests/records-agent-proposals.mjs); in-product assistant absent |
+| AGENT-001 — Build a working base from the owner's files | partial | scripted proposals through the proposal door were adopted for two held-apart briefs (ACCEPTANCE.md General-purpose authoring; tests/records-agent-proposals.mjs); construction runner (src/domains/construction/build.server.ts); model-authored proposals from files not run |
+| AGENT-002 — Test changes against live records before adoption | partial | exact schema impact preview (src/domains/records/manual/service.server.ts:17) and policy impact preview (src/domains/authority/policies.server.ts:14); combined formula/role before-after report absent |
+| AGENT-003 — Rebuild an incumbent app, not just its rows | partial | migration previews, custody and agent schema proposals (src/domains/records/base-transfer/service.server.ts; src/domains/records/manual/proposal-agent.server.ts); behaviour reconstruction absent |
+| AGENT-004 — Operate a workflow to its outcome | partial | outcome and execution machinery for the included Repairs app (src/domains/operations/worker.server.ts; src/domains/execution/runtime.server.ts; tests/repairs-outcome-http.mjs); no general record-outcome steward |
+| AGENT-005 — Repair broken automations and integrations | partial | failure history and external-effect readback (src/domains/automations/runtime.server.ts; src/domains/execution/runtime.server.ts:42); agent repair absent |
+| AGENT-006 — Keep the data clean | missing | bulk preview/commit/undo exists to build on (src/domains/records/bulk.server.ts; tests/records-transport.mjs) |
+| AGENT-007 — Agent authority | partial | proposing keys (RECORDS-007; tests/records-agent-proposals.mjs) and repair mandates with designated-human approval (tests/repairs-outcome-http.mjs) |
+| BOUND-001 — Separate products stay separate | partial | DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product |
+| BOUND-002 — Not a regulated system of record | partial | no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary |
+| BOUND-003 — Bounded compute | partial | formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built |
+| BOUND-004 — Honest migration and delivery claims | done | tests/records-import-receipt.mjs; tests/launch-installed-retries.mjs |
+| BOUND-005 — One business per installation | done | tests/records-base-exits.mjs |
+| HOME-001 — Owner identity plate | superseded | superseded by HOME-002 on 8 October 2026 |
+| HOME-002 — Public product landing | done | tests/foundation-shell.mjs; tests/ui-local-signin.mjs |
+| HOME-003 — Installed Lobby | done | tests/installed-home.mjs; tests/public-document-runtime.mjs |
+| DOCS-001 — Public docs | done | tests/public-document-runtime.mjs; tests/start-resources.mjs |
+| AUTH-BASE-001 — Install and sign in | done | tests/auth-base-only-runtime.mjs; tests/launch-production-composition.mjs; tests/local-auth-runtime.mjs |
+| OPS-001 — Equal operators | done | tests/launch-production-composition.mjs; tests/launch-scoped-authority.mjs |
+| OPS-002 — Management | done | tests/launch-operator-doors.mjs; tests/ui-launch-operator-doors.mjs |
+| OPS-003 — Workspace timezone | partial | implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet |
+| OPS-004 — Removing an operator | partial | implemented in src/apps/launch/owners.server.ts; no clause-tagged test yet |
+| OPS-005 — Erasing an operator | partial | implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet |
+| OPS-006 — Money | partial | implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet |
+| VIEW-001 — Operating surfaces | done | tests/foundation-shell.mjs; tests/launch-authority-browser.mjs |
+| VIEW-002 — Selected detail | done | tests/ui-launch-walkthrough.mjs |
+| VIEW-003 — Cross-view consistency | partial | implemented in src/apps/launch/reader.server.ts; no clause-tagged test yet |
+| VIEW-004 — Explicit states | done | tests/launch-authority-browser.mjs; tests/ui-launch-walkthrough.mjs |
+| VIEW-005 — Search | done | tests/launch-search-authority.mjs |
+| VIEW-006 — Concurrent edits | partial | implemented in src/apps/launch/service-write.server.ts; no clause-tagged test yet |
+| VIEW-007 — Paging and order | done | tests/launch-operator-doors.mjs |
+| CAMP-001 — Record | done | tests/launch-authority-browser.mjs; tests/launch-optional-fields.mjs |
+| CAMP-002 — Lifecycle | done | tests/ui-launch-walkthrough.mjs |
+| CAMP-003 — Validation | partial | implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet |
+| CAMP-004 — Detail and rollups | partial | implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet |
+| CAMP-005 — Health | done | tests/ui-launch-walkthrough.mjs |
+| CAMP-006 — Portfolio overview | partial | implemented in src/core/features/portfolio; no clause-tagged test yet |
+| CAMP-007 — Grid | partial | implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet |
+| CAMP-008 — Custom fields | done | tests/ui-launch-operator-doors.mjs |
+| CAMP-009 — Archiving | partial | implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet |
+| CAMP-010 — Restoring | partial | implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet |
+| CAMP-011 — Deletion | partial | implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet |
+| CAMP-012 — Risk rating | partial | implemented in src/apps/launch/campaign-projection.server.ts; no clause-tagged test yet |
+| CAMP-013 — Bulk edit | done | tests/launch-write-authority.mjs; tests/ui-launch-operator-doors.mjs |
+| CAMP-014 — Duplicating | partial | implemented in src/apps/launch/duplicate.server.ts; no clause-tagged test yet |
+| DELIV-001 — Record | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| DELIV-002 — Completion | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| DELIV-003 — Overdue | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| MILE-001 — Record | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
+| MILE-002 — Timeline lens | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
+| MILE-003 — Dependencies | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
+| MILE-004 — Readiness request | done | tests/launch-installed-schedules.mjs |
+| MILE-005 — Readiness rescheduling | partial | implemented in src/apps/launch/readiness.server.ts; no clause-tagged test yet |
+| MILE-006 — Overdue | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
+| RISK-001 — Record | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| RISK-002 — Lifecycle | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| RISK-003 — Escalation | done | tests/ui-launch-walkthrough.mjs |
+| RISK-004 — Isolation | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| RISK-005 — Shipped lens | partial | implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet |
+| DEC-001 — Record | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| DEC-002 — Queue | done | tests/ui-launch-walkthrough.mjs |
+| DEC-003 — Approval | done | tests/ui-launch-walkthrough.mjs |
+| DEC-004 — First outcome wins | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| DEC-005 — Assignment | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| DEC-006 — Changes, rejection, and cancellation | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| DEC-007 — Linked-risk effect | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
+| DEC-008 — Finality | partial | implemented in src/apps/launch/supersede.server.ts; no clause-tagged test yet |
+| LENS-001 — Definition | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
+| LENS-002 — Preview | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
+| LENS-003 — Save and share | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
+| LENS-004 — Edit and delete | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
+| LENS-005 — Current results | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
+| LENS-006 — Shipped views | partial | implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet |
+| LENS-007 — Conditions | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
+| ACT-001 — Campaign activity | done | tests/ui-launch-walkthrough.mjs |
+| ACT-002 — Comments | partial | implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet |
+| ACT-003 — Dates and times | done | tests/ui-launch-walkthrough.mjs |
+| ACT-004 — Mentions | partial | implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet |
+| AUTO-001 — Definition | partial | implemented in src/apps/launch/automations.server.ts; no clause-tagged test yet |
+| AUTO-002 — Commit boundary | done | tests/launch-installed-runtime.mjs |
+| AUTO-003 — One run per trigger | done | tests/launch-installed-event-control.mjs; tests/launch-installed-runtime.mjs |
+| AUTO-004 — Definition changes | done | tests/launch-installed-event-control.mjs; tests/launch-installed-network-cancel.mjs |
+| AUTO-005 — Loop protection | done | tests/launch-installed-event-control.mjs |
+| AUTO-006 — Run history | partial | implemented in src/apps/launch/automation-runtime.server.ts; no clause-tagged test yet |
+| AUTO-007 — Transport retry | done | tests/launch-installed-retries.mjs |
+| AUTO-008 — Failure that retrying cannot fix | done | tests/launch-installed-event-control.mjs |
+| AUTO-009 — Manual retry | done | tests/launch-installed-retries.mjs |
+| AUTO-010 — Fan-out | partial | implemented in src/apps/launch/bulk.server.ts; no clause-tagged test yet |
+| AUTO-011 — Shipped automations | done | tests/launch-installed-runtime.mjs; tests/launch-installed-schedules.mjs |
+| NOTIFY-001 — In-app events | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
+| NOTIFY-002 — Email delivery | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
+| NOTIFY-003 — Delivery failure | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
+| NOTIFY-004 — Digest | done | tests/launch-installed-schedules.mjs |
+| NOTIFY-005 — Inbox | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
+| NOTIFY-006 — One per event | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
+| NOTIFY-007 — Muting | partial | implemented in src/ui/settings/preferences-panel.tsx; no clause-tagged test yet |
+| NOTIFY-008 — Overdue decisions | done | tests/launch-installed-schedules.mjs |
+| AI-001 — Analyses | done | tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs |
+| AI-002 — Context | done | tests/launch-installed-runtime.mjs; tests/launch-installed-event-control.mjs |
+| AI-003 — Human control | done | tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs |
+| AI-004 — Provider and failure | done | tests/launch-installed-ai-failures.mjs |
+| AI-005 — Usage | done | tests/launch-installed-ai-failures.mjs |
+| AI-006 — Daily ceiling | done | tests/launch-installed-ai-failures.mjs |
+| IMPORT-001 — CSV preview | done | tests/launch-operator-doors.mjs; tests/ui-launch-operator-doors.mjs |
+| IMPORT-002 — Merge keys | done | tests/launch-operator-doors.mjs |
+| IMPORT-003 — Commit | done | tests/launch-operator-doors.mjs |
+| IMPORT-004 — Replay and staleness | done | tests/launch-operator-doors.mjs |
+| IMPORT-005 — Stored file | done | tests/launch-operator-doors.mjs |
+| SET-001 — Settings area | done | tests/ui-launch-operator-doors.mjs |
+| SET-002 — AI configuration | done | tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs |
+| SET-003 — First run and sample data | done | tests/launch-operator-doors.mjs |
+| DATA-001 — Export contents | partial | implemented in src/domains/portability/archive.server.ts; no clause-tagged test yet |
+| DATA-002 — CSV export | done | tests/ui-launch-operator-doors.mjs |
+| DATA-003 — Capacity limits | partial | implemented in src/apps/launch/storage.server.ts; no clause-tagged test yet |

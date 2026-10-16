@@ -1,5 +1,276 @@
 # Cradle acceptance
 
+## Target contract — 16 October 2026
+
+CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's acceptance evidence is listed below with its status, so a build round can work towards it. **63 done, 108 partial, 24 missing.** A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
+
+
+### Records, schema and the app model
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| RECORDS-001 — Records builder | Done | Native and legacy HTTP doors refuse forbidden reads and writes after a policy change; desktop and phone browser journeys open only authorized bases. |
+| RECORDS-002 — Manual schema adoption | Done | Builder journey at 1440 and 390 adopts a table/field/link/lookup change; a stale preview, stale schema or lost authority is refused with nothing changed. |
+| RECORDS-003 — Records views | Done | Saved grid/board/form round trip and browser journeys at 1440 and 390 with axe. |
+| RECORDS-004 — View CSV and templates | Done | Per-view CSV export compared field for field against a fresh-table re-import; template adoption journey. |
+| RECORDS-005 — Reviewed base import | Done | Native D1 import, restart, undo and receipt tests; desktop and phone move-in browser journeys. |
+| RECORDS-006 — Portable base exits | Done | Base JSON/CSV exit, fresh return and copy tests; Settings archive download journey. |
+| RECORDS-007 — Agent-proposed schema changes | Done | REST and MCP proposal door tests with the official MCP SDK client; 67 door cases. |
+| APP-SCOPE-001 — Explicit application scope | Done | Repeated setup and legacy mapping preserve explicit scopes and revocations. |
+| OWN-001 — Owned installation without seat charges | Done | Installer and whole-installation archive round trip on emitted workerd/D1/R2; Settings usage view. |
+| SCALE-001 — Operational scale | Partial | Declared load profile run against emitted workerd/D1 recording p50/p95/p99 and error rate, then an authorized hosted run. |
+
+### Fields, calculations and attachments
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| FIELD-001 — Complete field types | Partial | Builder journey creates one field of every type, writes valid and invalid values through UI, public form, REST and CSV, and re-imports the base export with every value equal. |
+| FIELD-002 — Field conversion and table deletion with preview | Missing | Conversion matrix test through `release.adopt` with lossy and lossless cases; delete-then-restore journey. |
+| FIELD-003 — Validation and conditional rules | Partial | Writes through UI, form, REST, import and automation refused with the rule's message; adoption preview counts existing violators. |
+| CALC-001 — Formula fields | Partial | Formula builder journey authoring each function family with previewed results; a broken formula shows its positioned error; the evaluator's results are checked against a fixture table. |
+| CALC-002 — Lookups across links | Partial | Manual round trip recomputes a lookup after the linked record changes; restricted linked fields are hidden from the lookup. |
+| CALC-003 — Rollups and counts | Partial | Builder journey adds a conditional rollup and a count; editing a linked record changes them on the next read. |
+| CALC-004 — Calculation consistency | Partial | Write-then-read test across UI, REST and export; cycle refused at adoption; timing at the SCALE-001 profile. |
+| FILE-001 — Attachments with previews | Partial | Upload, preview and download journey at 1440 and 390; a revoked operator's old link is refused; API upload round trip. |
+| FILE-002 — Attachments from connected file stores | Missing | Picker journeys against each provider's sandbox or a fake at the network edge; the reference survives export. |
+| FILE-003 — Attachments in exports, erasure and migration | Partial | Archive round trip with files equal by checksum; erasure test showing no remaining bytes; move-in receipt with zero skipped attachments. |
+
+### Views, editing and collaboration
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| VIEW-008 — Spreadsheet-grade grid editing | Partial | Grid browser journey with keyboard-only editing, a pasted 50×5 range from clipboard text and a refused invalid paste. |
+| VIEW-009 — Kanban | Partial | Board journey drags a card and the record's field changes; a read-only operator cannot drag. |
+| VIEW-010 — Calendar | Partial | Calendar journey creates, drags and opens records; the iCal feed returns the view's records and stops after revocation. |
+| VIEW-011 — Gallery | Partial | Gallery journey at 1440 and 390 with image covers. |
+| VIEW-012 — Timeline and Gantt | Partial | Timeline journey with grouping, dependency conflict marker and drag; a baseline compared after a move. |
+| VIEW-013 — Personal, locked and formatted views | Partial | View journey: personal view hidden from others, locked view refuses edits, summary values checked against the records, colour rule applied. |
+| VIEW-014 — Live multi-user editing | Partial | Two-browser journey: an edit in one appears in the other within 2 seconds; a stale concurrent edit shows the conflict. |
+| COLLAB-001 — Record comments and mentions | Partial | Comment-and-mention journey on a manual base; the mentioned operator's notification; erasure anonymises the author. |
+| COLLAB-002 — Record history | Partial | History reads hide fields the reader cannot see; restore-from-history journey. |
+| COLLAB-003 — Watching and change notifications | Missing | Watch journey producing one digest; a revoked reader stops receiving notifications. |
+
+### Forms, interfaces and dashboards
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| FORM-001 — Public shareable forms | Partial | Signed-out browser journey submits with an attachment and prefill; rate limit and Turnstile refusal; rotated link answers 404. |
+| FORM-002 — Conditional form logic | Partial | Conditional form journey; hidden fields are never written. |
+| FORM-003 — Embedded forms and views | Missing | Embed test on an allowed and a refused origin. |
+| IFACE-001 — Interface designer | Partial | Designer journey builds and publishes a three-page interface; a member sees it, a non-member does not; export and restore preserve it. |
+| IFACE-002 — Record review and approval screens | Partial | Approval journey works a queue of ten records; actions are policy-checked and audited. |
+| IFACE-003 — Charts and dashboards | Partial | Dashboard journey with each chart type checked against computed totals; drill-down lists exactly the counted records. |
+| IFACE-004 — Buttons and record actions | Partial | Button journey with confirmation; a forbidden user sees it disabled and the API refuses. |
+| IFACE-005 — External portals | Missing | Two external users each see only their own rows through the portal and REST; an attempt at another's record is refused. |
+| IFACE-006 — Templates and starting apps | Partial | Template adoption journey for each template; duplicate-base copy with an identity map. |
+| REPORT-001 — Scheduled reports | Missing | Scheduled report test at a fixed clock; a recipient with narrower policy receives fewer rows. |
+
+### Roles, permissions and sharing
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| PERM-001 — Roles and base sharing | Partial | Role matrix test through REST and UI for each role; demotion fences an open session's next write. |
+| PERM-002 — Row and field rules | Done | Policy tests hide rows and fields across reads, history and search. |
+| PERM-003 — Action and schema authority | Done | Forbidden action refused through native and legacy HTTP; non-owner adoption refused. |
+| PERM-004 — Preview access as a user | Partial | Preview journey shows the exact row/field diff a rule change causes for a chosen member. |
+| PERM-005 — Guests | Partial | Guest journey: one base visible, workspace navigation and search show nothing else. |
+| PERM-006 — Share links | Missing | Share-link test: password, expiry and revocation each refuse; hidden fields never appear in the payload. |
+| PERM-007 — Company sign-in and provisioning | Partial | OIDC exchange test; SAML and SCIM tests against a local provider at the network edge. |
+| PERM-008 — Admin audit log | Partial | Audit export after a scripted sequence of admin actions lists each one once. |
+
+### Automations and follow-up
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| AUTO-USER-001 — Approved record triggers | Done | Automation tests on emitted workerd; browser journey for definition and run history. |
+| AUTO-USER-002 — Every trigger | Partial | One emitted-worker test per trigger kind at a fixed clock; exported definitions restore disabled. |
+| AUTO-USER-003 — Every action | Partial | Per-action tests with fakes only at the provider network edge; each records its effect and idempotency key. |
+| AUTO-USER-004 — Conditions, branches and repeats | Partial | Branching and repeat test where each path's effect is checked and the per-item log names every item. |
+| AUTO-USER-005 — Test runs | Missing | Builder journey tests every step; an external send in test mode reaches only the builder's destination. |
+| AUTO-USER-006 — Run history and failure alerts | Partial | Failure test produces one notification with cause and link; an uncertain send offers no retry. |
+| AUTO-USER-007 — Scripts | Missing | Script test reads and writes allowed records, is refused a forbidden table, is stopped at the time limit and cannot reach an unapproved host. |
+| AUTO-USER-008 — Follow-up until done | Partial | Follow-up test at a fixed clock: reminder, update-request link updating a field, escalation and stop on completion; each recorded on the record. |
+
+### API, webhooks and integrations
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| API-USER-001 — Scoped revocable keys | Done | API key tests across issue, use, revoke and expiry. |
+| API-USER-002 — Complete REST API | Partial | Contract test drives every endpoint from the generated OpenAPI document; a batch over limits is refused whole. |
+| API-USER-003 — OAuth for third-party apps | Missing | OAuth flow test with a local client: consent, scoped access, revocation. |
+| WEBHOOK-USER-001 — Private destinations and signed delivery | Done | Webhook and Slack delivery tests at the network edge. |
+| WEBHOOK-USER-002 — Change subscriptions | Missing | Subscription test receives a ping per change and replays the cursor without gaps or duplicates. |
+| MCP-001 — Live records for AI assistants | Partial | Official MCP SDK client test: allowed read and write, refused out-of-scope table, approval-required write held until approved. |
+| INTEG-001 — Slack, Microsoft Teams and Nook | Partial | Interactive-button test with a fake Slack/Teams/Nook edge: the click updates the record as that person; an unauthorized clicker is refused. |
+| INTEG-002 — Gmail and Microsoft 365 mail | Partial | Send and inbound-mail tests with fakes at the provider edge; a recipient outside the allowed set is refused. |
+| INTEG-003 — Google Sheets and Excel | Partial | Workbook import and export round trip with typed values; Sheets import against a recorded API fixture. |
+| INTEG-004 — Google Calendar and Outlook | Partial | Calendar sync test against a recorded provider edge: create, move, cancel and an external edit flagged for review. |
+| INTEG-005 — CRM, development and payment systems | Missing | One synced-table and one action test per system against recorded fixtures at the network edge. |
+| INTEG-006 — Twilio SMS | Missing | SMS action test with a Twilio fake: send, delivery callback, STOP suppresses later sends. |
+| INTEG-007 — Zapier, Make and Crank | Missing | Each published trigger and action exercised from a local Crank client. |
+
+### Move-in, sync and recovery
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| MIGRATE-001 — Airtable move-in | Partial | Recorded-API move-in of a fixture base with every field type, formula families, attachments and views; receipt with zero unexplained losses; delta re-run; then one authorized real-account run. |
+| MIGRATE-002 — Smartsheet move-in | Missing | Recorded-API move-in of a fixture workspace with hierarchy and predecessors; receipt checked. |
+| MIGRATE-003 — Quickbase move-in | Missing | Recorded-API move-in of a fixture app; receipt checked. |
+| MIGRATE-004 — Spreadsheet workbook move-in | Partial | Workbook fixture produces a reviewed proposal whose adopted base matches the workbook's values. |
+| SYNC-001 — Synced tables | Missing | Sync test against recorded sources: refresh counts, removed-source marking, and a two-way conflict surfaced. |
+| SYNC-002 — Warehouse export | Missing | Scheduled export test writes a correct incremental file to a local bucket. |
+| SNAP-001 — Automatic snapshots and point-in-time restore | Partial | Snapshot test at fixed clocks; restore-as-copy equals the snapshot; rollback receipt. |
+| SNAP-002 — Trash | Missing | Delete-and-restore test for each kind; erasure leaves nothing in trash. |
+
+### Mobile
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| MOBILE-001 — Complete phone web app | Partial | Every browser journey above also runs at 390 and 320 with axe. |
+| MOBILE-002 — Installable app with camera and scanning | Missing | PWA install and push test in Chromium; scanning test with an image fixture. |
+| MOBILE-003 — Native iOS and Android apps | Missing | Device-farm journeys on current iOS and Android: sign-in to a local installation, edit, offline draft and reconcile, push receipt. |
+
+### AI in the base
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| AI-FIELD-001 — AI fields | Missing | AI field test with a fake provider at the network edge: bulk run, re-run on input change, manual edit preserved, ceiling refusal. |
+| AI-FIELD-002 — Document extraction | Missing | Extraction test on fixture PDFs: values, source highlights and confirmation gate. |
+| ASSIST-001 — Base assistant | Partial | Assistant test with a fake provider: cited answer limited to readable records; drafted view saved only by the operator. |
+
+### Push further: agents that run the operation
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| AGENT-001 — Build a working base from the owner's files | Partial | Two held-out owner workbooks produce adopted bases whose records match the sources field for field; an injected instruction in a source file changes nothing. |
+| AGENT-002 — Test changes against live records before adoption | Partial | Impact-report test on a populated base: a formula change lists exactly the changed cells; a rule change lists exactly the newly disclosed fields; a stale report is refused. |
+| AGENT-003 — Rebuild an incumbent app, not just its rows | Partial | Fixture Airtable base with an interface and two automations: rebuilt proposals pass the same role journeys; the decision list names each untranslatable item. |
+| AGENT-004 — Operate a workflow to its outcome | Partial | Held-out continuation scenario on fixture records: outcome reached with every action inside the mandate; revocation mid-run stops new effects; an uncertain send is not repeated. |
+| AGENT-005 — Repair broken automations and integrations | Partial | Fault-injection test: renamed field breaks an automation; the proposed fix is adopted and the next run succeeds; an uncertain webhook is reconciled, not resent. |
+| AGENT-006 — Keep the data clean | Missing | Fixture base with seeded duplicates and variants: the proposed change fixes exactly them and undoes cleanly. |
+| AGENT-007 — Agent authority | Partial | Grant tests: out-of-scope action refused, expired and revoked grants stop work, above-threshold action held for the designated approver. |
+
+### Honest boundaries
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| BOUND-001 — Separate products stay separate | Partial | Docs and navigation link to the sibling for each named job; no Cradle surface claims it. |
+| BOUND-002 — Not a regulated system of record | Partial | Docs state the boundary; no card number field type exists. |
+| BOUND-003 — Bounded compute | Partial | Script and formula limit tests (AUTO-USER-007, CALC-004). |
+| BOUND-004 — Honest migration and delivery claims | Done | Move-in receipts and uncertain-delivery tests. |
+| BOUND-005 — One business per installation | Done | Base copy between two installations by JSON export and reviewed import. |
+
+### Public landing and docs
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| HOME-001 — Owner identity plate | Superseded | — |
+| HOME-002 — Public product landing | Done | Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`. |
+| HOME-003 — Installed Lobby | Done | Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`. |
+| DOCS-001 — Public docs | Done | Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`. |
+
+### Included application: Launch readiness
+
+| Clause | Status | Required evidence |
+| --- | --- | --- |
+| AUTH-BASE-001 — Install and sign in | Done | Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`. |
+| OPS-001 — Equal operators | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| OPS-002 — Management | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| OPS-003 — Workspace timezone | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| OPS-004 — Removing an operator | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| OPS-005 — Erasing an operator | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| OPS-006 — Money | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| VIEW-001 — Operating surfaces | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| VIEW-002 — Selected detail | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| VIEW-003 — Cross-view consistency | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| VIEW-004 — Explicit states | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| VIEW-005 — Search | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| VIEW-006 — Concurrent edits | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| VIEW-007 — Paging and order | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-001 — Record | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-002 — Lifecycle | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-003 — Validation | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-004 — Detail and rollups | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-005 — Health | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-006 — Portfolio overview | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-007 — Grid | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-008 — Custom fields | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-009 — Archiving | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-010 — Restoring | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-011 — Deletion | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-012 — Risk rating | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-013 — Bulk edit | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| CAMP-014 — Duplicating | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DELIV-001 — Record | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DELIV-002 — Completion | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DELIV-003 — Overdue | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| MILE-001 — Record | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| MILE-002 — Timeline lens | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| MILE-003 — Dependencies | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| MILE-004 — Readiness request | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| MILE-005 — Readiness rescheduling | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| MILE-006 — Overdue | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| RISK-001 — Record | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| RISK-002 — Lifecycle | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| RISK-003 — Escalation | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| RISK-004 — Isolation | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| RISK-005 — Shipped lens | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-001 — Record | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-002 — Queue | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-003 — Approval | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-004 — First outcome wins | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-005 — Assignment | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-006 — Changes, rejection, and cancellation | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-007 — Linked-risk effect | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DEC-008 — Finality | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| LENS-001 — Definition | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| LENS-002 — Preview | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| LENS-003 — Save and share | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| LENS-004 — Edit and delete | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| LENS-005 — Current results | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| LENS-006 — Shipped views | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| LENS-007 — Conditions | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| ACT-001 — Campaign activity | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| ACT-002 — Comments | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| ACT-003 — Dates and times | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| ACT-004 — Mentions | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-001 — Definition | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-002 — Commit boundary | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-003 — One run per trigger | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-004 — Definition changes | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-005 — Loop protection | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-006 — Run history | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-007 — Transport retry | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-008 — Failure that retrying cannot fix | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-009 — Manual retry | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-010 — Fan-out | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-011 — Shipped automations | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-001 — In-app events | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-002 — Email delivery | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-003 — Delivery failure | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-004 — Digest | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-005 — Inbox | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-006 — One per event | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-007 — Muting | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| NOTIFY-008 — Overdue decisions | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AI-001 — Analyses | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AI-002 — Context | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AI-003 — Human control | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AI-004 — Provider and failure | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AI-005 — Usage | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AI-006 — Daily ceiling | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| IMPORT-001 — CSV preview | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| IMPORT-002 — Merge keys | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| IMPORT-003 — Commit | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| IMPORT-004 — Replay and staleness | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| IMPORT-005 — Stored file | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| SET-001 — Settings area | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| SET-002 — AI configuration | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| SET-003 — First run and sample data | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DATA-001 — Export contents | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DATA-002 — CSV export | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| DATA-003 — Capacity limits | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+
 ## Records foundation — 6 October 2026
 
 The records builder is the lead product. Launch readiness is an included template with every retained clause still binding; repairs are optional navigation and their full outcome remains separately gated. The October shell has one Home, grouped navigation, literal-localhost development access and a themed 404. See the [identity transition](docs/contract-transition.md#records-first-identity--6-october-2026).
