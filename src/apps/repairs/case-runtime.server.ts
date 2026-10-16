@@ -1,17 +1,12 @@
 import { Hono } from 'hono'
-import { z } from 'zod'
-import type { CommandRegistry } from '../../core/registry/commands'
-import { commandSchema, idSchema } from '../../core/registry/validation'
+import { idSchema } from '../../core/registry/validation'
 import { errorResponse } from '../../core/registry/errors.server'
 import { createUlid } from '../../core/shared/ids'
 import { AdmissionError } from '../../domains/admission/errors'
-import { canonicalHash } from '../../domains/admission/canonical'
 import type { Mandate } from '../../domains/operations/contracts'
 import type { RequestContext } from '../../domains/authority/ports'
 import type { OperationsRepository, OperationsProjectionDependencies } from '../../domains/operations/repository.server'
 import { createRepairOpenContext, type RepairOpenDependencies } from './context.server'
-import { repairActionSchemas } from './contracts'
-import { openRepair } from './intake.server'
 import { projectRepair } from './projection.server'
 import { createRepairRepository, str, json } from './repository.server'
 import {createRepairQuoteRead} from './quote-runtime.server'
@@ -19,18 +14,6 @@ import {createRepairContractorRead} from './contractor-runtime.server'
 import type {createRepairCaseControls} from './case-controls.server'
 import { REPAIRS_APP_ID, REPAIR_ENTITIES, repairRef } from './model'
 
-export function registerRepairOpenCommand(registry: CommandRegistry, d: RepairOpenDependencies) {
-  const input = repairActionSchemas['repair.open'].required({ mandate: true, sourceVersions: true })
-  registry.register({ action: 'repair.open', description: 'Open current repair work under reviewed operating instructions',
-    inputSchema: z.toJSONSchema(input) as never, input: commandSchema(input),
-    visible: async ctx => { try { await d.policy.scope(ctx, { appId: REPAIRS_APP_ID, entityId: REPAIR_ENTITIES.intakes, purpose: 'read' }); return ctx.principal.kind === 'human' } catch { return false } },
-    replayIdentity: async (_ctx, command) => ({ appId: REPAIRS_APP_ID, canonicalInputHash: await canonicalHash(command) }),
-    prepare: async (ctx, command) => {
-      if (ctx.principal.kind !== 'human') throw new AdmissionError('forbidden', 'A person must explicitly open current repair work')
-      return openRepair(createRepairOpenContext(d, ctx, command, 'repair.open'), command.input)
-    },
-  })
-}
 export function createRepairCaseReads(d: RepairOpenDependencies, operations: OperationsRepository<OperationsProjectionDependencies>, controls?:ReturnType<typeof createRepairCaseControls>) {
   const repo = createRepairRepository(d)
   return {

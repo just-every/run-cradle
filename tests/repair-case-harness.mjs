@@ -11,11 +11,11 @@ export async function fixture({ realEvidence = false } = {}) {
     await h.db.prepare('INSERT INTO evidence_source_versions(id,source_id,version,sha256,content,file_ids,known_at) VALUES(?,?,1,?,?,?,?)').bind(r.createUlid(),b.ev.sourceId,'synthetic-credential-sha','Synthetic private credential source','[]',h.ctx.now).run()
   }
   const operations = new r.OperationsRepository({ db: h.db, policy: h.d.policy, environment: { project: r.createOperationsProjection({ db: h.db, policy: h.d.policy, descriptors, evidence: h.d.evidence }) } })
-  const d = { db: h.db, policy: h.d.policy, evidence: h.d.evidence, cases: r.createRepairCaseAdapter(operations, h.d.evidence) }
+  const d = { ...h.d, db: h.db, policy: h.d.policy, evidence: h.d.evidence, cases: r.createRepairCaseAdapter(operations, h.d.evidence) }
   const replay = r.createReplayAccess(h.db, h.d.policy, r.createApplicationEntityRegistry(descriptors))
   const admission = r.createAdmissionService(h.db, { authorizeReplay: replay.authorizeReplay })
   const registry = r.createCommandRegistry(admission)
-  r.registerRepairIntakeCommands(registry, d); r.registerRepairOpenCommand(registry, d)
+  r.registerRepairCommands(registry,d,['intake.submit','intake.resolve-identity','repair.open'])
   const reads = r.createRepairCaseReads(d, operations), http = r.createRepairCaseHttp(reads, async () => h.ctx)
   const m = await installManualRepairMandate(h.db, { id: r.createUlid(), appId: r.REPAIRS_APP_ID, entityId: r.REPAIR_ENTITIES.workOrders, ownerId: h.ctx.principal.id, now: h.ctx.now })
   async function report(sourceId) {

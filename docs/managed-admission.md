@@ -16,7 +16,7 @@ or deploys. The generated `rer-project.json` records the SHA-256 digest of the
 canonical setup bytes. Preserve every already-applied migration byte.
 
 The managed workflow is dispatch-only and pins the trusted reusable workflow to
-`bf7a25abb44bec1457a7bc738ff63921d90fb52e`. It declares full verification. The
+`86c8b37399c901bffd9a240dbd1148a65ec83b34`. It declares full verification. The
 project profile runs its source-owned setup, build, verify and artifact operations.
 The project operations use `rer install`, `build`, and `verify`.
 The rer CLI selects the declared Node runtime. Browser preparation is explicit in
@@ -58,9 +58,12 @@ can atomically establish the first Base owner and session. Existing operators or
 the consumed claim ledger permanently prevent another first-owner claim. Preserve
 that ledger during recovery. Subsequent sign-in, invitations and revocation use
 the ordinary Base auth and Cradle's native authority projection. Local setup uses
-its private generated bootstrap secret and the development mail outbox. The same
-manifest names `MAIL_PROVIDER`, `MAIL_FROM` and `MAIL_PROVIDER_API_KEY` for managed
-hosting. Choose SendGrid or Resend and a verified sender for a hosted install. The
+its private generated bootstrap secret and opens signed in through `rer dev`.
+Managed hosting selects `MAIL_PROVIDER=rer` and supplies `MAIL_FROM`,
+`MAIL_RELAY_URL` and the private `MAIL_API_KEY`; Configure hides these fields.
+No provider account or mail key is needed from the customer. Free and Assisted
+hosting retain SendGrid and Resend with a verified sender and
+`MAIL_PROVIDER_API_KEY`. The
 local installer saves entered hosting settings in private `data/hosting-mail.json`
 and keeps its temporary app on development delivery; the hosting phase receives
 only the explicitly selected hosted provider settings. This file is local private configuration; preserve or deliberately remove it

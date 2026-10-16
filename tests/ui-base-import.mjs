@@ -1,3 +1,4 @@
+import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -20,7 +21,7 @@ contract('RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume
     for (const width of accessibilityWidths) {
       const context = await browser.newContext(accessibilityContextOptions({ viewport: { width, height: width === 390 ? 844 : 900 } }))
       try {
-        await context.addCookies([{ name: 'operator_session_local', value: runtime.cookie.slice('operator_session_local='.length), url: runtime.origin }])
+        await context.addCookies(browserCookies(runtime.cookie,runtime.origin))
         const page = await context.newPage(), journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
         const consoleErrors = [], externalRequests = [], batchCheckpoints = []
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()) })
@@ -31,10 +32,8 @@ contract('RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume
         await journey.capture('import-upload')
         const initial = await uploadSet(page, 'crm-example', `Imported CRM ${width}`, { action: journey.action })
         await verifyPreviewLists(page, initial)
-        await page.getByText(`Import plan size: ${initial.planSize.bytes.toLocaleString('en-US')} bytes.`,{exact:false}).waitFor()
-        await page.getByText(`Additional plan limit: ${initial.planSize.limit.toLocaleString('en-US')} bytes`,{exact:false}).waitFor()
         await journey.capture('import-preview')
-        const ack = page.getByLabel('I acknowledge all listed rejected rows, unresolved and ambiguous links, skipped values, named and lossy conversions.', { exact: true })
+        const ack = page.getByLabel('I reviewed the listed problems, skipped rows and values, links that cannot be matched, and changes to field types or names.', { exact: true })
         await journey.setChecked(ack,true)
         const originalTable=initial.source.tables[0],tableName=page.getByLabel(`Table name for ${originalTable.label}`,{exact:true})
         const renamedResponse=page.waitForResponse(r=>r.url().endsWith('/base-import/preview')&&r.request().method()==='POST')
@@ -57,7 +56,7 @@ contract('RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume
         assert.deepEqual(changed.identities, initial.identities, 'Overrides preserve all initial identities')
         assert.notEqual(changed.fingerprint, initial.fingerprint)
         assert.equal(await ack.isChecked(), false, 'Override clears acknowledgment')
-        assert.equal(await page.getByRole('button', { name: 'Save review and inspect schema impact', exact: true }).isDisabled(), true)
+        assert.equal(await page.getByRole('button', { name: 'Continue to review tables and fields', exact: true }).isDisabled(), true)
         await overrideType(page, 'Employees', 'number')
         await overrideType(page, 'Industry', 'select')
         const optionResponse = page.waitForResponse(r => r.url().endsWith('/base-import/preview') && r.request().method() === 'POST')
@@ -83,7 +82,6 @@ contract('RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume
         const mismatchedField = mismatched.schemaDraft.tables.find(table => table.id === mismatched.identities.tables[dealTable.key].entityId).fields.find(field => field.id === mismatched.identities.tables[dealTable.key].fields[lookupColumn.key])
         assert.equal(mismatchedField.type, 'text')
         await chooseLookup(page, lookupColumn.label, { relationColumnKey: provenLookup.relationColumnKey, valueColumnKey: provenLookup.valueColumnKey })
-        assert.ok(await page.getByText('Chosen: Lookup. Proposed:', { exact: false }).count() > 0, 'Lookup type uses friendly copy')
         await journey.capture('import-recomputed')
         const job = await submitImport(page, { action: journey.action, setChecked: journey.setChecked, onReview: async () => journey.capture('import-schema-impact') })
         await journey.capture('import-completed')

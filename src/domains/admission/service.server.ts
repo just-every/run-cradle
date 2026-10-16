@@ -55,10 +55,11 @@ export function createAdmissionService(db: D1Database, access: AdmissionAccess):
                 return prior;
             const compiled = compileAdmission(ctx, { ...plan, guards: [...plan.guards, ...(access.additionalGuards?.(ctx) ?? [])] }, {captureRecordEvents:access.captureRecordEvents});
             try {
-                await db.batch(compiled.statements.map(s => db.prepare(s.sql).bind(...s.values)));
+                if (plan.commitAtomic) await plan.commitAtomic(compiled.statements);
+                else await db.batch(compiled.statements.map(s => db.prepare(s.sql).bind(...s.values)));
             }
             catch (error) {
-                if (String(error).includes('CHECK constraint failed: ok=1'))
+                if (String(error).includes('CHECK constraint failed: ok=1') || plan.commitAtomic && /IMPORT_ATOMIC_GUARD|IMPORT_FINAL_GUARD|malformed JSON/.test(String(error)))
                     throw new AdmissionError('version_conflict', 'A prepared mutation no longer matches current state. Read and prepare again.');
                 if (/UNIQUE constraint|FOREIGN KEY constraint|NOT NULL constraint|CHECK constraint/.test(String(error)))
                     throw new AdmissionError('validation', 'A required, unique or referenced value is no longer valid.');

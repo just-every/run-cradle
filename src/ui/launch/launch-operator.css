@@ -1,0 +1,41 @@
+/* Launch operator controls: import, export, selection and bulk edit on the neutral app canvas. */
+.launch-grid-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 0 30px 16px; }
+.launch-export { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cr-link-button { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.launch-select-cell { width: 44px; }
+.launch-select-cell input, .launch-card-select input { width: 20px; height: 20px; }
+.launch-card-select { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; margin-right: 4px; vertical-align: middle; }
+.launch-grid-selection { padding: 0 30px; }
+.launch-grid-selection:empty { display: none; }
+.launch-bulk { margin: 16px 0 0; padding: 16px 20px; box-shadow: none; }
+.launch-bulk-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.launch-bulk-form .cr-field { flex: 1 1 180px; margin: 0; }
+.launch-bulk-form > .cr-button { flex: none; }
+.launch-bulk-count { flex: 1 0 100%; display: flex; gap: 12px; align-items: baseline; margin: 0; }
+.launch-bulk-done { flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.launch-select-all { margin: 8px 0 0; }
+.launch-import { margin-top: 16px; }
+.launch-import-kinds { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
+.launch-import-kinds legend { margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+.launch-import-kinds .cr-choice { margin: 0; }
+.launch-import-mapping { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 0 20px; margin: 0; padding: 0; border: 0; }
+.launch-import-mapping legend { margin-bottom: 12px; font-size: 14px; font-weight: 600; }
+.launch-import-summary { margin: 0; font-size: 15px; }
+.launch-import-changes { margin: 0; padding: 0; list-style: none; }
+.launch-import-changes li + li { margin-top: 4px; }
+.launch-import-changes strong { margin-right: 6px; }
+.launch-import .cr-notice--committed { flex-wrap: wrap; }
+.launch-import .cr-notice--committed > * { flex: 1 1 auto; }
+@media (max-width: 767px) {
+  .launch-grid-selection, .launch-grid-actions { padding-inline: 16px; }
+  .launch-bulk-form > .cr-button { flex: 1 1 100%; }
+  .launch-import-rows thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .launch-import-rows, .launch-import-rows tbody, .launch-import-rows tr, .launch-import-rows td { display: block; width: 100%; }
+  .launch-import-rows tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .launch-import-rows td { padding: 2px 0; border: 0; overflow-wrap: anywhere; }
+  .launch-import-rows td:first-child::before { content: 'CSV row '; }
+}
+.launch-custom-fields { padding: 0 18px 18px; border-top: 1px solid #edf0ef; }
+.launch-custom-fields h3 { margin: 14px 0 4px; font-size: 15px; font-weight: 600; }
+.launch-custom-fields .portfolio-detail-facts { padding: 0 0 12px; }
+.launch-custom-choices { display: grid; gap: 4px; margin: 0; padding: 0; border: 0; }

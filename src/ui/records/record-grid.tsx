@@ -12,7 +12,7 @@ function echoes(field: Field, visible: string[]) {
 const lifecycleLabel = (state: string) => state.charAt(0).toUpperCase() + state.slice(1).replaceAll('_', ' ')
 function cellClass(field: Field, row: RecordRow, primary: Field | undefined, visible: string[]) {
  const value = row.fields[field.id]
- return [field.id === primary?.id && 'cr-col-primary', field.type === 'boolean' && 'cr-cell--flag', field.id !== primary?.id && value?.state === 'value' && value.value === null && 'cr-cell--empty', echoes(field, visible) && 'cr-cell--echo'].filter(Boolean).join(' ') || undefined
+ return [field.id === primary?.id && 'cr-col-primary', field.type === 'boolean' && 'cr-cell--flag', ['date', 'instant'].includes(field.resultType ?? field.type) && 'cr-cell--nowrap', field.id !== primary?.id && value?.state === 'value' && value.value === null && 'cr-cell--empty', echoes(field, visible) && 'cr-cell--echo'].filter(Boolean).join(' ') || undefined
 }
 function FieldHeader({ field, id }: { field: Field; id: string }) {
  return <th id={id} scope="col">{field.label}<span className="cr-th-type" aria-hidden="true">{fieldTypeLabel(field)}</span></th>

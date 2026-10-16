@@ -1,6 +1,9 @@
 /* Records: base bar, the table card, chip toolbar and panels, record page, record form and schema builder. */
 .cr-records-page { min-width: 0; }
-.cr-records-page .cr-table td { overflow-wrap: anywhere; }
+.cr-records-page .cr-table td { overflow-wrap: break-word; word-break: normal; }
+.cr-records-page .cr-table td .cr-record-chip, .cr-records-page .cr-table td .cr-link { overflow-wrap: break-word; }
+.cr-display-tabs, .cr-saved-view-tabs { margin-bottom: 16px; }
+.cr-records-page .cr-table td.cr-cell--nowrap { white-space: nowrap; }
 .cr-records-page .cr-table td > a { display: inline-flex; align-items: center; min-height: 28px; }
 .cr-base-import details > summary { min-height: 28px; }
 .cr-boolean input[type="checkbox"] { width: 28px; height: 28px; min-height: 28px; }
@@ -21,7 +24,6 @@
 .cr-records-card-head > h2 { margin-right: 4px; }
 .cr-records-toolbar { margin: 0 0 8px; }
 .cr-chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
-.cr-chip-toggles { display: inline-flex; gap: 20px; margin-left: auto; padding-left: 12px; }
 .cr-records-panel, .cr-records-card form.cr-card { margin: 16px 0 8px; padding: 20px; border: 0; border-radius: var(--r-tile); background: var(--tile); box-shadow: none; }
 .cr-records-panel > .cr-actions .cr-choice { margin: 0; background: var(--card); }
 .cr-records-panel .cr-filter-group { background: var(--card); }
@@ -139,7 +141,6 @@
   .cr-chip-row { flex-wrap: nowrap; gap: 8px; margin: 0 -20px; padding: 2px 20px 12px; overflow-x: auto; scrollbar-width: none; }
   .cr-chip-row::-webkit-scrollbar { display: none; }
   .cr-chip-row > * { flex: none; }
-  .cr-chip-toggles { gap: 16px; margin-left: 0; padding-left: 4px; }
   .cr-record-fields { grid-template-columns: 1fr; gap: 24px; }
   .cr-record-editor-grid, .cr-field-extra, .cr-stats { grid-template-columns: 1fr; }
   .cr-field-row { grid-template-columns: 1fr; }

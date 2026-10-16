@@ -3,8 +3,8 @@ OWNER_EMAIL=you@example.com
 AUTH_LOCAL=true
 APP_ORIGIN=http://127.0.0.1:4185
 AUTH_ORIGIN=http://127.0.0.1:4185
-SESSION_SECRET=replace-with-independent-random-32-byte-secret
-SETUP_TOKEN=replace-with-another-independent-random-32-byte-secret
+SESSION_SECRET=synthetic-replace-with-independent-random-32-byte-secret
+SETUP_TOKEN=synthetic-replace-with-another-independent-random-32-byte-secret
 MAIL_PROVIDER=development
 MAIL_FROM=auth@localhost.test
 # Hosted installations omit AUTH_LOCAL and use HTTPS APP_ORIGIN,

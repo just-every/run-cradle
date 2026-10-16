@@ -10,15 +10,15 @@ import { campaignPatchSchema, deliverableToggleSchema } from '../../shared/schem
 import { parseJson, requirePathParam } from '../../shared/http'
 import type { Platform } from '../../platform'
 import { createCampaignService } from './service'
+import { gridQuerySchema, gridSelection } from './grid-query'
 
 export const registerCampaignRoutes = (app: Hono<AppEnv>, platform: Platform) => {
   const service = createCampaignService(platform)
 
   app.get('/api/campaigns', async (context) => {
-    const query=z.object({view:z.enum(['all','launch-prep','mine']).default('all'),phase:z.enum(campaignLifecycle.phases).optional(),status:z.enum(campaignLifecycle.statuses).optional(),sort:z.enum(['launchDate','name','health']).default('launchDate'),direction:z.enum(['asc','desc']).default('asc'),cursor:z.string().optional(),limit:z.string().optional()}).parse(context.req.query())
-    const rows=(await service.list()).filter(row=>(!query.phase || row.phase===query.phase)&&(!query.status || row.status===query.status)&&(query.view!=='launch-prep' || row.phase===campaignLifecycle.launchPreparationPhase)&&(query.view!=='mine' || row.owner.id===context.get('session').operator.id))
-    rows.sort((a,b)=>{const compared=query.sort==='health' ? (a.health ?? -1)-(b.health ?? -1) : String(a[query.sort]).localeCompare(String(b[query.sort]));return (query.direction==='desc'?-compared:compared)||a.id.localeCompare(b.id)})
-    return context.json(launchCollection(rows,query.cursor,query.limit))
+    const query=gridQuerySchema.extend({cursor:z.string().optional(),limit:z.string().optional()}).parse(context.req.query())
+    const grid=gridSelection(query,context.get('session').operator.id)
+    return context.json(launchCollection((await service.list()).filter(grid.matches),query.cursor,query.limit,grid.key,grid.directions))
   })
   app.get('/api/campaigns/:id', async (context) => context.json(await service.detail(requirePathParam(context.req.param('id'), 'campaign id'))))
   app.patch('/api/campaigns/:id', async (context) => {

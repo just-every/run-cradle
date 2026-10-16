@@ -58,12 +58,13 @@ export function compileAdmission<T>(ctx: RequestContext, plan: AdmissionPlan<T>,
                 break;
             const bytes=new TextEncoder().encode(canonical(item.values)).byteLength;if(parts.length&&payloadBytes+bytes>700000)break;payloadBytes+=bytes;
             const base = bindings.length;
-            parts.push('(' + bindExpression(item.sql, i => `json_extract(payload,'$[${base + i}]')`) + ')');
+            // Nested predicates can scan a table with its own payload column.
+            parts.push('(' + bindExpression(item.sql, i => `json_extract(admission_guard_values.payload,'$[${base + i}]')`) + ')');
             bindings.push(...item.values);
             length += item.sql.length;
             offset++;
         }
-        statements.push({ sql: `INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN ${balancedAnd(parts)} THEN 1 ELSE 0 END FROM (SELECT ? AS payload) WHERE NOT EXISTS(SELECT 1 FROM command_admissions WHERE command_id=?)`, values: [nonce, sequence++, canonical(bindings), plan.commandId] });
+        statements.push({ sql: `INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN ${balancedAnd(parts)} THEN 1 ELSE 0 END FROM (SELECT ? AS payload) AS admission_guard_values WHERE NOT EXISTS(SELECT 1 FROM command_admissions WHERE command_id=?)`, values: [nonce, sequence++, canonical(bindings), plan.commandId] });
     }
     statements.push({ sql: `INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN strftime('%Y-%m-%dT%H:%M:%fZ','now')<? THEN 1 ELSE 0 END WHERE NOT EXISTS(SELECT 1 FROM command_admissions WHERE command_id=?)`, values: [nonce, sequence++, plan.permit.validUntil, plan.commandId] });
     const provenance=encodeProvenance({policyVersion:plan.permit.policyVersion,grantId:plan.permit.grantId,grantVersion:plan.permit.grantVersion,subjects:resultSubjects(plan.committedResult,plan.audit,plan.accessSubjects)});

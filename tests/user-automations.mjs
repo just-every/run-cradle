@@ -2,17 +2,28 @@ import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
+import {automationQuietHours} from './helpers/automation-quiet-hours.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
 contract('AUTO-USER-001','real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
- const h=await userAutomationRuntime(18952)
+ const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[]
+ const h=await userAutomationRuntime(18952,{outbound:async request=>{
+  assert.equal(request.url,relay);assert.equal(request.headers.get('authorization'),'Bearer synthetic-record-relay-key')
+  delivered.push(await request.json());return new Response(null,{status:202})
+ }})
+ const providerMessages=h.mailMessages
+ h.mailMessages=async()=>[...await providerMessages(),...delivered]
  try {
+  await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined,MAIL_API_KEY:'synthetic-record-relay-key',MAIL_RELAY_URL:relay})
+  const settings=(await h.request('/api/v1/settings')).data
+  await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}}}})
   const save={commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{
    name:'Welcome record',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[
     {kind:'notify',operatorId:h.operator,title:'A new item needs review'},
     {kind:'email',operatorId:h.operator,subject:'New item',text:'Open Cradle to review the new item.'},
     {kind:'update',fieldId:h.statusId,value:'review'},
    ]}}
+  await h.request('/api/user-automations',{method:'POST',status:400,body:{...save,definition:{...save.definition,event:''}}})
   const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:save})).data.result.value
   const created=await h.create('Automation item')
   await h.tick(created.commandId);await h.tick(created.commandId)
@@ -21,16 +32,18 @@ contract('AUTO-USER-001','real admitted record triggers run notify/email/update 
   const record=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.ref.recordId}`)).data.record
   assert.equal(record.fields[h.statusId].value,'review')
   assert.equal((await h.db.prepare('SELECT count(*) AS n FROM channel_events WHERE event_id IN (SELECT id FROM launch_automation_actions WHERE run_id=?)').bind(runs[0].id).first()).n,1)
-  assert.equal((await h.db.prepare("SELECT count(*) AS n FROM rer_mail_development_outbox WHERE json_extract(message,'$.subject')='New item'").first()).n,1)
+  assert.deepEqual(delivered,[{to:'import-owner@example.test',subject:'New item',text:'Open Cradle to review the new item.'}])
+  const beforeDisable=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.length
+  await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
+  await automationQuietHours(h,save.definition)
   const loop=(await h.request('/api/user-automations',{method:'POST',status:201,body:{...save,commandId:createUlid(),definition:{...save.definition,name:'One update per chain',event:'updated',actions:[{kind:'update',fieldId:h.statusId,value:'loop-safe'}]}}})).data.result.value
   const changed=await h.patch(record,{[h.statusId]:'start'})
   await h.tick(changed.data.commandId)
   const worker=await h.runtime.getWorker();await worker.scheduled({cron:'* * * * *'})
   const loopRuns=(await h.request(`/api/user-automations/${loop.id}/runs`)).data.runs
   assert.ok(loopRuns.some(run=>run.state==='Complete'));assert.ok(loopRuns.some(run=>run.state==='Suppressed'))
-  await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
   const afterDisable=await h.create('Disabled item');await h.tick(afterDisable.commandId)
-  assert.equal((await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.length,1)
+  assert.equal((await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.length,beforeDisable)
   await h.db.prepare('UPDATE authority_delegations SET revoked_at=? WHERE automation_id=?').bind(Date.now(),loop.id).run()
   const pending=await h.patch((await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${afterDisable.record.ref.recordId}`)).data.record,{[h.statusId]:'after revocation'})
   await h.tick(pending.data.commandId)

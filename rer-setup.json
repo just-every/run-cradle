@@ -9,7 +9,7 @@
     {
       "id": "hosting-mail",
       "label": "Email delivery",
-      "help": "Local trials use the development outbox. Choose a provider and verified sender for hosting."
+      "help": "Managed mail is configured by Run Edit Run. For your own hosting, choose a provider and verified sender."
     },
     {
       "id": "egress",
@@ -26,7 +26,7 @@
     {
       "name": "OWNER_EMAIL",
       "label": "Owner email",
-      "help": "Use this address to sign in through the development outbox. No email is sent locally.",
+      "help": "Use your email to claim this workspace. Local development opens signed in through rer dev.",
       "kind": "email",
       "required": true,
       "prefill": "account-email",
@@ -92,7 +92,11 @@
       "options": [
         {
           "value": "development",
-          "label": "Local development outbox"
+          "label": "Local development (rer dev)"
+        },
+        {
+          "value": "rer",
+          "label": "RER managed mail"
         },
         {
           "value": "sendgrid",
@@ -107,11 +111,18 @@
     },
     {
       "name": "MAIL_FROM",
-      "label": "Verified sender email for hosting",
+      "label": "Sender email",
       "kind": "email",
       "required": false,
       "group": "hosting-mail",
       "presentations": [
+        {
+          "when": {
+            "field": "MAIL_PROVIDER",
+            "equals": "rer"
+          },
+          "required": true
+        },
         {
           "when": {
             "field": "MAIL_PROVIDER",
@@ -127,6 +138,30 @@
           "required": true
         }
       ]
+    },
+    {
+      "name": "MAIL_RELAY_URL",
+      "label": "Managed mail relay URL",
+      "kind": "url",
+      "required": true,
+      "when": {
+        "field": "MAIL_PROVIDER",
+        "equals": "rer"
+      },
+      "group": "hosting-mail"
+    },
+    {
+      "name": "MAIL_API_KEY",
+      "label": "Managed mail credential",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": true,
+      "input": "entered",
+      "when": {
+        "field": "MAIL_PROVIDER",
+        "equals": "rer"
+      },
+      "group": "hosting-mail"
     },
     {
       "name": "MAIL_PROVIDER_API_KEY",
@@ -241,6 +276,15 @@
       "ownerVisible": true,
       "input": "entered",
       "group": "service-connections"
+    },
+    {
+      "name": "IDENTITY_PROVIDER",
+      "label": "Identity provider",
+      "kind": "url",
+      "required": false,
+      "default": "",
+      "help": "Optional Auth installation. Leave blank for email links. Linking requires approval from both installation owners; existing workspaces enable provider sign-in in identity settings.",
+      "group": "service-connections"
     }
   ],
   "steps": [
@@ -250,6 +294,18 @@
       "emailField": "OWNER_EMAIL",
       "tokenField": "SETUP_TOKEN",
       "path": "/auth/owner-claim"
+    }
+  ],
+  "dependencies": [
+    {
+      "interface": "oidc-provider@1",
+      "optional": true,
+      "cardinality": 1,
+      "address": "IDENTITY_PROVIDER",
+      "paths": [
+        "/auth/oidc/auth/callback",
+        "/auth/oidc/auth/logout"
+      ]
     }
   ]
 }

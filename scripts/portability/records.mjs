@@ -2,31 +2,18 @@ import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {PortabilityError} from '@runeditrun/rer/modules/portability';
 import {catalogue,policy} from '@runeditrun/rer/modules/portability/catalogue';
-import {archiveRecords} from './files.mjs';
+import {fileRecords} from '@runeditrun/rer/modules/portability/files';
 const quote=name=>'"'+name.replaceAll('"','""')+'"';
 const normalize=sql=>sql.replace(/;\s*$/,'').replace(/\s+/g,' ').trim();
 const refuse=code=>{throw new PortabilityError(code,409);};
 
-export async function derivedSearch(db){
- const virtual=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE 'CREATE VIRTUAL TABLE%' ORDER BY name").all()).results;
- const derived=['launch_search'];
- for(const {name} of virtual){
-  if(name==='launch_search')continue;
-  if(!/^r_[a-z0-9_]+_search$/.test(name))continue;
-  const source=name.slice(0,-7);
-  if(!(await db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").bind(source).first()))continue;
-  const columns=(await db.prepare(`PRAGMA table_xinfo(${quote(name)})`).all()).results.filter(c=>!c.hidden).map(c=>c.name);
-  const base=new Set((await db.prepare(`PRAGMA table_xinfo(${quote(source)})`).all()).results.map(c=>c.name));
-  if(columns[0]!=='record_id'||!columns.slice(1).every(c=>base.has(c)))continue;
-  derived.push(name);
- }
- return derived;
-}
+export {derivedSearch} from '../../src/domains/portability/derived-search.mjs';
+import {derivedSearch} from '../../src/domains/portability/derived-search.mjs';
 
 /** Integrity is checked by Base before any destination schema is changed. */
 export async function prepareRecordRestore(db,root,path,config){
  let manifest;const current=[],groups=[];
- for await(const record of archiveRecords(path)){
+ for await(const record of fileRecords(path)){
   if(record.kind==='manifest')manifest=record;
   if(record.kind!=='part')continue;
   for(const item of record.items){

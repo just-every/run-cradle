@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {userScheduleBrowser} from './user-schedule-browser.mjs'
 
 export async function userAutomationBrowser(page,h,journey,width) {
  const name=`Browser automation ${width}`
@@ -6,6 +7,10 @@ export async function userAutomationBrowser(page,h,journey,width) {
  await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/automations')
  const panel=page.getByRole('region',{name:'Record automations'})
  await panel.getByLabel(/^Application/).selectOption(h.appId)
+ assert.equal(await page.getByRole('main').count(),1,'The automations page has one main landmark')
+ await panel.getByLabel(/^Record type/).locator('option').filter({hasText:h.entity.label}).waitFor({state:'attached'})
+ const choices=await panel.getByLabel(/^Record type/).locator('option').evaluateAll(options=>options.map(option=>option.value).filter(Boolean))
+ assert.deepEqual(choices,[h.entityId],'Only the base record type belongs in the automation picker')
  await panel.getByLabel(/^Record type/).selectOption(h.entityId)
  await panel.getByRole('button',{name:'New automation',exact:true}).click()
  const form=page.getByRole('form',{name:'Automation definition'})
@@ -27,6 +32,7 @@ export async function userAutomationBrowser(page,h,journey,width) {
  await panel.getByLabel(/^Application/).selectOption(h.appId)
  await panel.getByRole('button',{name:`Run history for ${name}`,exact:true}).click()
  await panel.getByText('Complete',{exact:true}).waitFor()
+ await panel.getByText(`Browser trigger ${width}`,{exact:true}).waitFor()
  await journey.capture('user-automation-complete')
  await panel.getByRole('button',{name:`Edit ${name}`,exact:true}).click()
  await form.getByLabel('Notification title',{exact:true}).fill('Another approved notification')
@@ -40,4 +46,5 @@ export async function userAutomationBrowser(page,h,journey,width) {
  const record=await h.create(`Disabled trigger ${width}`);await h.tick(record.commandId)
  assert.equal((await h.request(`/api/user-automations/${saved.id}/runs`)).data.runs.length,before)
  await journey.capture('user-automation-disabled')
+ await userScheduleBrowser(page,h,journey,width)
 }

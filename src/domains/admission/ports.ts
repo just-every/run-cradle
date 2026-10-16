@@ -76,6 +76,8 @@ export type AdmissionPlan<T> = {
     events: readonly DomainEvent[];
     outbox: readonly OutboxCommand[];
     committedResult: T;
+    /** Internal atomic transaction composition; the compiled admission is unchanged. */
+    commitAtomic?: (statements: readonly import('./compiler.server').Statement[]) => Promise<void>;
     changed?: readonly RevisionRef[];
     /** Explicit read dependencies when projected result values do not carry field IDs. */
     accessSubjects?: readonly {ref:Ref;fieldIds:readonly string[]}[];

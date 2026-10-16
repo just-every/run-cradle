@@ -1,6 +1,6 @@
 import {createHmac} from 'node:crypto'
 export const expiredToken='migrationexpired'.padEnd(43,'x')
-export const revokedToken='migrationrevoked'.padEnd(43,'x')
+export const revokedToken='synthetic-migrationrevoked'.padEnd(43,'x')
 /** Persist real Base expired/revoked credentials; neither control is an unknown cookie. */
 export function authoritySessionControlsSql(operator,now,secret='test-only-session-secret-32-characters-long'){
  if(!/^[0-9A-HJKMNP-TV-Z]{26}$/.test(operator))throw new Error('Invalid fixture principal')

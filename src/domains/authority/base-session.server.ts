@@ -58,7 +58,14 @@ export function createBaseProductAuth(db: D1Database, config: AuthConfiguration,
   }
   return {current,csrf,requireCsrf,rate,
     capabilities:{localDevelopmentSignIn:false,magicLink:{status:config.baseMailConfigured?'configured':'unconfigured'}},
-    requestLink:(request:Request,input:{email:string;returnTo:string})=>base.requestMagicLink(request,input),
+    requestLink:async(request:Request,input:{email:string;returnTo:string})=>{
+      if(!await db.prepare('SELECT singleton FROM oa_bootstrap WHERE singleton=1').first())throw new AuthorityError('unconfigured','This installation has no owner yet. The person hosting Cradle must run rer deploy again and wait for the owner claim to succeed, then return here to sign in.',503)
+      if(!config.baseMailConfigured)throw new AuthorityError('unconfigured','Sign-in email is not configured. The person hosting Cradle must configure the mail provider, sender and API key, then deploy again. For local use, run rer dev to open your workspace.',503)
+      try{return await base.requestMagicLink(request,input)}catch(error){
+        if(error&&typeof error==='object'&&'code' in error&&error.code==='mail_unavailable')throw new AuthorityError('mail_unavailable','Cradle could not send the sign-in email. The person hosting it must check the mail provider, sender and API key, then try again. You can recover owner access with rer signin.',503)
+        throw error
+      }
+    },
     signOut:async(request:Request)=>{await requireCsrf(request);return await base.signOut(request)},
     sessions:async(request:Request)=>{await current(request);const s=await base.getSession(request);if(!s)throw new AuthorityError('signed_out','Sign in to continue.',401);return(await base.listSessions(request,s.operatorId)).map(row=>({...row,current:row.id===s.id}))},
     revokeSession:async(request:Request,id:string)=>{await requireCsrf(request);await base.revokeSession(request,id)},

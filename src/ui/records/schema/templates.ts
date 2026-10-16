@@ -12,9 +12,6 @@ export function templateBase(key:string):SchemaDraft{
   const contacts=table('Contacts',[newField('Contact'),newField('Email'),company,lookup('Company name',company,companies.fields[0]!)])
   const dealCompany=link('Company',companies),contact=link('Contact',contacts)
   draft.name='Customer relationships';draft.tables=[companies,contacts,table('Deals',[newField('Deal'),newField('Value','number'),select('Stage',['New','Qualified','Won','Lost']),newField('Close date','date'),newField('Approved','boolean'),dealCompany,contact,lookup('Company name',dealCompany,companies.fields[0]!)])]
- }else if(key==='launch'){
-  const campaigns=table('Campaigns',[newField('Campaign'),newField('Launch date','date'),select('Status',['Planning','In progress','Ready','Blocked'])]),campaign=link('Campaign',campaigns),riskCampaign=link('Campaign',campaigns)
-  draft.name='Launch readiness';draft.tables=[campaigns,table('Deliverables',[newField('Deliverable'),newField('Due date','date'),newField('Complete','boolean'),campaign,lookup('Campaign name',campaign,campaigns.fields[0]!)]),table('Risks',[newField('Risk'),select('Severity',['Low','Medium','High','Critical']),newField('Mitigation'),newField('Resolved','boolean'),riskCampaign])]
  }else if(key==='projects'){
   const projects=table('Projects',[newField('Project'),newField('Target date','date'),newField('Budget','number')]),project=link('Project',projects)
   draft.name='Project tracker';draft.tables=[projects,table('Tasks',[newField('Task'),select('Priority',['Low','Medium','High']),newField('Due date','date'),newField('Complete','boolean'),project,lookup('Project name',project,projects.fields[0]!)])]

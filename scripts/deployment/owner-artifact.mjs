@@ -1,5 +1,5 @@
 import {execFileSync} from 'node:child_process';
-import {packageBuild} from '../../vendor/base/modules/deploy-kit/prepare.mjs';
+import {packageBuild} from '@runeditrun/rer/modules/deploy-kit/prepare';
 import {hash} from '../../vendor/base/modules/deploy-kit/validation.mjs';
 import {validateMigrations} from '../../vendor/base/modules/deploy-kit/migrations.mjs';
 import {migrationInventory,migrationGroups} from '../migration-groups.mjs';

@@ -1,3 +1,4 @@
+import {browserCookies} from './helpers/session-cookies.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
@@ -22,7 +23,7 @@ contract('ADMISSION-EDITOR-UI-001','the native owner editor negotiates through a
   for(const width of [1440,390]){
    const context=await browser.newContext({viewport:{width,height:width===390?844:900}})
    try{
-    await context.addCookies([{name:'operator_session_local',value:cookie.slice('operator_session_local='.length),url:origin}])
+    await context.addCookies(browserCookies(cookie,origin))
     const page=await context.newPage(),journey=recordsJourney(page,origin,output,width)
     const embedded=page.waitForResponse(response=>response.url().startsWith(edge.origin+'/editor?'))
     const document=await page.goto(origin+'/app');assert.equal(document.status(),200)
@@ -77,12 +78,12 @@ contract('ADMISSION-EDITOR-UI-001','the native owner editor negotiates through a
    const page=await anonymous.newPage();await page.goto(origin+'/signin');await page.waitForLoadState('networkidle')
    assert.equal(await page.locator('[data-rer-editor]').count(),0)
    assert.equal((await page.request.get(origin+'/api/editor/config')).status(),403)
-   await anonymous.addCookies([{name:'operator_session_local',value:member.slice('operator_session_local='.length),url:origin}])
+   await anonymous.addCookies(browserCookies(member,origin))
    assert.equal((await page.request.get(origin+'/api/editor/config')).status(),403,'Native non-owners cannot obtain a grant')
   }finally{await anonymous.close()}
   const owner=await browser.newContext({viewport:{width:390,height:844}})
   try{
-   await owner.addCookies([{name:'operator_session_local',value:cookie.slice('operator_session_local='.length),url:origin}])
+   await owner.addCookies(browserCookies(cookie,origin))
    const page=await owner.newPage();await page.goto(origin+'/app')
    await page.getByRole('button',{name:'Open Run Edit Run',exact:true}).waitFor()
    const csrf=await h.request('/auth/csrf',{cookie});const {csrfToken}=await csrf.json()

@@ -1,3 +1,4 @@
+import {browserCookies,sessionCookieWithToken} from './helpers/session-cookies.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import { expiredToken, revokedToken, authoritySessionControlsSql } from './helpers/session-controls.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
@@ -63,7 +64,7 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
   const now = Date.now()
   sql(`INSERT INTO sessions (id,created_at,updated_at,version,operator_id,token,expires_at,revoked_at) VALUES ('migration-expired',${now},${now},1,'${operator}','migration-expired',${now-1000},NULL), ('migration-revoked',${now},${now},1,'${operator}','migration-revoked',${now+86400000},${now})`)
   sql(authoritySessionControlsSql(operator, now))
-  for (const control of ['', `operator_session_local=${expiredToken}`, `operator_session_local=${revokedToken}`]) {
+  for (const control of ['', sessionCookieWithToken(cookie,expiredToken), sessionCookieWithToken(cookie,revokedToken)]) {
     for (const document of documents) {
       const response = await get(`${document}?probe=1`, control)
       assert.equal(response.status, 303, document)
@@ -73,10 +74,10 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
     for (const api of ['/api', '/api/session', '/api/missing', '/api/campaigns', '/api/risks/lens', '/api/milestones/timeline', '/api/lenses', '/api/decisions', '/api/automations', '/api/notifications', '/api/settings', '/api/search?q=se', '/api/workspace', '/api/status', '/api/portfolio']) assert.equal(await responseStatus(get(api, control)), 401, api)
   }
   const namespaces = ['session', 'status', 'workspace', 'portfolio', 'campaigns', 'deliverables', 'risks', 'milestones', 'lenses', 'decisions', 'automations', 'notifications', 'settings', 'search']
-  for (const namespace of namespaces) for (const control of ['', `operator_session_local=${expiredToken}`, `operator_session_local=${revokedToken}`, cookie]) assert.equal(await responseStatus(get(`/api/${namespace}/migration/unknown`, control)), control === cookie ? 404 : 401, namespace)
+  for (const namespace of namespaces) for (const control of ['', sessionCookieWithToken(cookie,expiredToken), sessionCookieWithToken(cookie,revokedToken), cookie]) assert.equal(await responseStatus(get(`/api/${namespace}/migration/unknown`, control)), control === cookie ? 404 : 401, namespace)
   for (const api of ['/api/session','/api/status','/api/workspace','/api/portfolio','/api/campaigns','/api/risks/lens','/api/milestones/timeline','/api/lenses','/api/decisions','/api/automations','/api/notifications','/api/settings','/api/search?q=se']) assert.equal(await responseStatus(get(api)), 200, api)
   const deliverable = (await json(`/api/campaigns/${ids.campaign}`)).deliverables[0]
-  for (const control of ['', `operator_session_local=${expiredToken}`, `operator_session_local=${revokedToken}`, cookie]) { const response = await request(`${origin}/api/deliverables/${deliverable.id}/toggle-completion`, { method: 'POST', headers: { ...(control ? { cookie: control } : {}), 'content-type': 'application/json', origin, 'x-csrf-token': csrfToken }, body: JSON.stringify({ version: deliverable.version }) }); const body = await response.text(); assert.equal(response.status, control === cookie ? 200 : 401, body) }
+  for (const control of ['', sessionCookieWithToken(cookie,expiredToken), sessionCookieWithToken(cookie,revokedToken), cookie]) { const response = await request(`${origin}/api/deliverables/${deliverable.id}/toggle-completion`, { method: 'POST', headers: { ...(control ? { cookie: control } : {}), 'content-type': 'application/json', origin, 'x-csrf-token': csrfToken }, body: JSON.stringify({ version: deliverable.version }) }); const body = await response.text(); assert.equal(response.status, control === cookie ? 200 : 401, body) }
   for (const document of documents) { const response = await get(document); assert.equal(response.status, 200, document); const html = bodyText(await response.text()); assert.match(html, /Maya Chen/); assert.doesNotMatch(html, /Loading (workspace|campaign|risk|milestone|decision|automation|your notifications)/i, document) }
   // Change authoritative rows, then demand the new values in body HTML, not just serialized loader data.
   sql(`UPDATE campaigns SET name='Migration campaign current' WHERE id='${ids.campaign}'; UPDATE risks SET title='Migration risk current' WHERE id='${ids.risk}'; UPDATE milestones SET title='Migration milestone current' WHERE id='${ids.milestone}'; UPDATE decisions SET title='Migration decision current' WHERE id='${ids.decision}'; UPDATE lenses SET name='Migration lens current' WHERE id='${ids.lens}'; UPDATE automations SET name='Migration automation current'; UPDATE notifications SET title='Migration notification current'; UPDATE workspace SET name='Migration workspace current'`)
@@ -100,7 +101,7 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
   const wireEvidence = []
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
     const browserContext = await browser.newContext({ viewport, timezoneId: 'Pacific/Honolulu' })
-    await browserContext.addCookies([{ name: cookie.split('=')[0], value: cookie.slice(cookie.indexOf('=')+1), url: origin }])
+    await browserContext.addCookies(browserCookies(cookie,origin))
     const page = await browserContext.newPage(); const errors=[]; const failed=[]; let navigations=0; let publicNavigation=true
     page.on('response', response => { if (response.status() >= 400) console.error('START_HTTP_FAILURE', response.status(), response.url()) }); page.on('pageerror', error=>errors.push(error.message)); page.on('console', event=>{if(event.type()==='error')errors.push(event.text())}); page.on('requestfailed', request=>failed.push(request.url())); page.on('request', request=>{if(request.isNavigationRequest()&&request.frame()===page.mainFrame())navigations++; if(request.url().includes('/_serverFn/')){captures.set(request.url(),request.headers());if(publicNavigation)publicTransports.add(request.url())}})
     // The docs are a public router document with the shared header's Sign in pill; the Lobby at / is plain HTML.
@@ -126,7 +127,7 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
     const headers={...original};delete headers.cookie;delete headers.host
     const before=await json('/api/campaigns')
     const positive=await request(url,{headers:{...headers,cookie}});const positiveBody=await positive.text();assert.equal(positive.status,200);assert.match(positiveBody,/Migration|Maya/); wireEvidence.push({ url, control: 'valid', status: positive.status, headers: Object.fromEntries(positive.headers), body: positiveBody })
-    for(const control of ['', `operator_session_local=${expiredToken}`,`operator_session_local=${revokedToken}`]) {
+    for(const control of ['', sessionCookieWithToken(cookie,expiredToken),sessionCookieWithToken(cookie,revokedToken)]) {
       const denied=await request(url,{headers:{...headers,...(control?{cookie:control}:{})}});const body=await denied.text()
       if(publicTransports.has(url)) { assert.equal(denied.status,200);assert.match(body,/Migration workspace current/) }
       else { assert.ok([200,401,403].includes(denied.status));assert.match(body,/signin|signed_out|redirect/i) }

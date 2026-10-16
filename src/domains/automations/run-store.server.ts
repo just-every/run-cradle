@@ -67,6 +67,10 @@ export function createAutomationRunStore(db:D1Database) {
    return (await db.prepare('SELECT id,position,state,idempotency_key,started_at,result_json FROM launch_automation_actions WHERE run_id=? ORDER BY position')
     .bind(runId).all<AutomationActionRun>()).results
   },
+  async hold(actionId:string,until:number) {
+   await db.prepare("UPDATE launch_automation_actions SET result_json=? WHERE id=? AND state='Pending'")
+    .bind(JSON.stringify({heldUntil:new Date(until).toISOString()}),actionId).run()
+  },
   async claim(run:AutomationRun,action:AutomationActionRun,guard:{sql:string;values:readonly unknown[]}) {
    const now=Date.now()
    const claimed=await db.prepare(`UPDATE launch_automation_actions SET state='Running',started_at=?
