@@ -27,6 +27,7 @@ export type RiskRecord = {
 }
 
 export type RiskLensResponse = {
+  id: string
   risks: RiskRecord[]
   total: number | string
   name: string
@@ -153,6 +154,7 @@ const decodeLens = (payload: unknown): RiskLensResponse => {
     throw new RiskApiError('The risks lens response omitted total.', 502, 'invalid_response')
   }
   return {
+    id: string(response, 'id', 'risks lens'),
     risks: response.risks.map(risk),
     total,
     name: string(response, 'name', 'risks lens'),

@@ -1,3 +1,4 @@
+import {captureAutomationEventState} from './automation-event-state.server'
 import { campaignLifecycle } from './lifecycle'
 import { authorizeLaunchWrites } from './write-authority.server'
 import type { CommandInput, Json, RevisionRef } from '../../contracts/primitives'
@@ -36,9 +37,10 @@ export function recordChange(set:ChangeSet,ctx:RequestContext,kind:LaunchKind,be
  set.audit.push({action,subject,changes,sourceIds:[],personalContentRefs:[]})
  if(campaignId&&after)for(const k of Object.keys(after).filter(k=>!['version','updated_at','created_at'].includes(k)&&!k.startsWith('launch_')&&(before?.[k]??null)!==after[k]))set.mutations.push({kind:'insert',table:activityTable,row:{id:createUlid(),created_at:Date.parse(ctx.now),updated_at:Date.parse(ctx.now),version:1,campaign_id:campaignId,subject_id:row.id,actor_id:ctx.principal.humanId,type:action,field_name:k,previous_value:before?.[k]==null?null:String(before[k]),next_value:after[k]==null?null:String(after[k]),message:`${action}: ${k}`}})
  if(campaignId&&(!after&&kind!=='campaign'||after&&changes.length===0))set.mutations.push({kind:'insert',table:activityTable,row:{id:createUlid(),created_at:Date.parse(ctx.now),updated_at:Date.parse(ctx.now),version:1,campaign_id:campaignId,subject_id:row.id,actor_id:ctx.principal.humanId,type:action,field_name:null,previous_value:null,next_value:null,message:action}})
- set.events.push({name:action,version:1,subject,payload:{id:row.id,campaignId},causeRunIds:[]});if(after)set.changed.push({ref:subject,version:after.version})
+ set.events.push({name:action,version:1,subject,payload:{id:row.id,campaignId,...kind==='risk'?{severity:row.severity,previousSeverity:before?.severity??null}:{} },causeRunIds:[]});if(after)set.changed.push({ref:subject,version:after.version})
 }
 export async function plan(context:LaunchContext,ctx:RequestContext,input:CommandInput<unknown>,action:string,set:ChangeSet,result:Json,target:LaunchKind):Promise<AdmissionPlan<Json>>{
+ await captureAutomationEventState(context,set)
  for (const mutation of set.mutations) if (mutation.kind === 'insert' && mutation.table.tableId === 'activity_entries') mutation.row = { ...mutation.row, message: JSON.stringify({ commandId: input.commandId, message: mutation.row.message }) }
  const hash=await canonicalHash({input:input.input,expected:input.expected}),permit=await authorizeLaunchWrites(context,ctx,input,action,hash,set,target)
  return{commandId:input.commandId,action,appId:LAUNCH_APP_ID,canonicalInputHash:hash,permit,guards:[...set.guards,...permit.guards],mutations:set.mutations,audit:set.audit,events:set.events,outbox:[],committedResult:result,changed:set.changed}

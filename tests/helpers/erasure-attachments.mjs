@@ -24,3 +24,10 @@ export function gzipMetadata(body,{name,comment,extra}={}){
  for(const [flag,value] of [[8,name],[16,comment]])if(value!==undefined){header[3]|=flag;fields.push(Buffer.from(value),Buffer.from([0]))}
  return Buffer.concat([header,...fields,member.subarray(10)])
 }
+/** A valid 1x1 PNG: an accepted upload type with no inspectable text. */
+export function png(){
+ const table=Array.from({length:256},(_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0}),crc=bytes=>{let c=0xffffffff;for(const b of bytes)c=table[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0}
+ const chunk=(type,data)=>{const length=Buffer.alloc(4),sum=Buffer.alloc(4),body=Buffer.concat([Buffer.from(type),data]);length.writeUInt32BE(data.length);sum.writeUInt32BE(crc(body));return Buffer.concat([length,body,sum])}
+ const header=Buffer.alloc(13);header.writeUInt32BE(1,0);header.writeUInt32BE(1,4);header[8]=8;header[9]=2
+ return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(Buffer.from([0,255,255,255]))),chunk('IEND',Buffer.alloc(0))])
+}

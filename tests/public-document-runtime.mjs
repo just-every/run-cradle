@@ -39,16 +39,34 @@ contract('HOME-003 AUTH-BASE-001', 'Actual emitted public SSR survives unavailab
         receipt.checks.push({ route, configured, recoveredRename: true, status: response.status })
       }
     }
-    // Hosted mail is part of installation readiness. A missing sender remains
-    // an explicit configuration failure, distinct from an unavailable name read.
+    // Mail remains a readiness failure at the installed home. Sign-in is the
+    // deliberate recovery door and must explain how to repair that failure.
     await h.reconfigure({ MAIL_FROM: undefined })
+    const unavailableHome = await h.request('/')
+    assert.equal(unavailableHome.status, 503)
+    const error = await unavailableHome.json()
+    assert.equal(error.error.code, 'unconfigured')
+    assert.ok(error.error.missing.includes('MAIL_FROM'))
+    receipt.checks.push({ route: '/', configured: false, status: unavailableHome.status, unconfigured: true })
+
+    const signin = await h.request('/signin')
+    assert.equal(signin.status, 200, 'Sign-in remains available to explain missing hosted mail')
+    assert.match(signin.headers.get('content-type'), /^text\/html/)
+    const guidance = await signin.text()
+    assert.ok(guidance.includes('<p class="cr-eyebrow">Recovered public rename</p>'), 'The recovery door retains the persisted public identity')
+    assert.match(guidance, /role="status"/)
+    assert.doesNotMatch(guidance, /<input\b[^>]*type="email"|<form[^>]*action="\/auth\/magic-link"/, 'Unconfigured mail cannot offer an unusable email sign-in form')
+    assert.doesNotMatch(guidance, /unavailable_workspace|SQLITE|SELECT name|PRIVATE-QUERY-ERROR-SENTINEL/)
+    receipt.checks.push({ route: '/signin', configured: false, status: signin.status, actionableMailSetup: true, emailForm: false })
+
+    await h.reconfigure({ MAIL_FROM: 'synthetic@example.test' })
     for (const route of ['/', '/signin']) {
       const response = await h.request(route)
-      assert.equal(response.status, 503)
-      const error = await response.json()
-      assert.equal(error.error.code, 'unconfigured')
-      assert.ok(error.error.missing.includes('MAIL_FROM'))
-      receipt.checks.push({ route, configured: false, status: response.status, unconfigured: true })
+      assert.equal(response.status, 200, 'Repairing the sender restores public readiness')
+      const html = await response.text()
+      assert.ok(html.includes('Recovered public rename'), 'Mail repair retains the persisted rename')
+      if (route === '/signin') assert.match(html, /<form[^>]*action="\/auth\/magic-link"/, 'Configured mail restores the actual sign-in form')
+      receipt.checks.push({ route, configured: true, status: response.status, recoveredMail: true, recoveredRename: true })
     }
     if (process.env.CRADLE_PUBLIC_EVIDENCE) {
       await mkdir(process.env.CRADLE_PUBLIC_EVIDENCE, { recursive: true })

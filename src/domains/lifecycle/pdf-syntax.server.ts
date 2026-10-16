@@ -1,3 +1,4 @@
+import type {InspectionBudget} from './inspection-budget.server'
 export type PdfName={kind:'name';value:string}
 export type PdfString={kind:'string';value:string;fontText?:string}
 export type PdfRef={kind:'ref';key:string}
@@ -25,26 +26,32 @@ export function valueText(value:PdfValue):string[]{
  if(Array.isArray(value))return value.flatMap(valueText)
  return []
 }
-function stringText(bytes:number[]):PdfString{
- const data=new Uint8Array(bytes)
+/** Growable byte buffer: decoded strings and names never hold a JS number per byte. */
+class Bytes{
+ private data=new Uint8Array(64);length=0
+ push(byte:number){if(this.length===this.data.length){const grown=new Uint8Array(this.data.length*2);grown.set(this.data);this.data=grown}this.data[this.length++]=byte}
+ view(){return this.data.subarray(0,this.length)}
+}
+function stringText(buffer:Bytes):PdfString{
+ const data=buffer.view()
  const bom=data[0]===254&&data[1]===255?'utf-16be':data[0]===255&&data[1]===254?'utf-16le':undefined
  if(bom){
-  const value=new TextDecoder(bom,{fatal:true}).decode(data.subarray(2)),codes=bytes.slice(2)
+  const value=new TextDecoder(bom,{fatal:true}).decode(data.subarray(2)),codes=data.subarray(2)
   // A BOM identifies a PDF text string, not a Type1 glyph encoding. Retain the
   // printable glyph bytes too; otherwise hex UTF16 can hide an ASCII identity.
   const inspectable=codes.every(b=>b===0||b>=32&&b<=126)
-  return {kind:'string',value,...inspectable?{fontText:new TextDecoder().decode(new Uint8Array(codes.filter(b=>b!==0)))}:{}}
+  return {kind:'string',value,...inspectable?{fontText:new TextDecoder().decode(codes.filter(b=>b!==0))}:{}}
  }
- if(bytes.some(b=>b>127||b===0))throw new Error('unsupported PDF string encoding')
+ if(data.some(b=>b>127||b===0))throw new Error('unsupported PDF string encoding')
  const value=new TextDecoder('utf-8',{fatal:true}).decode(data)
- return {kind:'string',value,...bytes.every(b=>b>=32&&b<=126)?{fontText:value}:{}}
+ return {kind:'string',value,...data.every(b=>b>=32&&b<=126)?{fontText:value}:{}}
 }
 /** One lexer for objects, dictionaries and content. Comments are separators;
  * names are decoded before comparison; duplicate decoded keys are refused. */
 export class PdfSyntax{
  at:number
  private tokens=0
- constructor(readonly text:string,start=0,readonly end=text.length){this.at=start}
+ constructor(readonly text:string,private readonly budget:InspectionBudget,start=0,readonly end=text.length){this.at=start}
  skip(){
   while(this.at<this.end){
    if(white(this.text[this.at]))this.at++
@@ -62,23 +69,26 @@ export class PdfSyntax{
   return value
  }
  hasWord(word:string){this.skip();return this.text.startsWith(word,this.at)&&this.at+word.length<=this.end&&delimiter(this.text[this.at+word.length])}
- number(){const word=this.word();if(!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(word))throw new Error('invalid PDF number');const value=Number(word);if(!Number.isFinite(value))throw new Error('invalid PDF number');return value}
+ number(){this.budget.charge(64);const word=this.word();if(!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(word))throw new Error('invalid PDF number');const value=Number(word);if(!Number.isFinite(value))throw new Error('invalid PDF number');return value}
  value(depth=0):PdfValue{
   this.skip();this.count();if(depth>64||this.at>=this.end)throw new Error('PDF nesting or truncation limit')
   const c=this.text[this.at]!
+  // Charge before allocating values or their collection slots. Number parsing
+  // also charges xref/header scalars and reference lookahead through number().
+  if(!/[+\-.\d]/.test(c))this.budget.charge(c==='['||c==='<'&&this.text[this.at+1]==='<'?128:64)
   if(c==='/'){
-   this.at++;let value=''
+   this.at++;const value=new Bytes()
    while(this.at<this.end&&!delimiter(this.text[this.at])){
     let byte=this.text.charCodeAt(this.at++)
     if(byte===35){const hex=this.text.slice(this.at,this.at+2);if(this.at+2>this.end||!/^[\da-f]{2}$/i.test(hex))throw new Error('invalid PDF name escape');byte=parseInt(hex,16);this.at+=2}
     if(byte<32||byte>126)throw new Error('unsupported PDF name encoding')
-    value+=String.fromCharCode(byte)
+    value.push(byte)
    }
-   if(!value)throw new Error('unsupported empty PDF name')
-   return {kind:'name',value}
+   if(!value.length)throw new Error('unsupported empty PDF name')
+   return {kind:'name',value:new TextDecoder('latin1').decode(value.view())}
   }
   if(c==='('){
-   this.at++;const bytes:number[]=[];let nesting=1
+   this.at++;const bytes=new Bytes();let nesting=1
    while(this.at<this.end&&nesting){
     const ch=this.text[this.at++]!
     if(ch==='\\'){
@@ -96,11 +106,10 @@ export class PdfSyntax{
    return stringText(bytes)
   }
   if(c==='<'&&this.text[this.at+1]!=='<'){
-   this.at++;let hex=''
-   while(this.at<this.end&&this.text[this.at]!=='>'){const ch=this.text[this.at++]!;if(white(ch))continue;if(!/[\da-f]/i.test(ch))throw new Error('invalid PDF hex string');hex+=ch}
+   this.at++;const bytes=new Bytes();let high=-1
+   while(this.at<this.end&&this.text[this.at]!=='>'){const ch=this.text[this.at++]!;if(white(ch))continue;if(!/[\da-f]/i.test(ch))throw new Error('invalid PDF hex string');const digit=parseInt(ch,16);if(high<0)high=digit;else{bytes.push(high*16+digit);high=-1}}
    if(this.at>=this.end)throw new Error('unterminated PDF hex string');this.at++
-   if(hex.length%2)hex+='0'
-   const bytes:number[]=[];for(let i=0;i<hex.length;i+=2)bytes.push(parseInt(hex.slice(i,i+2),16))
+   if(high>=0)bytes.push(high*16)
    return stringText(bytes)
   }
   if(c==='['){this.at++;const values:PdfValue[]=[];while(true){this.skip();if(this.text[this.at]===']'){this.at++;return values}values.push(this.value(depth+1))}}

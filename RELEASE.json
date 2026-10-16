@@ -1,7 +1,19 @@
 {
   "version": "0.1.0",
-  "date": "2026-10-11",
+  "date": "2026-10-16",
   "contractChanges": {
+    "AUTO-007": {
+      "change": "added",
+      "summary": "Owner-accepted clarification on 14 October 2026: the former unconditional transport retry promise applies only to failures known safe to retry. Uncertain SendGrid submissions retain visible Unknown action/run states and error details, with no automatic or manual resend. Existing safe retries retain their absolute 1, 5, 15, 30 and 60 minute offsets and action keys. Local action keys do not establish SendGrid idempotency; no reconciliation or exactly-once capability is claimed. See docs/launch-runtime.md#uncertain-delivery-contract--14-october-2026."
+    },
+    "AUTO-009": {
+      "change": "added",
+      "summary": "Clarifies the AUTO-007 uncertain-outcome exception: manual retry accepts only Failed runs, creates a linked retryOf run and retains original evidence and completed actions. Unknown runs cannot be manually resent; this adds no reconciliation operation or provider-side idempotency guarantee."
+    },
+    "NOTIFY-003": {
+      "change": "added",
+      "summary": "Clarifies that delivery retries follow AUTO-007's safe-retry requirement. Uncertain submission remains visibly Unknown instead of being converted to a confirmed failure eligible for resend. SendGrid acceptance is not proof of mailbox delivery; the in-app notification remains available. No new provider, authority or migration is introduced."
+    },
     "BASE-ACCESS-002": {
       "change": "added",
       "summary": "Breaking transport semantic clarification of BASE-ACCESS-002. Full old/new wording: docs/contract-transition.md#base-access-002-transport-clarification--29-september-2026. Native document 303 with empty body and safe signin next is preserved; private Start functions independently return identifiable serialized signin redirects; protected HTTP APIs retain 401. No authorization expansion."
@@ -47,8 +59,8 @@
       "summary": "Names the records-builder capability without claiming the full records acceptance floor."
     },
     "AUTH-BASE-001": {
-      "change": "added",
-      "summary": "Base operator-auth owns hosted and local credentials. The shared installer bootstraps the owner and local sign-in uses its one-use development outbox; legacy product credentials and mail execution are retired."
+      "change": "changed",
+      "summary": "Standalone local sign-in uses the checkout key and real Base dev sessions; the captured-mail sender and inbox page are retired. Hosted /signin names incomplete owner claim and missing or failed email configuration without claiming a request was received. Mail tests retain doubles only at their provider edge. Demo files and host remain owned by the demo lane."
     },
     "RECORDS-002": {
       "change": "added",
@@ -59,19 +71,39 @@
       "summary": "Human labels, linked chips, saved grid/kanban/form views and bounded responsive accessibility journeys."
     },
     "RECORDS-004": {
-      "change": "added",
-      "summary": "Per-view typed CSV round-trip and three editable templates; no expansion to the wider planned records floor."
+      "change": "changed",
+      "summary": "Launch readiness opens its included base without creating a duplicate; manual templates retain preview and adoption. View CSV checkbox values use Yes/No, accepted by the existing importer."
     },
     "RECORDS-007": {
       "change": "added",
       "summary": "Agent-proposed schema changes: an owner-issued proposing key (one base, 30-day maximum, revocable, digest only) reaches only the proposal door over REST and MCP, proposes schema, views and forms with an impact preview, and cannot adopt, read records or manage keys. Only the owner adopts through release.adopt with the existing recheck; proposal text is inert. No existing clause is weakened."
+    },
+    "HOME-003": {
+      "change": "changed",
+      "summary": "The installed Lobby and public setup state read Base\u2019s durable owner claim, independently of workspace first-run details. A healthy rer deploy therefore offers Sign in immediately after owner claim, with no setup-token instruction. Signed-in app access still requires the owner to confirm workspace details under SET-003; public disclosure remains limited to claim state and the workspace name."
+    },
+    "OPS-002": {
+      "change": "changed",
+      "summary": "15 October 2026: the installation owner can hand ownership to another active member (`member.transfer-ownership`) after a fresh Base email-link proof (`owner:transfer`) in the same session; the new owner receives the owner's exact app scopes, the installation-owner flag and the Base owner role, and Records base schema control. In the same commit the former owner becomes a Base admin, so exactly one owner remains; they keep their app access until they remove themselves through the unchanged removal rules (no owned active campaign, no unresolved assigned decision). The current owner can never be removed, by themselves or anyone else: they hand over first, so the installation always keeps an active owner. Previously the sole owner could never be removed. Security: the step-up proof and actor/target versions are rechecked inside the admission transaction; both people's older sessions end because Base bumps their operator version on a role change; proposing keys issued by the former owner stop working."
+    },
+    "VIEW-007": {
+      "change": "changed",
+      "summary": "15 October 2026: launch collections (campaign grid, decision queue, lens list, launch reader) page with a keyset cursor over the requested sort and the record ID instead of a numeric offset, so records added or removed between pages neither repeat nor skip others. Cursor strings from earlier pages are not accepted; clients restart from the first page."
+    },
+    "VIEW-005": {
+      "change": "changed",
+      "summary": "Global search includes every authorized base, with current row and field checks and canonical record detail links. Launch archive filtering is retained; inaccessible fields never produce matches."
+    },
+    "RECORDS-006": {
+      "change": "changed",
+      "summary": "Settings prepares and downloads a verified installation .rer archive using the maintained CLI portability format and privacy policy. Only the current installation owner has this door; credentials and private connections remain excluded, and source is kept separately."
     }
   },
   "extensionPointChanges": [],
   "migrations": [
     {
-      "id": "migrations/updates/9022_domain_rules_step_up.sql",
-      "buyerSteps": "Apply after 9021 in the updates group. The refreshed Base auth requires the additive domain-rule and step-up tables; existing operators, sessions and records stay unchanged."
+      "id": "migrations/core/1210_manual_records.sql",
+      "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
     },
     {
       "id": "migrations/base/9000_base_operator_auth.sql",
@@ -82,11 +114,11 @@
       "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
     },
     {
-      "id": "migrations/core/1210_manual_records.sql",
+      "id": "migrations/base/9002_development_outbox.sql",
       "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
     },
     {
-      "id": "migrations/base/9002_development_outbox.sql",
+      "id": "migrations/updates/9012_retire_native_auth.sql",
       "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
     },
     {
@@ -94,8 +126,8 @@
       "buyerSteps": "Apply after 9020 and before 9022 in the updates group; preserve all previously applied SQL and data. It rebuilds oa_sessions so Base can record local dev sessions, holding and restoring cradle_base_sessions around it, and adds oa_dev_credentials. Every existing session, mirrored product session and key keeps its id and stays valid; nobody signs in again."
     },
     {
-      "id": "migrations/updates/9012_retire_native_auth.sql",
-      "buyerSteps": "Apply in the declared migration group order; preserve all previously applied SQL and data. Sign in again through Base; the retirement migration revokes native credentials."
+      "id": "migrations/updates/9022_domain_rules_step_up.sql",
+      "buyerSteps": "Apply after 9021 in the updates group. The refreshed Base auth requires the additive domain-rule and step-up tables; existing operators, sessions and records stay unchanged."
     },
     {
       "id": "migrations/updates/9023_lifecycle_erasure.sql",
@@ -112,8 +144,32 @@
     {
       "id": "migrations/updates/9026_schema_proposals.sql",
       "buyerSteps": "Apply after 9025 in the updates group, preserving all applied SQL. It adds proposing-key bindings and stored agent proposals; existing records, views, forms, keys, grants and memberships are unchanged. Installation archives never carry proposing-key bindings."
+    },
+    {
+      "id": "migrations/updates/9030_legacy_sample_ulids.sql",
+      "buyerSteps": "Apply after 9029 in the updates group, preserving all applied SQL. It rewrites only the seven sample-fixture IDs outside the ULID alphabet (two lenses, four automations, one notification read) and every column that references them, so adopted legacy samples accept typed commands. No other row changes; historical receipt JSON keeps the old literal."
+    },
+    {
+      "id": "migrations/updates/9031_installation_owner_guard.sql",
+      "buyerSteps": "Apply after 9030 in the updates group, preserving all applied SQL. It adds two triggers on oa_operators that refuse (last_owner) deactivating, demoting or deleting the Base operator of the active installation owner unless another active principal is already the installation owner in the same transaction. No rows change; hand ownership over with member.transfer-ownership."
+    },
+    {
+      "id": "migrations/updates/9032_repair_accounting_mapping.sql",
+      "buyerSteps": "Apply after 9031 in the updates group without changing any prior SQL. This adds versioned owner-approved accounting contact, account and tax mappings. It grants no provider access and does not create a payable."
+    },
+    {
+      "id": "migrations/updates/9033_oidc_dependencies.sql",
+      "buyerSteps": "Apply after 9032 in the updates group without changing existing accounts or sessions. This adds optional Base identity-provider link and OIDC transaction storage. A new installation keeps provider sign-in off until configured and approved. Configure IDENTITY_PROVIDER through setup and manage enable, disable or unlink at /auth/settings/identity."
+    },
+    {
+      "id": "migrations/updates/9034_owner_signin.sql",
+      "buyerSteps": "Apply after 9033, preserving all previous migration bytes. This adds Base\u2019s single-use, expiring owner sign-in grant table. Run rer install with the exact 0.2.20 pin and redeploy before using rer signin."
+    },
+    {
+      "id": "migrations/updates/9035_launch_display_names.sql",
+      "buyerSteps": "Apply after 9034. Changes only retained Launch display labels and declared primary fields; record IDs, values and authority remain unchanged."
     }
   ],
   "breaking": true,
-  "agentUpdateInstructions": "Preserve all applied core migration bytes, existing records, identities, policy mappings and grants. Install frozen dependencies and use the local verification profiles documented in README.md. Review the BASE-ACCESS-002 transport clarification in docs/contract-transition.md; document and generated-function denials use their native protocols while HTTP APIs retain 401. Base installation adds migrations/base without replacing core history; existing Wrangler migration history requires reviewed hash adoption. Production uses Base cookies and two-step magic-link confirmation; legacy product cookies are not admitted by Base-configured installations. Remove SETUP_TOKEN after successful bootstrap. Keep new providers, scopes and grants inactive until explicitly authorized. Records-first navigation retains the launch template; enableRepairs is false by default and navigation grants no authority. See docs/installation.md and ACCEPTANCE.md for commands and remaining release gates. Local checks do not establish hosted readiness or full flagship acceptance. Apply the additive manual-records migration. Review every manual schema impact preview before adoption; use its recovery export for removed values. Configure OWNER_EMAIL before production setup; sign in through Base rather than a legacy product cookie. Local installs now use the shared installer and real Base sessions. Preserve private configuration permissions at 0600. Remove LOCAL_DEV_SESSION. Review the additive native credential retirement migration before upgrading. Hosting and RER admission require owner acceptance."
+  "agentUpdateInstructions": "Preserve all applied core migration bytes, existing records, identities, policy mappings and grants. Install frozen dependencies and use the local verification profiles documented in README.md. Review the BASE-ACCESS-002 transport clarification in docs/contract-transition.md; document and generated-function denials use their native protocols while HTTP APIs retain 401. Base installation adds migrations/base without replacing core history; existing Wrangler migration history requires reviewed hash adoption. Production uses Base cookies and two-step magic-link confirmation; legacy product cookies are not admitted by Base-configured installations. Remove SETUP_TOKEN after successful bootstrap. Keep new providers, scopes and grants inactive until explicitly authorized. Records-first navigation retains the launch template; enableRepairs is false by default and navigation grants no authority. See docs/installation.md and ACCEPTANCE.md for commands and remaining release gates. Local checks do not establish hosted readiness or full flagship acceptance. Apply the additive manual-records migration. Review every manual schema impact preview before adoption; use its recovery export for removed values. Configure OWNER_EMAIL before production setup; sign in through Base rather than a legacy product cookie. Local installs now use the shared installer and real Base sessions. Preserve private configuration permissions at 0600. Remove LOCAL_DEV_SESSION. Review the additive native credential retirement migration before upgrading. Hosting and RER admission require owner acceptance. 15 October 2026 (launch operator doors): apply migrations 9030 and 9031. Launch CSV import, CSV export of the grid, lenses and the decision queue, custom-field definitions in Settings, campaign bulk edit with undo, sample data install/remove and ownership handover are now reachable in the app; launch paging cursors changed to keysets (VIEW-007), and samples.remove is a registered command whose stored-file cleanup runs on removal. 15 October 2026 (repair outcome and optional OIDC): keep @runeditrun/rer pinned to 0.2.20 and run rer install. Apply additive migrations 9032 and 9033. Repair provider actions require current owner-issued grants, current source evidence, designated approval above AUD 2000, independent physical acceptance and explicit accountant mappings. A provider response loss stays uncertain until original-key reconciliation; an accounting receipt confirms handoff, never payment. An approved identity-provider link persists until the owner disables or unlinks it; removing the setup answer alone does not revoke it. Apply additive migration 9034 for single-use owner sign-in through rer signin. The owner claim changes the installed Lobby to Sign in before workspace setup is completed."
 }

@@ -27,7 +27,8 @@ export const createGrantService=(db:D1Database,policy:PolicyPort)=>{
     }
     // A row-limited issuer must not use delegation to broaden the delegated predicate.
     for(const scope of spec.scope){const own=await policy.scope(ctx,{appId:spec.appId,entityId:scope.entityId,purpose:'read'});guards.push(...own.currentAuthorityGuards)}
-    for(const p of spec.providerScopes){if(!p.fields.length||!p.purposes.length)return denied('Provider authority needs explicit fields and purposes.');for(const scope of spec.scope){const own=await policy.scope(ctx,{appId:spec.appId,entityId:scope.entityId,purpose:'provider_context'});if(!p.fields.every(f=>own.readableFieldIds.includes(f)))return denied();guards.push(...own.currentAuthorityGuards)}}
+    const providerFields=new Set<string>();if(spec.providerScopes.length)for(const scope of spec.scope){const own=await policy.scope(ctx,{appId:spec.appId,entityId:scope.entityId,purpose:'provider_context'});for(const field of own.readableFieldIds)providerFields.add(field);guards.push(...own.currentAuthorityGuards)}
+    for(const p of spec.providerScopes){if(!p.fields.length||!p.purposes.length)return denied('Provider authority needs explicit fields and purposes.');if(!p.fields.every(f=>providerFields.has(f)))return denied('Provider fields must be readable within the explicit grant scopes.')}
     return guards
   }
   const read=async(id:string)=>db.prepare('SELECT * FROM authority_grants WHERE id=?').bind(id).first<{id:string;issuer_id:string;delegate_id:string;app_id:string;spec_json:string;impact_hash:string;state:Grant['state'];version:number;created_at:number;updated_at:number;revoked_at:number|null}>()

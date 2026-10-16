@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {ownerWorkerName,ownerPlan} from '../../vendor/base/modules/deploy-kit/owner.mjs';
+import {ownerWorkerName,ownerPlan} from '@runeditrun/rer/modules/deploy-kit/owner';
 import {ownerArtifact} from '../deployment/owner-artifact.mjs';
 import {deployOwner} from '../deployment/deploy.mjs';
 import {adapter} from './local.mjs';
@@ -18,5 +18,5 @@ export async function deploy({root,options,store,signal,operationToken}){
   return {dryRun:true,deployed:false,migrations:artifact.migrations.length};
  }
  const result=await deployOwner(['--environment',environment],process.env,{root});
- return {deployed:true,origin:result.origin};
+ return {deployed:true,origin:result.origin,state:result.state,setupToken:result.setupToken};
 }

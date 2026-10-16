@@ -1,5 +1,4 @@
 import {contract} from './contract.mjs'
-import './records-detail-review.mjs'
 import {relationFixture,relationReview} from './helpers/records-browser-relations.mjs'
 import {homeReview, builderReview, gridReview, gridEdgeReview} from './helpers/records-browser-review.mjs'
 import {additionalViews} from './helpers/records-browser-additional-views.mjs'

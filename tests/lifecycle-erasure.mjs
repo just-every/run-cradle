@@ -14,7 +14,23 @@ import {portabilityPolicy} from '../scripts/portability/policy.mjs'
 import {migratedD1} from './helpers/sqlite-d1.mjs'
 import {derivedSearch} from '../scripts/portability/records.mjs'
 import {portableRecordSchema} from '../src/domains/records/portable-schema.server.ts'
-import {objectBucket} from './helpers/erasure-attachments.mjs'
+import {objectBucket,png} from './helpers/erasure-attachments.mjs'
+import {applyPreview} from './helpers/base-exit-runtime.mjs'
+import {prepareCsvSource,allocateImportIdentities} from '../src/domains/records/base-transfer/source.ts'
+import {previewBaseImport} from '../src/domains/records/base-transfer/plan.ts'
+import {createFixtureAuth} from './helpers/base-fixture-auth.mjs'
+import {executionResolutionFixture,testKeyring} from './helpers/execution-resolution-fixture.mjs'
+import {STAGING_ENTITY,stagingPolicyEntity} from '../src/domains/evidence/staging.server.ts'
+import {executionPolicyEntities} from '../src/domains/execution/metadata.server.ts'
+import {createPolicyPort} from '../src/domains/authority/policy.server.ts'
+import {createReplayAccess,createRequestContextFactory} from '../src/domains/authority/context.server.ts'
+import {createAdmissionService} from '../src/domains/admission/service.server.ts'
+import {createExecutionBudget} from '../src/domains/execution/budget-bridge.server.ts'
+import {createCommandRegistry} from '../src/core/registry/commands.ts'
+import {createCommandHttp} from '../src/core/registry/http.ts'
+import {registerExecutionCommands} from '../src/domains/execution/commands.server.ts'
+import {trustedPredicate} from '../src/domains/admission/sql.server.ts'
+import {createUlid} from '../src/core/shared/ids.ts'
 
 contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installation transfer creates its checkpoint atomically',async()=>{
  const h=await fixture()
@@ -143,4 +159,44 @@ contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decode
   assert.equal(target.sql.prepare('SELECT count(*) n FROM operators').get().n,0,'Later journal refuses old archive on a fresh target')
   console.log('ERASURE_CUSTODY_COUNTS '+JSON.stringify({before:beforeCounts,journals:journals.map(j=>({...j,stores_json:JSON.parse(j.stores_json)})),after:beforeCounts.map(({store})=>({store,rows:h.sql.prepare('SELECT count(*) n FROM '+store).get().n}))}))
  }finally{target?.close();h.close()}
+})
+
+contract('BASE-DATA-001 BASE-DATA-003','erasure completes beside other people\'s uninspectable files and confirmed name-only import copies',async()=>{
+ const h=await fixture()
+ try{
+  // An import that names the person without their email: a name alone never identifies them.
+  const source=prepareCsvSource([{filename:'Tasks.csv',bytes:Buffer.from('Task,Assignee\r\nFix roof,'+identity.name+'\r\nPaint fence,'+control.name+'\r\n')}],'tasks')
+  const preview=previewBaseImport(source,{name:'Tasks'},allocateImportIdentities(source));await applyPreview(h,preview)
+  const appId=preview.identities.appId,version=()=>h.sql.prepare('SELECT version FROM authority_principals WHERE id=?').get(h.person).version;await h.assign(appId)
+  assert.equal((await h.send('remove',{appId},version())).status,200)
+  // Other people's photo, ragged CSV, unsupported PDF and a 31 KB PDF that inflates to 30 MiB.
+  for(const [bytes,type] of [[png(),'image/png'],[Buffer.from('Item,Qty\nBolts,4\nNotes: reorder next week\n'),'text/csv'],[compressedPdf('Quarterly plan','LZWDecode'),'application/pdf'],[compressedPdf('a'.repeat(30*1024*1024)),'application/pdf']])await h.file(bytes,{owner:h.owner,type})
+  const objects=h.bucket.snapshot(),refused=await h.send('erase',{appId},version()),copies=(await refused.json()).error.erasureCopies
+  assert.equal(refused.status,409);assert.ok(copies.length>0)
+  const response=await h.send('erase',{appId,keepCopies:copies.map(copy=>copy.store)},version()),body=await response.json()
+  assert.equal(response.status,200,JSON.stringify(body));assert.equal(body.data.value.plan.kept.find(copy=>copy.reason==='not_inspected')?.rows,3,'Uninspectable files are reported, not silently skipped')
+  assert.deepEqual(h.bucket.snapshot(),objects,'Other people\'s files stay byte-identical')
+  assert.equal(h.sql.prepare('SELECT count(*) n FROM operators WHERE name=? OR email=?').get(identity.name,identity.email).n,0)
+ }finally{h.close()}
+})
+
+contract('BASE-DATA-001','erasing an operator who recorded a human effect resolution removes their name and email from its receipt',async()=>{
+ const h=await fixture()
+ try{
+  const {draft}=await h.create(),appId=draft.appId,host=new URL(h.origin).host
+  const auth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-erasure-session-secret-long-enough',mode:'development'},h.owner),session=await auth.signIn(h.person)
+  const f=await executionResolutionFixture(h.db,[h.person],{appId}),registry={get:(app,id)=>id===STAGING_ENTITY?stagingPolicyEntity(app):executionPolicyEntities.find(e=>e.id===id)}
+  const policy=createPolicyPort(h.db,registry),admission=createAdmissionService(h.db,createReplayAccess(h.db,policy,registry)),authenticate=createRequestContextFactory(h.db,auth.configuration)
+  const ctx=await authenticate(new Request(h.origin+'/api/v1/runs/'+createUlid(),{headers:{host,cookie:session.cookie}})),commands=createCommandRegistry(admission)
+  registerExecutionCommands(commands,{db:h.db,admission,policy,workspaceId:'resolution-test',keyring:testKeyring,adapters:new Map(),currentGuards:async()=>[trustedPredicate('1')],...createExecutionBudget(h.db),backgroundContext:async()=>ctx})
+  const a=await f.unknown(),resolved=await createCommandHttp({commands,admission,authenticate}).fetch(new Request(h.origin+'/api/v1/commands/attempt.resolve',{method:'POST',headers:{host,origin:h.origin,'content-type':'application/json',cookie:session.cookie,'x-csrf-token':session.csrf},body:JSON.stringify({commandId:createUlid(),expected:[],input:{attemptId:a.attemptId,expectedVersion:1,outcome:'done',evidence:{summary:identity.name+' phoned the recipient, who confirmed delivery.',reference:'call log kept by '+identity.email}}})}))
+  assert.equal(resolved.status,200,await resolved.clone().text())
+  const holding=()=>h.sql.prepare("SELECT count(*) n FROM execution_receipts WHERE method='human_evidence' AND (instr(result_json,?)>0 OR instr(result_json,?)>0)").get(identity.name,identity.email).n
+  assert.equal(holding(),1)
+  assert.equal((await h.send('remove',{appId},h.sql.prepare('SELECT version FROM authority_principals WHERE id=?').get(h.person).version)).status,200)
+  const response=await h.send('erase',{appId},h.sql.prepare('SELECT version FROM authority_principals WHERE id=?').get(h.person).version)
+  assert.equal(response.status,200,await response.clone().text());assert.equal(holding(),0)
+  const receipt=JSON.parse(h.sql.prepare("SELECT result_json FROM execution_receipts WHERE method='human_evidence'").get().result_json).humanResolution
+  assert.equal(receipt.actorId,h.person);assert.equal(receipt.outcome,'done','The decision and its actor stay; only identity text is anonymised')
+ }finally{h.close()}
 })

@@ -1,16 +1,17 @@
+import type {InspectionBudget} from './inspection-budget.server'
 import {PdfSyntax,dictionary,integer,isRef,keys} from './pdf-syntax.server'
 import type {PdfValue} from './pdf-syntax.server'
 export type PdfObject={value:PdfValue;stream?:string}
 /** Every byte outside comments/whitespace belongs to one indexed object or the
  * one classic xref/trailer. No recovery, incremental revision or unindexed data. */
-export function pdfEnvelope(file:string){
+export function pdfEnvelope(file:string,budget:InspectionBudget){
  const header=/^%PDF-1\.[0-7](?:\r\n|\r|\n)/.exec(file)
  if(!header)throw new Error('unsupported PDF version')
  const ending=/startxref[\x00\t\n\f\r ]+(\d+)[\x00\t\n\f\r ]+%%EOF[\x00\t\n\f\r ]*$/.exec(file)
  if(!ending)throw new Error('corrupt PDF trailer')
  const offset=Number(ending[1])
  if(!Number.isSafeInteger(offset)||offset<header[0].length||offset>=ending.index)throw new Error('invalid PDF xref offset')
- const xref=new PdfSyntax(file,offset);xref.word('xref')
+ const xref=new PdfSyntax(file,budget,offset);xref.word('xref')
  const indexed=new Map<string,number>(),ids=new Set<number>(),offsets=new Set<number>();let largest=0
  while(!xref.hasWord('trailer')){
   const start=integer(xref.number()),count=integer(xref.number())
@@ -29,10 +30,10 @@ export function pdfEnvelope(file:string){
  xref.word('startxref');if(integer(xref.number())!==offset||!/^[\x00\t\n\f\r ]+%%EOF[\x00\t\n\f\r ]*$/.test(file.slice(xref.at)))throw new Error('corrupt PDF ending')
  const ordered=[...indexed].sort((a,b)=>a[1]-b[1]),bounds=new Map<string,{start:number;end:number}>()
  ordered.forEach(([key,start],i)=>bounds.set(key,{start,end:ordered[i+1]?.[1]??offset}))
- if(!new PdfSyntax(file,header[0].length,ordered[0]?.[1]??offset).done())throw new Error('unindexed PDF content')
+ if(!new PdfSyntax(file,budget,header[0].length,ordered[0]?.[1]??offset).done())throw new Error('unindexed PDF content')
  function reader(key:string){
   const span=bounds.get(key);if(!span)throw new Error('missing PDF reference')
-  const parser=new PdfSyntax(file,span.start,span.end)
+  const parser=new PdfSyntax(file,budget,span.start,span.end)
   const id=integer(parser.number()),generation=integer(parser.number());parser.word('obj')
   if(`${id} ${generation}`!==key)throw new Error('corrupt PDF object identity')
   return parser

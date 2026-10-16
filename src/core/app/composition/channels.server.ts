@@ -1,3 +1,5 @@
+import {createLocalChannelDelivery} from '../../../domains/channels/local-delivery.server'
+import {capturedMailEnabled} from '../../platform/local-auth.server'
 import seed from '../../../../seed.json'
 import { measureChannelLimits } from '../../../domains/channels/limits.server'
 import { ApiError } from '../../registry/errors'
@@ -18,7 +20,7 @@ export function createChannelsComposition(platform: Platform, foundation: Server
   const db = platform.bindings.DB
   const profiles = createModelProfileReader({ db, policy: foundation.policy })
   const configuration = createConfigurationEvidence({
-    db,
+    db,policy:foundation.policy,
     connection: (ctx, id) => providers.connections(ctx).read(ctx, id),
     profile: profiles.read,
     async platform() {
@@ -29,11 +31,13 @@ export function createChannelsComposition(platform: Platform, foundation: Server
         ...(!env.MAIL_FROM ? ['MAIL_FROM'] : []),
         ...(!env.INSTALLATION_RELEASE_ID ? ['INSTALLATION_RELEASE_ID'] : []),
       ]
-      return { capabilities: [], requiredSetup, limits: await measureChannelLimits(db, seed.limits) }
+      const aiMissing=env.RER_DEMO==='1'?[]:[...(!env.AI_PROVIDER_API_KEY?.trim()?['AI_PROVIDER_API_KEY']:[]),...(!env.AI_MODEL?.trim()?['AI_MODEL']:[])]
+      const mailConfigured = platform.auth.configuration.baseMailConfigured === true
+      return { capabilities: [{id:'mail.sender.v1',state:mailConfigured?'ready' as const:'unconfigured' as const,checkedAt:null,missing:mailConfigured?[]:['installation mail provider, sender and API key'],reason:mailConfigured?'The installation mail sender is configured. Provider acceptance and delivery are recorded separately.':'Configure the installation mail sender.',supportedActions:['notification.email.send']},{id:'ai.provider.v1',state:aiMissing.length?'unconfigured' as const:'ready' as const,checkedAt:null,missing:aiMissing,reason:'Configuration permits enabling AI; measured results are recorded separately.',supportedActions:['launch.campaign-brief','launch.risk-readout','launch.lens-proposal']}], requiredSetup, limits: await measureChannelLimits(db, seed.limits) }
     },
   })
   const dependencies = { db, policy: foundation.policy, configuration }
-  const services = registerChannelCommands(foundation.commands, dependencies,async(ctx,ref)=>{
+  const access: Parameters<typeof registerChannelCommands>[2] = async(ctx,ref)=>{
     if(!ref.subjectId||!ref.subjectType)return false
     try{
       const scope=await foundation.policy.scope(ctx,{appId:ref.appId,entityId:ref.subjectType,purpose:'read'})
@@ -44,8 +48,9 @@ export function createChannelsComposition(platform: Platform, foundation: Server
       return !!await db.prepare(`SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${scope.rowPredicate.sql})`)
        .bind(ref.subjectId,...scope.rowPredicate.values).first()
     }catch{return false}
-  })
-  const http = createChannelHttp({ ...dependencies, commands: foundation.commands, authenticate: request => foundation.authenticate(request, 'http', createUlid()) })
+  }
+  const services = registerChannelCommands(foundation.commands, dependencies,access)
+  const http = createChannelHttp({ ...dependencies, access, commands: foundation.commands, authenticate: request => foundation.authenticate(request, 'http', createUlid()) })
   const mail = createChannelMailBridge({ authority: providers.notificationAuthority, execution: providers.execution, async connection() {
     const env = platform.bindings
     if (!env.NOTIFICATION_MAIL_CONNECTION_ID || !env.MAIL_FROM || !env.INSTALLATION_RELEASE_ID) throw new ApiError('unconfigured', 'Notification mail requires its explicit connection, sender and installation release.')
@@ -53,6 +58,6 @@ export function createChannelsComposition(platform: Platform, foundation: Server
     if (!row) throw new ApiError('unconfigured', 'The configured notification sender connection is unavailable.')
     return { ...row, from: env.MAIL_FROM, releaseId: env.INSTALLATION_RELEASE_ID }
   } })
-  const delivery = createChannelDelivery(db, foundation.admission, mail)
+  const delivery = capturedMailEnabled(platform.bindings)&&platform.bindings.MAIL_PROVIDER==='development'?createLocalChannelDelivery(platform.bindings,foundation.admission):createChannelDelivery(db, foundation.admission, mail)
   return { ...services, configuration, http, delivery }
 }

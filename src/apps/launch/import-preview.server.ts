@@ -1,9 +1,11 @@
 import type { RequestContext } from '../../domains/authority/ports'
 import type { ImportPrepared } from '../../domains/portability/import.server'
+import type { CellValue } from '../../contracts/primitives'
 import { canonicalHash } from '../../domains/admission/canonical'
 import { launchColumns,launchFieldIds } from './descriptors.server'
 import { campaignFields,deliverableFields,milestoneFields,LAUNCH_APP_ID,launchEntities } from './contracts'
 import { mappedFields,fail,type LaunchContext } from './domain.server'
+import { parseImportRow } from './import-row-errors'
 import type { LaunchRow } from './storage.server'
 /** Read one source snapshot for preview; commit still prepares current guarded domain mutations. */
 export async function prepareLegacyImportPreview(context:LaunchContext,ctx:RequestContext,kind:'campaign'|'deliverable'|'milestone',entries:{values:Record<string,string>;id:string}[]):Promise<({prepared:ImportPrepared}|{error:string})[]>{
@@ -32,12 +34,14 @@ export async function prepareLegacyImportPreview(context:LaunchContext,ctx:Reque
   }
   if(kind!=='campaign')normalized.campaignId=campaign!.id
   const defaults=kind==='campaign'?{objective:'',statusSummary:'',phase:'Planning',status:'On track',budgetMinor:0,spendMinor:0,tags:[],customFields:{}}:kind==='milestone'?{type:'Launch',status:'Not started',endDate:null,conflictReason:null}:{dueDate:null},prior=before?mappedFields(kind,before):{},merged:Record<string,unknown>={...defaults,...prior,...normalized}
-  ;(kind==='campaign'?campaignFields:kind==='deliverable'?deliverableFields:milestoneFields).parse(merged)
+  ;parseImportRow<unknown>(kind==='campaign'?campaignFields:kind==='deliverable'?deliverableFields:milestoneFields,merged)
   if(!people.results.some(p=>p.id===merged.ownerId))fail('Owner is not current')
   if(kind==='campaign'&&(String(merged.launchDate)<String(merged.startDate)||!['Planning','Build','Production','Review','Launch prep'].includes(String(merged.phase))||!['On track','Watch','At risk','Blocked'].includes(String(merged.status))))fail('Invalid campaign dates, phase or status')
   if(kind==='milestone'&&merged.endDate&&String(merged.endDate)<String(merged.startDate))fail('endDate must not precede startDate')
   const oldTags=tags.filter(t=>t.campaign_id===before?.id).map(t=>t.tag),oldCustom=Object.fromEntries(values.filter(v=>v.campaign_id===before?.id).map(v=>[v.field_id,JSON.parse(v.value_json)])),changed=!before||Object.entries(normalized).some(([key,value])=>JSON.stringify(key==='tags'?oldTags:key==='customFields'?Object.fromEntries(Object.keys(value as object).map(id=>[id,oldCustom[id]??null])):prior[key])!==JSON.stringify(value))
-  output.push({prepared:{row:{id:before?.id??entry.id,key:kind==='campaign'?code.toLowerCase():code.toLowerCase()+'\u0000'+fields.title!.trim(),values:fields,before:Object.fromEntries(Object.entries(prior).map(([key,value])=>[key,value==null?null:String(value)])),fingerprint:await canonicalHash(before??null),operation:!before?'create':changed?'update':'unchanged'},change:{guards:[],mutations:[],audit:[],next:null}}})
+  const shown=(name:string,value:unknown):CellValue=>value==null?null:name==='ownerId'?people.results.find(p=>p.id===value)?.name??String(value):Array.isArray(value)?value.join(' | '):String(value)
+  const changes=before?Object.entries(normalized).flatMap(([key,value])=>key==='customFields'?Object.entries(value as Record<string,unknown>).filter(([id,next])=>JSON.stringify(oldCustom[id]??null)!==JSON.stringify(next)).map(([id,next])=>({field:'custom:'+id,before:shown(id,oldCustom[id]),after:shown(id,next)})):key==='campaignId'?[]:JSON.stringify(key==='tags'?oldTags:prior[key])!==JSON.stringify(value)?[{field:key,before:shown(key,key==='tags'?oldTags:prior[key]),after:shown(key,value)}]:[]):[]
+  output.push({prepared:{row:{changes,id:before?.id??entry.id,key:kind==='campaign'?code.toLowerCase():code.toLowerCase()+'\u0000'+fields.title!.trim(),values:fields,before:Object.fromEntries(Object.entries(prior).map(([key,value])=>[key,value==null?null:String(value)])),fingerprint:await canonicalHash(before??null),operation:!before?'create':changed?'update':'unchanged'},change:{guards:[],mutations:[],audit:[],next:null}}})
  }catch(error){output.push({error:error instanceof Error?error.message:'Invalid row'})}}
  return output
 }

@@ -131,6 +131,8 @@ export const createCampaignRepository = (database: Database) => ({
         a.next_value AS nextValue, o.id AS actorId, o.name AS actorName FROM activity_entries a LEFT JOIN operators o ON o.id = a.actor_id
         WHERE a.campaign_id = ? ORDER BY a.created_at DESC, a.id DESC`, [id]),
     ])
+    const custom = await queryAll<{ id: string, name: string, type: string, optionsJson: string, valueJson: string | null }>(database, `SELECT f.id, f.name, f.type, f.options_json AS optionsJson, v.value_json AS valueJson
+      FROM launch_custom_fields f LEFT JOIN launch_custom_values v ON v.field_id = f.id AND v.campaign_id = ? ORDER BY f.created_at ASC, f.id ASC`, [id])
     const timezone = await queryOne<{timezone:string}>(database,'SELECT timezone FROM workspace_settings LIMIT 1')
     if(!timezone)throw new Error('Workspace timezone is required')
     const archived = await queryOne<{archivedAt:number|null}>(database,'SELECT archived_at AS archivedAt FROM campaigns WHERE id=?',[id])
@@ -146,6 +148,7 @@ export const createCampaignRepository = (database: Database) => ({
         actor: entry.actorId && entry.actorName ? person(entry.actorId, entry.actorName) : null,
       })),
       comments,
+      customFields: custom.map((field) => ({ id: field.id, name: field.name, type: field.type, options: JSON.parse(field.optionsJson) as string[], value: field.valueJson === null ? null : JSON.parse(field.valueJson) as string | boolean | string[] })),
       decisions: decisions.map((decision) => ({
         id: decision.id,
         title: decision.title,

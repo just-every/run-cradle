@@ -11,6 +11,7 @@ import { canonicalJson } from './grants.server'
 import { revalidateReservations } from './reservation-binding.server'
 import { proposedRowPredicate } from './proposed-row.server'
 import { canonicalInteger, reserveBudgets } from './budget.server'
+import { providerGrantIssuerGuards } from './provider-grant.server'
 /** Shared membership fence; capacity planning may measure this exact template. */
 export const membershipPolicyGuard=(ctx:RequestContext,appId:string,row:{id:string;version:number;membership_version:number})=>trustedPredicate(`EXISTS(SELECT 1 FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active' AND m.version=? AND p.id=? AND p.version=?)`,[ctx.principal.id,appId,row.membership_version,row.id,row.version])
 export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:DecisionAuthorityPort):PolicyPort=>{
@@ -70,19 +71,21 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     if(ctx.principal.kind!=='human'&&/^(grant\.|policy\.|member\.|credential\.)/.test(request.action))return denied('Only an authorized human can manage authority.')
     if(ctx.principal.credentialId){const c=await db.prepare('SELECT scopes_json FROM authority_credentials WHERE id=?').bind(ctx.principal.credentialId).first<{scopes_json:string}>();const scopes=JSON.parse(c!.scopes_json) as {appId:string;actions:string[];purposes:string[]}[];if(!scopes.some(s=>s.appId===request.appId&&s.actions.includes(request.action)&&(!request.purpose||s.purposes.includes(request.purpose))))return denied()}
     const readOnly=['execution.read','execution.reconcile','model.read','connection.read','connection.reconcile'].includes(request.action)&&request.cost.length===0;
-    const metadataOrControl=readOnly||['run.cancel','connection.configure','connection.begin-consent','connection.revoke','connection.check'].includes(request.action)&&request.cost.length===0;
+    const metadataOrControl=readOnly||['run.cancel','attempt.reconcile','attempt.recover','connection.configure','connection.begin-consent','connection.revoke','connection.check'].includes(request.action)&&request.cost.length===0;
     if(request.proposedRows?.some(p=>p.entityId!==request.targetEntityId)||request.expected.some(e=>e.ref.appId!==request.appId))return denied()
     const entities=request.targetEntityId?[request.targetEntityId]:request.expected.length?[...new Set(request.expected.map(r=>r.ref.entityId))]:[...new Set(loaded.rules.filter(r=>r.actions.includes(request.action)).map(r=>r.entityId))]
     if(!entities.length)return denied()
+    const knownFields=new Set(entities.flatMap(id=>registry.get(request.appId,id)?.fields.map(f=>f.id)??[]))
+    if(request.fieldIds?.some(id=>!knownFields.has(id)))return denied()
     for(const entityId of entities){
       const entity=registry.get(request.appId,entityId);if(!entity)return denied()
+      const entityFieldIds=request.fieldIds?.filter(id=>entity.fields.some(f=>f.id===id))
       const applicable=loaded.rules.filter(r=>r.entityId===entityId&&r.actions.includes(request.action))
-      const allowed=applicable.filter(r=>r.effect==='allow'&&(!request.fieldIds||request.fieldIds.every(f=>(readOnly?r.readableFields:r.writableFields).includes(f))))
+      const allowed=applicable.filter(r=>r.effect==='allow'&&(!entityFieldIds||entityFieldIds.every(f=>(readOnly?r.readableFields:r.writableFields).includes(f))))
       if(!allowed.length)return denied()
       const deniedRows=or(...applicable.filter(r=>r.effect==='deny').map(r=>compileFilter(r.rows,entity,ctx.now)))
       const rows=and(...(entity.appColumn?[trustedPredicate(`${identifier(entity.table)}.${identifier(entity.appColumn)}=?`,[request.appId])]:[]),or(...allowed.map(r=>compileFilter(r.rows,entity,ctx.now))),trustedPredicate(`NOT (${deniedRows.sql})`,deniedRows.values))
       const expected=request.expected.filter(r=>r.ref.entityId===entityId), proposed=request.proposedRows?.filter(r=>r.entityId===entityId)??[]
-      if(request.fieldIds?.some(id=>!entity.fields.some(f=>f.id===id)))return denied()
       for(const target of proposed)guards.push(proposedRowPredicate(entity,target.row,rows))
       for(const target of expected){if(target.ref.appId!==request.appId)return denied();guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${rows.sql}))`,[target.ref.recordId,...rows.values]))}
       // Unbound create/admin permission must be unconditional, never inferred from some visible row.
@@ -104,6 +107,7 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
       if(!spec.actions.includes(request.action)||(request.transition&&!spec.allowedTransitions.includes(request.transition)))return denied()
       for(const target of request.expected){const s=spec.scope.find(s=>s.entityId===target.ref.entityId);if(!s||s.recordIds&&!s.recordIds.includes(target.ref.recordId))return denied();if(s.filter){const entity=registry.get(request.appId,target.ref.entityId)!;const predicate=compileFilter(s.filter,entity,ctx.now);guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${predicate.sql}))`,[target.ref.recordId,...predicate.values]))}}
       if(request.connectionId&&!spec.providerScopes.some(s=>s.connectionId===request.connectionId&&!!request.purpose&&s.purposes.includes(request.purpose)&&(request.fieldIds??[]).every(f=>s.fields.includes(f))))return denied()
+      if(request.connectionId)guards.push(...await providerGrantIssuerGuards(db,registry,ctx,request,row.issuer_id,spec))
       const amounts=new Map<string,string>()
       for(const cost of request.cost){const cap=spec.perAction.find(v=>v.currency===cost.currency&&v.scale===cost.scale);if(!cap||canonicalInteger(cost.minor)>canonicalInteger(cap.minor))return denied('The per-action monetary ceiling is exceeded.');const unit=`money:${cost.currency}:${cost.scale}`;const total=BigInt(amounts.get(unit)??'0')+canonicalInteger(cost.minor);if(total>canonicalInteger(cap.minor))return denied('The combined per-action ceiling is exceeded.');amounts.set(unit,total.toString())}
       for(const [unit,value]of [['modelCalls',request.modelCalls??0],['wallSeconds',request.wallSeconds??0],['quantity',request.quantity??0]] as const){if(!Number.isSafeInteger(value)||value<0)return denied();if(value)amounts.set(unit,String(value))}

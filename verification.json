@@ -1,0 +1,172 @@
+{
+  "push": [
+    {
+      "name": "foundation",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:smoke",
+        "pnpm test:start",
+        "pnpm test:integration",
+        "pnpm test:domains",
+        "pnpm test:lifecycle-erasure",
+        "pnpm test:execution-resolution",
+        "pnpm test:migration",
+        "pnpm test:records",
+        "pnpm test:foundation"
+      ]
+    },
+    {
+      "name": "repairs",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:repairs",
+        "pnpm test:execution-resolution:browser",
+        "pnpm test:ui",
+        "pnpm test:repairs:browser"
+      ]
+    },
+    {
+      "name": "repairs-outcome",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:repairs:outcome"
+      ]
+    },
+    {
+      "name": "base",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "pnpm test:base"
+      ]
+    },
+    {
+      "name": "launch-1",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 1/4"
+      ]
+    },
+    {
+      "name": "launch-2",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 2/4"
+      ]
+    },
+    {
+      "name": "launch-3",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 3/4"
+      ]
+    },
+    {
+      "name": "launch-4",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 4/4"
+      ]
+    },
+    {
+      "name": "launch-doors",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:launch:doors",
+        "pnpm test:launch:walkthrough",
+        "pnpm test:recut:browser"
+      ]
+    },
+    {
+      "name": "records-native",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "pnpm test:records:release",
+        "pnpm test:records:base-native",
+        "pnpm test:admission"
+      ]
+    },
+    {
+      "name": "records-exits",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-json-metadata-native.mjs tests/records-base-json-http.mjs tests/records-base-required.mjs tests/records-base-export-policy.mjs tests/records-base-metadata-conflicts.mjs tests/records-base-edge-return.mjs tests/records-base-exit-restart.mjs tests/records-csv-correspondence-http.mjs"
+      ]
+    },
+    {
+      "name": "records-roundtrips",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-exits.mjs"
+      ]
+    },
+    {
+      "name": "records-browser",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:records:browser",
+        "pnpm test:records:base-browser",
+        "pnpm test:records:base-exits-browser"
+      ]
+    },
+    {
+      "name": "automations",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:user-automations",
+        "pnpm test:user-automations:browser",
+        "pnpm test:admission:browser"
+      ]
+    },
+    {
+      "name": "identity",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "pnpm test:oidc",
+        "node --test --test-concurrency=1 tests/installed-home.mjs tests/public-document-runtime.mjs tests/local-auth-runtime.mjs"
+      ]
+    },
+    {
+      "name": "runtime",
+      "browser": true,
+      "hosted": true,
+      "commands": [
+        "pnpm test:contract",
+        "pnpm source:check",
+        "pnpm check:deployment-spec"
+      ]
+    }
+  ],
+  "nightly": [
+    {
+      "name": "installer",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/ui-local-signin.mjs"
+      ]
+    },
+    {
+      "name": "portable-installation",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node tests/rer-data-roundtrip.mjs"
+      ]
+    }
+  ]
+}
