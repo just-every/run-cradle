@@ -1,53 +1,95 @@
 # Install Cradle
 
-Cradle runs on your own computer first. You need Node 22.20.0 and pnpm 10.12.4, and a copy of the Cradle source.
+Cradle runs on your own computer first: macOS, Linux or Windows with WSL2,
+with Git installed. **Node 22 or later is required before installing rer.**
+Download the installer for your computer from [nodejs.org](https://nodejs.org/en/download),
+run it, then open a new terminal. `node --version` should show v22 or later; npm
+comes with Node. Rer then provisions this project’s pinned Node 22.20.0 and
+pnpm 10.12.4.
 
 ## Run it on your computer
 
-1. Install the pinned dependencies from the source folder:
+Install rer once per computer using either Run page installer, pinned to
+Cradle's rer 0.2.23:
 
-   ```sh
-   rer install
-   ```
+```sh
+curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
+```
 
-2. Create a private `answers.json` file (readable only by you) with your email, name and workspace details:
+Or:
 
-   ```json
-   {"OWNER_EMAIL":"owner@example.com","OWNER_NAME":"Owner","WORKSPACE_NAME":"My records","WORKSPACE_TIMEZONE":"Australia/Brisbane","WORKSPACE_CURRENCY":"AUD"}
-   ```
+```sh
+npm install -g @runeditrun/rer@0.2.23
+```
 
-3. Set up the workspace, then start it:
+Both choices require Node first. Then clone Cradle and start it:
 
-   ```sh
-   rer setup --answers answers.json --non-interactive
-   rer dev
-   ```
+```sh
+git clone https://github.com/just-every/run-cradle.git cradle
+cd cradle && rer dev
+```
 
-4. Open the `RER_OPEN` address it prints. The browser lands signed in as you. Treat that address as a password: it carries this copy's development key.
+The first `rer dev` installs the dependencies, creates a local owner, applies
+migrations and starts the app. Open the `RER_OPEN` address it prints. The browser
+lands signed in as you. Treat that address as a password: it carries this copy's
+development key. Finish your workspace details at `/setup`; you can change them
+later in Settings.
 
-5. Finish your workspace details at `/setup`. You can change them later in Settings.
+Local `rer setup` is optional after zero-setup `rer dev`. To choose your own owner
+details before the first launch, use the private answers file described in the
+[README](../README.md#run-it-on-your-computer).
 
-No email is sent on your computer. `dev --login` signs in through the local development outbox instead: open the address it prints, choose the newest message and confirm.
+No email is sent on your computer. `rer dev --login` is an alias for automatic
+owner sign-in; open its `RER_OPEN` URL too.
 
 Stop the app with `rer dev --stop`.
 
 ## Move or reset your data
 
-Export before you reset anything you want to keep:
+Stop dev/preview first. Export before you reset anything you want to keep:
 
 ```sh
 rer export --output exports/workspace.rer
 rer reset --yes
 rer import --input exports/workspace.rer --yes
+rer dev
 ```
+
+`rer dev` recreates local configuration and the local owner; no answers file is
+needed. To choose an owner email, run `rer setup --owner-email you@example.com`
+before starting dev. `rer doctor` can report missing local inputs before dev has
+created them, including after reset/import.
 
 Import needs an empty installation and your confirmation. [Installation archives](installation-archives.md) explains what moves and what you approve again.
 
 ## Host it online
 
+Follow the [hosting instructions](installation.md#host-it-online) to create a
+private configuration file (mode 0600) with your Cloudflare credentials, receiving
+owner email and email provider settings. Deploy does not ask setup questions.
+Always set `OWNER_EMAIL` explicitly: the local trial address `owner@cradle.test`
+cannot receive mail.
+
 ```sh
-rer build
-rer deploy --dry-run
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --dry-run
+rer deploy --environment production --env-file "$HOME/cradle-production.env"
 ```
 
-The dry run checks everything without contacting any provider. Publishing uses your own Cloudflare account and a hosted email provider; the setup questions name each setting it needs. A push never deploys on its own.
+Dry-run builds and validates locally without provider calls. A healthy deployment
+claims the owner automatically. After deployment completes, open `/signin` on
+its hosted URL and confirm the emailed link. A failed owner claim must be resolved
+by completing deployment before sign-in can work.
+Repeat deployment keeps the existing owner and secrets. A public-main push
+redeploys the marketing site, not your installation.
+
+To update, preserve customisations, merge source updates, run `rer install` and
+`rer verify`, then deploy with the same environment and private file. Keep the
+`.rer/deploy` records. To delete the hosted installation **and its data**, save
+any exports you need first, then run:
+
+```sh
+rer deploy --environment production --env-file "$HOME/cradle-production.env" --remove --yes
+```
+
+`rer deploy --remove --yes` defaults to production. Rer removes only the resources
+listed in that environment's deployment record and checks that they are gone.

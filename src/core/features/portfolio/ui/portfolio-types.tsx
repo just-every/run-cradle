@@ -122,7 +122,10 @@ export type CampaignDetailResponse = {
   decisions: DecisionSummary[];
   comments: unknown[];
   activity: ActivitySummary[];
+  customFields: CampaignCustomField[];
 };
+
+export type CampaignCustomField = { id: string; name: string; type: string; options: string[]; value: string | boolean | string[] | null };
 
 export type CampaignQuery = {
   view: "all" | "launch-prep" | "mine";

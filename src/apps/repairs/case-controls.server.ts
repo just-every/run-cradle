@@ -12,7 +12,6 @@ import { trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { REPAIRS_APP_ID, REPAIR_ENTITIES, repairRef } from './model'
 import { createRepairOpenContext, type RepairOpenDependencies } from './context.server'
-import {noRepairExecution} from './manual-runtime.server'
 import { retainCaseEvidence } from './case-evidence.server'
 const actions = ['case.pause', 'case.takeover', 'case.resume', 'case.cancel'] as const
 export function createRepairCaseControls(d: RepairOpenDependencies, operations: OperationsRepository<OperationsProjectionDependencies>) {
@@ -33,11 +32,10 @@ export function createRepairCaseControls(d: RepairOpenDependencies, operations: 
     if(action==='case.resume'){
       const mandate=await operations.getMandate(ctx,value.mandateId)
       if(mandate.state!=='active'||mandate.version!==value.mandateVersion)throw new AdmissionError('version_conflict','Review the changed mandate before resuming')
-      if(mandate.actionIds.length||Object.keys(mandate.grants).length||value.runIds.length)throw new AdmissionError('unconfigured','Automated or provider work needs its full runtime revalidation before resuming')
       if(!await d.db.prepare("SELECT 1 FROM authority_principals WHERE id=? AND kind='human' AND state='active'").bind(value.accountableId).first())throw new AdmissionError('invalid_transition','A current accountable human is required before resuming')
-      const executionGuard=noRepairExecution(value.appId,value.id,work.id)
-      if(!await d.db.prepare(`SELECT 1 WHERE ${executionGuard.sql}`).bind(...executionGuard.values).first())throw new AdmissionError('unconfigured','Retained provider runs require full runtime reconciliation before resuming')
-      guards.push(trustedPredicate("EXISTS(SELECT 1 FROM authority_principals WHERE id=? AND kind='human' AND state='active')",[value.accountableId]),operations.mandateGuard(mandate),executionGuard)
+      // Resume changes the epoch. Previously admitted effects remain fenced and must
+      // be reconciled using their original keys; resumption grants no new authority.
+      guards.push(trustedPredicate("EXISTS(SELECT 1 FROM authority_principals WHERE id=? AND kind='human' AND state='active')",[value.accountableId]),operations.mandateGuard(mandate))
     }
     await retainCaseEvidence(context,value.sourceIds)
     const state:Case['state']=action==='case.resume'?'active':action==='case.takeover'?'taken_over':action==='case.cancel'?'cancelled':'paused'
@@ -52,6 +50,6 @@ export function createRepairCaseControls(d: RepairOpenDependencies, operations: 
   }
   return { prepare,
     register(registry:CommandRegistry){for(const action of actions){const input=controlInput.required({caseVersion:true});registry.register({action,description:action.replace('.',' '),inputSchema:z.toJSONSchema(input) as never,input:commandSchema(input),visible:async ctx=>{try{await d.policy.scope(ctx,{appId:REPAIRS_APP_ID,entityId:REPAIR_ENTITIES.workOrders,purpose:'read'});return ctx.principal.kind==='human'}catch{return false}},replayIdentity:async(_ctx,command)=>({appId:REPAIRS_APP_ID,canonicalInputHash:await canonicalHash(command)}),prepare:(ctx,command)=>prepare(ctx,action,command)})}},
-    async allowed(ctx:RequestContext,value:Case):Promise<AllowedAction[]>{return Promise.all(actions.map(async action=>{let reason=unavailable(value,action);if(ctx.principal.kind!=='human')reason='A person must change repair control';if(!reason)try{await d.policy.authorize(ctx,{appId:value.appId,action,targetEntityId:value.subject.entityId,expected:[{ref:value.subject,version:(await d.db.prepare('SELECT version FROM repair_work_orders WHERE id=?').bind(value.subject.recordId).first<{version:number}>())!.version}],cost:[],inputHash:await canonicalHash(value.id),commandId:createUlid()});if(action==='case.resume'){const m=await operations.getMandate(ctx,value.mandateId);if(m.version!==value.mandateVersion||m.state!=='active')reason='Review the changed mandate before resuming';else{const guard=noRepairExecution(value.appId,value.id,value.subject.recordId);if(m.actionIds.length||Object.keys(m.grants).length||value.runIds.length||!await d.db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())reason='Full runtime revalidation is required before resuming this work';}}}catch{reason='Current authority does not permit this action'}return {action,enabled:reason===null,reason,requiredDecisionId:null}}))},
+    async allowed(ctx:RequestContext,value:Case):Promise<AllowedAction[]>{return Promise.all(actions.map(async action=>{let reason=unavailable(value,action);if(ctx.principal.kind!=='human')reason='A person must change repair control';if(!reason)try{await d.policy.authorize(ctx,{appId:value.appId,action,targetEntityId:value.subject.entityId,expected:[{ref:value.subject,version:(await d.db.prepare('SELECT version FROM repair_work_orders WHERE id=?').bind(value.subject.recordId).first<{version:number}>())!.version}],cost:[],inputHash:await canonicalHash(value.id),commandId:createUlid()});if(action==='case.resume'){const m=await operations.getMandate(ctx,value.mandateId);if(m.version!==value.mandateVersion||m.state!=='active')reason='Review the changed mandate before resuming';}}catch{reason='Current authority does not permit this action'}return {action,enabled:reason===null,reason,requiredDecisionId:null}}))},
   }
 }

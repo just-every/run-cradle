@@ -23,6 +23,12 @@ export const loadPublicDocument = createServerFn({ method: 'GET' })
     return publicDocument()
   })
 
+export const loadSignInDocument = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    const { publicDocument } = await import('./public-document.server')
+    return publicDocument({ identity: true })
+  })
+
 export const loadSetupDocument = createServerFn({ method: 'GET' })
   .handler(async () => {
     const { setupDocument } = await import('../features/setup/document.server')

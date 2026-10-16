@@ -1,6 +1,11 @@
 import { CampaignInspector } from './campaign-inspector'
 import { CampaignGridControls, queryLabels } from './campaign-grid-controls'
 import { CreateCampaign } from '../../../../ui/launch/create-campaign';
+import { ImportLaunchCsv } from '../../../../ui/launch/import-launch-csv';
+import { ExportLaunchCsv } from '../../../../ui/launch/export-launch-csv';
+import { BulkCampaigns } from '../../../../ui/launch/bulk-campaigns';
+import { selectAllMatching } from '../../../../ui/launch/select-matching';
+import '../../../../ui/launch/launch-operator.css';
 import { useSearch } from '@tanstack/react-router';
 import { parseCampaignQuery } from './campaign-query';
 import { useEffect, useMemo, useState } from "react";
@@ -33,6 +38,9 @@ const replaceGridQuery = (query: CampaignQuery) => {
 
 const GridContent = () => {
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [chosen, setChosen] = useState<Map<string, number>>(new Map());
+  const [selecting, setSelecting] = useState('');
   const session = useOperatorSession();
   const search = useSearch({ strict: false });
   const [query, setQuery] = useState<CampaignQuery>(() => parseCampaignQuery(search));
@@ -55,6 +63,7 @@ const GridContent = () => {
   );
   const updateQuery = (patch: Partial<CampaignQuery>) => {
     setSelectedId(null);
+    setChosen(new Map());
     setQuery((current) => ({ ...current, ...patch }));
   };
 
@@ -68,17 +77,28 @@ const GridContent = () => {
       />
     );
   const workspaceCurrency = session.resource.data.workspace.currency;
+  const refresh = () => { setChosen(new Map()); campaigns.retry(); allCampaigns.retry(); };
+  const toggle = (id: string, version: number, on: boolean) => setChosen((current) => { const next = new Map(current); if (on) next.set(id, version); else next.delete(id); return next; });
+  const pageItems = campaigns.resource.state === "ready" ? campaigns.resource.data.items : [];
+  const pageChosen = pageItems.length > 0 && pageItems.every((campaign) => chosen.has(campaign.id));
+  const matching = campaigns.resource.state === "ready" ? campaigns.resource.data.total : 0;
+  const chooseAll = async () => { setSelecting(''); try { setChosen(new Map((await selectAllMatching(campaignQueryUrl(query))).map((item) => [item.id, item.version]))); } catch (cause) { setSelecting(cause instanceof Error ? cause.message : 'Could not select every match.'); } };
   return (
     <PortfolioPageShell
       currentPath="/app/campaigns"
       title="Campaign Grid"
       session={session.resource.data}
     >
-      {creating ? <CreateCampaign currency={workspaceCurrency} onClose={() => setCreating(false)} onSaved={() => { setCreating(false); campaigns.retry(); allCampaigns.retry(); }} /> : <button className="cr-button" onClick={() => setCreating(true)}>New campaign</button>}
-      {!creating && <div
+      {creating ? <CreateCampaign currency={workspaceCurrency} onClose={() => setCreating(false)} onSaved={() => { setCreating(false); refresh(); }} /> : importing ? <ImportLaunchCsv onClose={() => setImporting(false)} onImported={refresh} /> : <div className="launch-grid-actions"><button className="cr-button" onClick={() => setCreating(true)}>New campaign</button><button type="button" className="cr-button cr-button--quiet" onClick={() => setImporting(true)}>Import CSV</button><ExportLaunchCsv params={{ source: "grid", view: query.view, phase: query.phase, status: query.status, sort: query.sort, direction: query.direction }} /></div>}
+      {!creating && !importing && <div
         className={`portfolio-grid-page${selected ? " portfolio-grid-page--inspecting" : ""}`}
       >
         <CampaignGridControls query={query} onChange={updateQuery} />
+        <div className="launch-grid-selection">
+          <BulkCampaigns selected={[...chosen].map(([id, version]) => ({ id, version }))} onClear={() => setChosen(new Map())} onChanged={refresh} />
+          {chosen.size > 0 && chosen.size < Math.min(matching, 500) && <p className="launch-select-all"><button type="button" className="cr-link-button" onClick={() => void chooseAll()}>Select all {Math.min(matching, 500)} matching campaigns</button>{matching > 500 ? " (bulk edits take up to 500 at once)" : ""}</p>}
+          {selecting && <p role="alert" className="cr-error">{selecting}</p>}
+        </div>
         {campaigns.resource.state !== "ready" ? (
           <ResourceBoundary
             state={campaigns.resource.state}
@@ -103,6 +123,7 @@ const GridContent = () => {
                   </caption>
                   <thead>
                     <tr>
+                      <th scope="col" className="launch-select-cell"><input type="checkbox" aria-label="Select every campaign on this page" checked={pageChosen} onChange={(event) => setChosen((current) => { const next = new Map(current); for (const campaign of pageItems) { if (event.target.checked) next.set(campaign.id, campaign.version); else next.delete(campaign.id); } return next; })} /></th>
                       <th scope="col">Campaign</th>
                       <th scope="col">Phase</th>
                       <th scope="col">Owner</th>
@@ -125,6 +146,7 @@ const GridContent = () => {
                             : undefined
                         }
                       >
+                        <td className="launch-select-cell"><input type="checkbox" aria-label={`Select ${campaign.name}`} checked={chosen.has(campaign.id)} onChange={(event) => toggle(campaign.id, campaign.version, event.target.checked)} /></td>
                         <th scope="row">
                           <CampaignLink campaign={campaign} />
                         </th>
@@ -176,6 +198,7 @@ const GridContent = () => {
                     }
                   >
                     <div>
+                      <label className="launch-card-select"><input type="checkbox" checked={chosen.has(campaign.id)} onChange={(event) => toggle(campaign.id, campaign.version, event.target.checked)} /><span className="sr-only">Select {campaign.name}</span></label>
                       <CampaignLink campaign={campaign} />
                       <p>
                         {campaign.phase} · Launch{" "}

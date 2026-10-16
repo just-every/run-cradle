@@ -40,13 +40,26 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
     .bind(id,...guard.values,...subject.values).all<{id:string;definition_version:number;subject_id:string;state:string;queued_at:number;started_at:number|null;finished_at:number|null;error_code:string|null}>()
    const result=[]
    for(const run of rows.results){
-    const actions=await db.prepare(`SELECT position,state,error_code FROM launch_automation_actions WHERE run_id=? AND (${guard.sql}) ORDER BY position`)
-     .bind(run.id,...guard.values).all<{position:number;state:string;error_code:string|null}>()
+    const actions=await db.prepare(`SELECT position,state,error_code,result_json FROM launch_automation_actions WHERE run_id=? AND (${guard.sql}) ORDER BY position`)
+     .bind(run.id,...guard.values).all<{position:number;state:string;error_code:string|null;result_json:string|null}>()
     if(!await db.prepare(`SELECT 1 FROM automation_runs run WHERE run.id=? AND (${guard.sql}) AND (${subject.sql})`)
      .bind(run.id,...guard.values,...subject.values).first())continue
-    result.push({id:run.id,definitionVersion:run.definition_version,recordId:run.subject_id,state:run.state,
+    const primary=descriptor.schema.primaryFieldId??descriptor.schema.fields.find(field=>field.type==='text')?.id
+    const storage=primary&&scope.readableFieldIds.includes(primary)?descriptor.fields.get(primary):undefined
+    const label=storage?.column?await db.prepare(`SELECT ${identifier(storage.column)} AS label FROM ${identifier(descriptor.table.tableId)}
+     WHERE ${identifier(descriptor.idColumn)}=? AND (${guard.sql}) AND (${scope.rowPredicate.sql})`)
+     .bind(run.subject_id,...guard.values,...scope.rowPredicate.values).first<{label:string|number|null}>():null
+    const recordLabel=label?.label===null||label?.label===undefined?'Untitled record':
+     storage?.field.options?.find(option=>option.id===label.label)?.label??String(label.label)
+    const visibleActions=actions.results.map(action=>{
+     const heldUntil=action.state==='Pending'&&action.result_json?JSON.parse(action.result_json).heldUntil:null
+     return {position:action.position,state:heldUntil?'Held':action.state,error_code:action.error_code,heldUntil:heldUntil??null}
+    })
+    const held=visibleActions.find(action=>action.heldUntil)
+    result.push({id:run.id,definitionVersion:run.definition_version,recordId:run.subject_id,recordLabel,state:held&&['Queued','Running'].includes(run.state)?'Held':run.state,
+     heldUntil:held?.heldUntil??null,
      queuedAt:new Date(run.queued_at).toISOString(),startedAt:run.started_at===null?null:new Date(run.started_at).toISOString(),
-     finishedAt:run.finished_at===null?null:new Date(run.finished_at).toISOString(),errorCode:run.error_code,actions:actions.results})
+     finishedAt:run.finished_at===null?null:new Date(run.finished_at).toISOString(),errorCode:run.error_code,actions:visibleActions})
    }
    return result
   },

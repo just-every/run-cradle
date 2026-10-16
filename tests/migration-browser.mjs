@@ -1,3 +1,5 @@
+import {createFixtureMail} from './helpers/fixture-mail.mjs'
+import {emittedRuntime} from './helpers/emitted-runtime.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import {testDevKey} from './helpers/dev-gate.mjs'
 import { contract } from './contract.mjs'
@@ -23,15 +25,25 @@ await mkdir(evidence, { recursive: true })
 contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-002', `${mode} browser transport, Origin and document boundaries`, async()=>{
 const directory = await mkdtemp(path.join(tmpdir(), 'cradle-migration-browser-'))
 const variables = `APP_ORIGIN=${origin}\nAUTH_LOCAL=true\nRER_DEV_KEY=${testDevKey}\nOWNER_EMAIL=maya@northstar.example\nMAIL_PROVIDER=development\nMAIL_FROM=auth@localhost.test\nSESSION_SECRET=test-only-session-secret-32-characters-long\n`
-let worker, browser, output = '', oldVariables, oldEmittedVariables
+let worker, browser, output = '', oldVariables, oldEmittedVariables, variablesChanged=false, emittedVariablesChanged=false
 try {
   assert.equal(await fetch(origin).catch(() => null), null, 'Refuse occupied port')
   const migration = spawnSync(process.execPath, ['scripts/migrate-local.mjs', '--persist-to', directory], { encoding:'utf8', maxBuffer:16*1024*1024 })
   assert.equal(migration.status, 0, migration.stderr || migration.stdout)
   const member = await installLegacyFixture(directory)
+  // Credential acquisition uses the real emitted app with only SendGrid's
+  // paid transport replaced. Dispose it before the selected CLI owns the DB.
+  const mail=await createFixtureMail(port)
+  let credentialRuntime,cookie,csrfToken
+  try{
+    const bindings=Object.fromEntries(variables.trim().split('\n').map(line=>{const separator=line.indexOf('=');return [line.slice(0,separator),line.slice(separator+1)]}))
+    credentialRuntime=await emittedRuntime(directory,port,{...bindings,...mail.bindings},mail.fetch)
+    await credentialRuntime.ready
+    ;({cookie,csrfToken}=await baseHttpSession(origin))
+  }finally{try{await credentialRuntime?.dispose()}finally{await mail.close()}}
   oldVariables = await readFile('.dev.vars').catch(() => null)
-  await writeFile('.dev.vars', variables)
-  if(mode!=='dev'){oldEmittedVariables=await readFile('dist/server/.dev.vars').catch(()=>null);await writeFile('dist/server/.dev.vars',variables)}
+  await writeFile('.dev.vars', variables);variablesChanged=true
+  if(mode!=='dev'){oldEmittedVariables=await readFile('dist/server/.dev.vars').catch(()=>null);await writeFile('dist/server/.dev.vars',variables);emittedVariablesChanged=true}
   const args = mode === 'wrangler'
     ? ['exec','wrangler','dev','--config','dist/server/wrangler.json','--local','--port',String(port),'--inspector-port','0','--persist-to',directory]
     : ['exec','vite',...(mode === 'preview' ? ['preview'] : []),'--host','127.0.0.1','--port',String(port),'--strictPort']
@@ -43,7 +55,6 @@ try {
   let ready = false
   for(let i=0;i<200;i++) { if((await fetch(origin+'/health').catch(()=>null))?.status===200){ready=true;break} await new Promise(resolve=>setTimeout(resolve,100)) }
   assert.ok(ready, output)
-  const {cookie,csrfToken}=await baseHttpSession(origin)
   const api=async url=>(await fetch(origin+url,{headers:{cookie}})).json()
   const campaigns=await api('/api/campaigns'), risk=await api('/api/risks/lens'), timeline=await api('/api/milestones/timeline')
   for(const collection of [risk,timeline]) { assert.equal(typeof collection.total,'number'); assert.equal(typeof collection.totalLabel,'string'); assert.ok('nextCursor' in collection) }
@@ -92,8 +103,8 @@ try {
 } finally {
   if(browser)await browser.close()
   if(worker&&worker.exitCode===null){const closed=new Promise(resolve=>worker.once('exit',resolve));process.kill(-worker.pid,'SIGTERM');await closed}
-  if(mode!=='dev'){if(oldEmittedVariables)await writeFile('dist/server/.dev.vars',oldEmittedVariables);else await rm('dist/server/.dev.vars',{force:true})}
-  if(oldVariables)await writeFile('.dev.vars',oldVariables);else await rm('.dev.vars',{force:true})
+  if(emittedVariablesChanged){if(oldEmittedVariables)await writeFile('dist/server/.dev.vars',oldEmittedVariables);else await rm('dist/server/.dev.vars',{force:true})}
+  if(variablesChanged){if(oldVariables)await writeFile('.dev.vars',oldVariables);else await rm('.dev.vars',{force:true})}
   await writeFile(path.join(evidence,`${mode}-worker.log`),output)
   await rm(directory,{recursive:true,force:true})
 }

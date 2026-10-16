@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Send Managed sign-in and automation mail through RER with no customer mail key, using rer 0.2.23 and its Base adapter. Keep SendGrid and Resend for own-account hosting; reject missing hosted mail. Prefill sign-in email from a valid `login_hint` without submitting it.
+
+- Mark credential fixtures and examples explicitly synthetic so hosted source checks accept them.
+
 - Carry the approved landing style through the app: one token set, pill buttons, tabs and chips, white 24px cards, the lime-edged rail, a single table card with a chip toolbar and typed headers, two-column record page and form, schema builder tiles and review, two-column Settings, the public layout with the landing's ribbon pair, and empty and error cards with Cradle artwork. Labels, routes and behaviour are unchanged except the "Not configured" tag on Settings' AI and Email cards; template cards now appear in the empty Records states and the Create base flow. The installer takes Cradle's look through Base's seed theme hook (`public/rer-theme.css`, with the paper mark generated at `public/brand/mark.svg`).
 - Finish the style pass against the independent audit: sign-in, 404 and first-run setup sit above one smooth ribbon valley; the installer adds the forest "Manual setup" card, the ribbon valley and the footer from its own browser module (`scripts/installer/ui/seed.mjs`), leaving Base's copies unchanged; phone grids show records on the first screen (compact pills, one sideways chip row, no repeated lookup or initial state); Settings offers Timezone and Currency as selects and keeps pairs on phones; Home's welcome card and the Records chooser draw a real Records screen; a lone relation card matches the field card's height; the rail is easier to read. The landing is unchanged.
 - Publish documentation on the site at `/docs` and `/docs/<slug>`, built at build time from the repository's Markdown listed in `docs/site.json`, in the landing's header, footer and type. A broken link or page problem fails the build.

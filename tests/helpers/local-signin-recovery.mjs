@@ -1,9 +1,8 @@
-import {assertNoBrowserSession} from './session-cookies.mjs'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import {accessibilityCaptureOnly,accessibilityContextOptions,accessibilityEvidence,auditAccessibility} from './accessibility-evidence.mjs'
 
-export async function verifyIdentityAndRecovery({browser,context,page,viewport,origin,evidence,copy,link,accessibilityScreens=[]}) {
+export async function verifyIdentityAndRecovery({browser,context,viewport,origin,evidence,accessibilityScreens=[]}) {
   const capture=async(target,screen,file)=>{
     if(accessibilityEvidence){
       const audit=await auditAccessibility(target,{screen,width:viewport.width,output:evidence})
@@ -32,21 +31,12 @@ export async function verifyIdentityAndRecovery({browser,context,page,viewport,o
       assert.ok((await publicPage.locator('body').innerText()).includes(name),'The Lobby names the persisted rename')
       await capture(publicPage,`identity-${name.replace(' ','-').toLowerCase()}`,`identity-${name.replace(' ','-').toLowerCase()}-${viewport.width}.png`)
       await publicPage.goto(origin+'/signin')
-      assert.equal(await publicPage.getByLabel('Email address').isVisible(),true)
-      assert.equal(await publicPage.getByRole('button',{name:'Send sign-in link',exact:true}).isVisible(),true)
+      assert.equal(await publicPage.getByLabel('Email address').count(),0,'An unconfigured local installation does not offer email sign-in')
+      assert.match(await publicPage.locator('body').innerText(),/rer dev/)
       assert.equal(await publicPage.getByRole('link',{name:'Back to home',exact:true}).count(),1)
       assert.equal(await publicPage.getByText(name,{exact:true}).count(),1)
       assert.doesNotMatch(await publicPage.locator('body').innerText(),/Checking sign-in|Welcome back/)
       await capture(publicPage,`signin-nojs-${name.replace(' ','-').toLowerCase()}`,`signin-nojs-${name.replace(' ','-').toLowerCase()}-${viewport.width}.png`)
-    }
-    {
-      const response=await publicPage.goto(link)
-      assert.equal(response.status(),400)
-      await publicPage.getByRole('heading',{name:'This link is invalid or expired',exact:true}).waitFor()
-      assert.equal(await publicPage.getByRole('button',{name:'Confirm',exact:true}).count(),0)
-      assert.equal(await publicPage.getByRole('link',{name:'Request a new link',exact:true}).getAttribute('href'),'/signin')
-      await assertNoBrowserSession(anonymous,origin)
-      await capture(publicPage,'confirm-reused',`confirm-reused-${viewport.width}.png`)
     }
   } finally {await rename('My records');await anonymous.close()}
 }

@@ -3,20 +3,21 @@ import {PdfSyntax,dictionary,integer,isName,isRef,isString,keys,valueText} from 
 import type {PdfDict,PdfValue} from './pdf-syntax.server'
 import {inflateSync} from 'node:zlib'
 import {Buffer} from 'node:buffer'
-const limit=32*1024*1024
+import type {InspectionBudget} from './inspection-budget.server'
 const latin=(b:Uint8Array)=>Buffer.from(b.buffer,b.byteOffset,b.byteLength).toString('latin1')
 const standardFont=/^(?:Helvetica(?:-Bold|-Oblique|-BoldOblique)?|Courier(?:-Bold|-Oblique|-BoldOblique)?|Times-(?:Roman|Bold|Italic|BoldItalic))$/
 function array(value:PdfValue|undefined){if(!Array.isArray(value))throw new Error('unsupported PDF array');return value}
 function numeric(values:PdfValue[],count:number){if(values.length!==count||values.some(v=>typeof v!=='number'))throw new Error('unsupported PDF numeric operands')}
 /** Text-only content grammar. Unknown operators include inline images, drawing
  * paths, XObjects, marked content and extension operators: all are refused. */
-function contentText(text:string,fonts:Set<string>){
- const parser=new PdfSyntax(text),out:string[]=[],glyphs:string[]=[];let operands:PdfValue[]=[],inText=false,font=false,saves=0
+function contentText(text:string,fonts:Set<string>,budget:InspectionBudget){
+ const parser=new PdfSyntax(text,budget),out:string[]=[],glyphs:string[]=[];let operands:PdfValue[]=[],inText=false,font=false,saves=0
  const numbers:Record<string,number>={Td:2,TD:2,Tm:6,Tc:1,Tw:1,Tz:1,TL:1,Tr:1,Ts:1}
  const graphics:Record<string,number>={cm:6,g:1,G:1,rg:3,RG:3,k:4,K:4}
  function shown(value:PdfValue|undefined){
   if(!inText||!font||!isString(value)||value.fontText===undefined)throw new Error('uninspectable PDF text operand or glyph encoding')
-  out.push(value.value);glyphs.push(value.fontText)
+  // Glyph text is usually the same string; only a different one is a new copy.
+  budget.keep(out,[value.value]);if(value.fontText===value.value)glyphs.push(value.fontText);else budget.keep(glyphs,[value.fontText])
  }
  while(!parser.done()){
   if(/[\/(<\[+\-.\d]/.test(text[parser.at]!)){operands.push(parser.value());if(operands.length>100000)throw new Error('PDF operand inspection limit');continue}
@@ -45,8 +46,8 @@ function contentText(text:string,fonts:Set<string>){
 /** Accepted documents have a fully inspected classic object graph: catalog,
  * page tree, standard Type1 fonts, optional text Info, and raw/Flate text streams.
  * Whitelists are contextual; nothing unsupported is silently skipped. */
-export function pdfText(bytes:Uint8Array):string[]{
- const file=latin(bytes),{objects,trailer}=pdfEnvelope(file),used=new Set<string>(),pages=new Set<string>(),out=[file],textRuns:string[]=[],glyphRuns:string[]=[];let total=0
+export function pdfText(bytes:Uint8Array,budget:InspectionBudget):string[]{
+ const file=budget.build(bytes.length,()=>latin(bytes)),{objects,trailer}=pdfEnvelope(file,budget),used=new Set<string>(),pages=new Set<string>(),out=[file],textRuns:string[]=[],glyphRuns:string[]=[]
  function resolve(value:PdfValue|undefined):PdfValue|undefined{
   if(!isRef(value))return value
   const object=objects.get(value.key);if(!object||object.stream!==undefined)throw new Error('invalid PDF dictionary reference')
@@ -73,20 +74,17 @@ export function pdfText(bytes:Uint8Array):string[]{
   used.add(value.key);const dict=dictionary(object.value);keys(dict,['Length','Filter','DecodeParms'])
   if(isRef(dict.get('Length')))resolve(dict.get('Length'))
   if(dict.has('DecodeParms')&&dict.get('DecodeParms')!==null)throw new Error('unsupported PDF decode parameters')
-  let decoded:Uint8Array=Buffer.from(object.stream,'latin1')
+  let decoded:Uint8Array=Buffer.from(object.stream,'latin1');budget.charge(decoded.length)
   const filter=dict.get('Filter'),filters=filter===undefined?[]:Array.isArray(filter)?filter:[filter]
   if(filter!==undefined&&(!filters.length||filters.length>4))throw new Error('unsupported PDF filter chain')
   for(const f of filters){
    if(!isName(f)||!['FlateDecode','Fl'].includes(f.value))throw new Error('unsupported PDF stream filter')
-   const inflated=inflateSync(decoded,{maxOutputLength:limit,info:true}) as unknown as {buffer:Uint8Array;engine:{bytesWritten:number}}
+   const inflated=inflateSync(decoded,{maxOutputLength:Math.max(1,budget.left),info:true}) as unknown as {buffer:Uint8Array;engine:{bytesWritten:number}}
    if(inflated.engine.bytesWritten!==decoded.length)throw new Error('uninspectable trailing PDF compressed data')
-   decoded=inflated.buffer;total+=decoded.length
-   if(total>limit)throw new Error('decoded PDF exceeds inspection limit')
+   budget.charge(inflated.buffer.length);decoded=inflated.buffer
   }
-  if(!filters.length)total+=decoded.length
-  if(total>limit)throw new Error('decoded PDF exceeds inspection limit')
-  const text=latin(decoded),content=contentText(text,fonts)
-  out.push(text,...content.text,...content.glyphs);textRuns.push(...content.text);glyphRuns.push(...content.glyphs)
+  const bytes=decoded,text=budget.build(bytes.length,()=>latin(bytes)),content=contentText(text,fonts,budget)
+  out.push(text);for(const run of content.text)textRuns.push(run);for(const run of content.glyphs)glyphRuns.push(run)
  }
  function pageTree(value:PdfValue|undefined,parent:string|undefined,inheritedFonts:Set<string>,inheritedBox:boolean,depth=0):number{
   if(!isRef(value)||pages.has(value.key)||depth>64)throw new Error('invalid PDF page tree')
@@ -112,14 +110,16 @@ export function pdfText(bytes:Uint8Array):string[]{
  pageTree(catalog.get('Pages'),undefined,new Set(),false)
  if(trailer.has('Info')){
   const info=dictionary(resolve(trailer.get('Info')));keys(info,['Title','Author','Subject','Keywords','Creator','Producer','CreationDate','ModDate'])
-  for(const value of info.values()){if(!isString(value))throw new Error('unsupported PDF metadata');out.push(value.value)}
+  for(const value of info.values()){if(!isString(value))throw new Error('unsupported PDF metadata');budget.keep(out,[value.value])}
  }
  if(used.size!==objects.size)throw new Error('uninspectable unreferenced PDF objects')
- for(const object of objects.values())out.push(...valueText(object.value))
- out.push(...valueText(trailer),textRuns.join(''),textRuns.join(' '),glyphRuns.join(''),glyphRuns.join(' '))
- // StandardEncoding has curly quote glyphs at the ASCII quote positions. Scan
- // both forms, including identities split across text operators or streams.
- const quotes=[...textRuns,...glyphRuns,textRuns.join(''),textRuns.join(' '),glyphRuns.join(''),glyphRuns.join(' ')]
- out.push(...quotes.map(s=>s.replaceAll("'",'’').replaceAll('`','‘')))
+ for(const object of objects.values())budget.keep(out,valueText(object.value))
+ budget.keep(out,valueText(trailer))
+ // Joined runs find identities split across text operators or streams; each run
+ // is a substring of the spaced join with the same token boundaries.
+ const joins=[textRuns,...glyphRuns.some((glyph,i)=>glyph!==textRuns[i])?[glyphRuns]:[]].flatMap(runs=>{const length=runs.reduce((n,run)=>n+run.length,0);return [budget.build(length,()=>runs.join('')),budget.build(length+runs.length,()=>runs.join(' '))]})
+ out.push(...joins)
+ // StandardEncoding has curly quote glyphs at the ASCII quote positions. Scan both forms.
+ for(const joined of joins)if(/['`]/.test(joined))out.push(budget.build(joined.length,()=>joined.replaceAll("'",'’').replaceAll('`','‘')))
  return out
 }

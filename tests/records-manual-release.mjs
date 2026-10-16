@@ -161,11 +161,11 @@ test('RECORDS-001 RECORDS-003 RECORDS-004 grouped numeric sorting is canonical a
   assert.match(csv.filename,/Rows.*\d{4}-\d{2}-\d{2}/)
  }finally{h.close()}
 })
-test('RECORDS-001 RECORDS-004 CSV select labels escape null sentinel and leading backslashes exactly',async()=>{
+test('RECORDS-001 RECORDS-004 CSV preserves literal select labels and imports blank nullable choices without updates',async()=>{
  const h=await harness();try{
   const key=newField('Key'),choice=newField('Choice','select');choice.options=['\\N','\\prefix','comma, "北"\nline'].map(label=>({id:createUlid(),label}));choice.options.push({id:createUlid(),label:choice.options[0].id});const draft={appId:createUlid(),name:'Escapes',tables:[{id:createUlid(),label:'Choices',fields:[key,choice]}]}, {r}=await h.create(draft),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
   for(let n=0;n<choice.options.length;n++)await add(h,r,schema,{[key.id]:String(n),[choice.id]:choice.options[n].id})
   await add(h,r,schema,{[key.id]:'null',[choice.id]:null})
-  const csv=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query:{}}),preview=await r.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:csv.csv,mapping:[{column:'Key',fieldId:key.id},{column:'Choice',fieldId:choice.id}],mergeFieldId:key.id});assert.equal(preview.unchanged,5);assert.equal(preview.updates,0);assert.match(csv.csv,/\\\\N/)
+  const csv=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query:{sort:[{fieldId:key.id,direction:'asc'}]}}),preview=await r.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:csv.csv,mapping:[{column:'Key',fieldId:key.id},{column:'Choice',fieldId:choice.id}],mergeFieldId:key.id});assert.equal(preview.unchanged,5);assert.equal(preview.updates,0);const {parseCsv}=await import('../src/domains/portability/csv.ts'),rows=parseCsv(new TextEncoder().encode(csv.csv)).rows;assert.deepEqual(rows.map(row=>row[1]),[...choice.options.map(option=>option.label),''])
  }finally{h.close()}
 })

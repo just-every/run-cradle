@@ -1,0 +1,9 @@
+@media (max-width: 600px) {
+  .cr-import-preview .cr-table { display: block; min-width: 0; }
+  .cr-import-preview thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .cr-import-preview tbody { display: grid; gap: 12px; }
+  .cr-import-preview tr { display: block; padding: 12px 0; border-top: 1px solid var(--border); }
+  .cr-import-preview td { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: 8px; padding: 6px 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .cr-import-preview td::before { content: attr(data-label); font-weight: 600; }
+  .cr-import-preview td > p { margin: 0; }
+}

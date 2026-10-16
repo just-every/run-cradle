@@ -1,12 +1,11 @@
 import {privateExports} from './rer-private-exports.mjs'
 import {randomBytes} from 'node:crypto'
 import assert from 'node:assert/strict'
-import {outboxSession} from './rer-development.mjs'
-import {checkoutDevKey} from './dev-gate.mjs'
-import {withNativeOutbox} from './rer-emitted-worker.mjs'
+import {baseHttpSession} from './base-http-session.mjs'
+import {withNativeMail} from './rer-emitted-worker.mjs'
 export async function restoredSignIn(copy,origin,prior){
- return withNativeOutbox(copy,origin,async()=>{
-  const {cookie,token}=await outboxSession(origin,await checkoutDevKey(copy.source))
+ return withNativeMail(copy,origin,async()=>{
+  const {cookie,token}=await baseHttpSession(origin,(await copy.readVars()).OWNER_EMAIL)
   const app=await fetch(origin+'/app',{headers:{cookie},redirect:'manual'})
   assert.equal(app.status,200,'The archived completed workspace opens normally')
   const setup=await fetch(origin+'/setup',{headers:{cookie},redirect:'manual'})
@@ -25,7 +24,7 @@ export async function restoredSignIn(copy,origin,prior){
   const record=(await current.json()).data.record
   const edited=await send('/api/v1/commands/record.patch',{commandId:randomBytes(16).toString('hex').slice(0,26).toUpperCase(),expected:[{ref:record.ref,version:record.version}],input:{ref:record.ref,changes:{[r.fieldId]:'Restored owner edit'}}})
   assert.equal(edited.status,200,'Freshly signed-in owner edits a restored record')
-  const verified=await send(`/api/v1/apps/${r.appId}/entities/${r.entityId}/records/${r.recordId}`);assert.equal((await verified.json()).data.record.fields[r.fieldId].value,'Restored owner edit');console.log('NATIVE_RESTORED_OWNER: ordinary outbox one-use sign-in; historical identity; actual record edit read back; old session/key refused')
+  const verified=await send(`/api/v1/apps/${r.appId}/entities/${r.entityId}/records/${r.recordId}`);assert.equal((await verified.json()).data.record.fields[r.fieldId].value,'Restored owner edit');console.log('NATIVE_RESTORED_OWNER: ordinary provider-edge one-use sign-in; historical identity; actual record edit read back; old session/key refused')
   const apps=await fetch(origin+'/api/v1/apps',{headers:{cookie}});assert.equal(apps.status,200)
   assert.ok(!(await apps.json()).data.items.some(app=>app.id===prior.removedApp),'An already removed source scope is not revived')
   assert.equal((await fetch(origin+prior.removedRoute,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({limit:1})})).status,403,'Removed source scope cannot read its retained records')

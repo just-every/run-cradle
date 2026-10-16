@@ -3,6 +3,7 @@ import { execute, queryAll, queryOne } from '../shared/repository'
 
 type LensRow = {
   conditionsJson: string
+  createdAt: number
   createdById: string
   description: string
   display: string
@@ -17,6 +18,7 @@ type LensRow = {
 
 const map = (row: LensRow) => ({
   conditions: JSON.parse(row.conditionsJson),
+  createdAt: row.createdAt,
   createdById: row.createdById,
   description: row.description,
   display: row.display,
@@ -31,14 +33,20 @@ const map = (row: LensRow) => ({
 
 export const createLensRepository = (database: Database) => ({
   async list() {
-    const rows = await queryAll<LensRow>(database, `SELECT id, name, description, record_type AS recordType, conditions_json AS conditionsJson,
+    const rows = await queryAll<LensRow>(database, `SELECT id, created_at AS createdAt, name, description, record_type AS recordType, conditions_json AS conditionsJson,
       sort_json AS sortJson, fields_json AS fieldsJson, display, created_by_id AS createdById, shipped_key AS shippedKey, version FROM lenses ORDER BY created_at ASC, id ASC`)
     return rows.map(map)
   },
 
   async find(id: string) {
-    const row = await queryOne<LensRow>(database, `SELECT id, name, description, record_type AS recordType, conditions_json AS conditionsJson,
+    const row = await queryOne<LensRow>(database, `SELECT id, created_at AS createdAt, name, description, record_type AS recordType, conditions_json AS conditionsJson,
       sort_json AS sortJson, fields_json AS fieldsJson, display, created_by_id AS createdById, shipped_key AS shippedKey, version FROM lenses WHERE id = ?`, [id])
+    return row ? map(row) : undefined
+  },
+
+  async findShipped(key: string) {
+    const row = await queryOne<LensRow>(database, `SELECT id, created_at AS createdAt, name, description, record_type AS recordType, conditions_json AS conditionsJson,
+      sort_json AS sortJson, fields_json AS fieldsJson, display, created_by_id AS createdById, shipped_key AS shippedKey, version FROM lenses WHERE shipped_key = ?`, [key])
     return row ? map(row) : undefined
   },
 

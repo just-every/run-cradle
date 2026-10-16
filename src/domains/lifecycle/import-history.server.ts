@@ -9,7 +9,7 @@ export async function inspectImportHistory(db:D1Database,change:Effects,selected
  const final:D1Sql[]=[]
  for(const table of ['ik_provenance','ik_d1_history']){
   const rows=(await db.prepare(`SELECT id,job_id,source_identity,record_json FROM ${table} ORDER BY id`).all<{id:string;job_id:string;source_identity:string;record_json:string}>()).results
-  for(const row of rows)if(matches(JSON.parse(row.record_json))&&!selected.has(row.source_identity)&&!retired.has(row.job_id))throw new AuthorityError('version_conflict','Import history contains an unattributed identity in a reversible before-image. Resolve its custody before erasure; no identity was erased.',409)
+  for(const row of rows)if(!selected.has(row.source_identity)&&!retired.has(row.job_id)&&matches(JSON.parse(row.record_json)))throw new AuthorityError('version_conflict','Import history contains an unattributed identity in a reversible before-image. Resolve its custody before erasure; no identity was erased.',409)
   const image=JSON.stringify(rows.map(r=>[r.id,r.record_json]))
   const handled=[...new Set(rows.filter(r=>selected.has(r.source_identity)||retired.has(r.job_id)).map(r=>r.job_id))]
   change.guards.push(trustedPredicate(`(SELECT json_group_array(json_array(id,record_json)) FROM (SELECT id,record_json FROM ${table} ORDER BY id))=?`,[image]))

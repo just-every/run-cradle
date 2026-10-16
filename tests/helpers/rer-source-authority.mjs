@@ -1,18 +1,15 @@
 import assert from 'node:assert/strict'
 import {randomBytes} from 'node:crypto'
-import {outboxSession} from './rer-development.mjs'
-import {checkoutDevKey} from './dev-gate.mjs'
-import {withNativeOutbox} from './rer-emitted-worker.mjs'
+import {baseHttpSession} from './base-http-session.mjs'
+import {withNativeMail} from './rer-emitted-worker.mjs'
 import {bindings} from './rer-data-fixture.mjs'
 import {sourceRecords} from './rer-source-records.mjs'
-import {completeFirstRun} from './complete-first-run.mjs'
 const id=()=>randomBytes(16).toString('hex').slice(0,26).toUpperCase()
 
 /** Establish accepted source credentials and a genuinely revoked business scope. */
 export async function sourceAuthority(copy,origin){
- return withNativeOutbox(copy,origin,async()=>{
-  const {cookie}=await outboxSession(origin,await checkoutDevKey(copy.source))
-  await completeFirstRun(origin,cookie)
+ return withNativeMail(copy,origin,async()=>{
+  const {cookie}=await baseHttpSession(origin,(await copy.readVars()).OWNER_EMAIL)
   const csrfResponse=await fetch(origin+'/auth/csrf',{headers:{cookie}});assert.equal(csrfResponse.status,200)
   const {csrfToken}=await csrfResponse.json()
   const send=(route,body)=>fetch(origin+route,{method:body?'POST':'GET',headers:{cookie,origin,...(body?{'content-type':'application/json','x-csrf-token':csrfToken}:{})},...(body?{body:JSON.stringify(body)}:{})})

@@ -298,6 +298,19 @@
       "adapters": [
         "automation.egress.v1"
       ]
+    },
+    {
+      "id": "identity-provider",
+      "required": false,
+      "why": "Optional owner-approved Auth installation for OpenID Connect sign-in. Existing accounts and product authority remain required. Email recovery stays available.",
+      "data": [
+        "application origin and callback URLs",
+        "application public signing key and installation sector",
+        "OIDC authorization code, proof of possession and verified identity claims"
+      ],
+      "adapters": [
+        "oidc-provider@1"
+      ]
     }
   ],
   "env": [
@@ -378,6 +391,12 @@
       "requiredWhen": "A webhook or Slack action is enabled",
       "secret": false,
       "why": "The owner-configured trusted HTTPS relay endpoint; no token appears in this URL."
+    },
+    {
+      "name": "IDENTITY_PROVIDER",
+      "required": false,
+      "secret": false,
+      "why": "Optional HTTPS Auth installation for approved oidc-provider@1 pull linking. Blank installations retain email sign-in; linked sign-in is controlled by the owner identity setting."
     }
   ],
   "deploy": {
@@ -402,7 +421,16 @@
       "/setup",
       "/setup/state",
       "/docs",
-      "/docs/"
+      "/docs/",
+      "/.well-known/rer-dependencies",
+      "/.well-known/rer-link/callback",
+      "/.well-known/rer-link/jwks",
+      "/.well-known/rer-link/jwks/oidc-provider@1",
+      "/auth/dependencies/setup",
+      "/auth/dependencies/status",
+      "/auth/oidc/auth/start",
+      "/auth/oidc/auth/callback",
+      "/auth/oidc/auth/logout"
     ]
   },
   "customFields": [
