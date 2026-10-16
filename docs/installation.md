@@ -52,7 +52,7 @@ Values in this file take precedence over values in your shell environment.
 
 **Always set `OWNER_EMAIL` to an address you can receive mail at.** Deploy does
 not ask setup questions. Without this setting, a new deployment can copy the local
-trial owner, `owner@cradle.test`, which cannot receive sign-in email. Local
+trial owner, `owner@run-cradle.test`, which cannot receive sign-in email. Local
 `.dev.vars` is for local use; do not copy it into the hosting file.
 
 The app also requires `SESSION_SECRET` and `CONNECTION_ENCRYPTION_KEY`. Rer
