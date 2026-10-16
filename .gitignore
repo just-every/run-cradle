@@ -11,6 +11,8 @@ wrangler.toml
 data/hosting-mail.json
 
 .private/
+# Local installation archives from rer export hold private business data.
+exports/
 
 .rer/
 tmp/
