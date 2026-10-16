@@ -47,29 +47,17 @@ later** first: download the installer for your computer from
 [nodejs.org](https://nodejs.org/en/download), run it, then open a new terminal.
 Check `node --version` shows v22 or later; npm comes with Node.
 
-Install the `rer` command once per computer. These are the Run page's two
-installer choices, pinned here to Cradle's **rer 0.2.23**:
+Node comes first; rer then installs the project's pinned Node 22.20.0 and
+pnpm 10.12.4 for project commands, so you do not install pnpm separately. One line
+installs the `rer` command, clones Cradle and starts it:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
+npx -y @runeditrun/rer dev just-every/run-cradle
 ```
 
-Or, with npm:
-
-```sh
-npm install -g @runeditrun/rer@0.2.23
-```
-
-Both installers need Node first. Rer installs the project's pinned Node 22.20.0
-and pnpm 10.12.4 for project commands; you do not install pnpm separately. Then:
-
-```sh
-git clone https://github.com/just-every/run-cradle.git cradle
-cd cradle && rer dev
-```
-
-The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
-(`owner@cradle.test`), applies the migrations, starts the app and prints
+The checkout runs Cradle's pinned **rer 0.2.23**. To start it again later, run
+`cd run-cradle && rer dev`. The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
+(`owner@run-cradle.test`), applies the migrations, starts the app and prints
 `RER_READY` with its local URL, `RER_SIGNED_IN` and `RER_OPEN`. Open the `RER_OPEN`
 URL on this computer: it carries this checkout's dev key in its fragment (treat it
 as a credential), and the browser lands signed in as the owner. `rer dev --stop`
@@ -165,7 +153,7 @@ deploying, create an owner-only file outside this checkout, following the
 `OWNER_EMAIL` to an address you can receive mail at, and supply `MAIL_PROVIDER`,
 `MAIL_FROM` and `MAIL_PROVIDER_API_KEY`. Deploy does not ask setup questions.
 Always pass this file: otherwise a new deployment may copy the local trial owner,
-`owner@cradle.test`, which cannot receive sign-in email.
+`owner@run-cradle.test`, which cannot receive sign-in email.
 
 ```sh
 rer deploy --environment production --env-file "$HOME/cradle-production.env" --dry-run

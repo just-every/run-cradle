@@ -1,5 +1,8 @@
 import { sha256, unbase64 } from './crypto.server';
 export type SafeMailPart={filename:string;contentType:string;bytes:Uint8Array;sha256:string};
+// Each replacement repeats until stable so removing one tag cannot splice its neighbours into a new one.
+function replaceUntilStable(value:string,pattern:RegExp,replacement:string):string{let previous:string;do{previous=value;value=value.replace(pattern,replacement);}while(value!==previous);return value;}
+function htmlToText(html:string):string{return replaceUntilStable(replaceUntilStable(html,/<(script|style|form)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,''),/<[^>]*>/g,' ');}
 export async function parseMail(raw:Uint8Array,limits={maxBytes:10_000_000,maxAttachments:20,maxParts:100,maxDepth:8}):Promise<{plainText:string;attachments:SafeMailPart[]}> {
  if(raw.length>limits.maxBytes)throw new Error('MIME byte bound exceeded');
  const attachments:SafeMailPart[]=[];const text:string[]=[];let parts=0,total=0;
@@ -12,7 +15,7 @@ export async function parseMail(raw:Uint8Array,limits={maxBytes:10_000_000,maxAt
   else if(['7bit','8bit','binary'].includes(encoding))decoded=Uint8Array.from(body,c=>c.charCodeAt(0));else throw new Error('Unsupported MIME encoding');
   total+=decoded.length;if(total>limits.maxBytes)throw new Error('Decoded MIME byte bound exceeded');const disposition=headers.get('content-disposition')??'';const filename=/\bfilename=(?:"([^"\r\n]*)"|([^;\s]+))/i.exec(disposition);const isAttachment=/^attachment/i.test(disposition)||!!filename||!['text/plain','text/html'].includes(type);
   if(isAttachment){if(attachments.length>=limits.maxAttachments)throw new Error('MIME attachment bound exceeded');const name=(filename?.[1]??filename?.[2]??'attachment').replace(/[\x00-\x1f\\/]/g,'_').slice(0,200);attachments.push({filename:name,contentType:type,bytes:decoded,sha256:await sha256(decoded)});}
-  else {const charset=/\bcharset=(?:"([^"]+)"|([^;\s]+))/i.exec(contentType);let value:string;try{value=new TextDecoder(charset?.[1]??charset?.[2]??'utf-8',{fatal:true}).decode(decoded);}catch{throw new Error('Unsupported or malformed MIME text charset');}if(type==='text/html')value=value.replace(/<(script|style|form)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,'').replace(/<[^>]*>/g,' ');text.push(value);}
+  else {const charset=/\bcharset=(?:"([^"]+)"|([^;\s]+))/i.exec(contentType);let value:string;try{value=new TextDecoder(charset?.[1]??charset?.[2]??'utf-8',{fatal:true}).decode(decoded);}catch{throw new Error('Unsupported or malformed MIME text charset');}if(type==='text/html')value=htmlToText(value);text.push(value);}
  }
  // Latin-1 preserves original MIME transfer bytes until the declared leaf charset is decoded.
  await visit(Array.from(raw,b=>String.fromCharCode(b)).join(''),0);return {plainText:text.join('\n').slice(0,1_000_000),attachments};

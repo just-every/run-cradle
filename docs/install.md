@@ -9,27 +9,14 @@ pnpm 10.12.4.
 
 ## Run it on your computer
 
-Install rer once per computer using either Run page installer, pinned to
-Cradle's rer 0.2.23:
+Node first, then one line installs rer, clones Cradle and starts it. The
+checkout runs Cradle's pinned rer 0.2.23:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
+npx -y @runeditrun/rer dev just-every/run-cradle
 ```
 
-Or:
-
-```sh
-npm install -g @runeditrun/rer@0.2.23
-```
-
-Both choices require Node first. Then clone Cradle and start it:
-
-```sh
-git clone https://github.com/just-every/run-cradle.git cradle
-cd cradle && rer dev
-```
-
-The first `rer dev` installs the dependencies, creates a local owner, applies
+To start it again later, run `cd run-cradle && rer dev`. The first `rer dev` installs the dependencies, creates a local owner, applies
 migrations and starts the app. Open the `RER_OPEN` address it prints. The browser
 lands signed in as you. Treat that address as a password: it carries this copy's
 development key. Finish your workspace details at `/setup`; you can change them
@@ -67,7 +54,7 @@ Import needs an empty installation and your confirmation. [Installation archives
 Follow the [hosting instructions](installation.md#host-it-online) to create a
 private configuration file (mode 0600) with your Cloudflare credentials, receiving
 owner email and email provider settings. Deploy does not ask setup questions.
-Always set `OWNER_EMAIL` explicitly: the local trial address `owner@cradle.test`
+Always set `OWNER_EMAIL` explicitly: the local trial address `owner@run-cradle.test`
 cannot receive mail.
 
 ```sh

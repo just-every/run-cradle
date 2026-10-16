@@ -2928,7 +2928,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "d3217f8c1f41829915ded9f6b869330ea6afd8d33151f005048e16cb2aa697c2",
+      "sha256": "c25bfc4f6a8e55bd4cc1e9300bb9c98056cc561d7ddcc766aca2b838da65bc70",
       "executable": false
     },
     "docs/installation-archives.md": {
@@ -2936,7 +2936,7 @@
       "executable": false
     },
     "docs/installation.md": {
-      "sha256": "612d1c79104d5c15cd06cbaf395b00362d5fc5eda676bd7f7f92ee2a4087a30a",
+      "sha256": "b2b1895a5e7110736585299f5ed8421dc6dabc7a8753ab656bde52debac3a179",
       "executable": false
     },
     "docs/launch-readiness-20261002.md": {
@@ -3532,7 +3532,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "0dd88fad5d9f0615a81b5935d4084516cfa91f5279f4f411bd2fc7eac04d01b5",
+      "sha256": "cef89215a6c5e85e33ddf1042d9bea6859c259cdbbb31942953a91f55cf70f4a",
       "executable": false
     },
     "RELEASE.json": {
@@ -3896,7 +3896,7 @@
       "executable": false
     },
     "src/adapters/mime.server.ts": {
-      "sha256": "78556c9ea04282f0f6707ceb6d87e96d4830920d2ed95186239984a4f940a3e3",
+      "sha256": "c2072113194413194115d23659eb01c89635004481b55392a7f102ea0e72e89c",
       "executable": false
     },
     "src/adapters/model-schema.server.ts": {
@@ -7720,7 +7720,7 @@
       "executable": false
     },
     "src/site/run.ts": {
-      "sha256": "b0f1497871a40e370f703e0ae9fb29b77cf8428167efe0426aa2adb6450a1cde",
+      "sha256": "9d7579e4ec94eed3b5b194ef6fcf7a598a2e7c12dd0acae61220997afc9ce901",
       "executable": false
     },
     "src/ui/approvals/approvals-page.tsx": {
