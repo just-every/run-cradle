@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "998c3cf2d65820ef709e1d6fbdd4f1d4a31500146dcb87668c8cab3cb37da87b",
+      "sha256": "e3eadd71d650fda3a46be35f894ad33bddb17e6b9acbefc4ba7872749c5346bc",
       "executable": false
     },
     "DEMO.md": {
@@ -3437,6 +3437,54 @@
       "sha256": "9375e9201676113ebe98000d7231d4a0fe56c2554b50e37e256b6725b599dabe",
       "executable": false
     },
+    "docs/contract/VIEW-013/exact-money-summary-1440.png": {
+      "sha256": "b84e46e7ed6f5507feda0ffeada12eab8233ff37868e81d364e6aff6772eb361",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/exact-money-summary-390.png": {
+      "sha256": "6949ddddef5f5805b43a2895a76f74f1a1d7b87067a3a388d6279995dc741097",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/filled-percent-1440.png": {
+      "sha256": "177b0242e738b9f8fb1b397b9573d49f8e9940ca7087706797ada81e4d810dd9",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/filled-percent-390.png": {
+      "sha256": "ba4ae70553a8a8625fff81a568da056da22ead78d0a4e0b036f7c95066371d74",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/filtered-all-page-summary-1440.png": {
+      "sha256": "6a0d43f937c51e152e5f5f39c6d94f72c0e6865e4568f39c3855309f52d63611",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/filtered-all-page-summary-390.png": {
+      "sha256": "76c60fb4d48dd289d602aae1723a5985f9c5ae061f630f40bd62bf76beb423fd",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/mixed-currency-unavailable-1440.png": {
+      "sha256": "9748e1516fe309921e095acb055a7711cce538a26bb3b63a4da124501e1db499",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/mixed-currency-unavailable-390.png": {
+      "sha256": "3d9b3e2840cb478970cfdf65e8f1faecf7ad5a4b81b5449dc901d668950bf3d2",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/saved-filtered-summary-1440.png": {
+      "sha256": "9b88ba3ebb724f4272bb8247edad3caf4bc39241fd091da01dbebfb67af0bd99",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/saved-filtered-summary-390.png": {
+      "sha256": "0a4db065427dc988cae37de5322c8bf8560f837d9e393fd19dbca0da91434f71",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/whole-view-sum-groups-1440.png": {
+      "sha256": "8479b93bdd926040b58febad4e9eb888ce42800568aee0df8a900910bc74a037",
+      "executable": false
+    },
+    "docs/contract/VIEW-013/whole-view-sum-groups-390.png": {
+      "sha256": "ab6cf45a04fd119ac187f1ed9f04893e9747e4dfc981db743f826ce01cfce27b",
+      "executable": false
+    },
     "docs/contract/VIEW-015/board-conflict-1440.png": {
       "sha256": "c8756a32056bcfb7fee095f2674b4da64e545e116333bf66eb350e03303b3f1e",
       "executable": false
@@ -3485,6 +3533,38 @@
       "sha256": "734c20ac188b1f7cfeb516b9461d404b7f319156929e17b52e99f2be31bbff90",
       "executable": false
     },
+    "docs/contract/VIEW-016/5000-find-count-1440.png": {
+      "sha256": "4d380a9490b84881f542b22304b2d4f279c6542726b4ba7fbd0aa9e7c4db23ef",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/5000-find-count-390.png": {
+      "sha256": "7acac94d2f43b77f5c9a1873b146107554affd5b9680e0ea6cf92b785c86f663",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/active-person-find-1440.png": {
+      "sha256": "dbadcce9d9b7b7a4a64e27d4e83ec052d349fc9b72866a2d6e020d44f383662c",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/active-person-find-390.png": {
+      "sha256": "7568980f0bdb2f8ef9a666bd1f271c5ee3145d5f7efc90a7629bcbec75eec866",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/distant-matching-cell-1440.png": {
+      "sha256": "161ed4b886ca16d14db18f5b29f1203084a1d3c596776731049bb80026021841",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/distant-matching-cell-390.png": {
+      "sha256": "26377e04fb3774c4c9f555c7ecfbb71fb61307f94efe33ea078ebe10a08498d8",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/formatted-money-find-1440.png": {
+      "sha256": "62592084f8775e3ef6d69fb22823fb5222333dac70cff0aa7b4b6d516da56dd1",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/formatted-money-find-390.png": {
+      "sha256": "344810840f795e4b5e79caaafbb0fbff1093295c12ec532ea54bc2af0699850b",
+      "executable": false
+    },
     "docs/contract/VIEW-016/found-1440.png": {
       "sha256": "8d557715d62afce988ba734e71b12c78fc77dd6a5afdf7ebe4b8a1b716d86f63",
       "executable": false
@@ -3493,12 +3573,68 @@
       "sha256": "9d3695ce9bd8288efdf1553491b33cd67ecbcb3b90648e90329f1c168420ed3d",
       "executable": false
     },
+    "docs/contract/VIEW-016/hidden-column-no-match-1440.png": {
+      "sha256": "f9bd016baa26241ec62140d434d5ead61efc6188528140226192da8085f4be5a",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/hidden-column-no-match-390.png": {
+      "sha256": "f40b51a2367e1bd24e55cd84db3399780936440824291ed4292dedb8e0fec311",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/human-boolean-find-1440.png": {
+      "sha256": "ef8c5c69bcfb8f6df572c45881f5866447eaef81552fc055f79c620323e0cabe",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/human-boolean-find-390.png": {
+      "sha256": "7eaf95333c1b306ea1974f0d907935ff4818bf16ef136afcd3a071d645208f4b",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/readable-linked-cell-1440.png": {
+      "sha256": "78e3e796f63cd7f58a6e7e9cb0c64360e4f3c27db7433265835dc769d8af6dcf",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/readable-linked-cell-390.png": {
+      "sha256": "1ed369f1ba0ca966f732024cdda4287ae1aad2944da635f27c35275301f1ccb7",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/restricted-linked-label-no-match-1440.png": {
+      "sha256": "b597e9bcf484347411888c1623f97bd04a2c11ea831da4d8662279f4a9d95bd1",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/restricted-linked-label-no-match-390.png": {
+      "sha256": "799039cbf5e772bf47476ae33cbb05b3a937fbc7c0dc170164b90801a52fc851",
+      "executable": false
+    },
     "docs/contract/VIEW-016/saved-find-1440.png": {
       "sha256": "90598d051708194450e4436785aa10154e358dae113f7fbf78183f74373e038c",
       "executable": false
     },
     "docs/contract/VIEW-016/saved-find-390.png": {
       "sha256": "9ed8705506d801ca6bc9d8b8dedab17eb76f83e26af5a0f91c2a3a0c9a88a2c4",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/saved-formatted-value-find-1440.png": {
+      "sha256": "0df6aea1fad41403013768f1d6ab87463189b036b17862c7cae72ef975445c58",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/saved-formatted-value-find-390.png": {
+      "sha256": "9a05b5b449175043bd258e702b42363b1cf3f0ef18328933dc00bc027a0d7e0f",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/settled-linked-match-1440.png": {
+      "sha256": "1f206bcaf62717a5999a946cc637d5386a9727cbde5165b750252cff440a93db",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/settled-linked-match-390.png": {
+      "sha256": "2cd02b693acc279b37c146fb5ea04f6bb8737f07a19096e6db65b1980ad84170",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/settled-person-match-1440.png": {
+      "sha256": "999f8633dbbcb260854a3a0656f122553222bf70a49628b7c6e5d23460fc27ea",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/settled-person-match-390.png": {
+      "sha256": "87eaea6ea4273d4f33c65847cd651e3d251f9306a421c92c7ff04ec3b6f5a9a4",
       "executable": false
     },
     "docs/current-state.md": {
@@ -8794,7 +8930,11 @@
       "executable": false
     },
     "src/ui/records/find-in-view.tsx": {
-      "sha256": "bab88ceabdf62250f29143c8343a4ddd442f1c60413e6ef6505ed26b80e8e1ac",
+      "sha256": "8ff8cd5b4e333dd113d816e6b7adfdf4d32e5b6419a234295d9fbb4cd0fd1c2b",
+      "executable": false
+    },
+    "src/ui/records/find-readable-text.ts": {
+      "sha256": "793e991fa4b122e556c4e2b9051292584f84c1abaf1468f428ee61c85f7ef918",
       "executable": false
     },
     "src/ui/records/forms-panel.tsx": {
@@ -8894,7 +9034,7 @@
       "executable": false
     },
     "src/ui/records/record-table.tsx": {
-      "sha256": "d37a7ab9b4211609065cbd4e46f4546221183e127fe9196b9efcb25e682cecd0",
+      "sha256": "0126c0c86d2de6d292682b1b7e06470d49180ccbf9c1ef999fd6e07835cd722d",
       "executable": false
     },
     "src/ui/records/record-toolbar.tsx": {
@@ -8914,7 +9054,7 @@
       "executable": false
     },
     "src/ui/records/saved-views.tsx": {
-      "sha256": "254ef7cfa2daf76251b85db8c1a554725df3c76f45d4b5f7a6a148b08bb15c9e",
+      "sha256": "4602da7826c96702310e6f33e95542fb46f8ab7e88ecc1155bdbcc7db86329af",
       "executable": false
     },
     "src/ui/records/schema/calculation-review.css": {
@@ -8971,6 +9111,18 @@
     },
     "src/ui/records/schema/templates.ts": {
       "sha256": "704bad8803f67871410d41fa47483be81d98583d72de80e39e898b0e6d2a28ca",
+      "executable": false
+    },
+    "src/ui/records/view-summary-query.ts": {
+      "sha256": "6dd82684c5213b0d5d491fc7ff9acd353ad49460aac49984b60c117db1014663",
+      "executable": false
+    },
+    "src/ui/records/view-summary-values.ts": {
+      "sha256": "de7fcdd52424044394bed19a59a6dfb6db69b3e73c931ec70af8eb77ceb47601",
+      "executable": false
+    },
+    "src/ui/records/view-summary.tsx": {
+      "sha256": "79bd4421c8d27b7152885d8f57317e8d8d91d246bdb1f8554adaeffa36e8f329",
       "executable": false
     },
     "src/ui/repairs/accounting-mapping.tsx": {
@@ -9869,12 +10021,16 @@
       "sha256": "9725c7b3e681a17e3dfc12ea30c16a0bb18cbf0607f74617765a55a3e97b2f7c",
       "executable": false
     },
+    "tests/helpers/records-browser-summary-find.mjs": {
+      "sha256": "00c83ec2500b699738b1a14664d53448ccd81c17a7af2fcedb4952ba6e640918",
+      "executable": false
+    },
     "tests/helpers/records-browser-templates.mjs": {
       "sha256": "9846f775d2976c14bb37733a3ee0296fde9c5128a62176a3f4718689efcf396d",
       "executable": false
     },
     "tests/helpers/records-browser-views.mjs": {
-      "sha256": "4c2e45ef783516999d24bca2245f563722bd6ce34e4eb314d4ace66327d19706",
+      "sha256": "969467908e217abdd1555880e68a83a24b7dbc8243cd2a0a22e11b1c26a3f6f7",
       "executable": false
     },
     "tests/helpers/records-calculation-journey.mjs": {
@@ -10470,7 +10626,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "bd8d901fa9324e94892019bc9f358602b62365e81025d120104f3142334eee74",
+      "sha256": "83ab9851df6960439e4a13e943cecb3e36d739f05f20c9f698324ebd2d8619c1",
       "executable": false
     },
     "tests/ui-recut-final.mjs": {
