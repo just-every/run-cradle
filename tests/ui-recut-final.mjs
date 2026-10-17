@@ -8,10 +8,13 @@ import {recordsBrowserRuntime} from './helpers/records-browser-runtime.mjs'
 import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './helpers/accessibility-evidence.mjs'
 import {freePort} from './helpers/free-port.mjs'
+import {waitForResourcePanels} from './helpers/accessibility-readiness.mjs'
 
 const output=path.resolve(process.env.CRADLE_RECUT_OUTPUT??'../evidence/recut-final')
 // The second element follows the first: below it, or (on wide screens) beside it at the right.
+// Measure the settled page: while a section is still loading, or the scroll is settling after the record editor closes, the two boxes are read at different scroll positions.
 async function comfortableGap(first,next){
+ await waitForResourcePanels(first.page())
  const a=await first.boundingBox(),b=await next.boundingBox()
  assert.ok(a&&b,'Both reviewed elements must be visible')
  const below=b.y>=a.y+a.height-1,gap=below?b.y-a.y-a.height:b.x-a.x-a.width

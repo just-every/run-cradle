@@ -10634,7 +10634,7 @@
       "executable": false
     },
     "tests/ui-recut-final.mjs": {
-      "sha256": "4f7930bcd7bfcb35f1b919193ee140f32af8335dcd6aed75356d4b53d411f367",
+      "sha256": "6ec2a6120e9b0e6c5f1df59151e8c35b603e83c5c9a3ba74cd927742bb25c575",
       "executable": false
     },
     "tests/ui-repairs-browser.mjs": {
