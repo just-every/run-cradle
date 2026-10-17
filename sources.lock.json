@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5ef400df0ec2dd62ce720ff070298c471510c8b56856433d105eee5a3973c192",
+      "sha256": "ffa528b6dec4573e5a71d52a0c05774ad1d56d8cad9325ec23a112f97bc6bc64",
       "executable": false
     },
     "DEMO.md": {
@@ -3027,6 +3027,78 @@
     },
     "docs/contract-transition.md": {
       "sha256": "9632c274699f23f636bfc55578062dd86371d5a6dd69c3f82e330f4683e5cb72",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/column-controls-1440.png": {
+      "sha256": "9ea8986e133e54849e582b2cccdf918342d04d01df0e0ab0e41ce94b4456bd3e",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/column-controls-390.png": {
+      "sha256": "b875ec2732c1aa1097cdb8926c3fe1d67a5aa653c6354f71f1a0fb7cd2a434ef",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/current-1440.png": {
+      "sha256": "32c2de213f5cb5a3d024bc3c5b21b44f516ab63acc17ff31614800a61fefdc10",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/initial-1440.png": {
+      "sha256": "9492dd61fd20b7d70424aa574c19f294ee09d6cfba205f5ee6ac3bd00c2111b9",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/last-row-created-1440.png": {
+      "sha256": "5183a2781990cf94c5330b3bf0558fef88e4319639dbd59aae0658ad4ebe4c2f",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/last-row-created-390.png": {
+      "sha256": "1ef30921adf51fcf23f2faeafee8e9a8e1b9a1bd58d5141e7f46246a138ee86e",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/pasted-1440.png": {
+      "sha256": "f1523506e6045e5ea87c2cc14cef4e92d565e0bb2fd200f234b37cff686ab327",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/pasted-390.png": {
+      "sha256": "0d5a5f0ed4693ed04eafb8b5de291c8d4d69cb4842a9e7f527e47923f2d26dc5",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/refused-1440.png": {
+      "sha256": "df80bf9ad9455800b4eb9fbb64aee98e9d46defc93315e26fad79235c80d57a7",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/refused-390.png": {
+      "sha256": "8a3c7d5419d16569aafff1498d664da1709fef891eceeb846edbbd95c72e2237",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/saved-cell-editor-1440.png": {
+      "sha256": "0c71cb36e56ec6eddc5f7edc39c82c00aaa15854f1d3f39c57bbfaf04426715d",
+      "executable": false
+    },
+    "docs/contract/VIEW-008/saved-cell-editor-390.png": {
+      "sha256": "683350925febe1b1d4c8290b5b8de9f05ac498ba38dcd3bdb176d84bbc14bc1a",
+      "executable": false
+    },
+    "docs/contract/VIEW-015/redone-1440.png": {
+      "sha256": "b675c2f0a067e1ae9c9e2e8c0353e2a349f108f719232600a8e9903775b39e55",
+      "executable": false
+    },
+    "docs/contract/VIEW-015/redone-390.png": {
+      "sha256": "fa6c3c8c208da028e467e7a16603a24c86d483a8451931bc71081eba7fcd3777",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/found-1440.png": {
+      "sha256": "8d557715d62afce988ba734e71b12c78fc77dd6a5afdf7ebe4b8a1b716d86f63",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/found-390.png": {
+      "sha256": "9d3695ce9bd8288efdf1553491b33cd67ecbcb3b90648e90329f1c168420ed3d",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/saved-find-1440.png": {
+      "sha256": "90598d051708194450e4436785aa10154e358dae113f7fbf78183f74373e038c",
+      "executable": false
+    },
+    "docs/contract/VIEW-016/saved-find-390.png": {
+      "sha256": "9ed8705506d801ca6bc9d8b8dedab17eb76f83e26af5a0f91c2a3a0c9a88a2c4",
       "executable": false
     },
     "docs/current-state.md": {
@@ -9778,7 +9850,7 @@
       "executable": false
     },
     "tests/ui-recut-final.mjs": {
-      "sha256": "18c16d63594951d5897430501fccdb3f383bf9dd257570773a605e53e79e138f",
+      "sha256": "4f7930bcd7bfcb35f1b919193ee140f32af8335dcd6aed75356d4b53d411f367",
       "executable": false
     },
     "tests/ui-repairs-browser.mjs": {

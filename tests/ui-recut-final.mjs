@@ -23,11 +23,11 @@ async function capture(page,j,name){
  assert.deepEqual(axe.violations.filter(finding=>finding.id==='heading-order').map(finding=>finding.nodes.map(node=>node.target)),[],`${name}: heading order`)
 }
 async function savedGridRecord(result){
- const title=result.getByRole('cell',{name:'First deal',exact:true})
+ const title=result.getByRole('cell',{name:'First deal, Deal, editable',exact:true})
  await title.waitFor();assert.equal(await title.count(),1)
  const rows=result.locator('tbody').getByRole('row');assert.equal(await rows.count(),1)
  await rows.getByRole('link',{name:'Acme Co',exact:true}).waitFor()
- assert.deepEqual(await rows.getByRole('cell').allTextContents(),['First deal','12','Acme Co'])
+ assert.deepEqual(await rows.locator('td[data-field-id]').allTextContents(),['First deal','12','Acme Co'])
 }
 
 contract('RECORDS-003] [BASE-PUBLIC-003','final records review preserves spacing, hierarchy and reachable records on desktop and phone',async()=>{
