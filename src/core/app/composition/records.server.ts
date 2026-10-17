@@ -57,7 +57,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
     egress:createModelEgress({db,policy,profile:modelConfiguration.profile}),
   }}
   const sources=createSourceService(deps)
-  const mentions=createCommentMentions(deps,entities),comments=createCommentService(deps,mentions,descriptors)
+  const mentions=createCommentMentions(deps,entities,platform.auth.configuration.appOrigin),comments=createCommentService(deps,mentions,descriptors)
   registerCommentCommands(foundation.commands,comments)
   const commentReader=createCommentReader(deps,descriptors,platform.auth.configuration.sessionSecret)
   const activeCases=createCaseReferenceReader({db,policy,descriptors,evidence:sources})

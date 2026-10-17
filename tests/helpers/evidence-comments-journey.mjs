@@ -64,7 +64,7 @@ export async function evidenceCommentsJourney(h){
  assert.ok(unavailable.every(item=>!item.subject.available&&item.subject.id===null))
  await h.db.prepare("UPDATE channel_deliveries SET state='queued',due_at=? WHERE operator_id=? AND state='held'").bind(Date.now(),operator).run()
  await wake()
- assert.equal((await h.mailMessages()).filter(message=>message.subject==='You were mentioned in a comment'&&message.personalizations.some(group=>group.to.some(to=>to.email===email)))).length,1)
+ assert.equal((await h.mailMessages()).filter(message=>message.subject==='You were mentioned in a comment'&&message.personalizations.some(group=>group.to.some(to=>to.email===email))).length,1)
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),recipientPolicy).run()
  // Own deletion is versioned, searchable content disappears, and the thread retains its tombstone.
  await h.request('/api/v1/commands/comment.delete',{method:'POST',body:command({subject,id:added.id,version:edited.version})})

@@ -9,13 +9,14 @@ import {AuthorityError} from '../authority/errors';
 import type {ChannelEffects} from '../channels/ports';
 
 /** Recipient identity is real operator data; read authority belongs to that recipient. */
-export function createCommentMentions(deps:Pick<EvidenceDependencies,'db'|'access'>,entities:EntityRegistry){
+export function createCommentMentions(deps:Pick<EvidenceDependencies,'db'|'access'>,entities:EntityRegistry,appOrigin:string){
  const {db}=deps;
  const prepare:MentionPort['prepare']=async(ctx,subject,commentId,memberIds)=>{
   const effects:ChannelEffects={guards:[],mutations:[]};
   for(const operatorId of memberIds){
    const recipient=await automationRecipient(db,entities,ctx,{...subject,operatorId});
-   const integration=createChannelsIntegration(db,async()=>({guards:[recipient.guard],title:'You were mentioned in a comment',body:`Open the record to read the comment: /app/records/${subject.appId}/${subject.entityId}/${subject.recordId}`}));
+   const href=new URL(`/app/records/${subject.appId}/${subject.entityId}/${subject.recordId}`,appOrigin).href;
+   const integration=createChannelsIntegration(db,async()=>({guards:[recipient.guard],title:'You were mentioned in a comment',body:`Open the record to read the comment: ${href}`}));
    const next=await integration.notification(ctx,{kind:'comment-mentioned',operatorId,campaignId:null,subjectId:subject.recordId,eventId:commentId,appId:subject.appId,subjectType:subject.entityId});
    effects.guards.push(...next.guards);effects.mutations.push(...next.mutations);
   }

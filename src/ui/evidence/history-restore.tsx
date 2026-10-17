@@ -5,9 +5,9 @@ import { CellDisplay } from '../records/record-fields'
 import { useCommand } from '../shared/api'
 import { CommandFeedback } from '../shared/presentation'
 
-export function HistoryRestore({ record, schema, fieldId, value, onRestored }: { record: RecordRow; schema: EntitySchema; fieldId: string; value: Cell; onRestored: () => void }) {
+export function HistoryRestore({ record, schema, fieldId, value, auditId, onRestored }: { record: RecordRow; schema: EntitySchema; fieldId: string; value: Cell; auditId: string; onRestored: () => void }) {
   const [reviewing, setReviewing] = useState(false)
-  const command = useCommand<RecordRow>(`history-restore:${record.id}:${fieldId}`)
+  const command = useCommand<RecordRow>(`history-restore:${record.id}:${auditId}:${fieldId}`)
   const field = schema.fields.find(field => field.id === fieldId)
   if (!field || field.readOnly || field.type === 'computed' || value.state !== 'value' || record.fields[fieldId]?.state !== 'value' || !record.allowedActions.some(action => action.action === 'record.patch' && action.enabled)) return null
   const previousValue = value.value

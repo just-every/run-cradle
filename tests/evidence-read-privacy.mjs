@@ -3,13 +3,13 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {contract} from './contract.mjs'
 import {freePort} from './helpers/free-port.mjs'
-import {evidenceCommentsJourney} from './helpers/evidence-comments-journey.mjs'
 
 // Resolve TypeScript dependencies only after the loader has registered its hooks.
-const [{userAutomationRuntime},{STAGING_ENTITY,STAGING_OWNER,STAGING_FILES},{createUlid}]=await Promise.all([
+const [{userAutomationRuntime},{STAGING_ENTITY,STAGING_OWNER,STAGING_FILES},{createUlid},{evidenceCommentsJourney}]=await Promise.all([
  import('./helpers/user-automation-runtime.mjs'),
  import('../src/domains/evidence/staging.server.ts'),
  import('../src/core/shared/ids.ts'),
+ import('./helpers/evidence-comments-journey.mjs'),
 ])
 
 contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
