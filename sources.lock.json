@@ -2928,7 +2928,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "d7d84adb5e2ab5c44d9ec9f16b17a9987a4742138dcbaff5ef353fd42c39c544",
+      "sha256": "7d4ba42969b90fe55bcd6d829c0ca484236af07bb48ea3119efee9eacdad3ec7",
       "executable": false
     },
     "docs/installation-archives.md": {
@@ -2936,7 +2936,7 @@
       "executable": false
     },
     "docs/installation.md": {
-      "sha256": "e6e4eadc317cd020a28b3cb64ebbc737c99ea6da8cddf03270dc430b1f26a3a0",
+      "sha256": "2f1792717c1c4825012a37b6de8f9d63798a58cf6974cc904e25ecec18e92e6a",
       "executable": false
     },
     "docs/launch-readiness-20261002.md": {
@@ -3532,7 +3532,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "5c3233d9144d9c5e5befa813ebe5d4d654ccb04fa60de7af37f55c029274c378",
+      "sha256": "d7baec779687ef9c27e0f667a1f8bdd1285e0dd89e6de098b749e770e93497f1",
       "executable": false
     },
     "RELEASE.json": {
@@ -3552,7 +3552,7 @@
       "executable": false
     },
     "RUN-LOCALLY.md": {
-      "sha256": "7e1f2ea8076947305ba517c6667e81f9e2cab80298a9860465e0d7d1863308e2",
+      "sha256": "5166deec530cc21c35e8707669b2ece7dcc696a3acd79ee97f4815ea45c4e3ba",
       "executable": false
     },
     "sample-data/agent-briefs/brief-a-workshop.txt": {

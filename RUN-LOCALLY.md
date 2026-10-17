@@ -1,14 +1,15 @@
 # Run it locally
 
-Install Node 22 or later and Git first; see the [quick guide](docs/install.md).
-Install `rer` once per computer with either Run page installer, pinned here to
-Cradle's rer 0.2.23:
+Start Cradle with one line; see the [quick guide](docs/install.md). It needs Git and
+Node 22 or later, and installs `rer`, clones Cradle and starts it:
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | RER_VERSION=0.2.23 sh
+npx -y @runeditrun/rer dev just-every/run-cradle
 ```
 
-Or `npm install -g @runeditrun/rer@0.2.23`. Rer installs the project's pinned
+To only set it up, use `npx -y @runeditrun/rer setup just-every/run-cradle`; without Node,
+`curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-cradle`.
+Cradle's checkout pins rer 0.2.23. Rer installs the project's pinned
 Node 22.20.0 and pnpm 10.12.4 for project commands. This checkout uses its exact
 `@runeditrun/rer` devDependency; `OPERATIONS.json` and the package aliases dispatch
 to `rer VERB`.
