@@ -14,6 +14,10 @@ import { canonicalInteger, reserveBudgets } from './budget.server'
 import { providerGrantIssuerGuards } from './provider-grant.server'
 /** Shared membership fence; capacity planning may measure this exact template. */
 export const membershipPolicyGuard=(ctx:RequestContext,appId:string,row:{id:string;version:number;membership_version:number})=>trustedPredicate(`EXISTS(SELECT 1 FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active' AND m.version=? AND p.id=? AND p.version=?)`,[ctx.principal.id,appId,row.membership_version,row.id,row.version])
+/** Contexts of read-only (GET/HEAD) requests: nothing in them changes authority, so their
+ * policy reads may be shared. Background work and tests hold contexts across changes. */
+const readOnlyContexts=new WeakSet<RequestContext>()
+export const readOnlyContext=<T extends RequestContext>(ctx:T)=>{readOnlyContexts.add(ctx);return ctx}
 export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:DecisionAuthorityPort):PolicyPort=>{
   const load=async(ctx:RequestContext,appId:string)=>{
     const row=await db.prepare(`SELECT p.id,p.version,p.rules_json,m.version AS membership_version FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active' AND p.app_id=m.app_id`).bind(ctx.principal.id,appId).first<{id:string;version:number;rules_json:string;membership_version:number}>()
@@ -30,14 +34,15 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     }
     return {rules:rules.filter(r=>r.principals.some(p=>p.id===ctx.principal.id&&p.kind===ctx.principal.kind)),guards,version:row.version}
   }
-  // A request context reads its policy (or its denial) once per app for scoping; every
-  // scoped read still executes the returned guards, and authorize always loads afresh.
+  // A read-only request context reads its policy once per app for scoping; every scoped
+  // read still executes the returned guards, denials and authorize always load afresh.
   const loadedForReads=new WeakMap<RequestContext,Map<string,ReturnType<typeof load>>>()
   const loadForRead=(ctx:RequestContext,appId:string)=>{
+    if(!readOnlyContexts.has(ctx))return load(ctx,appId)
     let loaded=loadedForReads.get(ctx)
     if(!loaded)loadedForReads.set(ctx,loaded=new Map())
     let pending=loaded.get(appId)
-    if(!pending){pending=load(ctx,appId);loaded.set(appId,pending);pending.catch(()=>{})}
+    if(!pending){pending=load(ctx,appId);loaded.set(appId,pending);pending.catch(()=>loaded.delete(appId))}
     return pending
   }
   const proposerPermit=async(ctx:RequestContext,request:AuthorizationRequest):Promise<AuthorityPermit>=>{

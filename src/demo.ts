@@ -1,7 +1,7 @@
 import type { PlatformBindings } from './core/platform/bindings'
 import type { RequestContext } from './domains/authority/ports'
 import { createPlatform } from './core/platform'
-import { createLaunchFoundation } from './core/app/composition/launch.server'
+import { currentComposition } from './core/app/application-cache.server'
 import { createUlid } from './core/shared/ids'
 import { sampleData } from './core/features/sample-data/data'
 import { seedActivity } from './demo/activity.server'
@@ -28,7 +28,7 @@ export async function seedDemo(env: PlatformBindings, { ownerEmail, now }: { own
   const ctx: RequestContext = { principal: { id:owner.id,kind:'human',humanId:owner.id,sessionId:current!.session_id,baseSessionId:owner.sessionId,
     credentialId:null,issuedAt:new Date(owner.created_at).toISOString(),expiresAt:new Date(owner.expires_at).toISOString(),authenticationEpoch:owner.epoch },
     requestId:'00000000000000000000000DEM',now:now.toISOString(),ingress:'http' }
-  const foundation = await createLaunchFoundation(platform)
+  const { foundation } = (await currentComposition(env)).runtime
   if (!await db.prepare('SELECT 1 FROM sample_installations LIMIT 1').first()) {
     const receipt = await foundation.commands.get('launch.samples.install')!.execute(ctx,{commandId:'00000000000000000000000DEM',expected:[],input:{}})
     if (receipt.result.state !== 'committed') throw new Error('Demo sample installation did not commit')

@@ -23,13 +23,17 @@ const sameBindings = (a: PlatformBindings, b: PlatformBindings) => {
 }
 
 export async function currentApplication(input: PlatformBindings): Promise<AppType> {
+  return (await currentComposition(input)).app
+}
+
+export async function currentComposition(input: PlatformBindings): Promise<Composed> {
   const bindings = localRuntimeBindings(input)
   const schemas = await admittedSchemas(bindings.DB)
   const entry = composed.get(bindings.DB)
   if (entry && entry.schemas === schemas && sameBindings(entry.bindings, bindings)) {
-    const { app, runtime } = await entry.application
-    await ensureRecordAutomationTriggers(bindings.DB, runtime.foundation.descriptors)
-    return app
+    const current = await entry.application
+    await ensureRecordAutomationTriggers(bindings.DB, current.runtime.foundation.descriptors)
+    return current
   }
   const application = (async () => {
     const platform = createPlatform(bindings)
@@ -38,5 +42,5 @@ export async function currentApplication(input: PlatformBindings): Promise<AppTy
   })()
   composed.set(bindings.DB, { bindings, schemas, application })
   application.catch(() => { if (composed.get(bindings.DB)?.application === application) composed.delete(bindings.DB) })
-  return (await application).app
+  return application
 }

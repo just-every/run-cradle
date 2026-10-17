@@ -5,7 +5,8 @@ import { digest, signToken } from './crypto.server'
 import { AuthorityError } from './errors'
 
 type BaseSession = { principal: Principal; csrfHash: string }
-// One request resolves its session once per database; a check that must re-read passes fresh.
+// One read-only (GET/HEAD) request resolves its session once per database; a check that
+// must re-read passes fresh, and a request that may change authority always reads afresh.
 const resolved = new WeakMap<Request, Map<D1Database, Promise<BaseSession | undefined>>>()
 
 /** A request derived from another with the same credentials (a document's API read) shares its resolution. */
@@ -52,7 +53,7 @@ export function createBaseSessionReader(db: D1Database, config: AuthConfiguratio
     return {principal,csrfHash:row.csrf_hash}
   }
   return (request: Request, fresh = false) => {
-    if (fresh) return read(request)
+    if (fresh || !['GET', 'HEAD'].includes(request.method)) return read(request)
     let sessions = resolved.get(request)
     if (!sessions) resolved.set(request, sessions = new Map())
     let pending = sessions.get(db)

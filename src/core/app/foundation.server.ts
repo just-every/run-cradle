@@ -8,7 +8,7 @@ import type { Platform } from '../platform'
 import { loadDescriptorRegistry } from '../../domains/records/loader.server'
 import { createApplicationEntityRegistry } from './composition/entities.server'
 import type { EntityDescriptor } from '../../domains/records/descriptors.server'
-import { createPolicyPort } from '../../domains/authority/policy.server'
+import { createPolicyPort, readOnlyContext } from '../../domains/authority/policy.server'
 import { createMemberManagementPolicy } from '../../domains/authority/member-management.server'
 import { createReplayAccess, createRequestContextFactory } from '../../domains/authority/context.server'
 import { createAdmissionService } from '../../domains/admission/service.server'
@@ -41,7 +41,8 @@ export async function createServerFoundation(platform: Platform, inputs: {
   const resolve=createRequestContextFactory(db,platform.auth.configuration)
   const authenticate=async(request:Request,ingress:RequestContext['ingress'],requestId:string):Promise<RequestContext>=>{
     const context=await resolve(request,ingress)
-    return {...context,requestId,consistencyToken:request.headers.get('x-cradle-consistency')??undefined}
+    const current={...context,requestId,consistencyToken:request.headers.get('x-cradle-consistency')??undefined}
+    return ['GET','HEAD'].includes(request.method)?readOnlyContext(current):current
   }
   const commands=createCommandRegistry(admission)
   for(const command of createGrantCommands(db,policy))commands.register(command as import('../registry/commands').CommandDefinition<unknown,unknown>)
