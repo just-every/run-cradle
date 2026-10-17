@@ -44,15 +44,39 @@ A **base** (an app) holds related tables. Every read and write goes through curr
 - **RECORDS-007 — Agent-proposed schema changes.** The installation owner can issue a proposing key: a one-time machine credential stored as a digest, for one manual base or a new one, expiring within 30 days and revocable from Settings. It reaches only the proposal door, whose REST and MCP faces run the same tools: read the schema the issuing owner may currently read, propose tables, typed fields, links, lookups, views and forms and receive the RECORDS-002 impact preview with affected-record counts but never record identities or values, and list, read or withdraw its own proposals. Every other route or tool answers as missing; the key cannot adopt, read or write records, manage keys or see another key's proposals. A proposal is inert: its names, help text and notes are stored text and create no grant, membership, credential, automation, connection, outbound call or outbox row. Only the owner's session adopts, through `release.adopt`, which rechecks the stored preview against current schema, records and the issuer's authority and requires the proposing key to be current; stale, declined, withdrawn and revoked-key proposals are refused and change nothing, and a replayed adoption returns its first result. The adoption audit row names the adopting owner, the proposal and the key, and the release records the preview hash. A proposal stays reviewable for 7 days and the owner may decline it with a note the agent can read. Model-authored proposals inside Cradle are not part of this clause. Model-authored proposals from the owner's files are AGENT-001.
   *Acceptance:* REST and MCP proposal door tests with the official MCP SDK client; 67 door cases.
   *Status:* done — tests/records-agent-proposals.mjs.
+- **APP-SCOPE-001 — Explicit application scope.** Existing operators retain exactly their legacy launch rights. Enabling repair navigation in `src/ext/config.ts` grants no record visibility or actions and does not activate mandates, providers or background work. New scopes require explicit owner mapping.
+  *Acceptance:* Repeated setup and legacy mapping preserve explicit scopes and revocations.
+  *Status:* done — tests/launch-scoped-authority.mjs; tests/launch-setup-race.mjs.
+
+## Automations and follow-up
+
+Automations do work without someone starting it each time, and follow-up keeps work moving until the record's outcome is reached. AUTO-001 to AUTO-011 (Launch readiness section) govern the launch template's shipped automations; AUTO-USER clauses govern automations on every base.
+
+- **AUTO-USER-001 — Approved record triggers.** An automation author (AUTO-USER-009 names who: base owners and creators) with current app and record access can create, edit, disable and renew created/updated record triggers with ordered notify, email, update, webhook and Slack actions. An enabled automation runs for the lifetime AUTO-USER-009 sets: until disabled or until its author's authority lapses, with any expiry being an owner-set policy announced in advance. Each committed native change captures the enabled definition versions atomically. AUTO retains run/action history and the approved definition snapshot. Disable cancels queued work; lost issuer, app, subject or credential authority stops new effects, and an operator recipient who loses authority stops receiving that effect. Email to addresses that are not operators (customers, vendors, requesters) needs no recipient authority, so removing an operator stops only the sends addressed to that operator (AUTO-USER-010). Repeated queue delivery preserves one logical run/effect. A repeated automation or excessive causal depth is recorded as Suppressed. External uncertainty is visible and never authorizes automatic resend.
+  *Acceptance:* Automation tests on emitted workerd; browser journey for definition and run history.
+  *Status:* done — tests/user-automations.mjs; tests/ui-user-automations.mjs; src/domains/automations/capture.server.ts. Capture, history, disabling, fencing on lost authority and suppression are done. Today only the installation owner authors, with approval capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Creator authorship and the run-until-disabled lifetime are tracked under AUTO-USER-009. Email to addresses that are not operators is tracked under AUTO-USER-010.
+
+## API, webhooks and integrations
+
+The services the category runs on, named. Long-tail connectors come through [Crank](https://github.com/just-every/run-crank), Zapier or Make using Cradle's API and webhooks rather than a Cradle connector library.
+
+- **API-USER-001 — Scoped revocable keys.** The owner can issue a random one-time key for one app and entity, read access or approved create/update access, and a lifetime under API-USER-004: no expiry until revoked, or a date the issuer chooses, within any owner-set maximum. Only a digest is stored. Ordinary `/api/v1` policy/admission remains authoritative; keys grant neither administrative authority nor browser sessions. Listing returns safe metadata. Key revocation, issuer policy/membership/epoch/owner changes and expiry fence current reads and atomic writes. Interrupted issuance cannot reveal the same secret again.
+  *Acceptance:* API key tests across issue, use, revoke and expiry.
+  *Status:* done — tests/user-api-keys.mjs; src/domains/authority/user-keys-http.server.ts. Issue, use, revocation, fencing and expiry are done. Today every key's expiry is capped at 30 days (src/domains/authority/user-delegation.server.ts:48), and the non-expiring option is tracked under API-USER-004.
+- **WEBHOOK-USER-001 — Private destinations and signed delivery.** Webhook and Slack destination URLs are immutable encrypted configuration. A new webhook signing key is shown once and is never recoverable from history or later listing. Exact Base integrations prepare signatures and classify delivery. The trusted relay uses Base public-DNS-pinned verified TLS, HTTPS-only destinations, no redirects, bounded requests/responses and timeouts. Missing relay configuration fails visibly. The native relay command is source only; the owner provisions its HTTPS endpoint.
+  *Acceptance:* Webhook and Slack delivery tests at the network edge.
+  *Status:* done — tests/user-webhooks.mjs; src/domains/automations/destinations.server.ts.
+
+## Target clauses
+
+### Records, schema and the app model — target
+
 - **RECORDS-008 — Merge import into an existing table.** An operator with create and update rights on a table imports a CSV file, an .xlsx sheet or a Google Sheet (INTEG-003) into that existing, populated table. They map each column to a field or skip it and choose zero or more merge fields. The preview lists exactly the records that will update, with before and after values; the rows that will create records; unchanged rows; and refused rows with the reason for each. A row whose merge value matches exactly one existing record updates it, and a row that matches none creates one. A merge value that matches several records, or appears twice in the file, is refused rather than guessed. Linked-record columns resolve by the linked table's primary value, the way a person types it. When the operator ticks it, a missing linked record is created. An ambiguous or unknown name is shown on its row. Values convert by field type: US and ISO dates, currency with or without `$` and thousands separators, select labels, checkbox words, multi-select separators and E.164 or US-formatted phones. A column mapped to a field the importer cannot write, to a calculated field or to a hidden field is refused before the preview. Commit rechecks policy and record versions and applies the import in one atomic write. For 7 days the whole import can be undone as ordinary audited writes; a cell that someone changed since is reported as a conflict, not overwritten (VIEW-014). The mapping and merge fields are saved per table and source name, so next week's file is mapped in one step. A scheduled import runs the same mapping through the same preview rules from a Google Sheet, a CSV or JSON URL, or an emailed attachment (INTEG-002's inbound address). Rows that need review hold the run for a person, while a clean run commits on its own. The importer chooses whether import writes fire automations; the default is off, as in RECORDS-005. Every import yields a receipt counting created, updated, unchanged and refused rows.
   *Acceptance:* A fixture vendor price list, as CSV and as .xlsx, is merged on SKU into a populated table. The preview and commit update exactly the matching records with the expected values, create the rest, resolve linked records by primary value, and refuse a mapped forbidden field and a repeated SKU. Undo restores every prior value. A cell another operator changed after the import is reported as a conflict on undo. A saved mapping applied to next week's fixture file produces the expected preview. A scheduled Google Sheet import, run at a fixed clock against a recorded API fixture, commits a clean run and holds one with a refused row.
   *Status:* partial — CSV import into an existing table with column mapping, merge fields, a create/update/unchanged preview and a commit recheck (src/domains/records/csv.server.ts; src/domains/records/csv-preview-rows.server.ts; src/ui/records/import-records.tsx; tests/records-manual-roundtrip.mjs). Links are accepted only as exported reference JSON, and labels are refused (src/domains/records/csv-values.ts:13). Linking by primary value, .xlsx and Google Sheets, saved mappings, scheduled imports and import undo are absent.
 - **RECORDS-009 — Record templates and duplicate record.** Any operator with create rights can duplicate a record, optionally with its linked records and attachments. The copy goes through the same policy, validation and automation triggers as a new record, and fields the operator cannot write are left empty. A creator can save record templates per table: preset field values, preset linked records and child records to create with it (a purchase order with its standard line items). Operators apply a template from the grid, a form, an interface button (IFACE-004) or an automation action (AUTO-USER-003).
   *Acceptance:* Duplicate journey, with and without links, where a field the operator cannot write is left empty. A template is applied from the grid and from an automation, and it creates its child records in one audited write.
   *Status:* partial — campaign duplication for the Launch template only (CAMP-014; src/apps/launch/duplicate.server.ts); duplicating records and record templates on general bases are absent.
-- **APP-SCOPE-001 — Explicit application scope.** Existing operators retain exactly their legacy launch rights. Enabling repair navigation in `src/ext/config.ts` grants no record visibility or actions and does not activate mandates, providers or background work. New scopes require explicit owner mapping.
-  *Acceptance:* Repeated setup and legacy mapping preserve explicit scopes and revocations.
-  *Status:* done — tests/launch-scoped-authority.mjs; tests/launch-setup-race.mjs.
 - **OWN-001 — Owned installation without seat charges.** Cradle runs in the buyer's own Cloudflare account (Worker, D1, R2, Queues) or on RER Managed hosting, under the MIT licence. Adding operators, guests or bases never adds a licence fee; the only costs are the buyer's infrastructure and any providers they connect, and Settings shows current usage against every declared limit in `seed.json`. The owner can export everything (RECORDS-006) and leave without a vendor's cooperation.
   *Acceptance:* Installer and whole-installation archive round trip on emitted workerd/D1/R2; Settings usage view.
   *Status:* done — scripts/installer/seed.mjs; tests/rer-data-roundtrip.mjs; tests/ui-launch-operator-doors.mjs.
@@ -60,7 +84,7 @@ A **base** (an app) holds related tables. Every read and write goes through curr
   *Acceptance:* Declared load profile run against emitted workerd/D1 recording p50/p95/p99 and error rate, then an authorized hosted run.
   *Status:* partial — seed.json limits are recorded as flagship targets, not load-tested; src/domains/records/cursor.server.ts pages at 200.
 
-## Fields, calculations and attachments
+### Fields, calculations and attachments
 
 The data model an Airtable, Smartsheet or Quickbase buyer already relies on: rich field types, formulas, lookups and rollups that stay correct as linked records change, and files stored with the record.
 
@@ -139,7 +163,7 @@ The data model an Airtable, Smartsheet or Quickbase buyer already relies on: ric
   *Acceptance:* Archive round trip with files equal by checksum; erasure test showing no remaining bytes; move-in receipt with zero skipped attachments.
   *Status:* partial — tests/rer-data-roundtrip.mjs carries files in whole-installation archives; tests/lifecycle-erasure.mjs erases R2 files; base JSON export and import list attachments as skipped (src/domains/records/base-transfer/attachment-manifest.ts).
 
-## Views, editing and collaboration
+### Views, editing and collaboration
 
 Views are saved, permission-checked ways to see one table. VIEW-001 to VIEW-007 (in the Launch readiness section) are workspace-wide rules that apply to every base; VIEW-008 onward are the record views.
 
@@ -183,7 +207,7 @@ Views are saved, permission-checked ways to see one table. VIEW-001 to VIEW-007 
   *Acceptance:* A watch journey at a fixed clock produces one daily digest that lists every watched change. A watcher set to immediate delivery is notified of a change once in-app and once by email within 1 minute of the commit, and with a fake Slack edge connected, one Slack message arrives. A watcher's own change notifies nobody. A revoked reader stops receiving notifications.
   *Status:* missing — launch-template notifications only (NOTIFY-001 to NOTIFY-008).
 
-## Forms, interfaces and dashboards
+### Forms, interfaces and dashboards
 
 Task-specific apps over the same records: intake, review screens, dashboards and portals. Survey-grade forms with branching, payments and response analytics are [Pencil](https://github.com/just-every/run-pencil)'s product; Pencil can write responses into a Cradle table through the API.
 
@@ -231,7 +255,7 @@ Task-specific apps over the same records: intake, review screens, dashboards and
   *Acceptance:* A record prints to a PDF whose text contains every visible field and no hidden field. A packing-slip layout rendered for a batch of five records produces five pages, each with its own order lines and a barcode that decodes to that record's value. A label sheet places 30 records on one Avery 5160 page at the template's positions. A viewer with a narrower field policy gets the restricted fields empty.
   *Status:* missing — no print or PDF layout code. REPORT-001's PDF attachment is missing too.
 
-## Roles, permissions and sharing
+### Roles, permissions and sharing
 
 Access is decided on the server for every door: UI, form, interface, REST, MCP, export, automation and agent.
 
@@ -270,13 +294,8 @@ Access is decided on the server for every door: UI, form, interface, REST, MCP, 
   *Acceptance:* In a role journey, a base creator who is not the installation owner adds a "PO number" field and adopts it alone; the field appears to editors on their next read. The same creator's field deletion waits for the base owner's review, and the base owner adopts it. An editor creates and saves a collaborative view with a filter and grouping, and other members see it with no adoption step. An editor's attempt to add a field is refused through the UI and through the RECORDS-007 or REST schema door. A read-only member can save only a personal view.
   *Status:* partial — only the installation owner adopts today, through the impact preview and `release.adopt` (src/domains/records/manual/service.server.ts; tests/records-manual-release.mjs). Saved views are authorized operations (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs). Base-owner and creator adoption, the additive/destructive split, and role-scoped view editing are absent.
 
-## Automations and follow-up
+### Automations and follow-up — target
 
-Automations do work without someone starting it each time, and follow-up keeps work moving until the record's outcome is reached. AUTO-001 to AUTO-011 (Launch readiness section) govern the launch template's shipped automations; AUTO-USER clauses govern automations on every base.
-
-- **AUTO-USER-001 — Approved record triggers.** An automation author (AUTO-USER-009 names who: base owners and creators) with current app and record access can create, edit, disable and renew created/updated record triggers with ordered notify, email, update, webhook and Slack actions. An enabled automation runs for the lifetime AUTO-USER-009 sets: until disabled or until its author's authority lapses, with any expiry being an owner-set policy announced in advance. Each committed native change captures the enabled definition versions atomically. AUTO retains run/action history and the approved definition snapshot. Disable cancels queued work; lost issuer, app, subject or credential authority stops new effects, and an operator recipient who loses authority stops receiving that effect. Email to addresses that are not operators (customers, vendors, requesters) needs no recipient authority, so removing an operator stops only the sends addressed to that operator (AUTO-USER-010). Repeated queue delivery preserves one logical run/effect. A repeated automation or excessive causal depth is recorded as Suppressed. External uncertainty is visible and never authorizes automatic resend.
-  *Acceptance:* Automation tests on emitted workerd; browser journey for definition and run history.
-  *Status:* done — tests/user-automations.mjs; tests/ui-user-automations.mjs; src/domains/automations/capture.server.ts. Capture, history, disabling, fencing on lost authority and suppression are done. Today only the installation owner authors, with approval capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Creator authorship and the run-until-disabled lifetime are tracked under AUTO-USER-009. Email to addresses that are not operators is tracked under AUTO-USER-010.
 - **AUTO-USER-002 — Every trigger.** Automations start on: record created, record updated (optionally only for named fields), record enters or leaves a view's conditions, form submitted, button pressed, a schedule (every N minutes down to 15, hourly, daily, weekly, monthly, in the workspace time zone), a date field reaching an offset ("3 days before Due"), an inbound webhook with a signed secret, and an email arriving at the base's inbound address. Definitions travel in exports.
   *Acceptance:* One emitted-worker test per trigger kind at a fixed clock; exported definitions restore disabled.
   *Status:* partial — record created/updated triggers (tests/user-automations.mjs); launch-only schedules (src/apps/launch/automations.server.ts; tests/launch-installed-schedules.mjs); others absent.
@@ -332,13 +351,8 @@ Automations do work without someone starting it each time, and follow-up keeps w
   - A builder journey at 1440 and 390 composes the action with To, CC and BCC drawn from fields and typed addresses, and sees the preview for a chosen record.
   *Status:* partial — the email action sends through the installation's Base mail sender (`MAIL_FROM`) to one operator chosen by ID, with a static subject and text, rechecking that operator's authority just before dispatch, and records an uncertain answer without resending (src/domains/automations/effects.server.ts:55; src/domains/automations/contracts.ts:7; tests/user-automations.mjs). Field and static addresses, CC and BCC, the From name, Reply-to, inserted values, Markdown, attachments, the caps, the domain policy, suppression and unsubscribe are absent.
 
-## API, webhooks and integrations
+### API, webhooks and integrations — target
 
-The services the category runs on, named. Long-tail connectors come through [Crank](https://github.com/just-every/run-crank), Zapier or Make using Cradle's API and webhooks rather than a Cradle connector library.
-
-- **API-USER-001 — Scoped revocable keys.** The owner can issue a random one-time key for one app and entity, read access or approved create/update access, and a lifetime under API-USER-004: no expiry until revoked, or a date the issuer chooses, within any owner-set maximum. Only a digest is stored. Ordinary `/api/v1` policy/admission remains authoritative; keys grant neither administrative authority nor browser sessions. Listing returns safe metadata. Key revocation, issuer policy/membership/epoch/owner changes and expiry fence current reads and atomic writes. Interrupted issuance cannot reveal the same secret again.
-  *Acceptance:* API key tests across issue, use, revoke and expiry.
-  *Status:* done — tests/user-api-keys.mjs; src/domains/authority/user-keys-http.server.ts. Issue, use, revocation, fencing and expiry are done. Today every key's expiry is capped at 30 days (src/domains/authority/user-delegation.server.ts:48), and the non-expiring option is tracked under API-USER-004.
 - **API-USER-002 — Complete REST API.** A documented REST API (OpenAPI 3.1 per base, generated from the live schema) lists, filters (by condition or formula), sorts, pages, gets, creates, updates, upserts by a merge field and deletes records in batches of up to 100, uploads attachments, reads and writes comments, and reads schema; schema writes go through the RECORDS-007 proposal path. Personal access tokens for operators carry their own policy, with the scopes and lifetime API-USER-004 sets; rate limits are declared per key and answered with 429 and Retry-After.
   *Acceptance:* Contract test drives every endpoint from the generated OpenAPI document; a batch over limits is refused whole.
   *Status:* partial — read/create/update record APIs (src/domains/records/routes.server.ts; tests/user-api-keys.mjs); delete, upsert, batch, attachments, comments, OpenAPI and personal tokens absent.
@@ -357,9 +371,6 @@ The services the category runs on, named. Long-tail connectors come through [Cra
   - Under an owner-set 90-day policy, a key issued that day warns on days 83 and 89 and is refused on day 90.
   - The listing shows the last-used time for each key and token.
   *Status:* partial — scoped, digest-stored, revocable app keys with issuer fencing (tests/user-api-keys.mjs; src/domains/authority/user-keys.server.ts). Every expiry is capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Non-expiring keys, personal access tokens, the owner lifetime policy, warnings and last-used times are absent.
-- **WEBHOOK-USER-001 — Private destinations and signed delivery.** Webhook and Slack destination URLs are immutable encrypted configuration. A new webhook signing key is shown once and is never recoverable from history or later listing. Exact Base integrations prepare signatures and classify delivery. The trusted relay uses Base public-DNS-pinned verified TLS, HTTPS-only destinations, no redirects, bounded requests/responses and timeouts. Missing relay configuration fails visibly. The native relay command is source only; the owner provisions its HTTPS endpoint.
-  *Acceptance:* Webhook and Slack delivery tests at the network edge.
-  *Status:* done — tests/user-webhooks.mjs; src/domains/automations/destinations.server.ts.
 - **WEBHOOK-USER-002 — Change subscriptions.** An API client can subscribe to changes in a base, table or view and receive signed notifications, then fetch the ordered change payloads since its cursor, so an external system keeps in step without polling; a subscription expires after 7 days unless refreshed.
   *Acceptance:* Subscription test receives a ping per change and replays the cursor without gaps or duplicates.
   *Status:* missing — outbound automation webhooks only.
@@ -395,7 +406,7 @@ The services the category runs on, named. Long-tail connectors come through [Cra
   - **Moving a Zap.** A fixture Zap of the form Airtable New Record → Slack, re-pointed at Cradle, receives output with the same field-name keys.
   *Status:* missing — no Zapier, Make or Crank app code. The REST record API it would use is partial (API-USER-002), and OAuth and change subscriptions are missing (API-USER-003; WEBHOOK-USER-002).
 
-## Move-in, sync and recovery
+### Move-in, sync and recovery
 
 A buyer of any named incumbent can bring their working app, not just their rows, and keep data from other systems in step.
 
@@ -444,7 +455,7 @@ A buyer of any named incumbent can bring their working app, not just their rows,
   *Acceptance:* Delete-and-restore test for each kind; erasure leaves nothing in trash.
   *Status:* missing — record deletion previews impact (src/domains/records/delete-impact.server.ts); no trash.
 
-## Mobile
+### Mobile
 
 Operations happen away from desks. Mobile is part of the product, not a later port.
 
@@ -458,7 +469,7 @@ Operations happen away from desks. Mobile is part of the product, not a later po
   *Acceptance:* Device-farm journeys on current iOS and Android: sign-in to a local installation, edit, offline draft and reconcile, push receipt.
   *Status:* missing — seed.json nonGoals exclude native mobile applications for the current release; device-only drafts exist for repair intake only.
 
-## AI in the base
+### AI in the base
 
 AI features need a configured provider (Anthropic, OpenAI or another `ai.provider.v1` adapter); every record feature works without one. AI output is marked as AI-generated, budgeted (AI-005, AI-006) and never widens anyone's authority. AI-001 to AI-006 (Launch readiness section) remain binding for the launch template.
 
@@ -471,6 +482,26 @@ AI features need a configured provider (Anthropic, OpenAI or another `ai.provide
 - **ASSIST-001 — Base assistant.** In any base, an operator asks questions in plain English ("orders over $5,000 shipped late in Texas this quarter") and gets an answer citing the records it used, drawn only from what that operator may read; the assistant can draft a view, chart, formula (with an explanation) or automation as an unsaved draft the operator saves or discards.
   *Acceptance:* Assistant test with a fake provider: cited answer limited to readable records; drafted view saved only by the operator.
   *Status:* partial — permissioned external schema proposals (src/domains/records/manual/proposal-agent.server.ts; tests/records-agent-proposals.mjs); in-product assistant absent.
+
+### Honest boundaries
+
+What Cradle does not do, and how a buyer gets it. Each is a product line, not a gap to close.
+
+- **BOUND-001 — Separate products stay separate.** Cradle is the relational database and internal-app builder. It is not a project or work management suite (task inboxes, workload and resource planning across projects; no Run Edit Run product owns that category today, and buyers keep Asana, monday.com or ClickUp beside Cradle), a CRM ([Orbit](https://github.com/just-every/run-orbit)), a survey platform ([Pencil](https://github.com/just-every/run-pencil)), a wiki ([Slate](https://github.com/just-every/run-slate)), file storage ([Chest](https://github.com/just-every/run-chest)), team chat ([Nook](https://github.com/just-every/run-nook)), an issue tracker ([Vector](https://github.com/just-every/run-vector)), an automation platform ([Crank](https://github.com/just-every/run-crank)), an identity provider ([Auth](https://github.com/just-every/run-auth)) or a website builder ([Pane](https://github.com/just-every/run-pane)). It connects to each through the clauses above.
+  *Acceptance:* Docs and navigation link to the sibling for each named job; no Cradle surface claims it.
+  *Status:* partial — DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product.
+- **BOUND-002 — Not a regulated system of record.** Cradle is not an accounting ledger, payroll, EHR or payment processor. Money moves only through the buyer's processor (Stripe); ledgers stay in the buyer's accounting system. Cradle makes no HIPAA, PCI DSS or SOC 2 claim; a covered entity storing PHI needs its own hosting agreement (BAA) and its own assessment.
+  *Acceptance:* Docs state the boundary; no card number field type exists.
+  *Status:* partial — no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary.
+- **BOUND-003 — Bounded compute.** Formulas, scripts and automations run within declared time and memory bounds inside the Worker. Heavy analytics and long-running jobs run in the buyer's own warehouse or runtime (SYNC-002, API-USER-002), not in Cradle requests.
+  *Acceptance:* Script and formula limit tests (AUTO-USER-007, CALC-004).
+  *Status:* partial — formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built.
+- **BOUND-004 — Honest migration and delivery claims.** Cradle never says an app migrated because its rows did, never claims a message reached a person because a provider accepted it, and never resends an uncertain external effect; receipts name every loss and uncertainty.
+  *Acceptance:* Move-in receipts and uncertain-delivery tests.
+  *Status:* done — tests/records-import-receipt.mjs; tests/launch-installed-retries.mjs.
+- **BOUND-005 — One business per installation.** An installation serves one business with many bases; multiple tenants are separate installations, and moving a base between them uses RECORDS-006.
+  *Acceptance:* Base copy between two installations by JSON export and reviewed import.
+  *Status:* done — tests/records-base-exits.mjs.
 
 ## Push further: agents that run the operation
 
@@ -498,25 +529,6 @@ Beyond today's up-and-comers (Baserow's Kuma, Grist's assistant, Airtable's Omni
   *Acceptance:* Grant tests: out-of-scope action refused, expired and revoked grants stop work, above-threshold action held for the designated approver.
   *Status:* partial — proposing keys (RECORDS-007; tests/records-agent-proposals.mjs) and repair mandates with designated-human approval (tests/repairs-outcome-http.mjs).
 
-## Honest boundaries
-
-What Cradle does not do, and how a buyer gets it. Each is a product line, not a gap to close.
-
-- **BOUND-001 — Separate products stay separate.** Cradle is the relational database and internal-app builder. It is not a project or work management suite (task inboxes, workload and resource planning across projects; no Run Edit Run product owns that category today, and buyers keep Asana, monday.com or ClickUp beside Cradle), a CRM ([Orbit](https://github.com/just-every/run-orbit)), a survey platform ([Pencil](https://github.com/just-every/run-pencil)), a wiki ([Slate](https://github.com/just-every/run-slate)), file storage ([Chest](https://github.com/just-every/run-chest)), team chat ([Nook](https://github.com/just-every/run-nook)), an issue tracker ([Vector](https://github.com/just-every/run-vector)), an automation platform ([Crank](https://github.com/just-every/run-crank)), an identity provider ([Auth](https://github.com/just-every/run-auth)) or a website builder ([Pane](https://github.com/just-every/run-pane)). It connects to each through the clauses above.
-  *Acceptance:* Docs and navigation link to the sibling for each named job; no Cradle surface claims it.
-  *Status:* partial — DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product.
-- **BOUND-002 — Not a regulated system of record.** Cradle is not an accounting ledger, payroll, EHR or payment processor. Money moves only through the buyer's processor (Stripe); ledgers stay in the buyer's accounting system. Cradle makes no HIPAA, PCI DSS or SOC 2 claim; a covered entity storing PHI needs its own hosting agreement (BAA) and its own assessment.
-  *Acceptance:* Docs state the boundary; no card number field type exists.
-  *Status:* partial — no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary.
-- **BOUND-003 — Bounded compute.** Formulas, scripts and automations run within declared time and memory bounds inside the Worker. Heavy analytics and long-running jobs run in the buyer's own warehouse or runtime (SYNC-002, API-USER-002), not in Cradle requests.
-  *Acceptance:* Script and formula limit tests (AUTO-USER-007, CALC-004).
-  *Status:* partial — formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built.
-- **BOUND-004 — Honest migration and delivery claims.** Cradle never says an app migrated because its rows did, never claims a message reached a person because a provider accepted it, and never resends an uncertain external effect; receipts name every loss and uncertainty.
-  *Acceptance:* Move-in receipts and uncertain-delivery tests.
-  *Status:* done — tests/records-import-receipt.mjs; tests/launch-installed-retries.mjs.
-- **BOUND-005 — One business per installation.** An installation serves one business with many bases; multiple tenants are separate installations, and moving a base between them uses RECORDS-006.
-  *Acceptance:* Base copy between two installations by JSON export and reviewed import.
-  *Status:* done — tests/records-base-exits.mjs.
 ## Public landing and docs
 
 - **HOME-002 — Public product landing.** *Changed on 13 October 2026: the page moved from the installed `/` (now HOME-003) to the static run site.* At `/` of the run site (`https://run-cradle.com`, built by `rer build --site` from `src/site/pages.tsx`), Cradle presents its public product page using the configured theme tokens and the product's own type. It has a header, shared with the docs under DOCS-001, with the configured product name and links to `/docs` and to the public source repository (`https://github.com/just-every/run-cradle`); a hero with one heading, "Everything comes together in one place.", a supporting line that is the description in `src/ext/config.ts`, the plain line "100% free, open source alternative to Airtable and Smartsheet", a button **Run Cradle** to `/run`, a link to `/docs` and decorative illustrations of data streaming into one Projects screen; and sections, each with its own decorative illustration of Cradle's screens, for typed and linked tables, views, guarded schema changes, the practical parts (CSV import and export, visible automations, optional read-only AI) and self-hosted ownership that the owner customises with their own agents; at least two of those sections carry a quiet link to the published guide page on their subject (CSV import, automations, installing or leaving), and every `/docs` link on the page names a page published under DOCS-001. A closing call to action repeats **Run Cradle** to `/run` and links to `/docs`. The footer, also shared with the docs, carries the section anchors (which still reach the page from `/docs`), links to `/docs` and the source repository, an MIT licence link to `LICENSE` in that repository, and the credit. Its copy describes only capabilities this contract ships and shows no record content, public views, pricing, testimonials, customer logos, metrics or integrations the product does not ship. Its optional footer credit is visible by default and config can turn it off; when visible it names the configured product and links statically to `https://runeditrun.com`. The credit adds no telemetry or phone-home. Scroll motion never hides content: with reduced motion, without script, and after scrolling, every section is fully visible. The page loads no resource from another origin, links no instance-only route (`/signin`, `/setup`, `/app`, `/auth/*`) and reads no installation data. `/run` (Base's Run page) shows the two commands that run Cradle from `https://github.com/just-every/run-cradle`.
