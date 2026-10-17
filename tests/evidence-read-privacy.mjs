@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {contract} from './contract.mjs'
 import {freePort} from './helpers/free-port.mjs'
+import {evidenceCommentsJourney} from './helpers/evidence-comments-journey.mjs'
 
 // Resolve TypeScript dependencies only after the loader has registered its hooks.
 const [{userAutomationRuntime},{STAGING_ENTITY,STAGING_OWNER,STAGING_FILES},{createUlid}]=await Promise.all([
@@ -11,9 +12,10 @@ const [{userAutomationRuntime},{STAGING_ENTITY,STAGING_OWNER,STAGING_FILES},{cre
  import('../src/core/shared/ids.ts'),
 ])
 
-contract('BASE-INPUT-003 BASE-ACCESS-004','private source/file and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
+contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
  const h=await userAutomationRuntime(await freePort())
  try{
+  await evidenceCommentsJourney(h)
   const command=input=>({commandId:createUlid(),expected:[],input})
   const staged=(await h.request('/api/v1/commands/source.stage',{method:'POST',body:command({appId:h.appId,purpose:'source'})})).data.value
   const text='Private stored evidence',sha256=createHash('sha256').update(text).digest('hex')
@@ -64,7 +66,7 @@ contract('BASE-INPUT-003 BASE-ACCESS-004','private source/file and authority ide
  }finally{await h.close()}
 })
 
-contract('BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority',async()=>{
+contract('COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority',async()=>{
  const h=await userAutomationRuntime(await freePort()),observations={}
  try{
   const relationId=createUlid(),visible=(await h.create('Visible history')).record,hidden=(await h.create('Hidden history')).record
@@ -80,6 +82,15 @@ contract('BASE-ACCESS-004','record history reprojects retained relation and atta
   const history=async ref=>(await h.request('/api/v1/history?'+new URLSearchParams(ref))).data
   const record=async ref=>(await h.request(`/api/v1/apps/${ref.appId}/entities/${ref.entityId}/records/${ref.recordId}`)).data.record
   const includes=(value,id)=>JSON.stringify(value).includes(id)
+  const beforeRestore=await record(visible.ref)
+  const prior=(await history(visible.ref)).items.flatMap(entry=>entry.changes).find(change=>change.fieldId===h.statusId&&change.after.state==='value'&&change.after.value==='Retained visible change')
+  assert.equal(prior.before.state,'value')
+  const restored=(await h.patch(beforeRestore,{[h.statusId]:prior.before.value})).data.value
+  assert.deepEqual(restored.fields[h.statusId],prior.before,'History values restore through the ordinary audited write door')
+  const restoreAudit=(await history(visible.ref)).items.find(entry=>entry.changes.some(change=>change.fieldId===h.statusId&&change.before.state==='value'&&change.before.value==='Retained visible change'&&change.after.state==='value'&&change.after.value===prior.before.value))
+  assert.ok(restoreAudit,'Restoring is itself visible in record history')
+  await h.patch(beforeRestore,{[h.statusId]:'stale restore'},undefined,createUlid(),409)
+  assert.deepEqual((await record(visible.ref)).fields[h.statusId],prior.before,'Stale restore changes nothing')
   observations.allowedHistory=includes(await history(visible.ref),hidden.ref.recordId)
   const auditRows=(await h.db.prepare('SELECT id,changes_json FROM admission_audit WHERE app_id=?').bind(h.appId).all()).results
   const foreignApp=createUlid()

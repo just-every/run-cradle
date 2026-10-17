@@ -191,3 +191,8 @@
   .cr-editable-grid .cr-records-table td.cr-col-select { width: 48px; padding-inline: 4px; }
   .cr-editable-grid .cr-records-table td.cr-col-primary { font-size: 15px; }
 }
+
+.cr-record-comments { margin-top: 24px; min-width: 0; }
+.cr-comment-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.cr-record-comments .cr-detail, .cr-history-restore { overflow-wrap: anywhere; }
+.cr-history-restore { margin-bottom: 16px; }

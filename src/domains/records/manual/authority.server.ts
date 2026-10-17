@@ -31,6 +31,6 @@ export async function manualAuthority(db:D1Database, policy:PolicyPort, ctx:Requ
 }
 export function ownerRules(ownerId:string,schemas:EntitySchema[]):Policy['rules'] {
  const base={principals:[{id:ownerId,kind:'human' as const}],rows:{kind:'all' as const,conditions:[]},effect:'allow' as const,purposes:['read' as const,'export' as const]}
- const actions=['record.create','record.patch','record.delete','record.bulk-preview','record.bulk-commit','record.undo','view.preview','import.preview','import.commit','form.submit']
+ const actions=['record.create','record.patch','record.delete','record.bulk-preview','record.bulk-commit','record.undo','view.preview','import.preview','import.commit','form.submit','comment.add','comment.edit','comment.delete']
  return [...schemas.map(s=>({...base,id:createUlid(),entityId:s.id,readableFields:s.fields.map(f=>f.id),writableFields:s.fields.filter(f=>f.type!=='computed').map(f=>f.id),actions})),...[RECORD_SCHEMA_ENTITY_ID,RECORD_VIEW_ENTITY_ID,RECORD_FORM_ENTITY_ID].map(entityId=>({...base,id:createUlid(),entityId,readableFields:[],writableFields:[],actions:['release.adopt','view.save','view.delete','view.restore','form.save']})),...stagingPolicyRules(ownerId,createUlid(),createUlid())]
 }

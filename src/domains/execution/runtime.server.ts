@@ -21,8 +21,9 @@ import type { ExecutionDependencies } from './ports';
 import type { ModelSchema } from './model-ports';
 import type { EffectRequest } from './contracts';
 import { ApiError } from '../../core/registry/errors';
+import type {EntityRegistry} from '../authority/scope.server';
 export type ProviderRuntimeOptions=Pick<ExecutionDependencies,'db'|'admission'|'policy'|'workspaceId'|'currentGuards'|'observations'> & {
- bucket:R2Bucket;auth:AuthConfiguration;keyVersion:string;encryptionKey(version:string):string|undefined;
+ notificationEntities?:EntityRegistry;bucket:R2Bucket;auth:AuthConfiguration;keyVersion:string;encryptionKey(version:string):string|undefined;
  /** Explicit provider-secret allowlist, never the full environment binding object. */
  secrets:ReadonlyMap<string,{dispatch?:string;readback?:string}>;
  oauth(provider:OAuthProvider):OAuthConfiguration;schemas:ReadonlyMap<string,ModelSchema>;
@@ -31,7 +32,7 @@ export type ProviderRuntimeOptions=Pick<ExecutionDependencies,'db'|'admission'|'
  intake?(ctx:RequestContext,connectionId:string):Promise<{port:MailIntakePort;scope:unknown;pageToken:string|null}>;
 };
 export function createProviderRuntime(o:ProviderRuntimeOptions){
- const keyring=environmentKeyring(o.keyVersion,o.encryptionKey),payloads=privatePayloadStore(o.bucket,o.db),notification=createNotificationMailAuthority(o.db),credentialAccess=createCredentialAccess(o.db,o.policy);
+ const keyring=environmentKeyring(o.keyVersion,o.encryptionKey),payloads=privatePayloadStore(o.bucket,o.db),notification=createNotificationMailAuthority(o.db,o.notificationEntities),credentialAccess=createCredentialAccess(o.db,o.policy);
  const background=createExecutionBackground(o.db,{notification:notification.context});
  function connections(ctx:RequestContext){return createConnectionService({db:o.db,admission:o.admission,policy:o.policy,workspaceId:o.workspaceId,keyring,appOrigin:o.auth.appOrigin,context:async()=>ctx,oauth:o.oauth,secret:async(ref,purpose)=>o.secrets.get(ref)?.[purpose],credentialAuthority:async(context,id,purpose,operation)=>{
   if(operation.attemptId){const saved=await o.db.prepare('SELECT a.connection_id,r.actor_json,r.request_json FROM execution_attempts a JOIN execution_runs r ON r.id=a.run_id WHERE a.id=?').bind(operation.attemptId).first<{connection_id:string;actor_json:string;request_json:string}>();if(saved&&saved.connection_id===id&&JSON.parse(saved.actor_json).id===context.principal.id){const r=JSON.parse(saved.request_json) as EffectRequest;if(r.action==='notification.email.send')return notification.authorize(context,r,'reconcile');}}

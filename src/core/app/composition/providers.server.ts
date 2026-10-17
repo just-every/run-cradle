@@ -25,7 +25,7 @@ export function createProvidersComposition(platform:Platform,foundation:ServerFo
  const secrets=new Map<string,{dispatch?:string;readback?:string}>()
  if(env.MAIL_PROVIDER_API_KEY)secrets.set('MAIL_PROVIDER_API_KEY',{dispatch:env.MAIL_PROVIDER_API_KEY,readback:env.MAIL_PROVIDER_API_KEY})
  if(env.AI_PROVIDER_API_KEY)secrets.set('AI_PROVIDER_API_KEY',{dispatch:env.AI_PROVIDER_API_KEY,readback:env.AI_PROVIDER_API_KEY})
- const runtime=createProviderRuntime({db:env.DB,admission:foundation.admission,policy:foundation.policy,bucket:env.FILES,auth:platform.auth.configuration,workspaceId:'workspace',
+ const runtime=createProviderRuntime({db:env.DB,notificationEntities:foundation.entities,admission:foundation.admission,policy:foundation.policy,bucket:env.FILES,auth:platform.auth.configuration,workspaceId:'workspace',
   keyVersion:env.CONNECTION_ENCRYPTION_KEY_VERSION??'unconfigured',encryptionKey:version=>version===env.CONNECTION_ENCRYPTION_KEY_VERSION?env.CONNECTION_ENCRYPTION_KEY:undefined,secrets,schemas,
   oauth(provider){const clientId=provider==='xero'?env.XERO_CLIENT_ID:env.GOOGLE_CLIENT_ID,clientSecret=provider==='xero'?env.XERO_CLIENT_SECRET:env.GOOGLE_CLIENT_SECRET;if(!clientId||!clientSecret)throw new ApiError('unconfigured',`${provider} OAuth credentials are required.`);return{clientId,clientSecret,redirectUri:`${platform.auth.configuration.appOrigin}/oauth/${provider==='xero'?'xero':'google'}/callback`}},
   currentGuards:createExecutionGuards(env.DB,foundation),observations:createDeliveryObservations(env.DB).prepare,

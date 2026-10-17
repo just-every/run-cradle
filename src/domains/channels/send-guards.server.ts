@@ -6,11 +6,13 @@ import { notificationKinds, type ChannelEffects, type NotificationKind } from '.
 import { legacyRecipientGuards } from './recipient.server'
 import { deliveryTime } from './clock'
 import { createLegacyDigestProjection } from './digest.server'
+import {commentRecipientGuards} from './comment-recipient.server'
+import type {EntityRegistry} from '../authority/scope.server'
 
 const denied=():never=>{throw new AdmissionError('forbidden','Notification email authority does not match the durable event, recipient or content')}
 
 /** Both mail transports recheck current recipient/content authority and fence it at admission. */
-export async function notificationSendGuards(db:D1Database,ctx:RequestContext,ids:string[],operatorId:string,input:MailEnvelope,now:number):Promise<ChannelEffects['guards']>{
+export async function notificationSendGuards(db:D1Database,ctx:RequestContext,ids:string[],operatorId:string,input:MailEnvelope,now:number,entities?:EntityRegistry):Promise<ChannelEffects['guards']>{
  const guards=[trustedPredicate('EXISTS(SELECT 1 FROM operators WHERE id=? AND active=1 AND email=?)',[operatorId,input.to])]
  const settings=await db.prepare('SELECT id,version,timezone,quiet_hours_start,quiet_hours_end FROM workspace_settings ORDER BY id LIMIT 1').first<{id:string;version:number;timezone:string;quiet_hours_start:string;quiet_hours_end:string}>()
  if(!settings)return denied()
@@ -19,9 +21,11 @@ export async function notificationSendGuards(db:D1Database,ctx:RequestContext,id
  guards.push(trustedPredicate(pref?'EXISTS(SELECT 1 FROM channel_preferences WHERE operator_id=? AND version=?)':'NOT EXISTS(SELECT 1 FROM channel_preferences WHERE operator_id=?)',pref?[operatorId,pref.version]:[operatorId]))
  const bodies:string[]=[]
  for(const id of ids){
-  const n=await db.prepare('SELECT n.id,n.title,n.body,n.subject_id,n.version,c.event_kind,c.campaign_id FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id JOIN channel_notifications c ON c.notification_id=n.id WHERE d.id=? AND n.unavailable=0 AND n.operator_id=d.operator_id AND c.event_kind=d.kind').bind(id).first<{id:string;title:string;body:string;subject_id:string;version:number;event_kind:NotificationKind;campaign_id:string|null}>()
+  const n=await db.prepare('SELECT n.id,n.title,n.body,n.subject_id,n.version,c.app_id,c.subject_type,c.event_kind,c.campaign_id FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id JOIN channel_notifications c ON c.notification_id=n.id WHERE d.id=? AND n.unavailable=0 AND n.operator_id=d.operator_id AND c.event_kind=d.kind').bind(id).first<{id:string;title:string;body:string;subject_id:string;version:number;event_kind:NotificationKind;campaign_id:string|null;app_id:string;subject_type:string}>()
   if(!n||!notificationKinds.includes(n.event_kind))return denied()
-  const access=await legacyRecipientGuards(db,{kind:n.event_kind,operatorId,campaignId:n.campaign_id,subjectId:n.subject_id,eventId:n.id},new Date(now).toISOString())
+  const access=n.event_kind==='comment-mentioned'&&n.campaign_id===null&&/^[0-9A-HJKMNP-TV-Z]{26}$/.test(n.subject_type)
+   ?await commentRecipientGuards(db,entities,{...ctx,now:new Date(now).toISOString()},{notificationId:n.id,appId:n.app_id,entityId:n.subject_type,recordId:n.subject_id,operatorId})
+   :await legacyRecipientGuards(db,{kind:n.event_kind,operatorId,campaignId:n.campaign_id,subjectId:n.subject_id,eventId:n.id},new Date(now).toISOString())
   if(!access)return denied()
   guards.push(...access,trustedPredicate('EXISTS(SELECT 1 FROM notifications WHERE id=? AND version=? AND unavailable=0)',[n.id,n.version]))
   if(deliveryTime(now,pref?.timezone??settings.timezone,settings.quiet_hours_start,settings.quiet_hours_end,['decision-assigned','critical-risk-escalated','outage','weekly-digest'].includes(n.event_kind))>now)return denied()

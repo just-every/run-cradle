@@ -35,6 +35,10 @@ import { createRecordServices } from '../../../domains/records/service.server'
 import { createRecordHttp } from '../../../domains/records/routes.server'
 import { createEvidenceHttp } from '../../../domains/evidence/http.server'
 import { createEvidenceHistoryHttp } from '../../../domains/evidence/history-http.server'
+import { createCommentService } from '../../../domains/evidence/comments.server'
+import { createCommentMentions } from '../../../domains/evidence/comment-mentions.server'
+import { createCommentReader } from '../../../domains/evidence/comment-reader.server'
+import { registerCommentCommands } from '../../../domains/evidence/comment-commands.server'
 import { createAuditReader } from '../../../domains/admission/audit.server'
 import type { EvidenceDependencies } from '../../../domains/evidence/ports'
 import { REPAIRS_APP_ID } from '../../../apps/repairs/model'
@@ -53,6 +57,9 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
     egress:createModelEgress({db,policy,profile:modelConfiguration.profile}),
   }}
   const sources=createSourceService(deps)
+  const mentions=createCommentMentions(deps,entities),comments=createCommentService(deps,mentions,descriptors)
+  registerCommentCommands(foundation.commands,comments)
+  const commentReader=createCommentReader(deps,descriptors,platform.auth.configuration.sessionSecret)
   const activeCases=createCaseReferenceReader({db,policy,descriptors,evidence:sources})
   const services=createRecordServices(db,descriptors,policy,platform.auth.configuration.sessionSecret,
     createEvidenceDetail(deps,activeCases),createEvidenceAttachmentPort(deps),
@@ -84,6 +91,6 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
   })
   return {deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(createRecordsCsv(db,services,admission),foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
     http:createRecordHttp({...services,authenticate:foundation.authenticate}),
-    historyHttp:createEvidenceHistoryHttp({...deps,authenticate,audit,cursorSecret:platform.auth.configuration.sessionSecret}),
+    historyHttp:createEvidenceHistoryHttp({...deps,authenticate,audit,cursorSecret:platform.auth.configuration.sessionSecret,comments:commentReader,mentions}),
   }
 }
