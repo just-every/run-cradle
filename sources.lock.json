@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "8a7855246a564f2d965b528a0f78f72117293d582c07790916190bb4e6e416de",
+      "sha256": "c4775b60bca446bc4053d84de7d14c13e1db0474c99275d574428f6c4263c728",
       "executable": false
     },
     "DEMO.md": {
@@ -3091,6 +3091,78 @@
     },
     "docs/contract/CALC-004/next-read-updated-390.png": {
       "sha256": "b2d048ec57caf007cc387e48533a997ca8b65c44ad50fd569e583591906b8ef7",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/paged-candidates-1440.png": {
+      "sha256": "262389d5cf1d5c7df8f7e98019cd132e65348a0dcb6c9670e6daa2751c63bc02",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/paged-candidates-390.png": {
+      "sha256": "35466d585754fd8c3a7158e44075d9cdfc157fdbcb9e1ae52dd1436ededf2ae1",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/saved-link-result-1440.png": {
+      "sha256": "5dafb8f0254733c8c3d16995997644ccd48e7973b8ba727abec04a14f890095d",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/saved-link-result-390.png": {
+      "sha256": "ed10ad79f636b3e899041cbd691a68a6ba5139dd813c22d662ea379fea42c56a",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/search-readable-city-1440.png": {
+      "sha256": "2f6e85b98d1e72b1d221028e7ff9fe329d57d83940785456f628f3eb4f6e8587",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/search-readable-city-390.png": {
+      "sha256": "a90cbe864fd7ac11f81bb7b18a6d9555259b2e6e5e589b3358e711a3394a1aa3",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/single-and-many-selection-1440.png": {
+      "sha256": "95863ecdbb09dbe9cfebfe7e20c44936c6103f12a6a35e4b3f614851eefe6765",
+      "executable": false
+    },
+    "docs/contract/FIELD-005/single-and-many-selection-390.png": {
+      "sha256": "0fae5b1905c9ce4f414b69e794e5cb8acdb3390d8a28846329efc419009aed7b",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/committed-weekly-update-1440.png": {
+      "sha256": "f9b80414dbe18ca0a18052aa7cddb143639beaad78474e23d1aaf57a8ff74beb",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/committed-weekly-update-390.png": {
+      "sha256": "33a6842fcb0e8a154f80bb427ebcfd3a414c40ed8bdab67d4d60ed62f4e5d347",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/reused-next-week-1440.png": {
+      "sha256": "c4f485d6ec59545793f161d466ff2140170f4d2a3d54b0e9220ea3d880d9b441",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/reused-next-week-390.png": {
+      "sha256": "c00004359cfb9fa58753c1026e509268d6b444c82d419a80838446bdad253a1c",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/saved-source-mapping-1440.png": {
+      "sha256": "cb3a9432b87b111efb30b6944bef96a76af0c9b019b47c4604cf544b27403aff",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/saved-source-mapping-390.png": {
+      "sha256": "ef6ed4c9fa9d5e86c8e53d4925c97e42efd7c8f1853a206e2a13c88433570cd2",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/typed-preview-1440.png": {
+      "sha256": "45b340f2f9f8739201eb4c5968c00b450f496d5efc8885def4d82be2dbcd500f",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/typed-preview-390.png": {
+      "sha256": "1cc6b309bc776e7a11d25883a2f0c7f64c16a6ac13dbc891a5444066eb4ec319",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/weekly-update-preview-1440.png": {
+      "sha256": "c41c586eac1c18852f98a0ac16ebbdf696ecccac64ddc3cf52884a92434a876c",
+      "executable": false
+    },
+    "docs/contract/RECORDS-008/weekly-update-preview-390.png": {
+      "sha256": "495f47a972b4e0d1f88996709016be26a2cfc24f57d422a99d0dc3be4baf1b85",
       "executable": false
     },
     "docs/contract/VIEW-008/column-controls-1440.png": {
@@ -3595,6 +3667,10 @@
     },
     "migrations/core/1220_launch_runtime.sql": {
       "sha256": "db62e2f613c63666e23b55aac7d076583b4d015e21696e7aaf4a6768045e8767",
+      "executable": false
+    },
+    "migrations/core/1230_record_csv_mappings.sql": {
+      "sha256": "39e96e9fc1543b6db399bf9eccc1a7dda4b131e956c8942b605a3833502b7e93",
       "executable": false
     },
     "migrations/import/9003_base_import.sql": {
@@ -4718,7 +4794,7 @@
       "executable": false
     },
     "src/core/app/application.ts": {
-      "sha256": "03498d560b8dc1e79022dd596a632e13fab9765335455f69c82209d176f59d64",
+      "sha256": "00a96953f39089026fd6374818935264082749764ab91d163c7596ac5afbf154",
       "executable": false
     },
     "src/core/app/composition/admission-wake.server.ts": {
@@ -7486,7 +7562,7 @@
       "executable": false
     },
     "src/domains/records/csv-display.server.ts": {
-      "sha256": "679c38e214c9ac4d63d3f57a79b68d01d3a74ac2a948cb033e3729073767d6d5",
+      "sha256": "c323f1d81242fbaa78d3fc3bce2e7e35e4496fa45ae249085b1a1be53960d9d8",
       "executable": false
     },
     "src/domains/records/csv-export.server.ts": {
@@ -7494,19 +7570,35 @@
       "executable": false
     },
     "src/domains/records/csv-http.server.ts": {
-      "sha256": "0e61bf7c73944edf59c25262828dc19e514d5207ab0844f116a36bf3ddf405d4",
+      "sha256": "6d7bde9be39aa430777ec4ad825a27489ffbd0f21a881ed70316782a9ff1b7ab",
       "executable": false
     },
     "src/domains/records/csv-import-contracts.ts": {
       "sha256": "ad38a1080332c44e791523cc9d0559903bccb4c020a87b59df2c04f5296dde16",
       "executable": false
     },
+    "src/domains/records/csv-link-candidates.server.ts": {
+      "sha256": "36346cc370f6b6ea55fa26c5f77e8d707895bc7eb77b5d49fb647b88554a733d",
+      "executable": false
+    },
+    "src/domains/records/csv-mapping-contracts.ts": {
+      "sha256": "77b0db64f9d574489b3802279df88646d7919a47ae7d597e7aba93e7a7f052a0",
+      "executable": false
+    },
+    "src/domains/records/csv-mappings.server.ts": {
+      "sha256": "86ed229a180cb2492ab984625a8738ff0d6149387f8c927c05f943c1442dcb72",
+      "executable": false
+    },
     "src/domains/records/csv-preview-rows.server.ts": {
       "sha256": "430e408ae9a8d31d7881f0690491b73dfd5ec4d21678566cf454a4838aa5e246",
       "executable": false
     },
+    "src/domains/records/csv-typed-values.ts": {
+      "sha256": "6cc104edae53b4d75bde22858c01005be7b23a6d6fea35088ca40125aa26bb76",
+      "executable": false
+    },
     "src/domains/records/csv-validation.ts": {
-      "sha256": "656dc281bddc541554ebaf86b95931a89772c039d373077cd0d7391009defc5a",
+      "sha256": "d2dab96974f0cc88504d6d97c6144be1ae07b9b5b9ae9bf95b73699f8794d4c5",
       "executable": false
     },
     "src/domains/records/csv-values.ts": {
@@ -7514,7 +7606,7 @@
       "executable": false
     },
     "src/domains/records/csv.server.ts": {
-      "sha256": "5344957c8ed9e939dbf12eee10f4062abb26231f5d697fc8e0900dacaaa4027c",
+      "sha256": "ade41cb5f0d265024a2e9b7b66677f7644be359c7ee39ba9d988fcb84a69e3bf",
       "executable": false
     },
     "src/domains/records/cursor.server.ts": {
@@ -8377,6 +8469,10 @@
       "sha256": "47cfb3cecf953fec18a92d9135dfbde95c098e902c28e5caaf1f9466c238954d",
       "executable": false
     },
+    "src/ui/records/manual-import-mappings.tsx": {
+      "sha256": "10b3ad30bc52bd1ef236bd8e4ad6709c303d93b8b99efcba6bbd64355078e075",
+      "executable": false
+    },
     "src/ui/records/manual-import-preview.tsx": {
       "sha256": "0700d3686521cb1da9f6428ed8e61fba1607bb17cabbd734ffef03b70e174395",
       "executable": false
@@ -8386,7 +8482,7 @@
       "executable": false
     },
     "src/ui/records/manual-import.tsx": {
-      "sha256": "b814acb3a97f3c8eb4f4ded99109b378d0623c545f71ff136cc691a848653d9d",
+      "sha256": "8eb0ab10c997f069af90572dfe15b325eb51d4d61aa15ea7110a659a1917bd15",
       "executable": false
     },
     "src/ui/records/money-input.tsx": {
@@ -8454,7 +8550,7 @@
       "executable": false
     },
     "src/ui/records/relationship-picker.tsx": {
-      "sha256": "a2986cac13365867d0e109d217233bcfefebfc11e73e082717129335c380c654",
+      "sha256": "db4e80a18f4ab11fa3185bef7fbbc15fdbf54a3f18f5ab825c1240b3ce364a6b",
       "executable": false
     },
     "src/ui/records/saved-views.tsx": {
@@ -9746,7 +9842,7 @@
       "executable": false
     },
     "tests/records-csv-fence.mjs": {
-      "sha256": "b5f6f6899cd96ba61ed6961d8e73e8385b380c684c75b2081ed900524f377731",
+      "sha256": "a4459143dfd129f6a4c5c1e306ece2c9de7b13585a00e52464c9534bb59266fb",
       "executable": false
     },
     "tests/records-grid-range.mjs": {

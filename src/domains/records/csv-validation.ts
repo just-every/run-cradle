@@ -9,14 +9,14 @@ export function validateCsvCell(field: Field, value: unknown) {
     const required = field.required && (value === null || typeof value === 'string' && !value.trim())
     const reasons: Record<Field['type'], string> = {
       number: 'Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).',
-      date: 'Enter a real calendar date as YYYY-MM-DD.',
+      date: 'Enter a real calendar date as YYYY-MM-DD or M/D/YYYY.',
       instant: 'Enter a UTC date and time such as 2027-01-15T08:00:00.000Z.',
-      boolean: 'Enter true or false (Yes or No is also accepted).',
+      boolean: 'Enter Yes/No, true/false, checked/unchecked or 1/0.',
       url: 'Enter a complete http:// or https:// website address.',
       select: 'Choose one of this field’s available options.',
       multi_select: 'Choose available options without duplicates.',
       relation: 'Use an available linked record in the required CSV format.',
-      money: 'Use an exported money value with its currency and precision.',
+      money: 'Enter a USD amount such as $1,234.50, or an exported money value with its currency and precision.',
       person: 'Use an available person’s record ID.',
       attachment: 'Use exported file references.',
       text: 'Enter text within the 100,000 character limit.',

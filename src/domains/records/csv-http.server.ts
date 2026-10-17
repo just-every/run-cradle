@@ -12,6 +12,8 @@ export function recordsCsvHttp(service:ReturnType<typeof createRecordsCsv>,authe
  if(request.method!=='POST'||request.headers.get('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin request is required.')
  const input=await readJsonBody(request,url.pathname==='/api/v1/records/import-preview'?64*1024*1024:1048576);let data:unknown
  if(url.pathname==='/api/v1/records/export-csv')data=await service.exportCsv(ctx,input)
+ else if(url.pathname==='/api/v1/records/import-mappings')data=await service.mappings(ctx,input)
+ else if(url.pathname==='/api/v1/records/link-candidates')data=await service.linkCandidates(ctx,input)
  else if(url.pathname==='/api/v1/records/import-preview')data=await service.preview(ctx,input)
  else if(url.pathname==='/api/v1/commands/records.import-commit'){const command=z.object({commandId:idSchema,expected:z.array(z.unknown()).max(0),input:z.object({previewId:idSchema}).strict()}).strict().parse(input);data=(await service.commit(ctx,command.commandId,command.input.previewId)).result}
  else throw new AdmissionError('not_found','Unknown records CSV route.')

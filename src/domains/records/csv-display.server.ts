@@ -7,15 +7,19 @@ import type { createRecordServices } from './service.server'
 import { validateCsvCell } from './csv-validation'
 import { parseLinkCell } from './base-transfer/parse'
 import { ImportInputError } from './base-transfer/input-error'
+import { typedCsvValue } from './csv-typed-values'
 
 export function displayCsvValue(field:Field,value:CellValue):string {
  if(value===null)return ''
  const type=field.resultType??field.type
- if(type==='select'||type==='multi_select')return (Array.isArray(value)?value:[value]).map(id=>{
-  const label=field.options?.find(option=>option.id===id)?.label
-  if(label===undefined)throw new AdmissionError('validation',`${field.label}: a select option is unavailable.`)
-  return label
- }).join(', ')
+ if(type==='select'||type==='multi_select'){
+  const labels=(Array.isArray(value)?value:[value]).map(id=>{
+   const label=field.options?.find(option=>option.id===id)?.label
+   if(label===undefined)throw new AdmissionError('validation',`${field.label}: a select option is unavailable.`)
+   return label
+  })
+  return type==='multi_select'?labels.map(label=>'"'+label.replaceAll('"','""')+'"').join(','):labels[0]??''
+ }
  if(typeof value==='boolean')return value?'Yes':'No'
  return typeof value==='string'?value:JSON.stringify(value)
 }
@@ -73,9 +77,8 @@ export function createCsvLabels(services:ReturnType<typeof createRecordServices>
 
 export function decodeDisplayCsvValue(field:Field,raw:string):CellValue{
  if(field.type==='computed')throw new AdmissionError('validation',`${field.label} is computed and cannot be imported.`)
- let value:unknown=raw
+ let value:unknown=typedCsvValue(field,raw)
  if(field.type==='select')value=raw===''?null:field.options?.find(option=>option.label===raw)?.id??raw
- else if(field.type==='boolean')value=raw===''?null:raw==='true'||raw==='Yes'?true:raw==='false'||raw==='No'?false:raw
- else if(field.type!=='text'&&raw==='')value=null
+ else if(field.type!=='text'&&field.type!=='multi_select'&&raw==='')value=null
  return validateCsvCell(field,value)
 }

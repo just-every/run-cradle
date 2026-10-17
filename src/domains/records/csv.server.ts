@@ -14,8 +14,10 @@ export { decodeCsvValue, encodeCsvValue } from './csv-values'
 import { previewCsvRows } from './csv-preview-rows.server'
 import type { CsvImportPreview } from './csv-import-contracts'
 import { assertGuards } from './fence.server'
+import { createCsvMappings, validateCsvMapping, csvMappingSchema, csvMergeSchema } from './csv-mappings.server'
+import { createCsvLinkCandidates } from './csv-link-candidates.server'
 const stored=registerTable('record_csv_previews',['id','app_id','entity_id','owner_id','detail_json','expires_at','command_id'])
-export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024),mapping:z.array(z.object({column:z.string(),fieldId:idSchema}).strict()).min(1).max(80),mergeFieldId:z.union([idSchema,z.literal('_record_id')])}).strict()
+export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024),mapping:csvMappingSchema,mergeFieldId:csvMergeSchema}).strict()
 type Preview=CsvImportPreview & {guards:SqlPredicate[]}
 export function createRecordsCsv(db:D1Database,services:ReturnType<typeof createRecordServices>,admission:AdmissionPort){
  const {reader,writer,policy,descriptors,metadata}=services
@@ -39,10 +41,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   if(d.legacy)throw new AdmissionError('validation','This import is for records-builder tables. Use the retained application import for source-maintained records.')
   const scope=await policy.scope(ctx,{appId:request.appId,entityId:request.entityId,purpose:'read'})
   let csv:ReturnType<typeof parseCsv>;try{csv=parseCsv(new TextEncoder().encode(request.csv))}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Invalid CSV.')}
-  if(new Set(request.mapping.map(m=>m.fieldId)).size!==request.mapping.length||request.mapping.some(m=>!csv.headers.includes(m.column)))throw new AdmissionError('validation','Each mapped field must have exactly one source column.')
-  const byId=request.mergeFieldId==='_record_id',merge=d.fields.get(request.mergeFieldId)?.field
-  if(byId&&!csv.headers.includes('_record_id'))throw new AdmissionError('validation','Recovery requires the original _record_id column.')
-  if(!byId&&(!merge||!['text','number','date','select'].includes(merge.type)||!request.mapping.some(m=>m.fieldId===merge.id)))throw new AdmissionError('validation','Choose a mapped scalar field to match existing records.')
+  const mappingCheck=await validateCsvMapping(services,ctx,request.appId,request.entityId,request.mapping,request.mergeFieldId,csv.headers)
   // Guard only rows the caller can currently read. Hidden records never affect this preview.
   const expression=`(SELECT COALESCE(json_group_array(json(row)),'[]') FROM (SELECT json_object('id',${identifier(d.idColumn)},'version',${identifier(d.versionColumn)}) AS row FROM ${identifier(d.table.tableId)} WHERE ${scope.rowPredicate.sql} ORDER BY ${identifier(d.idColumn)}))`
   const snapshot=await db.prepare(`SELECT ${expression} AS value`).bind(...scope.rowPredicate.values).first<{value:string}>()
@@ -51,7 +50,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   do{const page=await reader.query(ctx,scope,{limit:200,cursor});existing.push(...page.items);cursor=page.nextCursor??undefined}while(cursor)
   const labelGuards:SqlPredicate[]=[],labels=createCsvLabels(services,ctx,labelGuards)
   const {rows,errors,guards:rowGuards}=await previewCsvRows(ctx,request,csv,d,scope,existing,writer,labels)
-  const guards=[...scope.currentAuthorityGuards,...labelGuards,rowGuard,...rowGuards]
+  const guards=[...scope.currentAuthorityGuards,...mappingCheck.guards,...labelGuards,rowGuard,...rowGuards]
   const permit=await policy.authorize(ctx,{appId:request.appId,targetEntityId:request.entityId,fieldIds:request.mapping.map(m=>m.fieldId),action:'import.preview',expected:[],cost:[],inputHash:await canonicalHash(request)})
   guards.push(...permit.guards);await assertGuards(db,guards)
   const result:Preview={id:createUlid(),appId:request.appId,entityId:request.entityId,rows,errors,rejected:errors.length,guards,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString(),creates:rows.filter(r=>r.operation==='create').length,updates:rows.filter(r=>r.operation==='update').length,unchanged:rows.filter(r=>r.operation==='unchanged').length}
@@ -77,5 +76,5 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   mutations.push({kind:'update',table:stored,set:{command_id:commandId},where:trustedPredicate('id=? AND command_id IS NULL AND expires_at>?',[id,ctx.now]),expectedRows:1})
   return admission.commit(ctx,{commandId,action:'import.commit',appId:p.appId,canonicalInputHash:hash,permit,guards,mutations,audit,events:[],outbox:[],committedResult:{id,creates:p.creates,updates:p.updates,unchanged:p.unchanged,rejected:p.rejected}})
  }
- return {exportCsv,preview,commit}
+ return {exportCsv,preview,commit,mappings:createCsvMappings(db,services),linkCandidates:createCsvLinkCandidates(db,services)}
 }
