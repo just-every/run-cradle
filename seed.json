@@ -12,7 +12,7 @@
     "Airtable",
     "Smartsheet"
   ],
-  "description": "A self-hosted records builder for one business: typed records, relationships, forms, saved views, reviewed base imports and portable exits, with an included launch-readiness template.",
+  "description": "Organize business records, connect related data, and build forms and views for daily work.",
   "scope": "one business, one workspace; records builder with reviewed base imports and portable base exits; launch readiness is an included template with retained rights and data; repair navigation is opt-in and adds no authority",
   "capabilities": [
     {

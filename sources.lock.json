@@ -4774,7 +4774,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "e792a141af3b1819f6f44d745c7f62eca162f84366df560a6ccf989401c8e270",
+      "sha256": "460fce3c57ac9a652c67894090da64b62b0aaeeaa27320a3f0401b58743aa8cd",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {
