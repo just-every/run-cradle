@@ -66,7 +66,11 @@
                     "select",
                     "url",
                     "relation",
-                    "computed"
+                    "computed",
+                    "instant",
+                    "money",
+                    "multi_select",
+                    "person"
                   ]
                 },
                 "required": {
@@ -74,6 +78,195 @@
                 },
                 "unique": {
                   "type": "boolean"
+                },
+                "options": {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "relation": {
+                  "type": "object",
+                  "properties": {
+                    "tableId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "cardinality": {
+                      "type": "string",
+                      "enum": [
+                        "one",
+                        "many"
+                      ]
+                    },
+                    "onDelete": {
+                      "type": "string",
+                      "const": "restrict"
+                    }
+                  },
+                  "required": [
+                    "tableId",
+                    "cardinality",
+                    "onDelete"
+                  ],
+                  "additionalProperties": false
+                },
+                "validation": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "min": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "max": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "pattern": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "minLength": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "maxLength": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100000
+                    }
+                  }
+                },
+                "defaultValue": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "minor": {
+                          "type": "string",
+                          "maxLength": 129,
+                          "pattern": "^-?(0|[1-9]\\d*)$"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{3}$"
+                        },
+                        "scale": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 6
+                        }
+                      },
+                      "required": [
+                        "minor",
+                        "currency",
+                        "scale"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "appId": {
+                          "type": "string",
+                          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                        },
+                        "entityId": {
+                          "type": "string",
+                          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                        },
+                        "recordId": {
+                          "type": "string",
+                          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                        }
+                      },
+                      "required": [
+                        "appId",
+                        "entityId",
+                        "recordId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "maxItems": 10000,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "appId": {
+                            "type": "string",
+                            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                          },
+                          "entityId": {
+                            "type": "string",
+                            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                          },
+                          "recordId": {
+                            "type": "string",
+                            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                          }
+                        },
+                        "required": [
+                          "appId",
+                          "entityId",
+                          "recordId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    {
+                      "maxItems": 10000,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "maxItems": 10000,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fileId": {
+                            "type": "string",
+                            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                          }
+                        },
+                        "required": [
+                          "fileId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  ]
                 }
               },
               "required": [
@@ -116,6 +309,45 @@
             },
             "minItems": 0,
             "maxItems": 10000
+          },
+          "validationRules": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120,
+                  "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+                },
+                "message": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000,
+                  "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+                },
+                "when": {
+                  "$ref": "#/$defs/ruleCondition"
+                },
+                "require": {
+                  "$ref": "#/$defs/ruleCondition"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "message",
+                "when",
+                "require"
+              ]
+            }
           }
         },
         "required": [
@@ -223,6 +455,10 @@
       },
       "minItems": 0,
       "maxItems": 16000000
+    },
+    "baseId": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
     }
   },
   "required": [
@@ -231,5 +467,177 @@
     "tables",
     "references",
     "cells"
-  ]
+  ],
+  "$defs": {
+    "ruleCondition": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "all",
+                "any"
+              ]
+            },
+            "conditions": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "$ref": "#/$defs/ruleCondition"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "conditions"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "condition"
+            },
+            "fieldId": {
+              "type": "string",
+              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+            },
+            "op": {
+              "enum": [
+                "eq",
+                "ne",
+                "gt",
+                "gte",
+                "lt",
+                "lte",
+                "empty",
+                "not_empty"
+              ]
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "minor": {
+                      "type": "string",
+                      "maxLength": 129,
+                      "pattern": "^-?(0|[1-9]\\d*)$"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "pattern": "^[A-Z]{3}$"
+                    },
+                    "scale": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 6
+                    }
+                  },
+                  "required": [
+                    "minor",
+                    "currency",
+                    "scale"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "appId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "entityId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "recordId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    }
+                  },
+                  "required": [
+                    "appId",
+                    "entityId",
+                    "recordId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "appId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "recordId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      }
+                    },
+                    "required": [
+                      "appId",
+                      "entityId",
+                      "recordId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fileId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      }
+                    },
+                    "required": [
+                      "fileId"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "fieldId",
+            "op"
+          ]
+        }
+      ]
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import { restoreCsvMetadata } from './csv-schema-metadata'
 import { accountCorrespondenceNulls } from './correspondence-accounting'
 import { ImportInputError } from './input-error'
 import { sourceWithOwnRowMaps, copyImportIdentities } from './source-maps'
@@ -60,17 +61,17 @@ export function previewBaseImport(input:PreparedSource,options:ImportOptions,ide
     if(column.key===primary)throw new ImportInputError(`${table.key}: first/selected primary column cannot be skipped`)
     report.diagnostics.push({code:'COLUMN_SKIPPED',tableKey:table.key,columnKey:column.key,message:`${accountingColumn.skipReason}; ${accountingColumn.nonempty} nonempty values preserved in source`});continue
    }
-   if(!['text','number','date','boolean','select','url','relation','computed'].includes(type))throw new ImportInputError(`${table.key}.${column.label}: type ${type} is not supported by the native builder; choose TEXT explicitly`)
+   if(!['text','number','date','instant','money','boolean','select','multi_select','url','person','relation','computed'].includes(type))throw new ImportInputError(`${table.key}.${column.label}: type ${type} is not supported by the native builder; choose TEXT explicitly`)
    const nativeFlags=correspondenceReview?.accepted?source.csvCorrespondence?.tables.find(t=>t.filename===table.key)?.columns.find(c=>c.key===column.key):undefined
    const field:Field={id:identity.fields[column.key],label:fieldLabel,type:type==='computed'?'text':type,required:nativeFlags?.required??false,unique:nativeFlags?.unique??false}
-   if(type==='select'){
+   if(type==='select'||type==='multi_select'){
     const labels=selectOptionLabels(table,column,override)
     if(new Set(labels).size!==labels.length||labels.some(v=>!v||v.length>200))throw new ImportInputError(`${table.key}.${column.label}: select options must be distinct nonempty labels up to 200 characters`)
     const optionIds=identity.options[column.key]??=Object.create(null);field.options=labels.map(label=>{if(!Object.hasOwn(optionIds,label))Object.defineProperty(optionIds,label,{value:stableOptionId(ids.appId,table.key,column.key,label),enumerable:true});return {label,id:optionIds[label]}});accountingColumn.options=labels
    }
    if(type==='relation'){relationColumns.push({table,column});const relationTarget=override.relationTableKey??column.relationTableKey;if(relationTarget!==undefined)accountingColumn.relationTarget=relationTarget}
    tableFields.push(field)
-   if(column.sourceType&&['formula','rollup','multipleLookupValues','dateTime','multipleSelects','multipleCollaborators','singleCollaborator','createdBy','lastModifiedBy'].includes(column.sourceType))report.diagnostics.push({code:'SOURCE_TYPE_MAPPING',tableKey:table.key,columnKey:column.key,message:`${column.sourceType} exported content retained as ${type==='computed'?'text pending lookup proof':type}; no formula, rollup, account, datetime or multiple-select behavior recreated.`})
+   if(column.sourceType&&['formula','rollup','multipleLookupValues','dateTime','multipleSelects','multipleCollaborators','singleCollaborator','createdBy','lastModifiedBy'].includes(column.sourceType))report.diagnostics.push({code:'SOURCE_TYPE_MAPPING',tableKey:table.key,columnKey:column.key,message:`${column.sourceType} exported content retained as ${type==='computed'?'text pending lookup proof':type}; source formula/rollup logic and accounts are never recreated. Native instant and multiple-select behavior apply only when explicitly chosen.`})
   }
   if(!tableFields.length)throw new ImportInputError(`${table.key}: choose at least one native field`)
   for(const row of table.rows){
@@ -137,6 +138,7 @@ export function previewBaseImport(input:PreparedSource,options:ImportOptions,ide
  for(const accounting of report.tables){accounting.created=accepted.filter(r=>r.tableKey===accounting.tableKey).length;accounting.rejected=accounting.rowsRead-accounting.created;for(const c of accounting.columns){const field=fields.get(accounting.tableKey)?.find(f=>f.id===ids.tables[accounting.tableKey].fields[c.columnKey]);if(field)c.chosenType=field.type}}
  report.reciprocalRelations=inverseViews.map(view=>({...view,inverseId:ids.tables[view.tableKey].fields[view.columnKey],label:report.tables.find(t=>t.tableKey===view.tableKey)!.columns.find(c=>c.columnKey===view.columnKey)!.label}))
  const schemaDraft={appId:ids.appId,name:options.name,tables:report.tables.map(t=>({id:ids.tables[t.tableKey].entityId,label:t.label,primaryFieldId:ids.tables[t.tableKey].fields[t.primaryColumnKey],fields:fields.get(t.tableKey)!,incomingRelations:inverseViews.filter(v=>v.tableKey===t.tableKey).map(v=>({id:ids.tables[v.tableKey].fields[v.columnKey],label:report.tables.find(t=>t.tableKey===v.tableKey)!.columns.find(c=>c.columnKey===v.columnKey)!.label,sourceEntityId:ids.tables[v.canonicalTableKey].entityId,sourceFieldId:ids.tables[v.canonicalTableKey].fields[v.canonicalColumnKey]}))}))}
+ restoreCsvMetadata(source,ids,schemaDraft,correspondenceReview?.accepted===true)
  for(const table of schemaDraft.tables){limit('fields',80,table.fields.length,table.label,1);limit('incomingRelations',80,table.incomingRelations.length,table.label,1)}
  for(const table of report.tables)for(const column of table.columns)if(column.converted)column.reasons.push(`${column.converted} cell representations changed; see complete conversion diagnostics.`)
  validateImportIdentities(source,ids)

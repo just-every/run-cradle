@@ -56,9 +56,10 @@ export async function preparePhysicalActivation(liveDb: D1Database, next: Entity
     guards: SqlPredicate[];
     mutations: SqlMutation[];
 }> {
-    const { encodeValues, decode } = await import('./codec.server');
+    const { encodeValues } = await import('./codec.server');
     const { identifier, trustedPredicate, exists } = await import('../admission/sql.server');
     const { createUlid } = await import('../../core/shared/ids');
+    const { storedValidationValues } = await import('./validation-values.server');
     const metadata = prepareSchemaActivation(next.schema, prior);
     if (!prior)
         return metadata;
@@ -66,10 +67,8 @@ export async function preparePhysicalActivation(liveDb: D1Database, next: Entity
     const guards: SqlPredicate[] = [...metadata.guards, trustedPredicate(`(SELECT COUNT(*) FROM ${identifier(prior.table.tableId)})=?`, [rows.results.length]), trustedPredicate(`NOT EXISTS(SELECT 1 FROM ${identifier(next.table.tableId)})`)];
     const mutations: SqlMutation[] = [];
     for (const row of rows.results) {
-        const values: Record<string, import('../../contracts/primitives').CellValue> = { ...backfill };
-        for (const [id, storage] of prior.fields)
-            if (storage.field.type !== 'computed' && !storage.join && next.fields.has(id))
-                values[id] = decode(storage, row);
+        const retained = await storedValidationValues(liveDb, prior, row);
+        const values: Record<string, import('../../contracts/primitives').CellValue> = { ...backfill, ...Object.fromEntries(Object.entries(retained).filter(([id])=>next.fields.has(id))) };
         const id = String(row[prior.idColumn]);
         guards.push(exists(prior.table, and(eq(prior.table, prior.idColumn, id), eq(prior.table, prior.versionColumn, Number(row[prior.versionColumn])))));
         mutations.push({ kind: 'insert', table: next.table, row: { ...encodeValues(next, values, true), [next.idColumn]: id, [next.versionColumn]: Number(row[prior.versionColumn]), [next.createdColumn]: String(row[prior.createdColumn]), [next.updatedColumn]: String(row[prior.updatedColumn]), [next.lifecycleColumn]: String(row[prior.lifecycleColumn]), [next.schemaVersionColumn]: next.schema.version } });

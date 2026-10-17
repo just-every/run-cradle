@@ -29,7 +29,7 @@ export function CellDisplay({ cell, field, appId }: { cell: Cell | undefined; fi
   if (field?.type === 'computed' && typeof value === 'string') return <span className="cr-derived">{value}</span>
   if (field?.type === 'person' && typeof value === 'string') return appId ? <PersonName appId={appId} id={value} /> : <span className="cr-error">Person lookup unavailable</span>
   if (typeof value === 'string') return <>{value}</>
-  if ('minor' in value) return <>{money(value as Money)}</>
+  if ('minor' in value) return <>{money(value as Money).replace('USD ', '$')}</>
   const values = Array.isArray(value) ? value : [value]
   return <>{values.map((item, i) => <span key={i}>{i > 0 ? ', ' : ''}{typeof item === 'string' ? item : 'recordId' in item ? <LinkedRecord reference={item} /> : <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a>}</span>)}</>
 }

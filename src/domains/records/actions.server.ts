@@ -82,7 +82,7 @@ export function createAuthorizedRecordCreatePreparer(deps: Pick<RecordActionDepe
   const insertion=change.mutations.find(m=>m.kind==='insert'&&m.table.tableId===descriptor.table.tableId);
   if(!insertion||insertion.kind!=='insert')throw new Error('Record insertion is missing');
   const action='record.create',hash=await canonicalHash({action,input:command.input,expected:command.expected,controlEpoch:command.controlEpoch??null});
-  const permit=await deps.policy.authorize(ctx,{appId,action,expected:[],targetEntityId:entityId,proposedRows:[{entityId,row:insertion.row}],fieldIds:Object.keys(values),cost:[],inputHash:hash,commandId:command.commandId});
+  const permit=await deps.policy.authorize(ctx,{appId,action,expected:[],targetEntityId:entityId,proposedRows:[{entityId,row:insertion.row}],fieldIds:change.audit.flatMap(fact=>fact.changes.map(value=>value.fieldId)),cost:[],inputHash:hash,commandId:command.commandId});
   return {commandId:command.commandId,action,appId,canonicalInputHash:hash,permit,guards:change.guards,mutations:change.mutations,audit:change.audit,events:[],outbox:[],committedResult:change.next,changed:[{ref:change.next.ref,version:change.next.version}]};
  };
 }

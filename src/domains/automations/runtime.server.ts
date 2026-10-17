@@ -3,6 +3,7 @@ import type { DescriptorRegistry } from '../records/descriptors.server'
 import { resolveBackgroundContext } from '../authority/background.server'
 import { automationEmailDue } from './email-timing.server'
 import { AuthorityError } from '../authority/errors'
+import { AdmissionError } from '../admission/errors'
 import { and,identifier,trustedPredicate } from '../admission/sql.server'
 import { createAutomationRunStore,runSnapshot,type AutomationRun } from './run-store.server'
 import type { createAutomationEffects } from './effects.server'
@@ -63,9 +64,10 @@ export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:stri
     await store.actionFinished(step.id,outcome.state,outcome.result,outcome.errorCode??null)
     if(outcome.state!=='Complete'){await store.finish(run.id,outcome.state,outcome.errorCode??null);return}
    } catch(error) {
-    const code=error instanceof AuthorityError?error.code:'automation_effect_failed'
+    const validation=error instanceof AdmissionError&&error.code==='validation'
+    const code=error instanceof AuthorityError||validation?error.code:'automation_effect_failed'
     const uncertain=claimed&&!(error instanceof AuthorityError)&&['email','webhook','slack'].includes(action.kind)
-    if(claimed)await store.actionFinished(step.id,uncertain?'Unknown':'Failed',{},code)
+    if(claimed)await store.actionFinished(step.id,uncertain?'Unknown':'Failed',validation?{message:error.message}:{},code)
     await store.finish(run.id,uncertain?'Unknown':error instanceof AuthorityError?'Cancelled':'Failed',code)
     return
    }

@@ -21,7 +21,7 @@ export function recordEditorChanges(record:RecordRow,values:Record<string,CellVa
 
 export function RecordEditor({ schema, record, onSaved, onCancel }: { schema: EntitySchema; record?: RecordRow; onSaved: () => void; onCancel: () => void }) {
   const [baseRecord, setBaseRecord] = useState(record)
-  const [values, setValues] = useState<Record<string, CellValue>>(() => Object.fromEntries(schema.fields.filter(field => field.type !== 'computed' && !field.readOnly).map(field => { const cell = record?.fields[field.id]; return [field.id, cell?.state === 'value' ? cell.value : !record && field.type === 'boolean' ? false : null] })))
+  const [values, setValues] = useState<Record<string, CellValue>>(() => Object.fromEntries(schema.fields.filter(field => field.type !== 'computed' && !field.readOnly).map(field => { const cell = record?.fields[field.id]; return [field.id, cell?.state === 'value' ? cell.value : !record && field.defaultValue !== undefined ? field.defaultValue : !record && field.type === 'boolean' ? false : null] })))
   const command = useCommand<RecordRow>(`record:${schema.appId}:${schema.id}:${record?.id ?? 'new'}`)
   useEffect(() => { if (command.result.state === 'committed') onSaved() }, [command.result.state])
   const conflict = command.result.state === 'failed' && command.result.error.detail.code === 'version_conflict'

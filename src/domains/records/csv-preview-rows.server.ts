@@ -79,7 +79,7 @@ export async function previewCsvRows(
         }
       }
       if (!prior) for (const field of descriptor.schema.fields)
-        if (field.required && field.type !== 'computed' && !mapped.some(mapping => mapping.field.id === field.id)) {
+        if (field.required && field.defaultValue === undefined && field.type !== 'computed' && !mapped.some(mapping => mapping.field.id === field.id)) {
           try { validateCsvCell(field, null) } catch (error) {
             if (!(error instanceof AdmissionError) || error.code !== 'validation') throw error
             problems.push(error.message)

@@ -1,3 +1,4 @@
+import { portablePersonGuards } from './person-portability.server'
 import { planContentBytes, PLAN_BYTES_LIMIT } from '../../../../vendor/base/modules/import-kit/src/plan/size'
 import { importCapacityError } from './plan-capacity'
 import { compileSchemaSet } from '../migration.server'
@@ -29,6 +30,7 @@ export async function prepareNativePlan(db:D1Database,policy:PolicyPort,registry
 export async function preparePlanFromSchemas(db:D1Database,registry:DescriptorRegistry,ctx:RequestContext,row:Pick<StoredReview,'app_id'|'created_at'|'id'>,preview:BasePreview,schemas:EntitySchema[],guards:Parameters<typeof assertGuards>[1]) {
  // A replay may already have these descriptors; compile initial schemas against
  // the other bases only, with all cross-table references resolved by the compiler.
+ const personGuards=await portablePersonGuards(db,preview,schemas)
  const prior=createDescriptorRegistry(registry.list().filter(d=>d.schema.appId!==row.app_id)),compiled=await compileSchemaSet(schemas,prior),reviewed=createDescriptorRegistry([...prior.list(),...compiled.descriptors])
  const authorityReservation=reserveNewBaseImportAuthority(ctx,row.app_id,schemas)
  let plan:ReturnType<typeof buildImportPlan>
@@ -42,6 +44,6 @@ export async function preparePlanFromSchemas(db:D1Database,registry:DescriptorRe
  const target=(await import('./target.server')).createNativeImportTarget(reviewed)
  for(const entry of plan.entries)for(const effect of entry.effects)for(const statement of target.write({...effect,destination:row.app_id,revision:'preflight'}))checkSql(statement)
  }catch(error){importCapacityError(error)}
- await assertGuards(db,guards)
+ await assertGuards(db,[...guards,...personGuards])
  return {plan,authorityReservation,planSize:{bytes:planContentBytes(plan),limit:PLAN_BYTES_LIMIT}}
 }

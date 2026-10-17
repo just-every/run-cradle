@@ -14,8 +14,8 @@ export function prepareJsonSource(artifact:UploadedArtifact):PreparedSource {
 }
 /** Called only after read-only collision preflight; either preserve every ID or replace every ID. */
 export function allocateJsonIdentities(snapshot:PortableBase,mode:'preserve'|'copy'):ImportIdentities {
- const allocate=(id:string)=>mode==='preserve'?id:createUlid(),ids:ImportIdentities={appId:allocate(snapshot.base.id),tables:{},views:{},forms:{},incomingRelations:{}}
- for(const table of snapshot.base.tables){ids.tables[table.id]={entityId:allocate(table.id),fields:Object.fromEntries(table.fields.map(f=>[f.id,allocate(f.id)])),records:Object.fromEntries(table.records.map(r=>[r.id,allocate(r.id)])),options:Object.fromEntries(table.fields.filter(f=>f.type==='select').map(f=>[f.id,Object.fromEntries(f.options!.map(o=>[o.label,allocate(o.id)]))]))};for(const incoming of table.incomingRelations)ids.incomingRelations![incoming.id]=allocate(incoming.id)}
+ const allocate=(id:string)=>mode==='preserve'?id:createUlid(),ids:ImportIdentities={appId:allocate(snapshot.base.id),tables:{},views:{},forms:{},incomingRelations:{},validationRules:{}}
+ for(const table of snapshot.base.tables){for(const rule of table.validationRules??[])ids.validationRules![rule.id]=allocate(rule.id);ids.tables[table.id]={entityId:allocate(table.id),fields:Object.fromEntries(table.fields.map(f=>[f.id,allocate(f.id)])),records:Object.fromEntries(table.records.map(r=>[r.id,allocate(r.id)])),options:Object.fromEntries(table.fields.filter(f=>(f.type==='select'||f.type==='multi_select')).map(f=>[f.id,Object.fromEntries(f.options!.map(o=>[o.label,allocate(o.id)]))]))};for(const incoming of table.incomingRelations)ids.incomingRelations![incoming.id]=allocate(incoming.id)}
  for(const view of snapshot.base.views)ids.views![view.id]=allocate(view.id);for(const form of snapshot.base.forms)ids.forms![form.id]=allocate(form.id)
  return ids
 }

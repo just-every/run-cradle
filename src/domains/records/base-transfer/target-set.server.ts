@@ -19,7 +19,7 @@ function sets(registry:DescriptorRegistry,destination:string):NativeSet[] {
   const table=identifier(d.table.tableId), columns=scalarColumns(d), kind='record:'+d.schema.id
   const query=(kind:string,value:string,where='')=>`SELECT r.id,json(${value}) AS native_value,COALESCE(m.revision,'native-unattributed') AS revision FROM ${table} r LEFT JOIN record_import_revisions m ON m.app_id=${literal(destination)} AND m.target_kind=${literal(kind)} AND m.record_id=r.id${where}`
   result.push({kind,sql:query(kind,`json_object('row',json(${object(columns,'r')}))`),comparisons:columns.map(c=>`json_extract(n.native_value,'$.row.${c}') IS json_extract(e.value,'$.value.row.${c}')`)})
-  for(const f of d.fields.values()) if(f.field.type==='relation'&&(f.join||!f.field.required)) {
+  for(const f of d.fields.values()) if(f.field.type==='multi_select'||f.field.type==='relation'&&(f.join||!f.field.required)) {
    const kind='link:'+d.schema.id+':'+f.field.id
    const values=f.join?`(SELECT COALESCE(json_group_array(json_object('id',id,'position',position,'record_id',record_id,'value',value)),'[]') FROM (SELECT id,record_id,value,position FROM ${identifier(f.join.table.tableId)} WHERE record_id=r.id ORDER BY position,id))`:undefined
    const value=f.join?`json_object('recordVersion',r.version,'values',json(${values}))`:`json_object('recordVersion',r.version,'value',r.${identifier(f.column)})`

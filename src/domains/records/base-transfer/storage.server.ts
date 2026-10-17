@@ -28,10 +28,10 @@ export function nativeSource(preview:BasePreview,registry:DescriptorRegistry,now
  }
  // Every relation cell, including an empty cell, has its own exact native snapshot.
  for(const record of preview.records){const d=registry.get(preview.identities.appId,record.entityId)
-  for(const f of d.fields.values())if(f.field.type==='relation'&&(f.join||!f.field.required)){
-   const link=byLink.get(record.entityId+':'+record.recordId+':'+f.field.id),ids=link?.targetRecordIds??[]
+  for(const f of d.fields.values())if(f.field.type==='multi_select'||f.field.type==='relation'&&(f.join||!f.field.required)){
+   const link=byLink.get(record.entityId+':'+record.recordId+':'+f.field.id),ids=f.field.type==='multi_select'?(record.fields[f.field.id] as string[]|null)??[]:link?.targetRecordIds??[]
    if(new Set(ids).size!==ids.length||!f.join&&ids.length>1)throw new Error('Invalid native relation cardinality')
-   const refs=ids.map(recordId=>({appId:preview.identities.appId,entityId:f.field.relation!.entityId,recordId}));validateCell(f.field,f.join?refs:refs[0]??null)
+   const refs=f.field.type==='multi_select'?ids:ids.map(recordId=>({appId:preview.identities.appId,entityId:f.field.relation!.entityId,recordId}));validateCell(f.field,f.join?refs:refs[0]??null)
    const value:Json=f.join?{recordVersion:1,values:ids.map((value,position)=>({id:record.recordId+':'+f.field.id+':'+position,record_id:record.recordId,value,position}))}:{recordVersion:1,value:ids[0]??null}
    append('link',record.entityId+':'+record.recordId+':'+f.field.id,ids,record.location,{targetKind:'link:'+record.entityId+':'+f.field.id,targetId:record.recordId,value})
   }

@@ -10,7 +10,7 @@ import { nativeOwnedContent, nativePreservedUndo } from './undo-target.server'
 /** Row scalars and each relation form disjoint native entities. Together they cover
  * every native column and join tuple; no JSON copy is used as native readback. */
 export function createNativeImportTarget(registry:DescriptorRegistry):D1TargetAdapter {
- const resolve=(destination:string,kind:string)=>{const [type,entityId,fieldId]=kind.split(':');if(type!=='record'&&type!=='link')throw new Error('Unknown native import kind');const d=registry.get(destination,entityId!);const field=fieldId?d.fields.get(fieldId):undefined;if(type==='link'&&field?.field.type!=='relation')throw new Error('Unknown native relation');return {d,field,type}}
+ const resolve=(destination:string,kind:string)=>{const [type,entityId,fieldId]=kind.split(':');if(type!=='record'&&type!=='link')throw new Error('Unknown native import kind');const d=registry.get(destination,entityId!);const field=fieldId?d.fields.get(fieldId):undefined;if(type==='link'&&field?.field.type!=='relation'&&field?.field.type!=='multi_select')throw new Error('Unknown native relation');return {d,field,type}}
  const marker=(destination:string,kind:string,id:string)=>({sql:'SELECT revision FROM record_import_revisions WHERE app_id=? AND target_kind=? AND record_id=?',params:[destination,kind,id]})
  const predicate=(sql:string,...params:unknown[]):D1Sql=>({sql,params})
  const joins=(f:FieldStorage,id:string)=>`SELECT id,record_id,value,position FROM ${identifier(f.join!.table.tableId)} WHERE record_id=? ORDER BY position,id`
@@ -47,7 +47,7 @@ export function createNativeImportTarget(registry:DescriptorRegistry):D1TargetAd
  function remove(destination:string,kind:string,id:string):D1Sql[]{
   const {d,field,type}=resolve(destination,kind),out:D1Sql[]=[]
   if(type==='link')out.push(field!.join?predicate(`DELETE FROM ${identifier(field!.join.table.tableId)} WHERE record_id=?`,id):predicate(`UPDATE ${identifier(d.table.tableId)} SET ${identifier(field!.column)}=NULL WHERE id=?`,id))
-  else {const relations=[...d.fields.values()].filter(f=>f.field.type==='relation'&&(f.join||!f.field.required));out.push(predicate(`DELETE FROM ${identifier(d.table.tableId)} WHERE id=?${relations.map(f=>f.join?` AND NOT EXISTS(SELECT 1 FROM ${identifier(f.join.table.tableId)} WHERE record_id=?)`:` AND ${identifier(f.column)} IS NULL`).join('')}`,id,...relations.filter(f=>f.join).map(()=>id)))}
+  else {const relations=[...d.fields.values()].filter(f=>f.field.type==='multi_select'||f.field.type==='relation'&&(f.join||!f.field.required));out.push(predicate(`DELETE FROM ${identifier(d.table.tableId)} WHERE id=?${relations.map(f=>f.join?` AND NOT EXISTS(SELECT 1 FROM ${identifier(f.join.table.tableId)} WHERE record_id=?)`:` AND ${identifier(f.column)} IS NULL`).join('')}`,id,...relations.filter(f=>f.join).map(()=>id)))}
   out.push(predicate('DELETE FROM record_import_revisions WHERE app_id=? AND target_kind=? AND record_id=?',destination,kind,id));return out
  }
  const target:D1TargetAdapter=withMetadataTarget({read,matches,write,remove,list:(db,destination)=>listNativeSet(db,registry,destination),matchesMany:(rows,destination)=>matchNativeSet(rows,registry,destination)})

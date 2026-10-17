@@ -15,7 +15,8 @@ import { expressionType, calculationKind } from '../calculation-schema'
 import { previewCalculations } from './calculation-preview.server'
 import { assertGuards } from '../fence.server'
 import { snapshotViews, prepareViewRemovals, prepareFormRemovals, type ViewSnapshot } from './view-removal.server'
-function comparableField(field:import('../contracts').Field){if(field.type!=='computed')return field;const {expression,resultType,readOnly,options,...stored}=field;return stored}
+import { previewRuleViolations } from './rule-preview.server'
+function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,readOnly,options,...stored}=physical;return stored}
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
 export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[] }
 /** Whose authority a preview is computed under: `reader` reads every affected table as `ownerId`. */
@@ -49,16 +50,15 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    const old=prior.find(p=>p.schema.id===schema.id)
    removals[schema.id]=old?.schema.fields.filter(f=>!schema.fields.some(n=>n.id===f.id)).map(f=>f.id)??[]
    for(const field of schema.fields){
-    if(!['text','url','number','date','select','boolean','relation','computed'].includes(field.type))throw new AdmissionError('validation',`${field.label}: this builder does not support this type.`)
+    if(!['text','url','number','date','instant','money','select','multi_select','person','boolean','relation','computed'].includes(field.type))throw new AdmissionError('validation',`${field.label}: this builder does not support this type.`)
     if(field.readOnly&&field.type!=='computed')throw new AdmissionError('validation','Read-only is reserved for lookup fields.')
     if(field.relation&&(field.relation.ownerAppId!==draft.appId||field.relation.onDelete!=='restrict'))throw new AdmissionError('validation','Links must target records in this base and restrict deletion.')
     if(field.type==='computed'&&(!field.expression||!field.resultType))throw new AdmissionError('validation',`${field.label}: a calculation needs an expression and result type.`)
     if(field.type==='computed'&&field.expression?.kind==='rollup'&&field.expression.aggregate==='lookup'){const expression=field.expression,relation=schema.fields.find(f=>f.id===expression.relationFieldId)?.relation,source=schemas.find(t=>t.id===relation?.entityId)?.fields.find(f=>f.id===expression.valueFieldId);if(!source||(source.type==='computed'?source.resultType:source.type)!==field.resultType||source.type==='relation')throw new AdmissionError('validation','Lookup source and result type must match a scalar field.');if(source.type==='select'&&canonical(field.options??[])!==canonical(source.options??[]))throw new AdmissionError('validation','Lookup select options must match its source field.')}
     if(field.type!=='relation'&&field.relation||field.type!=='computed'&&field.expression)throw new AdmissionError('validation','Only links declare relations and only lookups declare expressions.')
     const existing=old?.fields.get(field.id)?.field
-    if(existing&&canonical(comparableField({...existing,label:field.label}))!==canonical(comparableField(field)))throw new AdmissionError('validation',`${field.label}: changing an existing field type, options, requirement or relation is unsupported. Rename it or add a new field.`)
-    if(!existing&&old&&field.required)throw new AdmissionError('validation',`${field.label}: add optional fields to a populated schema; required backfill is not implemented.`)
-    if(field.type==='select'&&(!field.options?.length||new Set(field.options.map(o=>o.id)).size!==field.options.length||new Set(field.options.map(o=>o.label)).size!==field.options.length))throw new AdmissionError('validation','Select options must be unique and nonempty.')
+    if(existing&&canonical(comparableField({...existing,label:field.label}))!==canonical(comparableField(field)))throw new AdmissionError('validation',`${field.label}: changing an existing field type, options or relation is unsupported. Rename it or add a new field.`)
+    if(['select','multi_select'].includes(field.type)&&(!field.options?.length||new Set(field.options.map(o=>o.id)).size!==field.options.length||new Set(field.options.map(o=>o.label)).size!==field.options.length))throw new AdmissionError('validation','Select options must be unique and nonempty.')
    }
   }
   let compiled:Awaited<ReturnType<typeof compileSchemaSet>>
@@ -72,8 +72,11 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(!before)changes.push(`Add ${field.label} (${field.type==='computed'?calculationKind(field):field.type})`);else if(before.label!==field.label)changes.push(`Rename ${before.label} to ${field.label}`)}
    const removedFields=(old?.schema.fields??[]).filter(f=>removals[schema.id]!.includes(f.id)).map(f=>({id:f.id,label:f.label,populated:old!.fields.get(f.id)!.join?new Set((snapshot.rows[old!.fields.get(f.id)!.join!.table.tableId]??[]).map(row=>row.record_id)).size:rows.filter(row=>row[old!.fields.get(f.id)!.column]!==null&&row[old!.fields.get(f.id)!.column]!==undefined).length}))
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before?.type==='computed'&&canonical(before.expression)!==canonical(field.expression))changes.push(`Update calculation ${field.label}`)}
+   for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before&&canonical({required:before.required,unique:before.unique,validation:before.validation??null,defaultValue:before.defaultValue??null})!==canonical({required:field.required,unique:field.unique,validation:field.validation??null,defaultValue:field.defaultValue??null}))changes.push(`Update validation or default for ${field.label}`)}
+   for(const rule of schema.validationRules??[])if(canonical(rule)!==canonical(old?.schema.validationRules?.find(before=>before.id===rule.id)??null))changes.push(`Validate ${rule.name}: ${rule.message}`)
+   for(const rule of old?.schema.validationRules??[])if(!schema.validationRules?.some(next=>next.id===rule.id))changes.push(`Remove validation rule ${rule.name}`)
    changes.push(...removedFields.map(f=>`Remove ${f.label}: ${f.populated} stored ${f.populated===1?'value leaves':'values leave'} the live table`))
-   return {entityId:schema.id,label:schema.label,changes,recordIds:changes.length?rows.map(r=>String(r.id)):[],count:changes.length?rows.length:0,removedFields}
+   return {entityId:schema.id,label:schema.label,changes,recordIds:changes.length?rows.map(r=>String(r.id)):[],count:changes.length?rows.length:0,removedFields,...previewRuleViolations(schema,old,snapshot.rows)}
   })
   const currentPolicy=base?await db.prepare("SELECT p.id,p.version,p.rules_json FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.app_id=? AND m.principal_id=? AND m.state='active'").bind(draft.appId,ownerId).first<{id:string;version:number;rules_json:string}>():null
   if(currentPolicy){
@@ -91,6 +94,8 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
  /** Apply a reviewed preview atomically as the adopting owner, with any extra rows of the same release. */
  async function applyRelease(ctx:RequestContext,input:{commandId:string;hash:string;releaseId?:string;detail:StoredPreview;previewId:string;permit:AuthorityPermit;mutations:SqlMutation[];audit:AuditFact[];provenance?:Record<string,unknown>}){
   const {detail,previewId,permit}=input
+  const violations=detail.impacts.flatMap(impact=>impact.validationViolations??[])
+  if(violations.length)throw new AdmissionError('validation',`Schema adoption refused: existing records break ${violations.map(v=>`${v.ruleName} (${v.count} records): ${v.message}`).join('; ')}. Correct the records and preview again.`)
   const compiled=await compileSchemaSet(detail.schemas,registry,detail.removals)
   await stageSchemaSet(compiled,db,registry,detail.removals)
   const activation=await prepareSchemaSetActivation(db,compiled,registry)

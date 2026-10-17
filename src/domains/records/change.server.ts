@@ -13,6 +13,8 @@ import { createRecordReader } from './query.server';
 import { createDeleteImpact } from './delete-impact.server';
 import { canonicalHash, canonical } from '../admission/canonical';
 import { AdmissionError } from '../admission/errors';
+import { assertRecordValidation } from './validation-rules';
+import { storedValidationValues, uniqueValidationGuards } from './validation-values.server';
 export const schemaTable = registerTable('record_schemas', ['id', 'app_id', 'version', 'physical_revision', 'schema_json', 'created_at', 'updated_at']);
 export function schemaGuard(d: EntityDescriptor): SqlPredicate { return exists(schemaTable, and(eq(schemaTable, 'id', d.schema.id), eq(schemaTable, 'app_id', d.schema.appId), eq(schemaTable, 'version', d.schema.version), eq(schemaTable, 'physical_revision', d.schema.physicalRevision))); }
 export function createRecordWriter(db: D1Database, registry: DescriptorRegistry, policy: PolicyPort, reader: ReturnType<typeof createRecordReader>, attachments?: RecordAttachmentPort, effects?: RecordMutationEffects) {
@@ -62,6 +64,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
     function writable(scope: PolicyScope, values: Record<string, CellValue>) { for (const field of Object.keys(values))
         if (!scope.writableFieldIds.includes(field))
             throw new AdmissionError('forbidden', 'A changed field is not writable'); }
+    function normalizeValues(d:EntityDescriptor,values:Record<string,CellValue>){return Object.fromEntries(Object.entries(values).map(([id,value])=>{const field=d.fields.get(id)?.field;if(!field)throw new AdmissionError('validation','Unknown field ID');return [id,validateCell(field,value)]}))}
     async function internalChange(ctx: RequestContext, scope: PolicyScope, request: {
         ref: Ref;
         expectedVersion: number;
@@ -69,11 +72,14 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
     }, operation: 'patch' | 'transition' | 'delete' | 'undo' = 'patch'): Promise<PreparedRecordChange> {
         const d = registry.get(request.ref.appId, request.ref.entityId);
         writable(scope, request.changes);
+        request={...request,changes:normalizeValues(d,request.changes)};
         const raw = await reader.raw(ctx, scope, request.ref);
         if (!raw)
             throw new AdmissionError('not_found', 'Record not found');
         if (raw[d.versionColumn] !== request.expectedVersion)
             throw new AdmissionError('version_conflict', 'Record version changed', Number(raw[d.versionColumn]));
+        const complete = { ...await storedValidationValues(db, d, raw), ...request.changes };
+        if (operation !== 'delete') assertRecordValidation(d.schema, complete);
         const before = await reader.render(ctx, scope, d, raw);
         const row = { ...raw, ...encodeValues(d, request.changes, false), [d.versionColumn]: request.expectedVersion + 1, [d.updatedColumn]: new Date().toISOString() };
         const next = await reader.render(ctx, scope, d, row);
@@ -82,7 +88,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
                 next.fields[id] = scope.readableFieldIds.includes(id) ? { state: 'value', value: validateCell(d.fields.get(id)!.field, v) } : { state: 'redacted', reason: 'policy' };
         const projection = Object.keys(row).map(c => `json_extract(payload,'$.${c}') AS ${identifier(c)}`).join(',');
         const postScope = trustedPredicate(`EXISTS(SELECT 1 FROM (SELECT ${projection} FROM (SELECT ? AS payload)) AS ${identifier(d.table.tableId)} WHERE ${scope.rowPredicate.sql})`, [canonical(row), ...scope.rowPredicate.values]);
-        const guards = [postScope, ...await invariant(ctx, d, operation, request.ref, request.expectedVersion, request.changes, raw), schemaGuard(d), ...scope.currentAuthorityGuards, exists(d.table, and(scope.rowPredicate, eq(d.table, d.idColumn, request.ref.recordId), eq(d.table, d.versionColumn, request.expectedVersion))), ...await references(ctx, d, request.changes, request.ref.recordId)];
+        const guards = [postScope, ...await invariant(ctx, d, operation, request.ref, request.expectedVersion, request.changes, raw), schemaGuard(d), ...scope.currentAuthorityGuards, exists(d.table, and(scope.rowPredicate, eq(d.table, d.idColumn, request.ref.recordId), eq(d.table, d.versionColumn, request.expectedVersion))), ...await references(ctx, d, request.changes, request.ref.recordId), ...await uniqueValidationGuards(db,d,complete,row,request.ref.recordId)];
         const set = { ...encodeValues(d, request.changes, false), [d.versionColumn]: request.expectedVersion + 1, [d.updatedColumn]: row[d.updatedColumn] as string };
         const mutations: SqlMutation[] = [{ kind: 'update', table: d.table, set, where: and(eq(d.table, d.idColumn, request.ref.recordId), eq(d.table, d.versionColumn, request.expectedVersion)), expectedRows: 1 }, ...await joins(d, request.ref.recordId, request.changes, false)];
         if (!effects)
@@ -94,13 +100,16 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
     }
     async function prepareCreate(ctx: RequestContext, scope: PolicyScope, values: Record<string, CellValue>, id = createUlid()): Promise<PreparedRecordChange> {
         const d = registry.get(scope.appId, scope.entityId);
+        values = { ...Object.fromEntries(d.schema.fields.filter(field => field.defaultValue !== undefined && !Object.hasOwn(values,field.id)).map(field => [field.id,structuredClone(field.defaultValue!)])), ...values };
         writable(scope, values);
+        values=normalizeValues(d,values);
+        assertRecordValidation(d.schema, values);
         const now = new Date().toISOString(), row = { ...encodeValues(d, values, true), [d.idColumn]: id, [d.versionColumn]: 1, [d.createdColumn]: now, [d.updatedColumn]: now, [d.lifecycleColumn]: d.schema.lifecycle.initial, [d.schemaVersionColumn]: d.schema.version };
         const next = await reader.render(ctx, scope, d, row);
         for (const [fieldId, s] of d.fields)
             if (s.join)
                 next.fields[fieldId] = scope.readableFieldIds.includes(fieldId) ? { state: 'value', value: values[fieldId] ?? null } : { state: 'redacted', reason: 'policy' };
-        return { guards: [...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true)], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
+        return { guards: [...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id), ...await uniqueValidationGuards(db,d,values,row,id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true)], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
     }
     async function prepareTransition(ctx: RequestContext, scope: PolicyScope, ref: Ref, expectedVersion: number, action: string): Promise<PreparedRecordChange> { const d = registry.get(ref.appId, ref.entityId), raw = await reader.raw(ctx, scope, ref); if (!raw)
         throw new AdmissionError('not_found', 'Record not found'); const transition = d.schema.lifecycle.transitions.find(t => t.action === action && t.from.includes(String(raw[d.lifecycleColumn]))); if (!transition)

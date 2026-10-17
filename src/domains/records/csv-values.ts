@@ -10,6 +10,7 @@ export function decodeCsvValue(field:Field,raw:string):CellValue {
  let value:unknown=raw
  if(field.type==='boolean')value=raw===''?null:raw==='true'?true:raw==='false'?false:raw
  else if(field.type==='select')value=raw===''?null:(field.options?.find(o=>o.label===raw)??field.options?.find(o=>o.id===raw))?.id??raw
+ else if(field.type==='money'||field.type==='multi_select'){try{value=raw===''?field.type==='multi_select'?[]:null:JSON.parse(raw)}catch{throw new AdmissionError('validation',`${field.label}: use the exported typed value.`)}}
  else if(field.type==='relation') {try{value=raw===''?null:JSON.parse(raw)}catch{throw new AdmissionError('validation',`${field.label}: links require exported reference JSON; labels alone cannot identify records.`)}}
  else if(field.type!=='text'&&raw==='')value=null
  return validateCsvCell(field,value)

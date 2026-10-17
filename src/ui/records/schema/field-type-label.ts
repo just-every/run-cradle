@@ -3,7 +3,7 @@ import type { Field } from '../../../domains/records/contracts'
 
 export const manualFieldTypes = [
   ['text', 'Text'], ['url', 'URL / link'], ['number', 'Number'],
-  ['date', 'Date'], ['select', 'Select'], ['boolean', 'Checkbox'],
+  ['date', 'Date'], ['instant', 'Date and time (UTC)'], ['money', 'Currency'], ['select', 'Select'], ['multi_select', 'Multiple select'], ['person', 'Person'], ['boolean', 'Checkbox'],
   ['relation', 'Link to record'], ['computed', 'Lookup'],
 ] as const
 

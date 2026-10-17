@@ -1,10 +1,11 @@
+import { validateCsvMetadata } from './csv-schema-metadata'
 import { canonicalChunks,canonicalHash } from './canonical-stream'
 import { ImportInputError } from './input-error'
 import { PLAN_BYTES_LIMIT } from '../../../../vendor/base/modules/import-kit/src/plan/size'
 import { Buffer } from 'node:buffer'
 import type { PreparedSource,UploadedArtifact,ImportOptions,ImportIdentities } from './contracts'
 import { parseCorrespondence,referenceCoordinate,type CorrespondenceReview } from './correspondence-format'
-import { hash,rawText } from './format'
+import { hash,rawText,canonical } from './format'
 import { chosenType } from './infer'
 import { parseLinkCell } from './parse'
 function fail(message:string):never{throw new ImportInputError(`correspondence.json: ${message}`)}
@@ -38,9 +39,10 @@ export function reviewCorrespondence(source:PreparedSource,options:ImportOptions
   unique(table.columns.map(c=>c.key),'column coordinate');unique(table.rows.map(r=>String(r.ordinal)),'row ordinal')
   const primary=options.tables?.[csv.key]?.primaryColumnKey??csv.primaryColumnKey??csv.columns[0].key
   if(primary!==table.primaryColumnKey)fail(`${table.filename}: primary mapping changed; review new correspondence`)
-  for(const column of table.columns){const sourceColumn=csv.columns.find(c=>c.key===column.key);if(!sourceColumn||chosenType(csv,sourceColumn,options.tables?.[csv.key]?.columns?.[column.key])!==column.type)fail(`${table.filename}.${column.key}: type mapping differs from correspondence`)}
+  for(const column of table.columns){const sourceColumn=csv.columns.find(c=>c.key===column.key);if(!sourceColumn||chosenType(csv,sourceColumn,options.tables?.[csv.key]?.columns?.[column.key])!==column.type)fail(`${table.filename}.${column.key}: type mapping differs from correspondence`);if(column.options&&canonical(options.tables?.[csv.key]?.columns?.[column.key]?.options)!==canonical(column.options.map(o=>o.label)))fail(`${table.filename}.${column.key}: option mapping differs from correspondence`)}
   for(const row of table.rows){const sourceRow=csv.rows[row.ordinal-1];if(!sourceRow||rawText(sourceRow.values[primary])!==row.primary)fail(`${table.filename} data row ${row.ordinal}: primary text differs`)}
  }
+ validateCsvMetadata(data)
  const primaryIndexes=new Map(data.tables.map(table=>{const index=new Map<string,CorrespondenceReview['references'][number]['candidates']>();for(const row of sourceTables.get(table.filename)!.rows){const label=rawText(row.values[table.primaryColumnKey]),rows=index.get(label)??[];rows.push({rowKey:row.key,values:row.values});index.set(label,rows)}return [table.filename,index]}))
  const references:CorrespondenceReview['references']=[],seen=new Set<string>(),candidateCache=new Map<string,{rows:CorrespondenceReview['references'][number]['candidates'];bytes:number}>();let reviewBytes=0
  for(const reference of data.references){
@@ -61,7 +63,7 @@ export function reviewCorrespondence(source:PreparedSource,options:ImportOptions
  const selected=new Map<string,Set<string>>();for(const ref of references){const key=JSON.stringify([ref.tableKey,ref.rowKey,ref.columnKey]),targets=selected.get(key)??new Set<string>();if(targets.has(ref.selectedRowKey))fail(`${key}: repeated selected target cannot be silently deduplicated`);targets.add(ref.selectedRowKey);selected.set(key,targets)}
  const cells:CorrespondenceReview['cells']=[],cellSeen=new Set<string>()
  for(const cell of data.cells){const at=coordinate(cell.tableId,cell.recordId,cell.columnId);if(!at)fail('cell annotation contains an unknown identity');const table=tables.get(cell.tableId)!,column=table.columns.find(c=>c.id===cell.columnId)!,csv=sourceTables.get(at.tableKey)!,row=sourceRows.get(at.tableKey)!.get(at.rowKey)!,key=JSON.stringify(at)
-  if(cellSeen.has(key)||column.required&&cell.state==='null'||cell.state==='false'&&column.type!=='boolean'||cell.state==='empty'&&column.type!=='text'||['relation','computed'].includes(column.type)||rawText(row.values[at.columnKey])!=='')fail(`${at.tableKey} ${at.rowKey} ${at.columnKey}: incompatible or duplicate empty-cell annotation`)
+  if(cellSeen.has(key)||(column.required||column.type==='multi_select')&&cell.state==='null'||cell.state==='false'&&column.type!=='boolean'||cell.state==='empty'&&column.type!=='text'||['relation','computed'].includes(column.type)||rawText(row.values[at.columnKey])!=='')fail(`${at.tableKey} ${at.rowKey} ${at.columnKey}: incompatible or duplicate empty-cell annotation`)
   cellSeen.add(key);cells.push({...at,state:cell.state})
  }
  for(const table of data.tables)for(const row of sourceTables.get(table.filename)!.rows)for(const column of table.columns)if(!['relation','computed'].includes(column.type)&&rawText(row.values[column.key])===''&&!cellSeen.has(JSON.stringify({tableKey:table.filename,rowKey:row.key,columnKey:column.key})))fail(`${table.filename} ${row.key} ${column.key}: missing empty-cell state annotation`)

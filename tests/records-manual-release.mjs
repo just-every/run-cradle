@@ -4,7 +4,9 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {templateBase,newField} from '../src/ui/records/schema/templates.ts'
 import {harness,add} from './helpers/records-manual-harness.mjs'
-test('RECORDS-001 RECORDS-002 manual preview is effect free; adoption persists exact typed records, links, lookup and idempotency',async()=>{
+import {fieldRulesJourney} from './helpers/records-field-rules.mjs'
+test('RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules',async()=>{
+ await fieldRulesJourney()
  const h=await harness();try{
   const draft=templateBase('crm'),r=await h.runtime(),preview=await r.manual.preview(h.ctx,draft)
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM record_schemas').first()).n,0)

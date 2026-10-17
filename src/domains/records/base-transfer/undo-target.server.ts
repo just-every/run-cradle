@@ -29,7 +29,7 @@ export function nativePreservedUndo(registry:DescriptorRegistry,target:D1TargetA
    const row=byTarget.get(key('record:'+d.schema.id,id)),applied=byEffect.get(key('record:'+d.schema.id,id))?.expected,primary=d.schema.primaryFieldId?d.fields.get(d.schema.primaryFieldId):undefined
    const cells=row?(value(row).row as Record<string,Json>):undefined,old=applied?(value(applied).row as Record<string,Json>):undefined
    const cell=f?byTarget.get(key('link:'+d.schema.id+':'+f.field.id,id)):undefined,content=cell?value(cell):undefined
-   return {tableLabel:d.schema.label,primaryFieldId:d.schema.primaryFieldId??null,recordPrimary:primary?cells?.[primary.column]??old?.[primary.column]??null:null,appliedRecordVersion:old?.version??null,observedRecordVersion:cells?.version??null,...(f?{fieldLabel:f.field.label,required:f.field.required,cardinality:f.field.relation!.cardinality,targetTableId:f.field.relation!.entityId,targetTableLabel:registry.get(f.field.relation!.ownerAppId,f.field.relation!.entityId).schema.label,observedTargetIds:content?(f.join?(content.values as {value:string}[]).map(tuple=>tuple.value):content.value===null?[]:[content.value!]):[]}:{})}
+   return {tableLabel:d.schema.label,primaryFieldId:d.schema.primaryFieldId??null,recordPrimary:primary?cells?.[primary.column]??old?.[primary.column]??null:null,appliedRecordVersion:old?.version??null,observedRecordVersion:cells?.version??null,...(f?{fieldLabel:f.field.label,required:f.field.required,cardinality:f.field.relation?.cardinality??'many',...(f.field.relation?{targetTableId:f.field.relation.entityId,targetTableLabel:registry.get(f.field.relation.ownerAppId,f.field.relation.entityId).schema.label}:{}),observedTargetIds:content?(f.join?(content.values as {value:string}[]).map(tuple=>tuple.value):content.value===null?[]:[content.value!]):[]}:{})}
   }
   const observations=effects.map(effect=>{
    const expected=effect.expected,current=byTarget.get(key(expected.targetKind,expected.targetId))??null,[kind,entityId,fieldId]=expected.targetKind.split(':')
@@ -52,7 +52,7 @@ export function nativePreservedUndo(registry:DescriptorRegistry,target:D1TargetA
    // An unattributed empty cell carries no native data to protect.
    if(link||ids.length)dependency(owner,link,entity(d,row.targetId,f),{...describe(d,row.targetId,f),rule:'link-owner'})
    if(f.field.required&&link)dependency(link,owner,entity(d,row.targetId,f),{...describe(d,row.targetId,f),rule:'required-many-nonempty'},'retention-only')
-   for(const id of ids)dependency(byEffect.get(key('record:'+f.field.relation!.entityId,id)),link,entity(d,row.targetId,f,id),{...describe(d,row.targetId,f),rule:'incoming-link'})
+   if(f.field.type==='relation')for(const id of ids)dependency(byEffect.get(key('record:'+f.field.relation!.entityId,id)),link,entity(d,row.targetId,f,id),{...describe(d,row.targetId,f),rule:'incoming-link'})
   }
   // Required ONE values belong to the row effect. An edited child protects its
   // parent; an edited parent does not prevent removing an unchanged child.
@@ -75,7 +75,7 @@ export function nativePreservedUndo(registry:DescriptorRegistry,target:D1TargetA
   // They must disappear in one transaction: a later edit cannot retain an owner
   // after a previous bounded batch has already cleared its required links.
   const atomicGroups:string[][]=[]
-  for(const effect of records){const d=registry.get(destination,effect.expected.targetKind.slice(7)),required=[...d.fields.values()].filter(f=>f.field.type==='relation'&&f.field.required&&f.join).map(f=>byEffect.get(key('link:'+d.schema.id+':'+f.field.id,effect.expected.targetId))).filter((link):link is D1UndoEffect=>!!link);if(required.length)atomicGroups.push([effect.provenance.id,...required.map(link=>link.provenance.id)])}
+  for(const effect of records){const d=registry.get(destination,effect.expected.targetKind.slice(7)),required=[...d.fields.values()].filter(f=>f.field.required&&f.join).map(f=>byEffect.get(key('link:'+d.schema.id+':'+f.field.id,effect.expected.targetId))).filter((link):link is D1UndoEffect=>!!link);if(required.length)atomicGroups.push([effect.provenance.id,...required.map(link=>link.provenance.id)])}
   return {observations,dependencies,guards,atomicGroups,nativeRows:rows}
  }
 }

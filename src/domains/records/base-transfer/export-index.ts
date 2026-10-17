@@ -22,7 +22,8 @@ export function exportIndex(base: PortableBase['base']) {
   if (value === null) return ''
   if (field.type === 'select' || field.type === 'computed' && field.resultType === 'select') return options.get(field.id)!.get(String(value))!
   if (field.type === 'boolean' || field.type === 'computed' && field.resultType === 'boolean') return value ? 'checked' : ''
-  return Array.isArray(value)?JSON.stringify(value):String(value)
+  if(field.type==='multi_select'||field.type==='computed'&&field.resultType==='multi_select')return JSON.stringify((value as string[]).map(id=>options.get(field.id)!.get(id)!))
+  return typeof value==='object'?JSON.stringify(value):String(value)
  }
  return { tables, records, incoming, scalar }
 }

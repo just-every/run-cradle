@@ -48,6 +48,8 @@ export type Expr = {
     filter?: Filter;
 };
 export type Field = {
+    validation?: { min?: string; max?: string; minLength?: number; maxLength?: number; pattern?: string };
+    defaultValue?: CellValue;
     readOnly?: boolean;
     id: Id;
     label: string;
@@ -67,7 +69,12 @@ export type Field = {
     expression?: Expr;
     resultType?: Field['type'] | 'array';
 };
+export type RuleCondition = { kind: 'all' | 'any'; conditions: RuleCondition[] } | {
+    kind: 'condition'; fieldId: Id; op: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'empty' | 'not_empty'; value?: CellValue;
+};
+export type ValidationRule = { id: Id; name: string; message: string; when: RuleCondition; require: RuleCondition };
 export type EntitySchema = Versioned & {
+    validationRules?: ValidationRule[];
     primaryFieldId?: Id;
     incomingRelations?: { id: Id; label: string; sourceEntityId: Id; sourceFieldId: Id }[];
     appId: Id;

@@ -31,7 +31,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   const context=await exportContext(db,view?.name??d.schema.label,ctx.now,fields)
   const guards=[...scope.currentAuthorityGuards],labels=createCsvLabels(services,ctx,guards)
   const revision=await reader.revision(),rows:string[][]=[];let cursor:string|undefined
-  do{const page=await reader.query(ctx,scope,{...query,limit:200,cursor},'export');for(const row of page.items)rows.push(await Promise.all(fields.map(async field=>{const cell=row.fields[field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.');if(field.type==='relation')return labels.display(field,cell.value);return formatWorkspaceCell(field,cell.value,context,()=>!d.schema.physicalRevision.startsWith('manual_')&&field.type==='select'?String(cell.value??''):displayCsvValue(field,cell.value))})));cursor=page.nextCursor??undefined;}while(cursor)
+  do{const page=await reader.query(ctx,scope,{...query,limit:200,cursor},'export');for(const row of page.items)rows.push(await Promise.all(fields.map(async field=>{const cell=row.fields[field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.');if(field.type==='relation')return labels.display(field,cell.value);if(d.schema.physicalRevision.startsWith('manual_'))return displayCsvValue(field,cell.value);return formatWorkspaceCell(field,cell.value,context,()=>field.type==='select'?String(cell.value??''):displayCsvValue(field,cell.value))})));cursor=page.nextCursor??undefined;}while(cursor)
   await assertGuards(db,guards)
   if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during export. Export again.')
   return {csv:encodeCsv(fields.map(f=>f.label),rows),filename:context.filename,count:rows.length,capture:context}
@@ -69,7 +69,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
    if(row.operation==='unchanged')continue
    const ref={appId:p.appId,entityId:p.entityId,recordId:row.id},change=row.version===null?await writer.prepareCreate(ctx,scope,row.values,row.id):await writer.prepareChange(ctx,scope,{ref,expectedVersion:row.version,changes:row.values})
    const insertion=change.mutations.find(m=>m.kind==='insert'&&m.table.tableId===descriptors.get(p.appId,p.entityId).table.tableId)
-   const permit=await policy.authorize(ctx,{appId:p.appId,targetEntityId:p.entityId,action:row.version===null?'record.create':'record.patch',expected:row.version===null?[]:[{ref,version:row.version}],fieldIds:Object.keys(row.values),proposedRows:insertion?.kind==='insert'?[{entityId:p.entityId,row:insertion.row}]:undefined,cost:[],inputHash:hash})
+   const permit=await policy.authorize(ctx,{appId:p.appId,targetEntityId:p.entityId,action:row.version===null?'record.create':'record.patch',expected:row.version===null?[]:[{ref,version:row.version}],fieldIds:change.audit.flatMap(fact=>fact.changes.map(value=>value.fieldId)),proposedRows:insertion?.kind==='insert'?[{entityId:p.entityId,row:insertion.row}]:undefined,cost:[],inputHash:hash})
    guards.push(...change.guards,...permit.guards);mutations.push(...change.mutations);audit.push(...change.audit)
   }
   const permit=await policy.authorize(ctx,{appId:p.appId,targetEntityId:p.entityId,action:'import.commit',expected:[],cost:[],inputHash:hash})

@@ -41,6 +41,12 @@ export function convertCell(field:Field,column:SourceColumn,value:Json|undefined
   if(typeof value==='number'&&Number.isInteger(value)&&!Number.isSafeInteger(value))throw new Error('Unsafe API integer cannot establish exact digits; source response bytes retained')
   converted=origin?exactApiNumber(origin.lexeme):numberValue(typeof value==='number'?expandNumber(value):raw,column.sourceType==='percent')
  }
+ else if(field.type==='money')converted=typeof value==='object'?value:JSON.parse(raw)
+ else if(field.type==='multi_select'){
+  const labels=Array.isArray(value)?value:JSON.parse(raw)
+  if(!Array.isArray(labels)||labels.some(label=>typeof label!=='string'))throw new Error('Multiple-select expects a JSON array of exact option labels')
+  converted=labels.map(label=>{const option=field.options?.find(o=>o.label===label);if(!option)throw new Error(`Unknown select option ${JSON.stringify(label)}`);return option.id})
+ }
  else if(field.type==='date')converted=dateValue(raw,override.dateConvention)
  else if(field.type==='select'){
   const option=field.options?.find(o=>o.label===raw)

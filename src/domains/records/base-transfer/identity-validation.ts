@@ -16,5 +16,5 @@ export function validateImportIdentities(source:PreparedSource,ids:ImportIdentit
   for(const key of Object.keys(identity.options))if(!columns.has(key))throw new ImportInputError(`Unknown source option field identity ${key}`)
  }
  for(const key of Object.keys(ids.tables))if(!tables.has(key))throw new ImportInputError(`Unknown source table identity ${key}`)
- for(const kind of ['views','forms','incomingRelations'] as const)for(const id of Object.values(ids[kind]??{}))target(id,kind)
+ for(const kind of ['views','forms','incomingRelations','validationRules'] as const)for(const id of Object.values(ids[kind]??{}))target(id,kind)
 }
