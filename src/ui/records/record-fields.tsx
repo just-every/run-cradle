@@ -38,8 +38,8 @@ export function CellDisplay({ cell, field, appId }: { cell: Cell | undefined; fi
   const values = Array.isArray(value) ? value : [value]
   return <>{values.map((item, i) => <span key={i}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
 }
-export function FieldInput({ appId, subject, field, value, onChange, error }: { appId: string; subject?: Ref; field: Field; value: CellValue; onChange: (value: CellValue) => void; error?: string }) {
-  const id = `field-${field.id}`
+export function FieldInput({ appId, subject, field, value, onChange, error, inputId }: { appId: string; subject?: Ref; inputId?: string; field: Field; value: CellValue; onChange: (value: CellValue) => void; error?: string }) {
+  const id = inputId ?? `field-${field.id}`
   const common = { id, required: field.required, 'aria-invalid': !!error, 'aria-describedby': error ? `${id}-error` : undefined }
   let input
   if (field.type === 'boolean') input = <div className="cr-boolean"><input {...common} type="checkbox" required={false} aria-required={field.required} aria-describedby={`${id}-state${error ? ` ${id}-error` : ''}`} checked={value === true} onChange={e => onChange(e.target.checked)} /><span id={`${id}-state`}>{value === null ? 'Not set' : value ? 'Yes' : 'No'}</span>{!field.required && value !== null && <button type="button" className="cr-button cr-button--quiet" onClick={() => onChange(null)}>Clear {field.label}</button>}</div>
