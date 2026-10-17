@@ -16,6 +16,8 @@ export interface CommandDefinition<Input, Output> {
   /** Resolve only canonical identity before any state-dependent preparation or external work. */
   replayIdentity?(context: RequestContext, input: CommandInput<Input>): Promise<{ appId: string; canonicalInputHash: string }>
   prepare(context: RequestContext, input: CommandInput<Input>): Promise<AdmissionPlan<Output>>
+  /** Reproject current readable values after a refused stale write; never retries the command. */
+  describeConflict?(context: RequestContext, input: CommandInput<Input>, error: Error): Promise<Error>
 }
 /** A read a tool caller may make; it admits nothing and changes nothing. */
 export interface QueryDefinition<Input, Output> {
@@ -56,10 +58,15 @@ export function createCommandRegistry(admission: AdmissionPort) {
             const replay = await admission.replay(context, input.commandId, definition.action, identity.appId, identity.canonicalInputHash)
             if (replay) return replay
           }
-          const plan = await definition.prepare(context, input)
-          if (plan.action !== definition.action || plan.commandId !== input.commandId) throw new Error('Prepared command identity does not match invocation')
-          if (identity && (plan.appId !== identity.appId || plan.canonicalInputHash !== identity.canonicalInputHash)) throw new Error('Prepared canonical identity does not match replay identity')
-          return admission.commit(context, plan)
+          try {
+            const plan = await definition.prepare(context, input)
+            if (plan.action !== definition.action || plan.commandId !== input.commandId) throw new Error('Prepared command identity does not match invocation')
+            if (identity && (plan.appId !== identity.appId || plan.canonicalInputHash !== identity.canonicalInputHash)) throw new Error('Prepared canonical identity does not match replay identity')
+            return await admission.commit(context, plan)
+          } catch (error) {
+            if (definition.describeConflict && error instanceof Error && 'code' in error && error.code === 'version_conflict') throw await definition.describeConflict(context, input, error)
+            throw error
+          }
         },
       })
     },

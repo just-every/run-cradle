@@ -201,3 +201,5 @@
 /* Selected calendar fields need enough room to remain readable inside its scroll region. */
 .cr-records-page .cr-calendar-grid { grid-template-columns: repeat(7, minmax(160px, 1fr)); min-width: 1120px; }
 .cr-records-page .cr-calendar-day { overflow-wrap: anywhere; }
+
+.cr-live-records { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 10px 20px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }

@@ -11,7 +11,7 @@ import { createUlid } from '../src/core/shared/ids.ts'
 import { createCommandHttp } from '../src/core/registry/http.ts'
 import { createRecordHttp } from '../src/domains/records/routes.server.ts'
 
-test('VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, stale-safe and policy checked', async () => {
+test('VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, stale-safe and policy checked', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'cradle-range-'))
   let storage
   try {
@@ -68,5 +68,37 @@ test('VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, stale-saf
     await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules), policy.id).run()
     await patch({ appId, entityId: schema.id, rows: [{ recordId: changed.id, changes: { [fields[0].id]: 'Forbidden' } }] }, expected([changed]), 403)
     assert.deepEqual(snapshot(await query()), snapshot(beforeStale))
+    await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()
+    // A real competing command commits after preparation, before the final SQL guard.
+    const current=(await query()).find(row=>row.id===changed.id)
+    let intervene=true
+    const racing=await h.runtime(admission=>({...admission,async commit(ctx,plan){
+      if(intervene&&plan.action==='record.patch'){
+        intervene=false
+        await patch({ref:current.ref,changes:{[fields[1].id]:'7.25'}},expected([current]))
+      }
+      return admission.commit(ctx,plan)
+    }}))
+    const racedHttp=createCommandHttp({...racing,authenticate:async()=>h.ctx})
+    const response=await racedHttp.fetch(new Request('https://records.example/api/v1/commands/record.patch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({commandId:createUlid(),expected:expected([current]),input:{ref:current.ref,changes:{[fields[1].id]:'99'}}})}))
+    const raced=await response.json();assert.equal(response.status,409)
+    assert.match(raced.error.issues?.find(issue=>issue.fieldId===fields[1].id)?.message??'',/Number:.*current value is.*7\.25/)
+    assert.equal((await query()).find(row=>row.id===current.id).fields[fields[1].id].value,'7.25')
+    const beforeRestriction=(await query()).find(row=>row.id===current.id)
+    let restrict=true
+    const restricted=await h.runtime(admission=>({...admission,async commit(ctx,plan){
+      if(restrict&&plan.action==='record.patch'){
+        restrict=false
+        await patch({ref:beforeRestriction.ref,changes:{[fields[1].id]:'810045.75'}},expected([beforeRestriction]))
+        const hidden=JSON.parse(policy.rules_json)
+        for(const rule of hidden)if(rule.entityId===schema.id){rule.readableFields=rule.readableFields.filter(id=>id!==fields[1].id);rule.writableFields=rule.writableFields.filter(id=>id!==fields[1].id)}
+        await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(hidden),policy.id).run()
+      }
+      return admission.commit(ctx,plan)
+    }}))
+    const restrictedHttp=createCommandHttp({...restricted,authenticate:async()=>h.ctx})
+    const hiddenResponse=await restrictedHttp.fetch(new Request('https://records.example/api/v1/commands/record.patch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({commandId:createUlid(),expected:expected([beforeRestriction]),input:{ref:beforeRestriction.ref,changes:{[fields[1].id]:'100'}}})}))
+    assert.equal(hiddenResponse.status,403)
+    assert.doesNotMatch(await hiddenResponse.text(),/810045\.75/,'Conflict diagnosis must not disclose a value hidden after preparation')
   } finally { await storage?.close(); await rm(directory, { recursive: true, force: true }) }
 })

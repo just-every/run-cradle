@@ -10,6 +10,7 @@ import { AdmissionError } from '../admission/errors';
 export function createRecordHttp(ports: {
     authenticate(request: Request, ingress: RequestContext['ingress'], requestId: string): Promise<RequestContext>;
     policy: PolicyPort;
+    presence: ReturnType<typeof import('./presence.server').createRecordPresence>;
     reader: ReturnType<typeof createRecordReader>;
     metadata: ReturnType<typeof createRecordMetadata>;
     writer: ReturnType<typeof import('./change.server').createRecordWriter>;
@@ -28,9 +29,14 @@ export function createRecordHttp(ports: {
                 const prepared = await ports.writer.deletionImpact(ctx, { appId: idSchema.parse(impact[1]), entityId: idSchema.parse(impact[2]), recordId: idSchema.parse(impact[3]) });
                 return c.json({ data: { ref: prepared.ref, references: prepared.references }, meta: { requestId, apiVersion: 'cradle.api.v1', evaluatedAt: ctx.now, consistencyToken: ctx.consistencyToken ?? '' } });
             }
+            const entityPresence = path.match(/^\/api\/v1\/apps\/([^/]+)\/entities\/([^/]+)\/presence$/), viewPresence = path.match(/^\/api\/v1\/views\/([^/]+)\/presence$/);
             const forms=path.match(/^\/api\/v1\/apps\/([^/]+)\/forms$/);
             const entities = path.match(/^\/api\/v1\/apps\/([^/]+)\/entities(?:\/([^/]+)(?:\/(query|records)(?:\/([^/]+))?)?)?$/), views = path.match(/^\/api\/v1\/apps\/([^/]+)\/views$/), view = path.match(/^\/api\/v1\/views\/([^/]+)(?:\/(query))?$/), form = path.match(/^\/api\/v1\/forms\/([^/]+)$/);
-            if (path === '/api/v1/apps' && request.method === 'GET') {
+            if (request.method === 'POST' && (entityPresence || viewPresence)) {
+                const target = entityPresence ? { appId: idSchema.parse(entityPresence[1]), entityId: idSchema.parse(entityPresence[2]) } : { viewId: idSchema.parse(viewPresence![1]) };
+                data = await ports.presence.heartbeat(ctx, target);
+            }
+            else if (path === '/api/v1/apps' && request.method === 'GET') {
                 data = await ports.metadata.page(ctx, await ports.metadata.apps(ctx), path, pageInput);
             }
             else if (entities) {

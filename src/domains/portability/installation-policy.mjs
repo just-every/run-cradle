@@ -4,6 +4,7 @@ export const transient = ['Durable Object initialization cache', 'WORK_QUEUE del
 export const portabilityPolicy = {
  product:'just-every/cradle',
  excludeTables:[
+  'record_presence',
   'sessions','authority_sessions','authority_magic_tokens','authority_credentials','authority_rate_limits',
   'cradle_base_operators','cradle_base_sessions','connection_credentials','connection_oauth_states',
   'runtime_transfer_credentials','admission_outbox','portability_%',

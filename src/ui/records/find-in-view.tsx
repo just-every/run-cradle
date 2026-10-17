@@ -14,7 +14,8 @@ export function FindInView({ schema, query, fields, viewId, onMatch }: { schema:
     const key = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') { event.preventDefault(); setOpen(true); setTimeout(() => input.current?.focus(), 0) } }
     const changed = () => { active.current?.abort(); setMatches([]); setState('Records changed. Search again.'); onMatch(null) }
     window.addEventListener('records-changed', changed)
-    window.addEventListener('keydown', key); return () => { window.removeEventListener('records-changed', changed); window.removeEventListener('keydown', key); active.current?.abort() }
+    window.addEventListener('records-live-changed', changed)
+    window.addEventListener('keydown', key); return () => { window.removeEventListener('records-changed', changed); window.removeEventListener('records-live-changed', changed); window.removeEventListener('keydown', key); active.current?.abort() }
   }, [])
   useEffect(() => { active.current?.abort(); setMatches([]); setState(''); onMatch(null) }, [identity])
   async function search() {

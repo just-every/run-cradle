@@ -1,5 +1,6 @@
 import {boardBrowserJourney} from './helpers/records-board-journey.mjs'
 import {findBrowserJourney} from './helpers/records-find-journey.mjs'
+import {liveBrowserJourney} from './helpers/records-live-journey.mjs'
 import {contract} from './contract.mjs'
 import {relationFixture,relationReview} from './helpers/records-browser-relations.mjs'
 import {homeReview, builderReview, gridReview, gridEdgeReview} from './helpers/records-browser-review.mjs'
@@ -31,7 +32,7 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close()}
 })
-contract(['VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'Manual records browser journeys and concrete UI review corrections',async()=>{
+contract(['VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'Manual records browser journeys and concrete UI review corrections',async()=>{
 let h,browser,activePage
 try{
  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? await freePort()));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
@@ -51,6 +52,7 @@ try{
   await j.table('Deals');await j.record({Deal:'First deal',Value:'0','Close date':'2027-01-15',Approved:false,Stage:{select:'New'},'Company link':{link:'Acme 北, "Co"'}});await j.record({Deal:'Second deal',Value:'125.25',Stage:{select:'Qualified'}});await j.record({Deal:'Third deal',Value:'200',Stage:{select:'New'}});await gridReview(page,j);await j.capture('deals')
   const views=await exerciseViews(page,j);views.additional=await additionalViews(page,j,h.origin,result.appId);await exerciseSchemaEdit(page,j,h.origin,result.appId);const csv=await exerciseCsv(page,j,h.origin,width);const templates=await exerciseTemplates(page,j,h.origin,width);await gridEdgeReview(page,j,h.origin,width);await boardBrowserJourney(page,j,h,width);await verifyRetained();await page.goto(h.origin+'/app');await page.getByText('Launch readiness template',{exact:true}).waitFor();await j.capture('populated-home')
   await findBrowserJourney(page,j,h)
+  await liveBrowserJourney(page,j,h,browser,width,output)
   receipts.push({views,templates,csv,width,baseId:result.appId,companyId:company.id,pageErrors:j.errors,checkpoints:j.checkpoints})
   await context.close()
  }

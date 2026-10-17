@@ -2,7 +2,7 @@
 
 ## Target contract — 16 October 2026, revised 17 October 2026
 
-CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's acceptance evidence is listed below with its status, so a build round can work towards it. **63 done, 118 partial, 29 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
+CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's acceptance evidence is listed below with its status, so a build round can work towards it. **67 done, 115 partial, 28 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
 
 
 ### Records, schema and the app model
@@ -44,18 +44,18 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 
 | Clause | Status | Required evidence |
 | --- | --- | --- |
-| VIEW-008 — Spreadsheet-grade grid editing | Partial | Grid browser journey with keyboard-only editing, a pasted 50×5 range from clipboard text and a refused invalid paste. |
+| VIEW-008 — Spreadsheet-grade grid editing | Done | Grid browser journey with keyboard-only editing, a pasted 50×5 range from clipboard text and a refused invalid paste. |
 | VIEW-009 — Kanban | Partial | Board journey drags a card and the record's field changes; a read-only operator cannot drag. With an attachment field chosen as the cover, each card shows its record's first image, fitted or cropped as the view sets, and a card with no attachment shows no cover. For a reader who cannot read that attachment field, no card shows a cover. |
 | VIEW-010 — Calendar | Partial | Calendar journey creates, drags and opens records; the iCal feed returns the view's records and stops after revocation. |
 | VIEW-011 — Gallery | Partial | Gallery journey at 1440 and 390 with image covers. |
 | VIEW-012 — Timeline and Gantt | Partial | A timeline journey groups records, shows the dependency conflict marker and drags a bar, and a baseline is compared after the move. A Gantt fixture of eight tasks, whose single longest dependency chain is known, highlights exactly those tasks as the critical path. After a task's duration changes so that a different chain becomes longest, the highlighted set becomes exactly that chain. Dragging one bar changes no other record's dates. |
 | VIEW-013 — Personal, locked and formatted views | Partial | View journey: personal view hidden from others, locked view refuses edits, summary values checked against the records, colour rule applied. |
-| VIEW-014 — Live multi-user editing | Partial | Two-browser journey: an edit in one appears in the other within 2 seconds; a stale concurrent edit shows the conflict. |
+| VIEW-014 — Live multi-user editing | Done | Two-browser journey: an edit in one appears in the other within 2 seconds; a stale concurrent edit shows the conflict. |
 | VIEW-015 — Undo and redo | Partial | A grid journey pastes a 50×5 range, undoes it so every cell has its prior value, then redoes it so every cell has the pasted value. A fill-down, a bulk edit and a deletion are each undone and restored. After a second browser changes one pasted cell, undo reports that cell's conflict and applies nothing. A demoted operator's undo is refused. |
-| VIEW-016 — Find in view | Missing | A grid journey on a 5,000-record fixture finds a term and checks the reported count. Stepping through the matches reaches each matching cell. A hidden field's value is never matched. |
+| VIEW-016 — Find in view | Done | A grid journey on a 5,000-record fixture finds a term and checks the reported count. Stepping through the matches reaches each matching cell. A hidden field's value is never matched. |
 | VIEW-017 — List view across linked tables | Missing | A list journey at 1440 and 390 on a fixture of 3 projects, 12 tasks and 30 subtasks shows the exact hierarchy, counts and per-level fields. Adding a subtask under a task creates a linked record. Dragging a task to another project updates its link, and a read-only operator cannot drag. A task hidden by row policy is absent along with its subtasks. A Smartsheet-imported sheet with row hierarchy shows as indented rows. |
 | COLLAB-001 — Record comments and mentions | Partial | A comment-and-mention journey runs on a manual base. The mentioned operator is notified once in-app and once by email, and with a fake Slack, Teams or Nook edge connected, exactly one message reaches the mentioned person's chosen channel. The author edits their comment and the thread shows it as edited; another operator's edit is refused. Comment search finds the comment for an operator who can read the record. It returns nothing to an operator whose row policy hides the record, and the same holds through REST. Erasure anonymises the author. |
-| COLLAB-002 — Record history | Partial | History reads hide fields the reader cannot see; restore-from-history journey. |
+| COLLAB-002 — Record history | Done | History reads hide fields the reader cannot see; restore-from-history journey. |
 | COLLAB-003 — Watching and change notifications | Missing | A watch journey at a fixed clock produces one daily digest that lists every watched change. A watcher set to immediate delivery is notified of a change once in-app and once by email within 1 minute of the commit, and with a fake Slack edge connected, one Slack message arrives. A watcher's own change notifies nobody. A revoked reader stops receiving notifications. |
 
 ### Forms, interfaces and dashboards

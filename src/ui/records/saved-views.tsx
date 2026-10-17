@@ -10,7 +10,8 @@ import { useEffect, useState } from 'react'
 import type { Page } from '../../contracts/primitives'
 import type { EntitySchema, Query, RecordRow, View, ViewResult } from '../../domains/records/contracts'
 import { RECORD_SCHEMA_ENTITY_ID, RECORD_VIEW_ENTITY_ID } from '../../domains/records/contracts'
-import { readApi, useCommand, useResource } from '../shared/api'
+import { useCommand, useResource } from '../shared/api'
+import { LiveRecordsStatus, useLiveRecords } from './live-records'
 import { CommandFeedback, Empty, ResourceState } from '../shared/presentation'
 import { RecordCards } from './record-cards'
 
@@ -40,18 +41,16 @@ function SavedViewResult({ view, schema }: { view: View; schema: EntitySchema })
   const [match, setMatch] = useState<ViewMatch | null>(null)
   const [selection, setSelection] = useState<RecordRow[]>([])
   useEffect(() => { const refresh = () => setRevision(value => value + 1); window.addEventListener('records-changed', refresh); return () => window.removeEventListener('records-changed', refresh) }, [])
-  const [result, setResult] = useState<ViewResult | null>(null)
-  const [error, setError] = useState('')
   const [cursor, setCursor] = useState<string | undefined>()
-  useEffect(() => { const abort = new AbortController(); setResult(null); setError(''); readApi<ViewResult>(`/api/v1/views/${view.id}/query`, { method: 'POST', body: JSON.stringify({ limit: 100, fields: [...new Set([...view.fields,...view.groupBy,...Object.values(view.layout)])], ...(cursor ? { cursor } : {}) }) }, abort.signal).then(({ data }) => { if (!abort.signal.aborted) setResult(data) }, (cause: unknown) => { if (!abort.signal.aborted) setError(cause instanceof Error ? cause.message : 'Could not read the saved view.') }); return () => abort.abort() }, [view.id, view.version, cursor, revision])
+  const live = useLiveRecords<ViewResult>(`/api/v1/views/${view.id}/query`, { limit: 100, fields: [...new Set([...view.fields,...view.groupBy,...Object.values(view.layout)])], ...(cursor ? { cursor } : {}) }, `/api/v1/views/${view.id}/presence`, () => setCursor(undefined), revision)
+  const result = live.resource.state === 'ready' ? live.resource.data : null
   const find = <FindInView schema={schema} viewId={view.id} query={{ limit: 100, fields:[...new Set([...view.fields,...view.groupBy,...Object.values(view.layout)])] }} fields={view.fields} onMatch={value => { setMatch(value); if (value) setCursor(value.cursor) }} />
   const summary = <ViewSummary schema={schema} query={{limit:100}} fields={view.fields} viewId={view.id} revision={revision} />
   const history = view.display === 'board' ? <BoardHistoryToolbar /> : null
-  if (error) return <>{find}{summary}{history}<p className="cr-notice" role="alert">{error}</p></>
-  if (!result) return <>{find}{summary}{history}<p role="status">Reading current view…</p></>
-  if (!result.records.items.length) return <>{find}{summary}{history}<Empty headingLevel={2} title="No matching records">This view currently selects no records you can access.</Empty></>
+  if (!result) return <>{find}{summary}{history}<LiveRecordsStatus {...live} /><ResourceState resource={live.resource} operation="saved view" retry={live.refresh}>{() => null}</ResourceState></>
+  if (!result.records.items.length) return <>{find}{summary}{history}<LiveRecordsStatus {...live} /><Empty headingLevel={2} title="No matching records">This view currently selects no records you can access.</Empty></>
 
-  return <>{find}{summary}{history}<section className="cr-section cr-saved-view-result"><header className="cr-section-title"><h2>{view.name}</h2><ExportCsv schema={result.schema} query={{}} viewId={view.id} /><p>{view.display} · {result.records.total.value} records</p></header>{view.display === 'grid' ? <RecordsGrid schema={schema} rows={result.records.items} visible={view.fields} groupBy={view.groupBy.length ? view.groupBy : undefined} selection={selection} onSelection={setSelection} match={match} /> : view.display === 'board' && view.layout.boardFieldId ? <RecordBoard schema={result.schema} rows={result.records.items} visible={view.fields} boardFieldId={view.layout.boardFieldId} titleFieldId={view.layout.titleFieldId} name={view.name} match={match} /> : ['calendar', 'timeline', 'agenda'].includes(view.display) ? <DateViews schema={result.schema} records={result.records.items} view={view} match={match} /> : <RecordCards schema={result.schema} rows={result.records.items} visible={view.fields} titleFieldId={view.layout.titleFieldId} match={match} />}{cursor && <button className="cr-button cr-button--quiet" onClick={() => setCursor(undefined)}>First page</button>}{result.records.nextCursor && <button className="cr-button cr-button--quiet" onClick={() => setCursor(result.records.nextCursor!)}>Next page</button>}</section></>
+  return <>{find}{summary}{history}<LiveRecordsStatus {...live} /><section className="cr-section cr-saved-view-result"><header className="cr-section-title"><h2>{view.name}</h2><ExportCsv schema={result.schema} query={{}} viewId={view.id} /><p>{view.display} · {result.records.total.value} records</p></header>{view.display === 'grid' ? <RecordsGrid schema={schema} rows={result.records.items} visible={view.fields} groupBy={view.groupBy.length ? view.groupBy : undefined} selection={selection} onSelection={setSelection} match={match} /> : view.display === 'board' && view.layout.boardFieldId ? <RecordBoard schema={result.schema} rows={result.records.items} visible={view.fields} boardFieldId={view.layout.boardFieldId} titleFieldId={view.layout.titleFieldId} name={view.name} match={match} /> : ['calendar', 'timeline', 'agenda'].includes(view.display) ? <DateViews schema={result.schema} records={result.records.items} view={view} match={match} /> : <RecordCards schema={result.schema} rows={result.records.items} visible={view.fields} titleFieldId={view.layout.titleFieldId} match={match} />}{cursor && <button className="cr-button cr-button--quiet" onClick={() => setCursor(undefined)}>First page</button>}{result.records.nextCursor && <button className="cr-button cr-button--quiet" onClick={() => setCursor(result.records.nextCursor!)}>Next page</button>}</section></>
 }
 
 function ViewSettings({ view, onChanged }: { view: View; onChanged: () => void }) {

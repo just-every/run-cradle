@@ -4,7 +4,7 @@ import { FindInView, type ViewMatch } from './find-in-view'
 import { useEffect, useState, type ReactNode } from 'react'
 import type { Page } from '../../contracts/primitives'
 import type { EntitySchema, Filter, Query, RecordRow, View } from '../../domains/records/contracts'
-import { readApi, RequestFailure, type Resource } from '../shared/api'
+import { LiveRecordsStatus, useLiveRecords } from './live-records'
 import { Empty, ResourceState, Timestamp } from '../shared/presentation'
 import { BulkEditor } from './bulk-editor'
 import { ExportCsv } from './export-csv'
@@ -26,7 +26,6 @@ function RecordTableContent({ schema, tabs }: { schema: EntitySchema; tabs: Reac
   useEffect(() => { const refresh = () => setRevision(value => value + 1); window.addEventListener('records-changed', refresh); return () => window.removeEventListener('records-changed', refresh) }, [])
   const [query, setQuery] = useState<Query>({ limit: 50 })
   const [revision, setRevision] = useState(0)
-  const [resource, setResource] = useState<Resource<Page<RecordRow>>>({ state: 'loading', data: null })
   const [importing, setImporting] = useState(false)
   const [importSummary, setImportSummary] = useState<CsvImportSummary | null>(null)
   const [creating, setCreating] = useState(false)
@@ -43,15 +42,14 @@ function RecordTableContent({ schema, tabs }: { schema: EntitySchema; tabs: Reac
   const toggle = (panel: RecordPanel) => setOpen(current => { const next = new Set(current); if (!next.delete(panel)) next.add(panel); return next })
   const base = `/api/v1/apps/${schema.appId}/entities/${schema.id}`
   const readQuery = {...query,fields:schema.fields.map(field=>field.id)}
-  useEffect(() => {
-    const abort = new AbortController(); setResource({ state: 'loading', data: null })
-    readApi<Page<RecordRow>>(`${base}/query`, { method: 'POST', body: JSON.stringify(readQuery) }, abort.signal).then(({ data }) => { if (!abort.signal.aborted) setResource({ state: 'ready', data }) }, (error: unknown) => { if (abort.signal.aborted) return; const problem = error instanceof RequestFailure ? error : new RequestFailure(0, { requestId: '', operation: 'records', code: 'internal', message: 'Unable to read records.', retry: 'read' }); setResource({ state: problem.status === 401 ? 'signed_out' : problem.status === 403 ? 'forbidden' : problem.status === 404 ? 'not_found' : 'failed', data: null, error: problem }) })
-    return () => abort.abort()
-  }, [base, JSON.stringify(readQuery), revision])
+  const live = useLiveRecords<Page<RecordRow>>(`${base}/query`, readQuery, !viewingSaved && display !== 'form' ? `${base}/presence` : null, () => setQuery(current => ({ ...current, cursor: undefined })), revision)
+  const resource = live.resource
+
   if (importing) { const Import = schema.physicalRevision.startsWith('manual_') ? ManualImport : ImportRecords; return <><div className="cr-tabs-row">{tabs}</div><Import schema={schema} onClose={() => setImporting(false)} onSaved={(summary?: CsvImportSummary) => { if (summary) setImportSummary(summary); setImporting(false); setRevision(value => value + 1) }} /></> }
   if (creating) return <section className="cr-card cr-records-card"><div className="cr-tabs-row">{tabs}</div><RecordEditor schema={schema} onCancel={() => setCreating(false)} onSaved={() => { setCreating(false); setRevision(value => value + 1) }} /></section>
   return <>{bulkOpen && <BulkEditor schema={schema} records={selection} onChanged={() => setRevision(value => value + 1)} onClose={() => { setBulkOpen(false); setSelection([]) }} />}<section className="cr-card cr-records-card">
     <header className="cr-records-card-head"><h2>{schema.label}</h2>{tabs}<div className="cr-actions">{selection.length > 0 && <button className="cr-button cr-button--quiet" onClick={() => setBulkOpen(true)}>Edit {selection.length} selected</button>}{!viewingSaved && <ExportCsv schema={schema} query={{ ...query, fields: visible }} />}<button className="cr-button cr-button--quiet" onClick={() => { setImportSummary(null); setImporting(true) }}>Import CSV</button><button className="cr-button" disabled={!schema.fields.some(field => !field.readOnly && field.type !== 'computed')} onClick={() => setCreating(true)}>New record</button></div></header>
+    {!viewingSaved && display !== 'form' && <LiveRecordsStatus {...live} />}
     {importSummary && <p role="status">Import complete: {importSummary.creates} created · {importSummary.updates} updated · {importSummary.unchanged} unchanged · {importSummary.rejected} rejected.</p>}
     <nav className="cr-tabs cr-display-tabs" aria-label="Record display">{(['grid', 'board', 'form'] as const).map(mode => <button type="button" key={mode} className="cr-tab" aria-pressed={!viewingSaved && display === mode} onClick={() => { setSavedView(null); setDisplay(mode); setSelection([]); setSavingView(false) }}>{mode.charAt(0).toUpperCase() + mode.slice(1)}</button>)}</nav>
     <SavedRecordViews schema={schema} appId={schema.appId} entityId={schema.id} selected={savedView} onSelection={view => { setSavedView(view); setSelection([]); setSavingView(false) }} />
