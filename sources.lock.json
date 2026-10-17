@@ -3093,6 +3093,54 @@
       "sha256": "b2d048ec57caf007cc387e48533a997ca8b65c44ad50fd569e583591906b8ef7",
       "executable": false
     },
+    "docs/contract/COLLAB-001/compose-and-mention-1440.png": {
+      "sha256": "254971dd2eeb03af31afee81872a8dafcffdecacb05821e5989992dba3722576",
+      "executable": false
+    },
+    "docs/contract/COLLAB-001/compose-and-mention-390.png": {
+      "sha256": "75e5a41b12b26b4c344a39047fb372552d0184c0f659f5bf058b9677e1dfc781",
+      "executable": false
+    },
+    "docs/contract/COLLAB-001/deleted-comment-1440.png": {
+      "sha256": "3a9d6c377eb7ec066ac13b9f911233dd2276fb98db1f37a71c76b1609da408ca",
+      "executable": false
+    },
+    "docs/contract/COLLAB-001/deleted-comment-390.png": {
+      "sha256": "3ecc649dfc7ee447b7f42a5c2c5bd9ad3761980bb8c37766af2e5e038468914d",
+      "executable": false
+    },
+    "docs/contract/COLLAB-001/edited-search-result-1440.png": {
+      "sha256": "a49db3dc554151b4299998d1a3e5d384ac5214497033a821e4e56690f1a52e03",
+      "executable": false
+    },
+    "docs/contract/COLLAB-001/edited-search-result-390.png": {
+      "sha256": "e8e84055eb0dc2e47b406e3e3cbd8124598845f3146257fc5ba41d891f9968b4",
+      "executable": false
+    },
+    "docs/contract/COLLAB-001/empty-search-1440.png": {
+      "sha256": "e63e2830e3441ba8dcd8612e802a01ff5f6c9dec1364c40e3e870917d06f49ab",
+      "executable": false
+    },
+    "docs/contract/COLLAB-001/empty-search-390.png": {
+      "sha256": "c9712054c9d59870412a27080f58f18f2788c164a3aa42a65d9a765a84ecd6bf",
+      "executable": false
+    },
+    "docs/contract/COLLAB-002/restore-review-1440.png": {
+      "sha256": "e3469938385bab90f926104dde24b03b455ac6137a47b85ad9d197b5175b4093",
+      "executable": false
+    },
+    "docs/contract/COLLAB-002/restore-review-390.png": {
+      "sha256": "cb5cbd661acc21f3c976b8ae55bc037b76b2d63a290ec1fa285f361ba8363da5",
+      "executable": false
+    },
+    "docs/contract/COLLAB-002/restored-record-1440.png": {
+      "sha256": "c19271b6b95ab7d82b9e416ea3fde5b5f61b8df4c3c958e2728aa64683cc2f90",
+      "executable": false
+    },
+    "docs/contract/COLLAB-002/restored-record-390.png": {
+      "sha256": "fbe79ac4181440a8d5d47ff933efabac318f39b417c1833cbd334ff89ab8f5b0",
+      "executable": false
+    },
     "docs/contract/FIELD-005/paged-candidates-1440.png": {
       "sha256": "262389d5cf1d5c7df8f7e98019cd132e65348a0dcb6c9670e6daa2751c63bc02",
       "executable": false
