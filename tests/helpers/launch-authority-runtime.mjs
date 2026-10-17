@@ -13,6 +13,7 @@ import {createFixtureMail,fixtureMessages} from './fixture-mail.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 import { migrateFixture } from './migrate-fixture.mjs'
+import { queueConsumerOptions } from './queue-consumers.mjs'
 const { createUlid } = await import('../../src/core/shared/ids.ts')
 const { LAUNCH_APP_ID, launchEntities } = await import('../../src/apps/launch/contracts.ts')
 const { launchFieldIds } = await import('../../src/apps/launch/descriptors.server.ts')
@@ -20,7 +21,7 @@ const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.
 const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
-export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=true,installedLaunchDefinitions=false,installationOwner=false,providerFetch} = {}) {
+export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch} = {}) {
   const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
   const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
   assert.equal(available,true,'Authority test listener must be unoccupied')
@@ -51,7 +52,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues=tr
         Object.assign(current,mail.bindings)
       }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const result = convertV4MiniflareOptions({ host:'127.0.0.1',port,https,inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,...automaticQueues?{}:{queueConsumers:{}},modules,modulesRoot,bindings:current},...externalWorkers] })
+      const result = convertV4MiniflareOptions({ host:'127.0.0.1',port,https,inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,...queueConsumerOptions(automaticQueues),modules,modulesRoot,bindings:current},...externalWorkers] })
       for (const worker of result.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
       const rejectNetwork=()=>{throw new Error('Unexpected external request blocked by authority fixture')}
       result.workers[0].dev??={}

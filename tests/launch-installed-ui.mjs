@@ -8,7 +8,7 @@ import {setup,campaign} from './helpers/launch-installed.mjs'
 
 test('[AI-001/002/003 SET-002] existing campaign, risks, lens builder and settings controls expose real immutable results and errors',async()=>{
  let mode='valid',calls=0,browser
- const h=await setup({configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{
+ const h=await setup({automaticQueues:true,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{
   assert.equal(request.url,'https://api.openai.com/v1/responses');calls++;const body=await request.json(),feature=JSON.parse(body.input[0].content[0].text).feature
   if(mode==='refuse')return new Response('{}',{status:403})
   return Response.json({id:'edge-'+calls,model:'edge-model',status:'completed',usage:{input_tokens:9,output_tokens:4},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({content:'Reviewed '+feature+' without changing records',proposedLens:feature==='lens-proposal'?{name:'Suggested risk review',description:'Draft for operator review',recordType:'Risk',conditions:[],sort:{field:'severity',direction:'desc'},fields:['title','severity'],display:'Cards'}:null})}]}]})

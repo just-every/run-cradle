@@ -11,10 +11,11 @@ import {legacyCookieFixture} from './legacy-cookie-fixture.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 import {mailEdgeEntry} from './mail-edge-entry.mjs'
 import { migrateFixture } from './migrate-fixture.mjs'
+import { queueConsumerOptions } from './queue-consumers.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
-export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues=true,inspectMailRedirects=false}={}) {
+export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues,inspectMailRedirects=false}={}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-base-'))
   let port = Number(process.env.CRADLE_BASE_AUTHORITY_PORT ?? 0)
   const bindings = { ...productionBindings, APP_ORIGIN: 'https://cradle.authority.test', OWNER_EMAIL: 'owner@example.test', MAIL_PROVIDER: 'sendgrid', SESSION_SECRET: 'synthetic-base-authority-session-secret', SETUP_TOKEN: 'synthetic-base-authority-bootstrap-secret',...configuration }
@@ -30,7 +31,7 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     const optionsFor = changes => {
       const current = { ...options.bindings, ...bindings, ...changes }
       for (const key of Object.keys(current)) if (current[key] === undefined) delete current[key]
-      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...automaticQueues?{}:{queueConsumers:{}}, modules, modulesRoot, bindings: current }, ...externalWorkers] })
+      const config = convertV4MiniflareOptions({ host: '127.0.0.1', port, https: true, inspectorPort: 0, resourcePersistencePath: path.join(directory, 'v3'), workers: [{ ...options, ...queueConsumerOptions(automaticQueues), modules, modulesRoot, bindings: current }, ...externalWorkers] })
       for (const worker of config.workers) if (worker.dev) worker.dev.unsafeRegisterWorker = false
       config.workers[0].dev??={}
       config.workers[0].dev.outboundService={type:'fetcher',handler:async request=>{

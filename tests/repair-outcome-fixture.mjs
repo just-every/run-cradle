@@ -24,7 +24,7 @@ export async function repairOutcomeFixture(){
   const migration=spawnSync(process.execPath,['scripts/migrate-local.mjs','--persist-to',directory],{encoding:'utf8',maxBuffer:16*1024*1024});assert.equal(migration.status,0,migration.stderr+migration.stdout)
   const owner=await installLegacyFixture(directory,{installationOwner:true}),fixture=await installUiRepairsFixture(directory,owner)
   const key=Buffer.alloc(32,9).toString('base64url')
-  runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long',APP_ORIGIN:origin,CONNECTION_ENCRYPTION_KEY_VERSION:'test',CONNECTION_ENCRYPTION_KEY:key,...mail.bindings},mail.fetch)
+  runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long',APP_ORIGIN:origin,CONNECTION_ENCRYPTION_KEY_VERSION:'test',CONNECTION_ENCRYPTION_KEY:key,...mail.bindings},mail.fetch,{automaticQueues:true})
   await runtime.ready
   const db=await runtime.getD1Database('DB'),now=new Date().toISOString(),manager='01ARZ3NDEKTSV4RRFFQ69G5FAB',other='01ARZ3NDEKTSV4RRFFQ69G5FAC'
   const policy=(await db.prepare('SELECT p.* FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(owner,model.REPAIRS_APP_ID).first())

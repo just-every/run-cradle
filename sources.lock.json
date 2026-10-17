@@ -9722,7 +9722,7 @@
       "executable": false
     },
     "tests/helpers/base-emitted-runtime.mjs": {
-      "sha256": "9532cb30e228526f8d252e899b689f81f46cf112853d4aba00c2f3081085ef3c",
+      "sha256": "74a5b6219bffa069bff038c3125803fd68957f6cb08ce2de284b9480b510d76e",
       "executable": false
     },
     "tests/helpers/base-exit-fixture.mjs": {
@@ -9806,7 +9806,7 @@
       "executable": false
     },
     "tests/helpers/emitted-runtime.mjs": {
-      "sha256": "c9fbc39ad958037d69898ecfc803b083cd176d4d16d5c0ed902d1a9c218eab35",
+      "sha256": "63388bfbd74155f6a80f0d6a6e533420dc4b616b0629512e8cb3e0483c8cde30",
       "executable": false
     },
     "tests/helpers/erasure-attachments.mjs": {
@@ -9866,11 +9866,11 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "669f611718617610669893fc8b7618a69e3b225747e0724627762bca9c545f74",
+      "sha256": "80bc9a7e1862a8bfc5146771fcd9ec7aae0d055aa9f937f0c854290147c862b9",
       "executable": false
     },
     "tests/helpers/launch-base-authority-runtime.mjs": {
-      "sha256": "4c72a9230ad417b029b0d2ad366b645cffaeaa2b27db6ddfb5e72d3501f565e8",
+      "sha256": "4791d82f82b62dc8c90c2db6b94e97c4b40401ad77e781b260b1ebc7b58759ee",
       "executable": false
     },
     "tests/helpers/launch-decision-hydration.mjs": {
@@ -9979,6 +9979,10 @@
     },
     "tests/helpers/public-app-navigation.mjs": {
       "sha256": "9f47a3ebd3a70d2a67480a1d2b220cac9ca5f1972622b92b612618c0fee9a929",
+      "executable": false
+    },
+    "tests/helpers/queue-consumers.mjs": {
+      "sha256": "3310e2c8590b786e25f62e6cc23540dd54adb8ad026159d6c517bb55389445e3",
       "executable": false
     },
     "tests/helpers/records-api-decimal-source.mjs": {
@@ -10142,7 +10146,7 @@
       "executable": false
     },
     "tests/helpers/rer-emitted-worker.mjs": {
-      "sha256": "7f5a52c41388285b1b72b618749c142e4887271f9370c69479d81a33e8662bb3",
+      "sha256": "73d5761e9838aa40bc6fcb69bed313fd01e85ff15aab19e2eb45b5bc47f78a76",
       "executable": false
     },
     "tests/helpers/rer-erasure-archive.mjs": {
@@ -10266,11 +10270,11 @@
       "executable": false
     },
     "tests/launch-installed-retries.mjs": {
-      "sha256": "786d4f518a2c1bea2787523fe6574dddf7b7b58d12c20a7a3f317423b053158c",
+      "sha256": "9c7df8f12635883a049b46319606091b3136197cdacd4a87df85b2d536f7042d",
       "executable": false
     },
     "tests/launch-installed-runtime.mjs": {
-      "sha256": "6b52cbb67293d42efb7c51fb53c9bd5a753567b74a1346c8524eb31108a53576",
+      "sha256": "2c989b51713afe5587925e2e56cee185d5b7bf1db4b5be658daf764cc8cbfc32",
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
@@ -10278,7 +10282,7 @@
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
-      "sha256": "0dbf23ad97fb0366eab06255c716d45d14fcbc44d23b4777182b11d574344592",
+      "sha256": "238444daaf994305e354db6b30a1862b7c8396f4d268ed259c88723303af3098",
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
@@ -10498,7 +10502,7 @@
       "executable": false
     },
     "tests/repair-outcome-fixture.mjs": {
-      "sha256": "e0fb5d2e20536bff55772190fcfb918342c896ad2c000264c35dccf1ea8dc7d4",
+      "sha256": "82cf7d52461a811dbe17dfc9d72c6b5a3c0432b444b72756a439feaedad1c5d8",
       "executable": false
     },
     "tests/repair-outcome-flow.mjs": {

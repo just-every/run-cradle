@@ -7,7 +7,7 @@ test('[AUTO-007/009] installed ordered actions retry transport failures at absol
  for(const provider of ['sendgrid','rer']) {
  const requests=[],attempts=[],notices=[];let response=202
  const relay='https://mail.rer.example.test/api/managed-mail/send'
- const h=await setup({inspectMailRedirects:true,configuration:{MAIL_PROVIDER:provider,MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:provider==='sendgrid'?'test-network-edge-only':undefined,MAIL_API_KEY:provider==='rer'?'synthetic-relay-credential':undefined,MAIL_RELAY_URL:provider==='rer'?relay:undefined},providerFetch:async request=>{
+ const h=await setup({automaticQueues:true,inspectMailRedirects:true,configuration:{MAIL_PROVIDER:provider,MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:provider==='sendgrid'?'test-network-edge-only':undefined,MAIL_API_KEY:provider==='rer'?'synthetic-relay-credential':undefined,MAIL_RELAY_URL:provider==='rer'?relay:undefined},providerFetch:async request=>{
   assert.equal(request.url,provider==='rer'?relay:'https://api.sendgrid.com/v3/mail/send')
   assert.equal(request.headers.get('x-test-redirect-mode'),'manual')
   assert.equal(request.headers.get('authorization'),'Bearer '+(provider==='rer'?'synthetic-relay-credential':'test-network-edge-only'))
