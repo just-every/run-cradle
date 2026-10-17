@@ -10849,6 +10849,10 @@
       "sha256": "a564f995b582812f98908310fa71aa040eda9835114eabbc93bb3ec611cb462a",
       "executable": false
     },
+    "vendor/base/modules/deploy-kit/owner-secret-copy.mjs": {
+      "sha256": "5c9f5331d123487c5cfaf13be5c61cfec24848208b89b7b0d107930a720b80c3",
+      "executable": false
+    },
     "vendor/base/modules/deploy-kit/owner-secret-names.mjs": {
       "sha256": "ea72001ab53ed398059fe70329e6aa7983168612ec48c0e1c7469316e7979ea1",
       "executable": false
@@ -12107,6 +12111,10 @@
     },
     "vendor/base/modules/operator-auth/accounts/credentials.mjs": {
       "sha256": "2f3d762e2e16145d56d45ab1ce53797a2a05fa818f2a796f086effe4c49f3e02",
+      "executable": false
+    },
+    "vendor/base/modules/operator-auth/accounts/display-name.mjs": {
+      "sha256": "f4134112fb448f2baa75e9f7f4a4a54b90594ba14d64cc3bbcd0858afdaaadbb",
       "executable": false
     },
     "vendor/base/modules/operator-auth/accounts/editor-owner.mjs": {
