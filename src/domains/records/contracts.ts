@@ -68,6 +68,7 @@ export type Field = {
         cardinality: 'one' | 'many';
         onDelete: 'restrict' | 'unlink' | 'cascade';
     };
+    linkPicker?: { searchFieldIds: Id[]; displayFieldIds: Id[]; viewId?: Id };
     expression?: Expr;
     resultType?: Field['type'] | 'array';
     resultElementType?: 'text' | 'url' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'person';

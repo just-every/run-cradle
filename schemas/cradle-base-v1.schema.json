@@ -373,6 +373,38 @@
                         "select",
                         "person"
                       ]
+                    },
+                    "linkPicker": {
+                      "type": "object",
+                      "properties": {
+                        "searchFieldIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                          },
+                          "maxItems": 80,
+                          "uniqueItems": true
+                        },
+                        "displayFieldIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                          },
+                          "maxItems": 80,
+                          "uniqueItems": true
+                        },
+                        "viewId": {
+                          "type": "string",
+                          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                        }
+                      },
+                      "required": [
+                        "searchFieldIds",
+                        "displayFieldIds"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -382,7 +414,23 @@
                     "required",
                     "unique"
                   ],
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "required": [
+                          "linkPicker"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "type": {
+                            "const": "relation"
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               },
               "incomingRelations": {

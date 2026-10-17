@@ -15,11 +15,11 @@ import { assertGuards } from '../fence.server'
 const previews=registerTable('manual_record_previews',['id','app_id','owner_id','state','detail_json','created_at','expires_at'])
 export function createManualSchemas(db:D1Database,policy:PolicyPort,admission:AdmissionPort,registry:DescriptorRegistry){
  const core=createReleaseCore(db,policy,admission,registry)
- async function preview(ctx:RequestContext,unknown:unknown):Promise<ManualPreview>{
+ async function preview(ctx:RequestContext,unknown:unknown,pendingViews?:import('../link-picker-schema').PickerViewSnapshot[]):Promise<ManualPreview>{
   try{assertCalculationBounds(unknown)}catch(error){throw new AdmissionError('validation',(error as Error).message)}
   const draft=draftSchema.parse(unknown),id=createUlid(),inputHash=await canonicalHash(draft)
   const permit=await manualAuthority(db,policy,ctx,draft.appId,inputHash)
-  const detail=await core.buildPreview(draft,id,{permit,reader:ctx,ownerId:ctx.principal.id,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString()})
+  const detail=await core.buildPreview(draft,id,{permit,reader:ctx,ownerId:ctx.principal.id,pendingViews,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString()})
   // Keep reviewed state and policy fences, but authenticate adoption with its
   // current session. Only exact principal guards generated for this preview are
   // separated; schema, data, membership, policy and owner fences stay immutable.

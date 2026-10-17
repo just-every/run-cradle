@@ -1,3 +1,4 @@
+import { remapPortableLinkPicker } from './json-link-picker'
 import { remapFieldValue } from './metadata-remap'
 import { ImportInputError } from './input-error'
 import { validateJsonCoordinates } from './json-coordinates'
@@ -16,6 +17,7 @@ export function remapPortableField(field:PortableField,appId:string,map:Map<stri
  const native=nativePortableField(field,appId);native.id=map.get(field.id)!
  if(native.defaultValue!==undefined)native.defaultValue=remapFieldValue(field,native.defaultValue,map)
  if(native.options)native.options=native.options.map(o=>({id:map.get(o.id)!,label:o.label}))
+ if(field.linkPicker)native.linkPicker=remapPortableLinkPicker(field.linkPicker,map)
  if(native.relation)native.relation.entityId=map.get(native.relation.entityId)!
  if(native.expression)native.expression=remapExpression(native.expression,table,tables,map)
  return native

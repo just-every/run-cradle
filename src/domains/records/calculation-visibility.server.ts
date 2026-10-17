@@ -23,8 +23,14 @@ export async function visibleCalculationSchema(ctx: RequestContext, schema: Enti
     } catch(error) { if(error instanceof Error && 'code' in error && ['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code))) return false; throw error }
   }
   const fields = await Promise.all(schema.fields.map(async field => {
-    if (!field.expression || await visible(field.expression,schema,scope)) return field
-    const {expression,options,...safe} = field; return safe
+    if(field.expression&&!await visible(field.expression,schema,scope)){const {expression,options,...safe}=field;return safe}
+    if(field.linkPicker&&field.relation){
+      try{
+        const target=await policy.scope(ctx,{appId:field.relation.ownerAppId,entityId:field.relation.entityId,purpose:'read'})
+        return {...field,linkPicker:{...field.linkPicker,searchFieldIds:field.linkPicker.searchFieldIds.filter(id=>target.readableFieldIds.includes(id)),displayFieldIds:field.linkPicker.displayFieldIds.filter(id=>target.readableFieldIds.includes(id))}}
+      }catch(error){if(error instanceof Error&&'code'in error&&['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code))){const {linkPicker,...safe}=field;return safe}throw error}
+    }
+    return field
   }))
   return {...schema,fields}
 }

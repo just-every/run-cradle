@@ -1,3 +1,4 @@
+import { validatePortableLinkPicker } from './json-link-picker'
 import { validatePortableArray } from './calculation-values'
 import { assertCalculationBounds } from '../calculation-bounds'
 import { assertPortableInputBounds,encodedJsonBytes,jsonLimit,JSON_BASE_LIMIT,JSON_TABLE_LIMIT } from './json-limits'
@@ -11,7 +12,7 @@ import { validateFieldConfiguration,validateTableRules } from '../validation-sch
 import { filterFields } from '../filter.server'
 import { canonical } from '../../admission/canonical'
 import type { Field } from '../contracts'
-export function nativePortableField(field:PortableField,appId:string):Field {return {id:field.id,label:field.label,type:field.type,required:field.required,unique:field.unique,...(field.validation?{validation:structuredClone(field.validation)}:{}),...(field.defaultValue!==undefined?{defaultValue:structuredClone(field.defaultValue)}:{}),...(field.options?{options:field.options}:{}),...(field.relation?{relation:{ownerAppId:appId,entityId:field.relation.tableId,cardinality:field.relation.cardinality,onDelete:field.relation.onDelete}}:{}),...(field.type==='computed'?{readOnly:true,expression:field.expression?structuredClone(field.expression):{kind:'rollup' as const,aggregate:'lookup' as const,...field.lookup!},resultType:field.resultType,...(field.resultElementType?{resultElementType:field.resultElementType}:{})}: {})}}
+export function nativePortableField(field:PortableField,appId:string):Field {return {id:field.id,label:field.label,type:field.type,required:field.required,unique:field.unique,...(field.validation?{validation:structuredClone(field.validation)}:{}),...(field.defaultValue!==undefined?{defaultValue:structuredClone(field.defaultValue)}:{}),...(field.options?{options:field.options}:{}),...(field.linkPicker?{linkPicker:structuredClone(field.linkPicker)}:{}),...(field.relation?{relation:{ownerAppId:appId,entityId:field.relation.tableId,cardinality:field.relation.cardinality,onDelete:field.relation.onDelete}}:{}),...(field.type==='computed'?{readOnly:true,expression:field.expression?structuredClone(field.expression):{kind:'rollup' as const,aggregate:'lookup' as const,...field.lookup!},resultType:field.resultType,...(field.resultElementType?{resultElementType:field.resultElementType}:{})}: {})}}
 /** Strict allowlist plus cross-reference and native-value validation, before any persistence. */
 export function validatePortableBase(input:unknown):PortableBase {
  assertPortableInputBounds(input)
@@ -39,6 +40,7 @@ export function validatePortableBase(input:unknown):PortableBase {
     for(const option of field.options){if(ids.has(option.id)||optionOwners.has(option.id))throw new ImportInputError('Duplicate select option identity');optionOwners.set(option.id,field.id)}
    }
    try{validateFieldConfiguration(nativePortableField(field,base.id),validateCell)}catch(error){throw new ImportInputError(`${field.label}: ${(error as Error).message}`)}
+   validatePortableLinkPicker(field,base)
    if(field.relation&&!tables.has(field.relation.tableId))throw new ImportInputError(`${field.label}: dangling link table`)
    if(field.lookup){const relation=fields.get(field.lookup.relationFieldId)?.relation,source=relation&&tables.get(relation.tableId)?.fields.find(f=>f.id===field.lookup!.valueFieldId);if(!source||relation?.cardinality!=='one'||!['text','url','number','date','boolean','select'].includes(source.type)||source.type!==field.resultType||canonical(source.options??[])!==canonical(field.options??[]))throw new ImportInputError(`${field.label}: invalid lookup definition`)}
   }

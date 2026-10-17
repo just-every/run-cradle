@@ -44,7 +44,7 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   if(checked.acknowledgmentRequired&&!ack.acceptLoss)throw new AdmissionError('validation','Acknowledge semantic losses, converted or rejected values and unresolved or ambiguous links before schema review.')
   if(await db.prepare('SELECT 1 FROM manual_record_bases WHERE id=?').bind(checked.identities.appId).first())throw new AdmissionError('validation','A base import creates a new base only.')
   const retained=prepareReviewRetention(checked)
-  const schemaImpact=await manual.preview(ctx,checked.schemaDraft),id=createUlid(),permit=await manualAuthority(db,policy,ctx,checked.identities.appId,'0'.repeat(64))
+  const schemaImpact=await manual.preview(ctx,checked.schemaDraft,(checked.portableViews??[]).map(raw=>{const {tableId,...view}=raw as unknown as import('./json-format').PortableBase['base']['views'][number];return {id:view.id,visibility:view.visibility,definition_json:JSON.stringify({...view,appId:checked.identities.appId,entityId:tableId})}})),id=createUlid(),permit=await manualAuthority(db,policy,ctx,checked.identities.appId,'0'.repeat(64))
   const row={id,app_id:checked.identities.appId,principal_id:ctx.principal.id,fingerprint:checked.fingerprint,schema_preview_id:schemaImpact.id,created_at:ctx.now}
   const physical=await prepareNativePlan(db,policy,registry,ctx,row,checked)
   await retainReview(db,{...row,physical_fingerprint:physical.plan.fingerprint,schema_fingerprint:physical.schemaFingerprint},retained,permit.guards)

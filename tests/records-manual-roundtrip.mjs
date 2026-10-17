@@ -1,3 +1,4 @@
+import {pickerJourney} from './helpers/records-picker-journey.mjs'
 import {boardJourney} from './helpers/records-board-journey.mjs'
 import {fieldPortabilityJourney} from './helpers/records-field-portability.mjs'
 import {calculationJourney} from './helpers/records-calculation-journey.mjs'
@@ -110,7 +111,7 @@ test('VIEW-009 VIEW-015 FIELD-001 CALC-001 CALC-002 CALC-003 CALC-004 RECORDS-00
   await call(recordsCsvHttp(live.csv,auth),'/api/v1/records/export-csv',{appId:draft.appId,entityId:schema.id,viewId:grid.id,query:{}},403)
   await call(baseExportHttp(createBaseExport(h.db,live.services),auth),'/api/v1/records/base-export',{appId:draft.appId,format:'json'},403)
   await calculationJourney(h)
-  await lookupJourney(h)
+  await lookupJourney(h);await pickerJourney(h)
   await fieldPortabilityJourney(h);await boardJourney(h)
  }finally{h.close()}
 })

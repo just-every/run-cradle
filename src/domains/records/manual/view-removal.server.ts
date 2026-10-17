@@ -5,12 +5,12 @@ import { trustedPredicate } from '../../admission/sql.server'
 import { viewTable, formTable } from '../metadata.server'
 import { currentSchemaView, currentSchemaForm } from '../metadata-schema'
 
-export type ViewSnapshot = { id:string; version:number; definition_json:string }
+export type ViewSnapshot = { id:string; version:number; definition_json:string; visibility?:string }
 
 export async function snapshotViews(db:D1Database,appId:string){
- const expression="(SELECT COALESCE(json_group_array(json_object('id',id,'version',version,'definition_json',definition_json)), '[]') FROM (SELECT id,version,definition_json FROM record_views WHERE app_id=? ORDER BY id))"
+ const expression="(SELECT COALESCE(json_group_array(json_object('id',id,'version',version,'definition_json',definition_json,'visibility',visibility)), '[]') FROM (SELECT id,version,definition_json,visibility FROM record_views WHERE app_id=? ORDER BY id))"
  const row=await db.prepare(`SELECT ${expression} AS snapshot`).bind(appId).first<{snapshot:string}>()
- const formsExpression=expression.replaceAll('record_views','record_forms'),forms=await db.prepare(`SELECT ${formsExpression} AS snapshot`).bind(appId).first<{snapshot:string}>()
+ const formsExpression=expression.replaceAll('record_views','record_forms').replace("'visibility',visibility","'visibility',NULL").replace('definition_json,visibility FROM','definition_json FROM'),forms=await db.prepare(`SELECT ${formsExpression} AS snapshot`).bind(appId).first<{snapshot:string}>()
  return {views:JSON.parse(row!.snapshot) as ViewSnapshot[],forms:JSON.parse(forms!.snapshot) as ViewSnapshot[],guards:[trustedPredicate(`${expression}=?`,[appId,row!.snapshot]),trustedPredicate(`${formsExpression}=?`,[appId,forms!.snapshot])]} 
 }
 

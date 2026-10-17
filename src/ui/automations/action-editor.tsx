@@ -37,7 +37,7 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
    <label className="cr-field">Message<textarea required maxLength={4000} value={action.text} onChange={event=>onChange({...action,text:event.target.value})}/></label><p className="cr-muted">The recipient must still be able to read the record when the email is sent.</p></>}
   {action.kind==='update'&&<><label className="cr-field">Field<select required value={action.fieldId} onChange={event=>onChange({...action,fieldId:event.target.value,value:null})}>
    <option value="">Choose a field</option>{writable.map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label>
-   {writable.find(field=>field.id===action.fieldId)&&<FieldInput appId={appId} field={writable.find(field=>field.id===action.fieldId)!} value={action.value} onChange={value=>onChange({...action,value})}/>}</>}
+   {writable.find(field=>field.id===action.fieldId)&&<FieldInput entityId={entity.id} appId={appId} field={writable.find(field=>field.id===action.fieldId)!} value={action.value} onChange={value=>onChange({...action,value})}/>}</>}
   {(action.kind==='webhook'||action.kind==='slack')&&<>
    {action.destinationId?<p>Private destination saved. To rotate it, save a new URL.</p>:null}
    <label className="cr-field">{action.kind==='slack'?'Slack incoming webhook URL':'HTTPS receiver URL'}<input type="url" value={url} onChange={event=>setUrl(event.target.value)} autoComplete="off" spellCheck={false} placeholder="https://"/></label>

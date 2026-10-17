@@ -38,14 +38,14 @@ export function CellDisplay({ cell, field, appId }: { cell: Cell | undefined; fi
   const values = Array.isArray(value) ? value : [value]
   return <>{values.map((item, i) => <span key={i}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
 }
-export function FieldInput({ appId, subject, field, value, onChange, error, inputId }: { appId: string; subject?: Ref; inputId?: string; field: Field; value: CellValue; onChange: (value: CellValue) => void; error?: string }) {
+export function FieldInput({ appId, entityId, subject, field, value, onChange, error, inputId }: { appId: string; entityId: string; subject?: Ref; inputId?: string; field: Field; value: CellValue; onChange: (value: CellValue) => void; error?: string }) {
   const id = inputId ?? `field-${field.id}`
   const common = { id, required: field.required, 'aria-invalid': !!error, 'aria-describedby': error ? `${id}-error` : undefined }
   let input
   if (field.type === 'boolean') input = <div className="cr-boolean"><input {...common} type="checkbox" required={false} aria-required={field.required} aria-describedby={`${id}-state${error ? ` ${id}-error` : ''}`} checked={value === true} onChange={e => onChange(e.target.checked)} /><span id={`${id}-state`}>{value === null ? 'Not set' : value ? 'Yes' : 'No'}</span>{!field.required && value !== null && <button type="button" className="cr-button cr-button--quiet" onClick={() => onChange(null)}>Clear {field.label}</button>}</div>
   else if (field.type === 'select' || field.type === 'multi_select') input = <select {...common} multiple={field.type === 'multi_select'} value={field.type === 'multi_select' ? Array.isArray(value) ? value as string[] : [] : typeof value === 'string' ? value : ''} onChange={e => onChange(field.type === 'multi_select' ? Array.from(e.target.selectedOptions, item => item.value) : e.target.value || null)}>{field.type === 'select' && <option value="">Choose…</option>}{field.options?.map(option => <option value={option.id} key={option.id}>{option.label}</option>)}</select>
   else if (field.type === 'money') input = <MoneyInput field={field} value={value} onChange={onChange} />
-  else if (field.type === 'relation') input = <RelationshipPicker field={field} value={value} onChange={onChange} />
+  else if (field.type === 'relation') input = <RelationshipPicker appId={appId} entityId={entityId} inputId={id} field={field} value={value} onChange={onChange} />
   else if (field.type === 'person') input = <PersonPicker appId={appId} field={field} value={value} onChange={onChange} />
   else if (field.type === 'attachment') input = <><CellDisplay cell={{ state: 'value', value }} /><FileUpload label={`Add ${field.label}`} fieldId={field.id} appId={appId} subject={subject} onUploaded={file => onChange([...(Array.isArray(value) ? value.filter(item => typeof item === 'object' && item !== null && 'fileId' in item) : []), { fileId: file.id }])} /></>
   else if (field.type === 'text') input = <textarea {...common} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} />

@@ -16,11 +16,12 @@ import { previewCalculations } from './calculation-preview.server'
 import { assertGuards } from '../fence.server'
 import { snapshotViews, prepareViewRemovals, prepareFormRemovals, type ViewSnapshot } from './view-removal.server'
 import { previewRuleViolations } from './rule-preview.server'
-function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,resultElementType,readOnly,options,...stored}=physical;return stored}
+import { validateLinkPickers } from '../link-picker-schema'
+function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,linkPicker,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,resultElementType,readOnly,options,...stored}=physical;return stored}
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
 export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[] }
 /** Whose authority a preview is computed under: `reader` reads every affected table as `ownerId`. */
-export type PreviewAuthority={permit:AuthorityPermit;reader:RequestContext;ownerId:string;expiresAt:string}
+export type PreviewAuthority={permit:AuthorityPermit;reader:RequestContext;ownerId:string;expiresAt:string;pendingViews?:import('../link-picker-schema').PickerViewSnapshot[]}
 
 export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:AdmissionPort,registry:DescriptorRegistry){
  /** Validate and measure a schema draft; writes nothing. */
@@ -63,12 +64,15 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
   let compiled:Awaited<ReturnType<typeof compileSchemaSet>>
   try{compiled=await compileSchemaSet(schemas,registry,removals)}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Schema compilation failed.')}
   const snapshot=await snapshotTables(db,prior),viewSnapshot=await snapshotViews(db,draft.appId)
+  if(authority.pendingViews?.length&&(prior.length||base))throw new AdmissionError('validation','Pending picker views are accepted only for a new native base import.')
+  validateLinkPickers(schemas,[...viewSnapshot.views,...(authority.pendingViews??[])])
   const impacts=schemas.map(schema=>{const old=prior.find(p=>p.schema.id===schema.id),rows=old?snapshot.rows[old.table.tableId]!:[],changes:string[]=[]
    if(!old)changes.push(`Create table ${schema.label}`)
    else if(old.schema.label!==schema.label)changes.push(`Rename table ${old.schema.label} to ${schema.label}`)
    if(schema.primaryFieldId!==old?.schema.primaryFieldId&&schema.primaryFieldId)changes.push(`Use ${schema.fields.find(f=>f.id===schema.primaryFieldId)?.label} as the primary record label`)
    if(canonical(schema.incomingRelations??[])!==canonical(old?.schema.incomingRelations??[]))changes.push(`Incoming relationship sections: ${(schema.incomingRelations??[]).map(r=>r.label).join(', ')||'none'}`)
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(!before)changes.push(`Add ${field.label} (${field.type==='computed'?calculationKind(field):field.type})`);else if(before.label!==field.label)changes.push(`Rename ${before.label} to ${field.label}`)}
+   for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before&&canonical(before.linkPicker??null)!==canonical(field.linkPicker??null))changes.push(`Update linked-record picker for ${field.label}`)}
    const removedFields=(old?.schema.fields??[]).filter(f=>removals[schema.id]!.includes(f.id)).map(f=>({id:f.id,label:f.label,populated:old!.fields.get(f.id)!.join?new Set((snapshot.rows[old!.fields.get(f.id)!.join!.table.tableId]??[]).map(row=>row.record_id)).size:rows.filter(row=>row[old!.fields.get(f.id)!.column]!==null&&row[old!.fields.get(f.id)!.column]!==undefined).length}))
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before?.type==='computed'&&canonical(before.expression)!==canonical(field.expression))changes.push(`Update calculation ${field.label}`)}
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before&&canonical({required:before.required,unique:before.unique,validation:before.validation??null,defaultValue:before.defaultValue??null})!==canonical({required:field.required,unique:field.unique,validation:field.validation??null,defaultValue:field.defaultValue??null}))changes.push(`Update validation or default for ${field.label}`)}

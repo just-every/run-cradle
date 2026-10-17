@@ -6,6 +6,10 @@ import { validationPattern } from './validation-pattern'
 
 type ParseCell = (field: Field, value: unknown) => CellValue
 export function validateFieldConfiguration(field: Field, parse: ParseCell) {
+  if(field.linkPicker){
+    if(field.type!=='relation'||!field.relation)throw new Error('Picker settings require a linked-record field.')
+    for(const ids of [field.linkPicker.searchFieldIds,field.linkPicker.displayFieldIds])if(new Set(ids).size!==ids.length)throw new Error('Picker fields must not repeat.')
+  }
   if (field.unique && (['multi_select','attachment','computed'].includes(field.type) || field.type === 'relation' && field.relation?.cardinality === 'many')) throw new Error('Uniqueness is available for scalar fields only.')
   const limits = field.validation
   if (field.type === 'computed' && (limits !== undefined || field.defaultValue !== undefined)) throw new Error('Calculated fields cannot declare validation or defaults.')

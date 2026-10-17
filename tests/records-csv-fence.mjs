@@ -29,14 +29,15 @@ async function recurringCsv(h){
  let {r}=await h.create(draft)
  const identity={appId:draft.appId,entityId:draft.tables[0].id},[name,city,secret,due,budget,approved]=fields
  const initial=r.registry.get(identity.appId,identity.entityId).schema
+ const linked={...newField('Linked vendor','relation'),relation:{ownerAppId:identity.appId,entityId:identity.entityId,cardinality:'one',onDelete:'restrict'},linkPicker:{searchFieldIds:[name.id,city.id,secret.id],displayFieldIds:[city.id,budget.id,approved.id,secret.id]}}
  const calculated={...newField('Public summary','computed'),resultType:'text',readOnly:true,expression:{kind:'field',fieldId:secret.id}}
- r=await migrateFixture(h,r,{...initial,fields:[...fields,calculated],version:initial.version+1,physicalRevision:'manual_'+createUlid()})
+ r=await migrateFixture(h,r,{...initial,fields:[...fields,calculated,linked],version:initial.version+1,physicalRevision:'manual_'+createUlid()})
  const ownerPolicy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(draft.appId).first(),ownerRules=JSON.parse(ownerPolicy.rules_json)
- for(const rule of ownerRules)if(rule.entityId===identity.entityId){rule.readableFields=[...fields,calculated].map(f=>f.id);rule.writableFields=fields.map(f=>f.id)}
+ for(const rule of ownerRules)if(rule.entityId===identity.entityId){rule.readableFields=[...fields,calculated,linked].map(f=>f.id);rule.writableFields=[...fields,linked].map(f=>f.id)}
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(ownerRules),ownerPolicy.id).run();r=await h.runtime()
  const origin='https://csv.example.test'
  async function call(path,input,status=200,headers={origin}){
-  const http=recordsCsvHttp(r.csv,async()=>h.ctx),response=await http.fetch(new Request(origin+'/api/v1/records/'+path,{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify({...identity,...input})})),body=await response.json()
+  const http=recordsCsvHttp(r.csv,async()=>h.ctx),response=await http.fetch(new Request(origin+'/api/v1/records/'+path,{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify({...identity,...(path==='link-candidates'?{fieldId:linked.id}:{}),...input})})),body=await response.json()
   assert.equal(response.status,status,JSON.stringify(body));return body.data??body.error
  }
  const mapping=fields.map(field=>({column:field.label,fieldId:field.id})),sourceName='Weekly vendor CSV'
@@ -62,17 +63,18 @@ async function recurringCsv(h){
  // The chooser searches the whole table, not the visible first page, and carries its filter through paging.
  const first=await call('link-candidates',{search:''});assert.equal(first.records.items.length,50);assert.ok(first.records.nextCursor)
  const next=await call('link-candidates',{search:'',cursor:first.records.nextCursor});assert.equal(next.records.items.length,11)
- const found=await call('link-candidates',{search:'Changed city',fieldIds:[city.id]});assert.equal(found.records.items.length,1);assert.equal(found.records.items[0].fields[name.id].value,'Vendor 60');assert.equal(found.records.items[0].fields[city.id].value,'Changed city')
- const filtered=await call('link-candidates',{search:'Vendor',fieldIds:[name.id]});assert.equal(filtered.records.items.length,50)
- assert.equal((await call('link-candidates',{search:'Vendor',fieldIds:[name.id],cursor:filtered.records.nextCursor})).records.items.length,11)
+ const found=await call('link-candidates',{search:'Changed city'});assert.equal(found.records.items.length,1);assert.equal(found.records.items[0].fields[name.id].value,'Vendor 60');assert.equal(found.records.items[0].fields[city.id].value,'Changed city')
+ const filtered=await call('link-candidates',{search:'Vendor'});assert.equal(filtered.records.items.length,50)
+ assert.equal((await call('link-candidates',{search:'Vendor',cursor:filtered.records.nextCursor})).records.items.length,11)
  // Change real policy: the secret cannot be searched, shown, or restored from saved mappings.
  const policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(draft.appId).first(),rules=JSON.parse(policy.rules_json)
  for(const rule of rules)if(rule.entityId===identity.entityId)rule.readableFields=rule.readableFields.filter(id=>id!==secret.id)
  rules.push({id:createUlid(),principals:[{id:h.owner,kind:'human'}],entityId:identity.entityId,rows:{kind:'condition',fieldId:name.id,op:'eq',value:'Vendor 00'},readableFields:[],writableFields:[],actions:[],effect:'deny',purposes:['read']})
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run();r=await h.runtime()
- const restricted=await call('link-candidates',{search:'hidden needle',fieldIds:[name.id,city.id]});assert.equal(restricted.records.items.length,0);assert.ok(restricted.schema.fields.every(field=>field.id!==secret.id));assert.equal(restricted.schema.fields.find(field=>field.id===calculated.id).expression,undefined,'Picker metadata cannot reveal hidden calculation dependencies')
- await call('link-candidates',{search:'needle',fieldIds:[secret.id]},403)
- assert.equal((await call('link-candidates',{search:'Vendor 00',fieldIds:[name.id]})).records.items.length,0,'Row-hidden vendors are never offered')
+ const restricted=await call('link-candidates',{search:'hidden needle'});assert.equal(restricted.records.items.length,0);assert.ok(restricted.schema.fields.every(field=>field.id!==secret.id));assert.equal(restricted.schema.fields.find(field=>field.id===calculated.id).expression,undefined,'Picker metadata cannot reveal hidden calculation dependencies')
+ await call('link-candidates',{search:'needle',fieldIds:[secret.id]},400)
+ assert.ok(!restricted.searchFieldIds.includes(secret.id));assert.ok(!restricted.displayFieldIds.includes(secret.id));assert.ok(!restricted.schema.fields.find(field=>field.id===linked.id).linkPicker.searchFieldIds.includes(secret.id))
+ assert.equal((await call('link-candidates',{search:'Vendor 00'})).records.items.length,0,'Row-hidden vendors are never offered')
  assert.equal((await call('import-mappings',{action:'list'})).mappings[0].available,false)
  await call('import-mappings',{action:'use',sourceName,headers:fields.map(f=>f.label)},403)
  await call('import-preview',input,403)
