@@ -32,14 +32,14 @@ export async function pickerJourney(h){
  assert.ok(preview.impacts.find(impact=>impact.entityId===ordersId).changes.some(change=>change.includes(vendor.label)))
  await call(manual(),'/api/v1/commands/release.adopt',command({kind:'manual_schema',previewId:preview.id}));r=await h.runtime()
  const request={appId,entityId:ordersId,fieldId:vendor.id},candidates=(input={},status=200)=>call(recordsCsvHttp(r.csv,auth),'/api/v1/records/link-candidates',{...request,...input},status)
- let result=await candidates();assert.deepEqual(result.records.items.map(row=>row.fields[name.id].value),['Northstar','Acme']);assert.deepEqual(result.searchFieldIds,[city.id]);assert.deepEqual(result.displayFieldIds,[city.id,budget.id,active.id]);assert.equal(result.viewName,definition.name)
- assert.deepEqual((await candidates({search:'Brisbane'})).records.items.map(row=>row.fields[name.id].value),['Northstar']);assert.equal((await candidates({search:'Northstar'})).records.items.length,0)
+ let result=await candidates();assert.deepEqual(result.records.items.map(row=>row.fields[name.id].value),['Northstar','Acme']);assert.deepEqual(result.searchFieldIds,[name.id,city.id]);assert.deepEqual(result.displayFieldIds,[city.id,budget.id,active.id]);assert.equal(result.viewName,definition.name)
+ assert.deepEqual((await candidates({search:'Brisbane'})).records.items.map(row=>row.fields[name.id].value),['Northstar']);assert.equal((await candidates({search:'Northstar'})).records.items.length,1,'The readable primary field is always searched')
  await candidates({fieldIds:[name.id]},400);await candidates({fieldId:order.id},403)
  const download=await call(baseExportHttp(createBaseExport(h.db,r.services),auth),'/api/v1/records/base-export',{appId,format:'json'}),document=JSON.parse(download.content)
  assertPortableJsonSchema(document)
  const ids=allocateJsonIdentities(document,'copy'),map=jsonIdentityMap(document,ids),copy=await applyPreview(h,previewJsonImport(prepareJsonSource({filename:'approved-purchasing.cradle.json',bytes:new TextEncoder().encode(download.content)}),{name:'Copied purchasing'},ids))
  const copied=await call(recordsCsvHttp(copy.r.csv,auth),'/api/v1/records/link-candidates',{appId:ids.appId,entityId:map.get(ordersId),fieldId:map.get(vendor.id),search:'Brisbane'})
- assert.equal(copied.records.items[0].fields[map.get(name.id)].value,'Northstar');assert.deepEqual(copied.searchFieldIds,[map.get(city.id)]);assert.equal(copy.r.registry.get(ids.appId,map.get(ordersId)).fields.get(map.get(vendor.id)).field.linkPicker.viewId,map.get(view.id))
+ assert.equal(copied.records.items[0].fields[map.get(name.id)].value,'Northstar');assert.deepEqual(copied.searchFieldIds,[map.get(name.id),map.get(city.id)]);assert.equal(copy.r.registry.get(ids.appId,map.get(ordersId)).fields.get(map.get(vendor.id)).field.linkPicker.viewId,map.get(view.id))
  const expected=[{ref:{appId,entityId:'00000000000000000000000002',recordId:view.id},version:view.version}]
  view=(await call(commands(),'/api/v1/commands/view.save',command({id:view.id,view:{...definition,filter:{kind:'condition',fieldId:name.id,op:'eq',value:'Acme'}}},expected))).value
  assert.deepEqual((await candidates()).records.items.map(row=>row.fields[name.id].value),['Acme'],'Existing picker uses the latest shared-view filter')
