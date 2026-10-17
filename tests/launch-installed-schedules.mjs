@@ -17,10 +17,10 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
  let outbound=0
  const h=await recordsImportBrowserRuntime(await freePort(),{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
  try{
-  // Sign-in uses the real provider request at the test edge. This scheduler
-  // journey then exercises the existing local notification delivery path;
-  // its persisted messages contain notifications, never sign-in links.
-  await h.restart({MAIL_PROVIDER:'development'})
+  // Keep the configured Base sender: only its provider request is captured at
+  // the test network edge. Exclude the initial sign-in mail from schedule counts.
+  const initialMailCount=(await h.mailMessages()).length
+  const scheduledMail=async()=>(await h.mailMessages()).slice(initialMailCount)
   const csrfResponse=await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})
   assert.equal(csrfResponse.status,200)
   const {csrfToken}=await csrfResponse.json()
@@ -33,6 +33,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   }
   const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
   const owner=(await h.db.prepare("SELECT id FROM operators WHERE email='import-owner@example.test'").first()).id
+  const address=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner).first()).email.trim().toLowerCase()
   const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first())
   await command('settings.update',{version:settings.version,changes:{timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
   const readiness=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='launch-readiness'").first()
@@ -45,11 +46,24 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   const worker=await h.runtime.getWorker()
   const tick=at=>worker.scheduled({scheduledTime:Date.parse(at)-345*60000,cron:'* * * * *'})
   const count=async(sql,...params)=>Number((await h.db.prepare(sql).bind(...params).first()).n)
+  async function assertAccepted(kind){
+   const rows=(await h.db.prepare('SELECT state,attempts,receipt_id,group_id FROM channel_deliveries WHERE kind=? AND operator_id=?').bind(kind,owner).all()).results
+   assert.ok(rows.length,`${kind} has no durable delivery`)
+   const messages=await scheduledMail()
+   for(const row of rows){
+    assert.equal(row.state,'accepted',`${kind} provider acceptance was not persisted`)
+    assert.equal(row.attempts,1,`${kind} must dispatch once`)
+    assert.ok(row.receipt_id,`${kind} has no provider receipt`)
+    const captured=messages.filter(message=>message.custom_args.rer_delivery_id===row.group_id)
+    assert.equal(captured.length,1,`${kind} must have one provider request for its durable dispatch`)
+    assert.deepEqual(captured[0].personalizations.flatMap(group=>group.to.map(recipient=>recipient.email.trim().toLowerCase())),[address])
+   }
+  }
   async function snapshot(){return{
    readiness:await count("SELECT COUNT(*) n FROM launch_readiness WHERE milestone_id=? AND state='Outstanding'",milestone.id),
    digest:await count("SELECT COUNT(*) n FROM channel_deliveries WHERE kind='weekly-digest' AND operator_id=?",owner),
    overdue:await count("SELECT COUNT(*) n FROM channel_deliveries WHERE kind='decision-overdue' AND operator_id=?",owner),
-   mailOutbox:await count('SELECT COUNT(*) n FROM rer_mail_development_outbox'),
+   mail:(await scheduledMail()).length,
    admissionOutbox:await count('SELECT COUNT(*) n FROM admission_outbox'),
   }}
   await t.test('MILE-004 AUTO-011: configured local readiness schedule creates one request and mail',async st=>{
@@ -59,11 +73,12 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0)
    const first=await snapshot();st.diagnostic(JSON.stringify({at,before,first}))
    assert.equal(first.readiness,before.readiness+1,'emitted scheduled handler produced no readiness request')
-   assert.equal(first.mailOutbox,before.mailOutbox+1,'readiness has no development-mail outbox counterpart')
+   assert.equal(first.mail,before.mail+1,'readiness must send one provider request')
    await tick(at)
-   const duplicate=await snapshot();assert.equal(duplicate.readiness,first.readiness);assert.equal(duplicate.mailOutbox,first.mailOutbox)
+   const duplicate=await snapshot();assert.equal(duplicate.readiness,first.readiness);assert.equal(duplicate.mail,first.mail)
    const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
    await tick('2026-10-20T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
+   await assertAccepted('readiness')
   })
   await t.test('NOTIFY-004: enabled Monday digest creates one notification/delivery and mail',async st=>{
    const automation=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='weekly-digest'").first()
@@ -80,12 +95,16 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    await tick(at)
    const first=await snapshot();st.diagnostic(JSON.stringify({at,before,first}))
    assert.equal(first.digest,before.digest+1,'emitted scheduled handler produced no weekly digest delivery')
-   assert.equal(first.mailOutbox,before.mailOutbox+1,'digest has no development-mail outbox counterpart')
+   assert.equal(first.mail,before.mail+1,'digest must send one provider request')
    await tick(at);await tick(monday+'T09:14:59.000Z');await tick(monday+'T09:15:00.000Z')
-   const duplicate=await snapshot();assert.equal(duplicate.digest,first.digest);assert.equal(duplicate.mailOutbox,first.mailOutbox)
+   const duplicate=await snapshot();assert.equal(duplicate.digest,first.digest);assert.equal(duplicate.mail,first.mail)
    await tick('2026-10-26T09:15:00.000Z');assert.equal((await snapshot()).digest,first.digest,'Outside window must not create next week digest')
-   const address=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner).first()).email.trim().toLowerCase();assert.equal(await count('SELECT count(*) n FROM channel_events WHERE event_id=?','digest:'+monday+':'+address),1)
-   const mail=JSON.parse((await h.db.prepare("SELECT message FROM rer_mail_development_outbox WHERE json_extract(message,'$.subject')='Weekly portfolio digest' ORDER BY sequence DESC LIMIT 1").first()).message);assert.ok(mail.text.includes('Scheduled held-out campaign'));assert.ok(!mail.text.includes('Archived launch excluded'));const launches=mail.text.split('Launches in the next 30 days')[1].split('Open High and Critical risks')[0];assert.ok(launches.includes('Included at thirty days'));assert.ok(!launches.includes('Outside thirty days'))
+   assert.equal(await count('SELECT count(*) n FROM channel_events WHERE event_id=?','digest:'+monday+':'+address),1)
+   const mail=(await scheduledMail()).findLast(message=>message.subject==='Weekly portfolio digest')
+   assert.ok(mail,'The provider request must contain the weekly digest')
+   const text=mail.content.find(part=>part.type==='text/plain').value
+   assert.ok(text.includes('Scheduled held-out campaign'));assert.ok(!text.includes('Archived launch excluded'));const launches=text.split('Launches in the next 30 days')[1].split('Open High and Critical risks')[0];assert.ok(launches.includes('Included at thirty days'));assert.ok(!launches.includes('Outside thirty days'))
+   await assertAccepted('weekly-digest')
   })
   await t.test('NOTIFY-008: unresolved decision due plus fifteen minutes notifies once and re-arms',async st=>{
    const dueAt=new Date(monday+'T09:50:00.000+05:45').toISOString()
@@ -96,12 +115,13 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    await tick(monday+'T10:05:00.000Z')
    const first=await snapshot();st.diagnostic(JSON.stringify({before,first}))
    assert.equal(first.overdue,before.overdue+1,'emitted scheduled handler produced no overdue decision delivery')
-   assert.equal(first.mailOutbox,before.mailOutbox+1,'overdue decision has no development-mail outbox counterpart')
-   await tick(monday+'T10:05:00.000Z');assert.equal((await snapshot()).overdue,first.overdue)
+   assert.equal(first.mail,before.mail+1,'overdue decision must send one provider request')
+   await tick(monday+'T10:05:00.000Z');const duplicate=await snapshot();assert.equal(duplicate.overdue,first.overdue);assert.equal(duplicate.mail,first.mail)
    await command('launch.decision.patch',{id:decision.id,changes:{dueAt:new Date(monday+'T11:50:00.000+05:45').toISOString()}},expected('decision',decision))
    await tick(monday+'T12:05:00.000Z')
    const rearmed=await snapshot();st.diagnostic(JSON.stringify({rearmed}))
-   assert.equal(rearmed.overdue,first.overdue+1);assert.equal(rearmed.mailOutbox,first.mailOutbox+1)
+   assert.equal(rearmed.overdue,first.overdue+1);assert.equal(rearmed.mail,first.mail+1)
+   await assertAccepted('decision-overdue')
   })
   // Owner-authored schedules use the same public save command and emitted cron as shipped definitions.
   // Keep these within the existing schedule journey instead of adding registration-only tests.

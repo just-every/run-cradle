@@ -9786,7 +9786,7 @@
       "executable": false
     },
     "tests/launch-installed-retries.mjs": {
-      "sha256": "0e0e22a1bf4107de5d14cfa13f34f5ff4a38d8eb1490a86cfd0583e1a8eaf4f7",
+      "sha256": "786d4f518a2c1bea2787523fe6574dddf7b7b58d12c20a7a3f317423b053158c",
       "executable": false
     },
     "tests/launch-installed-runtime.mjs": {
@@ -9794,7 +9794,7 @@
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
-      "sha256": "ab39c8b98de742f6a942ac20ae60b2cbd316dce2b3225c38d343eab4261fce57",
+      "sha256": "e7851dbbc56f699d2e9e066b62705d4bb5b3df6bee5e4e64a52addf791c5ec60",
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
@@ -12010,7 +12010,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "5f2ffdcf0403caba0acab24080ac0d65c0edcfb301d185d989425254f9c98f49",
+      "sha256": "633f1d24b236bab26193247f3b2fcd2ce70d2884a1068ed0bcacd9832fbb2f6b",
       "executable": false
     },
     "vite.config.ts": {

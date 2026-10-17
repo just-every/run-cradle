@@ -9,7 +9,14 @@
         "pnpm test:start",
         "pnpm test:integration",
         "pnpm test:domains",
-        "pnpm test:lifecycle-erasure",
+        "pnpm test:lifecycle-erasure"
+      ]
+    },
+    {
+      "name": "foundation-records",
+      "browser": true,
+      "hosted": false,
+      "commands": [
         "pnpm test:execution-resolution",
         "pnpm test:migration",
         "pnpm test:records",
@@ -21,9 +28,30 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:repairs",
-        "pnpm test:execution-resolution:browser",
-        "pnpm test:ui",
+        "pnpm test:repairs"
+      ]
+    },
+    {
+      "name": "repairs-execution",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:execution-resolution:browser"
+      ]
+    },
+    {
+      "name": "repairs-ui",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:ui"
+      ]
+    },
+    {
+      "name": "repairs-browser",
+      "browser": true,
+      "hosted": false,
+      "commands": [
         "pnpm test:repairs:browser"
       ]
     },
@@ -81,7 +109,14 @@
       "hosted": false,
       "commands": [
         "pnpm test:launch:doors",
-        "pnpm test:launch:walkthrough",
+        "pnpm test:launch:walkthrough"
+      ]
+    },
+    {
+      "name": "launch-recut",
+      "browser": true,
+      "hosted": false,
+      "commands": [
         "pnpm test:recut:browser"
       ]
     },
@@ -116,7 +151,14 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:records:browser",
+        "pnpm test:records:browser"
+      ]
+    },
+    {
+      "name": "records-base-browser",
+      "browser": true,
+      "hosted": false,
+      "commands": [
         "pnpm test:records:base-browser",
         "pnpm test:records:base-exits-browser"
       ]
