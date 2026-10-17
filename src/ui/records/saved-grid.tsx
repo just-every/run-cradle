@@ -1,9 +1,0 @@
-import { useId } from 'react'
-import type { ViewResult } from '../../domains/records/contracts'
-import { CellDisplay } from './record-fields'
-export function SavedGrid({result}:{result:ViewResult}) {
- const tableId=useId()
- const {view,schema,records}=result,groups=new Map<string,typeof records.items>()
- for(const row of records.items){const key=JSON.stringify(view.groupBy.map(id=>row.fields[id]));groups.set(key,[...(groups.get(key)??[]),row])}
- return <div className="cr-table-wrap" role="region" aria-label={view.name} tabIndex={0}><table className="cr-table"><thead><tr>{view.fields.map(id=><th id={`${tableId}-field-${id}`} scope="col" key={id}>{schema.fields.find(field=>field.id===id)?.label}</th>)}</tr></thead>{[...groups].map(([key,rows],groupIndex)=><tbody key={key}>{view.groupBy.length>0&&<tr><th id={`${tableId}-rowgroup-${groupIndex}`} className="cr-record-group" scope="rowgroup" colSpan={view.fields.length}>{view.groupBy.map(id=><span key={id}>{schema.fields.find(field=>field.id===id)?.label}: <CellDisplay appId={schema.appId} field={schema.fields.find(field=>field.id===id)} cell={rows[0]!.fields[id]} /> · </span>)}{rows.length} on this page{view.groupBy.length===1&&(()=>{const cell=rows[0]!.fields[view.groupBy[0]!],group=result.groups.find(g=>cell?.state==='value'&&JSON.stringify(g.key)===JSON.stringify(cell.value));return group?` · ${group.count} total`:''})()}</th></tr>}{rows.map(record=><tr key={record.id}>{view.fields.map(id=><td key={id} className={['date', 'instant'].includes(schema.fields.find(field=>field.id===id)?.resultType ?? schema.fields.find(field=>field.id===id)?.type ?? '') ? 'cr-cell--nowrap' : undefined} headers={`${tableId}-field-${id}${view.groupBy.length?` ${tableId}-rowgroup-${groupIndex}`:''}`}><CellDisplay appId={schema.appId} field={schema.fields.find(field=>field.id===id)} cell={record.fields[id]} /></td>)}</tr>)}</tbody>)}</table></div>
-}

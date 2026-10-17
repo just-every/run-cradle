@@ -166,3 +166,28 @@
   .cr-records-table tbody td { font-size: 14px; }
   .cr-records-card .cr-table-wrap { margin-top: 4px; }
 }
+
+/* A focused cell remains visible while the table scrolls on a phone. */
+.cr-grid-workspace { min-width: 0; }
+.cr-grid-actions, .cr-grid-find { padding: .7rem 1rem; flex-wrap: wrap; }
+.cr-grid-find .cr-actions { margin-top: .6rem; }
+.cr-grid-find .cr-field { min-width: 150px; flex: 1; }
+.cr-editable-grid { max-width: 100%; }
+.cr-editable-grid .cr-records-table { table-layout: fixed; width: max-content; min-width: 100%; }
+.cr-editable-grid td { overflow-wrap: anywhere; cursor: cell; }
+.cr-editable-grid td:focus { outline: 2px solid #6854b5; outline-offset: -2px; }
+.cr-editable-grid .cr-grid-selected { background: #f0ecfb; }
+.cr-editable-grid .cr-grid-match { background: #ffed9c; box-shadow: inset 0 0 0 2px #9b6500; }
+.cr-column-width { display: block; width: 100%; height: 12px; margin-top: 5px; opacity: .35; }
+.cr-column-width:focus, .cr-column-width:hover { opacity: 1; }
+.cr-cell-editor input { min-width: 0; width: 100%; box-sizing: border-box; }
+.cr-cell-editor button { min-height: 28px; padding: 2px 6px; }
+@media (max-width: 760px) {
+  .cr-records-page .cr-editable-grid .cr-records-table { min-width: max-content; }
+  .cr-editable-grid .cr-records-table thead { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .cr-editable-grid .cr-records-table tbody { display: table-row-group; }
+  .cr-editable-grid .cr-records-table tbody tr { display: table-row; padding: 0; }
+  .cr-editable-grid .cr-records-table tbody td { display: table-cell; padding: 14px 12px; border-top: 1px solid var(--line); }
+  .cr-editable-grid .cr-records-table td.cr-col-select { width: 48px; padding-inline: 4px; }
+  .cr-editable-grid .cr-records-table td.cr-col-primary { font-size: 15px; }
+}

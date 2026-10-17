@@ -890,13 +890,13 @@ Launch readiness is a complete application template on the records platform (cam
 
 Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026).
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. **63 done, 118 partial, 29 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. **64 done, 118 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 58 | 53 | 0 | 111 |
-| Target and push further | 5 | 65 | 29 | 99 |
-| All | 63 | 118 | 29 | 210 |
+| Target and push further | 6 | 65 | 28 | 99 |
+| All | 64 | 118 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -925,15 +925,15 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `FILE-001` | Attachments with previews | target | partial | `src/domains/records/attachments.server.ts`, `src/domains/evidence/attachments.server.ts` | src/domains/records/attachments.server.ts:4 and src/domains/evidence/attachments.server.ts:1 hold attachment custody and record projection; manual bases cannot author attachment fields and no preview journey exists |
 | `FILE-002` | Attachments from connected file stores | target | missing |  | no code |
 | `FILE-003` | Attachments in exports, erasure and migration | target | partial | `tests/rer-data-roundtrip.mjs`, `tests/lifecycle-erasure.mjs`, `src/domains/records/base-transfer/attachment-manifest.ts` | tests/rer-data-roundtrip.mjs carries files in whole-installation archives; tests/lifecycle-erasure.mjs erases R2 files; base JSON export and import list attachments as skipped (src/domains/records/base-transfer/attachment-manifest.ts) |
-| `VIEW-008` | Spreadsheet-grade grid editing | target | partial | `src/ui/records/record-grid.tsx`, `src/ui/records/record-editor.tsx` | src/ui/records/record-grid.tsx and src/ui/records/record-editor.tsx ship a grid and record editor; inline cell editing, ranges and paste are absent |
+| `VIEW-008` | Spreadsheet-grade grid editing | target | done | `tests/records-grid-range.mjs`, `src/ui/records/record-grid.tsx`, `src/ui/records/grid-interaction.tsx`, `work/sd-cp-cradle/shots/VIEW-008/` |  |
 | `VIEW-009` | Kanban | target | partial | `src/ui/records/record-board.tsx`, `tests/records-manual-roundtrip.mjs` | src/ui/records/record-board.tsx; tests/records-manual-roundtrip.mjs (saved board); drag and covers absent |
 | `VIEW-010` | Calendar | target | partial | `src/ui/records/date-views.tsx`, `src/domains/records/metadata.server.ts` | src/ui/records/date-views.tsx:5 and src/domains/records/metadata.server.ts:18 render calendar metadata; no authoring journey, drag or feed |
 | `VIEW-011` | Gallery | target | partial | `src/domains/records/metadata.server.ts` | src/domains/records/metadata.server.ts:18 (card metadata); no gallery view |
 | `VIEW-012` | Timeline and Gantt | target | partial | `src/ui/records/date-views.tsx`, `src/apps/launch/milestones.server.ts` | src/ui/records/date-views.tsx:7 renders timeline metadata as a date list; Launch readiness MILE-002/MILE-003 implement a milestone timeline with dependencies (src/apps/launch/milestones.server.ts) |
 | `VIEW-013` | Personal, locked and formatted views | target | partial | `src/domains/records/metadata.server.ts`, `tests/records-manual-roundtrip.mjs` | saved views with filter/sort/group/field order ship (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs); personal/locked views, summary bar and conditional formatting are absent |
 | `VIEW-014` | Live multi-user editing | target | partial | `src/ui/records/record-conflict.tsx` | stale-version refusal exists (src/ui/records/record-conflict.tsx; VIEW-006); live propagation and presence are absent |
-| `VIEW-015` | Undo and redo | target | partial | `src/domains/records/bulk.server.ts`, `src/ui/records/bulk-editor.tsx`, `src/ui/records/delete-record.tsx` | a bulk edit has a server-side undo window of 10 minutes that refuses changed fields (src/domains/records/bulk.server.ts:115; src/ui/records/bulk-editor.tsx). A record deletion has no undo today (src/ui/records/delete-record.tsx), and a per-view undo and redo stack and keyboard shortcuts are absent |
-| `VIEW-016` | Find in view | target | missing |  | global search only (VIEW-005; src/domains/records/search.server.ts) |
+| `VIEW-015` | Undo and redo | target | partial | `tests/records-grid-range.mjs`, `src/ui/records/grid-history.tsx`, `work/sd-cp-cradle/shots/VIEW-015/` | Grid inline edits, range paste and fill use a 50-action session undo/redo stack, toolbar and keyboard shortcuts, current-policy audited atomic patches and named stale conflicts. Other record-editor, bulk, board/date drag, create and deletion actions do not yet join the stack. Whole-row version conflicts also refuse changes to untouched cells; final SQL guard races retain the generic conflict response. |
+| `VIEW-016` | Find in view | target | partial | `src/ui/records/find-in-view.tsx`, `work/sd-cp-cradle/shots/VIEW-016/` | Find scans every cursor page of the current query or saved view, only visible readable cells, counts matching cells and navigates/highlights grid matches with Enter/Shift+Enter. Exercised on 50 records at 1440 and 390. The 5,000-record acceptance fixture, human-label search for linked/user values, and highlighting/scrolling matches in board/gallery/date views remain. |
 | `VIEW-017` | List view across linked tables | target | missing |  | the record views are grid, board, form and date views (src/ui/records/record-grid.tsx; src/ui/records/record-board.tsx; src/ui/records/date-views.tsx); there is no list view |
 | `COLLAB-001` | Record comments and mentions | target | partial | `src/domains/evidence/comments.server.ts`, `src/apps/launch/comments.server.ts` | src/domains/evidence/comments.server.ts and src/apps/launch/comments.server.ts (ACT-002/ACT-004 in the launch template); no manual-base comment journey |
 | `COLLAB-002` | Record history | target | partial | `src/domains/evidence/history-http.server.ts`, `tests/evidence-read-privacy.mjs` | src/domains/evidence/history-http.server.ts; tests/evidence-read-privacy.mjs reproject history under current policy; restoring a value from history is absent |

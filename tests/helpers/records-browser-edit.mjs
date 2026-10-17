@@ -15,7 +15,7 @@ export async function exerciseSchemaEdit(page,j,origin,appId){
  const imported=await j.command(page.getByRole('button',{name:'Import records',exact:true}),'records.import-commit');assert.deepEqual([imported.creates,imported.updates,imported.rejected],[0,1,0])
  await page.getByRole('button',{name:'New record',exact:true}).waitFor()
  const grid=page.locator('table.cr-table');await grid.getByRole('columnheader',{name:'Recovered website',exact:true}).waitFor()
- assert.equal(await grid.getByRole('row').count(),2);assert.match(await grid.innerText(),/https:\/\/example.test/)
+ assert.equal(await grid.locator('tbody tr').count(),1);assert.match(await grid.innerText(),/https:\/\/example.test/)
  const restored=grid.getByRole('link',{name:'Acme updated',exact:true});assert.equal(new URL(await restored.getAttribute('href'),origin).pathname.split('/').at(-1),recordId)
  await j.capture('recovered-field')
 }
