@@ -10,6 +10,15 @@ Cradle is an owned replacement for Airtable, Smartsheet and Quickbase: relationa
 
 Security, privacy and operational guarantees are in `BASELINE.md`. No product clause supersedes a baseline requirement; a future exception must name the exact `BASE-` ID and its owner-accepted replacement meaning and consequences. Capacity and rate limits are in `seed.json → limits`; times are p95 at those limits. Clauses marked *Policy* have a default that buyers may replace through the named extension point, subject to the clause's explicit limits. `seed.json` describes the current release, including non-goals that some clauses here retire (public and embeddable views, sync, notification channels beyond in-app and email, native mobile apps, bounded scripts); each non-goal is removed from `seed.json` in the build round that delivers the clause replacing it. Default verification (`rer verify`) runs the local application suites within the 200-test seed budget; local verification alone does not prove hosted readiness.
 
+## Product target
+
+| | |
+| --- | --- |
+| Category | No-code relational databases and internal apps |
+| Incumbents a buyer switches from | Airtable, Smartsheet, Quickbase |
+| Up-and-comers it must also beat | Baserow, NocoDB, Grist |
+| First buyer | A US operations lead at a small or mid-size business (10–500 people) who runs inventory, vendors, requests, approvals, assets, events or field work in Airtable, Smartsheet or Quickbase, or in a tangle of spreadsheets, and wants the whole app (data, views, interfaces, automations, permissions) in an installation they own, priced in USD with no per-seat licence |
+
 ## Records, schema and the app model
 
 A **base** (an app) holds related tables. Every read and write goes through current server-side app, row, field and action policy. These clauses are the records core the rest of the product stands on; they were the first release and stay binding.
@@ -510,8 +519,6 @@ What Cradle does not do, and how a buyer gets it. Each is a product line, not a 
   *Status:* done — tests/records-base-exits.mjs.
 ## Public landing and docs
 
-- **HOME-001 — Owner identity plate.** *Superseded by HOME-002 on 8 October 2026; the original wording is retained for history and is no longer a requirement.* At `/`, this internal tool presents a public identity plate using the persisted workspace name (including later renames), or the configured public workspace name when that name read is unavailable, description in `src/ext/config.ts`, and the configured theme tokens: the owner's workspace name, one configurable description of their records workspace, and a link to `/signin`. Its optional footer credit is visible by default and config can turn it off; when visible it names the configured product and links statically to `https://runeditrun.com`. The credit adds no telemetry or phone-home. The landing contains no record content, public views, pricing, feature tour, testimonials, or metrics.
-  *Status:* superseded (not counted).
 - **HOME-002 — Public product landing.** *Changed on 13 October 2026: the page moved from the installed `/` (now HOME-003) to the static run site.* At `/` of the run site (`https://run-cradle.com`, built by `rer build --site` from `src/site/pages.tsx`), Cradle presents its public product page using the configured theme tokens and the product's own type. It has a header, shared with the docs under DOCS-001, with the configured product name and links to `/docs` and to the public source repository (`https://github.com/just-every/run-cradle`); a hero with one heading, "Everything comes together in one place.", a supporting line that is the description in `src/ext/config.ts`, the plain line "100% free, open source alternative to Airtable and Smartsheet", a button **Run Cradle** to `/run`, a link to `/docs` and decorative illustrations of data streaming into one Projects screen; and sections, each with its own decorative illustration of Cradle's screens, for typed and linked tables, views, guarded schema changes, the practical parts (CSV import and export, visible automations, optional read-only AI) and self-hosted ownership that the owner customises with their own agents; at least two of those sections carry a quiet link to the published guide page on their subject (CSV import, automations, installing or leaving), and every `/docs` link on the page names a page published under DOCS-001. A closing call to action repeats **Run Cradle** to `/run` and links to `/docs`. The footer, also shared with the docs, carries the section anchors (which still reach the page from `/docs`), links to `/docs` and the source repository, an MIT licence link to `LICENSE` in that repository, and the credit. Its copy describes only capabilities this contract ships and shows no record content, public views, pricing, testimonials, customer logos, metrics or integrations the product does not ship. Its optional footer credit is visible by default and config can turn it off; when visible it names the configured product and links statically to `https://runeditrun.com`. The credit adds no telemetry or phone-home. Scroll motion never hides content: with reduced motion, without script, and after scrolling, every section is fully visible. The page loads no resource from another origin, links no instance-only route (`/signin`, `/setup`, `/app`, `/auth/*`) and reads no installation data. `/run` (Base's Run page) shows the two commands that run Cradle from `https://github.com/just-every/run-cradle`.
   *Acceptance:* Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`.
   *Status:* done — tests/foundation-shell.mjs; tests/ui-local-signin.mjs.
@@ -522,6 +529,13 @@ What Cradle does not do, and how a buyer gets it. Each is a product line, not a 
 - **DOCS-001 — Public docs.** Every page listed in `docs/site.json` is served without a session at `/docs` (the first page) or `/docs/<slug>`, rendered from its Markdown file inside the same header and footer as the product page (HOME-002), with the Docs link marked as the current page, and with each page's source linked on GitHub at `https://github.com/just-every/run-cradle/edit/main/<file>`. The installed instance's header and footer also link `/signin`; the run site serves the same pages statically without it. A slug that is not listed is a genuine 404, never a redirect or an empty page. Links between pages and to repository files resolve at build time, and a broken link or anchor fails the build. A page loads no script, style, font or image from another origin; outbound links are plain anchors. The docs show no record content and add no sessionless path beyond `/docs` and `/docs/`.
   *Acceptance:* Public document runtime and built-site tests through `/`, `/docs`, `/setup` and `/signin`.
   *Status:* done — tests/public-document-runtime.mjs; tests/start-resources.mjs.
+
+### Retired clauses
+
+Retired clauses stay defined here so their IDs are never reused; they carry no status and are not counted.
+
+- **HOME-001 — Owner identity plate.** *Superseded by HOME-002 on 8 October 2026; the original wording is retained for history and is no longer a requirement.* At `/`, this internal tool presents a public identity plate using the persisted workspace name (including later renames), or the configured public workspace name when that name read is unavailable, description in `src/ext/config.ts`, and the configured theme tokens: the owner's workspace name, one configurable description of their records workspace, and a link to `/signin`. Its optional footer credit is visible by default and config can turn it off; when visible it names the configured product and links statically to `https://runeditrun.com`. The credit adds no telemetry or phone-home. The landing contains no record content, public views, pricing, feature tour, testimonials, or metrics.
+  *Status:* superseded (not counted).
 
 ## Included application: Launch readiness
 
@@ -874,218 +888,225 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-Judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. **63 done, 118 partial, 29 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026).
 
-| Clause | Status | Evidence |
-| --- | --- | --- |
-| RECORDS-001 — Records builder | done | tests/records-manual-release.mjs; tests/launch-scoped-authority.mjs; tests/launch-write-authority.mjs; tests/ui-records-builder.mjs |
-| RECORDS-002 — Manual schema adoption | done | tests/records-manual-release.mjs; tests/ui-records-builder.mjs; src/domains/records/manual/service.server.ts. The preview, recheck and atomic adoption are done for the installation owner; adoption by base owners and creators is tracked under PERM-009 |
-| RECORDS-003 — Records views | done | tests/records-manual-roundtrip.mjs; tests/ui-records-builder.mjs; tests/ui-recut-final.mjs |
-| RECORDS-004 — View CSV and templates | done | tests/records-csv-fence.mjs; tests/records-manual-roundtrip.mjs; src/ui/records/schema/templates.ts |
-| RECORDS-005 — Reviewed base import | done | tests/records-import-d1.mjs; tests/records-import-undo-restart.mjs; tests/records-import-receipt.mjs; tests/ui-base-import.mjs; tests/ui-base-undo.mjs |
-| RECORDS-006 — Portable base exits | done | tests/records-base-exits.mjs; tests/records-base-edge-return.mjs; tests/ui-base-exits.mjs; tests/installed-home.mjs |
-| RECORDS-007 — Agent-proposed schema changes | done | tests/records-agent-proposals.mjs |
-| RECORDS-008 — Merge import into an existing table | partial | CSV import into an existing table with column mapping, merge fields, a create/update/unchanged preview and a commit recheck (src/domains/records/csv.server.ts; src/domains/records/csv-preview-rows.server.ts; src/ui/records/import-records.tsx; tests/records-manual-roundtrip.mjs). Links are accepted only as exported reference JSON, and labels are refused (src/domains/records/csv-values.ts:13). Linking by primary value, .xlsx and Google Sheets, saved mappings, scheduled imports and import undo are absent |
-| RECORDS-009 — Record templates and duplicate record | partial | campaign duplication for the Launch template only (CAMP-014; src/apps/launch/duplicate.server.ts); duplicating records and record templates on general bases are absent |
-| APP-SCOPE-001 — Explicit application scope | done | tests/launch-scoped-authority.mjs; tests/launch-setup-race.mjs |
-| OWN-001 — Owned installation without seat charges | done | scripts/installer/seed.mjs; tests/rer-data-roundtrip.mjs; tests/ui-launch-operator-doors.mjs |
-| SCALE-001 — Operational scale | partial | seed.json limits are recorded as flagship targets, not load-tested; src/domains/records/cursor.server.ts pages at 200 |
-| FIELD-001 — Complete field types | partial | src/domains/records/validators.ts:14 supports text, number, date, instant, money, boolean, select, multi_select, url, person, relation, attachment and computed; the manual builder authors text, number, date, select, checkbox and links (tests/records-manual-release.mjs). Long and rich text, percent, duration, rating, email, phone, barcode, autonumber, created/modified metadata, button and per-viewer time zone display are absent |
-| FIELD-002 — Field conversion and table deletion with preview | missing | RECORDS-002 currently refuses existing-field type conversion and table deletion explicitly (src/domains/records/manual/service.server.ts) |
-| FIELD-003 — Validation and conditional rules | partial | src/domains/records/validators.ts:42 (typed, required, unique); src/domains/records/form-actions.server.ts:21; conditional cross-field rules absent |
-| FIELD-004 — Notify people when they're added to a user field | missing | on general bases, user fields hold people (src/domains/records/validators.ts:14 `person`) with no notification. Launch decisions notify a new assignee (DEC-005; src/apps/launch/transitions.server.ts), and that can be reused |
-| FIELD-005 — Linked-record picker | partial | src/ui/records/relationship-picker.tsx pages through the linked table's records 50 at a time through the policy-checked `/api/v1` query door; search, chosen display fields, view-limited selection, enforcement and create-from-picker are absent |
-| CALC-001 — Formula fields | partial | src/domains/records/formulas.ts:13 evaluates add/subtract/multiply/divide/concat/coalesce/eq/if/date_add/days_between with cycle and depth checks, and money results keep their currency and scale (src/domains/records/formulas.ts:45); the builder exposes no formula authoring or result formatting |
-| CALC-002 — Lookups across links | partial | lookup recomputation from current linked values is tested (src/domains/records/formulas.ts:8; tests/records-manual-roundtrip.mjs; tests/records-manual-release.mjs); a lookup read under a restricted linked-table policy has no test, and conditional, sorted and limited lookups are absent |
-| CALC-003 — Rollups and counts | partial | src/domains/records/validators.ts:14 rollup expression with sum/count/min/max/average/lookup and filter; src/domains/records/formulas.ts evaluation; no builder authoring or test |
-| CALC-004 — Calculation consistency | partial | src/domains/records/formulas.ts validateExpressionGraph (cycle and depth 64); no cross-door consistency or timing test |
-| CALC-005 — Airtable formula coverage | partial | src/domains/records/formulas.ts:13 evaluates add, subtract, multiply, divide, concat, coalesce, eq, if, date_add and days_between. The other listed functions and the reference fixture are absent |
-| FILE-001 — Attachments with previews | partial | src/domains/records/attachments.server.ts:4 and src/domains/evidence/attachments.server.ts:1 hold attachment custody and record projection; manual bases cannot author attachment fields and no preview journey exists |
-| FILE-002 — Attachments from connected file stores | missing | no code |
-| FILE-003 — Attachments in exports, erasure and migration | partial | tests/rer-data-roundtrip.mjs carries files in whole-installation archives; tests/lifecycle-erasure.mjs erases R2 files; base JSON export and import list attachments as skipped (src/domains/records/base-transfer/attachment-manifest.ts) |
-| VIEW-008 — Spreadsheet-grade grid editing | partial | src/ui/records/record-grid.tsx and src/ui/records/record-editor.tsx ship a grid and record editor; inline cell editing, ranges and paste are absent |
-| VIEW-009 — Kanban | partial | src/ui/records/record-board.tsx; tests/records-manual-roundtrip.mjs (saved board); drag and covers absent |
-| VIEW-010 — Calendar | partial | src/ui/records/date-views.tsx:5 and src/domains/records/metadata.server.ts:18 render calendar metadata; no authoring journey, drag or feed |
-| VIEW-011 — Gallery | partial | src/domains/records/metadata.server.ts:18 (card metadata); no gallery view |
-| VIEW-012 — Timeline and Gantt | partial | src/ui/records/date-views.tsx:7 renders timeline metadata as a date list; Launch readiness MILE-002/MILE-003 implement a milestone timeline with dependencies (src/apps/launch/milestones.server.ts) |
-| VIEW-013 — Personal, locked and formatted views | partial | saved views with filter/sort/group/field order ship (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs); personal/locked views, summary bar and conditional formatting are absent |
-| VIEW-014 — Live multi-user editing | partial | stale-version refusal exists (src/ui/records/record-conflict.tsx; VIEW-006); live propagation and presence are absent |
-| VIEW-015 — Undo and redo | partial | a bulk edit has a server-side undo window of 10 minutes that refuses changed fields (src/domains/records/bulk.server.ts:115; src/ui/records/bulk-editor.tsx). A record deletion has no undo today (src/ui/records/delete-record.tsx), and a per-view undo and redo stack and keyboard shortcuts are absent |
-| VIEW-016 — Find in view | missing | global search only (VIEW-005; src/domains/records/search.server.ts) |
-| VIEW-017 — List view across linked tables | missing | the record views are grid, board, form and date views (src/ui/records/record-grid.tsx; src/ui/records/record-board.tsx; src/ui/records/date-views.tsx); there is no list view |
-| COLLAB-001 — Record comments and mentions | partial | src/domains/evidence/comments.server.ts and src/apps/launch/comments.server.ts (ACT-002/ACT-004 in the launch template); no manual-base comment journey |
-| COLLAB-002 — Record history | partial | src/domains/evidence/history-http.server.ts; tests/evidence-read-privacy.mjs reproject history under current policy; restoring a value from history is absent |
-| COLLAB-003 — Watching and change notifications | missing | launch-template notifications only (NOTIFY-001 to NOTIFY-008) |
-| FORM-001 — Public shareable forms | partial | src/domains/records/form-actions.server.ts:15 and src/ui/records/forms-panel.tsx ship authenticated saved forms; no public form door |
-| FORM-002 — Conditional form logic | partial | required form fields exist (src/domains/records/form-actions.server.ts:21); conditional visibility absent |
-| FORM-003 — Embedded forms and views | missing | seed.json nonGoals still list public or embeddable views for the current release |
-| IFACE-001 — Interface designer | partial | saved views/forms and record detail pages ship (src/ui/records/record-detail-page.tsx; tests/ui-records-builder.mjs); construction machinery exists (src/domains/construction/service.server.ts:9); no page/layout editor |
-| IFACE-002 — Record review and approval screens | partial | registered form actions (src/domains/records/form-actions.server.ts:15); launch Decision Queue (DEC-002/DEC-003; tests/ui-launch-walkthrough.mjs) is a template-specific instance |
-| IFACE-003 — Charts and dashboards | partial | template-specific Portfolio Overview (src/core/features/portfolio/ui/portfolio-overview-page.tsx; CAMP-006); configurable charts absent |
-| IFACE-004 — Buttons and record actions | partial | registered record/form actions share command services (src/domains/records/form-actions.server.ts:15); user-configurable buttons absent |
-| IFACE-005 — External portals | missing | no code |
-| IFACE-006 — Templates and starting apps | partial | src/ui/records/schema/templates.ts ships Customer relationships and Project tracker; Launch readiness is included (tests/ui-records-builder.mjs; tests/records-manual-roundtrip.mjs); the further templates are absent; base copy via RECORDS-006 |
-| IFACE-007 — Per-component permissions and viewer filters | missing | no interface designer yet (IFACE-001). Row and field policy is enforced server-side (PERM-002; src/domains/authority/policy.server.ts), and the component-level narrowing would build on it |
-| REPORT-001 — Scheduled reports | missing | only the launch weekly digest (NOTIFY-004; tests/launch-installed-schedules.mjs) |
-| REPORT-002 — Print and page layouts | missing | no print or PDF layout code. REPORT-001's PDF attachment is missing too |
-| PERM-001 — Roles and base sharing | partial | explicit memberships and policy-scoped operations (src/domains/authority/member-management.server.ts; src/domains/authority/policy.server.ts; tests/user-api-keys.mjs; tests/evidence-read-privacy.mjs); named role presets and a commenter role are absent |
-| PERM-002 — Row and field rules | done | src/domains/authority/policy.server.ts; tests/evidence-read-privacy.mjs; tests/records-manual-release.mjs; tests/launch-search-authority.mjs |
-| PERM-003 — Action and schema authority | done | src/domains/records/actions.server.ts:35; tests/launch-write-authority.mjs; tests/records-manual-release.mjs; tests/user-api-keys.mjs |
-| PERM-004 — Preview access as a user | partial | policy impact preview (src/domains/authority/policies.server.ts:14); no view-as-user surface |
-| PERM-005 — Guests | partial | per-app memberships exist (src/domains/authority/member-management.server.ts); guest invitation and isolation journey absent |
-| PERM-006 — Share links | missing | public or embeddable views are a current-release non-goal in seed.json |
-| PERM-007 — Company sign-in and provisioning | partial | optional OIDC (tests/auth-oidc.mjs); SAML and SCIM absent |
-| PERM-008 — Admin audit log | partial | audit records exist under BASE-OPS-005 and adoption audit rows (RECORDS-007); no owner audit-log view or export |
-| PERM-009 — Who changes schema and views within a base | partial | only the installation owner adopts today, through the impact preview and `release.adopt` (src/domains/records/manual/service.server.ts; tests/records-manual-release.mjs). Saved views are authorized operations (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs). Base-owner and creator adoption, the additive/destructive split, and role-scoped view editing are absent |
-| AUTO-USER-001 — Approved record triggers | done | tests/user-automations.mjs; tests/ui-user-automations.mjs; src/domains/automations/capture.server.ts. Capture, history, disabling, fencing on lost authority and suppression are done. Today only the installation owner authors, with approval capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Creator authorship and the run-until-disabled lifetime are tracked under AUTO-USER-009. Email to addresses that are not operators is tracked under AUTO-USER-010 |
-| AUTO-USER-002 — Every trigger | partial | record created/updated triggers (tests/user-automations.mjs); launch-only schedules (src/apps/launch/automations.server.ts; tests/launch-installed-schedules.mjs); others absent |
-| AUTO-USER-003 — Every action | partial | update, notify, email, webhook and Slack actions (src/domains/automations/effects.server.ts:25; tests/user-automations.mjs; tests/user-webhooks.mjs); the email action reaches one operator only (AUTO-USER-010); create-record and the rest are absent |
-| AUTO-USER-004 — Conditions, branches and repeats | partial | ordered multi-action execution (src/domains/automations/contracts.ts:12; src/domains/automations/runtime.server.ts); conditions, branches and repeats absent |
-| AUTO-USER-005 — Test runs | missing | run history exists; no dry-run workflow |
-| AUTO-USER-006 — Run history and failure alerts | partial | durable run history and diagnosis (src/domains/automations/history.server.ts; src/ui/automations/run-history.tsx); failure notification to the enabling user absent |
-| AUTO-USER-007 — Scripts | missing | seed.json nonGoals exclude unrestricted runtime scripts; a bounded sandbox is required instead |
-| AUTO-USER-008 — Follow-up until done | partial | launch readiness requests and overdue-decision follow-up (MILE-004, MILE-005, NOTIFY-008; tests/launch-installed-schedules.mjs); general follow-up rules absent |
-| AUTO-USER-009 — Automation authorship and lifetime | partial | automations fence lost authority and stop new effects (tests/user-automations.mjs; src/domains/automations/configuration.server.ts). Authoring is installation-owner only, with every approval capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Creator authoring, the non-expiring default, the owner-set policy with warnings, and reassignment are absent |
-| AUTO-USER-010 — Email to anyone from the installation sender | partial | the email action sends through the installation's Base mail sender (`MAIL_FROM`) to one operator chosen by ID, with a static subject and text, rechecking that operator's authority just before dispatch, and records an uncertain answer without resending (src/domains/automations/effects.server.ts:55; src/domains/automations/contracts.ts:7; tests/user-automations.mjs). Field and static addresses, CC and BCC, the From name, Reply-to, inserted values, Markdown, attachments, the caps, the domain policy, suppression and unsubscribe are absent |
-| API-USER-001 — Scoped revocable keys | done | tests/user-api-keys.mjs; src/domains/authority/user-keys-http.server.ts. Issue, use, revocation, fencing and expiry are done. Today every key's expiry is capped at 30 days (src/domains/authority/user-delegation.server.ts:48), and the non-expiring option is tracked under API-USER-004 |
-| API-USER-002 — Complete REST API | partial | read/create/update record APIs (src/domains/records/routes.server.ts; tests/user-api-keys.mjs); delete, upsert, batch, attachments, comments, OpenAPI and personal tokens absent |
-| API-USER-003 — OAuth for third-party apps | missing | no code |
-| API-USER-004 — Long-lived integration keys and personal access tokens | partial | scoped, digest-stored, revocable app keys with issuer fencing (tests/user-api-keys.mjs; src/domains/authority/user-keys.server.ts). Every expiry is capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Non-expiring keys, personal access tokens, the owner lifetime policy, warnings and last-used times are absent |
-| WEBHOOK-USER-001 — Private destinations and signed delivery | done | tests/user-webhooks.mjs; src/domains/automations/destinations.server.ts |
-| WEBHOOK-USER-002 — Change subscriptions | missing | outbound automation webhooks only |
-| MCP-001 — Live records for AI assistants | partial | the RECORDS-007 proposal door has REST and MCP faces for schema proposals (src/domains/authority/proposer.server.ts:5; tests/records-agent-proposals.mjs); live-record MCP tools absent |
-| INTEG-001 — Slack, Microsoft Teams and Nook | partial | Slack incoming-webhook notifications (WEBHOOK-USER-001; tests/user-webhooks.mjs); Slack app, Teams and Nook absent |
-| INTEG-002 — Gmail and Microsoft 365 mail | partial | scoped Gmail read-only intake (src/adapters/gmail.server.ts:14); Base mail sends notifications; mailbox sending and inbound addresses absent |
-| INTEG-003 — Google Sheets and Excel | partial | CSV move-in and export (src/domains/records/csv.server.ts; tests/records-manual-roundtrip.mjs); .xlsx and Google Sheets absent |
-| INTEG-004 — Google Calendar and Outlook | partial | Google Calendar reserve/cancel/readback adapter (src/adapters/calendar.server.ts:7) used by repairs; no record calendar sync; Outlook absent |
-| INTEG-005 — CRM, development and payment systems | missing | no code |
-| INTEG-006 — Twilio SMS | missing | no code |
-| INTEG-007 — Zapier, Make and Crank | missing | no Zapier, Make or Crank app code. The REST record API it would use is partial (API-USER-002), and OAuth and change subscriptions are missing (API-USER-003; WEBHOOK-USER-002) |
-| MIGRATE-001 — Airtable move-in | partial | Airtable-shaped CSV and recorded-API import with attachment/behaviour loss receipts (src/domains/records/base-transfer/source-api.ts; tests/records-import-receipt.mjs); live connection, formula translation, attachments, comments and rebuild absent |
-| MIGRATE-002 — Smartsheet move-in | missing | CSV path only (RECORDS-005) |
-| MIGRATE-003 — Quickbase move-in | missing | CSV path only (RECORDS-005) |
-| MIGRATE-004 — Spreadsheet workbook move-in | partial | multi-table CSV move-in with reviewed relationship mapping (RECORDS-005; tests/records-import-d1.mjs) |
-| MIGRATE-005 — People and provenance on move-in | partial | the Airtable recorded-API path reads collaborator, created-by and last-modified-by kinds (src/domains/records/base-transfer/source-kinds.ts:3) but keeps collaborator names as text and states that on the receipt (src/domains/records/base-transfer/receipt.ts:9; tests/records-import-receipt.mjs). Matching by email, invitation, original created and modified times, comment import and the ID map are absent |
-| SYNC-001 — Synced tables | missing | seed.json nonGoals exclude bidirectional sync for the current release |
-| SYNC-002 — Warehouse export | missing | no code |
-| SNAP-001 — Automatic snapshots and point-in-time restore | partial | manual verified whole-installation archives (src/domains/portability/archive.server.ts) and adoption snapshots (src/domains/records/manual/snapshot.server.ts); scheduled point-in-time recovery absent |
-| SNAP-002 — Trash | missing | record deletion previews impact (src/domains/records/delete-impact.server.ts); no trash |
-| MOBILE-001 — Complete phone web app | partial | manual records and import journeys pass at 390 (tests/ui-records-builder.mjs; tests/ui-base-import.mjs); 320 px and the later journeys are not covered |
-| MOBILE-002 — Installable app with camera and scanning | missing | no code |
-| MOBILE-003 — Native iOS and Android apps | missing | seed.json nonGoals exclude native mobile applications for the current release; device-only drafts exist for repair intake only |
-| AI-FIELD-001 — AI fields | missing | read-only analysis machinery for the launch template (src/domains/intelligence/service.server.ts) can be reused |
-| AI-FIELD-002 — Document extraction | missing | no code |
-| ASSIST-001 — Base assistant | partial | permissioned external schema proposals (src/domains/records/manual/proposal-agent.server.ts; tests/records-agent-proposals.mjs); in-product assistant absent |
-| AGENT-001 — Build a working base from the owner's files | partial | scripted proposals through the proposal door were adopted for two held-apart briefs (ACCEPTANCE.md General-purpose authoring; tests/records-agent-proposals.mjs); construction runner (src/domains/construction/build.server.ts); model-authored proposals from files not run |
-| AGENT-002 — Test changes against live records before adoption | partial | exact schema impact preview (src/domains/records/manual/service.server.ts:17) and policy impact preview (src/domains/authority/policies.server.ts:14); combined formula/role before-after report absent |
-| AGENT-003 — Rebuild an incumbent app, not just its rows | partial | migration previews, custody and agent schema proposals (src/domains/records/base-transfer/service.server.ts; src/domains/records/manual/proposal-agent.server.ts); behaviour reconstruction absent |
-| AGENT-004 — Operate a workflow to its outcome | partial | outcome and execution machinery for the included Repairs app (src/domains/operations/worker.server.ts; src/domains/execution/runtime.server.ts; tests/repairs-outcome-http.mjs); no general record-outcome steward |
-| AGENT-005 — Repair broken automations and integrations | partial | failure history and external-effect readback (src/domains/automations/runtime.server.ts; src/domains/execution/runtime.server.ts:42); agent repair absent |
-| AGENT-006 — Keep the data clean | missing | bulk preview/commit/undo exists to build on (src/domains/records/bulk.server.ts; tests/records-transport.mjs) |
-| AGENT-007 — Agent authority | partial | proposing keys (RECORDS-007; tests/records-agent-proposals.mjs) and repair mandates with designated-human approval (tests/repairs-outcome-http.mjs) |
-| BOUND-001 — Separate products stay separate | partial | DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product |
-| BOUND-002 — Not a regulated system of record | partial | no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary |
-| BOUND-003 — Bounded compute | partial | formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built |
-| BOUND-004 — Honest migration and delivery claims | done | tests/records-import-receipt.mjs; tests/launch-installed-retries.mjs |
-| BOUND-005 — One business per installation | done | tests/records-base-exits.mjs |
-| HOME-001 — Owner identity plate | superseded | superseded by HOME-002 on 8 October 2026 |
-| HOME-002 — Public product landing | done | tests/foundation-shell.mjs; tests/ui-local-signin.mjs |
-| HOME-003 — Installed Lobby | done | tests/installed-home.mjs; tests/public-document-runtime.mjs |
-| DOCS-001 — Public docs | done | tests/public-document-runtime.mjs; tests/start-resources.mjs |
-| AUTH-BASE-001 — Install and sign in | done | tests/auth-base-only-runtime.mjs; tests/launch-production-composition.mjs; tests/local-auth-runtime.mjs |
-| OPS-001 — Equal operators | done | tests/launch-production-composition.mjs; tests/launch-scoped-authority.mjs |
-| OPS-002 — Management | done | tests/launch-operator-doors.mjs; tests/ui-launch-operator-doors.mjs |
-| OPS-003 — Workspace timezone | partial | implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet |
-| OPS-004 — Removing an operator | partial | implemented in src/apps/launch/owners.server.ts; no clause-tagged test yet |
-| OPS-005 — Erasing an operator | partial | implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet |
-| OPS-006 — Money | partial | implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet |
-| VIEW-001 — Operating surfaces | done | tests/foundation-shell.mjs; tests/launch-authority-browser.mjs |
-| VIEW-002 — Selected detail | done | tests/ui-launch-walkthrough.mjs |
-| VIEW-003 — Cross-view consistency | partial | implemented in src/apps/launch/reader.server.ts; no clause-tagged test yet |
-| VIEW-004 — Explicit states | done | tests/launch-authority-browser.mjs; tests/ui-launch-walkthrough.mjs |
-| VIEW-005 — Search | done | tests/launch-search-authority.mjs |
-| VIEW-006 — Concurrent edits | partial | implemented in src/apps/launch/service-write.server.ts; no clause-tagged test yet |
-| VIEW-007 — Paging and order | done | tests/launch-operator-doors.mjs |
-| CAMP-001 — Record | done | tests/launch-authority-browser.mjs; tests/launch-optional-fields.mjs |
-| CAMP-002 — Lifecycle | done | tests/ui-launch-walkthrough.mjs |
-| CAMP-003 — Validation | partial | implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet |
-| CAMP-004 — Detail and rollups | partial | implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet |
-| CAMP-005 — Health | done | tests/ui-launch-walkthrough.mjs |
-| CAMP-006 — Portfolio overview | partial | implemented in src/core/features/portfolio; no clause-tagged test yet |
-| CAMP-007 — Grid | partial | implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet |
-| CAMP-008 — Custom fields | done | tests/ui-launch-operator-doors.mjs |
-| CAMP-009 — Archiving | partial | implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet |
-| CAMP-010 — Restoring | partial | implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet |
-| CAMP-011 — Deletion | partial | implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet |
-| CAMP-012 — Risk rating | partial | implemented in src/apps/launch/campaign-projection.server.ts; no clause-tagged test yet |
-| CAMP-013 — Bulk edit | done | tests/launch-write-authority.mjs; tests/ui-launch-operator-doors.mjs |
-| CAMP-014 — Duplicating | partial | implemented in src/apps/launch/duplicate.server.ts; no clause-tagged test yet |
-| DELIV-001 — Record | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| DELIV-002 — Completion | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| DELIV-003 — Overdue | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| MILE-001 — Record | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
-| MILE-002 — Timeline lens | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
-| MILE-003 — Dependencies | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
-| MILE-004 — Readiness request | done | tests/launch-installed-schedules.mjs |
-| MILE-005 — Readiness rescheduling | partial | implemented in src/apps/launch/readiness.server.ts; no clause-tagged test yet |
-| MILE-006 — Overdue | partial | implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet |
-| RISK-001 — Record | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| RISK-002 — Lifecycle | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| RISK-003 — Escalation | done | tests/ui-launch-walkthrough.mjs |
-| RISK-004 — Isolation | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| RISK-005 — Shipped lens | partial | implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet |
-| DEC-001 — Record | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| DEC-002 — Queue | done | tests/ui-launch-walkthrough.mjs |
-| DEC-003 — Approval | done | tests/ui-launch-walkthrough.mjs |
-| DEC-004 — First outcome wins | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| DEC-005 — Assignment | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| DEC-006 — Changes, rejection, and cancellation | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| DEC-007 — Linked-risk effect | partial | implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet |
-| DEC-008 — Finality | partial | implemented in src/apps/launch/supersede.server.ts; no clause-tagged test yet |
-| LENS-001 — Definition | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
-| LENS-002 — Preview | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
-| LENS-003 — Save and share | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
-| LENS-004 — Edit and delete | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
-| LENS-005 — Current results | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
-| LENS-006 — Shipped views | partial | implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet |
-| LENS-007 — Conditions | partial | implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet |
-| ACT-001 — Campaign activity | done | tests/ui-launch-walkthrough.mjs |
-| ACT-002 — Comments | partial | implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet |
-| ACT-003 — Dates and times | done | tests/ui-launch-walkthrough.mjs |
-| ACT-004 — Mentions | partial | implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet |
-| AUTO-001 — Definition | partial | implemented in src/apps/launch/automations.server.ts; no clause-tagged test yet |
-| AUTO-002 — Commit boundary | done | tests/launch-installed-runtime.mjs |
-| AUTO-003 — One run per trigger | done | tests/launch-installed-event-control.mjs; tests/launch-installed-runtime.mjs |
-| AUTO-004 — Definition changes | done | tests/launch-installed-event-control.mjs; tests/launch-installed-network-cancel.mjs |
-| AUTO-005 — Loop protection | done | tests/launch-installed-event-control.mjs |
-| AUTO-006 — Run history | partial | implemented in src/apps/launch/automation-runtime.server.ts; no clause-tagged test yet |
-| AUTO-007 — Transport retry | done | tests/launch-installed-retries.mjs |
-| AUTO-008 — Failure that retrying cannot fix | done | tests/launch-installed-event-control.mjs |
-| AUTO-009 — Manual retry | done | tests/launch-installed-retries.mjs |
-| AUTO-010 — Fan-out | partial | implemented in src/apps/launch/bulk.server.ts; no clause-tagged test yet |
-| AUTO-011 — Shipped automations | done | tests/launch-installed-runtime.mjs; tests/launch-installed-schedules.mjs |
-| NOTIFY-001 — In-app events | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
-| NOTIFY-002 — Email delivery | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
-| NOTIFY-003 — Delivery failure | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
-| NOTIFY-004 — Digest | done | tests/launch-installed-schedules.mjs |
-| NOTIFY-005 — Inbox | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
-| NOTIFY-006 — One per event | partial | implemented in src/core/features/notifications; no clause-tagged test yet |
-| NOTIFY-007 — Muting | partial | implemented in src/ui/settings/preferences-panel.tsx; no clause-tagged test yet |
-| NOTIFY-008 — Overdue decisions | done | tests/launch-installed-schedules.mjs |
-| AI-001 — Analyses | done | tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs |
-| AI-002 — Context | done | tests/launch-installed-runtime.mjs; tests/launch-installed-event-control.mjs |
-| AI-003 — Human control | done | tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs |
-| AI-004 — Provider and failure | done | tests/launch-installed-ai-failures.mjs |
-| AI-005 — Usage | done | tests/launch-installed-ai-failures.mjs |
-| AI-006 — Daily ceiling | done | tests/launch-installed-ai-failures.mjs |
-| IMPORT-001 — CSV preview | done | tests/launch-operator-doors.mjs; tests/ui-launch-operator-doors.mjs |
-| IMPORT-002 — Merge keys | done | tests/launch-operator-doors.mjs |
-| IMPORT-003 — Commit | done | tests/launch-operator-doors.mjs |
-| IMPORT-004 — Replay and staleness | done | tests/launch-operator-doors.mjs |
-| IMPORT-005 — Stored file | done | tests/launch-operator-doors.mjs |
-| SET-001 — Settings area | done | tests/ui-launch-operator-doors.mjs |
-| SET-002 — AI configuration | done | tests/launch-installed-runtime.mjs; tests/launch-installed-ui.mjs |
-| SET-003 — First run and sample data | done | tests/launch-operator-doors.mjs |
-| DATA-001 — Export contents | partial | implemented in src/domains/portability/archive.server.ts; no clause-tagged test yet |
-| DATA-002 — CSV export | done | tests/ui-launch-operator-doors.mjs |
-| DATA-003 — Capacity limits | partial | implemented in src/apps/launch/storage.server.ts; no clause-tagged test yet |
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. **63 done, 118 partial, 29 missing** of 210 clauses; HOME-001 is superseded and not counted.
+
+| Clauses | Done | Partial | Missing | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Published | 58 | 53 | 0 | 111 |
+| Target and push further | 5 | 65 | 29 | 99 |
+| All | 63 | 118 | 29 | 210 |
+
+| Clause | Title | Kind | Status | Evidence | Gap |
+| --- | --- | --- | --- | --- | --- |
+| `RECORDS-001` | Records builder | published | done | `tests/records-manual-release.mjs`, `tests/launch-scoped-authority.mjs`, `tests/launch-write-authority.mjs`, `tests/ui-records-builder.mjs` |  |
+| `RECORDS-002` | Manual schema adoption | published | done | `tests/records-manual-release.mjs`, `tests/ui-records-builder.mjs`, `src/domains/records/manual/service.server.ts` |  |
+| `RECORDS-003` | Records views | published | done | `tests/records-manual-roundtrip.mjs`, `tests/ui-records-builder.mjs`, `tests/ui-recut-final.mjs` |  |
+| `RECORDS-004` | View CSV and templates | published | done | `tests/records-csv-fence.mjs`, `tests/records-manual-roundtrip.mjs`, `src/ui/records/schema/templates.ts` |  |
+| `RECORDS-005` | Reviewed base import | published | done | `tests/records-import-d1.mjs`, `tests/records-import-undo-restart.mjs`, `tests/records-import-receipt.mjs`, `tests/ui-base-import.mjs`, `tests/ui-base-undo.mjs` |  |
+| `RECORDS-006` | Portable base exits | published | done | `tests/records-base-exits.mjs`, `tests/records-base-edge-return.mjs`, `tests/ui-base-exits.mjs`, `tests/installed-home.mjs` |  |
+| `RECORDS-007` | Agent-proposed schema changes | published | done | `tests/records-agent-proposals.mjs` |  |
+| `RECORDS-008` | Merge import into an existing table | target | partial | `src/domains/records/csv.server.ts`, `src/domains/records/csv-preview-rows.server.ts`, `src/ui/records/import-records.tsx`, `tests/records-manual-roundtrip.mjs`, `src/domains/records/csv-values.ts` | CSV import into an existing table with column mapping, merge fields, a create/update/unchanged preview and a commit recheck (src/domains/records/csv.server.ts; src/domains/records/csv-preview-rows.server.ts; src/ui/records/import-records.tsx; tests/records-manual-roundtrip.mjs). Links are accepted only as exported reference JSON, and labels are refused (src/domains/records/csv-values.ts:13). Linking by primary value, .xlsx and Google Sheets, saved mappings, scheduled imports and import undo are absent |
+| `RECORDS-009` | Record templates and duplicate record | target | partial | `src/apps/launch/duplicate.server.ts` | campaign duplication for the Launch template only (CAMP-014; src/apps/launch/duplicate.server.ts); duplicating records and record templates on general bases are absent |
+| `APP-SCOPE-001` | Explicit application scope | published | done | `tests/launch-scoped-authority.mjs`, `tests/launch-setup-race.mjs` |  |
+| `OWN-001` | Owned installation without seat charges | target | done | `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/ui-launch-operator-doors.mjs` |  |
+| `SCALE-001` | Operational scale | target | partial | `seed.json`, `src/domains/records/cursor.server.ts` | seed.json limits are recorded as flagship targets, not load-tested; src/domains/records/cursor.server.ts pages at 200 |
+| `FIELD-001` | Complete field types | target | partial | `src/domains/records/validators.ts`, `tests/records-manual-release.mjs` | src/domains/records/validators.ts:14 supports text, number, date, instant, money, boolean, select, multi_select, url, person, relation, attachment and computed; the manual builder authors text, number, date, select, checkbox and links (tests/records-manual-release.mjs). Long and rich text, percent, duration, rating, email, phone, barcode, autonumber, created/modified metadata, button and per-viewer time zone display are absent |
+| `FIELD-002` | Field conversion and table deletion with preview | target | missing |  | RECORDS-002 currently refuses existing-field type conversion and table deletion explicitly (src/domains/records/manual/service.server.ts) |
+| `FIELD-003` | Validation and conditional rules | target | partial | `src/domains/records/validators.ts`, `src/domains/records/form-actions.server.ts` | src/domains/records/validators.ts:42 (typed, required, unique); src/domains/records/form-actions.server.ts:21; conditional cross-field rules absent |
+| `FIELD-004` | Notify people when they're added to a user field | target | missing |  | on general bases, user fields hold people (src/domains/records/validators.ts:14 `person`) with no notification. Launch decisions notify a new assignee (DEC-005; src/apps/launch/transitions.server.ts), and that can be reused |
+| `FIELD-005` | Linked-record picker | target | partial | `src/ui/records/relationship-picker.tsx` | src/ui/records/relationship-picker.tsx pages through the linked table's records 50 at a time through the policy-checked `/api/v1` query door; search, chosen display fields, view-limited selection, enforcement and create-from-picker are absent |
+| `CALC-001` | Formula fields | target | partial | `src/domains/records/formulas.ts` | src/domains/records/formulas.ts:13 evaluates add/subtract/multiply/divide/concat/coalesce/eq/if/date_add/days_between with cycle and depth checks, and money results keep their currency and scale (src/domains/records/formulas.ts:45); the builder exposes no formula authoring or result formatting |
+| `CALC-002` | Lookups across links | target | partial | `src/domains/records/formulas.ts`, `tests/records-manual-roundtrip.mjs`, `tests/records-manual-release.mjs` | lookup recomputation from current linked values is tested (src/domains/records/formulas.ts:8; tests/records-manual-roundtrip.mjs; tests/records-manual-release.mjs); a lookup read under a restricted linked-table policy has no test, and conditional, sorted and limited lookups are absent |
+| `CALC-003` | Rollups and counts | target | partial | `src/domains/records/validators.ts`, `src/domains/records/formulas.ts` | src/domains/records/validators.ts:14 rollup expression with sum/count/min/max/average/lookup and filter; src/domains/records/formulas.ts evaluation; no builder authoring or test |
+| `CALC-004` | Calculation consistency | target | partial | `src/domains/records/formulas.ts` | src/domains/records/formulas.ts validateExpressionGraph (cycle and depth 64); no cross-door consistency or timing test |
+| `CALC-005` | Airtable formula coverage | target | partial | `src/domains/records/formulas.ts` | src/domains/records/formulas.ts:13 evaluates add, subtract, multiply, divide, concat, coalesce, eq, if, date_add and days_between. The other listed functions and the reference fixture are absent |
+| `FILE-001` | Attachments with previews | target | partial | `src/domains/records/attachments.server.ts`, `src/domains/evidence/attachments.server.ts` | src/domains/records/attachments.server.ts:4 and src/domains/evidence/attachments.server.ts:1 hold attachment custody and record projection; manual bases cannot author attachment fields and no preview journey exists |
+| `FILE-002` | Attachments from connected file stores | target | missing |  | no code |
+| `FILE-003` | Attachments in exports, erasure and migration | target | partial | `tests/rer-data-roundtrip.mjs`, `tests/lifecycle-erasure.mjs`, `src/domains/records/base-transfer/attachment-manifest.ts` | tests/rer-data-roundtrip.mjs carries files in whole-installation archives; tests/lifecycle-erasure.mjs erases R2 files; base JSON export and import list attachments as skipped (src/domains/records/base-transfer/attachment-manifest.ts) |
+| `VIEW-008` | Spreadsheet-grade grid editing | target | partial | `src/ui/records/record-grid.tsx`, `src/ui/records/record-editor.tsx` | src/ui/records/record-grid.tsx and src/ui/records/record-editor.tsx ship a grid and record editor; inline cell editing, ranges and paste are absent |
+| `VIEW-009` | Kanban | target | partial | `src/ui/records/record-board.tsx`, `tests/records-manual-roundtrip.mjs` | src/ui/records/record-board.tsx; tests/records-manual-roundtrip.mjs (saved board); drag and covers absent |
+| `VIEW-010` | Calendar | target | partial | `src/ui/records/date-views.tsx`, `src/domains/records/metadata.server.ts` | src/ui/records/date-views.tsx:5 and src/domains/records/metadata.server.ts:18 render calendar metadata; no authoring journey, drag or feed |
+| `VIEW-011` | Gallery | target | partial | `src/domains/records/metadata.server.ts` | src/domains/records/metadata.server.ts:18 (card metadata); no gallery view |
+| `VIEW-012` | Timeline and Gantt | target | partial | `src/ui/records/date-views.tsx`, `src/apps/launch/milestones.server.ts` | src/ui/records/date-views.tsx:7 renders timeline metadata as a date list; Launch readiness MILE-002/MILE-003 implement a milestone timeline with dependencies (src/apps/launch/milestones.server.ts) |
+| `VIEW-013` | Personal, locked and formatted views | target | partial | `src/domains/records/metadata.server.ts`, `tests/records-manual-roundtrip.mjs` | saved views with filter/sort/group/field order ship (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs); personal/locked views, summary bar and conditional formatting are absent |
+| `VIEW-014` | Live multi-user editing | target | partial | `src/ui/records/record-conflict.tsx` | stale-version refusal exists (src/ui/records/record-conflict.tsx; VIEW-006); live propagation and presence are absent |
+| `VIEW-015` | Undo and redo | target | partial | `src/domains/records/bulk.server.ts`, `src/ui/records/bulk-editor.tsx`, `src/ui/records/delete-record.tsx` | a bulk edit has a server-side undo window of 10 minutes that refuses changed fields (src/domains/records/bulk.server.ts:115; src/ui/records/bulk-editor.tsx). A record deletion has no undo today (src/ui/records/delete-record.tsx), and a per-view undo and redo stack and keyboard shortcuts are absent |
+| `VIEW-016` | Find in view | target | missing |  | global search only (VIEW-005; src/domains/records/search.server.ts) |
+| `VIEW-017` | List view across linked tables | target | missing |  | the record views are grid, board, form and date views (src/ui/records/record-grid.tsx; src/ui/records/record-board.tsx; src/ui/records/date-views.tsx); there is no list view |
+| `COLLAB-001` | Record comments and mentions | target | partial | `src/domains/evidence/comments.server.ts`, `src/apps/launch/comments.server.ts` | src/domains/evidence/comments.server.ts and src/apps/launch/comments.server.ts (ACT-002/ACT-004 in the launch template); no manual-base comment journey |
+| `COLLAB-002` | Record history | target | partial | `src/domains/evidence/history-http.server.ts`, `tests/evidence-read-privacy.mjs` | src/domains/evidence/history-http.server.ts; tests/evidence-read-privacy.mjs reproject history under current policy; restoring a value from history is absent |
+| `COLLAB-003` | Watching and change notifications | target | missing |  | launch-template notifications only (NOTIFY-001 to NOTIFY-008) |
+| `FORM-001` | Public shareable forms | target | partial | `src/domains/records/form-actions.server.ts`, `src/ui/records/forms-panel.tsx` | src/domains/records/form-actions.server.ts:15 and src/ui/records/forms-panel.tsx ship authenticated saved forms; no public form door |
+| `FORM-002` | Conditional form logic | target | partial | `src/domains/records/form-actions.server.ts` | required form fields exist (src/domains/records/form-actions.server.ts:21); conditional visibility absent |
+| `FORM-003` | Embedded forms and views | target | missing |  | seed.json nonGoals still list public or embeddable views for the current release |
+| `IFACE-001` | Interface designer | target | partial | `src/ui/records/record-detail-page.tsx`, `tests/ui-records-builder.mjs`, `src/domains/construction/service.server.ts` | saved views/forms and record detail pages ship (src/ui/records/record-detail-page.tsx; tests/ui-records-builder.mjs); construction machinery exists (src/domains/construction/service.server.ts:9); no page/layout editor |
+| `IFACE-002` | Record review and approval screens | target | partial | `src/domains/records/form-actions.server.ts`, `tests/ui-launch-walkthrough.mjs` | registered form actions (src/domains/records/form-actions.server.ts:15); launch Decision Queue (DEC-002/DEC-003; tests/ui-launch-walkthrough.mjs) is a template-specific instance |
+| `IFACE-003` | Charts and dashboards | target | partial | `src/core/features/portfolio/ui/portfolio-overview-page.tsx` | template-specific Portfolio Overview (src/core/features/portfolio/ui/portfolio-overview-page.tsx; CAMP-006); configurable charts absent |
+| `IFACE-004` | Buttons and record actions | target | partial | `src/domains/records/form-actions.server.ts` | registered record/form actions share command services (src/domains/records/form-actions.server.ts:15); user-configurable buttons absent |
+| `IFACE-005` | External portals | target | missing |  | no code |
+| `IFACE-006` | Templates and starting apps | target | partial | `src/ui/records/schema/templates.ts`, `tests/ui-records-builder.mjs`, `tests/records-manual-roundtrip.mjs` | src/ui/records/schema/templates.ts ships Customer relationships and Project tracker; Launch readiness is included (tests/ui-records-builder.mjs; tests/records-manual-roundtrip.mjs); the further templates are absent; base copy via RECORDS-006 |
+| `IFACE-007` | Per-component permissions and viewer filters | target | missing |  | no interface designer yet (IFACE-001). Row and field policy is enforced server-side (PERM-002; src/domains/authority/policy.server.ts), and the component-level narrowing would build on it |
+| `REPORT-001` | Scheduled reports | target | missing |  | only the launch weekly digest (NOTIFY-004; tests/launch-installed-schedules.mjs) |
+| `REPORT-002` | Print and page layouts | target | missing |  | no print or PDF layout code. REPORT-001's PDF attachment is missing too |
+| `PERM-001` | Roles and base sharing | target | partial | `src/domains/authority/member-management.server.ts`, `src/domains/authority/policy.server.ts`, `tests/user-api-keys.mjs`, `tests/evidence-read-privacy.mjs` | explicit memberships and policy-scoped operations (src/domains/authority/member-management.server.ts; src/domains/authority/policy.server.ts; tests/user-api-keys.mjs; tests/evidence-read-privacy.mjs); named role presets and a commenter role are absent |
+| `PERM-002` | Row and field rules | target | done | `src/domains/authority/policy.server.ts`, `tests/evidence-read-privacy.mjs`, `tests/records-manual-release.mjs`, `tests/launch-search-authority.mjs` |  |
+| `PERM-003` | Action and schema authority | target | done | `src/domains/records/actions.server.ts`, `tests/launch-write-authority.mjs`, `tests/records-manual-release.mjs`, `tests/user-api-keys.mjs` |  |
+| `PERM-004` | Preview access as a user | target | partial | `src/domains/authority/policies.server.ts` | policy impact preview (src/domains/authority/policies.server.ts:14); no view-as-user surface |
+| `PERM-005` | Guests | target | partial | `src/domains/authority/member-management.server.ts` | per-app memberships exist (src/domains/authority/member-management.server.ts); guest invitation and isolation journey absent |
+| `PERM-006` | Share links | target | missing |  | public or embeddable views are a current-release non-goal in seed.json |
+| `PERM-007` | Company sign-in and provisioning | target | partial | `tests/auth-oidc.mjs` | optional OIDC (tests/auth-oidc.mjs); SAML and SCIM absent |
+| `PERM-008` | Admin audit log | target | partial | `src/domains/records/manual/release.server.ts`, `src/domains/records/manual/proposal-review.server.ts` | audit records exist under BASE-OPS-005 and adoption audit rows (RECORDS-007); no owner audit-log view or export |
+| `PERM-009` | Who changes schema and views within a base | target | partial | `src/domains/records/manual/service.server.ts`, `tests/records-manual-release.mjs`, `src/domains/records/metadata.server.ts`, `tests/records-manual-roundtrip.mjs` | only the installation owner adopts today, through the impact preview and `release.adopt` (src/domains/records/manual/service.server.ts; tests/records-manual-release.mjs). Saved views are authorized operations (src/domains/records/metadata.server.ts:18; tests/records-manual-roundtrip.mjs). Base-owner and creator adoption, the additive/destructive split, and role-scoped view editing are absent |
+| `AUTO-USER-001` | Approved record triggers | published | done | `tests/user-automations.mjs`, `tests/ui-user-automations.mjs`, `src/domains/automations/capture.server.ts`, `src/domains/authority/user-delegation.server.ts` |  |
+| `AUTO-USER-002` | Every trigger | target | partial | `tests/user-automations.mjs`, `src/apps/launch/automations.server.ts`, `tests/launch-installed-schedules.mjs` | record created/updated triggers (tests/user-automations.mjs); launch-only schedules (src/apps/launch/automations.server.ts; tests/launch-installed-schedules.mjs); others absent |
+| `AUTO-USER-003` | Every action | target | partial | `src/domains/automations/effects.server.ts`, `tests/user-automations.mjs`, `tests/user-webhooks.mjs` | update, notify, email, webhook and Slack actions (src/domains/automations/effects.server.ts:25; tests/user-automations.mjs; tests/user-webhooks.mjs); the email action reaches one operator only (AUTO-USER-010); create-record and the rest are absent |
+| `AUTO-USER-004` | Conditions, branches and repeats | target | partial | `src/domains/automations/contracts.ts`, `src/domains/automations/runtime.server.ts` | ordered multi-action execution (src/domains/automations/contracts.ts:12; src/domains/automations/runtime.server.ts); conditions, branches and repeats absent |
+| `AUTO-USER-005` | Test runs | target | missing |  | run history exists; no dry-run workflow |
+| `AUTO-USER-006` | Run history and failure alerts | target | partial | `src/domains/automations/history.server.ts`, `src/ui/automations/run-history.tsx` | durable run history and diagnosis (src/domains/automations/history.server.ts; src/ui/automations/run-history.tsx); failure notification to the enabling user absent |
+| `AUTO-USER-007` | Scripts | target | missing |  | seed.json nonGoals exclude unrestricted runtime scripts; a bounded sandbox is required instead |
+| `AUTO-USER-008` | Follow-up until done | target | partial | `tests/launch-installed-schedules.mjs` | launch readiness requests and overdue-decision follow-up (MILE-004, MILE-005, NOTIFY-008; tests/launch-installed-schedules.mjs); general follow-up rules absent |
+| `AUTO-USER-009` | Automation authorship and lifetime | target | partial | `tests/user-automations.mjs`, `src/domains/automations/configuration.server.ts`, `src/domains/authority/user-delegation.server.ts` | automations fence lost authority and stop new effects (tests/user-automations.mjs; src/domains/automations/configuration.server.ts). Authoring is installation-owner only, with every approval capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Creator authoring, the non-expiring default, the owner-set policy with warnings, and reassignment are absent |
+| `AUTO-USER-010` | Email to anyone from the installation sender | target | partial | `src/domains/automations/effects.server.ts`, `src/domains/automations/contracts.ts`, `tests/user-automations.mjs` | the email action sends through the installation's Base mail sender (`MAIL_FROM`) to one operator chosen by ID, with a static subject and text, rechecking that operator's authority just before dispatch, and records an uncertain answer without resending (src/domains/automations/effects.server.ts:55; src/domains/automations/contracts.ts:7; tests/user-automations.mjs). Field and static addresses, CC and BCC, the From name, Reply-to, inserted values, Markdown, attachments, the caps, the domain policy, suppression and unsubscribe are absent |
+| `API-USER-001` | Scoped revocable keys | published | done | `tests/user-api-keys.mjs`, `src/domains/authority/user-keys-http.server.ts`, `src/domains/authority/user-delegation.server.ts` |  |
+| `API-USER-002` | Complete REST API | target | partial | `src/domains/records/routes.server.ts`, `tests/user-api-keys.mjs` | read/create/update record APIs (src/domains/records/routes.server.ts; tests/user-api-keys.mjs); delete, upsert, batch, attachments, comments, OpenAPI and personal tokens absent |
+| `API-USER-003` | OAuth for third-party apps | target | missing |  | no code |
+| `API-USER-004` | Long-lived integration keys and personal access tokens | target | partial | `tests/user-api-keys.mjs`, `src/domains/authority/user-keys.server.ts`, `src/domains/authority/user-delegation.server.ts` | scoped, digest-stored, revocable app keys with issuer fencing (tests/user-api-keys.mjs; src/domains/authority/user-keys.server.ts). Every expiry is capped at 30 days (src/domains/authority/user-delegation.server.ts:48). Non-expiring keys, personal access tokens, the owner lifetime policy, warnings and last-used times are absent |
+| `WEBHOOK-USER-001` | Private destinations and signed delivery | published | done | `tests/user-webhooks.mjs`, `src/domains/automations/destinations.server.ts` |  |
+| `WEBHOOK-USER-002` | Change subscriptions | target | missing |  | outbound automation webhooks only |
+| `MCP-001` | Live records for AI assistants | target | partial | `src/domains/authority/proposer.server.ts`, `tests/records-agent-proposals.mjs` | the RECORDS-007 proposal door has REST and MCP faces for schema proposals (src/domains/authority/proposer.server.ts:5; tests/records-agent-proposals.mjs); live-record MCP tools absent |
+| `INTEG-001` | Slack, Microsoft Teams and Nook | target | partial | `tests/user-webhooks.mjs` | Slack incoming-webhook notifications (WEBHOOK-USER-001; tests/user-webhooks.mjs); Slack app, Teams and Nook absent |
+| `INTEG-002` | Gmail and Microsoft 365 mail | target | partial | `src/adapters/gmail.server.ts` | scoped Gmail read-only intake (src/adapters/gmail.server.ts:14); Base mail sends notifications; mailbox sending and inbound addresses absent |
+| `INTEG-003` | Google Sheets and Excel | target | partial | `src/domains/records/csv.server.ts`, `tests/records-manual-roundtrip.mjs` | CSV move-in and export (src/domains/records/csv.server.ts; tests/records-manual-roundtrip.mjs); .xlsx and Google Sheets absent |
+| `INTEG-004` | Google Calendar and Outlook | target | partial | `src/adapters/calendar.server.ts` | Google Calendar reserve/cancel/readback adapter (src/adapters/calendar.server.ts:7) used by repairs; no record calendar sync; Outlook absent |
+| `INTEG-005` | CRM, development and payment systems | target | missing |  | no code |
+| `INTEG-006` | Twilio SMS | target | missing |  | no code |
+| `INTEG-007` | Zapier, Make and Crank | target | missing |  | no Zapier, Make or Crank app code. The REST record API it would use is partial (API-USER-002), and OAuth and change subscriptions are missing (API-USER-003; WEBHOOK-USER-002) |
+| `MIGRATE-001` | Airtable move-in | target | partial | `src/domains/records/base-transfer/source-api.ts`, `tests/records-import-receipt.mjs` | Airtable-shaped CSV and recorded-API import with attachment/behaviour loss receipts (src/domains/records/base-transfer/source-api.ts; tests/records-import-receipt.mjs); live connection, formula translation, attachments, comments and rebuild absent |
+| `MIGRATE-002` | Smartsheet move-in | target | missing |  | CSV path only (RECORDS-005) |
+| `MIGRATE-003` | Quickbase move-in | target | missing |  | CSV path only (RECORDS-005) |
+| `MIGRATE-004` | Spreadsheet workbook move-in | target | partial | `tests/records-import-d1.mjs` | multi-table CSV move-in with reviewed relationship mapping (RECORDS-005; tests/records-import-d1.mjs) |
+| `MIGRATE-005` | People and provenance on move-in | target | partial | `src/domains/records/base-transfer/source-kinds.ts`, `src/domains/records/base-transfer/receipt.ts`, `tests/records-import-receipt.mjs` | the Airtable recorded-API path reads collaborator, created-by and last-modified-by kinds (src/domains/records/base-transfer/source-kinds.ts:3) but keeps collaborator names as text and states that on the receipt (src/domains/records/base-transfer/receipt.ts:9; tests/records-import-receipt.mjs). Matching by email, invitation, original created and modified times, comment import and the ID map are absent |
+| `SYNC-001` | Synced tables | target | missing |  | seed.json nonGoals exclude bidirectional sync for the current release |
+| `SYNC-002` | Warehouse export | target | missing |  | no code |
+| `SNAP-001` | Automatic snapshots and point-in-time restore | target | partial | `src/domains/portability/archive.server.ts`, `src/domains/records/manual/snapshot.server.ts` | manual verified whole-installation archives (src/domains/portability/archive.server.ts) and adoption snapshots (src/domains/records/manual/snapshot.server.ts); scheduled point-in-time recovery absent |
+| `SNAP-002` | Trash | target | missing |  | record deletion previews impact (src/domains/records/delete-impact.server.ts); no trash |
+| `MOBILE-001` | Complete phone web app | target | partial | `tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs` | manual records and import journeys pass at 390 (tests/ui-records-builder.mjs; tests/ui-base-import.mjs); 320 px and the later journeys are not covered |
+| `MOBILE-002` | Installable app with camera and scanning | target | missing |  | no code |
+| `MOBILE-003` | Native iOS and Android apps | target | missing |  | seed.json nonGoals exclude native mobile applications for the current release; device-only drafts exist for repair intake only |
+| `AI-FIELD-001` | AI fields | target | missing |  | read-only analysis machinery for the launch template (src/domains/intelligence/service.server.ts) can be reused |
+| `AI-FIELD-002` | Document extraction | target | missing |  | no code |
+| `ASSIST-001` | Base assistant | target | partial | `src/domains/records/manual/proposal-agent.server.ts`, `tests/records-agent-proposals.mjs` | permissioned external schema proposals (src/domains/records/manual/proposal-agent.server.ts; tests/records-agent-proposals.mjs); in-product assistant absent |
+| `AGENT-001` | Build a working base from the owner's files | push-further | partial | `ACCEPTANCE.md`, `tests/records-agent-proposals.mjs`, `src/domains/construction/build.server.ts` | scripted proposals through the proposal door were adopted for two held-apart briefs (ACCEPTANCE.md General-purpose authoring; tests/records-agent-proposals.mjs); construction runner (src/domains/construction/build.server.ts); model-authored proposals from files not run |
+| `AGENT-002` | Test changes against live records before adoption | push-further | partial | `src/domains/records/manual/service.server.ts`, `src/domains/authority/policies.server.ts` | exact schema impact preview (src/domains/records/manual/service.server.ts:17) and policy impact preview (src/domains/authority/policies.server.ts:14); combined formula/role before-after report absent |
+| `AGENT-003` | Rebuild an incumbent app, not just its rows | push-further | partial | `src/domains/records/base-transfer/service.server.ts`, `src/domains/records/manual/proposal-agent.server.ts` | migration previews, custody and agent schema proposals (src/domains/records/base-transfer/service.server.ts; src/domains/records/manual/proposal-agent.server.ts); behaviour reconstruction absent |
+| `AGENT-004` | Operate a workflow to its outcome | push-further | partial | `src/domains/operations/worker.server.ts`, `src/domains/execution/runtime.server.ts`, `tests/repairs-outcome-http.mjs` | outcome and execution machinery for the included Repairs app (src/domains/operations/worker.server.ts; src/domains/execution/runtime.server.ts; tests/repairs-outcome-http.mjs); no general record-outcome steward |
+| `AGENT-005` | Repair broken automations and integrations | push-further | partial | `src/domains/automations/runtime.server.ts`, `src/domains/execution/runtime.server.ts` | failure history and external-effect readback (src/domains/automations/runtime.server.ts; src/domains/execution/runtime.server.ts:42); agent repair absent |
+| `AGENT-006` | Keep the data clean | push-further | missing |  | bulk preview/commit/undo exists to build on (src/domains/records/bulk.server.ts; tests/records-transport.mjs) |
+| `AGENT-007` | Agent authority | push-further | partial | `tests/records-agent-proposals.mjs`, `tests/repairs-outcome-http.mjs` | proposing keys (RECORDS-007; tests/records-agent-proposals.mjs) and repair mandates with designated-human approval (tests/repairs-outcome-http.mjs) |
+| `BOUND-001` | Separate products stay separate | target | partial | `tests/public-document-runtime.mjs` | DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product |
+| `BOUND-002` | Not a regulated system of record | target | partial | `src/domains/records/validators.ts` | no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary |
+| `BOUND-003` | Bounded compute | target | partial | `src/domains/records/formulas.ts` | formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built |
+| `BOUND-004` | Honest migration and delivery claims | target | done | `tests/records-import-receipt.mjs`, `tests/launch-installed-retries.mjs` |  |
+| `BOUND-005` | One business per installation | target | done | `tests/records-base-exits.mjs` |  |
+| `HOME-002` | Public product landing | published | done | `tests/foundation-shell.mjs`, `tests/ui-local-signin.mjs` |  |
+| `HOME-003` | Installed Lobby | published | done | `tests/installed-home.mjs`, `tests/public-document-runtime.mjs` |  |
+| `DOCS-001` | Public docs | published | done | `tests/public-document-runtime.mjs`, `tests/start-resources.mjs` |  |
+| `AUTH-BASE-001` | Install and sign in | published | done | `tests/auth-base-only-runtime.mjs`, `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs` |  |
+| `OPS-001` | Equal operators | published | done | `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs` |  |
+| `OPS-002` | Management | published | done | `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs` |  |
+| `OPS-003` | Workspace timezone | published | partial | `src/apps/launch/setup.server.ts` | no clause-tagged test yet |
+| `OPS-004` | Removing an operator | published | partial | `src/apps/launch/owners.server.ts` | no clause-tagged test yet |
+| `OPS-005` | Erasing an operator | published | partial | `src/apps/launch/erasure.server.ts` | no clause-tagged test yet |
+| `OPS-006` | Money | published | partial | `src/apps/launch/setup.server.ts` | no clause-tagged test yet |
+| `VIEW-001` | Operating surfaces | published | done | `tests/foundation-shell.mjs`, `tests/launch-authority-browser.mjs` |  |
+| `VIEW-002` | Selected detail | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `VIEW-003` | Cross-view consistency | published | partial | `src/apps/launch/reader.server.ts` | no clause-tagged test yet |
+| `VIEW-004` | Explicit states | published | done | `tests/launch-authority-browser.mjs`, `tests/ui-launch-walkthrough.mjs` |  |
+| `VIEW-005` | Search | published | done | `tests/launch-search-authority.mjs` |  |
+| `VIEW-006` | Concurrent edits | published | partial | `src/apps/launch/service-write.server.ts` | no clause-tagged test yet |
+| `VIEW-007` | Paging and order | published | done | `tests/launch-operator-doors.mjs` |  |
+| `CAMP-001` | Record | published | done | `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs` |  |
+| `CAMP-002` | Lifecycle | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `CAMP-003` | Validation | published | partial | `src/apps/launch/campaigns.server.ts` | no clause-tagged test yet |
+| `CAMP-004` | Detail and rollups | published | partial | `src/apps/launch/campaigns.server.ts` | no clause-tagged test yet |
+| `CAMP-005` | Health | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `CAMP-006` | Portfolio overview | published | partial | `src/core/features/portfolio` | no clause-tagged test yet |
+| `CAMP-007` | Grid | published | partial | `src/apps/launch/campaigns.server.ts` | no clause-tagged test yet |
+| `CAMP-008` | Custom fields | published | done | `tests/ui-launch-operator-doors.mjs` |  |
+| `CAMP-009` | Archiving | published | partial | `src/apps/launch/lifecycle.ts` | no clause-tagged test yet |
+| `CAMP-010` | Restoring | published | partial | `src/apps/launch/lifecycle.ts` | no clause-tagged test yet |
+| `CAMP-011` | Deletion | published | partial | `src/apps/launch/erasure.server.ts` | no clause-tagged test yet |
+| `CAMP-012` | Risk rating | published | partial | `src/apps/launch/campaign-projection.server.ts` | no clause-tagged test yet |
+| `CAMP-013` | Bulk edit | published | done | `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs` |  |
+| `CAMP-014` | Duplicating | published | partial | `src/apps/launch/duplicate.server.ts` | no clause-tagged test yet |
+| `DELIV-001` | Record | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DELIV-002` | Completion | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DELIV-003` | Overdue | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `MILE-001` | Record | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
+| `MILE-002` | Timeline lens | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
+| `MILE-003` | Dependencies | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
+| `MILE-004` | Readiness request | published | done | `tests/launch-installed-schedules.mjs` |  |
+| `MILE-005` | Readiness rescheduling | published | partial | `src/apps/launch/readiness.server.ts` | no clause-tagged test yet |
+| `MILE-006` | Overdue | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
+| `RISK-001` | Record | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `RISK-002` | Lifecycle | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `RISK-003` | Escalation | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `RISK-004` | Isolation | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `RISK-005` | Shipped lens | published | partial | `src/apps/launch/shipped-lenses.server.ts` | no clause-tagged test yet |
+| `DEC-001` | Record | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DEC-002` | Queue | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `DEC-003` | Approval | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `DEC-004` | First outcome wins | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DEC-005` | Assignment | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DEC-006` | Changes, rejection, and cancellation | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DEC-007` | Linked-risk effect | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DEC-008` | Finality | published | partial | `src/apps/launch/supersede.server.ts` | no clause-tagged test yet |
+| `LENS-001` | Definition | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
+| `LENS-002` | Preview | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
+| `LENS-003` | Save and share | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
+| `LENS-004` | Edit and delete | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
+| `LENS-005` | Current results | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
+| `LENS-006` | Shipped views | published | partial | `src/apps/launch/shipped-lenses.server.ts` | no clause-tagged test yet |
+| `LENS-007` | Conditions | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
+| `ACT-001` | Campaign activity | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `ACT-002` | Comments | published | partial | `src/apps/launch/comments.server.ts` | no clause-tagged test yet |
+| `ACT-003` | Dates and times | published | done | `tests/ui-launch-walkthrough.mjs` |  |
+| `ACT-004` | Mentions | published | partial | `src/apps/launch/comments.server.ts` | no clause-tagged test yet |
+| `AUTO-001` | Definition | published | partial | `src/apps/launch/automations.server.ts` | no clause-tagged test yet |
+| `AUTO-002` | Commit boundary | published | done | `tests/launch-installed-runtime.mjs` |  |
+| `AUTO-003` | One run per trigger | published | done | `tests/launch-installed-event-control.mjs`, `tests/launch-installed-runtime.mjs` |  |
+| `AUTO-004` | Definition changes | published | done | `tests/launch-installed-event-control.mjs`, `tests/launch-installed-network-cancel.mjs` |  |
+| `AUTO-005` | Loop protection | published | done | `tests/launch-installed-event-control.mjs` |  |
+| `AUTO-006` | Run history | published | partial | `src/apps/launch/automation-runtime.server.ts` | no clause-tagged test yet |
+| `AUTO-007` | Transport retry | published | done | `tests/launch-installed-retries.mjs` |  |
+| `AUTO-008` | Failure that retrying cannot fix | published | done | `tests/launch-installed-event-control.mjs` |  |
+| `AUTO-009` | Manual retry | published | done | `tests/launch-installed-retries.mjs` |  |
+| `AUTO-010` | Fan-out | published | partial | `src/apps/launch/bulk.server.ts` | no clause-tagged test yet |
+| `AUTO-011` | Shipped automations | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-schedules.mjs` |  |
+| `NOTIFY-001` | In-app events | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
+| `NOTIFY-002` | Email delivery | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
+| `NOTIFY-003` | Delivery failure | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
+| `NOTIFY-004` | Digest | published | done | `tests/launch-installed-schedules.mjs` |  |
+| `NOTIFY-005` | Inbox | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
+| `NOTIFY-006` | One per event | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
+| `NOTIFY-007` | Muting | published | partial | `src/ui/settings/preferences-panel.tsx` | no clause-tagged test yet |
+| `NOTIFY-008` | Overdue decisions | published | done | `tests/launch-installed-schedules.mjs` |  |
+| `AI-001` | Analyses | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-ui.mjs` |  |
+| `AI-002` | Context | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-event-control.mjs` |  |
+| `AI-003` | Human control | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-ui.mjs` |  |
+| `AI-004` | Provider and failure | published | done | `tests/launch-installed-ai-failures.mjs` |  |
+| `AI-005` | Usage | published | done | `tests/launch-installed-ai-failures.mjs` |  |
+| `AI-006` | Daily ceiling | published | done | `tests/launch-installed-ai-failures.mjs` |  |
+| `IMPORT-001` | CSV preview | published | done | `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs` |  |
+| `IMPORT-002` | Merge keys | published | done | `tests/launch-operator-doors.mjs` |  |
+| `IMPORT-003` | Commit | published | done | `tests/launch-operator-doors.mjs` |  |
+| `IMPORT-004` | Replay and staleness | published | done | `tests/launch-operator-doors.mjs` |  |
+| `IMPORT-005` | Stored file | published | done | `tests/launch-operator-doors.mjs` |  |
+| `SET-001` | Settings area | published | done | `tests/ui-launch-operator-doors.mjs` |  |
+| `SET-002` | AI configuration | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-ui.mjs` |  |
+| `SET-003` | First run and sample data | published | done | `tests/launch-operator-doors.mjs` |  |
+| `DATA-001` | Export contents | published | partial | `src/domains/portability/archive.server.ts` | no clause-tagged test yet |
+| `DATA-002` | CSV export | published | done | `tests/ui-launch-operator-doors.mjs` |  |
+| `DATA-003` | Capacity limits | published | partial | `src/apps/launch/storage.server.ts` | no clause-tagged test yet |
