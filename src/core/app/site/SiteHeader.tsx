@@ -7,7 +7,7 @@ import './site.css'
 
 export type SitePage = 'home' | 'docs'
 
-/** The header of every public page, `/` and `/docs` alike: the lockup (a link home everywhere but home), Docs, Source and, on an installed instance, the Sign in pill. */
+/** The header of every public page, `/` and `/docs` alike: the lockup (a link home everywhere but home), Docs, Contract (the run site only; an installation does not serve it), Source and, on an installed instance, the Sign in pill. */
 export function SiteHeader({ productName, page }: { productName: string; page: SitePage }) {
   const site = useSiteVariant() === 'site'
   const lockup = <BrandLockup name={productName} variant="paper" />
@@ -20,6 +20,7 @@ export function SiteHeader({ productName, page }: { productName: string; page: S
         {site
           ? <a href="/docs" aria-current={page === 'docs' ? 'page' : undefined}>Docs</a>
           : <Link to="/docs" aria-current={page === 'docs' ? 'page' : undefined}>Docs</Link>}
+        {site && <a href="/contract">Contract</a>}
         <a href={sourceUrl}>Source</a>
         {!site && <Link className="site-signin" to="/signin">Sign in</Link>}
       </nav>

@@ -1,8 +1,9 @@
 // The run site `rer build --site` writes for run-cradle.com: the approved homepage with its Run Cradle action, /run,
-// the docs and the not-found page, plus the public files they use. It reads no installation data, only the
+// the docs, /contract from CONTRACT.md and the not-found page, plus the public files they use. It reads no installation data, only the
 // configuration in src/ext/config.ts, edition identity and Run data.
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { contractPageHtml } from '../base/contract-page'
 import { runPageHtml, siteNotFoundHtml, type SiteBuild, type SiteContext } from '../base/run-site'
 import { seedConfig } from '../ext/config'
 import { identity } from '../identity'
@@ -16,7 +17,7 @@ import '../core/app/styles.css'
 
 const description = 'A self-hosted records builder for one business: typed records, relationships, forms and saved views in a private workspace you run and change yourself. 100% free, open source alternative to Airtable and Smartsheet.'
 
-export async function sitePages({ styles }: SiteContext): Promise<SiteBuild> {
+export async function sitePages({ styles, contract }: SiteContext): Promise<SiteBuild> {
   const document = (title: string, summary: string, body: ReactElement) => '<!doctype html>' + renderToStaticMarkup(
     <html lang="en"><head><meta charSet="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><meta name="description" content={summary} />
       <link rel="preload" href="/fonts/lexend.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
@@ -34,10 +35,11 @@ export async function sitePages({ styles }: SiteContext): Promise<SiteBuild> {
   return {
     pages: [
       { path: '/', html: document(`${seedConfig.productName}, a self-hosted records builder`, description, <Landing productName={seedConfig.productName} landingMessage={seedConfig.landingMessage} showCredit={seedConfig.showPoweredByCredit} />) },
-      { path: '/run', html: runPageHtml(identity, run) },
+      { path: '/run', html: runPageHtml(identity, run, contract) },
+      ...(contract ? [{ path: '/contract', html: contractPageHtml(identity, run, contract) }] : []),
       { path: '/docs', html: await page('') },
       ...await Promise.all(slugs.map(async slug => ({ path: `/docs/${slug}`, html: await page(slug) }))),
-      { path: '/404', html: siteNotFoundHtml(identity, run) },
+      { path: '/404', html: siteNotFoundHtml(identity, run, contract) },
     ],
     assets: ['rer-theme.css', 'fonts', 'brand', 'favicon.ico', 'apple-touch-icon.png'],
   }
