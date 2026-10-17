@@ -4,9 +4,10 @@ import { BoardCard, type BoardColumn } from './board-card'
 import { useGridHistory } from './grid-history'
 import { primaryRecordField } from './record-label'
 import './record-board.css'
+import type { ViewMatch } from './find-in-view'
 
 /** Both the table switcher and saved boards use the same policy-checked table history. */
-export function RecordBoard({ schema, rows, visible, boardFieldId, titleFieldId, name }: { schema: EntitySchema; rows: RecordRow[]; visible: string[]; boardFieldId: string; titleFieldId?: string; name: string }) {
+export function RecordBoard({ schema, rows, visible, boardFieldId, titleFieldId, name, match }: { schema: EntitySchema; rows: RecordRow[]; visible: string[]; boardFieldId: string; titleFieldId?: string; name: string; match?: ViewMatch | null }) {
   const history = useGridHistory(), instructions = useId()
   const dragging = useRef<RecordRow | null>(null)
   const [over, setOver] = useState<string | null>(null)
@@ -38,7 +39,7 @@ export function RecordBoard({ schema, rows, visible, boardFieldId, titleFieldId,
         }}>
         <h3>{column.label} <span className="cr-muted" aria-hidden="true">{column.rows.length}</span></h3>
         {!column.rows.length && <p className="cr-muted cr-board-empty">No records on this page</p>}
-        {column.rows.map(record => <BoardCard key={`${field.id}:${record.id}:${record.version}`} schema={schema} record={record} field={field} titleFieldId={title} visible={visible} columns={columns} busy={history.busy} writable={writable(record)} onMove={column => void move(record, column)}
+        {column.rows.map(record => <BoardCard key={`${field.id}:${record.id}:${record.version}`} schema={schema} record={record} field={field} titleFieldId={title} visible={visible} columns={columns} busy={history.busy} writable={writable(record)} match={match} onMove={column => void move(record, column)}
           onDragStart={event => {
             if (!writable(record) || history.busy || event.target instanceof HTMLElement && event.target.closest('a,button,input,textarea,select')) { event.preventDefault(); return }
             dragging.current = record; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-cradle-board-record', record.id)

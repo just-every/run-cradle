@@ -196,3 +196,8 @@
 .cr-comment-body { white-space: pre-wrap; overflow-wrap: anywhere; }
 .cr-record-comments .cr-detail, .cr-history-restore { overflow-wrap: anywhere; }
 .cr-history-restore { margin-bottom: 16px; }
+
+.cr-view-match { background: #ffed9c; color: #332600; outline: 2px solid #9b6500; outline-offset: 2px; border-radius: 2px; scroll-margin: 80px; }
+/* Selected calendar fields need enough room to remain readable inside its scroll region. */
+.cr-records-page .cr-calendar-grid { grid-template-columns: repeat(7, minmax(160px, 1fr)); min-width: 1120px; }
+.cr-records-page .cr-calendar-day { overflow-wrap: anywhere; }

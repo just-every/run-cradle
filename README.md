@@ -52,7 +52,7 @@ npx -y @runeditrun/rer dev just-every/run-cradle
 
 No Node? `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-cradle` does the same, and the installer brings its own Node. To set Cradle up without starting it, use `setup` in place of `dev`.
 
-The checkout runs Cradle's pinned **rer 0.2.43**. To start it again later, run
+The checkout runs Cradle's pinned **rer 0.2.50**. To start it again later, run
 `cd run-cradle && rer dev`. The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
 (`owner@run-cradle.test`), applies the migrations, starts the app and prints
 `RER_READY` with its local URL, `RER_SIGNED_IN` and `RER_OPEN`. Open the `RER_OPEN`
@@ -134,10 +134,10 @@ rer dev
 
 Import requires an empty destination and explicit confirmation. DB business
 cells, including recomputed generated columns, and FILES bytes/metadata transfer.
-Credentials, sessions, outbox and private settings do not. Imported definitions
+Credentials, sessions and private settings do not. Imported definitions
 and effects are held or disabled until separately approved. See
 [installation archives](docs/installation-archives.md) for the exact policy.
-Reset removes only inventoried local data, settings, owner, outbox and drafts;
+Reset removes only inventoried local data, settings, owner and drafts;
 source, dependencies, exports and deployment receipts survive.
 
 ## Build and host

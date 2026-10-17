@@ -1,4 +1,5 @@
 import {boardBrowserJourney} from './helpers/records-board-journey.mjs'
+import {findBrowserJourney} from './helpers/records-find-journey.mjs'
 import {contract} from './contract.mjs'
 import {relationFixture,relationReview} from './helpers/records-browser-relations.mjs'
 import {homeReview, builderReview, gridReview, gridEdgeReview} from './helpers/records-browser-review.mjs'
@@ -49,6 +50,7 @@ try{
   await j.table('Contacts');await j.record({Contact:'Alex',Email:'alex@example.test','Company link':{link:'Acme 北, "Co"'}});await j.capture('contacts')
   await j.table('Deals');await j.record({Deal:'First deal',Value:'0','Close date':'2027-01-15',Approved:false,Stage:{select:'New'},'Company link':{link:'Acme 北, "Co"'}});await j.record({Deal:'Second deal',Value:'125.25',Stage:{select:'Qualified'}});await j.record({Deal:'Third deal',Value:'200',Stage:{select:'New'}});await gridReview(page,j);await j.capture('deals')
   const views=await exerciseViews(page,j);views.additional=await additionalViews(page,j,h.origin,result.appId);await exerciseSchemaEdit(page,j,h.origin,result.appId);const csv=await exerciseCsv(page,j,h.origin,width);const templates=await exerciseTemplates(page,j,h.origin,width);await gridEdgeReview(page,j,h.origin,width);await boardBrowserJourney(page,j,h,width);await verifyRetained();await page.goto(h.origin+'/app');await page.getByText('Launch readiness template',{exact:true}).waitFor();await j.capture('populated-home')
+  await findBrowserJourney(page,j,h)
   receipts.push({views,templates,csv,width,baseId:result.appId,companyId:company.id,pageErrors:j.errors,checkpoints:j.checkpoints})
   await context.close()
  }

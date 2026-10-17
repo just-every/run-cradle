@@ -7,10 +7,10 @@ import { installKeyboardInteractions } from './accessibility-keyboard.mjs'
 export function recordsJourney(page,origin,output,width,{allAxe=false}={}){
  installKeyboardInteractions(page)
  const checkpoints=[],errors=[];let previews=0;page.on('pageerror',e=>errors.push(e.message))
- async function capture(name){
+ async function capture(name,{viewport=false}={}){
   await page.waitForLoadState('networkidle')
   await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'))
-  await page.evaluate(()=>scrollTo(0,0))
+  if(!viewport)await page.evaluate(()=>scrollTo(0,0))
   if(!accessibilityCaptureOnly)assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name}: page overflow`)
 
   let report,layout,evidence
@@ -29,7 +29,7 @@ export function recordsJourney(page,origin,output,width,{allAxe=false}={}){
 
   assert.deepEqual(errors,[],`${name}: page errors`)
   assert.equal(await page.locator('.cr-state[aria-busy="false"]').count(),0,`${name}: failed resource`)
-  if(!accessibilityEvidence)await page.screenshot({path:path.join(output,`${name}-${width}.png`),fullPage:true})
+  if(!accessibilityEvidence)await page.screenshot({path:path.join(output,`${name}-${width}.png`),fullPage:!viewport})
   checkpoints.push({
    name,width,serious:0,critical:0,pageOverflow:layout?.pageOverflow??false,
    ...(evidence?{

@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "date": "2026-10-16",
+  "date": "2026-10-18",
   "contractChanges": {
     "AUTO-007": {
       "change": "added",
@@ -53,6 +53,10 @@
     "RECORDS-006": {
       "change": "changed",
       "summary": "Settings prepares and downloads a verified installation .rer archive using the maintained CLI portability format and privacy policy. Only the current installation owner has this door; credentials and private connections remain excluded, and source is kept separately."
+    },
+    "VIEW-016": {
+      "change": "changed",
+      "summary": "Completes find navigation over all current record view displays. The selected readable cell is highlighted and scrolled into view across pages; calendar/timeline/agenda render their selected fields. A 5,000-order emitted-Worker journey covers desktop and phone. No authority, data model or contract guarantee changes."
     }
   },
   "extensionPointChanges": [],
