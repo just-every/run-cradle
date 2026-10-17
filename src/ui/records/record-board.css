@@ -1,0 +1,10 @@
+.cr-board-workspace, .cr-board-history { min-width: 0; }
+.cr-board-workspace > p { margin: 0 0 16px; font-size: 14px; }
+.cr-board-history { margin-bottom: 16px; }
+.cr-board-column--over { outline: 2px solid var(--ink); outline-offset: -2px; }
+.cr-board-card[draggable="true"] { cursor: grab; }
+.cr-board-card[draggable="true"]:active { cursor: grabbing; }
+.cr-board-card a, .cr-board-card button, .cr-board-card select { cursor: pointer; }
+.cr-board-move { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin-top: 16px; }
+.cr-board-move .cr-field { flex: 1 1 140px; margin: 0; }
+.cr-board-readonly, .cr-board-empty { font-size: 13px; }

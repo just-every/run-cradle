@@ -38,7 +38,7 @@ export function GridHistoryProvider({ schema, children }: { schema: EntitySchema
   const history: History = { clearFeedback: command.reset, busy, canUndo: !!undo.length && !busy, canRedo: !!redo.length && !busy,
     execute: (rows, records) => send({ rows, expected: records.filter(row => rows.some(item => item.recordId === row.id)).map(row => ({ ref: row.ref, version: row.version })) }, 'edit'),
     undo: () => { if (undo.length) void send(undo.at(-1)!, 'undo') }, redo: () => { if (redo.length) void send(redo.at(-1)!, 'redo') },
-    feedback: <><CommandFeedback {...command} />{command.result.state === 'failed' && command.result.error.detail.issues && <ul className="cr-notice" role="alert">{command.result.error.detail.issues.map((issue, index) => <li key={index}>{issue.message}</li>)}</ul>}</> }
+    feedback: <><CommandFeedback {...command} />{command.result.state === 'failed' && command.result.error.detail.issues && <div className="cr-notice" role="alert"><ul>{command.result.error.detail.issues.map((issue, index) => <li key={index}>{issue.message}</li>)}</ul></div>}</> }
   return <Context.Provider value={history}>{children}</Context.Provider>
 }
 export function useGridHistory() { const value = useContext(Context); if (!value) throw Error('Grid history needs a table.'); return value }
