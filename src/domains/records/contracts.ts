@@ -34,6 +34,7 @@ export type Expr = {
 } | {
     kind: 'literal';
     value: CellValue;
+    valueType?: 'number';
 } | {
     kind: 'call';
     fn: string;
@@ -42,7 +43,8 @@ export type Expr = {
     kind: 'rollup';
     relationFieldId: Id;
     valueFieldId: Id;
-    aggregate: 'sum' | 'count' | 'min' | 'max' | 'average' | 'lookup';
+    aggregate: 'sum' | 'count' | 'counta' | 'countall' | 'min' | 'max' | 'average' | 'lookup' | 'arrayjoin' | 'arrayunique' | 'and' | 'or';
+    separator?: string;
     filter?: Filter;
 };
 export type Field = {
@@ -63,7 +65,7 @@ export type Field = {
         onDelete: 'restrict' | 'unlink' | 'cascade';
     };
     expression?: Expr;
-    resultType?: Field['type'];
+    resultType?: Field['type'] | 'array';
 };
 export type EntitySchema = Versioned & {
     primaryFieldId?: Id;

@@ -1,0 +1,29 @@
+import type { EntitySchema, Expr } from './contracts'
+import type { PolicyPort, PolicyScope, RequestContext } from '../authority/ports'
+import type { DescriptorRegistry } from './descriptors.server'
+import { filterFields } from './filter.server'
+/** Formula definitions can themselves disclose hidden dependency IDs, options or constants. */
+export async function visibleCalculationSchema(ctx: RequestContext, schema: EntitySchema, scope: PolicyScope, registry: DescriptorRegistry, policy: PolicyPort): Promise<EntitySchema> {
+  async function visible(expr: Expr, current: EntitySchema, own: PolicyScope, depth = 0): Promise<boolean> {
+    if (depth > 64) return false
+    if (expr.kind === 'literal') return true
+    if (expr.kind === 'call') return (await Promise.all(expr.args.map(arg => visible(arg,current,own,depth+1)))).every(Boolean)
+    const id = expr.kind === 'field' ? expr.fieldId : expr.relationFieldId
+    if (!own.readableFieldIds.includes(id)) return false
+    const dependency = current.fields.find(f=>f.id===id)
+    if (expr.kind === 'field') return !dependency?.expression || visible(dependency.expression,current,own,depth+1)
+    if (!dependency?.relation || !own.discoverableRelations.includes(id)) return false
+    try {
+      const target = registry.get(dependency.relation.ownerAppId,dependency.relation.entityId).schema
+      const targetScope = await policy.scope(ctx,{appId:target.appId,entityId:target.id,purpose:'read'})
+      if (!targetScope.readableFieldIds.includes(expr.valueFieldId) || filterFields(expr.filter).some(id=>!targetScope.readableFieldIds.includes(id))) return false
+      const value = target.fields.find(f=>f.id===expr.valueFieldId)
+      return !value?.expression || visible(value.expression,target,targetScope,depth+1)
+    } catch(error) { if(error instanceof Error && 'code' in error && ['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code))) return false; throw error }
+  }
+  const fields = await Promise.all(schema.fields.map(async field => {
+    if (!field.expression || await visible(field.expression,schema,scope)) return field
+    const {expression,options,...safe} = field; return safe
+  }))
+  return {...schema,fields}
+}

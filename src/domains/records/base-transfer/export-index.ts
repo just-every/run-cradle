@@ -21,8 +21,8 @@ export function exportIndex(base: PortableBase['base']) {
  function scalar(field: PortableField, value: unknown): string {
   if (value === null) return ''
   if (field.type === 'select' || field.type === 'computed' && field.resultType === 'select') return options.get(field.id)!.get(String(value))!
-  if (field.type === 'boolean') return value ? 'checked' : ''
-  return String(value)
+  if (field.type === 'boolean' || field.type === 'computed' && field.resultType === 'boolean') return value ? 'checked' : ''
+  return Array.isArray(value)?JSON.stringify(value):String(value)
  }
  return { tables, records, incoming, scalar }
 }

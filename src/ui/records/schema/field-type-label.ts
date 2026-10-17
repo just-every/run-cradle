@@ -1,3 +1,4 @@
+import { calculationKind } from '../../../domains/records/calculation-schema'
 import type { Field } from '../../../domains/records/contracts'
 
 export const manualFieldTypes = [
@@ -9,9 +10,9 @@ export const manualFieldTypes = [
 // Change prose remains authoritative; only a known added field's type is presented.
 export function impactChangeLabel(change: string, fields: Field[]) {
   for (const field of fields) {
-    const type = field.type === 'computed' ? 'lookup' : field.type
+    const type = field.type === 'computed' ? calculationKind(field) : field.type
     if (change === `Add ${field.label} (${type})`) {
-      const label = manualFieldTypes.find(([value]) => value === field.type)?.[1]
+      const label = field.type==='computed'?fieldTypeLabel(field):manualFieldTypes.find(([value]) => value === field.type)?.[1]
       return `Add ${field.label} (${label ?? type})`
     }
   }
@@ -21,5 +22,6 @@ export function impactChangeLabel(change: string, fields: Field[]) {
 const otherFieldTypes: Partial<Record<Field['type'], string>> = { instant: 'Date and time', money: 'Money', multi_select: 'Multi-select', person: 'Person', attachment: 'Attachment' }
 /** The type subtitle a table header shows under each field name. */
 export function fieldTypeLabel(field: Field) {
+  if(field.type==='computed'){if(!field.expression)return 'Calculated';if(field.expression.kind!=='rollup')return 'Formula';return field.expression.aggregate==='lookup'?'Lookup':field.expression.aggregate==='countall'?'Count':'Rollup'}
   return manualFieldTypes.find(([value]) => value === field.type)?.[1] ?? otherFieldTypes[field.type] ?? field.type
 }

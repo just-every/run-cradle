@@ -1,3 +1,4 @@
+import { visibleCalculationSchema } from './calculation-visibility.server';
 import { LAUNCH_APP_ID } from '../../apps/launch/contracts';
 import { formMappingKey,type FormActionMapping } from './forms.server';
 import { createCursorCodec } from './cursor.server';
@@ -68,7 +69,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         const fields = [...new Set([...(input.fields ?? view.fields), ...groupBy, ...Object.values(view.layout)])];
         const query = querySchema.parse({ ...input, fields, sort: input.sort ?? view.sort, filter: input.filter ? { kind: 'all', conditions: [view.filter, input.filter] } : view.filter, groupBy });
         const records = await reader.query(ctx, scope, query), groups = await reader.groups(ctx, scope, query);
-        return { view, schema: { ...descriptors.get(view.appId, view.entityId).schema, fields: descriptors.get(view.appId, view.entityId).schema.fields.filter(f => scope.readableFieldIds.includes(f.id)) }, records, groups };
+        return { view, schema: await visibleCalculationSchema(ctx,{ ...descriptors.get(view.appId, view.entityId).schema, fields: descriptors.get(view.appId, view.entityId).schema.fields.filter(f => scope.readableFieldIds.includes(f.id)) },scope,descriptors,policy), records, groups };
     }
     return {
         checkedView, readView, prepareView, viewQuery,readForm,registerFormAction,formAction,
@@ -97,7 +98,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         async entities(ctx: RequestContext, appId: string): Promise<EntitySchema[]> { const out: EntitySchema[] = []; for (const d of descriptors.list(appId)) {
             try {
                 const scope = await policy.scope(ctx, { appId, entityId: d.schema.id, purpose: 'read' });
-                out.push({ ...d.schema, fields: d.schema.fields.filter(f => scope.readableFieldIds.includes(f.id) || scope.writableFieldIds.includes(f.id)).map(f => ({ ...f, readOnly: f.readOnly || d.writePolicy?.patch === false || d.writePolicy?.protectedFieldIds?.includes(f.id) || !scope.writableFieldIds.includes(f.id) })) });
+                out.push(await visibleCalculationSchema(ctx,{ ...d.schema, fields: d.schema.fields.filter(f => scope.readableFieldIds.includes(f.id) || scope.writableFieldIds.includes(f.id)).map(f => ({ ...f, readOnly: f.readOnly || d.writePolicy?.patch === false || d.writePolicy?.protectedFieldIds?.includes(f.id) || !scope.writableFieldIds.includes(f.id) })) },scope,descriptors,policy));
             }
             catch (error) {
                 if (!(error instanceof Error) || !('code' in error) || error.code !== 'forbidden')

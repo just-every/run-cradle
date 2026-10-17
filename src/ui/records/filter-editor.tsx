@@ -1,7 +1,7 @@
 import type { EntitySchema, Filter } from '../../domains/records/contracts'
 import { FieldInput } from './record-fields'
 const words: Record<string, string> = { eq: 'equals', ne: 'does not equal', in: 'is one of', contains: 'contains', empty: 'is empty', not_empty: 'is not empty', before: 'is before', after: 'is after', next_days: 'is within the next days' }
-export function FilterEditor({ schema, filter, onChange, depth = 0 }: { schema: EntitySchema; filter: Filter; onChange: (filter: Filter) => void; depth?: number }) {
+export function FilterEditor({ schema, filter, onChange, depth = 0 }: { schema: Pick<EntitySchema,'appId'|'fields'>; filter: Filter; onChange: (filter: Filter) => void; depth?: number }) {
   if (filter.kind === 'condition') {
     const field = schema.fields.find(field => field.id === filter.fieldId)
     const ops = ['eq', 'ne', 'empty', 'not_empty', ...(field?.type === 'text' ? ['contains'] : []), ...(['date', 'instant'].includes(field?.type ?? '') ? ['before', 'after', 'next_days'] : [])]

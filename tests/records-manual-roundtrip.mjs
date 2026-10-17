@@ -1,3 +1,4 @@
+import {calculationJourney} from './helpers/records-calculation-journey.mjs'
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {harness,add} from './helpers/records-manual-harness.mjs'
@@ -64,7 +65,7 @@ test('RECORDS-001 RECORDS-004 fresh table CSV restores nullable select labels, r
  }finally{h.close()}
 })
 
-test('RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and board survive field removal and export current view CSV, base JSON and all-table CSV through HTTP',async()=>{
+test('CALC-001 CALC-003 CALC-004 RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and board survive field removal and export current view CSV, base JSON and all-table CSV through HTTP',async()=>{
  const h=await harness();try{
   const {draft,r}=await h.create(),company=r.registry.get(draft.appId,draft.tables[0].id).schema,schema=r.registry.get(draft.appId,draft.tables[2].id).schema,[key,amount,group,due,won,link]=schema.fields
   const northgate=await add(h,r,company,{[company.fields[0].id]:'Northgate'})
@@ -105,6 +106,7 @@ test('RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and
   await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run();live=await h.runtime()
   await call(recordsCsvHttp(live.csv,auth),'/api/v1/records/export-csv',{appId:draft.appId,entityId:schema.id,viewId:grid.id,query:{}},403)
   await call(baseExportHttp(createBaseExport(h.db,live.services),auth),'/api/v1/records/base-export',{appId:draft.appId,format:'json'},403)
+  await calculationJourney(h)
  }finally{h.close()}
 })
 

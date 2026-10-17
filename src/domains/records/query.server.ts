@@ -83,7 +83,7 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
             return { action: item.action, enabled: false, reason: 'Current authority does not permit this action.', requiredDecisionId: null };
         throw error;
     } })); }
-    async function render(ctx: RequestContext, scope: PolicyScope, d: EntityDescriptor, row: Record<string, unknown>, selected?: string[], path = new Set<string>()): Promise<RecordRow> {
+    async function render(ctx: RequestContext, scope: PolicyScope, d: EntityDescriptor, row: Record<string, unknown>, selected?: string[], path = new Set<string>(), purpose: 'read' | 'export' = 'read'): Promise<RecordRow> {
         enforce(ctx, scope, d);
         const ref = { appId: d.schema.appId, entityId: d.schema.id, recordId: String(row[d.idColumn]) };
         const key = ref.appId + ':' + ref.entityId + ':' + ref.recordId;
@@ -105,24 +105,28 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
                 if (path.has(fieldKey) || path.size >= 64)
                     return unavailable('dependency_limit', [id], 'Formula cycle or depth exceeds 64');
                 const nextPath = new Set(path).add(fieldKey);
-                return evaluateExpression(storage.field.expression!, { field: async (dep) => { if (dep === id)
-                        return unavailable('dependency_limit', [id], 'Formula cycle'); return cell(dep); }, rollup: async (relId, valId, filter) => {
+                return evaluateExpression(storage.field.expression!, { sourceOptions:(relId,valId)=>{const relation=d.fields.get(relId)?.field.relation;return relation?registry.get(relation.ownerAppId,relation.entityId).fields.get(valId)?.field.options:undefined}, sourceType:(relId,valId)=>{const relation=d.fields.get(relId)?.field.relation;if(!relation)return;const field=registry.get(relation.ownerAppId,relation.entityId).fields.get(valId)?.field;return field?.type==='computed'?field.resultType:field?.type}, field: async (dep) => { if (dep === id)
+                        return unavailable('dependency_limit', [id], 'Formula cycle'); const result=await cell(dep),source=d.fields.get(dep)?.field;
+                        if(result.state==='value'&&result.value!==null&&(source?.type==='select'||source?.type==='computed'&&source.resultType==='select')){const option=source.options?.find(option=>option.id===result.value);return option?{state:'value',value:option.label}:unavailable('invalid_source',[dep],'Source select option is unavailable');}return result; }, rollup: async (relId, valId, filter, countOnly) => {
                         const relation = d.fields.get(relId);
                         if (!relation?.field.relation || !scope.discoverableRelations.includes(relId) || !scope.readableFieldIds.includes(relId))
                             return [{ state: 'redacted', reason: 'policy' }];
                         const refs = await linked(relation);
-                        if (refs.length > 10000)
-                            return Array.from({ length: 10001 }, () => ({ state: 'value' as const, value: null }));
+                        if (!refs.length) return [];
                         const target = registry.get(relation.field.relation.ownerAppId, relation.field.relation.entityId);
-                        const targetScope = await policy.scope(ctx, { appId: target.schema.appId, entityId: target.schema.id, purpose: 'read' });
-                        if (!targetScope.readableFieldIds.includes(valId))
+                        let targetScope: PolicyScope;
+                        try { targetScope = await policy.scope(ctx, { appId: target.schema.appId, entityId: target.schema.id, purpose }); }
+                        catch (error) { if (error instanceof Error && 'code' in error && ['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code))) return [{state:'redacted',reason:'policy'}]; throw error; }
+                        if ((!countOnly && !targetScope.readableFieldIds.includes(valId)) || filterFields(filter).some(id=>!targetScope.readableFieldIds.includes(id)))
                             return [{ state: 'redacted', reason: 'policy' }];
                         const where = and(targetScope.rowPredicate, ...targetScope.currentAuthorityGuards, trustedPredicate(`${identifier(target.idColumn)} IN (SELECT value FROM json_each(?))`, [JSON.stringify(refs.map(r => r.recordId))]), compileFilter(target, targetScope, filter));
                         const targetRows = await db.prepare(`SELECT * FROM ${identifier(target.table.tableId)} WHERE ${where.sql} LIMIT 10001`).bind(...where.values).all<Record<string, unknown>>();
+                        const order=new Map(refs.map((ref,index)=>[ref.recordId,index]));targetRows.results.sort((a,b)=>order.get(String(a[target.idColumn]))!-order.get(String(b[target.idColumn]))!);
+                        if (countOnly) return targetRows.results.map(()=>({state:'value' as const,value:null}));
                         const valueStorage = target.fields.get(valId)!;
                         if (valueStorage.field.type !== 'computed' && !valueStorage.join && valueStorage.field.type !== 'relation')
                             return targetRows.results.map(row => ({ state: 'value' as const, value: decode(valueStorage, row) }));
-                        return Promise.all(targetRows.results.map(async (row) => (await render(ctx, targetScope, target, row, [valId], nextPath)).fields[valId]!));
+                        return Promise.all(targetRows.results.map(async (row) => (await render(ctx, targetScope, target, row, [valId], nextPath, purpose)).fields[valId]!));
                     } });
             }
             if (storage.field.type === 'relation')
@@ -143,7 +147,7 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
         return { id: ref.recordId, version: Number(row[d.versionColumn]), createdAt: String(row[d.createdColumn]), updatedAt: String(row[d.updatedColumn]), ref, schemaVersion: Number(row[d.schemaVersionColumn]), lifecycle: String(row[d.lifecycleColumn]), fields, allowedActions: await actions(ctx, scope, d, ref, Number(row[d.versionColumn]), String(row[d.lifecycleColumn])) };
     }
     /** Returns null when a commit lands while the page is read; the caller reads again from a fresh revision. */
-    async function executeQuery(ctx: RequestContext, scope: PolicyScope, input: Query): Promise<Page<RecordRow> | null> {
+    async function executeQuery(ctx: RequestContext, scope: PolicyScope, input: Query, purpose: 'read' | 'export'): Promise<Page<RecordRow> | null> {
         const q = querySchema.parse(input), d = registry.get(scope.appId, scope.entityId);
         // Group ordering is part of the query, so grid pages and exports share the same sequence.
         if (q.groupBy?.length) { const sort=q.sort??[]; q.sort=[...q.groupBy.map(fieldId=>({fieldId,direction:sort.find(s=>s.fieldId===fieldId)?.direction??'asc' as const})),...sort.filter(s=>!q.groupBy!.includes(s.fieldId))]; }
@@ -171,7 +175,7 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
         if (evaluated) {
             const rawRows = await db.prepare(`SELECT * FROM ${identifier(d.table.tableId)} WHERE ${where.sql}`).bind(...where.values).all<Record<string, unknown>>();
             const selected = [...new Set([...(q.fields ?? d.schema.fields.map(f => f.id)), ...used])];
-            const rendered = await Promise.all(rawRows.results.map(row => render(ctx, scope, d, row, selected)));
+            const rendered = await Promise.all(rawRows.results.map(row => render(ctx, scope, d, row, selected, new Set(), purpose)));
             const numeric = new Set(d.schema.fields.filter(f => f.type === 'number' || f.type === 'computed' && f.resultType === 'number').map(f => f.id));
             const filtered = rendered.filter(row => matchesFilter(row, q.filter, numeric, new Date().toISOString()));
             sortRecords(filtered, q.sort ?? [], numeric);
@@ -181,7 +185,7 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
             return { items, nextCursor: offset + limit < filtered.length ? await cursor.encode({ binding, revision: rev, offset: offset + limit }) : null, total: { kind: filtered.length > 10000 ? 'at_least' : 'exact', value: Math.min(filtered.length, 10000) }, evaluatedAt: new Date().toISOString() };
         }
         const [rows, count] = await db.batch([db.prepare(`SELECT * FROM ${identifier(d.table.tableId)} WHERE ${where.sql} ORDER BY ${sort.join(',')} LIMIT ? OFFSET ?`).bind(...where.values, limit + 1, offset), db.prepare(`SELECT COUNT(*) AS total FROM (SELECT 1 FROM ${identifier(d.table.tableId)} WHERE ${where.sql} LIMIT 10001)`).bind(...where.values)]);
-        const items = await Promise.all((rows!.results as Record<string, unknown>[]).slice(0, limit).map(row => render(ctx, scope, d, row, q.fields)));
+        const items = await Promise.all((rows!.results as Record<string, unknown>[]).slice(0, limit).map(row => render(ctx, scope, d, row, q.fields, new Set(), purpose)));
         if (await revision() !== rev)
             return null;
         const total = Number((count!.results[0] as {
@@ -189,9 +193,9 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
         }).total);
         return { items, nextCursor: rows!.results.length > limit ? await cursor.encode({ binding, revision: rev, offset: offset + limit }) : null, total: { kind: total > 10000 ? 'at_least' : 'exact', value: Math.min(total, 10000) }, evaluatedAt: new Date().toISOString() };
     }
-    async function query(ctx: RequestContext, scope: PolicyScope, input: Query): Promise<Page<RecordRow>> { try {
+    async function query(ctx: RequestContext, scope: PolicyScope, input: Query, purpose: 'read' | 'export' = 'read'): Promise<Page<RecordRow>> { try {
         for (let attempt = 0; attempt < 3; attempt++) {
-            const page = await executeQuery(ctx, scope, input);
+            const page = await executeQuery(ctx, scope, input, purpose);
             if (page)
                 return page;
         }

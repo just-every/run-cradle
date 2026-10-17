@@ -161,6 +161,9 @@
                       ],
                       "additionalProperties": false
                     },
+                    "expression": {
+                      "$ref": "#/$defs/__schema0"
+                    },
                     "resultType": {
                       "type": "string",
                       "enum": [
@@ -169,7 +172,8 @@
                         "number",
                         "date",
                         "boolean",
-                        "select"
+                        "select",
+                        "array"
                       ]
                     }
                   },
@@ -248,10 +252,50 @@
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                              "maxLength": 100000
                             }
                           }
                         ]
+                      }
+                    },
+                    "calculationErrors": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "enum": [
+                              "invalid_source",
+                              "dependency_limit",
+                              "rollup_limit",
+                              "mixed_currency",
+                              "stale_rate"
+                            ]
+                          },
+                          "fieldIds": {
+                            "maxItems": 200,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                            }
+                          },
+                          "message": {
+                            "type": "string",
+                            "maxLength": 100000
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "fieldIds",
+                          "message"
+                        ],
+                        "additionalProperties": false
                       }
                     }
                   },
@@ -314,7 +358,7 @@
                 }
               },
               "filter": {
-                "$ref": "#/$defs/__schema0"
+                "$ref": "#/$defs/__schema1"
               },
               "sort": {
                 "maxItems": 10,
@@ -493,22 +537,16 @@
           "properties": {
             "kind": {
               "type": "string",
-              "enum": [
-                "all",
-                "any"
-              ]
+              "const": "field"
             },
-            "conditions": {
-              "maxItems": 100,
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/__schema0"
-              }
+            "fieldId": {
+              "type": "string",
+              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
             }
           },
           "required": [
             "kind",
-            "conditions"
+            "fieldId"
           ],
           "additionalProperties": false
         },
@@ -517,25 +555,7 @@
           "properties": {
             "kind": {
               "type": "string",
-              "const": "condition"
-            },
-            "fieldId": {
-              "type": "string",
-              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
-            },
-            "op": {
-              "type": "string",
-              "enum": [
-                "eq",
-                "ne",
-                "in",
-                "contains",
-                "empty",
-                "not_empty",
-                "before",
-                "after",
-                "next_days"
-              ]
+              "const": "literal"
             },
             "value": {
               "anyOf": [
@@ -543,8 +563,7 @@
                   "type": "null"
                 },
                 {
-                  "type": "string",
-                  "maxLength": 100000
+                  "type": "string"
                 },
                 {
                   "type": "boolean"
@@ -628,8 +647,280 @@
                   "maxItems": 10000,
                   "type": "array",
                   "items": {
-                    "type": "string",
-                    "maxLength": 100000
+                    "type": "string"
+                  }
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fileId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      }
+                    },
+                    "required": [
+                      "fileId"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ]
+            },
+            "valueType": {
+              "type": "string",
+              "const": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "call"
+            },
+            "fn": {
+              "type": "string",
+              "enum": [
+                "add",
+                "subtract",
+                "multiply",
+                "divide",
+                "concat",
+                "coalesce",
+                "eq",
+                "ne",
+                "lt",
+                "lte",
+                "gt",
+                "gte",
+                "if",
+                "and",
+                "or",
+                "not",
+                "upper",
+                "lower",
+                "trim",
+                "len",
+                "date_add",
+                "days_between"
+              ]
+            },
+            "args": {
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "fn",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rollup"
+            },
+            "relationFieldId": {
+              "type": "string",
+              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+            },
+            "valueFieldId": {
+              "type": "string",
+              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+            },
+            "aggregate": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "count",
+                "counta",
+                "countall",
+                "min",
+                "max",
+                "average",
+                "lookup",
+                "arrayjoin",
+                "arrayunique",
+                "and",
+                "or"
+              ]
+            },
+            "filter": {
+              "$ref": "#/$defs/__schema1"
+            },
+            "separator": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          "required": [
+            "kind",
+            "relationFieldId",
+            "valueFieldId",
+            "aggregate"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "all",
+                "any"
+              ]
+            },
+            "conditions": {
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema1"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "conditions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "condition"
+            },
+            "fieldId": {
+              "type": "string",
+              "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "eq",
+                "ne",
+                "in",
+                "contains",
+                "empty",
+                "not_empty",
+                "before",
+                "after",
+                "next_days"
+              ]
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "minor": {
+                      "type": "string",
+                      "maxLength": 129,
+                      "pattern": "^-?(0|[1-9]\\d*)$"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "pattern": "^[A-Z]{3}$"
+                    },
+                    "scale": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 6
+                    }
+                  },
+                  "required": [
+                    "minor",
+                    "currency",
+                    "scale"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "appId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "entityId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "recordId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    }
+                  },
+                  "required": [
+                    "appId",
+                    "entityId",
+                    "recordId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "appId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      },
+                      "recordId": {
+                        "type": "string",
+                        "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                      }
+                    },
+                    "required": [
+                      "appId",
+                      "entityId",
+                      "recordId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                {
+                  "maxItems": 10000,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
                   }
                 },
                 {
@@ -662,6 +953,6 @@
       ]
     }
   },
-  "title": "Cradle base v1",
-  "description": "Portable base allowlist. Runtime also checks unique IDs, native values, cross-references and lookup equality."
+  "title": "Cradle portable base v1",
+  "description": "Portable base allowlist. Runtime also checks unique IDs, native values, calculation graphs, cross-references and lookup equality."
 }

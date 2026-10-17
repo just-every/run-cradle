@@ -1,0 +1,6 @@
+.cr-records-page .cr-calculation-review .cr-table { min-width: 0; table-layout: fixed; }
+.cr-calculation-review .cr-table th { white-space: normal; overflow-wrap: anywhere; }
+.cr-calculation-review .cr-table td { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .cr-calculation-review .cr-table th, .cr-calculation-review .cr-table td { padding: 12px 8px; }
+}

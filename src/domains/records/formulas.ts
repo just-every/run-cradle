@@ -1,21 +1,29 @@
-import type { Cell, CellValue, Money } from '../../contracts/primitives';
-import type { EntitySchema, Expr, Filter } from './contracts';
-import { add, compare, divide, multiply, normalize } from './exact';
+import { evaluateRollup } from './formula-rollup';
+import { arithmetic, truthy } from './formula-values';
+import type { Cell, CellValue } from '../../contracts/primitives';
+import type { EntitySchema, Expr, Field, Filter } from './contracts';
+import { validateFunction } from './formula-functions';
+import { validateCalculationTypes } from './calculation-schema';
+import { compare, normalize } from './exact';
 const value = (v: CellValue): Cell => ({ state: 'value', value: v });
 export const unavailable = (code: Extract<Cell, {
     state: 'unavailable';
 }>['code'], fieldIds: string[], message: string): Cell => ({ state: 'unavailable', code, fieldIds, message });
 export type FormulaContext = {
     field(id: string): Promise<Cell>;
-    rollup(relationFieldId: string, valueFieldId: string, filter?: Filter): Promise<Cell[]>;
+    rollup(relationFieldId: string, valueFieldId: string, filter?: Filter, countOnly?: boolean): Promise<Cell[]>;
+    sourceOptions?(relationFieldId:string,valueFieldId:string):Field['options'];
+    sourceType?(relationFieldId:string,valueFieldId:string): string | undefined;
 };
-export function validateExpressionGraph(schemas: readonly EntitySchema[]): void {
+export function validateExpressionGraph(schemas: readonly Pick<EntitySchema,'id'|'fields'>[]): void {
     const fields = new Map(schemas.flatMap(s => s.fields.map(f => [s.id + ':' + f.id, { s, f }] as const)));
+    const checkedDepth=new Map<string,number>();
     function visit(key: string, path: Set<string>, depth: number): void {
         if (depth > 64)
             throw new Error('Formula dependency depth exceeds 64');
         if (path.has(key))
             throw new Error('Formula dependency cycle');
+        if((checkedDepth.get(key)??0)>=depth)return;
         const item = fields.get(key);
         if (!item)
             throw new Error('Unknown formula dependency');
@@ -28,35 +36,15 @@ export function validateExpressionGraph(schemas: readonly EntitySchema[]): void 
             const rel = item!.s.fields.find(f => f.id === expr.relationFieldId)?.relation;
             if (!rel)
                 throw new Error('Rollup needs relation');
-            visit(rel.entityId + ':' + expr.valueFieldId, next, depth + 1);
+            if(expr.aggregate!=='countall')visit(rel.entityId + ':' + expr.valueFieldId, next, depth + 1);
         } if (expr.kind === 'call')
             expr.args.forEach(e => walk(e, expressionDepth + 1)); }
         walk(item.f.expression, depth);
+        checkedDepth.set(key,depth);
     }
     for (const key of fields.keys())
         visit(key, new Set(), 1);
-}
-function isMoney(v: CellValue): v is Money { return !!v && !Array.isArray(v) && typeof v === 'object' && 'minor' in v; }
-function arithmetic(fn: string, args: CellValue[]): CellValue {
-    if (args.length !== 2)
-        throw new Error('Arithmetic expects two arguments');
-    const [a, b] = args;
-    if (isMoney(a) || isMoney(b)) {
-        if (!isMoney(a) || !isMoney(b) || a.currency !== b.currency || a.scale !== b.scale)
-            throw new Error('mixed_currency');
-        if (fn !== 'add' && fn !== 'subtract')
-            throw new Error('Money supports same-currency addition and subtraction');
-        return { ...a, minor: fn === 'add' ? add(a.minor, b.minor) : add(a.minor, b.minor === '0' ? '0' : b.minor.startsWith('-') ? b.minor.slice(1) : '-' + b.minor) };
-    }
-    if (typeof a !== 'string' || typeof b !== 'string')
-        throw new Error('Numeric arguments must be exact decimal strings');
-    if (fn === 'add')
-        return add(a, b);
-    if (fn === 'subtract')
-        return add(a, b === '0' ? '0' : b.startsWith('-') ? b.slice(1) : '-' + b);
-    if (fn === 'multiply')
-        return multiply(a, b);
-    return divide(a, b);
+    validateCalculationTypes(schemas);
 }
 export async function evaluateExpression(expr: Expr, ctx: FormulaContext, depth = 1): Promise<Cell> {
     if (depth > 64)
@@ -66,59 +54,15 @@ export async function evaluateExpression(expr: Expr, ctx: FormulaContext, depth 
             return value(expr.value);
         if (expr.kind === 'field')
             return ctx.field(expr.fieldId);
-        if (expr.kind === 'rollup') {
-            const cells = await ctx.rollup(expr.relationFieldId, expr.valueFieldId, expr.filter);
-            if (cells.length > 10000)
-                return unavailable('rollup_limit', [expr.relationFieldId], 'Rollup exceeds 10,000 records');
-            const bad = cells.find(c => c.state !== 'value');
-            if (bad)
-                return bad;
-            const values = cells.flatMap(c => c.state === 'value' && c.value !== null ? [c.value] : []);
-            if (expr.aggregate === 'lookup') { if (values.length > 1) throw new Error('Lookup requires a single linked record'); return value(values[0] ?? null); }
-            if (expr.aggregate === 'count')
-                return value(String(cells.length));
-            if (!values.length)
-                return value(null);
-            let result: CellValue = values[0]!;
-            for (const v of values.slice(1)) {
-                if (expr.aggregate === 'sum' || expr.aggregate === 'average')
-                    result = arithmetic('add', [result, v]);
-                else {
-                    if (isMoney(result) || isMoney(v)) {
-                        if (!isMoney(result) || !isMoney(v) || result.currency !== v.currency || result.scale !== v.scale)
-                            throw new Error('mixed_currency');
-                        if ((compare(result.minor, v.minor) > 0) === (expr.aggregate === 'min'))
-                            result = v;
-                    }
-                    else {
-                        if (typeof result !== 'string' || typeof v !== 'string')
-                            throw new Error('Invalid rollup values');
-                        if ((compare(result, v) > 0) === (expr.aggregate === 'min'))
-                            result = v;
-                    }
-                }
-            }
-            if (expr.aggregate === 'average') {
-                if (isMoney(result)) {
-                    const minor = divide(result.minor, String(values.length));
-                    if (minor.includes('.'))
-                        throw new Error('Money average is not an exact minor unit');
-                    result = { ...result, minor };
-                }
-                else
-                    result = divide(String(result), String(values.length));
-            }
-            return value(result);
-        }
+        if (expr.kind === 'rollup') return await evaluateRollup(expr,ctx);
+        validateFunction(expr.fn, expr.args.length);
         if (expr.fn === 'if') {
             if (expr.args.length !== 3)
                 throw new Error('if needs three arguments');
             const condition = await evaluateExpression(expr.args[0]!, ctx, depth + 1);
             if (condition.state !== 'value')
                 return condition;
-            if (typeof condition.value !== 'boolean')
-                throw new Error('if condition must be boolean');
-            return evaluateExpression(expr.args[condition.value ? 1 : 2]!, ctx, depth + 1);
+            return evaluateExpression(expr.args[truthy(condition.value) ? 1 : 2]!, ctx, depth + 1);
         }
         const cells = await Promise.all(expr.args.map(e => evaluateExpression(e, ctx, depth + 1)));
         const bad = cells.find(c => c.state !== 'value');
@@ -130,14 +74,26 @@ export async function evaluateExpression(expr: Expr, ctx: FormulaContext, depth 
         if (['add', 'subtract', 'multiply', 'divide'].includes(expr.fn))
             return value(arithmetic(expr.fn, args));
         if (expr.fn === 'concat') {
-            if (args.some(v => typeof v !== 'string'))
-                throw new Error('concat expects strings');
-            return value(args.join(''));
+            if (args.some(v => v !== null && !['string','boolean'].includes(typeof v)))
+                throw new Error('CONCATENATE expects scalar values');
+            return value(args.map(v=>v===null?'':typeof v==='boolean'?(v?'1':'0'):v).join(''));
         }
         if (expr.fn === 'coalesce')
             return value(args.find(v => v !== null) ?? null);
-        if (expr.fn === 'eq')
-            return value(JSON.stringify(args[0]) === JSON.stringify(args[1]));
+        if (expr.fn === 'eq' || expr.fn === 'ne')
+            return value((JSON.stringify(args[0]) === JSON.stringify(args[1])) === (expr.fn === 'eq'));
+        if (['lt','lte','gt','gte'].includes(expr.fn)) {
+            if (typeof args[0] !== 'string' || typeof args[1] !== 'string') throw new Error('Comparison expects scalar strings');
+            const decimal = /^-?(0|[1-9]\d*)(\.\d+)?$/;
+            const compared = decimal.test(args[0]) && decimal.test(args[1]) ? compare(args[0],args[1]) : args[0] < args[1] ? -1 : args[0] === args[1] ? 0 : 1;
+            return value(expr.fn === 'lt' ? compared < 0 : expr.fn === 'lte' ? compared <= 0 : expr.fn === 'gt' ? compared > 0 : compared >= 0);
+        }
+        if (expr.fn === 'not') return value(!truthy(args[0]!));
+        if (expr.fn === 'and' || expr.fn === 'or') return value(expr.fn === 'and' ? args.every(truthy) : args.some(truthy));
+        if (['upper','lower','trim','len'].includes(expr.fn)) {
+            if (typeof args[0] !== 'string') throw new Error('Text function expects text');
+            return value(expr.fn === 'upper' ? args[0].toUpperCase() : expr.fn === 'lower' ? args[0].toLowerCase() : expr.fn === 'trim' ? args[0].trim() : String(args[0].length));
+        }
         if (expr.fn === 'date_add') {
             if (typeof args[0] !== 'string' || typeof args[1] !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(args[0]) || !/^-?\d{1,6}$/.test(args[1]))
                 throw new Error('date_add expects date and integral days');

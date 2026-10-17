@@ -10,8 +10,12 @@ import type { EntitySchema } from '../contracts'
 import type { ManualPreview, SchemaDraft } from './contracts'
 import { ownerRules, bases, policies, memberships } from './authority.server'
 import { snapshotTables } from './snapshot.server'
+import { parseFormula } from '../formula-parser'
+import { expressionType, calculationKind } from '../calculation-schema'
+import { previewCalculations } from './calculation-preview.server'
 import { assertGuards } from '../fence.server'
 import { snapshotViews, prepareViewRemovals, prepareFormRemovals, type ViewSnapshot } from './view-removal.server'
+function comparableField(field:import('../contracts').Field){if(field.type!=='computed')return field;const {expression,resultType,readOnly,options,...stored}=field;return stored}
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
 export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[] }
 /** Whose authority a preview is computed under: `reader` reads every affected table as `ownerId`. */
@@ -21,6 +25,14 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
  /** Validate and measure a schema draft; writes nothing. */
  async function buildPreview(draft:SchemaDraft,id:string,authority:PreviewAuthority):Promise<StoredPreview>{
   const {reader,ownerId,permit}=authority,now=reader.now
+  draft=structuredClone(draft)
+  for(const [fieldId,source] of Object.entries(draft.formulaSources??{})){
+   const table=draft.tables.find(t=>t.fields.some(f=>f.id===fieldId)),field=table?.fields.find(f=>f.id===fieldId)
+   if(!table||field?.type!=='computed')throw new AdmissionError('validation','Formula text must identify a computed field.')
+   try{field.expression=parseFormula(source,table.fields);field.readOnly=true}catch(error){throw new AdmissionError('validation',`${field.label}: ${(error as Error).message}`)}
+  }
+  // Resolve result types after every candidate AST is present, including formula dependencies.
+  for(const table of draft.tables)for(const field of table.fields)if(draft.formulaSources?.[field.id]!==undefined){try{const type=expressionType(field.expression!,table,draft.tables);field.resultType=type==='blank'?'text':type}catch(error){throw new AdmissionError('validation',`${field.label}: ${(error as Error).message}`)}}
   const base=await db.prepare('SELECT version,release_id FROM manual_record_bases WHERE id=?').bind(draft.appId).first<{version:number;release_id:string}>()
   const prior=registry.list(draft.appId).filter(d=>d.schema.physicalRevision.startsWith('manual_'))
   const readGuards:SqlPredicate[]=[]
@@ -40,24 +52,26 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
     if(!['text','url','number','date','select','boolean','relation','computed'].includes(field.type))throw new AdmissionError('validation',`${field.label}: this builder does not support this type.`)
     if(field.readOnly&&field.type!=='computed')throw new AdmissionError('validation','Read-only is reserved for lookup fields.')
     if(field.relation&&(field.relation.ownerAppId!==draft.appId||field.relation.onDelete!=='restrict'))throw new AdmissionError('validation','Links must target records in this base and restrict deletion.')
-    if(field.type==='computed'&&(field.expression?.kind!=='rollup'||field.expression.aggregate!=='lookup'||schema.fields.find(f=>f.id===(field.expression as {relationFieldId:string}).relationFieldId)?.relation?.cardinality!=='one'))throw new AdmissionError('validation','Lookup requires one link and a source field.')
-    if(field.type==='computed'&&field.expression?.kind==='rollup'){const expression=field.expression,relation=schema.fields.find(f=>f.id===expression.relationFieldId)?.relation,source=schemas.find(t=>t.id===relation?.entityId)?.fields.find(f=>f.id===expression.valueFieldId);if(!source||source.type!==field.resultType||['relation','computed'].includes(source.type))throw new AdmissionError('validation','Lookup source and result type must match a scalar field.');if(source.type==='select'&&canonical(field.options??[])!==canonical(source.options??[]))throw new AdmissionError('validation','Lookup select options must match its source field.')}
+    if(field.type==='computed'&&(!field.expression||!field.resultType))throw new AdmissionError('validation',`${field.label}: a calculation needs an expression and result type.`)
+    if(field.type==='computed'&&field.expression?.kind==='rollup'&&field.expression.aggregate==='lookup'){const expression=field.expression,relation=schema.fields.find(f=>f.id===expression.relationFieldId)?.relation,source=schemas.find(t=>t.id===relation?.entityId)?.fields.find(f=>f.id===expression.valueFieldId);if(!source||(source.type==='computed'?source.resultType:source.type)!==field.resultType||source.type==='relation')throw new AdmissionError('validation','Lookup source and result type must match a scalar field.');if(source.type==='select'&&canonical(field.options??[])!==canonical(source.options??[]))throw new AdmissionError('validation','Lookup select options must match its source field.')}
     if(field.type!=='relation'&&field.relation||field.type!=='computed'&&field.expression)throw new AdmissionError('validation','Only links declare relations and only lookups declare expressions.')
     const existing=old?.fields.get(field.id)?.field
-    if(existing&&canonical({...existing,label:field.label})!==canonical(field))throw new AdmissionError('validation',`${field.label}: changing an existing field type, options, requirement or relation is unsupported. Rename it or add a new field.`)
+    if(existing&&canonical(comparableField({...existing,label:field.label}))!==canonical(comparableField(field)))throw new AdmissionError('validation',`${field.label}: changing an existing field type, options, requirement or relation is unsupported. Rename it or add a new field.`)
     if(!existing&&old&&field.required)throw new AdmissionError('validation',`${field.label}: add optional fields to a populated schema; required backfill is not implemented.`)
     if(field.type==='select'&&(!field.options?.length||new Set(field.options.map(o=>o.id)).size!==field.options.length||new Set(field.options.map(o=>o.label)).size!==field.options.length))throw new AdmissionError('validation','Select options must be unique and nonempty.')
    }
   }
-  try{await compileSchemaSet(schemas,registry,removals)}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Schema compilation failed.')}
+  let compiled:Awaited<ReturnType<typeof compileSchemaSet>>
+  try{compiled=await compileSchemaSet(schemas,registry,removals)}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Schema compilation failed.')}
   const snapshot=await snapshotTables(db,prior),viewSnapshot=await snapshotViews(db,draft.appId)
   const impacts=schemas.map(schema=>{const old=prior.find(p=>p.schema.id===schema.id),rows=old?snapshot.rows[old.table.tableId]!:[],changes:string[]=[]
    if(!old)changes.push(`Create table ${schema.label}`)
    else if(old.schema.label!==schema.label)changes.push(`Rename table ${old.schema.label} to ${schema.label}`)
    if(schema.primaryFieldId!==old?.schema.primaryFieldId&&schema.primaryFieldId)changes.push(`Use ${schema.fields.find(f=>f.id===schema.primaryFieldId)?.label} as the primary record label`)
    if(canonical(schema.incomingRelations??[])!==canonical(old?.schema.incomingRelations??[]))changes.push(`Incoming relationship sections: ${(schema.incomingRelations??[]).map(r=>r.label).join(', ')||'none'}`)
-   for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(!before)changes.push(`Add ${field.label} (${field.type==='computed'?'lookup':field.type})`);else if(before.label!==field.label)changes.push(`Rename ${before.label} to ${field.label}`)}
+   for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(!before)changes.push(`Add ${field.label} (${field.type==='computed'?calculationKind(field):field.type})`);else if(before.label!==field.label)changes.push(`Rename ${before.label} to ${field.label}`)}
    const removedFields=(old?.schema.fields??[]).filter(f=>removals[schema.id]!.includes(f.id)).map(f=>({id:f.id,label:f.label,populated:old!.fields.get(f.id)!.join?new Set((snapshot.rows[old!.fields.get(f.id)!.join!.table.tableId]??[]).map(row=>row.record_id)).size:rows.filter(row=>row[old!.fields.get(f.id)!.column]!==null&&row[old!.fields.get(f.id)!.column]!==undefined).length}))
+   for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before?.type==='computed'&&canonical(before.expression)!==canonical(field.expression))changes.push(`Update calculation ${field.label}`)}
    changes.push(...removedFields.map(f=>`Remove ${f.label}: ${f.populated} stored ${f.populated===1?'value leaves':'values leave'} the live table`))
    return {entityId:schema.id,label:schema.label,changes,recordIds:changes.length?rows.map(r=>String(r.id)):[],count:changes.length?rows.length:0,removedFields}
   })
@@ -71,7 +85,8 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
     if(!ownerAllows.length||ownerAllows.some(rule=>rule.principals.length!==1))throw new AdmissionError('validation','Adding fields requires a dedicated owner field policy. Shared field policies must be reviewed by the owner before this schema change.')
    }
   }
-  return {id,appId:draft.appId,name:draft.name,schemas,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values are kept for recovery. Download the recovery CSV after applying this change. You can import them into a new field by matching the _record_id column (Original record ID); newer records stay unchanged.',access:'Only your current owner membership is updated for the fields explicitly added here. No other application, person, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,...viewSnapshot.guards,trustedPredicate('(SELECT COUNT(*) FROM record_schemas WHERE app_id=?)=?',[draft.appId,prior.length])],prior:prior.map(p=>p.schema),removals,policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows,viewSnapshots:viewSnapshot.views,formSnapshots:viewSnapshot.forms}
+  const calculations=await previewCalculations(db,policy,registry,schemas,compiled.descriptors,snapshot.rows,reader)
+  return {id,appId:draft.appId,name:draft.name,schemas,calculations,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values are kept for recovery. Download the recovery CSV after applying this change. You can import them into a new field by matching the _record_id column (Original record ID); newer records stay unchanged.',access:'Only your current owner membership is updated for the fields explicitly added here. No other application, person, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,...viewSnapshot.guards,trustedPredicate('(SELECT COUNT(*) FROM record_schemas WHERE app_id=?)=?',[draft.appId,prior.length])],prior:prior.map(p=>p.schema),removals,policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows,viewSnapshots:viewSnapshot.views,formSnapshots:viewSnapshot.forms}
  }
  /** Apply a reviewed preview atomically as the adopting owner, with any extra rows of the same release. */
  async function applyRelease(ctx:RequestContext,input:{commandId:string;hash:string;releaseId?:string;detail:StoredPreview;previewId:string;permit:AuthorityPermit;mutations:SqlMutation[];audit:AuditFact[];provenance?:Record<string,unknown>}){

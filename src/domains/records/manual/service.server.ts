@@ -1,3 +1,4 @@
+import { assertCalculationBounds } from '../calculation-bounds'
 import { principalGuards } from '../../authority/guards.server'
 import { recoveryTables } from './recovery.server'
 import { createUlid } from '../../../core/shared/ids'
@@ -15,6 +16,7 @@ const previews=registerTable('manual_record_previews',['id','app_id','owner_id',
 export function createManualSchemas(db:D1Database,policy:PolicyPort,admission:AdmissionPort,registry:DescriptorRegistry){
  const core=createReleaseCore(db,policy,admission,registry)
  async function preview(ctx:RequestContext,unknown:unknown):Promise<ManualPreview>{
+  try{assertCalculationBounds(unknown)}catch(error){throw new AdmissionError('validation',(error as Error).message)}
   const draft=draftSchema.parse(unknown),id=createUlid(),inputHash=await canonicalHash(draft)
   const permit=await manualAuthority(db,policy,ctx,draft.appId,inputHash)
   const detail=await core.buildPreview(draft,id,{permit,reader:ctx,ownerId:ctx.principal.id,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString()})
