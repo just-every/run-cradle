@@ -9118,7 +9118,7 @@
       "executable": false
     },
     "src/ui/records/live-records.tsx": {
-      "sha256": "fa1ce89c7a4cd9b0731be51f6c0133bea504282dff024f28e7ec8392d607c2ca",
+      "sha256": "bca2b33935f87d7b2f266e0f3cad0abae891a5fbc452d5555334b4b1ea445bbe",
       "executable": false
     },
     "src/ui/records/manual-import-mappings.tsx": {

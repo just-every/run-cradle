@@ -11,19 +11,19 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
   const setResource = (resource: Resource<T>) => setLoaded({ key, resource })
   const [participants, setParticipants] = useState<Presence['participants']>([])
   const [notice, setNotice] = useState('Connecting to live updates…')
-  const [revision, setRevision] = useState(0)
+  const requestRefresh = useRef<() => void>(() => {})
   const restartRef = useRef(restart); restartRef.current = restart
-  const refresh = useCallback(() => setRevision(value => value + 1), [])
+  const refresh = useCallback(() => requestRefresh.current(), [])
   useEffect(() => {
     const abort = new AbortController()
-    let timer: ReturnType<typeof setTimeout> | undefined, running = false, paused = false, previous: number | undefined, needsRead = true
-    setResource({ state: 'loading', data: null }); setParticipants([])
+    let timer: ReturnType<typeof setTimeout> | undefined, running = false, paused = false, previous: number | undefined, requested = 0, completed = -1
+    setResource({ state: 'loading', data: null }); setParticipants([]); setNotice('Connecting to live updates…')
     if (!presenceUrl) return
     const heartbeatUrl = presenceUrl
     function failed(error: unknown) {
       const problem = error instanceof RequestFailure ? error : new RequestFailure(0, { requestId: '', operation: 'Live records', code: 'internal', message: error instanceof Error ? error.message : 'Could not refresh records.', retry: 'read' })
       setResource({ state: problem.status === 401 ? 'signed_out' : problem.status === 403 ? 'forbidden' : problem.status === 404 ? 'not_found' : 'failed', data: null, error: problem })
-      setParticipants([]); setNotice('Live updates unavailable.'); needsRead = true
+      setParticipants([]); setNotice('Live updates unavailable.'); requested++
       paused = [401, 403, 404].includes(problem.status)
       if (problem.detail.code === 'stale_cursor') { window.dispatchEvent(new Event('records-live-changed')); setNotice('Records changed. Returned to the first page.'); restartRef.current() }
     }
@@ -35,10 +35,11 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
         const { data: presence } = await readApi<Presence>(heartbeatUrl, { method: 'POST', body: '{}' }, abort.signal)
         if (abort.signal.aborted) return
         setParticipants(presence.participants)
-        if (needsRead || presence.revision !== previous) {
+        if (requested !== completed || presence.revision !== previous) {
+          const reading = requested
           const { data } = await readApi<T>(url, { method: identity === undefined ? 'GET' : 'POST', ...(identity === undefined ? {} : { body: identity }) }, abort.signal)
           if (abort.signal.aborted) return
-          setResource({ state: 'ready', data }); needsRead = false
+          setResource({ state: 'ready', data }); completed = reading
           if (previous !== undefined && previous !== presence.revision) window.dispatchEvent(new Event('records-live-changed'))
         }
         previous = presence.revision; setNotice('Live updates on')
@@ -48,18 +49,21 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
         if (!paused && !abort.signal.aborted && document.visibilityState === 'visible' && navigator.onLine) timer = setTimeout(tick, Math.max(0, 1000 - (Date.now() - started)))
       }
     }
-    function changed() { needsRead = true; if (timer) clearTimeout(timer); void tick() }
+    function changed() { requested++; paused = false; if (timer) clearTimeout(timer); void tick() }
     function resume() {
       if (timer) clearTimeout(timer)
-      if (document.visibilityState === 'visible' && navigator.onLine) { needsRead = true; void tick() }
+      if (document.visibilityState === 'visible' && navigator.onLine) { requested++; void tick() }
       else { setParticipants([]); setNotice(navigator.onLine ? 'Live updates paused while this tab is hidden.' : 'Offline. Live updates paused.') }
     }
     window.addEventListener('records-changed', changed)
+    requestRefresh.current = changed
     window.addEventListener('online', resume); window.addEventListener('offline', resume)
     document.addEventListener('visibilitychange', resume)
     void tick()
-    return () => { abort.abort(); if (timer) clearTimeout(timer); window.removeEventListener('records-changed', changed); window.removeEventListener('online', resume); window.removeEventListener('offline', resume); document.removeEventListener('visibilitychange', resume) }
-  }, [url, identity, presenceUrl, revision, refreshKey])
+    return () => { requestRefresh.current = () => {}; abort.abort(); if (timer) clearTimeout(timer); window.removeEventListener('records-changed', changed); window.removeEventListener('online', resume); window.removeEventListener('offline', resume); document.removeEventListener('visibilitychange', resume) }
+  }, [url, identity, presenceUrl])
+  // Invalidation keeps editors and related readers mounted, including during an active read.
+  useEffect(refresh, [refresh, refreshKey])
   const resource: Resource<T> = loaded.key === key ? loaded.resource : { state: 'loading', data: null }
   return { resource, refresh, participants: loaded.key === key ? participants : [], notice: loaded.key === key ? notice : 'Connecting to live updates…' }
 }
