@@ -1,8 +1,8 @@
 {
-  "key": "e8a3f4b58640d8941132b15721c9de11e5b74acfa16338536e3cd66bb0c9faa1",
+  "key": "8aa0a8f678b1defa676df915565b24bd8001382b38be446a154a80a3bd8f1ca8",
   "origin": {
     "repository": "https://github.com/runeditrun/base.git",
-    "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+    "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
     "path": "modules/editor",
     "paths": [
       "src/config.ts",

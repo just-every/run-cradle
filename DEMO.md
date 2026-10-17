@@ -12,7 +12,7 @@ and sample colleagues. Colleagues have no login credentials. Visitors can edit
 records and explore the included Launch template.
 
 All vendored Base modules, including demo, operator-auth, owner-claim and mail,
-are refreshed together from `rer-v0.2.23`. The first import in `src/server.ts`
+are refreshed together from `rer-v0.2.38`. The first import in `src/server.ts`
 installs Base's demo effects. Vite supplies the guarded sockets, isolated state
 path and demo bindings. Public internet reads run for real; people-facing writes
 complete with provider-shaped success without sending. Base silently suppresses

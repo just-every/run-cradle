@@ -47,7 +47,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "edition-authoring",
           "paths": [
             "base-copies.mjs",
@@ -111,7 +111,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/operator-auth",
           "paths": [
             "README.md",
@@ -195,7 +195,11 @@
             "routes.mjs",
             "service.mjs",
             "signin/index.d.mts",
-            "signin/index.mjs"
+            "signin/index.mjs",
+            "accounts/one-click.mjs",
+            "identity/email-link/expiry.mjs",
+            "policy.d.mts",
+            "signin/one-click.mjs"
           ]
         },
         "mappings": [
@@ -526,6 +530,22 @@
           {
             "path": "vendor/base/modules/operator-auth/signin/index.mjs",
             "originPath": "signin/index.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/accounts/one-click.mjs",
+            "originPath": "accounts/one-click.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/identity/email-link/expiry.mjs",
+            "originPath": "identity/email-link/expiry.mjs"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/policy.d.mts",
+            "originPath": "policy.d.mts"
+          },
+          {
+            "path": "vendor/base/modules/operator-auth/signin/one-click.mjs",
+            "originPath": "signin/one-click.mjs"
           }
         ]
       }
@@ -540,7 +560,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/mail",
           "paths": [
             ".gitignore",
@@ -606,7 +626,8 @@
             "src/sender.mjs",
             "src/sendgrid-email/index.d.mts",
             "src/sendgrid-email/index.mjs",
-            "src/unsubscribe/index.mjs"
+            "src/unsubscribe/index.mjs",
+            "src/adapters/rer/list-headers.mjs"
           ]
         },
         "mappings": [
@@ -865,6 +886,10 @@
           {
             "path": "vendor/base/modules/mail/src/unsubscribe/index.mjs",
             "originPath": "src/unsubscribe/index.mjs"
+          },
+          {
+            "path": "vendor/base/modules/mail/src/adapters/rer/list-headers.mjs",
+            "originPath": "src/adapters/rer/list-headers.mjs"
           }
         ]
       }
@@ -879,7 +904,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/deploy-kit",
           "paths": [
             "README.md",
@@ -923,7 +948,12 @@
             "templates.mjs",
             "uploaded-worker.mjs",
             "validation.mjs",
-            "worker.mjs"
+            "worker.mjs",
+            "asset-health.mjs",
+            "migration-retry.mjs",
+            "pagination.mjs",
+            "public-origin.mjs",
+            "site-readback.mjs"
           ]
         },
         "mappings": [
@@ -1094,6 +1124,26 @@
           {
             "path": "vendor/base/modules/deploy-kit/worker.mjs",
             "originPath": "worker.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/asset-health.mjs",
+            "originPath": "asset-health.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/migration-retry.mjs",
+            "originPath": "migration-retry.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/pagination.mjs",
+            "originPath": "pagination.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/public-origin.mjs",
+            "originPath": "public-origin.mjs"
+          },
+          {
+            "path": "vendor/base/modules/deploy-kit/site-readback.mjs",
+            "originPath": "site-readback.mjs"
           }
         ]
       }
@@ -1108,7 +1158,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/import-kit",
           "paths": [
             "CONTRACT.md",
@@ -1289,7 +1339,18 @@
             "src/storage/provenance.ts",
             "src/storage/schema.ts",
             "src/storage/sqlite.ts",
-            "src/types.ts"
+            "src/types.ts",
+            "src/door/authority.ts",
+            "src/door/grants.ts",
+            "src/door/index.ts",
+            "src/door/inventory.ts",
+            "src/door/jobs.ts",
+            "src/door/planning.ts",
+            "src/door/README.md",
+            "src/door/schema.ts",
+            "src/door/store.ts",
+            "src/door/types.ts",
+            "src/door/uploads.ts"
           ]
         },
         "mappings": [
@@ -2008,6 +2069,50 @@
           {
             "path": "vendor/base/modules/import-kit/src/types.ts",
             "originPath": "src/types.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/authority.ts",
+            "originPath": "src/door/authority.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/grants.ts",
+            "originPath": "src/door/grants.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/index.ts",
+            "originPath": "src/door/index.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/inventory.ts",
+            "originPath": "src/door/inventory.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/jobs.ts",
+            "originPath": "src/door/jobs.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/planning.ts",
+            "originPath": "src/door/planning.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/README.md",
+            "originPath": "src/door/README.md"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/schema.ts",
+            "originPath": "src/door/schema.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/store.ts",
+            "originPath": "src/door/store.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/types.ts",
+            "originPath": "src/door/types.ts"
+          },
+          {
+            "path": "vendor/base/modules/import-kit/src/door/uploads.ts",
+            "originPath": "src/door/uploads.ts"
           }
         ]
       }
@@ -2022,7 +2127,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/integrations",
           "paths": [
             "README.md",
@@ -2191,7 +2296,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/owner-claim",
           "paths": [
             "README.md",
@@ -2202,7 +2307,8 @@
             "schema/idp.sql",
             "schema/owner-claim.sql",
             "transaction.mjs",
-            "verify.mjs"
+            "verify.mjs",
+            "verify.d.mts"
           ]
         },
         "mappings": [
@@ -2241,6 +2347,10 @@
           {
             "path": "vendor/base/modules/owner-claim/verify.mjs",
             "originPath": "verify.mjs"
+          },
+          {
+            "path": "vendor/base/modules/owner-claim/verify.d.mts",
+            "originPath": "verify.d.mts"
           }
         ]
       }
@@ -2255,7 +2365,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/editor",
           "paths": [
             "src/config.ts",
@@ -2339,7 +2449,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": ".",
           "paths": [
             "modules/delivery-producer/artifact.mjs",
@@ -2356,12 +2466,16 @@
             "modules/delivery-producer/package.mjs",
             "modules/delivery-producer/paths.mjs",
             "modules/delivery-producer/payloads.mjs",
-            "modules/delivery-producer/setup-manifest.mjs",
-            "modules/delivery-producer/spec.mjs",
             "schema/SETUP.schema.json",
             "schema/json-schema.mjs",
             "schema/setup-validation.mjs",
-            "modules/delivery-producer/mail.mjs"
+            "modules/delivery-producer/setup-manifest.mjs",
+            "modules/delivery-producer/spec.mjs",
+            "modules/delivery-producer/mail.mjs",
+            "modules/delivery-producer/native-export.mjs",
+            "default-seed/scripts/base-onboarding/schema/dependencies.mjs",
+            "modules/delivery-producer/sign-in.mjs",
+            "modules/delivery-producer/sql-statements.mjs"
           ]
         },
         "mappings": [
@@ -2444,6 +2558,22 @@
           {
             "path": "scripts/delivery/base/mail.mjs",
             "originPath": "modules/delivery-producer/mail.mjs"
+          },
+          {
+            "path": "scripts/delivery/base/native-export.mjs",
+            "originPath": "modules/delivery-producer/native-export.mjs"
+          },
+          {
+            "path": "scripts/delivery/base/schema/dependencies.mjs",
+            "originPath": "default-seed/scripts/base-onboarding/schema/dependencies.mjs"
+          },
+          {
+            "path": "scripts/delivery/base/sign-in.mjs",
+            "originPath": "modules/delivery-producer/sign-in.mjs"
+          },
+          {
+            "path": "scripts/delivery/base/sql-statements.mjs",
+            "originPath": "modules/delivery-producer/sql-statements.mjs"
           }
         ]
       }
@@ -2459,7 +2589,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "export",
           "paths": [
             "RUN-LOCALLY.md",
@@ -2488,7 +2618,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "8981bc2c4d9e61feca5787c83b4ed44056659dd9",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "foundation/runtime",
           "paths": [
             "deployment-health.ts",
@@ -2592,7 +2722,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+          "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
           "path": "modules/dependencies",
           "paths": [
             "README.md",

@@ -37,12 +37,12 @@
         "vendor/base/modules/import-kit/src/d1/erased-reversal.ts",
         "src/domains/lifecycle/import-retirement.server.ts"
       ],
-      "description": "Preserves Cradle\u2019s pre-existing atomic multi-base retirement and unchanged undo observations for unrelated imports. All other module exports are byte-exact at rer-v0.2.23."
+      "description": "Preserves Cradle’s pre-existing atomic multi-base retirement and unchanged undo observations for unrelated imports. All other module exports are byte-exact at rer-v0.2.38."
     }
   ],
   "componentOrigins": {
     "runeditrun/base-operator-auth": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/operator-auth",
       "paths": [
         "README.md",
@@ -126,11 +126,15 @@
         "routes.mjs",
         "service.mjs",
         "signin/index.d.mts",
-        "signin/index.mjs"
+        "signin/index.mjs",
+        "accounts/one-click.mjs",
+        "identity/email-link/expiry.mjs",
+        "policy.d.mts",
+        "signin/one-click.mjs"
       ]
     },
     "runeditrun/base-mail": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/mail",
       "paths": [
         ".gitignore",
@@ -196,11 +200,12 @@
         "src/sender.mjs",
         "src/sendgrid-email/index.d.mts",
         "src/sendgrid-email/index.mjs",
-        "src/unsubscribe/index.mjs"
+        "src/unsubscribe/index.mjs",
+        "src/adapters/rer/list-headers.mjs"
       ]
     },
     "runeditrun/base-deploy-kit": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/deploy-kit",
       "paths": [
         "README.md",
@@ -244,11 +249,16 @@
         "templates.mjs",
         "uploaded-worker.mjs",
         "validation.mjs",
-        "worker.mjs"
+        "worker.mjs",
+        "asset-health.mjs",
+        "migration-retry.mjs",
+        "pagination.mjs",
+        "public-origin.mjs",
+        "site-readback.mjs"
       ]
     },
     "runeditrun/base-import-kit": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/import-kit",
       "paths": [
         "CONTRACT.md",
@@ -429,11 +439,22 @@
         "src/storage/provenance.ts",
         "src/storage/schema.ts",
         "src/storage/sqlite.ts",
-        "src/types.ts"
+        "src/types.ts",
+        "src/door/authority.ts",
+        "src/door/grants.ts",
+        "src/door/index.ts",
+        "src/door/inventory.ts",
+        "src/door/jobs.ts",
+        "src/door/planning.ts",
+        "src/door/README.md",
+        "src/door/schema.ts",
+        "src/door/store.ts",
+        "src/door/types.ts",
+        "src/door/uploads.ts"
       ]
     },
     "runeditrun/edition-authoring": {
-      "revision": "56d2eadbd094cfe31c7f155da3355afe6fccf7de",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "edition-authoring",
       "paths": [
         "base-copies.mjs",
@@ -448,7 +469,7 @@
       ]
     },
     "runeditrun/base-delivery-producer": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": ".",
       "paths": [
         "modules/delivery-producer/artifact.mjs",
@@ -465,16 +486,20 @@
         "modules/delivery-producer/package.mjs",
         "modules/delivery-producer/paths.mjs",
         "modules/delivery-producer/payloads.mjs",
-        "modules/delivery-producer/setup-manifest.mjs",
-        "modules/delivery-producer/spec.mjs",
         "schema/SETUP.schema.json",
         "schema/json-schema.mjs",
         "schema/setup-validation.mjs",
-        "modules/delivery-producer/mail.mjs"
+        "modules/delivery-producer/setup-manifest.mjs",
+        "modules/delivery-producer/spec.mjs",
+        "modules/delivery-producer/mail.mjs",
+        "modules/delivery-producer/native-export.mjs",
+        "default-seed/scripts/base-onboarding/schema/dependencies.mjs",
+        "modules/delivery-producer/sign-in.mjs",
+        "modules/delivery-producer/sql-statements.mjs"
       ]
     },
     "runeditrun/base-dependencies": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/dependencies",
       "paths": [
         "README.md",
@@ -493,7 +518,7 @@
       ]
     },
     "runeditrun/base-owner-claim": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/owner-claim",
       "paths": [
         "README.md",
@@ -504,11 +529,12 @@
         "schema/idp.sql",
         "schema/owner-claim.sql",
         "transaction.mjs",
-        "verify.mjs"
+        "verify.mjs",
+        "verify.d.mts"
       ]
     },
     "runeditrun/base-integrations": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/integrations",
       "paths": [
         "README.md",
@@ -544,7 +570,7 @@
       ]
     },
     "runeditrun/base-demo": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/demo",
       "paths": [
         "README.md",
@@ -560,7 +586,7 @@
       ]
     },
     "runeditrun/base-d1-transport": {
-      "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98",
+      "revision": "670337b90174dd708aba9c9ec235e3be2e816d39",
       "path": "modules/d1-transport",
       "paths": [
         "index.d.mts",
@@ -568,5 +594,5 @@
       ]
     }
   },
-  "revision": "b4b372b032b2ddd7fbf47efa1bf17e1d5235be98"
+  "revision": "670337b90174dd708aba9c9ec235e3be2e816d39"
 }
