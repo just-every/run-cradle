@@ -3,7 +3,7 @@ import { readApi, RequestFailure, type Resource } from '../shared/api'
 
 type Presence = { participants: { id: string; name: string }[]; revision: number }
 
-/** A heartbeat rechecks authority every second. Only committed changes refresh the query. */
+/** Frequent authority checks leave read/render time inside the two-second live-update budget. */
 export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: string | null, restart: () => void, refreshKey = 0) {
   const identity = JSON.stringify(input)
   const key = JSON.stringify([url, identity, presenceUrl])
@@ -14,6 +14,7 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
   const requestRefresh = useRef<() => void>(() => {})
   const restartRef = useRef(restart); restartRef.current = restart
   const refresh = useCallback(() => requestRefresh.current(), [])
+  const reload = useCallback(() => { setLoaded({ key, resource: { state: 'loading', data: null } }); requestRefresh.current() }, [key])
   useEffect(() => {
     const abort = new AbortController()
     let timer: ReturnType<typeof setTimeout> | undefined, running = false, paused = false, previous: number | undefined, requested = 0, completed = -1
@@ -39,14 +40,15 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
           const reading = requested
           const { data } = await readApi<T>(url, { method: identity === undefined ? 'GET' : 'POST', ...(identity === undefined ? {} : { body: identity }) }, abort.signal)
           if (abort.signal.aborted) return
-          setResource({ state: 'ready', data }); completed = reading
+          if (requested === reading) setResource({ state: 'ready', data })
+          completed = reading
           if (previous !== undefined && previous !== presence.revision) window.dispatchEvent(new Event('records-live-changed'))
         }
         previous = presence.revision; setNotice('Live updates on')
       } catch (error) { if (!abort.signal.aborted) failed(error) }
       finally {
         running = false
-        if (!paused && !abort.signal.aborted && document.visibilityState === 'visible' && navigator.onLine) timer = setTimeout(tick, Math.max(0, 1000 - (Date.now() - started)))
+        if (!paused && !abort.signal.aborted && document.visibilityState === 'visible' && navigator.onLine) timer = setTimeout(tick, Math.max(0, 750 - (Date.now() - started)))
       }
     }
     function changed() { requested++; paused = false; if (timer) clearTimeout(timer); void tick() }
@@ -65,7 +67,7 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
   // Invalidation keeps editors and related readers mounted, including during an active read.
   useEffect(refresh, [refresh, refreshKey])
   const resource: Resource<T> = loaded.key === key ? loaded.resource : { state: 'loading', data: null }
-  return { resource, refresh, participants: loaded.key === key ? participants : [], notice: loaded.key === key ? notice : 'Connecting to live updates…' }
+  return { resource, refresh, reload, participants: loaded.key === key ? participants : [], notice: loaded.key === key ? notice : 'Connecting to live updates…' }
 }
 
 export function LiveRecordsStatus({ participants, notice }: { participants: Presence['participants']; notice: string }) {
