@@ -26,7 +26,7 @@ export function FindInView({ schema, query, fields, viewId, onMatch }: { schema:
     try {
       let cursor: string | undefined
       do {
-        const body = { ...query, cursor, fields, limit: query.limit ?? 50 }
+        const body = { ...query, cursor, fields:query.fields??fields, limit: query.limit ?? 50 }
         const { data } = await readApi<Page<RecordRow> | ViewResult>(viewId ? `/api/v1/views/${viewId}/query` : `/api/v1/apps/${schema.appId}/entities/${schema.id}/query`, { method: 'POST', body: JSON.stringify(body) }, abort.signal)
         const page = 'records' in data ? data.records : data
         const rowMatches: ViewMatch[][] = new Array(page.items.length)

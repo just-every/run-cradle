@@ -44,7 +44,7 @@ function SavedViewResult({ view, schema }: { view: View; schema: EntitySchema })
   const [error, setError] = useState('')
   const [cursor, setCursor] = useState<string | undefined>()
   useEffect(() => { const abort = new AbortController(); setResult(null); setError(''); readApi<ViewResult>(`/api/v1/views/${view.id}/query`, { method: 'POST', body: JSON.stringify({ limit: 100, fields: [...new Set([...view.fields,...view.groupBy,...Object.values(view.layout)])], ...(cursor ? { cursor } : {}) }) }, abort.signal).then(({ data }) => { if (!abort.signal.aborted) setResult(data) }, (cause: unknown) => { if (!abort.signal.aborted) setError(cause instanceof Error ? cause.message : 'Could not read the saved view.') }); return () => abort.abort() }, [view.id, view.version, cursor, revision])
-  const find = <FindInView schema={schema} viewId={view.id} query={{ limit: 100 }} fields={view.fields} onMatch={value => { setMatch(value); if (value) setCursor(value.cursor) }} />
+  const find = <FindInView schema={schema} viewId={view.id} query={{ limit: 100, fields:[...new Set([...view.fields,...view.groupBy,...Object.values(view.layout)])] }} fields={view.fields} onMatch={value => { setMatch(value); if (value) setCursor(value.cursor) }} />
   const summary = <ViewSummary schema={schema} query={{limit:100}} fields={view.fields} viewId={view.id} revision={revision} />
   const history = view.display === 'board' ? <BoardHistoryToolbar /> : null
   if (error) return <>{find}{summary}{history}<p className="cr-notice" role="alert">{error}</p></>
