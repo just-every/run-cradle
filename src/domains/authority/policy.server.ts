@@ -30,6 +30,16 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     }
     return {rules:rules.filter(r=>r.principals.some(p=>p.id===ctx.principal.id&&p.kind===ctx.principal.kind)),guards,version:row.version}
   }
+  // A request context reads its policy (or its denial) once per app for scoping; every
+  // scoped read still executes the returned guards, and authorize always loads afresh.
+  const loadedForReads=new WeakMap<RequestContext,Map<string,ReturnType<typeof load>>>()
+  const loadForRead=(ctx:RequestContext,appId:string)=>{
+    let loaded=loadedForReads.get(ctx)
+    if(!loaded)loadedForReads.set(ctx,loaded=new Map())
+    let pending=loaded.get(appId)
+    if(!pending){pending=load(ctx,appId);loaded.set(appId,pending);pending.catch(()=>{})}
+    return pending
+  }
   const proposerPermit=async(ctx:RequestContext,request:AuthorizationRequest):Promise<AuthorityPermit>=>{
     if(ctx.principal.proposer?.appId!==request.appId||!['schema.propose','schema.withdraw'].includes(request.action)||request.cost.length||request.grantId||request.connectionId)return denied()
     const credential=await db.prepare('SELECT scopes_json FROM authority_credentials WHERE id=? AND principal_id=?').bind(ctx.principal.credentialId,ctx.principal.id).first<{scopes_json:string}>()
@@ -39,7 +49,7 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     return {actor:{id:ctx.principal.id,kind:ctx.principal.kind},action:request.action,appId:request.appId,grantId:null,grantVersion:null,policyVersion:0,validUntil:ctx.principal.expiresAt,guards,reservationMutations:[],reservationIds:[]}
   }
   const scope:PolicyPort['scope']=async(ctx,request)=>{
-    const loaded=await load(ctx,request.appId),entity=registry.get(request.appId,request.entityId)
+    const loaded=await loadForRead(ctx,request.appId),entity=registry.get(request.appId,request.entityId)
     if(!entity)return denied()
     if(ctx.principal.credentialId){const c=await db.prepare('SELECT scopes_json FROM authority_credentials WHERE id=?').bind(ctx.principal.credentialId).first<{scopes_json:string}>();const credentialScopes=JSON.parse(c!.scopes_json) as {appId:string;purposes:string[]}[];if(!credentialScopes.some(s=>s.appId===request.appId&&s.purposes.includes(request.purpose)))return denied()}
     const rules=loaded.rules.filter(r=>r.entityId===request.entityId&&(r.purposes??['read']).includes(request.purpose))

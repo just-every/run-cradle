@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { activityActions, activityFieldLabel, activityValue } from './activity-presentation'
 import type { PropsWithChildren, ReactNode } from "react";
 
@@ -51,10 +52,10 @@ export const CampaignLink = ({
   campaign: CampaignSummary;
   className?: string;
 }) => (
-  <a className={className} href={campaignHref(campaign.id)}>
+  <Link className={className} to={campaignHref(campaign.id)}>
     <strong>{campaign.name}</strong>
     <small>{campaign.code}</small>
-  </a>
+  </Link>
 );
 
 export const MetricCard = ({

@@ -4,9 +4,20 @@ import { createUlid } from '../../core/shared/ids'
 import { digest, signToken } from './crypto.server'
 import { AuthorityError } from './errors'
 
+type BaseSession = { principal: Principal; csrfHash: string }
+// One request resolves its session once per database; a check that must re-read passes fresh.
+const resolved = new WeakMap<Request, Map<D1Database, Promise<BaseSession | undefined>>>()
+
+/** A request derived from another with the same credentials (a document's API read) shares its resolution. */
+export function shareResolvedSession(from: Request, to: Request) {
+  let sessions = resolved.get(from)
+  if (!sessions) resolved.set(from, sessions = new Map())
+  resolved.set(to, sessions)
+}
+
 /** A product projection; it cannot issue or accept any credential. */
 export function createBaseSessionReader(db: D1Database, config: AuthConfiguration, base: OperatorAuth) {
-  return async (request: Request) => {
+  const read = async (request: Request): Promise<BaseSession | undefined> => {
     const session = await base.getSession(request)
     if (!session) return undefined
     const operator = await db.prepare(`SELECT p.id,p.authentication_epoch,p.initial_owner FROM cradle_base_operators m
@@ -19,21 +30,34 @@ export function createBaseSessionReader(db: D1Database, config: AuthConfiguratio
       await config.initializeBaseOwner(session.operatorId)
     }
     // The mirrored session is a policy handle. Its token cannot sign anyone in.
-    const id=createUlid(),now=Date.now()
-    await db.batch([
-      db.prepare(`INSERT OR IGNORE INTO authority_sessions(id,principal_id,token_hash,csrf_hash,authentication_epoch,created_at,last_seen_at,expires_at)
-        SELECT ?,?,?,'',?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cradle_base_sessions WHERE base_id=?)`)
-        .bind(id,operator.id,`base:${session.id}`,operator.authentication_epoch,session.createdAt,now,session.expiresAt,session.id),
-      db.prepare(`INSERT OR IGNORE INTO cradle_base_sessions(base_id,session_id) SELECT ?,? WHERE EXISTS(SELECT 1 FROM authority_sessions WHERE id=?)`).bind(session.id,id,id),
-    ])
-    const row=await db.prepare(`SELECT s.id,s.csrf_hash FROM cradle_base_sessions m JOIN authority_sessions s ON s.id=m.session_id
+    const now=Date.now()
+    const mirrored=()=>db.prepare(`SELECT s.id,s.csrf_hash FROM cradle_base_sessions m JOIN authority_sessions s ON s.id=m.session_id
       WHERE m.base_id=? AND s.principal_id=? AND s.revoked_at IS NULL AND s.authentication_epoch=?`).bind(session.id,operator.id,operator.authentication_epoch)
       .first<{id:string;csrf_hash:string}>()
+    let row=await mirrored()
+    if (!row) {
+      const id=createUlid()
+      await db.batch([
+        db.prepare(`INSERT OR IGNORE INTO authority_sessions(id,principal_id,token_hash,csrf_hash,authentication_epoch,created_at,last_seen_at,expires_at)
+          SELECT ?,?,?,'',?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cradle_base_sessions WHERE base_id=?)`)
+          .bind(id,operator.id,`base:${session.id}`,operator.authentication_epoch,session.createdAt,now,session.expiresAt,session.id),
+        db.prepare(`INSERT OR IGNORE INTO cradle_base_sessions(base_id,session_id) SELECT ?,? WHERE EXISTS(SELECT 1 FROM authority_sessions WHERE id=?)`).bind(session.id,id,id),
+      ])
+      row=await mirrored()
+    }
     if (!row) return undefined
     await db.prepare('UPDATE authority_sessions SET last_seen_at=? WHERE id=?').bind(now,row.id).run()
     const principal: Principal={id:operator.id,kind:'human',humanId:operator.id,sessionId:row.id,baseSessionId:session.id,credentialId:null,
       issuedAt:new Date(session.createdAt).toISOString(),expiresAt:new Date(session.expiresAt).toISOString(),authenticationEpoch:operator.authentication_epoch}
     return {principal,csrfHash:row.csrf_hash}
+  }
+  return (request: Request, fresh = false) => {
+    if (fresh) return read(request)
+    let sessions = resolved.get(request)
+    if (!sessions) resolved.set(request, sessions = new Map())
+    let pending = sessions.get(db)
+    if (!pending) { pending = read(request); sessions.set(db, pending); pending.catch(() => sessions.delete(db)) }
+    return pending
   }
 }
 

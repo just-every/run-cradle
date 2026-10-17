@@ -15,8 +15,7 @@ import { checkHealth, isHealthMessage } from '../platform/health'
 import start from '@tanstack/react-start/server-entry'
 import { createSessionReader } from '../features/session/service'
 import { createPlatform } from '../platform'
-import { createApplication } from './application'
-import { getServerExtensionConfig } from './mount-server'
+import { currentApplication } from './application-cache.server'
 import { installedHomeResponse } from './installed-home.server'
 import { noTransformDocument } from './document-cache.server'
 import type { AppEnv } from './types'
@@ -59,7 +58,7 @@ export default {
     const missing = configurationFaults(bindings).filter(fault=>!(['/signin','/auth/request'].includes(path)&&fault.startsWith('MAIL_')))
     if (path !== '/health' && missing.length) return Response.json({ error: { code: 'unconfigured', message: 'Required installation configuration is missing or invalid.', missing } }, { status: 503 })
     const platform = createPlatform(bindings)
-    if (isHonoRequest(path)) return (await createApplication(platform, getServerExtensionConfig())).fetch(request, bindings, executionContext)
+    if (isHonoRequest(path)) return (await currentApplication(bindings)).fetch(request, bindings, executionContext)
     if (path === '/setup' || path === '/app' || path.startsWith('/app/')) {
       const firstRun = await firstRunResponse(request, platform)
       if (firstRun) return firstRun

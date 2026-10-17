@@ -5,6 +5,7 @@ import { createSessionReader } from '../features/session/service'
 import { createPlatform } from '../platform'
 import { firstRunComplete } from '../features/setup/server'
 import { createDocumentResourceRequest } from './document-request.server'
+import { shareResolvedSession } from '../../domains/authority/base-session.server'
 
 export async function loadDocumentSession() {
   let session, setupComplete = false
@@ -20,11 +21,11 @@ export async function loadDocumentSession() {
 }
 
 async function loadDocumentResource(path: string) {
-  const { createApplication } = await import('./application')
-  const { getServerExtensionConfig } = await import('./mount-server')
-  const request = getRequest()
-  const bindings = env
-  const response = await (await createApplication(createPlatform(bindings), getServerExtensionConfig())).fetch(createDocumentResourceRequest(request, path), bindings)
+  const { currentApplication } = await import('./application-cache.server')
+  const app = await currentApplication(env)
+  const request = getRequest(), resource = createDocumentResourceRequest(request, path)
+  shareResolvedSession(request, resource)
+  const response = await app.fetch(resource, env)
   if (response.status === 404) throw notFound()
   // Home remains useful for a records-only collaborator. Preserve the actual
   // launch denial as state; no launch rows or totals enter the document.

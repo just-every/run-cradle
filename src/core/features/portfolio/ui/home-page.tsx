@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import "./home-page.css";
 import { CradleArt } from "../../../../ui/shared/cradle-art";
 import { ResourceBoundary } from "../../../app/ui/operator";
@@ -109,7 +110,7 @@ const HomeContent = () => {
           <section className="portfolio-home-grid">
             <SectionCard
               title="Needs attention"
-              action={<a href="/app/campaigns">Open campaign grid</a>}
+              action={<Link to="/app/campaigns">Open campaign grid</Link>}
             >
               {attention.length ? (
                 <CampaignMiniList
@@ -127,7 +128,7 @@ const HomeContent = () => {
             </SectionCard>
             <SectionCard
               title="Upcoming milestones"
-              action={<a href="/app/lenses/timeline">Open timeline</a>}
+              action={<Link to="/app/lenses/timeline">Open timeline</Link>}
             >
               {upcomingMilestones.length ? (
                 <MilestoneList milestones={upcomingMilestones} />
@@ -138,7 +139,7 @@ const HomeContent = () => {
           </section>
           <SectionCard
             title="Recent activity"
-            action={<a href="/app/campaigns">Campaign grid</a>}
+            action={<Link to="/app/campaigns">Campaign grid</Link>}
           >
             {recentActivity.length ? (
               <ActivityList timezone={workspace.timezone} activity={recentActivity} />

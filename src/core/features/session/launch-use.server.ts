@@ -6,9 +6,11 @@ import { createRecordEntityRegistry } from '../../../domains/records/policy.serv
 import { launchDescriptors } from '../../../apps/launch/descriptors.server'
 import { authorizeLaunchProjection } from '../../../apps/launch/projection-authority.server'
 
+let launchEntities: ReturnType<typeof createRecordEntityRegistry> | undefined
+
 /** A protected navigation hint, admitted by the same policy as the launch view. */
 export async function launchInUse(db: D1Database, principal: Principal): Promise<boolean> {
-  const policy = createPolicyPort(db, createRecordEntityRegistry(createDescriptorRegistry(launchDescriptors)))
+  const policy = createPolicyPort(db, launchEntities ??= createRecordEntityRegistry(createDescriptorRegistry(launchDescriptors)))
   try {
     const recheck = await authorizeLaunchProjection(db, policy, { principal, requestId: principal.id, now: new Date().toISOString(), ingress: 'http' })
     const used = await db.prepare('SELECT 1 AS used FROM campaigns LIMIT 1').first()

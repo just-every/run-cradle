@@ -5197,8 +5197,12 @@
       "sha256": "5ba7aad25d2bc9e7e542d87c8f9f2e88328511b0bd45c8a3ca6ee5a0629c9928",
       "executable": false
     },
+    "src/core/app/application-cache.server.ts": {
+      "sha256": "d715e78d707f86a42f6c72e6a91c067003d170aae7a2427ac5858a187be94a8b",
+      "executable": false
+    },
     "src/core/app/application.ts": {
-      "sha256": "cc1ec557bae4a707a3dab18e301a3776da4a7bbf801455b732fef7d9822639df",
+      "sha256": "684c3ee5b9a07ecbd33dec15e3d9852071a9ba8fffb386fe358a8ac1f87ebd4d",
       "executable": false
     },
     "src/core/app/composition/admission-wake.server.ts": {
@@ -5274,7 +5278,7 @@
       "executable": false
     },
     "src/core/app/document.server.ts": {
-      "sha256": "ff6cee4f34359a51caf0357b348c7b3627b9e38f0653155a7a2a959321ddda98",
+      "sha256": "1269d1d6c25442c6957ce3ae219142924a86dda3eee1d000e8f140beab02ea77",
       "executable": false
     },
     "src/core/app/favicon.svg": {
@@ -5750,7 +5754,7 @@
       "executable": false
     },
     "src/core/app/worker.ts": {
-      "sha256": "357e2e34ea71b7fdf976d783bb5cff157103781917a0d8c020a7baaf0791d544",
+      "sha256": "2e147b42e6861192fc7c6ae2199183fdc2f71a79283489a0fb3376f129ef1cab",
       "executable": false
     },
     "src/core/features/automations/index.ts": {
@@ -6050,7 +6054,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.tsx": {
-      "sha256": "3679a0d1ebe0bc7f64e6862445241c84b5329b857e64b57ea96193f6e8c0875b",
+      "sha256": "b8ab6bba07dba1c65dfcf03d3eaf2e05347c368e3f89ba79da8a964f04efaffe",
       "executable": false
     },
     "src/core/features/portfolio/ui/index.tsx": {
@@ -6074,7 +6078,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-presentation.tsx": {
-      "sha256": "0c0f6dd26fea62efdd3c9691a73aecc8f9681ba76fded03aac35a80f6409082f",
+      "sha256": "8f3072a77ed42b2872f0b5c26a04bab8110238547aa4ce38afbc57a116772b4c",
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-types.tsx": {
@@ -6150,7 +6154,7 @@
       "executable": false
     },
     "src/core/features/session/launch-use.server.ts": {
-      "sha256": "e5395a7c9ef074e0f03a42cd01c60b63d5ea5fa78fa2a40af86ac0b86b9642c9",
+      "sha256": "017a3daad4bf9d07a923f591f045dc4a7b1798b71187fcfa70138ea1bd2c01a4",
       "executable": false
     },
     "src/core/features/session/routes.ts": {
@@ -6158,7 +6162,7 @@
       "executable": false
     },
     "src/core/features/session/service.ts": {
-      "sha256": "52ceb3f5105deb32fae1ce20b1b9bddeb43c2aea0af5e10ad45d1ad436e89490",
+      "sha256": "98b23fc93b7b13f6e9b26009da3c3ed38211befdf83c0abe811f344aaca4cffd",
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.css": {
@@ -6414,7 +6418,7 @@
       "executable": false
     },
     "src/domains/authority/base-session.server.ts": {
-      "sha256": "5352411f0d9eb64bbe208202f6248cb84c886170ec5126226226bdaefe91dc89",
+      "sha256": "84d1f778bb6988122c818b51b72988cc8735b3d1cb0c1e3f81add38aef867f75",
       "executable": false
     },
     "src/domains/authority/budget.server.ts": {
@@ -6506,7 +6510,7 @@
       "executable": false
     },
     "src/domains/authority/policy.server.ts": {
-      "sha256": "9fa4f2267e7b7e78c0508e42c1088e350922802d23bc7ebbec9f77ce31e55130",
+      "sha256": "ba429f425a05afb87f7e4f9b4bd1dde7ed8d2d933a10a398a8e2df4f01069614",
       "executable": false
     },
     "src/domains/authority/ports.ts": {
@@ -9274,7 +9278,7 @@
       "executable": false
     },
     "src/ui/shared/command.ts": {
-      "sha256": "47bf2dbdd21401681b7b9f627c549ced37739bc30c76b826c0bcd9cee07ee141",
+      "sha256": "19e4c71f7317ea74f482b86ecfc159cc0000aa35356a7c8767deeb5739998bb0",
       "executable": false
     },
     "src/ui/shared/cradle-art-screen.tsx": {

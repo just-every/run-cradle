@@ -4,7 +4,7 @@ import { authorizeLaunchProjection } from '../../apps/launch/projection-authorit
 import { createLaunchOwnersRouter } from '../../apps/launch/owners.server'
 import { createLaunchSettingsRouter } from '../../apps/launch/settings-http.server'
 import { AdmissionError } from '../../domains/admission/errors'
-import { createRuntime } from './composition/runtime.server'
+import type { Runtime } from './composition/runtime.server'
 import { ApiError, errorResponse } from '../registry/errors.server'
 import { createUlid } from '../shared/ids'
 import { AuthorityError } from '../../domains/authority/errors'
@@ -30,9 +30,9 @@ import type { Platform } from '../platform'
 import type { SeedConfig } from '../shared/config'
 import type { AppEnv } from './types'
 
-export const createApplication = async (platform: Platform, config: SeedConfig) => {
+export const createApplication = (platform: Platform, config: SeedConfig, runtime: Runtime) => {
   const app = new Hono<AppEnv>()
-  const {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime,launchImports} = await createRuntime(platform)
+  const {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime,launchImports} = runtime
 
   app.onError(async (error, context) => {
     if (error instanceof ApiError || error instanceof AdmissionError) return errorResponse(error, createUlid(), context.req.method + ' ' + context.req.path)
@@ -111,7 +111,10 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
     return context.json({ data: await foundation.commands.discover(ctx), meta: { requestId, apiVersion: 'cradle.api.v1', evaluatedAt: ctx.now, consistencyToken: ctx.consistencyToken ?? '' } }, 200, { 'cache-control': 'no-store', 'x-request-id': requestId })
   })
 
-  app.get('/api/session', (context) => context.json(context.get('session')))
+  app.get('/api/session', async (context) => {
+    const current = await sessions.getCurrent(context.req.raw)
+    return current ? context.json(current) : context.json(sessions.signedOut, 401)
+  })
   app.get('/api/status', (context) => context.json({ product: config.productName, status: 'data-spine' }))
 
   // All retained launch HTTP reads (including generated Start resource calls)
@@ -151,4 +154,4 @@ export const createApplication = async (platform: Platform, config: SeedConfig) 
   return app
 }
 
-export type AppType = Awaited<ReturnType<typeof createApplication>>
+export type AppType = ReturnType<typeof createApplication>

@@ -7,6 +7,13 @@ type Original = { url: string; body: CommandInput<unknown>; workspaceId: string;
 export type MutationState<T> = { state: 'idle' } | { state: 'submitting'; commandId: string } | { state: 'committed'; commandId: string; value: T } | { state: 'pending' | 'unknown' | 'cancelled'; commandId: string; checkIssue?: CheckIssue; runId?: string; statusUrl?: string } | { state: 'failed'; commandId: string; error: RequestFailure }
 const unresolved = (state: MutationState<unknown>['state']) => ['submitting', 'pending', 'unknown'].includes(state)
 const problem = (message: string) => new RequestFailure(0, { requestId: '', operation: 'command', code: 'internal', message, retry: 'read' })
+async function identify() {
+  const { data } = await readApi<{ member: { id: string }; workspace: { id: string } }>('/api/v1/session')
+  return { memberId: data.member.id, workspaceId: data.workspace.id }
+}
+// Commands that mount together share one in-flight identity read; a submission reads afresh.
+let mounting: ReturnType<typeof identify> | null = null
+const identifyOnMount = () => mounting ??= identify().finally(() => { mounting = null })
 export function useCommand<T>(storageKey?: string) {
   const busy = useRef(false)
   const original = useRef<Original | null>(null)
@@ -18,15 +25,11 @@ export function useCommand<T>(storageKey?: string) {
     if (persistence.current) try { if (busy.current && original.current) sessionStorage.setItem(persistence.current, JSON.stringify(original.current)); else sessionStorage.removeItem(persistence.current) } catch { /* In-memory identity remains; the interface does not claim device retention. */ }
     setState(next)
   }
-  async function identify() {
-    const { data } = await readApi<{ member: { id: string }; workspace: { id: string } }>('/api/v1/session')
-    return { memberId: data.member.id, workspaceId: data.workspace.id }
-  }
   const restoring = useRef<Promise<void> | null>(null)
   function restore() {
     if (!restoring.current) restoring.current = (async () => {
       if (!storageKey) return
-      const owner = await identify()
+      const owner = await identifyOnMount()
       persistence.current = `cradle-command:${owner.workspaceId}:${owner.memberId}:${storageKey}`
       const stored = sessionStorage.getItem(persistence.current)
       if (!stored) return
