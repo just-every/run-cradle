@@ -21,5 +21,6 @@ export type Impact = { summary: string; spend: Money[]; commitments: string[]; a
 export type CommandInput<T> = { commandId: Id; expected: RevisionRef[]; controlEpoch?: number; input: T };
 export type CommandResult<T> = { commandId: Id; state: 'committed'; value: T; changed: RevisionRef[]; eventIds: Id[] } | { commandId: Id; state: 'accepted'; runId: Id; statusUrl: string };
 export type CommandStatus = { commandId: Id; action: string; state: 'accepted' | 'running' | 'committed' | 'failed' | 'cancelled' | 'partial' | 'unknown'; result: Json | null; failure: Failure['error'] | null; runId: Id | null; receiptIds: Id[]; firstPossibleEffectAt: Instant | null; updatedAt: Instant };
-export type CellValue = null | string | boolean | Decimal | Money | Ref | Ref[] | string[] | { fileId: Id }[];
+export type ScalarCellValue = null | string | boolean | Money;
+export type CellValue = ScalarCellValue | Ref | Ref[] | ScalarCellValue[] | { fileId: Id }[];
 export type Cell = { state: 'value'; value: CellValue } | { state: 'redacted'; reason: 'policy' | 'erased' } | { state: 'unavailable'; code: 'invalid_source' | 'dependency_limit' | 'rollup_limit' | 'mixed_currency' | 'stale_rate'; fieldIds: Id[]; message: string };

@@ -2,6 +2,7 @@ import type { EntitySchema, Expr, Field, Filter } from './contracts'
 import { validateFunction, functionDefinition } from './formula-functions'
 import { validateCell } from './validators'
 import { normalize } from './exact'
+import { canonical } from '../admission/canonical'
 export type CalculationTable = Pick<EntitySchema,'id'|'fields'>
 type ResultType = Field['type'] | 'array' | 'blank'
 const scalar = ['text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person']
@@ -26,12 +27,15 @@ export function expressionType(expr: Expr, table: CalculationTable, tables: read
     const target = tables.find(t => t.id === relation?.entityId), source = target?.fields.find(f => f.id === expr.valueFieldId)
     if (!relation || !source) throw new Error('Rollup needs a link and a source field')
     validateCondition(expr.filter, target!)
+    if(expr.aggregate!=='lookup'&&(expr.sort!==undefined||expr.limit!==undefined))throw new Error('Sort and limit apply to lookups')
+    if(new Set((expr.sort??[]).map(sort=>sort.fieldId)).size!==(expr.sort??[]).length)throw new Error('Lookup sort fields must be distinct')
+    for(const sort of expr.sort??[]){const field=target!.fields.find(field=>field.id===sort.fieldId);if(!field||!scalar.includes(computedType(field,target!,tables,depth,cache,path)))throw new Error('Lookup sort requires a scalar field')}
     if (['count','counta','countall'].includes(expr.aggregate)) return 'number'
     if (expr.aggregate === 'and' || expr.aggregate === 'or') return 'boolean'
     if (expr.aggregate === 'arrayjoin') return 'text'
     if (expr.aggregate === 'arrayunique') { if(!['text','number','date','url','select','person','instant'].includes(source.type==='computed'?source.resultType??'':source.type))throw new Error('ARRAYUNIQUE needs a scalar string source');return 'array' }
     const type = computedType(source,target!,tables,depth,cache,path)
-    if (expr.aggregate === 'lookup') { if (relation.cardinality !== 'one' || !type || !scalar.includes(type)) throw new Error('Lookup requires one link and a scalar source field'); return type }
+    if (expr.aggregate === 'lookup') { if (!type || !scalar.includes(type)) throw new Error('Lookup requires a scalar source field'); return relation.cardinality==='many'?'array':type }
     if (!type || !['number','money'].includes(type)) throw new Error('SUM, AVERAGE, MIN and MAX require a numeric source field')
     return type
   }
@@ -74,6 +78,12 @@ export function validateCalculationTypes(schemas: readonly CalculationTable[]): 
       if (!field.expression || !field.resultType) throw new Error('Computed field needs an expression and result type')
       const type = expressionType(field.expression, table, schemas)
       if (type !== 'blank' && type !== field.resultType) throw new Error(`Expression returns ${type}, rather than ${field.resultType}`)
+      if(field.expression.kind==='rollup'&&field.expression.aggregate==='lookup'){
+        const expression=field.expression,relation=table.fields.find(f=>f.id===expression.relationFieldId)!.relation!,target=schemas.find(t=>t.id===relation.entityId)!,source=target.fields.find(f=>f.id===expression.valueFieldId)!
+        const elementType=computedType(source,target,schemas,0,new Map(),new Set())
+        if(relation.cardinality==='many'?field.resultElementType!==elementType:field.resultElementType!==undefined)throw new Error('Lookup array element type must match its scalar source')
+        if(elementType==='select'&&canonical(field.options??[])!==canonical(source.options??[]))throw new Error('Lookup select options must match its source field')
+      }else if(field.resultElementType!==undefined)throw new Error('Element type is reserved for many-link lookups')
     } catch (error) { throw new Error(`${field.label}: ${(error as Error).message}`) }
   }
 }

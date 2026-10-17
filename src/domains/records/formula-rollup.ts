@@ -1,18 +1,21 @@
-import type { Cell, CellValue } from '../../contracts/primitives'
+import type { Cell, CellValue, ScalarCellValue } from '../../contracts/primitives'
 import type { Expr } from './contracts'
 import type { FormulaContext } from './formulas'
 import { arithmetic, isMoney, truthy } from './formula-values'
 import { compare, divide } from './exact'
 const value = (v: CellValue): Cell => ({state:'value',value:v})
 export async function evaluateRollup(expr: Extract<Expr,{kind:'rollup'}>, ctx: FormulaContext): Promise<Cell> {
-  const cells = await ctx.rollup(expr.relationFieldId,expr.valueFieldId,expr.filter,expr.aggregate==='countall')
+  const cells = await ctx.rollup(expr.relationFieldId,expr.valueFieldId,expr.filter,expr.aggregate==='countall',{sort:expr.sort,limit:expr.limit})
   if(cells.length>10000)return {state:'unavailable',code:'rollup_limit',fieldIds:[expr.relationFieldId],message:'Rollup exceeds 10,000 authorized records'}
   const bad=cells.find(c=>c.state!=='value');if(bad)return bad
   let values=cells.flatMap(c=>c.state==='value'&&c.value!==null?[c.value]:[])
   if(expr.aggregate==='countall')return value(String(cells.length))
   if(expr.aggregate==='counta')return value(String(values.filter(v=>v!=='').length))
   if(expr.aggregate==='count'){const source=ctx.sourceType?.(expr.relationFieldId,expr.valueFieldId);return value(String(values.filter(v=>isMoney(v)||typeof v==='string'&&(!source||source==='number')&&/^-?(0|[1-9]\d*)(\.\d+)?$/.test(v)).length))}
-  if(expr.aggregate==='lookup'){if(cells.length>1)throw new Error('Lookup requires a single linked record');return value(values[0]??null)}
+  if(expr.aggregate==='lookup'){
+    if(ctx.relationMany?.(expr.relationFieldId))return value(cells.map(cell=>(cell as Extract<Cell,{state:'value'}>).value as ScalarCellValue))
+    if(cells.length>1)throw new Error('Lookup requires a single linked record');return value(values[0]??null)
+  }
   if(expr.aggregate==='and'||expr.aggregate==='or')return value(expr.aggregate==='and'?values.every(truthy):values.some(truthy))
   if(['arrayjoin','arrayunique'].includes(expr.aggregate)&&ctx.sourceType?.(expr.relationFieldId,expr.valueFieldId)==='select'){const options=ctx.sourceOptions?.(expr.relationFieldId,expr.valueFieldId);values=values.map(value=>{const option=options?.find(o=>o.id===value);if(!option)throw new Error('Source select option is unavailable');return option.label})}
   if(expr.aggregate==='arrayjoin'){if(values.some(v=>!['string','boolean'].includes(typeof v)))throw new Error('ARRAYJOIN needs scalar string or boolean values');return value(values.map(v=>typeof v==='boolean'?(v?'1':'0'):String(v)).join(expr.separator??','))}

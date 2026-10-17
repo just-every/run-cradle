@@ -3,12 +3,13 @@ import type { Field, RuleCondition, ValidationRule } from '../contracts'
 import { ImportInputError } from './input-error'
 
 export const personPortabilityNote='Person IDs refer to people in this installation. Import preserves those IDs and requires each referenced person to exist; it never creates people, accounts or memberships.'
-type TypedField=Pick<Field,'type'|'resultType'>
+type TypedField=Pick<Field,'type'|'resultType'|'resultElementType'>
 /** Remap only identities belonging to this base; person IDs are installation identities. */
 export function remapFieldValue(field:TypedField,value:CellValue,map:Map<string,string>):CellValue {
  if(value===null)return null
  const type=field.type==='computed'?field.resultType:field.type
  const id=(source:string)=>{const target=map.get(source);if(!target)throw new ImportInputError(`Missing portable identity ${source}`);return target}
+ if(type==='array'&&field.resultElementType==='select')return (value as (string|null)[]).map(value=>value===null?null:id(value))
  if(type==='select')return id(String(value))
  if(type==='multi_select')return (value as string[]).map(id)
  if(type==='relation'){
@@ -17,7 +18,7 @@ export function remapFieldValue(field:TypedField,value:CellValue,map:Map<string,
  }
  return structuredClone(value)
 }
-export function remapValidationRules(rules:ValidationRule[],fields:Pick<Field,'id'|'type'|'resultType'>[],map:Map<string,string>):ValidationRule[]{
+export function remapValidationRules(rules:ValidationRule[],fields:Pick<Field,'id'|'type'|'resultType'|'resultElementType'>[],map:Map<string,string>):ValidationRule[]{
  const condition=(c:RuleCondition):RuleCondition=>{
   if(c.kind!=='condition')return {...c,conditions:c.conditions.map(condition)}
   const field=fields.find(f=>f.id===c.fieldId),fieldId=map.get(c.fieldId)

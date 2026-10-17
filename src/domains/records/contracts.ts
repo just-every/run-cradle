@@ -46,6 +46,8 @@ export type Expr = {
     aggregate: 'sum' | 'count' | 'counta' | 'countall' | 'min' | 'max' | 'average' | 'lookup' | 'arrayjoin' | 'arrayunique' | 'and' | 'or';
     separator?: string;
     filter?: Filter;
+    sort?: Sort[];
+    limit?: number;
 };
 export type Field = {
     validation?: { min?: string; max?: string; minLength?: number; maxLength?: number; pattern?: string };
@@ -68,6 +70,7 @@ export type Field = {
     };
     expression?: Expr;
     resultType?: Field['type'] | 'array';
+    resultElementType?: 'text' | 'url' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'person';
 };
 export type RuleCondition = { kind: 'all' | 'any'; conditions: RuleCondition[] } | {
     kind: 'condition'; fieldId: Id; op: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'empty' | 'not_empty'; value?: CellValue;

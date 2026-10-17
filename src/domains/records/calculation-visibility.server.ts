@@ -16,9 +16,10 @@ export async function visibleCalculationSchema(ctx: RequestContext, schema: Enti
     try {
       const target = registry.get(dependency.relation.ownerAppId,dependency.relation.entityId).schema
       const targetScope = await policy.scope(ctx,{appId:target.appId,entityId:target.id,purpose:'read'})
-      if (!targetScope.readableFieldIds.includes(expr.valueFieldId) || filterFields(expr.filter).some(id=>!targetScope.readableFieldIds.includes(id))) return false
-      const value = target.fields.find(f=>f.id===expr.valueFieldId)
-      return !value?.expression || visible(value.expression,target,targetScope,depth+1)
+      const dependencies=[expr.valueFieldId,...filterFields(expr.filter),...(expr.sort??[]).map(sort=>sort.fieldId)]
+      if(dependencies.some(id=>!targetScope.readableFieldIds.includes(id)))return false
+      for(const id of dependencies){const value=target.fields.find(field=>field.id===id);if(value?.expression&&!await visible(value.expression,target,targetScope,depth+1))return false}
+      return true
     } catch(error) { if(error instanceof Error && 'code' in error && ['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code))) return false; throw error }
   }
   const fields = await Promise.all(schema.fields.map(async field => {

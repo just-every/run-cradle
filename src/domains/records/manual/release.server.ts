@@ -16,7 +16,7 @@ import { previewCalculations } from './calculation-preview.server'
 import { assertGuards } from '../fence.server'
 import { snapshotViews, prepareViewRemovals, prepareFormRemovals, type ViewSnapshot } from './view-removal.server'
 import { previewRuleViolations } from './rule-preview.server'
-function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,readOnly,options,...stored}=physical;return stored}
+function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,resultElementType,readOnly,options,...stored}=physical;return stored}
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
 export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[] }
 /** Whose authority a preview is computed under: `reader` reads every affected table as `ownerId`. */
@@ -54,7 +54,6 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
     if(field.readOnly&&field.type!=='computed')throw new AdmissionError('validation','Read-only is reserved for lookup fields.')
     if(field.relation&&(field.relation.ownerAppId!==draft.appId||field.relation.onDelete!=='restrict'))throw new AdmissionError('validation','Links must target records in this base and restrict deletion.')
     if(field.type==='computed'&&(!field.expression||!field.resultType))throw new AdmissionError('validation',`${field.label}: a calculation needs an expression and result type.`)
-    if(field.type==='computed'&&field.expression?.kind==='rollup'&&field.expression.aggregate==='lookup'){const expression=field.expression,relation=schema.fields.find(f=>f.id===expression.relationFieldId)?.relation,source=schemas.find(t=>t.id===relation?.entityId)?.fields.find(f=>f.id===expression.valueFieldId);if(!source||(source.type==='computed'?source.resultType:source.type)!==field.resultType||source.type==='relation')throw new AdmissionError('validation','Lookup source and result type must match a scalar field.');if(source.type==='select'&&canonical(field.options??[])!==canonical(source.options??[]))throw new AdmissionError('validation','Lookup select options must match its source field.')}
     if(field.type!=='relation'&&field.relation||field.type!=='computed'&&field.expression)throw new AdmissionError('validation','Only links declare relations and only lookups declare expressions.')
     const existing=old?.fields.get(field.id)?.field
     if(existing&&canonical(comparableField({...existing,label:field.label}))!==canonical(comparableField(field)))throw new AdmissionError('validation',`${field.label}: changing an existing field type, options or relation is unsupported. Rename it or add a new field.`)

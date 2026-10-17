@@ -302,7 +302,43 @@
                           "maxItems": 10000,
                           "type": "array",
                           "items": {
-                            "type": "string"
+                            "anyOf": [
+                              {
+                                "type": "null"
+                              },
+                              {
+                                "type": "string",
+                                "maxLength": 100000
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "minor": {
+                                    "type": "string",
+                                    "maxLength": 129,
+                                    "pattern": "^-?(0|[1-9]\\d*)$"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  },
+                                  "scale": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 6
+                                  }
+                                },
+                                "required": [
+                                  "minor",
+                                  "currency",
+                                  "scale"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
                           }
                         },
                         {
@@ -322,6 +358,20 @@
                             "additionalProperties": false
                           }
                         }
+                      ]
+                    },
+                    "resultElementType": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "url",
+                        "number",
+                        "date",
+                        "instant",
+                        "money",
+                        "boolean",
+                        "select",
+                        "person"
                       ]
                     }
                   },
@@ -399,8 +449,43 @@
                             "maxItems": 10000,
                             "type": "array",
                             "items": {
-                              "type": "string",
-                              "maxLength": 100000
+                              "anyOf": [
+                                {
+                                  "type": "null"
+                                },
+                                {
+                                  "type": "string",
+                                  "maxLength": 100000
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "minor": {
+                                      "type": "string",
+                                      "maxLength": 129,
+                                      "pattern": "^-?(0|[1-9]\\d*)$"
+                                    },
+                                    "currency": {
+                                      "type": "string",
+                                      "pattern": "^[A-Z]{3}$"
+                                    },
+                                    "scale": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 6
+                                    }
+                                  },
+                                  "required": [
+                                    "minor",
+                                    "currency",
+                                    "scale"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              ]
                             }
                           },
                           {
@@ -859,7 +944,43 @@
                   "maxItems": 10000,
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "string",
+                        "maxLength": 100000
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minor": {
+                            "type": "string",
+                            "maxLength": 129,
+                            "pattern": "^-?(0|[1-9]\\d*)$"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "scale": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 6
+                          }
+                        },
+                        "required": [
+                          "minor",
+                          "currency",
+                          "scale"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 {
@@ -979,6 +1100,36 @@
             "separator": {
               "type": "string",
               "maxLength": 200
+            },
+            "sort": {
+              "type": "array",
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fieldId": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ]
+                  }
+                },
+                "required": [
+                  "fieldId",
+                  "direction"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
             }
           },
           "required": [
@@ -1132,7 +1283,43 @@
                   "maxItems": 10000,
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "string",
+                        "maxLength": 100000
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minor": {
+                            "type": "string",
+                            "maxLength": 129,
+                            "pattern": "^-?(0|[1-9]\\d*)$"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "scale": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 6
+                          }
+                        },
+                        "required": [
+                          "minor",
+                          "currency",
+                          "scale"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 {
@@ -1303,7 +1490,43 @@
                   "maxItems": 10000,
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "string",
+                        "maxLength": 100000
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "minor": {
+                            "type": "string",
+                            "maxLength": 129,
+                            "pattern": "^-?(0|[1-9]\\d*)$"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "scale": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 6
+                          }
+                        },
+                        "required": [
+                          "minor",
+                          "currency",
+                          "scale"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 },
                 {

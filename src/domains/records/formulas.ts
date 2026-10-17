@@ -1,7 +1,7 @@
 import { evaluateRollup } from './formula-rollup';
 import { arithmetic, truthy } from './formula-values';
 import type { Cell, CellValue } from '../../contracts/primitives';
-import type { EntitySchema, Expr, Field, Filter } from './contracts';
+import type { EntitySchema, Expr, Field, Filter, Sort } from './contracts';
 import { validateFunction } from './formula-functions';
 import { validateCalculationTypes } from './calculation-schema';
 import { compare, normalize } from './exact';
@@ -11,7 +11,8 @@ export const unavailable = (code: Extract<Cell, {
 }>['code'], fieldIds: string[], message: string): Cell => ({ state: 'unavailable', code, fieldIds, message });
 export type FormulaContext = {
     field(id: string): Promise<Cell>;
-    rollup(relationFieldId: string, valueFieldId: string, filter?: Filter, countOnly?: boolean): Promise<Cell[]>;
+    rollup(relationFieldId: string, valueFieldId: string, filter?: Filter, countOnly?: boolean, selection?: {sort?: Sort[]; limit?: number}): Promise<Cell[]>;
+    relationMany?(relationFieldId: string): boolean;
     sourceOptions?(relationFieldId:string,valueFieldId:string):Field['options'];
     sourceType?(relationFieldId:string,valueFieldId:string): string | undefined;
 };
@@ -37,6 +38,7 @@ export function validateExpressionGraph(schemas: readonly Pick<EntitySchema,'id'
             if (!rel)
                 throw new Error('Rollup needs relation');
             if(expr.aggregate!=='countall')visit(rel.entityId + ':' + expr.valueFieldId, next, depth + 1);
+            for(const sort of expr.sort??[])visit(rel.entityId + ':' + sort.fieldId,next,depth+1);
         } if (expr.kind === 'call')
             expr.args.forEach(e => walk(e, expressionDepth + 1)); }
         walk(item.f.expression, depth);

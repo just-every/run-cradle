@@ -14,6 +14,7 @@ import { querySchema } from './validators';
 import { evaluateExpression, unavailable, validateExpressionGraph } from './formulas';
 import { createCursorCodec } from './cursor.server';
 import { AdmissionError } from '../admission/errors';
+import { linkedCalculationCells } from './linked-calculation.server';
 export type RecordDetailPort = (ctx: RequestContext, ref: Ref) => Promise<{
     evidenceIds: string[];
     commentCount: number;
@@ -105,28 +106,18 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
                 if (path.has(fieldKey) || path.size >= 64)
                     return unavailable('dependency_limit', [id], 'Formula cycle or depth exceeds 64');
                 const nextPath = new Set(path).add(fieldKey);
-                return evaluateExpression(storage.field.expression!, { sourceOptions:(relId,valId)=>{const relation=d.fields.get(relId)?.field.relation;return relation?registry.get(relation.ownerAppId,relation.entityId).fields.get(valId)?.field.options:undefined}, sourceType:(relId,valId)=>{const relation=d.fields.get(relId)?.field.relation;if(!relation)return;const field=registry.get(relation.ownerAppId,relation.entityId).fields.get(valId)?.field;return field?.type==='computed'?field.resultType:field?.type}, field: async (dep) => { if (dep === id)
+                return evaluateExpression(storage.field.expression!, { relationMany:relId=>d.fields.get(relId)?.field.relation?.cardinality==='many', sourceOptions:(relId,valId)=>{const relation=d.fields.get(relId)?.field.relation;return relation?registry.get(relation.ownerAppId,relation.entityId).fields.get(valId)?.field.options:undefined}, sourceType:(relId,valId)=>{const relation=d.fields.get(relId)?.field.relation;if(!relation)return;const field=registry.get(relation.ownerAppId,relation.entityId).fields.get(valId)?.field;return field?.type==='computed'?field.resultType:field?.type}, field: async (dep) => { if (dep === id)
                         return unavailable('dependency_limit', [id], 'Formula cycle'); const result=await cell(dep),source=d.fields.get(dep)?.field;
-                        if(result.state==='value'&&result.value!==null&&(source?.type==='select'||source?.type==='computed'&&source.resultType==='select')){const option=source.options?.find(option=>option.id===result.value);return option?{state:'value',value:option.label}:unavailable('invalid_source',[dep],'Source select option is unavailable');}return result; }, rollup: async (relId, valId, filter, countOnly) => {
+                        if(result.state==='value'&&result.value!==null&&(source?.type==='select'||source?.type==='computed'&&source.resultType==='select')){const option=source.options?.find(option=>option.id===result.value);return option?{state:'value',value:option.label}:unavailable('invalid_source',[dep],'Source select option is unavailable');}return result; }, rollup: async (relId, valId, filter, countOnly, selection) => {
                         const relation = d.fields.get(relId);
                         if (!relation?.field.relation || !scope.discoverableRelations.includes(relId) || !scope.readableFieldIds.includes(relId))
                             return [{ state: 'redacted', reason: 'policy' }];
                         const refs = await linked(relation);
-                        if (!refs.length) return [];
                         const target = registry.get(relation.field.relation.ownerAppId, relation.field.relation.entityId);
                         let targetScope: PolicyScope;
                         try { targetScope = await policy.scope(ctx, { appId: target.schema.appId, entityId: target.schema.id, purpose }); }
                         catch (error) { if (error instanceof Error && 'code' in error && ['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code))) return [{state:'redacted',reason:'policy'}]; throw error; }
-                        if ((!countOnly && !targetScope.readableFieldIds.includes(valId)) || filterFields(filter).some(id=>!targetScope.readableFieldIds.includes(id)))
-                            return [{ state: 'redacted', reason: 'policy' }];
-                        const where = and(targetScope.rowPredicate, ...targetScope.currentAuthorityGuards, trustedPredicate(`${identifier(target.idColumn)} IN (SELECT value FROM json_each(?))`, [JSON.stringify(refs.map(r => r.recordId))]), compileFilter(target, targetScope, filter));
-                        const targetRows = await db.prepare(`SELECT * FROM ${identifier(target.table.tableId)} WHERE ${where.sql} LIMIT 10001`).bind(...where.values).all<Record<string, unknown>>();
-                        const order=new Map(refs.map((ref,index)=>[ref.recordId,index]));targetRows.results.sort((a,b)=>order.get(String(a[target.idColumn]))!-order.get(String(b[target.idColumn]))!);
-                        if (countOnly) return targetRows.results.map(()=>({state:'value' as const,value:null}));
-                        const valueStorage = target.fields.get(valId)!;
-                        if (valueStorage.field.type !== 'computed' && !valueStorage.join && valueStorage.field.type !== 'relation')
-                            return targetRows.results.map(row => ({ state: 'value' as const, value: decode(valueStorage, row) }));
-                        return Promise.all(targetRows.results.map(async (row) => (await render(ctx, targetScope, target, row, [valId], nextPath, purpose)).fields[valId]!));
+                        return linkedCalculationCells(db,target,targetScope,refs,valId,filter,!!countOnly,selection,async(row,fieldId)=>(await render(ctx,targetScope,target,row,[fieldId],nextPath,purpose)).fields[fieldId]!);
                     } });
             }
             if (storage.field.type === 'relation')

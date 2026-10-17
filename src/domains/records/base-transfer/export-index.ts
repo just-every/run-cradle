@@ -20,6 +20,7 @@ export function exportIndex(base: PortableBase['base']) {
  }
  function scalar(field: PortableField, value: unknown): string {
   if (value === null) return ''
+  if(field.type==='computed'&&field.resultType==='array'&&field.resultElementType==='select')return JSON.stringify((value as (string|null)[]).map(id=>id===null?null:options.get(field.id)!.get(id)!))
   if (field.type === 'select' || field.type === 'computed' && field.resultType === 'select') return options.get(field.id)!.get(String(value))!
   if (field.type === 'boolean' || field.type === 'computed' && field.resultType === 'boolean') return value ? 'checked' : ''
   if(field.type==='multi_select'||field.type==='computed'&&field.resultType==='multi_select')return JSON.stringify((value as string[]).map(id=>options.get(field.id)!.get(id)!))

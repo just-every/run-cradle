@@ -20,7 +20,7 @@ export function RelationshipPicker({ field, value, onChange }: { field: Field; v
   },search?200:0)
   return ()=>{clearTimeout(timer);abort.abort()}
  },[relation?.ownerAppId,relation?.entityId,search,fieldIds,cursor,refresh])
- const refs:Ref[]=value&&typeof value==='object'?Array.isArray(value)?value.filter((item):item is Ref=>typeof item==='object'&&'recordId' in item):'recordId' in value?[value]:[]:[]
+ const refs:Ref[]=value&&typeof value==='object'?Array.isArray(value)?value.filter((item):item is Ref=>item!==null&&typeof item==='object'&&'recordId' in item):'recordId' in value?[value]:[]:[]
  const selected=fieldIds??result?.searchFieldIds??[],primary=result&&primaryRecordField(result.schema)
  return <div className="cr-relationship-picker">
   <p className="cr-muted">Only records and fields you can read are searched and shown.</p>
