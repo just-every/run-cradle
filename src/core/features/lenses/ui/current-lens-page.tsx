@@ -1,0 +1,27 @@
+import { useState } from 'react'
+import { formatDate, formatDateTime } from '../../portfolio/ui/portfolio-format'
+import { useCurrentLens, type CurrentLens } from './current-lens-client'
+
+const label = (field: string) => field.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, text => text.toUpperCase())
+const display = (value: unknown, field = '', timezone = 'UTC') => typeof value === 'string' && value && field.endsWith('Date') ? formatDate(value) : typeof value === 'string' && value && field.endsWith('At') ? formatDateTime(value, timezone) : value === null || value === undefined || value === '' ? '—' : typeof value === 'object' ? JSON.stringify(value) : String(value)
+const heading = (record: CurrentLens['items'][number]) => String(record.name ?? record.title)
+
+export function CurrentLensPage({lensId}: {lensId: string}) {
+ const {value, pending, error, refresh} = useCurrentLens(lensId)
+ const [selection, setSelection] = useState<string | null>(null)
+ if (!value) return <section className="rounded-xl border border-border bg-card p-6" aria-live="polite"><h1 className="text-xl font-extrabold">{error ? 'Could not load lens' : 'Evaluating current records'}</h1><p className="mt-2 text-sm text-muted-foreground">{error ?? 'Getting the result list, count and details together.'}</p>{error && <button className="mt-4 rounded-md border border-border px-3 py-2 text-sm font-bold" onClick={() => void refresh()}>Refresh results</button>}</section>
+ const selected = value.items.find(item => item.id === selection) ?? value.selectedDetail
+ const fields = [...new Set(['title' in (selected ?? {}) ? 'title' : 'name', ...value.lens.fields])]
+ return <div className="space-y-5" aria-labelledby="current-lens-title">
+  <header className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-5 lg:flex-row lg:items-center">
+   <div><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Saved Lens · Current results</p><h1 className="mt-1 text-2xl font-extrabold" id="current-lens-title">{value.lens.name}</h1>{value.lens.description && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{value.lens.description}</p>}</div>
+   <div className="flex flex-wrap items-center gap-3"><a className="cr-link text-sm font-bold text-primary underline" href={`/app/lenses/${lensId}/edit`}>Edit lens</a><button className="rounded-md border border-border px-3 py-2 text-sm font-bold" disabled={pending} onClick={() => void refresh()}>Refresh results</button></div>
+  </header>
+  <section aria-label="Condition summary" className="rounded-xl border border-border bg-card p-5"><h2 className="text-sm font-bold">Conditions</h2><p className="mt-2 text-sm text-muted-foreground">{value.lens.recordType} · Non-archived campaigns · {value.lens.display}</p>{value.conditionSummary.length ? <ul className="mt-2 flex flex-wrap gap-2">{value.conditionSummary.map((condition,index) => <li className="break-words rounded-md border border-border bg-background px-3 py-2 text-xs" key={index}>{condition}</li>)}</ul> : <p className="mt-2 text-sm">All non-archived records</p>}<p className="mt-3 break-words text-xs text-muted-foreground">Evaluated <time dateTime={value.evaluatedAt}>{formatDateTime(value.evaluatedAt,value.timezone)}</time> · {label(value.lens.sort.field)} {value.lens.sort.direction === 'asc' ? 'ascending' : 'descending'}</p></section>
+  <p className="text-sm font-bold" role="status">{value.total.value}{value.total.kind === 'at_least' ? '+' : ''} matching records</p>
+  {value.items.length === 0 ? <section className="rounded-xl border border-border bg-card p-8 text-center"><h2 className="text-lg font-bold">No matching records</h2><p className="mt-2 text-sm text-muted-foreground">No current records match these conditions.</p></section> : <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,1fr)]">
+   <section aria-label="Lens results" className="min-w-0 space-y-3">{value.items.map(item => <button key={String(item.id)} className={`w-full rounded-xl border p-5 text-left ${selected?.id === item.id ? 'border-primary bg-primary/5' : 'border-border bg-card'}`} aria-pressed={selected?.id === item.id} onClick={() => setSelection(String(item.id))}><strong className="block break-words text-base">{heading(item)}</strong><span className="mt-2 block text-sm text-muted-foreground">{display(item.campaign)} · {display(item.status ?? item.state)}</span>{Boolean(item.overdue) && <span className="mt-2 block text-sm font-bold text-red-700">Overdue</span>}</button>)}{value.nextCursor && <button className="rounded-md border border-border px-3 py-2 text-sm font-bold" onClick={() => void refresh(value.nextCursor!)}>Next page</button>}</section>
+   {selected && <section aria-label="Selected record detail" className="min-w-0 rounded-xl border border-border bg-card p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Selected record · Version {display(selected.version)}</p><h2 className="mt-2 break-words text-xl font-extrabold">{heading(selected)}</h2><dl className="mt-4 grid gap-4">{fields.map(field => <div key={field}><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label(field)}</dt><dd className="mt-1 break-words text-sm">{display(selected[field],field,value.timezone)}</dd></div>)}</dl><p className="mt-5 text-xs text-muted-foreground">From the same evaluation as the results above.</p></section>}
+  </div>}
+ </div>
+}

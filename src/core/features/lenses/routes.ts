@@ -17,6 +17,7 @@ export const registerLensRoutes = (app: Hono<AppEnv>, platform: Platform) => {
   })
   app.get('/api/lenses/:id', async (context) => {
     const id = requirePathParam(context.req.param('id'), 'lens id')
+    if (context.req.query('view') === 'results') return context.json(await service.results(id,context.req.query('cursor')),200,{'cache-control':'no-store'})
     const lens = await service.find(id)
     if (!lens) return context.json({ error: { code: 'not_found', message: `Lens ${id} was not found.` } }, 404)
     return context.json({ lens })

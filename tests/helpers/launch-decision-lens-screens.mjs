@@ -37,8 +37,8 @@ export async function verifyDecisionLensScreens({h,page,command,capture}) {
  await open.waitFor()
  await capture('clause-lens-saved')
  const url=await open.getAttribute('href')
- await open.click();await page.getByRole('heading',{name:'Lens Builder',exact:true}).waitFor()
- assert.equal(await page.getByLabel('Lens name',{exact:true}).inputValue(),`Supplier review ${width}`)
+ await open.click();await page.getByRole('heading',{name:`Supplier review ${width}`,exact:true}).waitFor()
+ await page.getByRole('heading',{name:'No matching records',exact:true}).waitFor()
  await capture('clause-lens-shared')
  const id=new URL(url,h.origin).pathname.split('/')[3]
  const response=await h.request(h.ownerSession,`/api/lenses/${id}`)

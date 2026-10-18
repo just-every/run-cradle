@@ -1,4 +1,5 @@
 import {AnalysisPanel} from '../../../../ui/launch/analysis-panel'
+import {CampaignComments} from '../../../../ui/launch/campaign-comments'
 import { CampaignCustomFields } from "../../../../ui/launch/campaign-custom-fields";
 import { campaignLifecycle } from '../../../../apps/launch/lifecycle'
 import { RelatedRecords } from '../../../../ui/launch/related-records';
@@ -381,6 +382,9 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
                   No deliverables are linked to this campaign.
                 </p>
               ) : null}
+            </SectionCard>
+            <SectionCard title="Comments">
+              <CampaignComments campaign={campaign} comments={detail.resource.data.comments} onChanged={detail.retry} />
             </SectionCard>
             <SectionCard title="Activity" collapsible className="portfolio-priority-history">
               <ActivityList timezone={session.resource.data.workspace.timezone} activity={activity} />

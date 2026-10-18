@@ -749,7 +749,7 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Definition edits/deletion preserve every business record; shipped lens deletion is refused.
 - **LENS-005 — Current results.** Opening or refreshing a lens re-evaluates it against non-archived records, and its result list, count, condition summary, and selected detail all describe that one evaluation.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — Saved definitions and explicit preview re-evaluation are tested; opening/refreshing a coherent result, count, condition summary and selected detail remains unimplemented.
+  *Status:* done — Saved lens opening and refresh materialize one definition revision, non-archived result set, count, condition summary and selected detail; current authority, edits, archival and explicit empty states are exercised at 1440/390. Evidence: `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`.
 - **LENS-006 — Shipped views.** Risks Lens and Timeline Lens ship as saved lenses. Operators can duplicate or edit them, and restoring either returns its definition to exactly the one in RISK-005 or MILE-002 without changing a record.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Both installed shipped lenses support independent duplication, editing and exact definition restoration without business mutations.
@@ -764,13 +764,13 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **ACT-002 — Comments.** An operator can add a plain-text comment to a campaign, and it appears in campaign activity. A comment changes no field of any record and triggers no automation and no AI call. An operator can delete a comment, which leaves a deletion entry in activity.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — Comment creation, activity and isolation are tested; comment deletion and its deletion activity entry remain unimplemented.
+  *Status:* done — Plain-text comment creation and versioned deletion, attributed activity, current authority, and complete business/automation/AI isolation through native HTTP commands and 1440/390 screens. Evidence: `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`.
 - **ACT-003 — Dates and times.** Every timestamp in the API and the export is ISO 8601 in UTC. Campaign, deliverable, and milestone dates are calendar dates evaluated from the start of that day in the workspace timezone; decision due times are instants. Every relative time exposes its absolute time as its accessible name.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **ACT-004 — Mentions.** A comment can mention a current operator, which notifies exactly that operator and changes no field of any record. A mention of a removed or erased operator renders as plain text and notifies nobody.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet.
+  *Status:* done — Only the mentioned current operator is notified; removed and erased mentions stay plain text without delivery or business-field changes, through native HTTP commands and 1440/390 screens. Evidence: `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`.
 
 ### Automations
 
@@ -904,13 +904,13 @@ Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 19 October 2026; their cited evidence and gaps describe those updates.
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **106 done, 76 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **109 done, 73 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 89 | 22 | 0 | 111 |
+| Published | 92 | 19 | 0 | 111 |
 | Target and push further | 17 | 54 | 28 | 99 |
-| All | 106 | 76 | 28 | 210 |
+| All | 109 | 73 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1081,13 +1081,13 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `LENS-002` | Preview | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
 | `LENS-003` | Save and share | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
 | `LENS-004` | Edit and delete | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
-| `LENS-005` | Current results | published | partial | `tests/launch-write-effects.mjs` | Saved definitions and explicit preview re-evaluation are tested; opening/refreshing a coherent result, count, condition summary and selected detail remains unimplemented. |
+| `LENS-005` | Current results | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | Saved lens opening and refresh materialize one definition revision, non-archived result set, count, condition summary and selected detail; current authority, edits, archival and explicit empty states are exercised at 1440/390. |
 | `LENS-006` | Shipped views | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
 | `LENS-007` | Conditions | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
 | `ACT-001` | Campaign activity | published | done | `tests/ui-launch-walkthrough.mjs` |  |
-| `ACT-002` | Comments | published | partial | `tests/launch-write-effects.mjs` | Comment creation, activity and isolation are tested; comment deletion and its deletion activity entry remain unimplemented. |
+| `ACT-002` | Comments | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | Plain-text comment creation and versioned deletion, attributed activity, current authority, and complete business/automation/AI isolation through native HTTP commands and 1440/390 screens. |
 | `ACT-003` | Dates and times | published | done | `tests/ui-launch-walkthrough.mjs` |  |
-| `ACT-004` | Mentions | published | partial | `src/apps/launch/comments.server.ts` | no clause-tagged test yet |
+| `ACT-004` | Mentions | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | Only the mentioned current operator is notified; removed and erased mentions stay plain text without delivery or business-field changes, through native HTTP commands and 1440/390 screens. |
 | `AUTO-001` | Definition | published | partial | `src/apps/launch/automations.server.ts` | no clause-tagged test yet |
 | `AUTO-002` | Commit boundary | published | done | `tests/launch-installed-runtime.mjs` |  |
 | `AUTO-003` | One run per trigger | published | done | `tests/launch-installed-event-control.mjs`, `tests/launch-installed-runtime.mjs` |  |

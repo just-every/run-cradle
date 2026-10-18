@@ -25,6 +25,7 @@ const id=z.object({id:idSchema}).strict(), empty=z.object({}).strict()
 const create=<T extends z.ZodType>(fields:T)=>z.object({fields}).strict()
 const patch=<T extends z.ZodRawShape>(fields:z.ZodObject<T>)=>z.object({id:idSchema,changes:fields.partial()}).strict()
 export const launchInputs={
+ 'comment.delete':id.extend({version:z.number().int().positive()}),
  'comment.create':z.object({campaignId:idSchema,body:z.string().trim().min(1).max(10000),mentions:z.array(idSchema).max(100).refine(ids=>new Set(ids).size===ids.length,'Duplicate mention')}).strict(),
  'campaign.create':create(campaignFields),'campaign.patch':patch(campaignFields),'campaign.archive':id,'campaign.restore':id.extend({ownerId:idSchema.optional()}),'campaign.delete':id.extend({confirmationCode:text}),'campaign.duplicate':id.extend({newCode:text,newLaunchDate:dateSchema.optional()}),
  'deliverable.create':create(deliverableFields),'deliverable.patch':patch(deliverableFields),'deliverable.delete':id,'deliverable.complete':id,'deliverable.reopen':id,
