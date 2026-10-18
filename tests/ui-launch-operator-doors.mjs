@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { chromium } from '@playwright/test'
+import { chromium, expect } from '@playwright/test'
 import { contract } from './contract.mjs'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { createFixtureAuth } from './helpers/base-fixture-auth.mjs'
@@ -14,7 +14,7 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
  await mkdir(output, { recursive: true })
  const h = await launchAuthorityRuntime({}, { installedLaunchDefinitions: true, installationOwner: true })
  const receipt = { environment: 'Actual emitted Worker and native D1, synthetic fixtures only', screens: [], downloads: [], errors: [] }
- const browser = await chromium.launch()
+ const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] })
  try {
   let actor = { id: h.owner, session: h.ownerSession }
   for (const width of [1440, 390]) {
@@ -132,11 +132,20 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    await page.locator('.launch-settings-item', { hasText: 'Sample data ·' }).first().getByRole('button', { name: 'Remove sample data' }).click()
    await page.getByText(`campaign “${edited.name}”`).waitFor()
    await b.capture('sample-data-refused')
-   await page.getByRole('button', { name: 'Install sample data' }).click()
-   await page.locator('.launch-settings-item', { hasText: 'Sample data ·' }).nth(1).waitFor()
+   const samples = page.locator('.launch-settings-item', { hasText: 'Sample data ·' }), previousSamples = await samples.count()
+   const [installed] = await Promise.all([
+    page.waitForResponse(response => response.url().endsWith('/api/v1/commands/launch.samples.install') && response.request().method() === 'POST'),
+    page.getByRole('button', { name: 'Install sample data' }).click(),
+   ])
+   assert.equal((await installed.json()).data.state, 'committed', 'The new sample installation commits')
+   await expect(samples).toHaveCount(previousSamples + 1)
    const installations = await h.db.prepare('SELECT COUNT(*) AS n FROM sample_installations').first('n')
-   await page.locator('.launch-settings-item', { hasText: 'Sample data ·' }).first().getByRole('button', { name: 'Remove sample data' }).click()
-   await page.waitForFunction(count => document.querySelectorAll('.launch-settings-item').length < count, await page.locator('.launch-settings-item').count())
+   const [removed] = await Promise.all([
+    page.waitForResponse(response => response.url().endsWith('/api/v1/commands/launch.samples.remove') && response.request().method() === 'POST'),
+    samples.first().getByRole('button', { name: 'Remove sample data' }).click(),
+   ])
+   assert.equal((await removed.json()).data.state, 'committed', 'The unedited sample removal commits')
+   await expect(samples).toHaveCount(previousSamples)
    assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM sample_installations').first('n'), installations - 1)
    await b.capture('sample-data-removed')
 

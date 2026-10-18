@@ -11046,7 +11046,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "f446346894522adf74fb848dc9df6ef3f9b3d4918d7ee34f9291ba2b601dd393",
+      "sha256": "cce97d0edf60b1a5ae048c15403e78cb0065279cde0339e301c27ce3e58e4c6f",
       "executable": false
     },
     "tests/ui-launch-optional-browser.mjs": {
