@@ -2914,7 +2914,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "c926ff7e2fc7a132bc3afc2ffb79dd61cacd20b1edab5242679413b327eeda6a",
+      "sha256": "5f06442ff90d24998d7a593165657a73c66789a35a5ad30d01643e1dc677fc3c",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -9846,7 +9846,7 @@
       "executable": false
     },
     "src/ui/records/timeline-chart.tsx": {
-      "sha256": "dc8ece837d5b51d12243805f9e12968cf45fa4c60f4b0236845bca0c72fba7c9",
+      "sha256": "9db46f571e4befad0edde5ab32907ff83a4e4ef32839c854a1d335334c5e5e76",
       "executable": false
     },
     "src/ui/records/timeline-data.ts": {
