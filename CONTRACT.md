@@ -710,7 +710,7 @@ Launch readiness is a complete application template on the records platform (cam
 
 - **DEC-001 — Record.** An operator can create, edit, and delete a decision. It belongs to exactly one campaign, links to at most one risk and to at most one decision it supersedes, requires a title and a requester, and has a priority of Critical, High, Medium, or Low, a due time, a recommendation, an impact statement, an optional assignee, and a state of Awaiting approval, In review, Approved, Rejected, or Cancelled. Awaiting approval and In review are unresolved; the other three are terminal.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Decision CRUD and typed required relationships through admitted commands and current HTTP details.
 - **DEC-002 — Queue.** Decision Queue contains exactly the unresolved decisions on non-archived campaigns. *Policy: `decision.queue-order.v1`; default order: overdue first, then priority Critical, High, Medium, Low, then earliest due time, then earliest creation time.*
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/ui-launch-walkthrough.mjs.
@@ -719,43 +719,43 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **DEC-004 — First outcome wins.** A request that approves, rejects, or cancels a decision is a mutation under VIEW-006. The first such outcome to commit is the decision's outcome; a later one against the older version returns 409 and changes nothing.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Competing prepared outcomes and a stale HTTP outcome return a version conflict without side effects.
 - **DEC-005 — Assignment.** Any operator can assign or reassign an unresolved decision to a current operator, which records the operator and the time and notifies the new assignee. Assignment changes no other field.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Current-operator assignment and reassignment preserve other fields and record actor, time and exactly the assignee notices.
 - **DEC-006 — Changes, rejection, and cancellation.** Requesting changes on an unresolved decision requires a rationale of at least one non-whitespace character, records the operator and the time, and sets the decision to In review. Rejecting or cancelling an unresolved decision also requires such a rationale and is a terminal outcome under DEC-004.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Nonblank rationale, attributed In review transition and terminal rejection/cancellation with unchanged linked risks.
 - **DEC-007 — Linked-risk effect.** A decision outcome changes its linked risk only through the resolution policy, and no other decision action changes a risk. *Policy: `decision.resolution.v1`; default: approving moves a linked risk from Needs decision or Escalated to In progress; requesting changes, rejecting, and cancelling leave it unchanged. No decision outcome resolves a risk.*
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Only approval of Needs decision or Escalated risks moves them to In progress; other actions preserve risks and none resolve them.
 - **DEC-008 — Finality.** A terminal decision cannot be edited into another outcome; such a request is rejected and changes nothing. An operator can create a new decision that supersedes it under DEC-001, and each decision links to the other on both details.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/supersede.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. All terminal states refuse edits; superseding decisions have reciprocal detail links at 1440 and 390.
 
 ### Lenses
 
 - **LENS-001 — Definition.** A lens has a name, a description, exactly one record type from Campaign, Risk, Milestone, or Decision, at most 20 conditions, a sort order, visible fields, and a display mode valid for its type: Grid for Campaign, Cards for Risk or Decision, Timeline or Agenda for Milestone. A lens with a mode its type does not allow is rejected on save.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. All supported record/display pairs, required definition fields and the 20-condition limit through preview/save.
 - **LENS-002 — Preview.** Lens preview evaluates the unsaved definition against non-archived records, reports the exact matching count under VIEW-007 within 2 seconds, changes no record, and shows an explicit zero-results state.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Exact unsaved previews within two seconds, archive exclusion, unchanged storage and explicit zero-result screens at 1440 and 390.
 - **LENS-003 — Save and share.** Saving a lens makes it available to every operator and records who saved it and when. Sharing produces a URL to the saved lens that requires an operator session; no lens URL is readable without one.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Saver identity/time, availability to another operator and session-protected working share URLs at 1440 and 390.
 - **LENS-004 — Edit and delete.** An operator can edit a lens definition or delete the lens. Neither changes, archives, or deletes any record the lens displays or hides. A shipped lens cannot be deleted.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Definition edits/deletion preserve every business record; shipped lens deletion is refused.
 - **LENS-005 — Current results.** Opening or refreshing a lens re-evaluates it against non-archived records, and its result list, count, condition summary, and selected detail all describe that one evaluation.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
+  *Status:* partial — Saved definitions and explicit preview re-evaluation are tested; opening/refreshing a coherent result, count, condition summary and selected detail remains unimplemented.
 - **LENS-006 — Shipped views.** Risks Lens and Timeline Lens ship as saved lenses. Operators can duplicate or edit them, and restoring either returns its definition to exactly the one in RISK-005 or MILE-002 without changing a record.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Both installed shipped lenses support independent duplication, editing and exact definition restoration without business mutations.
 - **LENS-007 — Conditions.** A condition names one field of the lens's record type — campaign custom fields only on a Campaign lens — and one operator from equals, not equals, one of, contains, is empty, is not empty, before, after, and within the next N days, typed to that field: contains applies to text fields only, and the date operators to date fields only. Conditions combine with AND. A condition naming an unknown field, or an operator its field's type does not support, is rejected on preview and on save.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lenses.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs. Typed field/operator validation on preview and save, campaign-only custom fields and AND combinations.
 
 ### Activity and comments
 
@@ -764,7 +764,7 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **ACT-002 — Comments.** An operator can add a plain-text comment to a campaign, and it appears in campaign activity. A comment changes no field of any record and triggers no automation and no AI call. An operator can delete a comment, which leaves a deletion entry in activity.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/comments.server.ts; no clause-tagged test yet.
+  *Status:* partial — Comment creation, activity and isolation are tested; comment deletion and its deletion activity entry remain unimplemented.
 - **ACT-003 — Dates and times.** Every timestamp in the API and the export is ISO 8601 in UTC. Campaign, deliverable, and milestone dates are calendar dates evaluated from the start of that day in the workspace timezone; decision due times are instants. Every relative time exposes its absolute time as its accessible name.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/ui-launch-walkthrough.mjs.
@@ -904,13 +904,13 @@ Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 19 October 2026; their cited evidence and gaps describe those updates.
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **94 done, 88 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **106 done, 76 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 77 | 34 | 0 | 111 |
+| Published | 89 | 22 | 0 | 111 |
 | Target and push further | 17 | 54 | 28 | 99 |
-| All | 94 | 88 | 28 | 210 |
+| All | 106 | 76 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1069,23 +1069,23 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `RISK-003` | Escalation | published | done | `tests/ui-launch-walkthrough.mjs` |  |
 | `RISK-004` | Isolation | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `RISK-005` | Shipped lens | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
-| `DEC-001` | Record | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `DEC-001` | Record | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
 | `DEC-002` | Queue | published | done | `tests/ui-launch-walkthrough.mjs` |  |
 | `DEC-003` | Approval | published | done | `tests/ui-launch-walkthrough.mjs` |  |
-| `DEC-004` | First outcome wins | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `DEC-005` | Assignment | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `DEC-006` | Changes, rejection, and cancellation | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `DEC-007` | Linked-risk effect | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `DEC-008` | Finality | published | partial | `src/apps/launch/supersede.server.ts` | no clause-tagged test yet |
-| `LENS-001` | Definition | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
-| `LENS-002` | Preview | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
-| `LENS-003` | Save and share | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
-| `LENS-004` | Edit and delete | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
-| `LENS-005` | Current results | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
-| `LENS-006` | Shipped views | published | partial | `src/apps/launch/shipped-lenses.server.ts` | no clause-tagged test yet |
-| `LENS-007` | Conditions | published | partial | `src/apps/launch/lenses.server.ts` | no clause-tagged test yet |
+| `DEC-004` | First outcome wins | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `DEC-005` | Assignment | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `DEC-006` | Changes, rejection, and cancellation | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `DEC-007` | Linked-risk effect | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `DEC-008` | Finality | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `LENS-001` | Definition | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `LENS-002` | Preview | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `LENS-003` | Save and share | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `LENS-004` | Edit and delete | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `LENS-005` | Current results | published | partial | `tests/launch-write-effects.mjs` | Saved definitions and explicit preview re-evaluation are tested; opening/refreshing a coherent result, count, condition summary and selected detail remains unimplemented. |
+| `LENS-006` | Shipped views | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
+| `LENS-007` | Conditions | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | |
 | `ACT-001` | Campaign activity | published | done | `tests/ui-launch-walkthrough.mjs` |  |
-| `ACT-002` | Comments | published | partial | `src/apps/launch/comments.server.ts` | no clause-tagged test yet |
+| `ACT-002` | Comments | published | partial | `tests/launch-write-effects.mjs` | Comment creation, activity and isolation are tested; comment deletion and its deletion activity entry remain unimplemented. |
 | `ACT-003` | Dates and times | published | done | `tests/ui-launch-walkthrough.mjs` |  |
 | `ACT-004` | Mentions | published | partial | `src/apps/launch/comments.server.ts` | no clause-tagged test yet |
 | `AUTO-001` | Definition | published | partial | `src/apps/launch/automations.server.ts` | no clause-tagged test yet |
