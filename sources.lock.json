@@ -4254,7 +4254,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "45b7b944bee3edc79fa2bd1c499012d2772cc36569718afd858ac60037fb5890",
+      "sha256": "444336aaec1b26e9fcf508756a36a698a48e0a26dbc65bd9eb0a927d3d67d5ac",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -4794,7 +4794,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "27d2e93fdb8786f3cc140207c4c221a28ad84fa0014779e2570ed1a1c0f6b09e",
+      "sha256": "ae9b541e1fa40cd159a07366655123c99f6fb474e00961be2809bc905d36a981",
       "executable": false
     },
     "rer-project.json": {
