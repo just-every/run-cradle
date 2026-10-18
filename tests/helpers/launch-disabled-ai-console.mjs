@@ -83,8 +83,9 @@ export async function verifyDisabledAiReadout({ page, runtime, receipt, width, a
 
 export function assertNoUnexpectedLaunchConsoleErrors(receipt, widths) {
   assert.deepEqual(receipt.expectedConsoleErrors.map(event => event.width), widths, 'One verified disabled-AI refusal per viewport')
-  const expectedIds = new Set(receipt.expectedConsoleErrors.map(event => event.eventId))
-  assert.equal(expectedIds.size, receipt.expectedConsoleErrors.length, 'Every expected error identifies a distinct original event')
+  const expectedErrors = [...receipt.expectedConsoleErrors,...(receipt.expectedConflictConsoleErrors ?? [])]
+  const expectedIds = new Set(expectedErrors.map(event => event.eventId))
+  assert.equal(expectedIds.size, expectedErrors.length, 'Every expected error identifies a distinct original event')
   receipt.unexpectedConsoleErrors = receipt.consoleErrors.filter(event => !expectedIds.has(event.id))
   assert.deepEqual(receipt.unexpectedConsoleErrors, [], 'No unexpected browser console errors')
 }

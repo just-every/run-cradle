@@ -233,7 +233,8 @@ try {
   await verifyDecisionLensScreens({h,page,command,capture})
   await verifyCommentScreens({h,page,command,capture})
   await verifyCurrentLensScreens({h,page,command,capture})
-  await verifyConcurrencyScreens({h,page,command,capture})
+  receipt.expectedConflictConsoleErrors ??= []
+  await verifyConcurrencyScreens({h,page,command,capture,receipt})
   await context.close()
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])
