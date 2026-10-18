@@ -70,12 +70,11 @@ try {
  assert.equal((await h.db.prepare('SELECT enabled FROM automations WHERE id=?').bind(criticalAutomation.id).first()).enabled,0,'Manual escalation walkthrough disables only the shipped critical-risk automation through its command')
  await h.db.prepare('UPDATE operators SET name=? WHERE id=?').bind('Mira Example',h.owner).run()
  await h.db.batch([h.db.prepare('UPDATE workspace_settings SET timezone=?').bind('Australia/Brisbane'),h.db.prepare('UPDATE workspace SET timezone=?').bind('Australia/Brisbane')])
- // The harness installs sample records; empty-state coverage clears those test-only rows.
- // No production delete action is mounted or invoked by this walkthrough.
- await h.db.prepare('DELETE FROM campaigns').run()
  const workspaceName=(await h.db.prepare('SELECT name FROM workspace WHERE id=?').bind('workspace').first()).name
  browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]})
  for(const width of accessibilityWidths) {
+  // Each viewport starts with an empty campaign fixture, including after the added clause journeys.
+  await h.db.prepare('DELETE FROM campaigns').run()
   const viewport={width,height:width===390?844:900}
   const context=await browser.newContext(accessibilityContextOptions({viewport})),page=await context.newPage()
   const action=target=>accessibilityAction(page,target)
