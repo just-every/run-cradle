@@ -10,10 +10,11 @@ import { launchAuthorityRuntime, createUlid, LAUNCH_APP_ID, launchEntities } fro
 import { settledRow } from './helpers/launch-settled-row.mjs'
 import { decisionHydration } from './helpers/launch-decision-hydration.mjs'
 import { verifyMilestoneScreens } from './helpers/launch-milestone-screens.mjs'
+import { verifyDecisionLensScreens } from './helpers/launch-decision-lens-screens.mjs'
 import { verifySettingsMemberErasure } from './helpers/settings-members-accessibility.mjs'
 import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
-contract('VIEW-004', '[MILE-002] [MILE-006] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] Launch walkthrough E10–E17 at desktop and phone', async () => {
+contract('VIEW-004', '[MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
 const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003']}
@@ -227,6 +228,7 @@ try {
   receipt.memberErasure.push(await verifySettingsMemberErasure({ runtime: h, page, width: viewport.width, action, capture }))
   await h.db.prepare('DELETE FROM campaigns WHERE id=?').bind(campaign.id).run()
   await verifyMilestoneScreens({h,page,command,capture})
+  await verifyDecisionLensScreens({h,page,command,capture})
   await context.close()
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])

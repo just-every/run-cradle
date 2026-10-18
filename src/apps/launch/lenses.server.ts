@@ -36,5 +36,5 @@ export async function prepareLens(context:LaunchContext,ctx:RequestContext,input
  const now=Date.parse(ctx.now),row={id,created_at:before?.created_at??now,updated_at:now,version:(before?.version??0)+1,name:definition.name,description:definition.description,record_type:definition.recordType,conditions_json:JSON.stringify(definition.conditions),sort_json:JSON.stringify(definition.sort),fields_json:JSON.stringify(definition.fields),display:definition.display,created_by_id:ctx.principal.humanId,shipped_key:before?.shipped_key??null}
  set.mutations.push(before?{kind:'update',table:tables.lens,set:row,where:eq(tables.lens,'id',id),expectedRows:1}:{kind:'insert',table:tables.lens,row},{kind:'insert',table:history,row:{id:createUlid(),lens_id:id,version:row.version,created_at:now,actor_id:ctx.principal.id,definition_json:JSON.stringify(definition)}})
  recordChange(set,ctx,'lens',before,row,'lens.saved')
- return plan(context,ctx,input,`launch.lens.${operation}`,set,{...definition,id,version:row.version,createdAt:new Date(row.created_at).toISOString(),updatedAt:ctx.now,shareUrl:`/app/lenses/${id}`} as Json,'lens')
+ return plan(context,ctx,input,`launch.lens.${operation}`,set,{...definition,id,version:row.version,createdAt:new Date(row.created_at).toISOString(),updatedAt:ctx.now,shareUrl:`/app/lenses/${id}/edit`} as Json,'lens')
 }

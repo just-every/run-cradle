@@ -6,6 +6,8 @@ import { verifyCampaignClauses } from './helpers/launch-campaign-clauses.mjs'
 import { verifyMilestoneClauses } from './helpers/launch-milestone-clauses.mjs'
 import { verifyRiskClauses } from './helpers/launch-risk-clauses.mjs'
 import { verifyCampaignLifecycleClauses } from './helpers/launch-campaign-lifecycle-clauses.mjs'
+import { verifyDecisionClauses } from './helpers/launch-decision-clauses.mjs'
+import { verifyLensClauses } from './helpers/launch-lens-clauses.mjs'
 import { verifyOverdueClauses } from './helpers/launch-overdue-clauses.mjs'
 import { clauseAnalysisFixture } from './helpers/launch-clause-analysis.mjs'
 
@@ -91,10 +93,13 @@ test('[RECORDS-001] zero writable fields and explicit deny rules cannot obtain v
  } finally { await h.close() }
 })
 
-test('[RECORDS-001] unmodelled definition changes require unchanged existing fields without expanding old policies', async () => {
- const h = await launchAuthorityRuntime()
+test('[RECORDS-001 DEC-001 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-002 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision/lens clauses', async () => {
+ const h = await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
  try {
-  const owner = await writeContext(h), policyBefore = await h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(h.policy.id).first()
+  const owner = await writeContext(h,h.ownerSession,createUlid()), policyBefore = await h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(h.policy.id).first()
+  const clauses={...h,...owner,r:launchSource,actor:h.owner,expected,campaign:code=>owner.commit('campaign.create',{fields:{...campaignFields(h.owner),code}})}
+  await verifyDecisionClauses(clauses)
+  await verifyLensClauses(clauses)
   const campaign = await owner.commit('campaign.create', { fields: campaignFields(h.owner) })
   const lensDefinition = { name: 'Risk review', description: '', recordType: 'Risk', display: 'Cards', conditions: [], sort: { field: 'title', direction: 'asc' }, fields: ['title'] }
   const lens = await owner.commit('lens.save', { definition: lensDefinition })
