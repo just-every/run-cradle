@@ -87,6 +87,7 @@ contract('VIEW-010] [VIEW-011] [VIEW-015','calendar and gallery views, current-p
     await j.capture('calendar-readonly')
     const instantBase=`/api/v1/apps/${appId}/entities/${instantId}`,instantSchema=await call(instantBase)
     const appointment=(await call('/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:instantId},version:instantSchema.version}],input:{appId,entityId:instantId,values:{[instantTitle.id]:'Morning inspection',[instantStart.id]:'2026-03-07T14:00:00.000Z',[instantEnd.id]:'2026-03-07T15:00:00.000Z'}}})).value
+    await call('/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:instantId},version:instantSchema.version}],input:{appId,entityId:instantId,values:{[instantTitle.id]:'Following month inspection',[instantStart.id]:'2026-04-06T13:00:00.000Z',[instantEnd.id]:'2026-04-06T14:00:00.000Z'}}})
     await call('/api/v1/commands/view.save',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:instantId},version:instantSchema.version}],input:{view:{appId,entityId:instantId,name:'Appointments calendar',display:'calendar',fields:[instantTitle.id,instantStart.id,instantEnd.id],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:instantTitle.id,startFieldId:instantStart.id,endFieldId:instantEnd.id},visibility:'private',shipped:false}}})
     await page.goto(`${h.origin}/app/records/${appId}/${instantId}`)
     await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Appointments calendar',exact:true}).click()
@@ -96,6 +97,8 @@ contract('VIEW-010] [VIEW-011] [VIEW-015','calendar and gallery views, current-p
     const after=(await call(instantBase+'/records/'+appointment.id)).record
     assert.equal(after.fields[instantStart.id].value,'2026-03-09T13:00:00.000Z');assert.equal(after.fields[instantEnd.id].value,'2026-03-09T14:00:00.000Z')
     await page.locator(`[data-calendar-date="2026-03-09"] [data-calendar-record="${appointment.id}"]`).waitFor()
+    await page.getByRole('status').filter({hasText:'1 records in this period'}).waitFor()
+    assert.equal(await page.locator('[data-calendar-record]').count(),1)
     await j.capture('calendar-instant-dst')
    }finally{await context.close()}
   }

@@ -72,7 +72,7 @@
     },
     "VIEW-010": {
       "change": "changed",
-      "summary": "Calendar authoring, month/week/day layouts, workspace-zone date and instant ranges, complete revision-fenced period reads and audited date moves with current-policy conflicts. Digest-only private iCal subscriptions use current issuer/native authority, revocation and archive-excluded credentials."
+      "summary": "Calendar authoring, month/week/day layouts, workspace-zone date and instant ranges, complete revision-fenced period reads and audited date moves with current-policy conflicts. Digest-only private iCal subscriptions use current issuer/native authority, revocation and archive-excluded credentials. Instant query candidates are clipped to the displayed workspace-date period before reporting calendar counts."
     },
     "VIEW-011": {
       "change": "changed",

@@ -4586,7 +4586,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "636872d8c85522589d8494a161e547f75845c53b57a4440e603182275b70664d",
+      "sha256": "ee503f28b21e148e649f835039ba9e7815d980dddeb43594b7595f329a852d79",
       "executable": false
     },
     "rer-project.json": {
@@ -9270,7 +9270,7 @@
       "executable": false
     },
     "src/ui/records/calendar-period.ts": {
-      "sha256": "874d96f08396a058ea76df83ec568defb32f8640c85c43ed58050a118b3900a7",
+      "sha256": "e02d021e0eb26f1c774117e5b45ca563899fbed95e946e5779c026e021225b78",
       "executable": false
     },
     "src/ui/records/date-views.tsx": {
@@ -11130,7 +11130,7 @@
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
-      "sha256": "e055809050a7a1deb308d6b972b451acc053be933c0f1a0f861e5b4ba80912ca",
+      "sha256": "47b9f532721df5162f9198de298ac1cf4918664f840110be75e13393dd3b6173",
       "executable": false
     },
     "tests/ui-recut-final.mjs": {
