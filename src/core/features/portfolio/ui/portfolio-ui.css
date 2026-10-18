@@ -443,7 +443,7 @@
   min-height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--r-field);
-  background: var(--card);
+  background-color: var(--card);
   color: var(--foreground);
   font: inherit;
   font-size: 0.72rem;
@@ -858,7 +858,7 @@
   width: 100%;
   border: 1px solid #cbd4d1;
   border-radius: var(--r-tile);
-  background: var(--card);
+  background-color: var(--card);
   color: var(--foreground);
   font: inherit;
   font-size: 0.77rem;

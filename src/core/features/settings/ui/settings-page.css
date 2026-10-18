@@ -35,7 +35,6 @@
   .cr-settings-workspace .cr-form-grid > .cr-settings-wide { grid-column: 1 / -1; }
   .cr-settings-workspace .cr-form-grid > .cr-settings-zone { grid-column: span 5; }
   .cr-settings-workspace .cr-form-grid > .cr-settings-currency { grid-column: span 3; }
-  .cr-settings-workspace select { padding-right: 34px; background-position: right 12px center; }
   .cr-settings-workspace .cr-field { margin-bottom: 16px; }
   .cr-settings-workspace .cr-button { width: 100%; }
   .cr-capability { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; }
