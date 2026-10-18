@@ -36,7 +36,7 @@
     },
     "HOME-003": {
       "change": "changed",
-      "summary": "The installed Lobby and public setup state read Base’s durable owner claim, independently of workspace first-run details. A healthy rer deploy therefore offers Sign in immediately after owner claim, with no setup-token instruction. Signed-in app access still requires the owner to confirm workspace details under SET-003; public disclosure remains limited to claim state and the workspace name."
+      "summary": "The installed Lobby and public setup state read Base\u2019s durable owner claim, independently of workspace first-run details. A healthy rer deploy therefore offers Sign in immediately after owner claim, with no setup-token instruction. Signed-in app access still requires the owner to confirm workspace details under SET-003; public disclosure remains limited to claim state and the workspace name."
     },
     "OPS-002": {
       "change": "changed",
@@ -85,6 +85,10 @@
     "VIEW-013": {
       "change": "changed",
       "summary": "Collaborative edits preserve original view ownership. Schema-adoption grants control locking/unlocking and locked-view changes, with final authority/version guards. Saved per-column summaries stream current-policy revision-fenced pages through 500,000 records without retaining the table; all seven methods, complete group counts and explicit fractional-average rounding are available. Ordered row/cell colour rules use visible readable fields and disappear with lost field access. Native JSON exports preserve choices and copy previews remap field/option references. Personal views remain owner-only. No product clause is weakened."
+    },
+    "PERM-009": {
+      "change": "changed",
+      "summary": "Adds explicit manual-base roles, creator additive adoption and retained destructive previews for owner review. Current policy and role versions fence mutations; adoption preserves base ownership and propagates authorized fields to full-base members. Collaborative/personal view authoring is role-scoped and audited. The clause remains partial with unsupported schema and interface dependencies named."
     }
   },
   "extensionPointChanges": [],
@@ -131,7 +135,7 @@
     },
     {
       "id": "migrations/updates/9034_owner_signin.sql",
-      "buyerSteps": "Apply after 9033, preserving all previous migration bytes. This adds Base’s single-use, expiring owner sign-in grant table. Run rer install with the pinned rer (0.2.23) and redeploy before using rer signin."
+      "buyerSteps": "Apply after 9033, preserving all previous migration bytes. This adds Base\u2019s single-use, expiring owner sign-in grant table. Run rer install with the pinned rer (0.2.23) and redeploy before using rer signin."
     },
     {
       "id": "migrations/updates/9035_launch_display_names.sql",
@@ -152,6 +156,10 @@
     {
       "id": "migrations/updates/9038_calendar_feeds.sql",
       "buyerSteps": "Apply the additive credential lookup index in the updates group. Existing records and credentials are unchanged; calendar subscriptions are created explicitly and credentials never enter archives."
+    },
+    {
+      "id": "migrations/core/1270_manual_base_roles.sql",
+      "buyerSteps": "Apply in the core group after 1260. Adds per-base role assignments only. Existing memberships and policies retain their current access until a base owner explicitly assigns a role."
     }
   ],
   "breaking": true,

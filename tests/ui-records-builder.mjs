@@ -1,3 +1,4 @@
+import {baseRolesJourney} from './helpers/records-base-roles-journey.mjs'
 import { collectionLookupsBrowser } from './helpers/records-collection-browser.mjs'
 import { historyBrowserJourney } from './helpers/records-history-journey.mjs'
 import { conditionalFormsJourney } from './helpers/records-forms-journey.mjs'
@@ -35,7 +36,8 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close()}
 })
-contract(['IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'Manual records browser journeys and concrete UI review corrections',async()=>{
+contract(['PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'Manual records browser journeys and concrete UI review corrections',async()=>{
+ await baseRolesJourney()
 let h,browser,activePage
 try{
  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? await freePort()));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})

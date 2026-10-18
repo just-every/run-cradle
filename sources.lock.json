@@ -2914,7 +2914,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "7cb1a9d2ea96a4141458b2ebee4f1482ac61c8f025faaf4534ef5980bdf719fd",
+      "sha256": "c1b22d02224b497e3ee1a9f0e6c9df4fce034839c5e7b8ede60aeaa22f11736f",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "f49e1b8ed7cc18c88148ae1f2aa1094f92e90db7306b6166c979f3970740875f",
+      "sha256": "00237f79ee548249a48b0e4f44cf4d0fbe4b0858639811aa78045c5b85bd0405",
       "executable": false
     },
     "authoring/README.md": {
@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a3c1faec1cd16c3d2771609e9d6f6827d7202f7b15640450928543332d01feb2",
+      "sha256": "6d4af21cc72454fcfb80cf778c24d596e482a4c24a9f3a268a78b797f0473150",
       "executable": false
     },
     "DEMO.md": {
@@ -3026,7 +3026,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "270ae47a06e936e76d04a32ca36045add76702214273b3b38418e0b561e6d4c8",
+      "sha256": "28c9bb9fdb678df064e2ba56a0f9dc891f943528aeed94beabde7541f9a97ab3",
       "executable": false
     },
     "docs/contract-transition.md": {
@@ -3471,6 +3471,38 @@
     },
     "docs/contract/IFACE-006/template-venues-390.png": {
       "sha256": "2aecea1c45cb0ea07c80377851d77e74f6f719a747a65d7db656e9b89cf1e27b",
+      "executable": false
+    },
+    "docs/contract/PERM-009/base-collaborators-1440.png": {
+      "sha256": "e0861f77b99f8c7234da8348213e421870c4f766c059f0334c9e0d34c279b988",
+      "executable": false
+    },
+    "docs/contract/PERM-009/base-collaborators-390.png": {
+      "sha256": "8c9fd3fe24246769e533c596cc38b4745815231cb24fd3bcb65e0488efcf735b",
+      "executable": false
+    },
+    "docs/contract/PERM-009/creator-awaiting-owner-1440.png": {
+      "sha256": "b113f30feafbe7649427d8267a2aa35bd19cd7bea654860bbb6a881102f0b3d3",
+      "executable": false
+    },
+    "docs/contract/PERM-009/creator-awaiting-owner-390.png": {
+      "sha256": "a8ddfeaf731de1cbc97118694b91874281bf3da1ed76444279dbd40f273012da",
+      "executable": false
+    },
+    "docs/contract/PERM-009/editor-collaborative-view-1440.png": {
+      "sha256": "375d023f51ff6858973daab922eb4dbca22a843e307628f6d0f5d96b0cd09488",
+      "executable": false
+    },
+    "docs/contract/PERM-009/editor-collaborative-view-390.png": {
+      "sha256": "37f13fbdf951d7f0c25e444a0ffe5b00af34064cde3c9c65107f1c956e1a30ad",
+      "executable": false
+    },
+    "docs/contract/PERM-009/owner-review-1440.png": {
+      "sha256": "8cd6cf56cf7cdc582688bb045c43a663f1d0ed35d811e6842ef03f4952da6084",
+      "executable": false
+    },
+    "docs/contract/PERM-009/owner-review-390.png": {
+      "sha256": "bcf7aa61e1e8c9de63cb7bcc489657e2ca5cd1fb013aade32825e43ad729595e",
       "executable": false
     },
     "docs/contract/RECORDS-002/picker-schema-impact-1440.png": {
@@ -4158,7 +4190,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "47448fd15af4816c2718a60c8fadd2871be7db5c9ede271ce122d26a2f13c8e9",
+      "sha256": "45b7b944bee3edc79fa2bd1c499012d2772cc36569718afd858ac60037fb5890",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -4481,6 +4513,10 @@
       "sha256": "284e951e2ebbf82b2798c07db5c666b7e5fe96bbec02c9ed134a128961783d66",
       "executable": false
     },
+    "migrations/core/1270_manual_base_roles.sql": {
+      "sha256": "5b45c93e66acac52afba0765a0f7ce423cacac8be6d733a4adbca27cce33a3cc",
+      "executable": false
+    },
     "migrations/import/9003_base_import.sql": {
       "sha256": "e3cb7da774766ab94eab07974020be7aaeecb4a47e7e73e4cc5e63e69c28d764",
       "executable": false
@@ -4630,7 +4666,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "a315e2fb719ab5ff86c28b0a1cfb4c65ffe7e20e0b66e2e55c79c2496203cf8d",
+      "sha256": "b51605f0645da13ee7b5a2bd8241d92a68f80e16d308a03aa37a32d89b49da12",
       "executable": false
     },
     "packaging.json": {
@@ -4642,7 +4678,7 @@
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "e608a647c09ad4bde6a1add3672afd4aa60bac269fefae6de322ae461037f995",
+      "sha256": "581f03980f8b287b9858e0db8ac751b1a3dbb1649beab13c96bad032f953534a",
       "executable": false
     },
     "public/apple-touch-icon.png": {
@@ -4690,7 +4726,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "528f9f487d5004edf0d1d5299e7f2ceb2b4d093294fb31e2e0459d1ae50aa474",
+      "sha256": "3e62872f3c7a6c80984004c5034c19aca7078cd1dc483de4e08454beee7af7fe",
       "executable": false
     },
     "rer-project.json": {
@@ -5610,7 +5646,7 @@
       "executable": false
     },
     "src/core/app/application.ts": {
-      "sha256": "0f0af12b04bbece72086b4d7e8a6a2ad93f82c5b7c3b7fb49692e53057bd4187",
+      "sha256": "975a2fa3fb89d2c6ae059ccb975036ef0af246f727920efa4907a399590fec92",
       "executable": false
     },
     "src/core/app/composition/admission-wake.server.ts": {
@@ -7870,7 +7906,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "22f2b6a8a0d641c257da09dd310b96939d965bfa869a9c4a6e3562f8108cf037",
+      "sha256": "6d12b7454e0e6e39912663163b311ece1e2a716321c93fd607434da5314d755f",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -8586,7 +8622,19 @@
       "executable": false
     },
     "src/domains/records/manual/authority.server.ts": {
-      "sha256": "b6785e75d8de4acdbc07152612683bf147e48c7f58de8d238aa291fdda6f3c68",
+      "sha256": "0d5d1a7fb521db530247c513e6a3848a4ba5c9c07666db8134720096751bdb60",
+      "executable": false
+    },
+    "src/domains/records/manual/base-access.server.ts": {
+      "sha256": "e8198a4a5a6f54eb2fe6aab3829247cf765d8411fcf2529bdc1a5cda25006a0f",
+      "executable": false
+    },
+    "src/domains/records/manual/base-collaborators.server.ts": {
+      "sha256": "e1b09c072bf813af59938cbac9ba43758867ba17423b81d739714006726c669e",
+      "executable": false
+    },
+    "src/domains/records/manual/base-role.ts": {
+      "sha256": "eeaffa6aeb223f4849aacd2aefe17b348d2a2c41d7c42989818a4cb0730011a7",
       "executable": false
     },
     "src/domains/records/manual/calculation-preview.server.ts": {
@@ -8594,11 +8642,11 @@
       "executable": false
     },
     "src/domains/records/manual/contracts.ts": {
-      "sha256": "23caaa60e2f68789107e7e2b4015fb373d174e099de381151bd0265b0e54c7ef",
+      "sha256": "c33c23dd3932cee7f8f28fef1a4cc775dee5dba556637ca3e49c557be4b04270",
       "executable": false
     },
     "src/domains/records/manual/http.server.ts": {
-      "sha256": "f08283cae971a32b533d43f52d0698b1c5d0b562e8e4650c9aec1a62fa6f1026",
+      "sha256": "2a94d0bcc3ef08a1f244f0f636acf7bca4190c5bbc72041f83c3ebe923310960",
       "executable": false
     },
     "src/domains/records/manual/proposal-agent.server.ts": {
@@ -8634,7 +8682,15 @@
       "executable": false
     },
     "src/domains/records/manual/release.server.ts": {
-      "sha256": "730f9405c7a716acbfd12b6331fb2a8b295afbcfa5ddcbec928df1279de72861",
+      "sha256": "86f75ec69ece6e2011e31732c21c201f21d975ea3257531623e0bfb367daeac0",
+      "executable": false
+    },
+    "src/domains/records/manual/role-policy.ts": {
+      "sha256": "00efc986c813f4fbde21021d4df8277e41ad7583f912eb65527ba86d111f3f80",
+      "executable": false
+    },
+    "src/domains/records/manual/role-schema.server.ts": {
+      "sha256": "ce7e24f25a56799e6d52a28a2505a7e6b3d29d19c25d624fde883462af8a6e0f",
       "executable": false
     },
     "src/domains/records/manual/rule-preview.server.ts": {
@@ -8642,7 +8698,7 @@
       "executable": false
     },
     "src/domains/records/manual/service.server.ts": {
-      "sha256": "b96057c668ef889051cba96014e82b37e18e7ac6b9b99618500569a487ced1d5",
+      "sha256": "214308cc4312efcb879cda72ea08f6ebdb97339fe00321cd666736cec6bb0d2c",
       "executable": false
     },
     "src/domains/records/manual/snapshot.server.ts": {
@@ -8658,7 +8714,7 @@
       "executable": false
     },
     "src/domains/records/metadata.server.ts": {
-      "sha256": "c9ff9c6aed878bb6152fc7c6d0c4dab1f887398c066a1bbbd4121644c6c3d64e",
+      "sha256": "dc9334c44e62f6d1795b1a663f1d3daa9678ff5e6abfb363f0af350a47583bdc",
       "executable": false
     },
     "src/domains/records/migration.server.ts": {
@@ -8694,7 +8750,7 @@
       "executable": false
     },
     "src/domains/records/routes.server.ts": {
-      "sha256": "cef35f5a6ee11993ee6884a71e9ef3a00f928bece7cec80adb604c317afd8fe0",
+      "sha256": "637164847886c5ba0575a33e1eabf52d86d3e0f7155b06a45671febdd9d003a4",
       "executable": false
     },
     "src/domains/records/schema.ts": {
@@ -8730,7 +8786,7 @@
       "executable": false
     },
     "src/domains/records/view-access.server.ts": {
-      "sha256": "a65d725b65618c3d2ed4f3df2d475ed4c5043af4c742c5f2758ede2a0cb144e1",
+      "sha256": "d34193ce3b9ab8887a07cc1ae8d5e19c2a0d0c2145a8e7d912a9f2e28ad1e6a2",
       "executable": false
     },
     "src/domains/records/view-presentation-schema.ts": {
@@ -9574,7 +9630,7 @@
       "executable": false
     },
     "src/ui/records/records-page.tsx": {
-      "sha256": "211be3463672360024db29c423d17145bcf2faaa9958ae4fdb30e3d999472804",
+      "sha256": "34ddf6cdc327fe7a96dd7a46d8b35416d0123d78d57d34574aa6bbf1c302a895",
       "executable": false
     },
     "src/ui/records/records.css": {
@@ -9594,7 +9650,15 @@
       "executable": false
     },
     "src/ui/records/saved-views.tsx": {
-      "sha256": "d890262223f0c7438e6e2a96782f4f065316421bcc6344e49116459ecbde8bc4",
+      "sha256": "02755323859e3313a10dd7c3e23caaed00c56306e79b13eace0b18a8aaae48e3",
+      "executable": false
+    },
+    "src/ui/records/schema/base-collaborators.tsx": {
+      "sha256": "d83d8b54bf587c6c7970af4edb4f77395dd2967fce5c8b6e9e369e24a25be693",
+      "executable": false
+    },
+    "src/ui/records/schema/base-schema-reviews.tsx": {
+      "sha256": "198095616e79165c928ea2cce78cf2c8d702e426798126bea695c3c3b789693c",
       "executable": false
     },
     "src/ui/records/schema/calculation-review.css": {
@@ -9638,7 +9702,7 @@
       "executable": false
     },
     "src/ui/records/schema/schema-builder.tsx": {
-      "sha256": "dc53c14815d5e2b8a87dff6d8495c299ffb95ed3d0e687518f6adc9e1111834c",
+      "sha256": "5cb528e794590b9a7229f60eefc3cab367b576db838c50f09a503e3679b4ae66",
       "executable": false
     },
     "src/ui/records/schema/table-rules.tsx": {
@@ -9691,6 +9755,10 @@
     },
     "src/ui/records/view-formatting.tsx": {
       "sha256": "f05bb692501ce4532c9e41fec90e81ae1951ff2758206511001f802d21b70313",
+      "executable": false
+    },
+    "src/ui/records/view-history.tsx": {
+      "sha256": "06a3c11d9a81ca97cf6e5ebacee067d14da4a746dd5fd5017349e8a17b477b5b",
       "executable": false
     },
     "src/ui/records/view-match.tsx": {
@@ -10589,6 +10657,10 @@
       "sha256": "e67f3a61ea00cd0509b408645d399be55914282c991457ba3335e46de0b2f651",
       "executable": false
     },
+    "tests/helpers/records-base-roles-journey.mjs": {
+      "sha256": "c4604faff70222d593d9c62c296b82f7c1f73e4543c22e1a60257c28ab252a9b",
+      "executable": false
+    },
     "tests/helpers/records-board-journey.mjs": {
       "sha256": "06685499b26c054a9727ad10a6098b6c093aff2770c51a71df8ba1a26421b1d7",
       "executable": false
@@ -11286,7 +11358,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "0b988e7e46c4a87266e7e6befb5e0ae6b1772be0210b45740e0b09f21a6aae0e",
+      "sha256": "e2386bf670a7807a615e9435c50be1f87c080e3407c1acb30312d7481d4ce399",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

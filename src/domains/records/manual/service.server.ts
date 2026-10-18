@@ -1,3 +1,5 @@
+import { baseAccess } from './base-access.server'
+import { createBaseCollaborators } from './base-collaborators.server'
 import { assertCalculationBounds } from '../calculation-bounds'
 import { principalGuards } from '../../authority/guards.server'
 import { recoveryTables } from './recovery.server'
@@ -14,12 +16,14 @@ import { createReleaseCore, publicPreview, type StoredPreview } from './release.
 import { assertGuards } from '../fence.server'
 const previews=registerTable('manual_record_previews',['id','app_id','owner_id','state','detail_json','created_at','expires_at'])
 export function createManualSchemas(db:D1Database,policy:PolicyPort,admission:AdmissionPort,registry:DescriptorRegistry){
- const core=createReleaseCore(db,policy,admission,registry)
+ const core=createReleaseCore(db,policy,admission,registry),collaborators=createBaseCollaborators(db,policy,admission,registry)
  async function preview(ctx:RequestContext,unknown:unknown,pendingViews?:import('../link-picker-schema').PickerViewSnapshot[]):Promise<ManualPreview>{
   try{assertCalculationBounds(unknown)}catch(error){throw new AdmissionError('validation',(error as Error).message)}
   const draft=draftSchema.parse(unknown),id=createUlid(),inputHash=await canonicalHash(draft)
   const permit=await manualAuthority(db,policy,ctx,draft.appId,inputHash)
   const detail=await core.buildPreview(draft,id,{permit,reader:ctx,ownerId:ctx.principal.id,pendingViews,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString()})
+  const access=await baseAccess(db,ctx,draft.appId)
+  detail.requiresOwnerReview=!!access&&!access.canDestruct&&detail.impacts.some(impact=>impact.removedFields.length>0||(impact.violatingRecordCount??0)>0)
   // Keep reviewed state and policy fences, but authenticate adoption with its
   // current session. Only exact principal guards generated for this preview are
   // separated; schema, data, membership, policy and owner fences stay immutable.
@@ -32,9 +36,12 @@ export function createManualSchemas(db:D1Database,policy:PolicyPort,admission:Ad
   return publicPreview(detail)
  }
  async function adopt(ctx:RequestContext,commandId:string,previewId:string){
-  const row=await db.prepare('SELECT detail_json,state FROM manual_record_previews WHERE id=? AND owner_id=?').bind(previewId,ctx.principal.id).first<{detail_json:string;state:string}>()
+  const row=await db.prepare('SELECT detail_json,state,owner_id FROM manual_record_previews WHERE id=?').bind(previewId).first<{detail_json:string;state:string;owner_id:string}>()
   if(!row)throw new AdmissionError('not_found','Schema preview not found.')
-  const detail=JSON.parse(row.detail_json) as StoredPreview;detail.guards=(detail.adoptionGuards??detail.guards).map(g=>trustedPredicate(g.sql,g.values));const hash=await canonicalHash({kind:'manual_schema',previewId})
+  const detail=JSON.parse(row.detail_json) as StoredPreview;const access=await baseAccess(db,ctx,detail.appId)
+  if(row.owner_id!==ctx.principal.id&&!access?.canManage)throw new AdmissionError('not_found','Schema preview not found.')
+  if(detail.requiresOwnerReview&&!access?.canDestruct)throw new AdmissionError('forbidden','This destructive change requires a base owner review.')
+  detail.guards=(detail.adoptionGuards??detail.guards).map(g=>trustedPredicate(g.sql,g.values));const hash=await canonicalHash({kind:'manual_schema',previewId})
   const replay=await admission.replay(ctx,commandId,'release.adopt',detail.appId,hash);if(replay)return replay
   if(row.state!=='prepared'||detail.expiresAt<=ctx.now)throw new AdmissionError('version_conflict','Preview has expired or was already adopted.')
   const permit=await manualAuthority(db,policy,ctx,detail.appId,hash)
@@ -50,6 +57,12 @@ export function createManualSchemas(db:D1Database,policy:PolicyPort,admission:Ad
   await assertGuards(db,guards)
   return {appId,name:base.name,tables:descriptors.map(d=>({id:d.schema.id,label:d.schema.label,...(d.schema.primaryFieldId?{primaryFieldId:d.schema.primaryFieldId}:{}),...(d.schema.incomingRelations?{incomingRelations:d.schema.incomingRelations}:{}),...(d.schema.validationRules?{validationRules:structuredClone(d.schema.validationRules)}:{}),fields:structuredClone(d.schema.fields)}))} as {appId:string;name:string;tables:SchemaDraft['tables']}
  }
- async function recovery(ctx:RequestContext,releaseId:string){const row=await db.prepare('SELECT app_id,detail_json FROM manual_record_releases WHERE id=? AND owner_id=?').bind(releaseId,ctx.principal.id).first<{app_id:string;detail_json:string}>();if(!row)throw new AdmissionError('not_found','Release not found.');const permit=await manualAuthority(db,policy,ctx,row.app_id,'0'.repeat(64));const d=JSON.parse(row.detail_json) as StoredPreview & {recoveryPolicy:string};const latest=await db.prepare('SELECT r.detail_json FROM manual_record_bases b JOIN manual_record_releases r ON r.id=b.release_id AND r.app_id=b.id WHERE b.id=? AND b.owner_id=?').bind(row.app_id,ctx.principal.id).first<{detail_json:string}>();if(!latest)throw new AdmissionError('forbidden','Current recovery authority is unavailable.');const recoveryPolicy=(JSON.parse(latest.detail_json) as {recoveryPolicy:string}).recoveryPolicy;const current=await db.prepare("SELECT p.rules_json FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.app_id=? AND m.principal_id=? AND m.state='active'").bind(row.app_id,ctx.principal.id).first<{rules_json:string}>();if(current?.rules_json!==recoveryPolicy)throw new AdmissionError('forbidden','Recovery snapshot access changed. A currently authorized recovery review is required.');await assertGuards(db,[...permit.guards,trustedPredicate("EXISTS(SELECT 1 FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.app_id=? AND m.principal_id=? AND m.state='active' AND p.rules_json=?)",[row.app_id,ctx.principal.id,recoveryPolicy])]);return {kind:'manual_schema_recovery',releaseId,priorSchemas:d.prior,retainedRows:d.snapshots,tables:recoveryTables(d.prior,d.snapshots),recovery:d.recovery}}
- return {preview,adopt,read,recovery}
+ async function recovery(ctx:RequestContext,releaseId:string){const row=await db.prepare('SELECT app_id,detail_json FROM manual_record_releases WHERE id=? AND owner_id=?').bind(releaseId,ctx.principal.id).first<{app_id:string;detail_json:string}>();if(!row)throw new AdmissionError('not_found','Release not found.');const permit=await manualAuthority(db,policy,ctx,row.app_id,'0'.repeat(64));const d=JSON.parse(row.detail_json) as StoredPreview & {recoveryPolicy:string};const latest=await db.prepare('SELECT r.detail_json FROM manual_record_bases b JOIN manual_record_releases r ON r.id=b.release_id AND r.app_id=b.id WHERE b.id=?').bind(row.app_id).first<{detail_json:string}>();if(!latest)throw new AdmissionError('forbidden','Current recovery authority is unavailable.');const latestDetail=JSON.parse(latest.detail_json) as {recoveryPolicy:string;recoveryPolicies?:Record<string,string>};const recoveryPolicy=latestDetail.recoveryPolicies?.[ctx.principal.id]??latestDetail.recoveryPolicy;const current=await db.prepare("SELECT p.rules_json FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.app_id=? AND m.principal_id=? AND m.state='active'").bind(row.app_id,ctx.principal.id).first<{rules_json:string}>();if(current?.rules_json!==recoveryPolicy)throw new AdmissionError('forbidden','Recovery snapshot access changed. A currently authorized recovery review is required.');await assertGuards(db,[...permit.guards,trustedPredicate("EXISTS(SELECT 1 FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.app_id=? AND m.principal_id=? AND m.state='active' AND p.rules_json=?)",[row.app_id,ctx.principal.id,recoveryPolicy])]);return {kind:'manual_schema_recovery',releaseId,priorSchemas:d.prior,retainedRows:d.snapshots,tables:recoveryTables(d.prior,d.snapshots),recovery:d.recovery}}
+ async function pending(ctx:RequestContext,appId:string){
+  const access=await baseAccess(db,ctx,appId);if(!access?.canManage)throw new AdmissionError('forbidden','Only a base owner may review schema changes.')
+  const rows=await db.prepare("SELECT detail_json FROM manual_record_previews WHERE app_id=? AND state='prepared' AND expires_at>? ORDER BY created_at DESC").bind(appId,ctx.now).all<{detail_json:string}>()
+  await assertGuards(db,access.guards)
+  return {items:rows.results.map(row=>JSON.parse(row.detail_json) as StoredPreview).filter(detail=>detail.requiresOwnerReview).map(publicPreview)}
+ }
+ return {preview,adopt,read,recovery,pending,collaborators}
 }

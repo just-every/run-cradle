@@ -1,3 +1,4 @@
+import { prepareRoleSchemaUpdates } from './role-schema.server'
 import { createUlid } from '../../../core/shared/ids'
 import type { AdmissionPort, AuditFact, SqlPredicate, SqlMutation } from '../../admission/ports'
 import type { AuthorityPermit, RequestContext, PolicyPort } from '../../authority/ports'
@@ -19,7 +20,7 @@ import { previewRuleViolations } from './rule-preview.server'
 import { validateLinkPickers } from '../link-picker-schema'
 function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,linkPicker,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,resultElementType,readOnly,options,...stored}=physical;return stored}
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
-export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[] }
+export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[]; policyOwnerId?:string; baseOwnerId?:string }
 /** Whose authority a preview is computed under: `reader` reads every affected table as `ownerId`. */
 export type PreviewAuthority={permit:AuthorityPermit;reader:RequestContext;ownerId:string;expiresAt:string;pendingViews?:import('../link-picker-schema').PickerViewSnapshot[]}
 
@@ -35,7 +36,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
   }
   // Resolve result types after every candidate AST is present, including formula dependencies.
   for(const table of draft.tables)for(const field of table.fields)if(draft.formulaSources?.[field.id]!==undefined){try{const type=expressionType(field.expression!,table,draft.tables);field.resultType=type==='blank'?'text':type}catch(error){throw new AdmissionError('validation',`${field.label}: ${(error as Error).message}`)}}
-  const base=await db.prepare('SELECT version,release_id FROM manual_record_bases WHERE id=?').bind(draft.appId).first<{version:number;release_id:string}>()
+  const base=await db.prepare('SELECT version,release_id,owner_id FROM manual_record_bases WHERE id=?').bind(draft.appId).first<{version:number;release_id:string;owner_id:string}>()
   const prior=registry.list(draft.appId).filter(d=>d.schema.physicalRevision.startsWith('manual_'))
   const readGuards:SqlPredicate[]=[]
   for(const d of prior){const scope=await policy.scope(reader,{appId:draft.appId,entityId:d.schema.id,purpose:'read'});if(!scope.unrestrictedRows||d.schema.fields.some(f=>!scope.readableFieldIds.includes(f.id)))throw new AdmissionError('forbidden','Schema changes require current read access to every affected row and field.');readGuards.push(...scope.currentAuthorityGuards)}
@@ -92,7 +93,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    }
   }
   const calculations=await previewCalculations(db,policy,registry,schemas,compiled.descriptors,snapshot.rows,reader)
-  return {id,appId:draft.appId,name:draft.name,schemas,calculations,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values are kept for recovery. Download the recovery CSV after applying this change. You can import them into a new field by matching the _record_id column (Original record ID); newer records stay unchanged.',access:'Only your current owner membership is updated for the fields explicitly added here. No other application, person, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,...viewSnapshot.guards,trustedPredicate('(SELECT COUNT(*) FROM record_schemas WHERE app_id=?)=?',[draft.appId,prior.length])],prior:prior.map(p=>p.schema),removals,policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows,viewSnapshots:viewSnapshot.views,formSnapshots:viewSnapshot.forms}
+  return {policyOwnerId:ownerId,baseOwnerId:base?.owner_id??ownerId,authorId:ownerId,id,appId:draft.appId,name:draft.name,schemas,calculations,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values are kept for recovery. Download the recovery CSV after applying this change. You can import them into a new field by matching the _record_id column (Original record ID); newer records stay unchanged.',access:'New tables and fields become available to members with full-base roles. Existing row and field restrictions stay in place. No other application, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,...viewSnapshot.guards,trustedPredicate('(SELECT COUNT(*) FROM record_schemas WHERE app_id=?)=?',[draft.appId,prior.length])],prior:prior.map(p=>p.schema),removals,policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows,viewSnapshots:viewSnapshot.views,formSnapshots:viewSnapshot.forms}
  }
  /** Apply a reviewed preview atomically as the adopting owner, with any extra rows of the same release. */
  async function applyRelease(ctx:RequestContext,input:{commandId:string;hash:string;releaseId?:string;detail:StoredPreview;previewId:string;permit:AuthorityPermit;mutations:SqlMutation[];audit:AuditFact[];provenance?:Record<string,unknown>}){
@@ -103,21 +104,23 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
   await stageSchemaSet(compiled,db,registry,detail.removals)
   const activation=await prepareSchemaSetActivation(db,compiled,registry)
   const releaseId=input.releaseId??createUlid(),policyId=detail.policy?.id??createUlid(),time=Date.parse(ctx.now)
-  let rules=ownerRules(ctx.principal.id,detail.schemas)
+  const policyOwnerId=detail.policyOwnerId??ctx.principal.id
+  let rules=ownerRules(policyOwnerId,detail.schemas)
   if(detail.policy){
    const current=JSON.parse(detail.policy.rules_json) as typeof rules
    // Keep all existing row/action/deny restrictions and every other principal intact.
-   rules=current.map(rule=>{const next=detail.schemas.find(s=>s.id===rule.entityId),old=detail.prior.find(s=>s.id===rule.entityId);if(!next||!old)return rule;const added=next.fields.filter(f=>!old.fields.some(p=>p.id===f.id));const owned=rule.effect==='allow'&&rule.principals.length===1&&rule.principals[0]!.id===ctx.principal.id;return {...rule,readableFields:[...rule.readableFields.filter(id=>next.fields.some(f=>f.id===id)),...(owned?added.map(f=>f.id):[])],writableFields:[...rule.writableFields.filter(id=>next.fields.some(f=>f.id===id)),...(owned?added.filter(f=>f.type!=='computed').map(f=>f.id):[])]}})
-   rules.push(...ownerRules(ctx.principal.id,detail.schemas.filter(s=>!detail.prior.some(p=>p.id===s.id))).filter(rule=>detail.schemas.some(s=>s.id===rule.entityId)))
+   rules=current.map(rule=>{const next=detail.schemas.find(s=>s.id===rule.entityId),old=detail.prior.find(s=>s.id===rule.entityId);if(!next||!old)return rule;const added=next.fields.filter(f=>!old.fields.some(p=>p.id===f.id));const owned=rule.effect==='allow'&&rule.principals.length===1&&rule.principals[0]!.id===policyOwnerId;return {...rule,readableFields:[...rule.readableFields.filter(id=>next.fields.some(f=>f.id===id)),...(owned?added.map(f=>f.id):[])],writableFields:[...rule.writableFields.filter(id=>next.fields.some(f=>f.id===id)),...(owned?added.filter(f=>f.type!=='computed').map(f=>f.id):[])]}})
+   rules.push(...ownerRules(policyOwnerId,detail.schemas.filter(s=>!detail.prior.some(p=>p.id===s.id))).filter(rule=>detail.schemas.some(s=>s.id===rule.entityId)))
   }
-  const mutations:SqlMutation[]=[...activation.mutations,...prepareViewRemovals(detail.viewSnapshots??[],detail.schemas,detail.removals,ctx.now),...prepareFormRemovals(detail.formSnapshots??[],detail.schemas,detail.removals,ctx.now)]
+  const roleChanges=await prepareRoleSchemaUpdates(db,detail,ctx.now)
+  const mutations:SqlMutation[]=[...roleChanges.mutations,...activation.mutations,...prepareViewRemovals(detail.viewSnapshots??[],detail.schemas,detail.removals,ctx.now),...prepareFormRemovals(detail.formSnapshots??[],detail.schemas,detail.removals,ctx.now)]
   mutations.push(detail.policy?{kind:'update',table:policies,set:{rules_json:canonical(rules),version:detail.policy.version+1,updated_at:time},where:trustedPredicate('id=? AND version=?',[policyId,detail.policy.version]),expectedRows:1}:{kind:'insert',table:policies,row:{id:policyId,app_id:detail.appId,name:'Manual base owner',rules_json:canonical(rules),version:1,created_at:time,updated_at:time}})
   if(!detail.policy)mutations.push({kind:'insert',table:memberships,row:{principal_id:ctx.principal.id,app_id:detail.appId,policy_id:policyId,legacy:0,state:'active',version:1}})
-  const baseRow={id:detail.appId,owner_id:ctx.principal.id,name:detail.name,version:detail.baseVersion+1,release_id:releaseId,updated_at:ctx.now}
+  const baseRow={id:detail.appId,owner_id:detail.baseOwnerId??ctx.principal.id,name:detail.name,version:detail.baseVersion+1,release_id:releaseId,updated_at:ctx.now}
   mutations.push(detail.baseVersion?{kind:'update',table:bases,set:baseRow,where:trustedPredicate('id=? AND version=? AND release_id=?',[detail.appId,detail.baseVersion,detail.parentReleaseId]),expectedRows:1}:{kind:'insert',table:bases,row:{...baseRow,created_at:ctx.now}})
-  mutations.push({kind:'insert',table:releases,row:{id:releaseId,app_id:detail.appId,owner_id:ctx.principal.id,preview_id:previewId,detail_json:canonical({...detail,recoveryPolicy:canonical(rules),...(input.provenance?{proposal:input.provenance}:{})}),created_at:ctx.now}},...input.mutations)
-  return admission.commit(ctx,{commandId:input.commandId,action:'release.adopt',appId:detail.appId,canonicalInputHash:input.hash,permit,guards:[...detail.guards,...activation.guards,trustedPredicate('?>strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')',[detail.expiresAt])],mutations,audit:input.audit,events:[],outbox:[],committedResult:{kind:'manual_schema',releaseId,appId:detail.appId,schemas:detail.schemas.map(s=>({id:s.id,label:s.label})),recoveryUrl:`/api/v1/records/releases/${releaseId}/recovery`}})
+  mutations.push({kind:'insert',table:releases,row:{id:releaseId,app_id:detail.appId,owner_id:ctx.principal.id,preview_id:previewId,detail_json:canonical({...detail,recoveryPolicy:roleChanges.rulesByPrincipal[ctx.principal.id]??canonical(rules),recoveryPolicies:{...roleChanges.rulesByPrincipal,[policyOwnerId]:canonical(rules)},...(input.provenance?{proposal:input.provenance}:{})}),created_at:ctx.now}},...input.mutations)
+  return admission.commit(ctx,{commandId:input.commandId,action:'release.adopt',appId:detail.appId,canonicalInputHash:input.hash,permit,guards:[...detail.guards,...roleChanges.guards,...activation.guards,trustedPredicate('?>strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')',[detail.expiresAt])],mutations,audit:input.audit,events:[],outbox:[],committedResult:{kind:'manual_schema',releaseId,appId:detail.appId,schemas:detail.schemas.map(s=>({id:s.id,label:s.label})),recoveryUrl:`/api/v1/records/releases/${releaseId}/recovery`}})
  }
  return {buildPreview,applyRelease,assertGuards:(guards:readonly SqlPredicate[])=>assertGuards(db,guards)}
 }
-export function publicPreview(d:StoredPreview):ManualPreview {const {guards,adoptionGuards,prior,removals,policy,baseVersion,snapshots,viewSnapshots,formSnapshots,...publicFields}=d;return publicFields}
+export function publicPreview(d:StoredPreview):ManualPreview {const {guards,adoptionGuards,prior,removals,policy,baseVersion,snapshots,viewSnapshots,formSnapshots,policyOwnerId,baseOwnerId,...publicFields}=d;return publicFields}

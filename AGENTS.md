@@ -4,7 +4,7 @@
 
 Install Node 22 or later, then install this checkout’s package dependencies
 (`pnpm install --frozen-lockfile`) and run `pnpm exec rer install`. The package-pinned
-rer 0.2.58 then provisions this project’s
+rer 0.2.59 then provisions this project’s
 pinned Node 22.20.0 and pnpm 10.12.4. See the README for platform prerequisites
 and the alternative installer. Start a checkout through these commands:
 

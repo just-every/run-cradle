@@ -1,3 +1,4 @@
+import { requireBaseAuthor } from './base-access.server'
 import { connectionManagementActions } from '../../authority/connection-management'
 import type { AuthorityPermit, PolicyPort, RequestContext } from '../../authority/ports'
 import { principalGuards } from '../../authority/guards.server'
@@ -15,13 +16,11 @@ export const manualOwnerGuards=(ctx:RequestContext)=>[...principalGuards(ctx),tr
 export const manualBaseOwnerGuard=(ctx:RequestContext,appId:string)=>trustedPredicate('EXISTS(SELECT 1 FROM manual_record_bases WHERE id=? AND owner_id=?)',[appId,ctx.principal.id])
 export async function manualAuthority(db:D1Database, policy:PolicyPort, ctx:RequestContext, appId:string, inputHash:string):Promise<AuthorityPermit> {
  if(ctx.principal.kind!=='human'||!ctx.principal.sessionId)throw new AdmissionError('forbidden','A current owner session is required to change a base.')
- const owner=manualOwnerGuards(ctx)
- const base=await db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first<{owner_id:string}>()
+ const access=await requireBaseAuthor(db,ctx,appId)
+ const owner=access?[...access.guards]:manualOwnerGuards(ctx)
  let permit:AuthorityPermit
- if(base){
-  if(base.owner_id!==ctx.principal.id)throw new AdmissionError('forbidden','Only this base owner can change its schema.')
+ if(access){
   permit=await policy.authorize(ctx,{appId,action:'release.adopt',expected:[],cost:[],inputHash})
-  owner.push(manualBaseOwnerGuard(ctx,appId))
  }else{
   owner.push(trustedPredicate('NOT EXISTS(SELECT 1 FROM record_schemas WHERE app_id=?) AND NOT EXISTS(SELECT 1 FROM authority_memberships WHERE app_id=?)',[appId,appId]))
   permit={actor:{id:ctx.principal.id,kind:'human'},action:'release.adopt',appId,grantId:null,grantVersion:null,policyVersion:0,validUntil:ctx.principal.expiresAt,guards:[],reservationMutations:[],reservationIds:[]}

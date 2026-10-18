@@ -16,7 +16,13 @@ export function manualSchemaHttp(service:ReturnType<typeof createManualSchemas>,
   const csv=url.pathname.match(/^\/api\/v1\/records\/releases\/([^/]+)\/recovery\/([^/]+)\.csv$/)
   if(request.method==='GET'&&csv){const recovery=await service.recovery(ctx,idSchema.parse(csv[1])),table=recovery.tables.find(t=>t.entityId===idSchema.parse(csv[2]));if(!table)throw new AdmissionError('not_found','Recovery table not found.');return new Response(table.csv,{headers:{'content-type':'text/csv;charset=utf-8','content-disposition':`attachment; filename="schema-recovery.csv"; filename*=UTF-8''${encodeURIComponent(table.name+'-recovery.csv')}`,'cache-control':'no-store'}})}
   let data:unknown
-  if(request.method==='POST'&&url.pathname==='/api/v1/records/schema-preview')data=await service.preview(ctx,await readJsonBody(request))
+  const baseRoute=url.pathname.match(/^\/api\/v1\/records\/bases\/([^/]+)\/(access|collaborators|reviews)$/)
+  if(baseRoute){
+   const appId=idSchema.parse(baseRoute[1]),surface=baseRoute[2]
+   if(request.method==='GET')data=surface==='access'?await service.collaborators.access(ctx,appId):surface==='reviews'?await service.pending(ctx,appId):await service.collaborators.list(ctx,appId)
+   else if(request.method==='POST'&&surface==='collaborators')data=await service.collaborators.save(ctx,appId,await readJsonBody(request))
+   else throw new AdmissionError('not_found','Unknown base operation.')
+  }else if(request.method==='POST'&&url.pathname==='/api/v1/records/schema-preview')data=await service.preview(ctx,await readJsonBody(request))
   else if(request.method==='POST'&&url.pathname==='/api/v1/commands/release.adopt'){
    const input=z.object({commandId:idSchema,expected:z.array(z.unknown()).max(0),input:z.discriminatedUnion('kind',[z.object({kind:z.literal('manual_schema'),previewId:idSchema}).strict(),z.object({kind:z.literal('agent_proposal'),proposalId:idSchema}).strict()])}).strict().parse(await readJsonBody(request))
    data=(input.input.kind==='manual_schema'?await service.adopt(ctx,input.commandId,input.input.previewId):await review.adopt(ctx,input.commandId,input.input.proposalId)).result

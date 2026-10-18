@@ -31,7 +31,7 @@ export function createRecordHttp(ports: {
             }
             const entityPresence = path.match(/^\/api\/v1\/apps\/([^/]+)\/entities\/([^/]+)\/presence$/), viewPresence = path.match(/^\/api\/v1\/views\/([^/]+)\/presence$/);
             const forms=path.match(/^\/api\/v1\/apps\/([^/]+)\/forms$/);
-            const entities = path.match(/^\/api\/v1\/apps\/([^/]+)\/entities(?:\/([^/]+)(?:\/(query|records)(?:\/([^/]+))?)?)?$/), views = path.match(/^\/api\/v1\/apps\/([^/]+)\/views$/), view = path.match(/^\/api\/v1\/views\/([^/]+)(?:\/(query))?$/), form = path.match(/^\/api\/v1\/forms\/([^/]+)$/);
+            const entities = path.match(/^\/api\/v1\/apps\/([^/]+)\/entities(?:\/([^/]+)(?:\/(query|records)(?:\/([^/]+))?)?)?$/), views = path.match(/^\/api\/v1\/apps\/([^/]+)\/views$/), view = path.match(/^\/api\/v1\/views\/([^/]+)(?:\/(query|history))?$/), form = path.match(/^\/api\/v1\/forms\/([^/]+)$/);
             if (request.method === 'POST' && (entityPresence || viewPresence)) {
                 const target = entityPresence ? { appId: idSchema.parse(entityPresence[1]), entityId: idSchema.parse(entityPresence[2]) } : { viewId: idSchema.parse(viewPresence![1]) };
                 data = await ports.presence.heartbeat(ctx, target);
@@ -67,7 +67,8 @@ export function createRecordHttp(ports: {
             }
             else if (view) {
                 const definition = await ports.metadata.readView(ctx, idSchema.parse(view[1]));
-                if (view[2] === 'query' && request.method === 'POST')
+                if(view[2]==='history'&&request.method==='GET')data=await ports.metadata.viewHistory(ctx,definition.id);
+                else if (view[2] === 'query' && request.method === 'POST')
                     data = await ports.metadata.viewQuery(ctx, definition, querySchema.parse(await readJsonBody(request)));
                 else if (!view[2] && request.method === 'GET')
                     data = definition;
