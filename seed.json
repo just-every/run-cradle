@@ -212,6 +212,12 @@
       "clauses": [
         "CALC-002"
       ]
+    },
+    {
+      "id": "operations-starting-templates",
+      "clauses": [
+        "IFACE-006"
+      ]
     }
   ],
   "nonGoals": [

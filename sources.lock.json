@@ -2914,7 +2914,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "a45bb8dbe713d5a06ad0d7dac50717d0c9d7972b1e6c31fe0571f6472ff2afb2",
+      "sha256": "851406805f595186d83080a65d0921d9ff39e71b05ca55e04029d758b648bb30",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "250642a8dae57fe9a0247d530912607d97ec6b0638636bcf093434b8281adb2e",
+      "sha256": "64e5c7b37d72eef4442c4de9c122c2b8b352437e1d3dff9eba5d06e5bcf6fd0d",
       "executable": false
     },
     "DEMO.md": {
@@ -3026,7 +3026,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "e164f792c8fff1bdcb94adecd1305523fd9ee870a864f10e4224480d27d4d3a2",
+      "sha256": "84f0e338516a841083feb294b7cbc0b5f3f1f2a445d962771f1e2846decca89c",
       "executable": false
     },
     "docs/contract-transition.md": {
@@ -3351,6 +3351,126 @@
     },
     "docs/contract/FIELD-005/unshared-view-refusal-390.png": {
       "sha256": "e7ee9d1eb9677bf11c8a805a4471923cd923bfc6b282e0a3161c29c4c51d6028",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-assets-schema-1440.png": {
+      "sha256": "97efb6dcfb49c28df59c649ea582f5e896bf3c2a5b27094cae9f18181ce842ad",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-assets-schema-390.png": {
+      "sha256": "165c69633e483752cdf96bda928508e364c456000f8e1a95d6908673499462b9",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-campaigns-1440.png": {
+      "sha256": "fb643986452d47d938c89e5f0c2bbce31bcb64551915be33cc3035b4059ac0a3",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-campaigns-390.png": {
+      "sha256": "c525df19b53d3477ff2bc0abd5d137dca300b5c156e51a0e5f13ee1e628523b6",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-catalogue-1440.png": {
+      "sha256": "db418c35bff5f99309b00d9ad6ce464dc1e53dfa6208d458e69d0f3c57d58382",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-catalogue-390.png": {
+      "sha256": "630c4177d8cddf9f7c2593c0a5ffa141ee1eea31b24ea7bc9be24ec0e8ff9f30",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-content-schema-1440.png": {
+      "sha256": "28a4d8c9af21e712226204b870d3c56a4a923d6dfb807af44c277834506a1d31",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-content-schema-390.png": {
+      "sha256": "5ff98f40b6ac85161492287277da3adf0fe26874266b933e9120a9bb5dab5409",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-copy-exclusions-1440.png": {
+      "sha256": "f4f034cf178ac911b3d040160415e1bc3156deaba70816537c08e1c5a4ef9c17",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-copy-exclusions-390.png": {
+      "sha256": "e2e9342cae8d8e2f3690310fc4d5228b59c6bc75a4ba90c045da6827403ff132",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-copy-without-records-1440.png": {
+      "sha256": "13e9aabe8e2f97be0bb5fe1538cd2fff43e20da3986e8d73e9930b4a59933c98",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-copy-without-records-390.png": {
+      "sha256": "91241130bad832e7e14fa246cb84ddfa9564d59f7e358d9e7ce0501907a7f155",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-events-schema-1440.png": {
+      "sha256": "1bbf26c419bc98efa6612656864761e2da9f055e5faf42a54174620b4fe55872",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-events-schema-390.png": {
+      "sha256": "d894f8a121e78e9b89c31e38a0a587397756eb43cf21a3c6c8da8a21d159cdcf",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-field-operations-schema-1440.png": {
+      "sha256": "cf24b8d23e2cb57456e13fbc07f1f1b4f50518cf14f6724f1981e43d44dbea7c",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-field-operations-schema-390.png": {
+      "sha256": "8d635143999dfadcab07ce5384941e2681535dd23a9df83bd64af51416276f0d",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-inventory-schema-1440.png": {
+      "sha256": "a3b3c9bcecbdfd99d7241ebbd6913dddbd0779a75568579e68ecd64bcca82c8f",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-inventory-schema-390.png": {
+      "sha256": "58a33930ffafcb592d05125ded72e37439d977ccb310589d16f42fe328c6e54f",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-locations-1440.png": {
+      "sha256": "af9a649224a4ae290962f872145ec6209aa62474576eea5766c25d25de6405b0",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-locations-390.png": {
+      "sha256": "492c6298cdab8a277e7622d3b975cdff684014036a9ce91f95dcfd37188af814",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-products-1440.png": {
+      "sha256": "022cc89742ae8d1840159cdf3f23e08c4b67d996895e61b6f46ac58f61b5503b",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-products-390.png": {
+      "sha256": "193cc93175de1c84f03b2b117b1afd41e98690fed27915b96267239e3212381a",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-sites-1440.png": {
+      "sha256": "e1f8db7fa9d2c7f8afc7bd21d87d5d2e1774e7c6d3ce13fa63273787d3c74b25",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-sites-390.png": {
+      "sha256": "4791e53d96c67ccf367e1534d0161fd96521d1c9d9203b26aa3e00e190214dce",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-vendors-1440.png": {
+      "sha256": "213bb3914c7b0c9b158c1bee59bf279103e40233b4aaece7d39cdbde04de7a35",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-vendors-390.png": {
+      "sha256": "0dd7362d08c1c07d837d2795325edcc4dc4e148a38b8b88373442ead9a5f9704",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-vendors-schema-1440.png": {
+      "sha256": "73992970c8bca21cf00f73dce2c8a1896244716f18aa40f64670d2e984dc4753",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-vendors-schema-390.png": {
+      "sha256": "d8dd761d8549ffd7d31ef9a74bfa4f8b86765aeeb8350687e2b043f232737d41",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-venues-1440.png": {
+      "sha256": "5e14b8bfe7ffe5d4973a0f6da0a891e9652c39dc6529a6044d5e6467ce071b24",
+      "executable": false
+    },
+    "docs/contract/IFACE-006/template-venues-390.png": {
+      "sha256": "2aecea1c45cb0ea07c80377851d77e74f6f719a747a65d7db656e9b89cf1e27b",
       "executable": false
     },
     "docs/contract/RECORDS-002/picker-schema-impact-1440.png": {
@@ -4814,7 +4934,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "b23ebb0703aba3a1955c5d35814bcb9f3557d6ecaca51050a58ee5de6ee895b5",
+      "sha256": "d54c1b71bf7a79ab1c0834442a7b97a83a25a319cf6a2073c5cd4c0c1c208719",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {
@@ -7950,7 +8070,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/export-http.server.ts": {
-      "sha256": "222740e08257910e2e39f2b4aba9196463b8e0f1eace4089c1bb8d6d08b2c0c6",
+      "sha256": "a44735325c27eab2960a16e2b32a55252f340840690d9cb3ff338e99bd3502f6",
       "executable": false
     },
     "src/domains/records/base-transfer/export-index.ts": {
@@ -8079,6 +8199,10 @@
     },
     "src/domains/records/base-transfer/review-retention.ts": {
       "sha256": "a0fa79ca240e594ac27f0ab60237a70d27eef56ee88b25b54d0e1a1b5d3d9b10",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/schema-only.ts": {
+      "sha256": "a326de4a0013d9c28a6361826f0cc7b8651281a2a716a2442e7e41d4a24fbc13",
       "executable": false
     },
     "src/domains/records/base-transfer/service.server.ts": {
@@ -9130,7 +9254,7 @@
       "executable": false
     },
     "src/ui/records/export-base.tsx": {
-      "sha256": "a1fe51a8c152f7af907c53e51b2df37a5fa4e0db2665e26fa7b5518fb9833277",
+      "sha256": "f12643093b01a9467ea3688a050d6c240d921becbd7555f78e60922a3ba32309",
       "executable": false
     },
     "src/ui/records/export-csv.tsx": {
@@ -9337,12 +9461,44 @@
       "sha256": "a1587d2cf89b0c2736b94d0bba3abf9360824bff38e8ba8568d8d08e582c2f73",
       "executable": false
     },
+    "src/ui/records/schema/template-assets.ts": {
+      "sha256": "0a32479a9a5f6c5ff18659f56289ec04d7829b5ddb1273d6cfd874b519823448",
+      "executable": false
+    },
     "src/ui/records/schema/template-cards.tsx": {
       "sha256": "f26cb4ecc6aabcb09c7fa1a42fb9904449d616e63af228644cf7a92c7b21be29",
       "executable": false
     },
+    "src/ui/records/schema/template-content.ts": {
+      "sha256": "10337e94300766259ee748847f4053cc5b50e1df79b00c6026184968e94783f1",
+      "executable": false
+    },
+    "src/ui/records/schema/template-events.ts": {
+      "sha256": "0461f3b0a357cc450382abc58202e9780ec857f561678a9d7cf9cf128acf4a0e",
+      "executable": false
+    },
+    "src/ui/records/schema/template-field-operations.ts": {
+      "sha256": "26199b3451b5098f9c62c1b8a76ef10466d6622de25a04dd6a59f97a8895492d",
+      "executable": false
+    },
+    "src/ui/records/schema/template-fields.ts": {
+      "sha256": "89ac9786ee56dc604f3b23880b3b7b31d3883a04db4e6df3291bc5540d5e67e1",
+      "executable": false
+    },
+    "src/ui/records/schema/template-inventory.ts": {
+      "sha256": "18985ee0beb2ed9f8cb6fbd74208bacb8deee9da57980764bf207a61c75d936a",
+      "executable": false
+    },
+    "src/ui/records/schema/template-vendors.ts": {
+      "sha256": "b0e4132a880b3c4757186fb6a096f15f93ea965ea63de2650a066ab739205f4e",
+      "executable": false
+    },
+    "src/ui/records/schema/templates-operations.ts": {
+      "sha256": "0a8951ad06fce9abe1d280767613a63ff729fe1974e00adb8235f8447e1e0591",
+      "executable": false
+    },
     "src/ui/records/schema/templates.ts": {
-      "sha256": "704bad8803f67871410d41fa47483be81d98583d72de80e39e898b0e6d2a28ca",
+      "sha256": "330210e24b1c0c34b4077fee41f73dfd65757a447eba53daa6db9d4771330dc7",
       "executable": false
     },
     "src/ui/records/view-match.tsx": {
@@ -10270,7 +10426,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-templates.mjs": {
-      "sha256": "9846f775d2976c14bb37733a3ee0296fde9c5128a62176a3f4718689efcf396d",
+      "sha256": "4dd6c67a239fbbe0994740231f053663a908a51774caa3ca3ab7715674227f33",
       "executable": false
     },
     "tests/helpers/records-browser-views.mjs": {
@@ -10367,6 +10523,10 @@
     },
     "tests/helpers/records-manual-harness.mjs": {
       "sha256": "a0734826c29a75347885e9af86ed614eaef1388a9ce85be8c040f20eebf8f288",
+      "executable": false
+    },
+    "tests/helpers/records-operations-templates.mjs": {
+      "sha256": "9fc5c8c595fb2df5663f14068573a50fcae57bccd708c0a94cceefc438bb094c",
       "executable": false
     },
     "tests/helpers/records-picker-journey.mjs": {
@@ -10726,7 +10886,7 @@
       "executable": false
     },
     "tests/records-manual-roundtrip.mjs": {
-      "sha256": "f91d456887eb579ff6f8b4d4273d906871457aeb477386ec651c991cd437e4aa",
+      "sha256": "fbcf99007045ce178951f19fb95da5cf93d2fe3e2a8783675313e93ec31e1365",
       "executable": false
     },
     "tests/records-runtime-entry.ts": {
@@ -10902,7 +11062,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "099dc44b0fdba7df5ec1cb5e9663516378740473a52485e6a02eaaf4e76a9874",
+      "sha256": "0b988e7e46c4a87266e7e6befb5e0ae6b1772be0210b45740e0b09f21a6aae0e",
       "executable": false
     },
     "tests/ui-recut-final.mjs": {

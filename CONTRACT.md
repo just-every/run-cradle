@@ -237,7 +237,7 @@ Task-specific apps over the same records: intake, review screens, dashboards and
   *Status:* missing — no code.
 - **IFACE-006 — Templates and starting apps.** New bases start from editable templates through the same preview and adoption: Customer relationships, Project tracker and Launch readiness today, plus US SMB operations templates for inventory and orders, vendor and contract register, asset and equipment register, event planning, field operations tracker and content production. A whole base can be duplicated with or without records.
   *Acceptance:* Template adoption journey for each template; duplicate-base copy with an identity map.
-  *Status:* partial — src/ui/records/schema/templates.ts ships Customer relationships and Project tracker; Launch readiness is included (tests/ui-records-builder.mjs; tests/records-manual-roundtrip.mjs); the further templates are absent; base copy via RECORDS-006.
+  *Status:* done — All nine editable templates use preview and adoption. The six operations templates include linked tables, typed USD/date/person fields and realistic record journeys. Reviewed native copies preserve identities through remapping, with records or schema only; record-dependent exclusions are disclosed before schema-only download and the source stays intact. Evidence: `src/ui/records/schema/templates.ts`, `src/domains/records/base-transfer/schema-only.ts`, `tests/helpers/records-operations-templates.mjs`, `tests/helpers/records-browser-templates.mjs`, `docs/contract/IFACE-006/`.
 - **IFACE-007 — Per-component permissions and viewer filters.** Each interface component that shows records has user-action settings:
   - inline editing on or off;
   - adding records on or off;
@@ -904,13 +904,13 @@ Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 18 October 2026; their cited evidence and gaps describe those updates.
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **69 done, 113 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **70 done, 112 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 58 | 53 | 0 | 111 |
-| Target and push further | 11 | 60 | 28 | 99 |
-| All | 69 | 113 | 28 | 210 |
+| Target and push further | 12 | 59 | 28 | 99 |
+| All | 70 | 112 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -960,7 +960,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `IFACE-003` | Charts and dashboards | target | partial | `src/core/features/portfolio/ui/portfolio-overview-page.tsx` | template-specific Portfolio Overview (src/core/features/portfolio/ui/portfolio-overview-page.tsx; CAMP-006); configurable charts absent |
 | `IFACE-004` | Buttons and record actions | target | partial | `src/domains/records/form-actions.server.ts` | registered record/form actions share command services (src/domains/records/form-actions.server.ts:15); user-configurable buttons absent |
 | `IFACE-005` | External portals | target | missing |  | no code |
-| `IFACE-006` | Templates and starting apps | target | partial | `src/ui/records/schema/templates.ts`, `tests/ui-records-builder.mjs`, `tests/records-manual-roundtrip.mjs` | src/ui/records/schema/templates.ts ships Customer relationships and Project tracker; Launch readiness is included (tests/ui-records-builder.mjs; tests/records-manual-roundtrip.mjs); the further templates are absent; base copy via RECORDS-006 |
+| `IFACE-006` | Templates and starting apps | target | done | `src/ui/records/schema/templates.ts`, `src/domains/records/base-transfer/schema-only.ts`, `tests/helpers/records-operations-templates.mjs`, `tests/helpers/records-browser-templates.mjs`, `docs/contract/IFACE-006/` |  |
 | `IFACE-007` | Per-component permissions and viewer filters | target | missing |  | no interface designer yet (IFACE-001). Row and field policy is enforced server-side (PERM-002; src/domains/authority/policy.server.ts), and the component-level narrowing would build on it |
 | `REPORT-001` | Scheduled reports | target | missing |  | only the launch weekly digest (NOTIFY-004; tests/launch-installed-schedules.mjs) |
 | `REPORT-002` | Print and page layouts | target | missing |  | no print or PDF layout code. REPORT-001's PDF attachment is missing too |
