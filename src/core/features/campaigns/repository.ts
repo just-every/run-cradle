@@ -95,9 +95,9 @@ export const createCampaignRepository = (database: Database) => ({
   },
 
   async findDeliverable(id: string) {
-    const row = await queryOne<{ id: string, title: string, dueDate: string | null, state: string, version: number, ownerId: string, ownerName: string }>(database, `
-      SELECT d.id, d.title, d.due_date AS dueDate, d.state, d.version, o.id AS ownerId, o.name AS ownerName
-      FROM deliverables d JOIN operators o ON o.id = d.owner_id WHERE d.id = ?
+    const row = await queryOne<{ id: string, title: string, dueDate: string | null, state: string, version: number, ownerId: string, ownerName: string, archived: number }>(database, `
+      SELECT d.id, d.title, d.due_date AS dueDate, d.state, d.version, o.id AS ownerId, o.name AS ownerName, (c.archived_at IS NOT NULL) AS archived
+      FROM deliverables d JOIN operators o ON o.id = d.owner_id JOIN campaigns c ON c.id=d.campaign_id WHERE d.id = ?
     `, [id])
     if (!row) return undefined
     const settings=await queryOne<{timezone:string}>(database,'SELECT timezone FROM workspace_settings LIMIT 1');if(!settings)throw new Error('Workspace timezone is required')
@@ -108,7 +108,7 @@ export const createCampaignRepository = (database: Database) => ({
       owner: { id: row.ownerId, initials: toInitials(row.ownerName), name: row.ownerName },
       dueDate: row.dueDate,
       state: row.state,
-      overdue: row.state !== 'Complete' && Boolean(row.dueDate && row.dueDate < today),
+      overdue: !row.archived && row.state !== 'Complete' && Boolean(row.dueDate && row.dueDate < today),
       version: row.version,
     }
   },

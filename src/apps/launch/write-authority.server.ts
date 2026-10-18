@@ -7,6 +7,7 @@ import { AdmissionError } from '../../domains/admission/errors'
 import { LAUNCH_APP_ID, launchEntities } from './contracts'
 import { launchColumns, launchFieldIds, launchTables, type LaunchKind } from './descriptors.server'
 import { launchAttributionFields } from './write-fields.server'
+import { isLaunchMetadataColumn } from './storage.server'
 import type { ChangeSet, LaunchContext } from './domain.server'
 
 type Row = Record<string, SqlScalar>
@@ -66,7 +67,7 @@ export async function authorizeLaunchWrites(context: LaunchContext, ctx: Request
    if (mutation.kind === 'delete' || mutation.kind === 'replaceText') { allFields(value); continue }
    const next = mutation.kind === 'insert' ? row : mutation.set
    for (const [column, cell] of Object.entries(next)) {
-    if (bookkeeping.has(column) || column.startsWith('launch_') || mutation.kind === 'update' && cell === row[column]) continue
+    if (bookkeeping.has(column) || isLaunchMetadataColumn(column) || mutation.kind === 'update' && cell === row[column]) continue
     const field = fieldForColumn(kind, column)
     if (field) value.fields.add(field)
     else allFields(value)

@@ -620,10 +620,10 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **CAMP-003 — Validation.** A campaign's launch date must not fall before its start date, its health must be a whole number from 0 to 100, and its budget and spend must be zero or greater. Campaign codes are trimmed and unique case-insensitively. A mutation breaking any of these, or clearing the owner, start date, or launch date of an active campaign, is rejected with a validation error naming the field and changes nothing.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **CAMP-004 — Detail and rollups.** Campaign detail shows the campaign's fields, its complete and total deliverable counts, its milestones, its open risks, its unresolved decisions, its comments, and its activity. Those counts are derived: they change only through a mutation to a linked record.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **CAMP-005 — Health.** Health is shown with the operator who last set it and when. A campaign whose health has not been set in the last 14 days is marked stale. *Policy: `campaign.health.v1`; default: health and status change only through an explicit operator edit or an import row that maps the field. A replacement may derive health from linked records; no replacement may set it from AI output, which AI-003 forbids.*
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/ui-launch-walkthrough.mjs.
@@ -638,73 +638,73 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/ui-launch-operator-doors.mjs.
 - **CAMP-009 — Archiving.** Archiving a campaign is allowed while it has open deliverables, milestones, risks, and decisions, and withdraws its work in one commit: its unresolved decisions leave Decision Queue, its risks and milestones leave every lens and the digest, its incomplete deliverables and milestones stop counting as overdue, it leaves the counts in CAMP-006 and every search that does not ask for archived campaigns, its outstanding readiness requests and every queued automation run whose subject is that campaign or one of its records are cancelled without executing an action, and email held under NOTIFY-002 for that campaign is dropped. Archiving completes and resolves nothing.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **CAMP-010 — Restoring.** Restoring returns the campaign and every record archived with it to the state each had at archiving, and creates no notification, readiness request, or automation run for the archived period. CAMP-003 is applied at restore: a campaign whose owner was removed while it was archived must be given a current owner before it becomes active.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/lifecycle.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **CAMP-011 — Deletion.** Deleting a campaign removes its deliverables, its milestones and their dependencies, its risks, decisions, comments, campaign activity, AI analyses, and import references under `BASE-DATA-003`. Deletion requires typing the campaign code to confirm and cannot be undone. Audit records survive with the campaign reference anonymised.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **CAMP-012 — Risk rating.** A campaign's risk rating is derived as the highest severity among its open risks, or None when it has none, and is shown wherever the campaign is listed.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/campaign-projection.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **CAMP-013 — Bulk edit.** In the campaign grid and in any Grid or Cards lens an operator can select up to 500 records, including every record matching the current conditions, and apply one change to all of them: owner, phase, status, a tag added or removed, a custom-field value, archive, or restore. A bulk change commits for every selected record or none, is rejected naming the first record that fails validation, writes one activity entry on each changed record and one bulk entry naming the operator and the count, and can be undone once within 1 hour, restoring the prior value of every record it changed.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-write-authority.mjs; tests/ui-launch-operator-doors.mjs.
 - **CAMP-014 — Duplicating.** Duplicating a campaign copies its fields, tags, custom-field values, deliverables, and milestones under a new unique code, and copies no risks, decisions, comments, activity, notifications, or AI analyses. When the operator supplies a new launch date, every copied date shifts by the difference between it and the original launch date; otherwise dates are copied unchanged. The copy triggers no automation.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/duplicate.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 
 ### Deliverables
 
 - **DELIV-001 — Record.** An operator can create, edit, and delete a deliverable. It belongs to exactly one campaign, requires a title and an owner, has an optional due date, and has a state of Open or Complete that starts Open.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **DELIV-002 — Completion.** Completing or reopening a deliverable records the operator and the time, adds a campaign activity entry, and changes the campaign's derived completion count in the same commit.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **DELIV-003 — Overdue.** An Open deliverable with a due date before the current date in the workspace timezone is marked overdue on campaign detail, in every lens and search result that contains it, and in CSV export. A deliverable due today is not overdue.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 
 ### Milestones
 
 - **MILE-001 — Record.** An operator can create, edit, and delete a milestone. It belongs to exactly one campaign, requires a title and an owner, has a type of Launch, Review, Approval, Decision, Event, or Publish, has a status of Not started, On track, Watch, At risk, Blocked, or Complete that starts Not started, and has either a single date or a start and end date whose end does not fall before its start.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **MILE-002 — Timeline lens.** As shipped, Timeline Lens contains every milestone of every non-archived campaign, ordered by date ascending using the start date for a range and then by campaign code. A range is rendered as a range with both dates and a point as a point with one date. Month scale renders one column per calendar month and Quarter scale one per quarter in the workspace timezone; switching scale changes only the columns, never the milestone set. Every item links to its campaign detail and to its milestone detail.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **MILE-003 — Dependencies.** An operator can name existing milestones in any campaign as predecessors of a milestone. A predecessor set that would create a cycle is rejected with a validation error and changes nothing. When a milestone starts before a predecessor ends, both carry a dependency-conflict marker on milestone detail and in Timeline Lens, and setting the later milestone's status to On track while that marker stands requires a reason of at least one non-whitespace character, recorded on the milestone and in campaign activity. Changing one milestone's date never changes another's.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **MILE-004 — Readiness request.** A readiness request is an in-app notification addressed to a milestone's owner, Outstanding until that owner acknowledges it. Within 15 minutes of 08:00 each day in the workspace timezone the shipped readiness automation creates exactly one Outstanding request for every milestone of type Launch that is not Complete, whose campaign is non-archived, and whose date falls within the next 5 days, and that has no Outstanding request. A repeated evaluation creates no duplicate.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-installed-schedules.mjs.
 - **MILE-005 — Readiness rescheduling.** Moving a Launch milestone's date out of the five-day window cancels its Outstanding request, and moving it inside the window creates one at the next daily evaluation. Completing or deleting the milestone, or archiving its campaign, cancels an Outstanding request. A milestone whose date has already passed receives no request.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/readiness.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **MILE-006 — Overdue.** An incomplete milestone whose date, or whose range end, falls before the current date in the workspace timezone is marked overdue wherever it appears.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/milestones.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 
 ### Risks
 
 - **RISK-001 — Record.** An operator can create, edit, and delete a risk. It belongs to exactly one campaign, requires a title and an owner, has a severity of Low, Medium, High, or Critical, has an optional due date, carries a signal and a mitigation as free text of at most 2,000 characters each — the signal being the evidence that raised the risk — and has a workflow state.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **RISK-002 — Lifecycle.** An open risk is Watching, In progress, Needs decision, or Escalated. Resolving it requires a resolution note of at least one non-whitespace character and records the operator and the time. Reopening a resolved risk returns it to Watching and keeps the previous resolution in activity.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **RISK-003 — Escalation.** An operator can escalate an open risk with a reason. In one commit the escalation sets the risk's state to Escalated, records the operator, reason, and time, and applies the escalation policy; the response carries any decision the policy created. *Policy: `risk.escalation.v1`; default: escalating a risk of severity Critical creates one unresolved decision of priority Critical linked to that risk unless an unresolved decision is already linked to it, and notifies the campaign owner. Escalating a lower severity creates no decision.*
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **RISK-004 — Isolation.** Escalating, updating, or resolving a risk changes that risk, the campaign activity entry ACT-001 requires, the campaign's derived rollups, and — when `risk.escalation.v1` fires — the one decision and one notification it creates. No other record changes; a linked decision changes only through `decision.resolution.v1`.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/transitions.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 - **RISK-005 — Shipped lens.** As shipped and before any operator edit, Risks Lens contains exactly the open risks of severity High or Critical whose campaign is non-archived and whose launch date is no later than 30 days from today in the workspace timezone, so a campaign already past its launch date stays in the lens. It orders Critical before High, then earliest due date, then risks without a due date, then campaign code, and shows severity, state, owner, due date, signal, mitigation, and campaign.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/shipped-lenses.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-write-effects.mjs and tests/ui-launch-walkthrough.mjs; native Worker/D1 journeys with provider substitution only at the network edge.
 
 ### Decisions
 
@@ -1043,32 +1043,32 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `VIEW-007` | Paging and order | published | done | `tests/launch-operator-doors.mjs` |  |
 | `CAMP-001` | Record | published | done | `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs` |  |
 | `CAMP-002` | Lifecycle | published | done | `tests/ui-launch-walkthrough.mjs` |  |
-| `CAMP-003` | Validation | published | partial | `src/apps/launch/campaigns.server.ts` | no clause-tagged test yet |
-| `CAMP-004` | Detail and rollups | published | partial | `src/apps/launch/campaigns.server.ts` | no clause-tagged test yet |
+| `CAMP-003` | Validation | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `CAMP-004` | Detail and rollups | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `CAMP-005` | Health | published | done | `tests/ui-launch-walkthrough.mjs` |  |
 | `CAMP-006` | Portfolio overview | published | partial | `src/core/features/portfolio` | no clause-tagged test yet |
 | `CAMP-007` | Grid | published | partial | `src/apps/launch/campaigns.server.ts` | no clause-tagged test yet |
 | `CAMP-008` | Custom fields | published | done | `tests/ui-launch-operator-doors.mjs` |  |
-| `CAMP-009` | Archiving | published | partial | `src/apps/launch/lifecycle.ts` | no clause-tagged test yet |
-| `CAMP-010` | Restoring | published | partial | `src/apps/launch/lifecycle.ts` | no clause-tagged test yet |
-| `CAMP-011` | Deletion | published | partial | `src/apps/launch/erasure.server.ts` | no clause-tagged test yet |
-| `CAMP-012` | Risk rating | published | partial | `src/apps/launch/campaign-projection.server.ts` | no clause-tagged test yet |
+| `CAMP-009` | Archiving | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `CAMP-010` | Restoring | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `CAMP-011` | Deletion | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `CAMP-012` | Risk rating | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `CAMP-013` | Bulk edit | published | done | `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs` |  |
-| `CAMP-014` | Duplicating | published | partial | `src/apps/launch/duplicate.server.ts` | no clause-tagged test yet |
-| `DELIV-001` | Record | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `DELIV-002` | Completion | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `DELIV-003` | Overdue | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `MILE-001` | Record | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
-| `MILE-002` | Timeline lens | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
-| `MILE-003` | Dependencies | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
+| `CAMP-014` | Duplicating | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `DELIV-001` | Record | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `DELIV-002` | Completion | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `DELIV-003` | Overdue | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `MILE-001` | Record | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `MILE-002` | Timeline lens | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `MILE-003` | Dependencies | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `MILE-004` | Readiness request | published | done | `tests/launch-installed-schedules.mjs` |  |
-| `MILE-005` | Readiness rescheduling | published | partial | `src/apps/launch/readiness.server.ts` | no clause-tagged test yet |
-| `MILE-006` | Overdue | published | partial | `src/apps/launch/milestones.server.ts` | no clause-tagged test yet |
-| `RISK-001` | Record | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `RISK-002` | Lifecycle | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
+| `MILE-005` | Readiness rescheduling | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `MILE-006` | Overdue | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `RISK-001` | Record | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `RISK-002` | Lifecycle | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `RISK-003` | Escalation | published | done | `tests/ui-launch-walkthrough.mjs` |  |
-| `RISK-004` | Isolation | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
-| `RISK-005` | Shipped lens | published | partial | `src/apps/launch/shipped-lenses.server.ts` | no clause-tagged test yet |
+| `RISK-004` | Isolation | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
+| `RISK-005` | Shipped lens | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `DEC-001` | Record | published | partial | `src/apps/launch/transitions.server.ts` | no clause-tagged test yet |
 | `DEC-002` | Queue | published | done | `tests/ui-launch-walkthrough.mjs` |  |
 | `DEC-003` | Approval | published | done | `tests/ui-launch-walkthrough.mjs` |  |

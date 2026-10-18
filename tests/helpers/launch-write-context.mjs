@@ -14,6 +14,7 @@ try {
  source = await import(path.join(directory, 'runtime.mjs'))
 } finally { await rm(directory, { recursive: true, force: true }) }
 const { createPolicyPort, createRequestContextFactory, createReplayAccess, createApplicationEntityRegistry, createDescriptorRegistry, launchDescriptors, createAdmissionService, createLaunchHandlers, createChannelsIntegration, createUlid, LAUNCH_APP_ID, launchEntities, launchCommandSchema, createLegacyImportAdapter } = source
+export const launchSource = source
 export { createLegacyImportAdapter }
 export const { createLegacyAutomationAuthority, createLegacyAutomationRuntime, decodeCampaignDetail } = source
 export const expected = (kind, row) => [{ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities[kind], recordId: row.id }, version: row.version }]
@@ -24,7 +25,7 @@ export async function writeContext(h, session = h.ownerSession, releaseId) {
  const admission = createAdmissionService(h.db, { authorizeReplay: replay.authorizeReplay })
  const resolve = createRequestContextFactory(h.db, h.configuration)
  const ctx = await resolve(new Request(`${h.origin}/api/v1/session`, { headers: { host:new URL(h.origin).host, cookie: session.cookie } }), 'http')
- const context = { releaseId, db: h.db, policy, integration: createChannelsIntegration(h.db) }
+ const context = { releaseId, db: h.db, policy, integration: { ...createChannelsIntegration(h.db), deleteCampaign: (ctx,id)=>source.campaignErasure(h.db,ctx,id) } }
  const handlers = createLaunchHandlers(context)
  const prepare = (action, input, revisions = []) => handlers[action](ctx, launchCommandSchema(action).parse({ commandId: createUlid(), input, expected: revisions }))
  const commit = async (action, input, revisions = []) => (await admission.commit(ctx, await prepare(action, input, revisions))).result.value

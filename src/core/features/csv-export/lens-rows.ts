@@ -2,6 +2,8 @@ import { compileLens } from '../../../apps/launch/lenses.server'
 import { lensDefinition } from '../../../apps/launch/contracts'
 import type { ExportWorkspace } from './workspace-format'
 import { instant, money } from './workspace-format'
+import { launchOverdue, overdueMarkerField } from '../../../apps/launch/overdue-projection.server'
+import { localDate } from '../../../apps/launch/milestones.server'
 
 type Row = Record<string, string | number | null>
 const labels: Record<string, string> = { code: 'Code', name: 'Name', title: 'Title', owner: 'Owner', ownerId: 'Owner', requester: 'Requester', requesterId: 'Requester', assignee: 'Assignee', assigneeId: 'Assignee', campaign: 'Campaign', campaignId: 'Campaign', campaignCode: 'Campaign code', campaignLaunchDate: 'Campaign launch date', summary: 'Status summary', statusSummary: 'Status summary', dueAt: 'Due' }
@@ -29,5 +31,10 @@ export async function lensExport(db: D1Database, lens: { name: string; descripti
   if (field === 'dueAt') return instant(value, workspace.timezone)
   return value ?? ''
  }
- return { header, rows: rows.map(row => definition.fields.map(field => cell(row, field))) }
+ const marker = query.kind === 'milestone' ? overdueMarkerField('milestone', definition.fields) : undefined
+ const today = localDate(workspace.capturedAt, workspace.timezone)
+ return { header, rows: rows.map(row => {
+  const overdue = query.kind === 'milestone' && launchOverdue('milestone', { status: row.status, startDate: row.start_date, endDate: row.end_date }, today, true)
+  return definition.fields.map(field => field === marker && overdue ? `${cell(row, field) ?? ''} (Overdue)` : cell(row, field))
+ }) }
 }

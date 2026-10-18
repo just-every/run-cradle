@@ -13,6 +13,7 @@ export type Milestone = {
   startDate: string
   endDate: string | null
   predecessors: Array<{ id: string; title: string }>
+  overdue: boolean
   dependencyConflict: boolean
   conflictReason: string | null
   version: number
@@ -43,9 +44,9 @@ const milestone = (value: unknown): Milestone => {
   const source = asRecord(value, 'Milestone')
   const campaign = asRecord(source.campaign, 'Milestone campaign')
   const owner = asRecord(source.owner, 'Milestone owner')
-  if (!Array.isArray(source.predecessors) || typeof source.dependencyConflict !== 'boolean' || typeof source.version !== 'number') throw new MilestoneApiError('Milestone returned an invalid response.', 502)
+  if (!Array.isArray(source.predecessors) || typeof source.overdue !== 'boolean' || typeof source.dependencyConflict !== 'boolean' || typeof source.version !== 'number') throw new MilestoneApiError('Milestone returned an invalid response.', 502)
   return {
-    id: text(source, 'id', 'Milestone'), title: text(source, 'title', 'Milestone'), owner: { id: text(owner, 'id', 'Milestone owner'), name: text(owner, 'name', 'Milestone owner'), initials: text(owner, 'initials', 'Milestone owner') }, type: text(source, 'type', 'Milestone'), status: text(source, 'status', 'Milestone'), startDate: text(source, 'startDate', 'Milestone'), endDate: nullableText(source, 'endDate', 'Milestone'), dependencyConflict: source.dependencyConflict, conflictReason: nullableText(source, 'conflictReason', 'Milestone'), version: source.version,
+    id: text(source, 'id', 'Milestone'), title: text(source, 'title', 'Milestone'), owner: { id: text(owner, 'id', 'Milestone owner'), name: text(owner, 'name', 'Milestone owner'), initials: text(owner, 'initials', 'Milestone owner') }, type: text(source, 'type', 'Milestone'), status: text(source, 'status', 'Milestone'), startDate: text(source, 'startDate', 'Milestone'), endDate: nullableText(source, 'endDate', 'Milestone'), overdue: source.overdue, dependencyConflict: source.dependencyConflict, conflictReason: nullableText(source, 'conflictReason', 'Milestone'), version: source.version,
     campaign: { id: text(campaign, 'id', 'Milestone campaign'), name: text(campaign, 'name', 'Milestone campaign'), code: text(campaign, 'code', 'Milestone campaign') },
     predecessors: source.predecessors.map((item) => { const predecessor = asRecord(item, 'Milestone predecessor'); return { id: text(predecessor, 'id', 'Milestone predecessor'), title: text(predecessor, 'title', 'Milestone predecessor') } }),
   }

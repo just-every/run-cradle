@@ -10,10 +10,12 @@ export const createPortfolioService = (platform: Platform) => {
 
   return {
     async get() {
-      const [metrics, allCampaigns, upcomingMilestones, recentActivity] = await Promise.all([
-        repository.metrics(), campaigns.list(), repository.upcomingMilestones(), repository.recentActivity(),
+      const [metrics, allCampaigns, upcomingMilestones, recentActivity, settings] = await Promise.all([
+        repository.metrics(), campaigns.list(), repository.upcomingMilestones(), repository.recentActivity(), platform.bindings.DB.prepare('SELECT timezone FROM workspace_settings LIMIT 1').first<{timezone:string}>(),
       ])
       if (!metrics) throw new Error('Portfolio metrics query returned no result.')
+      if (!settings) throw new Error('Workspace timezone is required.')
+      const today = new Intl.DateTimeFormat('en-CA',{timeZone:settings.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())
       return {
         attention: allCampaigns.filter((campaign) => campaign.status === 'At risk' || campaign.status === 'Blocked'),
         metrics: {
@@ -46,7 +48,7 @@ export const createPortfolioService = (platform: Platform) => {
           status: milestone.status,
           startDate: milestone.startDate,
           endDate: milestone.endDate,
-          overdue: milestone.status !== 'Complete' && milestone.startDate < new Date().toISOString().slice(0, 10),
+          overdue: milestone.status !== 'Complete' && (milestone.endDate ?? milestone.startDate) < today,
           dependencyConflict: milestone.conflictReason !== null,
           version: milestone.version,
         })),

@@ -8,4 +8,6 @@ export const tagTable=registerTable('campaign_tags',[...common,'campaign_id','ta
 export const customValueTable=registerTable('launch_custom_values',['id','field_id','campaign_id','value_json'])
 export const dependencyTable=registerTable('milestone_dependencies',[...common,'milestone_id','predecessor_id'])
 export type LaunchRow=Record<string,string|number|null>&{id:string;version:number;created_at:number;updated_at:number}
-export const toWire=(row:LaunchRow)=>Object.fromEntries(Object.entries(row).filter(([k])=>!k.startsWith('launch_')).map(([k,v])=>[k.replace(/_([a-z])/g,(_,c:string)=>c.toUpperCase()),typeof v==='number'&&(k.endsWith('_at')||k==='due_at')?new Date(v).toISOString():v]))
+const metadataColumns=new Set(['launch_lifecycle','launch_schema_version','launch_created_iso','launch_updated_iso'])
+export const isLaunchMetadataColumn=(column:string)=>metadataColumns.has(column)
+export const toWire=(row:LaunchRow)=>Object.fromEntries(Object.entries(row).filter(([k])=>!isLaunchMetadataColumn(k)).map(([k,v])=>[k.replace(/_([a-z])/g,(_,c:string)=>c.toUpperCase()),typeof v==='number'&&(k.endsWith('_at')||k==='due_at')?new Date(v).toISOString():v]))

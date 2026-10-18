@@ -1,7 +1,7 @@
 import { integration } from './domain.server'
 import type { CommandInput, Json } from '../../contracts/primitives'
 import type { RequestContext } from '../../domains/authority/ports'
-import { eq } from '../../domains/admission/sql.server'
+import { eq,trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { type LaunchKind } from './descriptors.server'
 import { tables,type LaunchRow } from './storage.server'
@@ -12,11 +12,21 @@ export async function prepareRecord(context:LaunchContext,ctx:RequestContext,inp
  if(before)versionGuard(set,kind,before,input.expected)
  if(kind==='decision'&&operation==='patch'&&before&&['Approved','Rejected','Cancelled'].includes(String(before.state)))fail('A terminal decision cannot be edited; create a superseding decision')
  if(operation==='delete'){
+  if(kind==='risk'){
+   const linked=(await context.db.prepare('SELECT * FROM decisions WHERE risk_id=?').bind(id).all<LaunchRow>()).results
+   set.guards.push(trustedPredicate('(SELECT COUNT(*) FROM decisions WHERE risk_id=?)=?',[id,linked.length]))
+   for(const decision of linked){
+    const after={...decision,risk_id:null,updated_at:now,version:decision.version+1}
+    set.guards.push(trustedPredicate('EXISTS(SELECT 1 FROM decisions WHERE id=? AND version=?)',[decision.id,decision.version]))
+    set.mutations.push({kind:'update',table:tables.decision,set:{risk_id:null,updated_at:now,version:after.version},where:eq(tables.decision,'id',decision.id),expectedRows:1})
+    recordChange(set,ctx,'decision',decision,after,'decision.updated')
+   }
+  }
   set.mutations.push({kind:'delete',table:tables[kind],where:eq(tables[kind],'id',id),expectedRows:1});recordChange(set,ctx,kind,before,null,`${kind}.deleted`)
   return finish({deletedId:id})
  }
  const fields={...(before?mappedFields(kind,before):{}),...(input.input.fields??input.input.changes??{})};delete fields.tags;delete fields.customFields
- await validateDomain(context.db,set,kind,fields,operation==='create')
+ await validateDomain(context.db,set,kind,fields,operation==='create',id)
  if(operation==='create')await capacity(context.db,set,kind)
  const after:LaunchRow={...(before??{id,created_at:now,version:0}),...physicalFields(kind,fields),updated_at:now,version:(before?.version??0)+1}
  if(kind==='campaign'&&(!before||input.input.changes?.health!==undefined)){after.health_updated_at=now;after.health_set_by_id=ctx.principal.humanId}

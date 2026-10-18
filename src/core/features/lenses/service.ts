@@ -10,7 +10,7 @@ export const createLensService=(platform:Platform)=>{
   list:()=>repository.list(),find:(id:string)=>repository.find(id),
   async preview(definition:LensDefinition,cursor?:string){
    const page=await previewLens(platform.bindings.DB,lensDefinition.parse(definition),new Date().toISOString(),cursor?Number(cursor):0)
-   return{...page,items:page.items.map(row=>({id:String(row.id),title:String(row.name??row.title),subtitle:String(row.campaignId??row.code??''),meta:String(row.status??row.state??'')}))}
+   return{...page,items:page.items.map(row=>({id:String(row.id),title:String(row.name??row.title),subtitle:String(row.campaignId??row.code??''),meta:String(row.status??row.state??'')+(row.overdue?' · Overdue':''),...(typeof row.overdue==='boolean'?{overdue:row.overdue}:{})}))}
   },
  }
 }

@@ -9,10 +9,11 @@ import AxeBuilder from '@axe-core/playwright'
 import { launchAuthorityRuntime, createUlid, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { settledRow } from './helpers/launch-settled-row.mjs'
 import { decisionHydration } from './helpers/launch-decision-hydration.mjs'
+import { verifyMilestoneScreens } from './helpers/launch-milestone-screens.mjs'
 import { verifySettingsMemberErasure } from './helpers/settings-members-accessibility.mjs'
 import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
-contract('VIEW-004', '[VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] Launch walkthrough E10–E17 at desktop and phone', async () => {
+contract('VIEW-004', '[MILE-002] [MILE-006] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
 const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003']}
@@ -70,7 +71,7 @@ try {
  // No production delete action is mounted or invoked by this walkthrough.
  await h.db.prepare('DELETE FROM campaigns').run()
  const workspaceName=(await h.db.prepare('SELECT name FROM workspace WHERE id=?').bind('workspace').first()).name
- browser=await chromium.launch()
+ browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]})
  for(const width of accessibilityWidths) {
   const viewport={width,height:width===390?844:900}
   const context=await browser.newContext(accessibilityContextOptions({viewport})),page=await context.newPage()
@@ -179,8 +180,15 @@ try {
    for(const month of ['Oct 2026','Nov 2026'])assert.deepEqual(await page.getByLabel(`Dates in ${month}`,{exact:true}).locator('span').allTextContents(),['1','8','15','22','29'],'Each month displays its date markers')
    const range=page.getByLabel('Cross-month review, Oct 29, 2026 through Nov 4, 2026',{exact:true});assert.ok((await range.innerText()).includes('Oct 29, 2026 – Nov 4, 2026'));assert.equal(await range.getByLabel('Dependency conflict',{exact:true}).count(),1)
   } else {
-   const range=page.getByLabel('Milestone agenda',{exact:true}).getByRole('link').filter({has:page.getByText('Cross-month review',{exact:true})});assert.equal(await range.locator('time').getAttribute('datetime'),'2026-10-29');assert.equal(await range.locator('time').innerText(),'Oct 29, 2026');assert.ok((await range.innerText()).includes('ends Nov 4, 2026'));assert.equal(await range.getByText('Dependency conflict',{exact:true}).count(),1)
+   const range=page.getByLabel('Milestone agenda',{exact:true}).getByRole('article').filter({has:page.getByRole('link',{name:'Cross-month review',exact:true})});assert.equal(await range.locator('time').getAttribute('datetime'),'2026-10-29');assert.equal(await range.locator('time').innerText(),'Oct 29, 2026');assert.ok((await range.innerText()).includes('ends Nov 4, 2026'));assert.equal(await range.getByText('Dependency conflict',{exact:true}).count(),1)
   }
+  const milestoneLinks=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(links=>links.map(link=>link.getAttribute('href')).sort())
+  const monthItems=await milestoneLinks()
+  assert.ok(monthItems.includes(`/app/milestones/${crossing.id}`));assert.ok(monthItems.includes(`/app/milestones/${point.id}`))
+  assert.ok(await page.locator(`a[href="/app/campaigns/${campaign.id}"]`).filter({visible:true}).count(),'Every timeline item links to its campaign at this width')
+  await action(page.getByRole('button',{name:'Quarter',exact:true}));assert.deepEqual(await milestoneLinks(),monthItems,'Scale changes preserve the milestone set')
+  if(calendarShown)await page.getByLabel('Dates in Q4 2026',{exact:true}).waitFor()
+  await capture('timeline-quarter');await action(page.getByRole('button',{name:'Month',exact:true}));assert.deepEqual(await milestoneLinks(),monthItems)
   await capture('timeline-cross-month-range');
   await page.goto(`${h.origin}/app/milestones/${crossing.id}`);await page.getByRole('heading',{name:'Cross-month review',exact:true}).waitFor();assert.equal(await page.locator('time[datetime="2026-10-29"]').innerText(),'Oct 29, 2026');assert.equal(await page.locator('time[datetime="2026-11-04"]').innerText(),'Nov 4, 2026');await page.getByText(/Dependency conflict:/).waitFor();await capture('milestone-cross-month-range');
   const review=await h.db.prepare('SELECT id FROM milestones WHERE title=? AND campaign_id=?').bind('Review package',campaign.id).first();await page.goto(`${h.origin}/app/milestones/${review.id}`);await page.getByRole('heading',{name:'Review package',exact:true}).waitFor();const milestoneText=await page.locator('body').innerText();assert.ok(milestoneText.includes('Oct 18, 2026'));assert.ok(milestoneText.includes('Oct 21, 2026'));assert.doesNotMatch(milestoneText,/2026-10-18|2026-10-21/);await capture('milestone-human-range')
@@ -218,6 +226,7 @@ try {
   receipt.memberErasure ??= []
   receipt.memberErasure.push(await verifySettingsMemberErasure({ runtime: h, page, width: viewport.width, action, capture }))
   await h.db.prepare('DELETE FROM campaigns WHERE id=?').bind(campaign.id).run()
+  await verifyMilestoneScreens({h,page,command,capture})
   await context.close()
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])

@@ -3,15 +3,21 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { tables,tagTable,customValueTable,dependencyTable,type LaunchRow } from './storage.server'
-import { emptyChange,load,operator,versionGuard,recordChange,plan,toWire,capacity,type LaunchContext } from './domain.server'
+import { emptyChange,load,operator,versionGuard,recordChange,plan,toWire,capacity,validateDomain,mappedFields,type LaunchContext } from './domain.server'
 import { shiftDate } from './milestones.server'
 export async function prepareDuplicate(context:LaunchContext,ctx:RequestContext,input:CommandInput<{id:string;newCode:string;newLaunchDate?:string}>){
  const before=await load(context.db,'campaign',input.input.id),set=emptyChange();versionGuard(set,'campaign',before,input.expected);await capacity(context.db,set,'campaign');await operator(context.db,set,before.owner_id)
  const now=Date.parse(ctx.now),id=createUlid(),delta=input.input.newLaunchDate?(Date.parse(input.input.newLaunchDate)-Date.parse(String(before.launch_date)))/86400000:0
  const row:LaunchRow={...Object.fromEntries(Object.entries(before).filter(([key])=>tables.campaign.writableColumnIds.includes(key))),id,created_at:now,updated_at:now,version:1,code:input.input.newCode,start_date:shiftDate(String(before.start_date),delta),launch_date:shiftDate(String(before.launch_date),delta),archived_at:null,health_set_by_id:ctx.principal.humanId,health_updated_at:now}
+ await validateDomain(context.db,set,'campaign',mappedFields('campaign',row),true,id)
  set.mutations.push({kind:'insert',table:tables.campaign,row})
  const tags=await context.db.prepare('SELECT tag FROM campaign_tags WHERE campaign_id=?').bind(before.id).all<{tag:string}>();for(const tag of tags.results)set.mutations.push({kind:'insert',table:tagTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,campaign_id:id,tag:tag.tag}})
- const custom=await context.db.prepare('SELECT field_id,value_json FROM launch_custom_values WHERE campaign_id=?').bind(before.id).all<{field_id:string;value_json:string}>();for(const value of custom.results)set.mutations.push({kind:'insert',table:customValueTable,row:{id:createUlid(),campaign_id:id,...value}})
+ const custom=await context.db.prepare('SELECT v.field_id,v.value_json,f.type,f.version FROM launch_custom_values v JOIN launch_custom_fields f ON f.id=v.field_id WHERE v.campaign_id=?').bind(before.id).all<{field_id:string;value_json:string;type:string;version:number}>()
+ for(const value of custom.results){
+  set.guards.push(trustedPredicate('EXISTS(SELECT 1 FROM launch_custom_fields WHERE id=? AND version=?)',[value.field_id,value.version]))
+  const date=JSON.parse(value.value_json)
+  set.mutations.push({kind:'insert',table:customValueTable,row:{id:createUlid(),campaign_id:id,field_id:value.field_id,value_json:value.type==='date'&&date!==null?JSON.stringify(shiftDate(String(date),delta)):value.value_json}})
+ }
  const milestoneIds=new Map<string,string>()
  for(const kind of ['deliverable','milestone'] as const){const children=await context.db.prepare(`SELECT * FROM ${kind==='deliverable'?'deliverables':'milestones'} WHERE campaign_id=?`).bind(before.id).all<LaunchRow>();await capacity(context.db,set,kind,children.results.length);set.guards.push(trustedPredicate(`(SELECT COUNT(*) FROM ${kind==='deliverable'?'deliverables':'milestones'} WHERE campaign_id=?)=?`,[before.id,children.results.length]));for(const child of children.results){await operator(context.db,set,child.owner_id);const childId=createUlid();if(kind==='milestone')milestoneIds.set(child.id,childId);set.guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${kind==='deliverable'?'deliverables':'milestones'} WHERE id=? AND version=?)`,[child.id,child.version]));const copy:LaunchRow={...Object.fromEntries(Object.entries(child).filter(([key])=>tables[kind].writableColumnIds.includes(key))),id:childId,campaign_id:id,created_at:now,updated_at:now,version:1};for(const date of ['due_date','start_date','end_date'])if(copy[date])copy[date]=shiftDate(String(copy[date]),delta);set.mutations.push({kind:'insert',table:tables[kind],row:copy})}}
  const edges=await context.db.prepare('SELECT milestone_id,predecessor_id FROM milestone_dependencies WHERE milestone_id IN(SELECT id FROM milestones WHERE campaign_id=?)').bind(before.id).all<{milestone_id:string;predecessor_id:string}>();for(const e of edges.results)if(milestoneIds.has(e.predecessor_id))set.mutations.push({kind:'insert',table:dependencyTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,milestone_id:milestoneIds.get(e.milestone_id)!,predecessor_id:milestoneIds.get(e.predecessor_id)!}})

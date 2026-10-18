@@ -1,7 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { launchAuthorityRuntime, launchEntities, launchFieldIds, createUlid } from './helpers/launch-authority-runtime.mjs'
-import { expected, writeContext, mutationSnapshot } from './helpers/launch-write-context.mjs'
+import { expected, writeContext, mutationSnapshot, launchSource } from './helpers/launch-write-context.mjs'
+import { verifyCampaignClauses } from './helpers/launch-campaign-clauses.mjs'
+import { verifyMilestoneClauses } from './helpers/launch-milestone-clauses.mjs'
+import { verifyRiskClauses } from './helpers/launch-risk-clauses.mjs'
+import { verifyCampaignLifecycleClauses } from './helpers/launch-campaign-lifecycle-clauses.mjs'
+import { verifyOverdueClauses } from './helpers/launch-overdue-clauses.mjs'
+import { clauseAnalysisFixture } from './helpers/launch-clause-analysis.mjs'
 
 const campaignFields = ownerId => ({ code: 'WRITE-EFFECTS', name: 'Release', ownerId, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Launch', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} })
 const milestoneFields = (campaignId, ownerId) => ({ campaignId, title: 'Release review', ownerId, type: 'Review', status: 'Not started', startDate: '2026-12-01', endDate: null, conflictReason: null })
@@ -12,10 +18,22 @@ const unchangedDenial = async (h, scope, action, input, revisions) => {
  assert.deepEqual(await mutationSnapshot(h.db), before, action)
 }
 
-test('[RECORDS-001] prior full policy covers conservative effects, limited policies cannot change sidecars or cascades', async () => {
- const h = await launchAuthorityRuntime()
+test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects and campaign record clauses', async () => {
+ const analysis=clauseAnalysisFixture()
+ const h = await launchAuthorityRuntime(analysis.configuration, {installedLaunchDefinitions:true,installationOwner:true,providerFetch:analysis.providerFetch})
  try {
-  const owner = await writeContext(h), originalPolicy = await h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(h.policy.id).first()
+  const owner = await writeContext(h,h.ownerSession,createUlid()), originalPolicy = await h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(h.policy.id).first()
+  const clauses={...h,...owner,r:launchSource,actor:h.owner,expected,campaign:code=>owner.commit('campaign.create',{fields:{...campaignFields(h.owner),code}})}
+  clauses.completeAnalysis=campaignId=>analysis.complete(clauses,campaignId)
+  for(const key of ['critical-risk','campaign-brief']){
+   const definition=await h.db.prepare('SELECT * FROM automations WHERE shipped_key=?').bind(key).first()
+   if(definition.enabled)await owner.commit('automation.disable',{id:definition.id},expected('automation',definition))
+  }
+  await verifyCampaignClauses(clauses)
+  await verifyMilestoneClauses(clauses)
+  await verifyRiskClauses(clauses)
+  await verifyCampaignLifecycleClauses(clauses)
+  await verifyOverdueClauses(clauses)
   // This is the unchanged retained owner policy: only existing descriptor fields.
   for (const [kind, entity] of Object.entries(launchEntities)) assert.deepEqual(JSON.parse(originalPolicy.rules_json).find(rule => rule.entityId === entity).writableFields, Object.values(launchFieldIds[kind]))
   let campaign = await owner.commit('campaign.create', { fields: campaignFields(h.owner) })

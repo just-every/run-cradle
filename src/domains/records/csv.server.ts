@@ -16,6 +16,8 @@ import type { CsvImportPreview } from './csv-import-contracts'
 import { assertGuards } from './fence.server'
 import { createCsvMappings, validateCsvMapping, csvMappingSchema, csvMergeSchema } from './csv-mappings.server'
 import { createCsvLinkCandidates } from './csv-link-candidates.server'
+import { launchOverdueKind, overdueFieldIds, overdueMarkerField, projectLaunchOverdue } from '../../apps/launch/overdue-projection.server'
+import { launchFieldIds } from '../../apps/launch/descriptors.server'
 const stored=registerTable('record_csv_previews',['id','app_id','entity_id','owner_id','detail_json','expires_at','command_id'])
 export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024),mapping:csvMappingSchema,mergeFieldId:csvMergeSchema}).strict()
 type Preview=CsvImportPreview & {guards:SqlPredicate[]}
@@ -30,8 +32,26 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   const fields=(query.fields??d.schema.fields.map(f=>f.id)).map(id=>{const field=d.schema.fields.find(f=>f.id===id);if(!field||!scope.readableFieldIds.includes(id))throw new AdmissionError('forbidden','An export field is unavailable.');return field})
   const context=await exportContext(db,view?.name??d.schema.label,ctx.now,fields)
   const guards=[...scope.currentAuthorityGuards],labels=createCsvLabels(services,ctx,guards)
+  const kind=d.legacy?launchOverdueKind(request.appId,request.entityId):null
+  const overdueInputs=kind&&overdueFieldIds(kind).every(id=>scope.readableFieldIds.includes(id))?overdueFieldIds(kind):[]
+  const marker=kind?overdueMarkerField(kind,fields.map(field=>Object.keys(launchFieldIds[kind]).find(name=>launchFieldIds[kind][name]===field.id)??field.id)):undefined
+  const markerId=kind&&marker?launchFieldIds[kind][marker]??marker:undefined
+  const selected=[...new Set([...fields.map(field=>field.id),...overdueInputs])]
   const revision=await reader.revision(),rows:string[][]=[];let cursor:string|undefined
-  do{const page=await reader.query(ctx,scope,{...query,limit:200,cursor},'export');for(const row of page.items)rows.push(await Promise.all(fields.map(async field=>{const cell=row.fields[field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.');if(field.type==='relation'||field.type==='computed'&&field.resultElementType==='relation')return labels.display(field,cell.value);if(d.schema.physicalRevision.startsWith('manual_'))return displayCsvValue(field,cell.value);return formatWorkspaceCell(field,cell.value,context,()=>field.type==='select'?String(cell.value??''):displayCsvValue(field,cell.value))})));cursor=page.nextCursor??undefined;}while(cursor)
+  do{
+   const page=await reader.query(ctx,scope,{...query,fields:selected,limit:200,cursor},'export')
+   const overdue=kind&&overdueInputs.length?await projectLaunchOverdue(db,kind,page.items,ctx.now):null
+   if(overdue)guards.push(...overdue.guards)
+   for(const row of page.items)rows.push(await Promise.all(fields.map(async field=>{
+    const cell=row.fields[field.id]
+    if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.')
+    if(field.type==='relation'||field.type==='computed'&&field.resultElementType==='relation')return labels.display(field,cell.value)
+    if(d.schema.physicalRevision.startsWith('manual_'))return displayCsvValue(field,cell.value)
+    const value=formatWorkspaceCell(field,cell.value,context,()=>field.type==='select'?String(cell.value??''):displayCsvValue(field,cell.value))
+    return field.id===markerId&&overdue?.flags.get(row.id)?`${value} (Overdue)`:value
+   })))
+   cursor=page.nextCursor??undefined
+  }while(cursor)
   await assertGuards(db,guards)
   if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during export. Export again.')
   return {csv:encodeCsv(fields.map(f=>f.label),rows),filename:context.filename,count:rows.length,capture:context}
