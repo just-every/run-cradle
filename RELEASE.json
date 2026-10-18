@@ -93,6 +93,18 @@
     "VIEW-012": {
       "change": "changed",
       "summary": "Completes saved date/range timelines with arbitrary readable field groups, five zooms, linked dependencies, early-start conflicts and duration-based critical paths. Ordinary audited drag or accessible moves affect only the selected record and join undo/redo. Server-captured planned-date baselines persist, project under current policy and remap in native copies. Cycles or incomplete graphs withhold critical paths; declared record/axis limits refuse explicitly."
+    },
+    "ACT-002": {
+      "change": "changed",
+      "summary": "Launch campaign comments now have versioned deletion with retained attributed activity. Comment creation and deletion change no business fields and emit no automation or AI work."
+    },
+    "ACT-004": {
+      "change": "changed",
+      "summary": "Clause-named native Worker and desktop/phone journeys prove current mention delivery and plain-text removed or erased mentions without record changes."
+    },
+    "LENS-005": {
+      "change": "changed",
+      "summary": "Saved lens links open current evaluated results. Refresh replaces the definition, non-archived list, count, conditions and selected detail together; the editor remains available through Edit lens."
     }
   },
   "extensionPointChanges": [],
@@ -164,6 +176,10 @@
     {
       "id": "migrations/core/1270_manual_base_roles.sql",
       "buyerSteps": "Apply in the core group after 1260. Adds per-base role assignments only. Existing memberships and policies retain their current access until a base owner explicitly assigns a role."
+    },
+    {
+      "id": "migrations/core/1280_launch_comment_deletion.sql",
+      "buyerSteps": "Apply after core 1270. Existing Launch comment-create allow and deny rules gain the paired comment-delete action with their principals, row and field restrictions retained. No record content or other capability is changed."
     }
   ],
   "breaking": true,
