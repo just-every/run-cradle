@@ -15,7 +15,7 @@ export const createAuthorityReads=(db:D1Database,policy:PolicyPort)=>{
   const guard=and(...principalGuards(ctx))
   const membership=await db.prepare(`SELECT p.id,p.version,m.version AS membership_version FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id AND p.app_id=m.app_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active' AND (${guard.sql})`).bind(ctx.principal.id,appId,...guard.values).first<{id:string;version:number;membership_version:number}>()
   if(!membership)return denied('Current app membership is required.')
-  const allowedActions=await Promise.all(['member.read','grant.read'].map(name=>action(ctx,appId,name)))
+  const allowedActions=await Promise.all(['member.read','grant.read','connection.configure'].map(name=>action(ctx,appId,name)))
   const current=and(guard,membershipPolicyGuard(ctx,appId,membership))
   if(!await db.prepare(`SELECT 1 WHERE ${current.sql}`).bind(...current.values).first())return denied('Current app membership is required.')
   return {appId,allowedActions}

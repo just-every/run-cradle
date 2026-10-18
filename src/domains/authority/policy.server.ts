@@ -1,3 +1,4 @@
+import { ownerConnectionControl } from './connection-management'
 import { and, or, trustedPredicate, identifier } from '../admission/sql.server'
 import type { SqlPredicate } from '../admission/ports'
 import type { GrantSpec, Policy } from './contracts'
@@ -83,6 +84,10 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     request.cost.forEach(cost=>moneySchema.parse(cost))
     const audMicros=request.cost.filter(c=>c.currency==='AUD').reduce((sum,c)=>sum+canonicalInteger(c.minor)*10n**BigInt(6-c.scale),0n)
     const loaded=await load(ctx,request.appId),guards:SqlPredicate[]=[...loaded.guards]
+    if(ownerConnectionControl(request.action)){
+      if(ctx.principal.kind!=='human'||!ctx.principal.sessionId||ctx.principal.credentialId)return denied('A current installation owner session is required to manage connections.')
+      guards.push(trustedPredicate("EXISTS(SELECT 1 FROM authority_principals WHERE id=? AND initial_owner=1 AND state='active')",[ctx.principal.id]))
+    }
     if(ctx.principal.kind!=='human'&&/^(grant\.|policy\.|member\.|credential\.)/.test(request.action))return denied('Only an authorized human can manage authority.')
     if(ctx.principal.credentialId){const c=await db.prepare('SELECT scopes_json FROM authority_credentials WHERE id=?').bind(ctx.principal.credentialId).first<{scopes_json:string}>();const scopes=JSON.parse(c!.scopes_json) as {appId:string;actions:string[];purposes:string[]}[];if(!scopes.some(s=>s.appId===request.appId&&s.actions.includes(request.action)&&(!request.purpose||s.purposes.includes(request.purpose))))return denied()}
     const readOnly=['execution.read','execution.reconcile','model.read','connection.read','connection.reconcile'].includes(request.action)&&request.cost.length===0;

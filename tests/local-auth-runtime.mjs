@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto'
 import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 
-contract('AUTH-BASE-001 HOME-003 BASE-ACCESS-002', 'emitted production rejects development sender/viewer and public identity follows persisted renames without private data',async()=>{
- const h=await launchBaseAuthorityRuntime()
+contract('AUTH-BASE-001 HOME-003 BASE-ACCESS-002 INTEG-002 BASE-SEC-003', 'emitted production rejects development sender/viewer and public identity follows persisted renames without private data',async()=>{
+ const h=await launchBaseAuthorityRuntime({configuration:{CONNECTION_ENCRYPTION_KEY_VERSION:undefined,GOOGLE_CLIENT_ID:'test-only-google-client',GOOGLE_CLIENT_SECRET:'test-only-google-secret'}})
  try {
   const owner=await h.bootstrap()
   assert.equal((await h.request('/app',{headers:{cookie:owner.cookie}})).status,200)
@@ -16,6 +16,7 @@ contract('AUTH-BASE-001 HOME-003 BASE-ACCESS-002', 'emitted production rejects d
   assert.match(signin,/id="signin-email"/);assert.doesNotMatch(signin,/Welcome back|Checking sign-in|Continue with local development identity/)
   for(const html of [front,signin])assert.doesNotMatch(html,/owner@example\.test|Launch owner/,'Public identity exposes no private operator identity')
   assert.equal((await(await h.request('/api/session',{headers:{cookie:owner.cookie}})).json()).workspace.name,'Renamed records')
+  await verifyOwnerGmail(h,owner)
   const before=await h.db.prepare('SELECT count(*) n FROM oa_tokens').first()
   await h.reconfigure({AUTH_LOCAL:'true',MAIL_PROVIDER:'development',RER_DEPLOY_SOURCE:'test-deployed-source'})
   assert.equal((await h.request('/__dev/outbox')).status,404)
@@ -54,3 +55,32 @@ contract('AUTH-BASE-001 BASE-ACCESS-002', 'adopted branded mail and CSP confirma
   assert.equal((await h.post('/auth/confirm',{token:link.searchParams.get('token')})).status,400)
  } finally {await h.close()}
 })
+
+async function verifyOwnerGmail(h, owner) {
+  const session = async () => (await (await h.request('/api/v1/session', {headers:{cookie:owner.cookie}})).json()).data
+  const current = await session(), appId = current.appIds[0]
+  const {createUlid} = await import('../src/core/shared/ids.ts')
+  const command = async (action,input) => h.post('/api/v1/commands/'+action,{commandId:createUlid(),expected:[],input},{cookie:owner.cookie,'x-csrf-token':(await session()).csrfToken})
+  const input = {appId,adapterId:'gmail',name:'Operations mailbox',accountId:'operations@example.test',scopes:[],ownership:[],credentialRef:null}
+  const configured = await command('connection.configure',input)
+  assert.equal(configured.status,200,await configured.clone().text())
+  const {connectionId} = (await configured.json()).data.value
+  const read = await h.request('/api/v1/connections/'+connectionId,{headers:{cookie:owner.cookie}})
+  assert.equal(read.status,200,await read.clone().text())
+  const consent = await command('connection.begin-consent',{connectionId,returnTo:'/app/settings'})
+  assert.equal(consent.status,200,await consent.clone().text())
+  const authorization = new URL((await consent.json()).data.value.authorizationUrl)
+  assert.equal(authorization.origin,'https://accounts.google.com')
+  assert.equal(authorization.searchParams.get('redirect_uri'),h.origin+'/oauth/google/callback')
+  assert.ok(authorization.searchParams.get('state'))
+  assert.ok(authorization.searchParams.get('code_challenge'))
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM authority_grants').first()).n,0,'Connecting creates no provider action grant')
+  await h.db.prepare('UPDATE authority_principals SET initial_owner=0 WHERE id=?').bind(owner.owner).run()
+  const before = await h.db.prepare('SELECT count(*) n FROM provider_connections').first()
+  assert.equal((await command('connection.configure',input)).status,403)
+  assert.equal((await command('connection.begin-consent',{connectionId,returnTo:'/app/settings'})).status,403)
+  assert.deepEqual(await h.db.prepare('SELECT count(*) n FROM provider_connections').first(),before)
+  await h.db.prepare('UPDATE authority_principals SET initial_owner=1 WHERE id=?').bind(owner.owner).run()
+  await h.db.prepare('DELETE FROM authority_memberships WHERE principal_id=? AND app_id=?').bind(owner.owner,appId).run()
+  assert.equal((await command('connection.configure',input)).status,403,'Owner setup never restores a revoked app membership')
+}
