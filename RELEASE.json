@@ -61,6 +61,10 @@
     "VIEW-014": {
       "change": "changed",
       "summary": "Completes live multi-user record editing and scoped presence. Native browser sessions refresh committed data within two seconds, keep open drafts on their original versions and receive current readable values on stale-write refusals, including final SQL guard races. Presence stores short-lived session handles only, rechecks current policy and native sessions, and never transfers in archives."
+    },
+    "FORM-002": {
+      "change": "changed",
+      "summary": "Authenticated forms gain earlier-answer visibility, ordered pages and sections, and server-side refusal of hidden answers. Page navigation preserves visible answers and discards newly hidden ones. Typed conditions and page/section metadata survive portable JSON copies. Current form/schema versions, field authority and canonical table validation still govern every submission."
     }
   },
   "extensionPointChanges": [],

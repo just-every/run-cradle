@@ -200,6 +200,12 @@
         "WEBHOOK-USER-001",
         "API-USER-001"
       ]
+    },
+    {
+      "id": "conditional-record-forms",
+      "clauses": [
+        "FORM-002"
+      ]
     }
   ],
   "nonGoals": [

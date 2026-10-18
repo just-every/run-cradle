@@ -19,11 +19,15 @@ export function remapFieldValue(field:TypedField,value:CellValue,map:Map<string,
  return structuredClone(value)
 }
 export function remapValidationRules(rules:ValidationRule[],fields:Pick<Field,'id'|'type'|'resultType'|'resultElementType'>[],map:Map<string,string>):ValidationRule[]{
+ const condition=(c:RuleCondition):RuleCondition=>remapRuleCondition(c,fields,map)
+ return rules.map(rule=>{const id=map.get(rule.id);if(!id)throw new ImportInputError('Missing validation rule identity');return {...rule,id,when:condition(rule.when),require:condition(rule.require)}})
+}
+export function remapRuleCondition(c:RuleCondition,fields:Pick<Field,'id'|'type'|'resultType'|'resultElementType'>[],map:Map<string,string>):RuleCondition {
  const condition=(c:RuleCondition):RuleCondition=>{
   if(c.kind!=='condition')return {...c,conditions:c.conditions.map(condition)}
   const field=fields.find(f=>f.id===c.fieldId),fieldId=map.get(c.fieldId)
   if(!field||!fieldId)throw new ImportInputError('Validation rule references an unmapped field')
   return {...c,fieldId,...(c.value!==undefined?{value:remapFieldValue(field,c.value,map)}:{})}
  }
- return rules.map(rule=>{const id=map.get(rule.id);if(!id)throw new ImportInputError('Missing validation rule identity');return {...rule,id,when:condition(rule.when),require:condition(rule.require)}})
+ return condition(c)
 }
