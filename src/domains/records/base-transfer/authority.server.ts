@@ -1,7 +1,8 @@
 import type { RequestContext, PolicyPort } from '../../authority/ports'
 import type { SqlPredicate } from '../../admission/ports'
 import type { EntitySchema } from '../contracts'
-import { manualAuthority, manualOwnerGuards, manualBaseOwnerGuard } from '../manual/authority.server'
+import { manualAuthority, manualBaseOwnerGuard } from '../manual/authority.server'
+import { baseAccessGuards } from '../manual/base-access.server'
 import { membershipPolicyGuard } from '../../authority/policy.server'
 import { principalGuards } from '../../authority/guards.server'
 import { canonical } from '../../admission/canonical'
@@ -23,7 +24,7 @@ export function authoritySize(value:D1Sql){return {sqlBytes:new TextEncoder().en
  * actual reviewed schemas. No fake policy is loaded, evaluated or persisted. */
 export function reserveNewBaseImportAuthority(ctx:RequestContext,appId:string,schemas:readonly EntitySchema[]){
  const loaded=[...principalGuards(ctx),membershipPolicyGuard(ctx,appId,{id:'0'.repeat(26),version:1,membership_version:1})]
- const permit=[...loaded,...manualOwnerGuards(ctx),manualBaseOwnerGuard(ctx,appId)]
+ const permit=[...loaded,...baseAccessGuards(ctx,appId,ctx.principal.id,{policy_id:'0'.repeat(26),version:1,role:null,role_version:null})]
  const guards=[...permit,manualBaseOwnerGuard(ctx,appId)]
  for(const schema of schemas)guards.push(...loaded,schemaGuard(appId,{id:schema.id,schema_json:canonical(schema)}))
  const capacityTemplate=predicate(guards,appId,schemas.length)

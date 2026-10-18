@@ -8154,7 +8154,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/authority.server.ts": {
-      "sha256": "c5f6d4481963c63de6a3953f7b04d7fd6bfe3bf1f786525b288c01fec1cf375f",
+      "sha256": "c3767ef281264f77adb2191ddbc906db99af24bc360cc35b883f576f85cf705e",
       "executable": false
     },
     "src/domains/records/base-transfer/calculation-values.ts": {
@@ -8626,7 +8626,7 @@
       "executable": false
     },
     "src/domains/records/manual/base-access.server.ts": {
-      "sha256": "e8198a4a5a6f54eb2fe6aab3829247cf765d8411fcf2529bdc1a5cda25006a0f",
+      "sha256": "f111ab4659941817c2530312ac6e71049c0b29f8d5f6979062029ea348dfdc34",
       "executable": false
     },
     "src/domains/records/manual/base-collaborators.server.ts": {
@@ -11110,7 +11110,7 @@
       "executable": false
     },
     "tests/records-base-export-policy.mjs": {
-      "sha256": "e92f58e1d2abbea35a3e30cdec5c040ade9baef377633707000c837c76021c23",
+      "sha256": "bbcf35c09a83919a56f6b7cdfae2fcb345118a48005ea708bc5652840351c22a",
       "executable": false
     },
     "tests/records-base-json-http.mjs": {
