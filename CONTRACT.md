@@ -904,13 +904,13 @@ Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 19 October 2026; their cited evidence and gaps describe those updates.
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **75 done, 107 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **94 done, 88 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 58 | 53 | 0 | 111 |
+| Published | 77 | 34 | 0 | 111 |
 | Target and push further | 17 | 54 | 28 | 99 |
-| All | 75 | 107 | 28 | 210 |
+| All | 94 | 88 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
