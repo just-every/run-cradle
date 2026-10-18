@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+Description only; no product change. The catalogue description is now "Organize business records, connect related data, and build forms and views for daily work.", the same sentence as main. The application, contract, migrations and configuration are identical to 0.2.0, so upgrading from 0.2.0 needs no migration, configuration or data step.
+
 ## 0.2.0
 
 - Send Managed sign-in and automation mail through RER with no customer mail key, using rer 0.2.23 and its Base adapter. Keep SendGrid and Resend for own-account hosting; reject missing hosted mail. Prefill sign-in email from a valid `login_hint` without submitting it.
