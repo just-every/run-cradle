@@ -46,7 +46,7 @@ function SavedViewResult({ view, schema }: { view: View; schema: EntitySchema })
   const result = live.resource.state === 'ready' ? live.resource.data : null
   const find = <FindInView schema={schema} viewId={view.id} query={{ limit: 100, fields:[...new Set([...view.fields,...view.groupBy,...Object.values(view.layout)])] }} fields={view.fields} onMatch={value => { setMatch(value); if (value) setCursor(value.cursor) }} />
   const summary = <ViewSummary schema={schema} query={{limit:100}} fields={view.fields} viewId={view.id} revision={revision} />
-  const history = view.display === 'board' ? <BoardHistoryToolbar /> : null
+  const history = view.display !== 'grid' || !result?.records.items.length ? <BoardHistoryToolbar label={view.display==='board'?'Board editing':'Record editing'} /> : null
   if (!result) return <>{find}{summary}{history}<LiveRecordsStatus {...live} /><ResourceState resource={live.resource} operation="saved view" retry={live.refresh}>{() => null}</ResourceState></>
   if (!result.records.items.length) return <>{find}{summary}{history}<LiveRecordsStatus {...live} /><Empty headingLevel={2} title="No matching records">This view currently selects no records you can access.</Empty></>
 

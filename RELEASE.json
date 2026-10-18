@@ -65,6 +65,10 @@
     "FORM-002": {
       "change": "changed",
       "summary": "Authenticated forms gain earlier-answer visibility, ordered pages and sections, and server-side refusal of hidden answers. Page navigation preserves visible answers and discards newly hidden ones. Typed conditions and page/section metadata survive portable JSON copies. Current form/schema versions, field authority and canonical table validation still govern every submission."
+    },
+    "VIEW-015": {
+      "change": "changed",
+      "summary": "Record-editor and bulk field edits join the grid/board 50-action undo stack, scoped to the operator and table in browser session storage across navigation and reload. Every available record view exposes undo/redo. Typed cell preconditions preserve unrelated edits, and current-policy audit checks refuse another actor changing a target away and back. Inverses remain ordinary atomic audited writes with final version guards. Creation/deletion and future date-drag actions remain unfinished."
     }
   },
   "extensionPointChanges": [],

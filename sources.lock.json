@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9354f0fef0f8c2c8402ab8f549a20660afea9e30e3e02291eccc2ec5489f8ec3",
+      "sha256": "a510dcb1a7041eaadbe535ec01225d1750d2ea437affca3e70fabbeebacc9c88",
       "executable": false
     },
     "DEMO.md": {
@@ -4426,7 +4426,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "ecc71ef12b0493352f39cc1aa8d385d8651843c06d00bf357eafea022a21c61a",
+      "sha256": "568e383739e0cba3f99aa9dfef25bc71c5c1217edf679876cb06818da2e5be60",
       "executable": false
     },
     "rer-project.json": {
@@ -8126,7 +8126,7 @@
       "executable": false
     },
     "src/domains/records/bulk.server.ts": {
-      "sha256": "8660dbb5ea14183ed73297cb71e02878fa795c1d67dbdb8b213ddba9091b5c4d",
+      "sha256": "2f9ba0242c57e9bbe1772826c0cae7e746cae8da97978a6cb5e2d0e66840026d",
       "executable": false
     },
     "src/domains/records/calculation-bounds.ts": {
@@ -8150,7 +8150,7 @@
       "executable": false
     },
     "src/domains/records/conflict.server.ts": {
-      "sha256": "e594b6920a501dbab59c26997b3555b7042492f90d2178a606931e75e22f6ea5",
+      "sha256": "6fb33a159799acba3568baac1882c856876108c57836e4b73a7acd3e90b5b7c0",
       "executable": false
     },
     "src/domains/records/contracts.ts": {
@@ -8277,6 +8277,10 @@
       "sha256": "75a413225caeddcd430338cb8a5a6893ad0fb10593266b1cc0955233e6cf3fd6",
       "executable": false
     },
+    "src/domains/records/history-conflicts.server.ts": {
+      "sha256": "35facc24092c0f2dc30cbb3a8cded850f9f42c92594f225b2547327f6c615519",
+      "executable": false
+    },
     "src/domains/records/incoming.server.ts": {
       "sha256": "17dd632ca4bda0e22f8715c4966cd125ec3bd3f7c76b9bf48c1b46a985ea34a4",
       "executable": false
@@ -8394,11 +8398,11 @@
       "executable": false
     },
     "src/domains/records/query.server.ts": {
-      "sha256": "c2e60d82763799dda06546161ee2a069933c20ebf92f7220aebb9d9eec9118fb",
+      "sha256": "ea6413ce81154f1de60cae8dc404ba19c179f52054101990292d4eaf25d01745",
       "executable": false
     },
     "src/domains/records/range.server.ts": {
-      "sha256": "8ff3ad78c7142035d1a5edcd932d5a5da3e738b7adb6d8edb2fa371ca42253c5",
+      "sha256": "26c2d1f1bfddb3b6466ffc115d5220e49b9c2a185becbda74035aad21e1a3ada",
       "executable": false
     },
     "src/domains/records/redaction.server.ts": {
@@ -9070,11 +9074,11 @@
       "executable": false
     },
     "src/ui/records/board-history-toolbar.tsx": {
-      "sha256": "c093c4551a48d99df28f26077d14c73b9ceeba77df883f04757b94c43117afa1",
+      "sha256": "7a689eeb56a2fb39296be457c8c4210f5c49691c6b32721032f1bb621271c438",
       "executable": false
     },
     "src/ui/records/bulk-editor.tsx": {
-      "sha256": "e63ceb90cd412db70521c8dbad66cdf918235d5fce0efcb594e9b9d6a9468e10",
+      "sha256": "27ed535d4af4b1f33b77a248899c4c939da3decedf907d597c4b25327b59f646",
       "executable": false
     },
     "src/ui/records/date-views.tsx": {
@@ -9117,8 +9121,12 @@
       "sha256": "3866b4d6ff2e5a5409b9326cea8171c917a9d3f7e343a3b20284890e7a5ccae7",
       "executable": false
     },
+    "src/ui/records/grid-history-session.ts": {
+      "sha256": "be0cf8cf20efe0b215e687fa796dc4429c3ce34034b3af5c50d154b2b9c15007",
+      "executable": false
+    },
     "src/ui/records/grid-history.tsx": {
-      "sha256": "b4aca4d2fde7d3548e642ae79734aeff7cfe609f886924a60315281b9fed76a9",
+      "sha256": "99cf27de80d7b9baa3df38cc73382e6bd45b832800b34d3734d55a8c7f9b1894",
       "executable": false
     },
     "src/ui/records/grid-interaction.tsx": {
@@ -9194,11 +9202,11 @@
       "executable": false
     },
     "src/ui/records/record-detail-page.tsx": {
-      "sha256": "5077344011979b071e0608459fce1bb3a90d613a4dff4409f56e608dc851b5fa",
+      "sha256": "c09f38a940f1ef31dd57b7fd9ceb4c71e1339e0e255ffefee3c232ef1edb0531",
       "executable": false
     },
     "src/ui/records/record-editor.tsx": {
-      "sha256": "b974178c7c9afc9e413aa2687695999c0314ff68c533a8d4c03aa2f71aca31f6",
+      "sha256": "80bbe4113d5b242b9d91ac6019afcf096d12fab0ce4f6fb915f14aa20d415a38",
       "executable": false
     },
     "src/ui/records/record-fields.tsx": {
@@ -9218,7 +9226,7 @@
       "executable": false
     },
     "src/ui/records/record-table.tsx": {
-      "sha256": "e2d2136bdcbd0ddd755de31d5732a82c4511035f9318669739bc95ef715b4f14",
+      "sha256": "8ebbae474deac0cacd34cb709adf154ca84d7c0d1bf43d31cf29aad90fc2ece0",
       "executable": false
     },
     "src/ui/records/record-toolbar.tsx": {
@@ -9230,7 +9238,7 @@
       "executable": false
     },
     "src/ui/records/records.css": {
-      "sha256": "58d4ede28d06781306a24c45137d848f469c0b37a8b78c48092aa92247854ba2",
+      "sha256": "d4ed7971b84d9052ce5d9d499fb475569a8352b2a970d22bb9eb42a986020ab1",
       "executable": false
     },
     "src/ui/records/relationship-picker.tsx": {
@@ -9238,7 +9246,7 @@
       "executable": false
     },
     "src/ui/records/saved-views.tsx": {
-      "sha256": "daaaf90267ea743cfbeaa59115c5fb4928966d5a7a8f73b1fa391d455014fb05",
+      "sha256": "6c0a3e7b5e7af48e9232b639f2c974ca31c0b937d68d6838c7aaf41d7fb294bf",
       "executable": false
     },
     "src/ui/records/schema/calculation-review.css": {
@@ -10257,6 +10265,10 @@
       "sha256": "f7ae5a2aaf2b8e888912795f979d65b6101ab97ea189dbfb9305ff074c45c12d",
       "executable": false
     },
+    "tests/helpers/records-history-journey.mjs": {
+      "sha256": "764a08ef56d8fd358ac55af5689d5bcec007142461a462fc373642bb18bc2614",
+      "executable": false
+    },
     "tests/helpers/records-import-browser-runtime.mjs": {
       "sha256": "094825943fc072472f01d79a2f88b45d35b61b4536674158cbb8d3a80090fdf3",
       "executable": false
@@ -10622,7 +10634,7 @@
       "executable": false
     },
     "tests/records-grid-range.mjs": {
-      "sha256": "6813dd5ee557634c2065f8784ee8b44169b663940ac5d7eb496c7ecf88563a35",
+      "sha256": "1367c05d18d51a2801022231521602cf9291665d3e432f1952b33751d46859f6",
       "executable": false
     },
     "tests/records-import-content-native.mjs": {
@@ -10842,7 +10854,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "44caf8077c31ed92bc0e75dafdb7ebe10483e1ac68b1336bc0886d63243f09d8",
+      "sha256": "d340c79aa8b5630eea8ef910c83868e49f74bb6de5df17f6e9bceb4e57ab547d",
       "executable": false
     },
     "tests/ui-recut-final.mjs": {

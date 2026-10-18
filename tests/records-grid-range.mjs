@@ -17,7 +17,7 @@ test('VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, 
   try {
     storage = await openImportD1(directory, true)
     const h = await harness(storage), appId = createUlid()
-    const fields = [newField('Name'), newField('Number', 'number'), newField('Date', 'date'), newField('Checked', 'boolean'), newField('Website', 'url')]
+    const fields = [newField('Name'), newField('Number', 'number'), newField('Date', 'date'), newField('Checked', 'boolean'), newField('Website', 'url'), newField('Memo')]
     const draft = { appId, name: 'Range fixture', tables: [{ id: createUlid(), label: 'Rows', fields }] }
     const { r } = await h.create(draft), schema = r.registry.get(appId, draft.tables[0].id).schema
     const initial = []
@@ -56,12 +56,25 @@ test('VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, 
     assert.deepEqual((await query()).map(row => row.fields[fields[0].id].value).sort(), initial.map(row => row.fields[fields[0].id].value).sort())
     const redone = (await patch({ appId, entityId: schema.id, rows: restored.inverse }, expected(restored.rows))).data.value
     assert.equal(redone.rows.length, 50)
+    const inverseWithCells=result=>result.inverse.map(change=>({...change,unchangedSince:result.rows.find(row=>row.id===change.recordId).version,ifValues:Object.fromEntries(Object.keys(change.changes).map(id=>[id,result.rows.find(row=>row.id===change.recordId).fields[id].value]))}))
+    // An unrelated cell edit must survive a cell-scoped undo and redo.
+    const target=redone.rows[1]
+    await patch({ref:target.ref,changes:{[fields[5].id]:'Colleague note'}},expected([target]))
+    const one={rows:[target],inverse:[redone.inverse[1]]}
+    const undoneCell=(await patch({appId,entityId:schema.id,rows:inverseWithCells(one)},expected([target]))).data.value
+    assert.equal(undoneCell.rows[0].fields[fields[5].id].value,'Colleague note')
+    const redoneCell=(await patch({appId,entityId:schema.id,rows:inverseWithCells(undoneCell)},expected(undoneCell.rows))).data.value
+    assert.equal(redoneCell.rows[0].fields[fields[5].id].value,'Colleague note')
     const changed = (await patch({ ref: redone.rows[0].ref, changes: { [fields[0].id]: 'Concurrent edit' } }, expected([redone.rows[0]]))).data.value
     const beforeStale = await query()
     const stale = await patch({ appId, entityId: schema.id, rows: redone.inverse }, expected(redone.rows), 409)
     assert.match(stale.error.issues.find(issue => issue.fieldId === fields[0].id).message, /Row 1, Name:.*Concurrent edit/)
     assert.equal(stale.error.currentVersions[0].version, changed.version)
     assert.deepEqual(snapshot(await query()), snapshot(beforeStale))
+    const guardedConflict=await patch({appId,entityId:schema.id,rows:inverseWithCells(redone)},expected(redone.rows),409)
+    assert.equal(guardedConflict.error.issues.length,1)
+    assert.equal(guardedConflict.error.issues[0].fieldId,fields[0].id)
+    assert.deepEqual(snapshot(await query()),snapshot(beforeStale))
     const policy = await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(appId).first()
     const rules = JSON.parse(policy.rules_json)
     for (const rule of rules) if (rule.entityId === schema.id) rule.writableFields = []
@@ -80,7 +93,7 @@ test('VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, 
       return admission.commit(ctx,plan)
     }}))
     const racedHttp=createCommandHttp({...racing,authenticate:async()=>h.ctx})
-    const response=await racedHttp.fetch(new Request('https://records.example/api/v1/commands/record.patch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({commandId:createUlid(),expected:expected([current]),input:{ref:current.ref,changes:{[fields[1].id]:'99'}}})}))
+    const response=await racedHttp.fetch(new Request('https://records.example/api/v1/commands/record.patch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({commandId:createUlid(),expected:expected([current]),input:{appId,entityId:schema.id,rows:[{recordId:current.id,changes:{[fields[1].id]:'99'},ifValues:{[fields[1].id]:current.fields[fields[1].id].value}}]}})}))
     const raced=await response.json();assert.equal(response.status,409)
     assert.match(raced.error.issues?.find(issue=>issue.fieldId===fields[1].id)?.message??'',/Number:.*current value is.*7\.25/)
     assert.equal((await query()).find(row=>row.id===current.id).fields[fields[1].id].value,'7.25')

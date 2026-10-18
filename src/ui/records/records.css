@@ -136,6 +136,7 @@
   .cr-base-actions, .cr-records-card-head > .cr-actions { gap: 6px; }
   .cr-records-card-head { gap: 12px 16px; margin-bottom: 16px; }
   .cr-records-card-head > .cr-actions { flex: 1 1 100%; flex-wrap: nowrap; margin-left: 0; }
+  .cr-records-card-head--selected > .cr-actions { flex-wrap: wrap; }
   .cr-records-card-head > .cr-actions > .cr-button:last-child { order: -1; }
   .cr-records-card-head > .cr-actions > div { flex: none; }
   .cr-chip-row { flex-wrap: nowrap; gap: 8px; margin: 0 -20px; padding: 2px 20px 12px; overflow-x: auto; scrollbar-width: none; }
