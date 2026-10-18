@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
@@ -15,7 +16,7 @@ export async function collectionLookupsBrowser(){
   h=await recordsBrowserRuntime(await freePort())
   const call=async(path,input,status=200)=>{const csrf=input===undefined?null:await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json();const response=await fetch(h.origin+path,{method:input===undefined?'GET':'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json',...(csrf?{'x-csrf-token':csrf.csrfToken}:{})},...(input===undefined?{}:{body:JSON.stringify(input)})}),body=await response.json();assert.equal(response.status,status,JSON.stringify(body));return status===200?body.data:body.error}
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
-  for(const width of [1440,390]){
+  for(const width of recordsBrowserWidths()){
    const f=await collectionLookupFixture(call),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    try{
     page.setDefaultTimeout(15000)
@@ -54,6 +55,6 @@ export async function collectionLookupsBrowser(){
     assert.deepEqual(j.errors,[])
    }catch(error){await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});throw error}finally{await context.close()}
   }
-  console.log('CALC-002 collection builder and record journeys passed at 1440 and 390')
+  console.log(`CALC-002 collection builder and record journeys passed at ${recordsBrowserWidths().join(' and ')}`)
  }finally{await browser?.close();await h?.close()}
 }

@@ -10822,7 +10822,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "c4604faff70222d593d9c62c296b82f7c1f73e4543c22e1a60257c28ab252a9b",
+      "sha256": "9eceb53c3acdce306dc9ca5e8ba4344a0234696b3bc77c366ec775954bf333fb",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
@@ -10858,7 +10858,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-review.mjs": {
-      "sha256": "2286e188b97213e4f1ebc982a2e02391ab2d79c04594f1256766a78bf86b1bca",
+      "sha256": "8d779caf6e8a64fdfb0213764742cc0ca229525d0897a62aa9e7be6cf916d406",
       "executable": false
     },
     "tests/helpers/records-browser-runtime.mjs": {
@@ -10877,6 +10877,10 @@
       "sha256": "969467908e217abdd1555880e68a83a24b7dbc8243cd2a0a22e11b1c26a3f6f7",
       "executable": false
     },
+    "tests/helpers/records-browser-widths.mjs": {
+      "sha256": "0e09bf6e3cf4bf253c8d6aeead4de5405951fc81c8a90d4dfb00ef739cf3bf2f",
+      "executable": false
+    },
     "tests/helpers/records-calculation-journey.mjs": {
       "sha256": "f75843ddca7c2d4368ab49a111a40e58880df833e6a45a46d926f2dd152531be",
       "executable": false
@@ -10886,7 +10890,7 @@
       "executable": false
     },
     "tests/helpers/records-collection-browser.mjs": {
-      "sha256": "269c288e3306185067ce8889205f4dd373d1bab6a0359341292d64ee4e4282c3",
+      "sha256": "5bb9ad79faf03cc71388dc7e4819a4a88df90b0b7abc83893d0fda98781e1451",
       "executable": false
     },
     "tests/helpers/records-collection-lookups.mjs": {
@@ -10918,7 +10922,7 @@
       "executable": false
     },
     "tests/helpers/records-forms-journey.mjs": {
-      "sha256": "f7ae5a2aaf2b8e888912795f979d65b6101ab97ea189dbfb9305ff074c45c12d",
+      "sha256": "9970fc1693808069a3058c4dac81fe0ff6abe214654cc1c1656e73e4bd86d116",
       "executable": false
     },
     "tests/helpers/records-gallery-journey.mjs": {
@@ -10926,7 +10930,7 @@
       "executable": false
     },
     "tests/helpers/records-history-journey.mjs": {
-      "sha256": "ed93ae33c89f2ad9dd5ab923f1a9df2fae8c249aa91c3494f464247e16108094",
+      "sha256": "7cb997af9e4bf16e4a0705b56187d974fd49444327a33b9f03578c48279f405e",
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
@@ -11526,7 +11530,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "e2386bf670a7807a615e9435c50be1f87c080e3407c1acb30312d7481d4ce399",
+      "sha256": "b9eb4093f20181aa16698386d86e742721c45d1b49ab08522fce0c7d3dbcfe7f",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
@@ -13398,7 +13402,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "42ebcf6fafcae9506b3cd83ec539ef181b96cb5d5748315eea35be710f208896",
+      "sha256": "89237590c0ce2e94142dd5b266b40dd82b3fa79dae0bb24fc2b3ef380e230b23",
       "executable": false
     },
     "vite.config.ts": {

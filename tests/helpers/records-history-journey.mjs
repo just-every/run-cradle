@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
 import {chromium} from '@playwright/test'
@@ -12,7 +13,7 @@ export async function historyBrowserJourney(){
  let h,browser
  try{
   h=await recordsBrowserRuntime(await freePort());browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
-  for(const width of [1440,390]){
+  for(const width of recordsBrowserWidths()){
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    let peerContext
    try{

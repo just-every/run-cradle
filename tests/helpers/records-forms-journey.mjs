@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
@@ -27,7 +28,7 @@ export async function conditionalFormsJourney(){
   const definition={appId,entityId,title:'Warehouse request',fields:fields.map(f=>({fieldId:f.id,label:f.label,help:'',required:f.required})),submitAction:'record.create',authenticated:true}
   let saved=(await call('/api/v1/commands/form.save',command({form:definition},[schemaRevision]))).value
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
-  for(const width of [1440,390]){
+  for(const width of recordsBrowserWidths()){
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    try{
     page.setDefaultTimeout(15000)
