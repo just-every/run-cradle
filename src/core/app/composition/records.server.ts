@@ -1,3 +1,5 @@
+import {createCalendarFeeds} from '../../../domains/records/calendar-feed.server'
+import {calendarFeedHttp} from '../../../domains/records/calendar-feed-http.server'
 import { createBaseExport } from '../../../domains/records/base-transfer/export-json.server'
 import { baseExportHttp } from '../../../domains/records/base-transfer/export-http.server'
 import { prepareJsonSource } from '../../../domains/records/base-transfer/source-json'
@@ -89,7 +91,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
       return {subject,fieldIds}
     },
   })
-  return {deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(createRecordsCsv(db,services,admission),foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
+  return {calendarFeedHttp:calendarFeedHttp(createCalendarFeeds(db,services.metadata,policy,platform.auth.configuration.appOrigin),foundation.authenticate),deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(createRecordsCsv(db,services,admission),foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
     http:createRecordHttp({...services,authenticate:foundation.authenticate}),
     historyHttp:createEvidenceHistoryHttp({...deps,authenticate,audit,cursorSecret:platform.auth.configuration.sessionSecret,comments:commentReader,mentions}),
   }

@@ -422,6 +422,7 @@
     "operatorPath": "/app",
     "apiPath": "/api",
     "publicPaths": [
+      "/api/v1/calendar-feeds/",
       "/",
       "/health",
       "/signin",

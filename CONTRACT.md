@@ -175,7 +175,7 @@ Views are saved, permission-checked ways to see one table. VIEW-001 to VIEW-007 
   *Status:* partial — Raw and saved boards move cards between single-select stacks by drag or an accessible Move to control, using normal versioned atomic record.patch. Chosen card fields remain policy-projected; read-only cards cannot drag or move and stale writes preserve the concurrent value. Person/single-link grouping, attachment covers and ordering within a stack remain absent.
 - **VIEW-010 — Calendar.** A calendar view places records by a date or start/end date range in month, week and day layouts in the workspace time zone; dragging moves the dates; the view can be subscribed to as a private iCal feed URL (revocable) from Google Calendar or Outlook.
   *Acceptance:* Calendar journey creates, drags and opens records; the iCal feed returns the view's records and stops after revocation.
-  *Status:* partial — src/ui/records/date-views.tsx:5 and src/domains/records/metadata.server.ts:18 render calendar metadata; no authoring journey, drag or feed.
+  *Status:* done — Saved calendars show date and instant ranges in month, week and day layouts in the workspace zone. Complete period reads are revision-fenced; drag and touch/keyboard moves are ordinary audited versioned writes with shared undo and conflict refusal. Private digest-only iCal subscriptions page the current authorized view and stop after revocation or lost issuer authority. Evidence: `tests/ui-records-calendar.mjs`, `tests/helpers/records-calendar-feed.mjs`, `src/ui/records/record-calendar.tsx`, `src/domains/records/calendar-feed.server.ts`.
 - **VIEW-011 — Gallery.** A gallery view shows records as cards led by an attachment cover image, with chosen fields and the same filter, sort and group as other views.
   *Acceptance:* Gallery journey at 1440 and 390 with image covers.
   *Status:* partial — src/domains/records/metadata.server.ts:18 (card metadata); no gallery view.
@@ -904,13 +904,13 @@ Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 18 October 2026; their cited evidence and gaps describe those updates.
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **70 done, 112 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **71 done, 111 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 58 | 53 | 0 | 111 |
-| Target and push further | 12 | 59 | 28 | 99 |
-| All | 70 | 112 | 28 | 210 |
+| Target and push further | 13 | 58 | 28 | 99 |
+| All | 71 | 111 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -941,7 +941,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `FILE-003` | Attachments in exports, erasure and migration | target | partial | `tests/rer-data-roundtrip.mjs`, `tests/lifecycle-erasure.mjs`, `src/domains/records/base-transfer/attachment-manifest.ts` | tests/rer-data-roundtrip.mjs carries files in whole-installation archives; tests/lifecycle-erasure.mjs erases R2 files; base JSON export and import list attachments as skipped (src/domains/records/base-transfer/attachment-manifest.ts) |
 | `VIEW-008` | Spreadsheet-grade grid editing | target | done | `tests/records-grid-range.mjs`, `src/ui/records/record-grid.tsx`, `src/ui/records/grid-interaction.tsx`, `docs/contract/VIEW-008/` |  |
 | `VIEW-009` | Kanban | target | partial | `src/ui/records/record-board.tsx`, `tests/helpers/records-board-journey.mjs`, `docs/contract/VIEW-009/` | Raw and saved boards move cards between single-select stacks by drag or an accessible Move to control, using normal versioned atomic record.patch. Chosen card fields remain policy-projected; read-only cards cannot drag or move and stale writes preserve the concurrent value. Person/single-link grouping, attachment covers and ordering within a stack remain absent |
-| `VIEW-010` | Calendar | target | partial | `src/ui/records/date-views.tsx`, `src/domains/records/metadata.server.ts` | src/ui/records/date-views.tsx:5 and src/domains/records/metadata.server.ts:18 render calendar metadata; no authoring journey, drag or feed |
+| `VIEW-010` | Calendar | target | done | `tests/ui-records-calendar.mjs`, `tests/helpers/records-calendar-feed.mjs`, `src/ui/records/record-calendar.tsx`, `src/domains/records/calendar-feed.server.ts` |  |
 | `VIEW-011` | Gallery | target | partial | `src/domains/records/metadata.server.ts` | src/domains/records/metadata.server.ts:18 (card metadata); no gallery view |
 | `VIEW-012` | Timeline and Gantt | target | partial | `src/ui/records/date-views.tsx`, `src/apps/launch/milestones.server.ts` | src/ui/records/date-views.tsx:7 renders timeline metadata as a date list; Launch readiness MILE-002/MILE-003 implement a milestone timeline with dependencies (src/apps/launch/milestones.server.ts) |
 | `VIEW-013` | Personal, locked and formatted views | target | partial | `tests/ui-records-builder.mjs`, `tests/helpers/records-browser-summary-find.mjs`, `src/ui/records/view-summary.tsx`, `src/ui/records/view-summary-query.ts`, `src/ui/records/view-summary-values.ts`, `docs/contract/VIEW-013/` | Personal and app-shared saved views retain current owner edit checks. An explicit summary scans the complete current authorized query or saved view, supports exact sum/average/min/max, filled count, empty count and percent filled, and shows full counts for visible text/select/boolean groups. Restricted/unavailable cells, mixed currency/scale, nonterminating averages, changing pages and more than 10,000 records have explicit unavailable states. Summary choices are session-local; creator locking, persisted summary choices and conditional row/cell formatting remain absent. |

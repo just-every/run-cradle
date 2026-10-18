@@ -191,6 +191,14 @@
         "pnpm source:check",
         "pnpm check:deployment-spec"
       ]
+    },
+    {
+      "name": "records-calendar",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:calendar"
+      ]
     }
   ],
   "nightly": [

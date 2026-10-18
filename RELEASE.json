@@ -69,6 +69,10 @@
     "VIEW-015": {
       "change": "changed",
       "summary": "Record-editor and bulk field edits join the grid/board 50-action undo stack, scoped to the operator and table in browser session storage across navigation and reload. Every available record view exposes undo/redo. Typed cell preconditions preserve unrelated edits, and current-policy audit checks refuse another actor changing a target away and back. Inverses remain ordinary atomic audited writes with final version guards. Creation/deletion and future date-drag actions remain unfinished."
+    },
+    "VIEW-010": {
+      "change": "changed",
+      "summary": "Calendar authoring, month/week/day layouts, workspace-zone date and instant ranges, complete revision-fenced period reads and audited date moves with current-policy conflicts. Digest-only private iCal subscriptions use current issuer/native authority, revocation and archive-excluded credentials."
     }
   },
   "extensionPointChanges": [],
@@ -132,6 +136,10 @@
     {
       "id": "migrations/core/1250_record_presence.sql",
       "buyerSteps": "Apply the additive core migration without changing prior SQL. It stores short-lived presence handles and clears them on removal/erasure; installation archives exclude this transient table. Existing record data and grants stay intact."
+    },
+    {
+      "id": "migrations/updates/9038_calendar_feeds.sql",
+      "buyerSteps": "Apply the additive credential lookup index in the updates group. Existing records and credentials are unchanged; calendar subscriptions are created explicitly and credentials never enter archives."
     }
   ],
   "breaking": true,

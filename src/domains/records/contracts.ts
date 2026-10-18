@@ -130,6 +130,7 @@ export type Form = Versioned & {
     authenticated: true;
 };
 export type ViewResult = {
+    timezone?: string;
     view: View;
     schema: EntitySchema;
     records: Page<RecordRow>;

@@ -118,7 +118,7 @@ test('IFACE-006 VIEW-014 VIEW-009 VIEW-015 FIELD-001 CALC-001 CALC-002 CALC-003 
  }finally{h.close()}
 })
 
-test('RECORDS-001 RECORDS-002 recovery rejects revocation immediately before its combined final SQL fence',async()=>{
+test('RECORDS-001 RECORDS-002 recovery revocation and twenty-table schema previews retain their final SQL fences',async()=>{
  const h=await harness();try{
   const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
   await add(h,r,schema,{[schema.fields[0].id]:'Private recovery',[schema.fields[1].id]:'https://private.example'})
@@ -127,9 +127,7 @@ test('RECORDS-001 RECORDS-002 recovery rejects revocation immediately before its
   h.db.prepare=sql=>{const statement=prepare(sql);if(/^SELECT 1\b/.test(sql)&&sql.includes('p.rules_json=?')){const first=statement.first.bind(statement);statement.first=async(...args)=>{await prepare('UPDATE authority_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),h.session).run();injected=true;return first(...args)}}return statement}
   await assert.rejects(live.manual.recovery(h.ctx,release.releaseId),/stale/);assert.equal(injected,true)
  }finally{h.close()}
-})
-
-test('RECORDS-001 RECORDS-002 twenty populated tables retain one complete preview fence within D1 binding capacity',async()=>{
+ {
  const h=await harness();try{
   const draft={appId:createUlid(),name:'Twenty tables',tables:Array.from({length:20},(_,n)=>({id:createUlid(),label:`Table ${n}`,fields:[newField('Name')]}))},{r}=await h.create(draft)
   for(const table of draft.tables){const schema=r.registry.get(draft.appId,table.id).schema;await add(h,r,schema,{[schema.fields[0].id]:table.label})}
@@ -139,4 +137,5 @@ test('RECORDS-001 RECORDS-002 twenty populated tables retain one complete previe
   const last=r.registry.get(draft.appId,draft.tables.at(-1).id),row=await h.db.prepare(`SELECT id FROM "${last.table.tableId}"`).first();await h.db.prepare(`UPDATE "${last.table.tableId}" SET version=version+1 WHERE id=?`).bind(row.id).run()
   await assert.rejects(r.manual.adopt(h.ctx,createUlid(),preview.id),/stale/);assert.equal((await h.db.prepare('SELECT version FROM manual_record_bases WHERE id=?').bind(draft.appId).first()).version,1)
  }finally{h.close()}
+ }
 })

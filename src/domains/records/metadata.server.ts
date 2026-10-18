@@ -45,6 +45,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
             throw new AdmissionError('forbidden', 'View references an unavailable field'); if (['calendar', 'timeline', 'agenda'].includes(view.display)) {
         if (!view.layout.startFieldId || !['date', 'instant'].includes(d.fields.get(view.layout.startFieldId)!.field.type))
             throw new AdmissionError('validation', 'Calendar and timeline need a date field');
+        if (view.layout.endFieldId && (d.fields.get(view.layout.endFieldId)!.field.type !== d.fields.get(view.layout.startFieldId)!.field.type)) throw new AdmissionError('validation', 'Start and end fields must have the same date type');
     } if (view.display === 'timeline' && !view.layout.endFieldId)
         throw new AdmissionError('validation', 'Timeline needs an end field'); if (view.display === 'board' && !view.layout.boardFieldId)
         throw new AdmissionError('validation', 'Board needs a grouping field'); return view; }
@@ -70,7 +71,9 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         const fields = [...new Set([...(input.fields ?? view.fields), ...groupBy, ...Object.values(view.layout)])];
         const query = querySchema.parse({ ...input, fields, sort: input.sort ?? view.sort, filter: input.filter ? { kind: 'all', conditions: [view.filter, input.filter] } : view.filter, groupBy });
         const records = await reader.query(ctx, scope, query), groups = await reader.groups(ctx, scope, query);
-        return { view, schema: await visibleCalculationSchema(ctx,{ ...descriptors.get(view.appId, view.entityId).schema, fields: descriptors.get(view.appId, view.entityId).schema.fields.filter(f => scope.readableFieldIds.includes(f.id)) },scope,descriptors,policy), records, groups };
+        const workspace = await db.prepare('SELECT timezone FROM workspace_settings LIMIT 1').first<{timezone:string}>();
+        if (!workspace && view.display === 'calendar') throw new AdmissionError('unconfigured', 'Workspace timezone is required.');
+        return { timezone:workspace?.timezone, view, schema: await visibleCalculationSchema(ctx,{ ...descriptors.get(view.appId, view.entityId).schema, fields: descriptors.get(view.appId, view.entityId).schema.fields.filter(f => scope.readableFieldIds.includes(f.id)) },scope,descriptors,policy), records, groups };
     }
     return {
         checkedView, readView, prepareView, viewQuery,readForm,registerFormAction,formAction,

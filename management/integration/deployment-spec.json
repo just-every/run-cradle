@@ -704,6 +704,12 @@
       "name": "9037_base_import_stream_sources.sql",
       "sha256": "16c5fc06273046bf82587559de20942f5a4888617ab494ff6c046e689daa2dfd",
       "sql": "-- import-kit d1PreparationStepsSchema addition: a stream published by\n-- prepareD1ImportSteps keeps the source digest its steps began with, so only\n-- that same upload replays as published under its operation key.\nCREATE TABLE IF NOT EXISTS ik_d1_stream_sources (stream_id TEXT PRIMARY KEY REFERENCES ik_d1_streams(id) ON DELETE CASCADE, destination TEXT NOT NULL, source_digest TEXT NOT NULL);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9038_calendar_feeds.sql",
+      "sha256": "0c2550da067bf773f8ea3bacea043464f7fce459a6614f3c8a3809cb2056badf",
+      "sql": "-- Calendar subscriptions are credentials, excluded from installation archives.\nCREATE INDEX authority_calendar_feed_lookup ON authority_credentials(audience, principal_id, json_extract(scopes_json, '$[0].calendarViewId'));\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
