@@ -21,7 +21,7 @@ import { createRecordReader } from './query.server';
 import { currentSchemaView, currentSchemaForm } from './metadata-schema';
 import { formFieldDefinition, validateFormLogic } from './form-definition';
 const sortSchema = z.object({ fieldId: idSchema, direction: z.enum(['asc', 'desc']) }).strict();
-export const viewDefinition = z.object({...viewPresentationDefinition, appId: idSchema, entityId: idSchema, name: z.string().trim().min(1).max(200), display: z.enum(['grid', 'cards', 'board', 'calendar', 'timeline', 'agenda']), fields: z.array(idSchema).max(200), filter: filterSchema, sort: z.array(sortSchema).max(10), groupBy: z.array(idSchema).max(5), layout: z.object({ titleFieldId: idSchema, startFieldId: idSchema.optional(), endFieldId: idSchema.optional(), boardFieldId: idSchema.optional(), coverFieldId: idSchema.optional() }).strict(), coverFit: z.enum(['cover','contain']).optional(), visibility: z.enum(['private', 'app']), shipped: z.boolean() }).strict();
+export const viewDefinition = z.object({...viewPresentationDefinition, access:z.object({canEdit:z.boolean(),canLock:z.boolean()}).strict().optional(), appId: idSchema, entityId: idSchema, name: z.string().trim().min(1).max(200), display: z.enum(['grid', 'cards', 'board', 'calendar', 'timeline', 'agenda']), fields: z.array(idSchema).max(200), filter: filterSchema, sort: z.array(sortSchema).max(10), groupBy: z.array(idSchema).max(5), layout: z.object({ titleFieldId: idSchema, startFieldId: idSchema.optional(), endFieldId: idSchema.optional(), boardFieldId: idSchema.optional(), coverFieldId: idSchema.optional() }).strict(), coverFit: z.enum(['cover','contain']).optional(), visibility: z.enum(['private', 'app']), shipped: z.boolean() }).strict();
 export const formDefinition = z.object({ appId: idSchema, entityId: idSchema, title: z.string().min(1).max(200), fields: z.array(formFieldDefinition).max(200), submitAction: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/), authenticated: z.literal(true) }).strict();
 export const viewTable = registerTable('record_views', ['id', 'app_id', 'entity_id', 'owner_id', 'version', 'visibility', 'definition_json', 'created_at', 'updated_at']);
 export const formTable = registerTable('record_forms', ['id', 'app_id', 'entity_id', 'version', 'definition_json', 'created_at', 'updated_at']);
@@ -45,6 +45,8 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
     function denied(error:unknown){return error instanceof Error&&'code'in error&&['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code));}
     const cursorCodec = createCursorCodec(cursorSecret);
     async function checkedView(ctx: RequestContext, definition: unknown, reading = false): Promise<Omit<View, 'id' | 'version' | 'createdAt' | 'updatedAt'>> { const view = viewDefinition.parse(definition), d = descriptors.get(view.appId, view.entityId), scope = await policy.scope(ctx, { appId: view.appId, entityId: view.entityId, purpose: 'read' });
+        // Read-only access hints may round-trip from a read; they never enter the saved definition or authorize a write.
+        delete view.access;
         if ((view.layout.coverFieldId || view.coverFit) && !['cards','board'].includes(view.display)) throw new AdmissionError('validation', 'Cover settings require a gallery or board view');
         if (view.layout.coverFieldId) {
             const cover = view.layout.coverFieldId;

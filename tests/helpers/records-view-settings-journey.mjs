@@ -57,7 +57,7 @@ export async function viewSettingsJourney(){
    await j.capture('view-summary-colours')
    await open(peer);assert.equal(await peer.getByRole('button',{name:'Edit view',exact:true}).isEnabled(),true)
    // Collaborative edits retain original ownership; editor cannot lock the shared view.
-   await browserCall(peer,'/api/v1/commands/view.save',liveCommand({id:view.id,view:{...definition(view),locked:true}},[{ref:{appId:f.appId,entityId:viewId,recordId:view.id},version:view.version}]),403)
+   await browserCall(peer,'/api/v1/commands/view.save',liveCommand({id:view.id,view:{...definition(view),locked:true,access:{canEdit:true,canLock:true}}},[{ref:{appId:f.appId,entityId:viewId,recordId:view.id},version:view.version}]),403)
    const edited=(await browserCall(peer,'/api/v1/commands/view.save',liveCommand({id:view.id,view:{...definition(view),sort:[{fieldId:f.title.id,direction:'desc'}]}},[{ref:{appId:f.appId,entityId:viewId,recordId:view.id},version:view.version}]))).value
    assert.equal((await h.db.prepare('SELECT owner_id FROM record_views WHERE id=?').bind(view.id).first()).owner_id,'00000000000000000000000981')
    await open(page);await page.getByRole('button',{name:'Edit view',exact:true}).click();await page.getByLabel('Lock view',{exact:true}).check();await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save');view=await get();assert.equal(view.locked,true);await open(page)
