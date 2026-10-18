@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "67f00ac5e099998993dc5b5963f3409410f36ca3d6de4201a7ebd3e093edf140",
+      "sha256": "54cae321b8e83e29d3322b356cf868b56b0fddde70269bd05228044c4c69bf7f",
       "executable": false
     },
     "DEMO.md": {
@@ -3026,7 +3026,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "bc5e7693cf1427c9ea1f9abdf484008523aec50054fb2dbcb63002a4c4c53b06",
+      "sha256": "4207e7aba9a32d92d1f1a6d770f34db0f710063784b5beb8f772689c887c3e28",
       "executable": false
     },
     "docs/contract-transition.md": {
@@ -10557,6 +10557,10 @@
       "sha256": "b1751fa4d4b7f8f7939f86e004b417b9713869af9ed2b3ee8af1b37696023adb",
       "executable": false
     },
+    "tests/helpers/records-extended-boards.mjs": {
+      "sha256": "0b05c8d3c197950899dda83abb2c7b2b93c6124e078d8d75399eb05ee8ce3ab6",
+      "executable": false
+    },
     "tests/helpers/records-field-portability.mjs": {
       "sha256": "63067394e5bfd16f3c493c8e338b19b68468f5af3d8b28cd0f20643137d74db4",
       "executable": false
@@ -11173,16 +11177,12 @@
       "sha256": "e23fe17e5d4d93905746f83759f7501473a1cbf1b78dfc51dba75a02187db03c",
       "executable": false
     },
-    "tests/ui-records-board.mjs": {
-      "sha256": "d5ab5a75137fee880d369b6ac524f55406dd99e7ce167ed1a3ae5297f07893da",
-      "executable": false
-    },
     "tests/ui-records-builder.mjs": {
       "sha256": "0b988e7e46c4a87266e7e6befb5e0ae6b1772be0210b45740e0b09f21a6aae0e",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
-      "sha256": "47b9f532721df5162f9198de298ac1cf4918664f840110be75e13393dd3b6173",
+      "sha256": "f1bafad81ce7e4bdbf9799e15d75898089a6853932a09ab3d1a8d327e0f35f87",
       "executable": false
     },
     "tests/ui-recut-final.mjs": {
@@ -13050,7 +13050,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "8f78d0bb9db392387bca59c8210ba7697cb55090eeb5308733664c2e3719eb76",
+      "sha256": "42ebcf6fafcae9506b3cd83ec539ef181b96cb5d5748315eea35be710f208896",
       "executable": false
     },
     "vite.config.ts": {

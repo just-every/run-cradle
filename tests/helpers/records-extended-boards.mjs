@@ -1,20 +1,19 @@
-import './helpers/typescript-loader.mjs'
-import {contract} from './contract.mjs'
+import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
 import path from 'node:path'
 import {chromium} from '@playwright/test'
-import {recordsBrowserRuntime} from './helpers/records-browser-runtime.mjs'
-import {recordsJourney} from './helpers/records-browser-journey.mjs'
-import {galleryFixture} from './helpers/records-gallery-journey.mjs'
-import {browserCall,liveCommand} from './helpers/records-live-fixture.mjs'
-import {freePort} from './helpers/free-port.mjs'
-import {repairFieldId,REPAIR_ENTITIES} from '../src/apps/repairs/model.ts'
-import {createUlid} from '../src/core/shared/ids.ts'
-import {newField} from '../src/ui/records/schema/templates.ts'
+import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
+import {recordsJourney} from './records-browser-journey.mjs'
+import {galleryFixture} from './records-gallery-journey.mjs'
+import {browserCall,liveCommand} from './records-live-fixture.mjs'
+import {freePort} from './free-port.mjs'
+import {repairFieldId,REPAIR_ENTITIES} from '../../src/apps/repairs/model.ts'
+import {createUlid} from '../../src/core/shared/ids.ts'
+import {newField} from '../../src/ui/records/schema/templates.ts'
 
 // One public-door journey covers native rules and the two responsive product surfaces.
-contract('VIEW-009','boards group by links and people, show private covers, reorder and refuse forbidden moves',async()=>{
+export async function extendedBoardJourney(){
  const output=path.resolve('.private/boards');await mkdir(output,{recursive:true})
  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
  try{for(const width of [1440,390]){
@@ -74,4 +73,4 @@ contract('VIEW-009','boards group by links and people, show private covers, reor
    await j.capture('board-person-assigned')
   }catch(error){await page.screenshot({path:path.join(output,`failure-${width}.png`),fullPage:true});throw error}finally{await context.close();await h.close()}
  }}finally{await browser.close()}
-})
+}
