@@ -3898,7 +3898,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "bd32b18ded19c1d0f4ae5afe90fd92868a327b4f7d625ec5e6523f9ca5e645c6",
+      "sha256": "05ea444158041d46c9cf557b196c9e9fdf3a72b380cfd1df8268ae083cac3755",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -4215,6 +4215,10 @@
     },
     "migrations/core/1250_record_presence.sql": {
       "sha256": "15b7acb7988f3d02a26e3d5e6e97772afb6c45dd1c2c1633a055b0e7471de22f",
+      "executable": false
+    },
+    "migrations/core/1260_owner_connections.sql": {
+      "sha256": "284e951e2ebbf82b2798c07db5c666b7e5fe96bbec02c9ed134a128961783d66",
       "executable": false
     },
     "migrations/import/9003_base_import.sql": {
@@ -5010,7 +5014,7 @@
       "executable": false
     },
     "src/apps/launch/setup.server.ts": {
-      "sha256": "d7d3088397f642b20cae040dd2fad1dff0735812b4c40ea07e182ea885097fd8",
+      "sha256": "62af46acd17d95f7d5a610d35ff4d740ecd264f6c0fc18829cfcc075f3c27f3b",
       "executable": false
     },
     "src/apps/launch/shipped-lenses.server.ts": {
@@ -5386,7 +5390,7 @@
       "executable": false
     },
     "src/core/app/composition/providers.server.ts": {
-      "sha256": "fe3218150c20d337f85e206d2e9e1508691c113033982b6b824fd6311023c4a3",
+      "sha256": "de285b47a28011025098086a7a8cd6a2bd6085c96ef1d8fa4b6a107d1f9c177e",
       "executable": false
     },
     "src/core/app/composition/records.server.ts": {
@@ -6573,6 +6577,10 @@
       "sha256": "7b4cdf63a865c3dfdfb991fccf29eaad499f1e21540fe5d4eee2d8e34d6ffba2",
       "executable": false
     },
+    "src/domains/authority/connection-management.ts": {
+      "sha256": "e7534e9715b6ad53ecb527b1e690efb8b69fc31ee2202cd59bd3f30bfa223afb",
+      "executable": false
+    },
     "src/domains/authority/context.server.ts": {
       "sha256": "c3cb7475fe6f769f7f5d0c31f19af0a7a5fead1639b92ec480c4537081edb9f2",
       "executable": false
@@ -6650,7 +6658,7 @@
       "executable": false
     },
     "src/domains/authority/policy.server.ts": {
-      "sha256": "d40033671a4e6095ee74593c60c20bce5e1b2226e69b59a69372c69f2cd448b9",
+      "sha256": "239e02213bdbfba693d8c532481a14ddd33304245da46bbb2f05692f3efc57a2",
       "executable": false
     },
     "src/domains/authority/ports.ts": {
@@ -6690,7 +6698,7 @@
       "executable": false
     },
     "src/domains/authority/reads.server.ts": {
-      "sha256": "94673a27d67d1be7767c91d774f4afe4b94af5aca1ee75e3cd83812a28b99897",
+      "sha256": "675a39a724983082eb07dc7bb1c7532c9a45c1140b04be2fecd58f1215a8f6b9",
       "executable": false
     },
     "src/domains/authority/reference.server.ts": {
@@ -8282,7 +8290,7 @@
       "executable": false
     },
     "src/domains/records/manual/authority.server.ts": {
-      "sha256": "aea85faebd2a9071034cf46257c836b39bd532003829ba9cbd494d92d4acb25d",
+      "sha256": "b6785e75d8de4acdbc07152612683bf147e48c7f58de8d238aa291fdda6f3c68",
       "executable": false
     },
     "src/domains/records/manual/calculation-preview.server.ts": {
@@ -9353,12 +9361,16 @@
       "sha256": "b809f044babf2fda8f7c3c232e487a1e6fba1eca95cf192c80663f4ebcf683fa",
       "executable": false
     },
+    "src/ui/settings/connect-gmail.tsx": {
+      "sha256": "256b3693d0a368610ebd631985c2d0a40684e52507c6b2978c0684743521d477",
+      "executable": false
+    },
     "src/ui/settings/connection-actions.tsx": {
       "sha256": "c7db95d1a5f338b2a6ed5d0f9dd05f475445127fbd325438cd6af10a472d5df9",
       "executable": false
     },
     "src/ui/settings/connection-panel.tsx": {
-      "sha256": "69b2499f38291e5f8b57eae1e705c619d47ce5583eb0861b928536e1d30a59d9",
+      "sha256": "0aa8b87d1151d766886adca9d9aeacad8ba2211c6a062dee99ba6e2b45a3b87f",
       "executable": false
     },
     "src/ui/settings/custom-fields-panel.tsx": {
@@ -10514,7 +10526,7 @@
       "executable": false
     },
     "tests/local-auth-runtime.mjs": {
-      "sha256": "d849d3f6f0b19ea1d4652272e7adcb0033594e8fce1edbab2df8501aacdb6b02",
+      "sha256": "d24c7834b1b040e3159eedfd00ccd49b715591b755fc0a95273df95011822ce7",
       "executable": false
     },
     "tests/migration-browser.mjs": {
