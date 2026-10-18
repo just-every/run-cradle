@@ -14,7 +14,7 @@ import { cellValueSchema, idSchema, validateCell } from './validators'
 export const rangePatchSchema = z.object({
   appId: idSchema,
   entityId: idSchema,
-  rows: z.array(z.object({ recordId: idSchema, changes: z.record(idSchema, cellValueSchema) }).strict()).min(1).max(500),
+  rows: z.array(z.object({ recordId: idSchema, changes: z.record(idSchema, cellValueSchema), ifValues: z.record(idSchema, cellValueSchema).optional(), unchangedSince: z.number().int().positive().optional() }).strict()).min(1).max(500),
 }).strict()
 type RangePatch = z.infer<typeof rangePatchSchema>
 type CellIssue = { path: string; fieldId?: string; message: string }
@@ -29,6 +29,7 @@ export function createRangePatchPreparer({ reader, writer, descriptors, policy }
       throw new ApiError('validation', 'A range must contain distinct records.')
     const count = rows.reduce((total, row) => total + Object.keys(row.changes).length, 0)
     if (!count || count > 10000) throw new ApiError('capacity_limit', 'A range supports 1–10,000 cells across at most 500 distinct records.')
+    if(rows.some(row=>row.ifValues && canonical(Object.keys(row.ifValues).sort())!==canonical(Object.keys(row.changes).sort()))) throw new ApiError('validation','Cell preconditions must name exactly the changed fields.')
     const refs = rows.map(row => ({ appId, entityId, recordId: row.recordId }))
     const expected = new Map(command.expected.map(value => [value.ref.recordId, value]))
     if (command.expected.length !== rows.length || expected.size !== rows.length || refs.some(ref => {
@@ -37,6 +38,8 @@ export function createRangePatchPreparer({ reader, writer, descriptors, policy }
     })) throw new ApiError('validation', 'One current expected version is required for every range record.')
     const descriptor = descriptors.get(appId, entityId)
     const scope = await policy.scope(ctx, { appId, entityId, purpose: 'read' })
+    if(rows.some(row=>row.unchangedSince!==undefined&&!row.ifValues))throw new ApiError('validation','A change boundary requires cell preconditions.')
+    const otherChanges=await reader.otherActorCellChanges(ctx,rows.flatMap(row=>row.unchangedSince===undefined?[]:[{ref:{appId,entityId,recordId:row.recordId},version:row.unchangedSince}]))
     const current: RecordRow[] = [], issues: CellIssue[] = [], conflicts: CellIssue[] = [], versions: RevisionRef[] = []
     const normalized: Record<string, CellValue>[] = []
     let forbidden = false
@@ -46,7 +49,7 @@ export function createRangePatchPreparer({ reader, writer, descriptors, policy }
         current.push(record)
         const changes: Record<string, CellValue> = {}
         const stale = record.version !== expected.get(row.recordId)!.version
-        if (stale) versions.push({ ref: record.ref, version: record.version })
+        let cellConflict = false
         for (const [fieldId, value] of Object.entries(row.changes)) {
           const field = descriptor.fields.get(fieldId)?.field, cell = record.fields[fieldId]
           const path = `rows.${index}.changes.${fieldId}`, label = `Row ${index + 1}, ${field?.label ?? fieldId}`
@@ -55,13 +58,14 @@ export function createRangePatchPreparer({ reader, writer, descriptors, policy }
             issues.push({ path, fieldId, message: `${label}: this cell is not readable and writable.` })
             continue
           }
-          if (stale) conflicts.push({ path, fieldId, message: `${label}: record changed; current value is ${JSON.stringify(cell.value)}.` })
+          if (row.ifValues ? (canonical(cell.value)!==canonical(row.ifValues[fieldId]!) || otherChanges.has(`${row.recordId}:${fieldId}`)) : stale) {cellConflict=true;conflicts.push({ path, fieldId, message: `${label}: record changed; current value is ${JSON.stringify(cell.value)}.` })}
           try { changes[fieldId] = validateCell(field, value) }
           catch (error) {
             if (!(error instanceof AdmissionError) || error.code !== 'validation') throw error
             issues.push({ path, fieldId, message: `${label}: ${error.message}` })
           }
         }
+        if(cellConflict)versions.push({ref:record.ref,version:record.version})
         normalized.push(changes)
       }
       if (issues.length) throw new ApiError(forbidden ? 'forbidden' : 'validation', 'The range was not saved. Correct the named cells.', { issues })

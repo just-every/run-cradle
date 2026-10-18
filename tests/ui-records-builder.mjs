@@ -1,3 +1,4 @@
+import { historyBrowserJourney } from './helpers/records-history-journey.mjs'
 import { conditionalFormsJourney } from './helpers/records-forms-journey.mjs'
 import {boardBrowserJourney} from './helpers/records-board-journey.mjs'
 import {findBrowserJourney} from './helpers/records-find-journey.mjs'
@@ -62,4 +63,5 @@ try{
  await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2));console.log(JSON.stringify({passed:receipts,evidence:output}))
 }catch(error){if(activePage){await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:true});await writeFile(path.join(output,'failure.html'),await activePage.content())}throw error}finally{await browser?.close();await h?.close()}
 await conditionalFormsJourney()
+await historyBrowserJourney()
 })

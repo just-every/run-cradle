@@ -1,3 +1,5 @@
+import { otherActorCellChanges } from './history-conflicts.server';
+import type { RevisionRef } from '../../contracts/primitives';
 import { assertCurrentScopeAuthority } from '../authority/guards.server';
 import { createCellProjection } from '../authority/cell-projection.server';
 import { readIncomingRelations } from './incoming.server';
@@ -237,7 +239,7 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
     } while (token); return [...counts.values()]; }
     async function record(ctx: RequestContext, scope: PolicyScope, ref: Ref) { const d = registry.get(ref.appId, ref.entityId), row = await raw(ctx, scope, ref); if (!row)
         throw new AdmissionError('not_found', 'Record not found'); return render(ctx, scope, d, row); }
-    return { assertScope: (ctx: RequestContext, scope: PolicyScope) => assertCurrentScopeAuthority(db, ctx, scope), query, groups, raw, withRows, render, revision, record, projectCell, async get(ctx: RequestContext, scope: PolicyScope, ref: Ref) {
+    return { otherActorCellChanges: (ctx:RequestContext, expected:RevisionRef[])=>otherActorCellChanges(db,ctx,expected), assertScope: (ctx: RequestContext, scope: PolicyScope) => assertCurrentScopeAuthority(db, ctx, scope), query, groups, raw, withRows, render, revision, record, projectCell, async get(ctx: RequestContext, scope: PolicyScope, ref: Ref) {
             const result = await record(ctx, scope, ref);
             if (!details)
                 throw new AdmissionError('unconfigured', 'Record detail evidence/case port is required');
