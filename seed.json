@@ -549,7 +549,9 @@
       "/rer-theme.css": 120,
       "/auth/confirm": 20
     },
-    "concurrentSessions": 40
+    "concurrentSessions": 40,
+    "timelineRecords": 10000,
+    "timelineAxisIntervals": 1500
   },
   "accessibility": {
     "level": "WCAG 2.2 AA",

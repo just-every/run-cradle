@@ -68,7 +68,7 @@
     },
     "VIEW-015": {
       "change": "changed",
-      "summary": "Record-editor and bulk field edits join the grid/board 50-action undo stack, scoped to the operator and table in browser session storage across navigation and reload. Every available record view exposes undo/redo. Typed cell preconditions preserve unrelated edits, and current-policy audit checks refuse another actor changing a target away and back. Inverses remain ordinary atomic audited writes with final version guards. Calendar date/range moves now undo and redo as one audited step at desktop and phone widths. Creation/deletion and future timeline drag actions remain unfinished."
+      "summary": "Record-editor and bulk field edits join the grid/board 50-action undo stack, scoped to the operator and table in browser session storage across navigation and reload. Every available record view exposes undo/redo. Typed cell preconditions preserve unrelated edits, and current-policy audit checks refuse another actor changing a target away and back. Inverses remain ordinary atomic audited writes with final version guards. Calendar date/range moves now undo and redo as one audited step at desktop and phone widths. Timeline drag and accessible date moves now share that stack. Creation/deletion remain unfinished."
     },
     "VIEW-010": {
       "change": "changed",
@@ -89,6 +89,10 @@
     "PERM-009": {
       "change": "changed",
       "summary": "Adds explicit manual-base roles, creator additive adoption and retained destructive previews for owner review. Current policy and role versions fence mutations; adoption preserves base ownership and propagates authorized fields to full-base members. Collaborative/personal view authoring is role-scoped and audited. The clause remains partial with unsupported schema and interface dependencies named."
+    },
+    "VIEW-012": {
+      "change": "changed",
+      "summary": "Completes saved date/range timelines with arbitrary readable field groups, five zooms, linked dependencies, early-start conflicts and duration-based critical paths. Ordinary audited drag or accessible moves affect only the selected record and join undo/redo. Server-captured planned-date baselines persist, project under current policy and remap in native copies. Cycles or incomplete graphs withhold critical paths; declared record/axis limits refuse explicitly."
     }
   },
   "extensionPointChanges": [],

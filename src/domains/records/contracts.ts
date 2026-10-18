@@ -95,7 +95,16 @@ export type EntitySchema = Versioned & {
     };
     physicalRevision: string;
 };
+export type TimelineZoom = 'day' | 'week' | 'month' | 'quarter' | 'year';
+export type TimelineBaseline = {
+    capturedAt: string;
+    startFieldId: Id;
+    endFieldId?: Id;
+    records: { recordId: Id; start: string | null; end?: string | null }[];
+};
 export type View = Versioned & {
+    timelineZoom?: TimelineZoom;
+    timelineBaseline?: TimelineBaseline;
     locked?: boolean;
     summaries?: import('./view-presentation').ViewSummaryChoice[];
     formatting?: import('./view-presentation').ViewColorRule[];
@@ -114,6 +123,7 @@ export type View = Versioned & {
         endFieldId?: Id;
         boardFieldId?: Id;
         coverFieldId?: Id;
+        dependencyFieldId?: Id;
     };
     coverFit?: 'cover' | 'contain';
     visibility: 'private' | 'app';
@@ -136,6 +146,7 @@ export type Form = Versioned & {
     authenticated: true;
 };
 export type ViewResult = {
+    timelineDependenciesComplete?: boolean;
     timezone?: string;
     view: View;
     schema: EntitySchema;

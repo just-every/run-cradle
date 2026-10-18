@@ -25,6 +25,7 @@ export function schemaOnlyBase(source:PortableBase):{snapshot:PortableBase;omiss
    omissions.push(`${table.label} · ${rule.name}: exclude the validation rule that references excluded records.`);return false
   })
  }
+ for(const view of snapshot.base.views)if(view.timelineBaseline){delete view.timelineBaseline;omissions.push(`${view.name}: exclude the timeline baseline that references excluded records.`)}
  for(const view of snapshot.base.views)if(referencesRecord(view.filter)){
   view.filter={kind:'all',conditions:[]};omissions.push(`${snapshot.base.tables.find(table=>table.id===view.tableId)!.label} · ${view.name}: clear the saved view filter that references excluded records.`)
  }
