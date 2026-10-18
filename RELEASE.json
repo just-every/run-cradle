@@ -36,7 +36,7 @@
     },
     "HOME-003": {
       "change": "changed",
-      "summary": "The installed Lobby and public setup state read Base\u2019s durable owner claim, independently of workspace first-run details. A healthy rer deploy therefore offers Sign in immediately after owner claim, with no setup-token instruction. Signed-in app access still requires the owner to confirm workspace details under SET-003; public disclosure remains limited to claim state and the workspace name."
+      "summary": "The installed Lobby and public setup state read Base’s durable owner claim, independently of workspace first-run details. A healthy rer deploy therefore offers Sign in immediately after owner claim, with no setup-token instruction. Signed-in app access still requires the owner to confirm workspace details under SET-003; public disclosure remains limited to claim state and the workspace name."
     },
     "OPS-002": {
       "change": "changed",
@@ -77,6 +77,10 @@
     "VIEW-011": {
       "change": "changed",
       "summary": "Raw and saved Gallery displays reuse current record policy, fields, filters, sorting and grouping. Private attachment covers support crop/fit and disappear when current access is narrowed. An opaque access revision makes permission-only changes refresh live records. Existing attachment authoring and export limitations remain under FILE-001/FILE-003."
+    },
+    "VIEW-009": {
+      "change": "changed",
+      "summary": "Boards add policy-checked person and single-link columns, paged/searchable destinations and private first-image covers with crop/fit. Moves remain ordinary versioned record patches and stop after policy loss. Within-stack ordering is an operator-scoped browser-tab presentation preference, using drag or buttons."
     }
   },
   "extensionPointChanges": [],
@@ -123,7 +127,7 @@
     },
     {
       "id": "migrations/updates/9034_owner_signin.sql",
-      "buyerSteps": "Apply after 9033, preserving all previous migration bytes. This adds Base\u2019s single-use, expiring owner sign-in grant table. Run rer install with the pinned rer (0.2.23) and redeploy before using rer signin."
+      "buyerSteps": "Apply after 9033, preserving all previous migration bytes. This adds Base’s single-use, expiring owner sign-in grant table. Run rer install with the pinned rer (0.2.23) and redeploy before using rer signin."
     },
     {
       "id": "migrations/updates/9035_launch_display_names.sql",

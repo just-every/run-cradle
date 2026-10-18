@@ -199,6 +199,14 @@
       "commands": [
         "pnpm test:calendar"
       ]
+    },
+    {
+      "name": "boards",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node --import ./tests/helpers/typescript-loader.mjs --test tests/ui-records-board.mjs"
+      ]
     }
   ],
   "nightly": [

@@ -14,7 +14,7 @@ import {newField} from '../../src/ui/records/schema/templates.ts'
 import {assertPortableJsonSchema} from './json-schema-assert.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
-async function fixture(h){
+export async function galleryFixture(h){
  const owner='00000000000000000000000981',now=new Date().toISOString(),policyId=createUlid()
  await setupRepairs(h.db,{managerId:owner,releaseId:REPAIRS_RELEASE_ID,now})
  const base={principals:[{id:owner,kind:'human'}],rows:{kind:'all',conditions:[]},actions:['record.create','record.patch','view.save','upload.begin','upload.complete'],effect:'allow',purposes:['read','export']}
@@ -39,7 +39,7 @@ export async function galleryBrowserJourney(){
   try{
    page.setDefaultTimeout(15000)
    console.log('gallery fixture',width)
-   const f=await fixture(h),table=`${h.origin}/app/records/${f.appId}/${f.entityId}`,base=`/api/v1/apps/${f.appId}/entities/${f.entityId}`
+   const f=await galleryFixture(h),table=`${h.origin}/app/records/${f.appId}/${f.entityId}`,base=`/api/v1/apps/${f.appId}/entities/${f.entityId}`
    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
    // Existing attachment-enabled records use their real editor, upload custody and audited patch path.
    for(const [index,name]of ['cooler','pump'].entries()){

@@ -41,7 +41,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
     function denied(error:unknown){return error instanceof Error&&'code'in error&&['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code));}
     const cursorCodec = createCursorCodec(cursorSecret);
     async function checkedView(ctx: RequestContext, definition: unknown, reading = false): Promise<Omit<View, 'id' | 'version' | 'createdAt' | 'updatedAt'>> { const view = viewDefinition.parse(definition), d = descriptors.get(view.appId, view.entityId), scope = await policy.scope(ctx, { appId: view.appId, entityId: view.entityId, purpose: 'read' });
-        if ((view.layout.coverFieldId || view.coverFit) && view.display !== 'cards') throw new AdmissionError('validation', 'Cover settings require a gallery view');
+        if ((view.layout.coverFieldId || view.coverFit) && !['cards','board'].includes(view.display)) throw new AdmissionError('validation', 'Cover settings require a gallery or board view');
         if (view.layout.coverFieldId) {
             const cover = view.layout.coverFieldId;
             if (d.fields.get(cover)?.field.type !== 'attachment') throw new AdmissionError('validation', 'Gallery cover must be an attachment field');
@@ -55,7 +55,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         if (view.layout.endFieldId && (d.fields.get(view.layout.endFieldId)!.field.type !== d.fields.get(view.layout.startFieldId)!.field.type)) throw new AdmissionError('validation', 'Start and end fields must have the same date type');
     } if (view.display === 'timeline' && !view.layout.endFieldId)
         throw new AdmissionError('validation', 'Timeline needs an end field'); if (view.display === 'board' && !view.layout.boardFieldId)
-        throw new AdmissionError('validation', 'Board needs a grouping field'); return view; }
+        throw new AdmissionError('validation', 'Board needs a grouping field'); if (view.display === 'board') { const field = d.fields.get(view.layout.boardFieldId!)?.field; if (!field || !['select','person','relation'].includes(field.type) || field.type === 'relation' && field.relation?.cardinality !== 'one') throw new AdmissionError('validation', 'Board columns require a single select, person or single linked-record field'); } return view; }
     async function readView(ctx: RequestContext, id: string): Promise<View> { const row = await db.prepare('SELECT * FROM record_views WHERE id=?').bind(id).first<Stored>(); if (!row || row.visibility === 'deleted' || row.visibility === 'private' && row.owner_id !== ctx.principal.id)
         throw new AdmissionError('not_found', 'View not found'); const storedView = JSON.parse(row.definition_json) as View, v=currentSchemaView(storedView,descriptors.get(storedView.appId,storedView.entityId).schema); return {...v,...await checkedView(ctx, vWithoutVersion(v), true)}; }
     function vWithoutVersion<T extends {
@@ -80,7 +80,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         const records = await reader.query(ctx, scope, query), groups = await reader.groups(ctx, scope, query);
         const workspace = await db.prepare('SELECT timezone FROM workspace_settings LIMIT 1').first<{timezone:string}>();
         if (!workspace && view.display === 'calendar') throw new AdmissionError('unconfigured', 'Workspace timezone is required.');
-        return { timezone:workspace?.timezone, view, schema: await visibleCalculationSchema(ctx,{ ...descriptors.get(view.appId, view.entityId).schema, fields: descriptors.get(view.appId, view.entityId).schema.fields.filter(f => scope.readableFieldIds.includes(f.id)) },scope,descriptors,policy), records, groups };
+        return { timezone:workspace?.timezone, view, schema: await visibleCalculationSchema(ctx,{ ...descriptors.get(view.appId, view.entityId).schema, fields: descriptors.get(view.appId, view.entityId).schema.fields.filter(f => scope.readableFieldIds.includes(f.id)).map(f => ({ ...f, readOnly: f.readOnly || !scope.writableFieldIds.includes(f.id) })) },scope,descriptors,policy), records, groups };
     }
     return {
         checkedView, readView, prepareView, viewQuery,readForm,registerFormAction,formAction,
