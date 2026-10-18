@@ -7,7 +7,7 @@ async function snapshot(db, tables = observedTables) {
  return Object.fromEntries(tables.map((table, index) => [table, rows[index].results]))
 }
 const shift = (date, days) => new Date(Date.parse(date + 'T12:00:00Z') + days * 86400000).toISOString().slice(0, 10)
-const definition = changes => ({ name: 'Launch condition review', description: 'An operator-authored view', recordType: 'Campaign', conditions: [], sort: { field: 'code', direction: 'asc' }, fields: ['code', 'name', 'launchDate'], display: 'Grid', ...changes })
+const definition = changes => ({ name: 'Launch condition review', description: 'An operator-authored view', recordType: 'Campaign', conditions: [], sort: { field: 'code', direction: 'asc' }, fields: ['code', 'name', 'launchDate', 'summary', 'tags'], display: 'Grid', ...changes })
 const canonical = lens => Object.fromEntries(['name', 'description', 'recordType', 'conditions', 'sort', 'fields', 'display'].map(key => [key, lens[key]]))
 async function read(h, route, session = h.ownerSession) {
  const response = await h.request(session, route)
@@ -28,6 +28,18 @@ async function preview(h, input, expectedIds) {
  const internal = await h.r.previewLens(h.db, input, h.ctx.now)
  assert.deepEqual(internal.total, { kind: 'exact', value: expectedIds.length })
  assert.deepEqual(new Set(internal.items.map(row => row.id)), new Set(expectedIds))
+ return page
+}
+async function currentResults(h, saved, expectedIds, session = h.ownerSession) {
+ const page = await read(h, `/api/lenses/${saved.id}?view=results`, session)
+ assert.deepEqual(canonical(page.lens), canonical(saved), 'LENS-005: condition summary uses the evaluated saved definition')
+ assert.equal(page.lens.version, saved.version)
+ assert.deepEqual(new Set(page.items.map(row => row.id)), new Set(expectedIds), 'LENS-005: opening evaluates current non-archived records')
+ assert.deepEqual(page.total, {kind:'exact',value:expectedIds.length}, 'LENS-005: count agrees with the result list')
+ assert.deepEqual(page.selectedDetail, page.items[0] ?? null, 'LENS-005: selected detail is the same evaluated record, not a separate read')
+ assert.deepEqual(page.conditionSummary, saved.conditions.map(condition => `${condition.field} ${condition.operator}${condition.value === undefined ? '' : ` ${Array.isArray(condition.value) ? condition.value.join(', ') : String(condition.value ?? '')}`}`))
+ assert.ok(Number.isFinite(Date.parse(page.evaluatedAt)))
+ assert.equal(page.nextCursor,null)
  return page
 }
 async function invalid(h, input) {
@@ -115,25 +127,30 @@ async function lifecycle(h, fixtures) {
  assert.ok([302, 303, 307, 308, 401].includes(signedOut.status), 'A lens share URL requires a session')
  if (signedOut.status !== 401) assert.equal(new URL(signedOut.headers.get('location'), h.origin).pathname, '/signin')
  assert.equal((await fetch(h.origin + `/api/lenses/${saved.id}`, { redirect: 'manual' })).status, 401)
- // Each open fetches the saved conditions before evaluating the current records.
- let opened = (await read(h, `/api/lenses/${saved.id}`)).lens
- assert.deepEqual(opened.conditions, input.conditions)
- await preview(h, canonical(opened), [fixtures.a.id, fixtures.c.id])
+ // LENS-005: each open and refresh returns one complete current evaluation.
+ const opened = await currentResults(h, saved, [fixtures.a.id, fixtures.c.id], person.session)
+ assert.equal(opened.selectedDetail.phase, 'Planning')
+ assert.equal(opened.selectedDetail.summary, fixtures.a.statusSummary)
+ assert.deepEqual(opened.selectedDetail.tags, ['Supplier'])
  fixtures.a = await h.commit('campaign.patch', { id: fixtures.a.id, changes: { phase: 'Build' } }, h.expected('campaign', fixtures.a))
- opened = (await read(h, `/api/lenses/${saved.id}`)).lens
- assert.deepEqual(canonical(opened), input)
- await preview(h, canonical(opened), [fixtures.c.id])
+ await currentResults(h, saved, [fixtures.c.id])
+ assert.equal(opened.selectedDetail.phase, 'Planning', 'An existing evaluation retains its selected detail until refreshed')
  fixtures.c = await h.commit('campaign.archive', { id: fixtures.c.id }, h.expected('campaign', fixtures.c))
- await preview(h, canonical((await read(h, `/api/lenses/${saved.id}`)).lens), [])
+ await currentResults(h, saved, [])
+ assert.equal((await fetch(h.origin + `/api/lenses/${saved.id}?view=results`, {redirect:'manual'})).status,401)
+ const limited = await h.addPerson({change:rules=>rules.map(rule=>({...rule,readableFields:[]}))})
+ assert.equal((await h.request(limited.session, `/api/lenses/${saved.id}?view=results`)).status,403, 'Current policy denies a restricted saved-result projection')
  const beforeEdit = await snapshot(h.db, businessTables), edited = { ...input, description: 'Changed by a colleague', conditions: [{ field: 'code', operator: 'contains', value: fixtures.prefix }], sort: { field: 'launchDate', direction: 'desc' } }
  const response = await h.request(person.session, `/api/lenses/${saved.id}`, { method: 'PUT', body: JSON.stringify({ ...edited, version: saved.version }) })
  assert.equal(response.status, 200, JSON.stringify(await response.clone().json()))
  saved = (await response.json()).lens
  assert.deepEqual(canonical(saved), edited)
+ await currentResults(h, saved, [fixtures.a.id,fixtures.b.id], person.session)
  assert.deepEqual(await snapshot(h.db, businessTables), beforeEdit)
  await h.commit('lens.delete', { id: saved.id }, h.expected('lens', saved))
  assert.deepEqual(await snapshot(h.db, businessTables), beforeEdit)
  assert.equal((await h.request(person.session, `/api/lenses/${saved.id}`)).status, 404)
+ assert.equal((await h.request(person.session, `/api/lenses/${saved.id}?view=results`)).status,404)
 }
 
 async function shipped(h) {
@@ -173,7 +190,7 @@ export async function verifyLensClauses(h) {
  const archived = await make('ARCHIVED', { name: 'Alpha archived', phase: 'Planning', statusSummary: '', launchDate: shift(today, 2) })
  await h.commit('campaign.archive', { id: archived.id }, h.expected('campaign', archived))
  const custom = await h.commit('custom-field.save', { field: { name: 'Lens region', type: 'text' } })
- const tagged = await h.commit('campaign.patch', { id: a.id, changes: { customFields: { [custom.id]: 'north' } } }, h.expected('campaign', a))
+ const tagged = await h.commit('campaign.patch', { id: a.id, changes: { customFields: { [custom.id]: 'north' }, tags: ['Supplier'] } }, h.expected('campaign', a))
  const fixtures = { a: tagged, b, c, prefix, today, custom }
  await conditions(h, fixtures)
  await lifecycle(h, fixtures)

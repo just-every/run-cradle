@@ -120,7 +120,7 @@ export type CampaignDetailResponse = {
   milestones: MilestoneSummary[];
   risks: RiskSummary[];
   decisions: DecisionSummary[];
-  comments: unknown[];
+  comments: { id: string; version: number; body: string; authorName: string }[];
   activity: ActivitySummary[];
   customFields: CampaignCustomField[];
 };

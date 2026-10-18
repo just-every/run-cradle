@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict'
+
+export async function verifyCommentScreens({h,page,command,capture}) {
+ const width=page.viewportSize().width
+ const create=async(action,input,expected=[]) => (await command(action,input,expected)).data.value
+ const campaign=await create('campaign.create',{fields:{code:`COMMENT-SCREEN-${width}`,name:'Supplier conversation',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2026-12-01',objective:'Agree the next delivery',statusSummary:'Supplier evidence is ready for review',phase:'Planning',status:'On track',health:70,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+ const current=await h.addPerson({name:`Current reviewer ${width}`}),removed=await h.addPerson({name:`Former reviewer ${width}`}),erased=await h.addPerson({name:`Erased reviewer ${width}`})
+ await h.db.prepare('UPDATE operators SET active=0 WHERE id=?').bind(removed.id).run()
+ await h.db.prepare("UPDATE operators SET active=0,name='Erased operator' WHERE id=?").bind(erased.id).run()
+ await page.goto(`${h.origin}/app/campaigns/${campaign.id}`)
+ await page.getByRole('heading',{name:campaign.name,exact:true}).waitFor()
+ const activity=page.locator('details.portfolio-priority-history')
+ if(await activity.getAttribute('open')===null)await activity.locator(':scope > summary').click()
+ const thread=page.getByRole('region',{name:'Campaign comments',exact:true})
+ await thread.getByLabel('Add a campaign comment',{exact:true}).fill(`Delivery is confirmed. <b>Plain text</b> @Current reviewer ${width} @Former reviewer ${width} @Erased reviewer ${width}`)
+ await thread.getByLabel(`Current reviewer ${width}`,{exact:true}).check()
+ assert.equal(await thread.getByLabel(`Former reviewer ${width}`,{exact:true}).count(),0)
+ await thread.getByRole('button',{name:'Post comment',exact:true}).click()
+ const comment=thread.getByRole('article').filter({hasText:'Delivery is confirmed.'})
+ await comment.waitFor()
+ assert.equal(await comment.locator('b').count(),0,'ACT-002 markup stays plain text')
+ assert.equal(await comment.locator('a').count(),0,'ACT-004 removed/erased mentions stay plain text')
+ const stored=await h.db.prepare('SELECT id FROM comments WHERE campaign_id=? AND deleted_at IS NULL').bind(campaign.id).first()
+ const notices=(await h.db.prepare("SELECT operator_id FROM notifications WHERE subject_id=? AND kind='comment-mentioned'").bind(stored.id).all()).results
+ assert.deepEqual(notices.map(item=>item.operator_id),[current.id])
+ await capture('clause-comment-posted')
+ await comment.getByRole('button',{name:'Delete comment',exact:true}).click()
+ await thread.getByText('No comments yet.',{exact:true}).waitFor()
+ if(await activity.getAttribute('open')===null)await activity.locator(':scope > summary').click()
+ await page.locator('.portfolio-activity-list').getByText(/deleted comment/).waitFor()
+ await capture('clause-comment-deleted')
+ await page.reload()
+ await page.getByRole('heading',{name:campaign.name,exact:true}).waitFor()
+ assert.equal(await page.getByText('Delivery is confirmed.',{exact:false}).count(),0)
+ await capture('clause-comment-deleted-reopened')
+}

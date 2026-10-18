@@ -343,7 +343,10 @@ export const decodeCampaignDetail: Decoder<CampaignDetailResponse> = (
     decisions: requiredArray(record, "campaign detail.decisions").map(
       decodeDecision,
     ),
-    comments: requiredArray(record, "campaign detail.comments"),
+    comments: requiredArray(record, "campaign detail.comments").map(value => {
+      const comment = requiredRecord(value, "campaign comment");
+      return { id: requiredText(comment, "comment.id"), version: requiredNumber(comment, "comment.version"), body: requiredText(comment, "comment.body"), authorName: requiredText(comment, "comment.authorName") };
+    }),
     activity: requiredArray(record, "campaign detail.activity").map(
       decodeActivity,
     ),
