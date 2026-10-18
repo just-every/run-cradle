@@ -8,7 +8,7 @@ import { createUlid } from '../../core/shared/ids'
 
 /** Setup is explicit and idempotent. It never installs example campaigns or grants. */
 export async function prepareLaunchSetup(db:D1Database,ownerId:string,now=Date.now()):Promise<D1PreparedStatement[]> {
- const operator=await db.prepare('SELECT id FROM operators WHERE id=? AND active=1').bind(ownerId).first()
+ const operator=await db.prepare('SELECT o.id,p.initial_owner FROM operators o LEFT JOIN authority_principals p ON p.id=o.id WHERE o.id=? AND o.active=1').bind(ownerId).first<{id:string;initial_owner:number|null}>()
  if(!operator)throw new Error('Launch setup requires the configured active operator')
  const statements:D1PreparedStatement[]=[]
  for(const descriptor of launchDescriptors){const s=descriptor.schema;statements.push(db.prepare('INSERT OR IGNORE INTO record_schemas(id,app_id,version,physical_revision,schema_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').bind(s.id,s.appId,s.version,s.physicalRevision,JSON.stringify(s),s.createdAt,s.updatedAt))}
@@ -21,7 +21,7 @@ export async function prepareLaunchSetup(db:D1Database,ownerId:string,now=Date.n
  const alreadyScoped=await db.prepare('SELECT 1 FROM authority_memberships WHERE principal_id=? LIMIT 1').bind(ownerId).first()
  if(!initialized&&!alreadyScoped){
   const policyId=createUlid()
-  const rules:import('../../domains/authority/contracts').Policy['rules']=launchDescriptors.map((d)=>({id:createUlid(),principals:[{kind:'human',id:ownerId}],entityId:d.schema.id,rows:{kind:'all',conditions:[]},readableFields:d.schema.fields.map(f=>f.id),writableFields:d.schema.fields.map(f=>f.id),actions:[...legacyLaunchSurface(d.schema.id)!.actions,...connectionManagementActions],effect:'allow',purposes:legacyLaunchSurface(d.schema.id)!.purposes}));rules.push(...channelLegacyPolicyRules(ownerId),...legacyImportStagingRules(ownerId,createUlid(),createUlid()))
+  const rules:import('../../domains/authority/contracts').Policy['rules']=launchDescriptors.map((d)=>({id:createUlid(),principals:[{kind:'human',id:ownerId}],entityId:d.schema.id,rows:{kind:'all',conditions:[]},readableFields:d.schema.fields.map(f=>f.id),writableFields:d.schema.fields.map(f=>f.id),actions:[...legacyLaunchSurface(d.schema.id)!.actions,...(operator.initial_owner?connectionManagementActions:[])],effect:'allow',purposes:legacyLaunchSurface(d.schema.id)!.purposes}));rules.push(...channelLegacyPolicyRules(ownerId),...legacyImportStagingRules(ownerId,createUlid(),createUlid()))
   statements.push(db.prepare("INSERT INTO authority_policies(id,app_id,name,rules_json,created_at,updated_at,version) SELECT ?,?,'Legacy launch operator',?,?,?,1 WHERE NOT EXISTS(SELECT 1 FROM authority_memberships WHERE principal_id=?) AND NOT EXISTS(SELECT 1 FROM authority_policies WHERE app_id=?)").bind(policyId,LAUNCH_APP_ID,JSON.stringify(rules),now,now,ownerId,LAUNCH_APP_ID))
   statements.push(db.prepare("INSERT OR IGNORE INTO authority_memberships(principal_id,app_id,policy_id,legacy,state,version) SELECT ?,?,?,1,'active',1 WHERE changes()=1 AND EXISTS(SELECT 1 FROM authority_policies WHERE id=?) AND EXISTS(SELECT 1 FROM operators o JOIN authority_principals p ON p.id=o.id WHERE o.id=? AND o.active=1 AND p.state='active')").bind(ownerId,LAUNCH_APP_ID,policyId,policyId,ownerId))
  }
