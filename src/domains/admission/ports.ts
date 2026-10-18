@@ -79,6 +79,8 @@ export type AdmissionPlan<T> = {
     /** Internal atomic transaction composition; the compiled admission is unchanged. */
     commitAtomic?: (statements: readonly import('./compiler.server').Statement[]) => Promise<void>;
     changed?: readonly RevisionRef[];
+    /** Explicit authorized revision reads used only to diagnose an atomic refusal. */
+    versionDependencies?: readonly VersionDependency[];
     /** Explicit read dependencies when projected result values do not carry field IDs. */
     accessSubjects?: readonly {ref:Ref;fieldIds:readonly string[]}[];
 };
@@ -91,4 +93,10 @@ export type AdmissionPort = {
     replay<T>(ctx: RequestContext, commandId: Id, action: string, appId: Id, canonicalInputHash: string): Promise<AdmissionReceipt<T> | null>;
     commit<T>(ctx: RequestContext, plan: AdmissionPlan<T>): Promise<AdmissionReceipt<T>>;
     status(ctx: RequestContext, commandId: Id): Promise<CommandStatus>;
+};
+
+export type VersionDependency = {
+    label: string;
+    version: number;
+    current(): Promise<number | null>;
 };

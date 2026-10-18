@@ -605,7 +605,7 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/launch-search-authority.mjs.
 - **VIEW-006 — Concurrent edits.** Every mutation of a campaign, deliverable, milestone, risk, decision, comment, lens, custom-field definition, automation, or workspace setting supplies that record's current version. A mutation carrying an older version returns 409, names the current version, and changes nothing.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/service-write.server.ts; no clause-tagged test yet.
+  *Status:* done — Current caller revisions fence every Launch record and definition mutation, comment deletion, workspace and readiness settings, sample removal, bulk undo and safe retry. Stale admissions and commit races name the authorized current version and commit no effects; native setup and 1440/390 settings journeys retain those revisions. Evidence: `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`, `tests/helpers/launch-concurrency-clauses.mjs`.
 - **VIEW-007 — Paging and order.** A collection response returns at most 200 records with a cursor, applies the requested sort with the record ID as its final tiebreak so paging repeats and skips nothing, and reports an exact total up to 10,000 matches and `10,000+` beyond it. A result larger than one page states how many records are shown out of that total.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-operator-doors.mjs.
@@ -904,13 +904,13 @@ Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 19 October 2026; their cited evidence and gaps describe those updates.
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **110 done, 72 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **111 done, 71 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 93 | 18 | 0 | 111 |
+| Published | 94 | 17 | 0 | 111 |
 | Target and push further | 17 | 54 | 28 | 99 |
-| All | 110 | 72 | 28 | 210 |
+| All | 111 | 71 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1039,7 +1039,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `VIEW-003` | Cross-view consistency | published | done | `tests/launch-write-effects.mjs`, `tests/helpers/launch-consistency-clauses.mjs` | Post-success native HTTP reads show committed campaign and child fields, derived Home/Overview/Grid/Detail counts, saved and shipped lenses, Decision Queue and Automation Monitor; archive and terminal decisions update the next read. |
 | `VIEW-004` | Explicit states | published | done | `tests/launch-authority-browser.mjs`, `tests/ui-launch-walkthrough.mjs` |  |
 | `VIEW-005` | Search | published | done | `tests/launch-search-authority.mjs` |  |
-| `VIEW-006` | Concurrent edits | published | partial | `src/apps/launch/service-write.server.ts` | no clause-tagged test yet |
+| `VIEW-006` | Concurrent edits | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`, `tests/helpers/launch-concurrency-clauses.mjs` | Current caller revisions fence every Launch record and definition mutation, comment deletion, workspace and readiness settings, sample removal, bulk undo and safe retry. Stale admissions and commit races name the authorized current version and commit no effects; native setup and 1440/390 settings journeys retain those revisions. |
 | `VIEW-007` | Paging and order | published | done | `tests/launch-operator-doors.mjs` |  |
 | `CAMP-001` | Record | published | done | `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs` |  |
 | `CAMP-002` | Lifecycle | published | done | `tests/ui-launch-walkthrough.mjs` |  |

@@ -130,7 +130,7 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    const edited = await h.db.prepare('SELECT c.id,c.name,c.version FROM campaigns c JOIN launch_sample_records s ON s.record_id=c.id JOIN sample_installations i ON i.id=s.installation_id ORDER BY i.created_at DESC,c.id LIMIT 1').first()
    await b.command('launch.campaign.patch', { id: edited.id, changes: { statusSummary: 'Edited by an operator' } }, [b.campaignRef(edited)])
    await page.locator('.launch-settings-item', { hasText: 'Sample data ·' }).first().getByRole('button', { name: 'Remove sample data' }).click()
-   await page.getByText(`campaign “${edited.name}”`).waitFor()
+   await page.getByText(`campaign has current version ${edited.version+1}`,{exact:true}).waitFor()
    await b.capture('sample-data-refused')
    const samples = page.locator('.launch-settings-item', { hasText: 'Sample data ·' }), previousSamples = await samples.count()
    const [installed] = await Promise.all([

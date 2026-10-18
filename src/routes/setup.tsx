@@ -6,12 +6,14 @@ import {editorLeaf} from '../core/features/editor/leaf'
 
 export const Route=createFileRoute('/setup')({loader:()=>loadSetupDocument(),component:editorLeaf(Setup)})
 function Setup(){
-  const {csrf,workspace}=Route.useLoaderData(),config=useSeedConfig()
+  const {csrf,workspace,settingsVersion}=Route.useLoaderData(),config=useSeedConfig()
   return <PublicLayout config={config}><section className="cr-identity">
     <p className="cr-eyebrow">Cradle</p><h1>Set up your workspace</h1>
     <p>Confirm the details for your records. You can change them later in settings.</p>
     <form method="post" action="/setup" className="cr-stack">
       <input type="hidden" name="csrf" value={csrf}/>
+      <input type="hidden" name="workspaceVersion" value={workspace.version}/>
+      <input type="hidden" name="settingsVersion" value={settingsVersion}/>
       <div className="cr-field"><label htmlFor="setup-name">Workspace name</label><input id="setup-name" name="name" defaultValue={workspace.name} required maxLength={200}/></div>
       <div className="cr-field"><label htmlFor="setup-timezone">Timezone</label><input id="setup-timezone" name="timezone" defaultValue={workspace.timezone} required/></div>
       <div className="cr-field"><label htmlFor="setup-currency">Currency</label><input id="setup-currency" name="currency" defaultValue={workspace.currency} required pattern="[A-Z]{3}"/></div>

@@ -21,7 +21,9 @@ export async function setupDocument() {
     throw new Error('The first owner must complete setup.')
   }
   const csrf=await createProductAuth(platform.database.$client,platform.auth.configuration).csrf(request)
-  const workspace=await platform.database.$client.prepare("SELECT name,timezone,currency FROM workspace WHERE id='workspace'").first<{name:string;timezone:string;currency:string}>()
+  const workspace=await platform.database.$client.prepare("SELECT name,timezone,currency,version FROM workspace WHERE id='workspace'").first<{name:string;timezone:string;currency:string;version:number}>()
   if (!workspace) throw new Error('Workspace is unavailable.')
-  return {csrf,workspace}
+  const settings=await platform.database.$client.prepare('SELECT version FROM workspace_settings ORDER BY id LIMIT 1').first<{version:number}>()
+  if(!settings)throw new Error('Workspace settings are unavailable.')
+  return {csrf,workspace,settingsVersion:settings.version}
 }
