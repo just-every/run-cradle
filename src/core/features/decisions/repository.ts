@@ -1,5 +1,5 @@
 import type { Database } from '../shared/repository'
-import { executeBatch, iso, queryAll, queryOne } from '../shared/repository'
+import { iso, queryAll, queryOne } from '../shared/repository'
 import { toInitials } from '../../shared/people'
 
 type DecisionRow = {
@@ -21,6 +21,9 @@ type DecisionRow = {
   requesterName: string
   riskId: string | null
   riskTitle: string | null
+  supersedesId: string | null
+  supersedesTitle: string | null
+  supersededByJson: string
   state: string
   title: string
   version: number
@@ -30,10 +33,14 @@ const select = `
   SELECT d.id, d.title, d.priority, d.due_at AS dueAt, d.recommendation, d.impact, d.state, d.version, d.risk_id AS riskId, d.rationale,
     risk.title AS riskTitle, (SELECT next_value FROM activity_entries WHERE subject_id=d.id AND type='decision.created' AND field_name='recommendation' ORDER BY created_at ASC,id ASC LIMIT 1) AS escalationReason, EXISTS(SELECT 1 FROM admission_audit audit JOIN command_admissions admission ON admission.command_id=audit.command_id WHERE json_extract(audit.subject_json,'$.recordId')=d.id AND audit.action='decision.created' AND admission.action IN ('launch.risk.escalate','launch.automation.execute')) AS escalationOrigin, EXISTS(SELECT 1 FROM activity_entries WHERE subject_id=d.id AND type='decision.updated' AND field_name='recommendation') AS recommendationEdited,
     c.id AS campaignId, c.code AS campaignCode, c.name AS campaignName,
-    requester.id AS requesterId, requester.name AS requesterName, assignee.id AS assigneeId, assignee.name AS assigneeName
+    requester.id AS requesterId, requester.name AS requesterName, assignee.id AS assigneeId, assignee.name AS assigneeName,
+    previous.id AS supersedesId, previous.title AS supersedesTitle,
+    (SELECT json_group_array(json_object('id', following.id, 'title', following.title))
+      FROM (SELECT id, title FROM decisions WHERE supersedes_id = d.id ORDER BY created_at, id) following) AS supersededByJson
   FROM decisions d JOIN campaigns c ON c.id = d.campaign_id JOIN operators requester ON requester.id = d.requester_id
   LEFT JOIN operators assignee ON assignee.id = d.assignee_id
   LEFT JOIN risks risk ON risk.id = d.risk_id
+  LEFT JOIN decisions previous ON previous.id = d.supersedes_id
 `
 
 const map = (row: DecisionRow) => ({
@@ -49,6 +56,8 @@ const map = (row: DecisionRow) => ({
   recommendationSource: row.escalationOrigin && !row.recommendationEdited && row.recommendation === row.escalationReason ? 'escalation-reason' as const : 'decision-field' as const,
   requester: { id: row.requesterId, initials: toInitials(row.requesterName), name: row.requesterName },
   risk: row.riskId && row.riskTitle ? { id: row.riskId, title: row.riskTitle } : null,
+  supersedes: row.supersedesId === null ? null : { id: row.supersedesId, title: row.supersedesTitle! },
+  supersededBy: JSON.parse(row.supersededByJson) as { id: string; title: string }[],
   state: row.state,
   title: row.title,
   version: row.version,
