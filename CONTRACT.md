@@ -596,7 +596,7 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/ui-launch-walkthrough.mjs.
 - **VIEW-003 — Cross-view consistency.** A read issued after a mutation's success response returns that mutation's committed state and the counts derived from it on Home, Portfolio Overview, Campaign Grid, Campaign Detail, every lens, Decision Queue, and Automation Monitor.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/reader.server.ts; no clause-tagged test yet.
+  *Status:* done — Post-success native HTTP reads show committed campaign and child fields, derived Home/Overview/Grid/Detail counts, saved and shipped lenses, Decision Queue and Automation Monitor; archive and terminal decisions update the next read. Evidence: `tests/launch-write-effects.mjs`, `tests/helpers/launch-consistency-clauses.mjs`.
 - **VIEW-004 — Explicit states.** Every collection and detail surface renders exactly one of loading, empty, not found, signed out, or failed. The failed state names the operation that failed and offers a retry; it renders no rows, no sample data, and no result of an earlier successful read. An action a policy forbids is refused with a stated reason and changes nothing.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-authority-browser.mjs; tests/ui-launch-walkthrough.mjs.
@@ -904,13 +904,13 @@ Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 19 October 2026; their cited evidence and gaps describe those updates.
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **109 done, 73 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **110 done, 72 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 92 | 19 | 0 | 111 |
+| Published | 93 | 18 | 0 | 111 |
 | Target and push further | 17 | 54 | 28 | 99 |
-| All | 109 | 73 | 28 | 210 |
+| All | 110 | 72 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1036,7 +1036,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `OPS-006` | Money | published | partial | `src/apps/launch/setup.server.ts` | no clause-tagged test yet |
 | `VIEW-001` | Operating surfaces | published | done | `tests/foundation-shell.mjs`, `tests/launch-authority-browser.mjs` |  |
 | `VIEW-002` | Selected detail | published | done | `tests/ui-launch-walkthrough.mjs` |  |
-| `VIEW-003` | Cross-view consistency | published | partial | `src/apps/launch/reader.server.ts` | no clause-tagged test yet |
+| `VIEW-003` | Cross-view consistency | published | done | `tests/launch-write-effects.mjs`, `tests/helpers/launch-consistency-clauses.mjs` | Post-success native HTTP reads show committed campaign and child fields, derived Home/Overview/Grid/Detail counts, saved and shipped lenses, Decision Queue and Automation Monitor; archive and terminal decisions update the next read. |
 | `VIEW-004` | Explicit states | published | done | `tests/launch-authority-browser.mjs`, `tests/ui-launch-walkthrough.mjs` |  |
 | `VIEW-005` | Search | published | done | `tests/launch-search-authority.mjs` |  |
 | `VIEW-006` | Concurrent edits | published | partial | `src/apps/launch/service-write.server.ts` | no clause-tagged test yet |
