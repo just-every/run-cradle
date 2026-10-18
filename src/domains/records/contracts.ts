@@ -71,7 +71,7 @@ export type Field = {
     linkPicker?: { searchFieldIds: Id[]; displayFieldIds: Id[]; viewId?: Id };
     expression?: Expr;
     resultType?: Field['type'] | 'array';
-    resultElementType?: 'text' | 'url' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'person';
+    resultElementType?: 'text' | 'url' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'person' | 'relation' | 'attachment';
 };
 export type RuleCondition = { kind: 'all' | 'any'; conditions: RuleCondition[] } | {
     kind: 'condition'; fieldId: Id; op: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'empty' | 'not_empty'; value?: CellValue;

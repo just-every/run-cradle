@@ -3,7 +3,7 @@ import { LinkedRecord } from './linked-record'
 import { MoneyInput } from './money-input'
 import { RelationshipPicker } from './relationship-picker'
 import { PersonPicker } from './person-picker'
-import type { Cell, CellValue, ScalarCellValue, Money, Page, Ref } from '../../contracts/primitives'
+import type { Cell, CellValue, Money, Page, Ref } from '../../contracts/primitives'
 import type { Field } from '../../domains/records/contracts'
 import type { Member } from '../../domains/authority/contracts'
 import { useResource } from '../shared/api'
@@ -28,7 +28,7 @@ export function CellDisplay({ cell, field, appId }: { cell: Cell | undefined; fi
   if (field?.type === 'computed' && field.resultType === 'array' && Array.isArray(value)) {
     if (!value.length) return <span className="cr-muted">No values</span>
     const elementField = { ...field, resultType: field.resultElementType, resultElementType: undefined }
-    return <>{(value as ScalarCellValue[]).map((item, index) => <span key={index}>{index ? ', ' : ''}<CellDisplay cell={{ state: 'value', value: item }} field={elementField} appId={appId} /></span>)}</>
+    return <>{(value as CellValue[]).map((item, index) => <span key={index}>{index ? ', ' : ''}<CellDisplay cell={{ state: 'value', value: item }} field={elementField} appId={appId} /></span>)}</>
   }
   if (field?.type === 'select' || field?.type === 'multi_select' || field?.type === 'computed' && field.resultType === 'select') { const ids = Array.isArray(value) ? value : [value]; return <>{ids.map((id, index) => <span className={`cr-record-chip cr-record-chip--${typeof id === 'string' ? chipTone(field, id) : 'lilac'}`} key={index}>{index ? <span className="cr-sr-only">, </span> : null}{field.options?.find(option => option.id === id)?.label ?? <span className="cr-error">Option unavailable</span>}</span>)}</> }
   if ((field?.type === 'person' || field?.type === 'computed' && field.resultType === 'person') && typeof value === 'string') return appId ? <PersonName appId={appId} id={value} /> : <span className="cr-error">Person lookup unavailable</span>

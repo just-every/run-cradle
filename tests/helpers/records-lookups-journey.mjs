@@ -1,3 +1,4 @@
+import {collectionLookupJourney} from './records-collection-lookups.mjs'
 import assert from 'node:assert/strict'
 import {add} from './records-manual-harness.mjs'
 import {applyPreview} from './base-exit-runtime.mjs'
@@ -15,6 +16,7 @@ import {assertPortableJsonSchema} from './json-schema-assert.mjs'
 
 /** The existing records HTTP journey also exercises ordered, typed many-link lookups. */
 export async function lookupJourney(h){
+ await collectionLookupJourney(h)
  const origin='https://lookups.example.test',auth=async()=>h.ctx
  async function call(http,path,input,status=200){const response=await http.fetch(new Request(origin+path,{method:input===undefined?'GET':'POST',headers:{origin,'content-type':'application/json'},...(input===undefined?{}:{body:JSON.stringify(input)})})),body=await response.json();assert.equal(response.status,status,JSON.stringify(body));return status===200?body.data:body.error}
  const appId=createUlid(),ordersId=createUlid(),accountId=createUlid(),name=newField('Order'),open=newField('Open','boolean'),due=newField('Due','date'),total=newField('Total','money'),note=newField('Note'),person=newField('Buyer','person'),stage=newField('Stage','select'),account=newField('Account'),orders=newField('Orders','relation')

@@ -12,7 +12,7 @@ export function remapFieldValue(field:TypedField,value:CellValue,map:Map<string,
  if(type==='array'&&field.resultElementType==='select')return (value as (string|null)[]).map(value=>value===null?null:id(value))
  if(type==='select')return id(String(value))
  if(type==='multi_select')return (value as string[]).map(id)
- if(type==='relation'){
+ if(type==='relation'||type==='array'&&field.resultElementType==='relation'){
   const ref=(v:Ref):Ref=>({appId:id(v.appId),entityId:id(v.entityId),recordId:id(v.recordId)})
   return Array.isArray(value)?(value as Ref[]).map(ref):ref(value as Ref)
  }

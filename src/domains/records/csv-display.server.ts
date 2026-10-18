@@ -12,6 +12,7 @@ import { typedCsvValue } from './csv-typed-values'
 export function displayCsvValue(field:Field,value:CellValue):string {
  if(value===null)return ''
  const type=field.resultType??field.type
+ if(type==='array'&&Array.isArray(value)&&field.resultElementType==='select')return JSON.stringify(value.map(item=>item===null?null:displayCsvValue({...field,resultType:'select',resultElementType:undefined},item as string)))
  if(type==='select'||type==='multi_select'){
   const labels=(Array.isArray(value)?value:[value]).map(id=>{
    const label=field.options?.find(option=>option.id===id)?.label
@@ -27,8 +28,8 @@ export function displayCsvValue(field:Field,value:CellValue):string {
 /** Label reads require their own export scope, including the target's primary field. */
 export function createCsvLabels(services:ReturnType<typeof createRecordServices>,ctx:RequestContext,guards:SqlPredicate[]){
  const targets=new Map<string,Promise<{scope:Awaited<ReturnType<typeof services.policy.scope>>;field:Field}>>()
- async function target(field:Field){
-  const relation=field.relation!,key=relation.ownerAppId+':'+relation.entityId
+ async function target(field:Field,reference?:Ref){
+  const relation=field.type==='computed'&&field.resultElementType==='relation'?{ownerAppId:reference!.appId,entityId:reference!.entityId}:field.relation!,key=relation.ownerAppId+':'+relation.entityId
   let pending=targets.get(key)
   if(!pending){pending=(async()=>{
    const d=services.descriptors.get(relation.ownerAppId,relation.entityId),primary=d.schema.primaryFieldId?d.fields.get(d.schema.primaryFieldId)?.field:d.schema.fields.find(f=>f.type==='text')
@@ -43,7 +44,7 @@ export function createCsvLabels(services:ReturnType<typeof createRecordServices>
  async function label(field:Field,ref:Ref){
   const key=ref.appId+':'+ref.entityId+':'+ref.recordId
   let pending=labels.get(key)
-  if(!pending){pending=(async()=>{const t=await target(field),record=await services.reader.record(ctx,t.scope,ref),cell=record.fields[t.field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','A linked record label is restricted or unavailable.');return displayCsvValue(t.field,cell.value)})();labels.set(key,pending)}
+  if(!pending){pending=(async()=>{const t=await target(field,ref),record=await services.reader.record(ctx,t.scope,ref),cell=record.fields[t.field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','A linked record label is restricted or unavailable.');return displayCsvValue(t.field,cell.value)})();labels.set(key,pending)}
   return pending
  }
  const candidates=new Map<string,Promise<Map<string,Ref[]>>>()
@@ -71,7 +72,7 @@ export function createCsvLabels(services:ReturnType<typeof createRecordServices>
  return {resolve,async display(field:Field,value:CellValue){
   if(value===null)return ''
   const refs=(Array.isArray(value)?value:[value]) as Ref[],texts=await Promise.all(refs.map(ref=>label(field,ref)))
-  return field.relation!.cardinality==='many'?texts.map(text=>'"'+text.replaceAll('"','""')+'"').join(','):texts[0]??''
+  return field.resultType==='array'||field.relation?.cardinality==='many'?texts.map(text=>'"'+text.replaceAll('"','""')+'"').join(','):texts[0]??''
  }}
 }
 

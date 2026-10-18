@@ -1,3 +1,4 @@
+import { lookupCollection, lookupElementType } from './lookup-types'
 import type { EntitySchema, Expr, Field, Filter } from './contracts'
 import { validateFunction, functionDefinition } from './formula-functions'
 import { validateCell } from './validators'
@@ -35,7 +36,7 @@ export function expressionType(expr: Expr, table: CalculationTable, tables: read
     if (expr.aggregate === 'arrayjoin') return 'text'
     if (expr.aggregate === 'arrayunique') { if(!['text','number','date','url','select','person','instant'].includes(source.type==='computed'?source.resultType??'':source.type))throw new Error('ARRAYUNIQUE needs a scalar string source');return 'array' }
     const type = computedType(source,target!,tables,depth,cache,path)
-    if (expr.aggregate === 'lookup') { if (!type || !scalar.includes(type)) throw new Error('Lookup requires a scalar source field'); return relation.cardinality==='many'?'array':type }
+    if (expr.aggregate === 'lookup') { if (!lookupElementType(source)) throw new Error('Lookup source type is unavailable'); return relation.cardinality==='many'||lookupCollection(source)?'array':type }
     if (!type || !['number','money'].includes(type)) throw new Error('SUM, AVERAGE, MIN and MAX require a numeric source field')
     return type
   }
@@ -80,10 +81,10 @@ export function validateCalculationTypes(schemas: readonly CalculationTable[]): 
       if (type !== 'blank' && type !== field.resultType) throw new Error(`Expression returns ${type}, rather than ${field.resultType}`)
       if(field.expression.kind==='rollup'&&field.expression.aggregate==='lookup'){
         const expression=field.expression,relation=table.fields.find(f=>f.id===expression.relationFieldId)!.relation!,target=schemas.find(t=>t.id===relation.entityId)!,source=target.fields.find(f=>f.id===expression.valueFieldId)!
-        const elementType=computedType(source,target,schemas,0,new Map(),new Set())
-        if(relation.cardinality==='many'?field.resultElementType!==elementType:field.resultElementType!==undefined)throw new Error('Lookup array element type must match its scalar source')
+        const elementType=lookupElementType(source)
+        if(relation.cardinality==='many'||lookupCollection(source)?field.resultElementType!==elementType:field.resultElementType!==undefined)throw new Error('Lookup array element type must match its source')
         if(elementType==='select'&&canonical(field.options??[])!==canonical(source.options??[]))throw new Error('Lookup select options must match its source field')
-      }else if(field.resultElementType!==undefined)throw new Error('Element type is reserved for many-link lookups')
+      }else if(field.resultElementType!==undefined)throw new Error('Element type is reserved for array lookups')
     } catch (error) { throw new Error(`${field.label}: ${(error as Error).message}`) }
   }
 }

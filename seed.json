@@ -206,6 +206,12 @@
       "clauses": [
         "FORM-002"
       ]
+    },
+    {
+      "id": "linked-record-lookups",
+      "clauses": [
+        "CALC-002"
+      ]
     }
   ],
   "nonGoals": [

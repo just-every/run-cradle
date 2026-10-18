@@ -1,4 +1,4 @@
-import type { Cell, CellValue, ScalarCellValue } from '../../contracts/primitives'
+import type { Cell, CellValue } from '../../contracts/primitives'
 import type { Expr } from './contracts'
 import type { FormulaContext } from './formulas'
 import { arithmetic, isMoney, truthy } from './formula-values'
@@ -13,7 +13,12 @@ export async function evaluateRollup(expr: Extract<Expr,{kind:'rollup'}>, ctx: F
   if(expr.aggregate==='counta')return value(String(values.filter(v=>v!=='').length))
   if(expr.aggregate==='count'){const source=ctx.sourceType?.(expr.relationFieldId,expr.valueFieldId);return value(String(values.filter(v=>isMoney(v)||typeof v==='string'&&(!source||source==='number')&&/^-?(0|[1-9]\d*)(\.\d+)?$/.test(v)).length))}
   if(expr.aggregate==='lookup'){
-    if(ctx.relationMany?.(expr.relationFieldId))return value(cells.map(cell=>(cell as Extract<Cell,{state:'value'}>).value as ScalarCellValue))
+    const collection=['multi_select','relation','attachment','array'].includes(ctx.sourceType?.(expr.relationFieldId,expr.valueFieldId)??'')
+    if(collection||ctx.relationMany?.(expr.relationFieldId)){
+      const result: unknown[]=[]
+      for(const cell of cells){const item=(cell as Extract<Cell,{state:'value'}>).value;result.push(...(collection?(item===null?[]:Array.isArray(item)?item:[item]):[item]));if(result.length>10000)return {state:'unavailable',code:'rollup_limit',fieldIds:[expr.relationFieldId],message:'Lookup exceeds 10,000 output values'}}
+      return value(result as CellValue)
+    }
     if(cells.length>1)throw new Error('Lookup requires a single linked record');return value(values[0]??null)
   }
   if(expr.aggregate==='and'||expr.aggregate==='or')return value(expr.aggregate==='and'?values.every(truthy):values.some(truthy))

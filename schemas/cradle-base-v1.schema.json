@@ -371,7 +371,9 @@
                         "money",
                         "boolean",
                         "select",
-                        "person"
+                        "person",
+                        "relation",
+                        "attachment"
                       ]
                     },
                     "linkPicker": {
@@ -560,6 +562,33 @@
                               "scale"
                             ],
                             "additionalProperties": false
+                          },
+                          {
+                            "maxItems": 10000,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "appId": {
+                                  "type": "string",
+                                  "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                                },
+                                "entityId": {
+                                  "type": "string",
+                                  "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                                },
+                                "recordId": {
+                                  "type": "string",
+                                  "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                                }
+                              },
+                              "required": [
+                                "appId",
+                                "entityId",
+                                "recordId"
+                              ],
+                              "additionalProperties": false
+                            }
                           }
                         ]
                       }
