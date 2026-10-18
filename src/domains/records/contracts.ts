@@ -109,7 +109,9 @@ export type View = Versioned & {
         startFieldId?: Id;
         endFieldId?: Id;
         boardFieldId?: Id;
+        coverFieldId?: Id;
     };
+    coverFit?: 'cover' | 'contain';
     visibility: 'private' | 'app';
     shipped: boolean;
 };

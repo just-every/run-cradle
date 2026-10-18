@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { readApi, RequestFailure, type Resource } from '../shared/api'
 
-type Presence = { participants: { id: string; name: string }[]; revision: number }
+type Presence = { participants: { id: string; name: string }[]; revision: number; accessRevision: string }
 
 /** Frequent authority checks leave read/render time inside the two-second live-update budget. */
 export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: string | null, restart: () => void, refreshKey = 0) {
@@ -17,7 +17,7 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
   const reload = useCallback(() => { setLoaded({ key, resource: { state: 'loading', data: null } }); requestRefresh.current() }, [key])
   useEffect(() => {
     const abort = new AbortController()
-    let timer: ReturnType<typeof setTimeout> | undefined, running = false, paused = false, previous: number | undefined, requested = 0, completed = -1
+    let timer: ReturnType<typeof setTimeout> | undefined, running = false, paused = false, previous: number | undefined, previousAccess: string | undefined, requested = 0, completed = -1
     setResource({ state: 'loading', data: null }); setParticipants([]); setNotice('Connecting to live updates…')
     if (!presenceUrl) return
     const heartbeatUrl = presenceUrl
@@ -36,7 +36,7 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
         const { data: presence } = await readApi<Presence>(heartbeatUrl, { method: 'POST', body: '{}' }, abort.signal)
         if (abort.signal.aborted) return
         setParticipants(presence.participants)
-        if (requested !== completed || presence.revision !== previous) {
+        if (requested !== completed || presence.revision !== previous || presence.accessRevision !== previousAccess) {
           const reading = requested
           const { data } = await readApi<T>(url, { method: identity === undefined ? 'GET' : 'POST', ...(identity === undefined ? {} : { body: identity }) }, abort.signal)
           if (abort.signal.aborted) return
@@ -44,7 +44,7 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
           completed = reading
           if (previous !== undefined && previous !== presence.revision) window.dispatchEvent(new Event('records-live-changed'))
         }
-        previous = presence.revision; setNotice('Live updates on')
+        previous = presence.revision; previousAccess = presence.accessRevision; setNotice('Live updates on')
       } catch (error) { if (!abort.signal.aborted) failed(error) }
       finally {
         running = false

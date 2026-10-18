@@ -2,7 +2,7 @@
 
 ## Target contract — 16 October 2026, revised 17–18 October 2026
 
-CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's required acceptance evidence is listed below with the status in CONTRACT.md's current Status table. As reconciled on 18 October, the rows total **71 done, 111 partial, 28 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
+CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's required acceptance evidence is listed below with the status in CONTRACT.md's current Status table. As reconciled on 18 October, the rows total **72 done, 110 partial, 28 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
 
 
 ### Records, schema and the app model
@@ -47,7 +47,7 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | VIEW-008 — Spreadsheet-grade grid editing | Done | Grid browser journey with keyboard-only editing, a pasted 50×5 range from clipboard text and a refused invalid paste. **Current implementation and remaining work:** Current evidence: `tests/records-grid-range.mjs` and `docs/contract/VIEW-008/` cover shipped spreadsheet editing, atomic paste/fill, clipboard copy, keyboard navigation, column controls and last-row creation. Undo coverage remains separately tracked in VIEW-015. |
 | VIEW-009 — Kanban | Partial | Board journey drags a card and the record's field changes; a read-only operator cannot drag. With an attachment field chosen as the cover, each card shows its record's first image, fitted or cropped as the view sets, and a card with no attachment shows no cover. For a reader who cannot read that attachment field, no card shows a cover. |
 | VIEW-010 — Calendar | Done | Calendar journey creates, drags and opens records; the iCal feed returns the view's records and stops after revocation. |
-| VIEW-011 — Gallery | Partial | Gallery journey at 1440 and 390 with image covers. |
+| VIEW-011 — Gallery | Done | Gallery journey at 1440 and 390 with image covers. |
 | VIEW-012 — Timeline and Gantt | Partial | A timeline journey groups records, shows the dependency conflict marker and drags a bar, and a baseline is compared after the move. A Gantt fixture of eight tasks, whose single longest dependency chain is known, highlights exactly those tasks as the critical path. After a task's duration changes so that a different chain becomes longest, the highlighted set becomes exactly that chain. Dragging one bar changes no other record's dates. |
 | VIEW-013 — Personal, locked and formatted views | Partial | View journey: personal view hidden from others, locked view refuses edits, summary values checked against the records, colour rule applied. |
 | VIEW-014 — Live multi-user editing | Done | Two-browser journey: an edit in one appears in the other within 2 seconds; a stale concurrent edit shows the conflict. **Current implementation and remaining work:** Current evidence: `tests/helpers/records-live-journey.mjs`, `tests/helpers/records-presence-journey.mjs` and `tests/records-grid-range.mjs` cover native sessions, two-second refresh, presence and stale writes with current readable values at 1440/390. |
@@ -311,8 +311,8 @@ profile did not cover formula/rollup authoring, comments, bulk editing or record
 history. Subsequent evidence now covers the bounded formula and rollup builders
 (CALC-001/CALC-003), record comments (COLLAB-001), grid range editing (VIEW-008)
 and history restoration (COLLAB-002), as detailed in the current clause rows
-above. Rare field types, gallery, charts and attachment authoring/preview
-journeys remain incomplete under FIELD-001, VIEW-011, IFACE-003 and FILE-001.
+above. Rare field types, charts and attachment authoring/preview
+journeys remain incomplete under FIELD-001, IFACE-003 and FILE-001.
 The broader requirements below remain binding. Hosted owner sign-in, resource teardown, CI
 and publication inspection each require their own exact-candidate receipt.
 

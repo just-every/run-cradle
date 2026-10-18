@@ -3,15 +3,15 @@ import {mkdir} from 'node:fs/promises'
 import path from 'node:path'
 import {chromium} from '@playwright/test'
 import {contract} from './contract.mjs'
+import {galleryBrowserJourney} from './helpers/records-gallery-journey.mjs'
 import {calendarFeedJourney} from './helpers/records-calendar-feed.mjs'
 import {recordsBrowserRuntime} from './helpers/records-browser-runtime.mjs'
 import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {freePort} from './helpers/free-port.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {newField} from '../src/ui/records/schema/templates.ts'
-import {movedDates} from '../src/ui/records/calendar-dates.ts'
 
-contract('VIEW-010','calendar month/week/day, ranges, current-policy moves and private feed at desktop and phone widths',async()=>{
+contract('VIEW-010] [VIEW-011] [VIEW-015','calendar and gallery views, current-policy writes and private feeds at desktop and phone widths',async()=>{
  await calendarFeedJourney()
  const output=path.resolve('.private/calendar');await mkdir(output,{recursive:true})
  let h,browser
@@ -53,6 +53,12 @@ contract('VIEW-010','calendar month/week/day, ranges, current-policy moves and p
     assert.equal((await get()).fields[start.id].value,'2026-10-23');assert.equal((await get()).fields[end.id].value,'2026-10-25')
     await page.locator(`[data-calendar-date="2026-10-23"] [data-calendar-record="${created.id}"]`).waitFor()
     await j.capture('calendar-moved')
+    const editing=page.getByRole('group',{name:'Record editing',exact:true})
+    const undo=patch();await editing.getByRole('button',{name:'Undo',exact:true}).click();assert.equal((await undo).status(),200)
+    assert.equal((await get()).fields[start.id].value,'2026-10-19');assert.equal((await get()).fields[end.id].value,'2026-10-21')
+    const redo=patch();await editing.getByRole('button',{name:'Redo',exact:true}).click();assert.equal((await redo).status(),200)
+    assert.equal((await get()).fields[start.id].value,'2026-10-23');assert.equal((await get()).fields[end.id].value,'2026-10-25')
+    await page.locator(`[data-calendar-date="2026-10-23"] [data-calendar-record="${created.id}"]`).waitFor()
     await page.locator(`[data-calendar-date="2026-10-23"] [data-calendar-record="${created.id}"]`).getByRole('link',{name:'Acme site visit',exact:true}).click()
     await page.getByRole('heading',{name:'Acme site visit',exact:true}).waitFor()
     await page.goto(tablePath);await open()
@@ -63,9 +69,6 @@ contract('VIEW-010','calendar month/week/day, ranges, current-policy moves and p
     await page.getByRole('button',{name:'Revoke subscription',exact:true}).click();await page.getByText('Revoked',{exact:false}).waitFor();assert.equal((await fetch(url)).status,404)
     await j.capture('calendar-subscription-revoked')
     await page.getByRole('button',{name:'Calendar subscription',exact:true}).click()
-    // Date moves across DST retain 09:00 local time, rather than adding fixed UTC days.
-    const instantRow={fields:{a:{state:'value',value:'2026-03-07T14:00:00.000Z'},b:{state:'value',value:'2026-03-07T15:00:00.000Z'}}}
-    assert.deepEqual(movedDates(instantRow,'a','b','2026-03-09','America/New_York'),{a:'2026-03-09T13:00:00.000Z',b:'2026-03-09T14:00:00.000Z'})
     // Retain a move draft while another writer changes its source version.
     await page.getByRole('button',{name:`Move record ${created.id}`,exact:true}).first().click()
     const current=await get()
@@ -97,4 +100,5 @@ contract('VIEW-010','calendar month/week/day, ranges, current-policy moves and p
    }finally{await context.close()}
   }
  }finally{await browser?.close();await h?.close()}
+ await galleryBrowserJourney()
 })

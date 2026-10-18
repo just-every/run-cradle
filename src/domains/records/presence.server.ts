@@ -3,6 +3,7 @@ import type { SqlPredicate } from '../admission/ports';
 import type { createRecordMetadata } from './metadata.server';
 import { and, trustedPredicate } from '../admission/sql.server';
 import { AdmissionError } from '../admission/errors';
+import { digest } from '../authority/crypto.server';
 import { createUlid } from '../../core/shared/ids';
 
 const ttlMs = 15_000;
@@ -27,13 +28,14 @@ export function createRecordPresence(db: D1Database, policy: PolicyPort, metadat
         const scope = await policy.scope(ctx, { appId, entityId, purpose: 'read' });
         const guards = [...scope.currentAuthorityGuards];
         if (view) guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM record_views WHERE id=? AND app_id=? AND entity_id=? AND version=? AND (visibility='app' OR (visibility='private' AND owner_id=?)))`, [view.id, appId, entityId, view.version, ctx.principal.id]));
-        return { appId, entityId, viewId: view?.id ?? null, key: view ? `view:${view.id}:${view.version}` : `entity:${appId}:${entityId}`, guards };
+        const accessRevision = await digest(JSON.stringify([scope.policyVersion, scope.currentAuthorityGuards.at(-1) ?? null, scope.readableFieldIds, scope.writableFieldIds, view?.version ?? null]));
+        return { accessRevision, appId, entityId, viewId: view?.id ?? null, key: view ? `view:${view.id}:${view.version}` : `entity:${appId}:${entityId}`, guards };
     }
     function unavailable(error: unknown) {
         return error instanceof Error && 'code' in error && ['forbidden', 'not_found', 'grant_expired', 'grant_revoked', 'signed_out'].includes(String(error.code));
     }
     return {
-        async heartbeat(context: RequestContext, target: Target): Promise<{ participants: Participant[]; revision: number; expiresInMs: number }> {
+        async heartbeat(context: RequestContext, target: Target): Promise<{ participants: Participant[]; revision: number; accessRevision: string; expiresInMs: number }> {
             // Time and identity come exclusively from the server authentication context.
             const ctx: RequestContext = { ...context, now: new Date().toISOString() };
             const own = await checked(ctx, target), current = and(...own.guards), now = Date.now();
@@ -67,7 +69,7 @@ export function createRecordPresence(db: D1Database, policy: PolicyPort, metadat
             }
             // One final transaction fences every projected person and the requester against
             // current policy/session/view state, including Base-session revocation. No names
-            // are retained, and no session/authority metadata leaves this service.
+            // are retained; no session identifiers or policy contents leave this service.
             const statements = visible.map(({ row, guards }) => {
                 const guard = and(current, ...guards);
                 return db.prepare(`SELECT p.id,o.name FROM record_presence a
@@ -82,7 +84,7 @@ export function createRecordPresence(db: D1Database, policy: PolicyPort, metadat
                 ...statements,
             ]);
             if (!result[0]!.results.length) throw new AdmissionError('forbidden', 'Presence authority changed');
-            return { participants: result.slice(2).flatMap(value => value.results as Participant[]), revision: Number((result[1]!.results[0] as { revision: number }).revision), expiresInMs: ttlMs };
+            return { accessRevision: own.accessRevision, participants: result.slice(2).flatMap(value => value.results as Participant[]), revision: Number((result[1]!.results[0] as { revision: number }).revision), expiresInMs: ttlMs };
         },
     };
 }

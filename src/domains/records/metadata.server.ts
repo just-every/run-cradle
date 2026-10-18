@@ -17,7 +17,7 @@ import { createRecordReader } from './query.server';
 import { currentSchemaView, currentSchemaForm } from './metadata-schema';
 import { formFieldDefinition, validateFormLogic } from './form-definition';
 const sortSchema = z.object({ fieldId: idSchema, direction: z.enum(['asc', 'desc']) }).strict();
-export const viewDefinition = z.object({ appId: idSchema, entityId: idSchema, name: z.string().trim().min(1).max(200), display: z.enum(['grid', 'cards', 'board', 'calendar', 'timeline', 'agenda']), fields: z.array(idSchema).max(200), filter: filterSchema, sort: z.array(sortSchema).max(10), groupBy: z.array(idSchema).max(5), layout: z.object({ titleFieldId: idSchema, startFieldId: idSchema.optional(), endFieldId: idSchema.optional(), boardFieldId: idSchema.optional() }).strict(), visibility: z.enum(['private', 'app']), shipped: z.boolean() }).strict();
+export const viewDefinition = z.object({ appId: idSchema, entityId: idSchema, name: z.string().trim().min(1).max(200), display: z.enum(['grid', 'cards', 'board', 'calendar', 'timeline', 'agenda']), fields: z.array(idSchema).max(200), filter: filterSchema, sort: z.array(sortSchema).max(10), groupBy: z.array(idSchema).max(5), layout: z.object({ titleFieldId: idSchema, startFieldId: idSchema.optional(), endFieldId: idSchema.optional(), boardFieldId: idSchema.optional(), coverFieldId: idSchema.optional() }).strict(), coverFit: z.enum(['cover','contain']).optional(), visibility: z.enum(['private', 'app']), shipped: z.boolean() }).strict();
 export const formDefinition = z.object({ appId: idSchema, entityId: idSchema, title: z.string().min(1).max(200), fields: z.array(formFieldDefinition).max(200), submitAction: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/), authenticated: z.literal(true) }).strict();
 export const viewTable = registerTable('record_views', ['id', 'app_id', 'entity_id', 'owner_id', 'version', 'visibility', 'definition_json', 'created_at', 'updated_at']);
 export const formTable = registerTable('record_forms', ['id', 'app_id', 'entity_id', 'version', 'definition_json', 'created_at', 'updated_at']);
@@ -40,7 +40,14 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
     async function readForm(ctx:RequestContext,id:string){const row=await db.prepare('SELECT * FROM record_forms WHERE id=?').bind(id).first<Stored>();if(!row)throw new AdmissionError('not_found','Form not found');const storedForm=JSON.parse(row.definition_json) as Form,form=currentSchemaForm(storedForm,descriptors.get(storedForm.appId,storedForm.entityId).schema);if(form.id!==row.id||form.appId!==row.app_id||form.entityId!==row.entity_id||form.version!==row.version)throw new AdmissionError('schema_conflict','Stored form identity mismatch');const {d}=await authorizeForm(ctx,form);return {...form,schema:{...d.schema,fields:d.schema.fields.filter(f=>form.fields.some(item=>item.fieldId===f.id))}};}
     function denied(error:unknown){return error instanceof Error&&'code'in error&&['forbidden','not_found','grant_expired','grant_revoked'].includes(String(error.code));}
     const cursorCodec = createCursorCodec(cursorSecret);
-    async function checkedView(ctx: RequestContext, definition: unknown): Promise<Omit<View, 'id' | 'version' | 'createdAt' | 'updatedAt'>> { const view = viewDefinition.parse(definition), d = descriptors.get(view.appId, view.entityId), scope = await policy.scope(ctx, { appId: view.appId, entityId: view.entityId, purpose: 'read' }); for (const id of [...view.fields, ...view.groupBy, ...view.sort.map(s => s.fieldId), ...filterFields(view.filter), ...Object.values(view.layout)])
+    async function checkedView(ctx: RequestContext, definition: unknown, reading = false): Promise<Omit<View, 'id' | 'version' | 'createdAt' | 'updatedAt'>> { const view = viewDefinition.parse(definition), d = descriptors.get(view.appId, view.entityId), scope = await policy.scope(ctx, { appId: view.appId, entityId: view.entityId, purpose: 'read' });
+        if ((view.layout.coverFieldId || view.coverFit) && view.display !== 'cards') throw new AdmissionError('validation', 'Cover settings require a gallery view');
+        if (view.layout.coverFieldId) {
+            const cover = view.layout.coverFieldId;
+            if (d.fields.get(cover)?.field.type !== 'attachment') throw new AdmissionError('validation', 'Gallery cover must be an attachment field');
+            if (reading && !scope.readableFieldIds.includes(cover)) { delete view.layout.coverFieldId; view.fields = view.fields.filter(id => id !== cover); }
+        }
+        for (const id of [...view.fields, ...view.groupBy, ...view.sort.map(s => s.fieldId), ...filterFields(view.filter), ...Object.values(view.layout)])
         if (!d.fields.has(id) || !scope.readableFieldIds.includes(id))
             throw new AdmissionError('forbidden', 'View references an unavailable field'); if (['calendar', 'timeline', 'agenda'].includes(view.display)) {
         if (!view.layout.startFieldId || !['date', 'instant'].includes(d.fields.get(view.layout.startFieldId)!.field.type))
@@ -50,7 +57,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         throw new AdmissionError('validation', 'Timeline needs an end field'); if (view.display === 'board' && !view.layout.boardFieldId)
         throw new AdmissionError('validation', 'Board needs a grouping field'); return view; }
     async function readView(ctx: RequestContext, id: string): Promise<View> { const row = await db.prepare('SELECT * FROM record_views WHERE id=?').bind(id).first<Stored>(); if (!row || row.visibility === 'deleted' || row.visibility === 'private' && row.owner_id !== ctx.principal.id)
-        throw new AdmissionError('not_found', 'View not found'); const storedView = JSON.parse(row.definition_json) as View, v=currentSchemaView(storedView,descriptors.get(storedView.appId,storedView.entityId).schema); return {...v,...await checkedView(ctx, vWithoutVersion(v))}; }
+        throw new AdmissionError('not_found', 'View not found'); const storedView = JSON.parse(row.definition_json) as View, v=currentSchemaView(storedView,descriptors.get(storedView.appId,storedView.entityId).schema); return {...v,...await checkedView(ctx, vWithoutVersion(v), true)}; }
     function vWithoutVersion<T extends {
         id: string;
         version: number;
@@ -63,7 +70,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         throw new AdmissionError('version_conflict', 'View changed', old.version); if (!old && input.shipped)
         throw new AdmissionError('forbidden', 'Only source installation creates shipped views'); const now = new Date().toISOString(), view: View = { ...input, id: id ?? createUlid(), version: (old?.version ?? 0) + 1, createdAt: old?.createdAt ?? now, updatedAt: now }; const row = { id: view.id, app_id: view.appId, entity_id: view.entityId, owner_id: ctx.principal.id, version: view.version, visibility: view.visibility, definition_json: canonical(view), created_at: view.createdAt, updated_at: view.updatedAt }; const scope = await policy.scope(ctx, { appId: view.appId, entityId: view.entityId, purpose: 'read' }); return { value: view, guards: [...scope.currentAuthorityGuards], mutations: [old ? { kind: 'update', table: viewTable, set: row, where: and(eq(viewTable, 'id', view.id), eq(viewTable, 'version', old.version)), expectedRows: 1 } : { kind: 'insert', table: viewTable, row }] as SqlMutation[] }; }
     async function viewQuery(ctx: RequestContext, view: View, input: Query) {
-        await checkedView(ctx, vWithoutVersion(view));
+        await checkedView(ctx, vWithoutVersion(view), true);
         const scope = await policy.scope(ctx, { appId: view.appId, entityId: view.entityId, purpose: 'read' });
         const groupBy = input.groupBy ?? view.groupBy;
         // Group and layout keys are renderer inputs even when they are hidden columns.

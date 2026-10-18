@@ -68,11 +68,15 @@
     },
     "VIEW-015": {
       "change": "changed",
-      "summary": "Record-editor and bulk field edits join the grid/board 50-action undo stack, scoped to the operator and table in browser session storage across navigation and reload. Every available record view exposes undo/redo. Typed cell preconditions preserve unrelated edits, and current-policy audit checks refuse another actor changing a target away and back. Inverses remain ordinary atomic audited writes with final version guards. Creation/deletion and future date-drag actions remain unfinished."
+      "summary": "Record-editor and bulk field edits join the grid/board 50-action undo stack, scoped to the operator and table in browser session storage across navigation and reload. Every available record view exposes undo/redo. Typed cell preconditions preserve unrelated edits, and current-policy audit checks refuse another actor changing a target away and back. Inverses remain ordinary atomic audited writes with final version guards. Calendar date/range moves now undo and redo as one audited step at desktop and phone widths. Creation/deletion and future timeline drag actions remain unfinished."
     },
     "VIEW-010": {
       "change": "changed",
       "summary": "Calendar authoring, month/week/day layouts, workspace-zone date and instant ranges, complete revision-fenced period reads and audited date moves with current-policy conflicts. Digest-only private iCal subscriptions use current issuer/native authority, revocation and archive-excluded credentials."
+    },
+    "VIEW-011": {
+      "change": "changed",
+      "summary": "Raw and saved Gallery displays reuse current record policy, fields, filters, sorting and grouping. Private attachment covers support crop/fit and disappear when current access is narrowed. An opaque access revision makes permission-only changes refresh live records. Existing attachment authoring and export limitations remain under FILE-001/FILE-003."
     }
   },
   "extensionPointChanges": [],
