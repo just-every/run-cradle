@@ -1,12 +1,13 @@
+import {SavedGroupCounts} from './saved-group-counts'
 import { useEffect, useId, useRef, useState } from 'react'
 import { RequestFailure } from '../shared/api'
 import { Timestamp } from '../shared/presentation'
 import { readViewSummary, type ViewSummaryInput, type ViewSummarySnapshot } from './view-summary-query'
-import { computeViewAggregate, computeViewGroupCounts, summaryNumeric, type SummaryAggregate } from './view-summary-values'
+import { summaryNumeric, type SummaryAggregate } from './view-summary-values'
 
 export { readViewSummary } from './view-summary-query'
-export { computeViewAggregate, computeViewGroupCounts, summaryEmpty } from './view-summary-values'
-export type { SummaryAggregate, SummaryValue, SummaryGroups } from './view-summary-values'
+export { summaryEmpty } from './view-summary-values'
+export type { SummaryAggregate, SummaryValue } from './view-summary-values'
 
 type SummaryState = { identity: string; status: 'idle' | 'loading' | 'failed'; message?: string } | { identity: string; status: 'ready'; snapshot: ViewSummarySnapshot }
 const aggregates: { id: SummaryAggregate; label: string; numeric?: true }[] = [
@@ -54,12 +55,11 @@ export function ViewSummary({ schema, query, fields, viewId, revision }: ViewSum
     if (open) { active.current?.abort(); setState({ identity, status: 'idle' }) }
     setOpen(value => !value)
   }
-  const result = current.status === 'ready' && field ? computeViewAggregate(current.snapshot.rows, field, aggregate) : null
-  const groups = current.status === 'ready' ? computeViewGroupCounts(current.snapshot.rows, schema, visible.map(item => item.id), current.snapshot.groupBy) : null
+  const result = current.status === 'ready' && field ? current.snapshot.aggregates[field.id]?.[aggregate] : null
   return <div className="cr-grid-find">
     <button type="button" className="cr-button cr-button--quiet" aria-expanded={open} aria-controls={panelId} onClick={toggle}>Summary</button>
     {open && <section id={panelId} className="cr-records-panel cr-stack" aria-label="Whole-query summary">
-      <p>Summarise every matching record you can read, across all pages. Maximum 10,000 records.</p>
+      <p>Summarise every matching record you can read, across all pages. Up to 500,000 matching records; counts and totals are streamed across every page.</p>
       {!visible.length ? <p className="cr-notice">No visible, readable fields are available.</p> : <>
         <form className="cr-stack" onSubmit={event => { event.preventDefault(); void calculate() }}>
           <label className="cr-field">Summary field<select value={field?.id ?? ''} onChange={event => { setFieldId(event.target.value); setAggregate('count') }}>{visible.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
@@ -71,7 +71,7 @@ export function ViewSummary({ schema, query, fields, viewId, revision }: ViewSum
         {current.status === 'ready' && <div className="cr-stack" role="status">
           <p><strong>{current.snapshot.total.toLocaleString()} matching records</strong> across all pages · <Timestamp value={current.snapshot.evaluatedAt} /></p>
           {result && (result.available ? <p className="cr-notice cr-notice--submitting"><strong>{field?.label} · {aggregates.find(item => item.id === aggregate)?.label}: {result.value}</strong>{result.note && <><br />{result.note}</>}</p> : <p className="cr-notice">Summary unavailable: {result.reason}</p>)}
-          {groups && (!groups.available ? <p className="cr-notice">{groups.reason}</p> : current.snapshot.groupBy.length > 0 && <div><h3>Group counts · all matching records</h3>{groups.groups.length ? <ul>{groups.groups.map(group => <li className="cr-notice cr-notice--submitting" key={group.key}>{group.label} · <strong>{group.count.toLocaleString()}</strong></li>)}</ul> : <p>No matching groups.</p>}</div>)}
+          <SavedGroupCounts schema={schema} snapshot={current.snapshot} showFieldNames />
         </div>}
       </>}
     </section>}

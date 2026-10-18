@@ -1,3 +1,4 @@
+import {useViewColor} from './view-formatting'
 import { useId, useState, type DragEvent } from 'react'
 import { GalleryCover } from './gallery-cover'
 import { boardKey, type BoardColumn } from './board-columns'
@@ -15,12 +16,13 @@ export function BoardCard({ schema, record, field, titleFieldId, visible, column
   match?: ViewMatch | null
   busy: boolean; writable: boolean; onMove(column: BoardColumn): void; onDragStart(event: DragEvent<HTMLElement>): void; onDragEnd(): void
 }) {
+  const color=useViewColor(schema.fields)
   const titleId = useId(), selectId = useId(), moveLabelId = useId(), moveButtonId = useId()
   const cell = record.fields[field.id], current = cell?.state === 'value' ? cell.value : undefined
   const currentColumn = columns.find(column => column.id === (current === undefined ? '__unavailable' : boardKey(current)))
   const [destination, setDestination] = useState(currentColumn?.id ?? '')
   const selected = columns.find(column => column.id === destination)
-  return <article className="cr-card cr-board-card" aria-labelledby={titleId} data-record-id={record.id} draggable={writable && !busy} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={event => { if (onDropBefore) { event.preventDefault(); event.stopPropagation() } }} onDrop={onDropBefore}>
+  return <article data-view-color={color(record)} className="cr-card cr-board-card" aria-labelledby={titleId} data-record-id={record.id} draggable={writable && !busy} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={event => { if (onDropBefore) { event.preventDefault(); event.stopPropagation() } }} onDrop={onDropBefore}>
     {coverFieldId && <GalleryCover record={record} fieldId={coverFieldId} fit={coverFit} />}
     <h3 id={titleId}>{titleFieldId && <ViewMatchCell recordId={record.id} fieldId={titleFieldId} match={match}><CellDisplay appId={schema.appId} field={schema.fields.find(field => field.id === titleFieldId)} cell={record.fields[titleFieldId]} /></ViewMatchCell>}</h3>
     <RecordCardFields schema={schema} record={record} visible={visible} titleFieldId={titleFieldId} match={match} />

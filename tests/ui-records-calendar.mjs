@@ -1,3 +1,4 @@
+import {viewSettingsJourney} from './helpers/records-view-settings-journey.mjs'
 import {extendedBoardJourney} from './helpers/records-extended-boards.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
@@ -12,7 +13,7 @@ import {freePort} from './helpers/free-port.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {newField} from '../src/ui/records/schema/templates.ts'
 
-contract('VIEW-009] [VIEW-010] [VIEW-011] [VIEW-015','calendar and gallery views, current-policy writes and private feeds at desktop and phone widths',async()=>{
+contract('VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIEW-015','record calendars, boards, private covers and saved view presentation at desktop and phone widths',async()=>{
  await calendarFeedJourney()
  const output=path.resolve('.private/calendar');await mkdir(output,{recursive:true})
  let h,browser
@@ -106,4 +107,5 @@ contract('VIEW-009] [VIEW-010] [VIEW-011] [VIEW-015','calendar and gallery views
  }finally{await browser?.close();await h?.close()}
  await galleryBrowserJourney()
  await extendedBoardJourney()
+ await viewSettingsJourney()
 })

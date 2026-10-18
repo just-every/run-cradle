@@ -809,6 +809,77 @@
                   "cover",
                   "contain"
                 ]
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "summaries": {
+                "type": "array",
+                "maxItems": 80,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fieldId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "aggregate": {
+                      "type": "string",
+                      "enum": [
+                        "sum",
+                        "average",
+                        "min",
+                        "max",
+                        "count",
+                        "empty",
+                        "percent-filled"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "fieldId",
+                    "aggregate"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "formatting": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "filter": {
+                      "$ref": "#/$defs/__schema1"
+                    },
+                    "target": {
+                      "type": "string",
+                      "enum": [
+                        "row",
+                        "cell"
+                      ]
+                    },
+                    "fieldId": {
+                      "type": "string",
+                      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "mint",
+                        "butter",
+                        "coral",
+                        "lilac"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "filter",
+                    "target",
+                    "color"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
             "required": [

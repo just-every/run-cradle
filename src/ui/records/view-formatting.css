@@ -1,0 +1,10 @@
+[data-view-color="mint"] { --view-color: #e5f1e8; }
+[data-view-color="butter"] { --view-color: #fff2c6; }
+[data-view-color="coral"] { --view-color: #fbe7df; }
+[data-view-color="lilac"] { --view-color: #eee8fa; }
+.cr-records-table tr[data-view-color] > td, .cr-card[data-view-color], p[data-view-color], td[data-view-color] { background-color: var(--view-color) !important; color: #153d35; }
+.cr-records-table td[data-view-color] { background-color: var(--view-color) !important; }
+.cr-view-summary-bar { display:flex; flex-wrap:wrap; gap:12px; padding:12px; border:1px solid var(--border); border-radius:12px; }
+.cr-view-summary-bar > div { flex:1 1 140px; min-width:0; }
+.cr-view-summary-bar dt { font-weight:600; }
+.cr-view-summary-bar dd { margin:4px 0 0; overflow-wrap:anywhere; }

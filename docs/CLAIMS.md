@@ -1,6 +1,6 @@
 # Implemented contract claims
 
-These rows track the clauses completed in the 18 October 2026 round; the complete product status remains in CONTRACT.md.
+These rows track the clauses completed in the 18–19 October 2026 rounds; the complete product status remains in CONTRACT.md.
 
 | Clause | Status | Proven behavior | Evidence |
 | --- | --- | --- | --- |
@@ -9,3 +9,4 @@ These rows track the clauses completed in the 18 October 2026 round; the complet
 | VIEW-010 | done | Month/week/day date and instant calendars, DST-preserving audited moves, stale/readonly refusal and private revocable iCal feeds; product journeys at 1440/390. | `tests/ui-records-calendar.mjs`, `tests/helpers/records-calendar-feed.mjs`, `src/ui/records/record-calendar.tsx`, `src/domains/records/calendar-feed.server.ts` |
 | VIEW-011 | done | Raw and saved galleries, chosen fields and current filter/sort/group, private attachment covers with fit/crop, and live row/cover revocation; product journeys at 1440/390. | `tests/helpers/records-gallery-journey.mjs`, `tests/ui-records-calendar.mjs`, `src/ui/records/record-gallery.tsx`, `src/ui/records/gallery-cover.tsx` |
 | VIEW-009 | done | Single-select, person and single-link boards; private crop/fit covers, ordinary audited stack moves, readonly/stale refusal and personal within-stack order; product journeys at 1440/390. | `tests/helpers/records-extended-boards.mjs`, `tests/helpers/records-board-journey.mjs`, `src/ui/records/record-board.tsx`, `docs/contract/VIEW-009/` |
+| VIEW-013 | done | Current-policy collaborative/personal/creator-locked views, persisted per-column summaries and row/cell colours; streamed whole-query statistics, complete groups and explicit fractional averages; 10,005-order and two-operator journeys at 1440/390, native export and copy remapping. | `tests/helpers/records-view-settings-journey.mjs`, `tests/ui-records-calendar.mjs`, `src/ui/records/view-summary-query.ts`, `docs/contract/VIEW-013/` |

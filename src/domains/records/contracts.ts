@@ -96,6 +96,10 @@ export type EntitySchema = Versioned & {
     physicalRevision: string;
 };
 export type View = Versioned & {
+    locked?: boolean;
+    summaries?: import('./view-presentation').ViewSummaryChoice[];
+    formatting?: import('./view-presentation').ViewColorRule[];
+    access?: {canEdit:boolean;canLock:boolean};
     appId: Id;
     entityId: Id;
     name: string;

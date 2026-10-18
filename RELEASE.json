@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "date": "2026-10-18",
+  "date": "2026-10-19",
   "contractChanges": {
     "AUTO-007": {
       "change": "added",
@@ -81,6 +81,10 @@
     "VIEW-009": {
       "change": "changed",
       "summary": "Boards add policy-checked person and single-link columns, paged/searchable destinations and private first-image covers with crop/fit. Moves remain ordinary versioned record patches and stop after policy loss. Within-stack ordering is an operator-scoped browser-tab presentation preference, using drag or buttons."
+    },
+    "VIEW-013": {
+      "change": "changed",
+      "summary": "Collaborative edits preserve original view ownership. Schema-adoption grants control locking/unlocking and locked-view changes, with final authority/version guards. Saved per-column summaries stream current-policy revision-fenced pages through 500,000 records without retaining the table; all seven methods, complete group counts and explicit fractional-average rounding are available. Ordered row/cell colour rules use visible readable fields and disappear with lost field access. Native JSON exports preserve choices and copy previews remap field/option references. Personal views remain owner-only. No product clause is weakened."
     }
   },
   "extensionPointChanges": [],
