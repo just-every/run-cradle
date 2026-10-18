@@ -1,3 +1,4 @@
+import { conditionalFormsJourney } from './helpers/records-forms-journey.mjs'
 import {boardBrowserJourney} from './helpers/records-board-journey.mjs'
 import {findBrowserJourney} from './helpers/records-find-journey.mjs'
 import {liveBrowserJourney} from './helpers/records-live-journey.mjs'
@@ -32,7 +33,7 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close()}
 })
-contract(['VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'Manual records browser journeys and concrete UI review corrections',async()=>{
+contract(['FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'Manual records browser journeys and concrete UI review corrections',async()=>{
 let h,browser,activePage
 try{
  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? await freePort()));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
@@ -60,5 +61,5 @@ try{
  await writeFile(path.join(output,'ai-counts.json'),JSON.stringify(aiCounts,null,2));
  await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2));console.log(JSON.stringify({passed:receipts,evidence:output}))
 }catch(error){if(activePage){await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:true});await writeFile(path.join(output,'failure.html'),await activePage.content())}throw error}finally{await browser?.close();await h?.close()}
-
+await conditionalFormsJourney()
 })

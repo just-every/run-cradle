@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import { visibleFormFields } from './form-logic';
 import type {CommandRegistry} from '../../core/registry/commands';
 import type {Json,CommandInput} from '../../contracts/primitives';
 import type {PolicyPort} from '../authority/ports';
@@ -18,7 +19,8 @@ export function registerRecordFormActions(registry:CommandRegistry,deps:{metadat
   const version=command.expected.find(e=>e.ref.appId===form.appId&&e.ref.entityId===RECORD_FORM_ENTITY_ID&&e.ref.recordId===form.id);if(version?.version!==form.version)throw new AdmissionError('version_conflict','Current form version is required',form.version);
   const schemaVersion=command.expected.find(e=>e.ref.appId===form.appId&&e.ref.entityId===RECORD_SCHEMA_ENTITY_ID&&e.ref.recordId===form.entityId);if(schemaVersion?.version!==form.schema.version)throw new AdmissionError('schema_conflict','Current form schema version is required');
   const allowed=new Set(form.fields.map(f=>f.fieldId));for(const id of Object.keys(command.input.values))if(!allowed.has(id))throw new AdmissionError('validation','Submitted field is not advertised by this form');
-  for(const field of form.fields){const value=command.input.values[field.fieldId];if(field.required&&(value===undefined||value===null||value===''||Array.isArray(value)&&!value.length))throw new AdmissionError('validation','A required form field is missing');if(value!==undefined)validateCell(form.schema.fields.find(f=>f.id===field.fieldId)!,value);}
+  const visible=visibleFormFields(form,form.schema.fields,command.input.values),visibleIds=new Set(visible.map(f=>f.fieldId));for(const id of Object.keys(command.input.values))if(!visibleIds.has(id))throw new AdmissionError('validation','A hidden form field cannot be submitted');
+  for(const field of visible){const value=command.input.values[field.fieldId];if(field.required&&(value===undefined||value===null||value===''||Array.isArray(value)&&!value.length))throw new AdmissionError('validation',`${field.label} is required.`);if(value!==undefined)validateCell(form.schema.fields.find(f=>f.id===field.fieldId)!,value);}
   const expected=command.expected.filter(e=>e.ref.entityId!==RECORD_FORM_ENTITY_ID),base={commandId:command.commandId,expected,controlEpoch:command.controlEpoch};
   const mapping=deps.metadata.formAction(form);let target;
   if(mapping){const input=mapping.input.parse(mapping.map({form,values:command.input.values,expected}));target=await mapping.prepare(ctx,{...base,input});}

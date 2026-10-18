@@ -216,7 +216,7 @@ Task-specific apps over the same records: intake, review screens, dashboards and
   *Status:* partial — src/domains/records/form-actions.server.ts:15 and src/ui/records/forms-panel.tsx ship authenticated saved forms; no public form door.
 - **FORM-002 — Conditional form logic.** Form fields show or hide on earlier answers, sections and pages group long forms, and validation follows FIELD-003 so a submission that breaks a rule is refused with the rule's message.
   *Acceptance:* Conditional form journey; hidden fields are never written.
-  *Status:* partial — required form fields exist (src/domains/records/form-actions.server.ts:21); conditional visibility absent.
+  *Status:* done — Authenticated forms author typed conditions on earlier visible answers, ordered pages and sections. Changing an answer clears newly hidden values, and the server refuses submitted hidden values and checks visible required fields, current form/schema versions, policy and canonical table rules. JSON export and identity-remapped copy preserve conditions and layout. Evidence: `tests/helpers/records-forms-journey.mjs`, `tests/ui-records-builder.mjs`, `src/domains/records/form-logic.ts`, `src/domains/records/form-definition.ts`, `src/domains/records/form-actions.server.ts`.
 - **FORM-003 — Embedded forms and views.** A form or a read-only view can be embedded in another site (for example a [Pane](https://github.com/just-every/run-pane) site) by iframe or script snippet, restricted to owner-listed origins, showing only the fields and records the share allows.
   *Acceptance:* Embed test on an allowed and a refused origin.
   *Status:* missing — seed.json nonGoals still list public or embeddable views for the current release.
@@ -902,13 +902,13 @@ Launch readiness is a complete application template on the records platform (cam
 
 Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026).
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. **67 done, 115 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. **68 done, 114 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 58 | 53 | 0 | 111 |
-| Target and push further | 9 | 62 | 28 | 99 |
-| All | 67 | 115 | 28 | 210 |
+| Target and push further | 10 | 61 | 28 | 99 |
+| All | 68 | 114 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -951,7 +951,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `COLLAB-002` | Record history | target | done | `tests/evidence-read-privacy.mjs`, `docs/contract/COLLAB-002/` |  |
 | `COLLAB-003` | Watching and change notifications | target | missing |  | launch-template notifications only (NOTIFY-001 to NOTIFY-008) |
 | `FORM-001` | Public shareable forms | target | partial | `src/domains/records/form-actions.server.ts`, `src/ui/records/forms-panel.tsx` | src/domains/records/form-actions.server.ts:15 and src/ui/records/forms-panel.tsx ship authenticated saved forms; no public form door |
-| `FORM-002` | Conditional form logic | target | partial | `src/domains/records/form-actions.server.ts` | required form fields exist (src/domains/records/form-actions.server.ts:21); conditional visibility absent |
+| `FORM-002` | Conditional form logic | target | done | `tests/helpers/records-forms-journey.mjs`, `tests/ui-records-builder.mjs`, `src/domains/records/form-actions.server.ts` |  |
 | `FORM-003` | Embedded forms and views | target | missing |  | seed.json nonGoals still list public or embeddable views for the current release |
 | `IFACE-001` | Interface designer | target | partial | `src/ui/records/record-detail-page.tsx`, `tests/ui-records-builder.mjs`, `src/domains/construction/service.server.ts` | saved views/forms and record detail pages ship (src/ui/records/record-detail-page.tsx; tests/ui-records-builder.mjs); construction machinery exists (src/domains/construction/service.server.ts:9); no page/layout editor |
 | `IFACE-002` | Record review and approval screens | target | partial | `src/domains/records/form-actions.server.ts`, `tests/ui-launch-walkthrough.mjs` | registered form actions (src/domains/records/form-actions.server.ts:15); launch Decision Queue (DEC-002/DEC-003; tests/ui-launch-walkthrough.mjs) is a template-specific instance |

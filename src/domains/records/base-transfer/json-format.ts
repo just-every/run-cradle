@@ -1,3 +1,4 @@
+import { formFieldDefinition } from '../form-definition'
 import { z } from 'zod'
 import { idSchema, filterSchema, exprSchema, moneySchema, cellValueSchema, ruleConditionSchema } from '../validators'
 const label=z.string().min(1).max(200)
@@ -9,7 +10,7 @@ export const portableFieldSchema=z.object({id:idSchema,label:canonicalMetadataLa
 const calculationErrorSchema=z.object({code:z.enum(['invalid_source','dependency_limit','rollup_limit','mixed_currency','stale_rate']),fieldIds:z.array(idSchema).max(200),message:z.string().max(100000)}).strict()
 const valueSchema=z.union([z.null(),z.string(),z.boolean(),moneySchema,z.array(z.union([z.null(),z.string().max(100000),z.boolean(),moneySchema])).max(10000)])
 export const portableViewSchema=z.object({id:idSchema,tableId:idSchema,name:canonicalMetadataLabel(200),display:z.enum(['grid','cards','board','calendar','timeline','agenda']),fields:z.array(idSchema).max(80),filter:filterSchema,sort:z.array(z.object({fieldId:idSchema,direction:z.enum(['asc','desc'])}).strict()).max(10),groupBy:z.array(idSchema).max(5),layout:z.object({titleFieldId:idSchema,startFieldId:idSchema.optional(),endFieldId:idSchema.optional(),boardFieldId:idSchema.optional()}).strict(),visibility:z.enum(['private','app'])}).strict()
-export const portableFormSchema=z.object({id:idSchema,tableId:idSchema,title:label,fields:z.array(z.object({fieldId:idSchema,label:z.string().max(200),help:z.string().max(2000),required:z.boolean()}).strict()).max(80),submitAction:z.literal('record.create'),authenticated:z.literal(true)}).strict()
+export const portableFormSchema=z.object({id:idSchema,tableId:idSchema,title:label,fields:z.array(formFieldDefinition).max(80),submitAction:z.literal('record.create'),authenticated:z.literal(true)}).strict()
 export const portableBaseSchema=z.object({format:z.literal('cradle-base'),version:z.literal(1),envelope:z.object({capturedAt:z.string().datetime()}).strict(),base:z.object({id:idSchema,name:canonicalMetadataLabel(120),tables:z.array(z.object({id:idSchema,label:canonicalMetadataLabel(120),primaryFieldId:idSchema,validationRules:z.array(portableValidationRuleSchema).max(50).optional(),fields:z.array(portableFieldSchema).min(1).max(80),incomingRelations:z.array(z.object({id:idSchema,label,sourceEntityId:idSchema,sourceFieldId:idSchema}).strict()).max(80),records:z.array(z.object({id:idSchema,values:z.record(idSchema,valueSchema),calculationErrors:z.record(idSchema,calculationErrorSchema).optional()}).strict()).max(10000)}).strict()).min(1).max(20),views:z.array(portableViewSchema).max(10000),forms:z.array(portableFormSchema).max(10000)}).strict()}).strict()
 export type PortableBase=z.infer<typeof portableBaseSchema>
 export type PortableField=z.infer<typeof portableFieldSchema>

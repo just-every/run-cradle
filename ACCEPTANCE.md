@@ -2,7 +2,7 @@
 
 ## Target contract — 16 October 2026, revised 17 October 2026
 
-CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's acceptance evidence is listed below with its status, so a build round can work towards it. **67 done, 115 partial, 28 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
+CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's acceptance evidence is listed below with its status, so a build round can work towards it. **68 done, 114 partial, 28 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
 
 
 ### Records, schema and the app model
@@ -63,7 +63,7 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | Clause | Status | Required evidence |
 | --- | --- | --- |
 | FORM-001 — Public shareable forms | Partial | Signed-out browser journey submits with an attachment and prefill; rate limit and Turnstile refusal; rotated link answers 404. A submitter who ticks "Email me a copy" receives exactly one message from the installation sender (AUTO-USER-010), at the address entered in the form's email field, listing the answers they could see and leaving out hidden fields; with the box unticked, nothing is sent. |
-| FORM-002 — Conditional form logic | Partial | Conditional form journey; hidden fields are never written. |
+| FORM-002 — Conditional form logic | Done | Conditional form journey; hidden fields are never written. |
 | FORM-003 — Embedded forms and views | Missing | Embed test on an allowed and a refused origin. |
 | IFACE-001 — Interface designer | Partial | A designer journey builds and publishes a three-page interface with a section, two tabs and a record picker; a member sees it and a non-member does not. The designer publishes v2, opens v1 read-only showing v1's layout, and restores v1, which becomes v3 with v1's layout and members see it on their next load. Export and restore preserve every version. |
 | IFACE-002 — Record review and approval screens | Partial | Approval journey works a queue of ten records; actions are policy-checked and audited. |

@@ -1,0 +1,12 @@
+import { useEffect, useState } from 'react'
+import { RECORD_FORM_ENTITY_ID, RECORD_SCHEMA_ENTITY_ID, type EntitySchema, type Form } from '../../domains/records/contracts'
+import { useCommand } from '../shared/api'
+import { CommandFeedback } from '../shared/presentation'
+import { FormFieldOptions } from './form-field-options'
+export function FormEditor({ schema, initial, onClose, onSaved }: { schema: EntitySchema; initial?: Form; onClose: () => void; onSaved: () => void }) {
+  const available = schema.fields.filter(field => !field.readOnly && field.type !== 'computed')
+  const [title, setTitle] = useState(initial?.title ?? ''), [fields, setFields] = useState<Form['fields']>(initial?.fields ?? available.filter(field => field.required).map(field => ({ fieldId: field.id, label: field.label, help: '', required: true })))
+  const command = useCommand<Form>(`form-save:${initial?.id ?? schema.id}`)
+  useEffect(() => { if (command.result.state === 'committed') onSaved() }, [command.result.state])
+  return <form className="cr-form cr-card" onSubmit={event => { event.preventDefault(); void command.submit('/api/v1/commands/form.save', { ...(initial ? { id: initial.id } : {}), form: { appId: schema.appId, entityId: schema.id, title, fields, submitAction: initial?.submitAction ?? 'record.create', authenticated: true } }, [{ ref: { appId: schema.appId, entityId: initial ? RECORD_FORM_ENTITY_ID : RECORD_SCHEMA_ENTITY_ID, recordId: initial?.id ?? schema.id }, version: initial?.version ?? schema.version }]) }}><h3>{initial ? 'Edit form' : 'Create form'}</h3><label className="cr-field">Form title<input required value={title} onChange={event => setTitle(event.target.value)} /></label>{available.filter(field => !fields.some(item => item.fieldId === field.id)).map(field => <label className="cr-choice" key={field.id}><input type="checkbox" checked={false} onChange={() => setFields(value => [...value, { fieldId: field.id, label: field.label, help: '', required: field.required }])} />{field.label}</label>)}{fields.map((selected, index) => <FormFieldOptions key={selected.fieldId} schema={schema} fields={fields} index={index} onChange={setFields} />)}<p>People must sign in and retain permission to submit. This form grants no additional access.</p><CommandFeedback {...command} /><div className="cr-actions"><button className="cr-button" disabled={!fields.length || !['idle','failed'].includes(command.result.state)}>Save form</button><button type="button" className="cr-button cr-button--quiet" onClick={onClose}>Close</button></div></form>
+}

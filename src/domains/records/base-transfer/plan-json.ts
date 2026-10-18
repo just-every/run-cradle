@@ -1,4 +1,4 @@
-import { remapFieldValue,remapValidationRules,personPortabilityNote } from './metadata-remap'
+import { remapRuleCondition,remapFieldValue,remapValidationRules,personPortabilityNote } from './metadata-remap'
 import { canonicalHash } from './canonical-stream'
 import { ImportInputError } from './input-error'
 import { validateJsonOverrides } from './json-coordinates'
@@ -22,7 +22,7 @@ export function previewJsonImport(source:PreparedSource,options:ImportOptions,id
  preview.links=links;orderImportRecords(preview);preview.source=source;preview.options={...options,name:nativeOptions.name};preview.identities=ids
  preview.report={version:1,schemaRetainedAfterUndo:true,diagnostics:[],lookups:base.tables.flatMap(t=>t.fields.filter(f=>f.lookup).map(f=>({tableKey:t.id,columnKey:f.id,recognized:true}))),tables:base.tables.map(table=>({tableKey:table.id,label:table.label,primaryColumnKey:table.primaryFieldId,rowsRead:table.records.length,created:table.records.length,rejected:0,columns:table.fields.map(f=>({columnKey:f.id,label:f.label,chosenType:f.type,proposedType:f.type,validTypes:[f.type],reasons:['Native JSON preserves the declared field definition and typed values.',...(f.type==='person'||f.resultType==='person'||f.resultElementType==='person'?[personPortabilityNote]:[])],nonempty:table.records.filter(row=>nonempty(row.values[f.id])).length,converted:0,unparseable:0,skippedNonempty:0})),links:table.fields.filter(f=>f.relation).map(f=>{const count=links.filter(l=>l.tableKey===table.id&&l.fieldId===map.get(f.id)).reduce((n,l)=>n+l.targetRecordIds.length,0);return {columnKey:f.id,referencesRead:count,resolved:count,unresolved:0,ambiguous:0,listings:[]}})}))}
  preview.portableViews=base.views.map(view=>({...view,id:map.get(view.id)!,tableId:map.get(view.tableId)!,fields:view.fields.map(id=>map.get(id)!),filter:remapFilter(view.filter,base.tables.find(t=>t.id===view.tableId)!,map),sort:view.sort.map(s=>({...s,fieldId:map.get(s.fieldId)!})),groupBy:view.groupBy.map(id=>map.get(id)!),layout:Object.fromEntries(Object.entries(view.layout).map(([key,id])=>[key,map.get(id)!]))})) as unknown as Json[]
- preview.portableForms=base.forms.map(form=>({...form,id:map.get(form.id)!,tableId:map.get(form.tableId)!,fields:form.fields.map(f=>({...f,fieldId:map.get(f.fieldId)!}))})) as unknown as Json[]
+ preview.portableForms=base.forms.map(form=>({...form,id:map.get(form.id)!,tableId:map.get(form.tableId)!,fields:form.fields.map(f=>({...f,fieldId:map.get(f.fieldId)!,...(f.showWhen?{showWhen:remapRuleCondition(f.showWhen,base.tables.find(t=>t.id===form.tableId)!.fields,map)}:{})}))})) as unknown as Json[]
  preview.acknowledgmentRequired=false;preview.acknowledgments={loss:false,rejected:false,unresolved:false,ambiguous:false}
  const {fingerprint:_,...content}=preview;preview.fingerprint=canonicalHash(content);return preview
 }
