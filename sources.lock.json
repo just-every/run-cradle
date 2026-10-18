@@ -11558,7 +11558,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "7707a5ec5809c56e55fdc6857f4528dacad18492d9bdfbd8cae76e8301063e83",
+      "sha256": "efa2b2cf6e157717e43da6aeaaeffb10ea0d5208758ce7ead55dc6cf38f577d9",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
