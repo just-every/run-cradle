@@ -4622,7 +4622,7 @@
       "executable": false
     },
     "schemas/cradle-base-v1.schema.json": {
-      "sha256": "ac8a2e4cdd1ce84910107ab499e8f6895c8575524794b5aa2965ca779ce57698",
+      "sha256": "c69742a18a1c20e2b203dde7c6171b3ddbe347dbc671e0bbae80a33b6aba95fa",
       "executable": false
     },
     "schemas/cradle-csv-correspondence-v1.schema.json": {
@@ -10530,7 +10530,7 @@
       "executable": false
     },
     "tests/helpers/records-gallery-journey.mjs": {
-      "sha256": "5e5a74be80932a7489e3d351da87eea8839dd619829e7ef37eb4117caf34a94c",
+      "sha256": "10d362d20c2e4c40fcdcdf1216cb6c23853aa0a7528adf810e69ffc33f0c4de1",
       "executable": false
     },
     "tests/helpers/records-history-journey.mjs": {

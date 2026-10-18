@@ -10,6 +10,8 @@ import {setupRepairs} from '../../src/apps/repairs/setup.server.ts'
 import {repairDescriptors} from '../../src/apps/repairs/descriptors.ts'
 import {REPAIRS_APP_ID,REPAIRS_RELEASE_ID,REPAIR_ENTITIES,repairFieldId} from '../../src/apps/repairs/model.ts'
 import {RECORD_SCHEMA_ENTITY_ID,RECORD_VIEW_ENTITY_ID} from '../../src/domains/records/contracts.ts'
+import {newField} from '../../src/ui/records/schema/templates.ts'
+import {assertPortableJsonSchema} from './json-schema-assert.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
 async function fixture(h){
@@ -92,6 +94,15 @@ export async function galleryBrowserJourney(){
    assert.equal(await page.locator('.cr-gallery-card').getByText('Cold room A',{exact:true}).count(),0)
    assert.equal((await context.request.get(`${h.origin}${base}/records/${f.ids[0]}`)).status(),404)
    await j.capture('gallery-restricted-rows')
+   // A gallery's fit setting also travels through the public native exit and return preview.
+   const appId=createUlid(),entityId=createUlid(),title=newField('Item'),draft={appId,name:'Portable gallery',tables:[{id:entityId,label:'Items',fields:[title]}]}
+   const schemaPreview=await browserCall(page,'/api/v1/records/schema-preview',draft)
+   await browserCall(page,'/api/v1/commands/release.adopt',liveCommand({kind:'manual_schema',previewId:schemaPreview.id}))
+   await browserCall(page,'/api/v1/commands/view.save',liveCommand({view:{appId,entityId,name:'Portable gallery',display:'cards',fields:[title.id],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:title.id},coverFit:'contain',visibility:'private',shipped:false}}))
+   const exit=await browserCall(page,'/api/v1/records/base-export',{appId,format:'json'}),snapshot=JSON.parse(exit.content)
+   assertPortableJsonSchema(snapshot);assert.equal(snapshot.base.views[0].coverFit,'contain')
+   const returned=await page.evaluate(async content=>{const csrf=(await(await fetch('/auth/csrf')).json()).csrfToken,form=new FormData();form.append('files',new File([content],'gallery.json',{type:'application/json'}));form.append('options',JSON.stringify({name:'Gallery return'}));const response=await fetch('/api/v1/records/base-import/preview',{method:'POST',headers:{'x-csrf-token':csrf},body:form});return {status:response.status,body:await response.json()}},exit.content)
+   assert.equal(returned.status,200,JSON.stringify(returned.body));assert.equal(returned.body.data.portableViews[0].coverFit,'contain')
   }catch(error){console.log('gallery failure',error.message);await page.screenshot({path:path.join(output,`failure-${width}.png`),fullPage:true});throw error}finally{await context.close();await h.close()}
  }}finally{await browser.close()}
 }

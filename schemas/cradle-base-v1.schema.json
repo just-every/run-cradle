@@ -785,6 +785,10 @@
                   "boardFieldId": {
                     "type": "string",
                     "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "coverFieldId": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
                   }
                 },
                 "required": [
@@ -797,6 +801,13 @@
                 "enum": [
                   "private",
                   "app"
+                ]
+              },
+              "coverFit": {
+                "type": "string",
+                "enum": [
+                  "cover",
+                  "contain"
                 ]
               }
             },
