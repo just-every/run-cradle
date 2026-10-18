@@ -35,7 +35,7 @@ export const launchInputs={
  'lens.save':z.object({id:idSchema.optional(),definition:lensDefinition}).strict(),'lens.delete':id,'lens.restore':id,
  'custom-field.save':z.object({id:idSchema.optional(),field:customFieldDefinition}).strict(),'custom-field.delete':id.extend({confirmedAffectedCount:z.number().int().nonnegative()}),
  'readiness.acknowledge':z.object({requestId:idSchema}).strict(),
- 'automation.save':z.object({id:idSchema.optional(),definition:automationDefinition}).strict(),'automation.enable':id,'automation.disable':id,'automation.retry':z.object({runId:idSchema}).strict(),
+ 'automation.save':z.object({id:idSchema.optional(),definition:automationDefinition}).strict(),'automation.enable':id,'automation.disable':id,'automation.retry':z.object({runId:idSchema,version:z.number().int().positive()}).strict(),
  'analysis.request':z.object({feature:z.enum(['campaign-brief','risk-readout','lens-proposal']),campaignId:idSchema.optional(),lensId:idSchema.optional(),lensDraft:lensDefinition.optional(),prompt:z.string().max(10000).optional()}).strict(),
  'samples.install':empty,'samples.remove':z.object({installationId:idSchema}).strict(),
  'bulk.apply':z.object({recordType:z.enum(['Campaign','Risk','Milestone','Decision']),ids:z.array(idSchema).min(1).max(500),change:z.discriminatedUnion('kind',[z.object({kind:z.literal('field'),field:z.enum(['ownerId','phase','status']),value:text}).strict(),z.object({kind:z.enum(['tag-add','tag-remove']),value:text}).strict(),z.object({kind:z.literal('custom-field'),fieldId:idSchema,value:cellValueSchema}).strict(),z.object({kind:z.enum(['archive','restore'])}).strict()])}).strict(),'bulk.undo':z.object({bulkId:idSchema}).strict(),

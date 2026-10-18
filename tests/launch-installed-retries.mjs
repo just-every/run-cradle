@@ -67,7 +67,7 @@ test('[AUTO-007/009] installed ordered actions retry transport failures at absol
   assert.equal((await h.db.prepare("SELECT count(*) n FROM activity_entries WHERE message='Exactly one completed action'").first()).n,1)
   const original=JSON.stringify(failed),keys=failedActions.map(a=>a.idempotency_key)
   response=202
-  const retried=value(await h.command('launch.automation.retry',{runId:failed.id}));assert.equal(retried.retryOf,failed.id)
+  const retried=value(await h.command('launch.automation.retry',{runId:failed.id,version:failed.version}));assert.equal(retried.retryOf,failed.id)
   await waitFor(()=>h.db.prepare('SELECT * FROM automation_runs WHERE id=?').bind(retried.runId).first(),r=>r?.state==='Succeeded')
   assert.equal(JSON.stringify(await readRun()),original);assert.deepEqual(await readActions(),failedActions)
   const copied=(await h.db.prepare('SELECT * FROM launch_automation_actions WHERE run_id=? ORDER BY position').bind(retried.runId).all()).results
@@ -116,7 +116,7 @@ test('[AUTO-007/009 AUTO-USER-001] uncertain SendGrid delivery stays visible wit
   assert.equal(calls,1);assert.deepEqual(await readActions(),actions);assert.equal(await h.db.prepare('SELECT 1 FROM launch_automation_retries WHERE run_id=?').bind(run.id).first(),null)
   const visible=(await h.read('/api/automations')).automations.find(a=>a.id===definition.id)
   assert.equal(visible.lastRunStatus,'Unknown');assert.equal(visible.failure.code,run.error_code);assert.equal(visible.failure.message,run.error_message)
-  await h.command('launch.automation.retry',{runId:run.id},[],400)
+  await h.command('launch.automation.retry',{runId:run.id,version:run.version},[],400)
   assert.equal(calls,1);assert.equal((await h.db.prepare('SELECT count(*) n FROM automation_runs WHERE retry_of=?').bind(run.id).first()).n,0)
   assert.equal((await h.db.prepare("SELECT count(*) n FROM activity_entries WHERE message='Completed before uncertainty'").first()).n,1)
  }finally{await h.close()}

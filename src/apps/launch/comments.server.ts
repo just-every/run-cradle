@@ -1,3 +1,4 @@
+import {currentLaunchVersion} from './version-dependencies.server'
 import {AdmissionError} from '../../domains/admission/errors'
 import type {CommandInput} from '../../contracts/primitives'
 import type {RequestContext} from '../../domains/authority/ports'
@@ -16,7 +17,8 @@ export async function prepareCommentDelete(context:LaunchContext,ctx:RequestCont
  set.guards.push(trustedPredicate('EXISTS(SELECT 1 FROM comments WHERE id=? AND version=? AND deleted_at IS NULL)',[comment.id,comment.version]))
  set.mutations.push({kind:'update',table:comments,set:{body:'',deleted_at:now,updated_at:now,version:comment.version+1},where:and(eq(comments,'id',comment.id),eq(comments,'version',comment.version)),expectedRows:1},{kind:'insert',table:activityTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,campaign_id:campaign.id,subject_id:comment.id,actor_id:ctx.principal.humanId??ctx.principal.id,type:'comment.deleted',message:'Comment deleted'}})
  set.audit.push({action:'comment.deleted',subject:ref('campaign',campaign.id),changes:[],sourceIds:[],personalContentRefs:[comment.id]})
- return plan(context,ctx,input,'launch.comment.delete',set,{id:comment.id,version:comment.version+1,deleted:true},'campaign')
+ const prepared=await plan(context,ctx,input,'launch.comment.delete',set,{id:comment.id,version:comment.version+1,deleted:true},'campaign')
+ return {...prepared,versionDependencies:[...prepared.versionDependencies??[],{label:'Comment',version:comment.version,async current(){if(await currentLaunchVersion(context,ctx,'campaign',comment.campaign_id)===null)return null;return(await context.db.prepare('SELECT version FROM comments WHERE id=? AND campaign_id=?').bind(comment.id,comment.campaign_id).first<{version:number}>())?.version??null}}]}
 }
 /** Mention identities affect notification delivery; comment bodies remain plain text. */
 export async function prepareComment(context:LaunchContext,ctx:RequestContext,input:CommandInput<{campaignId:string;body:string;mentions:string[]}>){

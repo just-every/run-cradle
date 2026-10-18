@@ -1,3 +1,4 @@
+import { launchVersionDependencies } from './version-dependencies.server'
 import { launchCascadeWrites } from './write-cascades.server'
 import type { CommandInput, RevisionRef } from '../../contracts/primitives'
 import type { SqlMutation, SqlScalar } from '../../domains/admission/ports'
@@ -106,5 +107,5 @@ export async function authorizeLaunchWrites(context: LaunchContext, ctx: Request
   permits.push(await context.policy.authorize(ctx, { appId: LAUNCH_APP_ID, action: value.action, commandId: input.commandId, inputHash: hash, expected, cost: [], targetEntityId: launchEntities[value.kind], fieldIds: [...value.fields], proposedRows: [...value.proposed.values()].map(row => ({ entityId: launchEntities[value.kind], row })) }))
  }
  const primaryPermit = permits[[...writes.values()].indexOf(primary)]!
- return { ...primaryPermit, guards: permits.flatMap(permit => permit.guards), reservationMutations: permits.flatMap(permit => permit.reservationMutations), reservationIds: permits.flatMap(permit => permit.reservationIds) }
+ return { ...primaryPermit, versionDependencies:launchVersionDependencies(context,ctx,[...writes.values()].flatMap(value=>[...value.expected.values()])), guards: permits.flatMap(permit => permit.guards), reservationMutations: permits.flatMap(permit => permit.reservationMutations), reservationIds: permits.flatMap(permit => permit.reservationIds) }
 }
