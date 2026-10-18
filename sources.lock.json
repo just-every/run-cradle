@@ -2914,7 +2914,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "3e6e8e6ca53600d855e0d320a46778487ea50295e4d32431e877d4ef5fa160ed",
+      "sha256": "daa710d20c14d09017538b49f953578f8b86e7d7daf46db25c285fea65d05b5c",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9bd0836a468cf78ca153c6a17b6d3e7441822dce765f3565eb02f371ad88bd3c",
+      "sha256": "85146b2ced92db06c01e2133e2572c9c17f85b99f27f157c4a50637eb1c55ee3",
       "executable": false
     },
     "DEMO.md": {
@@ -3026,7 +3026,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "b6bfb1978dc5c1d8f30e9833127548a34d3970f7c518a59077f06e1c0ef50f88",
+      "sha256": "6c4f1a52d5e8d4e38e52bcfeadfd8ea66debf60ca6331e1a9625d46881560cf6",
       "executable": false
     },
     "docs/contract-transition.md": {
@@ -10717,6 +10717,10 @@
       "sha256": "8ba04e565670401f3821e478a8c47e5b3edcbcffe567254e170e63780b31981e",
       "executable": false
     },
+    "tests/helpers/launch-consistency-clauses.mjs": {
+      "sha256": "5a377f0d7c5130eb1be60896568522dcea0e9a89fe01771164515115f14f6719",
+      "executable": false
+    },
     "tests/helpers/launch-current-lens-screens.mjs": {
       "sha256": "d2f38c121b455657624ee11673c49c28456affdae579bab18cab7e43a26dabde",
       "executable": false
@@ -11262,7 +11266,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "3f629f97848a35f9a867acd17eab3ea994f4e83f6b4a9588e8a41e393443bccb",
+      "sha256": "170a36c8b210fc788cec633623b7c38a78a93e33b18929794478b2bec2fa76a1",
       "executable": false
     },
     "tests/launch-write-service.mjs": {
