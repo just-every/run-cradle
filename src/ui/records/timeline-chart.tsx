@@ -41,7 +41,7 @@ export function TimelineChart({ schema, view, schedule, baseline, axis, writable
           if (line.kind === 'group') return <div key={line.key} className="cr-timeline-group"><div className="cr-timeline-label">{view.groupBy.map(id => <span key={id}><CellDisplay appId={schema.appId} field={schema.fields.find(field => field.id === id)} cell={line.row.fields[id]} /> </span>)}</div></div>
           const task = line.task, row = task.row, before = planned.get(row.id), critical = schedule.critical.has(row.id)
           const baselineStart = before?.start ? Date.parse(before.start) : null, baselineEnd = before?.end ? Date.parse(before.end) : baselineStart
-          const range = task.start === null ? 'Unscheduled' : `${axis.civil(task.start)}${task.end !== null && task.end !== task.start ? ` → ${axis.civil(task.end)}` : ''}`
+          const range = task.start === null ? 'Unscheduled' : `${axis.civil(task.start)}${task.end !== null && view.layout.endFieldId ? ` → ${axis.civil(task.end)}` : ''}`
           let comparison: ReactNode = null
           if (baselineStart !== null && task.start !== null) {
             const delta = task.start - baselineStart, finish = task.end !== null && baselineEnd !== null ? task.end - baselineEnd : 0
@@ -56,7 +56,7 @@ export function TimelineChart({ schema, view, schedule, baseline, axis, writable
               event.preventDefault(); drop(source.row, event.clientX - event.currentTarget.getBoundingClientRect().left - source.offset)
             }}>
               {task.start !== null && task.end !== null && task.end >= task.start && <div className={`cr-timeline-bar${critical ? ' cr-timeline-bar--critical' : ''}`} data-timeline-bar={row.id} data-start={new Date(task.start).toISOString()} data-end={new Date(task.end).toISOString()} style={{ left: axis.x(task.start), width: Math.max(12, axis.x(task.end) - axis.x(task.start)) }} draggable={writable(row) && !busy} aria-label={`${range}${critical ? '; critical path' : ''}`} title={`${range}${critical ? ' · Critical path' : ''}`}
-                onDragStart={event => { if (!writable(row) || busy) { event.preventDefault(); return }; dragging.current = { row, offset: event.clientX - event.currentTarget.getBoundingClientRect().left }; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-cradle-timeline-record', row.id) }} onDragEnd={() => { dragging.current = null }}><span>{title(row)}</span></div>}
+                onDragStart={event => { if (!writable(row) || busy) { event.preventDefault(); return }; dragging.current = { row, offset: event.clientX - event.currentTarget.getBoundingClientRect().left }; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('application/x-cradle-timeline-record', row.id) }} onDragEnd={() => { dragging.current = null }}><span><CellDisplay appId={schema.appId} field={schema.fields.find(field => field.id === view.layout.titleFieldId)} cell={row.fields[view.layout.titleFieldId]} /></span></div>}
               {baselineStart !== null && baselineEnd !== null && baselineEnd >= baselineStart && <div className="cr-timeline-baseline-bar" data-timeline-baseline={row.id} style={{ left: axis.x(baselineStart), width: Math.max(12, axis.x(baselineEnd) - axis.x(baselineStart)) }} title={`Baseline: ${before!.start}${before!.end ? ` → ${before!.end}` : ''}`} />}
               {comparison}
             </div>

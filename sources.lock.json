@@ -3665,6 +3665,14 @@
       "sha256": "1c07e05971f8b64917d1db72eca6a2a7bc61b1ce5b9cb84340724b98801ac209",
       "executable": false
     },
+    "docs/contract/VIEW-012/same-day-range-1440.png": {
+      "sha256": "b18eb08a470e6f9d1c7b72fa3ff12b0ad6324311408a1c28c21d6af8c43760c1",
+      "executable": false
+    },
+    "docs/contract/VIEW-012/same-day-range-390.png": {
+      "sha256": "abfc541ec8121d45e132855030c7b8a511adae068fa3b9135b67c0c6e08f7533",
+      "executable": false
+    },
     "docs/contract/VIEW-012/timeline-critical-recomputed-1440.png": {
       "sha256": "47ab316b502968c334d7174ec9600b1c4d63dbd11389a7f8f36de804a61e6518",
       "executable": false
@@ -9838,7 +9846,7 @@
       "executable": false
     },
     "src/ui/records/timeline-chart.tsx": {
-      "sha256": "7c497c97f059aad72159b123a0b761ccbac7ea1dc55e08f907dc4c1a047e773c",
+      "sha256": "dc8ece837d5b51d12243805f9e12968cf45fa4c60f4b0236845bca0c72fba7c9",
       "executable": false
     },
     "src/ui/records/timeline-data.ts": {
