@@ -10442,7 +10442,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-additional-views.mjs": {
-      "sha256": "7053163e9412fa205dd751af46c2d0ae8ebd1237fed1aa8d4e1fc223ce70f159",
+      "sha256": "17f08682a3806b82651de3e8a400293ad669cd599a745622d7125e06e6a18aef",
       "executable": false
     },
     "tests/helpers/records-browser-csv.mjs": {
@@ -10534,7 +10534,7 @@
       "executable": false
     },
     "tests/helpers/records-history-journey.mjs": {
-      "sha256": "764a08ef56d8fd358ac55af5689d5bcec007142461a462fc373642bb18bc2614",
+      "sha256": "ed93ae33c89f2ad9dd5ab923f1a9df2fae8c249aa91c3494f464247e16108094",
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {

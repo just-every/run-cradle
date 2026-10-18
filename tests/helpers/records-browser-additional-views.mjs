@@ -15,7 +15,7 @@ export async function additionalViews(page,j,origin,appId){
   if(display==='timeline')await editor.getByLabel('End date',{exact:true}).selectOption({label:'Close date'})
   const saved=await j.command(editor.getByRole('button',{name:'Save view',exact:true}),'view.save')
   await page.reload();await j.action(page.getByRole('navigation',{name:'Saved views',exact:true}).getByRole('button',{name:saved.name,exact:true}))
-  const section=page.locator('section.cr-section').filter({has:page.getByRole('heading',{name,exact:true})});await section.waitFor();assert.match(await section.innerText(),/First deal/);assert.match(await section.innerText(),/Third deal/)
+  const section=page.locator('section.cr-section').filter({has:page.getByRole('heading',{name,exact:true})});await section.waitFor();await section.getByText('First deal',{exact:true}).first().waitFor();assert.match(await section.innerText(),/First deal/);assert.match(await section.innerText(),/Third deal/)
   if(display!=='cards')assert.match(await section.innerText(),/Unscheduled/)
   if(display==='timeline')assert.match(await section.innerText(),/2027-01-15.*→ 2027-01-15/s)
   // Every selected field is rendered, including fields beside a calendar title.
