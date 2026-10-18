@@ -1,8 +1,9 @@
+import type { RevisionRef } from '../../contracts/primitives'
 import { useEffect } from 'react'
 import { useCommand, useResource } from '../shared/api'
 import { CommandFeedback, ResourceState, Timestamp } from '../shared/presentation'
 
-type Installation = { id: string; installedAt: string; installedBy: string | null; records: number; campaigns: number }
+type Installation = { id: string; installedAt: string; installedBy: string | null; records: number; campaigns: number; revisions:RevisionRef[] }
 
 /** Install example campaigns in one action and remove exactly those records later (SET-003). */
 export function SampleDataPanel() {
@@ -19,5 +20,5 @@ function SampleRow({ item, onRemoved }: { item: Installation; onRemoved: () => v
  const remove = useCommand<{ removedIds: string[] }>(`launch-samples-remove:${item.id}`)
  useEffect(() => { if (remove.result.state === 'committed') onRemoved() }, [remove.result.state])
  return <li className="launch-settings-item"><div className="launch-settings-summary"><strong>Sample data · {item.campaigns} campaigns, {item.records} records</strong><span>Installed <Timestamp value={item.installedAt} />{item.installedBy ? ` by ${item.installedBy}` : ''}</span></div>
-  <div className="cr-actions"><button type="button" className="cr-button cr-button--quiet" disabled={['submitting', 'pending', 'unknown'].includes(remove.result.state)} onClick={() => void remove.submit('/api/v1/commands/launch.samples.remove', { installationId: item.id }, [])}>Remove sample data</button></div><CommandFeedback {...remove} /></li>
+  <div className="cr-actions"><button type="button" className="cr-button cr-button--quiet" disabled={['submitting', 'pending', 'unknown'].includes(remove.result.state)} onClick={() => void remove.submit('/api/v1/commands/launch.samples.remove', { installationId: item.id }, item.revisions)}>Remove sample data</button></div><CommandFeedback {...remove} /></li>
 }

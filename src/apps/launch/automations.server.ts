@@ -1,3 +1,4 @@
+import { prepareAutomationRetry } from './automation-retry.server'
 import { parseSchedule } from './schedule'
 import type { CommandInput,Json } from '../../contracts/primitives'
 import type { RequestContext } from '../../domains/authority/ports'
@@ -12,9 +13,7 @@ export const actionTable=registerTable('launch_automation_actions',['id','run_id
 export const declaredEvents=['campaign.created.v1','campaign.updated.v1','campaign.archived.v1','campaign.restored.v1','campaign.deleted.v1','deliverable.completed.v1','deliverable.reopened.v1','milestone.updated.v1','risk.created.v1','risk.updated.v1','risk.escalated.v1','risk.resolved.v1','decision.requested.v1','decision.assigned.v1','decision.resolved.v1','lens.saved.v1','comment.created.v1','import.committed.v1','operator.removed.v1','automation.run-failed.v1']
 export async function prepareAutomation(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,operation:string){
  const set=emptyChange(),now=Date.parse(ctx.now)
- if(operation==='retry'){
-  if(!context.releaseId)fail('Automation retry requires the mounted source release');const run=await context.db.prepare('SELECT * FROM automation_runs WHERE id=?').bind(String(input.input.runId)).first<Record<string,string|number|null>>();if(!run||run.state!=='Failed')fail('Only a Failed run can be retried');const id=createUlid();set.guards.push(trustedPredicate("EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND version=? AND state='Failed')",[String(run!.id),Number(run!.version)]));set.mutations.push({kind:'insert',table:runTable,row:{...run!,id,created_at:now,updated_at:now,version:1,state:'Queued',queued_at:now,started_at:null,finished_at:null,error_code:null,error_message:null,retry_of:String(run!.id),initiated_by_id:ctx.principal.humanId}});const actions=await context.db.prepare('SELECT * FROM launch_automation_actions WHERE run_id=? ORDER BY position').bind(String(run!.id)).all<Record<string,string|number|null>>();for(const a of actions.results)set.mutations.push({kind:'insert',table:actionTable,row:{...a,id:createUlid(),run_id:id,...a.state==='Complete'?{}:{state:'Pending',started_at:null,finished_at:null,error_code:null,error_message:null}}});const prepared=await plan(context,ctx,input,'launch.automation.retry',set,{runId:id,retryOf:String(run!.id),state:'Queued'},'automation');return{...prepared,outbox:[{action:'launch.automation.execute',version:1,input:{runId:id},notBefore:ctx.now,grantId:prepared.permit.grantId,subject:null,sourceReleaseId:context.releaseId!,causeRunIds:[...JSON.parse(String(run!.cause_run_ids_json)),id]}]}
- }
+ if(operation==='retry')return prepareAutomationRetry(context,ctx,input)
  const id=String(input.input.id??createUlid()),before=input.input.id?await load(context.db,'automation',id):null;if(before)versionGuard(set,'automation',before,input.expected)
  if(operation==='enable'||operation==='disable'){
   if(!before)fail('Automation was not found');

@@ -1,3 +1,4 @@
+import {launchVersionDependencies} from './version-dependencies.server'
 import {captureAutomationEventState} from './automation-event-state.server'
 import { campaignLifecycle } from './lifecycle'
 import { authorizeLaunchWrites } from './write-authority.server'
@@ -47,7 +48,7 @@ export async function plan(context:LaunchContext,ctx:RequestContext,input:Comman
  await captureAutomationEventState(context,set)
  for (const mutation of set.mutations) if (mutation.kind === 'insert' && mutation.table.tableId === 'activity_entries') mutation.row = { ...mutation.row, message: JSON.stringify({ commandId: input.commandId, message: mutation.row.message }) }
  const hash=await canonicalHash({input:input.input,expected:input.expected}),permit=await authorizeLaunchWrites(context,ctx,input,action,hash,set,target)
- return{commandId:input.commandId,action,appId:LAUNCH_APP_ID,canonicalInputHash:hash,permit,guards:[...set.guards,...permit.guards],mutations:set.mutations,audit:set.audit,events:set.events,outbox:[],committedResult:result,changed:set.changed}
+ return{commandId:input.commandId,action,appId:LAUNCH_APP_ID,canonicalInputHash:hash,permit,guards:[...set.guards,...permit.guards],mutations:set.mutations,audit:set.audit,events:set.events,outbox:[],committedResult:result,changed:set.changed,versionDependencies:[...launchVersionDependencies(context,ctx,input.expected),...permit.versionDependencies]}
 }
 export async function capacity(db:D1Database,set:ChangeSet,kind:LaunchKind,additional=1){const limit=({campaign:50000,deliverable:500000,milestone:250000,risk:250000,decision:250000,lens:200,customField:50} as Partial<Record<LaunchKind,number>>)[kind];if(!limit)return;const count=await db.prepare(`SELECT COUNT(*) AS n FROM "${launchTables[kind]}"`).first<{n:number}>();if(count!.n+additional>limit)throw new AdmissionError('capacity_limit',`${kind} limit ${limit}; current count ${count!.n}`);set.guards.push(trustedPredicate(`(SELECT COUNT(*) FROM "${launchTables[kind]}")+?<=?`,[additional,limit]))}
 export {toWire}

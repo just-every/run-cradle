@@ -98,7 +98,7 @@ test('[AUTO-005/011 AI-002] a mixed bulk brief skips unchanged campaigns without
   const failed=await h.db.prepare("SELECT * FROM automation_runs WHERE trigger_key IN (SELECT id FROM admission_events WHERE command_id=?) AND automation_id IN (SELECT id FROM automations WHERE shipped_key='campaign-brief')").bind(partial.data.commandId).first()
   assert.equal(failed.state,'Failed');assert.deepEqual(contexts.slice(3).map(c=>c.campaign.id),[a.id,b.id])
   const completedA=await h.db.prepare("SELECT * FROM launch_analysis_requests WHERE automation_run_id=? AND state='Complete'").bind(failed.id).first();assert.ok(completedA)
-  failCampaign=null;const retried=value(await h.command('launch.automation.retry',{runId:failed.id}));await h.tick(at+10800004)
+  failCampaign=null;const retried=value(await h.command('launch.automation.retry',{runId:failed.id,version:failed.version}));await h.tick(at+10800004)
   assert.equal((await h.db.prepare('SELECT state FROM automation_runs WHERE id=?').bind(retried.runId).first()).state,'Succeeded');assert.equal(contexts.length,6);assert.equal(contexts.at(-1).campaign.id,b.id)
   assert.deepEqual(await h.db.prepare('SELECT * FROM launch_analysis_requests WHERE id=?').bind(completedA.id).first(),completedA)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_model_calls').first()).n,6)

@@ -46,4 +46,11 @@ export async function verifyCommentClauses(h) {
  const staleBefore=await snapshot(),staleDeleted=await request('comment.delete',{id:comment.id,version:comment.version})
  assert.equal(staleDeleted.status,409);assert.match((await staleDeleted.json()).error.message,/current version 2/)
  assert.deepEqual(await snapshot(),staleBefore)
+ const racingResponse=await request('comment.create',{campaignId:campaign.id,body:'Concurrent removal',mentions:[]})
+ assert.equal(racingResponse.status,200);const racing=(await racingResponse.json()).data.value
+ const pending=await h.prepare('comment.delete',{id:racing.id,version:racing.version},h.expected('campaign',campaign))
+ assert.equal((await request('comment.delete',{id:racing.id,version:racing.version})).status,200)
+ const raceBefore=await snapshot()
+ await assert.rejects(h.admission.commit(h.ctx,pending),error=>error.code==='version_conflict'&&error.currentVersion===2&&error.message.includes('current version 2'))
+ assert.deepEqual(await snapshot(),raceBefore)
 }

@@ -39,9 +39,9 @@ test('[AUTO-LEGACY-AUTH RECORDS-001] real policy preserves shipped execution and
   // or provider substitute participates in the command preparation or admission.
   await h.db.prepare("INSERT INTO automation_runs(id,created_at,updated_at,version,automation_id,definition_version,subject_id,state,queued_at,trigger_key,definition_json,cause_run_ids_json) VALUES(?,1,1,1,?,?,?,'Failed',1,?,?,'[]')").bind(failedId, control.id, controlDefinition.definition_version, campaign.id, 'synthetic-failed-run', JSON.stringify({ definition: controlDefinition, subjectIds: [campaign.id] })).run()
   const before = await mutationSnapshot(h.db)
-  await assert.rejects(restricted.prepare('automation.retry', { runId: failedId }), error => error.code === 'forbidden')
+  await assert.rejects(restricted.prepare('automation.retry', { runId: failedId,version:1 }), error => error.code === 'forbidden')
   assert.deepEqual(await mutationSnapshot(h.db), before)
-  const retry = await owner.commit('automation.retry', { runId: failedId })
+  const retry = await owner.commit('automation.retry', { runId: failedId,version:1 })
   assert.equal((await h.db.prepare('SELECT state FROM automation_runs WHERE id=?').bind(retry.runId).first()).state, 'Queued')
   for (const [action, input, revisions] of [['automation.disable', { id: control.id }, expected('automation', control)], ['campaign.archive', { id: campaign.id }, expected('campaign', campaign)]]) {
    const unchanged = await mutationSnapshot(h.db)

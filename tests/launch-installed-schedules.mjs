@@ -34,8 +34,8 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
   const owner=(await h.db.prepare("SELECT id FROM operators WHERE email='import-owner@example.test'").first()).id
   const address=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner).first()).email.trim().toLowerCase()
-  const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first())
-  await command('settings.update',{version:settings.version,changes:{timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
+  const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first()),readinessBefore=await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()
+  await command('settings.update',{version:settings.version,changes:{readinessVersion:readinessBefore.version,timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
   const readiness=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='launch-readiness'").first()
   assert.ok(readiness,'Native setup must install the readiness definition')
   await command('launch.automation.enable',{id:readiness.id},expected('automation',readiness))
@@ -76,7 +76,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    assert.equal(first.mail,before.mail+1,'readiness must send one provider request')
    await tick(at)
    const duplicate=await snapshot();assert.equal(duplicate.readiness,first.readiness);assert.equal(duplicate.mail,first.mail)
-   const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
+   const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessVersion:(await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()).version,readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
    await tick('2026-10-20T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
    await assertAccepted('readiness')
   })

@@ -4,6 +4,7 @@ import type { CommandResult, CommandStatus, Json, Ref } from '../../contracts/pr
 import { compileAdmission } from './compiler.server';
 import { loadProvenance } from './provenance.server';
 import { AdmissionError } from './errors';
+import { versionConflict } from './version-conflicts.server';
 type Stored = {
     command_id: string;
     batch_nonce: string;
@@ -60,14 +61,14 @@ export function createAdmissionService(db: D1Database, access: AdmissionAccess):
             }
             catch (error) {
                 if (String(error).includes('CHECK constraint failed: ok=1') || plan.commitAtomic && /IMPORT_ATOMIC_GUARD|IMPORT_FINAL_GUARD|malformed JSON/.test(String(error)))
-                    throw new AdmissionError('version_conflict', 'A prepared mutation no longer matches current state. Read and prepare again.');
+                    throw await versionConflict(plan.versionDependencies, 'A prepared mutation no longer matches current state. Read and prepare again.');
                 if (/UNIQUE constraint|FOREIGN KEY constraint|NOT NULL constraint|CHECK constraint/.test(String(error)))
                     throw new AdmissionError('validation', 'A required, unique or referenced value is no longer valid.');
                 throw error;
             }
             const row = await read(plan.commandId);
             if (!row)
-                throw new AdmissionError('version_conflict', 'Current record, authority or budget guards rejected this command. Refresh before submitting.');
+                throw await versionConflict(plan.versionDependencies, 'Current record, authority or budget guards rejected this command. Refresh before submitting.');
             if (row.batch_nonce !== compiled.nonce)
                 await visible(ctx, row);
             if (row.actor_id !== ctx.principal.id || row.actor_kind !== ctx.principal.kind || row.app_id !== plan.appId || row.action !== plan.action || row.input_hash !== plan.canonicalInputHash)
