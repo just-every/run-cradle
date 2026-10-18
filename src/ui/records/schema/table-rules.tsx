@@ -4,7 +4,7 @@ import type { Field, RuleCondition, ValidationRule } from '../../../domains/reco
 import { FieldInput } from '../record-fields'
 const operators = [['eq', 'equals'], ['ne', 'does not equal'], ['gt', 'is greater than'], ['gte', 'is at least'], ['lt', 'is less than'], ['lte', 'is at most'], ['empty', 'is empty'], ['not_empty', 'is not empty']] as const
 
-function ConditionEditor({ label, condition, fields, appId, entityId, onChange }: { label: string; condition: RuleCondition; fields: Field[]; appId: string; entityId: string; onChange: (condition: RuleCondition) => void }) {
+export function ConditionEditor({ label, condition, fields, appId, entityId, onChange }: { label: string; condition: RuleCondition; fields: Field[]; appId: string; entityId: string; onChange: (condition: RuleCondition) => void }) {
   const identity = useId()
   if (condition.kind !== 'condition') return <fieldset><legend>{label} · {condition.kind === 'all' ? 'all' : 'any'} conditions</legend>{condition.conditions.map((child, index) => <ConditionEditor key={index} label={`Condition ${index + 1}`} condition={child} fields={fields} appId={appId} entityId={entityId} onChange={next => onChange({ ...condition, conditions: condition.conditions.map((value, i) => index === i ? next : value) })} />)}</fieldset>
   const field = fields.find(field => field.id === condition.fieldId)

@@ -122,6 +122,9 @@ export type Form = Versioned & {
         label: string;
         help: string;
         required: boolean;
+        showWhen?: RuleCondition;
+        page?: string;
+        section?: string;
     }[];
     submitAction: string;
     authenticated: true;
