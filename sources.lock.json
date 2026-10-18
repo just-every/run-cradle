@@ -10730,7 +10730,7 @@
       "executable": false
     },
     "tests/helpers/launch-concurrency-screens.mjs": {
-      "sha256": "4794b792a4137862fe38c2e0dd4a838cc673ebfa63dbda56ca77113db5df7723",
+      "sha256": "21565ba96f1a49fedcd509fd013837d0851f170afbfea7b77a1aaf06a4f97a1a",
       "executable": false
     },
     "tests/helpers/launch-consistency-clauses.mjs": {
@@ -10754,7 +10754,7 @@
       "executable": false
     },
     "tests/helpers/launch-disabled-ai-console.mjs": {
-      "sha256": "0bc358873766b78162e7ee56c640edfbffa10741de478703fae96f83381610b5",
+      "sha256": "3c8dfee20335325b69fb6c5854e33f3656e190ec137a2d15404a6c548ec04a32",
       "executable": false
     },
     "tests/helpers/launch-doors-browser.mjs": {
@@ -11586,7 +11586,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "be54ea0776a7ddc670c82a4f7c95e359e99e9d91858681caff71a3c44ed8a00c",
+      "sha256": "33afaed39e830163d0acba8197599d91a5b1fed31e3d6d3f42bf5b5a58ddf851",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {

@@ -4,13 +4,25 @@ const appId='00000000000000000000000700'
 const revision=(entityId,row)=>[{ref:{appId,entityId,recordId:row.id},version:row.version}]
 
 /** VIEW-006: current saves, retained stale forms, and sample review revisions at either viewport. */
-export async function verifyConcurrencyScreens({h,page,command,capture}) {
+export async function verifyConcurrencyScreens({h,page,command,capture,receipt}) {
+ const width=page.viewportSize().width
  const read=async route=>{const response=await page.request.get(h.origin+route);assert.equal(response.status(),200,route);return response.json()}
  const settingsSection=()=>page.locator('section').filter({has:page.getByRole('heading',{name:'Launch readiness',exact:true})}).last()
  const submit=async(button,action)=>{
+  const startedAt=Date.now()
   const pending=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/api/v1/commands/'+action))
   await button.click();const response=await pending
-  return {status:response.status(),body:await response.json(),input:response.request().postDataJSON()}
+  assert.equal(await response.finished(),null,'The command response finishes normally')
+  const finishedAt=Date.now()
+  return {status:response.status(),body:await response.json(),input:response.request().postDataJSON(),url:response.url(),startedAt,finishedAt}
+ }
+ const verifyConflictConsole=refusal=>{
+  assert.equal(refusal.status,409)
+  assert.ok(Number.isInteger(refusal.body.error.currentVersion))
+  const window={start:refusal.startedAt,end:Math.min(Date.now(),refusal.finishedAt+1000)}
+  const matches=receipt.consoleErrors.filter(event=>event.width===width&&event.location.url===refusal.url&&event.message==='Failed to load resource: the server responded with a status of 409 (Conflict)'&&event.time>=window.start&&event.time<=window.end)
+  assert.equal(matches.length,1,'Exactly one browser resource error belongs to this verified stale-version refusal')
+  receipt.expectedConflictConsoleErrors.push({eventId:matches[0].id,width,reason:'Verified stale-version refusal',request:{url:refusal.url,method:'POST',body:refusal.input},response:{status:refusal.status,body:refusal.body},window})
  }
  await page.goto(h.origin+'/app/settings')
  await page.getByRole('heading',{name:'Launch readiness',exact:true}).waitFor()
@@ -29,6 +41,7 @@ export async function verifyConcurrencyScreens({h,page,command,capture}) {
  const refused=await submit(settingsSection().getByRole('button',{name:'Save readiness schedule',exact:true}),'settings.update')
  assert.equal(refused.status,409,JSON.stringify(refused.body));assert.equal(refused.body.error.currentVersion,readiness.version+1)
  await settingsSection().getByText(`Readiness automation has current version ${readiness.version+1}`,{exact:true}).waitFor()
+ verifyConflictConsole(refused)
  await capture('clause-concurrency-readiness-stale')
 
  const panel=page.locator('details').filter({has:page.locator('summary').filter({hasText:/^Sample data$/})})
@@ -46,6 +59,7 @@ export async function verifyConcurrencyScreens({h,page,command,capture}) {
  assert.equal(stale.status,409,JSON.stringify(stale.body));assert.equal(stale.body.error.currentVersion,campaign.version+1)
  assert.deepEqual(stale.input.expected,reviewed.revisions)
  await installations().first().getByText(`campaign has current version ${campaign.version+1}`,{exact:true}).waitFor()
+ verifyConflictConsole(stale)
  await capture('clause-concurrency-samples-stale')
 
  const clean=await submit(panel.getByRole('button',{name:'Install sample data',exact:true}),'launch.samples.install')
