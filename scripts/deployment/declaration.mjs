@@ -21,10 +21,17 @@ export async function ownerDeclaration(root,env){
  return declaration
 }
 
-/** The CLI reads this before building; the demo keeps its own base declaration. */
+/** The CLI reads this before building; the demo keeps its own base declaration.
+ * Managed hosting supplies the relay credentials and own-account hosting its provider key,
+ * so each mail credential is optional and bound once supplied. */
 export async function managedOwnerDeclaration(root){
  const declaration=await ownerDeclaration(root,{MAIL_PROVIDER:'rer',MAIL_FROM:'noreply@example.test'})
+ declaration.secrets.push({binding:'MAIL_PROVIDER_API_KEY',environment:'MAIL_PROVIDER_API_KEY'})
+ const credentials=new Set(['MAIL_API_KEY','MAIL_RELAY_URL','MAIL_PROVIDER_API_KEY'])
  const standIns={MAIL_PROVIDER:'rer',MAIL_FROM:'noreply@example.test',MAIL_RELAY_URL:'https://mail.example.test/api/managed-mail/send'}
- for(const input of declaration.secrets)if(standIns[input.binding])input.verifyStandIn=standIns[input.binding]
+ for(const input of declaration.secrets){
+  if(standIns[input.binding])input.verifyStandIn=standIns[input.binding]
+  if(credentials.has(input.binding))input.optional=true
+ }
  return declaration
 }

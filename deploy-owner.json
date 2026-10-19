@@ -65,12 +65,19 @@
     },
     {
       "binding": "MAIL_API_KEY",
-      "environment": "MAIL_API_KEY"
+      "environment": "MAIL_API_KEY",
+      "optional": true
     },
     {
       "binding": "MAIL_RELAY_URL",
       "environment": "MAIL_RELAY_URL",
-      "verifyStandIn": "https://mail.example.test/api/managed-mail/send"
+      "verifyStandIn": "https://mail.example.test/api/managed-mail/send",
+      "optional": true
+    },
+    {
+      "binding": "MAIL_PROVIDER_API_KEY",
+      "environment": "MAIL_PROVIDER_API_KEY",
+      "optional": true
     }
   ],
   "crons": [

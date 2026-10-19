@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "deploy-owner.json": {
-      "sha256": "d8ddf4dff10664c4e45dafbf0c1bf7e030849b880c4258ba9f96dfc126bd8227",
+      "sha256": "3a6b00f5793c84b813596ca133efd7c541b3e8d0d11f0dffc616fa7027335f55",
       "executable": false
     },
     "deploy-site.json": {
@@ -4970,7 +4970,7 @@
       "executable": false
     },
     "scripts/deployment/declaration.mjs": {
-      "sha256": "24a89cc2b83b103684a6d2a5dfa0e1d7fa2f991bca61ab27f43d585d91938427",
+      "sha256": "43c472a9c23b4fcfeb01c3a965540f8563b9f90ee90b1ff17954b09f1e95878c",
       "executable": false
     },
     "scripts/deployment/deploy.mjs": {
