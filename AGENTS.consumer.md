@@ -27,8 +27,8 @@ prints on this computer (it carries this checkout's dev key, so treat it as a
 credential). Use `rer dev --as` to switch between the owner, signed out and the personas
 `admin@dev.localhost` and `member@dev.localhost`; `dev --as PERSONA` starts as one of
 them or `signed-out`. `dev --login` aliases automatic owner sign-in; open its
-`RER_OPEN` URL. Finish
-first-run details at `/setup`. Stop serving
+`RER_OPEN` URL. Workspace details
+not set by setup are asked at `/setup`. Stop serving
 with `rer dev --stop` before verify, reset or data movement. Export
 before resetting data you want to keep. Deploy without `--dry-run` only when the
 owner explicitly requests it and supplies the declared account configuration.

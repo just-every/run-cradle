@@ -35,6 +35,19 @@ contract('HOME-003 BASE-DATA-001 RECORDS-006', 'The installed Lobby recognizes t
     assert.equal(firstTarget.origin, h.origin)
     assert.equal(firstTarget.pathname, '/setup')
     assert.match(await home(), /<a class="btn" href="\/signin">/, 'A deployed owner signs in without a setup token')
+    // Without configured workspace details the owner confirms them at the native /setup form.
+    const setupPage = await h.request('/setup', { headers: { cookie } })
+    assert.equal(setupPage.status, 200, 'An unconfigured installation asks for workspace details')
+    assert.match(setupPage.headers.get('cache-control') ?? '', /no-store/, 'The owner form and CSRF token are never cached')
+    assert.match(await setupPage.text(), /Set up your workspace/)
+    const deep = await h.request('/app/records', { headers: { cookie } })
+    assert.equal(new URL(deep.headers.get('location'), h.origin).pathname, '/setup')
+    const { csrfToken } = await (await h.request('/auth/csrf', { headers: { cookie } })).json()
+    const submit = (body, origin = h.origin) => h.request('/setup', { method: 'POST', headers: { cookie, origin, 'content-type': 'application/x-www-form-urlencoded' }, body: body.toString() })
+    assert.equal((await submit(new URLSearchParams({ name: 'Changed without authority', timezone: 'UTC', currency: 'USD' }))).status, 403, 'Setup refuses missing CSRF')
+    assert.equal((await submit(new URLSearchParams({ csrf: csrfToken, name: 'Changed without authority', timezone: 'UTC', currency: 'USD' }), 'https://foreign.example.test')).status, 403, 'Setup refuses foreign-origin mutation')
+    assert.equal((await submit(new URLSearchParams([['csrf', csrfToken], ['name', 'First'], ['name', 'Second'], ['timezone', 'UTC'], ['currency', 'USD']]))).status, 400, 'Setup refuses ambiguous form fields')
+    assert.equal((await submit(new URLSearchParams({ csrf: csrfToken, name: 'x'.repeat(9000), timezone: 'UTC', currency: 'USD' }))).status, 413, 'Setup bounds the request body before mutation')
     await completeFirstRun(h.origin, cookie, h.dispatch)
     await h.db.prepare("UPDATE workspace SET name='Northwind' WHERE id='workspace'").run()
     assert.deepEqual(await state(), { state: 'claimed' })
@@ -45,5 +58,25 @@ contract('HOME-003 BASE-DATA-001 RECORDS-006', 'The installed Lobby recognizes t
     assert.equal((await h.request('/setup/state', { method: 'POST' })).status, 405)
     const owner=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators').first()).principal_id
     await installationArchive(h,{cookie,owner})
+  } finally { await h.close() }
+})
+
+contract('SET-003 AUTH-BASE-001', 'Configured workspace details open the app at first sign-in, and sign-in takes the owner email hint', async () => {
+  const workspace = { WORKSPACE_NAME: 'Northwind', WORKSPACE_TIMEZONE: 'Australia/Sydney', WORKSPACE_CURRENCY: 'AUD' }
+  const h = await launchBaseAuthorityRuntime({ configuration: workspace })
+  try {
+    const bootstrap = await h.post('/auth/bootstrap', { token: h.bindings.SETUP_TOKEN, displayName: 'Launch owner', returnTo: '/app' })
+    assert.equal(bootstrap.status, 303)
+    const cookie = bootstrap.headers.get('set-cookie').split(';')[0]
+    const firstVisit = await h.request('/app', { headers: { cookie } })
+    assert.equal(firstVisit.status, 200, 'The owner opens the app without a second setup')
+    await firstVisit.arrayBuffer()
+    const setup = await h.request('/setup', { headers: { cookie } })
+    assert.equal(setup.status, 303)
+    assert.equal(new URL(setup.headers.get('location'), h.origin).pathname, '/app')
+    const { settings } = await (await h.request('/api/settings', { headers: { cookie } })).json()
+    assert.deepEqual({ name: settings.workspace.name, timezone: settings.workspace.timezone, currency: settings.workspace.currency }, { name: 'Northwind', timezone: 'Australia/Sydney', currency: 'AUD' })
+    const signin = await (await h.request('/signin?login_hint=' + encodeURIComponent('owner@example.test'))).text()
+    assert.match(signin, /<input[^>]*id="signin-email"[^>]*value="owner@example.test"|<input[^>]*value="owner@example.test"[^>]*id="signin-email"/, 'Sign-in fills the email field from login_hint')
   } finally { await h.close() }
 })

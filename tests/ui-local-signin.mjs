@@ -92,7 +92,8 @@ async function freshViewport(viewport,evidence){
       // shell before it and the authenticated document after it independently.
       observations.assertClean(undefined,'public local sign-in')
       await page.close();page=await context.newPage();installKeyboardInteractions(page)
-      await page.goto(installation.openUrl);await page.waitForURL(origin+'/setup')
+      // rer setup's workspace answers are the owner's confirmed details: the key exchange opens the app, never a second setup.
+      await page.goto(installation.openUrl);await page.waitForURL(origin+'/app')
       await page.waitForLoadState('networkidle');observations=browserObservations(page,origin)
       assert.equal(new URL(page.url()).hash,'','The checkout key leaves the address bar after exchange')
       const gate=await gateCookie(origin,installation.key),cookies=await context.cookies(origin),sessions=cookies.filter(cookie=>cookie.name!==gate.name)
@@ -101,40 +102,7 @@ async function freshViewport(viewport,evidence){
       assert.equal((await page.evaluate(()=>document.cookie)).includes(sessions[0].name+'='),false,'Page JavaScript cannot read the owner session')
       assert.equal((await context.request.get(origin+'/auth/session')).status(),200,'The real dev owner session authenticates')
       assert.equal((await fetch(origin+'/auth/session')).status,401,'No ambient session escapes the browser')
-      await page.getByLabel('Workspace name',{exact:true}).waitFor();await check('setup')
-      if(viewport.width===1440){
-       nativeContext=await browser.newContext(accessibilityContextOptions({viewport,javaScriptEnabled:false}));nativeContext.setDefaultTimeout(30000)
-       await nativeContext.addCookies(cookies)
-       nativePage=await nativeContext.newPage();installKeyboardInteractions(nativePage)
-       await nativePage.goto(origin+'/setup')
-       await nativePage.getByLabel('Workspace name',{exact:true}).waitFor()
-       const setupPage=await nativeContext.request.get(origin+'/setup')
-       assert.match(setupPage.headers()['cache-control'],/no-store/,'The owner form and CSRF token are never cached')
-       const deep=await nativeContext.request.get(origin+'/app/records',{maxRedirects:0});assert.equal(new URL(deep.headers().location,origin).pathname,'/setup')
-       const proof=await nativeContext.request.get(origin+'/auth/csrf'),{csrfToken}=await proof.json()
-       const invalid=await nativeContext.request.post(origin+'/setup',{headers:{origin},form:{name:'Changed without authority',timezone:'UTC',currency:'USD'},maxRedirects:0});assert.equal(invalid.status(),403,'Setup refuses missing CSRF')
-       const foreign=await nativeContext.request.post(origin+'/setup',{headers:{origin:'https://foreign.example.test'},form:{csrf:csrfToken,name:'Changed without authority',timezone:'UTC',currency:'USD'},maxRedirects:0});assert.equal(foreign.status(),403,'Setup refuses foreign-origin mutation')
-       const duplicate=await nativeContext.request.post(origin+'/setup',{headers:{origin,'content-type':'application/x-www-form-urlencoded'},data:new URLSearchParams([['csrf',csrfToken],['name','First'],['name','Second'],['timezone','UTC'],['currency','USD']]).toString(),maxRedirects:0});assert.equal(duplicate.status(),400,'Setup refuses ambiguous form fields')
-       const oversized=await nativeContext.request.post(origin+'/setup',{headers:{origin,'content-type':'application/x-www-form-urlencoded'},data:new URLSearchParams({csrf:csrfToken,name:'x'.repeat(9000),timezone:'UTC',currency:'USD'}).toString(),maxRedirects:0});assert.equal(oversized.status(),413,'Setup bounds the request body before mutation')
-       if(accessibilityEvidence){
-        const setupAudit=await auditAccessibility(nativePage,{screen:'setup-nojs',width:viewport.width,output:evidence})
-        const setupSevere=[...setupAudit.axe.wcag22aa,...setupAudit.axe.targetSize].filter(violation=>['serious','critical'].includes(violation.impact))
-        if(!accessibilityCaptureOnly)assert.deepEqual(setupSevere.map(violation=>violation.id),[],`setup-nojs WCAG 2.2 AA serious/critical accessibility`)
-        accessibilityScreens.push({screen:'setup-nojs',width:viewport.width,wcagFindings:setupAudit.axe.wcag22aa.length,targetSizeFindings:setupAudit.axe.targetSize.length,controls:setupAudit.layout.controls.length,tabbable:setupAudit.keyboard.tabbableCount,tabOrderComplete:setupAudit.keyboard.missing.length===0,keyboardActivations:setupAudit.keyboard.activations.length,smallTargets:setupAudit.layout.targetsBelow24.length})
-       }else{if(!accessibilityCaptureOnly)assert.equal(await nativePage.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await nativePage.screenshot({path:path.join(evidence,'setup-1440.png'),fullPage:true})}
-       await nativePage.getByLabel('Workspace name',{exact:true}).fill('My records');await nativePage.getByLabel('Timezone',{exact:true}).fill('Australia/Brisbane');await nativePage.getByLabel('Currency',{exact:true}).fill('AUD')
-       await accessibilityAction(nativePage,nativePage.getByRole('button',{name:'Open my workspace',exact:true}));await nativePage.waitForURL(origin+'/app')
-       await nativePage.getByRole('link',{name:'Open records',exact:true}).waitFor()
-       const cookies=await nativeContext.cookies();assert.equal((await nativeContext.request.get(origin+'/auth/session')).status(),200)
-       await context.addCookies(cookies);await nativeContext.close();await page.goto(origin+'/app')
-      }else {
-       const deep=await context.request.get(origin+'/app/records',{maxRedirects:0});assert.equal(new URL(deep.headers().location,origin).pathname,'/setup')
-       // Drive the real mounted router through its public navigation method:
-       // client document transport must enforce the same unfinished state.
-       await page.goto(origin+'/docs');await navigateClient('/app/records');await page.waitForURL(origin+'/setup')
-       await page.getByLabel('Workspace name',{exact:true}).fill('My records');await page.getByLabel('Timezone',{exact:true}).fill('Australia/Brisbane');await page.getByLabel('Currency',{exact:true}).fill('AUD')
-       await check('setup');await accessibilityAction(page,page.getByRole('button',{name:'Open my workspace',exact:true}))
-      }
+      const deep=await context.request.get(origin+'/app/records',{maxRedirects:0});assert.equal(deep.status(),200,'Configured workspace details leave no setup gate')
       await page.waitForURL(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
       await page.getByRole('heading',{name:'Your business, organised your way.',exact:true}).waitFor()
       await navigateClient('/setup');await page.waitForURL(origin+'/app')
@@ -144,7 +112,7 @@ async function freshViewport(viewport,evidence){
       const homeResponse=await context.request.get(origin+'/app')
       assert.equal(homeResponse.status(),200)
       const homeHtml=await homeResponse.text()
-      if(viewport.width===1440){const settings=await context.request.get(origin+'/api/settings');assert.equal(settings.status(),200);const {settings:current}=await settings.json();assert.deepEqual({name:current.workspace.name,timezone:current.workspace.timezone,currency:current.workspace.currency},{name:'My records',timezone:'Australia/Brisbane',currency:'AUD'},'The installed workspace retains the approved business settings')}
+      const settings=await context.request.get(origin+'/api/settings');assert.equal(settings.status(),200);const {settings:current}=await settings.json();assert.deepEqual({name:current.workspace.name,timezone:current.workspace.timezone,currency:current.workspace.currency},{name:vars.WORKSPACE_NAME,timezone:vars.WORKSPACE_TIMEZONE,currency:vars.WORKSPACE_CURRENCY},'The installed workspace holds the configured business settings')
       const plainContext = await browser.newContext(accessibilityContextOptions({ viewport, javaScriptEnabled: false }))
       try {
         await plainContext.addCookies(await context.cookies())
@@ -165,7 +133,7 @@ async function freshViewport(viewport,evidence){
       await accessibilityAction(page,page.getByRole('link',{name:'Open records',exact:true}));await page.getByRole('heading',{name:'Records',exact:true}).waitFor();await check('records')
       await verifyIdentityAndRecovery({browser,context,viewport,origin,evidence,accessibilityScreens})
       await verifyExpiredSession({context,page,viewport,origin,evidence,copy})
-      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,javaScriptDisabledSetup:viewport.width===1440,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean()})
+      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,configuredFirstRun:true,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean()})
       await context.close()
     for(const secret of [vars.SESSION_SECRET,vars.SETUP_TOKEN])assert.equal(installation.output().includes(secret),false,'Local dev must redact secrets')
     await assert.rejects(copy.rer(['reset','--yes','--non-interactive']),error=>error.exitCode===4&&error.errorCode==='safety_refusal','Reset refuses an active app')
@@ -194,7 +162,7 @@ async function freshViewport(viewport,evidence){
   }
 }
 
-contract('AUTH-BASE-001 HOME-002 VIEW-001 BASE-ACCESS-002 BASE-ACCESS-003 RECORDS-001 RECORDS-005', 'fresh source zero-setup dev identity, native first-run setup, expired-session recovery and signed-in records at both sizes',async()=>{
+contract('AUTH-BASE-001 SET-003 HOME-002 VIEW-001 BASE-ACCESS-002 BASE-ACCESS-003 RECORDS-001 RECORDS-005', 'fresh source zero-setup dev identity, configured first run, expired-session recovery and signed-in records at both sizes',async()=>{
  const evidence=path.resolve(process.env.CRADLE_LOCAL_EVIDENCE??'tmp/local-signin-evidence')
  const receipt={viewports:[],secretsPrinted:false,realBase:true}
  for(const width of accessibilityWidths){const viewport={width,height:width===390?844:900};receipt.viewports.push(await freshViewport(viewport,evidence))}

@@ -18,11 +18,15 @@ export class InstallationCoordinator extends DurableObject<PlatformBindings> {
       if (!await this.ctx.storage.get('initialized')) {
         const now=Date.now()
         const name=this.env.WORKSPACE_NAME?.trim()||'Cradle records',timezone=this.env.WORKSPACE_TIMEZONE||'UTC',currency=this.env.WORKSPACE_CURRENCY||'USD'
+        // Configuration that names the workspace (rer setup, Managed hosting) already holds the
+        // owner's answers; /setup asks only when the installation left them unset.
+        const configured=[this.env.WORKSPACE_NAME,this.env.WORKSPACE_TIMEZONE,this.env.WORKSPACE_CURRENCY].every(value=>value?.trim())
         new Intl.DateTimeFormat('en',{timeZone:timezone})
         if(name.length>200||!/^\p{Lu}{3}$/u.test(currency))throw new Error('Workspace name, timezone and currency must be valid.')
         await this.env.DB.batch([
           this.env.DB.prepare(`INSERT OR IGNORE INTO workspace(id,created_at,updated_at,name,timezone,currency,version) VALUES('workspace',?,?,?,?,?,1)`).bind(now,now,name,timezone,currency),
           this.env.DB.prepare(`INSERT OR IGNORE INTO workspace_settings(id,created_at,updated_at,version,workspace_name,timezone,currency,quiet_hours_start,quiet_hours_end) SELECT 'workspace-settings',?,?,1,name,timezone,currency,'18:00','08:00' FROM workspace WHERE id='workspace'`).bind(now,now),
+          ...configured?[this.env.DB.prepare('UPDATE cradle_first_run SET completed_at=? WHERE singleton=1 AND completed_at IS NULL').bind(now)]:[],
         ])
         if(!archive?.source_owner_id)await this.env.DB.batch(await prepareLaunchSetup(this.env.DB,owner.id))
         await this.ctx.storage.put('initialized',true)

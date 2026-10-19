@@ -79,8 +79,9 @@ bytes. Use `rer dev --as` to switch between the owner, signed out and the person
 one of them or `signed-out`. `rer dev --login` is an alias for the same automatic
 owner sign-in; open its `RER_OPEN` URL. No email is sent locally. Keys minted in a
 dev session work only with this checkout's dev key and never travel in an export.
-Finish your first-run details at `/setup`; other app routes take you there until
-completed. Later `/setup` opens the app. Settings remain editable.
+Setup answers name the workspace, its timezone and currency, so the owner opens
+straight into the app. An installation configured without them asks at `/setup`
+first; other app routes take you there until completed. Settings remain editable.
 Dev serves source with HMR. `rer preview` serves a fixed production build using
 the same data. Choose a loopback port with `--port`; an occupied port fails.
 `rer install` (or `pnpm install --frozen-lockfile`) installs the pinned

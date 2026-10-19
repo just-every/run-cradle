@@ -83,11 +83,12 @@ a checkout on another volume than your home folder, where pnpm cannot clone
 packages from its store.
 
 After `RER_READY`, Cradle prints `RER_SIGNED_IN EMAIL` and `RER_OPEN URL`.
-Open that private dev-key URL on this computer to enter as the local owner and
-finish `/setup`. `rer dev --login` aliases automatic owner sign-in; it does not
+Open that private dev-key URL on this computer to enter as the local owner; it
+opens the app with the workspace details from setup. `rer dev --login` aliases automatic owner sign-in; it does not
 open a mail viewer. No local inbox or outbox page is available, and no email is
-sent externally. App routes take the signed-in owner to `/setup` until first-run
-completion is stored durably; later `/setup` opens the app.
+sent externally. Only when the configuration leaves the workspace name, timezone
+or currency unset do app routes take the signed-in owner to `/setup` until
+first-run completion is stored durably; later `/setup` opens the app.
 
 The saved local port is used; a first setup saves the first free port from 8787. Explicit ports are decimal
 integers from 1 through 65535 and must be free; a busy requested port fails
