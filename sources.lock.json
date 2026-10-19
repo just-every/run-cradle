@@ -5101,6 +5101,10 @@
       "sha256": "bd2b0991d12450c5f0a7d9c6a5ee803192be40dc8bef6fcb10e77efa70f0e0bd",
       "executable": false
     },
+    "scripts/portability/migrations.mjs": {
+      "sha256": "5e6249b82751ddeb02d157728d278b94790014303d85d0741849d2b2755bb823",
+      "executable": false
+    },
     "scripts/portability/policy.mjs": {
       "sha256": "513f7dedd96c4329c33405e23a85d6df7ad759bf61f43624691be84089bf5452",
       "executable": false
@@ -5118,7 +5122,7 @@
       "executable": false
     },
     "scripts/portability/worker.mjs": {
-      "sha256": "3b07d31fe6b104f5e9c62df653f3ae88cf54a20f65d7d8e2da764263c5a34344",
+      "sha256": "da3cde8925dfa1aaa9d9c54ac4b5edcc66865d31107d22ec27155289a816ec63",
       "executable": false
     },
     "scripts/review-fixture-20261002.mjs": {
@@ -10481,6 +10485,10 @@
       "sha256": "d7a1bb86d716549ec0a7c0bfccf442912c4b8e8759d2ec96c4569e6de972cbe9",
       "executable": false
     },
+    "tests/fixtures/portability/cradle-prior.rer": {
+      "sha256": "6fee8a09a585671e9d31d22f3cb3baf4eb351d869909685e464df2900a0d0f9d",
+      "executable": false
+    },
     "tests/foundation-shell.mjs": {
       "sha256": "e11583992aa2c2a99744c1c15d6c47a945963d4ffb22f1f39168457ea29bc7e9",
       "executable": false
@@ -10871,6 +10879,10 @@
     },
     "tests/helpers/oidc-runtime.mjs": {
       "sha256": "ac4055f94b5b626760f7baf7c26e4c9bfe32d3b9b7c5ffc731ed968b4d5c3e1a",
+      "executable": false
+    },
+    "tests/helpers/platform-archive.mjs": {
+      "sha256": "a0bb9276c41abe1c1091dda72c2f474f3f03de8b806012f6ab685851feea9951",
       "executable": false
     },
     "tests/helpers/portable-identity-expectation.mjs": {
@@ -11358,7 +11370,7 @@
       "executable": false
     },
     "tests/records-base-export-policy.mjs": {
-      "sha256": "bbcf35c09a83919a56f6b7cdfae2fcb345118a48005ea708bc5652840351c22a",
+      "sha256": "7bf0c37a9df8a657ad5a44556795d7b87d60170ba651c8d24340a7d5cbd0277c",
       "executable": false
     },
     "tests/records-base-json-http.mjs": {
@@ -11535,6 +11547,10 @@
     },
     "tests/rer-data-roundtrip.mjs": {
       "sha256": "c32ecbb1c32e72b0a0cd637d4c943f5489982fc8495d82a70ef9aef40f752bc2",
+      "executable": false
+    },
+    "tests/rer-retained-archive.mjs": {
+      "sha256": "dd2d4460dcaca139be4e6e5e8a59800729aa6b26ebdb9a861436678e32364185",
       "executable": false
     },
     "tests/runtime-configuration.mjs": {
@@ -12569,6 +12585,10 @@
       "sha256": "1cc6c400007eb6a08a9698a22d4b6cfd41ace42b04eb59927bd34c776bbe444c",
       "executable": false
     },
+    "vendor/base/modules/import-kit/src/door/refusals.ts": {
+      "sha256": "1c03c2366bac97733ba30ad9e0f69311191735dcddced839a5e804dc2e4f6d6e",
+      "executable": false
+    },
     "vendor/base/modules/import-kit/src/door/schema.ts": {
       "sha256": "f5814a590ec4329e2ae77bdb98af6d1d3726a53b4d5939c7513d49c348593c0d",
       "executable": false
@@ -12635,6 +12655,10 @@
     },
     "vendor/base/modules/import-kit/src/provenance/canonical-stream.ts": {
       "sha256": "94b9bef088d1d907edd4de44b74132ba257fa488a1ca447ad2cceb0f1d049890",
+      "executable": false
+    },
+    "vendor/base/modules/import-kit/src/provenance/credential-names.ts": {
+      "sha256": "51c836f11d6c8a938c724a9ceb07746dfbbdd8f1474627ece80fbd917634f01f",
       "executable": false
     },
     "vendor/base/modules/import-kit/src/provenance/credentials.ts": {
