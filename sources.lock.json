@@ -2922,11 +2922,11 @@
       "executable": false
     },
     "AGENTS.consumer.md": {
-      "sha256": "677b7d76f6ad4ff7e7af7ed62c655b17460895fe23d3bfafd8c66a04a81bb7d1",
+      "sha256": "c9c69488adda22a37ef23dc0ab2debee4d59abe38f8fec67e668b2e94038ee39",
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "58059a995387ab23a13fc99e1d3de855ee1afbfb268071a78f5612c3ef40a685",
+      "sha256": "e3c5401cf1f072f115eccd2768e754c8df76ce7619a9a834a6d137c87fa1ffe2",
       "executable": false
     },
     "authoring/README.md": {
@@ -2982,11 +2982,11 @@
       "executable": false
     },
     "CLAUDE.md": {
-      "sha256": "613caf503c3caab17cc85f15ad2fa95495b8ea22aa1d11b82bd193e87d04d6b7",
+      "sha256": "beda4a6ddc8b81908c288b3d5563234bfcd79d7bedd571dbbc3e6a510f085c19",
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e642632953c3566aa34b77f633781caa99971f347ebb2b5e25a9bf5ff6fc7b30",
+      "sha256": "830e9bb227fe075b2756a9e1e90e10f1975c5f6361da91009eea1d063bf92063",
       "executable": false
     },
     "DEMO.md": {
@@ -4258,7 +4258,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "444336aaec1b26e9fcf508756a36a698a48e0a26dbc65bd9eb0a927d3d67d5ac",
+      "sha256": "c57d185a44aa03f6c01392ca330db46566b976f997bed8eaa4b5f36b9be36dd7",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -4742,7 +4742,7 @@
       "executable": false
     },
     "packaging.json": {
-      "sha256": "0dc46cc2b04e7f9e625eee8aee49c2d1271dc8a21509d10e23d9f8f541387b03",
+      "sha256": "cda9f519d5f186fca2b4e91a851cca70ffef3abadc06735c3848636c5981d56b",
       "executable": false
     },
     "PLAN.md": {
@@ -4794,7 +4794,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "21cc83375e8fa6f4d0baec15131e317cf86720f6d9aa9887fbe403d0f6c19908",
+      "sha256": "3cc0631e394f0fbee8c435e2e6e4d64da84b520052a7e45bd3f4802eec305ae9",
       "executable": false
     },
     "RELEASE.json": {
@@ -4814,7 +4814,7 @@
       "executable": false
     },
     "RUN-LOCALLY.md": {
-      "sha256": "ee90fa646242522083913fd21209acf5d2d932d7cacb4beba2a44f5d8252c83d",
+      "sha256": "ba5c2a1959621f34cdd8bf55c8cc7d73f21e30fb80cbb8345fb3c35be0094007",
       "executable": false
     },
     "sample-data/agent-briefs/brief-a-workshop.txt": {
@@ -6794,7 +6794,7 @@
       "executable": false
     },
     "src/core/platform/installation.server.ts": {
-      "sha256": "cd3a82ee106956ec54338fc29753e724a9cccd42b983510d15ed06e5847c1c4c",
+      "sha256": "49215258d3bd8749df50b23c52c0fde3b47f0ef76402e0f12076699ecbfa0662",
       "executable": false
     },
     "src/core/platform/local-auth.server.ts": {
@@ -11214,7 +11214,7 @@
       "executable": false
     },
     "tests/installed-home.mjs": {
-      "sha256": "03eba3c929d0a3699021cfd0bcd96aa1ac502d575f631f32ba1f90f932f7ac05",
+      "sha256": "c3f65e48771e5d16152b5273fc6e52699c238d5982b74ab87cf36b01cc0440ea",
       "executable": false
     },
     "tests/intelligence-fixture.mjs": {
@@ -11602,7 +11602,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "e23fe17e5d4d93905746f83759f7501473a1cbf1b78dfc51dba75a02187db03c",
+      "sha256": "608b383dd4a188376bb04d6a4197357e6dfe7a7016b8badbd154c9077967799e",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
