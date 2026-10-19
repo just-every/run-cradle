@@ -812,22 +812,22 @@ Launch readiness is a complete application template on the records platform (cam
 
 - **NOTIFY-001 — In-app events.** An operator receives an in-app notification when a decision is assigned to them, when they are mentioned in a comment, when a Critical risk is escalated on a campaign they own, when a readiness request is created for them, and when an automation run they started fails. A Failed run that no operator started notifies the owner of the campaign it acted on, or every operator when the run has no campaign subject.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
+  *Status:* partial — implemented in src/domains/channels; no clause-tagged test yet.
 - **NOTIFY-002 — Email delivery.** Every in-app notification has an email counterpart routed by the delivery policy through `mail.sender.v1` against the workspace quiet hours in settings, which default to 18:00–08:00 in the workspace timezone. Authentication email and the weekly digest are never held. *Policy: `notification.delivery.v1`; default: a Critical risk escalation or a decision assignment is emailed within 60 seconds at any hour; every other email raised during quiet hours is held and sent within 60 seconds of quiet hours ending, as one message per operator.*
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
+  *Status:* partial — implemented in src/domains/channels; no clause-tagged test yet.
 - **NOTIFY-003 — Delivery failure.** Every outbound email has a delivery record linked to its notification and, when an automation sent it, to that run. A failed send, including an asynchronous bounce, is retried on the AUTO-007 schedule subject to its safe-retry requirement and then marked failed on both the delivery record and the notification, where settings lists it. An uncertain submission remains visibly Unknown under AUTO-007, rather than being treated as a confirmed failure that permits resend. SendGrid acceptance is not proof of mailbox delivery. The in-app notification stays available.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
+  *Status:* partial — implemented in src/domains/channels; no clause-tagged test yet.
 - **NOTIFY-004 — Digest.** When enabled, the weekly digest is sent within 15 minutes of 09:00 each Monday in the workspace timezone to the configured recipients, defaulting to every current operator, and once per recipient address however often that address appears. It itemizes non-archived campaigns, launches in the next 30 days, open High and Critical risks, unresolved decisions, and runs that failed in the previous 7 days.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-installed-schedules.mjs.
 - **NOTIFY-005 — Inbox.** The notification inbox lists an operator's notifications newest first and the navigation shell shows their unread count. A notification is unread for an operator until that operator opens it, an operator can mark one or all of their notifications read, and one operator's read state never changes another's. A notification whose subject has been archived or deleted is shown as unavailable rather than linking to a missing record.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
+  *Status:* partial — `tests/ui-launch-walkthrough.mjs` names NOTIFY-005 and proves ordering, navigation count, opening, individual/all reads, operator isolation, archived subjects and deleted comments at 1440/390. Campaign deletion still erases its notifications rather than retaining unavailable inbox items; this conflicts with the final sentence and remains unfulfilled.
 - **NOTIFY-006 — One per event.** An operator receives at most one in-app notification and one email for a single product event however many of its roles they hold, is never notified of an action they took themselves, and a repeat of the same event on the same subject within 60 minutes updates the existing unread notification instead of creating another.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/core/features/notifications; no clause-tagged test yet.
+  *Status:* partial — implemented in src/domains/channels; no clause-tagged test yet.
 - **NOTIFY-007 — Muting.** In settings each operator can mute any notification kind for themselves. Muting stops the email for that kind for that operator only; the in-app notification is still created, and delivery to every other operator is unchanged.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* partial — implemented in src/ui/settings/preferences-panel.tsx; no clause-tagged test yet.
@@ -900,9 +900,9 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026).
+The initial audit used commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026); each current row states its implementation, named proof and remaining gap.
 
-That commit identifies the initial audit. The rows below include subsequent builder updates through 19 October 2026; their cited evidence and gaps describe those updates.
+That commit identifies the initial audit. The rows below include subsequent builder updates through 20 October 2026; their cited evidence and gaps describe those updates.
 
 Release 0.3.0 gate (19 October 2026, independent of the builders): on the release candidate, the published records clauses RECORDS-001 to RECORDS-004 and RECORDS-006, AUTH-BASE-001 and HOME-003 were exercised through the browser, locally at 1440 and 390 px and on a hosted own-account install with real SendGrid mail. That covered a template base with a link and a lookup, CSV import review, grid, board and form, saved filtered, grouped and sorted views, view CSV, a field removal with its recovery CSV, a record automation that notified and emailed the owner, an upgrade of a populated 0.2.0 install, and a hosted base export, removal, redeploy and base JSON return with email sign-in after. The gate fixed two defects before release: Records under `rer dev` (VIEW-012's limits module) and own-account mail deploys (AUTH-BASE-001). Every other row rests on its cited tests passing in CI Verify on the release commit; the gate did not exercise a live AI provider (AI-001 to AI-006, SET-002).
 
@@ -1101,12 +1101,12 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `AUTO-009` | Manual retry | published | done | `tests/launch-installed-retries.mjs` |  |
 | `AUTO-010` | Fan-out | published | partial | `src/apps/launch/bulk.server.ts` | no clause-tagged test yet |
 | `AUTO-011` | Shipped automations | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-schedules.mjs` |  |
-| `NOTIFY-001` | In-app events | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
-| `NOTIFY-002` | Email delivery | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
-| `NOTIFY-003` | Delivery failure | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
+| `NOTIFY-001` | In-app events | published | partial | `src/domains/channels/integration.server.ts` | no clause-tagged test yet |
+| `NOTIFY-002` | Email delivery | published | partial | `src/domains/channels/delivery.server.ts` | no clause-tagged test yet |
+| `NOTIFY-003` | Delivery failure | published | partial | `src/domains/channels/delivery.server.ts` | no clause-tagged test yet |
 | `NOTIFY-004` | Digest | published | done | `tests/launch-installed-schedules.mjs` |  |
-| `NOTIFY-005` | Inbox | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
-| `NOTIFY-006` | One per event | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
+| `NOTIFY-005` | Inbox | published | partial | `src/domains/channels/inbox.server.ts`, `src/domains/channels/routes.server.ts`, `tests/ui-launch-walkthrough.mjs` | Campaign deletion erases notifications instead of retaining unavailable items; ordering, opening, reads, operator isolation, archive and deleted-comment behavior have clause-named 1440/390 proof. |
+| `NOTIFY-006` | One per event | published | partial | `src/domains/channels/integration.server.ts` | no clause-tagged test yet |
 | `NOTIFY-007` | Muting | published | partial | `src/ui/settings/preferences-panel.tsx` | no clause-tagged test yet |
 | `NOTIFY-008` | Overdue decisions | published | done | `tests/launch-installed-schedules.mjs` |  |
 | `AI-001` | Analyses | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-ui.mjs` |  |
