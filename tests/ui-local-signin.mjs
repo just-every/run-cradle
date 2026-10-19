@@ -82,12 +82,14 @@ async function freshViewport(viewport,evidence){
       assert.equal(lobbyText.includes(vars.SETUP_TOKEN),false,'The Lobby never exposes the private setup token')
       await check('home-public')
       assert.equal(await page.getByRole('heading',{level:1}).count(),1,'The Lobby has one h1')
-      const signinResponse=await fetch(origin+'/signin',{redirect:'manual'});assert.equal(signinResponse.status,200)
-      const html=await signinResponse.text();assert.doesNotMatch(html,/id="signin-email"|Send sign-in link|\/__dev\/outbox/)
-      await accessibilityAction(page,page.getByRole('link',{name:'Sign in',exact:true}));await page.waitForURL(origin+'/signin')
-      await page.getByRole('heading',{name:'Sign-in email is not configured',exact:true}).waitFor();await check('signin')
-      assert.match(await page.locator('body').innerText(),/rer dev/)
-      assert.equal(await page.getByRole('link',{name:'Back to home',exact:true}).count(),1)
+      // Base dev identity owns local sign-in: a browser without this checkout's key is sent to the key page, which offers no email sign-in.
+      const signinResponse=await fetch(origin+'/signin',{redirect:'manual'});assert.equal(signinResponse.status,303)
+      assert.equal(new URL(signinResponse.headers.get('location'),origin).pathname,'/__dev/key','Sign-in without the checkout key opens the key page')
+      const keyPage=await fetch(origin+'/__dev/key');assert.equal(keyPage.status,200)
+      const html=await keyPage.text();assert.doesNotMatch(html,/id="signin-email"|Send sign-in link|\/__dev\/outbox/)
+      await accessibilityAction(page,page.getByRole('link',{name:'Sign in',exact:true}));await page.waitForURL(origin+'/__dev/key')
+      await page.getByRole('heading',{name:'Opening the local app',exact:true}).waitFor();await check('signin')
+      assert.match(await page.locator('body').innerText(),/RER_OPEN/,'The key page sends the person to the link rer printed')
       // The key exchange POST navigates its own document. Observe the public
       // shell before it and the authenticated document after it independently.
       observations.assertClean(undefined,'public local sign-in')

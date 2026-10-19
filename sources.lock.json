@@ -10850,11 +10850,11 @@
       "executable": false
     },
     "tests/helpers/local-signin-expired.mjs": {
-      "sha256": "0616257cc629573979e91f2e4c3c5eeb2ac1842d48c4f9f56cf4c18c67bd3c64",
+      "sha256": "cc42f905d7545e3dba1e53ae9c8aedf17b7c9661c687b7063097369a3e4cc547",
       "executable": false
     },
     "tests/helpers/local-signin-recovery.mjs": {
-      "sha256": "89e4142a09b7b531f6ec719e2630947a6d13e7c901d139026530b26f53b2489e",
+      "sha256": "5461e729e54219ba94189ee4f89af0fb5a806c50fc445be307701d6230da2733",
       "executable": false
     },
     "tests/helpers/mail-edge-entry.mjs": {
@@ -11618,7 +11618,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "608b383dd4a188376bb04d6a4197357e6dfe7a7016b8badbd154c9077967799e",
+      "sha256": "d0865f3654ec383b8df1d03a154fb94f4ef4f10900c413c023a6197983ecc91e",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {

@@ -15,8 +15,10 @@ export async function verifyExpiredSession({context,page,viewport,origin,evidenc
  assert.equal((await context.request.get(origin+'/auth/session')).status(),401,'The actual expired session no longer authenticates')
  const denied=await context.request.get(origin+'/app',{maxRedirects:0})
  assert.equal(denied.status(),303);assert.equal(new URL(denied.headers().location,origin).pathname,'/signin')
- await page.goto(origin+'/app');await page.waitForURL(origin+'/signin')
- await page.getByRole('heading',{name:'Sign-in email is not configured',exact:true}).waitFor()
+ // The browser still holds the checkout key, so sign-in offers the dev identities in one click.
+ await page.goto(origin+'/app');await page.waitForURL(url=>url.pathname==='/signin')
+ await page.getByRole('heading',{name:'Sign in to Cradle',exact:true}).waitFor()
+ assert.equal(await page.getByRole('link',{name:'Sign in as Owner',exact:true}).count(),1,'The expired owner is offered their own identity again')
  if(accessibilityEvidence){
   const audit=await auditAccessibility(page,{screen:'session-expired',width:viewport.width,output:evidence})
   const severe=[...audit.axe.wcag22aa,...audit.axe.targetSize].filter(violation=>['serious','critical'].includes(violation.impact))

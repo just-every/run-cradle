@@ -32,9 +32,9 @@ export async function verifyIdentityAndRecovery({browser,context,viewport,origin
       await capture(publicPage,`identity-${name.replace(' ','-').toLowerCase()}`,`identity-${name.replace(' ','-').toLowerCase()}-${viewport.width}.png`)
       await publicPage.goto(origin+'/signin')
       assert.equal(await publicPage.getByLabel('Email address').count(),0,'An unconfigured local installation does not offer email sign-in')
-      assert.match(await publicPage.locator('body').innerText(),/rer dev/)
-      assert.equal(await publicPage.getByRole('link',{name:'Back to home',exact:true}).count(),1)
-      assert.equal(await publicPage.getByText(name,{exact:true}).count(),1)
+      // Without the checkout key, sign-in is Base's key page: it names the link rer printed.
+      assert.equal(new URL(publicPage.url()).pathname,'/__dev/key')
+      assert.match(await publicPage.locator('body').innerText(),/RER_OPEN/)
       assert.doesNotMatch(await publicPage.locator('body').innerText(),/Checking sign-in|Welcome back/)
       await capture(publicPage,`signin-nojs-${name.replace(' ','-').toLowerCase()}`,`signin-nojs-${name.replace(' ','-').toLowerCase()}-${viewport.width}.png`)
     }
