@@ -1,4 +1,5 @@
 import { CampaignInspector } from './campaign-inspector'
+import { CampaignMoneyTotals } from './campaign-money-totals'
 import { CampaignGridControls, queryLabels } from './campaign-grid-controls'
 import { CreateCampaign } from '../../../../ui/launch/create-campaign';
 import { ImportLaunchCsv } from '../../../../ui/launch/import-launch-csv';
@@ -116,6 +117,7 @@ const GridContent = () => {
         ) : (
           <section className="portfolio-grid-workspace">
             <div className="portfolio-grid-results">
+              <CampaignMoneyTotals campaigns={pageItems} currency={workspaceCurrency} />
               <div className="portfolio-table-wrap">
                 <table className="portfolio-campaign-table">
                   <caption>

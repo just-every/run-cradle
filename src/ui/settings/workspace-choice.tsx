@@ -4,5 +4,5 @@ import { useEffect, useState } from 'react'
 export function WorkspaceChoice({ label, kind, value, onChange, className }: { label: string; kind: 'timeZone' | 'currency'; value: string; onChange: (value: string) => void; className: string }) {
   const [options, setOptions] = useState<string[]>([value])
   useEffect(() => { const known = Intl.supportedValuesOf(kind); setOptions(known.includes(value) ? known : [value, ...known]) }, [kind, value])
-  return <label className={`cr-field ${className}`}>{label}<select value={value} onChange={event => onChange(event.target.value)} required>{options.map(option => <option key={option} value={option}>{option}</option>)}</select></label>
+  return <label className={`cr-field ${className}`}>{label}<select aria-label={label} value={value} onChange={event => onChange(event.target.value)} required>{options.map(option => <option key={option} value={option}>{option}</option>)}</select></label>
 }

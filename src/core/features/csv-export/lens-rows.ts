@@ -25,7 +25,7 @@ export async function lensExport(db: D1Database, lens: { name: string; descripti
   if (field === 'campaign' || field === 'campaignCode' || field === 'campaignId') return row.export_campaign_code ?? ''
   if (field === 'campaignLaunchDate') return row.export_campaign_launch ?? ''
   if (field === 'tags') return tags.filter(tag => tag.campaign_id === row.id).map(tag => tag.tag).join(' | ')
-  if (field === 'budgetMinor' || field === 'spendMinor') return money(row[field === 'budgetMinor' ? 'budget_minor' : 'spend_minor'] as number | null)
+  if (field === 'budgetMinor' || field === 'spendMinor') return money(row[field === 'budgetMinor' ? 'budget_minor' : 'spend_minor'] as number | null, workspace.currency)
   const column = columns[field] ?? field.replace(/[A-Z]/g, letter => '_' + letter.toLowerCase()), value = row[column] ?? null
   if (column.endsWith('_id')) return value === null ? '' : people.get(String(value)) ?? ''
   if (field === 'dueAt') return instant(value, workspace.timezone)

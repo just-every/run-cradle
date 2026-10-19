@@ -1,5 +1,5 @@
 /** Calendar arithmetic is explicit: storage and deadlines are UTC instants. */
-export function validTimezone(zone:string):boolean {try {new Intl.DateTimeFormat('en',{timeZone:zone}).format(0);return true}catch{return false}}
+export function validTimezone(zone:string):boolean {if(!/^[A-Za-z][A-Za-z0-9._+-]*(?:\/[A-Za-z0-9._+-]+)*$/.test(zone))return false;try {new Intl.DateTimeFormat('en',{timeZone:zone}).format(0);return true}catch{return false}}
 export function localParts(at:number,zone:string){const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',weekday:'short',hourCycle:'h23'}).formatToParts(at).map(p=>[p.type,p.value]));return {date:`${p.year}-${p.month}-${p.day}`,minute:Number(p.hour)*60+Number(p.minute),weekday:p.weekday}}
 export function minute(value:string){if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(value))throw new Error('Quiet hours require HH:mm');return Number(value.slice(0,2))*60+Number(value.slice(3))}
 export function quietAt(at:number,zone:string,start:string,end:string){const t=localParts(at,zone).minute,s=minute(start),e=minute(end);return s===e?false:s<e?t>=s&&t<e:t>=s||t<e}

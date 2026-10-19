@@ -4,6 +4,7 @@ import type { Platform } from '../../platform'
 import { createSessionReader } from '../session/service'
 import { createProductAuth } from '../../../domains/authority/product-auth.server'
 import {readInput} from '../../../../vendor/base/modules/operator-auth/input.mjs'
+import { currency as workspaceCurrency, timezone as workspaceTimezone } from '../../../domains/channels/validators'
 
 export async function firstRunComplete(db: D1Database) {
   return Boolean((await db.prepare('SELECT completed_at FROM cradle_first_run WHERE singleton=1').first<{completed_at:number|null}>())?.completed_at)
@@ -28,8 +29,9 @@ export async function firstRunResponse(request: Request, platform: Platform) {
   const current = await auth.requireCsrf(new Request(request.url,{method:'POST',headers}))
   if(!['name','timezone','currency'].every(key=>typeof form[key]==='string'))return new Response('Enter valid workspace details.',{status:400})
   const name = String(form.name).trim(), timezone = String(form.timezone), currency = String(form.currency)
-  if (!name || name.length > 200 || !/^[A-Z]{3}$/.test(currency)) return new Response('Enter a workspace name and three-letter currency.',{status:400})
-  try { new Intl.DateTimeFormat('en',{timeZone:timezone}) } catch { return new Response('Enter a valid timezone.',{status:400}) }
+  if (!name || name.length > 200) return new Response('Enter a workspace name.',{status:400})
+  if (!workspaceCurrency.safeParse(currency).success) return new Response('Enter an ISO 4217 currency.',{status:400})
+  if (!workspaceTimezone.safeParse(timezone).success) return new Response('Enter a valid IANA timezone.',{status:400})
   const workspaceVersion=Number(form.workspaceVersion),settingsVersion=Number(form.settingsVersion)
   if(![workspaceVersion,settingsVersion].every(version=>Number.isSafeInteger(version)&&version>0))return new Response('Supply the current workspace and settings versions.',{status:400})
   const dependencies=[

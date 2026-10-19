@@ -2,9 +2,9 @@ import {installationArchive} from './helpers/installation-archive.mjs'
 import assert from 'node:assert/strict'
 import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
-import { completeFirstRun } from './helpers/complete-first-run.mjs'
+import { workspaceOperations } from './helpers/workspace-operations.mjs'
 
-contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001', 'The installed Lobby recognizes the owner claim before workspace setup; configured workspace details skip setup and sign-in takes the owner email hint', async () => {
+contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001 OPS-003 OPS-006', '[OPS-006] [OPS-003] The installed Lobby recognizes the owner claim, validates workspace setup, preserves money on relabel and moves workspace schedules', async () => {
   const h = await launchBaseAuthorityRuntime()
   try {
     const state = async () => {
@@ -48,7 +48,14 @@ contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001', 'The instal
     assert.equal((await submit(new URLSearchParams({ csrf: csrfToken, name: 'Changed without authority', timezone: 'UTC', currency: 'USD' }), 'https://foreign.example.test')).status, 403, 'Setup refuses foreign-origin mutation')
     assert.equal((await submit(new URLSearchParams([['csrf', csrfToken], ['name', 'First'], ['name', 'Second'], ['timezone', 'UTC'], ['currency', 'USD']]))).status, 400, 'Setup refuses ambiguous form fields')
     assert.equal((await submit(new URLSearchParams({ csrf: csrfToken, name: 'x'.repeat(9000), timezone: 'UTC', currency: 'USD' }))).status, 413, 'Setup bounds the request body before mutation')
-    await completeFirstRun(h.origin, cookie, h.dispatch)
+    const workspaceVersion=(await h.db.prepare('SELECT version FROM workspace').first()).version,settingsVersion=(await h.db.prepare('SELECT version FROM workspace_settings').first()).version
+    const details={csrf:csrfToken,name:'Northwind',timezone:'Australia/Sydney',currency:'AUD',workspaceVersion:String(workspaceVersion),settingsVersion:String(settingsVersion)}
+    for(const invalid of [{timezone:'Mars/Olympus'},{timezone:'+05:45'},{currency:'ZZZ'},{currency:'usd'}]){
+      assert.equal((await submit(new URLSearchParams({...details,...invalid}))).status,400,'Setup rejects non-IANA timezones and non-ISO currencies')
+      assert.equal((await h.db.prepare('SELECT version FROM workspace').first()).version,workspaceVersion)
+      assert.equal((await h.db.prepare('SELECT completed_at FROM cradle_first_run').first()).completed_at,null)
+    }
+    assert.equal((await submit(new URLSearchParams(details))).status,303)
     await h.db.prepare("UPDATE workspace SET name='Northwind' WHERE id='workspace'").run()
     assert.deepEqual(await state(), { state: 'claimed' })
     const claimed = await home()
@@ -57,6 +64,7 @@ contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001', 'The instal
     assert.doesNotMatch(claimed, /href="\/setup"|<script/)
     assert.equal((await h.request('/setup/state', { method: 'POST' })).status, 405)
     const owner=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators').first()).principal_id
+    await workspaceOperations(h,cookie)
     await installationArchive(h,{cookie,owner})
   } finally { await h.close() }
   await configuredInstallation()

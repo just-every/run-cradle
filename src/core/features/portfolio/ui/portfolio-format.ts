@@ -1,4 +1,5 @@
 import type { CampaignSummary, Person } from "./portfolio-types";
+import { formatWorkspaceMoney } from '../../../shared/workspace-money';
 
 export const formatDate = (
   date: string,
@@ -26,12 +27,7 @@ export const formatDateTime = (value: string, timeZone: string) => {
   }).format(parsed);
 };
 
-export const formatMoney = (amountMinor: number, currency: string) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amountMinor / 100);
+export const formatMoney = formatWorkspaceMoney;
 
 export const healthLabel = (campaign: CampaignSummary) =>
   campaign.health === null

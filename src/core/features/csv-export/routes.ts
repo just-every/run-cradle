@@ -31,7 +31,7 @@ export const registerExportRoutes = (app: Hono<AppEnv>, platform: Platform) => {
    const selected = (await campaigns.list()).filter(grid.matches).sort((a, b) => compareKeys(grid.key(a), grid.key(b), grid.directions))
    view = `Campaign grid · ${gridViewLabels[query.view]}${query.phase ? ` · ${query.phase}` : ''}${query.status ? ` · ${query.status}` : ''}`
    header = ['Campaign', 'Phase', 'Owner', 'Launch', `Budget (${workspace.currency})`, 'Status', 'Risk']
-   rows = selected.map(row => [row.name, row.phase, row.owner.name, row.launchDate, money(row.budgetMinor), row.status, row.riskRating])
+   rows = selected.map(row => [row.name, row.phase, row.owner.name, row.launchDate, money(row.budgetMinor, workspace.currency), row.status, row.riskRating])
   } else if (query.source === 'lens' || query.source === 'shipped-lens') {
    const lens = query.source === 'lens' ? await lenses.find(query.lensId) : await lenses.findShipped(query.key)
    if (!lens) throw new HTTPException(404, { message: 'This lens was not found.' })

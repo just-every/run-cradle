@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers'
 import {restoreOwner} from './restored-owner.server'
 import type { PlatformBindings } from './bindings'
 import { prepareLaunchSetup } from '../../apps/launch/setup.server'
+import { currency as workspaceCurrency, timezone as workspaceTimezone } from '../../domains/channels/validators'
 
 /** One durable coordinator completes the first owner's product initialization.
  * Base has already admitted the owner; this binding is never a public route. */
@@ -21,8 +22,9 @@ export class InstallationCoordinator extends DurableObject<PlatformBindings> {
         // Configuration that names the workspace (rer setup, Managed hosting) already holds the
         // owner's answers; /setup asks only when the installation left them unset.
         const configured=[this.env.WORKSPACE_NAME,this.env.WORKSPACE_TIMEZONE,this.env.WORKSPACE_CURRENCY].every(value=>value?.trim())
-        new Intl.DateTimeFormat('en',{timeZone:timezone})
-        if(name.length>200||!/^\p{Lu}{3}$/u.test(currency))throw new Error('Workspace name, timezone and currency must be valid.')
+        workspaceTimezone.parse(timezone)
+        workspaceCurrency.parse(currency)
+        if(name.length>200)throw new Error('Workspace name must contain at most 200 characters.')
         await this.env.DB.batch([
           this.env.DB.prepare(`INSERT OR IGNORE INTO workspace(id,created_at,updated_at,name,timezone,currency,version) VALUES('workspace',?,?,?,?,?,1)`).bind(now,now,name,timezone,currency),
           this.env.DB.prepare(`INSERT OR IGNORE INTO workspace_settings(id,created_at,updated_at,version,workspace_name,timezone,currency,quiet_hours_start,quiet_hours_end) SELECT 'workspace-settings',?,?,1,name,timezone,currency,'18:00','08:00' FROM workspace WHERE id='workspace'`).bind(now,now),

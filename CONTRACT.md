@@ -575,16 +575,16 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/launch-operator-doors.mjs; tests/ui-launch-operator-doors.mjs.
 - **OPS-003 — Workspace timezone.** Setup requires a valid IANA workspace timezone and rejects any other value with a validation error. Changing it re-renders every displayed time and moves the next fire time of every schedule in this contract; it leaves stored UTC timestamps byte-identical and moves no run already queued and no email already sent.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet.
+  *Status:* partial — named OPS-003 journeys in `tests/installed-home.mjs` and `tests/ui-launch-walkthrough.mjs` prove IANA validation, workspace deadline redisplay, shifted shipped readiness/digest fire times, and unchanged UTC, admitted work and sent-mail history. Owner-authored schedules retain their explicit timezone, and shared Timestamp presentation still uses the browser timezone; those do not satisfy every-schedule/every-displayed-time requirements.
 - **OPS-004 — Removing an operator.** Removing an operator ends their sessions within 1 minute, drops them from digest recipients, and cancels their outstanding readiness requests. Removal is rejected, naming each blocking record, while that operator owns an active campaign or is the assignee of an unresolved decision. Risks, deliverables, milestones, comments, activity entries, and AI analyses keep their attribution to the removed operator, and a lens condition naming them returns zero results rather than an error.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* partial — implemented in src/apps/launch/owners.server.ts; no clause-tagged test yet.
 - **OPS-005 — Erasing an operator.** A removed operator can be erased under `BASE-DATA-003`. Erasure replaces their name and email with a stable anonymous label wherever they appear, deletes their notifications and delivery records, keeps the comments, activity entries, and decision outcomes they authored under that label, completes within 5 minutes, is confirmed when complete, and cannot be undone.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* partial — implemented in src/apps/launch/erasure.server.ts; no clause-tagged test yet.
-- **OPS-006 — Money.** Setup requires an ISO 4217 workspace currency. Budget and spend are stored as minor-unit integers in that currency and are displayed, summed, and exported in it. Changing the currency relabels stored amounts and never converts them.
+- **OPS-006 — Money.** Setup requires an ISO 4217 workspace currency. Budget and spend are stored as minor-unit integers in that currency and are displayed, summed, and exported in it. Changing the currency relabels stored amounts and never converts them. The Campaign Grid's budget and spend totals cover the rows currently shown and label that scope.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/setup.server.ts; no clause-tagged test yet.
+  *Status:* done — named OPS-006 native setup, HTTP/CSV and 1440/390 journeys in `tests/installed-home.mjs` and `tests/ui-launch-walkthrough.mjs`: ISO validation, exact minor-unit input/display/sums/export for two-, zero- and three-decimal currencies, and relabel without changing stored amounts or UTC timestamps.
 
 ### Operator views
 
@@ -906,13 +906,13 @@ That commit identifies the initial audit. The rows below include subsequent buil
 
 Release 0.3.0 gate (19 October 2026, independent of the builders): on the release candidate, the published records clauses RECORDS-001 to RECORDS-004 and RECORDS-006, AUTH-BASE-001 and HOME-003 were exercised through the browser, locally at 1440 and 390 px and on a hosted own-account install with real SendGrid mail. That covered a template base with a link and a lookup, CSV import review, grid, board and form, saved filtered, grouped and sorted views, view CSV, a field removal with its recovery CSV, a record automation that notified and emailed the owner, an upgrade of a populated 0.2.0 install, and a hosted base export, removal, redeploy and base JSON return with email sign-in after. The gate fixed two defects before release: Records under `rer dev` (VIEW-012's limits module) and own-account mail deploys (AUTH-BASE-001). Every other row rests on its cited tests passing in CI Verify on the release commit; the gate did not exercise a live AI provider (AI-001 to AI-006, SET-002).
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **115 done, 67 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **116 done, 66 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 96 | 15 | 0 | 111 |
+| Published | 97 | 14 | 0 | 111 |
 | Target and push further | 19 | 52 | 28 | 99 |
-| All | 115 | 67 | 28 | 210 |
+| All | 116 | 66 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1032,10 +1032,10 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `AUTH-BASE-001` | Install and sign in | published | done | `tests/auth-base-only-runtime.mjs`, `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs` |  |
 | `OPS-001` | Equal operators | published | done | `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs` |  |
 | `OPS-002` | Management | published | done | `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs` |  |
-| `OPS-003` | Workspace timezone | published | partial | `src/apps/launch/setup.server.ts` | no clause-tagged test yet |
+| `OPS-003` | Workspace timezone | published | partial | `src/core/features/setup/server.ts`, `src/domains/channels/settings.server.ts`, `tests/installed-home.mjs`, `tests/ui-launch-walkthrough.mjs` | Explicit-zone owner-authored schedules do not move with the workspace; shared Timestamp presentation uses browser timezone. Shipped schedules, deadline redisplay, IANA validation and preservation have named proof. |
 | `OPS-004` | Removing an operator | published | partial | `src/apps/launch/owners.server.ts` | no clause-tagged test yet |
 | `OPS-005` | Erasing an operator | published | partial | `src/apps/launch/erasure.server.ts` | no clause-tagged test yet |
-| `OPS-006` | Money | published | partial | `src/apps/launch/setup.server.ts` | no clause-tagged test yet |
+| `OPS-006` | Money | published | done | `src/core/features/setup/server.ts`, `src/core/shared/workspace-money.ts`, `src/core/features/portfolio/ui/campaign-money-totals.tsx`, `tests/installed-home.mjs`, `tests/ui-launch-walkthrough.mjs` | |
 | `VIEW-001` | Operating surfaces | published | done | `tests/foundation-shell.mjs`, `tests/launch-authority-browser.mjs` |  |
 | `VIEW-002` | Selected detail | published | done | `tests/ui-launch-walkthrough.mjs` |  |
 | `VIEW-003` | Cross-view consistency | published | done | `tests/launch-write-effects.mjs`, `tests/helpers/launch-consistency-clauses.mjs` | Post-success native HTTP reads show committed campaign and child fields, derived Home/Overview/Grid/Detail counts, saved and shipped lenses, Decision Queue and Automation Monitor; archive and terminal decisions update the next read. |
