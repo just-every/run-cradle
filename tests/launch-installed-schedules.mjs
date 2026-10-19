@@ -10,7 +10,9 @@ const {recordsImportBrowserRuntime}=await fromRepo('tests/helpers/records-import
 const {freePort}=await fromRepo('tests/helpers/free-port.mjs')
 const {createUlid}=await fromRepo('src/core/shared/ids.ts')
 const {LAUNCH_APP_ID,launchEntities}=await fromRepo('src/apps/launch/contracts.ts')
-const monday='2026-10-19'
+// The held-out Monday is always ahead of the wall clock, so its scheduled ticks are never stale.
+const addDays=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000).toISOString().slice(0,10)
+const monday=addDays(new Date().toISOString().slice(0,10),7-(new Date().getUTCDay()+6)%7)
 assert.equal(new Date(monday+'T00:00:00Z').getUTCDay(),1)
 
 await test('emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
@@ -42,7 +44,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   const config=JSON.parse(readiness.trigger_config_json)
   const campaign=await command('launch.campaign.create',{fields:{code:'SCHEDULED',name:'Scheduled held-out campaign',ownerId:owner,startDate:monday,launchDate:monday,objective:'Exercise emitted scheduler',statusSummary:'Ready',phase:'Planning',status:'On track',health:70,budgetMinor:100,spendMinor:0,tags:[],customFields:{}}})
   const milestone=await command('launch.milestone.create',{fields:{campaignId:campaign.id,title:'Scheduled held-out launch',ownerId:owner,type:'Launch',status:'Not started',startDate:monday,endDate:null,conflictReason:null}})
-  const later=await command('launch.milestone.create',{fields:{campaignId:campaign.id,title:'Beyond configured lead days',ownerId:owner,type:'Launch',status:'Not started',startDate:'2026-10-23',endDate:null,conflictReason:null}})
+  const later=await command('launch.milestone.create',{fields:{campaignId:campaign.id,title:'Beyond configured lead days',ownerId:owner,type:'Launch',status:'Not started',startDate:addDays(monday,4),endDate:null,conflictReason:null}})
   const worker=await h.runtime.getWorker()
   const tick=at=>worker.scheduled({scheduledTime:Date.parse(at)-345*60000,cron:'* * * * *'})
   const count=async(sql,...params)=>Number((await h.db.prepare(sql).bind(...params).first()).n)
@@ -77,7 +79,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    await tick(at)
    const duplicate=await snapshot();assert.equal(duplicate.readiness,first.readiness);assert.equal(duplicate.mail,first.mail)
    const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessVersion:(await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()).version,readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
-   await tick('2026-10-20T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
+   await tick(addDays(monday,1)+'T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
    await assertAccepted('readiness')
   })
   await t.test('NOTIFY-004: enabled Monday digest creates one notification/delivery and mail',async st=>{
@@ -87,7 +89,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const digestSettings=await h.db.prepare("SELECT version FROM channel_digest_settings WHERE id='digest'").first()
    await command('digest.update',{version:digestSettings.version,recipientIds:[owner]})
    const cutoffCampaign=async(code,name,launchDate)=>command('launch.campaign.create',{fields:{code,name,ownerId:owner,startDate:monday,launchDate,objective:'Digest cutoff',statusSummary:'Ready',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
-   await cutoffCampaign('DAY30','Included at thirty days','2026-11-18');await cutoffCampaign('DAY31','Outside thirty days','2026-11-19')
+   await cutoffCampaign('DAY30','Included at thirty days',addDays(monday,30));await cutoffCampaign('DAY31','Outside thirty days',addDays(monday,31))
    const archived=await cutoffCampaign('ARCHIVED','Archived launch excluded',monday);await command('launch.campaign.archive',{id:archived.id},expected('campaign',archived))
    const quiet=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:quiet.version,changes:{quietHoursStart:'09:00',quietHoursEnd:'10:00'}})
    const before=await snapshot(),at=monday+'T09:00:00.000Z'
@@ -98,7 +100,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    assert.equal(first.mail,before.mail+1,'digest must send one provider request')
    await tick(at);await tick(monday+'T09:14:59.000Z');await tick(monday+'T09:15:00.000Z')
    const duplicate=await snapshot();assert.equal(duplicate.digest,first.digest);assert.equal(duplicate.mail,first.mail)
-   await tick('2026-10-26T09:15:00.000Z');assert.equal((await snapshot()).digest,first.digest,'Outside window must not create next week digest')
+   await tick(addDays(monday,7)+'T09:15:00.000Z');assert.equal((await snapshot()).digest,first.digest,'Outside window must not create next week digest')
    assert.equal(await count('SELECT count(*) n FROM channel_events WHERE event_id=?','digest:'+monday+':'+address),1)
    const mail=(await scheduledMail()).findLast(message=>message.subject==='Weekly portfolio digest')
    assert.ok(mail,'The provider request must contain the weekly digest')

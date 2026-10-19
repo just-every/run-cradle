@@ -2885,6 +2885,10 @@
       "sha256": "ae7ea7e49a6a00684e51025a7ad5a0fde0ec79a0837f16dab814d41c9c72c1ed",
       "executable": false
     },
+    ".github/assets/release/cradle-0.3.0-records-1440.png": {
+      "sha256": "5d61cd1ed191999aefbc60c2776a76e18286da08dd4d1f6592bf7c1d06f04a79",
+      "executable": false
+    },
     ".github/workflows/rer-managed.yml": {
       "sha256": "aa2861c9983f2ab90dadcc6f455b0b5c3e1bbeae0b9d9fec9bd27e9de591cb9a",
       "executable": false
@@ -11246,7 +11250,7 @@
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
-      "sha256": "246e18c1d22e7a94e78db4caf8d2b50ebb146e66f2b671efe7e2b664ae0e2e2e",
+      "sha256": "6f2d586a291b888cf3bbad9eac6d09847220355704b181f0021d20e6294a9a40",
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
