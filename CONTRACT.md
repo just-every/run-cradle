@@ -830,7 +830,7 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* partial — implemented in src/domains/channels; no clause-tagged test yet.
 - **NOTIFY-007 — Muting.** In settings each operator can mute any notification kind for themselves. Muting stops the email for that kind for that operator only; the in-app notification is still created, and delivery to every other operator is unchanged.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/ui/settings/preferences-panel.tsx; no clause-tagged test yet.
+  *Status:* done — `tests/ui-launch-walkthrough.mjs` names NOTIFY-007 and proves saved per-kind mute controls, retained in-app notices, unchanged delivery to another operator and unmuted kinds at 1440/390; `tests/launch-installed-schedules.mjs` proves weekly digest muting preserves its in-app event and prevents email.
 - **NOTIFY-008 — Overdue decisions.** A decision still unresolved 15 minutes after its due time notifies its assignee once, or its requester once when it has no assignee. Moving the due time later re-arms that notification once for the new time.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-installed-schedules.mjs.
@@ -906,13 +906,13 @@ That commit identifies the initial audit. The rows below include subsequent buil
 
 Release 0.3.0 gate (19 October 2026, independent of the builders): on the release candidate, the published records clauses RECORDS-001 to RECORDS-004 and RECORDS-006, AUTH-BASE-001 and HOME-003 were exercised through the browser, locally at 1440 and 390 px and on a hosted own-account install with real SendGrid mail. That covered a template base with a link and a lookup, CSV import review, grid, board and form, saved filtered, grouped and sorted views, view CSV, a field removal with its recovery CSV, a record automation that notified and emailed the owner, an upgrade of a populated 0.2.0 install, and a hosted base export, removal, redeploy and base JSON return with email sign-in after. The gate fixed two defects before release: Records under `rer dev` (VIEW-012's limits module) and own-account mail deploys (AUTH-BASE-001). Every other row rests on its cited tests passing in CI Verify on the release commit; the gate did not exercise a live AI provider (AI-001 to AI-006, SET-002).
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **114 done, 68 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **115 done, 67 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 95 | 16 | 0 | 111 |
+| Published | 96 | 15 | 0 | 111 |
 | Target and push further | 19 | 52 | 28 | 99 |
-| All | 114 | 68 | 28 | 210 |
+| All | 115 | 67 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1107,7 +1107,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `NOTIFY-004` | Digest | published | done | `tests/launch-installed-schedules.mjs` |  |
 | `NOTIFY-005` | Inbox | published | partial | `src/domains/channels/inbox.server.ts`, `src/domains/channels/routes.server.ts`, `tests/ui-launch-walkthrough.mjs` | Campaign deletion erases notifications instead of retaining unavailable items; ordering, opening, reads, operator isolation, archive and deleted-comment behavior have clause-named 1440/390 proof. |
 | `NOTIFY-006` | One per event | published | partial | `src/domains/channels/integration.server.ts` | no clause-tagged test yet |
-| `NOTIFY-007` | Muting | published | partial | `src/ui/settings/preferences-panel.tsx` | no clause-tagged test yet |
+| `NOTIFY-007` | Muting | published | done | `src/domains/channels/integration.server.ts`, `src/domains/channels/settings.server.ts`, `src/ui/settings/preferences-panel.tsx`, `tests/ui-launch-walkthrough.mjs`, `tests/launch-installed-schedules.mjs` | |
 | `NOTIFY-008` | Overdue decisions | published | done | `tests/launch-installed-schedules.mjs` |  |
 | `AI-001` | Analyses | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-ui.mjs` |  |
 | `AI-002` | Context | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-event-control.mjs` |  |
