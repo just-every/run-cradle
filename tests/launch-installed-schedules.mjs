@@ -15,7 +15,7 @@ const addDays=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000)
 const monday=addDays(new Date().toISOString().slice(0,10),7-(new Date().getUTCDay()+6)%7)
 assert.equal(new Date(monday+'T00:00:00Z').getUTCDay(),1)
 
-await test('emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
+await test('[NOTIFY-007] emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
  let outbound=0
  const h=await recordsImportBrowserRuntime(await freePort(),{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
  try{
@@ -107,6 +107,22 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const text=mail.content.find(part=>part.type==='text/plain').value
    assert.ok(text.includes('Scheduled held-out campaign'));assert.ok(!text.includes('Archived launch excluded'));const launches=text.split('Launches in the next 30 days')[1].split('Open High and Critical risks')[0];assert.ok(launches.includes('Included at thirty days'));assert.ok(!launches.includes('Outside thirty days'))
    await assertAccepted('weekly-digest')
+   const preferenceResponse=await fetch(h.origin+'/api/v1/preferences',{headers:{cookie:h.cookie}})
+   assert.equal(preferenceResponse.status,200)
+   const preferences=(await preferenceResponse.json()).data
+   await command('preferences.update',{version:preferences.version,preferences:{timezone:preferences.timezone,mutedKinds:['weekly-digest'],digestEnabled:preferences.digestEnabled,progressEnabled:preferences.progressEnabled}})
+   const beforeMuted=await snapshot()
+   await tick(addDays(monday,7)+'T09:00:00.000Z')
+   const afterMuted=await snapshot()
+   assert.equal(afterMuted.digest,beforeMuted.digest+1,'NOTIFY-007 muted weekly digest retains its in-app event and delivery record')
+   assert.equal(afterMuted.mail,beforeMuted.mail,'NOTIFY-007 muting also stops weekly digest email')
+   const muted=await h.db.prepare("SELECT d.state,n.id FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE d.kind='weekly-digest' AND d.operator_id=? ORDER BY d.created_at DESC LIMIT 1").bind(owner).first()
+   assert.equal(muted.state,'muted')
+   const inbox=await fetch(h.origin+'/api/v1/notifications',{headers:{cookie:h.cookie}})
+   assert.equal(inbox.status,200)
+   assert.ok((await inbox.json()).data.items.some(item=>item.id===muted.id),'NOTIFY-007 weekly digest remains in the inbox')
+   await command('preferences.update',{version:preferences.version+1,preferences:{timezone:preferences.timezone,mutedKinds:preferences.mutedKinds,digestEnabled:preferences.digestEnabled,progressEnabled:preferences.progressEnabled}})
+
   })
   await t.test('NOTIFY-008: unresolved decision due plus fifteen minutes notifies once and re-arms',async st=>{
    const dueAt=new Date(monday+'T09:50:00.000+05:45').toISOString()
