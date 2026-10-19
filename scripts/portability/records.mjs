@@ -2,6 +2,7 @@ import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {PortabilityError} from '@runeditrun/rer/modules/portability';
 import {catalogue,policy} from '@runeditrun/rer/modules/portability/catalogue';
+import {platformTable} from '@runeditrun/rer/internal/modules/portability/bookkeeping.mjs';
 import {fileRecords} from '@runeditrun/rer/modules/portability/files';
 const quote=name=>'"'+name.replaceAll('"','""')+'"';
 const normalize=sql=>sql.replace(/;\s*$/,'').replace(/\s+/g,' ').trim();
@@ -37,7 +38,9 @@ export async function prepareRecordRestore(db,root,path,config){
  const compiled=await build({entryPoints:[join(root,'src/domains/records/portable-schema.server.ts')],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
  const {portableRecordSchema}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].contents).toString('base64'));
  const plans=portableRecordSchema(groups),byName=new Map(plans.map(plan=>[plan.name,plan]));
- const missing=manifest.tables.filter(t=>!cat.tables.some(old=>old.name===t.name));
+ // Base authenticates the original manifest and every skipped bookkeeping row.
+ // Only product tables may require a schema compiled from archived records.
+ const missing=manifest.tables.filter(t=>!platformTable(t.name)&&!cat.tables.some(old=>old.name===t.name));
  for(const table of missing){
   const plan=byName.get(table.name);
   if(!plan||!/^CREATE TABLE /.test(plan.sql)||normalize(plan.sql)!==normalize(table.sql))refuse('unsupported_record_schema');

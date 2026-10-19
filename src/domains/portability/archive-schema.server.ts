@@ -7,7 +7,10 @@ export type ArchiveManifest={format:'cradle-archive';version:1;createdAt:string;
 export type ArchivePolicy={fts5ConfigurationOwners?:Readonly<Record<string,string>>;authorize(operation:'export'|'restore'):Promise<void>;excludeTables:readonly string[];secretColumns:Readonly<Record<string,readonly string[]>>;requiredConfiguration:string[];sourceIdentity:string;appId:string;authorizeTable(name:string):Promise<void>;additionalFiles?(db:D1Database,snapshotTable:(name:string)=>string):Promise<{key:string;bytes:number;sha256:string}[]>;beforeRestoreCommit?(db:D1Database,jobId:string):Promise<D1PreparedStatement[]>};
 export const credentialTables=new Set(['oa_sessions','oa_tokens','oa_limits','cradle_base_sessions','sessions','magic_links','authority_sessions','authority_magic_tokens','authority_credentials','authority_rate_limits','public_rate_limits','auth_rate_limits','connection_credentials','connection_oauth_states']);
 export const transferTables=new Set(['lifecycle_file_writes','portability_jobs','portability_parts','portability_segments','portability_fences','portability_steps','portability_assertions']);
-const internal=(name:string)=>name.startsWith('sqlite_')||name.startsWith('_cf_')||transferTables.has(name)||name.startsWith('e_stage_')||name.startsWith('e_snap_')||name==='d1_migrations';
+// Migration ledgers, matched by exact name: Wrangler's, and RER Platform's rer_migrations.
+// Each installation keeps its own history; an archive never carries one and a restore never writes one.
+export const migrationLedgers=new Set(['d1_migrations','rer_migrations']);
+const internal=(name:string)=>name.startsWith('sqlite_')||name.startsWith('_cf_')||transferTables.has(name)||name.startsWith('e_stage_')||name.startsWith('e_snap_')||migrationLedgers.has(name);
 export async function catalog(db:D1Database,policy:ArchivePolicy):Promise<ArchiveTable[]>{
  const shadows=new Set((await derivedStorage(db)).tables.map(t=>t.name));
  const tables=(await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='table' AND sql IS NOT NULL ORDER BY name").all<{name:string;sql:string}>()).results;const result:ArchiveTable[]=[];

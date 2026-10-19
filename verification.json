@@ -207,6 +207,14 @@
       "commands": [
         "pnpm test:calendar"
       ]
+    },
+    {
+      "name": "retained-archive",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node --test --test-concurrency=1 tests/rer-retained-archive.mjs"
+      ]
     }
   ],
   "nightly": [

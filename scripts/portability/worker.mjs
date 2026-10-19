@@ -1,3 +1,4 @@
+import {restoreMigrations} from './migrations.mjs';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {createRequire} from 'node:module';
@@ -50,7 +51,7 @@ async function run(direction,{root,path,journal}){
   if(direction==='export'&&await proxy.env.DB.prepare("SELECT 1 FROM lifecycle_erasures WHERE state='pending' LIMIT 1").first())throw new PortabilityError('erasure_pending',409);
   if(direction==='import')cleanup=await prepareRecordRestore(proxy.env.DB,root,path,portabilityPolicy);
   const config={...portabilityPolicy,derivedTables:await derivedSearch(proxy.env.DB)};
-  const service=await createPortability({db:proxy.env.DB,buckets:{FILES:installationBucket(proxy.env.DB,proxy.env.FILES)},policy:config});
+  const service=await createPortability({db:proxy.env.DB,buckets:{FILES:installationBucket(proxy.env.DB,proxy.env.FILES)},policy:config,migrations:()=>restoreMigrations(proxy.env.DB,root,config)});
   const receipt=direction==='export'?await exportArchive(service,path,transient):await importWithCustody(service,proxy.env.DB,path,journal);
   if(direction==='import')await rebuildSearch(proxy.env.DB,root);
   complete=true;
