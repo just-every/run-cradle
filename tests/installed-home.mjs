@@ -4,7 +4,7 @@ import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 import { completeFirstRun } from './helpers/complete-first-run.mjs'
 
-contract('HOME-003 BASE-DATA-001 RECORDS-006', 'The installed Lobby recognizes the owner claim before workspace setup is completed', async () => {
+contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001', 'The installed Lobby recognizes the owner claim before workspace setup; configured workspace details skip setup and sign-in takes the owner email hint', async () => {
   const h = await launchBaseAuthorityRuntime()
   try {
     const state = async () => {
@@ -59,9 +59,11 @@ contract('HOME-003 BASE-DATA-001 RECORDS-006', 'The installed Lobby recognizes t
     const owner=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators').first()).principal_id
     await installationArchive(h,{cookie,owner})
   } finally { await h.close() }
+  await configuredInstallation()
 })
 
-contract('SET-003 AUTH-BASE-001', 'Configured workspace details open the app at first sign-in, and sign-in takes the owner email hint', async () => {
+// RER's setup and Managed hosting configure the workspace: the owner's first sign-in opens the app.
+async function configuredInstallation() {
   const workspace = { WORKSPACE_NAME: 'Northwind', WORKSPACE_TIMEZONE: 'Australia/Sydney', WORKSPACE_CURRENCY: 'AUD' }
   const h = await launchBaseAuthorityRuntime({ configuration: workspace })
   try {
@@ -79,4 +81,4 @@ contract('SET-003 AUTH-BASE-001', 'Configured workspace details open the app at 
     const signin = await (await h.request('/signin?login_hint=' + encodeURIComponent('owner@example.test'))).text()
     assert.match(signin, /<input[^>]*id="signin-email"[^>]*value="owner@example.test"|<input[^>]*value="owner@example.test"[^>]*id="signin-email"/, 'Sign-in fills the email field from login_hint')
   } finally { await h.close() }
-})
+}
