@@ -52,7 +52,7 @@ npx -y @runeditrun/rer dev just-every/run-cradle
 
 No Node? `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-cradle` does the same, and the installer brings its own Node. To set Cradle up without starting it, use `setup` in place of `dev`.
 
-The checkout runs Cradle's pinned **rer 0.2.63**. To start it again later, run
+The checkout runs Cradle's pinned **rer 0.2.68**. To start it again later, run
 `cd run-cradle && rer dev`. The first `rer dev` installs the pinned frozen dependencies, sets up a local owner
 (`owner@run-cradle.test`), applies the migrations, starts the app and prints
 `RER_READY` with its local URL, `RER_SIGNED_IN` and `RER_OPEN`. Open the `RER_OPEN`
