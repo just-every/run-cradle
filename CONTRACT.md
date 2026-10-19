@@ -900,7 +900,7 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-The initial audit used commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026); each current row states its implementation, named proof and remaining gap.
+Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026).
 
 That commit identifies the initial audit. The rows below include subsequent builder updates through 20 October 2026; their cited evidence and gaps describe those updates.
 
