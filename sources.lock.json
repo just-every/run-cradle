@@ -2918,11 +2918,11 @@
       "executable": false
     },
     "AGENTS.consumer.md": {
-      "sha256": "c9ff308371dc9c0c59f3c69e05199a87c189d686a56a4065696f9e57a3a2bfe0",
+      "sha256": "677b7d76f6ad4ff7e7af7ed62c655b17460895fe23d3bfafd8c66a04a81bb7d1",
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "00237f79ee548249a48b0e4f44cf4d0fbe4b0858639811aa78045c5b85bd0405",
+      "sha256": "58059a995387ab23a13fc99e1d3de855ee1afbfb268071a78f5612c3ef40a685",
       "executable": false
     },
     "authoring/README.md": {
@@ -2974,7 +2974,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "169cb688e560271c417f4dfe5f550b1a9617b09802320fe06a65d7d8b6416be7",
+      "sha256": "868d38c92653b95175ec5a2417b78ff4dc42ff036383068fd0fc61550bf88356",
       "executable": false
     },
     "CLAUDE.md": {
@@ -2982,7 +2982,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5d53097836016f560d228426962b4ecd514075c6d054084c4b43e6605dd56345",
+      "sha256": "e642632953c3566aa34b77f633781caa99971f347ebb2b5e25a9bf5ff6fc7b30",
       "executable": false
     },
     "DEMO.md": {
@@ -4158,7 +4158,7 @@
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "5e994247473b415d8a440bec183de4cebdbcf154fb6034551aa6c6b775e9ceb6",
+      "sha256": "f961e46848a7f4865fc80b4e4360d4a0c1d36ba13170f11124d702a342daa2a9",
       "executable": false
     },
     "docs/installation-archives.md": {
@@ -4166,7 +4166,7 @@
       "executable": false
     },
     "docs/installation.md": {
-      "sha256": "c6016548d58bb3b102eaaa99870b47886ad36751b0cb7530c04f90147bfb7d9d",
+      "sha256": "4661a8ece79e10438bbafb83e1e904b5d88f10bd02f57f097557c3560fd12797",
       "executable": false
     },
     "docs/launch-readiness-20261002.md": {
@@ -4734,7 +4734,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "004ba719050680272ae816798f468a0f056d2cfc56c2f41aabf918b1e73c0d55",
+      "sha256": "04cf6c1dc8b6f934a17ede770f361de27ce25df2be17330818a67f0f6494bc87",
       "executable": false
     },
     "packaging.json": {
@@ -4790,11 +4790,11 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "6d6335f01370b13f8f0a043c09334c0397b3394dcacdf34b42c35b3219ffb5b7",
+      "sha256": "21cc83375e8fa6f4d0baec15131e317cf86720f6d9aa9887fbe403d0f6c19908",
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "7664ca873b36628c395c300ebccea4e53ed1e13790193fddf0bfa064ccc5b998",
+      "sha256": "955fb237541aa5190da0d678c83d3cc86eb3564e7092dd85b364fd9f29f45713",
       "executable": false
     },
     "rer-project.json": {
@@ -4810,7 +4810,7 @@
       "executable": false
     },
     "RUN-LOCALLY.md": {
-      "sha256": "1031dfc899235ddb6f252addce85ff16b23aeb1906f1bfe0e16edb96f95c7968",
+      "sha256": "ee90fa646242522083913fd21209acf5d2d932d7cacb4beba2a44f5d8252c83d",
       "executable": false
     },
     "sample-data/agent-briefs/brief-a-workshop.txt": {
@@ -5146,7 +5146,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "6b56985d7bb1b8723b42db44b05b46b542683e57241e70ddd29d5b18ec59c10e",
+      "sha256": "5215627cd99e2c465432592ea053691109887be66dbe26d0b131e6128658df35",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {

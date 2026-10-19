@@ -1,192 +1,880 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "date": "2026-10-19",
   "contractChanges": {
-    "AUTO-007": {
-      "change": "added",
-      "summary": "Owner-accepted clarification on 14 October 2026: the former unconditional transport retry promise applies only to failures known safe to retry. Uncertain SendGrid submissions retain visible Unknown action/run states and error details, with no automatic or manual resend. Existing safe retries retain their absolute 1, 5, 15, 30 and 60 minute offsets and action keys. Local action keys do not establish SendGrid idempotency; no reconciliation or exactly-once capability is claimed. See docs/launch-runtime.md#uncertain-delivery-contract--14-october-2026."
-    },
-    "AUTO-009": {
-      "change": "added",
-      "summary": "Clarifies the AUTO-007 uncertain-outcome exception: manual retry accepts only Failed runs, creates a linked retryOf run and retains original evidence and completed actions. Unknown runs cannot be manually resent; this adds no reconciliation operation or provider-side idempotency guarantee."
-    },
-    "NOTIFY-003": {
-      "change": "added",
-      "summary": "Clarifies that delivery retries follow AUTO-007's safe-retry requirement. Uncertain submission remains visibly Unknown instead of being converted to a confirmed failure eligible for resend. SendGrid acceptance is not proof of mailbox delivery; the in-app notification remains available. No new provider, authority or migration is introduced."
-    },
-    "HOME-002": {
+    "ACT-001": {
       "change": "changed",
-      "summary": "Supersedes HOME-001. The owner identity plate is replaced by a public product landing page at `/` with a hero of data streaming into one Projects screen, illustrated sections for tables, views, safe schema changes, the practical parts (CSV, automations, read-only AI) and ownership, and a closing call to action. Retained: no record content or public views, a link to `/signin`, the configurable credit to runeditrun.com with no telemetry or phone-home, and config-driven product and workspace names. Superseded: the former ban on a feature tour. Still excluded: pricing, testimonials, metrics and integrations the product does not ship. No new sessionless path or data change. See docs/contract-transition.md#public-product-landing--8-october-2026. Amended 12 October 2026 with DOCS-001: the landing and the docs share one header and footer; the header links Docs, the source repository and Sign in; the hero and closing call to action link to the docs, at least two sections link to the guide page on their subject, and the footer adds Docs, Source, Sign in and an MIT licence link. Nothing the clause required is removed; the new links are same-site or plain outbound anchors, so the page still loads nothing from another origin and gains no sessionless path."
-    },
-    "DOCS-001": {
-      "change": "added",
-      "summary": "New clause. Every page in docs/site.json is served without a session at /docs and /docs/<slug> inside the same header and footer as the landing, each page links to its source on GitHub, an unlisted slug is a genuine 404 and no third-party resource loads. The docs routes and their /docs and /docs/ public paths already existed; this records them as a guaranteed, tested surface. package.json now names the public repository so the Edit this page links and repository links in the pages are built. No data or migration change."
-    },
-    "AUTH-BASE-001": {
-      "change": "changed",
-      "summary": "Standalone local sign-in uses the checkout key and real Base dev sessions; the captured-mail sender and inbox page are retired. Hosted /signin names incomplete owner claim and missing or failed email configuration without claiming a request was received. Mail tests retain doubles only at their provider edge. Demo files and host remain owned by the demo lane."
-    },
-    "RECORDS-004": {
-      "change": "changed",
-      "summary": "Launch readiness opens its included base without creating a duplicate; manual templates retain preview and adoption. View CSV checkbox values use Yes/No, accepted by the existing importer."
-    },
-    "RECORDS-007": {
-      "change": "added",
-      "summary": "Agent-proposed schema changes: an owner-issued proposing key (one base, 30-day maximum, revocable, digest only) reaches only the proposal door over REST and MCP, proposes schema, views and forms with an impact preview, and cannot adopt, read records or manage keys. Only the owner adopts through release.adopt with the existing recheck; proposal text is inert. No existing clause is weakened."
-    },
-    "HOME-003": {
-      "change": "changed",
-      "summary": "The installed Lobby and public setup state read Base\u2019s durable owner claim, independently of workspace first-run details. A healthy rer deploy therefore offers Sign in immediately after owner claim, with no setup-token instruction. Signed-in app access still requires the owner to confirm workspace details under SET-003; public disclosure remains limited to claim state and the workspace name."
-    },
-    "OPS-002": {
-      "change": "changed",
-      "summary": "15 October 2026: the installation owner can hand ownership to another active member (`member.transfer-ownership`) after a fresh Base email-link proof (`owner:transfer`) in the same session; the new owner receives the owner's exact app scopes, the installation-owner flag and the Base owner role, and Records base schema control. In the same commit the former owner becomes a Base admin, so exactly one owner remains; they keep their app access until they remove themselves through the unchanged removal rules (no owned active campaign, no unresolved assigned decision). The current owner can never be removed, by themselves or anyone else: they hand over first, so the installation always keeps an active owner. Previously the sole owner could never be removed. Security: the step-up proof and actor/target versions are rechecked inside the admission transaction; both people's older sessions end because Base bumps their operator version on a role change; proposing keys issued by the former owner stop working."
-    },
-    "VIEW-007": {
-      "change": "changed",
-      "summary": "15 October 2026: launch collections (campaign grid, decision queue, lens list, launch reader) page with a keyset cursor over the requested sort and the record ID instead of a numeric offset, so records added or removed between pages neither repeat nor skip others. Cursor strings from earlier pages are not accepted; clients restart from the first page."
-    },
-    "VIEW-005": {
-      "change": "changed",
-      "summary": "Global search includes every authorized base, with current row and field checks and canonical record detail links. Launch archive filtering is retained; inaccessible fields never produce matches."
-    },
-    "RECORDS-006": {
-      "change": "changed",
-      "summary": "Settings prepares and downloads a verified installation .rer archive using the maintained CLI portability format and privacy policy. Only the current installation owner has this door; credentials and private connections remain excluded, and source is kept separately."
-    },
-    "VIEW-016": {
-      "change": "changed",
-      "summary": "Completes find navigation over all current record view displays. The selected readable cell is highlighted and scrolled into view across pages; calendar/timeline/agenda render their selected fields. A 5,000-order emitted-Worker journey covers desktop and phone. No authority, data model or contract guarantee changes."
-    },
-    "VIEW-014": {
-      "change": "changed",
-      "summary": "Completes live multi-user record editing and scoped presence. Native browser sessions refresh committed data within two seconds, keep open drafts on their original versions and receive current readable values on stale-write refusals, including final SQL guard races. Presence stores short-lived session handles only, rechecks current policy and native sessions, and never transfers in archives."
-    },
-    "FORM-002": {
-      "change": "changed",
-      "summary": "Authenticated forms gain earlier-answer visibility, ordered pages and sections, and server-side refusal of hidden answers. Page navigation preserves visible answers and discards newly hidden ones. Typed conditions and page/section metadata survive portable JSON copies. Current form/schema versions, field authority and canonical table validation still govern every submission."
-    },
-    "VIEW-015": {
-      "change": "changed",
-      "summary": "Record-editor and bulk field edits join the grid/board 50-action undo stack, scoped to the operator and table in browser session storage across navigation and reload. Every available record view exposes undo/redo. Typed cell preconditions preserve unrelated edits, and current-policy audit checks refuse another actor changing a target away and back. Inverses remain ordinary atomic audited writes with final version guards. Calendar date/range moves now undo and redo as one audited step at desktop and phone widths. Timeline drag and accessible date moves now share that stack. Creation/deletion remain unfinished."
-    },
-    "VIEW-010": {
-      "change": "changed",
-      "summary": "Calendar authoring, month/week/day layouts, workspace-zone date and instant ranges, complete revision-fenced period reads and audited date moves with current-policy conflicts. Digest-only private iCal subscriptions use current issuer/native authority, revocation and archive-excluded credentials. Instant query candidates are clipped to the displayed workspace-date period before reporting calendar counts."
-    },
-    "VIEW-011": {
-      "change": "changed",
-      "summary": "Raw and saved Gallery displays reuse current record policy, fields, filters, sorting and grouping. Private attachment covers support crop/fit and disappear when current access is narrowed. An opaque access revision makes permission-only changes refresh live records. Existing attachment authoring and export limitations remain under FILE-001/FILE-003."
-    },
-    "VIEW-009": {
-      "change": "changed",
-      "summary": "Boards add policy-checked person and single-link columns, paged/searchable destinations and private first-image covers with crop/fit. Moves remain ordinary versioned record patches and stop after policy loss. Within-stack ordering is an operator-scoped browser-tab presentation preference, using drag or buttons."
-    },
-    "VIEW-013": {
-      "change": "changed",
-      "summary": "Collaborative edits preserve original view ownership. Schema-adoption grants control locking/unlocking and locked-view changes, with final authority/version guards. Saved per-column summaries stream current-policy revision-fenced pages through 500,000 records without retaining the table; all seven methods, complete group counts and explicit fractional-average rounding are available. Ordered row/cell colour rules use visible readable fields and disappear with lost field access. Native JSON exports preserve choices and copy previews remap field/option references. Personal views remain owner-only. No product clause is weakened."
-    },
-    "PERM-009": {
-      "change": "changed",
-      "summary": "Adds explicit manual-base roles, creator additive adoption and retained destructive previews for owner review. Current policy and role versions fence mutations; adoption preserves base ownership and propagates authorized fields to full-base members. Collaborative/personal view authoring is role-scoped and audited. The clause remains partial with unsupported schema and interface dependencies named."
-    },
-    "VIEW-012": {
-      "change": "changed",
-      "summary": "Completes saved date/range timelines with arbitrary readable field groups, five zooms, linked dependencies, early-start conflicts and duration-based critical paths. Ordinary audited drag or accessible moves affect only the selected record and join undo/redo. Server-captured planned-date baselines persist, project under current policy and remap in native copies. Cycles or incomplete graphs withhold critical paths; declared record/axis limits refuse explicitly."
+      "summary": "Campaign activity: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
     },
     "ACT-002": {
       "change": "changed",
-      "summary": "Launch campaign comments now have versioned deletion with retained attributed activity. Comment creation and deletion change no business fields and emit no automation or AI work."
+      "summary": "Comments: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "ACT-003": {
+      "change": "changed",
+      "summary": "Dates and times: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
     },
     "ACT-004": {
       "change": "changed",
-      "summary": "Clause-named native Worker and desktop/phone journeys prove current mention delivery and plain-text removed or erased mentions without record changes."
+      "summary": "Mentions: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AGENT-001": {
+      "change": "added",
+      "summary": "Build a working base from the owner's files: added in the 16–19 October target contract (push-further clause, status partial)."
+    },
+    "AGENT-002": {
+      "change": "added",
+      "summary": "Test changes against live records before adoption: added in the 16–19 October target contract (push-further clause, status partial)."
+    },
+    "AGENT-003": {
+      "change": "added",
+      "summary": "Rebuild an incumbent app, not just its rows: added in the 16–19 October target contract (push-further clause, status partial)."
+    },
+    "AGENT-004": {
+      "change": "added",
+      "summary": "Operate a workflow to its outcome: added in the 16–19 October target contract (push-further clause, status partial)."
+    },
+    "AGENT-005": {
+      "change": "added",
+      "summary": "Repair broken automations and integrations: added in the 16–19 October target contract (push-further clause, status partial)."
+    },
+    "AGENT-006": {
+      "change": "added",
+      "summary": "Keep the data clean: added in the 16–19 October target contract (push-further clause, status missing)."
+    },
+    "AGENT-007": {
+      "change": "added",
+      "summary": "Agent authority: added in the 16–19 October target contract (push-further clause, status partial)."
+    },
+    "AI-001": {
+      "change": "changed",
+      "summary": "Analyses: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AI-002": {
+      "change": "changed",
+      "summary": "Context: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AI-003": {
+      "change": "changed",
+      "summary": "Human control: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AI-004": {
+      "change": "changed",
+      "summary": "Provider and failure: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AI-005": {
+      "change": "changed",
+      "summary": "Usage: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AI-006": {
+      "change": "changed",
+      "summary": "Daily ceiling: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AI-FIELD-001": {
+      "change": "added",
+      "summary": "AI fields: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "AI-FIELD-002": {
+      "change": "added",
+      "summary": "Document extraction: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "API-USER-001": {
+      "change": "changed",
+      "summary": "Scoped revocable keys: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "API-USER-002": {
+      "change": "added",
+      "summary": "Complete REST API: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "API-USER-003": {
+      "change": "added",
+      "summary": "OAuth for third-party apps: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "API-USER-004": {
+      "change": "added",
+      "summary": "Long-lived integration keys and personal access tokens: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "APP-SCOPE-001": {
+      "change": "changed",
+      "summary": "Explicit application scope: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "ASSIST-001": {
+      "change": "added",
+      "summary": "Base assistant: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "AUTH-BASE-001": {
+      "change": "changed",
+      "summary": "Install and sign in: own-account hosting with SendGrid or Resend deploys with rer deploy. The owner deploy declaration makes each mail credential optional and binds the one supplied (Managed: MAIL_API_KEY and MAIL_RELAY_URL; own account: MAIL_PROVIDER_API_KEY), and the hosting guide asks for the provider key as MAIL_API_KEY too, because rer's deploy check looks for that name. Gated hosted with real SendGrid mail."
+    },
+    "AUTO-001": {
+      "change": "changed",
+      "summary": "Definition: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "AUTO-002": {
+      "change": "changed",
+      "summary": "Commit boundary: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-003": {
+      "change": "changed",
+      "summary": "One run per trigger: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-004": {
+      "change": "changed",
+      "summary": "Definition changes: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-005": {
+      "change": "changed",
+      "summary": "Loop protection: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-006": {
+      "change": "changed",
+      "summary": "Run history: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "AUTO-007": {
+      "change": "changed",
+      "summary": "Transport retry: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-008": {
+      "change": "changed",
+      "summary": "Failure that retrying cannot fix: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-009": {
+      "change": "changed",
+      "summary": "Manual retry: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-010": {
+      "change": "changed",
+      "summary": "Fan-out: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "AUTO-011": {
+      "change": "changed",
+      "summary": "Shipped automations: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-USER-001": {
+      "change": "changed",
+      "summary": "Approved record triggers: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "AUTO-USER-002": {
+      "change": "added",
+      "summary": "Every trigger: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "AUTO-USER-003": {
+      "change": "added",
+      "summary": "Every action: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "AUTO-USER-004": {
+      "change": "added",
+      "summary": "Conditions, branches and repeats: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "AUTO-USER-005": {
+      "change": "added",
+      "summary": "Test runs: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "AUTO-USER-006": {
+      "change": "added",
+      "summary": "Run history and failure alerts: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "AUTO-USER-007": {
+      "change": "added",
+      "summary": "Scripts: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "AUTO-USER-008": {
+      "change": "added",
+      "summary": "Follow-up until done: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "AUTO-USER-009": {
+      "change": "added",
+      "summary": "Automation authorship and lifetime: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "AUTO-USER-010": {
+      "change": "added",
+      "summary": "Email to anyone from the installation sender: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "BOUND-001": {
+      "change": "added",
+      "summary": "Separate products stay separate: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "BOUND-002": {
+      "change": "added",
+      "summary": "Not a regulated system of record: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "BOUND-003": {
+      "change": "added",
+      "summary": "Bounded compute: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "BOUND-004": {
+      "change": "added",
+      "summary": "Honest migration and delivery claims: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "BOUND-005": {
+      "change": "added",
+      "summary": "One business per installation: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "CALC-001": {
+      "change": "added",
+      "summary": "Formula fields: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "CALC-002": {
+      "change": "added",
+      "summary": "Lookups across links: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "CALC-003": {
+      "change": "added",
+      "summary": "Rollups and counts: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "CALC-004": {
+      "change": "added",
+      "summary": "Calculation consistency: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "CALC-005": {
+      "change": "added",
+      "summary": "Airtable formula coverage: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "CAMP-001": {
+      "change": "changed",
+      "summary": "Record: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-002": {
+      "change": "changed",
+      "summary": "Lifecycle: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-003": {
+      "change": "changed",
+      "summary": "Validation: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-004": {
+      "change": "changed",
+      "summary": "Detail and rollups: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-005": {
+      "change": "changed",
+      "summary": "Health: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-006": {
+      "change": "changed",
+      "summary": "Portfolio overview: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "CAMP-007": {
+      "change": "changed",
+      "summary": "Grid: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "CAMP-008": {
+      "change": "changed",
+      "summary": "Custom fields: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-009": {
+      "change": "changed",
+      "summary": "Archiving: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-010": {
+      "change": "changed",
+      "summary": "Restoring: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-011": {
+      "change": "changed",
+      "summary": "Deletion: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-012": {
+      "change": "changed",
+      "summary": "Risk rating: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-013": {
+      "change": "changed",
+      "summary": "Bulk edit: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "CAMP-014": {
+      "change": "changed",
+      "summary": "Duplicating: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "COLLAB-001": {
+      "change": "added",
+      "summary": "Record comments and mentions: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "COLLAB-002": {
+      "change": "added",
+      "summary": "Record history: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "COLLAB-003": {
+      "change": "added",
+      "summary": "Watching and change notifications: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "DATA-001": {
+      "change": "changed",
+      "summary": "Export contents: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "DATA-002": {
+      "change": "changed",
+      "summary": "CSV export: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DATA-003": {
+      "change": "changed",
+      "summary": "Capacity limits: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "DEC-001": {
+      "change": "changed",
+      "summary": "Record: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DEC-002": {
+      "change": "changed",
+      "summary": "Queue: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DEC-003": {
+      "change": "changed",
+      "summary": "Approval: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DEC-004": {
+      "change": "changed",
+      "summary": "First outcome wins: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DEC-005": {
+      "change": "changed",
+      "summary": "Assignment: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DEC-006": {
+      "change": "changed",
+      "summary": "Changes, rejection, and cancellation: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DEC-007": {
+      "change": "changed",
+      "summary": "Linked-risk effect: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DEC-008": {
+      "change": "changed",
+      "summary": "Finality: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DELIV-001": {
+      "change": "changed",
+      "summary": "Record: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DELIV-002": {
+      "change": "changed",
+      "summary": "Completion: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DELIV-003": {
+      "change": "changed",
+      "summary": "Overdue: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "DOCS-001": {
+      "change": "changed",
+      "summary": "Public docs: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "FIELD-001": {
+      "change": "added",
+      "summary": "Complete field types: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "FIELD-002": {
+      "change": "added",
+      "summary": "Field conversion and table deletion with preview: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "FIELD-003": {
+      "change": "added",
+      "summary": "Validation and conditional rules: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "FIELD-004": {
+      "change": "added",
+      "summary": "Notify people when they're added to a user field: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "FIELD-005": {
+      "change": "added",
+      "summary": "Linked-record picker: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "FILE-001": {
+      "change": "added",
+      "summary": "Attachments with previews: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "FILE-002": {
+      "change": "added",
+      "summary": "Attachments from connected file stores: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "FILE-003": {
+      "change": "added",
+      "summary": "Attachments in exports, erasure and migration: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "FORM-001": {
+      "change": "added",
+      "summary": "Public shareable forms: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "FORM-002": {
+      "change": "added",
+      "summary": "Conditional form logic: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "FORM-003": {
+      "change": "added",
+      "summary": "Embedded forms and views: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "HOME-002": {
+      "change": "changed",
+      "summary": "Public product landing: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "HOME-003": {
+      "change": "changed",
+      "summary": "Installed Lobby: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "IFACE-001": {
+      "change": "added",
+      "summary": "Interface designer: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "IFACE-002": {
+      "change": "added",
+      "summary": "Record review and approval screens: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "IFACE-003": {
+      "change": "added",
+      "summary": "Charts and dashboards: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "IFACE-004": {
+      "change": "added",
+      "summary": "Buttons and record actions: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "IFACE-005": {
+      "change": "added",
+      "summary": "External portals: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "IFACE-006": {
+      "change": "added",
+      "summary": "Templates and starting apps: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "IFACE-007": {
+      "change": "added",
+      "summary": "Per-component permissions and viewer filters: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "IMPORT-001": {
+      "change": "changed",
+      "summary": "CSV preview: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "IMPORT-002": {
+      "change": "changed",
+      "summary": "Merge keys: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "IMPORT-003": {
+      "change": "changed",
+      "summary": "Commit: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "IMPORT-004": {
+      "change": "changed",
+      "summary": "Replay and staleness: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "IMPORT-005": {
+      "change": "changed",
+      "summary": "Stored file: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "INTEG-001": {
+      "change": "added",
+      "summary": "Slack, Microsoft Teams and Nook: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "INTEG-002": {
+      "change": "added",
+      "summary": "Gmail and Microsoft 365 mail: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "INTEG-003": {
+      "change": "added",
+      "summary": "Google Sheets and Excel: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "INTEG-004": {
+      "change": "added",
+      "summary": "Google Calendar and Outlook: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "INTEG-005": {
+      "change": "added",
+      "summary": "CRM, development and payment systems: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "INTEG-006": {
+      "change": "added",
+      "summary": "Twilio SMS: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "INTEG-007": {
+      "change": "added",
+      "summary": "Zapier, Make and Crank: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "LENS-001": {
+      "change": "changed",
+      "summary": "Definition: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "LENS-002": {
+      "change": "changed",
+      "summary": "Preview: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "LENS-003": {
+      "change": "changed",
+      "summary": "Save and share: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "LENS-004": {
+      "change": "changed",
+      "summary": "Edit and delete: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
     },
     "LENS-005": {
       "change": "changed",
-      "summary": "Saved lens links open current evaluated results. Refresh replaces the definition, non-archived list, count, conditions and selected detail together; the editor remains available through Edit lens."
+      "summary": "Current results: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "LENS-006": {
+      "change": "changed",
+      "summary": "Shipped views: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "LENS-007": {
+      "change": "changed",
+      "summary": "Conditions: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "MCP-001": {
+      "change": "added",
+      "summary": "Live records for AI assistants: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "MIGRATE-001": {
+      "change": "added",
+      "summary": "Airtable move-in: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "MIGRATE-002": {
+      "change": "added",
+      "summary": "Smartsheet move-in: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "MIGRATE-003": {
+      "change": "added",
+      "summary": "Quickbase move-in: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "MIGRATE-004": {
+      "change": "added",
+      "summary": "Spreadsheet workbook move-in: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "MIGRATE-005": {
+      "change": "added",
+      "summary": "People and provenance on move-in: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "MILE-001": {
+      "change": "changed",
+      "summary": "Record: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "MILE-002": {
+      "change": "changed",
+      "summary": "Timeline lens: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "MILE-003": {
+      "change": "changed",
+      "summary": "Dependencies: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "MILE-004": {
+      "change": "changed",
+      "summary": "Readiness request: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "MILE-005": {
+      "change": "changed",
+      "summary": "Readiness rescheduling: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "MILE-006": {
+      "change": "changed",
+      "summary": "Overdue: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "MOBILE-001": {
+      "change": "added",
+      "summary": "Complete phone web app: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "MOBILE-002": {
+      "change": "added",
+      "summary": "Installable app with camera and scanning: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "MOBILE-003": {
+      "change": "added",
+      "summary": "Native iOS and Android apps: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "NOTIFY-001": {
+      "change": "changed",
+      "summary": "In-app events: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "NOTIFY-002": {
+      "change": "changed",
+      "summary": "Email delivery: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "NOTIFY-003": {
+      "change": "changed",
+      "summary": "Delivery failure: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "NOTIFY-004": {
+      "change": "changed",
+      "summary": "Digest: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "NOTIFY-005": {
+      "change": "changed",
+      "summary": "Inbox: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "NOTIFY-006": {
+      "change": "changed",
+      "summary": "One per event: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "NOTIFY-007": {
+      "change": "changed",
+      "summary": "Muting: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "NOTIFY-008": {
+      "change": "changed",
+      "summary": "Overdue decisions: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "OPS-001": {
+      "change": "changed",
+      "summary": "Equal operators: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "OPS-002": {
+      "change": "changed",
+      "summary": "Management: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "OPS-003": {
+      "change": "changed",
+      "summary": "Workspace timezone: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "OPS-004": {
+      "change": "changed",
+      "summary": "Removing an operator: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "OPS-005": {
+      "change": "changed",
+      "summary": "Erasing an operator: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "OPS-006": {
+      "change": "changed",
+      "summary": "Money: clause text and acceptance revised in the 16–19 October target contract (published clause, status partial)."
+    },
+    "OWN-001": {
+      "change": "added",
+      "summary": "Owned installation without seat charges: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "PERM-001": {
+      "change": "added",
+      "summary": "Roles and base sharing: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "PERM-002": {
+      "change": "added",
+      "summary": "Row and field rules: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "PERM-003": {
+      "change": "added",
+      "summary": "Action and schema authority: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "PERM-004": {
+      "change": "added",
+      "summary": "Preview access as a user: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "PERM-005": {
+      "change": "added",
+      "summary": "Guests: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "PERM-006": {
+      "change": "added",
+      "summary": "Share links: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "PERM-007": {
+      "change": "added",
+      "summary": "Company sign-in and provisioning: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "PERM-008": {
+      "change": "added",
+      "summary": "Admin audit log: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "PERM-009": {
+      "change": "added",
+      "summary": "Who changes schema and views within a base: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "RECORDS-001": {
+      "change": "changed",
+      "summary": "Records builder: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RECORDS-002": {
+      "change": "changed",
+      "summary": "Manual schema adoption: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RECORDS-003": {
+      "change": "changed",
+      "summary": "Records views: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RECORDS-004": {
+      "change": "changed",
+      "summary": "View CSV and templates: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RECORDS-005": {
+      "change": "changed",
+      "summary": "Reviewed base import: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RECORDS-006": {
+      "change": "changed",
+      "summary": "Portable base exits: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RECORDS-007": {
+      "change": "changed",
+      "summary": "Agent-proposed schema changes: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RECORDS-008": {
+      "change": "added",
+      "summary": "Merge import into an existing table: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "RECORDS-009": {
+      "change": "added",
+      "summary": "Record templates and duplicate record: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "REPORT-001": {
+      "change": "added",
+      "summary": "Scheduled reports: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "REPORT-002": {
+      "change": "added",
+      "summary": "Print and page layouts: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "RISK-001": {
+      "change": "changed",
+      "summary": "Record: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RISK-002": {
+      "change": "changed",
+      "summary": "Lifecycle: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RISK-003": {
+      "change": "changed",
+      "summary": "Escalation: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RISK-004": {
+      "change": "changed",
+      "summary": "Isolation: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "RISK-005": {
+      "change": "changed",
+      "summary": "Shipped lens: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "SCALE-001": {
+      "change": "added",
+      "summary": "Operational scale: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "SET-001": {
+      "change": "changed",
+      "summary": "Settings area: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "SET-002": {
+      "change": "changed",
+      "summary": "AI configuration: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "SET-003": {
+      "change": "changed",
+      "summary": "First run and sample data: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "SNAP-001": {
+      "change": "added",
+      "summary": "Automatic snapshots and point-in-time restore: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "SNAP-002": {
+      "change": "added",
+      "summary": "Trash: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "SYNC-001": {
+      "change": "added",
+      "summary": "Synced tables: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "SYNC-002": {
+      "change": "added",
+      "summary": "Warehouse export: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "VIEW-001": {
+      "change": "changed",
+      "summary": "Operating surfaces: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "VIEW-002": {
+      "change": "changed",
+      "summary": "Selected detail: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "VIEW-003": {
+      "change": "changed",
+      "summary": "Cross-view consistency: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "VIEW-004": {
+      "change": "changed",
+      "summary": "Explicit states: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "VIEW-005": {
+      "change": "changed",
+      "summary": "Search: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
     },
     "VIEW-006": {
       "change": "changed",
-      "summary": "Current caller revisions fence every Launch record and definition mutation, comment deletion, workspace and readiness settings, sample removal, bulk undo and safe retry. Stale admissions and commit races name the authorized current version and commit no effects; native setup and 1440/390 settings journeys retain those revisions. API clients now supply source run version for launch.automation.retry, reviewed record revisions in launch.samples.remove expected, and readinessVersion alongside readiness setting edits. Native first-run forms carry workspaceVersion and settingsVersion."
+      "summary": "Concurrent edits: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "VIEW-007": {
+      "change": "changed",
+      "summary": "Paging and order: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "VIEW-008": {
+      "change": "added",
+      "summary": "Spreadsheet-grade grid editing: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "VIEW-009": {
+      "change": "added",
+      "summary": "Kanban: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "VIEW-010": {
+      "change": "added",
+      "summary": "Calendar: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "VIEW-011": {
+      "change": "added",
+      "summary": "Gallery: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "VIEW-012": {
+      "change": "added",
+      "summary": "Timeline and Gantt: the timeline bounds now live in source, so Records loads under rer dev (0.2.0..main imported seed.json into the browser bundle, and every Records page failed locally while built Workers worked)."
+    },
+    "VIEW-013": {
+      "change": "added",
+      "summary": "Personal, locked and formatted views: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "VIEW-014": {
+      "change": "added",
+      "summary": "Live multi-user editing: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "VIEW-015": {
+      "change": "added",
+      "summary": "Undo and redo: added in the 16–19 October target contract (target clause, status partial)."
+    },
+    "VIEW-016": {
+      "change": "added",
+      "summary": "Find in view: added in the 16–19 October target contract (target clause, status done)."
+    },
+    "VIEW-017": {
+      "change": "added",
+      "summary": "List view across linked tables: added in the 16–19 October target contract (target clause, status missing)."
+    },
+    "WEBHOOK-USER-001": {
+      "change": "changed",
+      "summary": "Private destinations and signed delivery: clause text and acceptance revised in the 16–19 October target contract (published clause, status done)."
+    },
+    "WEBHOOK-USER-002": {
+      "change": "added",
+      "summary": "Change subscriptions: added in the 16–19 October target contract (target clause, status missing)."
     }
   },
   "extensionPointChanges": [],
   "migrations": [
     {
-      "id": "migrations/core/1220_launch_runtime.sql",
-      "buyerSteps": "Apply in the core group before the updates group, preserving all applied SQL. It adds launch dispatch, retry, action-effect, automation-authority and model-call bookkeeping and marks every existing launch event as already dispatched, so no historical mutation replays. Records and authority are unchanged."
+      "id": "migrations/core/1230_record_csv_mappings.sql",
+      "buyerSteps": "Apply in the core group after 1220, preserving all applied SQL. Adds the table for saved per-table CSV import mappings. Additive; existing records are unchanged."
     },
     {
-      "id": "migrations/updates/9026_provider_setup_lifecycle.sql",
-      "buyerSteps": "Apply in the updates group, preserving all applied SQL. It adds Base provider setup controls; an absent setting means off, so identity-provider sign-in stays off after upgrade until the owner turns it on."
-    },
-    {
-      "id": "migrations/updates/9026_schema_proposals.sql",
-      "buyerSteps": "Apply after 9025 in the updates group, preserving all applied SQL. It adds proposing-key bindings and stored agent proposals; existing records, views, forms, keys, grants and memberships are unchanged. Installation archives never carry proposing-key bindings."
-    },
-    {
-      "id": "migrations/updates/9027_import_reversal_fences.sql",
-      "buyerSteps": "Apply after 9026. Additive Base import-kit fences for reversal; existing imports and records are unchanged."
-    },
-    {
-      "id": "migrations/updates/9028_import_custody_retirement.sql",
-      "buyerSteps": "Apply after 9027. Adds the append-only import retirement and erasure journal (its rows cannot be updated or deleted) and refreshes one stream-revision trigger. Existing imports and records are unchanged."
-    },
-    {
-      "id": "migrations/updates/9029_human_effect_resolution.sql",
-      "buyerSteps": "Apply after 9028. Adds a unique index so each execution attempt holds at most one human-evidence resolution. An installation that already holds two for one attempt fails this step: resolve the duplicate before upgrading."
-    },
-    {
-      "id": "migrations/updates/9030_legacy_sample_ulids.sql",
-      "buyerSteps": "Apply after 9029 in the updates group, preserving all applied SQL. It rewrites only the seven sample-fixture IDs outside the ULID alphabet (two lenses, four automations, one notification read) and every column that references them, so adopted legacy samples accept typed commands. No other row changes; historical receipt JSON keeps the old literal."
-    },
-    {
-      "id": "migrations/updates/9031_installation_owner_guard.sql",
-      "buyerSteps": "Apply after 9030 in the updates group, preserving all applied SQL. It adds two triggers on oa_operators that refuse (last_owner) deactivating, demoting or deleting the Base operator of the active installation owner unless another active principal is already the installation owner in the same transaction. No rows change; hand ownership over with member.transfer-ownership."
-    },
-    {
-      "id": "migrations/updates/9032_repair_accounting_mapping.sql",
-      "buyerSteps": "Apply after 9031 in the updates group without changing any prior SQL. This adds versioned owner-approved accounting contact, account and tax mappings. It grants no provider access and does not create a payable."
-    },
-    {
-      "id": "migrations/updates/9033_oidc_dependencies.sql",
-      "buyerSteps": "Apply after 9032 in the updates group without changing existing accounts or sessions. This adds optional Base identity-provider link and OIDC transaction storage. A new installation keeps provider sign-in off until configured and approved. Configure IDENTITY_PROVIDER through setup and manage enable, disable or unlink at /auth/settings/identity."
-    },
-    {
-      "id": "migrations/updates/9034_owner_signin.sql",
-      "buyerSteps": "Apply after 9033, preserving all previous migration bytes. This adds Base\u2019s single-use, expiring owner sign-in grant table. Run rer install with the pinned rer (0.2.23) and redeploy before using rer signin."
-    },
-    {
-      "id": "migrations/updates/9035_launch_display_names.sql",
-      "buyerSteps": "Apply after 9034. Changes only retained Launch display labels and declared primary fields; record IDs, values and authority remain unchanged."
-    },
-    {
-      "id": "migrations/updates/9036_base_import_preparation_steps.sql",
-      "buyerSteps": "Apply after 9035. Adds Base import-kit preparation checkpoints for imports prepared across requests; erasure, cancellation and header retirement read them. Additive; kept in archives."
-    },
-    {
-      "id": "migrations/updates/9037_base_import_stream_sources.sql",
-      "buyerSteps": "Apply after 9036. Records the source digest a prepared import stream began with, so only the same upload replays under its operation key. Additive."
+      "id": "migrations/core/1240_record_comments.sql",
+      "buyerSteps": "Apply after 1230. Existing manual-base editors (rules that allow record.patch for a human principal) gain comment.add, comment.edit and comment.delete under the same principal, row and allow/deny rules; read-only and delegated rules are unchanged. The policy version advances, so previously frozen grants are re-evaluated."
     },
     {
       "id": "migrations/core/1250_record_presence.sql",
-      "buyerSteps": "Apply the additive core migration without changing prior SQL. It stores short-lived presence handles and clears them on removal/erasure; installation archives exclude this transient table. Existing record data and grants stay intact."
+      "buyerSteps": "Apply after 1240. Adds short-lived record presence (who is viewing) with expiry and person indexes, and a trigger that forgets a person's presence when their principal is deactivated. Additive."
     },
     {
-      "id": "migrations/updates/9038_calendar_feeds.sql",
-      "buyerSteps": "Apply the additive credential lookup index in the updates group. Existing records and credentials are unchanged; calendar subscriptions are created explicitly and credentials never enter archives."
+      "id": "migrations/core/1260_owner_connections.sql",
+      "buyerSteps": "Apply after 1250. The active installation owner's own allow rules gain the connection read, configure, begin-consent, check and revoke actions, matching new installations. Membership revocations, row restrictions, denies and non-owner policies are preserved; the policy version advances."
     },
     {
       "id": "migrations/core/1270_manual_base_roles.sql",
-      "buyerSteps": "Apply in the core group after 1260. Adds per-base role assignments only. Existing memberships and policies retain their current access until a base owner explicitly assigns a role."
+      "buyerSteps": "Apply after 1260. Adds per-base role assignments (base roles and creator schema adoption, PERM-009). Additive; no existing access changes until an owner assigns a role."
     },
     {
       "id": "migrations/core/1280_launch_comment_deletion.sql",
-      "buyerSteps": "Apply after core 1270. Existing Launch comment-create allow and deny rules gain the paired comment-delete action with their principals, row and field restrictions retained. No record content or other capability is changed."
+      "buyerSteps": "Apply after 1270. Rules that already allow launch.comment.create gain launch.comment.delete with the same entity, principals, restrictions and effect; the policy version advances."
+    },
+    {
+      "id": "migrations/updates/9038_calendar_feeds.sql",
+      "buyerSteps": "Apply in the updates group after 9037. Adds an index for private calendar-feed credentials (VIEW-010 iCal subscriptions). Additive."
     }
   ],
-  "breaking": true,
-  "agentUpdateInstructions": "Upgrade from 0.1.0 by merging this release into your checkout, keeping your customisations and every applied migration byte. Before pulling, stop rer dev and take an export with rer export. Run rer install with the pinned @runeditrun/rer 0.2.50, then rer dev (local) or rer deploy (hosted); both apply the additive migrations listed here in order: core 1220, then updates 9026 to 9037. Hosted mail: set MAIL_PROVIDER to rer (Managed hosting: MAIL_RELAY_URL and MAIL_API_KEY come from RER), sendgrid or resend (MAIL_PROVIDER_API_KEY), plus MAIL_FROM; a hosted installation without one of these refuses email sign-in with a plain message. Local sign-in now uses the checkout key through rer dev; the development outbox page is gone and local mail is never shown in a page. rer deploy claims the owner itself; SETUP_TOKEN is retired at the claim and the Lobby offers Sign in before workspace setup is completed (HOME-003). Launch collection cursors are keysets (VIEW-007): a client holding an offset cursor from 0.1.0 restarts from the first page. The installation owner can hand ownership to another active member (OPS-002) and can no longer be removed; migration 9031 enforces this in the database. Identity-provider sign-in (9026, 9033) stays off until the owner configures and approves it. Settings prepares the installation .rer archive for the owner only (RECORDS-006); credentials, sessions and private connections stay excluded. Keep new providers, scopes and grants inactive until explicitly authorized. Local checks do not establish hosted readiness or full flagship acceptance (ACCEPTANCE.md). Apply core 1250 for live presence. Live views need no provider account or additional configuration. Launch callers must send input.version with launch.automation.retry, the revisions returned by /api/v1/launch/samples as expected for sample removal, and changes.readinessVersion for readiness edits. Native setup carries hidden workspaceVersion and settingsVersion fields; custom setup clients must supply them. Old revisions receive 409 with the authorized current version and require a fresh review; never resend an uncertain provider effect.",
-  "publicReleaseNotes": "Cradle 0.2.0 sends Managed hosting mail through the RER relay, so a Managed installation needs no SendGrid or Resend account; own-account hosting keeps SendGrid and Resend. A valid login_hint prefills the sign-in email without submitting it.\n\nThe launch template becomes a working app: CSV import with review, CSV export of the grid, lenses and decision queue, custom fields, bulk edit with undo, sample data install and removal, durable automations with safe retries, and ownership handover. Records gain reviewed CSV-set and native JSON base imports, portable base exits, an owner-only installation archive in Settings, and agent-proposed schema changes the owner adopts.\n\nrer deploy claims the owner; the Lobby offers Sign in straight away. Local sign-in uses the checkout key; there is no mail outbox page. Documentation is served at /docs.\n\nMigrations 1220 and 9026 to 9037 are additive. Launch paging cursors changed to keysets, so older cursors restart from the first page.\n\nUpgrading a local install: stop dev, rer export, pull, then rer install and rer dev.\n\nScreenshot: .github/assets/release/cradle-0.2.0-records-1440.png (Records at 1440 px: the Project tracker template's Projects grid in local dev).\n\nLocal and CI verification only; this release does not claim hosted capacity, live mailbox delivery or full flagship acceptance."
+  "breaking": false,
+  "agentUpdateInstructions": "Upgrade from 0.2.0 by merging this release into your checkout, keeping your customisations and every applied migration byte. Back up first: stop rer dev and run rer export --output exports/workspace.rer; for a hosted installation, sign in as the owner and download Settings → Export your installation → Download verified archive (wrangler d1 export cannot export Cradle's database because it holds FTS5 search tables). Run rer install with the pinned @runeditrun/rer 0.2.63, then rer dev (local) or rer deploy (hosted); both apply the seven additive migrations listed here in order: core 1230 to 1280, then updates 9038. The independent 0.3.0 gate upgraded a populated 0.2.0 local install this way and kept its bases, records and links. Own-account hosting with SendGrid or Resend: put the provider key in your hosting file as both MAIL_PROVIDER_API_KEY and MAIL_API_KEY. Managed hosting is unchanged. A first rer deploy to a new environment can stop part-way through applying the migrations (provider-request-budget or a transient Cloudflare transport failure); run the same command again and it resumes from the applied ones. Policy migrations 1240, 1260 and 1280 add comment and connection actions to existing editor and owner rules and advance policy versions; review People and authority afterwards if you customised rules. Keep new providers, scopes and grants inactive until explicitly authorized. CONTRACT.md's Status table shows which target clauses are still partial or missing.",
+  "publicReleaseNotes": "Cradle 0.3.0 is the records builder release. Bases gain formulas, rollups and conditional lookups, attachments and private image galleries, Kanban boards with covers, calendars with private iCal feeds, timelines and Gantt charts with critical paths and baselines, locked and personal views with summaries and colours, conditional forms with pages, record comments, shared undo, live presence, base roles with owner-reviewed schema adoption, nine editable starting apps and reviewed whole-base copies.\n\nRecord automations notify people in the app, by email, through signed webhooks or Slack; email waits out quiet hours and every run is recorded. Owners can connect Gmail.\n\nChecked before release, locally at 1440 and 390 and on a hosted install with real email: a template base with a link and a lookup, CSV import preview (created, updated, rejected), grid, board and form, filter, group, sort and saved views, view CSV export, a field removal previewed with its recovery CSV, and an automation that notified and emailed the owner. A populated 0.2.0 install upgraded with its data, and a hosted base was backed up, removed, redeployed and restored, with email sign-in after.\n\nFixed during the gate: Records pages failed to load under rer dev, and own-account hosting with SendGrid or Resend could not deploy.\n\nNot in this release: many target clauses in CONTRACT.md are still partial or missing (Status table: 111 done, 71 partial, 28 missing of 210), among them dashboards, the full API and MCP surface, sync and mobile. The landing page's AI briefs need an AI provider key, which this gate did not exercise. A Settings installation archive restores into a local checkout only; a hosted installation is restored base by base through Import a base.\n\nKnown issues: a first deploy to a new environment may need the same rer deploy command run twice; a base JSON import advances while its stored-import page is open, so keep or reopen that page until it says Import completed.\n\nBack up first: rer export locally, or Settings → Export your installation on a hosted install. Migrations: core 1230–1280 and updates 9038, all additive.\n\nScreenshot: .github/assets/release/cradle-0.3.0-records-1440.png (Records at 1440 px: a Projects grid in local dev on the release build)."
 }

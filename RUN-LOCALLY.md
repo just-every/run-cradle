@@ -9,7 +9,7 @@ npx -y @runeditrun/rer dev just-every/run-cradle
 
 To only set it up, use `npx -y @runeditrun/rer setup just-every/run-cradle`; without Node,
 `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-cradle`.
-Cradle's checkout pins rer 0.2.38. Rer installs the project's pinned
+Cradle's checkout pins rer 0.2.63. Rer installs the project's pinned
 Node 22.20.0 and pnpm 10.12.4 for project commands. This checkout uses its exact
 `@runeditrun/rer` devDependency; `OPERATIONS.json` and the package aliases dispatch
 to `rer VERB`.

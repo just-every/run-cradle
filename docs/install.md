@@ -7,7 +7,7 @@ Node 22.20.0 and pnpm 10.12.4.
 ## Run it on your computer
 
 One line installs rer, clones Cradle and starts it. The
-checkout runs Cradle's pinned rer 0.2.38:
+checkout runs Cradle's pinned rer 0.2.63:
 
 ```sh
 npx -y @runeditrun/rer dev just-every/run-cradle

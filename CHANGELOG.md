@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.3.0
+
+What an owner gets:
+
+- Fields and calculations: typed fields with business rules and defaults, formulas, conditional rollups, and conditional ordered lookups across linked records, each previewed on real records before adoption. Linked-record pickers search readable labels.
+- Views: editable grids with ranges, fill down and recovery; Kanban boards by select, person or link with private covers; private image galleries; calendars by date or instant with private, revocable iCal feeds; timelines and Gantt charts with dependencies, critical paths and baselines; collaborative, personal and locked views with column summaries and colour rules; find across every view.
+- Collaboration: record comments and mentions, live editing with scoped presence, and undo shared across editors, bulk changes and views.
+- Forms: conditional record forms with pages and guarded answers.
+- Starting apps and roles: nine editable starting templates, reviewed whole-base copies with or without records, and base roles where creators propose schema changes the owner reviews.
+- Automations: record automations notify in the app, email, call a signed webhook or post to Slack; email waits out quiet hours and every run is recorded. Owners can connect Gmail.
+- Launch readiness: campaign, deliverable, milestone, risk, decision, lens and comment clauses completed, with every mutation fenced on the current revision.
+- One plain catalogue sentence: "Organize business records, connect related data, and build forms and views for daily work."
+- Fixed in the release gate: Records pages failed to load under `rer dev` (a browser import of `seed.json`); own-account hosting with SendGrid or Resend could not deploy (the owner deploy declaration required the Managed relay credentials and never bound the provider key). Docs now name the pinned rer 0.2.63.
+
+Not in this release:
+
+- CONTRACT.md is the full Airtable, Smartsheet and Quickbase replacement target; its Status table reads 111 done, 71 partial and 28 missing of 210 clauses. Dashboards and reports, the complete API, MCP and integrations, sync, mobile and parts of permissions remain partial or missing.
+- The landing page's AI briefs need an AI provider key; this release's gate did not exercise a live AI provider.
+- A Settings installation archive restores into a local checkout only; a hosted installation is restored base by base through Import a base (base JSON).
+
+Known issues:
+
+- A first `rer deploy` to a new environment can stop part-way through the 118 migrations (`provider-request-budget`, or a transient Cloudflare transport failure). Run the same command again; it resumes.
+- rer's deploy check reads the provider key as `MAIL_API_KEY`, while Cradle sends with `MAIL_PROVIDER_API_KEY`: own-account hosts set both to the same key.
+- `wrangler d1 export` refuses Cradle's database (FTS5 search tables); use Settings → Export your installation for a hosted backup.
+- A base JSON import advances while its stored-import page is open; keep it open, or reopen it, until it says Import completed.
+- Recovery CSVs show empty cells as `\N` and links as JSON identities.
+
+Back up first: stop dev and run `rer export --output exports/workspace.rer`, or on a hosted install download Settings → Export your installation → Download verified archive.
+
+Migrations `core/1230` to `core/1280` and `updates/9038` are additive; `1240`, `1260` and `1280` extend existing editor and owner rules with comment and connection actions. RELEASE.json lists each one's upgrade step.
+
+Upgrading a local install: stop dev, run `rer export`, pull, then run `rer install` and `rer dev`.
+
+Screenshot: `.github/assets/release/cradle-0.3.0-records-1440.png` (Records at 1440 px in local dev on the release build).
+
 ## 0.2.0
 
 - Send Managed sign-in and automation mail through RER with no customer mail key, using rer 0.2.23 and its Base adapter. Keep SendGrid and Resend for own-account hosting; reject missing hosted mail. Prefill sign-in email from a valid `login_hint` without submitting it.
