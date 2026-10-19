@@ -10854,7 +10854,7 @@
       "executable": false
     },
     "tests/helpers/local-signin-recovery.mjs": {
-      "sha256": "5461e729e54219ba94189ee4f89af0fb5a806c50fc445be307701d6230da2733",
+      "sha256": "f8b85354b3c4047f8d869efc07a2da134d5fbe4adb3b97c6a5687de81cb93fb5",
       "executable": false
     },
     "tests/helpers/mail-edge-entry.mjs": {

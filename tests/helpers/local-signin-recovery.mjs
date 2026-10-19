@@ -28,7 +28,8 @@ export async function verifyIdentityAndRecovery({browser,context,viewport,origin
       await rename(name)
       await publicPage.goto(origin+'/')
       await publicPage.getByRole('link',{name:'Sign in',exact:true}).waitFor()
-      assert.ok((await publicPage.locator('body').innerText()).includes(name),'The Lobby names the persisted rename')
+      // Base's Lobby names the deployment in its document title ("<workspace> · Cradle"); its card names the product.
+      assert.ok((await publicPage.title()).startsWith(name+' · '),'The Lobby names the persisted rename')
       await capture(publicPage,`identity-${name.replace(' ','-').toLowerCase()}`,`identity-${name.replace(' ','-').toLowerCase()}-${viewport.width}.png`)
       await publicPage.goto(origin+'/signin')
       assert.equal(await publicPage.getByLabel('Email address').count(),0,'An unconfigured local installation does not offer email sign-in')
