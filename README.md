@@ -148,7 +148,8 @@ Cloudflare account and Resend or SendGrid for email. Before
 deploying, create an owner-only file outside this checkout, following the
 [complete hosting instructions](docs/installation.md#host-it-online). Set
 `OWNER_EMAIL` to an address you can receive mail at, and supply `MAIL_PROVIDER`,
-`MAIL_FROM` and `MAIL_PROVIDER_API_KEY`. Deploy does not ask setup questions.
+`MAIL_FROM`, and your provider key as both `MAIL_PROVIDER_API_KEY` and
+`MAIL_API_KEY`. Deploy does not ask setup questions.
 Always pass this file: otherwise a new deployment may copy the local trial owner,
 `owner@run-cradle.test`, which cannot receive sign-in email.
 
