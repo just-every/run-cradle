@@ -1,4 +1,4 @@
-import { useEffect, type PropsWithChildren, type ReactNode } from "react";
+import { useEffect, useState, type PropsWithChildren, type ReactNode } from "react";
 
 import {
   OperatorShell,
@@ -24,6 +24,16 @@ type PortfolioPageShellProps = PropsWithChildren<{
 
 export const useOperatorSession = () => {
   const session = useApiResource("/api/session", decodeSession);
+  const [unreadCount, setUnreadCount] = useState<number | null>(null);
+  useEffect(() => setUnreadCount(null), [session.resource]);
+  useEffect(() => {
+    const changed = (event: Event) => {
+      const value: unknown = (event as CustomEvent<{ unreadCount?: unknown }>).detail?.unreadCount;
+      if (typeof value === "number" && Number.isInteger(value) && value >= 0) setUnreadCount(value);
+    };
+    window.addEventListener("notification-inbox-changed", changed);
+    return () => window.removeEventListener("notification-inbox-changed", changed);
+  }, []);
 
   useEffect(() => {
     const refresh = () => session.retry();
@@ -31,7 +41,9 @@ export const useOperatorSession = () => {
     return () => window.removeEventListener("operator-session-changed", refresh);
   }, [session.retry]);
 
-  return session;
+  return { ...session, resource: session.resource.state === "ready" && unreadCount !== null
+    ? { ...session.resource, data: { ...session.resource.data, unreadNotifications: unreadCount } }
+    : session.resource };
 };
 
 export const OperatorSessionBoundary = ({

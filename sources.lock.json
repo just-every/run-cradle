@@ -2918,7 +2918,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "0ac524ad4e3242c99b12f61dc27ae18c29b24f23c7862c6ef1fe3d18c5701803",
+      "sha256": "a7017bfdaac819ae4d1f1d5c9e13a4ebfff156cda12367dc027a03f85b3a29f9",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "7337070e81c9194d27e0b41ba8237b184f9630163d6998b7c67cdbaf16bbb88d",
+      "sha256": "6b37e09716257cd0647bfcaa23332ee7bf02fa19db5e876c1ca3d56641195af3",
       "executable": false
     },
     "DEMO.md": {
@@ -6570,7 +6570,7 @@
       "executable": false
     },
     "src/core/features/notifications/ui/notifications-page.tsx": {
-      "sha256": "e48e3986eab1bf93ca381cfe28e739cc3ec8dc7f4dfa43dc4f8e91e6fef94cfb",
+      "sha256": "b685b1c6b873f817551fd0fb9116c354691d3101dc7548e6f4717a34e693170d",
       "executable": false
     },
     "src/core/features/portfolio/index.ts": {
@@ -6638,7 +6638,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-page-shell.tsx": {
-      "sha256": "533552b8d1d6a5a29c7abb7c7a45dbecb1f6916495c78683b1284127848635d4",
+      "sha256": "4738f0be13ebb2f9ea75a64e265b50c0538c61d4577e1d50e8016a3329cd4e7f",
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-presentation.tsx": {
@@ -7261,8 +7261,12 @@
       "sha256": "e058249ea7e9d4bab894ecb8f0c01472ce8c429a92543fb0799438179ebf1854",
       "executable": false
     },
+    "src/domains/channels/inbox-subject.server.ts": {
+      "sha256": "8115d16aeb72c33b719c5d8745499ecc44eb8644fc29655cd7d552326484ea8d",
+      "executable": false
+    },
     "src/domains/channels/inbox.server.ts": {
-      "sha256": "dc232d757de1c61620e5c1ff4ed0f949aad50d52aff4284784f95de0e600ed9e",
+      "sha256": "b9aa31e773e5a7177075544533f69cfcceeb981f8b3b0dcac0c3353f809e653c",
       "executable": false
     },
     "src/domains/channels/integration.server.ts": {
@@ -10785,6 +10789,10 @@
       "sha256": "91a853f199e35757d03ad5233c7ae0bf591d78d07151d1a3fa76b5c2cad71843",
       "executable": false
     },
+    "tests/helpers/launch-inbox-screens.mjs": {
+      "sha256": "23f1c621054cf579cdd3639307748cd114b8cdf42d2047d297c32602bd4720fb",
+      "executable": false
+    },
     "tests/helpers/launch-installed.mjs": {
       "sha256": "87f20d00f3109be3cbaacb8bd45efb22dd378fe82c5b7d8b934c64784cee2853",
       "executable": false
@@ -11618,7 +11626,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "33afaed39e830163d0acba8197599d91a5b1fed31e3d6d3f42bf5b5a58ddf851",
+      "sha256": "1c02292dd894f6b7b8b11bc856412470b345b115816d91e62bd701c066e2c931",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
