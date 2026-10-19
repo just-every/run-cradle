@@ -8,6 +8,9 @@ import {checkoutDevKey} from './dev-gate.mjs'
 import {observeChild} from '../../scripts/evidence/runtime-child.mjs'
 import {saveInstallerStartupDiagnostic} from './local-installer-diagnostic.mjs'
 /** Run the installed CLI; zero-setup callers let rer dev create its own local owner and settings. */
+// Zero-setup belongs to the public rer command (the package bin, global/rer.mjs):
+// it sets up a local owner and leaves the server running in the background.
+// The checkout's internal dispatcher (bin/rer.mjs) requires rer setup first.
 export async function localInstallerJourney(copy,_browser,{zeroSetup=false}={}){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
  const command=async args=>copy.rer(args)
@@ -21,14 +24,14 @@ export async function localInstallerJourney(copy,_browser,{zeroSetup=false}={}){
  }
  const origin=`http://127.0.0.1:${port}`
  await availableMachine()
- const app=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--port',String(port),'--non-interactive'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
+ const app=spawn(process.execPath,[zeroSetup?'node_modules/@runeditrun/rer/global/rer.mjs':'node_modules/@runeditrun/rer/bin/rer.mjs','dev','--port',String(port),'--non-interactive'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
  const capture=observeChild(app)
- const close=async()=>{if(app.exitCode===null&&app.signalCode===null)await command(['dev','--stop']);await capture.close}
+ const close=async()=>{if(zeroSetup||app.exitCode===null&&app.signalCode===null)await command(['dev','--stop']);await capture.close}
  try{
   for(let i=0;i<1200&&!capture.output().includes(`RER_READY ${origin}`);i++){
    const output=capture.output()
    const refusal=/Server startup requires machine load/.test(output)?' (machine load guard)':/15 GiB free/.test(output)?' (disk guard)':''
-   assert.equal(app.exitCode,null,'Dev must stay alive'+refusal);await new Promise(resolve=>setTimeout(resolve,100))
+   if(!zeroSetup||app.exitCode)assert.equal(app.exitCode,null,'Dev must stay alive'+refusal);await new Promise(resolve=>setTimeout(resolve,100))
   }
   let output=capture.output()
   assert.ok(output.includes(`RER_READY ${origin}`),'Health-gated dev readiness')

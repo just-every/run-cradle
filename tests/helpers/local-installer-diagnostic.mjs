@@ -8,12 +8,14 @@ import { checkoutDevKey } from './dev-gate.mjs'
 // with this installation's actual generated credentials and inherited values.
 export async function saveInstallerStartupDiagnostic(copy, child, capture) {
   await capture.close
-  const vars = await copy.readVars()
+  // A startup that stopped before setup wrote its settings has no generated values yet.
+  const absent = error => { if (error.code === 'ENOENT' || /dev key/.test(error.message)) return undefined; throw error }
+  const vars = await copy.readVars().catch(absent) ?? {}
   const { AUTH_ORIGIN, APP_ORIGIN, ...bindings } = vars
   const known = [...new Set([
     ...credentialValues(bindings),
     ...credentialValues(copy.environment),
-    await checkoutDevKey(copy.source),
+    await checkoutDevKey(copy.source).catch(absent),
   ].filter(Boolean))]
   const redactor = createRedaction()
   redactor.addSecrets(known)

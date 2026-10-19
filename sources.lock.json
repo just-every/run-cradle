@@ -5102,7 +5102,7 @@
       "executable": false
     },
     "scripts/portability/migrations.mjs": {
-      "sha256": "5e6249b82751ddeb02d157728d278b94790014303d85d0741849d2b2755bb823",
+      "sha256": "1fd4cb06d4f141c2b54fb832b88391e624a9471fc266ea587406db0548d0b20b",
       "executable": false
     },
     "scripts/portability/policy.mjs": {
@@ -10838,11 +10838,11 @@
       "executable": false
     },
     "tests/helpers/local-installer-diagnostic.mjs": {
-      "sha256": "c5c91b5646c5627ab95fd07c95b05f03f146067b853905fd3ced60acd751594f",
+      "sha256": "d2d61b51146fdd998c1b68ee0c5191a5544da5c9ef17aeaa70da7e50446286fb",
       "executable": false
     },
     "tests/helpers/local-installer-journey.mjs": {
-      "sha256": "9ee7d2d153f4f10b4712fb3d7c26a135ff831b5d2e07e841837369c4ee41a6f1",
+      "sha256": "85d33ee922b6b6657bfc4ab725d3430694c95d8be0d2fdcec1d6f952e1c9a803",
       "executable": false
     },
     "tests/helpers/local-signin-copy.mjs": {
