@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {copyFile,mkdtemp,readFile,rm} from 'node:fs/promises'
+import {chmod,copyFile,mkdtemp,readFile,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {contract} from './contract.mjs'
@@ -11,6 +11,8 @@ import {encodedRow} from '@runeditrun/rer/modules/portability/catalogue'
 import {canonicalJson} from '@runeditrun/rer/modules/portability'
 import {platformTable} from '@runeditrun/rer/internal/modules/portability/bookkeeping.mjs'
 
+// rer import reads only an owner's private file, as rer export writes it.
+const place=async(from,to)=>{await copyFile(from,to);await chmod(to,0o600)}
 const quote=name=>'"'+name.replaceAll('"','""')+'"'
 async function matchesArchive(root,path){
  const records=[];for await(const record of fileRecords(path))records.push(record)
@@ -42,7 +44,7 @@ contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and
   await target.command(['run','db:migrate:local'])
   const ledger=()=>bindings(target.source,async({DB})=>(await DB.prepare('SELECT * FROM d1_migrations ORDER BY id').all()).results)
   const before=await ledger()
-  await copyFile('tests/fixtures/portability/cradle-prior.rer',join(target.source,'retained.rer'))
+  await place('tests/fixtures/portability/cradle-prior.rer',join(target.source,'retained.rer'))
   await target.rer(['import','--input','retained.rer','--yes','--non-interactive'])
   const retained=await matchesArchive(target.source,join(target.source,'retained.rer'))
   assert.ok(retained.tables.some(t=>t.name==='rer_migrations'),'the retained backup carries the Platform ledger')
@@ -53,10 +55,10 @@ contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and
   // This version's own export of a Platform-installed database round-trips; the ledger never travels.
   const platformLedger=await platformArchive(directory)
   assert.equal(platformLedger.length,JSON.parse(await readFile('management/integration/deployment-spec.json','utf8')).migrations.length)
-  await copyFile(join(directory,'unknown.rer'),join(target.source,'unknown.rer'))
+  await place(join(directory,'unknown.rer'),join(target.source,'unknown.rer'))
   await assert.rejects(target.rer(['import','--input','unknown.rer','--yes','--non-interactive']),e=>e.errorCode==='restore_refused'&&e.message.includes('unsupported_record_schema'))
   assert.deepEqual(await ledger(),reset,'an unknown table changes no migration receipt')
-  await copyFile(join(directory,'platform.rer'),join(target.source,'platform.rer'))
+  await place(join(directory,'platform.rer'),join(target.source,'platform.rer'))
   await target.rer(['import','--input','platform.rer','--yes','--non-interactive'])
   const native=await matchesArchive(target.source,join(target.source,'platform.rer'))
   assert.ok(!native.tables.some(t=>t.name==='rer_migrations'),'a native export never carries the Platform ledger')

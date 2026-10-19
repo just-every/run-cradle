@@ -13,7 +13,7 @@ import {derivedSearch,prepareRecordRestore} from './records.mjs';
 async function importWithCustody(service,db,path,journal){
  const actor='cradle-cli:'+randomUUID();let complete=false;
  try{
-  const receipt=await importArchive({...service,imports:{...service.imports,create:manifest=>service.imports.create(manifest,actor)}},path,transient,journal);
+  const receipt=await importArchive({...service,imports:{...service.imports,create:(manifest,_actor,options)=>service.imports.create(manifest,actor,options)}},path,transient,journal);
   complete=true;return receipt;
  }finally{if(!complete){
    // Reconcile by this invocation's actor even if create/abort committed but
