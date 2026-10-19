@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+What an owner gets:
+
+- A backup made by the previous version now restores. Installation archives made on RER Platform carry Platform's migration history (`rer_migrations`); Cradle refused them as holding an unknown record table. Restore now hands that history to Base, which checks it and keeps the destination's own history unchanged; every archived record and file is restored. Archives holding a table this version does not know are still refused.
+- Cradle's own archive format treats Platform's migration history the same way: it is never exported as owner data and never blocks a restore.
+- Hosted first sign-in opens the app when RER already set the workspace name, timezone and currency, and Open app fills the owner's email on the sign-in form (SET-003, AUTH-BASE-001).
+- Pins rer 0.2.68. No new migrations.
+
 ## 0.3.0
 
 What an owner gets:
