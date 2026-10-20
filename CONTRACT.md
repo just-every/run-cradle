@@ -447,7 +447,7 @@ A buyer of any named incumbent can bring their working app, not just their rows,
   *Status:* missing — seed.json nonGoals exclude bidirectional sync for the current release.
 - **SYNC-002 — Warehouse export.** An owner can schedule a full or incremental export of chosen bases to the buyer's BigQuery, Snowflake or R2/S3 bucket as Parquet or CSV for analysis beyond the app. The current implementation provides R2 + CSV only; no BigQuery or Snowflake transfer has run.
   *Acceptance:* Scheduled export test writes a correct incremental file to a local bucket.
-  *Status:* missing — no code.
+  *Status:* partial — local emitted Worker tests prove R2 + CSV full/incremental schedules, current policy, tombstones, owner-loss pause and erasure custody (tests/launch-operator-doors.mjs [SYNC-002], tests/helpers/warehouse-export-journey.mjs); no hosted proof. BigQuery, Snowflake and S3 destinations and Parquet not built; R2 + CSV only.
 - **SNAP-001 — Automatic snapshots and point-in-time restore.** Each base is snapshotted automatically (hourly for 7 days, daily for 90 days) and on every schema adoption; an owner can browse a snapshot and restore it as a new base or roll the base back, with a receipt of what changed.
   *Acceptance:* Snapshot test at fixed clocks; restore-as-copy equals the snapshot; rollback receipt.
   *Status:* partial — manual verified whole-installation archives (src/domains/portability/archive.server.ts) and adoption snapshots (src/domains/records/manual/snapshot.server.ts); scheduled point-in-time recovery absent.
