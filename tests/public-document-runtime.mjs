@@ -106,6 +106,7 @@ contract('DOCS-001 BOUND-001 BOUND-002', 'Every published docs page shares the s
         const text = docs.html.replace(/<[^>]*>/g, ' ').replace(/&#(?:39|x27);|&apos;|’/g, "'").replace(/\s+/g, ' ')
         const anchors = [...docs.html.matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)]
         for (const [job, product, url] of [
+          ['a project or work management suite', 'Pegboard', 'https://run-pegboard.com'],
           ['a CRM', 'Orbit', 'https://github.com/just-every/run-orbit'],
           ['a survey platform', 'Pencil', 'https://github.com/just-every/run-pencil'],
           ['a wiki', 'Slate', 'https://github.com/just-every/run-slate'],
@@ -120,10 +121,11 @@ contract('DOCS-001 BOUND-001 BOUND-002', 'Every published docs page shares the s
           const sibling = anchors.find(([, href]) => href === url)
           assert.equal(sibling?.[2].replace(/<[^>]*>/g, ''), product, `${job} names and links its separate product`)
         }
+        const payroll = anchors.find(([, href]) => href === 'https://run-envelope.com')
+        assert.equal(payroll?.[2].replace(/<[^>]*>/g, ''), 'Envelope', 'Payroll names and links its separate product')
+        assert.match(text, /The separate payroll product is Envelope\s*\./, 'Payroll is identified only as a separate product')
         for (const boundary of [
-          "Cradle is not a project or work management suite: task inboxes, workload and resource planning across projects stay with the buyer's own tool.",
-          'No Run Edit Run product owns that category today.',
-          'Keep Asana, monday.com or ClickUp beside Cradle.',
+          'Task inboxes, workload and resource planning across projects sit outside Cradle.',
           'Cradle is not an accounting ledger, payroll, EHR or payment processor.',
           "Money moves only through the buyer's processor (Stripe); ledgers stay in the buyer's accounting system.",
           'Cradle makes no HIPAA, PCI DSS or SOC 2 claim; a covered entity storing PHI needs its own hosting agreement (BAA) and its own assessment.',

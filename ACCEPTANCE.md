@@ -169,8 +169,8 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 
 | Clause | Status | Required evidence |
 | --- | --- | --- |
-| BOUND-001 — Separate products stay separate | Done | `tests/public-document-runtime.mjs` serves `/docs/boundaries` without a session in the shared header/footer, checks every sibling link and the buyer's own project/work tool boundary. Docs and product copy checked for sibling-job claims. |
-| BOUND-002 — Not a regulated system of record | Done | `tests/public-document-runtime.mjs` checks every regulated-system boundary sentence and the actual `fieldSchema` type list from `src/domains/records/validators.ts` for card-number or PHI-specific types. |
+| BOUND-001 — Separate products stay separate | Done | `tests/public-document-runtime.mjs` serves `/docs/boundaries` without a session in the shared header/footer, checks every sibling link, including [Pegboard](https://run-pegboard.com) for project/work management. Docs and product copy checked for sibling-job claims. |
+| BOUND-002 — Not a regulated system of record | Done | `tests/public-document-runtime.mjs` checks every regulated-system boundary sentence, the separate payroll product link to [Envelope](https://run-envelope.com) and the actual `fieldSchema` type list from `src/domains/records/validators.ts` for card-number or PHI-specific types. |
 | BOUND-003 — Bounded compute | Partial | Script and formula limit tests (AUTO-USER-007, CALC-004). |
 | BOUND-004 — Honest migration and delivery claims | Done | Move-in receipts and uncertain-delivery tests. |
 | BOUND-005 — One business per installation | Done | Base copy between two installations by JSON export and reviewed import. |
