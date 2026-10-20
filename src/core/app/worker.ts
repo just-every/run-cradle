@@ -94,6 +94,7 @@ export default {
         if ('kind' in body && body.kind === 'cradle.channels.wake.v1') await events.channels()
         else if ('kind' in body && body.kind === 'cradle.launch.events.v1' && 'commandId' in body && typeof body.commandId==='string') await events.launch(body.commandId)
         else if ('kind' in body && body.kind === 'cradle.records.automations.v1' && 'commandId' in body && typeof body.commandId==='string') await events.automations(body.commandId)
+        else if ('kind' in body && body.kind === 'cradle.warehouse.wake.v1') await events.warehouse()
         else if ('kind' in body && body.kind === 'cradle.outbox.v1' && 'outboxId' in body && typeof body.outboxId === 'string') await events.dispatch(body.outboxId)
         else throw new Error('Unsupported queue envelope')
         message.ack()

@@ -13,7 +13,9 @@ export function withAdmissionWake(admission: AdmissionPort, db: D1Database, queu
       if(launch)await queue.send({kind:'cradle.launch.events.v1',commandId:plan.commandId})
       const records=await db.prepare("SELECT 1 FROM record_automation_events WHERE command_id=? AND state='pending' LIMIT 1").bind(plan.commandId).first()
       if(records)await queue.send({kind:'cradle.records.automations.v1',commandId:plan.commandId})
-      if(rows.results.length||due||records||launch)await db.prepare("INSERT INTO runtime_queue_publications(command_id,state,attempts,checked_at,error_code) VALUES(?,'published',1,?,NULL) ON CONFLICT(command_id) DO UPDATE SET state='published',attempts=attempts+1,checked_at=excluded.checked_at,error_code=NULL").bind(plan.commandId,new Date().toISOString()).run()
+      const warehouse=plan.action==='warehouse.save'
+      if(warehouse)await queue.send({kind:'cradle.warehouse.wake.v1'})
+      if(rows.results.length||due||records||launch||warehouse)await db.prepare("INSERT INTO runtime_queue_publications(command_id,state,attempts,checked_at,error_code) VALUES(?,'published',1,?,NULL) ON CONFLICT(command_id) DO UPDATE SET state='published',attempts=attempts+1,checked_at=excluded.checked_at,error_code=NULL").bind(plan.commandId,new Date().toISOString()).run()
     } catch {
       // The client receives the real admission outcome, never a claim that mail or
       // another external effect completed. Cron scans the original durable work.

@@ -906,13 +906,13 @@ That commit identifies the initial audit. The rows below include subsequent buil
 
 Release 0.3.0 gate (19 October 2026, independent of the builders): on the release candidate, the published records clauses RECORDS-001 to RECORDS-004 and RECORDS-006, AUTH-BASE-001 and HOME-003 were exercised through the browser, locally at 1440 and 390 px and on a hosted own-account install with real SendGrid mail. That covered a template base with a link and a lookup, CSV import review, grid, board and form, saved filtered, grouped and sorted views, view CSV, a field removal with its recovery CSV, a record automation that notified and emailed the owner, an upgrade of a populated 0.2.0 install, and a hosted base export, removal, redeploy and base JSON return with email sign-in after. The gate fixed two defects before release: Records under `rer dev` (VIEW-012's limits module) and own-account mail deploys (AUTH-BASE-001). Every other row rests on its cited tests passing in CI Verify on the release commit; the gate did not exercise a live AI provider (AI-001 to AI-006, SET-002).
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **118 done, 64 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **119 done, 64 partial, 27 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 99 | 12 | 0 | 111 |
-| Target and push further | 19 | 52 | 28 | 99 |
-| All | 118 | 64 | 28 | 210 |
+| Target and push further | 20 | 52 | 27 | 99 |
+| All | 119 | 64 | 27 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1005,7 +1005,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `MIGRATE-004` | Spreadsheet workbook move-in | target | partial | `tests/records-import-d1.mjs` | multi-table CSV move-in with reviewed relationship mapping (RECORDS-005; tests/records-import-d1.mjs) |
 | `MIGRATE-005` | People and provenance on move-in | target | partial | `src/domains/records/base-transfer/source-kinds.ts`, `src/domains/records/base-transfer/receipt.ts`, `tests/records-import-receipt.mjs` | the Airtable recorded-API path reads collaborator, created-by and last-modified-by kinds (src/domains/records/base-transfer/source-kinds.ts:3) but keeps collaborator names as text and states that on the receipt (src/domains/records/base-transfer/receipt.ts:9; tests/records-import-receipt.mjs). Matching by email, invitation, original created and modified times, comment import and the ID map are absent |
 | `SYNC-001` | Synced tables | target | missing |  | seed.json nonGoals exclude bidirectional sync for the current release |
-| `SYNC-002` | Warehouse export | target | missing |  | no code |
+| `SYNC-002` | Warehouse export | target | done | R2 and CSV ship; BigQuery, Snowflake, remote S3 endpoints and Parquet are not yet shipped. `tests/launch-operator-doors.mjs` [SYNC-002], `tests/helpers/warehouse-export-journey.mjs`, `src/domains/warehouse/`, `src/domains/lifecycle/cleanup.server.ts`, `src/ui/settings/warehouse-panel.tsx`, `docs/exporting-to-your-own-bucket.md` |  |
 | `SNAP-001` | Automatic snapshots and point-in-time restore | target | partial | `src/domains/portability/archive.server.ts`, `src/domains/records/manual/snapshot.server.ts` | manual verified whole-installation archives (src/domains/portability/archive.server.ts) and adoption snapshots (src/domains/records/manual/snapshot.server.ts); scheduled point-in-time recovery absent |
 | `SNAP-002` | Trash | target | missing |  | record deletion previews impact (src/domains/records/delete-impact.server.ts); no trash |
 | `MOBILE-001` | Complete phone web app | target | partial | `tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs` | manual records and import journeys pass at 390 (tests/ui-records-builder.mjs; tests/ui-base-import.mjs); 320 px and the later journeys are not covered |

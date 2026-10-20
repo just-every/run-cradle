@@ -8,6 +8,7 @@ import { PreferencesPanel } from '../../../../ui/settings/preferences-panel'
 import { UsagePanel } from '../../../../ui/settings/usage-panel'
 import { ConnectionPanel } from '../../../../ui/settings/connection-panel'
 import { ArchivePanel } from '../../../../ui/settings/archive-panel'
+import { WarehousePanel } from '../../../../ui/settings/warehouse-panel'
 import { AccessPanel } from '../../../../ui/settings/access-panel'
 import { ApiKeysPanel } from '../../../../ui/settings/api-keys-panel'
 import { WorkspaceChoice } from '../../../../ui/settings/workspace-choice'
@@ -55,6 +56,7 @@ export const SettingsPage = () => {
     </div>
     <div className="cr-settings-side">
       <ArchivePanel />
+      <div className="cr-card"><LazySettingsPanel title="Scheduled bucket exports"><WarehousePanel /></LazySettingsPanel></div>
       <div className="cr-card cr-settings-rows">
         <details className="cr-detail"><summary>Your notifications</summary><PreferencesPanel /></details>
         <details className="cr-detail" onToggle={event=>setKeysOpen(event.currentTarget.open)}><summary>API keys</summary>{keysOpen&&<ApiKeysPanel />}</details>

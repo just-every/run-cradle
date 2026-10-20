@@ -1,5 +1,5 @@
 import { exportContext, formatWorkspaceCell } from './csv-export.server'
-import { createCsvLabels, displayCsvValue } from './csv-display.server'
+import { createCsvLabels, displayCsvValue, displayCsvLabels } from './csv-display.server'
 import { z } from 'zod'
 import type { RequestContext } from '../authority/ports'
 import type { AdmissionPort, SqlPredicate, SqlMutation } from '../admission/ports'
@@ -23,7 +23,7 @@ export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.st
 type Preview=CsvImportPreview & {guards:SqlPredicate[]}
 export function createRecordsCsv(db:D1Database,services:ReturnType<typeof createRecordServices>,admission:AdmissionPort){
  const {reader,writer,policy,descriptors,metadata}=services
- async function exportCsv(ctx:RequestContext,input:unknown){
+ async function exportCsv(ctx:RequestContext,input:unknown,snapshot?:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][]}){
   const request=z.object({appId:idSchema,entityId:idSchema,viewId:idSchema.optional(),query:querySchema}).strict().parse(input)
   const d=descriptors.get(request.appId,request.entityId),view=request.viewId?await metadata.readView(ctx,request.viewId):null
   if(view&&(view.appId!==request.appId||view.entityId!==request.entityId))throw new AdmissionError('validation','View belongs to another table.')
@@ -42,10 +42,12 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
    const page=await reader.query(ctx,scope,{...query,fields:selected,limit:200,cursor},'export')
    const overdue=kind&&overdueInputs.length?await projectLaunchOverdue(db,kind,page.items,ctx.now):null
    if(overdue)guards.push(...overdue.guards)
+   if(snapshot)snapshot.rows.push(...page.items)
    for(const row of page.items)rows.push(await Promise.all(fields.map(async field=>{
     const cell=row.fields[field.id]
     if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.')
     if(field.type==='relation'||field.type==='computed'&&field.resultElementType==='relation')return labels.display(field,cell.value)
+    if(d.legacy&&field.type==='multi_select'){if(!Array.isArray(cell.value)||cell.value.some(value=>typeof value!=='string'))throw new AdmissionError('validation','Legacy multi-select values must be text labels.');return displayCsvLabels(cell.value as string[])}
     if(d.schema.physicalRevision.startsWith('manual_'))return displayCsvValue(field,cell.value)
     const value=formatWorkspaceCell(field,cell.value,context,()=>field.type==='select'?String(cell.value??''):displayCsvValue(field,cell.value))
     return field.id===markerId&&overdue?.flags.get(row.id)?`${value} (Overdue)`:value
@@ -54,6 +56,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   }while(cursor)
   await assertGuards(db,guards)
   if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during export. Export again.')
+  if(snapshot){snapshot.headers=fields.map(f=>f.label);snapshot.values=rows}
   return {csv:encodeCsv(fields.map(f=>f.label),rows),filename:context.filename,count:rows.length,capture:context}
  }
  async function preview(ctx:RequestContext,input:unknown){

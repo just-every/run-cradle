@@ -1,3 +1,4 @@
+import {channelLegacySurface,CHANNEL_FIELDS} from '../channels/setup.server'
 import type { AdmissionPlan, SqlMutation, SqlPredicate } from '../admission/ports'
 import { registerTable, trustedPredicate } from '../admission/sql.server'
 import type { PolicyPort, RequestContext } from './ports'
@@ -53,7 +54,11 @@ export function createOwnershipTransfer(db: D1Database, policy: PolicyPort) {
    FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id LEFT JOIN authority_memberships t ON t.principal_id=? AND t.app_id=m.app_id
    WHERE m.principal_id=? AND m.state='active' ORDER BY m.app_id`).bind(memberId, ctx.principal.id).all<{ app_id: string; legacy: number; version: number; policy_id: string; name: string; rules_json: string; policy_version: number; target_version: number | null }>()).results
   for (const scope of scopes) {
-   const rules = (JSON.parse(scope.rules_json) as Policy['rules']).map(rule => ({ ...rule, id: createUlid(), principals: rule.principals.map(principal => principal.kind === 'human' && principal.id === ctx.principal.id ? { ...principal, id: memberId } : principal) }))
+   // Recipient-only channel filters follow the human; business-record filters stay exact.
+   const recipientRows=(rows:Policy['rules'][number]['rows']):Policy['rules'][number]['rows']=>rows.kind==='condition'
+    ? rows.fieldId===CHANNEL_FIELDS.owner&&rows.op==='eq'&&rows.value===ctx.principal.id?{...rows,value:memberId}:rows
+    : {...rows,conditions:rows.conditions.map(recipientRows)}
+   const rules = (JSON.parse(scope.rules_json) as Policy['rules']).map(rule => ({ ...rule, id: createUlid(),rows:channelLegacySurface(rule.entityId)?.personal?recipientRows(rule.rows):rule.rows, principals: rule.principals.map(principal => principal.kind === 'human' && principal.id === ctx.principal.id ? { ...principal, id: memberId } : principal) }))
    const policyId = createUlid()
    guards.push(trustedPredicate('EXISTS(SELECT 1 FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.version=? AND p.id=? AND p.version=?)', [ctx.principal.id, scope.app_id, scope.version, scope.policy_id, scope.policy_version]))
    mutations.push({ kind: 'insert', table: policies, row: { id: policyId, app_id: scope.app_id, name: `Owner scope from ${scope.name}`, rules_json: canonicalJson(rules), version: 1, created_at: now, updated_at: now } })

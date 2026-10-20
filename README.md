@@ -114,6 +114,9 @@ No provider credentials are needed for local use.
 
 ## Reset and move data
 
+For recurring full or incremental CSV exports, see
+[Exporting to your own bucket](docs/exporting-to-your-own-bucket.md).
+
 In Settings → **Export your installation**, choose **Prepare archive**, wait
 until it is verified, then **Download verified archive**. The `.rer` download uses
 the same format as `rer export`; keep your source checkout separately. See

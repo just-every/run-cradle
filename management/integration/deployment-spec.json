@@ -10,6 +10,10 @@
       "binding": "FILES"
     },
     {
+      "kind": "r2",
+      "binding": "WAREHOUSE"
+    },
+    {
       "kind": "queue",
       "binding": "WORK_QUEUE"
     }
@@ -491,6 +495,12 @@
     },
     {
       "binding": "DB",
+      "name": "1290_warehouse_exports.sql",
+      "sha256": "405754683d4ac24e1592c17f4649067af46c647bf3b1f6b9218e15238b386fcf",
+      "sql": "-- Additive: retains every released installation row and existing resource identity.\nCREATE TABLE warehouse_exports (\n id TEXT PRIMARY KEY, name TEXT NOT NULL, owner_id TEXT NOT NULL REFERENCES authority_principals(id),\n bases_json TEXT NOT NULL, mode TEXT NOT NULL CHECK(mode IN ('full','incremental')),\n local_rule TEXT NOT NULL, timezone TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'active',\n version INTEGER NOT NULL DEFAULT 1, watermark_json TEXT NOT NULL DEFAULT '{}',\n last_slot TEXT, running_id TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL\n);\n-- Custody precedes object creation, including manifests and interrupted runs.\nCREATE TABLE warehouse_objects (object_key TEXT PRIMARY KEY, export_id TEXT NOT NULL, run_id TEXT NOT NULL, created_at TEXT NOT NULL);\n"
+    },
+    {
+      "binding": "DB",
       "name": "9000_base_operator_auth.sql",
       "sha256": "86c87c79b2f8c2199a20908bf4451d3cdad61316aacec7d79c4851fd841ca04b",
       "sql": "-- Additive schema draft. Integrator assigns the next migration number; never\n-- replace an applied migration. All epoch timestamps are milliseconds.\nCREATE TABLE oa_operators (\n id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, display_name TEXT NOT NULL,\n role TEXT NOT NULL CHECK(role IN ('owner','admin','member')),\n status TEXT NOT NULL CHECK(status IN ('invited','active','inactive')),\n version INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL\n);\nCREATE TABLE oa_bootstrap (singleton INTEGER PRIMARY KEY CHECK(singleton=1), claim_id TEXT NOT NULL UNIQUE, claimed_at INTEGER NOT NULL);\nCREATE TABLE oa_tokens (\n id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE,\n kind TEXT NOT NULL CHECK(kind IN ('magic','invite')),\n operator_id TEXT NOT NULL REFERENCES oa_operators(id), operator_version INTEGER NOT NULL,\n issuer_id TEXT REFERENCES oa_operators(id), issuer_version INTEGER,\n return_to TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL,\n consumed_at INTEGER, revoked_at INTEGER,\n CHECK((kind='invite' AND issuer_id IS NOT NULL AND issuer_version IS NOT NULL)\n    OR (kind='magic' AND issuer_id IS NULL AND issuer_version IS NULL))\n);\nCREATE TABLE oa_sessions (\n id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE,\n operator_id TEXT NOT NULL REFERENCES oa_operators(id), operator_version INTEGER NOT NULL,\n kind TEXT NOT NULL CHECK(kind IN ('native','review','oidc','password')),\n source_token_id TEXT UNIQUE REFERENCES oa_tokens(id),\n created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, revoked_at INTEGER\n);\nCREATE INDEX oa_sessions_operator ON oa_sessions(operator_id);\nCREATE TABLE oa_external_identities (\n issuer TEXT NOT NULL, subject TEXT NOT NULL, operator_id TEXT NOT NULL REFERENCES oa_operators(id),\n PRIMARY KEY(issuer, subject)\n);\nCREATE TABLE oa_limits (key TEXT PRIMARY KEY, window INTEGER NOT NULL, count INTEGER NOT NULL);\nCREATE TRIGGER oa_preserve_last_owner_update BEFORE UPDATE OF status,role ON oa_operators\n WHEN OLD.role='owner' AND OLD.status='active' AND (NEW.role!='owner' OR NEW.status!='active')\n AND (SELECT COUNT(*) FROM oa_operators WHERE role='owner' AND status='active') <= 1\n BEGIN SELECT RAISE(ABORT, 'last_owner'); END;\nCREATE TRIGGER oa_preserve_last_owner_delete BEFORE DELETE ON oa_operators\n WHEN OLD.role='owner' AND OLD.status='active'\n AND (SELECT COUNT(*) FROM oa_operators WHERE role='owner' AND status='active') <= 1\n BEGIN SELECT RAISE(ABORT, 'last_owner'); END;\n-- A status/role change invalidates every preexisting session and link, including\n-- after a later reactivation. Keep this invariant for direct administrative SQL.\nCREATE TRIGGER oa_operator_version AFTER UPDATE OF status,role ON oa_operators\n WHEN OLD.status != NEW.status OR OLD.role != NEW.role\n BEGIN UPDATE oa_operators SET version=OLD.version+1 WHERE id=NEW.id; END;\n\n-- Fresh installs include the additive invitation cancellation ledger.\n-- Apply as a NEW numbered migration after operator-auth.sql in existing stores.\n-- This durable record is admission state, not an expiring credential. Never prune it.\n-- Existing active/inactive operators retain their recorded status: no historical\n-- acceptance is inferred. Only a witnessed invited -> inactive transition records\n-- an unaccepted cancellation, including direct administrative SQL transitions.\nCREATE TABLE oa_invitation_cancellations (\n operator_id TEXT PRIMARY KEY REFERENCES oa_operators(id),\n operator_version INTEGER NOT NULL\n);\nCREATE TRIGGER oa_record_invitation_cancellation AFTER UPDATE OF status ON oa_operators\n WHEN OLD.status='invited' AND NEW.status='inactive'\n BEGIN INSERT INTO oa_invitation_cancellations(operator_id,operator_version)\n VALUES(NEW.id,OLD.version+1)\n ON CONFLICT(operator_id) DO UPDATE SET operator_version=excluded.operator_version; END;\nCREATE TRIGGER oa_reject_cancelled_invitation_reactivation BEFORE UPDATE OF status ON oa_operators\n WHEN NEW.status='active' AND EXISTS(SELECT 1 FROM oa_invitation_cancellations WHERE operator_id=OLD.id)\n BEGIN SELECT RAISE(ABORT, 'invitation_required'); END;\n"
@@ -728,6 +738,12 @@
       "name": "9039_erased_operator_guard.sql",
       "sha256": "551e8ec6c02213c0c611509843cd44f87715cc5b7b98901d9666d04e0dadbabb",
       "sql": "-- An erased operator cannot be undone (OPS-005). Base's operator routes change status and role\n-- directly, and cradle_update_base_operator projects an active status back onto the principal.\n-- Refuse any status or role change on the Base operator of an erased principal.\nCREATE TRIGGER cradle_preserve_erased_operator BEFORE UPDATE OF status,role ON oa_operators\n WHEN EXISTS(SELECT 1 FROM cradle_base_operators m JOIN authority_principals p ON p.id=m.principal_id\n  WHERE m.base_id=OLD.id AND p.state='erased')\n BEGIN SELECT RAISE(ABORT, 'operator_erased'); END;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9040_warehouse_erasure_binding.sql",
+      "sha256": "cd1743dc8dc4ed24744a829d36a62f82c90acb4316a8eb475fc95609209e01fc",
+      "sql": "-- Retain the FILES custody of every existing erasure receipt.\nALTER TABLE lifecycle_erasure_blobs ADD COLUMN bucket_binding TEXT NOT NULL DEFAULT 'FILES' CHECK(bucket_binding IN ('FILES','WAREHOUSE'));\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

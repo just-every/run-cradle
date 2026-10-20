@@ -9,6 +9,9 @@ import { parseLinkCell } from './base-transfer/parse'
 import { ImportInputError } from './base-transfer/input-error'
 import { typedCsvValue } from './csv-typed-values'
 
+/** Legacy multi-select storage holds literal labels; authored bases hold option IDs. */
+export function displayCsvLabels(labels:readonly string[]):string{return labels.map(label=>'"'+label.replaceAll('"','""')+'"').join(',')}
+
 export function displayCsvValue(field:Field,value:CellValue):string {
  if(value===null)return ''
  const type=field.resultType??field.type
@@ -19,7 +22,7 @@ export function displayCsvValue(field:Field,value:CellValue):string {
    if(label===undefined)throw new AdmissionError('validation',`${field.label}: a select option is unavailable.`)
    return label
   })
-  return type==='multi_select'?labels.map(label=>'"'+label.replaceAll('"','""')+'"').join(','):labels[0]??''
+  return type==='multi_select'?displayCsvLabels(labels):labels[0]??''
  }
  if(typeof value==='boolean')return value?'Yes':'No'
  return typeof value==='string'?value:JSON.stringify(value)

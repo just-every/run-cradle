@@ -1,3 +1,4 @@
+import {createWarehouseComposition} from './warehouse.server'
 import { createInstalledLaunch } from './launch-runtime.server'
 import {createLifecycleComposition} from './lifecycle.server'
 import { validateAuthConfiguration } from '../../../domains/authority/product-auth.server'
@@ -17,12 +18,13 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const providers=createProvidersComposition(platform,foundation)
  validateAuthConfiguration(platform.auth.configuration)
  const records=createRecordsComposition(platform,foundation)
+ const warehouse=createWarehouseComposition(platform,foundation,records,clock)
  await ensureRecordAutomationTriggers(platform.bindings.DB,foundation.descriptors)
  const automations=createAutomationsComposition(platform,foundation,clock)
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)
  const launchImports=createLaunchImportComposition(platform,foundation,records)
- return {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
+ return {foundation,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
 export type Runtime=Awaited<ReturnType<typeof createRuntime>>

@@ -17,7 +17,7 @@ import {createUlid} from '../../shared/ids'
 import type {Json} from '../../../contracts/primitives'
 import type {RequestContext} from '../../../domains/authority/ports'
 export function createLifecycleComposition(platform:Platform,foundation:ServerFoundation){
- const db=platform.bindings.DB,service=createMemberService(db,foundation.policy,memberLifecycle(db,platform.bindings.FILES,foundation.descriptors)),cleanup=createLifecycleCleanup(db,platform.bindings.FILES)
+ const db=platform.bindings.DB,service=createMemberService(db,foundation.policy,memberLifecycle(db,platform.bindings.FILES,foundation.descriptors)),cleanup=createLifecycleCleanup(db,platform.bindings.FILES,platform.bindings.WAREHOUSE)
  const ref=z.object({appId:idSchema,entityId:idSchema,recordId:idSchema}).strict(),expected=z.array(z.object({ref,version:z.number().int().positive()}).strict()).min(1).max(100)
  const visible=async(ctx:RequestContext,action:string)=>{if(ctx.principal.kind!=='human')return false;for(const app of (await db.prepare("SELECT app_id FROM authority_memberships WHERE principal_id=? AND state='active'").bind(ctx.principal.id).all<{app_id:string}>()).results){try{await foundation.policy.authorize(ctx,{appId:app.app_id,action,expected:[],cost:[],inputHash:''});return true}catch(error){if(!(error instanceof AuthorityError))throw error}}return false}
  const inviteInput=z.object({email:z.email().max(254),name:z.string().trim().min(1).max(200),scopes:z.array(z.object({appId:idSchema,policyId:idSchema,legacy:z.literal(false)}).strict()).min(1).max(100)}).strict()

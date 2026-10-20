@@ -105,6 +105,7 @@ export const createApplication = (platform: Platform, config: SeedConfig, runtim
   for(const path of ['/api/v1/commands/member.erase','/api/v1/commands/launch.campaign.delete','/api/v1/commands/launch.samples.remove','/api/v1/erasures/:id']) app.all(path,context=>lifecycle.http.fetch(context.req.raw))
   const archives=installationArchiveHttp(platform,foundation)
   for(const path of ['/api/v1/commands/export.start','/api/v1/archive-jobs/*'])app.all(path,c=>archives.fetch(c.req.raw))
+  app.all('/api/v1/warehouse-exports',context=>runtime.warehouse.http.fetch(context.req.raw))
   app.route('/api/v1/commands', foundation.http)
   app.get('/api/v1/actions', async context => {
     const requestId = createUlid()

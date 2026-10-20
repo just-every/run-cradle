@@ -27,6 +27,7 @@ export const portabilityPolicy = {
    }
   }
   if(await db.prepare("SELECT 1 FROM authority_principals WHERE kind<>'system' OR human_id IS NOT NULL OR initial_owner<>0 LIMIT 1").first())return false;
+  if(tables.warehouse_exports&&await db.prepare(`SELECT 1 FROM "${tables.warehouse_exports.replaceAll('"','""')}" WHERE state='active' OR running_id IS NOT NULL OR watermark_json<>'{}' LIMIT 1`).first())return false;
   const checks={
    lifecycle_erasures:"state<>'complete'",lifecycle_erasure_blobs:'1',lifecycle_file_writes:'1',
    operators:'active<>0',authority_principals:"initial_owner<>0 OR (kind<>'system' AND state NOT IN ('removed','erased'))",
@@ -47,6 +48,7 @@ export const portabilityPolicy = {
   return true;
  },
  exportRow(table,row){
+  if(table==='warehouse_exports'){if(row.state!=='removed')row.state='paused';row.running_id=null;row.watermark_json='{}';row.last_slot=null;}
   if(table==='operators')row.active=0;
   if(table==='authority_principals'){if(row.kind!=='system'&&row.state!=='erased')row.state='removed';row.initial_owner=0;}
   if(table==='authority_memberships'){
@@ -94,3 +96,7 @@ export const portabilityPolicy = {
   return row;
  },
 };
+
+/** Installations with the scheduled-export binding keep its retained copies in
+ * the same verified archive and erasure checkpoint as canonical files. */
+export const installationPortabilityPolicy = warehouse => {if(!warehouse?.get)throw new PortabilityError('missing_bucket:WAREHOUSE',409);return {...portabilityPolicy,buckets:{...portabilityPolicy.buckets,WAREHOUSE:{}}};};

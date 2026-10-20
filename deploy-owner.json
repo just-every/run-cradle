@@ -18,6 +18,9 @@
   "r2": [
     {
       "binding": "FILES"
+    },
+    {
+      "binding": "WAREHOUSE"
     }
   ],
   "queues": [

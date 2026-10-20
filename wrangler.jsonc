@@ -22,7 +22,8 @@
     {
       "binding": "FILES",
       "bucket_name": "cradle-files"
-    }
+    },
+    {"binding":"WAREHOUSE","bucket_name":"cradle-warehouse"}
   ],
   "queues": {
     "producers": [

@@ -1,3 +1,5 @@
+import {trustedPredicate} from '../admission/sql.server'
+const warehouseObjectInventoryGuard=(keys:string[])=>trustedPredicate("(SELECT COALESCE(json_group_array(object_key),'[]') FROM (SELECT object_key FROM warehouse_objects ORDER BY object_key))=?",[JSON.stringify(keys)])
 import {prepareImportCustody} from './import-custody.server'
 import {requireQuiescentFiles} from './file-writes.server'
 import type {RequestContext} from '../authority/ports'
@@ -52,8 +54,11 @@ export function memberLifecycle(db:D1Database,bucket:R2Bucket,registry:Descripto
   keys.push(...inputKeys)
   for(const row of encrypted.results)await updateRows(db,change,'execution_attempts',{sealed_input:null,reconcile_input:null,payload_erased_at:ctx.now},'id=?',[row.id])
   const app=(await db.prepare('SELECT app_id FROM authority_memberships WHERE principal_id=? ORDER BY app_id LIMIT 1').bind(id).first<{app_id:string}>())!
-  retainCleanup(change,{id,appId:app.app_id,kind:'member',subjectId:id,label,now:ctx.now,keys})
-  return {...change,commit:custody.commit,plan:{places:[...planned,...custody.custodyPlaces,{store:'R2 private intake files',action:'delete' as const,rows:objects.erase.length,reason:'their own uploads that carry their identity'},{store:'R2 execution inputs',action:'delete' as const,rows:encrypted.results.length,reason:'captured inputs of runs they started or held'}],kept:[...residual,...custody.residual,...objects.residual,...objects.notInspected?[{store:'R2 files not inspected',rows:objects.notInspected,reason:'not_inspected'}]:[]]}}
+  const warehouseKeys=(await db.prepare('SELECT object_key FROM warehouse_objects ORDER BY object_key').all<{object_key:string}>()).results.map(row=>row.object_key)
+  change.guards.push(warehouseObjectInventoryGuard(warehouseKeys))
+  await updateRows(db,change,'warehouse_exports',{watermark_json:'{}'},'1=1',[])
+  retainCleanup(change,{id,appId:app.app_id,kind:'member',subjectId:id,label,now:ctx.now,keys,warehouseKeys})
+  return {...change,commit:custody.commit,plan:{places:[...planned,...custody.custodyPlaces,{store:'R2 warehouse export copies',action:'delete' as const,rows:warehouseKeys.length,reason:'all retained scheduled export copies retired by person erasure'},{store:'R2 private intake files',action:'delete' as const,rows:objects.erase.length,reason:'their own uploads that carry their identity'},{store:'R2 execution inputs',action:'delete' as const,rows:encrypted.results.length,reason:'captured inputs of runs they started or held'}],kept:[...residual,...custody.residual,...objects.residual,...objects.notInspected?[{store:'R2 files not inspected',rows:objects.notInspected,reason:'not_inspected'}]:[]]}}
  },
  }
 }
