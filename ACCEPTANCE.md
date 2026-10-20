@@ -2,7 +2,7 @@
 
 ## Target contract — 16 October 2026, revised 17–19 October 2026
 
-CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's required acceptance evidence is listed below with the status in CONTRACT.md's current Status table. As updated on 19 October, the rows total **111 done, 71 partial, 28 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
+CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replacement. Every clause's required acceptance evidence is listed below with the status in CONTRACT.md's current Status table. As updated on 20 October, the rows total **114 done, 68 partial, 28 missing** of 210 clauses, after the 17 October revisions that answered the first buyer review with twelve new clauses and the second with three (AUTO-USER-010, FIELD-005 and VIEW-017), each with sharper acceptance on existing ones. A row moves to done only when the named journey or test passes through a public door on the exact candidate and the clause's status in CONTRACT.md is updated in the same change. The earlier sections below remain binding records of what has been accepted and of the flagship gates.
 
 
 ### Records, schema and the app model
@@ -169,8 +169,8 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 
 | Clause | Status | Required evidence |
 | --- | --- | --- |
-| BOUND-001 — Separate products stay separate | Partial | Docs and navigation link to the sibling for each named job; no Cradle surface claims it. |
-| BOUND-002 — Not a regulated system of record | Partial | Docs state the boundary; no card number field type exists. |
+| BOUND-001 — Separate products stay separate | Done | `tests/public-document-runtime.mjs` serves `/docs/boundaries` without a session in the shared header/footer, checks every sibling link and the buyer's own project/work tool boundary. Docs and product copy checked for sibling-job claims. |
+| BOUND-002 — Not a regulated system of record | Done | `tests/public-document-runtime.mjs` checks every regulated-system boundary sentence and the actual `fieldSchema` type list from `src/domains/records/validators.ts` for card-number or PHI-specific types. |
 | BOUND-003 — Bounded compute | Partial | Script and formula limit tests (AUTO-USER-007, CALC-004). |
 | BOUND-004 — Honest migration and delivery claims | Done | Move-in receipts and uncertain-delivery tests. |
 | BOUND-005 — One business per installation | Done | Base copy between two installations by JSON export and reviewed import. |
@@ -258,7 +258,7 @@ CONTRACT.md now describes the complete Airtable, Smartsheet and Quickbase replac
 | AUTO-007 — Transport retry | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
 | AUTO-008 — Failure that retrying cannot fix | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
 | AUTO-009 — Manual retry | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
-| AUTO-010 — Fan-out | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
+| AUTO-010 — Fan-out | Done | `tests/launch-installed-event-control.mjs` submits a multi-record bulk edit and committed import through HTTP with two enabled event automations; each event creates exactly one run per automation carrying the affected IDs. |
 | AUTO-011 — Shipped automations | Done | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
 | NOTIFY-001 — In-app events | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |
 | NOTIFY-002 — Email delivery | Partial | A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`). |

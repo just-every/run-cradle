@@ -1,7 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {createHash} from 'node:crypto'
 import {setup,value,campaign,expected} from './helpers/launch-installed.mjs'
-const {launchEntities}=await import('../src/apps/launch/contracts.ts')
+const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
+const {createUlid}=await import('../src/core/shared/ids.ts')
 
 test('[AUTO-003/004] disable after actual event queue admission cancels queued work before any product effect',async()=>{
  const h=await setup({automaticQueues:false});try{
@@ -64,7 +66,7 @@ test('[AUTO-003 AI-003] duplicate emitted queue delivery during an in-flight bri
  }finally{release();await first?.catch(()=>{});await h.close()}
 })
 
-test('[AUTO-005/011 AI-002] a mixed bulk brief skips unchanged campaigns without spending quota or losing the bulk run',async()=>{
+test('[AUTO-005/011 AI-002] [AUTO-010] bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress',async()=>{
  let failCampaign=null
  const contexts=[],h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{
   assert.equal(request.url,'https://api.openai.com/v1/responses');contexts.push(JSON.parse((await request.json()).input[0].content[0].text))
@@ -76,6 +78,19 @@ test('[AUTO-005/011 AI-002] a mixed bulk brief skips unchanged campaigns without
   const a=await campaign(h,'BULK-A'),b=await campaign(h,'BULK-B')
   await h.command('launch.campaign.patch',{id:a.id,changes:{status:'Watch'}},expected(launchEntities.campaign,a))
   const at=Date.now();await h.tick(at);assert.equal(contexts.length,2)
+  const observer=value(await h.command('launch.automation.save',{definition:{name:'Batch activity',enabled:true,trigger:{kind:'event',event:'import.committed.v1'},actions:[{command:'add-activity',input:{campaignId:a.id,message:'One activity for the committed batch'}}]}}))
+  const brief=await h.db.prepare("SELECT id,definition_version FROM automations WHERE shipped_key='campaign-brief' AND enabled=1").first()
+  const fanOut=async(commandId,name,ids)=>{
+   const events=(await h.db.prepare('SELECT id,name,payload_json FROM admission_events WHERE command_id=? ORDER BY id').bind(commandId).all()).results
+   assert.equal(events.length,1,'A batch mutation emits one trigger event, rather than a trigger per record');assert.equal(events[0].name,name)
+   const payload=JSON.parse(events[0].payload_json);assert.deepEqual(payload.ids??payload.recordIds,ids)
+   const runs=(await h.db.prepare('SELECT * FROM automation_runs WHERE trigger_key IN (SELECT id FROM admission_events WHERE command_id=?) ORDER BY automation_id').bind(commandId).all()).results
+   assert.deepEqual(runs.map(run=>({automationId:run.automation_id,version:run.definition_version,trigger:run.trigger_key,state:run.state,subject:run.subject_id,ids:JSON.parse(run.definition_json).subjectIds})),[
+    {automationId:brief.id,version:brief.definition_version,trigger:events[0].id,state:'Succeeded',subject:null,ids},
+    {automationId:observer.id,version:observer.definitionVersion,trigger:events[0].id,state:'Succeeded',subject:null,ids},
+   ].sort((a,b)=>a.automationId.localeCompare(b.automationId)),'Each enabled applicable automation has exactly one run carrying exactly the batch record IDs')
+   assert.equal((await h.db.prepare('SELECT count(*) n FROM activity_entries WHERE automation_run_id IN (SELECT id FROM automation_runs WHERE automation_id=? AND trigger_key=?)').bind(observer.id,events[0].id).first()).n,1)
+  }
   const readContexts=async()=>(await h.db.prepare('SELECT * FROM launch_brief_context ORDER BY campaign_id').all()).results
   const before=await readContexts(),bulk=async(status='Watch')=>{
    const rows=(await h.db.prepare('SELECT id,version FROM campaigns WHERE id IN (?,?) ORDER BY id').bind(a.id,b.id).all()).results
@@ -83,6 +98,7 @@ test('[AUTO-005/011 AI-002] a mixed bulk brief skips unchanged campaigns without
   }
   const change=await bulk(),records=(await h.db.prepare('SELECT * FROM campaigns ORDER BY id').all()).results
   await h.tick(at+3600001)
+  await fanOut(change.data.commandId,'bulk.updated',[a.id,b.id])
   assert.deepEqual(contexts.map(c=>c.campaign.id),[a.id,b.id,b.id]);assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_model_calls').first()).n,3)
   const run=await h.db.prepare("SELECT * FROM automation_runs WHERE trigger_key IN (SELECT id FROM admission_events WHERE command_id=?) AND automation_id IN (SELECT id FROM automations WHERE shipped_key='campaign-brief')").bind(change.data.commandId).first()
   assert.equal(run.state,'Succeeded');assert.deepEqual(JSON.parse(run.definition_json).subjectIds,[a.id,b.id]);assert.equal(run.subject_id,null)
@@ -102,6 +118,21 @@ test('[AUTO-005/011 AI-002] a mixed bulk brief skips unchanged campaigns without
   assert.equal((await h.db.prepare('SELECT state FROM automation_runs WHERE id=?').bind(retried.runId).first()).state,'Succeeded');assert.equal(contexts.length,6);assert.equal(contexts.at(-1).campaign.id,b.id)
   assert.deepEqual(await h.db.prepare('SELECT * FROM launch_analysis_requests WHERE id=?').bind(completedA.id).first(),completedA)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_model_calls').first()).n,6)
+  const {csrfToken}=await h.read('/auth/csrf'),headers={cookie:h.owner.cookie,'x-csrf-token':csrfToken}
+  const post=async(path,input,commandId=createUlid())=>{
+   const response=await h.post(path,{commandId,expected:[],input},headers);assert.equal(response.status,200,await response.clone().text());return response.json()
+  }
+  const staged=value(await h.command('source.stage',{appId:LAUNCH_APP_ID,purpose:'import'})),csv=`Code,Summary\r\n${a.code},Imported campaign A context\r\n${b.code},Imported campaign B context\r\n`
+  const upload=value(await h.command('upload.begin',{appId:LAUNCH_APP_ID,subject:staged.subject,filename:'batch-campaigns.csv',mediaType:'text/csv',bytes:Buffer.byteLength(csv),sha256:createHash('sha256').update(csv).digest('hex')}))
+  const uploaded=await h.request(upload.uploadUrl,{method:'PUT',headers:{...headers,origin:h.origin,'content-type':'text/csv'},body:csv});assert.equal(uploaded.status,200,await uploaded.text())
+  const preview=value(await post('/api/v1/launch/imports/preview',{kind:'campaign',fileId:upload.file.id,mapping:[{column:'Code',field:'code'},{column:'Summary',field:'statusSummary'}]}))
+  assert.deepEqual({state:preview.state,creates:preview.creates,updates:preview.updates,unchanged:preview.unchanged,errors:preview.errors},{state:'valid',creates:0,updates:2,unchanged:0,errors:[]})
+  const importCommandId=createUlid(),committed=await post(`/api/v1/launch/imports/${preview.id}/commit`,{token:preview.token},importCommandId)
+  assert.deepEqual(value(committed),{id:preview.id,rows:2})
+  assert.deepEqual((await h.db.prepare('SELECT id,status_summary FROM campaigns WHERE id IN (?,?) ORDER BY id').bind(a.id,b.id).all()).results,[{id:a.id,status_summary:'Imported campaign A context'},{id:b.id,status_summary:'Imported campaign B context'}].sort((a,b)=>a.id.localeCompare(b.id)))
+  await h.tick(at+14400005)
+  await fanOut(importCommandId,'import.committed',[a.id,b.id])
+  assert.deepEqual(contexts.slice(6).map(c=>c.campaign.id),[a.id,b.id])
  }finally{await h.close()}
 })
 

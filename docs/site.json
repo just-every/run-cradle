@@ -12,6 +12,11 @@
           "slug": "install",
           "source": "docs/install.md",
           "label": "Install"
+        },
+        {
+          "slug": "boundaries",
+          "source": "docs/boundaries.md",
+          "label": "What Cradle is not"
         }
       ]
     },

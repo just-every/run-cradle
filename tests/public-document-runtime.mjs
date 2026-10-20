@@ -4,6 +4,7 @@ import path from 'node:path'
 import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 import { seedConfig } from '../src/ext/config.ts'
+const { fieldSchema } = await import('../src/domains/records/validators.ts')
 
 contract('HOME-003 AUTH-BASE-001', 'Actual emitted public SSR survives unavailable workspace names and recovers persisted renames', async () => {
   const h = await launchBaseAuthorityRuntime()
@@ -78,7 +79,7 @@ contract('HOME-003 AUTH-BASE-001', 'Actual emitted public SSR survives unavailab
 const hrefsIn = fragment => [...fragment.matchAll(/<a\b[^>]*?\shref="([^"]*)"/g)].map(match => match[1])
 const element = (html, open, close) => html.slice(html.search(open)).split(close)[0]
 
-contract('DOCS-001', 'Every published docs page on the emitted Worker shares the site header and footer', async () => {
+contract('DOCS-001 BOUND-001 BOUND-002', 'Every published docs page shares the site chrome and serves truthful product and regulated-data boundaries without a session', async () => {
   const source = JSON.parse(await readFile('rer-project.json', 'utf8')).sourceRepository
   assert.equal(JSON.parse(await readFile('package.json', 'utf8')).repository.url, source, 'the docs build reads the same public repository as the site chrome')
   const slugs = JSON.parse(await readFile('docs/site.json', 'utf8')).sections.flatMap(section => section.pages.map(page => ({ slug: page.slug, source: page.source })))
@@ -89,6 +90,7 @@ contract('DOCS-001', 'Every published docs page on the emitted Worker shares the
       return { status: response.status, type: response.headers.get('content-type') ?? '', html: await response.text() }
     }
     const origin = new URL(h.origin).origin
+    assert.ok(slugs.some(entry => entry.slug === 'boundaries'), 'Product boundaries are published in the docs navigation')
     for (const entry of slugs) {
       const route = entry.slug ? `/docs/${entry.slug}` : '/docs'
       const docs = await page(route)
@@ -99,10 +101,41 @@ contract('DOCS-001', 'Every published docs page on the emitted Worker shares the
       assert.match(docsHeader, /<a\b[^>]*aria-current="page"[^>]*href="\/docs"|<a\b[^>]*href="\/docs"[^>]*aria-current="page"/, `${route} marks Docs as current`)
       assert.ok(hrefsIn(element(docs.html, /<footer\b/, '</footer>')).includes(`${source}/blob/main/LICENSE`), `${route} shares the footer`)
       assert.ok(hrefsIn(docs.html).includes(`${source}/edit/main/${entry.source}`), `${route} links to its source`)
+      assert.ok(hrefsIn(docs.html).includes('/docs/boundaries'), `${route} links to the product boundaries`)
+      if (entry.slug === 'boundaries') {
+        const text = docs.html.replace(/<[^>]*>/g, ' ').replace(/&#(?:39|x27);|&apos;|’/g, "'").replace(/\s+/g, ' ')
+        const anchors = [...docs.html.matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)]
+        for (const [job, product, url] of [
+          ['a CRM', 'Orbit', 'https://github.com/just-every/run-orbit'],
+          ['a survey platform', 'Pencil', 'https://github.com/just-every/run-pencil'],
+          ['a wiki', 'Slate', 'https://github.com/just-every/run-slate'],
+          ['file storage', 'Chest', 'https://github.com/just-every/run-chest'],
+          ['team chat', 'Nook', 'https://github.com/just-every/run-nook'],
+          ['an issue tracker', 'Vector', 'https://github.com/just-every/run-vector'],
+          ['an automation platform', 'Crank', 'https://github.com/just-every/run-crank'],
+          ['an identity provider', 'Auth', 'https://github.com/just-every/run-auth'],
+          ['a website builder', 'Pane', 'https://github.com/just-every/run-pane'],
+        ]) {
+          assert.ok(text.includes(`Cradle is not ${job}.`), `${job} stays outside Cradle`)
+          const sibling = anchors.find(([, href]) => href === url)
+          assert.equal(sibling?.[2].replace(/<[^>]*>/g, ''), product, `${job} names and links its separate product`)
+        }
+        for (const boundary of [
+          "Cradle is not a project or work management suite: task inboxes, workload and resource planning across projects stay with the buyer's own tool.",
+          'No Run Edit Run product owns that category today.',
+          'Keep Asana, monday.com or ClickUp beside Cradle.',
+          'Cradle is not an accounting ledger, payroll, EHR or payment processor.',
+          "Money moves only through the buyer's processor (Stripe); ledgers stay in the buyer's accounting system.",
+          'Cradle makes no HIPAA, PCI DSS or SOC 2 claim; a covered entity storing PHI needs its own hosting agreement (BAA) and its own assessment.',
+        ]) assert.ok(text.includes(boundary), `Published boundary: ${boundary}`)
+      }
       for (const [, reference] of docs.html.matchAll(/<(?:script|img|link|iframe)\b[^>]*?\s(?:src|href)="([^"]*)"/g)) {
         assert.ok(!/^(?:[a-z]+:)?\/\//i.test(reference) || reference.startsWith(origin), `${route} loads ${reference} from another origin`)
       }
     }
+    const fieldTypes = fieldSchema.shape.type.options
+    assert.ok(fieldTypes.length > 0, 'Inspect the actual record field-type validator')
+    for (const type of fieldTypes) assert.doesNotMatch(type, /card|payment|phi|patient|medical|health|diagnos|ehr/i, `${type} is not a card-number or PHI-specific field type`)
     for (const route of ['/docs/no-such-page', '/docs/install/extra']) assert.equal((await page(route)).status, 404, `${route} is a genuine 404`)
   } finally { await h.close() }
 })

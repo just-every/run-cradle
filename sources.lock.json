@@ -2918,7 +2918,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "9508e4175deaddbc0b84ea3a3953205895bbdd90dec34c5ae0d9cd640380be69",
+      "sha256": "0ac524ad4e3242c99b12f61dc27ae18c29b24f23c7862c6ef1fe3d18c5701803",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "830e9bb227fe075b2756a9e1e90e10f1975c5f6361da91009eea1d063bf92063",
+      "sha256": "7337070e81c9194d27e0b41ba8237b184f9630163d6998b7c67cdbaf16bbb88d",
       "executable": false
     },
     "DEMO.md": {
@@ -3029,8 +3029,12 @@
       "sha256": "bf4c27d4b9ef3c9188f248f938aa475cee585922b1df8ba3ae1beef330d99d39",
       "executable": false
     },
+    "docs/boundaries.md": {
+      "sha256": "6f8bfbf60adf4866030d0733f63e6b1f24fed0195c81b8b59f52994b66fa9f3a",
+      "executable": false
+    },
     "docs/CLAIMS.md": {
-      "sha256": "2e2d57220f8843d77cc4d55004289f5531ad6767e23de026cda3e8fbc666bae6",
+      "sha256": "b838eb07a639088655037d6d155d377cd33c553e7615d4a8b20447a599ba02ca",
       "executable": false
     },
     "docs/contract-transition.md": {
@@ -4222,7 +4226,7 @@
       "executable": false
     },
     "docs/site.json": {
-      "sha256": "5cef4e0e5bbfeefb2cb7d78d6792ef202179789b29a682d3459bfe2c573ca07d",
+      "sha256": "972c76177d755d7efba12b10510fd7fc03538700f90f560dec0883e57ad3e202",
       "executable": false
     },
     "docs/user-automations.md": {
@@ -11246,7 +11250,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "17e7738b64732f456860c919780045b39a277b9dd12a3609c95bf0140e62e278",
+      "sha256": "0a3d23d8fe6bb700ba5fe7b718541c77c45e2ffc88e2a1fb6bffa24a7d8a6d81",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
@@ -11350,7 +11354,7 @@
       "executable": false
     },
     "tests/public-document-runtime.mjs": {
-      "sha256": "fb343642577573514ba7a78f659a4bc19d787eef1bf56048c13c89df77d90d39",
+      "sha256": "dad51cdd4ce5dd1fa2c847ab509eddea69e65c3abcf7b27410fe424d0d5a3122",
       "executable": false
     },
     "tests/records-agent-proposals.mjs": {

@@ -1,9 +1,12 @@
 # Implemented contract claims
 
-These rows track the clauses completed in the 18–19 October 2026 rounds; the complete product status remains in CONTRACT.md.
+These rows track the clauses completed in the 18–20 October 2026 rounds; the complete product status remains in CONTRACT.md.
 
 | Clause | Status | Proven behavior | Evidence |
 | --- | --- | --- | --- |
+| BOUND-001 | done | Sessionless public boundaries page in the shared docs navigation and chrome, all nine sibling links, and project/work management left with the buyer's own tool; docs and product copy checked for sibling-job claims. | `tests/public-document-runtime.mjs`, `docs/boundaries.md` |
+| BOUND-002 | done | Public accounting, payroll, EHR, payment, compliance and PHI boundaries; the actual record field-type validator contains no card-number or PHI-specific type. | `tests/public-document-runtime.mjs`, `src/domains/records/validators.ts`, `docs/boundaries.md` |
+| AUTO-010 | done | Multi-record bulk edit and committed import each create one run per enabled event automation, carrying all affected IDs rather than one run per record. | `tests/launch-installed-event-control.mjs` |
 | CALC-002 | done | Conditional scalar and collection lookups, current policy, next-read recomputation, labeled CSV and native copies; builder and record journeys at 1440/390. | `tests/helpers/records-lookups-journey.mjs`, `tests/helpers/records-collection-lookups.mjs`, `tests/helpers/records-collection-browser.mjs`, `docs/contract/CALC-002/` |
 | IFACE-006 | done | Nine editable starting templates; six operations adoption/edit journeys and reviewed whole-base copies with or without records, identity remapping and disclosed record-dependent exclusions; browser journeys at 1440/390. | `tests/helpers/records-operations-templates.mjs`, `tests/helpers/records-browser-templates.mjs`, `docs/contract/IFACE-006/` |
 | VIEW-010 | done | Month/week/day date and instant calendars, DST-preserving audited moves, stale/readonly refusal and private revocable iCal feeds; product journeys at 1440/390. | `tests/ui-records-calendar.mjs`, `tests/helpers/records-calendar-feed.mjs`, `src/ui/records/record-calendar.tsx`, `src/domains/records/calendar-feed.server.ts` |

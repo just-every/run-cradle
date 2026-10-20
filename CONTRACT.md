@@ -489,10 +489,10 @@ What Cradle does not do, and how a buyer gets it. Each is a product line, not a 
 
 - **BOUND-001 — Separate products stay separate.** Cradle is the relational database and internal-app builder. It is not a project or work management suite (task inboxes, workload and resource planning across projects; no Run Edit Run product owns that category today, and buyers keep Asana, monday.com or ClickUp beside Cradle), a CRM ([Orbit](https://github.com/just-every/run-orbit)), a survey platform ([Pencil](https://github.com/just-every/run-pencil)), a wiki ([Slate](https://github.com/just-every/run-slate)), file storage ([Chest](https://github.com/just-every/run-chest)), team chat ([Nook](https://github.com/just-every/run-nook)), an issue tracker ([Vector](https://github.com/just-every/run-vector)), an automation platform ([Crank](https://github.com/just-every/run-crank)), an identity provider ([Auth](https://github.com/just-every/run-auth)) or a website builder ([Pane](https://github.com/just-every/run-pane)). It connects to each through the clauses above.
   *Acceptance:* Docs and navigation link to the sibling for each named job; no Cradle surface claims it.
-  *Status:* partial — DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product.
+  *Status:* done — tests/public-document-runtime.mjs serves the public boundaries page without a session, with shared navigation and all nine sibling links; docs and product copy were checked for sibling-job claims.
 - **BOUND-002 — Not a regulated system of record.** Cradle is not an accounting ledger, payroll, EHR or payment processor. Money moves only through the buyer's processor (Stripe); ledgers stay in the buyer's accounting system. Cradle makes no HIPAA, PCI DSS or SOC 2 claim; a covered entity storing PHI needs its own hosting agreement (BAA) and its own assessment.
   *Acceptance:* Docs state the boundary; no card number field type exists.
-  *Status:* partial — no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary.
+  *Status:* done — tests/public-document-runtime.mjs checks the exact public regulated-system boundary and the field-type list in src/domains/records/validators.ts for card-number or PHI-specific types.
 - **BOUND-003 — Bounded compute.** Formulas, scripts and automations run within declared time and memory bounds inside the Worker. Heavy analytics and long-running jobs run in the buyer's own warehouse or runtime (SYNC-002, API-USER-002), not in Cradle requests.
   *Acceptance:* Script and formula limit tests (AUTO-USER-007, CALC-004).
   *Status:* partial — formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built.
@@ -803,7 +803,7 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — tests/launch-installed-retries.mjs.
 - **AUTO-010 — Fan-out.** A mutation that changes many records at once — a bulk edit under CAMP-013 or a committed import under IMPORT-003 — dispatches at most one run per enabled automation, carrying the affected record IDs, rather than one run per record.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/bulk.server.ts; no clause-tagged test yet.
+  *Status:* done — tests/launch-installed-event-control.mjs proves one run per enabled event automation for a multi-record bulk edit and committed import, with the affected IDs carried by each run.
 - **AUTO-011 — Shipped automations.** The seed ships four automations. Critical risk escalation triggers when a risk's severity becomes Critical while the risk is open and not already Escalated, and its one action escalates that risk under RISK-003; it is enabled by default. Launch readiness runs on the schedule in MILE-004 and is enabled by default; its lead time, 5 days by default, and its evaluation hour, 08:00 by default, are editable in settings. Campaign brief triggers when a campaign is created or updated, at most once per campaign per hour, skipped when nothing in its AI-002 context changed since the last brief; it is enabled by default and dispatched only while AI is enabled under SET-002. The weekly portfolio digest runs on the schedule in NOTIFY-004 and is disabled by default. No other parameter of a shipped automation is editable, and each can be disabled.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/launch-installed-runtime.mjs; tests/launch-installed-schedules.mjs.
@@ -902,17 +902,17 @@ Launch readiness is a complete application template on the records platform (cam
 
 Judged from the code and tests at commit `212d3e8c91d72e345c10344318e41bd46793a2a4` (16 October 2026).
 
-That commit identifies the initial audit. The rows below include subsequent builder updates through 19 October 2026; their cited evidence and gaps describe those updates.
+That commit identifies the initial audit. The rows below include subsequent builder updates through 20 October 2026; their cited evidence and gaps describe those updates.
 
 Release 0.3.0 gate (19 October 2026, independent of the builders): on the release candidate, the published records clauses RECORDS-001 to RECORDS-004 and RECORDS-006, AUTH-BASE-001 and HOME-003 were exercised through the browser, locally at 1440 and 390 px and on a hosted own-account install with real SendGrid mail. That covered a template base with a link and a lookup, CSV import review, grid, board and form, saved filtered, grouped and sorted views, view CSV, a field removal with its recovery CSV, a record automation that notified and emailed the owner, an upgrade of a populated 0.2.0 install, and a hosted base export, removal, redeploy and base JSON return with email sign-in after. The gate fixed two defects before release: Records under `rer dev` (VIEW-012's limits module) and own-account mail deploys (AUTH-BASE-001). Every other row rests on its cited tests passing in CI Verify on the release commit; the gate did not exercise a live AI provider (AI-001 to AI-006, SET-002).
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **111 done, 71 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **114 done, 68 partial, 28 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 94 | 17 | 0 | 111 |
-| Target and push further | 17 | 54 | 28 | 99 |
-| All | 111 | 71 | 28 | 210 |
+| Published | 95 | 16 | 0 | 111 |
+| Target and push further | 19 | 52 | 28 | 99 |
+| All | 114 | 68 | 28 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1021,8 +1021,8 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `AGENT-005` | Repair broken automations and integrations | push-further | partial | `src/domains/automations/runtime.server.ts`, `src/domains/execution/runtime.server.ts` | failure history and external-effect readback (src/domains/automations/runtime.server.ts; src/domains/execution/runtime.server.ts:42); agent repair absent |
 | `AGENT-006` | Keep the data clean | push-further | missing |  | bulk preview/commit/undo exists to build on (src/domains/records/bulk.server.ts; tests/records-transport.mjs) |
 | `AGENT-007` | Agent authority | push-further | partial | `tests/records-agent-proposals.mjs`, `tests/repairs-outcome-http.mjs` | proposing keys (RECORDS-007; tests/records-agent-proposals.mjs) and repair mandates with designated-human approval (tests/repairs-outcome-http.mjs) |
-| `BOUND-001` | Separate products stay separate | target | partial | `tests/public-document-runtime.mjs` | DOCS-001 pages describe only shipped capabilities (tests/public-document-runtime.mjs); docs do not yet link each sibling product |
-| `BOUND-002` | Not a regulated system of record | target | partial | `src/domains/records/validators.ts` | no card-number or PHI-specific field type exists (src/domains/records/validators.ts); the public docs do not yet state the boundary |
+| `BOUND-001` | Separate products stay separate | target | done | `tests/public-document-runtime.mjs`, `docs/boundaries.md` |  |
+| `BOUND-002` | Not a regulated system of record | target | done | `tests/public-document-runtime.mjs`, `src/domains/records/validators.ts`, `docs/boundaries.md` |  |
 | `BOUND-003` | Bounded compute | target | partial | `src/domains/records/formulas.ts` | formula depth/cycle bounds (src/domains/records/formulas.ts); script sandbox not yet built |
 | `BOUND-004` | Honest migration and delivery claims | target | done | `tests/records-import-receipt.mjs`, `tests/launch-installed-retries.mjs` |  |
 | `BOUND-005` | One business per installation | target | done | `tests/records-base-exits.mjs` |  |
@@ -1099,7 +1099,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `AUTO-007` | Transport retry | published | done | `tests/launch-installed-retries.mjs` |  |
 | `AUTO-008` | Failure that retrying cannot fix | published | done | `tests/launch-installed-event-control.mjs` |  |
 | `AUTO-009` | Manual retry | published | done | `tests/launch-installed-retries.mjs` |  |
-| `AUTO-010` | Fan-out | published | partial | `src/apps/launch/bulk.server.ts` | no clause-tagged test yet |
+| `AUTO-010` | Fan-out | published | done | `tests/launch-installed-event-control.mjs` |  |
 | `AUTO-011` | Shipped automations | published | done | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-schedules.mjs` |  |
 | `NOTIFY-001` | In-app events | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
 | `NOTIFY-002` | Email delivery | published | partial | `src/core/features/notifications` | no clause-tagged test yet |
