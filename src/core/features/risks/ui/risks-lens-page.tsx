@@ -2,7 +2,7 @@ import { ExportLaunchCsv } from '../../../../ui/launch/export-launch-csv'
 import {AnalysisPanel} from '../../../../ui/launch/analysis-panel'
 import { RiskEscalationNotice } from './risk-escalation-notice'
 import { formatDate } from '../../portfolio/ui/portfolio-format'
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 
 import { escalateRisk, useRiskAction, useRiskLens, type RiskRecord } from './risk-client'
 
@@ -20,6 +20,8 @@ const State = ({ title, children, retry }: { title: string; children: ReactNode;
 )
 
 const RiskCard = ({ risk, onEscalated }: { risk: RiskRecord; onEscalated: (risk: RiskRecord) => void }) => {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => { setHydrated(true) }, [])
   const [isComposerOpen, setComposerOpen] = useState(false)
   const [reason, setReason] = useState('')
   const action = useRiskAction()
@@ -41,7 +43,7 @@ const RiskCard = ({ risk, onEscalated }: { risk: RiskRecord; onEscalated: (risk:
     <header className="flex items-start justify-between gap-3"><div className="flex flex-wrap gap-2"><span className="rounded-full border border-current/20 bg-white/70 px-2 py-1 text-xs font-bold">{risk.severity}</span><span className="rounded-full border border-current/20 bg-white/70 px-2 py-1 text-xs font-bold">{risk.state}</span></div><span className="text-right text-xs font-semibold">{risk.dueDate ? `Due ${formatDate(risk.dueDate)}` : 'No due date'}</span></header>
     <div><h2 className="text-lg font-bold text-foreground"><a className="cr-link underline-offset-2 hover:underline" href={`/app/risks/${encodeURIComponent(risk.id)}`}>{risk.title}</a></h2><p className="mt-2 text-sm text-muted-foreground"><a className="cr-link font-semibold text-foreground underline-offset-2 hover:underline" href={`/app/campaigns/${encodeURIComponent(risk.campaign.id)}`}>{risk.campaign.name}</a> · {risk.owner.name}</p></div>
     <dl className="grid gap-3 text-sm"><div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Signal</dt><dd className="mt-1 text-foreground">{risk.signal}</dd></div><div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Mitigation</dt><dd className="mt-1 text-foreground">{risk.mitigation}</dd></div></dl>
-    <footer className="mt-auto flex items-center justify-between gap-3"><a className="cr-link text-sm font-bold text-primary underline-offset-2 hover:underline" href={`/app/campaigns/${encodeURIComponent(risk.campaign.id)}`}>Open campaign</a>{canEscalate ? <button className="rounded-md border border-current/30 bg-white/80 px-3 py-2 text-sm font-bold text-foreground" onClick={() => setComposerOpen((open) => !open)}>Escalate</button> : <span className="text-xs font-bold">{risk.state === 'Escalated' ? 'Already escalated' : 'Resolved'}</span>}</footer>
+    <footer className="mt-auto flex items-center justify-between gap-3"><a className="cr-link text-sm font-bold text-primary underline-offset-2 hover:underline" href={`/app/campaigns/${encodeURIComponent(risk.campaign.id)}`}>Open campaign</a>{canEscalate ? <button className="rounded-md border border-current/30 bg-white/80 px-3 py-2 text-sm font-bold text-foreground disabled:opacity-50" disabled={!hydrated} onClick={() => setComposerOpen((open) => !open)}>Escalate</button> : <span className="text-xs font-bold">{risk.state === 'Escalated' ? 'Already escalated' : 'Resolved'}</span>}</footer>
     {isComposerOpen ? <form className="border-t border-current/20 pt-4" onSubmit={submit}><label className="grid gap-2 text-sm font-bold" htmlFor={`risk-reason-${risk.id}`}>Escalation reason<textarea className="min-h-20 rounded-md border border-current/30 bg-white px-3 py-2 font-normal text-foreground" id={`risk-reason-${risk.id}`} value={reason} onChange={(event) => setReason(event.target.value)} required /></label>{action.error ? <p className="mt-2 text-sm font-semibold text-red-800">{action.error.message}</p> : null}<div className="mt-3 flex justify-end gap-2"><button className="px-3 py-2 text-sm font-semibold" type="button" onClick={() => setComposerOpen(false)}>Cancel</button><button className="rounded-md bg-primary px-3 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50" disabled={action.isPending || !reason.trim()}>{action.isPending ? 'Escalating…' : 'Confirm escalation'}</button></div></form> : null}
   </article>
 }

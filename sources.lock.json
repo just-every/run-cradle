@@ -6686,7 +6686,7 @@
       "executable": false
     },
     "src/core/features/risks/ui/risks-lens-page.tsx": {
-      "sha256": "d2d14f8811400376ecd6ef14e2666fd5e3d692ee9bbbb3b23ad28405fcb0dc9b",
+      "sha256": "b1abb436f6f6ab7664f6fd1983c452cbfa56ffd8d1887594d4cd7befa3fd97a2",
       "executable": false
     },
     "src/core/features/sample-data/data.ts": {
@@ -11650,7 +11650,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "03d76e54c52f1fb093ddf8c16909afb3369f0db429d6e065f51d2dade27c5f73",
+      "sha256": "1f654c8b80ff05a9c2780a1a124a8175b5f176c68512eb1d8e2f7101568713b6",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
