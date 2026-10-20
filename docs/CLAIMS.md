@@ -1,10 +1,10 @@
 # Implemented contract claims
 
-These rows track the clauses completed in the 18–21 October 2026 rounds; the complete product status remains in CONTRACT.md.
+These rows track the clauses completed or advanced in the 18–21 October 2026 rounds; the complete product status remains in CONTRACT.md.
 
 | Clause | Status | Proven behavior | Evidence |
 | --- | --- | --- | --- |
-| SYNC-002 | done | Owner-selected bases, full/incremental CSV to a separately bound R2 bucket, hourly/daily/weekly schedules, audited changes, current policy, deletion tombstones, verified watermarks, owner-loss pause/in-app notice and export custody erased before confirmation. BigQuery, Snowflake, remote S3 and Parquet are not yet shipped. | `tests/launch-operator-doors.mjs` [SYNC-002], `tests/helpers/warehouse-export-journey.mjs`, `src/domains/warehouse/`, `docs/exporting-to-your-own-bucket.md` |
+| SYNC-002 | partial | Owner-selected bases, full/incremental CSV to a separately bound R2 bucket, hourly/daily/weekly schedules, audited changes, current policy, deletion tombstones, verified watermarks, owner-loss pause/in-app notice and export custody erased before confirmation. Local tests only; no hosted proof. No BigQuery or Snowflake transfer has run. Gap: BigQuery, Snowflake and S3 destinations and Parquet not built; R2 + CSV only. | `tests/launch-operator-doors.mjs` [SYNC-002], `tests/helpers/warehouse-export-journey.mjs`, `src/domains/warehouse/`, `docs/exporting-to-your-own-bucket.md` |
 | BOUND-001 | done | Sessionless public boundaries page in the shared docs navigation and chrome, sibling links including [Pegboard](https://run-pegboard.com) for project/work management; docs and product copy checked for sibling-job claims. | `tests/public-document-runtime.mjs`, `docs/boundaries.md` |
 | BOUND-002 | done | Public accounting, payroll, EHR, payment, compliance and PHI boundaries, with a link to the separate payroll product [Envelope](https://run-envelope.com); the actual record field-type validator contains no card-number or PHI-specific type. | `tests/public-document-runtime.mjs`, `src/domains/records/validators.ts`, `docs/boundaries.md` |
 | AUTO-010 | done | Multi-record bulk edit and committed import each create one run per enabled event automation, carrying all affected IDs rather than one run per record. | `tests/launch-installed-event-control.mjs` |
