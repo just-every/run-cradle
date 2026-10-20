@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Erasing an operator is final: Base's operator status and role routes now refuse any change to an erased person, so they cannot be re-activated (OPS-005). Adds `updates/9039`, an additive trigger.
+- OPS-004 and OPS-005 are done, each with a named journey over the launch HTTP doors.
+
 ## 0.4.0
 
 What an owner gets:

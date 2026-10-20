@@ -722,6 +722,12 @@
       "name": "9038_calendar_feeds.sql",
       "sha256": "0c2550da067bf773f8ea3bacea043464f7fce459a6614f3c8a3809cb2056badf",
       "sql": "-- Calendar subscriptions are credentials, excluded from installation archives.\nCREATE INDEX authority_calendar_feed_lookup ON authority_credentials(audience, principal_id, json_extract(scopes_json, '$[0].calendarViewId'));\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9039_erased_operator_guard.sql",
+      "sha256": "551e8ec6c02213c0c611509843cd44f87715cc5b7b98901d9666d04e0dadbabb",
+      "sql": "-- An erased operator cannot be undone (OPS-005). Base's operator routes change status and role\n-- directly, and cradle_update_base_operator projects an active status back onto the principal.\n-- Refuse any status or role change on the Base operator of an erased principal.\nCREATE TRIGGER cradle_preserve_erased_operator BEFORE UPDATE OF status,role ON oa_operators\n WHEN EXISTS(SELECT 1 FROM cradle_base_operators m JOIN authority_principals p ON p.id=m.principal_id\n  WHERE m.base_id=OLD.id AND p.state='erased')\n BEGIN SELECT RAISE(ABORT, 'operator_erased'); END;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

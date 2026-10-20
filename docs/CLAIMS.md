@@ -1,6 +1,6 @@
 # Implemented contract claims
 
-These rows track the clauses completed in the 18–20 October 2026 rounds; the complete product status remains in CONTRACT.md.
+These rows track the clauses completed in the 18–21 October 2026 rounds; the complete product status remains in CONTRACT.md.
 
 | Clause | Status | Proven behavior | Evidence |
 | --- | --- | --- | --- |
@@ -51,3 +51,5 @@ These rows track the clauses completed in the 18–20 October 2026 rounds; the c
 | ACT-004 | done | Only the mentioned current operator is notified; removed and erased mentions stay plain text without delivery or business-field changes, through native HTTP commands and 1440/390 screens. | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` |
 | VIEW-003 | done | Post-success native HTTP reads show committed campaign and child fields, derived Home/Overview/Grid/Detail counts, saved and shipped lenses, Decision Queue and Automation Monitor; archive and terminal decisions update the next read. | `tests/launch-write-effects.mjs`, `tests/helpers/launch-consistency-clauses.mjs` |
 | VIEW-006 | done | Current caller revisions fence every Launch record and definition mutation, comment deletion, workspace and readiness settings, sample removal, bulk undo and safe retry. Stale admissions and commit races name the authorized current version and commit no effects; native setup and 1440/390 settings journeys retain those revisions. | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` |
+| OPS-004 | done | Removal is refused naming each blocking campaign and decision, ends sessions at once, cancels Outstanding readiness requests, drops the person from the Monday digest, keeps attribution with their name and returns zero results for lenses naming them. | `tests/launch-operator-doors.mjs`, `tests/helpers/launch-operator-lifecycle.mjs` |
+| OPS-005 | done | A removed operator is erased to one stable `Anonymous <last 8 of id>` label in every read, their notifications and delivery records are deleted, authored comments, activity and decision outcomes remain under the label, the erasure confirms inside five minutes and cannot be undone or repeated. | `tests/launch-operator-doors.mjs`, `tests/helpers/launch-operator-erasure.mjs`, `migrations/updates/9039_erased_operator_guard.sql` |

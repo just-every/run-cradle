@@ -2918,7 +2918,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "4648ca3425d33e4518130925928617a2b568547573a4d3badd2f191ec01f500a",
+      "sha256": "ae136d5bd684252d456273fbaf4d4d371f1aa745163d962090fbc0187bdd838f",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2978,7 +2978,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "e071264cf987c399e26b83ed06109930f2863063eb298d3daee91a6e523d4898",
+      "sha256": "1470b92e8295af079ed83d5e363df8339feeaff930204dc97f88da751b9e0e37",
       "executable": false
     },
     "CLAUDE.md": {
@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "20866c22510652c4e5955150a2e27dd33b1f8252d1d9e584eea25b98efed5f62",
+      "sha256": "ecae568790cee5dd87af56613986fa194eda5ed195eb3f7fb5584281a28edefc",
       "executable": false
     },
     "DEMO.md": {
@@ -3034,7 +3034,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "b754ff2873cb4eb8421b91dc3b3c930bafca98caf137abd54bbb41af2d1cbcd1",
+      "sha256": "7a16ca974ec57e36523e240f04fce316a170f8cc3781cd9c1654939f4828aa03",
       "executable": false
     },
     "docs/contract-transition.md": {
@@ -4262,7 +4262,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "c57d185a44aa03f6c01392ca330db46566b976f997bed8eaa4b5f36b9be36dd7",
+      "sha256": "2eefa51f8524083961b3958c98aaae1158b1c32f7a9a1077a0417419e21ab8e5",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -4735,6 +4735,10 @@
     },
     "migrations/updates/9038_calendar_feeds.sql": {
       "sha256": "0c2550da067bf773f8ea3bacea043464f7fce459a6614f3c8a3809cb2056badf",
+      "executable": false
+    },
+    "migrations/updates/9039_erased_operator_guard.sql": {
+      "sha256": "551e8ec6c02213c0c611509843cd44f87715cc5b7b98901d9666d04e0dadbabb",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -10821,6 +10825,14 @@
       "sha256": "483d642a2d039e895e1e9ab8cff9bacc9604e345510f97a4f3f15ba8bb2ffa36",
       "executable": false
     },
+    "tests/helpers/launch-operator-erasure.mjs": {
+      "sha256": "f8a264853368c0783976797eeed19be5ec80879e5f076f2f3cc57a16d6eb5082",
+      "executable": false
+    },
+    "tests/helpers/launch-operator-lifecycle.mjs": {
+      "sha256": "9dd4ef0e15911fdcbd7f97e34d7d876c5e0de16391d1470b4ad18be1c463373c",
+      "executable": false
+    },
     "tests/helpers/launch-overdue-clauses.mjs": {
       "sha256": "763ffd32b727c2715079c4bef1778efccb8b689e97c09fc940ad113e2372ffd3",
       "executable": false
@@ -11306,7 +11318,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "12910cf52b128b9080905c4c7bf7701f16f5207996ad4c5d6e5ab30d88829740",
+      "sha256": "5de4e7ec93c4531efffa0a4a8920f3a0acf1e3025859ee794ab9dd8598d15c6a",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
