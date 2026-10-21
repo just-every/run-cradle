@@ -127,10 +127,15 @@ export type CampaignDetailResponse = {
 
 export type CampaignCustomField = { id: string; name: string; type: string; options: string[]; value: string | boolean | string[] | null };
 
+export type CampaignGroup = "none" | "phase" | "status" | "owner";
+export type CampaignField = "phase" | "owner" | "launchDate" | "budget" | "status" | "risk";
 export type CampaignQuery = {
   view: "all" | "launch-prep" | "mine";
   phase: string;
   status: string;
+  group: CampaignGroup;
   sort: "launchDate" | "name" | "health";
   direction: "asc" | "desc";
+  /** Grid columns the operator chose to show; presentation only, never sent to the API. */
+  fields: CampaignField[];
 };

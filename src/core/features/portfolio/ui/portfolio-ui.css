@@ -392,6 +392,7 @@
 }
 .portfolio-grid-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
@@ -437,6 +438,50 @@
   color: var(--muted-foreground);
   font-size: 0.69rem;
   font-weight: 750;
+}
+.portfolio-fields-toggle {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-field);
+  background: var(--card);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.portfolio-fields-toggle[aria-expanded="true"] {
+  background: var(--tab);
+}
+.portfolio-fields-panel {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 16px;
+}
+.portfolio-fields-panel label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.portfolio-campaign-table tbody tr.portfolio-group-row {
+  height: auto;
+  background: var(--background);
+}
+.portfolio-group-row th,
+.portfolio-card-group h3 {
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.portfolio-group-row th span,
+.portfolio-card-group h3 span {
+  color: var(--muted-foreground);
+  font-weight: 650;
 }
 .portfolio-grid-filters select {
   max-width: 146px;
@@ -1037,6 +1082,14 @@
     border-color: var(--border);
     background: var(--ok-row);
   }
+  .portfolio-campaign-cards > li.portfolio-card-group {
+    padding: 6px 2px 0;
+    border: 0;
+    background: none;
+  }
+  .portfolio-card-group h3 {
+    margin: 0;
+  }
   .portfolio-campaign-cards > li > div:first-child {
     display: grid;
     min-width: 0;
@@ -1134,7 +1187,8 @@
 @media(max-width:900px) {
  .portfolio-grid-filters { display:grid; grid-template-columns:1fr 1fr; overflow:visible; }
  .portfolio-grid-filters label { display:grid; min-width:0; }
- .portfolio-grid-filters label:last-child { grid-column:1/-1; }
+ .portfolio-grid-filters .portfolio-fields-toggle { grid-column:1/-1; min-height:44px; }
+ .portfolio-fields-panel { justify-content:flex-start; }
  .portfolio-grid-filters select { width:100%; max-width:none; min-height:44px; }
  .portfolio-grid-results { padding-right:16px; }
  .launch-create-form { margin:16px; width:calc(100% - 32px); }

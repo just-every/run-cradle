@@ -1,6 +1,8 @@
 import { CampaignInspector } from './campaign-inspector'
 import { CampaignMoneyTotals } from './campaign-money-totals'
 import { CampaignGridControls, queryLabels } from './campaign-grid-controls'
+import { campaignGridSearch } from './campaign-grid-fields'
+import { CampaignCards, CampaignTable } from './campaign-grid-results'
 import { CreateCampaign } from '../../../../ui/launch/create-campaign';
 import { ImportLaunchCsv } from '../../../../ui/launch/import-launch-csv';
 import { ExportLaunchCsv } from '../../../../ui/launch/export-launch-csv';
@@ -18,21 +20,12 @@ import {
   decodeCampaignList,
   useApiResource,
 } from "./portfolio-api";
-import {
-  formatDate,
-  formatMoney,
-} from "./portfolio-format";
-import {
-  CampaignLink,
-  PersonAvatar,
-  StatusPill,
-} from "./portfolio-presentation";
 import { PortfolioPageShell, useOperatorSession } from "./portfolio-page-shell";
 import type { CampaignQuery } from "./portfolio-types";
 
 const replaceGridQuery = (query: CampaignQuery) => {
   const next = new URL(window.location.href);
-  next.search = campaignQueryUrl(query).split("?")[1] ?? "";
+  next.search = campaignGridSearch(campaignQueryUrl(query), query);
   window.history.replaceState(null, "", next);
 };
 
@@ -83,6 +76,7 @@ const GridContent = () => {
   const pageItems = campaigns.resource.state === "ready" ? campaigns.resource.data.items : [];
   const pageChosen = pageItems.length > 0 && pageItems.every((campaign) => chosen.has(campaign.id));
   const matching = campaigns.resource.state === "ready" ? campaigns.resource.data.total : 0;
+  const results = { campaigns: pageItems, group: query.group, fields: query.fields, currency: workspaceCurrency, selectedId: selected?.id ?? null, chosen, toggle, onInspect: setSelectedId };
   const chooseAll = async () => { setSelecting(''); try { setChosen(new Map((await selectAllMatching(campaignQueryUrl(query))).map((item) => [item.id, item.version]))); } catch (cause) { setSelecting(cause instanceof Error ? cause.message : 'Could not select every match.'); } };
   return (
     <PortfolioPageShell
@@ -119,108 +113,9 @@ const GridContent = () => {
             <div className="portfolio-grid-results">
               <CampaignMoneyTotals campaigns={pageItems} currency={workspaceCurrency} />
               <div className="portfolio-table-wrap">
-                <table className="portfolio-campaign-table">
-                  <caption>
-                    {campaigns.resource.data.totalLabel} in {queryLabels[query.view]}
-                  </caption>
-                  <thead>
-                    <tr>
-                      <th scope="col" className="launch-select-cell"><input type="checkbox" aria-label="Select every campaign on this page" checked={pageChosen} onChange={(event) => setChosen((current) => { const next = new Map(current); for (const campaign of pageItems) { if (event.target.checked) next.set(campaign.id, campaign.version); else next.delete(campaign.id); } return next; })} /></th>
-                      <th scope="col">Campaign</th>
-                      <th scope="col">Phase</th>
-                      <th scope="col">Owner</th>
-                      <th scope="col">Launch</th>
-                      <th scope="col">Budget</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Risk</th>
-                      <th scope="col">
-                        <span className="sr-only">Inspect</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {campaigns.resource.data.items.map((campaign) => (
-                      <tr
-                        key={campaign.id}
-                        className={
-                          selected?.id === campaign.id
-                            ? "is-selected"
-                            : undefined
-                        }
-                      >
-                        <td className="launch-select-cell"><input type="checkbox" aria-label={`Select ${campaign.name}`} checked={chosen.has(campaign.id)} onChange={(event) => toggle(campaign.id, campaign.version, event.target.checked)} /></td>
-                        <th scope="row">
-                          <CampaignLink campaign={campaign} />
-                        </th>
-                        <td>{campaign.phase}</td>
-                        <td>
-                          <PersonAvatar person={campaign.owner} compact />
-                        </td>
-                        <td>
-                          <time dateTime={campaign.launchDate}>
-                            {formatDate(campaign.launchDate)}
-                          </time>
-                        </td>
-                        <td>
-                          {formatMoney(
-                            campaign.budgetMinor,
-                            workspaceCurrency,
-                          )}
-                        </td>
-                        <td>
-                          <StatusPill>{campaign.status}</StatusPill>
-                        </td>
-                        <td>
-                          {campaign.riskRating === "None" ? <span>None</span> : <StatusPill>{campaign.riskRating}</StatusPill>}
-                        </td>
-                        <td>
-                          <button
-                            className="portfolio-inspect-button"
-                            type="button"
-                            onClick={() => setSelectedId(campaign.id)}
-                            aria-label={`Inspect ${campaign.name}`}
-                          >
-                            Inspect
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <CampaignTable {...results} caption={`${campaigns.resource.data.totalLabel} in ${queryLabels[query.view]}`} pageChosen={pageChosen} choosePage={(on) => setChosen((current) => { const next = new Map(current); for (const campaign of pageItems) { if (on) next.set(campaign.id, campaign.version); else next.delete(campaign.id); } return next; })} />
               </div>
-              <ul
-                className="portfolio-campaign-cards"
-                aria-label="Campaign cards"
-              >
-                {campaigns.resource.data.items.map((campaign) => (
-                  <li
-                    key={campaign.id}
-                    className={
-                      selected?.id === campaign.id ? "is-selected" : undefined
-                    }
-                  >
-                    <div>
-                      <label className="launch-card-select"><input type="checkbox" checked={chosen.has(campaign.id)} onChange={(event) => toggle(campaign.id, campaign.version, event.target.checked)} /><span className="sr-only">Select {campaign.name}</span></label>
-                      <CampaignLink campaign={campaign} />
-                      <p>
-                        {campaign.phase} · Launch{" "}
-                        {formatDate(campaign.launchDate)}
-                      </p>
-                      <PersonAvatar person={campaign.owner} compact />
-                    </div>
-                    <div>
-                      <StatusPill>{campaign.status}</StatusPill>
-                      {campaign.riskRating === "None" ? <span>None</span> : <StatusPill>{campaign.riskRating}</StatusPill>}
-                      <button
-                        type="button"
-                        onClick={() => setSelectedId(campaign.id)}
-                      >
-                        Inspect
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <CampaignCards {...results} />
             </div>
             {selected ? (
               <CampaignInspector

@@ -497,5 +497,6 @@ export const campaignQueryUrl = (query: CampaignQuery) => {
   });
   if (query.phase) search.set("phase", query.phase);
   if (query.status) search.set("status", query.status);
+  if (query.group !== "none") search.set("group", query.group);
   return `/api/campaigns?${search.toString()}`;
 };

@@ -2918,7 +2918,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "726d2642e6cf8fe3ba44c6e9de28ab437d69c8bee83c98d52bf7355ba07fd043",
+      "sha256": "2f4d472bca6bccbf139e20ffd8e8c0ea8318d6ecb0cd24fc6e93e30110e79081",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "7d15592848dfa4e1e17618e78be1c9686d0ecdb44bb46e7af6aa46297a219369",
+      "sha256": "2e5c6216b8473cbfa3369e08d5a08ccee86246701ba12080052c9a3d2c8b39b0",
       "executable": false
     },
     "DEMO.md": {
@@ -3034,7 +3034,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "1dce18f93f3f52eefaf6ccf1af63a7632ddc0898c57e675fa8364c453934daf0",
+      "sha256": "b960afbd1f482cde8d534b6c037a64e0af10b3824ab3fc8ab41c8636986b196a",
       "executable": false
     },
     "docs/contract-transition.md": {
@@ -6362,7 +6362,7 @@
       "executable": false
     },
     "src/core/features/campaigns/grid-query.ts": {
-      "sha256": "aef9011abf95de71d0cc6e759de896950b75b27f9a6166563e507ce42b3a94da",
+      "sha256": "a48c550a2a60f6c075dd40d41982bca5f2589782786ff6df10c21c466cc9f6ea",
       "executable": false
     },
     "src/core/features/campaigns/index.ts": {
@@ -6630,11 +6630,19 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-grid-controls.tsx": {
-      "sha256": "c7e3aa667a183e5dc3f248fac3b4efd029ba3c9bacffffbbe63b1150f377318d",
+      "sha256": "099e3b516a3ef369dc67a593f1010395b35da0fc79540310e7cca693dc01f576",
+      "executable": false
+    },
+    "src/core/features/portfolio/ui/campaign-grid-fields.ts": {
+      "sha256": "18cc6a77d0ed7d1254427328567de834c4936f73177c0757b357587fa11c1510",
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-grid-page.tsx": {
-      "sha256": "270a4488715bc5efd6fe3206b04c618e5500e174400b069e64d7bb577223083b",
+      "sha256": "54fe4769b3ad3d7147af4bebbec1e7d1d5741fa81a5bb599bc3141b309462f5a",
+      "executable": false
+    },
+    "src/core/features/portfolio/ui/campaign-grid-results.tsx": {
+      "sha256": "54c5389a3b5aa6b988f426279786f9f8009d8d0fbe5a7f87597e3837424b5cd9",
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-inspector.tsx": {
@@ -6646,7 +6654,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-query.ts": {
-      "sha256": "41573ecfe8af62c88e56d0b791350d24ab05d8b4e598588ed07a986457c60c7a",
+      "sha256": "8d8caea38cd70086b5f249dca0d7a7d8e2efbaa41e13cd5898c98ab85d5a854f",
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.css": {
@@ -6662,7 +6670,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-api.tsx": {
-      "sha256": "5cef2c0282e9d2ca1b107e0ace03d022debfc762d798a5200bf0cd32fdd1af1b",
+      "sha256": "c00541efcece7033024e98bac364fc9c0a1ce6c807f8543d9e8fcac530ebced6",
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-format.ts": {
@@ -6682,11 +6690,11 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-types.tsx": {
-      "sha256": "2446e44a137eddfa23812f14ca87a79bf65b6c2fd5b077b6332d096135a56a5d",
+      "sha256": "4d58dbc56a4ed8d60d8f8538ea8d99d099915e6969a23c3878c10e75ee559a9f",
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-ui.css": {
-      "sha256": "8e409fcea231524a7025b31e455e5d15f22498f4e93c9a709684dbac36471ab5",
+      "sha256": "9758063f95a65caa23982dc8864cb6f977c5faf1a26cd89ee5b088284c2cd9e9",
       "executable": false
     },
     "src/core/features/risks/index.ts": {
@@ -10853,6 +10861,10 @@
       "sha256": "91a853f199e35757d03ad5233c7ae0bf591d78d07151d1a3fa76b5c2cad71843",
       "executable": false
     },
+    "tests/helpers/launch-grid-view-screens.mjs": {
+      "sha256": "54d87668eb521ddba8b7d9f37b0d5da62065dc75fc099a8b3b2ad7217a7d4b7b",
+      "executable": false
+    },
     "tests/helpers/launch-inbox-screens.mjs": {
       "sha256": "23f1c621054cf579cdd3639307748cd114b8cdf42d2047d297c32602bd4720fb",
       "executable": false
@@ -11718,7 +11730,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "da19a909824936786f86ea3ac32a159ccf9c9d14620e184c6c3c8483670b89b3",
+      "sha256": "7925f327c63ec8956925bb8aad6899c544ea2816e9fff14e1f76f81b26e8b11c",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {

@@ -632,7 +632,7 @@ Launch readiness is a complete application template on the records platform (cam
   *Status:* done — `tests/ui-launch-walkthrough.mjs` names CAMP-006; its emitted-worker 1440/390 fixture proves empty No data, active/archived campaign and decision counts, both attention statuses, terminal decisions, half-up health rounding and stale-count presentation.
 - **CAMP-007 — Grid.** Any operator can filter, group, sort, and choose visible fields in the campaign grid. Three built-in views ship: All active, every non-archived campaign; Launch prep, every non-archived campaign in the lifecycle policy's launch-preparation phase; and My campaigns, every non-archived campaign owned by the signed-in operator. Each re-queries on open and on refresh, and opening, filtering, grouping, or sorting a view changes no record.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
-  *Status:* partial — implemented in src/apps/launch/campaigns.server.ts; no clause-tagged test yet.
+  *Status:* done — the `[CAMP-007]` step of `tests/ui-launch-walkthrough.mjs` (`tests/helpers/launch-grid-view-screens.mjs`) drives the emitted Worker's Campaign Grid at 1440 and 390. All active lists every non-archived campaign, Launch prep only the lifecycle's launch-preparation phase, and My campaigns only the signed-in operator's, also for a second operator through `/api/campaigns`. The status filter, the Name sort, grouping by owner and by phase, and hidden Budget and Owner fields each show the expected rows and columns, with no serious or critical axe findings. Groups follow lifecycle order and stay together across pages (`src/core/features/campaigns/grid-query.ts`), and chosen fields survive a reload. A change made elsewhere appears when a view is reopened and on reload, and opening, filtering, grouping, sorting and choosing fields change no campaign and commit no command.
 - **CAMP-008 — Custom fields.** An operator can define, edit, and delete campaign custom fields of the types in `seed.json → customFields`, and those fields are available in grid display, filtering, lens conditions, CSV import, and CSV export. Deleting a definition deletes its stored values and is confirmed with the number of campaigns holding one.
   *Acceptance:* A clause-tagged test through the launch HTTP transport or emitted worker (`tests/launch-*.mjs`) or the operator walkthrough at 1440 and 390 (`tests/ui-launch-walkthrough.mjs`).
   *Status:* done — tests/ui-launch-operator-doors.mjs.
@@ -906,13 +906,13 @@ That commit identifies the initial audit. The rows below include subsequent buil
 
 Release 0.3.0 gate (19 October 2026, independent of the builders): on the release candidate, the published records clauses RECORDS-001 to RECORDS-004 and RECORDS-006, AUTH-BASE-001 and HOME-003 were exercised through the browser, locally at 1440 and 390 px and on a hosted own-account install with real SendGrid mail. That covered a template base with a link and a lookup, CSV import review, grid, board and form, saved filtered, grouped and sorted views, view CSV, a field removal with its recovery CSV, a record automation that notified and emailed the owner, an upgrade of a populated 0.2.0 install, and a hosted base export, removal, redeploy and base JSON return with email sign-in after. The gate fixed two defects before release: Records under `rer dev` (VIEW-012's limits module) and own-account mail deploys (AUTH-BASE-001). Every other row rests on its cited tests passing in CI Verify on the release commit; the gate did not exercise a live AI provider (AI-001 to AI-006, SET-002).
 
-Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **120 done, 63 partial, 27 missing** of 210 clauses; HOME-001 is superseded and not counted.
+Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's commit) and its tests, and revised on 17 October 2026 after the first buyer review, which added twelve clauses: RECORDS-008, RECORDS-009, FIELD-004, CALC-005, VIEW-015, VIEW-016, IFACE-007, REPORT-002, PERM-009, AUTO-USER-009, API-USER-004 and MIGRATE-005, and again after the second, which added three: AUTO-USER-010, FIELD-005 and VIEW-017. The current rows total **121 done, 62 partial, 27 missing** of 210 clauses; HOME-001 is superseded and not counted.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 101 | 10 | 0 | 111 |
+| Published | 102 | 9 | 0 | 111 |
 | Target and push further | 19 | 53 | 27 | 99 |
-| All | 120 | 63 | 27 | 210 |
+| All | 121 | 62 | 27 | 210 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -1049,7 +1049,7 @@ Statuses were judged on 16 October 2026 from `main` at 212d3e8 (the code audit's
 | `CAMP-004` | Detail and rollups | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `CAMP-005` | Health | published | done | `tests/ui-launch-walkthrough.mjs` |  |
 | `CAMP-006` | Portfolio overview | published | done | `src/core/features/portfolio`, `tests/ui-launch-walkthrough.mjs`, `tests/helpers/launch-portfolio-screens.mjs` | |
-| `CAMP-007` | Grid | published | partial | `src/apps/launch/campaigns.server.ts` | no clause-tagged test yet |
+| `CAMP-007` | Grid | published | done | `src/core/features/campaigns/grid-query.ts`, `src/core/features/portfolio/ui/campaign-grid-controls.tsx`, `src/core/features/portfolio/ui/campaign-grid-results.tsx`, `tests/ui-launch-walkthrough.mjs`, `tests/helpers/launch-grid-view-screens.mjs` | |
 | `CAMP-008` | Custom fields | published | done | `tests/ui-launch-operator-doors.mjs` |  |
 | `CAMP-009` | Archiving | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |
 | `CAMP-010` | Restoring | published | done | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` | — |

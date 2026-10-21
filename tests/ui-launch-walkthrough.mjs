@@ -11,6 +11,7 @@ import { settledRow } from './helpers/launch-settled-row.mjs'
 import { decisionHydration } from './helpers/launch-decision-hydration.mjs'
 import { verifyWorkspaceScreens } from './helpers/launch-workspace-screens.mjs'
 import { verifyAutomationMonitorScreens } from './helpers/launch-automation-monitor-screens.mjs'
+import { verifyGridViewScreens } from './helpers/launch-grid-view-screens.mjs'
 import { verifyPortfolioScreens } from './helpers/launch-portfolio-screens.mjs'
 import { verifyInboxScreens } from './helpers/launch-inbox-screens.mjs'
 import { verifyMilestoneScreens } from './helpers/launch-milestone-screens.mjs'
@@ -21,10 +22,10 @@ import { verifyDecisionLensScreens } from './helpers/launch-decision-lens-screen
 import { verifySettingsMemberErasure } from './helpers/settings-members-accessibility.mjs'
 import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
-contract('VIEW-004', '[OPS-006] [OPS-003] [CAMP-006] [NOTIFY-005] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] Launch walkthrough E10–E17 at desktop and phone', async () => {
+contract('VIEW-004', '[OPS-006] [OPS-003] [CAMP-006] [NOTIFY-005] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
 const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
-const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006']}
+const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006','CAMP-007']}
 let browser
 const command=async(action,input,expected=[])=>{
  const response=await h.request(h.ownerSession,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})})
@@ -109,6 +110,7 @@ try {
    if(!accessibilityEvidence)await page.screenshot({path:path.join(output,file),fullPage:true})
    receipt.screens.push({file,viewport,overflow:false,seriousCritical:0,...(evidence?{wcagViolationCount:evidence.axe.wcag22aa.length,targetSizeViolationCount:evidence.axe.targetSize.length,smallTargetCount:evidence.layout.targetsBelow24.length,controls:evidence.layout.controls.length,tabOrderComplete:evidence.keyboard?.missing?.length===0,tabbableCount:evidence.keyboard?.tabbableCount??null}: {})})
   }
+  await verifyGridViewScreens({h,page,command,capture})
   await verifyPortfolioScreens({h,page,command,capture})
   await page.goto(`${h.origin}/app/campaigns`)
   await page.getByRole('heading',{name:'No campaigns yet',exact:true}).waitFor()
