@@ -40,7 +40,6 @@ export function createAutomationCommands(registry: CommandRegistry, contribution
   catch (error) { return refuse(`Automation action ${action} input does not match its command schema: ${issues(error)}`) }
  }
  return {
-  actions: [...offered.keys()],
   offers: (action: string) => offered.has(action),
   /** Composition fails loudly when a contribution names no registered command. */
   verify() { for (const action of offered.keys()) if (!registry.get(action)) throw new Error(`jobs.commands.v1 contribution ${action} is not a registered command`) },

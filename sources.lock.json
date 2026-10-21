@@ -5242,7 +5242,7 @@
       "executable": false
     },
     "src/apps/launch/automation-commands.server.ts": {
-      "sha256": "2a187e2a074fb02264c66e9a8c2c83811a37c921a3d0145e1150d1bdae5661f1",
+      "sha256": "612c97e404b6cd497db0856e8daecfba26ccf8cf35cabbc56f7c2ac0bdbaaacf",
       "executable": false
     },
     "src/apps/launch/automation-delegation.server.ts": {
