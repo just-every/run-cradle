@@ -68,7 +68,7 @@ export async function seedLeaver(doors, adminId) {
 }
 
 /** [OPS-004] Removal, read back through the doors. */
-export async function verifyRemoval(doors, w) {
+export async function verifyRemoval(doors, w, company) {
  const { h, call, command, commit, ref, memberRef, member, count, tick } = doors
  const { leaver, stay, other } = w
  const lensTotal = async lens => { const page = await call(`/api/lenses/${lens.id}?view=results`); assert.equal(page.status, 200, JSON.stringify(page.body)); return page.body.total?.value ?? page.body.total }
@@ -90,13 +90,15 @@ export async function verifyRemoval(doors, w) {
  assert.equal((await h.request(leaver.session, '/api/v1/session')).status, 200, 'A refused removal ends no session')
  assert.equal(await count("SELECT COUNT(*) n FROM launch_readiness WHERE owner_id=? AND state='Outstanding'", leaver.id), 1)
 
+ if(company)await company.blocked()
  // Hand the blocking records on, then remove. Sessions end in the same commit.
  const version = table => async id => (await h.db.prepare(`SELECT id,version FROM ${table} WHERE id=?`).bind(id).first())
  const campaign = await version('campaigns')(w.owned.id)
  await commit('launch.bulk.apply', { recordType: 'Campaign', ids: [campaign.id], change: { kind: 'field', field: 'ownerId', value: stay.id } }, ref('campaign', campaign))
  for (const decision of [w.unresolved, w.assigned]) await commit('launch.decision.assign', { id: decision.id, assigneeId: stay.id }, ref('decision', await version('decisions')(decision.id)))
  const removedAt = Date.now()
- await commit('member.remove', { memberId: leaver.id, reason: 'Left the company' }, memberRef(await member(leaver.id)))
+ if(company)await company.remove()
+ else await commit('member.remove', { memberId: leaver.id, reason: 'Left the company' }, memberRef(await member(leaver.id)))
  assert.equal((await h.request(leaver.session, '/api/v1/session')).status, 401, 'Removal ends their session at once')
  assert.ok(Date.now() - removedAt < 60000, 'Their session ended inside one minute')
  assert.equal((await member(leaver.id)).state, 'removed')

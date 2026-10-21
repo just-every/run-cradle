@@ -27,7 +27,7 @@ export async function identityMatches(root){return bindings(root,async({DB,FILES
  let cursor;do{const page=await FILES.list({cursor});for(const object of page.objects){const body=await FILES.get(object.key);if(!body)continue;objects++;objectBytes+=body.size;const text=new TextDecoder().decode(await body.arrayBuffer());if([JSON.stringify([object.key,body.customMetadata,body.httpMetadata]),text].some(copyIn))matches.push({table:'R2',column:'key-metadata-bytes',count:1})}cursor=page.truncated?page.cursor:undefined}while(cursor)
  return {tables,matches,contained,objects,objectBytes}
 })}
-export async function sourceErasure(copy,origin,prior,populate,restart){
+export async function sourceErasure(copy,origin,prior,populate,restart,prepareIdentity){
  const identity=await bindings(copy.source,async({DB,FILES})=>{
   const base=id(),now=Date.now();await DB.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(base,erasedEmail,erasedName,now).run()
   const person=(await DB.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(base).first()).principal_id
@@ -53,7 +53,7 @@ export async function sourceErasure(copy,origin,prior,populate,restart){
    await FILES.put(objectKey,body,{httpMetadata:{contentType:type,...encoding?{contentEncoding:encoding}:{}}})
    await DB.prepare("INSERT INTO evidence_files(id,app_id,entity_id,record_id,field_ids,filename,media_type,bytes,sha256,object_key,state,version,created_at,updated_at) VALUES(?,?,?,?,'[]','Private attachment',?,?,?,?,'available',1,?,?)").bind(file,appId,'00000000000000000000000408',intake,type,body.length,digest,objectKey,new Date(now).toISOString(),new Date(now).toISOString()).run()
   }
-  return {person,campaign,key,intake,compressedKeys,version:(await DB.prepare('SELECT version FROM authority_principals WHERE id=?').bind(person).first()).version}
+  return {base,person,campaign,key,intake,compressedKeys,version:(await DB.prepare('SELECT version FROM authority_principals WHERE id=?').bind(person).first()).version}
  })
  let before,opaqueFixture
  const started=Date.now()
@@ -64,6 +64,7 @@ export async function sourceErasure(copy,origin,prior,populate,restart){
   const mention=async(expectedStatus=200)=>{const campaign=await bindings(copy.source,async({DB})=>DB.prepare('SELECT version FROM campaigns WHERE id=?').bind(identity.campaign).first());const response=await fetch(origin+'/api/v1/commands/launch.comment.create',{method:'POST',headers:{cookie:prior.cookie,origin,connection:'close','content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({commandId:id(),expected:[{ref:{appId,entityId:'00000000000000000000000701',recordId:identity.campaign},version:campaign.version}],input:{campaignId:identity.campaign,body:'Plain mention @'+identity.person,mentions:[identity.person]}})});const result=await response.json();assert.equal(response.status,expectedStatus,'Public launch comment mention: '+JSON.stringify(result.error??{}));return result.data?.value?.id}
   await mentionAuthorityControls(copy,prior,mention)
   const activeMention=await mention();await bindings(copy.source,async({DB})=>assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE operator_id=? AND subject_id=?').bind(identity.person,activeMention).first()).n,1,'Current mention notifies exactly one recipient'))
+  if(prepareIdentity)await prepareIdentity(identity);identity.version=(await bindings(copy.source,async({DB})=>DB.prepare('SELECT version FROM authority_principals WHERE id=?').bind(identity.person).first())).version;
   const removal={commandId:id(),expected:[{ref:{appId,entityId,recordId:identity.person},version:identity.version}],input:{memberId:identity.person,reason:'Owner removed access before erasure'}}
   const removed=await request(removal,'remove'),removedBody=await removed.json();assert.equal(removed.status,200,'Normal owner removal completes: '+JSON.stringify(removedBody.error??{}));assert.equal(removedBody.data.value.state,'removed')
   if(populate)await populate(identity)

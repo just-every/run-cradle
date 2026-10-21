@@ -1,3 +1,4 @@
+import {companyResponse,isCompanyRequest} from '../../domains/company-identity/http.server'
 import {localRuntimeBindings} from '../platform/local-auth.server'
 import {firstRunResponse} from '../features/setup/server'
 import {editorConfigResponse,editorDocumentHeaders} from '../features/editor/server'
@@ -43,6 +44,10 @@ export default {
       const health = await checkHealth(bindings)
       return Response.json(health.status === 'ok' ? { status: 'ok', database: 'available', ...(bindings.RER_VERSION ? {ok:true,deployment:{sourceSha:bindings.RER_DEPLOY_SOURCE,fingerprint:bindings.RER_DEPLOY_FINGERPRINT,versionId:bindings.RER_VERSION.id}} : {}) } : health, { status: health.status === 'ok' ? 200 : 503 })
     }
+    if (isCompanyRequest(path)||path==='/auth/settings/identity'&&request.method==='GET') {
+      const response=await companyResponse(request,bindings,createBaseAuth(bindings))
+      if(response)return response
+    }
     if (isDependencyRequest(path)) {
       const response = await dependencyResponse(request, bindings, createBaseAuth(bindings))
       if (response) return response
@@ -53,7 +58,7 @@ export default {
       if (response) return response
     }
     // Public document assets must remain available while sign-in explains configuration.
-    if (path.startsWith('/assets/') || path.startsWith('/fonts/') || path === '/favicon.ico' || path === '/apple-touch-icon.png' || path === '/brand/mark.svg' || path === '/brand/band.svg' || path === '/rer-theme.css' || (import.meta.env.DEV && (path === '/@vite/client' || path === '/@id/virtual:tanstack-start-dev-client-entry' || path.startsWith('/@id/__x00__virtual:cradle-docs') || path.startsWith('/src/') || path.startsWith('/node_modules/.vite/deps/') || path.startsWith('/node_modules/.pnpm/') || path === '/@react-refresh' || path === '/@tanstack-start/styles.css'))) return bindings.ASSETS.fetch(request)
+    if (path.startsWith('/assets/') || path.startsWith('/fonts/') || path === '/favicon.ico' || path === '/apple-touch-icon.png' || path === '/brand/mark.svg' || path === '/brand/band.svg' || path === '/rer-theme.css' || path === '/company-identity.css' || (import.meta.env.DEV && (path === '/@vite/client' || path === '/@id/virtual:tanstack-start-dev-client-entry' || path.startsWith('/@id/__x00__virtual:cradle-docs') || path.startsWith('/src/') || path.startsWith('/node_modules/.vite/deps/') || path.startsWith('/node_modules/.pnpm/') || path === '/@react-refresh' || path === '/@tanstack-start/styles.css'))) return bindings.ASSETS.fetch(request)
     // Sign-in must explain missing email setup even while the private app is unavailable.
     const missing = configurationFaults(bindings).filter(fault=>!(['/signin','/auth/request'].includes(path)&&fault.startsWith('MAIL_')))
     if (path !== '/health' && missing.length) return Response.json({ error: { code: 'unconfigured', message: 'Required installation configuration is missing or invalid.', missing } }, { status: 503 })

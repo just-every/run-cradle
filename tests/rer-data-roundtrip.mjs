@@ -1,3 +1,4 @@
+import {companyArchiveSource,companyArchivePerson} from './helpers/company-archive.mjs';
 import {privateExports} from './helpers/rer-private-exports.mjs';
 import {retainedThroughClock} from './helpers/rer-retention-clock.mjs';
 import {retentionRows} from './helpers/rer-retention.mjs';
@@ -19,13 +20,13 @@ import {sourceAuthority} from './helpers/rer-source-authority.mjs';
 import {sha256,canonicalJson} from '@runeditrun/rer/modules/portability';
 const semantics=records=>({tables:records[0].tables,excludedColumns:records[0].excludedColumns,objects:records[0].objects,payloads:records[0].payloads,requiredConfiguration:records[0].requiredConfiguration,items:records.filter(r=>r.kind==='part').flatMap(p=>p.items)});
 const archive=async(root,name)=>JSON.parse('['+(await readFile(join(root,name),'utf8')).trim().split('\n').join(',')+']');
-contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES fresh-install restore, authority hold and confirmed reset',async()=>{
+contract('PERM-007 SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES fresh-install restore, authority hold and confirmed reset',async()=>{
  const source=await freshLocalCopy(),target=await freshLocalCopy();
  let complete=false;
  try{
   await source.rer(['check','--profile','first-party']);await target.rer(['check','--profile','first-party']);
   await source.rer(['install','--non-interactive']);await target.rer(['install','--non-interactive']);
-  const upgrades=(await readdir(join(source.source,'migrations/updates'))).filter(name=>/^902[345]_/.test(name));
+  const upgrades=(await readdir(join(source.source,'migrations/updates'))).filter(name=>/^902[345]_/.test(name)||name.startsWith('9040_'));
   const server=createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const port=server.address().port;await new Promise(resolve=>server.close(resolve));
   await writeFile(join(source.source,'answers.json'),JSON.stringify({OWNER_EMAIL:'archive-owner@example.test'}),{mode:0o600});
   await source.rer(['setup','--answers','answers.json','--port',String(port),'--non-interactive']);
@@ -35,11 +36,14 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
   assert.deepEqual(await bindings(source.source,async({DB})=>(await DB.prepare('SELECT id FROM oa_operators ORDER BY id').all()).results),owner,'No second owner');
   await appendFile(join(source.source,'.dev.vars'),'\nCONNECTION_ENCRYPTION_KEY='+randomBytes(32).toString('base64')+'\n');
   const origin=`http://127.0.0.1:${port}`,prior=await sourceAuthority(source,origin);
+  let company;await withRerEmittedWorker(source,origin,async()=>{company=await companyArchiveSource(origin,prior.cookie)});
   const sourceOwner=await bindings(source.source,async({DB})=>DB.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first());
   await seedData(source.source);
   const authorityRows=()=>bindings(source.source,async({DB})=>{const result={};for(const table of ['authority_grants','authority_memberships','authority_policies'])result[table]=(await DB.prepare(`SELECT * FROM ${table} ORDER BY 1,2`).all()).results;return result});
   // Construct the preceding schema in this disposable, populated D1; preserve every
-  // older applied-ledger row and its timestamp. Production has no missing-schema fallback.
+  // older applied-ledger row and its timestamp. Replay the later bucket-column migration
+  // too: dropping its table must not leave that dependent migration marked applied.
+  // Production has no missing-schema fallback.
   const oldSearch=(await readFile(join(source.source,'migrations/core/0702_launch_search.sql'),'utf8')).split('\n').filter(line=>line.startsWith('CREATE TRIGGER '));
   await bindings(source.source,async({DB})=>{for(const sql of oldSearch){const name=/CREATE TRIGGER ([a-z_]+)/.exec(sql)[1];await DB.prepare('DROP TRIGGER '+name).run();await DB.prepare(sql).run()}for(const table of ['lifecycle_erasure_blobs','lifecycle_erasures','lifecycle_file_writes','launch_search_rows'])await DB.prepare('DROP TABLE '+table).run();for(const name of upgrades)await DB.prepare('DELETE FROM d1_migrations WHERE name=?').bind(name).run()});
   const priorLedger=await bindings(source.source,async({DB})=>(await DB.prepare('SELECT * FROM d1_migrations ORDER BY id').all()).results);
@@ -53,13 +57,14 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
   let erased,oldManifest,personalJob;
   await withRerEmittedWorker(source,origin,async(_runtime,{offline})=>{assert.equal((await fetch(origin+'/api/v1/apps',{headers:{cookie:prior.cookie}})).status,200);assert.deepEqual(await authorityRows(),beforeUpgrade.authority,'First public ingress after upgrade creates no authority rows or activation')
   console.log('FORWARD_UPGRADE_9023_9024_9025: prior populated D1; complete grants/memberships/policies and record/search/file snapshots equal');
-  erased=await sourceErasure(source,origin,prior,async identity=>{personalJob=await personalImport(origin,prior.cookie);oldManifest=await offline(()=>capturePersonalArchive(source,identity))},()=>offline(async()=>{}));await retiredPersonalImport(source,personalJob);const csrfToken=(await(await fetch(origin+'/auth/csrf',{headers:{cookie:prior.cookie}})).json()).csrfToken;await privateExports({origin,cookie:prior.cookie,csrfToken,records:prior.records},'post-erasure');await sourceCampaignDeletion(source,origin,prior);});await retainedThroughClock(source,port);const before=await visibleData(source.source);
+  erased=await sourceErasure(source,origin,prior,async identity=>{personalJob=await personalImport(origin,prior.cookie);oldManifest=await offline(()=>capturePersonalArchive(source,identity))},()=>offline(async()=>{}),async identity=>{company=await companyArchivePerson(source,origin,prior.cookie,identity,company)});await retiredPersonalImport(source,personalJob);const csrfToken=(await(await fetch(origin+'/auth/csrf',{headers:{cookie:prior.cookie}})).json()).csrfToken;await privateExports({origin,cookie:prior.cookie,csrfToken,records:prior.records},'post-erasure');await sourceCampaignDeletion(source,origin,prior);});await retainedThroughClock(source,port);const before=await visibleData(source.source);
   assert.equal(await bindings(source.source,async({DB})=>(await DB.prepare('SELECT COUNT(*) AS n FROM automations WHERE id=? AND enabled=1').bind(prior.records.automationId).first()).n),1,'The archived updated-record automation is enabled in the source');
   await source.rer(['export','--output','exports/first.rer','--non-interactive']);
   const first=await archive(source.source,'exports/first.rer');
   const archiveBytes=await readFile(join(source.source,'exports/first.rer'),'utf8'),privateValues=await source.readVars();
-  const secrets=['SESSION_SECRET','SETUP_TOKEN','CONNECTION_ENCRYPTION_KEY'].flatMap(name=>privateValues[name]?[privateValues[name]]:[]);
+  const secrets=[...Object.values(company),...['SESSION_SECRET','SETUP_TOKEN','CONNECTION_ENCRYPTION_KEY'].flatMap(name=>privateValues[name]?[privateValues[name]]:[])];
   assert.equal(secrets.filter(value=>archiveBytes.includes(value)).length,0,'Installation archive contains no setup/session/connection secrets');
+  for(const value of Object.values(company))assert.ok(!archiveBytes.includes(value),'Company configuration and provisioning credentials never leave the archive');
   console.log('ARCHIVE_SECRET_SCAN: '+secrets.length+' configured secret values; 0 matches');
   assert.ok(!hasIdentityCopy(archiveBytes),'Erased identity is absent from the whole archive');
   assert.ok(!first[0].objects.some(object=>[erased.key,...erased.compressedKeys].includes(object.key)),'Later public archive omits all personal FILES objects');
@@ -100,6 +105,7 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
    assert.deepEqual(actual.rows.map(row=>Object.fromEntries(expected.generated.map(name=>[name,row[name]]))),expected.rows.map(row=>Object.fromEntries(expected.generated.map(name=>[name,row[name]]))),'Every visible generated value is equal');
   }
   await bindings(target.source,async({DB})=>{
+   for(const table of ['company_identity_config','company_scim_credentials','company_scim_users'])assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM '+table).first()).n,0,'Company identity restores inactive');
    assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM oa_operators').first()).n,0,'Source auth never transfers');
    assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM oa_sessions').first()).n,0,'Source sessions never transfer');
    assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM authority_credentials').first()).n,0,'Source machine credentials never transfer');
@@ -114,6 +120,7 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
   await target.rer(['setup','--answers','answers.json','--port',String(port),'--non-interactive']);
   await restoredSignIn(target,origin,prior);
   await bindings(target.source,async({DB})=>{
+   for(const table of ['company_identity_config','company_scim_credentials','company_scim_users'])assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM '+table).first()).n,0,'Company identity restores inactive');
    assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM oa_operators').first()).n,1,'Fresh restore admits exactly one owner');
    assert.equal((await DB.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first()).id,sourceOwner.id,'Fresh credentials preserve the returning owner’s historical identity');
    assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM automations WHERE enabled<>0').first()).n,0,'Owner admission cannot reactivate imported definitions');
@@ -143,7 +150,7 @@ contract('SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES 
   console.log(`RER_DATA_ROUNDTRIP PASS: ${first[0].tables.length} owned tables, ${first[0].tables.reduce((n,t)=>n+t.count,0)} rows, ${before.generated.length} generated-column tables, ${before.objects.length} FILES objects; all DB cells/generated values/FILES/search equal, repeat setup, holds and reset`);
   complete=true;
  }finally{
-  for(const copy of [source,target]){await copy.rer(['dev','--stop']).catch(()=>{});await copy.rer(['preview','--stop']).catch(()=>{});await copy.log.close();}
+  for(const copy of [source,target]){await copy.log.close();}
   if(complete)for(const copy of [source,target])await rm(copy.root,{recursive:true,force:true});
   else{
    await mkdir('tmp',{recursive:true});const retained=await mkdtemp('tmp/rer-data-failure-');

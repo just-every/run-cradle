@@ -7,6 +7,9 @@ const remove=(table:string,where:string,reason:string):IdentityPlace=>({table,wh
 /** Base IDs differ from product principals. Keep replay-ledger keys, but remove
  * the attributable subject before its external-identity join is deleted. */
 export const authIdentityPlaces:IdentityPlace[]=[
+ remove('company_scim_credentials',`owner_id ${base}`,'their issued SCIM credentials'),
+ remove('company_scim_users',`operator_id ${base}`,'their SCIM identity and names'),
+ remove('company_identity_audit',`operator_id ${base} OR actor_id ${base}`,'company identity audit references'),
  remove('rer_dependency_pending',`approved_by ${base}`,'their pending dependency approvals'),
  remove('oa_setup_links',`owner_id ${base} OR session_id ${sessions}`,'their provider setup attempts'),
  remove('oa_provider_session_pins',`session_id ${sessions}`,'their provider session pins'),

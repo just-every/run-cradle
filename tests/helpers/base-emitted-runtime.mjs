@@ -15,8 +15,9 @@ export async function baseEmittedRuntime(directory,port,bindings,outboundService
   import actual, { InstallationCoordinator } from './${path.basename(main)}';
   export { InstallationCoordinator };
   export default { ...actual, async fetch(envelope,env,context) {
-   const {url,...init}=await envelope.json();
-   return actual.fetch(new Request(url,init),env,context);
+   const {url,testNow,...init}=await envelope.json();
+   const realNow=Date.now;if(testNow)Date.now=()=>testNow;
+   try{return await actual.fetch(new Request(url,init),env,context)}finally{Date.now=realNow}
   } };
  `}
  const config=convertV4MiniflareOptions({host:'127.0.0.1',port,inspectorPort:0,resourcePersistencePath:path.join(directory,'v3'),workers:[{...options,...queueConsumerOptions(automaticQueues),modules:[envelope,...modules],modulesRoot,bindings:{...options.bindings,...bindings},outboundService},...externalWorkers]})

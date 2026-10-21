@@ -1,11 +1,14 @@
 # Implemented contract claims
 
-These rows track the clauses completed or advanced in the 18–21 October 2026 rounds; the complete product status remains in CONTRACT.md.
+These rows track the clauses completed or advanced in the 18–22 October 2026 rounds; the complete product status remains in CONTRACT.md.
 
 Whole-table review on 21 October 2026 against public main `d89dcf951aa40995a81824a51d4e1a42711056e4` and its completed exact-source Verify 39590513431 preserves every status below. Overall: 121 done, 62 partial, 27 missing of 210; published: 102/9/0 of 111; target and push further: 19/53/27 of 99. Current CI execution is mapped in CONTRACT.md. No provider, live migration, stranger or new release acceptance is added; the partial notification/data proof gaps and 320 px gap remain.
 
+22 October company/workbook/scale round: PERM-007 is done from emitted-Worker local-provider and lifecycle/archive journeys; INTEG-003 and SCALE-001 remain partial. Recount: 122 done, 61 partial, 27 missing; published 102/9/0 and target/push-further 20/52/27. Earlier unrelated judgements remain as recorded above. No real IdP, Google or hosted run was used.
+
 | Clause | Status | Proven behavior | Evidence |
 | --- | --- | --- | --- |
+| PERM-007 | done | Closed OIDC/SAML sign-in, verified signed references, SCIM least-privilege provisioning and atomic removal, session revocation, same-person reprovision, erasure and inactive credential-free restore. Real IdP commissioning NOT RUN. | `tests/auth-oidc.mjs`, `tests/launch-operator-doors.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/ui-base-import.mjs`, `docs/contract/PERM-007/` |
 | SYNC-002 | partial | Owner-selected bases, full/incremental CSV to a separately bound R2 bucket, hourly/daily/weekly schedules, audited changes, current policy, deletion tombstones, verified watermarks, owner-loss pause/in-app notice and export custody erased before confirmation. Local tests only; no hosted proof. No BigQuery or Snowflake transfer has run. Gap: BigQuery, Snowflake and S3 destinations and Parquet not built; R2 + CSV only. | `tests/launch-operator-doors.mjs` [SYNC-002], `tests/helpers/warehouse-export-journey.mjs`, `src/domains/warehouse/`, `docs/exporting-to-your-own-bucket.md` |
 | BOUND-001 | done | Sessionless public boundaries page in the shared docs navigation and chrome, sibling links including [Pegboard](https://run-pegboard.com) for project/work management; docs and product copy checked for sibling-job claims. | `tests/public-document-runtime.mjs`, `docs/boundaries.md` |
 | BOUND-002 | done | Public accounting, payroll, EHR, payment, compliance and PHI boundaries, with a link to the separate payroll product [Envelope](https://run-envelope.com); the actual record field-type validator contains no card-number or PHI-specific type. | `tests/public-document-runtime.mjs`, `src/domains/records/validators.ts`, `docs/boundaries.md` |

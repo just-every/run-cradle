@@ -9,8 +9,8 @@ const running=new WeakSet()
 export async function withRerDevelopment(copy,origin,run){
  if(running.has(copy)||hasRuntimeBindings(copy.source))return run()
  await availableMachine()
- const app=spawn(process.execPath,['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--non-interactive','--json'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
- let output='';for(const stream of [app.stdout,app.stderr])stream.on('data',chunk=>output+=chunk)
+ const app=spawn('perl',['-e','setpgrp(0,0); exec @ARGV','--',process.execPath,'node_modules/@runeditrun/rer/bin/rer.mjs','dev','--non-interactive','--json'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
+ console.log('OWNED_DEV_PID '+app.pid);let output='';for(const stream of [app.stdout,app.stderr])stream.on('data',chunk=>output+=chunk)
  const ended=new Promise(resolve=>app.once('close',resolve))
  const events=()=>output.split('\n').flatMap(line=>{try{return [JSON.parse(line)]}catch{return []}})
  const ready=()=>events().find(event=>event.event==='ready'&&event.url===origin)
@@ -28,5 +28,5 @@ export async function withRerDevelopment(copy,origin,run){
   assert.ok(new URLSearchParams(open.hash.slice(1)).get('rer-dev')===await checkoutDevKey(copy.source),'The open link carries this checkout’s dev key')
   running.add(copy)
   return await run()
- }finally{running.delete(copy);await copy.rer(['dev','--stop']);await ended;await copy.log.writeFile(output);console.log('RECOVERY_COMMAND '+JSON.stringify({installation:copy.source,program:'node',args:['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--non-interactive','--json'],exitCode:app.exitCode}))}
+ }finally{running.delete(copy);if(app.exitCode===null){process.kill(-app.pid,'SIGTERM');const timer=setTimeout(()=>{try{process.kill(-app.pid,'SIGKILL')}catch{}},5000);try{await ended}finally{clearTimeout(timer)}}await copy.log.writeFile(output);console.log('RECOVERY_COMMAND '+JSON.stringify({installation:copy.source,program:'node',args:['node_modules/@runeditrun/rer/bin/rer.mjs','dev','--non-interactive','--json'],exitCode:app.exitCode}))}
 }

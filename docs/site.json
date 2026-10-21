@@ -54,6 +54,16 @@
           "label": "Installation archives"
         }
       ]
+    },
+    {
+      "title": "Company identity",
+      "pages": [
+        {
+          "slug": "company-identity",
+          "source": "docs/company-identity.md",
+          "label": "Company sign-in and SCIM"
+        }
+      ]
     }
   ],
   "githubOnly": [

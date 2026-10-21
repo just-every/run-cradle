@@ -1,3 +1,4 @@
+import {companyIdentityJourney} from './helpers/company-identity-journey.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { sign } from './helpers/oidc-provider.mjs'
@@ -12,7 +13,7 @@ async function ready(t){
  r.bindings.IDENTITY_PROVIDER=issuer
  await r.link();return r
 }
-test('OIDC: optional pull-link shares the email owner, admits only existing people and retains product policy',async t=>{
+test('[PERM-007] company OIDC/SAML and SCIM: optional pull-link shares the email owner, admits only existing people and retains product policy',async t=>{
  const r=await oidcRuntime(t,emitted,issuer+'/')
  const discovery=await r.call('/.well-known/rer-dependencies');assert.equal(discovery.status,200)
  const dependency=(await discovery.json()).dependencies[0]
@@ -44,6 +45,7 @@ test('OIDC: optional pull-link shares the email owner, admits only existing peop
  await r.begin()
  if(emitted)assert.match(await(await r.call('/signin')).text(),/action="\/auth\/oidc\/auth\/start"/,'recovered provider is visible')
  assert.equal((await r.call('/auth/session',undefined,await r.proof())).status,200)
+ await companyIdentityJourney(t,r,native)
  assert.equal((await r.call('/auth/settings/identity',{idpSignIn:false},native)).status,200)
  assert.equal((await r.call('/auth/session',undefined,session)).status,401)
  assert.equal((await r.call('/auth/oidc/auth/start',{})).status,403)

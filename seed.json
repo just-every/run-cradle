@@ -449,7 +449,9 @@
       "/auth/dependencies/status",
       "/auth/oidc/auth/start",
       "/auth/oidc/auth/callback",
-      "/auth/oidc/auth/logout"
+      "/auth/oidc/auth/logout",
+      "/auth/saml/",
+      "/scim/v2/"
     ]
   },
   "customFields": [
