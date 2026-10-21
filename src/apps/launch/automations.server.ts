@@ -4,7 +4,7 @@ import type { CommandInput,Json } from '../../contracts/primitives'
 import type { RequestContext } from '../../domains/authority/ports'
 import { registerTable,eq,trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
-import seed from '../../../seed.json'
+import seed from '../../../seed.json' with { type: 'json' }
 import { automationDefinition,builtInAutomationActions } from './contracts'
 import { tables } from './storage.server'
 import { emptyChange,load,versionGuard,plan,fail,toWire,recordChange,type LaunchContext } from './domain.server'
