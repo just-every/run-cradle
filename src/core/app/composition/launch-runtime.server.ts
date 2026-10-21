@@ -1,5 +1,6 @@
 import {createLaunchUsage} from '../../../apps/launch/usage.server'
 import {createLaunchAutomationEffects} from '../../../apps/launch/automation-effects.server'
+import {launchAutomationCommands} from './automation-commands.server'
 import {launchSourceRelease} from '../../../apps/launch/source-release.server'
 import { z } from 'zod'
 import type { Platform } from '../../platform'
@@ -24,7 +25,7 @@ import { registerTable,eq,trustedPredicate } from '../../../domains/admission/sq
 const briefTable=registerTable('launch_brief_context',['campaign_id','context_hash','last_requested_at'])
 
 export function createInstalledLaunch(platform:Platform,foundation:ServerFoundation,clock=()=>new Date()){
- const db=platform.bindings.DB,channels=createChannelsIntegration(db),context={db,policy:foundation.policy,integration:channels,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID)}
+ const db=platform.bindings.DB,channels=createChannelsIntegration(db),automationCommands=launchAutomationCommands(foundation.commands),context={db,policy:foundation.policy,integration:channels,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID),automationCommands}
  const release=()=>{if(!context.releaseId)throw new ApiError('unconfigured','INSTALLATION_RELEASE_ID is required for launch background work');return context.releaseId}
  const service=createLegacyAutomationAuthority(context,clock),schedules=createChannelSchedules(db,channels),project=createLegacyDigestProjection(db)
  const analysis=createLaunchAnalysisReader(db,foundation.policy)
@@ -40,6 +41,7 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
  const customEffects=createLaunchAutomationEffects(platform.bindings,service.context)
  const automation=createLegacyAutomationRuntime(context,foundation.admission,{releaseId:context.releaseId??'',authority:service.authority,context:service.context,async external(ctx,input){
   if(input.action==='digest'&&input.run.definition.shipped_key==='weekly-digest')return{...await schedules.digest(ctx,project),state:'Complete',result:{delivered:'weekly-digest'} as Json,outbox:[]}
+  if(automationCommands.offers(input.action))return automationCommands.execute(await service.context(ctx,input.run),ctx,input)
   if(input.action!=='request-ai-analysis')return customEffects(ctx,input)
   const mutations:SqlMutation[]=[],completed:string[]=[],skipped:string[]=[]
   for(const campaignId of input.run.definition.shipped_key?input.run.subjectIds:[String((input.input as Record<string,unknown>).campaignId)]){

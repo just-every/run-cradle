@@ -142,7 +142,8 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    if(!await countEffects())t.diagnostic(JSON.stringify({schedule:fixture.name,saved,definition:await h.db.prepare('SELECT id,enabled,trigger_type,trigger_config_json FROM automations WHERE id=?').bind(saved.id).first(),at:fixture.after,runs:(await h.db.prepare('SELECT state,error_code,error_message,trigger_key FROM automation_runs WHERE automation_id=?').bind(saved.id).all()).results,actions:(await h.db.prepare('SELECT state,error_code,error_message FROM launch_automation_actions WHERE run_id IN (SELECT id FROM automation_runs WHERE automation_id=?)').bind(saved.id).all()).results}))
    assert.equal(await countEffects(),1,'Created schedule must fire across an hour or midnight boundary')
    await tick(fixture.after);assert.equal(await countEffects(),1,'Repeated cron must preserve one effect per schedule occurrence')
-   const monitor=await fetch(h.origin+'/api/automations',{headers:{cookie:h.cookie}})
+   // These runs execute on the scheduler clock a day ahead; read the success window ending there.
+   const monitor=await fetch(h.origin+'/api/automations?windowEnd='+encodeURIComponent(fixture.after),{headers:{cookie:h.cookie}})
    assert.equal(monitor.status,200)
    const visible=(await monitor.json()).automations.find(item=>item.id===saved.id)
    assert.ok(visible);assert.equal(visible.runCount30Days,1);assert.equal(visible.lastRunStatus,'Succeeded')

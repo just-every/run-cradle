@@ -9,15 +9,11 @@ import { createAutomationService } from './service'
 export const registerAutomationRoutes = (app: Hono<AppEnv>, platform: Platform) => {
   const service = createAutomationService(platform)
   app.get('/api/automations', async (context) => {
-    const automations = await service.list()
-    return context.json({ automations, ...collection(automations) })
+    const monitor = await service.monitor(context.req.query('windowEnd'))
+    return context.json({ ...monitor, ...collection(monitor.automations) })
   })
-  app.get('/api/automations/runs', async (context) => {
-    const runs = await service.runs()
-    return context.json({ runs, ...collection(runs) })
-  })
-  app.get('/api/automations/:id/runs', async (context) => {
-    const runs = await service.runs(requirePathParam(context.req.param('id'), 'automation id'))
-    return context.json({ runs, ...collection(runs) })
-  })
+  app.get('/api/automations/runs', async (context) => context.json(await service.runs({ cursor: context.req.query('cursor'), limit: context.req.query('limit') })))
+  app.get('/api/automations/:id/runs', async (context) => context.json(await service.runs({
+    automationId: requirePathParam(context.req.param('id'), 'automation id'), cursor: context.req.query('cursor'), limit: context.req.query('limit'),
+  })))
 }

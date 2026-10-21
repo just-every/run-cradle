@@ -100,7 +100,7 @@ test('[AUTO-007/009] installed ordered actions retry transport failures at absol
  }
 })
 
-test('[AUTO-007/009 AUTO-USER-001] uncertain SendGrid delivery stays visible without unsafe automatic or manual resend',async()=>{
+test('[AUTO-007/009 AUTO-USER-001] [AUTO-006] uncertain SendGrid delivery stays visible as a finished Unknown run without unsafe automatic or manual resend',async()=>{
  let calls=0
  const h=await setup({automaticQueues:false,configuration:{MAIL_PROVIDER:'sendgrid',MAIL_FROM:'sender@example.test',MAIL_PROVIDER_API_KEY:'network-edge-only'},providerFetch:async request=>{assert.equal(request.url,'https://api.sendgrid.com/v3/mail/send');calls++;return new Response(null,{status:503})}})
  try{
@@ -116,6 +116,9 @@ test('[AUTO-007/009 AUTO-USER-001] uncertain SendGrid delivery stays visible wit
   assert.equal(calls,1);assert.deepEqual(await readActions(),actions);assert.equal(await h.db.prepare('SELECT 1 FROM launch_automation_retries WHERE run_id=?').bind(run.id).first(),null)
   const visible=(await h.read('/api/automations')).automations.find(a=>a.id===definition.id)
   assert.equal(visible.lastRunStatus,'Unknown');assert.equal(visible.failure.code,run.error_code);assert.equal(visible.failure.message,run.error_message)
+  // AUTO-006: Unknown is final, keeps the time it finished through every later tick, and counts as finished without success.
+  const [history]=(await h.read(`/api/automations/${definition.id}/runs`)).runs
+  assert.deepEqual({state:history.state,finishedAt:history.finishedAt,finished:visible.runCount30Days,rate:visible.successRate30Days},{state:'Unknown',finishedAt:new Date(at).toISOString(),finished:1,rate:0})
   await h.command('launch.automation.retry',{runId:run.id,version:run.version},[],400)
   assert.equal(calls,1);assert.equal((await h.db.prepare('SELECT count(*) n FROM automation_runs WHERE retry_of=?').bind(run.id).first()).n,0)
   assert.equal((await h.db.prepare("SELECT count(*) n FROM activity_entries WHERE message='Completed before uncertainty'").first()).n,1)

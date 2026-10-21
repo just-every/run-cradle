@@ -11,6 +11,7 @@ import type { Platform } from '../../platform'
 import { createServerFoundation } from '../foundation.server'
 import { launchDescriptors } from '../../../apps/launch/descriptors.server'
 import { createLaunchHandlers } from '../../../apps/launch/registry.server'
+import { launchAutomationCommands } from './automation-commands.server'
 import { mountLegacyLaunch } from '../../../apps/launch/legacy.server'
 import { launchCommandSchema, launchInputs, LAUNCH_APP_ID, type LaunchAction } from '../../../apps/launch/contracts'
 import { canonicalHash } from '../../../domains/admission/canonical'
@@ -27,8 +28,8 @@ export async function createLaunchFoundation(platform: Platform) {
     descriptors:[...launchDescriptors,...repairDescriptors,sourceIntakeDescriptor(INSTALLATION_AUTHORITY_APP),...[...appIds].map(stagingDescriptor)],
     admissionGuards:()=>[trustedPredicate("NOT EXISTS(SELECT 1 FROM portability_fences WHERE name IN ('restore','snapshot'))")],
   })
-  const channelEffects=createChannelsIntegration(platform.bindings.DB)
-  const handlers=createLaunchHandlers({db:platform.bindings.DB,policy:foundation.policy,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID),integration:{...channelEffects,async deleteCampaign(ctx,id){return campaignErasure(platform.bindings.DB,ctx,id)}}})
+  const channelEffects=createChannelsIntegration(platform.bindings.DB),automationCommands=launchAutomationCommands(foundation.commands)
+  const handlers=createLaunchHandlers({db:platform.bindings.DB,policy:foundation.policy,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID),automationCommands,integration:{...channelEffects,async deleteCampaign(ctx,id){return campaignErasure(platform.bindings.DB,ctx,id)}}})
   const actions = (Object.keys(launchInputs) as LaunchAction[]).filter(action => action !== 'analysis.request')
   for(const action of actions){
     const prepare=handlers[action]
@@ -40,6 +41,7 @@ export async function createLaunchFoundation(platform: Platform) {
       prepare:(ctx,input)=>prepare(ctx,input as CommandInput<Record<string,unknown>>),
     })
   }
+  automationCommands.verify()
   mountLegacyLaunch(platform,{async execute(request,action,input){
     const command=foundation.commands.get(`launch.${action}`)
     if(!command)throw new ApiError('unconfigured',`Launch ${action} requires its complete domain effects.`)

@@ -33,6 +33,8 @@ export interface RegisteredCommand {
   readonly action: string
   readonly description: string
   readonly inputSchema: Json
+  /** The command's own input validator, for callers that admit its plan elsewhere (jobs.commands.v1). */
+  readonly input: Validator<CommandInput<unknown>>
   visible(context: RequestContext): Promise<boolean>
   execute(context: RequestContext, value: unknown): Promise<AdmissionReceipt<unknown>>
 }
@@ -48,7 +50,7 @@ export function createCommandRegistry(admission: AdmissionPort) {
     register<I, O>(definition: CommandDefinition<I, O>) {
       name(definition.action)
       commands.set(definition.action, {
-        action: definition.action, description: definition.description, inputSchema: definition.inputSchema,
+        action: definition.action, description: definition.description, inputSchema: definition.inputSchema, input: definition.input,
         visible: async context => admitted(context, definition.proposer) && definition.visible(context),
         async execute(context, value) {
           if (!admitted(context, definition.proposer)) throw new ApiError('not_found', 'Unknown command.')

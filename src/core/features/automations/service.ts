@@ -1,21 +1,26 @@
 import { describeSchedule } from '../../../apps/launch/schedule'
+import { launchCollection } from '../../../apps/launch/paging'
+import { instantSchema } from '../../../domains/records/validators'
 import { z } from 'zod'
 import type { Platform } from '../../platform'
-import { createAutomationRepository } from './repository'
+import { createAutomationRepository, finishedStates } from './repository'
+
+export const successWindowDays = 30
 
 export const createAutomationService = (platform: Platform) => {
   const repository = createAutomationRepository(platform.database)
 
   return {
-    async list() {
-      const [definitions, runs] = await Promise.all([repository.list(), repository.runs()])
-      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000
+    /** Automation Monitor: each definition, its newest run and its success rate over the
+     * trailing 30 days ending at `windowEnd` (now unless the caller names an instant). */
+    async monitor(windowEnd?: string) {
+      const to = windowEnd === undefined ? Date.now() : Date.parse(instantSchema.parse(windowEnd))
+      const from = to - successWindowDays * 24 * 60 * 60 * 1000
+      const [definitions, latest, finished] = await Promise.all([repository.list(), repository.latestRuns(), repository.finished(from, to)])
 
-      return definitions.map((definition) => {
-        const definitionRuns = runs.filter((run) => run.automationId === definition.id)
-        const recentFinished = definitionRuns.filter((run) => run.finishedAt && Date.parse(run.finishedAt) >= cutoff)
-        const succeeded = recentFinished.filter((run) => run.state === 'Succeeded').length
-        const lastRun = definitionRuns[0]
+      const automations = definitions.map((definition) => {
+        const counts = finished.find((row) => row.automationId === definition.id)
+        const lastRun = latest.find((row) => row.automationId === definition.id)
         const triggerConfig = definition.triggerConfig as Record<string, unknown>
         const events=[triggerConfig.event,...(Array.isArray(triggerConfig.events)?triggerConfig.events:[])].filter(Boolean)
         const trigger = definition.triggerType === 'event'
@@ -36,8 +41,9 @@ export const createAutomationService = (platform: Platform) => {
           enabled: definition.enabled,
           version: definition.version,
           definitionVersion: definition.definitionVersion,
-          successRate30Days: recentFinished.length ? succeeded / recentFinished.length : null,
-          runCount30Days: recentFinished.length,
+          successRate30Days: counts ? counts.succeeded / counts.finished : null,
+          runCount30Days: counts?.finished ?? 0,
+          succeededCount30Days: counts?.succeeded ?? 0,
           lastRunAt: lastRun?.finishedAt ?? lastRun?.startedAt ?? lastRun?.queuedAt ?? null,
           lastRunStatus: lastRun?.state ?? null,
           heldUntil:lastRun?.heldUntil??null,
@@ -46,7 +52,13 @@ export const createAutomationService = (platform: Platform) => {
             : null,
         }
       })
+      return { automations, successWindow: { days: successWindowDays, from: new Date(from).toISOString(), to: new Date(to).toISOString(), finishedStates } }
     },
-    runs: (automationId?: string) => repository.runs(automationId),
+    /** Retained run history paged under VIEW-007: newest queued first, then run ID. */
+    async runs(query: { automationId?: string, cursor?: string, limit?: string }) {
+      const page = launchCollection(await repository.runKeys(query.automationId), query.cursor, query.limit, (run) => [run.queuedAt, run.id], ['desc', 'desc'])
+      const runs = await repository.runs(page.items.map((run) => run.id))
+      return { ...page, items: runs, runs }
+    },
   }
 }

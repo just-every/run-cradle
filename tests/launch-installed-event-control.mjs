@@ -2,11 +2,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {setup,value,campaign,expected} from './helpers/launch-installed.mjs'
+import {verifyDefinitions,verifyContributedRun} from './helpers/launch-automation-definitions.mjs'
+import {historyMailEdge,verifyRunHistory} from './helpers/launch-run-history.mjs'
 const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
 const {createUlid}=await import('../src/core/shared/ids.ts')
 
-test('[AUTO-003/004] disable after actual event queue admission cancels queued work before any product effect',async()=>{
- const h=await setup({automaticQueues:false});try{
+test('[AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; disable cancels queued work before any effect; full run history pages with each attempted action and a 30-day success rate',async()=>{
+ const mail=historyMailEdge(),h=await setup({automaticQueues:false,providerFetch:mail.fetch});try{
   const c=await campaign(h,'CANCEL'),owner=(await h.db.prepare('SELECT owner_id FROM campaigns WHERE id=?').bind(c.id).first()).owner_id
   const created=await h.command('launch.risk.create',{fields:{campaignId:c.id,ownerId:owner,title:'Queued critical risk',severity:'Critical',signal:'Known',mitigation:'Review',dueDate:null}}),risk=value(created),worker=await h.runtime.getWorker()
   await worker.queue('cradle-work',[{id:'admit-event',timestamp:Date.now(),attempts:1,body:{kind:'cradle.launch.events.v1',commandId:created.data.commandId}}])
@@ -23,6 +25,9 @@ test('[AUTO-003/004] disable after actual event queue admission cancels queued w
   const before=await history(),outcomes=[]
   for(let i=0;i<2;i++){outcomes.push((await h.tick()).outcome);await worker.queue('cradle-work',[{id:'erased-event-'+i,timestamp:Date.now(),attempts:1,body:{kind:'cradle.launch.events.v1',commandId:pending.data.commandId}}])}
   assert.deepEqual({redacted:redacted.length>0,outcomes,history:await history(),receipts:(await h.db.prepare('SELECT count(*) n FROM launch_event_dispatches WHERE event_id IN (SELECT value FROM json_each(?))').bind(ids).first()).n,runs:(await h.db.prepare('SELECT id FROM automation_runs WHERE trigger_key IN (SELECT value FROM json_each(?))').bind(ids).all()).results,campaign:await h.db.prepare('SELECT * FROM campaigns WHERE id=?').bind(erased.id).first(),activity:(await h.db.prepare('SELECT * FROM activity_entries WHERE campaign_id=?').bind(erased.id).all()).results},{redacted:true,outcomes:['ok','ok'],history:before,receipts:redacted.length,runs:[],campaign:null,activity:[]},'Repeated scheduled and queue delivery consumes erased events without effects or rewriting erasure history')
+  await verifyDefinitions(h,{campaign:c,owner,risk})
+  const contributed=await verifyContributedRun(h,{campaign:c,owner})
+  await verifyRunHistory(h,{campaign:c,owner,risk:contributed.risk,mail})
  }finally{await h.close()}
 })
 

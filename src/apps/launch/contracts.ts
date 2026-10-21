@@ -11,7 +11,8 @@ export const milestoneFields=z.object({campaignId:idSchema,title:text,ownerId:id
 export const riskFields=z.object({campaignId:idSchema,title:text,ownerId:idSchema,severity:z.enum(['Low','Medium','High','Critical']),dueDate:dateSchema.nullable(),signal:z.string().max(2000),mitigation:z.string().max(2000)}).strict()
 export const decisionFields=z.object({campaignId:idSchema,riskId:idSchema.nullable(),supersedesId:idSchema.nullable(),title:text,requesterId:idSchema,assigneeId:idSchema.nullable(),priority:z.enum(['Critical','High','Medium','Low']),dueAt:instantSchema,recommendation:z.string().max(100000),impact:z.string().max(100000)}).strict()
 export const lensDefinition=z.object({name:text,description:z.string().max(10000),recordType:z.enum(['Campaign','Risk','Milestone','Decision']),conditions:z.array(z.object({field:text,operator:z.enum(['equals','not equals','one of','contains','is empty','is not empty','before','after','within the next N days']),value:z.union([cellValueSchema,z.number().int()]).optional()}).strict()).max(20),sort:z.object({field:text,direction:z.enum(['asc','desc'])}).strict(),fields:z.array(text).max(100),display:z.enum(['Grid','Cards','Timeline','Agenda'])}).strict()
-const actionInput=z.discriminatedUnion('command',[
+export const builtInAutomationActions=['escalate-risk','create-decision','notify-operator','send-email','request-ai-analysis','add-activity'] as const
+const builtInAction=z.discriminatedUnion('command',[
  z.object({command:z.literal('escalate-risk'),input:z.object({id:idSchema,reason}).strict()}).strict(),
  z.object({command:z.literal('create-decision'),input:decisionFields}).strict(),
  z.object({command:z.literal('notify-operator'),input:z.object({operatorId:idSchema,subjectId:idSchema,title:text,body:z.string().max(10000)}).strict()}).strict(),
@@ -19,6 +20,9 @@ const actionInput=z.discriminatedUnion('command',[
  z.object({command:z.literal('request-ai-analysis'),input:z.object({campaignId:idSchema}).strict()}).strict(),
  z.object({command:z.literal('add-activity'),input:z.object({campaignId:idSchema,message:text}).strict()}).strict(),
 ])
+/** A command contributed through jobs.commands.v1; saving checks the input against that command's own schema. */
+const contributedAction=z.object({command:z.string().min(1).max(200).refine(command=>!(builtInAutomationActions as readonly string[]).includes(command),'A built-in action takes its own input'),input:z.record(z.string(),z.unknown())}).strict()
+const actionInput=z.union([builtInAction,contributedAction])
 export const automationDefinition=z.object({name:text,trigger:z.discriminatedUnion('kind',[z.object({kind:z.literal('event'),event:text}).strict(),z.object({kind:z.literal('schedule'),localRule:text,timezone:text}).strict()]),actions:z.array(actionInput).min(1).max(100),enabled:z.boolean()}).strict()
 export const customFieldDefinition=z.object({name:text,type:z.enum(['text','number','date','boolean','select','multi_select','url']),options:z.array(text).max(1000).optional()}).strict()
 const id=z.object({id:idSchema}).strict(), empty=z.object({}).strict()

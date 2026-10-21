@@ -13,7 +13,8 @@ import { LAUNCH_APP_ID, launchEntities, campaignFields, deliverableFields, miles
 import { launchColumns, launchTables, type LaunchKind, launchFieldIds } from './descriptors.server'
 import { tables, activityTable, type LaunchRow, toWire, isLaunchMetadataColumn } from './storage.server'
 import type { LaunchIntegration } from './ports'
-export type LaunchContext={releaseId?:string;db:D1Database;policy:PolicyPort;integration:Partial<LaunchIntegration>}
+import type { AutomationCommands } from './automation-commands.server'
+export type LaunchContext={releaseId?:string;db:D1Database;policy:PolicyPort;integration:Partial<LaunchIntegration>;automationCommands?:AutomationCommands}
 export function integration<K extends keyof LaunchIntegration>(context:LaunchContext,key:K):LaunchIntegration[K]{const port=context.integration[key];if(!port)throw new AdmissionError('unconfigured',`Launch requires the ${key} integration port`);return port as LaunchIntegration[K]}
 export type ChangeSet={guards:SqlPredicate[];mutations:SqlMutation[];audit:AuditFact[];events:DomainEvent[];changed:RevisionRef[]}
 export const emptyChange=():ChangeSet=>({guards:[],mutations:[],audit:[],events:[],changed:[]})
