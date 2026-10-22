@@ -26,7 +26,7 @@ export async function recordTrashBrowser(){
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app/settings')
     await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Prepare archive'&&!button.disabled))
     await page.locator('summary').filter({hasText:/^Trash$/}).click()
-    const panel=page.getByRole('region',{name:'Trash',exact:true});await panel.getByLabel('Trash base',{exact:true}).selectOption(h.appId)
+    const panel=page.getByRole('region',{name:'Trash',exact:true});await panel.getByRole('combobox').selectOption(h.appId)
     await panel.getByRole('button',{name:`Restore synthetic-cradle-${30+width} · Packaging labels`,exact:true}).waitFor()
     async function capture(state){await page.waitForLoadState('networkidle');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[]);await panel.scrollIntoViewIfNeeded();await page.screenshot({path:`${output}/trash-${state}-${width}.png`,fullPage:true})}
     await capture('list')
@@ -34,7 +34,7 @@ export async function recordTrashBrowser(){
     await panel.getByRole('button',{name:`Restore synthetic-cradle-${30+width} · Packaging labels`,exact:true}).click();assert.equal((await response).status(),200)
     await panel.getByText('Trash is empty',{exact:true}).waitFor();await capture('restored')
     assert.equal((await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.id}`)).data.record.id,created.record.id)
-   }catch(error){await page.screenshot({path:`${output}/trash-failed-${width}.png`,fullPage:true});console.log('TRASH_BROWSER_FAILURE '+JSON.stringify({errors,text:await page.locator('body').innerText()}));throw error}finally{await context.close()}
+   }catch(error){await page.screenshot({path:`${output}/trash-failed-${width}.png`,fullPage:true});console.log('TRASH_BROWSER_FAILURE '+JSON.stringify({errors,text:await page.getByRole('region',{name:'Trash',exact:true}).innerText().catch(()=> 'Trash panel unavailable')}));throw error}finally{await context.close()}
   }
  }finally{await browser?.close();await h?.close();console.log('OWNED_PROCESSES_AFTER '+JSON.stringify(ownedProcesses()))}
 }
