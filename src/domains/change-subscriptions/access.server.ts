@@ -18,7 +18,7 @@ export function subscriptionAccess(db:D1Database,policy:PolicyPort,services:Retu
   if(view&&(view.appId!==scope.app_id||scope.entity_id&&view.entityId!==scope.entity_id))throw new AuthorityError('validation','View does not belong to this scope.',400)
   const entityId=view?.entityId??scope.entity_id
   const candidates=services.descriptors.list().filter(d=>d.schema.appId===scope.app_id&&(!entityId||d.schema.id===entityId)),allowed:PolicyScope[]=[]
-  for(const d of candidates){try{const current=await policy.scope(ctx,{appId:scope.app_id,entityId:d.schema.id,purpose:'read'});await assertCurrentScopeAuthority(db,ctx,current);allowed.push(current)}catch(error){if(entityId||!(error instanceof AuthorityError)&&!(error instanceof Error&&'code'in error&&error.code==='forbidden'))throw error}}
+  for(const d of candidates){try{const current=await policy.scope(ctx,{appId:scope.app_id,entityId:d.schema.id,purpose:'read'});await assertCurrentScopeAuthority(db,ctx,current);allowed.push(current)}catch(error){if(entityId||!(error instanceof Error&&'code'in error&&['forbidden','not_found'].includes(String(error.code))))throw error}}
   if(!allowed.length)throw new AuthorityError('forbidden','The API key cannot read this scope.')
   return {scopes:allowed,view}
  }

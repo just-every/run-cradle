@@ -45,7 +45,7 @@ export const portabilityPolicy = {
    integration_deliveries:"state IN ('queued','sending') OR claim IS NOT NULL OR claim_until IS NOT NULL",
   };
   for(const [table,condition]of Object.entries(checks)){
-   const staged=tables[table];if(!staged)return false;
+   const staged=tables[table];if(!staged){if(table==='record_change_subscriptions')continue;return false;}
    if(await db.prepare('SELECT 1 FROM "'+staged.replaceAll('"','""')+'" WHERE '+condition+' LIMIT 1').first())return false;
   }
   return true;
