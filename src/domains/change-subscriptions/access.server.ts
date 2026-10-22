@@ -4,6 +4,7 @@ import {AuthorityError} from '../authority/errors'
 import {assertCurrentScopeAuthority} from '../authority/guards.server'
 import {matchesFilter} from '../records/evaluated-query'
 import type {Ref,Cell} from '../../contracts/primitives'
+import type {ChangeItem} from './schema'
 import type {Subscription,Change} from './storage.server'
 
 export function subscriptionAccess(db:D1Database,policy:PolicyPort,services:ReturnType<typeof createRecordServices>){
@@ -22,27 +23,33 @@ export function subscriptionAccess(db:D1Database,policy:PolicyPort,services:Retu
   if(!allowed.length)throw new AuthorityError('forbidden','The API key cannot read this scope.')
   return {scopes:allowed,view}
  }
- async function project(ctx:RequestContext,subscription:Subscription,change:Change){
+ async function project(ctx:RequestContext,subscription:Subscription,change:Change):Promise<ChangeItem|{kind:'resync_required'}|null>{
   const ref=JSON.parse(change.subject_json) as Ref|null
-  if(!ref||ref.appId!==subscription.app_id||subscription.entity_id&&ref.entityId!==subscription.entity_id)return null
+  if(!ref)return change.action==='record.delete'?{kind:'resync_required'}:null
+  if(ref.appId!==subscription.app_id||subscription.entity_id&&ref.entityId!==subscription.entity_id)return null
   const access=await scopes(ctx,subscription),scope=access.scopes.find(s=>s.entityId===ref.entityId)
-  if(!scope)return null
+  if(access.view&&ref.entityId!==access.view.entityId)return null
   if(change.action==='record.delete'){
-   // A deleted row cannot establish a restricted row predicate. Deny its tombstone.
-   if(!scope.unrestrictedRows||access.view)return null
+   // No tombstone identity crosses a policy we cannot establish on a deleted row.
+   // This scope-level sentinel is collapsed to one range marker by the fetch door.
+   if(!scope||!scope.unrestrictedRows||access.view)return {kind:'resync_required'}
    return {id:change.id,sequence:change.change_sequence,kind:'delete',recordId:ref.recordId}
   }
-  if(!['record.create','record.patch','record.undo'].includes(change.action))return null
-  const changes=JSON.parse(change.changes_json) as {fieldId:string;before:Cell;after:Cell}[]
-  if(!changes.some(c=>JSON.stringify(c.before)!==JSON.stringify(c.after)))return null
+  if(!scope||!['record.create','record.patch','record.undo','record.restore'].includes(change.action))return null
+  const restoring=change.action==='record.restore'
+  const retained=JSON.parse(change.changes_json) as {fieldId:string;before:Cell;after:Cell}[]
+  if(!restoring&&!retained.some(c=>JSON.stringify(c.before)!==JSON.stringify(c.after)))return null
   try{
    const current=await services.reader.record(ctx,scope,ref)
    if(access.view){const descriptor=services.descriptors.get(ref.appId,ref.entityId),numeric=new Set(descriptor.schema.fields.filter(f=>['number','currency','percent','duration'].includes(f.type)).map(f=>f.id));if(!matchesFilter(current,access.view.filter,numeric,ctx.now))return null}
+   // Restore has no retained field delta: project its current readable snapshot,
+   // including the usual relation/file protections, without a second value store.
+   const changes=restoring?Object.entries(current.fields).map(([fieldId,after])=>({fieldId,before:{state:'value',value:null} as Cell,after})):retained
    const fields=changes.filter(c=>scope.readableFieldIds.includes(c.fieldId)&&(!access.view||access.view.fields.includes(c.fieldId)))
    if(!fields.length)return null
    const projected=await Promise.all(fields.map(async c=>({fieldId:c.fieldId,before:await services.reader.projectCell(ctx,scope,ref,c.fieldId,c.before),after:await services.reader.projectCell(ctx,scope,ref,c.fieldId,c.after)})))
    await assertCurrentScopeAuthority(db,ctx,scope)
-   return {id:change.id,sequence:change.change_sequence,kind:change.action==='record.create'?'create':'update',recordId:ref.recordId,entityId:ref.entityId,changes:projected}
+   return {id:change.id,sequence:change.change_sequence,kind:restoring?'restore':change.action==='record.create'?'create':'update',recordId:ref.recordId,entityId:ref.entityId,changes:projected}
   }catch(error){if(error instanceof Error&&'code'in error&&['forbidden','not_found'].includes(String(error.code)))return null;throw error}
  }
  return {key,scopes,project}

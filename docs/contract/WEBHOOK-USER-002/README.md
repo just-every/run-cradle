@@ -17,7 +17,8 @@ intersection of that base and the tables the key can read.
   unexpired subscription extends to seven days from the request clock.
 - `DELETE /api/v1/change-subscriptions/<id>`: `{commandId}`.
 - `GET /api/v1/change-subscriptions/<id>/changes?cursor=<cursor>&through=<cursor>&limit=100`:
-  ordered payloads, a continuation `cursor`, the window's `through` and `hasMore`.
+  ordered `items`, a continuation `cursor`, the window's `through`, `hasMore`, and
+  an optional range-level `resyncRequired` object (schema: `src/domains/change-subscriptions/schema.ts`).
   Limit is 1–200. Omit through to capture the present high-water mark; retain the
   returned through while paging or replaying that window. Fetch from the saved
   continuation to the newest ping's cursor for later changes. Cursor signatures
@@ -28,7 +29,8 @@ The audit payload is the only change-value store. An additive audit sequence is
 assigned in the same transaction as the record change and survives archives.
 No independent payload log is created. Unchanged before/after cells produce no
 change notification. Cursor access is retained for **30 days**; an older cursor
-is refused with a named window and requires resynchronization. Audit retention
+returns HTTP 410 `cursor_expired` naming resynchronization, separately from
+HTTP 410 `subscription_expired` after seven days without refresh. Audit retention
 itself is unchanged. On first fetch, a cursor durably captures its upper audit sequence. Reusing that
 cursor returns the same ordered payloads under the same current policy, even
 when later commits arrive. The response continuation captures a later window
@@ -38,10 +40,35 @@ IDs, positions and times, and are removed after 30 days.
 Policy is applied at fetch time, conservatively: current unreadable rows have
 no payload, fields outside current authority are omitted, and retained relation
 or attachment cells use the ordinary server projection. A delete payload has
-only its record ID plus change metadata. A restricted-row key receives no
-delete tombstone when current authority cannot be established from the deleted
-row. View membership is checked against the current view and record. Values
-never travel in a ping.
+only its record ID plus change metadata (`id`, `sequence`, `kind: "delete"`).
+A restricted-row or view-scoped delete whose current authority cannot be
+established produces no delete item; it produces the same range-level marker
+for every such uncertainty, even for a row the key could never read:
+
+```json
+{"items":[],"cursor":"<continuation>","through":"<window-end>","hasMore":false,"resyncRequired":{"code":"resync_required","message":"Something in this subscribed range could not be narrowed for this key; resynchronize the scope.","from":"<request-cursor>","through":"<continuation>"}}
+```
+
+The marker covers only that page's cursor range, contains no record identity,
+field, value, table row count or per-record marker, and coalesces uncertainties
+in that range. A subscriber can infer only that something in the subscribed
+range could not be narrowed for this key; unchanged per-change ping timing/count
+reveals range activity, without identifying a record or its prior readability.
+This is the conservative default: the signal cannot hide all range activity.
+Resynchronize the subscribed scope, save the continuation, then fetch later
+changes; replaying a cursor retains the same range, including its marker under
+unchanged authority. Paging advances past the range without dropping it or
+repeating its delete items. Policy and current row/view membership are rechecked
+on every fetch, so a changed policy or row can change readable payloads on replay.
+
+`record.restore` is delivered as `kind: "restore"` in audit commit order, with
+the normal change metadata, recordId, entityId and changes. Because restore
+retains no separate audit delta, its create-like `changes` are the current
+readable snapshot, with null before cells and projected current after cells.
+Current unreadable rows produce no restore payload or ping; unreadable fields
+are omitted, and relation/file cells use the ordinary projection. A subscriber
+told of a delete receives the readable restore on its next range. View membership
+is checked against the current view and record. Values never travel in a ping.
 
 The receiver URL must be public HTTPS. The existing trusted egress relay pins
 public DNS, verifies TLS, bounds responses and refuses redirects. Creation
@@ -76,8 +103,17 @@ erasure redacts the canonical retained values.
 
 ## Remaining acceptance
 
-Delete delivery, the full write-door matrix, archive restoration and person/
-record erasure of retained feed values still need public-door proof. Base/view
-scope journeys, deleted-scope final listing, at-least-once delivery after uncertainty and paged subscription listing remain
+The full write-door matrix, archive restoration and person/record erasure of
+retained feed values still need public-door proof. Populated upgrades of the
+9045 audit-sequence and 9047 deleted-view backfill UPDATEs remain unproven.
+Base-scope journeys, deleted-scope final listing, at-least-once delivery after
+uncertainty and paged subscription listing remain
 open. The dispatcher selects only the first 200 active subscriptions per sweep; later subscriptions can starve, so fair delivery beyond that bound is incomplete. No Zapier, Make or Crank application is supplied (INTEG-007 remains
 missing). These obligations are not narrowed by this implementation.
+
+The existing `tests/user-webhooks.mjs` registration invokes the synchronization
+matrix in `tests/helpers/change-subscriptions-deletes.mjs`: unrestricted id-only
+delete, view/restricted range signals and replay/paging, signed pings, narrowed
+restore and unreadable restore refusal, and a signed cursor at its issuance
+clock minus 31 days returning `cursor_expired`. The existing subscription journey
+separately moves the scheduled clock eight days and proves `subscription_expired`.

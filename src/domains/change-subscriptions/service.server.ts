@@ -11,6 +11,7 @@ import {createUlid} from '../../core/shared/ids'
 import {environmentKeyring,seal} from '../connections/crypto.server'
 import {validateDestination} from '../../../vendor/base/modules/integrations/core/destination.ts'
 import {createCursorCodec} from '../records/cursor.server'
+import {resyncMessage,type ChangeItem} from './schema'
 import {subscriptionAccess} from './access.server'
 import {subscriptions,windows,retentionMs,lifetimeMs,type Subscription,type Change} from './storage.server'
 
@@ -51,10 +52,12 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    const upper={binding:id,offset:window.through_sequence,revision:window.captured_at}
    if(upper.offset<from.offset)throw new AuthorityError('validation','Invalid change window.',400)
    const rows=await db.prepare("SELECT id,change_sequence,action,subject_json,changes_json,created_at FROM admission_audit WHERE app_id=? AND change_sequence>? AND change_sequence<=? AND created_at>=? ORDER BY change_sequence,id LIMIT ?").bind(row.app_id,from.offset,upper.offset,new Date(now-retentionMs).toISOString(),input.limit).all<Change>()
-   const items=[];for(const change of rows.results){const projected=await access.project(ctx,row,change);if(projected)items.push(projected)}
+   const items:ChangeItem[]=[];let resyncRequired=false
+   for(const change of rows.results){const projected=await access.project(ctx,row,change);if(projected?.kind==='resync_required')resyncRequired=true;else if(projected)items.push(projected)}
    const next=rows.results.length===input.limit?rows.results.at(-1)!.change_sequence:upper.offset
    await access.scopes(ctx,row)
-   return {items,cursor:await cursor(id,next,upper.revision,await digest(input.cursor+':'+next),next<upper.offset?upper.offset:undefined),through:await cursor(id,upper.offset,upper.revision),hasMore:next<upper.offset}
+   const continuation=await cursor(id,next,upper.revision,await digest(input.cursor+':'+next),next<upper.offset?upper.offset:undefined)
+   return {items,cursor:continuation,through:await cursor(id,upper.offset,upper.revision),hasMore:next<upper.offset,...(resyncRequired?{resyncRequired:{code:'resync_required' as const,message:resyncMessage,from:input.cursor,through:continuation}}:{})}
   },
  }
 }

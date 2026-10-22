@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "7bedc7287653e8be0bd69d219c766b3892c8ca1d7038dc74f288c0fc410ee78e",
+      "sha256": "10eafbc22fdc62f08da1ea52ee2890801b15c60168fbc6b724343163fd46a618",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9affc6fb24d1a1375a8eacb4bd4c0555d99bfca9a115ef7389d13ce9f7f6e9da",
+      "sha256": "5011a41cf49e86f08caaaaa7550153bb89f1c29da64471260d89a19d62de03e6",
       "executable": false
     },
     "DEMO.md": {
@@ -4354,7 +4354,7 @@
       "executable": false
     },
     "docs/contract/WEBHOOK-USER-002/README.md": {
-      "sha256": "20569d233586e8686d733494f94147cbf950b85202e812d50f558eeb8a159789",
+      "sha256": "bc76fb92469a87ce16dede9f4ee31ebed97ebd8a2591290fbcbe9c3782a9f24d",
       "executable": false
     },
     "docs/current-state.md": {
@@ -7598,7 +7598,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/access.server.ts": {
-      "sha256": "1b865bea20a93d4ac9802cd35c7b01bd1f8dad7466634e1202697b605864b088",
+      "sha256": "6bcfa5045e4fb926d328d9bd1f510dcdc5898b8b3e81ce5b34c2af1f59127652",
       "executable": false
     },
     "src/domains/change-subscriptions/delivery.server.ts": {
@@ -7606,11 +7606,11 @@
       "executable": false
     },
     "src/domains/change-subscriptions/http.server.ts": {
-      "sha256": "cfaeab8943c7bd8f0f252a48d6396989e458cc0049c5913adcf89021a1ca2f05",
+      "sha256": "2e3804710ac7b420eb2aa7cbb3dd939571b494b04fc05b9e5bf69e773ef84c6a",
       "executable": false
     },
     "src/domains/change-subscriptions/service.server.ts": {
-      "sha256": "aa9e5e800af2501919f2e61d08a116e3c070daa9b49153cedb3f5411d705cc53",
+      "sha256": "d0d75e006370221343da6a1903112727391c435ecf13cd5bcbe9264a1626b15e",
       "executable": false
     },
     "src/domains/change-subscriptions/storage.server.ts": {
@@ -11221,8 +11221,12 @@
       "sha256": "308e8de52969fdad07e9aa0543a3c32b78bd6d4fd5ae07cdf5209fd8db6e0cbf",
       "executable": false
     },
+    "tests/helpers/change-subscriptions-deletes.mjs": {
+      "sha256": "6f7a3f9f1794c780acc3d262908227f562721b7ae998cf0cb6c0dac33a9734f3",
+      "executable": false
+    },
     "tests/helpers/change-subscriptions-journey.mjs": {
-      "sha256": "91a678ac89fd6138b9867c29673f79f0287c12a729d42224e0dde11f3faa2b79",
+      "sha256": "9fbee4285a8979951deea0cad85216797c86b48c13a7583ba35202f5dba78396",
       "executable": false
     },
     "tests/helpers/company-archive.mjs": {
@@ -12350,7 +12354,7 @@
       "executable": false
     },
     "tests/user-api-keys.mjs": {
-      "sha256": "c91eb3b562dd36ba74d5608a2d15b7512814031cb9442dcd4568e677c38e7944",
+      "sha256": "8f0251a78528efeec369b4fa1bb3552a0b8b38e8da70636c4847b5cd487c35fa",
       "executable": false
     },
     "tests/user-automations.mjs": {
@@ -12358,7 +12362,7 @@
       "executable": false
     },
     "tests/user-webhooks.mjs": {
-      "sha256": "4874f31a8764ab33e77b9f4e2a7e1d380b9fe4a4fbef8819979fba6c346a1c4e",
+      "sha256": "78b89ef93351cb1602cb41ce56fc99a109c7ffe4d00d8029307c75015b6ac831",
       "executable": false
     },
     "tsconfig.json": {
