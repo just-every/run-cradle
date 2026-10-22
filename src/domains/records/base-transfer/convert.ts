@@ -30,6 +30,7 @@ export function dateValue(raw:string,convention:ColumnOverride['dateConvention']
 }
 export function convertCell(field:Field,column:SourceColumn,value:Json|undefined,override:ColumnOverride,origin?:NumericOrigin,tokens?:NumericToken[]):{value:Json;changed:boolean} {
  if(origin&&value!==origin.lexeme)throw new Error('API numeric token provenance does not match cell')
+ if(value===null&&column.typedNulls)return {value:null,changed:false}
  const raw=origin?.lexeme??rawCellText(value,tokens);let converted:unknown=raw
  if(field.type==='text'){const text=column.sourceType==='multipleSelects'&&Array.isArray(value)?value.map(rawText).join(', '):raw;return {value:text,changed:!!origin||(typeof value!=='string'&&value!==undefined&&value!==null)}}
  if(field.type==='boolean'){

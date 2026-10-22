@@ -1,10 +1,11 @@
 import type { ProviderResult } from './contracts';
 import { sha256 } from './crypto.server';
-export type Endpoint = 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke';
+export type Endpoint = 'sheets.read' | 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke';
 const segment = (s: string) => { if (!s || s.length > 1024 || /[\x00-\x1f]/.test(s)) throw new Error('Invalid provider identifier'); return encodeURIComponent(s); };
 export function endpoint(name: Endpoint, ids: string[] = []): { url: string; method: string } {
   const a = () => segment(ids[0] ?? ''); const b = () => segment(ids[1] ?? '');
   switch (name) {
+    case 'sheets.read': return {url:`https://sheets.googleapis.com/v4/spreadsheets/${a()}`,method:'GET'};
     case 'resend.send': return { url: 'https://api.resend.com/emails', method: 'POST' };
     case 'resend.read': return { url: `https://api.resend.com/emails/${a()}`, method: 'GET' };
     case 'gmail.profile': return { url: 'https://gmail.googleapis.com/gmail/v1/users/me/profile', method: 'GET' };

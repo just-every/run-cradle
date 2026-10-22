@@ -6,6 +6,7 @@ import { createUlid } from '../../core/shared/ids';
 import type { createApiKeyWriter } from './api-keys.server';
 export const providerSetupCatalogue={providers:[
  {id:'resend',label:'Resend email',authentication:'api_key',accountLabel:'Verified sender email',resourceLabel:'Verified sender email',actions:['repair.request-quote','notification.email.send'],readbackSecret:true},
+ {id:'google-sheets',label:'Google Sheets',authentication:'oauth',accountLabel:'Spreadsheet ID',resourceLabel:'Spreadsheet ID',actions:['connection.sync'],readbackSecret:false},
  {id:'gmail',label:'Gmail inbox',authentication:'oauth',accountLabel:'Mailbox email address',resourceLabel:'Approved Gmail label',actions:['connection.sync'],readbackSecret:false},
  {id:'google-calendar',label:'Google Calendar',authentication:'oauth',accountLabel:'Calendar account',resourceLabel:'Owned calendar ID',actions:['repair.book-visit','repair.cancel-visit'],readbackSecret:false},
  {id:'xero',label:'Xero draft bills',authentication:'oauth',accountLabel:'Xero organisation ID',resourceLabel:'Approved Xero organisation ID',actions:['repair.handoff-invoice'],readbackSecret:false},

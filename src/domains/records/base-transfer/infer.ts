@@ -13,6 +13,7 @@ export function inferColumn(table:SourceTable,column:SourceColumn):Field['type']
  if(type==='checkbox')return 'boolean'
  if(type==='singleSelect')return 'select'
  if(type==='date')return 'date'
+ if(type==='dateTime')return 'instant'
  if(type==='formula'||type==='rollup'){
   const rows=table.rows.filter(row=>nonempty(row.values[column.key]))
   return rows.length&&rows.every(row=>{
@@ -37,7 +38,7 @@ import { parseLinkCell } from './parse'
 /** CSV evidence proposes links only when one imported target matches every reference exactly. */
 export function inferCsvStructure(source:PreparedSource,options:ImportOptions):{source:PreparedSource;diagnostics:ImportDiagnostic[]} {
  const tables=source.tables.map(t=>({...t,columns:t.columns.map(c=>({...c,...(options.tables?.[t.key]?.columns?.[c.key]?.lookup?{lookup:options.tables[t.key].columns![c.key].lookup}:{})}))})),diagnostics:ImportDiagnostic[]=[]
- if(source.format!=='csv-set')return {source:{...source,tables},diagnostics}
+ if(!['csv-set','xlsx','google-sheets'].includes(source.format))return {source:{...source,tables},diagnostics}
  const primaryIndexes=new Map(tables.map(table=>{const primary=options.tables?.[table.key]?.primaryColumnKey??table.primaryColumnKey??table.columns[0].key,index=new Map<string,typeof table.rows>();for(const row of table.rows){const label=rawText(row.values[primary]);const matches=index.get(label);if(matches)matches.push(row);else index.set(label,[row])}return [table.key,index]}))
  for(const table of tables)for(const column of table.columns){
   const override=options.tables?.[table.key]?.columns?.[column.key]??{},primary=options.tables?.[table.key]?.primaryColumnKey??table.primaryColumnKey??table.columns[0].key

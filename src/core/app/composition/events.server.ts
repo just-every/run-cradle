@@ -33,6 +33,7 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     // Admit due notifications before dispatching effects in this same invocation.
     await channels()
     await runtime.providers.jobs.scheduled()
+    await runtime.sheets.scheduled()
     await runtime.automations.runtime.tick()
   }
   return { dispatch, channels, scheduled,warehouse:()=>runtime.warehouse.runtime.scheduled(),launch:(commandId:string)=>runtime.launch.events(commandId),automations:(commandId:string)=>runtime.automations.runtime.tick(commandId,'queue') }

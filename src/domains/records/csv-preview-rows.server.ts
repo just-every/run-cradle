@@ -95,7 +95,7 @@ export async function previewCsvRows(
         return !prior || cell?.state !== 'value' || canonical(cell.value) !== canonical(value)
       }))
       const record: CsvImportRow = { row, label, id: prior?.id ?? createUlid(), version: prior?.version ?? null,
-        values: changed, operation: prior ? Object.keys(changed).length ? 'update' : 'unchanged' : 'create' }
+        before: Object.fromEntries(Object.keys(changed).flatMap(id=>{const cell=prior?.fields[id];return cell?.state==='value'?[[id,cell.value]]:[]})), values: changed, operation: prior ? Object.keys(changed).length ? 'update' : 'unchanged' : 'create' }
       const change = record.version === null ? await writer.prepareCreate(ctx, scope, changed, record.id)
         : await writer.prepareChange(ctx, scope, { ref: { appId: request.appId, entityId: request.entityId, recordId: record.id }, expectedVersion: record.version, changes: changed })
       guards.push(...change.guards)

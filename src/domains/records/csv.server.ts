@@ -1,3 +1,6 @@
+import {exportViewWorkbook} from './workbooks/export'
+import {readWorkbook} from './workbooks/read'
+import {Buffer} from 'node:buffer'
 import { exportContext, formatWorkspaceCell } from './csv-export.server'
 import { createCsvLabels, displayCsvValue, displayCsvLabels } from './csv-display.server'
 import { z } from 'zod'
@@ -19,11 +22,11 @@ import { createCsvLinkCandidates } from './csv-link-candidates.server'
 import { launchOverdueKind, overdueFieldIds, overdueMarkerField, projectLaunchOverdue } from '../../apps/launch/overdue-projection.server'
 import { launchFieldIds } from '../../apps/launch/descriptors.server'
 const stored=registerTable('record_csv_previews',['id','app_id','entity_id','owner_id','detail_json','expires_at','command_id'])
-export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024),mapping:csvMappingSchema,mergeFieldId:csvMergeSchema}).strict()
+export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024).optional(),workbook:z.object({filename:z.string().max(200),base64:z.string().max(14*1024*1024),sheet:z.string().max(120)}).strict().optional(),mapping:csvMappingSchema,mergeFieldId:csvMergeSchema}).strict()
 type Preview=CsvImportPreview & {guards:SqlPredicate[]}
 export function createRecordsCsv(db:D1Database,services:ReturnType<typeof createRecordServices>,admission:AdmissionPort){
  const {reader,writer,policy,descriptors,metadata}=services
- async function exportCsv(ctx:RequestContext,input:unknown,snapshot?:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][]}){
+ async function exportCsv(ctx:RequestContext,input:unknown,snapshot?:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]}){
   const request=z.object({appId:idSchema,entityId:idSchema,viewId:idSchema.optional(),query:querySchema}).strict().parse(input)
   const d=descriptors.get(request.appId,request.entityId),view=request.viewId?await metadata.readView(ctx,request.viewId):null
   if(view&&(view.appId!==request.appId||view.entityId!==request.entityId))throw new AdmissionError('validation','View belongs to another table.')
@@ -45,6 +48,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
    if(snapshot)snapshot.rows.push(...page.items)
    for(const row of page.items)rows.push(await Promise.all(fields.map(async field=>{
     const cell=row.fields[field.id]
+    if(snapshot&&cell?.state==='redacted')return 'Redacted'
     if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains a restricted or unavailable value.')
     if(field.type==='relation'||field.type==='computed'&&field.resultElementType==='relation')return labels.display(field,cell.value)
     if(d.legacy&&field.type==='multi_select'){if(!Array.isArray(cell.value)||cell.value.some(value=>typeof value!=='string'))throw new AdmissionError('validation','Legacy multi-select values must be text labels.');return displayCsvLabels(cell.value as string[])}
@@ -56,14 +60,14 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   }while(cursor)
   await assertGuards(db,guards)
   if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during export. Export again.')
-  if(snapshot){snapshot.headers=fields.map(f=>f.label);snapshot.values=rows}
+  if(snapshot){snapshot.headers=fields.map(f=>f.label);snapshot.values=rows;snapshot.fields=fields}
   return {csv:encodeCsv(fields.map(f=>f.label),rows),filename:context.filename,count:rows.length,capture:context}
  }
  async function preview(ctx:RequestContext,input:unknown){
   const request=csvPreviewInput.parse(input),d=descriptors.get(request.appId,request.entityId)
   if(d.legacy)throw new AdmissionError('validation','This import is for records-builder tables. Use the retained application import for source-maintained records.')
   const scope=await policy.scope(ctx,{appId:request.appId,entityId:request.entityId,purpose:'read'})
-  let csv:ReturnType<typeof parseCsv>;try{csv=parseCsv(new TextEncoder().encode(request.csv))}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Invalid CSV.')}
+  let csv:ReturnType<typeof parseCsv>;try{if(Boolean(request.csv)===Boolean(request.workbook))throw new Error('Choose exactly one CSV or workbook sheet.');if(request.workbook){const sheets=readWorkbook(new Uint8Array(Buffer.from(request.workbook.base64,'base64')),request.workbook.filename),sheet=sheets.find(s=>s.name===request.workbook!.sheet);if(!sheet)throw new Error('Choose a worksheet from the uploaded workbook.');csv={headers:sheet.headers,rows:sheet.rows.map(row=>row.map(cell=>cell.value===null?'':String(cell.value)))}}else csv=parseCsv(new TextEncoder().encode(request.csv))}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Invalid CSV.')}
   const mappingCheck=await validateCsvMapping(services,ctx,request.appId,request.entityId,request.mapping,request.mergeFieldId,csv.headers)
   // Guard only rows the caller can currently read. Hidden records never affect this preview.
   const expression=`(SELECT COALESCE(json_group_array(json(row)),'[]') FROM (SELECT json_object('id',${identifier(d.idColumn)},'version',${identifier(d.versionColumn)}) AS row FROM ${identifier(d.table.tableId)} WHERE ${scope.rowPredicate.sql} ORDER BY ${identifier(d.idColumn)}))`
@@ -99,5 +103,6 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   mutations.push({kind:'update',table:stored,set:{command_id:commandId},where:trustedPredicate('id=? AND command_id IS NULL AND expires_at>?',[id,ctx.now]),expectedRows:1})
   return admission.commit(ctx,{commandId,action:'import.commit',appId:p.appId,canonicalInputHash:hash,permit,guards,mutations,audit,events:[],outbox:[],committedResult:{id,creates:p.creates,updates:p.updates,unchanged:p.unchanged,rejected:p.rejected}})
  }
- return {exportCsv,preview,commit,mappings:createCsvMappings(db,services),linkCandidates:createCsvLinkCandidates(db,services)}
+ async function exportXlsx(ctx:RequestContext,input:unknown){const snapshot:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]}={rows:[]};const exported=await exportCsv(ctx,input,snapshot);return exportViewWorkbook(snapshot,exported.filename.replace(/\.csv$/i,''))}
+ return {exportCsv,exportXlsx,preview,commit,mappings:createCsvMappings(db,services),linkCandidates:createCsvLinkCandidates(db,services)}
 }

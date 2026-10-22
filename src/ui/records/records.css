@@ -204,3 +204,7 @@
 .cr-records-page .cr-calendar-day { overflow-wrap: anywhere; }
 
 .cr-live-records { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 10px 20px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+
+/* View export formats share the existing wrapping action layout. */
+.cr-records-export { display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; }
+.cr-records-card-head > .cr-actions:has(.cr-records-export) { flex-wrap: wrap; }

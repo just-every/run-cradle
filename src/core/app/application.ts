@@ -32,7 +32,7 @@ import type { AppEnv } from './types'
 
 export const createApplication = (platform: Platform, config: SeedConfig, runtime: Runtime) => {
   const app = new Hono<AppEnv>()
-  const {foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime,launchImports} = runtime
+  const {sheets,foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime,launchImports} = runtime
 
   app.onError(async (error, context) => {
     if (error instanceof ApiError || error instanceof AdmissionError) return errorResponse(error, createUlid(), context.req.method + ' ' + context.req.path)
@@ -88,7 +88,8 @@ export const createApplication = (platform: Platform, config: SeedConfig, runtim
   for (const path of ['/api/v1/connections/:id', '/oauth/*', '/webhooks/*']) app.all(path, context => providers.connectionHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/runs/*', '/api/v1/receipts/*', '/api/v1/attempts/*']) app.all(path, context => providers.http.fetch(context.req.raw))
   for (const path of ['/api/v1/sources', '/api/v1/sources/*', '/api/v1/files/*', '/api/v1/commands/upload.begin', '/api/v1/commands/upload.complete', '/api/v1/commands/source.capture', '/api/v1/commands/source.stage']) app.all(path, context => records.evidenceHttp.fetch(context.req.raw))
-  for (const path of ['/api/v1/records/export-csv','/api/v1/records/import-mappings','/api/v1/records/link-candidates','/api/v1/records/import-preview','/api/v1/commands/records.import-commit']) app.all(path, context => records.csvHttp.fetch(context.req.raw))
+  for(const path of ['/api/v1/records/sheets-source','/api/v1/records/sheets-schedule'])app.all(path,context=>sheets.http.fetch(context.req.raw))
+  for (const path of ['/api/v1/records/export-xlsx','/api/v1/records/workbook-sheets','/api/v1/records/export-csv','/api/v1/records/import-mappings','/api/v1/records/link-candidates','/api/v1/records/import-preview','/api/v1/commands/records.import-commit']) app.all(path, context => records.csvHttp.fetch(context.req.raw))
   app.all('/api/v1/records/base-export', context => records.baseExportHttp.fetch(context.req.raw))
   app.all('/api/v1/records/base-import/*', context => records.baseImportHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/records/schema-preview','/api/v1/records/bases/:appId/access','/api/v1/records/bases/:appId/collaborators','/api/v1/records/bases/:appId/reviews','/api/v1/records/bases/:appId','/api/v1/records/releases/:releaseId/recovery','/api/v1/records/releases/:releaseId/recovery/*','/api/v1/commands/release.adopt','/api/v1/records/proposals','/api/v1/records/proposals/:id','/api/v1/records/proposals/:id/decline']) app.all(path, context => records.manualHttp.fetch(context.req.raw))

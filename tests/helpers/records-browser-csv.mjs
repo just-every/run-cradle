@@ -14,7 +14,7 @@ export async function exerciseCsv(page,j,origin,width){
  }
  async function importCsv(csv,expected,rejected=0){
   await j.action(page.getByRole('button',{name:'Import CSV',exact:true}))
-  await page.getByLabel('CSV file',{exact:true}).setInputFiles({name:'records.csv',mimeType:'text/csv',buffer:Buffer.from(csv)})
+  await page.getByLabel('CSV or Excel file',{exact:true}).setInputFiles({name:'records.csv',mimeType:'text/csv',buffer:Buffer.from(csv)})
   await page.getByLabel(/^Match existing records by/).selectOption({label:'Key'})
   const pending=page.waitForResponse(response=>response.url().endsWith('/records/import-preview'))
   await j.action(page.getByRole('button',{name:'Preview import',exact:true}))

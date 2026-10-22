@@ -32,6 +32,7 @@ export const portabilityPolicy = {
   const checks={
    lifecycle_erasures:"state<>'complete'",lifecycle_erasure_blobs:'1',lifecycle_file_writes:'1',
    operators:'active<>0',authority_principals:"initial_owner<>0 OR (kind<>'system' AND state NOT IN ('removed','erased'))",
+   record_sheet_schedules:"state<>'paused' OR running_id IS NOT NULL",
    authority_memberships:"state='active'",authority_grants:'restore_hold<>1',automations:'enabled<>0',automation_runs:"state IN ('Queued','Running','Waiting')",launch_automation_actions:"state IN ('Queued','Pending','Running','Waiting')",
    execution_runs:"state IN ('queued','running','waiting','partial') OR lease_owner IS NOT NULL OR next_wake_at IS NOT NULL",
    execution_attempts:"state IN ('prepared','dispatching') OR next_check_at IS NOT NULL",
@@ -49,6 +50,7 @@ export const portabilityPolicy = {
   return true;
  },
  exportRow(table,row){
+  if(table==='record_sheet_schedules'){row.state='paused';row.running_id=null;row.last_slot=null;row.last_started_at=null;}
   if(table==='warehouse_exports'){if(row.state!=='removed')row.state='paused';row.running_id=null;row.watermark_json='{}';row.last_slot=null;}
   if(table==='operators')row.active=0;
   if(table==='authority_principals'){if(row.kind!=='system'&&row.state!=='erased')row.state='removed';row.initial_owner=0;}

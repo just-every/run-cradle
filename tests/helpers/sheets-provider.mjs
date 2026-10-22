@@ -1,0 +1,9 @@
+import assert from 'node:assert/strict'
+export function sheetsProvider(){let amount=31,reads=0;const id='synthetic-cradle-sheet-1';const properties=[{sheetId:0,title:'Orders',sheetType:'GRID',gridProperties:{rowCount:3,columnCount:5}},{sheetId:1,title:'Companies',sheetType:'GRID',gridProperties:{rowCount:2,columnCount:2}}];const v=value=>({effectiveValue:typeof value==='boolean'?{boolValue:value}:typeof value==='number'?{numberValue:value}:{stringValue:value}})
+ return {id,change(value){amount=value},get reads(){return reads},async fetch(request){const u=new URL(request.url)
+  if(u.origin==='https://oauth2.googleapis.com'&&u.pathname==='/token'){const form=new URLSearchParams(await request.text());assert.equal(form.get('code'),'synthetic-cradle-code-1');return Response.json({access_token:'synthetic-cradle-access-1',refresh_token:'synthetic-cradle-refresh-1',token_type:'Bearer',expires_in:3600,scope:'https://www.googleapis.com/auth/spreadsheets.readonly'})}
+  assert.equal(u.origin,'https://sheets.googleapis.com');assert.equal(u.pathname,'/v4/spreadsheets/'+id);assert.equal(request.headers.get('authorization'),'Bearer synthetic-cradle-access-1');assert.equal((u.searchParams.get('fields').match(/\(/g)??[]).length,(u.searchParams.get('fields').match(/\)/g)??[]).length);reads++
+  const data=[[['synthetic-cradle-1',amount,'2026-10-22',true,'North'],['synthetic-cradle-3',40,'2026-10-24',false,'North']],[['North','Brisbane']]],headers=[['Order','Amount','Due','Approved','Company'],['Company','City']]
+  return Response.json({spreadsheetId:id,sheets:properties.map((p,i)=>({properties:p,...(u.searchParams.get('fields').includes('rowData')?{data:[{startRow:0,startColumn:0,rowData:[headers[i],...data[i]].map(row=>({values:row.map(v)}))}]}:{})}))})
+ }}
+}

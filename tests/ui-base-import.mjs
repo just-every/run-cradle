@@ -1,18 +1,18 @@
-import {companyIdentityBrowser} from './helpers/company-identity-browser.mjs'
+import {companyWorkbookBrowser} from './helpers/company-workbook-browser.mjs'
 import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium } from '@playwright/test'
 import { contract } from './contract.mjs'
-import {recordsImportBrowserRuntime} from './helpers/records-import-browser-runtime.mjs'
+import {companyWorkbookRuntime as recordsImportBrowserRuntime} from './helpers/company-workbook-runtime.mjs'
 import { recordsJourney } from './helpers/records-browser-journey.mjs'
 import { accessibilityTabAway } from './helpers/accessibility-input.mjs'
 import { accessibilityContextOptions, accessibilityWidths } from './helpers/accessibility-evidence.mjs'
 import { uploadSet, overrideType, chooseTarget, chooseMissingTarget, chooseLookup, submitImport, downloadStatus, verifyPreviewLists } from './helpers/base-import-browser.mjs'
 import {freePort} from './helpers/free-port.mjs'
 const output = path.resolve(process.env.CRADLE_IMPORT_OUTPUT ?? process.env.TMPDIR ?? '.private/base-import-browser')
-contract('PERM-007 RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume and undo on desktop and phone', async () => {
+contract('PERM-007 INTEG-003 RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume and undo on desktop and phone', async () => {
   await mkdir(output, { recursive: true })
   let runtime, browser
   const receipts = []
@@ -24,7 +24,7 @@ contract('PERM-007 RECORDS-005', 'CSV-set import preview, guarded adoption, stor
       try {
         await context.addCookies(browserCookies(runtime.cookie,runtime.origin))
         const page = await context.newPage(), journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
-        await companyIdentityBrowser(page,{...journey,companyOutput:name=>path.join(output,`${name}-${width}.png`)},runtime,width)
+        await companyWorkbookBrowser(page,{...journey,companyOutput:name=>path.join(output,`${name}-${width}.png`)},runtime,width)
         const consoleErrors = [], externalRequests = [], batchCheckpoints = []
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()) })
         page.on('request', request => { if (new URL(request.url()).origin !== runtime.origin) externalRequests.push(request.url()) })

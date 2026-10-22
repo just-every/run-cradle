@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { base64, bytes, base64url } from '../../adapters/crypto.server';
 import { ProviderTransport } from '../../adapters/transport.server';
-export type OAuthProvider='gmail'|'google-calendar'|'xero';
+export type OAuthProvider='gmail'|'google-sheets'|'google-calendar'|'xero';
 export type OAuthConfiguration={clientId:string;clientSecret:string;redirectUri:string};
-export const oauthScopes=(provider:OAuthProvider)=>provider==='gmail'?['https://www.googleapis.com/auth/gmail.readonly']:provider==='google-calendar'?['https://www.googleapis.com/auth/calendar.events.owned']:['accounting.invoices','offline_access'];
+export const oauthScopes=(provider:OAuthProvider)=>provider==='gmail'?['https://www.googleapis.com/auth/gmail.readonly']:provider==='google-sheets'?['https://www.googleapis.com/auth/spreadsheets.readonly']:provider==='google-calendar'?['https://www.googleapis.com/auth/calendar.events.owned']:['accounting.invoices','offline_access'];
 export function consentURL(provider:OAuthProvider,config:OAuthConfiguration,state:string,challenge:string){const url=new URL(provider==='xero'?'https://login.xero.com/identity/connect/authorize':'https://accounts.google.com/o/oauth2/v2/auth');url.search=new URLSearchParams({client_id:config.clientId,redirect_uri:config.redirectUri,response_type:'code',scope:oauthScopes(provider).join(' '),state,code_challenge:challenge,code_challenge_method:'S256',...(provider==='xero'?{}:{access_type:'offline',prompt:'consent'})}).toString();return url.toString();}
 export const pkceChallenge=async(verifier:string)=>base64url(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes(verifier))));
 export type Tokens={accessToken:string;refreshToken:string|null;expiresAt:string;scopes:string[]};

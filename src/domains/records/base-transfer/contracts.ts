@@ -6,13 +6,13 @@ import type { SourceBundle, SourceLocation, ImportJob, Reconciliation, Json } fr
 import type { D1UndoDisposition } from '../../../../vendor/base/modules/import-kit/src/d1/undo-types'
 
 export type UploadedArtifact = { filename: string; bytes: Uint8Array }
-export type SourceColumn = { key: string; label: string; sourceType?: string; options?: string[]; relationTableKey?: string; reciprocalColumnKey?: string; lookup?: { relationColumnKey: string; valueColumnKey: string } }
+export type SourceColumn = { typedNulls?: boolean; key: string; label: string; sourceType?: string; options?: string[]; relationTableKey?: string; reciprocalColumnKey?: string; lookup?: { relationColumnKey: string; valueColumnKey: string } }
 /** Original JSON number tokens, keyed by mapped column; survives job/preview serialization. */
 export type NumericOrigin = { lexeme: string; pointer: string }
 export type NumericToken = NumericOrigin & { path: (string | number)[] }
 export type SourceRow = { key: string; values: Record<string, Json>; numericOrigins?: Record<string, NumericOrigin>; numericTokens?: Record<string, NumericToken[]>; location: SourceLocation }
 export type SourceTable = { primaryColumnKey?: string; key: string; label: string; columns: SourceColumn[]; rows: SourceRow[] }
-export type PreparedSource = { csvCorrespondence?: CsvCorrespondence; portableBase?: Json; format: 'csv-set' | 'api' | 'cradle-base-v1'; namespace: string; bundle: SourceBundle; tables: SourceTable[] }
+export type PreparedSource = { csvCorrespondence?: CsvCorrespondence; portableBase?: Json; format: 'csv-set' | 'api' | 'cradle-base-v1' | 'xlsx' | 'google-sheets'; namespace: string; bundle: SourceBundle; tables: SourceTable[] }
 export type ColumnOverride = { sourceKind?: SourceKind; sourceChoices?: string[]; lookup?: { relationColumnKey: string; valueColumnKey: string }; type?: Field['type']; label?: string; options?: string[]; dateConvention?: 'iso' | 'day-first' | 'month-first'; relationTableKey?: string; cardinality?: 'one' | 'many'; onDelete?: 'restrict'; reciprocal?: { tableKey: string; columnKey: string }; derivedFrom?: { tableKey: string; columnKey: string }; skip?: boolean }
 export type ImportOptions = { correspondenceAcceptedFingerprint?: string; referenceChoices?: Record<string,string>; name: string; tables?: Record<string, { label?: string; primaryColumnKey?: string; columns?: Record<string, ColumnOverride> }> }
 /** Allocated exactly once; overrides must reuse this complete identity map. */

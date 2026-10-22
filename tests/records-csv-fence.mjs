@@ -1,3 +1,5 @@
+import {readWorkbook} from '../src/domains/records/workbooks/read.ts'
+import {workbookJourney} from './helpers/workbook-journey.mjs'
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {harness} from './helpers/records-manual-harness.mjs'
@@ -49,11 +51,14 @@ async function recurringCsv(h){
  await call('import-mappings',{action:'use',sourceName,headers:['wrong source']},400)
  await call('import-mappings',{action:'save',sourceName,mapping,mergeFieldId:name.id,expectedVersion:null},409)
  await call('import-mappings',{action:'save',sourceName,mapping,mergeFieldId:name.id,expectedVersion:saved.version},403,{origin:'https://elsewhere.test'})
- const rows=Array.from({length:61},(_,i)=>[`Vendor ${String(i).padStart(2,'0')}`,i===60?'Remote city':'Brisbane','hidden needle','10/17/2026',i===0?'$1,234.50':'12.00',i%2?'unchecked':'YES',i===0?'Wholesale; Local, preferred':'Wholesale'])
+ const rows=Array.from({length:61},(_,i)=>[`Vendor ${String(i).padStart(2,'0')}`,i<4?['=1+1','+1','-1','@SUM(A1)'][i]:i===60?'Remote city':'Brisbane','hidden needle','10/17/2026',i===0?'$1,234.50':'12.00',i%2?'unchecked':'YES',i===0?'Wholesale; Local, preferred':'Wholesale'])
  const csv=encodeCsv(fields.map(f=>f.label),[...rows,['Invalid date','Nowhere','','2/30/2026','0','No','Wholesale'],['Invalid money','Nowhere','','2026-10-17','$1,00.10','No','Wholesale'],['Invalid tags','Nowhere','','2026-10-17','0','No','Wholesale; Wholesale']])
  const input={csv,mapping:used.mapping,mergeFieldId:used.mergeFieldId},preview=await call('import-preview',input)
  assert.deepEqual([preview.creates,preview.rejected],[61,3]);assert.equal(preview.rows[0].values[due.id],'2026-10-17');assert.deepEqual(preview.rows[0].values[budget.id],{minor:'123450',currency:'USD',scale:2});assert.equal(preview.rows[0].values[approved.id],true);assert.deepEqual(preview.rows[0].values[tags.id],tags.options.map(option=>option.id))
  await r.csv.commit(h.ctx,createUlid(),preview.id)
+ const workbook=await call('export-xlsx',{query:{sort:[{fieldId:name.id,direction:'asc'}]}}),typed=readWorkbook(Buffer.from(workbook.content,'base64'),'vendors.xlsx')[0],at=label=>typed.headers.indexOf(label)
+ assert.equal(typed.rows[0][at('Budget')].value,'1234.5');assert.equal(typed.rows[0][at('Budget')].type,'number');assert.equal(typed.rows[0][at('Due')].value,'2026-10-17');assert.equal(typed.rows[0][at('Approved')].value,true)
+ assert.deepEqual(typed.rows.slice(0,4).map(row=>row[at('City')]),['=1+1','+1','-1','@SUM(A1)'].map(value=>({value,type:'text'})))
  const exported=await r.csv.exportCsv(h.ctx,{...identity,query:{}})
  assert.equal((await call('import-preview',{...input,csv:exported.csv})).unchanged,61,'Quoted multi-select labels and exact money survive view CSV export')
  assert.equal((await call('import-preview',input)).unchanged,61)
@@ -69,7 +74,7 @@ async function recurringCsv(h){
  // Change real policy: the secret cannot be searched, shown, or restored from saved mappings.
  const policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(draft.appId).first(),rules=JSON.parse(policy.rules_json)
  for(const rule of rules)if(rule.entityId===identity.entityId)rule.readableFields=rule.readableFields.filter(id=>id!==secret.id)
- rules.push({id:createUlid(),principals:[{id:h.owner,kind:'human'}],entityId:identity.entityId,rows:{kind:'condition',fieldId:name.id,op:'eq',value:'Vendor 00'},readableFields:[],writableFields:[],actions:[],effect:'deny',purposes:['read']})
+ rules.push({id:createUlid(),principals:[{id:h.owner,kind:'human'}],entityId:identity.entityId,rows:{kind:'condition',fieldId:name.id,op:'eq',value:'Vendor 00'},readableFields:[],writableFields:[],actions:[],effect:'deny',purposes:['read','export']})
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run();r=await h.runtime()
  const restricted=await call('link-candidates',{search:'hidden needle'});assert.equal(restricted.records.items.length,0);assert.ok(restricted.schema.fields.every(field=>field.id!==secret.id));assert.equal(restricted.schema.fields.find(field=>field.id===calculated.id).expression,undefined,'Picker metadata cannot reveal hidden calculation dependencies')
  await call('link-candidates',{search:'needle',fieldIds:[secret.id]},400)
@@ -78,6 +83,9 @@ async function recurringCsv(h){
  assert.equal((await call('import-mappings',{action:'list'})).mappings[0].available,false)
  await call('import-mappings',{action:'use',sourceName,headers:fields.map(f=>f.label)},403)
  await call('import-preview',input,403)
+ const narrowed=await call('export-xlsx',{query:{fields:[name.id,budget.id,calculated.id]}}),narrowedSheet=readWorkbook(Buffer.from(narrowed.content,'base64'),'narrowed.xlsx')[0]
+ assert.equal(narrowedSheet.rows.length,60);assert.deepEqual(narrowedSheet.headers,['Vendor','Budget','Public summary']);assert.ok(!JSON.stringify(narrowedSheet).includes('hidden needle'));assert.ok(!narrowedSheet.rows.some(row=>row[0].value==='Vendor 00'));assert.ok(narrowedSheet.rows.every(row=>row[2].value==='Redacted'))
+ await call('export-xlsx',{query:{fields:[secret.id]}},403)
  const repaired=mapping.filter(item=>item.fieldId!==secret.id)
  const updated=await call('import-mappings',{action:'save',sourceName,mapping:repaired,mergeFieldId:name.id,expectedVersion:saved.version})
  assert.deepEqual((await call('import-mappings',{action:'use',sourceName,headers:fields.map(f=>f.label)})).mapping,repaired)
@@ -90,7 +98,7 @@ async function recurringCsv(h){
  assert.ok(await h.db.prepare('SELECT id FROM record_csv_previews WHERE id=?').bind(preview.id).first())
 }
 
-test('RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 recurring CSV mappings, typed values and private paged link search retain final import fences',async()=>{
+test('[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 CSV, workbook and Sheets imports retain review, mapping, scheduled merge and export fences',async()=>{
  const migrations=migrationInventory(),mappingMigration=migrations.find(item=>item.name==='1230_record_csv_mappings.sql')
  const h=await harness(migratedD1(migrations.filter(item=>item!==mappingMigration)))
  try{
@@ -106,4 +114,5 @@ test('RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 recurring CSV mappings, type
   assert.equal((await r.manual.read(h.ctx,draft.appId)).name,draft.name)
   await recurringCsv(h);await csvFenceScenario(h)
  }finally{h.close()}
+ await workbookJourney()
 })

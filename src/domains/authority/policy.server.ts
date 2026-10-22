@@ -1,3 +1,4 @@
+import {ownerSheetsRead} from './sheets-read.server'
 import { ownerConnectionControl } from './connection-management'
 import { and, or, trustedPredicate, identifier } from '../admission/sql.server'
 import type { SqlPredicate } from '../admission/ports'
@@ -90,7 +91,8 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     }
     if(ctx.principal.kind!=='human'&&/^(grant\.|policy\.|member\.|credential\.)/.test(request.action))return denied('Only an authorized human can manage authority.')
     if(ctx.principal.credentialId){const c=await db.prepare('SELECT scopes_json FROM authority_credentials WHERE id=?').bind(ctx.principal.credentialId).first<{scopes_json:string}>();const scopes=JSON.parse(c!.scopes_json) as {appId:string;actions:string[];purposes:string[]}[];if(!scopes.some(s=>s.appId===request.appId&&s.actions.includes(request.action)&&(!request.purpose||s.purposes.includes(request.purpose))))return denied()}
-    const readOnly=['execution.read','execution.reconcile','model.read','connection.read','connection.reconcile'].includes(request.action)&&request.cost.length===0;
+    const sheetsRead=await ownerSheetsRead(db,ctx,request);if(sheetsRead)guards.push(sheetsRead)
+    const readOnly=!!sheetsRead||['execution.read','execution.reconcile','model.read','connection.read','connection.reconcile'].includes(request.action)&&request.cost.length===0;
     const metadataOrControl=readOnly||['run.cancel','attempt.reconcile','attempt.recover','connection.configure','connection.begin-consent','connection.revoke','connection.check'].includes(request.action)&&request.cost.length===0;
     if(request.proposedRows?.some(p=>p.entityId!==request.targetEntityId)||request.expected.some(e=>e.ref.appId!==request.appId))return denied()
     const entities=request.targetEntityId?[request.targetEntityId]:request.expected.length?[...new Set(request.expected.map(r=>r.ref.entityId))]:[...new Set(loaded.rules.filter(r=>r.actions.includes(request.action)).map(r=>r.entityId))]

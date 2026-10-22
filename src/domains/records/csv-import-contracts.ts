@@ -5,6 +5,7 @@ export type CsvImportRow = {
   label: string
   id: string
   version: number | null
+  before?: Record<string, CellValue>
   values: Record<string, CellValue>
   operation: 'create' | 'update' | 'unchanged'
 }

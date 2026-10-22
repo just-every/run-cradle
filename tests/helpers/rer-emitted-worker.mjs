@@ -10,7 +10,7 @@ import {useRuntimeBindings} from './rer-data-fixture.mjs'
 import {availableMachine} from './available-machine.mjs'
 const built=new WeakSet()
 /** The actual emitted Worker and direct verification share one D1/R2 owner. */
-export async function withRerEmittedWorker(copy,origin,run,{mail=false,queueConsumers}={}){
+export async function withRerEmittedWorker(copy,origin,run,{mail=false,queueConsumers,outbound,bindings:extraBindings={}}={}){
  await availableMachine()
  if(!built.has(copy)){await copy.command(['run','build']);built.add(copy)}
  const require=createRequire(join(copy.source,'package.json')),{Miniflare,convertV4MiniflareOptions,Log,LogLevel}=require('miniflare'),{unstable_getMiniflareWorkerOptions}=require('wrangler')
@@ -21,9 +21,9 @@ export async function withRerEmittedWorker(copy,origin,run,{mail=false,queueCons
  const rejectNetwork=()=>{calls++;throw new Error('Local lifecycle rehearsal prohibits outbound network')}
  const mailEdge=mail?await createFixtureMail(new URL(origin).port,rejectNetwork):null
  const mailBindings=mailEdge?{...mailEdge.bindings,MAIL_FROM:'signin@fixture.example.test'}:{}
- const config=convertV4MiniflareOptions({host:'127.0.0.1',port:Number(new URL(origin).port),inspectorPort:0,resourcePersistencePath:join(copy.source,'.wrangler/state/v3'),workers:[{...options,...queueConsumerOptions(queueConsumers),modules,modulesRoot,bindings:{...options.bindings,...await copy.readVars(),...mailBindings,RER_DEV_KEY:await checkoutDevKey(copy.source),APP_ORIGIN:origin,AUTH_ORIGIN:origin,AUTH_LOCAL:'true'}},...externalWorkers]})
+ const config=convertV4MiniflareOptions({host:'127.0.0.1',port:Number(new URL(origin).port),inspectorPort:0,resourcePersistencePath:join(copy.source,'.wrangler/state/v3'),workers:[{...options,...queueConsumerOptions(queueConsumers),modules,modulesRoot,bindings:{...options.bindings,...await copy.readVars(),...mailBindings,...extraBindings,RER_DEV_KEY:await checkoutDevKey(copy.source),APP_ORIGIN:origin,AUTH_ORIGIN:origin,AUTH_LOCAL:'true'}},...externalWorkers]})
  for(const worker of config.workers)if(worker.dev)worker.dev.unsafeRegisterWorker=false
- config.workers[0].dev??={};config.workers[0].dev.outboundService={type:'fetcher',handler:mailEdge?.fetch??rejectNetwork}
+ config.workers[0].dev??={};config.workers[0].dev.outboundService={type:'fetcher',handler:outbound??mailEdge?.fetch??rejectNetwork}
  const logs=[];class PrivateLog extends Log{log(message){logs.push(message)}}
  config.log=new PrivateLog(LogLevel.INFO);config.handleStructuredLogs=message=>logs.push(JSON.stringify(message))
  let runtime,detach

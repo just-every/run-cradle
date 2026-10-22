@@ -1,3 +1,4 @@
+import {archiveSheetsSource,archiveSheetsRestored} from './helpers/sheets-archive.mjs';
 import {companyArchiveSource,companyArchivePerson} from './helpers/company-archive.mjs';
 import {privateExports} from './helpers/rer-private-exports.mjs';
 import {retainedThroughClock} from './helpers/rer-retention-clock.mjs';
@@ -37,6 +38,7 @@ contract('PERM-007 SC-03 SC-06 SC-08','real rer setup twice, complete generated 
   await appendFile(join(source.source,'.dev.vars'),'\nCONNECTION_ENCRYPTION_KEY='+randomBytes(32).toString('base64')+'\n');
   const origin=`http://127.0.0.1:${port}`,prior=await sourceAuthority(source,origin);
   let company;await withRerEmittedWorker(source,origin,async()=>{company=await companyArchiveSource(origin,prior.cookie)});
+  const archivedSheet=await archiveSheetsSource(source,origin,prior);
   const sourceOwner=await bindings(source.source,async({DB})=>DB.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first());
   await seedData(source.source);
   const authorityRows=()=>bindings(source.source,async({DB})=>{const result={};for(const table of ['authority_grants','authority_memberships','authority_policies'])result[table]=(await DB.prepare(`SELECT * FROM ${table} ORDER BY 1,2`).all()).results;return result});
@@ -90,7 +92,7 @@ contract('PERM-007 SC-03 SC-06 SC-08','real rer setup twice, complete generated 
   assert.equal(await bindings(target.source,async({DB})=>(await DB.prepare('SELECT COUNT(*) AS n FROM campaigns').first()).n),0,'Failed archive leaves an empty target');
   await assert.rejects(target.rer(['import','--input','exports/first.rer','--non-interactive']),error=>error.exitCode===4&&error.errorCode==='safety_refusal','Import requires explicit confirmation');
   await target.rer(['import','--input','exports/first.rer','--yes','--non-interactive']);
-  await retentionRows(target.source,'after-installation-restore');
+  await retentionRows(target.source,'after-installation-restore');await archiveSheetsRestored(target,archivedSheet);
   const effects=()=>bindings(target.source,async({DB})=>{const n=async table=>(await DB.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n;return {events:await n('record_automation_events'),runs:await n('automation_runs'),actions:await n('launch_automation_actions'),notifications:await n('channel_events')+await n('channel_notifications')+await n('notifications'),deliveries:await n('integration_deliveries')}});
   const restoredEffects=await effects();
   await target.rer(['export','--output','exports/second.rer','--non-interactive']);

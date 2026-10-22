@@ -8,17 +8,17 @@ export function ManualImportPreview({ schema, preview }: { schema: EntitySchema;
   const [offset, setOffset] = useState(0)
   const rows = [
     ...preview.rows.map(row => ({ ...row, message: null, problems: undefined })),
-    ...preview.errors.map(error => ({ ...error, operation: 'rejected', values: {}, message: error.message, problems: error.problems })),
+    ...preview.errors.map(error => ({ ...error, operation: 'rejected', values: {}, before:undefined, message: error.message, problems: error.problems })),
   ].sort((left, right) => left.row - right.row)
   const operation = { create: 'Create', update: 'Update', unchanged: 'Unchanged', rejected: 'Rejected' }
   return <>
     <div className="cr-table-wrap cr-import-preview" role="region" tabIndex={0} aria-label="CSV import changes"><table className="cr-table">
-      <thead><tr><th>CSV row</th><th>Record</th><th>Change</th><th>Values or reason</th></tr></thead>
+      <thead><tr><th>Source row</th><th>Record</th><th>Change</th><th>Values or reason</th></tr></thead>
       <tbody>{rows.slice(offset, offset + 50).map(row => <tr key={row.row}>
-        <td data-label="CSV row">{row.row}</td><td data-label="Record">{row.label}</td><td data-label="Change">{operation[row.operation as keyof typeof operation]}</td>
+        <td data-label="Source row">{row.row}</td><td data-label="Record">{row.label}</td><td data-label="Change">{operation[row.operation as keyof typeof operation]}</td>
         <td data-label="Values or reason"><div>{row.message ? <ul className="cr-error">{(row.problems ?? [row.message]).map((problem, index) => <li key={index}>{problem}</li>)}</ul> : Object.entries(row.values).map(([id, value]) => {
           const field = schema.fields.find(field => field.id === id)
-          return <p key={id}>{field?.label}: <CellDisplay cell={{ state: 'value', value }} field={field} appId={schema.appId} /></p>
+          return <p key={id}>{field?.label}: {row.before&&id in row.before&&<><CellDisplay cell={{state:'value',value:row.before[id]!}} field={field} appId={schema.appId} /> → </>}<CellDisplay cell={{ state: 'value', value }} field={field} appId={schema.appId} /></p>
         })}</div></td>
       </tr>)}</tbody>
     </table></div>
