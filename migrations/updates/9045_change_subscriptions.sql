@@ -14,3 +14,10 @@ CREATE TABLE record_change_subscriptions (
  state TEXT NOT NULL, last_sequence INTEGER NOT NULL, delivery_state TEXT NOT NULL
 );
 CREATE INDEX record_change_subscriptions_key ON record_change_subscriptions(credential_id,app_id);
+
+-- Cursor windows contain positions only, never another copy of record values.
+CREATE TABLE record_change_windows (
+ cursor_hash TEXT PRIMARY KEY, subscription_id TEXT NOT NULL,
+ through_sequence INTEGER NOT NULL, captured_at INTEGER NOT NULL
+);
+CREATE INDEX record_change_windows_subscription ON record_change_windows(subscription_id);

@@ -4958,7 +4958,7 @@
       "executable": false
     },
     "migrations/updates/9045_change_subscriptions.sql": {
-      "sha256": "76a2ebb997aa71c8ebdf0d7dbad6e2bda607b9d49186aac7e87ea25040b3206e",
+      "sha256": "27ec0fe5c6919bc19b4501032e8ca609747eb193235ab89d0c91cf92b03a0d15",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -7530,7 +7530,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/delivery.server.ts": {
-      "sha256": "4f562ca86b68f8dc4d2afc3c5ea18a2634b532cb937a37236f033173289ae6c1",
+      "sha256": "9448dc7dbb839443632dd4f6ed9a16fe631f21ebc9184cdb7f97fa8a3fa4ea55",
       "executable": false
     },
     "src/domains/change-subscriptions/http.server.ts": {
@@ -7538,11 +7538,11 @@
       "executable": false
     },
     "src/domains/change-subscriptions/service.server.ts": {
-      "sha256": "d5e2ccf069b09031c99da7f5f5070cf020e8640f5df7cd89c9d187f4403772f6",
+      "sha256": "333ba6244fe90bc84825054c844aacf073940236deae98a319e5ce7a9422723e",
       "executable": false
     },
     "src/domains/change-subscriptions/storage.server.ts": {
-      "sha256": "098b39359dfb8b4261d548147dcac2f5e33b72982ade2987af24c39745ea7533",
+      "sha256": "1d065df6529f453dd59862bb9c4bce0f7f98830a51f625a6b87a6b159ca5e399",
       "executable": false
     },
     "src/domains/channels/clock.ts": {
@@ -8382,7 +8382,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "40f03a52288f365123614f4c273a87cf93e60ff2ce0d5f09776494d554de2797",
+      "sha256": "36afbdd281c999116ed3bd86ad393ae62d5ae07df518a13dcc5449f15d2e2bf1",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -11098,7 +11098,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-journey.mjs": {
-      "sha256": "9fd18457e21b9e6bc22b6b4ae6876b906b066a1d25b22bff4378980a6de9a0bf",
+      "sha256": "38cda1e4fe52deed53b904e5cbae6c1c1906939bb11bf2d0084b931ca156c15f",
       "executable": false
     },
     "tests/helpers/company-archive.mjs": {

@@ -37,6 +37,7 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('evidence_staging','owner_id=?','their private source intake'),
  place('evidence_files',`entity_id='${STAGING_ENTITY}' AND record_id IN (SELECT id FROM evidence_staging WHERE owner_id=?)`,'files in their private source intake'),
  place('manual_base_roles','principal_id=?','their base roles'),
+ {...byId('subscription_id IN (SELECT id FROM record_change_subscriptions WHERE owner_id=? OR principal_id=?)','their subscription cursor windows','delete'),table:'record_change_windows'},
  {...byId('owner_id=? OR principal_id=?','their subscriptions and sealed receiver signing secrets','delete'),table:'record_change_subscriptions'},
  place('record_views','owner_id=?','record views they own'),
  place('record_previews','actor_id=?','record previews they made'),

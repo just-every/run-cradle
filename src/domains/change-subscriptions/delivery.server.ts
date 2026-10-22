@@ -27,6 +27,7 @@ export function changeSubscriptionDelivery(env:PlatformBindings,service:ReturnTy
   return new DeliveryService({repository:new IntegrationsRepository(new D1SqlDatabase(db),row.app_id),now:()=>clock().getTime(),transport:{async send(wire){await authorize(row);return relay.send(wire)}},protocols:[createWebhookProtocol({resolveDestination:async()=> (await secret(row)).url,signingKey:async()=>unbase64((await secret(row)).signingKey)})]})
  }
  return {async tick(commandId?:string){
+  await db.prepare('DELETE FROM record_change_windows WHERE captured_at<?').bind(clock().getTime()-retentionMs).run()
   const rows=await db.prepare("SELECT * FROM record_change_subscriptions WHERE state='active' ORDER BY id LIMIT 200").all<Subscription>()
   for(const row of rows.results){
    if(row.expires_at<=clock().getTime()){await db.prepare("UPDATE record_change_subscriptions SET state='expired',sealed_json=NULL WHERE id=? AND expires_at<=?").bind(row.id,clock().getTime()).run();continue}

@@ -21,18 +21,18 @@ export async function changeSubscriptionsJourney(h,edge){
  const pings=edge.received.filter(r=>r.path==='/changes')
  assert.equal(pings.length,3,'One verifiable ping for each committed change, including recovery replay')
  for(const ping of pings){const verified=await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id});const value=JSON.parse(verified.envelope.body);assert.equal(value.changeCount,1);assert.equal(value.subscriptionId,subscription.id);assert.ok(!ping.body.includes('synthetic-cradle-3'))}
- const through=JSON.parse(pings.at(-1).body).cursor
- const route=(cursor,limit=200)=>`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&through=${encodeURIComponent(through)}&limit=${limit}`
+ const route=(cursor,limit=200)=>`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`
  const page=(await h.request(route(subscription.cursor),{secret:key.secret})).data
  assert.deepEqual(page.items.map(i=>i.kind),['create','create','update'])
  assert.equal(new Set(page.items.map(i=>i.id)).size,3)
+ await h.create('synthetic-cradle-later-1');await tick()
  assert.deepEqual((await h.request(route(subscription.cursor),{secret:key.secret})).data,page,'A fixed signed window replays identically')
  let cursor=subscription.cursor,items=[],more=true
  while(more){const part=(await h.request(route(cursor,1),{secret:key.secret})).data;items.push(...part.items);cursor=part.cursor;more=part.hasMore}
  assert.deepEqual(items,page.items,'Paging has no gaps or duplicates')
  const current=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${second.record.ref.recordId}`)).data.record
  await h.patch(current,{[h.statusId]:null});await tick()
- assert.equal(edge.received.filter(r=>r.path==='/changes').length,3,'Saving an unchanged value produces no ping')
+ assert.equal(edge.received.filter(r=>r.path==='/changes').length,4,'Saving an unchanged value produces no ping')
  const credential=await h.db.prepare('SELECT principal_id FROM authority_credentials WHERE id=?').bind(key.id).first()
  const membership=await h.db.prepare('SELECT policy_id FROM authority_memberships WHERE principal_id=? AND app_id=?').bind(credential.principal_id,h.appId).first()
  const policy=await h.db.prepare('SELECT rules_json FROM authority_policies WHERE id=?').bind(membership.policy_id).first(),rules=JSON.parse(policy.rules_json)
