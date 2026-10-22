@@ -11,5 +11,5 @@ export async function automationTestBrowser(page,h,width){
  await page.waitForLoadState('networkidle')
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
  const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.map(node=>node.target)})),[])
- await mkdir('docs/contract/AUTO-USER-005',{recursive:true});await panel.scrollIntoViewIfNeeded();await page.evaluate(()=>scrollBy(0,-100));await page.screenshot({path:`docs/contract/AUTO-USER-005/test-panel-${width}.png`,fullPage:false})
+ await mkdir('docs/contract/AUTO-USER-005',{recursive:true});await panel.evaluate(element=>scrollTo(0,Math.max(0,element.getBoundingClientRect().top+scrollY-100)));await page.screenshot({path:`docs/contract/AUTO-USER-005/test-panel-${width}.png`,fullPage:false});await panel.locator('ol').evaluate(element=>scrollTo(0,Math.max(0,element.getBoundingClientRect().top+scrollY-100)));await page.screenshot({path:`docs/contract/AUTO-USER-005/test-panel-results-${width}.png`,fullPage:false})
 }
