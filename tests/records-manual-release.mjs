@@ -4,8 +4,10 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {templateBase,newField} from '../src/ui/records/schema/templates.ts'
 import {harness,add} from './helpers/records-manual-harness.mjs'
+import {recordTrashJourney} from './helpers/record-trash-journey.mjs'
 import {fieldRulesJourney} from './helpers/records-field-rules.mjs'
-test('RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules',async()=>{
+test('[SNAP-002] RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules',async()=>{
+ await recordTrashJourney()
  await fieldRulesJourney()
  const h=await harness();try{
   const draft=templateBase('crm'),r=await h.runtime(),preview=await r.manual.preview(h.ctx,draft)
