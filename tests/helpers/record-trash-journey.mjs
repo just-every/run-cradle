@@ -44,6 +44,26 @@ export async function recordTrashJourney(){
   const d=(await h.descriptors()).get(h.appId,h.entityId)
   assert.equal((await h.db.prepare(`SELECT count(*) n FROM "${d.table.tableId}" WHERE id=?`).bind(record.id).first()).n,0)
   assert.ok((await h.db.prepare("SELECT 1 FROM admission_audit WHERE action='record.trash.purge' AND json_extract(subject_json,'$.recordId')=?").bind(record.id).first()),'Purge is an audited irreversible step')
+  const command=(input,expected=[])=>({commandId:createUlid(),expected,input})
+  const tableSchema=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
+  const revision={ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:tableSchema.version}
+  const view=(await h.request('/api/v1/commands/view.save',{method:'POST',body:command({view:{appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-51',display:'grid',fields:[h.nameId],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:h.nameId},visibility:'app',shipped:false}},[revision])})).data.value
+  const form=(await h.request('/api/v1/commands/form.save',{method:'POST',body:command({form:{appId:h.appId,entityId:h.entityId,title:'synthetic-cradle-52',fields:[{fieldId:h.nameId,label:'Name',help:'',required:true}],submitAction:'record.create',authenticated:true}},[revision])})).data.value
+  for(const [kind,saved] of [['view',view],['form',form]]){
+   const drop=async version=>kind==='view'?h.request('/api/v1/commands/view.delete',{method:'POST',body:command({viewId:saved.id},[{ref:{appId:h.appId,entityId:'00000000000000000000000002',recordId:saved.id},version}])}):h.request(`/api/v1/records/trash/forms/${saved.id}/delete`,{method:'POST',body:{commandId:createUlid(),appId:h.appId,version}})
+   await drop(saved.version)
+   const listed=(await h.request(trash)).data.items.find(item=>item.id===saved.id);assert.equal(listed.kind,kind)
+   const snapshot=(await h.request('/api/v1/records/base-export',{method:'POST',body:{appId:h.appId,format:'json'}})).data.content
+   assert.ok(!snapshot.includes(saved.id),'Deleted metadata leaves base JSON')
+   const result=(await h.request('/api/v1/records/trash/restore',{method:'POST',body:{kind,commandId:createUlid(),appId:h.appId,entityId:h.entityId,recordId:saved.id,version:listed.version}})).data
+   assert.equal(result.result.state,'committed')
+   assert.ok(!(await h.request(trash)).data.items.some(item=>item.id===saved.id))
+   const row=await h.db.prepare(`SELECT definition_json,version,deleted_at FROM ${kind==='view'?'record_views':'record_forms'} WHERE id=?`).bind(saved.id).first()
+   assert.equal(row.deleted_at,null);assert.equal(JSON.parse(row.definition_json).id,saved.id);assert.ok(row.version>saved.version)
+   await drop(row.version)
+  }
+  await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()+32*86400000})
+  for(const [table,id]of [['record_views',view.id],['record_forms',form.id]])assert.equal((await h.db.prepare(`SELECT count(*) n FROM ${table} WHERE id=?`).bind(id).first()).n,0,'Expired metadata is purged')
   const email='synthetic-cradle-41@example.test',name='synthetic-cradle-41',basePerson=createUlid()
   await h.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(basePerson,email,name,Date.now()).run()
   const person=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(basePerson).first()).principal_id

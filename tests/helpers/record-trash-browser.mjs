@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {fileURLToPath} from 'node:url'
 import {userInfo} from 'node:os'
 import {mkdir} from 'node:fs/promises'
 import {execFileSync} from 'node:child_process'
@@ -36,3 +37,5 @@ export async function recordTrashBrowser(){
   }
  }finally{await browser?.close();await h?.close();console.log('OWNED_PROCESSES_AFTER '+JSON.stringify(ownedProcesses()))}
 }
+
+if(process.argv[1]===fileURLToPath(import.meta.url))await recordTrashBrowser()

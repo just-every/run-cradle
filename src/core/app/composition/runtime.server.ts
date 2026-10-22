@@ -1,3 +1,4 @@
+import {metadataTrashPurge} from '../../../domains/records/trash/metadata-purge.server'
 import {recordTrashPurge} from '../../../domains/records/trash/purge.server'
 import {createChangeSubscriptions} from '../../../domains/change-subscriptions/service.server'
 import {changeSubscriptionDelivery} from '../../../domains/change-subscriptions/delivery.server'
@@ -34,11 +35,12 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  await ensureRecordAutomationTriggers(platform.bindings.DB,foundation.descriptors)
  const changeSubscriptions=createChangeSubscriptions(platform.bindings,foundation.policy,foundation.admission,records.services,platform.auth.configuration.sessionSecret)
  const changeDelivery=changeSubscriptionDelivery(platform.bindings,changeSubscriptions,platform.auth.configuration.appOrigin,clock)
+ const purgeRecords=recordTrashPurge(platform.bindings.DB,foundation.descriptors,foundation.admission,clock),purgeMetadata=metadataTrashPurge(platform.bindings.DB,foundation.admission,clock)
  const automations=createAutomationsComposition(platform,foundation,clock)
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)
  const launchImports=createLaunchImportComposition(platform,foundation,records)
- return {trashPurge:recordTrashPurge(platform.bindings.DB,foundation.descriptors,foundation.admission,clock),changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
+ return {trashPurge:async()=>{await purgeRecords();await purgeMetadata()},changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
 export type Runtime=Awaited<ReturnType<typeof createRuntime>>

@@ -42,6 +42,9 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  // record_trash markers and held canonical values: records/trash/erasure.server.ts
 
  place('record_views','owner_id=?','record views they own'),
+ {...byId('owner_id=? AND deleted_at IS NOT NULL','their trashed views','delete'),table:'record_views'},
+ place('record_forms','owner_id=?','record forms they own'),
+ {...byId('owner_id=? AND deleted_at IS NOT NULL','their trashed forms','delete'),table:'record_forms'},
  place('record_previews','actor_id=?','record previews they made'),
  place('record_undo','actor_id=?','record undo they made'),
  place('record_sheet_snapshots','actor_id=?','Google Sheets snapshots they imported'),
