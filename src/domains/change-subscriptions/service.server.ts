@@ -18,7 +18,7 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
  const db=env.DB,access=subscriptionAccess(db,policy,services),codec=createCursorCodec(cursorSecret)
  const version=env.CONNECTION_ENCRYPTION_KEY_VERSION??'v1',keyring=environmentKeyring(version,v=>v===version?env.CONNECTION_ENCRYPTION_KEY:undefined)
  const position=async()=>Number((await db.prepare('SELECT COALESCE(MAX(change_sequence),0) n FROM admission_audit').first<{n:number}>())!.n)
- const cursor=(id:string,offset:number,time:number,nonce='origin')=>codec.encode({binding:id+':'+nonce,revision:time,offset})
+ const cursor=(id:string,offset:number,time:number,nonce='origin',upper?:number)=>codec.encode({binding:id+':'+nonce+(upper===undefined?'':':'+upper),revision:time,offset})
  const belongs=(binding:string,id:string)=>binding.startsWith(id+':')
  function safe(row:Subscription){return {id:row.id,appId:row.app_id,entityId:row.entity_id,viewId:row.view_id,state:row.expires_at<=Date.now()?'expired':row.state,deliveryState:row.delivery_state,createdAt:new Date(row.created_at).toISOString(),expiresAt:new Date(row.expires_at).toISOString()}}
  async function get(ctx:RequestContext,id:string,requireActive=true){await access.key(ctx);const row=await db.prepare('SELECT * FROM record_change_subscriptions WHERE id=? AND credential_id=? AND principal_id=?').bind(id,ctx.principal.credentialId,ctx.principal.id).first<Subscription>();if(!row)throw new AuthorityError('not_found','Subscription not found.',404);await access.scopes(ctx,row);if(requireActive&&(row.state!=='active'||row.expires_at<=Date.parse(ctx.now)))throw new AuthorityError('subscription_expired','Subscription is inactive or expired after 7 days. Refresh an active subscription before it expires.',410);return row}
@@ -44,8 +44,8 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    if(from.revision<now-retentionMs)throw new AuthorityError('cursor_expired','Change cursors are retained for 30 days; resynchronize the scope.',410)
    const requested=input.through?await codec.decode(input.through):null
    if(requested&&!belongs(requested.binding,id))throw new AuthorityError('validation','Cursor belongs to another subscription.',400)
-   const cursorHash=await digest(input.cursor)
-   await db.prepare('INSERT INTO record_change_windows(cursor_hash,subscription_id,through_sequence,captured_at) SELECT ?,?,MIN(COALESCE(?,MAX(change_sequence),0),COALESCE(MAX(change_sequence),0)),? FROM admission_audit WHERE 1 ON CONFLICT(cursor_hash) DO NOTHING').bind(cursorHash,id,requested?.offset??null,now).run()
+   const cursorHash=await digest(input.cursor),bounded=from.binding.split(':').length===3?Number(from.binding.split(':')[2]):requested?.offset??null
+   await db.prepare('INSERT INTO record_change_windows(cursor_hash,subscription_id,through_sequence,captured_at) SELECT ?,?,MIN(COALESCE(?,MAX(change_sequence),0),COALESCE(MAX(change_sequence),0)),? FROM admission_audit WHERE 1 ON CONFLICT(cursor_hash) DO NOTHING').bind(cursorHash,id,bounded,now).run()
    const window=(await db.prepare('SELECT through_sequence,captured_at FROM record_change_windows WHERE cursor_hash=? AND subscription_id=?').bind(cursorHash,id).first<{through_sequence:number;captured_at:number}>())!
    const upper={binding:id,offset:window.through_sequence,revision:window.captured_at}
    if(upper.offset<from.offset)throw new AuthorityError('validation','Invalid change window.',400)
@@ -53,7 +53,7 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    const items=[];for(const change of rows.results){const projected=await access.project(ctx,row,change);if(projected)items.push(projected)}
    const next=rows.results.length===input.limit?rows.results.at(-1)!.change_sequence:upper.offset
    await access.scopes(ctx,row)
-   return {items,cursor:await cursor(id,next,upper.revision,await digest(input.cursor+':'+next)),through:await cursor(id,upper.offset,upper.revision),hasMore:next<upper.offset}
+   return {items,cursor:await cursor(id,next,upper.revision,await digest(input.cursor+':'+next),next<upper.offset?upper.offset:undefined),through:await cursor(id,upper.offset,upper.revision),hasMore:next<upper.offset}
   },
  }
 }
