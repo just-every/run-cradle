@@ -1,5 +1,6 @@
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
+import {changeSubscriptionsJourney} from './helpers/change-subscriptions-journey.mjs'
 import {randomBytes} from 'node:crypto'
 import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
@@ -8,7 +9,7 @@ import {createUlid} from '../src/core/shared/ids.ts'
 import {verifyWebhook} from '../vendor/base/modules/integrations/core/webhook.ts'
 import {unbase64} from '../src/adapters/crypto.server.ts'
 
-contract('WEBHOOK-USER-001','real Worker automations send verified signed webhooks and Slack once through the bounded redirect-refusing TLS relay',async()=>{
+contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker automations send verified signed webhooks and Slack once through the bounded redirect-refusing TLS relay',async()=>{
  let edge,h
  try {
   edge=await automationNetworkEdge()
@@ -60,5 +61,6 @@ contract('WEBHOOK-USER-001','real Worker automations send verified signed webhoo
   const calls=edge.tlsCalls;await h.tick(change.data.commandId)
   assert.equal((await h.request(`/api/user-automations/${failure.id}/runs`)).data.runs[0].state,'Unknown')
   assert.equal(edge.tlsCalls,calls,'Uncertain external work is not automatically resent')
+  await changeSubscriptionsJourney(h,edge)
  }finally{await h?.close();await edge?.close()}
 })

@@ -1,3 +1,4 @@
+import {changeSubscriptionsHttp} from '../../domains/change-subscriptions/http.server'
 import {installationArchiveHttp} from '../../domains/portability/installation-http.server'
 import { createAuthorityRouter } from '../../domains/authority/routes'
 import { authorizeLaunchProjection } from '../../apps/launch/projection-authority.server'
@@ -68,6 +69,7 @@ export const createApplication = (platform: Platform, config: SeedConfig, runtim
     await next()
   })
   app.route('/api/v1', createAuthorityRouter(platform.bindings.DB, foundation.policy, platform.auth.configuration, (request, ingress) => foundation.authenticate(request, ingress, createUlid())))
+  app.route('/api/v1/change-subscriptions',changeSubscriptionsHttp(runtime.changeSubscriptions,request=>foundation.authenticate(request,'http',createUlid())))
   app.route('/api/user-keys',createUserKeysHttp(
     createUserKeyService(platform.bindings.DB,foundation.policy,foundation.admission,platform.auth.configuration.appOrigin),
     request=>foundation.authenticate(request,'http',createUlid()),

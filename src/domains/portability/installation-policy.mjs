@@ -14,7 +14,7 @@ export const portabilityPolicy = {
   'ik_d1_native_staging%','ik_d1_preparation_receipts',
  ],
  derivedTables:['launch_search'],
- secretColumns:{execution_attempts:['sealed_input','reconcile_input'],launch_analysis_requests:['authority_json'],launch_automation_authorities:['principal_json']},
+ secretColumns:{record_change_subscriptions:['sealed_json'],execution_attempts:['sealed_input','reconcile_input'],launch_analysis_requests:['authority_json'],launch_automation_authorities:['principal_json']},
  replaceableTables:['authority_principals','execution_collection_revisions','channel_mail_authority','channel_digest_settings','cradle_restore','cradle_first_run'],
  requiredConfiguration:['OWNER_EMAIL','OWNER_NAME','SESSION_SECRET','SETUP_TOKEN','APP_ORIGIN','AUTH_ORIGIN','MAIL_FROM','MAIL_PROVIDER','CONNECTION_ENCRYPTION_KEY'],
  buckets:{FILES:{}},
@@ -32,6 +32,7 @@ export const portabilityPolicy = {
   const checks={
    lifecycle_erasures:"state<>'complete'",lifecycle_erasure_blobs:'1',lifecycle_file_writes:'1',
    operators:'active<>0',authority_principals:"initial_owner<>0 OR (kind<>'system' AND state NOT IN ('removed','erased'))",
+   record_change_subscriptions:"state<>'inactive' OR sealed_json IS NOT NULL",
    record_sheet_schedules:"state<>'paused' OR running_id IS NOT NULL",
    authority_memberships:"state='active'",authority_grants:'restore_hold<>1',automations:'enabled<>0',automation_runs:"state IN ('Queued','Running','Waiting')",launch_automation_actions:"state IN ('Queued','Pending','Running','Waiting')",
    execution_runs:"state IN ('queued','running','waiting','partial') OR lease_owner IS NOT NULL OR next_wake_at IS NOT NULL",
@@ -50,6 +51,7 @@ export const portabilityPolicy = {
   return true;
  },
  exportRow(table,row){
+  if(table==='record_change_subscriptions'){row.state='inactive';row.sealed_json=null;row.delivery_state='restore_hold';}
   if(table==='record_sheet_schedules'){row.state='paused';row.running_id=null;row.last_slot=null;row.last_started_at=null;}
   if(table==='warehouse_exports'){if(row.state!=='removed')row.state='paused';row.running_id=null;row.watermark_json='{}';row.last_slot=null;}
   if(table==='operators')row.active=0;
