@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
-import {LAUNCH_APP_ID} from '../../src/apps/launch/contracts.ts'
 import {AUTHORITY_ENTITY_IDS} from '../../src/domains/authority/contracts.ts'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
@@ -78,8 +77,8 @@ export async function recordTrashJourney(){
   await personal('/api/v1/commands/record.delete',{commandId:createUlid(),expected:[{ref:personalRecord.ref,version:personalRecord.version}],input:{ref:personalRecord.ref,confirmation:personalRecord.id}})
   assert.equal((await h.db.prepare('SELECT count(*) n FROM record_trash WHERE actor_id=?').bind(person).first()).n,1)
   const memberVersion=async()=> (await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(person).first()).version
-  await h.request('/api/v1/commands/member.remove',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:LAUNCH_APP_ID,entityId:AUTHORITY_ENTITY_IDS.member,recordId:person},version:await memberVersion()}],input:{memberId:person,reason:'synthetic-cradle-42'}}})
-  const erased=await h.request('/api/v1/commands/member.erase',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:LAUNCH_APP_ID,entityId:AUTHORITY_ENTITY_IDS.member,recordId:person},version:await memberVersion()}],input:{memberId:person}}})
+  await h.request('/api/v1/commands/member.remove',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:h.appId,entityId:AUTHORITY_ENTITY_IDS.member,recordId:person},version:await memberVersion()}],input:{memberId:person,reason:'synthetic-cradle-42'}}})
+  const erased=await h.request('/api/v1/commands/member.erase',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:h.appId,entityId:AUTHORITY_ENTITY_IDS.member,recordId:person},version:await memberVersion()}],input:{memberId:person,reason:'synthetic-cradle-43'}}})
   assert.equal(erased.data.value.confirmed,true)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM record_trash WHERE actor_id=?').bind(person).first()).n,0)
   const held=await h.db.prepare(`SELECT count(*) rows,COALESCE(sum(length(CAST("${d.fields.get(h.nameId).column}" AS BLOB))+length(CAST("${d.fields.get(h.statusId).column}" AS BLOB))),0) bytes FROM "${d.table.tableId}" WHERE id=?`).bind(personalRecord.id).first()
