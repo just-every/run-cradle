@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {automationTestBrowser} from './automation-test-browser.mjs'
 import {userScheduleBrowser} from './user-schedule-browser.mjs'
 
 export async function userAutomationBrowser(page,h,journey,width) {
@@ -35,6 +36,7 @@ export async function userAutomationBrowser(page,h,journey,width) {
  await panel.getByText(`Browser trigger ${width}`,{exact:true}).waitFor()
  await journey.capture('user-automation-complete')
  await panel.getByRole('button',{name:`Edit ${name}`,exact:true}).click()
+ await automationTestBrowser(page,h,width)
  await form.getByLabel('Notification title',{exact:true}).fill('Another approved notification')
  const edited=page.waitForResponse(response=>response.url().endsWith('/api/user-automations')&&response.request().method()==='POST')
  await form.getByRole('button',{name:'Save automation',exact:true}).click()

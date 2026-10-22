@@ -1,3 +1,5 @@
+import {userInfo} from 'node:os'
+import {execFileSync} from 'node:child_process'
 import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
@@ -9,13 +11,15 @@ import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {userKeyBrowser} from './helpers/user-key-browser.mjs'
 import {userAutomationBrowser} from './helpers/user-automation-browser.mjs'
 
-contract('AUTOMATIONS-USER-UI-001','owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone',async()=>{
+contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone',async()=>{
  const output=path.resolve(process.env.CRADLE_AUTOMATIONS_OUTPUT??'.private/user-automation-browser')
  await mkdir(output,{recursive:true});let h,browser
  const receipts=[]
  try {
   h=await userAutomationRuntime(18957)
-  browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  assert.equal(process.env.HOME,userInfo().homedir)
+  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  console.log('OWNED_BROWSER_PIDS '+execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).split('\n').filter(line=>line.trim().split(/\s+/)[1]===String(process.pid)).join(' | '))
   for(const width of [1440,390]) {
    const context=await browser.newContext({viewport:{width,height:width===390?844:900}})
    try {
