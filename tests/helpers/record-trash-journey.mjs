@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
+import {baseHttpSession} from './base-http-session.mjs'
+import {LAUNCH_APP_ID} from '../../src/apps/launch/contracts.ts'
+import {AUTHORITY_ENTITY_IDS} from '../../src/domains/authority/contracts.ts'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
 export async function recordTrashJourney(){
@@ -41,5 +44,22 @@ export async function recordTrashJourney(){
   const d=(await h.descriptors()).get(h.appId,h.entityId)
   assert.equal((await h.db.prepare(`SELECT count(*) n FROM "${d.table.tableId}" WHERE id=?`).bind(record.id).first()).n,0)
   assert.ok((await h.db.prepare("SELECT 1 FROM admission_audit WHERE action='record.trash.purge' AND json_extract(subject_json,'$.recordId')=?").bind(record.id).first()),'Purge is an audited irreversible step')
+  const email='synthetic-cradle-41@example.test',name='synthetic-cradle-41',basePerson=createUlid()
+  await h.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(basePerson,email,name,Date.now()).run()
+  const person=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(basePerson).first()).principal_id
+  await h.request(`/api/v1/records/bases/${h.appId}/collaborators`,{method:'POST',body:{commandId:createUlid(),principalId:person,role:'editor'}})
+  const signed=await baseHttpSession(h.origin,email),csrf=(await (await fetch(h.origin+'/auth/csrf',{headers:{cookie:signed.cookie}})).json()).csrfToken
+  async function personal(route,body){const response=await fetch(h.origin+route,{method:'POST',headers:{cookie:signed.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrf},body:JSON.stringify(body)}),value=await response.json();assert.equal(response.status,200,JSON.stringify(value));return value.data}
+  const schema=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
+  const personalRecord=(await personal('/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:schema.version}],input:{appId:h.appId,entityId:h.entityId,values:{[h.nameId]:name,[h.statusId]:email}}})).value
+  await personal('/api/v1/commands/record.delete',{commandId:createUlid(),expected:[{ref:personalRecord.ref,version:personalRecord.version}],input:{ref:personalRecord.ref,confirmation:personalRecord.id}})
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM record_trash WHERE actor_id=?').bind(person).first()).n,1)
+  const memberVersion=async()=> (await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(person).first()).version
+  await h.request('/api/v1/commands/member.remove',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:LAUNCH_APP_ID,entityId:AUTHORITY_ENTITY_IDS.member,recordId:person},version:await memberVersion()}],input:{memberId:person,reason:'synthetic-cradle-42'}}})
+  const erased=await h.request('/api/v1/commands/member.erase',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:LAUNCH_APP_ID,entityId:AUTHORITY_ENTITY_IDS.member,recordId:person},version:await memberVersion()}],input:{memberId:person}}})
+  assert.equal(erased.data.value.confirmed,true)
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM record_trash WHERE actor_id=?').bind(person).first()).n,0)
+  const held=await h.db.prepare(`SELECT count(*) rows,COALESCE(sum(length(CAST("${d.fields.get(h.nameId).column}" AS BLOB))+length(CAST("${d.fields.get(h.statusId).column}" AS BLOB))),0) bytes FROM "${d.table.tableId}" WHERE id=?`).bind(personalRecord.id).first()
+  assert.deepEqual(held,{rows:0,bytes:0},'Person erasure bypasses trash with zero held rows and bytes')
  }finally{await h.close()}
 }

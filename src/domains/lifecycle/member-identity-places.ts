@@ -39,7 +39,7 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('manual_base_roles','principal_id=?','their base roles'),
  {...byId('subscription_id IN (SELECT id FROM record_change_subscriptions WHERE owner_id=? OR principal_id=?)','their subscription cursor windows','delete'),table:'record_change_windows'},
  {...byId('owner_id=? OR principal_id=?','their subscriptions and sealed receiver signing secrets','delete'),table:'record_change_subscriptions'},
- {...byId('actor_id=?','trash deletion attribution','set'),table:'record_trash',columns:['actor_id'],set:()=>({actor_id:null})},
+ {...byId('actor_id=?','their trashed record markers','delete'),table:'record_trash'},
  place('record_views','owner_id=?','record views they own'),
  place('record_previews','actor_id=?','record previews they made'),
  place('record_undo','actor_id=?','record undo they made'),
