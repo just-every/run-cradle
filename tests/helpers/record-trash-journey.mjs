@@ -51,12 +51,15 @@ export async function recordTrashJourney(){
   const form=(await h.request('/api/v1/commands/form.save',{method:'POST',body:command({form:{appId:h.appId,entityId:h.entityId,title:'synthetic-cradle-52',fields:[{fieldId:h.nameId,label:'Name',help:'',required:true}],submitAction:'record.create',authenticated:true}},[revision])})).data.value
   for(const [kind,saved] of [['view',view],['form',form]]){
    const drop=async version=>kind==='view'?h.request('/api/v1/commands/view.delete',{method:'POST',body:command({viewId:saved.id},[{ref:{appId:h.appId,entityId:'00000000000000000000000002',recordId:saved.id},version}])}):h.request(`/api/v1/records/trash/forms/${saved.id}/delete`,{method:'POST',body:{commandId:createUlid(),appId:h.appId,version}})
+   const publicPath=`/api/v1/${kind==='view'?'views':'forms'}/${saved.id}`
    await drop(saved.version)
+   await h.request(publicPath,{status:404})
    const listed=(await h.request(trash)).data.items.find(item=>item.id===saved.id);assert.equal(listed.kind,kind)
    const snapshot=(await h.request('/api/v1/records/base-export',{method:'POST',body:{appId:h.appId,format:'json'}})).data.content
    assert.ok(!snapshot.includes(saved.id),'Deleted metadata leaves base JSON')
    const result=(await h.request('/api/v1/records/trash/restore',{method:'POST',body:{kind,commandId:createUlid(),appId:h.appId,entityId:h.entityId,recordId:saved.id,version:listed.version}})).data
    assert.equal(result.result.state,'committed')
+   assert.equal((await h.request(publicPath)).data.id,saved.id)
    assert.ok(!(await h.request(trash)).data.items.some(item=>item.id===saved.id))
    const row=await h.db.prepare(`SELECT definition_json,version,deleted_at FROM ${kind==='view'?'record_views':'record_forms'} WHERE id=?`).bind(saved.id).first()
    assert.equal(row.deleted_at,null);assert.equal(JSON.parse(row.definition_json).id,saved.id);assert.ok(row.version>saved.version)
@@ -67,7 +70,7 @@ export async function recordTrashJourney(){
   const email='synthetic-cradle-41@example.test',name='synthetic-cradle-41',basePerson=createUlid()
   await h.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(basePerson,email,name,Date.now()).run()
   const person=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(basePerson).first()).principal_id
-  await h.request(`/api/v1/records/bases/${h.appId}/collaborators`,{method:'POST',body:{commandId:createUlid(),principalId:person,role:'editor'}})
+  await h.request(`/api/v1/records/bases/${h.appId}/collaborators`,{method:'POST',body:{commandId:createUlid(),principalId:person,role:'editor',version:0}})
   const signed=await baseHttpSession(h.origin,email),csrf=(await (await fetch(h.origin+'/auth/csrf',{headers:{cookie:signed.cookie}})).json()).csrfToken
   async function personal(route,body){const response=await fetch(h.origin+route,{method:'POST',headers:{cookie:signed.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrf},body:JSON.stringify(body)}),value=await response.json();assert.equal(response.status,200,JSON.stringify(value));return value.data}
   const schema=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
