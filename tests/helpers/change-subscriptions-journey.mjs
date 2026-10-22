@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {verifyWebhook} from '../../vendor/base/modules/integrations/core/webhook.ts'
+import {changeSubscriptionDeletes} from './change-subscriptions-deletes.mjs'
 import {unbase64} from '../../src/adapters/crypto.server.ts'
 
 export async function changeSubscriptionsJourney(h,edge){
@@ -51,9 +52,12 @@ export async function changeSubscriptionsJourney(h,edge){
  await h.create('synthetic-cradle-7');await tick()
  assert.ok(!edge.received.some(r=>r.path==='/revoked-changes'))
  await h.request(`${root}/${stopped.id}/changes?cursor=${encodeURIComponent(stopped.cursor)}`,{secret:revoked.secret,status:401})
+ await changeSubscriptionDeletes(h,edge)
  const before=edge.received.filter(r=>r.path==='/changes').length
  await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()+8*86400000})
- await h.request(route(subscription.cursor),{secret:key.secret,status:410})
+ const expiredSubscription=await h.request(route(subscription.cursor),{secret:key.secret,status:410})
+ assert.equal(expiredSubscription.error.code,'subscription_expired')
+ console.log('CHANGE_SUBSCRIPTION_LIFETIME PASS 410 subscription_expired')
  await h.create('synthetic-cradle-8');await tick()
  assert.equal(edge.received.filter(r=>r.path==='/changes').length,before)
  await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})

@@ -9,7 +9,7 @@ import {createUlid} from '../src/core/shared/ids.ts'
 import {verifyWebhook} from '../vendor/base/modules/integrations/core/webhook.ts'
 import {unbase64} from '../src/adapters/crypto.server.ts'
 
-contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker automations send verified signed webhooks and Slack once through the bounded redirect-refusing TLS relay',async()=>{
+contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery preserves ordered replay, delete resynchronization and policy-narrowed restores',async()=>{
  let edge,h
  try {
   edge=await automationNetworkEdge()
