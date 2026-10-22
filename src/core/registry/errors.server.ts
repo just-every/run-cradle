@@ -23,6 +23,7 @@ export function errorResponse(error: unknown, requestId: string, operation: stri
   } }, { status: error.status, headers: { 'x-request-id': requestId, 'cache-control': 'no-store' } })
   if (error instanceof AdmissionError) error = new ApiError(error.code, error.message, error.currentVersion===undefined?{}:{currentVersion:error.currentVersion})
   if (error instanceof AuthorityError) error = new ApiError(error.code in statusByCode ? error.code as ErrorCode : 'forbidden', error.message, error.details)
+  if(error instanceof Error){const limit=error.message.match(/LIMIT (recordsPerTable|recordsPerBase) value (\d+) CURRENT (\d+)/);if(limit)error=new ApiError('capacity_limit',limit[0])}
   if (error instanceof ZodError) error = new ApiError('validation', 'The request did not match its schema.', { issues: error.issues.map(issue => ({ path: issue.path.map(String).join('.'), message: issue.message })) })
   const known = error instanceof ApiError ? error : null
   const code: ErrorCode = known ? known.code : 'internal'

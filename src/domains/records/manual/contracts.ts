@@ -1,8 +1,9 @@
+import {recordLimits,capacityMessage} from '../capacity'
 import { z } from 'zod'
 import { idSchema, fieldSchema, incomingRelationSchema, validationRuleSchema, refineTableRules } from '../validators'
 import type { Cell } from '../../../contracts/primitives'
 import type { EntitySchema } from '../contracts'
-export const draftSchema = z.object({ appId: idSchema, name: z.string().trim().min(1).max(120), formulaSources: z.record(idSchema,z.string().max(10000)).optional(), tables: z.array(z.object({ validationRules:z.array(validationRuleSchema).max(50).optional(), incomingRelations: z.array(incomingRelationSchema).max(80).optional(), primaryFieldId: idSchema.optional(), id: idSchema, label: z.string().trim().min(1).max(120), fields: z.array(fieldSchema).min(1).max(80) }).strict().superRefine(refineTableRules)).min(1).max(20) }).strict()
+export const draftSchema = z.object({ appId: idSchema, name: z.string().trim().min(1).max(120), formulaSources: z.record(idSchema,z.string().max(10000)).optional(), tables: z.array(z.object({ validationRules:z.array(validationRuleSchema).max(50).optional(), incomingRelations: z.array(incomingRelationSchema).max(80).optional(), primaryFieldId: idSchema.optional(), id: idSchema, label: z.string().trim().min(1).max(120), fields: z.array(fieldSchema).min(1).superRefine((fields,ctx)=>{if(fields.length>recordLimits.fieldsPerTable)ctx.addIssue({code:'custom',message:capacityMessage('fieldsPerTable',fields.length)})}) }).strict().superRefine(refineTableRules)).min(1).superRefine((tables,ctx)=>{if(tables.length>recordLimits.tablesPerBase)ctx.addIssue({code:'custom',message:capacityMessage('tablesPerBase',tables.length)})}) }).strict()
 export type SchemaDraft = z.infer<typeof draftSchema>
 export type RuleViolationImpact = { ruleId:string; ruleName:string; message:string; recordIds:string[]; count:number }
 export type SchemaImpact = { entityId: string; label: string; changes: string[]; recordIds: string[]; count: number; removedFields: { id: string; label: string; populated: number }[]; validationViolations?:RuleViolationImpact[]; violatingRecordIds?:string[]; violatingRecordCount?:number }

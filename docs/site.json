@@ -67,6 +67,11 @@
           "slug": "company-identity",
           "source": "docs/company-identity.md",
           "label": "Company sign-in and SCIM"
+        },
+        {
+          "slug": "measured-scale",
+          "source": "docs/measured-scale.md",
+          "label": "Measured scale"
         }
       ]
     }

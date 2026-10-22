@@ -1,0 +1,29 @@
+name: Measured scale
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scale:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CRADLE_SCALE_OUTPUT: .private/scale/result.json
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22.20.0'
+          package-manager-cache: false
+      - run: npm install --global pnpm@10.12.4
+      - run: pnpm install --frozen-lockfile --ignore-workspace
+      - run: pnpm build:app
+      - run: nice -n 15 node --import ./tests/helpers/typescript-loader.mjs scripts/scale/run.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: measured-scale
+          path: .private/scale/result.json

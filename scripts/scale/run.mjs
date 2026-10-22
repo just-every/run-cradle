@@ -1,0 +1,26 @@
+import {mkdir,writeFile} from 'node:fs/promises'
+import {execFileSync} from 'node:child_process'
+import os from 'node:os'
+import path from 'node:path'
+import assert from 'node:assert/strict'
+import {recordsImportBrowserRuntime} from '../../tests/helpers/records-import-browser-runtime.mjs'
+import {freePort} from '../../tests/helpers/free-port.mjs'
+import {workbookDoors} from '../../tests/helpers/workbook-http.mjs'
+import {newField} from '../../src/ui/records/schema/templates.ts'
+import {createUlid} from '../../src/core/shared/ids.ts'
+import {seedProfile,profile} from './profile.mjs'
+import {measure} from './measure.mjs'
+const output=path.resolve(process.env.CRADLE_SCALE_OUTPUT??'.private/scale/result.json'),result={sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runId:process.env.GITHUB_RUN_ID??process.env.REMOTE_JOB_ID??'local-'+new Date().toISOString(),host:{platform:os.platform(),arch:os.arch(),cpu:os.cpus()[0].model,logicalCpus:os.cpus().length,memoryBytes:os.totalmem(),node:process.version,release:os.release()},profile,hosted:'NOT RUN — authorized stage and credentials are not available',measurements:[],limits:[]};let h
+try{
+ h=await recordsImportBrowserRuntime(await freePort());const f=await seedProfile(h);result.actual=f.counts;const d=await workbookDoors(h),schema=f.schemas[0],field=f.fields[0],ref={appId:f.appId,entityId:schema.id,recordId:String(1).padStart(26,'0')},route=`/api/v1/apps/${f.appId}/entities/${schema.id}/query`,query={limit:profile.pageSize,fields:[field.title.id,field.amount.id,field.stage.id]}
+ const view=(await d.command('view.save',{view:{appId:f.appId,entityId:schema.id,name:'Scale grouped grid',display:'grid',fields:query.fields,filter:{kind:'all',conditions:[]},sort:[{fieldId:field.title.id,direction:'asc'}],groupBy:[field.stage.id],layout:{titleFieldId:field.title.id},visibility:'app',shipped:false}})).value
+ const workloads=[['grid',()=>d.call(route,query)],['filter',()=>d.call(route,{...query,filter:{kind:'condition',fieldId:field.stage.id,op:'eq',value:field.stage.options[0].id}})],['sort',()=>d.call(route,{...query,sort:[{fieldId:field.amount.id,direction:'desc'}]})],['group',()=>d.call('/api/v1/views/'+view.id+'/query',{limit:profile.pageSize})],['formula',()=>d.call(route,{...query,fields:[field.title.id,field.formula.id]})],['rollup10000',async()=>{const data=await d.call(`/api/v1/apps/${f.appId}/entities/${f.schemas[2].id}/query`,{limit:1,fields:[f.fields[2].title.id,f.fields[2].rollup.id]});const cell=data.items[0].fields[f.fields[2].rollup.id];assert.ok(cell.state==='unavailable'||cell.state==='value'&&cell.value==='55000');if(cell.state==='unavailable')result.rollupUnavailable=cell;return data}]]
+ for(const [name,operation]of workloads){const measurement=await measure(name,profile.samples,operation);result.measurements.push(measurement);console.log(JSON.stringify(measurement))}
+ let version=1;const write=await measure('write',profile.samples,async n=>{await d.command('record.patch',{ref,changes:{[field.amount.id]:String(n+20)}},[{ref,version}]);version++});result.measurements.push(write)
+ const read=await d.call(route,{limit:1,fields:[field.amount.id,field.formula.id],filter:{kind:'condition',fieldId:field.title.id,op:'eq',value:'synthetic-cradle-000000'}});assert.equal(read.items[0].fields[field.formula.id].value,String((profile.samples-1+20)*2));result.writeThenRead=true
+ for(const [name,entity]of [['recordsPerTable',f.schemas[0]],['recordsPerBase',f.schemas[3]]]){const r=await d.raw('/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId:f.appId,entityId:'00000000000000000000000001',recordId:entity.id},version:1}],input:{appId:f.appId,entityId:entity.id,values:{[entity.primaryFieldId]:'beyond profile'}}}),body=await r.json();result.limits.push({name,status:r.status,body})}
+ for(const [name,count]of [['fieldsPerTable',501],['tablesPerBase',51]]){const tables=name==='fieldsPerTable'?[{id:createUlid(),label:'Too wide',fields:Array.from({length:count},(_,i)=>newField('Field '+i,'boolean'))}]:Array.from({length:count},(_,i)=>({id:createUlid(),label:'Table '+i,fields:[newField('Name')]}));const r=await d.raw('/api/v1/records/schema-preview',{appId:createUlid(),name:'Beyond profile',tables});result.limits.push({name,status:r.status,body:await r.json()})}
+ for(const refusal of result.limits){assert.ok(refusal.status>=400&&refusal.status<500,refusal.name+' must be refused');const detail=JSON.stringify(refusal.body);assert.ok(detail.includes(refusal.name)&&detail.includes('CURRENT'),refusal.name+' refusal must name its limit and current count')}
+ result.targets=result.measurements.map(m=>({name:m.name,p95TargetMs:m.name==='write'?300:1000,met:m.errorRate===0&&(m.p95<=(m.name==='write'?300:1000)||m.name==='rollup10000'&&Boolean(result.rollupUnavailable?.reason))}));result.completed=true
+}catch(error){result.completed=false;result.failure={message:error.message,stack:error.stack};console.error(error.message);process.exitCode=1}
+finally{await h?.close();await mkdir(path.dirname(output),{recursive:true});await writeFile(output,JSON.stringify(result,null,2)+'\n');console.log('SCALE_RESULT '+output)}

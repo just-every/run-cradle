@@ -1,4 +1,5 @@
 import {archiveSheetsSource,archiveSheetsRestored} from './helpers/sheets-archive.mjs';
+import {companyUpgrade} from './helpers/company-upgrade.mjs';
 import {companyArchiveSource,companyArchivePerson} from './helpers/company-archive.mjs';
 import {privateExports} from './helpers/rer-private-exports.mjs';
 import {retainedThroughClock} from './helpers/rer-retention-clock.mjs';
@@ -21,7 +22,7 @@ import {sourceAuthority} from './helpers/rer-source-authority.mjs';
 import {sha256,canonicalJson} from '@runeditrun/rer/modules/portability';
 const semantics=records=>({tables:records[0].tables,excludedColumns:records[0].excludedColumns,objects:records[0].objects,payloads:records[0].payloads,requiredConfiguration:records[0].requiredConfiguration,items:records.filter(r=>r.kind==='part').flatMap(p=>p.items)});
 const archive=async(root,name)=>JSON.parse('['+(await readFile(join(root,name),'utf8')).trim().split('\n').join(',')+']');
-contract('PERM-007 SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES fresh-install restore, authority hold and confirmed reset',async()=>{
+contract('PERM-007 INTEG-003 SCALE-001 SC-03 SC-06 SC-08','real rer setup twice, complete generated DB/FILES fresh-install restore, authority hold and confirmed reset',async()=>{
  const source=await freshLocalCopy(),target=await freshLocalCopy();
  let complete=false;
  try{
@@ -37,6 +38,7 @@ contract('PERM-007 SC-03 SC-06 SC-08','real rer setup twice, complete generated 
   assert.deepEqual(await bindings(source.source,async({DB})=>(await DB.prepare('SELECT id FROM oa_operators ORDER BY id').all()).results),owner,'No second owner');
   await appendFile(join(source.source,'.dev.vars'),'\nCONNECTION_ENCRYPTION_KEY='+randomBytes(32).toString('base64')+'\n');
   const origin=`http://127.0.0.1:${port}`,prior=await sourceAuthority(source,origin);
+  await companyUpgrade(source);
   let company;await withRerEmittedWorker(source,origin,async()=>{company=await companyArchiveSource(origin,prior.cookie)});
   const archivedSheet=await archiveSheetsSource(source,origin,prior);
   const sourceOwner=await bindings(source.source,async({DB})=>DB.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first());

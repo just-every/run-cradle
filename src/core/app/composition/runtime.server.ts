@@ -1,3 +1,4 @@
+import {ensureRecordCapacity} from '../../../domains/records/capacity.server'
 import {createSheetsImport} from '../../../domains/records/sheets/import.server'
 import {createSheetSchedules} from '../../../domains/records/sheets/schedules.server'
 import {sheetsHttp} from '../../../domains/records/sheets/http.server'
@@ -17,6 +18,7 @@ import { ensureRecordAutomationTriggers } from '../../../domains/automations/cap
 /** Each request resolves admitted schema pointers and current authority anew. */
 export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const foundation=await createLaunchFoundation(platform)
+ await ensureRecordCapacity(platform.bindings.DB,foundation.descriptors)
  const lifecycle=createLifecycleComposition(platform,foundation)
  const providers=createProvidersComposition(platform,foundation)
  validateAuthConfiguration(platform.auth.configuration)

@@ -1,0 +1,2 @@
+import {performance} from 'node:perf_hooks'
+export async function measure(name,samples,operation){const ms=[],failures=[];for(let n=0;n<samples;n++){const start=performance.now();try{await operation(n);ms.push(performance.now()-start)}catch(error){ms.push(performance.now()-start);failures.push({sample:n,message:error.message})}}ms.sort((a,b)=>a-b);const percentile=p=>ms[Math.min(ms.length-1,Math.ceil(ms.length*p)-1)];return {name,samples,p50:percentile(.5),p95:percentile(.95),p99:percentile(.99),errorRate:failures.length/samples,failures}}

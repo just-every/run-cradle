@@ -1,3 +1,4 @@
+import {recordCapacityGuard} from './capacity.server'
 import type { RecordMutationEffects } from './effects.server';
 import type { RecordAttachmentPort } from './attachments.server';
 import type { CellValue, Ref, Cell } from '../../contracts/primitives';
@@ -109,7 +110,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         for (const [fieldId, s] of d.fields)
             if (s.join)
                 next.fields[fieldId] = scope.readableFieldIds.includes(fieldId) ? { state: 'value', value: values[fieldId] ?? null } : { state: 'redacted', reason: 'policy' };
-        return { guards: [...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id), ...await uniqueValidationGuards(db,d,values,row,id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true)], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
+        return { guards: [...await recordCapacityGuard(db,d),...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id), ...await uniqueValidationGuards(db,d,values,row,id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true)], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
     }
     async function prepareTransition(ctx: RequestContext, scope: PolicyScope, ref: Ref, expectedVersion: number, action: string): Promise<PreparedRecordChange> { const d = registry.get(ref.appId, ref.entityId), raw = await reader.raw(ctx, scope, ref); if (!raw)
         throw new AdmissionError('not_found', 'Record not found'); const transition = d.schema.lifecycle.transitions.find(t => t.action === action && t.from.includes(String(raw[d.lifecycleColumn]))); if (!transition)

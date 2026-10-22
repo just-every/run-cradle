@@ -1,3 +1,4 @@
+import {capacitySql} from './capacity.server'
 import type { EntitySchema, Field } from './contracts';
 import type { SqlPredicate, TableHandle } from '../admission/ports';
 import { registerTable, identifier } from '../admission/sql.server';
@@ -149,7 +150,7 @@ export function compileSchema(input: EntitySchema, resolve: (appId: string, enti
         extra.push(`CREATE VIRTUAL TABLE ${quoted} USING fts5(record_id UNINDEXED,${searchCols.join(',')}, tokenize='unicode61');`, `CREATE TRIGGER ${identifier(tableName + '_search_insert')} AFTER INSERT ON ${identifier(tableName)} BEGIN INSERT INTO ${quoted}(record_id,${searchCols.join(',')}) VALUES(new.id,${searchable.map(s => 'new.' + identifier(s.column)).join(',')}); END;`, `CREATE TRIGGER ${identifier(tableName + '_search_delete')} AFTER DELETE ON ${identifier(tableName)} BEGIN DELETE FROM ${quoted} WHERE record_id=old.id; END;`, `CREATE TRIGGER ${identifier(tableName + '_search_update')} AFTER UPDATE ON ${identifier(tableName)} BEGIN DELETE FROM ${quoted} WHERE record_id=old.id; INSERT INTO ${quoted}(record_id,${searchCols.join(',')}) VALUES(new.id,${searchable.map(s => 'new.' + identifier(s.column)).join(',')}); END;`);
     }
     const descriptor: EntityDescriptor = { searchTable, writePolicy: prior?.writePolicy, schema, table: registerTable(tableName, cols), fields, idColumn: 'id', versionColumn: 'version', createdColumn: 'created_at', updatedColumn: 'updated_at', lifecycleColumn: 'lifecycle', schemaVersionColumn: 'schema_version' };
-    const sql = [`CREATE TABLE ${identifier(tableName)} (${defs.join(',')});`, `CREATE INDEX ${identifier(tableName + '_lifecycle')} ON ${identifier(tableName)}(lifecycle,id);`, ...extra];
+    const sql = [`CREATE TABLE ${identifier(tableName)} (${defs.join(',')});`, `CREATE INDEX ${identifier(tableName + '_lifecycle')} ON ${identifier(tableName)}(lifecycle,id);`, ...extra,...capacitySql(descriptor)];
     return { descriptor, sql };
 }
 /** Explicit author-owned mapping: shares the existing table and IDs, never copies records. */
