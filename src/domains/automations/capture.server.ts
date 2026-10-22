@@ -11,7 +11,7 @@ function trigger(descriptor:EntityDescriptor,operation:'INSERT'|'UPDATE',name:st
   WHERE b.app_id=${app} AND b.entity_id=${entity} AND a.enabled=1
    AND json_extract(a.trigger_config_json,'$.event')=${event}`
  return `CREATE TRIGGER ${identifier(name)} AFTER ${operation} ON ${identifier(descriptor.table.tableId)}
-  WHEN ${current} AND EXISTS(SELECT 1 FROM record_automation_context c
+  WHEN NEW.${identifier(descriptor.lifecycleColumn)}<>'deleted' AND ${current} AND EXISTS(SELECT 1 FROM record_automation_context c
    JOIN command_admissions admission ON admission.command_id=c.command_id
    WHERE c.singleton=1 AND c.app_id=${app} AND admission.state='admitted')
   BEGIN
@@ -34,8 +34,11 @@ export async function ensureRecordAutomationTriggers(db:D1Database,descriptors:D
   if(!live||live.version!==descriptor.schema.version||live.physical_revision!==descriptor.schema.physicalRevision)continue
   const saved=await db.prepare('SELECT table_name FROM record_automation_triggers WHERE app_id=? AND entity_id=?')
    .bind(binding.app_id,binding.entity_id).first<{table_name:string}>()
-  if(saved?.table_name===descriptor.table.tableId)continue
   const stem='record_auto_'+binding.entity_id.toLowerCase()
+  if(saved?.table_name===descriptor.table.tableId){
+   const existing=await db.prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?").bind(stem+'_updated').first<{sql:string}>()
+   if(existing?.sql===trigger(descriptor,'UPDATE',stem+'_updated'))continue
+  }
   const nonce=crypto.randomUUID()
   await db.batch([
    db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN EXISTS(
