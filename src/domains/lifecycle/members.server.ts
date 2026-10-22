@@ -29,7 +29,7 @@ export function memberLifecycle(db:D1Database,bucket:R2Bucket,registry:Descripto
   await requireQuiescentFiles(db,change)
   const others=await otherIdentities(db,id,needles)
   const custody=await prepareImportCustody(db,registry,change,ctx,{id,...person},others,keep)
-  const {planned,residual}=await redactIdentityCopies(db,change,{person:{id,email:person.email},needles,label,places:[...memberIdentityPlaces,...await trashErasurePlaces(db,registry,id),...custody.places],others,keep,managedTables:custody.managedTables})
+  const {planned,residual}=await redactIdentityCopies(db,change,{person:{id,email:person.email},needles,label,places:[...memberIdentityPlaces,...await trashErasurePlaces(db,registry,{id,...person}),...custody.places],others,keep,managedTables:custody.managedTables})
   const encrypted=await db.prepare("SELECT a.id,a.sealed_input,a.reconcile_input FROM execution_attempts a JOIN execution_runs r ON r.id=a.run_id WHERE json_extract(r.actor_json,'$.id')=? OR a.custodian_id=?").bind(id,id).all<{id:string;sealed_input:string|null;reconcile_input:string|null}>()
   const inputKeys=encrypted.results.flatMap(row=>[row.sealed_input,row.reconcile_input].flatMap(value=>{const key=value?JSON.parse(value).payloadRef?.key:undefined;return key?[key as string]:[]}))
   const objects=await classifyIdentityObjects(db,bucket,{personId:id,matches:[...new Set(needles.flatMap(needle=>[needle,JSON.stringify(needle).slice(1,-1)]))],label,others,deleting:new Set(inputKeys)})

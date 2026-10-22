@@ -2,14 +2,21 @@ import type {DescriptorRegistry} from '../descriptors.server'
 import type {IdentityPlace} from '../../lifecycle/member-identity-places'
 import {AdmissionError} from '../../admission/errors'
 import {identifier} from '../../admission/sql.server'
+import {storedValidationValues} from '../validation-values.server'
 import type {TrashRow} from './storage.server'
-/** Personal erasure retires the person's own held records in the same admission.
- * Their values stay in canonical columns until that deletion, never a trash copy. */
-export async function trashErasurePlaces(db:D1Database,registry:DescriptorRegistry,personId:string):Promise<IdentityPlace[]>{
- const held=await db.prepare('SELECT * FROM record_trash').all<TrashRow>(),places:IdentityPlace[]=[]
- for(const row of held.results){const d=registry.get(row.app_id,row.entity_id),current=await db.prepare(`SELECT ${identifier(d.versionColumn)} version,${identifier(d.lifecycleColumn)} lifecycle FROM ${identifier(d.table.tableId)} WHERE ${identifier(d.idColumn)}=?`).bind(row.record_id).first<{version:number;lifecycle:string}>()
-  if(current&&(current.version!==row.record_version||current.lifecycle!=='deleted'))throw new AdmissionError('version_conflict','A held trash record changed; resolve its custody before erasure.')
-  places.push({table:d.table.tableId,where:'id=? AND version=? AND lifecycle=\'deleted\'',values:()=>[row.record_id,String(row.record_version)],action:row.actor_id===personId?'delete':'scrub',reason:row.actor_id===personId?'canonical values of their own trashed record':'identity values held in another trashed record'})
+/** Held values stay canonical. Deletion attribution does not confer ownership of
+ * a business record: erase identity-only rows, scrub other held identity values,
+ * and anonymize the deleter without making a retained row visible. */
+export async function trashErasurePlaces(db:D1Database,registry:DescriptorRegistry,person:{id:string;name:string;email:string}):Promise<IdentityPlace[]>{
+ const held=await db.prepare('SELECT * FROM record_trash').all<TrashRow>(),places:IdentityPlace[]=[],identity=new Set([person.id,person.name,person.email])
+ for(const row of held.results){
+  const d=registry.get(row.app_id,row.entity_id),current=await db.prepare(`SELECT * FROM ${identifier(d.table.tableId)} WHERE ${identifier(d.idColumn)}=?`).bind(row.record_id).first<Record<string,unknown>>()
+  if(current&&(current[d.versionColumn]!==row.record_version||current[d.lifecycleColumn]!=='deleted'))throw new AdmissionError('version_conflict','A held trash record changed; resolve its custody before erasure.')
+  const values=current?Object.values(await storedValidationValues(db,d,current)):[],personal=values.some(v=>typeof v==='string'&&identity.has(v)),identityOnly=personal&&values.every(v=>v===null||Array.isArray(v)&&v.length===0||typeof v==='string'&&identity.has(v))
+  places.push({table:d.table.tableId,where:'id=? AND version=? AND lifecycle=\'deleted\'',values:()=>[row.record_id,String(row.record_version)],action:identityOnly?'delete':'scrub',reason:identityOnly?'identity-only canonical values held in trash':'identity values held in a business record in trash'})
+  const where='app_id=? AND entity_id=? AND record_id=?',marker={table:'record_trash',where,values:()=>[row.app_id,row.entity_id,row.record_id]}
+  if(identityOnly||!current)places.push({...marker,action:'delete',reason:'trash marker for a permanently erased record'})
+  else if(row.actor_id===person.id)places.push({...marker,action:'set',columns:['actor_id'],set:()=>({actor_id:null}),reason:'anonymized deletion attribution; retained business values stay in trash'})
  }
  return places
 }

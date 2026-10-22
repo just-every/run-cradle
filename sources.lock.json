@@ -8390,11 +8390,11 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "c0041720b6e5b46fa7228cfb9fc7f152f89f311106be984a02fc4cf666aeca48",
+      "sha256": "5b73a10f1f26e3792c5ec6854b1541a0c3951d976f976a11ab4cf6b932d963ed",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
-      "sha256": "e327baa7c25a356eb9a44c05dfbc8d515fd85751f12d9e8aea0cd655f99aeebc",
+      "sha256": "a1c6d5177c5579bf8fff1f759c3746245162d6a0ea362dc90f82eae450294283",
       "executable": false
     },
     "src/domains/lifecycle/other-identities.server.ts": {
@@ -9315,6 +9315,10 @@
     },
     "src/domains/records/trash/authority.server.ts": {
       "sha256": "4cef28d1a281c0ebc680c4d7766f124219852196e39b8dffe6639b9394b10d53",
+      "executable": false
+    },
+    "src/domains/records/trash/erasure.server.ts": {
+      "sha256": "fb5793121484e60464cfafc96045015df41af4dbe9bd26e418bac3ec84a5c283",
       "executable": false
     },
     "src/domains/records/trash/http.server.ts": {
