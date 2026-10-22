@@ -1,4 +1,5 @@
 import {companyWorkbookBrowser} from './helpers/company-workbook-browser.mjs'
+import {fileStoresBrowser} from './helpers/file-stores-browser.mjs'
 import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -12,7 +13,7 @@ import { accessibilityContextOptions, accessibilityWidths } from './helpers/acce
 import { uploadSet, overrideType, chooseTarget, chooseMissingTarget, chooseLookup, submitImport, downloadStatus, verifyPreviewLists } from './helpers/base-import-browser.mjs'
 import {freePort} from './helpers/free-port.mjs'
 const output = path.resolve(process.env.CRADLE_IMPORT_OUTPUT ?? process.env.TMPDIR ?? '.private/base-import-browser')
-contract('PERM-007 INTEG-003 RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume and undo on desktop and phone', async () => {
+contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume and undo on desktop and phone', async () => {
   await mkdir(output, { recursive: true })
   let runtime, browser
   const receipts = []
@@ -25,6 +26,7 @@ contract('PERM-007 INTEG-003 RECORDS-005', 'CSV-set import preview, guarded adop
         await context.addCookies(browserCookies(runtime.cookie,runtime.origin))
         const page = await context.newPage(), journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
         await companyWorkbookBrowser(page,{...journey,companyOutput:name=>path.join(output,`${name}-${width}.png`)},runtime,width)
+        await fileStoresBrowser(page,runtime,width,output)
         const consoleErrors = [], externalRequests = [], batchCheckpoints = []
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()) })
         page.on('request', request => { if (new URL(request.url()).origin !== runtime.origin) externalRequests.push(request.url()) })

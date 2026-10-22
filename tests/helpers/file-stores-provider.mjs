@@ -15,7 +15,7 @@ export function fileStoresProvider() {
       const form = async () => new URLSearchParams(await request.clone().text())
       if (request.method !== 'GET' && !u.pathname.endsWith('/token') && !reads.has(u.pathname)) writes.push(`${request.method} ${u.origin}${u.pathname}`)
       if (u.pathname.endsWith('/token')) {
-        assert.equal((await form()).get('code'), 'synthetic-cradle-code-1')
+        assert.ok(['synthetic-cradle-code-1', 'synthetic-cradle-code-2'].includes((await form()).get('code')))
         const body = { access_token: 'synthetic-cradle-access-1', refresh_token: 'synthetic-cradle-refresh-1', token_type: 'bearer', expires_in: 3600 }
         const scope = u.hostname === 'oauth2.googleapis.com' ? storeScopes['google-drive'] : u.hostname === 'login.microsoftonline.com' ? storeScopes.onedrive : u.hostname === 'api.dropboxapi.com' ? storeScopes.dropbox : null
         return Response.json(scope ? { ...body, scope: scope.join(' ') } : body)

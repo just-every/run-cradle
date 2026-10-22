@@ -10,6 +10,8 @@ No real provider call or consent was used. Every journey ran in the emitted Work
 
 Before (pristine main `0d77622`): `POST /api/v1/records/schema-preview` with an attachment field is refused ("this builder does not support this type"), and `/api/v1/records/file-stores/*` does not exist. After: the journey above passes.
 
+Browser: `tests/ui-base-import.mjs` (`[PERM-007 INTEG-003 FILE-002 RECORDS-005]`, helper `tests/helpers/file-stores-browser.mjs`) opens the chooser from the attachment cell, attaches a Google Drive file, saves, and shows the reference with its on-demand thumbnail at 1440 and 390 (no serious axe finding, no horizontal overflow, nothing copied into private file custody). Screenshots: `file-store-*-1440.png` and `-390.png`.
+
 ## Scopes and why
 
 | Store | Scope asked | Why |
@@ -36,4 +38,4 @@ Before (pristine main `0d77622`): `POST /api/v1/records/schema-preview` with an 
 
 ## Gap (named in CONTRACT.md and ACCEPTANCE.md)
 
-Keep a copy, base JSON export and return of attachment fields, archive restore and attacher erasure journeys, the browser proof at 1440 and 390, and a Chest picker against Chest's API are not built or not run. See the Status of FILE-002.
+Keep a copy, base JSON export and return of attachment fields, archive restore and attacher erasure journeys, and a Chest picker against Chest's API are not built or not run. See the Status of FILE-002.

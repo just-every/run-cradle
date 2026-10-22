@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "94da1b3eaece7aec07db537cabe713a416d25fd3cd4756d7cc763080c91059fb",
+      "sha256": "3bb12baa64732eb0b333d1b62b46afe065f602fa3bbaacf4492b6b42a6826813",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "cf8bd527e8b8b6dec52882e4eaf093a98a718ef32e4b5ad67cd1f2a97882c515",
+      "sha256": "16357cefc61758896e0c744f323140a7c01e00e8a3a7ac392f4de522756571dd",
       "executable": false
     },
     "DEMO.md": {
@@ -3038,7 +3038,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "ccc36945008e9d02298775e77e735495bf6152d4fd754dc5233bd154b4a47fc8",
+      "sha256": "b7b6719624053c8727edf3a65ca14a312cb99883898fa3dfa59aa970511b9f7a",
       "executable": false
     },
     "docs/company-identity.md": {
@@ -3370,7 +3370,7 @@
       "executable": false
     },
     "docs/contract/FILE-002/README.md": {
-      "sha256": "10520a180e7bf030f9618a7e09df6f3746c28d0e9c92d2593a1c7cec0f017b3e",
+      "sha256": "76e522b5f261f774239dc8b457a50e03e3c4452628f972eeef83b950c46f50c0",
       "executable": false
     },
     "docs/contract/IFACE-006/template-assets-schema-1440.png": {
@@ -3491,6 +3491,10 @@
     },
     "docs/contract/IFACE-006/template-venues-390.png": {
       "sha256": "2aecea1c45cb0ea07c80377851d77e74f6f719a747a65d7db656e9b89cf1e27b",
+      "executable": false
+    },
+    "docs/contract/INTEG-003/README.md": {
+      "sha256": "a016a9ddca9499d5246acc17b8fabf195e50732a8eddea147b876a676cc48940",
       "executable": false
     },
     "docs/contract/INTEG-003/sheets-import-controls-1440.png": {
@@ -10118,7 +10122,7 @@
       "executable": false
     },
     "src/ui/records/record-detail-page.tsx": {
-      "sha256": "c09f38a940f1ef31dd57b7fd9ceb4c71e1339e0e255ffefee3c232ef1edb0531",
+      "sha256": "abe4278d4ecf57b736901a7c530a86815298532ef1193d48910b49653ea69706",
       "executable": false
     },
     "src/ui/records/record-editor.tsx": {
@@ -10290,7 +10294,7 @@
       "executable": false
     },
     "src/ui/records/store-chooser.tsx": {
-      "sha256": "90d7eb5e4bdfcf282230410ebb512e9f56331c9f944b4f306d2c0bb7486bc14e",
+      "sha256": "6d3b255e36b27e6f7337280e208596d2f469b931c8f7d419df926b7f0e8e8440",
       "executable": false
     },
     "src/ui/records/store-reference-view.tsx": {
@@ -11070,7 +11074,7 @@
       "executable": false
     },
     "tests/helpers/company-workbook-runtime.mjs": {
-      "sha256": "20dae5488574e68e61bb7825bb2e554c403feef5ac1db6e1823078679a3b6367",
+      "sha256": "2717a8a4c462ed0d68b2b6cc905aa0bb750dcad1b6a171f93507318006aca67c",
       "executable": false
     },
     "tests/helpers/compiled-worker.mjs": {
@@ -11126,7 +11130,7 @@
       "executable": false
     },
     "tests/helpers/file-stores-provider.mjs": {
-      "sha256": "7aeb2688e5f8bd2c606036b9a65826e4c4f489c4d6a3eb89e3c6b107940476de",
+      "sha256": "ba23485fdcc1d247d238261ff1bc44e23e28c0a19e7ec049c8e7fa2ca0e17a18",
       "executable": false
     },
     "tests/helpers/fixture-mail.mjs": {
@@ -12090,7 +12094,7 @@
       "executable": false
     },
     "tests/ui-base-import.mjs": {
-      "sha256": "c7ce185094538f8a6bae0199ad9948d63bfff652b493468a127068c9283b78df",
+      "sha256": "292c3717872cfb810c1c862b4b944d6acfb2fcd600bdd7b664dcf918e6c0bb27",
       "executable": false
     },
     "tests/ui-base-undo.mjs": {
