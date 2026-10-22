@@ -1,0 +1,19 @@
+# Base trash (partial)
+
+No real provider call or consent was used. Canonical record rows and metadata definitions stay in their original storage. A marker holds the deletion time, original lifecycle, version/schema fences and inverse unlink operations. Ordinary read policy excludes marked records even when archived rows are requested. Base exports omit deleted records, saved views and forms.
+
+`GET /api/v1/records/trash?appId=<base>` lists at most 200 records plus 200 of each metadata kind that the current human session may restore. `POST /api/v1/records/trash/restore` accepts `{commandId,appId,entityId,recordId,version,kind}` (`record`, `view` or `form`). Record and view deletion use their existing commands. `POST /api/v1/records/trash/forms/<id>/delete` accepts `{commandId,appId,version}`. Restore rechecks current deletion authority. A stale version, schema change, missing link target or reused metadata name refuses restoration before mutation. The Settings Trash list uses these same doors.
+
+Retention is 30 days from deletion. The scheduled clock seam claims at most one purge run per kind per hour. Simple record and metadata purges are audited irreversible admissions. A record with files/source custody or a multi-record cascade is visibly held for further custody work, rather than silently dropping its dependencies. These cases remain acceptance gaps.
+
+Installation archives carry canonical held rows, markers and original deletion times. Restore does not reset their clock. Person erasure dynamically registers held canonical records with member identity erasure: identity-only rows are removed with their marker; identity values in retained business records are scrubbed and deletion attribution is anonymized. Erasure is irreversible and bypasses restore. Public archive/restore and broader erasure matrices remain unproven.
+
+Evidence: `tests/records-manual-release.mjs` — `[SNAP-002] RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules`, extended by `tests/helpers/record-trash-journey.mjs`. The unchanged registration proves record disappearance, JSON omission, current-policy refusal, restoration of the same identity, values/link/history and moved-clock purge. Browser evidence is `tests/helpers/record-trash-browser.mjs`, invoked by the existing records builder journey.
+
+## Gap
+
+Fields and tables have no trash/restore implementation. Interfaces: no deletable interface object exists (IFACE-001); the kind is proven when one does. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, populated released-version upgrades, archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
+
+## Published deletion override — RELEASE-ROUND DEBT
+
+The existing record deletion dialog says “Erasure has been requested. This deletion cannot be undone.”, “This permanently deletes the record. Review affected relationships before continuing. There is no undo.” and “I understand this record and any listed dependent records will be permanently deleted.” Its action is labelled “Permanently delete”. These published words are now overridden for ordinary record deletion: deletion hides the canonical record and retains it in Trash for 30 days, with current-authority restoration and audited eventual purge. BASE-DATA-003 erasure remains irreversible and bypasses Trash. The dialog itself is outside this round's named UI scope and is left for an owner-scoped follow-up; release files are unchanged. Clauses: SNAP-002, RECORDS-002, BASE-DATA-003.
