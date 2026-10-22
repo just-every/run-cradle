@@ -30,6 +30,8 @@ export async function changeSubscriptionsJourney(h,edge){
  let cursor=subscription.cursor,items=[],more=true
  while(more){const part=(await h.request(route(cursor,1),{secret:key.secret})).data;items.push(...part.items);cursor=part.cursor;more=part.hasMore}
  assert.deepEqual(items,page.items,'Paging has no gaps or duplicates')
+ const later=(await h.request(route(page.cursor),{secret:key.secret})).data
+ assert.deepEqual(later.items.map(i=>i.recordId),[(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/query`,{method:'POST',body:{limit:20}})).data.items.find(r=>r.fields[h.nameId].value==='synthetic-cradle-later-1').id])
  const current=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${second.record.ref.recordId}`)).data.record
  await h.patch(current,{[h.statusId]:null});await tick()
  assert.equal(edge.received.filter(r=>r.path==='/changes').length,4,'Saving an unchanged value produces no ping')

@@ -45,7 +45,7 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    const requested=input.through?await codec.decode(input.through):null
    if(requested&&!belongs(requested.binding,id))throw new AuthorityError('validation','Cursor belongs to another subscription.',400)
    const cursorHash=await digest(input.cursor)
-   await db.prepare('INSERT INTO record_change_windows(cursor_hash,subscription_id,through_sequence,captured_at) SELECT ?,?,MIN(COALESCE(?,MAX(change_sequence),0),COALESCE(MAX(change_sequence),0)),? FROM admission_audit ON CONFLICT(cursor_hash) DO NOTHING').bind(cursorHash,id,requested?.offset??null,now).run()
+   await db.prepare('INSERT INTO record_change_windows(cursor_hash,subscription_id,through_sequence,captured_at) SELECT ?,?,MIN(COALESCE(?,MAX(change_sequence),0),COALESCE(MAX(change_sequence),0)),? FROM admission_audit WHERE 1 ON CONFLICT(cursor_hash) DO NOTHING').bind(cursorHash,id,requested?.offset??null,now).run()
    const window=(await db.prepare('SELECT through_sequence,captured_at FROM record_change_windows WHERE cursor_hash=? AND subscription_id=?').bind(cursorHash,id).first<{through_sequence:number;captured_at:number}>())!
    const upper={binding:id,offset:window.through_sequence,revision:window.captured_at}
    if(upper.offset<from.offset)throw new AuthorityError('validation','Invalid change window.',400)
