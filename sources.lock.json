@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "16357cefc61758896e0c744f323140a7c01e00e8a3a7ac392f4de522756571dd",
+      "sha256": "39e4b8803d158cfc290ed85adefbf9a8eca25c23a28ca9585b84722db80c6439",
       "executable": false
     },
     "DEMO.md": {
@@ -3367,6 +3367,30 @@
     },
     "docs/contract/FIELD-005/unshared-view-refusal-390.png": {
       "sha256": "e7ee9d1eb9677bf11c8a805a4471923cd923bfc6b282e0a3161c29c4c51d6028",
+      "executable": false
+    },
+    "docs/contract/FILE-002/file-store-cell-attached-1440.png": {
+      "sha256": "e2ac2f5cc696975ebba486ee900c9d1d485018ae6c4b2ac80a6df19207d45950",
+      "executable": false
+    },
+    "docs/contract/FILE-002/file-store-cell-attached-390.png": {
+      "sha256": "1aa02f3af710aa01b93ac8876a480939a059ba4ae7cb1bfe68767addefcb4339",
+      "executable": false
+    },
+    "docs/contract/FILE-002/file-store-cell-empty-1440.png": {
+      "sha256": "048bd4b2ea09a352a97fe29bc8bf3c98a11f12e3b1dfd87f655dae04644e5866",
+      "executable": false
+    },
+    "docs/contract/FILE-002/file-store-cell-empty-390.png": {
+      "sha256": "2442a5bb6fda90120b553eaa26e415d3f1efbf87b81ecd78a14ebb504dc894de",
+      "executable": false
+    },
+    "docs/contract/FILE-002/file-store-chooser-1440.png": {
+      "sha256": "8dbd5b6549a40c50a20adbf5a3e0fe8ff7a1b3cdca3fb26a819f9d7f04575347",
+      "executable": false
+    },
+    "docs/contract/FILE-002/file-store-chooser-390.png": {
+      "sha256": "1f85f0a22a7ccaa93d60ce4fc84fcd1e2e6dd658cf7165fb325105d3aa466d2a",
       "executable": false
     },
     "docs/contract/FILE-002/README.md": {
@@ -11123,6 +11147,10 @@
     },
     "tests/helpers/explicit-launch-member.mjs": {
       "sha256": "96aae6830c9f98512ecfb0a52c6778ce6d5f8ab45ac513ed4e9d717ac2079076",
+      "executable": false
+    },
+    "tests/helpers/file-stores-browser.mjs": {
+      "sha256": "56766cd15ef477317d27b9fc1fefc83e5c7075c6ec98bbad5c8efa57f6dc2e91",
       "executable": false
     },
     "tests/helpers/file-stores-journey.mjs": {
