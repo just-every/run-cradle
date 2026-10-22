@@ -63,8 +63,11 @@ on every fetch, so a changed policy or row can change readable payloads on repla
 
 `record.restore` is delivered as `kind: "restore"` in audit commit order, with
 the normal change metadata, recordId, entityId and changes. Because restore
-retains no separate audit delta, its create-like `changes` are the current
-readable snapshot, with null before cells and projected current after cells.
+retains no separate audit delta, its create-like `changes` use the latest retained
+audit after-cell per field before that restore, with null before cells; later
+edits cannot rewrite that payload. No second value store is created. A readable
+restore with no retained readable field deltas still yields a restore item with
+an empty changes list. Every retained cell is projected under current authority.
 Current unreadable rows produce no restore payload or ping; unreadable fields
 are omitted, and relation/file cells use the ordinary projection. A subscriber
 told of a delete receives the readable restore on its next range. View membership

@@ -5,6 +5,7 @@ import {assertCurrentScopeAuthority} from '../authority/guards.server'
 import {matchesFilter} from '../records/evaluated-query'
 import type {Ref,Cell} from '../../contracts/primitives'
 import type {ChangeItem} from './schema'
+import {restoredCells} from './restore.server'
 import type {Subscription,Change} from './storage.server'
 
 export function subscriptionAccess(db:D1Database,policy:PolicyPort,services:ReturnType<typeof createRecordServices>){
@@ -42,11 +43,11 @@ export function subscriptionAccess(db:D1Database,policy:PolicyPort,services:Retu
   try{
    const current=await services.reader.record(ctx,scope,ref)
    if(access.view){const descriptor=services.descriptors.get(ref.appId,ref.entityId),numeric=new Set(descriptor.schema.fields.filter(f=>['number','currency','percent','duration'].includes(f.type)).map(f=>f.id));if(!matchesFilter(current,access.view.filter,numeric,ctx.now))return null}
-   // Restore has no retained field delta: project its current readable snapshot,
-   // including the usual relation/file protections, without a second value store.
-   const changes=restoring?Object.entries(current.fields).map(([fieldId,after])=>({fieldId,before:{state:'value',value:null} as Cell,after})):retained
+   // Keep restore values at their commit while current authority still narrows
+   // every fetch and ordinary relation/file projection protects retained cells.
+   const changes=restoring?await restoredCells(db,ref,change.change_sequence):retained
    const fields=changes.filter(c=>scope.readableFieldIds.includes(c.fieldId)&&(!access.view||access.view.fields.includes(c.fieldId)))
-   if(!fields.length)return null
+   if(!fields.length&&!restoring)return null
    const projected=await Promise.all(fields.map(async c=>({fieldId:c.fieldId,before:await services.reader.projectCell(ctx,scope,ref,c.fieldId,c.before),after:await services.reader.projectCell(ctx,scope,ref,c.fieldId,c.after)})))
    await assertCurrentScopeAuthority(db,ctx,scope)
    return {id:change.id,sequence:change.change_sequence,kind:restoring?'restore':change.action==='record.create'?'create':'update',recordId:ref.recordId,entityId:ref.entityId,changes:projected}
