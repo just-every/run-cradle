@@ -79,9 +79,49 @@ jobs:
             ~/.cache/ms-playwright
           key: seed-ubuntu24-${{ runner.arch }}-browser-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
       - run: pnpm install --frozen-lockfile --ignore-workspace
-      - name: Install Chromium and system libraries
+      - name: Install Chromium system libraries
         if: matrix.browser
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          # Verify 39857704532 spent 9m30s of verify-launch-doors' 12-minute cap
+          # in one apt-get download from the runner's Azure mirror, with the
+          # journeys never reaching their end. A stalled mirror path does not
+          # recover on the same host, so attempt 1 uses the Azure mirror and
+          # attempts 2 and 3 use other mirrors serving the same Ubuntu-signed
+          # archive (apt still verifies every Release signature). Keep the
+          # mirror list in step with Base's verify.yml (runeditrun/base).
+          mirrors=(http://azure.archive.ubuntu.com/ubuntu http://mirrors.edge.kernel.org/ubuntu http://us-east-1.ec2.archive.ubuntu.com/ubuntu)
+          # Keep downloaded archives, including partial ones, across attempts.
+          sudo mkdir -p /var/tmp/cradle-apt/archives
+          cat <<'APT' | sudo tee /var/tmp/cradle-apt/apt.conf > /dev/null
+          Dir::Cache::archives "/var/tmp/cradle-apt/archives";
+          APT::Keep-Downloaded-Packages "true";
+          APT::Update::Error-Mode "any";
+          Acquire::Retries "2";
+          Acquire::http::Timeout "30";
+          Acquire::https::Timeout "30";
+          APT
+          started=$SECONDS
+          for attempt in 1 2 3; do
+            mirror=${mirrors[attempt - 1]}
+            sudo sed -i -E "s@^(URIs:[[:space:]]*)https?://(([a-z0-9.-]+\.)?archive\.ubuntu\.com|security\.ubuntu\.com|mirrors\.edge\.kernel\.org)/ubuntu/?@\1${mirror}/@" /etc/apt/sources.list.d/ubuntu.sources
+            printf 'Chromium apt: libraries attempt %s/3 (60s deadline; mirror %s)\n' "$attempt" "$mirror"
+            if sudo env "PATH=$PATH" APT_CONFIG=/var/tmp/cradle-apt/apt.conf timeout --kill-after=5s 60s bash -ec '
+              dpkg --configure -a
+              ./node_modules/.bin/playwright install-deps chromium
+            '; then
+              printf 'Chromium apt: libraries complete (attempts=%s mirror=%s seconds=%s)\n' "$attempt" "$mirror" "$((SECONDS - started))"
+              exit 0
+            else
+              status=$?
+              printf 'Chromium apt: libraries attempt %s/3 failed (mirror %s, exit %s, seconds=%s)\n' "$attempt" "$mirror" "$status" "$((SECONDS - started))" >&2
+            fi
+            if (( attempt < 3 )); then sleep "$((attempt * 2))"; fi
+          done
+          printf 'Chromium apt: libraries failed after 3 attempts (exit %s; 60s per attempt; seconds=%s). Inspect the apt download log.\n' "$status" "$((SECONDS - started))" >&2
+          exit 1
+      - name: Install Chromium
+        if: matrix.browser
+        run: pnpm exec playwright install chromium
       - name: Reserve disk for native runtime journeys
         run: |
           free_kib() { df -Pk "$GITHUB_WORKSPACE" | awk 'END { print $4 }'; }
