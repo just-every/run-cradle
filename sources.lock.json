@@ -10577,6 +10577,10 @@
       "sha256": "b781d0962a6f9d87a95d5bfe2ad1a0b96a19c04ac8bb267c87ca6ce64831a101",
       "executable": false
     },
+    "src/ui/settings/trash-panel.tsx": {
+      "sha256": "496c1b61fe1033f856985fb9d2ad56b8f761289b04b65dc282e771f9e7d5b43c",
+      "executable": false
+    },
     "src/ui/settings/usage-panel.tsx": {
       "sha256": "61d1b5f57244c0a4872e4c1d82c413cf5de03eb33791f454c606490d9a680f8c",
       "executable": false
@@ -12222,7 +12226,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "b9eb4093f20181aa16698386d86e742721c45d1b49ab08522fce0c7d3dbcfe7f",
+      "sha256": "a8bf31aaab86f89074adb83f630c717d2fb8bcb04a4410fc4a543e452ab380d1",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
