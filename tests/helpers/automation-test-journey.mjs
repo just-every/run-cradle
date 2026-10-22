@@ -41,6 +41,7 @@ export async function automationTestJourney(h,delivered,setMailStatus){
  await h.request(route,{method:'POST',status:409,body:{...input,commandId:createUlid(),live:{previewId:tested.id,effects:[]}}})
  // The confirmed live test uses the supported three actions; no real webhook provider is used.
  const liveAutomation=await save({...definition,actions:definition.actions.slice(0,3)},automation.id,automation.version)
+ await h.request(route,{method:'POST',status:409,body:input})
  const dry=(await h.request(route,{method:'POST',body:{...input,commandId:createUlid()}})).data
  const live=(await h.request(route,{method:'POST',body:{...input,commandId:createUlid(),live:{previewId:dry.id,effects:dry.confirmationEffects}}})).data
  assert.equal(live.mode,'live');assert.equal(live.state,'Complete')
