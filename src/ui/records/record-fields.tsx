@@ -10,6 +10,7 @@ import type { Field } from '../../domains/records/contracts'
 import type { Member } from '../../domains/authority/contracts'
 import { useResource } from '../shared/api'
 import { money } from '../shared/presentation'
+import { decimal, format } from '../../domains/records/exact'
 
 const toneByMeaning: Record<string, ChipTone> = { high: 'coral', blocked: 'coral', critical: 'coral', lost: 'coral', medium: 'butter', 'in progress': 'butter', qualified: 'butter', low: 'mint', ready: 'mint', done: 'mint', won: 'mint', planning: 'lilac', new: 'lilac' }
 const toneCycle = ['lilac', 'butter', 'mint', 'coral'] as const
@@ -20,6 +21,8 @@ export function chipTone(field: Field, optionId: string): ChipTone {
   const label = index >= 0 ? field.options![index]!.label.trim().toLowerCase() : ''
   return toneByMeaning[label] ?? toneCycle[Math.max(index, 0) % toneCycle.length]!
 }
+/** A stored fraction shown as a percentage: the exact decimal moves two places and the stored value is not touched. */
+export function percentText(value: string) { try { const exact = decimal(value); return `${format({ units: exact.units * 100n, scale: exact.scale })}%` } catch { return value } }
 export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undefined; field?: Field; appId?: string; record?: Ref & { fieldId: string } }) {
   if (!cell) return <span className="cr-muted">Not recorded</span>
   if (cell.state === 'redacted') return <span className="cr-muted">{cell.reason === 'erased' ? 'Erased' : 'Restricted'}</span>
@@ -35,6 +38,7 @@ export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undef
   if (field?.type === 'select' || field?.type === 'multi_select' || field?.type === 'computed' && field.resultType === 'select') { const ids = Array.isArray(value) ? value : [value]; return <>{ids.map((id, index) => <span className={`cr-record-chip cr-record-chip--${typeof id === 'string' ? chipTone(field, id) : 'lilac'}`} key={index}>{index ? <span className="cr-sr-only">, </span> : null}{field.options?.find(option => option.id === id)?.label ?? <span className="cr-error">Option unavailable</span>}</span>)}</> }
   if ((field?.type === 'person' || field?.type === 'computed' && field.resultType === 'person') && typeof value === 'string') return appId ? <PersonName appId={appId} id={value} /> : <span className="cr-error">Person lookup unavailable</span>
   if (field?.type === 'computed' && typeof value === 'string') return <span className="cr-derived">{value}</span>
+  if (typeof value === 'string' && field?.numberFormat === 'percent') return <>{percentText(value)}</>
   if (typeof value === 'string') return <>{value}</>
   if ('minor' in value) return <>{money(value as Money).replace('USD ', '$')}</>
   const values = Array.isArray(value) ? value : [value]

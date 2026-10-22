@@ -23,6 +23,14 @@ export async function workbookJourney(){const provider=sheetsProvider(),h=await 
   const exported=await d.call('/api/v1/records/export-xlsx',{...identity,viewId:view.id,query:{}}),sheets=readWorkbook(Buffer.from(exported.content,'base64'),'view.xlsx');assert.deepEqual(sheets[0].headers,['Approved','Amount','Order']);assert.equal(sheets[0].rows[0][2].value,'synthetic-cradle-4');assert.equal(sheets[0].rows[0][0].value,true)
   const base=await d.call('/api/v1/records/base-export',{appId:identity.appId,format:'xlsx'});assert.equal(readWorkbook(Buffer.from(base.content,'base64'),'base.xlsx').length,2)
   const reimport=await d.call('/api/v1/records/base-import/preview',d.form(Buffer.from(base.content,'base64'),'base.xlsx'));assert.equal(reimport.schemaDraft.tables[0].fields.find(f=>f.label==='Amount').type,'number')
+  // A percent field leaves as a numeric cell with a percentage format and returns as a percent field, value unchanged.
+  const rates=writeWorkbook([{name:'Rates',headers:['Name','Rate'],rows:[[cell('synthetic-cradle-r1'),{value:'0.25',type:'number',format:'percentage'}],[cell('synthetic-cradle-r2'),{value:'0.075',type:'number',format:'percentage'}]]}])
+  const ratePreview=await d.call('/api/v1/records/base-import/preview',d.form(rates,'rates.xlsx')),rateField=ratePreview.schemaDraft.tables[0].fields.find(f=>f.label==='Rate');assert.equal(rateField.type,'number');assert.equal(rateField.numberFormat,'percent','A percentage-formatted column is a percent field')
+  await d.adopt(rates,'rates.xlsx',ratePreview)
+  const rateExport=await d.call('/api/v1/records/base-export',{appId:ratePreview.identities.appId,format:'xlsx'}),rateSheet=readWorkbook(Buffer.from(rateExport.content,'base64'),'rates.xlsx')[0]
+  assert.deepEqual(rateSheet.rows.map(r=>[r[1].value,r[1].type,r[1].percent]).sort(),[['0.075','number',true],['0.25','number',true]],'Percent values are unchanged numeric cells with a percentage format')
+  const returned=await d.call('/api/v1/records/base-import/preview',d.form(Buffer.from(rateExport.content,'base64'),'rates-return.xlsx'));assert.equal(returned.schemaDraft.tables[0].fields.find(f=>f.label==='Rate').numberFormat,'percent','The export returns as a percent field')
+  const rateJson=await d.call('/api/v1/records/base-export',{appId:ratePreview.identities.appId,format:'json'});assert.equal(JSON.parse(rateJson.content).base.tables[0].fields.find(f=>f.label==='Rate').numberFormat,'percent')
   await sheetsJourney(h,d,provider,identity,fields,mapping)
  }finally{await h.close()}
 }

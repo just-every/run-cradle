@@ -1,6 +1,6 @@
 import {unzipWorkbook,bound,reject} from './zip'
-import {xml,elements,children,spreadsheet,relationships,officeRelationships,numberFormat,excelDate} from './xml'
-export type WorkbookCell={value:string|boolean|null;type:'text'|'number'|'date'|'instant'|'boolean';formula?:string}
+import {xml,elements,children,spreadsheet,relationships,officeRelationships,numberFormat,isPercentFormat,excelDate} from './xml'
+export type WorkbookCell={value:string|boolean|null;type:'text'|'number'|'date'|'instant'|'boolean';formula?:string;percent?:true}
 export type WorkbookSheet={name:string;headers:string[];rows:WorkbookCell[][]}
 export function readWorkbook(bytes:Uint8Array,filename:string):WorkbookSheet[]{
  const files=unzipWorkbook(bytes,filename),types=xml(files.get('[Content_Types].xml'),'[Content_Types].xml')
@@ -31,7 +31,7 @@ export function readWorkbook(bytes:Uint8Array,filename:string):WorkbookSheet[]{
     else if(type==='b'){if(!['0','1'].includes(value))reject('Invalid workbook boolean.');result={value:value==='1',type:'boolean'}}
     else if(type==='d'){const instant=new Date(value);if(!Number.isFinite(instant.getTime()))reject('Invalid workbook date.');result={value:/T/.test(value)?instant.toISOString():instant.toISOString().slice(0,10),type:/T/.test(value)?'instant':'date'}}
     else if(type==='e')reject('Workbook contains an Excel error cell. Recalculate and correct it before importing.')
-    else if(value!==''){if(!/^-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value))reject('Invalid workbook number.');const kind=numberFormat(formatId,formats.get(formatId));result={value:kind==='number'?value:excelDate(value,kind,date1904),type:kind}}
+    else if(value!==''){if(!/^-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value))reject('Invalid workbook number.');const kind=numberFormat(formatId,formats.get(formatId));result={value:kind==='number'?value:excelDate(value,kind,date1904),type:kind,...(isPercentFormat(formatId,formats.get(formatId))?{percent:true as const}:{})}}
     else if(formula!==undefined)reject('Formula cell has no cached value. Recalculate and save the workbook in Excel first.')
     cells[column-1]={...result,...(formula!==undefined?{formula}:{})}
    }

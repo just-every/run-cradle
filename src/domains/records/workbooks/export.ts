@@ -6,11 +6,11 @@ import {parseCsv} from '../../portability/csv'
 import {format} from '../exact'
 import {writeWorkbook,type ExportCell} from './write'
 export const workbookMime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-export function typedExportCell(field:Pick<Field,'type'|'resultType'>,value:unknown,display:string):ExportCell{
+export function typedExportCell(field:Pick<Field,'type'|'resultType'|'numberFormat'>,value:unknown,display:string):ExportCell{
  const type=field.resultType??field.type
  if(value===null)return {value:null,type:'text'}
  if(type==='boolean')return {value:!!value,type:'boolean'}
- if(type==='number')return {value:String(value),type:'number'}
+ if(type==='number')return {value:String(value),type:'number',...(field.numberFormat==='percent'?{format:'percentage' as const}:{})}
  if(type==='money'){const money=value as {minor:string;scale:number;currency:string};return {value:format({units:BigInt(money.minor),scale:money.scale}),type:'number',format:'currency',currency:money.currency}}
  if(type==='date'||type==='instant')return {value:String(value),type}
  return {value:display,type:'text'}

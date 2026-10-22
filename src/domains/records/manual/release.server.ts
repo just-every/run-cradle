@@ -18,7 +18,7 @@ import { assertGuards } from '../fence.server'
 import { snapshotViews, prepareViewRemovals, prepareFormRemovals, type ViewSnapshot } from './view-removal.server'
 import { previewRuleViolations } from './rule-preview.server'
 import { validateLinkPickers } from '../link-picker-schema'
-function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,linkPicker,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,resultElementType,readOnly,options,...stored}=physical;return stored}
+function comparableField(field:import('../contracts').Field){const {validation,defaultValue,required,unique,linkPicker,numberFormat,...physical}=field;if(field.type!=='computed')return physical;const {expression,resultType,resultElementType,readOnly,options,...stored}=physical;return stored}
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
 export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[]; policyOwnerId?:string; baseOwnerId?:string }
 /** Whose authority a preview is computed under: `reader` reads every affected table as `ownerId`. */

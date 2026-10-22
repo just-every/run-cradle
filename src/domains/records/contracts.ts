@@ -69,6 +69,8 @@ export type Field = {
         onDelete: 'restrict' | 'unlink' | 'cascade';
     };
     linkPicker?: { searchFieldIds: Id[]; displayFieldIds: Id[]; viewId?: Id };
+    /** Display metadata only: a number shown and exported as a percentage; the stored value is unchanged. */
+    numberFormat?: 'percent';
     expression?: Expr;
     resultType?: Field['type'] | 'array';
     resultElementType?: 'text' | 'url' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'person' | 'relation' | 'attachment';

@@ -6,6 +6,8 @@ export function xml(bytes:Uint8Array|undefined,part:string){if(!bytes)reject('Wo
 export const elements=(node:Document|Element,name:string,namespace=spreadsheet)=>Array.from(node.getElementsByTagNameNS(namespace,name))
 export const children=(node:Element,name:string)=>Array.from(node.childNodes).filter((child):child is Element=>child.nodeType===1&&(child as Element).namespaceURI===spreadsheet&&(child as Element).localName===name)
 export const escapeXml=(value:string)=>value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;')
+/** Excel's built-in 0% and 0.00% formats and any custom code that shows a percent sign. */
+export const isPercentFormat=(id:number,custom:string|undefined)=>[9,10].includes(id)||/%/.test((custom??'').replace(/"[^"]*"|\\.|\[[^\]]*\]/g,''))
 export function numberFormat(id:number,custom:string|undefined){
  const format=(custom??'').replace(/"[^"]*"|\\.|\[[^\]]*\]/g,'').toLowerCase()
  if([14,15,16,17].includes(id)||/[yd]/.test(format))return /[hs]/.test(format)||id===22?'instant':'date'
