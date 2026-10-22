@@ -6,6 +6,8 @@ Whole-table review on 21 October 2026 against public main `d89dcf951aa40995a8182
 
 22 October company/workbook/scale round: PERM-007 is done from emitted-Worker local-provider and lifecycle/archive journeys; INTEG-003 and SCALE-001 remain partial. Recount: 122 done, 61 partial, 27 missing; published 102/9/0 and target/push-further 20/52/27. Earlier unrelated judgements remain as recorded above. No real IdP, Google or hosted run was used.
 
+After the 22 October addition of SCALE-002 as missing (no existing status changes), overall: 122 done, 61 partial, 28 missing of 211; published: 102/9/0 of 111; target and push further: 20/52/28 of 100.
+
 | Clause | Status | Proven behavior | Evidence |
 | --- | --- | --- | --- |
 | SCALE-001 | partial | 250k/table, 500k/base and 50 tables measured at 80 fields (86 physical columns), all diagnostic latency targets met with zero errors; four named beyond-limit refusals. Gap: full-profile CREATE TABLE refused; 500-field storage awaits SCALE-002 and full-profile timings remain unmeasured. Hosted NOT RUN. Reduced-width measurements are diagnostic only. | `scripts/scale/run.mjs`, `docs/contract/SCALE-001/`, ACCEPTANCE.md |
