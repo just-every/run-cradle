@@ -4,13 +4,16 @@ import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
-contract('API-USER-001','owner issues a once-only hashed key; real API reads and scoped writes stop on revoke and issuer policy change',async()=>{
+contract('API-USER-001','[WEBHOOK-USER-002] owner issues a once-only hashed key; real API reads and scoped writes stop on revoke and issuer policy change',async()=>{
  const h=await userAutomationRuntime(18951)
  try {
   const record=(await h.create('Key acceptance')).record
   const issue={commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'Read service',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}
   const issued=(await h.request('/api/user-keys',{method:'POST',status:201,body:issue})).data.key
   assert.ok(typeof issued.secret==='string'&&issued.secret.length>=32)
+  const subscriptions='/api/v1/change-subscriptions'
+  const subscription=(await h.request(subscriptions,{method:'POST',secret:issued.secret,status:201,body:{appId:h.appId,entityId:h.entityId,url:'https://receiver.example.com/changes'}})).data
+  assert.ok(subscription.id)
   const stored=await h.db.prepare('SELECT token_hash,scopes_json FROM authority_credentials WHERE id=?').bind(issued.id).first()
   assert.ok(stored.token_hash&&!stored.token_hash.includes(issued.secret),'The credential stores a digest')
   const listed=(await h.request(`/api/user-keys?appId=${h.appId}`)).data.keys
