@@ -44,12 +44,13 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   const permit=await policy.authorize(ctx,{appId:ref.appId,targetEntityId:ref.entityId,action:'view.preview',expected:[],cost:[],inputHash:hash})
   const claimed=await admission.commit(ctx,{commandId:id,action:'automation.test',appId:ref.appId,canonicalInputHash:hash,permit:{...permit,action:'automation.test'},guards:[guard,recordGuard],mutations:[{kind:'insert',table:tests,row:{id,automation_id:input.id,owner_id:ctx.principal.id,app_id:ref.appId,entity_id:ref.entityId,record_id:record.id,definition_version:binding.definition_version,record_version:record.version,mode,state:'Unknown',created_at:ctx.now,result_json:storedResult(),confirmation_hash:confirmationHash}}],audit:[{action:'automation.test',subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,mode}})
   if(claimed.replay)return narrow((await db.prepare('SELECT result_json FROM record_automation_tests WHERE id=?').bind(id).first<{result_json:string}>())!.result_json)
+  const effectContext={...ctx,causeRunIds:[...(ctx.causeRunIds??[]),id]}
   const run:AutomationRun={id,automation_id:input.id,definition_version:binding.definition_version,subject_id:record.id,state:'Running',definition_json:JSON.stringify({definition,event:{ref,event:input.event,version:record.version}}),cause_run_ids_json:'[]',principal_id:ctx.principal.id,credential_id:null,app_id:ref.appId,entity_id:ref.entityId}
   for(const step of result.steps){if(!preview.trigger.matches||step.state==='Failed')continue;const action=definition.actions[step.position]
    try{
     await authorize()
     if(mode==='live'){
-     const outcome=await effects.execute(ctx,run,{id:step.id,position:step.position,state:'Running',idempotency_key:step.id,started_at:Date.parse(ctx.now),result_json:null},action,scope,trustedPredicate('1'),version,authorize)
+     const outcome=await effects.execute(effectContext,run,{id:step.id,position:step.position,state:'Running',idempotency_key:step.id,started_at:Date.parse(ctx.now),result_json:null},action,scope,trustedPredicate('1'),version,authorize)
      step.state=outcome.state;step.output={preview:step.output,result:outcome.result};if(outcome.errorCode)step.errorCode=outcome.errorCode;if(action.kind==='update'&&outcome.state==='Complete')version=(await reader.record(ctx,scope,ref)).version
     }else if(action.kind==='email'){
      if(!ctx.principal.humanId)throw new AuthorityError('forbidden','A builder email address is required.')

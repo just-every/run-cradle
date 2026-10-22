@@ -33,8 +33,8 @@ export function createAutomationRunStore(db:D1Database) {
      if(!saved)throw new Error('Captured automation definition is unavailable')
      const definition=recordAutomationDefinition.parse(JSON.parse(saved.definition_json))
      const id=await delegationCommandId(event.id,`${ref.id}:${ref.version}`)
-     const ancestors=causes.length?await db.prepare(`SELECT id,automation_id FROM automation_runs WHERE id IN (${causes.map(()=>'?').join(',')})`)
-      .bind(...causes).all<{id:string;automation_id:string}>():{results:[]}
+     const ancestors=causes.length?await db.prepare(`SELECT id,automation_id FROM automation_runs WHERE id IN (${causes.map(()=>'?').join(',')}) UNION ALL SELECT id,automation_id FROM record_automation_tests WHERE id IN (${causes.map(()=>'?').join(',')})`)
+      .bind(...causes,...causes).all<{id:string;automation_id:string}>():{results:[]}
      const suppressed=causes.length>=10||ancestors.results.some(run=>run.automation_id===ref.id)
      const state=suppressed?'Suppressed':'Queued',now=Date.now()
      const snapshot=JSON.stringify({definition,event:{commandId:event.command_id,event:event.event,
