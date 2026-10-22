@@ -8,7 +8,7 @@ Retention is 30 days from deletion. The scheduled clock seam claims at most one 
 
 Installation archives carry canonical held rows, markers and original deletion times. Restore does not reset their clock. Person erasure dynamically registers held canonical records with member identity erasure: identity-only rows are removed with their marker; identity values in retained business records are scrubbed and deletion attribution is anonymized. Erasure is irreversible and bypasses restore. Public archive/restore and broader erasure matrices remain unproven.
 
-Evidence: `tests/records-manual-release.mjs` — `[SNAP-002] RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules`, extended by `tests/helpers/record-trash-journey.mjs`. The unchanged registration proves record disappearance, JSON omission, current-policy refusal, restoration of the same identity, values/link/history and moved-clock purge. Browser evidence is `tests/helpers/record-trash-browser.mjs`, invoked by the existing records builder journey.
+Evidence: `tests/records-manual-release.mjs` — `[SNAP-002] RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules`, extended by `tests/helpers/record-trash-journey.mjs`. The unchanged registration proves record disappearance, JSON omission, current-policy refusal, restoration of the same identity, values/link/history, saved-view and form delete/restore through their read doors, moved-clock purge, and person erasure with zero trash rows and held bytes for an identity-only record. Browser evidence is `tests/helpers/record-trash-browser.mjs`, invoked by the existing records builder journey.
 
 ## Gap
 
