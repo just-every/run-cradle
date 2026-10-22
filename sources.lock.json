@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "6b7870ec6682dc1099ae32a82b4211bc4996f956eef4365b9dd6c593a5884bc5",
+      "sha256": "dcbdabde961317ae1f398dfc7b11d3c1527d7c03def6386c5b45dbc76382d000",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "0fa17e142a0c9ac62c1cc863c38514b4a9e33ca2ea07c5fc0b8dc8298ff1c488",
+      "sha256": "002522b780a03134730168af8606ecf3f474aba1a5bd1a11451c02e1bc1bd388",
       "executable": false
     },
     "DEMO.md": {
@@ -3038,7 +3038,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "9f947980a59135624befc2b9228126911d26aea4ccf66ac9c59e74b08ed56a1b",
+      "sha256": "6f4da49c5e52dc7db43f5da9b62119cd7a9f36acbc98c3914b0ea64fc0cffbc8",
       "executable": false
     },
     "docs/company-identity.md": {
@@ -3697,6 +3697,10 @@
       "sha256": "495f47a972b4e0d1f88996709016be26a2cfc24f57d422a99d0dc3be4baf1b85",
       "executable": false
     },
+    "docs/contract/SCALE-001/diagnostic-80-fields.json": {
+      "sha256": "a577519965bbb5bd635a4417771f8d9685d0bd713bf2b1dbe36abe1090f69fda",
+      "executable": false
+    },
     "docs/contract/SCALE-001/full-profile-refused.json": {
       "sha256": "252b30f0b1cf7a978b92317f6329f8ec001d62a0e1b8e6df3f9b25c66d5cb321",
       "executable": false
@@ -4342,7 +4346,7 @@
       "executable": false
     },
     "docs/measured-scale.md": {
-      "sha256": "39223eb2e3309edec4b8d7c7cf2d7039d535e57b77fb626100c5a77fea4631bf",
+      "sha256": "3dd10b3657a15ea57dcc930f40e48d526806a4391a7874cd774914afdd911f7f",
       "executable": false
     },
     "docs/operating-loops.md": {
@@ -5358,7 +5362,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "5b3461e56ce93e4ab71eaaaefee6e0d069c17e41aa7f8f289762a667e111a29c",
+      "sha256": "fe9fff098a44ca7e2ca499a8b1fba900cf519053eee7b17a568a7eb239c76070",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {

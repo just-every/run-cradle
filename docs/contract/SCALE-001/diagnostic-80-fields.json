@@ -1,0 +1,212 @@
+{
+  "sha": "dc97c8aeb589dafc55332faff51c8bc07234552f",
+  "runId": "local-2026-10-22T00:16:28.481Z",
+  "host": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M1 Max",
+    "logicalCpus": 10,
+    "memoryBytes": 34359738368,
+    "node": "v22.20.0",
+    "release": "25.6.0"
+  },
+  "profile": {
+    "recordsPerTable": 250000,
+    "recordsPerBase": 500000,
+    "fieldsPerTable": 80,
+    "tablesPerBase": 50,
+    "linkedRecords": 10000,
+    "pageSize": 100,
+    "samples": 30,
+    "concurrency": 1,
+    "scope": "diagnostic: 80 fields; NOT the SCALE-001 profile"
+  },
+  "declaredProfile": {
+    "recordsPerTable": 250000,
+    "recordsPerBase": 500000,
+    "fieldsPerTable": 500,
+    "tablesPerBase": 50,
+    "linkedRecords": 10000,
+    "pageSize": 100,
+    "samples": 30,
+    "concurrency": 1
+  },
+  "hosted": "NOT RUN \u2014 authorized stage and credentials are not available",
+  "measurements": [
+    {
+      "name": "grid",
+      "samples": 30,
+      "p50": 17.711209000000963,
+      "p95": 21.5257500000007,
+      "p99": 31.73120899999776,
+      "errorRate": 0,
+      "failures": []
+    },
+    {
+      "name": "filter",
+      "samples": 30,
+      "p50": 20.10983299999498,
+      "p95": 26.01641699999891,
+      "p99": 35.105250000000524,
+      "errorRate": 0,
+      "failures": []
+    },
+    {
+      "name": "sort",
+      "samples": 30,
+      "p50": 86.48949999999604,
+      "p95": 104.74845800000185,
+      "p99": 107.04683400000067,
+      "errorRate": 0,
+      "failures": []
+    },
+    {
+      "name": "group",
+      "samples": 30,
+      "p50": 271.67637500000274,
+      "p95": 277.02195799999754,
+      "p99": 279.3547499999986,
+      "errorRate": 0,
+      "failures": []
+    },
+    {
+      "name": "formula",
+      "samples": 30,
+      "p50": 17.52595800000563,
+      "p95": 22.428374999995867,
+      "p99": 31.680332999996608,
+      "errorRate": 0,
+      "failures": []
+    },
+    {
+      "name": "rollup10000",
+      "samples": 30,
+      "p50": 160.24370900000213,
+      "p95": 175.78820899999846,
+      "p99": 190.3497920000009,
+      "errorRate": 0,
+      "failures": []
+    },
+    {
+      "name": "write",
+      "samples": 30,
+      "p50": 52.32404200000019,
+      "p95": 70.29675000000134,
+      "p99": 87.26495799999975,
+      "errorRate": 0,
+      "failures": []
+    }
+  ],
+  "limits": [
+    {
+      "name": "recordsPerTable",
+      "status": 409,
+      "body": {
+        "error": {
+          "requestId": "01M5GFGCZFQSA9DAC00C3J0D12",
+          "operation": "POST /api/v1/commands/record.create",
+          "code": "capacity_limit",
+          "message": "LIMIT recordsPerTable value 250000 CURRENT 250000",
+          "retry": "after_change"
+        }
+      }
+    },
+    {
+      "name": "recordsPerBase",
+      "status": 409,
+      "body": {
+        "error": {
+          "requestId": "01M5GFGCZZWGDT5MBXJY79B7SD",
+          "operation": "POST /api/v1/commands/record.create",
+          "code": "capacity_limit",
+          "message": "LIMIT recordsPerBase value 500000 CURRENT 500000",
+          "retry": "after_change"
+        }
+      }
+    },
+    {
+      "name": "fieldsPerTable",
+      "status": 400,
+      "body": {
+        "error": {
+          "requestId": "01M5GFGD0C2S6ESQM0B57NWQMC",
+          "operation": "POST /api/v1/records/schema-preview",
+          "code": "validation",
+          "message": "The request did not match its schema.",
+          "retry": "after_change",
+          "issues": [
+            {
+              "path": "tables.0.fields",
+              "message": "LIMIT fieldsPerTable value 500 CURRENT 501. Reduce the base or table before adding more."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "tablesPerBase",
+      "status": 400,
+      "body": {
+        "error": {
+          "requestId": "01M5GFGD0PCWK9SPANZCR0YZSQ",
+          "operation": "POST /api/v1/records/schema-preview",
+          "code": "validation",
+          "message": "The request did not match its schema.",
+          "retry": "after_change",
+          "issues": [
+            {
+              "path": "tables",
+              "message": "LIMIT tablesPerBase value 50 CURRENT 51. Reduce the base or table before adding more."
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "actual": {
+    "tables": 50,
+    "mainFields": 80,
+    "mainRecords": 250000,
+    "baseRecords": 500000
+  },
+  "writeThenRead": true,
+  "targets": [
+    {
+      "name": "grid",
+      "p95TargetMs": 1000,
+      "met": true
+    },
+    {
+      "name": "filter",
+      "p95TargetMs": 1000,
+      "met": true
+    },
+    {
+      "name": "sort",
+      "p95TargetMs": 1000,
+      "met": true
+    },
+    {
+      "name": "group",
+      "p95TargetMs": 1000,
+      "met": true
+    },
+    {
+      "name": "formula",
+      "p95TargetMs": 1000,
+      "met": true
+    },
+    {
+      "name": "rollup10000",
+      "p95TargetMs": 1000,
+      "met": true
+    },
+    {
+      "name": "write",
+      "p95TargetMs": 300,
+      "met": true
+    }
+  ],
+  "completed": true,
+  "executionRunId": "20261022T001607008860Z-heavy-slot-614b2457"
+}

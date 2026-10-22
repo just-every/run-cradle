@@ -22,7 +22,7 @@ Whole-table current-main review: `d89dcf951aa40995a81824a51d4e1a42711056e4` (21 
 | RECORDS-009 — Record templates and duplicate record | Partial | Duplicate journey, with and without links, where a field the operator cannot write is left empty. A template is applied from the grid and from an automation, and it creates its child records in one audited write. |
 | APP-SCOPE-001 — Explicit application scope | Done | Repeated setup and legacy mapping preserve explicit scopes and revocations. |
 | OWN-001 — Owned installation without seat charges | Done | Installer and whole-installation archive round trip on emitted workerd/D1/R2; Settings usage view. **Current evidence:** `tests/rer-retained-archive.mjs` and `tests/ui-launch-operator-doors.mjs` run in push CI. Installer/full CLI round-trip journeys remain nightly/release-tier; no fresh stranger or release acceptance is added. |
-| SCALE-001 — Operational scale | Partial | Declared load profile run against emitted workerd/D1 recording p50/p95/p99 and error rate, then an authorized hosted run. |
+| SCALE-001 — Operational scale | Partial | `scripts/scale/run.mjs` and `docs/contract/SCALE-001/`: local 80-field diagnostic measured, full 500-field profile refused before timing by the 100-physical-column D1 bound. Four beyond-limit HTTP refusals and write-then-read passed. Gap: wide-field storage, all timings at the full declared profile, and authorized hosted run NOT RUN. See measured results below; reduced-width results do not earn full-profile acceptance. |
 
 ### Fields, calculations and attachments
 
@@ -384,3 +384,24 @@ RECORDS-005 and RECORDS-006 cover reviewed multi-table import and portable base 
 Desktop and phone browser journeys pass upload, mapping review, guarded adoption, progress/report, linked chips and lookup, JSON/CSV downloads, reviewed CSV return and undo, with no horizontal overflow, serious/critical axe findings, console errors or external requests. CSV correspondence accepts no choices on load. Explicit acceptance selects distinct duplicate-primary candidates and preserves typed nulls; raw resolved/unresolved/ambiguous accounting stays separate. The unchanged recorded API edge expectation retains all nine links, including the selected distinct Twin. Ordinary CSV without accepted correspondence still exposes its eight-resolved/one-ambiguous loss boundary. These flows are wired into `pnpm verify`.
 
 Base-level round trips do not prove whole-installation restoration. The Data lifecycle row now records its separately measured local archive and recovery clauses. Hosted, real-account, universal erasure, catalog publication and release acceptance remain pending. See [importing](docs/importing.md) and [leaving and returning](docs/leaving-cradle.md).
+
+
+## SCALE-001 measured results — 22 October 2026
+
+The full declared profile remains 250,000 records in one table, 500,000 in one base, 500 fields in one table and 50 tables in one base. Run `20261022T000520795495Z-heavy-slot-f105328a`, source `15b0403a762f32fccb4b03bb8c668efd9a1fc9bc`, refused the 500-field table with `D1_ERROR: too many columns` before measuring. [Raw failure](docs/contract/SCALE-001/full-profile-refused.json). Cloudflare D1’s [100 physical columns per table](https://developers.cloudflare.com/d1/platform/limits/) conflicts with the current column-per-field storage layout. The compiler now refuses that layout explicitly before adoption. This is an open implementation gap, not a reduction of the 500-field obligation.
+
+The explicit `--diagnostic-80-fields` run `20261022T001607008860Z-heavy-slot-614b2457` measured source `dc97c8aeb589dafc55332faff51c8bc07234552f`: Apple M1 Max, 10 logical CPUs, 32 GiB RAM, macOS/Darwin 25.6.0 arm64, Node 22.20.0, emitted workerd with local D1. Actual population: 250,000 records in the main table, 500,000 records and 50 tables in the base, **80 fields** in the main table (76 optional boolean cells left null), 10,000 rollup links. Each workload ran 30 serial samples; grid pages contain 100 records. Seeding was additive SQL; every timed read/write used the authenticated owner HTTP doors. The entire response was consumed. [Raw diagnostic result](docs/contract/SCALE-001/diagnostic-80-fields.json).
+
+| Workload | p50 ms | p95 ms | p99 ms | Error rate |
+| --- | ---: | ---: | ---: | ---: |
+| grid | 17.71 | 21.53 | 31.73 | 0% |
+| filter | 20.11 | 26.02 | 35.11 | 0% |
+| sort | 86.49 | 104.75 | 107.05 | 0% |
+| group | 271.68 | 277.02 | 279.35 | 0% |
+| formula | 17.53 | 22.43 | 31.68 | 0% |
+| rollup10000 | 160.24 | 175.79 | 190.35 | 0% |
+| write | 52.32 | 70.30 | 87.26 | 0% |
+
+All seven diagnostic targets passed, including current formula read after a write and the exact 10,000-link rollup sum. Public HTTP refused record 250,001/table and 500,001/base (409), field 501 and table 51 (400), naming each limit, value and current count. Derived capacity counters survive populated upgrades by reconstruction and are omitted from portable archives (`tests/rer-data-roundtrip.mjs`).
+
+**Gap:** the full 500-field profile cannot be populated with the current physical layout, so its grid/filter/sort/group/write/formula/rollup timings are NOT RUN. The 80-field diagnostic is not full-profile acceptance. The authorized hosted stage run is NOT RUN because no stage or keys are available. No real IdP, Google or hosted run was used. `Measured scale` is dispatch-only and outside push Verify; results do not constitute a hosted performance guarantee. SCALE-001 remains partial.

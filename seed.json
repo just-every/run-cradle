@@ -519,7 +519,7 @@
     ]
   },
   "limits": {
-    "status": "flagship-targets-not-load-tested",
+    "status": "local-80-field-diagnostic-measured-500-field-profile-blocked-hosted-not-run",
     "operators": 100,
     "campaigns": 50000,
     "campaignCustomFields": 50,
