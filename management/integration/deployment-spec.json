@@ -786,6 +786,12 @@
       "name": "9046_record_trash.sql",
       "sha256": "ade113dbe96ca572a19f96dea4b1e6ab0552c90bfc2e507a9bfee30bf95c341f",
       "sql": "CREATE TABLE record_trash (\n app_id TEXT NOT NULL, entity_id TEXT NOT NULL, record_id TEXT NOT NULL,\n group_id TEXT NOT NULL, actor_id TEXT, deleted_at INTEGER NOT NULL,\n expires_at INTEGER NOT NULL, record_version INTEGER NOT NULL,\n schema_version INTEGER NOT NULL, prior_lifecycle TEXT NOT NULL,\n links_json TEXT NOT NULL, purge_state TEXT NOT NULL,\n PRIMARY KEY(app_id,entity_id,record_id)\n);\nCREATE INDEX record_trash_group ON record_trash(group_id);\nCREATE INDEX record_trash_expiry ON record_trash(expires_at);\nCREATE TABLE record_trash_maintenance (id TEXT PRIMARY KEY,last_hour INTEGER NOT NULL);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9047_metadata_trash.sql",
+      "sha256": "751195a85f0404a2c05f570c14befbca96529858db44740fa3baedc3bae48a2b",
+      "sql": "ALTER TABLE record_views ADD COLUMN deleted_at INTEGER;\nALTER TABLE record_views ADD COLUMN expires_at INTEGER;\nALTER TABLE record_views ADD COLUMN purge_state TEXT NOT NULL DEFAULT 'held';\nALTER TABLE record_forms ADD COLUMN owner_id TEXT;\nALTER TABLE record_forms ADD COLUMN deleted_at INTEGER;\nALTER TABLE record_forms ADD COLUMN expires_at INTEGER;\nALTER TABLE record_forms ADD COLUMN purge_state TEXT NOT NULL DEFAULT 'held';\n-- Previously deleted views enter a full restore window at upgrade.\nUPDATE record_views SET deleted_at=unixepoch()*1000,expires_at=(unixepoch()+2592000)*1000 WHERE visibility='deleted';\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

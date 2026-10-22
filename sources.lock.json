@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "89c85179a543a37e5cdac0fb372d5e621d3dc721ee3ee7366c9c446b62cb0201",
+      "sha256": "57d036162a2ba4d7cf721df06df10b656e5358ef3e3c9617c1e19ac2e2088caf",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "cc81bea89143c8a482778b56361f7a0af77529e149c1dda9a15eb0e60d780491",
+      "sha256": "7ad2ec1f1889215edb931b6fd43690dd43944992047dc860e21db77ffd466b8f",
       "executable": false
     },
     "DEMO.md": {
@@ -3038,7 +3038,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "5ca0f2bc75d31eb48d2f302a12f1777dc9664f774742e98393ecfa50400f44ea",
+      "sha256": "c359e82edc1de516479829f828814ea7b0dbde9856fc4b4c1dace5da6f637a71",
       "executable": false
     },
     "docs/company-identity.md": {
@@ -3735,6 +3735,10 @@
     },
     "docs/contract/SCALE-001/full-profile-refused.json": {
       "sha256": "252b30f0b1cf7a978b92317f6329f8ec001d62a0e1b8e6df3f9b25c66d5cb321",
+      "executable": false
+    },
+    "docs/contract/SNAP-002/README.md": {
+      "sha256": "1bad20bb28143cf38d702d3f1ac8bd892eec92b432626f8be7218d5d8c0e142f",
       "executable": false
     },
     "docs/contract/VIEW-008/column-controls-1440.png": {
@@ -4454,7 +4458,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "708fe90d89c23b394f408de20cf3ca46bb15c3db09a99313c879bbbc185725be",
+      "sha256": "521e99058004516693838d6e75bafacf91f1b84082670d20024707f33070c4c6",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -4967,6 +4971,10 @@
     },
     "migrations/updates/9046_record_trash.sql": {
       "sha256": "ade113dbe96ca572a19f96dea4b1e6ab0552c90bfc2e507a9bfee30bf95c341f",
+      "executable": false
+    },
+    "migrations/updates/9047_metadata_trash.sql": {
+      "sha256": "751195a85f0404a2c05f570c14befbca96529858db44740fa3baedc3bae48a2b",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -6070,7 +6078,7 @@
       "executable": false
     },
     "src/core/app/composition/records.server.ts": {
-      "sha256": "7a181e799a6f08f53ce40aa530af1fd6fe945aa30ba16899159b0986d76ccbb1",
+      "sha256": "a3dc6e2743028039459eefcef9d0010d255eec77a4b13b6e955b89c1efab38e3",
       "executable": false
     },
     "src/core/app/composition/repair-intake.server.ts": {
@@ -6078,7 +6086,7 @@
       "executable": false
     },
     "src/core/app/composition/runtime.server.ts": {
-      "sha256": "8894b3a38b5c56a0aa55ed3fe4fcd32706b75fe041865d3f43ad05e80115dc91",
+      "sha256": "d470c8ddaa0b578956a400c00391b0b40e15d6b8de3c2b26f996ec1609cf7acd",
       "executable": false
     },
     "src/core/app/composition/warehouse.server.ts": {
@@ -7486,7 +7494,7 @@
       "executable": false
     },
     "src/domains/automations/capture.server.ts": {
-      "sha256": "4b1a8d44680eb207a4757d4acb7d322272f052195428809b1db9a34d00fec205",
+      "sha256": "3ac6c4fb7c684a4c757748080bd2e61dd85cd99d692a2ce38b67872c373514d2",
       "executable": false
     },
     "src/domains/automations/configuration.server.ts": {
@@ -8390,7 +8398,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "5b73a10f1f26e3792c5ec6854b1541a0c3951d976f976a11ab4cf6b932d963ed",
+      "sha256": "06526103339ea37d7b0220958ab2333358def1b52de3f4ff0ff0ffa71c576776",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -8622,7 +8630,7 @@
       "executable": false
     },
     "src/domains/records/actions.server.ts": {
-      "sha256": "730a3c1113c4853d9199e1247ebc639502fc3aa8339a1c986d6d7920a3664b15",
+      "sha256": "0349287824afbcd86828fd692b1cb6ad1f7229bb4f026b4af7d29490d5dbe5f6",
       "executable": false
     },
     "src/domains/records/attachments.server.ts": {
@@ -8710,7 +8718,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/export-json.server.ts": {
-      "sha256": "948fa9bebd292aad8564b33f233eff4ef241e67ea49d49599363dfadc0cefadd",
+      "sha256": "b4338e56cfa7616886b36cc92a4da3979aeff3e183ce5fe34f0470009a0d0699",
       "executable": false
     },
     "src/domains/records/base-transfer/export-zip.ts": {
@@ -9226,7 +9234,7 @@
       "executable": false
     },
     "src/domains/records/metadata.server.ts": {
-      "sha256": "96f69f67e6145d0fd96f7789dee61c6dcda30b6b7b5648e9c01a4487392044d5",
+      "sha256": "0d96ace054779d3b4b590b0b0770e2aac0e66d91fca6c83520970989f47d503d",
       "executable": false
     },
     "src/domains/records/migration.server.ts": {
@@ -9322,7 +9330,15 @@
       "executable": false
     },
     "src/domains/records/trash/http.server.ts": {
-      "sha256": "6718c1bf123d3d27523a6e55a9a7c92791ff8522da9f2f2af295e4c289eac9bc",
+      "sha256": "be29853e57b099e51244dbacc021157cf70a3e1cd5bf88d3f44731f7a0fbc4e1",
+      "executable": false
+    },
+    "src/domains/records/trash/metadata-purge.server.ts": {
+      "sha256": "8386044afc8cb0afdc8b00c0b711ab04c8dc837a6e0393853686b4b00874d0ad",
+      "executable": false
+    },
+    "src/domains/records/trash/metadata.server.ts": {
+      "sha256": "cb0443f00f6413c68f543cd16b30bf8ffeaa3bb672b1abb53c201381afe7d7df",
       "executable": false
     },
     "src/domains/records/trash/purge.server.ts": {
@@ -10582,7 +10598,7 @@
       "executable": false
     },
     "src/ui/settings/trash-panel.tsx": {
-      "sha256": "496c1b61fe1033f856985fb9d2ad56b8f761289b04b65dc282e771f9e7d5b43c",
+      "sha256": "5a438298d4f55a4ccbcc18d75acf8cd85e5cbf33e09b93bff71ad43cf2efc409",
       "executable": false
     },
     "src/ui/settings/usage-panel.tsx": {
@@ -11474,11 +11490,11 @@
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
-      "sha256": "9909c2be6f853511da96d545a9ba787d05e20025ac9d04aa198881a7eb06c195",
+      "sha256": "3d246cec369df0ce1f7e4fb9767246653115289599ce0b416f6e5bd955aa69e8",
       "executable": false
     },
     "tests/helpers/record-trash-journey.mjs": {
-      "sha256": "e110d4cf2b64e5debdd1a8cdae712566e54f4afde4de67f94734d027f21d6037",
+      "sha256": "b0eef7e2a548d70b5e01380b1e18831c2b25b3a7eccc9775987ba8687a718049",
       "executable": false
     },
     "tests/helpers/records-api-decimal-source.mjs": {
