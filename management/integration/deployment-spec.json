@@ -768,6 +768,12 @@
       "name": "9043_record_capacity.sql",
       "sha256": "ba50f158663affe0655aa7987255575d5299155292c226ee2c91ed67f6c698b7",
       "sql": "-- Derived counts for every physical generation; active record_schemas select the live base.\nCREATE TABLE record_capacity (\n table_id TEXT PRIMARY KEY, app_id TEXT NOT NULL, entity_id TEXT NOT NULL,\n schema_version INTEGER NOT NULL, physical_revision TEXT NOT NULL, row_count INTEGER NOT NULL CHECK(row_count>=0)\n);\nCREATE INDEX record_capacity_base ON record_capacity(app_id,entity_id,schema_version,physical_revision);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9044_file_store_connections.sql",
+      "sha256": "384d28e090175a8c27fa70a331b13c7a162b435d6011ffd649063123c9e165f0",
+      "sql": "-- Additive: a connection used to pick files from a person's own file store belongs to that person.\n-- Existing connections keep a NULL owner and are never offered to the chooser.\nALTER TABLE provider_connections ADD COLUMN owner_id TEXT;\nCREATE INDEX provider_connections_owner ON provider_connections(owner_id,adapter_id);\n-- One request and its answer per connection job; the row is deleted when the answer is read.\n-- It holds metadata or one small thumbnail in transit, never a credential and never a stored copy.\nCREATE TABLE file_store_requests (\n job_id TEXT PRIMARY KEY REFERENCES connection_jobs(id),\n connection_id TEXT NOT NULL REFERENCES provider_connections(id),\n actor_id TEXT NOT NULL,\n request_json TEXT NOT NULL,\n result_json TEXT,\n created_at TEXT NOT NULL\n);\nCREATE INDEX file_store_requests_age ON file_store_requests(created_at);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
@@ -805,6 +811,12 @@
     "GOOGLE_CLIENT_SECRET",
     "XERO_CLIENT_ID",
     "XERO_CLIENT_SECRET",
+    "MICROSOFT_CLIENT_ID",
+    "MICROSOFT_CLIENT_SECRET",
+    "DROPBOX_CLIENT_ID",
+    "DROPBOX_CLIENT_SECRET",
+    "BOX_CLIENT_ID",
+    "BOX_CLIENT_SECRET",
     "EGRESS_RELAY_SECRET",
     "CANDIDATE_RUNNER_TOKEN",
     "CANDIDATE_DEPLOY_TOKEN",

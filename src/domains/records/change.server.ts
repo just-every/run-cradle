@@ -1,9 +1,10 @@
 import {recordCapacityGuard} from './capacity.server'
 import type { RecordMutationEffects } from './effects.server';
 import type { RecordAttachmentPort } from './attachments.server';
-import type { CellValue, Ref, Cell } from '../../contracts/primitives';
+import type { AttachmentMember, CellValue, Ref, Cell, StoreReference } from '../../contracts/primitives';
+import { referenceValue } from './store-references';
 import type { PolicyPort, PolicyScope, RequestContext } from '../authority/ports';
-import type { DescriptorRegistry, EntityDescriptor } from './descriptors.server';
+import type { DescriptorRegistry, EntityDescriptor, FieldStorage } from './descriptors.server';
 import type { PreparedRecordChange } from './ports';
 import type { SqlMutation, SqlPredicate } from '../admission/ports';
 import { registerTable, and, eq, exists, trustedPredicate, identifier } from '../admission/sql.server';
@@ -23,15 +24,33 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
     async function invariant(ctx: RequestContext, d: EntityDescriptor, operation: 'create' | 'patch' | 'transition' | 'delete' | 'undo', ref: Ref, expectedVersion: number, changes: Record<string, CellValue>, prior: Record<string, unknown> | null, nextLifecycle?: string): Promise<SqlPredicate[]> { const rules = d.writePolicy; if ((operation === 'create' && rules?.create === false) || (operation === 'patch' && rules?.patch === false) || (operation === 'delete' && rules?.delete === false) || (operation === 'undo' && (rules?.patch === false || rules?.transitions?.length === 0)))
         throw new AdmissionError('forbidden', 'This entity requires a typed domain action'); if (Object.keys(changes).some(id => rules?.protectedFieldIds?.includes(id) || d.fields.get(id)?.field.readOnly))
         throw new AdmissionError('forbidden', 'This field requires a typed domain action'); return (await rules?.validate?.(ctx, { operation, ref, expectedVersion, changes, prior, nextLifecycle }))?.guards ?? []; }
+    /** A reference already stored on this record stays as it is; a new one must come from the writer's own connected store. */
+    async function storeReferenceGuards(ctx: RequestContext, d: EntityDescriptor, recordId: string, storage: FieldStorage, reference: StoreReference): Promise<SqlPredicate[]> {
+        const kept = await db.prepare(`SELECT 1 AS present FROM ${identifier(storage.join!.table.tableId)} WHERE record_id=? AND value=?`).bind(recordId, referenceValue(reference)).first();
+        if (kept)
+            return [];
+        if (reference.attachedBy !== ctx.principal.id)
+            throw new AdmissionError('forbidden', 'A store reference is attached by the person whose store it comes from');
+        if (reference.provider === 'chest')
+            return reference.connectionId ? (() => { throw new AdmissionError('validation', 'A Chest link carries no connection'); })() : [];
+        if (!reference.connectionId)
+            throw new AdmissionError('validation', 'A store reference needs the connection it was picked through');
+        const guard = trustedPredicate("EXISTS(SELECT 1 FROM provider_connections WHERE id=? AND adapter_id=? AND owner_id=? AND state='connected' AND revoked_at IS NULL)", [reference.connectionId, reference.provider, ctx.principal.id]);
+        const live = await db.prepare(`SELECT 1 AS live WHERE ${guard.sql}`).bind(...guard.values).first();
+        if (!live)
+            throw new AdmissionError('forbidden', 'The connection is not yours or is no longer connected');
+        return [guard];
+    }
     async function references(ctx: RequestContext, d: EntityDescriptor, values: Record<string, CellValue>, recordId: string): Promise<SqlPredicate[]> { const guards: SqlPredicate[] = []; for (const [id, value] of Object.entries(values)) {
         const f = d.fields.get(id)!.field;
         if (f.type === 'attachment' && value !== null) {
-            if (!attachments)
+            if (!attachments && (value as AttachmentMember[]).some(member => 'fileId' in member))
                 throw new AdmissionError('unconfigured', 'Attachment authorization port is required');
-            for (const file of value as {
-                fileId: string;
-            }[])
-                guards.push(...await attachments.prepareLink(ctx, file.fileId, { appId: d.schema.appId, entityId: d.schema.id, recordId }, id));
+            for (const member of value as AttachmentMember[])
+                if ('fileId' in member)
+                    guards.push(...await attachments!.prepareLink(ctx, member.fileId, { appId: d.schema.appId, entityId: d.schema.id, recordId }, id));
+                else
+                    guards.push(...await storeReferenceGuards(ctx, d, recordId, d.fields.get(id)!, member.reference));
         }
         if (f.type !== 'relation' || value === null)
             continue;
@@ -48,9 +67,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
             if (!s.join || !(fieldId in values) && !creating)
                 continue;
             const value = validateCell(s.field, values[fieldId] ?? null);
-            const members = value === null ? [] : value as (string | Ref | {
-                fileId: string;
-            })[];
+            const members = value === null ? [] : value as (string | Ref | AttachmentMember)[];
             if (!creating) {
                 const count = await db.prepare(`SELECT COUNT(*) AS n FROM ${identifier(s.join.table.tableId)} WHERE record_id=?`).bind(id).first<{
                     n: number;
@@ -58,7 +75,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
                 mutations.push({ kind: 'delete', table: s.join.table, where: eq(s.join.table, 'record_id', id), expectedRows: count!.n });
             }
             for (const [position, v] of members.entries())
-                mutations.push({ kind: 'insert', table: s.join.table, row: { id: createUlid(), record_id: id, value: typeof v === 'string' ? v : 'recordId' in v ? v.recordId : v.fileId, position } });
+                mutations.push({ kind: 'insert', table: s.join.table, row: { id: createUlid(), record_id: id, value: typeof v === 'string' ? v : 'recordId' in v ? v.recordId : 'reference' in v ? referenceValue(v.reference) : v.fileId, position } });
         }
         return mutations;
     }

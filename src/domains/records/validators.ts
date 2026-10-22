@@ -4,6 +4,7 @@ import type { CellValue } from '../../contracts/primitives';
 import type { EntitySchema, Field, Filter, Expr, Query, RuleCondition, ValidationRule } from './contracts';
 import { normalize } from './exact';
 import { formulaFunctions, type FormulaFunction } from './formula-functions';
+import { attachmentMemberSchema } from './store-references';
 import { assertRuleBounds, validateFieldConfiguration, validateTableRules } from './validation-schema';
 export const idSchema = z.string().regex(/^[0-9A-HJKMNP-TV-Z]{26}$/);
 export const instantSchema = z.string().refine(v => /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(v) && Number.isFinite(Date.parse(v)) && new Date(v).toISOString() === v, 'Expected UTC ISO instant');
@@ -11,7 +12,7 @@ export const dateSchema = z.string().refine(v => /^\d{4}-\d\d-\d\d$/.test(v) && 
 export const refSchema = z.object({ appId: idSchema, entityId: idSchema, recordId: idSchema }).strict();
 const decimalSchema = z.string().transform(v => normalize(v));
 export const moneySchema = z.object({ minor: z.string().regex(/^-?(0|[1-9]\d*)$/).max(129), currency: z.string().regex(/^[A-Z]{3}$/), scale: z.number().int().min(0).max(6) }).strict().refine(v => Intl.supportedValuesOf('currency').includes(v.currency), 'Unknown ISO currency');
-export const cellValueSchema: z.ZodType<CellValue> = z.union([z.null(), z.string().refine(v => [...v].length <= 100000, 'Cell character limit 100000 exceeded'), z.boolean(), moneySchema, refSchema, z.array(refSchema).max(10000), z.array(z.union([z.null(), z.string().refine(v => [...v].length <= 100000, 'Cell character limit 100000 exceeded'), z.boolean(), moneySchema])).max(10000), z.array(z.object({ fileId: idSchema }).strict()).max(10000)]);
+export const cellValueSchema: z.ZodType<CellValue> = z.union([z.null(), z.string().refine(v => [...v].length <= 100000, 'Cell character limit 100000 exceeded'), z.boolean(), moneySchema, refSchema, z.array(refSchema).max(10000), z.array(z.union([z.null(), z.string().refine(v => [...v].length <= 100000, 'Cell character limit 100000 exceeded'), z.boolean(), moneySchema])).max(10000), z.array(attachmentMemberSchema).max(10000)]);
 export const filterSchema: z.ZodType<Filter> = z.lazy(() => z.union([z.object({ kind: z.enum(['all', 'any']), conditions: z.array(filterSchema).max(100) }).strict(), z.object({ kind: z.literal('condition'), fieldId: idSchema, op: z.enum(['eq', 'ne', 'in', 'contains', 'empty', 'not_empty', 'before', 'after', 'next_days']), value: cellValueSchema.optional() }).strict()]));
 export const exprSchema: z.ZodType<Expr> = z.lazy(() => z.union([z.object({ kind: z.literal('field'), fieldId: idSchema }).strict(), z.object({ kind: z.literal('literal'), value: cellValueSchema, valueType: z.literal('number').optional() }).strict(), z.object({ kind: z.literal('call'), fn: z.enum(Object.keys(formulaFunctions) as [FormulaFunction, ...FormulaFunction[]]), args: z.array(exprSchema).max(100) }).strict(), z.object({ kind: z.literal('rollup'), relationFieldId: idSchema, valueFieldId: idSchema, aggregate: z.enum(['sum', 'count', 'counta', 'countall', 'min', 'max', 'average', 'lookup', 'arrayjoin', 'arrayunique', 'and', 'or']), filter: filterSchema.optional(), separator: z.string().max(200).optional(), sort: z.array(z.object({fieldId:idSchema,direction:z.enum(['asc','desc'])}).strict()).max(10).optional(), limit:z.number().int().min(1).max(10000).optional() }).strict()]));
 const types = ['text', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'multi_select', 'url', 'person', 'relation', 'attachment', 'computed'] as const;
@@ -45,7 +46,7 @@ function validateCellValue(field: Field, value: unknown): CellValue {
                     throw new Error('Relation owner mismatch');
             return v;
         }
-        case 'attachment': return z.array(z.object({ fileId: idSchema }).strict()).min(field.required ? 1 : 0).max(1000).parse(value);
+        case 'attachment': return z.array(attachmentMemberSchema).min(field.required ? 1 : 0).max(1000).parse(value);
         case 'select': {
             const v = idSchema.parse(value);
             if (!field.options?.some(o => o.id === v))

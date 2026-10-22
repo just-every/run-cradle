@@ -2,10 +2,12 @@ import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {contract} from './contract.mjs'
+import {fileStoresProvider} from './helpers/file-stores-provider.mjs'
 import {freePort} from './helpers/free-port.mjs'
 
 // Resolve TypeScript dependencies only after the loader has registered its hooks.
-const [{userAutomationRuntime},{STAGING_ENTITY,STAGING_OWNER,STAGING_FILES},{createUlid},{evidenceCommentsJourney}]=await Promise.all([
+const [{fileStoresJourney,fileStoreBindings},{userAutomationRuntime},{STAGING_ENTITY,STAGING_OWNER,STAGING_FILES},{createUlid},{evidenceCommentsJourney}]=await Promise.all([
+ import('./helpers/file-stores-journey.mjs'),
  import('./helpers/user-automation-runtime.mjs'),
  import('../src/domains/evidence/staging.server.ts'),
  import('../src/core/shared/ids.ts'),
@@ -66,8 +68,8 @@ contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and au
  }finally{await h.close()}
 })
 
-contract('COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority',async()=>{
- const h=await userAutomationRuntime(await freePort()),observations={}
+contract('FILE-002 COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority; store references attach from each connected store without copying',async()=>{
+ const provider=fileStoresProvider(),h=await userAutomationRuntime(await freePort(),{outbound:request=>provider.fetch(request),bindings:fileStoreBindings}),observations={}
  try{
   const relationId=createUlid(),visible=(await h.create('Visible history')).record,hidden=(await h.create('Hidden history')).record
   const draft={appId:h.appId,name:'Automation acceptance',tables:[{id:h.entityId,label:'Items',primaryFieldId:h.nameId,fields:[
@@ -108,6 +110,7 @@ contract('COLLAB-002 BASE-ACCESS-004','record history reprojects retained relati
   await setRules(rules.map(r=>r.entityId===h.entityId?{...r,readableFields:r.readableFields.filter(id=>id!==relationId)}:r))
   observations.maskedFieldLeak=includes(await history(visible.ref),relationId)
   await setRules(rules)
+  await fileStoresJourney(h,provider,draft.tables[0].fields)
 
   // The current manual builder cannot create attachment fields. Use native private
   // intake and a retained historical attachment-cell snapshot in its real audit row.

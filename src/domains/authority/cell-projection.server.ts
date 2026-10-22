@@ -1,4 +1,4 @@
-import type { Cell, Ref } from '../../contracts/primitives';
+import type { Cell, Ref, StoreReference } from '../../contracts/primitives';
 import type { PolicyPort, PolicyScope, RequestContext } from './ports';
 import { AdmissionError } from '../admission/errors';
 import { and, identifier, trustedPredicate } from '../admission/sql.server';
@@ -8,6 +8,7 @@ import type { DescriptorRegistry } from '../records/descriptors.server';
 const redacted: Cell = { state: 'redacted', reason: 'policy' };
 const isRef = (value: unknown): value is Ref => !!value && typeof value === 'object' && 'appId' in value && 'entityId' in value && 'recordId' in value;
 const isFile = (value: unknown): value is { fileId: string } => !!value && typeof value === 'object' && 'fileId' in value && typeof value.fileId === 'string';
+const isReference = (value: unknown): value is { reference: StoreReference } => !!value && typeof value === 'object' && 'reference' in value;
 
 /** Current values and retained audit cells share the same reference authority. */
 export function createCellProjection(db: D1Database, registry: DescriptorRegistry, policy: PolicyPort, attachments?: RecordAttachmentPort) {
@@ -40,17 +41,20 @@ export function createCellProjection(db: D1Database, registry: DescriptorRegistr
             }
         }
         if (field.type === 'attachment') {
-            if (!values.every(isFile))
+            if (!values.every(value => isFile(value) || isReference(value)))
                 return redacted;
-            if (!attachments)
+            if (!attachments && values.some(isFile))
                 throw new AdmissionError('unconfigured', 'Attachment authorization port is required');
-            const visible: { fileId: string }[] = [];
-            for (const file of values)
-                if (await attachments.readable(ctx, file.fileId, ref, fieldId))
-                    visible.push({ fileId: file.fileId });
+            // A store reference is metadata on this record's own field: it follows the row and field authority checked above.
+            const visible: ({ fileId: string } | { reference: StoreReference })[] = [];
+            for (const member of values)
+                if (isReference(member))
+                    visible.push(member);
+                else if (await attachments!.readable(ctx, member.fileId, ref, fieldId))
+                    visible.push({ fileId: member.fileId });
             return { state: 'value', value: visible };
         }
         // Schema changes must not turn old structured references into scalar output.
-        return values.some(value => isRef(value) || isFile(value)) ? redacted : cell;
+        return values.some(value => isRef(value) || isFile(value) || isReference(value)) ? redacted : cell;
     };
 }

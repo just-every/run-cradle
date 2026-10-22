@@ -4,10 +4,11 @@ import { decode } from './codec.server'
 import { identifier, trustedPredicate } from '../admission/sql.server'
 import type { SqlPredicate } from '../admission/ports'
 import { AdmissionError } from '../admission/errors'
+import { attachmentMember } from './store-references'
 
 function collection(storage: FieldStorage, members: string[]): CellValue {
   if (storage.field.type === 'relation') return members.map(recordId => ({ appId: storage.field.relation!.ownerAppId, entityId: storage.field.relation!.entityId, recordId } satisfies Ref))
-  if (storage.field.type === 'attachment') return members.map(fileId => ({ fileId }))
+  if (storage.field.type === 'attachment') return members.map(attachmentMember)
   return members
 }
 /** Internal validation reads stored values, never policy-redacted response cells. */

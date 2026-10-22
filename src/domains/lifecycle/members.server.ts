@@ -41,6 +41,10 @@ export function memberLifecycle(db:D1Database,bucket:R2Bucket,registry:Descripto
   const mentions=await db.prepare('SELECT id,mentions_json FROM evidence_comments WHERE EXISTS(SELECT 1 FROM json_each(mentions_json) WHERE value=?)').bind(id).all<{id:string;mentions_json:string}>()
   for(const comment of mentions.results)await updateRows(db,change,'evidence_comments',{mentions_json:JSON.stringify((JSON.parse(comment.mentions_json) as string[]).filter(member=>member!==id))},'id=?',[comment.id])
   for(const object of objects.erase){keys.push(object.key);if(object.fileId)await updateRows(db,change,'evidence_files',{state:'erased',filename:'erased',updated_at:ctx.now},'id=?',[object.fileId])}
+  // FILE-002: store references the person attached and the file-store connections they own leave with them.
+  for(const d of registry.list())for(const f of d.fields.values())if(f.field.type==='attachment'&&f.join)await removeRows(db,change,f.join.table.tableId,"CASE WHEN substr(value,1,1)='{' AND json_valid(value) THEN json_extract(value,'$.attachedBy') END=?",[id])
+  await removeRows(db,change,'connection_credentials',"connection_id IN (SELECT id FROM provider_connections WHERE owner_id=?)",[id])
+  await updateRows(db,change,'provider_connections',{state:'revoked',revoked_at:ctx.now,remote_revocation_state:'erased',updated_at:ctx.now},'owner_id=? AND revoked_at IS NULL',[id])
   keys.push(...inputKeys)
   for(const row of encrypted.results)await updateRows(db,change,'execution_attempts',{sealed_input:null,reconcile_input:null,payload_erased_at:ctx.now},'id=?',[row.id])
   const app=(await db.prepare('SELECT app_id FROM authority_memberships WHERE principal_id=? ORDER BY app_id LIMIT 1').bind(id).first<{app_id:string}>())!

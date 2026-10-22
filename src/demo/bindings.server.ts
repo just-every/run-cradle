@@ -8,6 +8,7 @@ export function demoBindings(env: PlatformBindings): PlatformBindings {
     AI_PROVIDER_API_KEY: undefined, AI_MODEL: undefined,
     GOOGLE_CLIENT_ID: undefined, GOOGLE_CLIENT_SECRET: undefined,
     XERO_CLIENT_ID: undefined, XERO_CLIENT_SECRET: undefined,
+    MICROSOFT_CLIENT_ID: undefined, MICROSOFT_CLIENT_SECRET: undefined, DROPBOX_CLIENT_ID: undefined, DROPBOX_CLIENT_SECRET: undefined, BOX_CLIENT_ID: undefined, BOX_CLIENT_SECRET: undefined,
     EGRESS_RELAY_URL: undefined, EGRESS_RELAY_SECRET: undefined,
     CANDIDATE_RUNNER_URL: undefined, CANDIDATE_RUNNER_TOKEN: undefined,
     CANDIDATE_DEPLOY_TOKEN: undefined, CANDIDATE_RUNNER_PUBLIC_KEY: undefined,

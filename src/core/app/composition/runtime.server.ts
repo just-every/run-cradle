@@ -2,6 +2,8 @@ import {ensureRecordCapacity} from '../../../domains/records/capacity.server'
 import {createSheetsImport} from '../../../domains/records/sheets/import.server'
 import {createSheetSchedules} from '../../../domains/records/sheets/schedules.server'
 import {sheetsHttp} from '../../../domains/records/sheets/http.server'
+import {createFileStores} from '../../../domains/records/file-stores/service.server'
+import {fileStoresHttp} from '../../../domains/records/file-stores/http.server'
 import {createWarehouseComposition} from './warehouse.server'
 import { createInstalledLaunch } from './launch-runtime.server'
 import {createLifecycleComposition} from './lifecycle.server'
@@ -24,6 +26,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  validateAuthConfiguration(platform.auth.configuration)
  const records=createRecordsComposition(platform,foundation)
  const sheetSource=createSheetsImport(platform.bindings.DB,foundation,providers),sheetSchedules=createSheetSchedules(platform.bindings.DB,foundation,sheetSource,records.csv,clock),sheets={http:sheetsHttp(foundation,sheetSource,sheetSchedules),scheduled:sheetSchedules.scheduled}
+ const fileStores={http:fileStoresHttp(foundation,createFileStores(platform.bindings.DB,foundation,providers,records.services.reader))}
  const warehouse=createWarehouseComposition(platform,foundation,records,clock)
  await ensureRecordAutomationTriggers(platform.bindings.DB,foundation.descriptors)
  const automations=createAutomationsComposition(platform,foundation,clock)
@@ -31,6 +34,6 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)
  const launchImports=createLaunchImportComposition(platform,foundation,records)
- return {foundation,sheets,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
+ return {foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
 export type Runtime=Awaited<ReturnType<typeof createRuntime>>

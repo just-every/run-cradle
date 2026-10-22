@@ -14,6 +14,7 @@ import { createDeliveryObservations } from '../../../domains/channels/delivery.s
 import { applicationSourceModelSchema } from '../../../domains/construction/model-schema'
 import { operationModelSchema } from '../../../domains/operations/model.server'
 import { formulationModelSchema } from '../../../domains/intelligence/model'
+import { oauthFamily } from '../../../domains/connections/oauth.server'
 import { createExecutionHttp } from '../../../domains/execution/routes.server'
 import { registerExecutionCommands } from '../../../domains/execution/commands.server'
 import { createUlid } from '../../shared/ids'
@@ -28,7 +29,7 @@ export function createProvidersComposition(platform:Platform,foundation:ServerFo
  if(env.AI_PROVIDER_API_KEY)secrets.set('AI_PROVIDER_API_KEY',{dispatch:env.AI_PROVIDER_API_KEY,readback:env.AI_PROVIDER_API_KEY})
  const runtime=createProviderRuntime({db:env.DB,notificationEntities:foundation.entities,admission:foundation.admission,policy:foundation.policy,bucket:env.FILES,auth:platform.auth.configuration,workspaceId:'workspace',
   keyVersion:connectionKeyVersion,encryptionKey:version=>version===connectionKeyVersion?env.CONNECTION_ENCRYPTION_KEY:undefined,secrets,schemas,
-  oauth(provider){const clientId=provider==='xero'?env.XERO_CLIENT_ID:env.GOOGLE_CLIENT_ID,clientSecret=provider==='xero'?env.XERO_CLIENT_SECRET:env.GOOGLE_CLIENT_SECRET;if(!clientId||!clientSecret)throw new ApiError('unconfigured',`${provider} OAuth credentials are required.`);return{clientId,clientSecret,redirectUri:`${platform.auth.configuration.appOrigin}/oauth/${provider==='xero'?'xero':'google'}/callback`}},
+  oauth(provider){const family=oauthFamily(provider),pairs={google:[env.GOOGLE_CLIENT_ID,env.GOOGLE_CLIENT_SECRET],xero:[env.XERO_CLIENT_ID,env.XERO_CLIENT_SECRET],microsoft:[env.MICROSOFT_CLIENT_ID,env.MICROSOFT_CLIENT_SECRET],dropbox:[env.DROPBOX_CLIENT_ID,env.DROPBOX_CLIENT_SECRET],box:[env.BOX_CLIENT_ID,env.BOX_CLIENT_SECRET]},[clientId,clientSecret]=pairs[family];if(!clientId||!clientSecret)throw new ApiError('unconfigured',`${provider} OAuth credentials are required.`);return{clientId,clientSecret,redirectUri:`${platform.auth.configuration.appOrigin}/oauth/${family}/callback`}},
   currentGuards:createExecutionGuards(env.DB,foundation),observations:createDeliveryObservations(env.DB).prepare,
  })
  const jobs=createConnectionJobs({db:env.DB,admission:foundation.admission,policy:foundation.policy,service:runtime.connections,releaseId:connectionRelease(env.DB,foundation.policy),backgroundContext:runtime.background.connectionJob})

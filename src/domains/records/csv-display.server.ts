@@ -8,6 +8,7 @@ import { validateCsvCell } from './csv-validation'
 import { parseLinkCell } from './base-transfer/parse'
 import { ImportInputError } from './base-transfer/input-error'
 import { typedCsvValue } from './csv-typed-values'
+import { isStoreReferenceMember } from './store-references'
 
 /** Legacy multi-select storage holds literal labels; authored bases hold option IDs. */
 export function displayCsvLabels(labels:readonly string[]):string{return labels.map(label=>'"'+label.replaceAll('"','""')+'"').join(',')}
@@ -25,6 +26,8 @@ export function displayCsvValue(field:Field,value:CellValue):string {
   return type==='multi_select'?displayCsvLabels(labels):labels[0]??''
  }
  if(typeof value==='boolean')return value?'Yes':'No'
+ // A store reference leaves as provider, id, name, type and link: never bytes, a connection or a person.
+ if(type==='attachment'&&Array.isArray(value))return JSON.stringify(value.map(member=>isStoreReferenceMember(member)?{reference:{provider:member.reference.provider,itemId:member.reference.itemId,name:member.reference.name,mediaType:member.reference.mediaType,link:member.reference.link}}:member))
  return typeof value==='string'?value:JSON.stringify(value)
 }
 

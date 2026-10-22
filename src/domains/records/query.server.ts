@@ -4,6 +4,7 @@ import { assertCurrentScopeAuthority } from '../authority/guards.server';
 import { createCellProjection } from '../authority/cell-projection.server';
 import { readIncomingRelations } from './incoming.server';
 import type { RecordAttachmentPort } from './attachments.server';
+import { attachmentMember } from './store-references';
 import type { Cell, CellValue, Page, Ref, AllowedAction } from '../../contracts/primitives';
 import type { RequestContext, PolicyPort, PolicyScope } from '../authority/ports';
 import type { DescriptorRegistry, EntityDescriptor, FieldStorage } from './descriptors.server';
@@ -130,7 +131,7 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
                     value: string;
                 }>();
                 if (storage.field.type === 'attachment')
-                    return projectCell(ctx, scope, ref, id, { state: 'value', value: values.results.map(file => ({ fileId: file.value })) });
+                    return projectCell(ctx, scope, ref, id, { state: 'value', value: values.results.map(file => attachmentMember(file.value)) });
                 return { state: 'value', value: values.results.map(r => r.value) };
             }
             return { state: 'value', value: decode(storage, row) };

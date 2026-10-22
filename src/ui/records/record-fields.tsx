@@ -3,7 +3,9 @@ import { LinkedRecord } from './linked-record'
 import { MoneyInput } from './money-input'
 import { RelationshipPicker } from './relationship-picker'
 import { PersonPicker } from './person-picker'
-import type { Cell, CellValue, Money, Page, Ref } from '../../contracts/primitives'
+import { StoreReferenceView } from './store-reference-view'
+import { StoreChooser } from './store-chooser'
+import type { Cell, CellValue, Money, Page, Ref, StoreReference } from '../../contracts/primitives'
 import type { Field } from '../../domains/records/contracts'
 import type { Member } from '../../domains/authority/contracts'
 import { useResource } from '../shared/api'
@@ -18,7 +20,7 @@ export function chipTone(field: Field, optionId: string): ChipTone {
   const label = index >= 0 ? field.options![index]!.label.trim().toLowerCase() : ''
   return toneByMeaning[label] ?? toneCycle[Math.max(index, 0) % toneCycle.length]!
 }
-export function CellDisplay({ cell, field, appId }: { cell: Cell | undefined; field?: Field; appId?: string }) {
+export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undefined; field?: Field; appId?: string; record?: Ref & { fieldId: string } }) {
   if (!cell) return <span className="cr-muted">Not recorded</span>
   if (cell.state === 'redacted') return <span className="cr-muted">{cell.reason === 'erased' ? 'Erased' : 'Restricted'}</span>
   if (cell.state === 'unavailable') return <span title={cell.message} className="cr-error">Unavailable · {cell.message}</span>
@@ -36,7 +38,7 @@ export function CellDisplay({ cell, field, appId }: { cell: Cell | undefined; fi
   if (typeof value === 'string') return <>{value}</>
   if ('minor' in value) return <>{money(value as Money).replace('USD ', '$')}</>
   const values = Array.isArray(value) ? value : [value]
-  return <>{values.map((item, i) => <span key={i}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
+  return <>{values.map((item, i) => <span key={i}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
 }
 export function FieldInput({ appId, entityId, subject, field, value, onChange, error, inputId }: { appId: string; entityId: string; subject?: Ref; inputId?: string; field: Field; value: CellValue; onChange: (value: CellValue) => void; error?: string }) {
   const id = inputId ?? `field-${field.id}`
@@ -47,7 +49,7 @@ export function FieldInput({ appId, entityId, subject, field, value, onChange, e
   else if (field.type === 'money') input = <MoneyInput field={field} value={value} onChange={onChange} />
   else if (field.type === 'relation') input = <RelationshipPicker appId={appId} entityId={entityId} inputId={id} field={field} value={value} onChange={onChange} />
   else if (field.type === 'person') input = <PersonPicker appId={appId} field={field} value={value} onChange={onChange} />
-  else if (field.type === 'attachment') input = <><CellDisplay cell={{ state: 'value', value }} /><FileUpload label={`Add ${field.label}`} fieldId={field.id} appId={appId} subject={subject} onUploaded={file => onChange([...(Array.isArray(value) ? value.filter(item => typeof item === 'object' && item !== null && 'fileId' in item) : []), { fileId: file.id }])} /></>
+  else if (field.type === 'attachment') input = <><CellDisplay cell={{ state: 'value', value }} appId={appId} record={subject ? { ...subject, fieldId: field.id } : undefined} />{subject && <StoreChooser appId={appId} entityId={entityId} fieldId={field.id} subject={subject} value={value} onChange={onChange} />}<FileUpload label={`Add ${field.label}`} fieldId={field.id} appId={appId} subject={subject} onUploaded={file => onChange([...(Array.isArray(value) ? value.filter(item => typeof item === 'object' && item !== null && ('fileId' in item || 'reference' in item)) : []), { fileId: file.id }])} /></>
   else if (field.type === 'text') input = <textarea {...common} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} />
   else input = <input {...common} type={field.type === 'date' ? 'date' : field.type === 'instant' ? 'datetime-local' : field.type === 'url' ? 'url' : 'text'} inputMode={field.type === 'number' ? 'decimal' : undefined} value={typeof value === 'string' ? field.type === 'instant' ? value.slice(0, 16) : value : ''} onChange={e => onChange(e.target.value ? field.type === 'instant' ? new Date(`${e.target.value}Z`).toISOString() : e.target.value : null)} />
   return <div className="cr-field"><label htmlFor={id}>{field.label}{field.required ? ' *' : ''}{field.type === 'instant' ? ' (UTC)' : ''}</label>{input}{field.unique && <small>Each record must have a distinct value.</small>}{error && <p id={`${id}-error`} className="cr-error">{error}</p>}</div>

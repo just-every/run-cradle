@@ -260,6 +260,60 @@
       "group": "service-connections"
     },
     {
+      "name": "MICROSOFT_CLIENT_ID",
+      "label": "Microsoft OAuth client ID",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "MICROSOFT_CLIENT_SECRET",
+      "label": "Microsoft OAuth client secret",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "DROPBOX_CLIENT_ID",
+      "label": "Dropbox OAuth client ID",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "DROPBOX_CLIENT_SECRET",
+      "label": "Dropbox OAuth client secret",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "BOX_CLIENT_ID",
+      "label": "Box OAuth client ID",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
+      "name": "BOX_CLIENT_SECRET",
+      "label": "Box OAuth client secret",
+      "kind": "secret",
+      "required": false,
+      "ownerVisible": true,
+      "input": "entered",
+      "group": "service-connections"
+    },
+    {
       "name": "CANDIDATE_RUNNER_TOKEN",
       "label": "Candidate runner credential",
       "kind": "secret",

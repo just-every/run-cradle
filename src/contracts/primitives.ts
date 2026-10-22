@@ -22,5 +22,8 @@ export type CommandInput<T> = { commandId: Id; expected: RevisionRef[]; controlE
 export type CommandResult<T> = { commandId: Id; state: 'committed'; value: T; changed: RevisionRef[]; eventIds: Id[] } | { commandId: Id; state: 'accepted'; runId: Id; statusUrl: string };
 export type CommandStatus = { commandId: Id; action: string; state: 'accepted' | 'running' | 'committed' | 'failed' | 'cancelled' | 'partial' | 'unknown'; result: Json | null; failure: Failure['error'] | null; runId: Id | null; receiptIds: Id[]; firstPossibleEffectAt: Instant | null; updatedAt: Instant };
 export type ScalarCellValue = null | string | boolean | Money;
-export type CellValue = ScalarCellValue | Ref | Ref[] | ScalarCellValue[] | { fileId: Id }[];
+/** A file that stays in the person's own file store; Cradle holds metadata only (FILE-002). */
+export type StoreReference = { provider: 'google-drive' | 'onedrive' | 'dropbox' | 'box' | 'chest'; itemId: string; name: string; mediaType: string; size: number | null; modifiedAt: Instant | null; link: string; connectionId: Id | null; attachedBy: Id };
+export type AttachmentMember = { fileId: Id } | { reference: StoreReference };
+export type CellValue = ScalarCellValue | Ref | Ref[] | ScalarCellValue[] | AttachmentMember[];
 export type Cell = { state: 'value'; value: CellValue } | { state: 'redacted'; reason: 'policy' | 'erased' } | { state: 'unavailable'; code: 'invalid_source' | 'dependency_limit' | 'rollup_limit' | 'mixed_currency' | 'stale_rate'; fieldIds: Id[]; message: string };

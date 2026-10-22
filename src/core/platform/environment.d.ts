@@ -46,6 +46,12 @@ declare global {
       GOOGLE_CLIENT_SECRET?: string
       XERO_CLIENT_ID?: string
       XERO_CLIENT_SECRET?: string
+      MICROSOFT_CLIENT_ID?: string
+      MICROSOFT_CLIENT_SECRET?: string
+      DROPBOX_CLIENT_ID?: string
+      DROPBOX_CLIENT_SECRET?: string
+      BOX_CLIENT_ID?: string
+      BOX_CLIENT_SECRET?: string
       CONNECTION_ENCRYPTION_KEY?: string
       EGRESS_RELAY_URL?: string
       EGRESS_RELAY_SECRET?: string

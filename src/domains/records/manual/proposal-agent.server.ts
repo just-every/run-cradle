@@ -38,6 +38,8 @@ export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:Des
   const {appId,issuerId}=proposerOf(ctx),hash=await canonicalHash({action:'schema.propose',input})
   // Naming another base, or one of its tables, answers as a missing application: nothing about it is disclosed.
   if(input.schema.appId!==appId||input.schema.tables.some(t=>registry.list().some(d=>d.schema.id===t.id&&d.schema.appId!==appId)))throw new AdmissionError('not_found','Application not found.')
+  // Attachment fields connect to a person's own file store (FILE-002): only an owner's builder offers them, never an agent proposal.
+  const attachment=input.schema.tables.flatMap(t=>t.fields).find(f=>f.type==='attachment');if(attachment)throw new AdmissionError('validation',`${attachment.label}: this builder does not support this type.`)
   const permit=await policy.authorize(ctx,{appId,action:'schema.propose',expected:[],cost:[],inputHash:hash,commandId})
   const view=await issuerView(db,ctx),{base,guard}=await baseFence(appId,issuerId),id=createUlid()
   const authentication=new Set([...principalGuards(ctx),...principalGuards(view)].map(g=>canonical({sql:g.sql,values:g.values})))
