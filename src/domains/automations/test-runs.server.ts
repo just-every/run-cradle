@@ -9,7 +9,7 @@ import {automationTestPreview,type ConfirmationEffect} from './test-preview.serv
 import {sendBuilderTestMail} from './test-mail.server'
 import {automationRecipient} from './recipients.server'
 import {ownerDelegationSnapshot} from '../authority/delegation.server'
-import {and,registerTable,trustedPredicate} from '../admission/sql.server'
+import {and,identifier,registerTable,trustedPredicate} from '../admission/sql.server'
 import {canonicalHash,canonical} from '../admission/canonical'
 import {AuthorityError} from '../authority/errors'
 import type {AutomationRun} from './run-store.server'
@@ -24,23 +24,26 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   if(!binding||binding.owner_id!==ctx.principal.id)throw new AuthorityError('not_found','Only the automation author can test it.',404)
   const own=await ownerDelegationSnapshot(db,ctx,binding.app_id),scope=await policy.scope(ctx,{appId:binding.app_id,entityId:binding.entity_id,purpose:'read'}),ref={appId:binding.app_id,entityId:binding.entity_id,recordId:input.recordId},record=await reader.record(ctx,scope,ref),definition=recordAutomationDefinition.parse(JSON.parse(binding.definition_json))
   if(definition.actions.some(action=>['email','webhook','slack'].includes(action.kind)))await policy.scope(ctx,{appId:ref.appId,entityId:ref.entityId,purpose:'export'})
+  if(definition.actions.some(action=>action.kind==='update'&&(!scope.writableFieldIds.includes(action.fieldId)||!scope.readableFieldIds.includes(action.fieldId))))throw new AuthorityError('forbidden','A test requires current read and write authority for each update field.')
+  const narrow=(value:string)=>{const result=JSON.parse(value);for(const step of result.steps??[])if(step.input?.values)step.input.values=Object.fromEntries(Object.entries(step.input.values).filter(([id])=>scope.readableFieldIds.includes(id)));return result}
   const id=input.commandId,mode=input.live?'live':'dry',hash=await canonicalHash(input)
   const replay=await admission.replay(ctx,id,'automation.test',ref.appId,hash)
-  if(replay){const prior=await db.prepare('SELECT result_json FROM record_automation_tests WHERE id=? AND owner_id=?').bind(id,ctx.principal.id).first<{result_json:string}>();if(!prior)throw new AuthorityError('not_found','Test run is unavailable.',404);return JSON.parse(prior.result_json)}
+  if(replay){const prior=await db.prepare('SELECT result_json FROM record_automation_tests WHERE id=? AND owner_id=?').bind(id,ctx.principal.id).first<{result_json:string}>();if(!prior)throw new AuthorityError('not_found','Test run is unavailable.',404);await reader.assertScope(ctx,scope);return narrow(prior.result_json)}
   const preview=await automationTestPreview({db,entities,descriptors,destinations},ctx,scope,id,definition,record,input.event)
   const confirmationHash=await canonicalHash({automationId:input.id,definitionVersion:binding.definition_version,recordId:record.id,recordVersion:record.version,event:input.event,effects:preview.confirmationEffects})
   if(input.live){const prior=await db.prepare('SELECT * FROM record_automation_tests WHERE id=? AND owner_id=? AND mode=\'dry\'').bind(input.live.previewId,ctx.principal.id).first<Stored>();if(!prior||prior.confirmation_hash!==confirmationHash||canonical(input.live.effects)!==canonical(preview.confirmationEffects))throw new AuthorityError('version_conflict','Preview the current record and confirm every named effect and destination before a live test.',409)}
   const guard=and(own.guard,...scope.currentAuthorityGuards,trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND definition_version=?)',[input.id,binding.definition_version]))
-  async function authorize(){await reader.assertScope(ctx,scope);if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())throw new AuthorityError('forbidden','The author’s authority or automation changed before the test effect.')}
+  let version=record.version
+  const descriptor=descriptors.get(ref.appId,ref.entityId),recordGuard=trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(descriptor.table.tableId)} WHERE ${identifier(descriptor.idColumn)}=? AND ${identifier(descriptor.versionColumn)}=? AND (${scope.rowPredicate.sql}))`,[record.id,record.version,...scope.rowPredicate.values])
+  async function authorize(){await reader.assertScope(ctx,scope);if((await reader.record(ctx,scope,ref)).version!==version)throw new AuthorityError('version_conflict','The chosen record changed during this test.',409);if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())throw new AuthorityError('forbidden','The author’s authority or automation changed before the test effect.')}
   await authorize()
   const result={id,mode,testMode:mode,definitionVersion:binding.definition_version,recordId:record.id,recordLabel:record.id,state:'Unknown',queuedAt:ctx.now,trigger:preview.trigger,steps:preview.steps,confirmationEffects:preview.confirmationEffects}
   // Receiver URLs may contain credentials. History stores destination IDs and
   // payloads, never decrypted URLs or the signing secret.
   function storedResult(){return JSON.stringify({...result,confirmationEffects:undefined,steps:result.steps.map(step=>{if(step.kind!=='webhook'&&step.kind!=='slack')return step;const output=step.output as {wire?:Record<string,unknown>};return {...step,output:{...output,...(output?.wire?{wire:{...output.wire,url:undefined}}:{})}}})})}
   const permit=await policy.authorize(ctx,{appId:ref.appId,targetEntityId:ref.entityId,action:'view.preview',expected:[],cost:[],inputHash:hash})
-  const claimed=await admission.commit(ctx,{commandId:id,action:'automation.test',appId:ref.appId,canonicalInputHash:hash,permit:{...permit,action:'automation.test'},guards:[guard],mutations:[{kind:'insert',table:tests,row:{id,automation_id:input.id,owner_id:ctx.principal.id,app_id:ref.appId,entity_id:ref.entityId,record_id:record.id,definition_version:binding.definition_version,record_version:record.version,mode,state:'Unknown',created_at:ctx.now,result_json:storedResult(),confirmation_hash:confirmationHash}}],audit:[{action:'automation.test',subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,mode}})
-  if(claimed.replay)return JSON.parse((await db.prepare('SELECT result_json FROM record_automation_tests WHERE id=?').bind(id).first<{result_json:string}>())!.result_json)
-  let version=record.version
+  const claimed=await admission.commit(ctx,{commandId:id,action:'automation.test',appId:ref.appId,canonicalInputHash:hash,permit:{...permit,action:'automation.test'},guards:[guard,recordGuard],mutations:[{kind:'insert',table:tests,row:{id,automation_id:input.id,owner_id:ctx.principal.id,app_id:ref.appId,entity_id:ref.entityId,record_id:record.id,definition_version:binding.definition_version,record_version:record.version,mode,state:'Unknown',created_at:ctx.now,result_json:storedResult(),confirmation_hash:confirmationHash}}],audit:[{action:'automation.test',subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,mode}})
+  if(claimed.replay)return narrow((await db.prepare('SELECT result_json FROM record_automation_tests WHERE id=?').bind(id).first<{result_json:string}>())!.result_json)
   const run:AutomationRun={id,automation_id:input.id,definition_version:binding.definition_version,subject_id:record.id,state:'Running',definition_json:JSON.stringify({definition,event:{ref,event:input.event,version:record.version}}),cause_run_ids_json:'[]',principal_id:ctx.principal.id,credential_id:null,app_id:ref.appId,entity_id:ref.entityId}
   for(const step of result.steps){if(!preview.trigger.matches||step.state==='Failed')continue;const action=definition.actions[step.position]
    try{
