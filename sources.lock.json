@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a7892b9c75b6f6ffac7781ff52582e38ba5de5a2e98d1189fcbfa45684cbe624",
+      "sha256": "e98f656a66646d39af2570a4079eecbfd9c6f60a4a7521bde152694faa87bee5",
       "executable": false
     },
     "DEMO.md": {
@@ -9102,7 +9102,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-agent.server.ts": {
-      "sha256": "19bc0036f583e2c3e421ba6b47f92847c4a0d547185b42a48a870e7c66ad5012",
+      "sha256": "fbe4e284bdf081524cebc65b93f1092f637d0dbc798a3294c19591d8e6d4c9a3",
       "executable": false
     },
     "src/domains/records/manual/proposal-commands.server.ts": {
