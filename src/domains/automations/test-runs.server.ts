@@ -50,7 +50,7 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
     await authorize()
     if(mode==='live'){
      const outcome=await effects.execute(ctx,run,{id:step.id,position:step.position,state:'Running',idempotency_key:step.id,started_at:Date.parse(ctx.now),result_json:null},action,scope,trustedPredicate('1'),version,authorize)
-     step.state=outcome.state;step.output={preview:step.output,result:outcome.result};if(outcome.errorCode)step.errorCode=outcome.errorCode;if(action.kind==='update'&&outcome.state==='Complete')version++
+     step.state=outcome.state;step.output={preview:step.output,result:outcome.result};if(outcome.errorCode)step.errorCode=outcome.errorCode;if(action.kind==='update'&&outcome.state==='Complete')version=(await reader.record(ctx,scope,ref)).version
     }else if(action.kind==='email'){
      if(!ctx.principal.humanId)throw new AuthorityError('forbidden','A builder email address is required.')
      const builder=await automationRecipient(db,entities,ctx,{...ref,operatorId:ctx.principal.humanId})
