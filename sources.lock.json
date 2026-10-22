@@ -6018,7 +6018,7 @@
       "executable": false
     },
     "src/core/app/application.ts": {
-      "sha256": "62ceb5ba7e19a739135e5d878335f4554886c716f3926b1612d7ebd71994d311",
+      "sha256": "302df7d79e7f9bad2c72c74e3892d85d3a1cd7c0b6b1f1ea63084ec406e363c2",
       "executable": false
     },
     "src/core/app/composition/admission-wake.server.ts": {
@@ -7018,7 +7018,7 @@
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.tsx": {
-      "sha256": "9d09bf108a1192a81add577b06314e20b48621cae9078e21d7538e1e5ec2b4c0",
+      "sha256": "be265e9cd1467eddafcb13f1a947cef0e2b1392af88315f5e9c07f46b0d51ec4",
       "executable": false
     },
     "src/core/features/setup/document.server.ts": {
