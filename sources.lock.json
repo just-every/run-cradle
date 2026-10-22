@@ -2918,7 +2918,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "b09dc15aeb6e6a18980d2f9474ab89d9ac8407801dc97a599fdc5e5492d28212",
+      "sha256": "dc9147c86e56cfa4c9b79e424adb8e3e887a781829250cfcc2353ecfa2f9d7b9",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "af5b5d96325f10f6fdfb6e15d6e8d01b3597b695c3306320e29ca3a6b40739f8",
+      "sha256": "8b5e13c1f0e0162810ed4c639baa7068b56be7794d360f718b71665e38cd48ae",
       "executable": false
     },
     "DEMO.md": {
@@ -3034,7 +3034,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "c3098c80d14f465ff6eca7fbcd22866e70f9d171d19fb4a143f1fe15dccb5966",
+      "sha256": "384b7758cd1ad294984aee1c9efe8b11c01e24f2320822894258da1dba53017e",
       "executable": false
     },
     "docs/contract-transition.md": {

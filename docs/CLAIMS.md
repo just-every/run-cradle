@@ -2,7 +2,7 @@
 
 These rows track the clauses completed or advanced in the 18–21 October 2026 rounds; the complete product status remains in CONTRACT.md.
 
-Whole-table review on 21 October 2026 against public main `d89dcf951aa40995a81824a51d4e1a42711056e4` and its completed exact-source Verify 39590513431 preserves every status below. Overall: 121 done, 62 partial, 27 missing of 210; published: 102/9/0 of 111; target and push further: 19/53/27 of 99. Current CI execution is mapped in CONTRACT.md. No provider, live migration, stranger or new release acceptance is added; the partial notification/data proof gaps and 320 px gap remain.
+Whole-table review on 21 October 2026 against public main `d89dcf951aa40995a81824a51d4e1a42711056e4` and its completed exact-source Verify 39590513431 preserves every status below. After the 22 October addition of SCALE-002 as missing (no existing status changes), overall: 121 done, 62 partial, 28 missing of 211; published: 102/9/0 of 111; target and push further: 19/53/28 of 100. Current CI execution is mapped in CONTRACT.md. No provider, live migration, stranger or new release acceptance is added; the partial notification/data proof gaps and 320 px gap remain.
 
 | Clause | Status | Proven behavior | Evidence |
 | --- | --- | --- | --- |
