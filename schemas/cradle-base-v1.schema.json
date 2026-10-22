@@ -407,6 +407,9 @@
                         "displayFieldIds"
                       ],
                       "additionalProperties": false
+                    },
+                    "numberFormat": {
+                      "const": "percent"
                     }
                   },
                   "required": [

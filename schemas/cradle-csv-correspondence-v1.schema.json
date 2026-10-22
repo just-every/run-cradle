@@ -156,6 +156,9 @@
                     }
                   }
                 },
+                "numberFormat": {
+                  "const": "percent"
+                },
                 "defaultValue": {
                   "anyOf": [
                     {
