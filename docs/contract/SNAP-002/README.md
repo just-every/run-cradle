@@ -12,7 +12,7 @@ Evidence: `tests/records-manual-release.mjs` — `[SNAP-002] RECORDS-001 RECORDS
 
 ## Gap
 
-Fields and tables have no trash/restore implementation. Interfaces: no deletable interface object exists (IFACE-001); the kind is proven when one does. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, populated released-version upgrades, archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
+Fields and tables have no trash/restore implementation. Interfaces were carved verbatim into IFACE-001 as an acceptance point (ct, 22 October); no interface object is invented here. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, populated released-version upgrades, archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
 
 ## Published deletion override — RELEASE-ROUND DEBT
 

@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "10eafbc22fdc62f08da1ea52ee2890801b15c60168fbc6b724343163fd46a618",
+      "sha256": "7aaa00ec3ad8e3648a9279d075b3970bdfaf8ee87f4cf65ca524ddfe2e5ce396",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5011a41cf49e86f08caaaaa7550153bb89f1c29da64471260d89a19d62de03e6",
+      "sha256": "fb01b624c0e1b1bf4f95c2e868a410ee50e51b1b648980c4bdf2646eeeeaf85a",
       "executable": false
     },
     "DEMO.md": {
@@ -3758,7 +3758,7 @@
       "executable": false
     },
     "docs/contract/SNAP-002/README.md": {
-      "sha256": "d63579d901d3a8869251f264b21d010161b9b78ad059ccf727c42a46b3808821",
+      "sha256": "a7bc6f94fed55a020bf44e7aa2e6850379e3e6d842c2c84a64178ba05a561379",
       "executable": false
     },
     "docs/contract/SNAP-002/trash-list-1440.png": {
@@ -7607,6 +7607,10 @@
     },
     "src/domains/change-subscriptions/http.server.ts": {
       "sha256": "2e3804710ac7b420eb2aa7cbb3dd939571b494b04fc05b9e5bf69e773ef84c6a",
+      "executable": false
+    },
+    "src/domains/change-subscriptions/schema.ts": {
+      "sha256": "ca7124ff7f69a8e252a6be032f34b832e1600342b9d62343f009079f9279e8a9",
       "executable": false
     },
     "src/domains/change-subscriptions/service.server.ts": {
