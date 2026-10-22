@@ -1,0 +1,31 @@
+{
+  "sha": "15b0403a762f32fccb4b03bb8c668efd9a1fc9bc",
+  "runId": "local-2026-10-22T00:08:46.051Z",
+  "host": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M1 Max",
+    "logicalCpus": 10,
+    "memoryBytes": 34359738368,
+    "node": "v22.20.0",
+    "release": "25.6.0"
+  },
+  "profile": {
+    "recordsPerTable": 250000,
+    "recordsPerBase": 500000,
+    "fieldsPerTable": 500,
+    "tablesPerBase": 50,
+    "linkedRecords": 10000,
+    "pageSize": 100,
+    "samples": 30,
+    "concurrency": 1
+  },
+  "hosted": "NOT RUN \u2014 authorized stage and credentials are not available",
+  "measurements": [],
+  "limits": [],
+  "completed": false,
+  "failure": {
+    "message": "D1_ERROR: too many columns on r_01m5gf0preybkghh3m8vwxqpfx_manual_01m5gf0prex9w8bcd05949vbba: SQLITE_ERROR"
+  },
+  "executionRunId": "20261022T000520795495Z-heavy-slot-f105328a"
+}

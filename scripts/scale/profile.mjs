@@ -3,7 +3,9 @@ import {compileSchema} from '../../src/domains/records/descriptors.server.ts'
 import {ownerRules} from '../../src/domains/records/manual/authority.server.ts'
 import {encodeValues} from '../../src/domains/records/codec.server.ts'
 import {newField} from '../../src/ui/records/schema/templates.ts'
-export const profile={recordsPerTable:250000,recordsPerBase:500000,fieldsPerTable:500,tablesPerBase:50,linkedRecords:10000,pageSize:100,samples:30,concurrency:1}
+export const declaredProfile={recordsPerTable:250000,recordsPerBase:500000,fieldsPerTable:500,tablesPerBase:50,linkedRecords:10000,pageSize:100,samples:30,concurrency:1}
+const diagnostic=process.argv.includes('--diagnostic-80-fields')
+export const profile={...declaredProfile,fieldsPerTable:diagnostic?80:500,scope:diagnostic?'diagnostic: 80 fields; NOT the SCALE-001 profile':'declared SCALE-001 profile'}
 const q=name=>'"'+name.replaceAll('"','""')+'"',literal=value=>value===null?'NULL':typeof value==='number'?String(value):"'"+value.replaceAll("'","''")+"'"
 export async function seedProfile(h){
  const appId=createUlid(),now=new Date().toISOString(),owner=(await h.db.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first()).id,schemas=[],descriptors=[],fields=[],indexes=[]
@@ -11,7 +13,7 @@ export async function seedProfile(h){
   const title=newField('Title'),amount=newField('Amount','number'),stage=newField('Stage','select');stage.options=[{id:createUlid(),label:'Ready'},{id:createUlid(),label:'Shipped'}]
   const formula={...newField('Double','computed'),readOnly:true,resultType:'number',expression:{kind:'call',fn:'multiply',args:[{kind:'field',fieldId:amount.id},{kind:'literal',value:'2',valueType:'number'}]}}
   const list=[title,amount,stage,formula]
-  if(i===0)for(let n=4;n<500;n++)list.push(newField('Flag '+n,'boolean'))
+  if(i===0)for(let n=4;n<profile.fieldsPerTable;n++)list.push(newField('Flag '+n,'boolean'))
   const schema={id:createUlid(),appId,label:i===0?'Scale orders':'Scale table '+i,version:1,createdAt:now,updatedAt:now,physicalRevision:'manual_'+createUlid(),primaryFieldId:title.id,fields:list,lifecycle:{states:['active'],initial:'active',transitions:[]}}
   if(i===2){const links={...newField('Orders','relation'),relation:{ownerAppId:appId,entityId:schemas[0].id,cardinality:'many',onDelete:'restrict'}},rollup={...newField('Total','computed'),readOnly:true,resultType:'number',expression:{kind:'rollup',relationFieldId:links.id,valueFieldId:fields[0].amount.id,aggregate:'sum'}};list.push(links,rollup);fields.push({title,amount,stage,formula,links,rollup})}else fields.push({title,amount,stage,formula})
   const compiled=compileSchema(schema,(_app,id)=>descriptors.find(d=>d.schema.id===id));schemas.push(schema);descriptors.push(compiled.descriptor)

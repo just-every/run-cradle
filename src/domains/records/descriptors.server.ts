@@ -1,3 +1,4 @@
+import {AdmissionError} from '../admission/errors'
 import {capacitySql} from './capacity.server'
 import type { EntitySchema, Field } from './contracts';
 import type { SqlPredicate, TableHandle } from '../admission/ports';
@@ -143,6 +144,7 @@ export function compileSchema(input: EntitySchema, resolve: (appId: string, enti
             extra.push(`CREATE UNIQUE INDEX ${identifier(tableName + '_' + base + '_unique')} ON ${identifier(tableName)}(${identifier(base)},${identifier(storage.currencyColumn!)},${identifier(storage.scaleColumn!)});`);
         extra.push(`CREATE INDEX ${identifier(tableName + '_' + base + '_idx')} ON ${identifier(tableName)}(${identifier(storage.sortColumn ?? base)},id);`);
     }
+    if(cols.length>100)throw new AdmissionError('capacity_limit',`D1 physical columns limit 100 CURRENT ${cols.length}. This table needs a wider storage layout before it can be adopted.`);
     const searchable = [...fields.values()].filter(s => ['text', 'url'].includes(s.field.type) && !s.join);
     const searchTable = searchable.length ? tableName + '_search' : undefined;
     if (searchTable) {

@@ -8,9 +8,9 @@ import {freePort} from '../../tests/helpers/free-port.mjs'
 import {workbookDoors} from '../../tests/helpers/workbook-http.mjs'
 import {newField} from '../../src/ui/records/schema/templates.ts'
 import {createUlid} from '../../src/core/shared/ids.ts'
-import {seedProfile,profile} from './profile.mjs'
+import {seedProfile,profile,declaredProfile} from './profile.mjs'
 import {measure} from './measure.mjs'
-const output=path.resolve(process.env.CRADLE_SCALE_OUTPUT??'.private/scale/result.json'),result={sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runId:process.env.GITHUB_RUN_ID??process.env.REMOTE_JOB_ID??'local-'+new Date().toISOString(),host:{platform:os.platform(),arch:os.arch(),cpu:os.cpus()[0].model,logicalCpus:os.cpus().length,memoryBytes:os.totalmem(),node:process.version,release:os.release()},profile,hosted:'NOT RUN — authorized stage and credentials are not available',measurements:[],limits:[]};let h
+const output=path.resolve(process.env.CRADLE_SCALE_OUTPUT??'.private/scale/result.json'),result={sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runId:process.env.GITHUB_RUN_ID??process.env.REMOTE_JOB_ID??'local-'+new Date().toISOString(),host:{platform:os.platform(),arch:os.arch(),cpu:os.cpus()[0].model,logicalCpus:os.cpus().length,memoryBytes:os.totalmem(),node:process.version,release:os.release()},profile,declaredProfile,hosted:'NOT RUN — authorized stage and credentials are not available',measurements:[],limits:[]};let h
 try{
  h=await recordsImportBrowserRuntime(await freePort());const f=await seedProfile(h);result.actual=f.counts;const d=await workbookDoors(h),schema=f.schemas[0],field=f.fields[0],ref={appId:f.appId,entityId:schema.id,recordId:String(1).padStart(26,'0')},route=`/api/v1/apps/${f.appId}/entities/${schema.id}/query`,query={limit:profile.pageSize,fields:[field.title.id,field.amount.id,field.stage.id]}
  const view=(await d.command('view.save',{view:{appId:f.appId,entityId:schema.id,name:'Scale grouped grid',display:'grid',fields:query.fields,filter:{kind:'all',conditions:[]},sort:[{fieldId:field.title.id,direction:'asc'}],groupBy:[field.stage.id],layout:{titleFieldId:field.title.id},visibility:'app',shipped:false}})).value
