@@ -4418,7 +4418,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "3e17655f5c18e274f881e30a46b463ad298f9bc39d15c0d542a23415e15e85d8",
+      "sha256": "1e024be8b1fd974c51b7b8b16530f5c5dea2881b8e07ecb502fbdf1969e3798a",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
