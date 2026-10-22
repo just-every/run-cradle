@@ -23,15 +23,7 @@ export type RecordActionDependencies = {
     writer: ReturnType<typeof createRecordWriter>;
     metadata: ReturnType<typeof createRecordMetadata>;
     bulk: ReturnType<typeof createBulkService>;
-    deleteEffects: (ctx: RequestContext, ref: {
-        appId: string;
-        entityId: string;
-        recordId: string;
-    }) => Promise<{
-        erasureJobId: string;
-        guards: AdmissionPlan<unknown>['guards'];
-        mutations: AdmissionPlan<unknown>['mutations'];
-    }>;
+
 };
 export function registerRecordActions(registry: CommandRegistry, deps: RecordActionDependencies) {
     const { policy, descriptors, writer, metadata, bulk } = deps;
@@ -62,7 +54,7 @@ export function registerRecordActions(registry: CommandRegistry, deps: RecordAct
     const evidence = z.object({ sourceId: idSchema, sourceVersion: z.number().int().positive(), locator: z.union([z.object({ kind: z.literal('text'), start: z.number().int().nonnegative(), end: z.number().int().nonnegative() }).strict(), z.object({ kind: z.literal('page'), page: z.number().int().positive(), region: z.array(z.number()).optional() }).strict(), z.object({ kind: z.literal('field'), path: z.string() }).strict()]), observedAt: z.string() }).strict();
     register('record.transition', z.object({ ref: refSchema, transition: z.string().min(1).max(100), reason: z.string().min(1).max(4000), evidence: z.array(evidence).max(100) }).strict(), async (ctx, c) => { const scope = await policy.scope(ctx, { appId: c.input.ref.appId, entityId: c.input.ref.entityId, purpose: 'read' }), p = await writer.prepareTransition(ctx, scope, c.input.ref, expected(c, c.input.ref), c.input.transition); const result = await plan(ctx, c, 'record.transition', c.input.ref.appId, p.next, { ...p, changed: [{ ref: p.next.ref, version: p.next.version }] }); const transition = await policy.authorize(ctx, { appId: c.input.ref.appId, action: c.input.transition, transition: c.input.transition, expected: c.expected, cost: [], inputHash: result.canonicalInputHash, commandId: c.commandId }); result.guards = [...result.guards, ...transition.guards]; result.mutations = [...result.mutations, ...transition.reservationMutations]; return result; });
     register('record.delete', z.object({ ref: refSchema, confirmation: z.string() }).strict(), async (ctx, c) => { if (c.input.confirmation !== c.input.ref.recordId)
-        throw new AdmissionError('validation', 'Confirm deletion using the exact record ID'); const scope = await policy.scope(ctx, { appId: c.input.ref.appId, entityId: c.input.ref.entityId, purpose: 'read' }), p = await writer.prepareDelete(ctx, scope, c.input.ref, expected(c, c.input.ref)), effects = await deps.deleteEffects(ctx, c.input.ref); return plan(ctx, c, 'record.delete', c.input.ref.appId, { deleted: c.input.ref, erasureJobId: effects.erasureJobId }, { ...p, guards: [...p.guards, ...effects.guards], mutations: [...p.mutations, ...effects.mutations] }); });
+        throw new AdmissionError('validation', 'Confirm deletion using the exact record ID'); const scope = await policy.scope(ctx, { appId: c.input.ref.appId, entityId: c.input.ref.entityId, purpose: 'read' }), p = await writer.prepareDelete(ctx, scope, c.input.ref, expected(c, c.input.ref)); return plan(ctx, c, 'record.delete', c.input.ref.appId, { deleted: c.input.ref, trashUntil:new Date(Date.parse(ctx.now)+30*86400000).toISOString() }, p); });
     register('record.bulk-preview', z.object({ appId: idSchema, entityId: idSchema, selection: z.union([z.object({ ids: z.array(idSchema).max(500) }).strict(), z.object({ query: querySchema }).strict()]), change: z.union([z.object({ fieldId: idSchema, value: cellValueSchema }).strict(), z.object({ transition: z.string().min(1) }).strict()]) }).strict(), bulk.preview);
     register('record.bulk-commit', z.object({ previewId: idSchema, token: z.string().max(20000) }).strict(), bulk.commit);
     register('record.undo', z.object({ undoId: idSchema }).strict(), bulk.undo);

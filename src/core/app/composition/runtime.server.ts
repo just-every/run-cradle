@@ -1,3 +1,4 @@
+import {recordTrashPurge} from '../../../domains/records/trash/purge.server'
 import {createChangeSubscriptions} from '../../../domains/change-subscriptions/service.server'
 import {changeSubscriptionDelivery} from '../../../domains/change-subscriptions/delivery.server'
 import {ensureRecordCapacity} from '../../../domains/records/capacity.server'
@@ -38,6 +39,6 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)
  const launchImports=createLaunchImportComposition(platform,foundation,records)
- return {changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
+ return {trashPurge:recordTrashPurge(platform.bindings.DB,foundation.descriptors,foundation.admission,clock),changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
 export type Runtime=Awaited<ReturnType<typeof createRuntime>>

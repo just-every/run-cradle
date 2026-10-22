@@ -1,3 +1,4 @@
+import {trashTable,trashLifetime} from './trash/storage.server'
 import {recordCapacityGuard} from './capacity.server'
 import type { RecordMutationEffects } from './effects.server';
 import type { RecordAttachmentPort } from './attachments.server';
@@ -134,7 +135,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         throw new AdmissionError('invalid_transition', 'Lifecycle transition is not available'); if (d.writePolicy?.transitions && !d.writePolicy.transitions.includes(action))
         throw new AdmissionError('forbidden', 'Lifecycle requires a typed domain action'); const change = await internalChange(ctx, scope, { ref, expectedVersion, changes: {} }, 'transition'); change.guards.push(...await invariant(ctx, d, 'transition', ref, expectedVersion, {}, raw, transition.to)); const mutation = change.mutations[0]; if (mutation.kind !== 'update')
         throw new Error('Invalid transition plan'); mutation.set = { ...mutation.set, [d.lifecycleColumn]: transition.to }; change.next.lifecycle = transition.to; change.audit[0]!.action = action; return change; }
-    async function prepareDelete(ctx: RequestContext, scope: PolicyScope, ref: Ref, expectedVersion: number, path = new Set<string>()): Promise<PreparedRecordChange> {
+    async function prepareDelete(ctx: RequestContext, scope: PolicyScope, ref: Ref, expectedVersion: number, path = new Set<string>(), groupId=createUlid()): Promise<PreparedRecordChange> {
         const key = ref.appId + ':' + ref.entityId + ':' + ref.recordId;
         if (path.size >= 64 || path.has(key))
             throw new AdmissionError('invalid_transition', 'Deletion dependency cycle or depth limit');
@@ -142,6 +143,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         const d = registry.get(ref.appId, ref.entityId), change = await internalChange(ctx, scope, { ref, expectedVersion, changes: {} }, 'delete'), impact = await deletionImpact(ctx, ref);
         change.guards.push(...impact.guards);
         const dependents: SqlMutation[] = [];
+        const restoreLinks:{ref:Ref;fieldId:string;version:number;value:CellValue}[]=[];
         const handled = new Set<string>();
         for (const link of impact.references) {
             const targetKey = link.ref.appId + ':' + link.ref.entityId + ':' + link.ref.recordId;
@@ -153,12 +155,13 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
             let prepared: PreparedRecordChange;
             if (link.effect === 'cascade') {
                 handled.add(targetKey);
-                prepared = await prepareDelete(ctx, targetScope, link.ref, link.version, nextPath);
+                prepared = await prepareDelete(ctx, targetScope, link.ref, link.version, nextPath,groupId);
             }
             else {
                 const current = await reader.record(ctx, targetScope, link.ref), old = current.fields[link.fieldId];
                 if (old?.state !== 'value')
                     throw new AdmissionError('forbidden', 'Linked field is unavailable');
+                restoreLinks.push({ref:link.ref,fieldId:link.fieldId,version:link.version+1,value:old.value});
                 const value = Array.isArray(old.value) ? (old.value as Ref[]).filter(v => v.recordId !== ref.recordId) : null;
                 prepared = await prepareChange(ctx, targetScope, { ref: link.ref, expectedVersion: link.version, changes: { [link.fieldId]: value } });
             }
@@ -167,7 +170,8 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
             dependents.push(...prepared.mutations, ...permit.reservationMutations);
             change.audit.push(...prepared.audit);
         }
-        change.mutations = [...change.mutations.slice(1), ...dependents, { kind: 'delete', table: d.table, where: and(eq(d.table, d.idColumn, ref.recordId), eq(d.table, d.versionColumn, expectedVersion)), expectedRows: 1 }];
+        const own=change.mutations[0]!;if(own.kind!=='update')throw new Error('Record trash requires a versioned update');own.set={...own.set,[d.lifecycleColumn]:'deleted'};
+        change.mutations = [...change.mutations, ...dependents, {kind:'insert',table:trashTable,row:{app_id:ref.appId,entity_id:ref.entityId,record_id:ref.recordId,group_id:groupId,actor_id:ctx.principal.id,deleted_at:Date.parse(ctx.now),expires_at:Date.parse(ctx.now)+trashLifetime,record_version:expectedVersion+1,schema_version:d.schema.version,prior_lifecycle:change.next.lifecycle,links_json:canonical(restoreLinks),purge_state:'held'}}];
         change.audit[0]!.action = 'record.delete';
         change.next.lifecycle = 'deleted';
         return change;

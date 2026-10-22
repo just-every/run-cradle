@@ -1,3 +1,5 @@
+import {recordTrashService} from '../../../domains/records/trash/service.server'
+import {recordTrashHttp} from '../../../domains/records/trash/http.server'
 import {prepareSheetsSource} from '../../../domains/records/sheets/source'
 import {prepareWorkbookSource} from '../../../domains/records/workbooks/source'
 import {createCalendarFeeds} from '../../../domains/records/calendar-feed.server'
@@ -25,6 +27,7 @@ import { registerRecordActions, createAuthorizedRecordCreatePreparer } from '../
 import { registerRecordFormActions } from '../../../domains/records/form-actions.server'
 import type { Platform } from '../../platform'
 import type { ServerFoundation } from '../foundation.server'
+import {createUlid} from '../../shared/ids'
 import { ApiError } from '../../registry/errors'
 import { createReferenceAccess } from '../../../domains/authority/reference.server'
 import { createModelConfiguration } from '../../../domains/execution/configuration.server'
@@ -68,7 +71,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
   const services=createRecordServices(db,descriptors,policy,platform.auth.configuration.sessionSecret,
     createEvidenceDetail(deps,activeCases),createEvidenceAttachmentPort(deps),
     (ctx,change)=>prepareCanonicalInvalidation(db,ctx,change.before))
-  registerRecordActions(foundation.commands,{...services,async deleteEffects(){throw new ApiError('unconfigured','Record deletion requires complete evidence erasure and recovery support. No record was deleted.')}})
+  registerRecordActions(foundation.commands,services)
   registerRecordFormActions(foundation.commands,{metadata:services.metadata,policy,prepareCreate:createAuthorizedRecordCreatePreparer(services)})
   const manual=createManualSchemas(db,policy,admission,descriptors)
   const csv=createRecordsCsv(db,services,admission)
@@ -94,7 +97,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
       return {subject,fieldIds}
     },
   })
-  return {csv,calendarFeedHttp:calendarFeedHttp(createCalendarFeeds(db,services.metadata,policy,platform.auth.configuration.appOrigin),foundation.authenticate),deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.endsWith('.sheets.json')?prepareSheetsSource(artifacts[0]!):artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):artifacts.length===1&&/\.xls[xm]$/i.test(artifacts[0]!.filename)?prepareWorkbookSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(csv,foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
+  return {trashHttp:recordTrashHttp(recordTrashService(db,services,admission),request=>foundation.authenticate(request,'http',createUlid())),csv,calendarFeedHttp:calendarFeedHttp(createCalendarFeeds(db,services.metadata,policy,platform.auth.configuration.appOrigin),foundation.authenticate),deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.endsWith('.sheets.json')?prepareSheetsSource(artifacts[0]!):artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):artifacts.length===1&&/\.xls[xm]$/i.test(artifacts[0]!.filename)?prepareWorkbookSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(csv,foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
     http:createRecordHttp({...services,authenticate:foundation.authenticate}),
     historyHttp:createEvidenceHistoryHttp({...deps,authenticate,audit,cursorSecret:platform.auth.configuration.sessionSecret,comments:commentReader,mentions}),
   }

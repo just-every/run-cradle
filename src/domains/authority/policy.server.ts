@@ -1,3 +1,4 @@
+import {liveRecord} from '../records/trash/authority.server'
 import {ownerSheetsRead} from './sheets-read.server'
 import { ownerConnectionControl } from './connection-management'
 import { and, or, trustedPredicate, identifier } from '../admission/sql.server'
@@ -65,10 +66,11 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     const common=(key:'readableFields'|'writableFields')=>allow[0]![key].filter(id=>allow.every(r=>r[key].includes(id))&&!deny.some(r=>r[key].includes(id)))
     const deniedRows=or(...deny.map(r=>compileFilter(r.rows,entity,ctx.now)))
     const selection=and(...(entity.appColumn?[trustedPredicate(`${identifier(entity.table)}.${identifier(entity.appColumn)}=?`,[request.appId])]:[]),or(...allow.map(r=>compileFilter(r.rows,entity,ctx.now))),trustedPredicate(`NOT (${deniedRows.sql})`,deniedRows.values))
-    const rowPredicate=and(selection,...loaded.guards)
+    const visibility=liveRecord(ctx,request.appId,request.entityId,entity.table,entity.idColumn)
+    const rowPredicate=and(selection,visibility,...loaded.guards)
     // Cursor identity retains the membership/policy fence, but excludes per-request clock parameters.
     // Every read still executes rowPredicate and all currentAuthorityGuards.
-    const cursorPredicate=and(selection,loaded.guards[loaded.guards.length-1]!)
+    const cursorPredicate=and(selection,visibility,loaded.guards[loaded.guards.length-1]!)
     const result:PolicyScope={principal:ctx.principal,appId:request.appId,entityId:request.entityId,policyVersion:loaded.version,rowPredicate,cursorPredicate,readableFieldIds:common('readableFields'),writableFieldIds:common('writableFields'),discoverableRelations:entity.fields.filter(f=>(f.type==='relation'||f.relationDiscoverable===true)&&common('readableFields').includes(f.id)).map(f=>f.id),validUntil:ctx.principal.expiresAt,currentAuthorityGuards:loaded.guards}
     // Composite legacy projections contain linked values and derived counts. They
     // may only bypass per-row projection when this policy proves unbounded read.
@@ -106,7 +108,7 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
       const allowed=applicable.filter(r=>r.effect==='allow'&&(!entityFieldIds||entityFieldIds.every(f=>(readOnly?r.readableFields:r.writableFields).includes(f))))
       if(!allowed.length)return denied()
       const deniedRows=or(...applicable.filter(r=>r.effect==='deny').map(r=>compileFilter(r.rows,entity,ctx.now)))
-      const rows=and(...(entity.appColumn?[trustedPredicate(`${identifier(entity.table)}.${identifier(entity.appColumn)}=?`,[request.appId])]:[]),or(...allowed.map(r=>compileFilter(r.rows,entity,ctx.now))),trustedPredicate(`NOT (${deniedRows.sql})`,deniedRows.values))
+      const rows=and(liveRecord(ctx,request.appId,entityId,entity.table,entity.idColumn),...(entity.appColumn?[trustedPredicate(`${identifier(entity.table)}.${identifier(entity.appColumn)}=?`,[request.appId])]:[]),or(...allowed.map(r=>compileFilter(r.rows,entity,ctx.now))),trustedPredicate(`NOT (${deniedRows.sql})`,deniedRows.values))
       const expected=request.expected.filter(r=>r.ref.entityId===entityId), proposed=request.proposedRows?.filter(r=>r.entityId===entityId)??[]
       for(const target of proposed)guards.push(proposedRowPredicate(entity,target.row,rows))
       for(const target of expected){if(target.ref.appId!==request.appId)return denied();guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${rows.sql}))`,[target.ref.recordId,...rows.values]))}

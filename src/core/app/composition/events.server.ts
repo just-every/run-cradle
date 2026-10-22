@@ -29,6 +29,7 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
   async function scheduled() {
     await runtime.launch.scheduled()
     await runtime.lifecycle.cleanup.maintain()
+    await runtime.trashPurge()
     await runtime.warehouse.runtime.scheduled()
     // Admit due notifications before dispatching effects in this same invocation.
     await channels()
