@@ -12,8 +12,17 @@ Evidence: `tests/records-manual-release.mjs` — `[SNAP-002] RECORDS-001 RECORDS
 
 ## Gap
 
-Fields and tables have no trash/restore implementation. Interfaces were carved verbatim into IFACE-001 as an acceptance point (ct, 22 October); no interface object is invented here. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, populated released-version upgrades, archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
+Fields and tables have no trash/restore implementation. Interfaces were carved verbatim into IFACE-001 as an acceptance point (ct, 22 October); no interface object is invented here. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, populated released-version upgrades (including the 9047 deleted-view backfill UPDATE), archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
 
-## Published deletion override — RELEASE-ROUND DEBT
+## Deletion dialog correction
 
-The existing record deletion dialog says “Erasure has been requested. This deletion cannot be undone.”, “This permanently deletes the record. Review affected relationships before continuing. There is no undo.” and “I understand this record and any listed dependent records will be permanently deleted.” Its action is labelled “Permanently delete”. These published words are now overridden for ordinary record deletion: deletion hides the canonical record and retains it in Trash for 30 days, with current-authority restoration and audited eventual purge. BASE-DATA-003 erasure remains irreversible and bypasses Trash. The dialog itself is outside this round's named UI scope and is left for an owner-scoped follow-up; release files are unchanged. Clauses: SNAP-002, RECORDS-002, BASE-DATA-003.
+The previous dialog said “This permanently deletes the record” and “There is no undo”,
+and labelled its action “Permanently delete”. The dialog now says that ordinary
+deletion moves the record to Trash for 30 days, where people with the right to
+delete it can restore it, and labels its action “Move to Trash”. BASE-DATA-003
+erasure remains irreversible and bypasses Trash; release files are unchanged.
+The browser journey opens and confirms this dialog, proves the deleted end state
+and restores the same record at 1440 and 390, with no page overflow or serious/
+critical axe findings. Its host's three icon-only mobile navigation controls have
+300 ms hover tooltips and immediate keyboard-focus tooltips, scoped to record
+detail and deletion states. No test pins the former copy.

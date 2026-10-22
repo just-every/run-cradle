@@ -134,6 +134,7 @@ export const OperatorShell = ({
           <span />
           <span />
           <span />
+          <span className="operator-record-tooltip" role="tooltip">Open navigation</span>
         </button>
         <Link className="operator-mobile-brand" to="/app">
           <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
@@ -148,6 +149,7 @@ export const OperatorShell = ({
           }
         >
           <OperatorIcon name="bell" />
+          <span className="operator-record-tooltip" role="tooltip">Notifications</span>
           {identity.unreadNotifications ? (
             <b>
               {identity.unreadNotifications > 99
@@ -181,6 +183,7 @@ export const OperatorShell = ({
             aria-label="Close navigation"
           >
             ×
+            <span className="operator-record-tooltip" role="tooltip">Close navigation</span>
           </button>
         </div>
         <OperatorRail

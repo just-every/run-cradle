@@ -2910,7 +2910,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "bfe73b986bd754baca9a0a771f3d13bbd6f82f1e5ca15509d12dca1bd8e657db",
+      "sha256": "0a761269e6e6e7d95225e8d5aa388a44f8a644ef428e4b903891a25669113aec",
       "executable": false
     },
     ".gitignore": {
@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "62015efb59623396918a726ecc11bb5906c0d76665ce9cef5d616962ee15cc74",
+      "sha256": "5ba5b83fcb59b3658a5e9b9d3f5798b76eceb662e795ad468c421cbefb8167b4",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d33d06d946a5c879d74262f8a522f335f0e841eb07c2e13137d41b946595ea61",
+      "sha256": "9b227ed3257a8f9131dccd24e435b46b0e88ce3c3bc7efa7c491998a1e5a3a03",
       "executable": false
     },
     "DEMO.md": {
@@ -3758,7 +3758,7 @@
       "executable": false
     },
     "docs/contract/SNAP-002/README.md": {
-      "sha256": "a7bc6f94fed55a020bf44e7aa2e6850379e3e6d842c2c84a64178ba05a561379",
+      "sha256": "7590f405f1d5b4b2242e82496bbe7c2f34d2e2808e8ee3445dc41b11695217e1",
       "executable": false
     },
     "docs/contract/SNAP-002/trash-list-1440.png": {
@@ -6606,11 +6606,11 @@
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.css": {
-      "sha256": "bf58e5045e9967ba6a64a6295aa48e5f272b7e38c6cd8f9b4a3b14dbf89e408d",
+      "sha256": "71ad83d283afff2218f71b6bee3e28c4ea1ccfd8f01f3e3e692ce020945218c1",
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.tsx": {
-      "sha256": "31d77b08c88fc79494ea917d2453d5d4074ff89c077188b5123bef98e27f7afc",
+      "sha256": "c9397baa6b735973f69cb11f03573b4d05d0c4a7cfa84fea3500cd1cb15dc31e",
       "executable": false
     },
     "src/core/app/ui/operator/resource-boundary.tsx": {
@@ -10158,7 +10158,7 @@
       "executable": false
     },
     "src/ui/records/delete-record.tsx": {
-      "sha256": "4ad9b1a7fe5c64ff163171fa5a31bb05c5c5e5802a0af5fb6b8ea5b60450c85d",
+      "sha256": "3dd2e64d3a49fd0b0e365072e5b5e5031a9e83db349ff9db0b85eaf3dea95ebb",
       "executable": false
     },
     "src/ui/records/export-base.tsx": {
@@ -11570,7 +11570,7 @@
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
-      "sha256": "606dc07d726a971234e5a0e489c186267bc0f2344d54fc78dbe78dc4a43c5f5e",
+      "sha256": "30902b91f47c2d03cece3461d6dfff0d9880f44c0eb943be3c4ab472a78a8737",
       "executable": false
     },
     "tests/helpers/record-trash-journey.mjs": {
