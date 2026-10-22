@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "dcbdabde961317ae1f398dfc7b11d3c1527d7c03def6386c5b45dbc76382d000",
+      "sha256": "21aed991596a59182b2db3c77e885eca969c4686d163a33b81a3165048c5ca1f",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "002522b780a03134730168af8606ecf3f474aba1a5bd1a11451c02e1bc1bd388",
+      "sha256": "033b964f43292ddd4dadd2fcce960d2d80ddff832cd177fa483a488f2865fd16",
       "executable": false
     },
     "DEMO.md": {
@@ -3038,7 +3038,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "6f4da49c5e52dc7db43f5da9b62119cd7a9f36acbc98c3914b0ea64fc0cffbc8",
+      "sha256": "6d6bb771626c570015c73761bc07a99e24b37da90bf6c65fb85e6f65588469a9",
       "executable": false
     },
     "docs/company-identity.md": {
@@ -4346,7 +4346,7 @@
       "executable": false
     },
     "docs/measured-scale.md": {
-      "sha256": "3dd10b3657a15ea57dcc930f40e48d526806a4391a7874cd774914afdd911f7f",
+      "sha256": "d3b7baed1312ce15dd38dbbc3e1b2cafc9926895b2b9615e13adc325ce5fa315",
       "executable": false
     },
     "docs/operating-loops.md": {
