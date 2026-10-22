@@ -4,6 +4,7 @@ import type { RecordAutomationDefinition } from '../../domains/automations/contr
 import { createUlid } from '../../core/shared/ids'
 import { readApi,useResource } from '../shared/api'
 import { ResourceState } from '../shared/presentation'
+import {AutomationTestPanel} from './test-panel'
 import { AutomationActionEditor } from './action-editor'
 export type SavedAutomation={id:string;version:number;definitionVersion:number;definition:RecordAutomationDefinition;expiresAt:string|null}
 export function AutomationDefinitionEditor({appId,entity,existing,onSaved,onCancel}:{appId:string;entity:EntitySchema;
@@ -34,6 +35,7 @@ export function AutomationDefinitionEditor({appId,entity,existing,onSaved,onCanc
   <button className="cr-button cr-button--quiet" type="button" disabled={definition.actions.length>=10} onClick={()=>setDefinition({...definition,actions:[...definition.actions,{kind:'notify',operatorId:'',title:'A record changed'}]})}>Add action</button>
   <label className="cr-field">Approve for<select value={days} onChange={event=>setDays(Number(event.target.value))}>{[7,14,30].map(day=><option key={day} value={day}>{day} days</option>)}</select></label>
   <label><input type="checkbox" checked={definition.enabled} onChange={event=>setDefinition({...definition,enabled:event.target.checked})}/> Enable after saving</label>
+  {existing&&<AutomationTestPanel id={existing.id} entity={entity} event={existing.definition.event}/>}
   <p className="cr-muted">Runs use your current record policy. After approval expires, save again to renew it. Updates cannot repeat the same automation in a chain.</p>
   {error&&<p className="cr-error" role="alert">{error}</p>}
   <div className="cr-toolbar"><button className="cr-button" disabled={busy||recipients.resource.state!=='ready'}>{busy?'Saving…':'Save automation'}</button><button className="cr-button cr-button--quiet" type="button" onClick={onCancel} disabled={busy}>Cancel</button></div>

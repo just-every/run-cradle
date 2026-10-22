@@ -4,11 +4,13 @@ import type { RequestContext } from '../authority/ports'
 import { idSchema,instantSchema } from '../authority/validators'
 import { readBoundedJson } from '../authority/http.server'
 import { recordAutomationDefinition } from './contracts'
+import type {createAutomationTests} from './test-runs.server'
 import type { createRecordAutomationConfiguration } from './configuration.server'
 import type { createRecordAutomationHistory } from './history.server'
 import type { createAutomationDestinations } from './destinations.server'
 
 export function recordAutomationsHttp(deps:{
+ tests:ReturnType<typeof createAutomationTests>;
  configuration:ReturnType<typeof createRecordAutomationConfiguration>;
  history:ReturnType<typeof createRecordAutomationHistory>;
  destinations:ReturnType<typeof createAutomationDestinations>;
@@ -33,6 +35,7 @@ export function recordAutomationsHttp(deps:{
   const ctx=await deps.authenticate(c.req.raw)
   return c.json(reply(ctx,{recipients:await deps.recipients(ctx,idSchema.parse(c.req.query('appId')),idSchema.parse(c.req.query('entityId')))}))
  })
+ router.post('/:id/test',async c=>{const ctx=await deps.authenticate(c.req.raw),input=z.object({commandId:idSchema,recordId:idSchema,event:z.enum(['created','updated']),live:z.object({previewId:idSchema,effects:z.array(z.object({position:z.number().int().nonnegative(),kind:z.string(),destination:z.string().max(2048)}).strict()).max(10)}).strict().optional()}).strict().parse(await readBoundedJson(c.req.raw,32768));return c.json(reply(ctx,await deps.tests.run(ctx,{...input,id:idSchema.parse(c.req.param('id'))})))})
  router.get('/:id/runs',async c=>{
   const ctx=await deps.authenticate(c.req.raw)
   return c.json(reply(ctx,{runs:await deps.history.runs(ctx,idSchema.parse(c.req.param('id')))}))

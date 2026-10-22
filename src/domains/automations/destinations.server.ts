@@ -16,6 +16,9 @@ import { DeliveryService } from '../../../vendor/base/modules/integrations/core/
 import type { TrustedTransport } from '../../../vendor/base/modules/integrations/core/types.ts'
 import { RelayTransport } from '../integrations/relay-transport.server'
 import { destinations } from './storage.server'
+import type {RecordAutomationAction} from './contracts'
+import type {Ref} from '../../contracts/primitives'
+import {renderSlackEvent,serializeSlackMessage} from '../../../vendor/base/modules/integrations/slack/message.ts'
 
 export function createAutomationDestinations(env:PlatformBindings,policy:PolicyPort,admission:AdmissionPort) {
  const db=env.DB,version=env.CONNECTION_ENCRYPTION_KEY_VERSION??'v1'
@@ -43,6 +46,12 @@ export function createAutomationDestinations(env:PlatformBindings,policy:PolicyP
     audit:[{action:'automation.destination.create',subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,kind:input.kind,createdAt:new Date(createdAt).toISOString()}})
    if(receipt.replay)throw new AuthorityError('version_conflict','Destination already saved. Its signing key is not recoverable; create a new destination to rotate it.',409)
    return {id,kind:input.kind,...(input.kind==='webhook'?{signingKey}:{})}
+  },
+  async preview(ctx:RequestContext,appId:string,action:Extract<RecordAutomationAction,{kind:'webhook'|'slack'}>,ref:Ref,event:string,recordVersion:number,id:string){
+   if(!await db.prepare('SELECT 1 FROM record_automation_destinations WHERE id=? AND app_id=? AND owner_id=? AND kind=? AND revoked_at IS NULL').bind(action.destinationId,appId,ctx.principal.id,action.kind).first())throw new AuthorityError('not_found','Destination is unavailable.',404)
+   const destination=await resolve(appId,action.destinationId),body=action.kind==='slack'?serializeSlackMessage(renderSlackEvent('record.changed',action.text,{'record.changed':text=>({summary:text,sections:[text]})})):JSON.stringify({event,record:ref,version:recordVersion,deliveryId:id})
+   const protocol=action.kind==='webhook'?createWebhookProtocol({resolveDestination:async()=>destination.url,signingKey:async()=>unbase64(destination.signingKey)}):createSlackIncomingWebhookProtocol({resolveDestination:async()=>destination.url})
+   return protocol.prepare({id,tenant:appId,destinationId:action.destinationId,event:'record.'+event,protocol:action.kind==='webhook'?'webhook':'slack.incoming-webhook.v1',body},Date.parse(ctx.now))
   },
   delivery(appId:string,authorize:()=>Promise<void>) {
    if(!env.EGRESS_RELAY_URL||!env.EGRESS_RELAY_SECRET)throw new AuthorityError('unconfigured','Configure the trusted HTTPS egress relay before enabling outbound actions.',503)

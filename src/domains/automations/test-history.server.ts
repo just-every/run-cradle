@@ -1,0 +1,8 @@
+import type {RequestContext,PolicyPort} from '../authority/ports'
+import type {DescriptorRegistry} from '../records/descriptors.server'
+import {identifier,and} from '../admission/sql.server'
+export async function automationTestHistory(db:D1Database,policy:PolicyPort,descriptors:DescriptorRegistry,ctx:RequestContext,id:string,binding:{app_id:string;entity_id:string},authority:import('../admission/ports').SqlPredicate){
+ const scope=await policy.scope(ctx,{appId:binding.app_id,entityId:binding.entity_id,purpose:'read'}),d=descriptors.get(binding.app_id,binding.entity_id),guard=and(authority,...scope.currentAuthorityGuards)
+ const rows=await db.prepare(`SELECT t.* FROM record_automation_tests t WHERE t.automation_id=? AND t.owner_id=? AND (${guard.sql}) AND EXISTS(SELECT 1 FROM ${identifier(d.table.tableId)} WHERE ${identifier(d.idColumn)}=t.record_id AND (${scope.rowPredicate.sql})) ORDER BY t.created_at DESC,t.id DESC LIMIT 100`).bind(id,ctx.principal.id,...guard.values,...scope.rowPredicate.values).all<{id:string;record_id:string;definition_version:number;mode:string;state:string;created_at:string;result_json:string}>()
+ return rows.results.map(row=>{const result=JSON.parse(row.result_json) as {steps:{position:number;state:string;errorCode?:string}[]};return {id:row.id,definitionVersion:row.definition_version,recordId:row.record_id,recordLabel:row.record_id,state:row.state,testMode:row.mode,heldUntil:null,queuedAt:row.created_at,startedAt:row.created_at,finishedAt:row.state==='Unknown'?null:row.created_at,errorCode:row.state==='Unknown'?'test_outcome_unknown':null,actions:result.steps.map(step=>({position:step.position,state:step.state,error_code:step.errorCode??null,heldUntil:null}))}})
+}

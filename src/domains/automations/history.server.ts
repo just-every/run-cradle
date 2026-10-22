@@ -4,6 +4,7 @@ import { ownerDelegationSnapshot } from '../authority/delegation.server'
 import { principalGuards } from '../authority/guards.server'
 import { and,identifier,trustedPredicate } from '../admission/sql.server'
 import { AuthorityError } from '../authority/errors'
+import {automationTestHistory} from './test-history.server'
 import { recordAutomationDefinition } from './contracts'
 
 export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,descriptors:DescriptorRegistry) {
@@ -61,7 +62,7 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
      queuedAt:new Date(run.queued_at).toISOString(),startedAt:run.started_at===null?null:new Date(run.started_at).toISOString(),
      finishedAt:run.finished_at===null?null:new Date(run.finished_at).toISOString(),errorCode:run.error_code,actions:visibleActions})
    }
-   return result
+   return [...result,...await automationTestHistory(db,policy,descriptors,ctx,id,binding,guard)].sort((a,b)=>b.queuedAt.localeCompare(a.queuedAt)||b.id.localeCompare(a.id)).slice(0,100)
   },
  }
 }
