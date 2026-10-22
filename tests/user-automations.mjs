@@ -7,10 +7,10 @@ import {automationQuietHours} from './helpers/automation-quiet-hours.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
 contract('AUTO-USER-001','[AUTO-USER-005] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
- const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[]
+ const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[];let testMailStatus=202
  const h=await userAutomationRuntime(18952,{outbound:async request=>{
   assert.equal(request.url,relay);assert.equal(request.headers.get('authorization'),'Bearer synthetic-record-relay-key')
-  delivered.push(await request.json());return new Response(null,{status:202})
+  delivered.push(await request.json());return new Response(null,{status:testMailStatus})
  }})
  const providerMessages=h.mailMessages
  h.mailMessages=async()=>[...await providerMessages(),...delivered]
@@ -18,7 +18,7 @@ contract('AUTO-USER-001','[AUTO-USER-005] real admitted record triggers run noti
   await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined,MAIL_API_KEY:'synthetic-record-relay-key',MAIL_RELAY_URL:relay})
   const settings=(await h.request('/api/v1/settings')).data
   await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}}}})
-  await automationTestJourney(h,delivered)
+  await automationTestJourney(h,delivered,status=>{testMailStatus=status})
   const save={commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{
    name:'Welcome record',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[
     {kind:'notify',operatorId:h.operator,title:'A new item needs review'},

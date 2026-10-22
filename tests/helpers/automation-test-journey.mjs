@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
+import {baseHttpSession} from './base-http-session.mjs'
 import {randomBytes} from 'node:crypto'
 import {createUlid} from '../../src/core/shared/ids.ts'
-export async function automationTestJourney(h,delivered){
+export async function automationTestJourney(h,delivered,setMailStatus){
  await h.restart({CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64')})
  const person=createUlid(),email='synthetic-cradle-61@example.test'
  await h.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(person,email,'synthetic-cradle-61',Date.now()).run()
@@ -29,8 +30,11 @@ export async function automationTestJourney(h,delivered){
  const history=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs
  assert.ok(history.some(run=>run.id===tested.id&&run.testMode==='dry'&&run.actions.length===4))
  await h.request(route,{method:'POST',body:input});assert.equal(delivered.length,1,'Replaying a test does not resend its mail')
- const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-64',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}})).data.key
- await h.request(route,{method:'POST',secret:key.secret,status:404,body:{...input,commandId:createUlid()}})
+ await h.restart({MAIL_PROVIDER:'sendgrid',MAIL_PROVIDER_API_KEY:'test-only-sendgrid-mail-edge'})
+ const nonAuthor=await baseHttpSession(h.origin,email)
+ await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined})
+ const refused=await fetch(h.origin+route,{method:'POST',headers:{cookie:nonAuthor.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':nonAuthor.csrfToken},body:JSON.stringify({...input,commandId:createUlid()})})
+ assert.equal(refused.status,404,'A different human who may read and edit the record cannot test the author’s automation')
  const mismatch=(await h.request(route,{method:'POST',body:{...input,commandId:createUlid(),event:'updated'}})).data
  assert.equal(mismatch.trigger.matches,false);assert.ok(mismatch.steps.every(step=>step.state==='Skipped'));assert.equal(delivered.length,1)
  await h.request(route,{method:'POST',status:409,body:{...input,commandId:createUlid(),live:{previewId:tested.id,effects:[]}}})
@@ -42,6 +46,13 @@ export async function automationTestJourney(h,delivered){
  assert.equal((await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${chosen.id}`)).data.record.fields[h.statusId].value,'review')
  assert.equal(delivered.at(-1).to,email,'Only an explicitly confirmed live test sends to the original operator')
  assert.ok((await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.some(run=>run.id===live.id&&run.testMode==='live'))
+ const uncertainInput={...input,commandId:createUlid()},beforeUncertain=delivered.length
+ setMailStatus(503)
+ const uncertain=(await h.request(route,{method:'POST',body:uncertainInput})).data
+ assert.equal(uncertain.state,'Unknown');assert.equal(uncertain.steps[2].state,'Unknown')
+ setMailStatus(202)
+ const replayed=(await h.request(route,{method:'POST',body:uncertainInput})).data
+ assert.equal(replayed.state,'Unknown');assert.equal(delivered.length,beforeUncertain+1,'An uncertain mail acknowledgement never resends on replay')
  await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:liveAutomation.version}})
  delivered.length=0
 }
