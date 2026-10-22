@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "39a069f54e1161f01ad2e3837383e0abff6b7ab89f5ffa8fe4af95453d576029",
+      "sha256": "3d63f1dfcafcfb2710eaf46bdc52ebd02d2ba0b3965669da8eee1e7ffb31fdfa",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c08c0d95a67f91c4b79d83b36331be80dbc15653bf33a121110f2b424ef055ff",
+      "sha256": "29ceb2629bbbf5facd66ed158a453be5e8c4359cd1ac3fa711148c0028ef0f4b",
       "executable": false
     },
     "DEMO.md": {
@@ -4346,7 +4346,7 @@
       "executable": false
     },
     "docs/measured-scale.md": {
-      "sha256": "d3b7baed1312ce15dd38dbbc3e1b2cafc9926895b2b9615e13adc325ce5fa315",
+      "sha256": "1fae4fa3f1c3c44645ad1e8b8ce342fa4b68f3979fa47cd933249db02518282f",
       "executable": false
     },
     "docs/operating-loops.md": {
