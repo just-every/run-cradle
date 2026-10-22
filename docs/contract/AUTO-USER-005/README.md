@@ -10,7 +10,7 @@ Tests are durably claimed before any send. Repeating the same command never send
 
 Custody: `record_automation_tests` stores projected step inputs/results, the author and chosen record, versions and a confirmation digest. Receiver URLs and signing secrets are absent from durable test results; a signed receiver preview is returned only to the currently authorized author. Generic installation export/restore carries test history with no dispatch path. Member identity erasure registers the authored test rows for scrubbing. Complete archive/restore and erasure acceptance for these rows remains unproven.
 
-Evidence: `tests/user-automations.mjs` — `[AUTO-USER-005] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work`, extended by `tests/helpers/automation-test-journey.mjs`; browser panel: `tests/ui-user-automations.mjs` and `tests/helpers/automation-test-browser.mjs`.
+Evidence: `tests/user-automations.mjs` — `[AUTO-USER-005] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work`, extended by `tests/helpers/automation-test-journey.mjs`; browser panel: `tests/ui-user-automations.mjs` and `tests/helpers/automation-test-browser.mjs`. Desktop and phone checks pass without horizontal overflow or serious/critical axe findings; `test-panel-*.png` shows both the chosen record and the completed step output.
 
 ## Gap and inherited duty
 

@@ -3,7 +3,7 @@ import {mkdir} from 'node:fs/promises'
 import AxeBuilder from '@axe-core/playwright'
 export async function automationTestBrowser(page,h,width){
  const panel=page.getByRole('region',{name:'Test automation',exact:true})
- await panel.getByRole('combobox').first().selectOption({label:`Browser trigger ${width}`})
+ await panel.getByRole('combobox').first().selectOption({label:`synthetic-cradle-${width} · Packaging approval`})
  const response=page.waitForResponse(response=>response.url().endsWith('/test')&&response.request().method()==='POST')
  await panel.getByRole('button',{name:'Run test',exact:true}).click()
  const result=await response;assert.equal(result.status(),200,await result.text());assert.equal((await result.json()).data.state,'Complete')
