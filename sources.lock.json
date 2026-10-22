@@ -11914,7 +11914,7 @@
       "executable": false
     },
     "tests/records-transport.mjs": {
-      "sha256": "6d7485867ad111ac6f6d12ba10cbdcada35c4f29553398c6d60a2ae3b061c418",
+      "sha256": "15127e07bc8521548f31a03c7c9e79cfd87c99c2615afdefb9abde3a31b01b94",
       "executable": false
     },
     "tests/records-transport.worker.ts": {
