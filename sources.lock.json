@@ -11598,7 +11598,7 @@
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
-      "sha256": "094825943fc072472f01d79a2f88b45d35b61b4536674158cbb8d3a80090fdf3",
+      "sha256": "7ff40c1e29410974fe7ef885b0e2de233e9f6d1da7398dea24c50b14c4f43ec4",
       "executable": false
     },
     "tests/helpers/records-import-crash-child.mjs": {
