@@ -792,6 +792,12 @@
       "name": "9047_metadata_trash.sql",
       "sha256": "751195a85f0404a2c05f570c14befbca96529858db44740fa3baedc3bae48a2b",
       "sql": "ALTER TABLE record_views ADD COLUMN deleted_at INTEGER;\nALTER TABLE record_views ADD COLUMN expires_at INTEGER;\nALTER TABLE record_views ADD COLUMN purge_state TEXT NOT NULL DEFAULT 'held';\nALTER TABLE record_forms ADD COLUMN owner_id TEXT;\nALTER TABLE record_forms ADD COLUMN deleted_at INTEGER;\nALTER TABLE record_forms ADD COLUMN expires_at INTEGER;\nALTER TABLE record_forms ADD COLUMN purge_state TEXT NOT NULL DEFAULT 'held';\n-- Previously deleted views enter a full restore window at upgrade.\nUPDATE record_views SET deleted_at=unixepoch()*1000,expires_at=(unixepoch()+2592000)*1000 WHERE visibility='deleted';\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9048_automation_test_runs.sql",
+      "sha256": "a8dd84aeb5fa336f10e498eed3e12798077565373f1badc60056edf2cf44ad42",
+      "sql": "-- Test runs have no automatic execution/recovery path, including after restore.\nCREATE TABLE record_automation_tests (\n id TEXT PRIMARY KEY, automation_id TEXT NOT NULL, owner_id TEXT NOT NULL,\n app_id TEXT NOT NULL, entity_id TEXT NOT NULL, record_id TEXT NOT NULL,\n definition_version INTEGER NOT NULL, record_version INTEGER NOT NULL,\n mode TEXT NOT NULL, state TEXT NOT NULL, created_at TEXT NOT NULL,\n result_json TEXT NOT NULL, confirmation_hash TEXT NOT NULL\n);\nCREATE INDEX record_automation_tests_history ON record_automation_tests(automation_id,created_at,id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
