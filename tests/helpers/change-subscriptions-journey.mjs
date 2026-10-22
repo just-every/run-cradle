@@ -22,6 +22,7 @@ export async function changeSubscriptionsJourney(h,edge){
  assert.equal(pings.length,3,'One verifiable ping for each committed change, including recovery replay')
  for(const ping of pings){const verified=await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id});const value=JSON.parse(verified.envelope.body);assert.equal(value.changeCount,1);assert.equal(value.subscriptionId,subscription.id);assert.ok(!ping.body.includes('synthetic-cradle-3'))}
  const route=(cursor,limit=200)=>`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`
+ await h.request(route('invalid-cursor'),{secret:key.secret,status:400})
  const page=(await h.request(route(subscription.cursor),{secret:key.secret})).data
  assert.deepEqual(page.items.map(i=>i.kind),['create','create','update'])
  assert.equal(new Set(page.items.map(i=>i.id)).size,3)
