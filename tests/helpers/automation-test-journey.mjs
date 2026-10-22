@@ -20,6 +20,7 @@ export async function automationTestJourney(h,delivered,setMailStatus){
  assert.equal(tested.trigger.matches,true);assert.equal(tested.steps.length,4);assert.ok(tested.steps.every(step=>step.state==='Complete'&&step.input&&step.output))
  assert.deepEqual(tested.steps[0].output,{fieldId:h.statusId,before:null,after:'review'})
  assert.deepEqual(tested.steps[2].output.wouldHaveUsed,[email]);assert.deepEqual(tested.steps[2].output.to,['import-owner@example.test'])
+ assert.ok(!(await h.db.prepare('SELECT result_json FROM record_automation_tests WHERE id=?').bind(tested.id).first()).result_json.includes(tested.steps[3].output.wire.url),'Decrypted receiver URLs never enter durable test history')
  assert.equal(tested.steps[3].output.sent,false);assert.ok(tested.steps[3].output.wire.headers['webhook-signature'])
  assert.deepEqual(delivered.map(message=>message.to),['import-owner@example.test'],'One test email reaches the builder alone; no webhook reached the network edge')
  const unchanged=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${chosen.id}`)).data.record
