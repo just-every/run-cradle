@@ -79,5 +79,5 @@ erasure redacts the canonical retained values.
 Delete delivery, the full write-door matrix, archive restoration and person/
 record erasure of retained feed values still need public-door proof. Base/view
 scope journeys, deleted-scope final listing, at-least-once delivery after uncertainty and paged subscription listing remain
-open. No Zapier, Make or Crank application is supplied (INTEG-007 remains
+open. The dispatcher selects only the first 200 active subscriptions per sweep; later subscriptions can starve, so fair delivery beyond that bound is incomplete. No Zapier, Make or Crank application is supplied (INTEG-007 remains
 missing). These obligations are not narrowed by this implementation.
