@@ -1,5 +1,5 @@
 declare module '*vendor/base/modules/operator-auth/input.mjs' {
- export function readInput(request:Request):Promise<Record<string,unknown>>
+ export function readInput(request:Pick<Request,'headers'|'body'>):Promise<Record<string,unknown>>
 }
 
 declare module '*vendor/base/modules/operator-auth/page.mjs' {
