@@ -1,3 +1,4 @@
+import {recordCalendarJourney} from './helpers/record-calendar-journey.mjs'
 import {timelineBrowserJourney} from './helpers/records-timeline-journey.mjs'
 import {viewSettingsJourney} from './helpers/records-view-settings-journey.mjs'
 import {extendedBoardJourney} from './helpers/records-extended-boards.mjs'
@@ -13,7 +14,8 @@ import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {newField} from '../src/ui/records/schema/templates.ts'
 
-contract('VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIEW-015','record calendars, boards, private covers and saved view presentation at desktop and phone widths',async()=>{
+contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIEW-015','record calendars, boards, private covers and saved view presentation at desktop and phone widths',async()=>{
+ await recordCalendarJourney()
  await timelineBrowserJourney()
  await calendarFeedJourney()
  const output=path.resolve('.private/calendar');await mkdir(output,{recursive:true})

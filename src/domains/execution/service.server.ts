@@ -150,5 +150,5 @@ export function createExecutionService(d:ExecutionDependencies) {
  async function retry(ctx:RequestContext,id:string,commandId:string){const plan=await prepareRetry(ctx,id,commandId);await d.admission.commit(ctx,plan);return read(ctx,plan.committedResult.runId);}
  async function scopedEffectInput(ctx:RequestContext,attemptId:string){const a=await requiredAttempt(attemptId),row=await requiredRun(a.run_id);await read(ctx,row.id);return effect(a,requestOf(row),true);}
  async function reconciliationPermit(ctx:RequestContext,runId:string){const row=await requiredRun(runId);return authorize(ctx,requestOf(row),'reconcile',[]);}
- return {resolution:createHumanResolution(d),reconciliationPermit,scopedEffectInput,prepare,prepareCancellation,prepareRetry,run,dispatch,reconcile,recover,cancel,retry,read,repository:repo};
+ return {resolution:createHumanResolution(d),reconciliationPermit,scopedEffectInput,prepare,prepareEffect,prepareCancellation,prepareRetry,run,dispatch,reconcile,recover,cancel,retry,read,repository:repo};
 }
