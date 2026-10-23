@@ -18,7 +18,7 @@ export async function storeReferenceReturns(h){
  const {snapshot,refs}=portableStoreFixture(),{d,preview,job,status}=await importStoreSnapshot(h,snapshot)
  assert.equal(status.reconciliation.ok,true);assert.deepEqual(preview.report.storeReferences,{unresolved:5,resolved:0,unverified:0})
  async function check(appId,expected=refs){
-  const entities=(await d.call(`/api/v1/apps/${appId}/entities`)).items,entity=entities.find(e=>e.label==='Files'),rows=(await d.call(`/api/v1/apps/${appId}/entities/${entity.id}/records`)).items,field=entity.fields.find(f=>f.type==='attachment'),row=rows.find(r=>r.fields[field.id]?.value?.length)
+  const entities=(await d.call(`/api/v1/apps/${appId}/entities`)).items,entity=entities.find(e=>e.label==='Files'),rows=(await d.call(`/api/v1/apps/${appId}/entities/${entity.id}/query`,{})).items,field=entity.fields.find(f=>f.type==='attachment'),row=rows.find(r=>r.fields[field.id]?.value?.length)
   assert.equal(row.fields[field.id].value.length,expected.length)
   for(const member of row.fields[field.id].value){assert.equal(member.reference.resolution,'unresolved');assert.equal(member.reference.connectionId,null);assert.ok(expected.some(ref=>canonical(ref)===canonical(member.reference.portable)))}
   const exported=await d.call('/api/v1/records/base-export',{appId,format:'json'}),parsed=JSON.parse(exported.content),values=parsed.base.tables[0].records.flatMap(r=>r.values[parsed.base.tables[0].fields.find(f=>f.type==='attachment').id]);assert.equal(canonical(values),canonical(expected),'Unresolved canonical content round-trips byte for byte');assertNoStoreCredentials(exported.content)
