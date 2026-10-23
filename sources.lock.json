@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f0db83bc9daa2aa68c0b800400cee25a1c8c9542cd3fd4cd108f2c12c15c5298",
+      "sha256": "7fa313c19abdd863ae551c167b2d369a933e85b19854423a6ac2531c26d48a44",
       "executable": false
     },
     "DEMO.md": {
@@ -7266,7 +7266,7 @@
       "executable": false
     },
     "src/core/platform/base-auth-input.d.ts": {
-      "sha256": "03f83a5b531c8b046c8c7395f4bbf04efa9613a7ab6dd9de371a49012f4c10f8",
+      "sha256": "c02f94a610d5dadc65c3e1d3a7273af65a070dffd863e4e40f62adb6f0c26b3b",
       "executable": false
     },
     "src/core/platform/base-auth.server.ts": {
