@@ -10542,7 +10542,7 @@
       "executable": false
     },
     "src/ui/records/store-settings.tsx": {
-      "sha256": "719d029da0ce017745ba152d3ef9ec408224eac23a3cd1d6ce98a8e225fbbff3",
+      "sha256": "37dd3d96617a53b3d967fed2b8012b5d0e729b0d486d8751b316f23d8c6a3712",
       "executable": false
     },
     "src/ui/records/timeline-axis.ts": {
@@ -11414,7 +11414,7 @@
       "executable": false
     },
     "tests/helpers/file-stores-browser.mjs": {
-      "sha256": "d401ab519ff47e698145ab285253d5e8f30697e399bb6eee7f52fe8c524a1f2c",
+      "sha256": "137bb7ddc0acf05f60b45fea9749105bb88aa1db31380e128544f8f03b4dd7fe",
       "executable": false
     },
     "tests/helpers/file-stores-journey.mjs": {

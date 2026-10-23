@@ -45,5 +45,12 @@ export async function fileStoresBrowser(page,h,width,output){
  await j.action(page.getByText('File store policy',{exact:true}))
  await page.getByRole('combobox',{name:/^Who may connect Google Drive/}).waitFor()
  await j.capture('file-store-owner-policy')
+ // Saving a provider policy inside the open record editor stores it; writers is restored for the next width.
+ for(const role of ['installation-owner','writers']){
+  await page.getByRole('combobox',{name:/^Who may connect Google Drive/}).selectOption(role)
+  const saved=page.waitForResponse(r=>r.url().endsWith('/file-stores/settings')&&r.request().method()==='POST')
+  await j.action(page.getByRole('button',{name:'Save Google Drive policy',exact:true}));assert.equal((await saved).status(),200)
+  assert.equal((await h.db.prepare("SELECT connect_role FROM file_store_policies WHERE provider='google-drive'").first()).connect_role,role)
+ }
 }
 
