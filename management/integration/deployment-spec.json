@@ -798,6 +798,12 @@
       "name": "9048_automation_test_runs.sql",
       "sha256": "a8dd84aeb5fa336f10e498eed3e12798077565373f1badc60056edf2cf44ad42",
       "sql": "-- Test runs have no automatic execution/recovery path, including after restore.\nCREATE TABLE record_automation_tests (\n id TEXT PRIMARY KEY, automation_id TEXT NOT NULL, owner_id TEXT NOT NULL,\n app_id TEXT NOT NULL, entity_id TEXT NOT NULL, record_id TEXT NOT NULL,\n definition_version INTEGER NOT NULL, record_version INTEGER NOT NULL,\n mode TEXT NOT NULL, state TEXT NOT NULL, created_at TEXT NOT NULL,\n result_json TEXT NOT NULL, confirmation_hash TEXT NOT NULL\n);\nCREATE INDEX record_automation_tests_history ON record_automation_tests(automation_id,created_at,id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9049_schema_trash.sql",
+      "sha256": "b3cf3a9e2f029abaee5ad5f96f743770f71887af01ca7ad935534f3434a78cd0",
+      "sql": "-- Schema deletions share the existing Trash clock, authority and maintenance path.\nALTER TABLE record_trash ADD COLUMN kind TEXT NOT NULL DEFAULT 'record' CHECK(kind IN ('record','field','table'));\nALTER TABLE record_trash ADD COLUMN detail_json TEXT NOT NULL DEFAULT '{}';\nCREATE INDEX record_trash_kind_expiry ON record_trash(kind,expires_at);\n\n-- Rotate dispatch independently of audit activity in any one base.\nALTER TABLE record_change_subscriptions ADD COLUMN last_dispatch_at INTEGER NOT NULL DEFAULT 0;\nCREATE INDEX record_change_dispatch_order ON record_change_subscriptions(state,last_dispatch_at,id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
