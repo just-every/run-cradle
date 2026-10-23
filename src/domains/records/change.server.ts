@@ -26,10 +26,11 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         throw new AdmissionError('forbidden', 'This entity requires a typed domain action'); if (Object.keys(changes).some(id => rules?.protectedFieldIds?.includes(id) || d.fields.get(id)?.field.readOnly))
         throw new AdmissionError('forbidden', 'This field requires a typed domain action'); return (await rules?.validate?.(ctx, { operation, ref, expectedVersion, changes, prior, nextLifecycle }))?.guards ?? []; }
     /** A reference already stored on this record stays as it is; a new one must come from the writer's own connected store. */
-    async function storeReferenceGuards(ctx: RequestContext, d: EntityDescriptor, recordId: string, storage: FieldStorage, reference: StoreReference): Promise<SqlPredicate[]> {
+    async function storeReferenceGuards(ctx: RequestContext, d: EntityDescriptor, recordId: string, storage: FieldStorage, reference: StoreReference,verified?:ReadonlyMap<string,readonly SqlPredicate[]>): Promise<SqlPredicate[]> {
         const kept = await db.prepare(`SELECT 1 AS present FROM ${identifier(storage.join!.table.tableId)} WHERE record_id=? AND value=?`).bind(recordId, referenceValue(reference)).first();
         if (kept)
             return [];
+        const proof=verified?.get(referenceValue(reference));if(proof)return [...proof];
         if(reference.portable||reference.resolution)throw new AdmissionError('forbidden','Returned references can only be preserved on their imported record until resolved.');
         if (reference.attachedBy !== ctx.principal.id)
             throw new AdmissionError('forbidden', 'A store reference is attached by the person whose store it comes from');
@@ -43,7 +44,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
             throw new AdmissionError('forbidden', 'The connection is not yours or is no longer connected');
         return [guard];
     }
-    async function references(ctx: RequestContext, d: EntityDescriptor, values: Record<string, CellValue>, recordId: string): Promise<SqlPredicate[]> { const guards: SqlPredicate[] = []; for (const [id, value] of Object.entries(values)) {
+    async function references(ctx: RequestContext, d: EntityDescriptor, values: Record<string, CellValue>, recordId: string,verified?:ReadonlyMap<string,readonly SqlPredicate[]>): Promise<SqlPredicate[]> { const guards: SqlPredicate[] = []; for (const [id, value] of Object.entries(values)) {
         const f = d.fields.get(id)!.field;
         if (f.type === 'attachment' && value !== null) {
             if (!attachments && (value as AttachmentMember[]).some(member => 'fileId' in member))
@@ -52,7 +53,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
                 if ('fileId' in member)
                     guards.push(...await attachments!.prepareLink(ctx, member.fileId, { appId: d.schema.appId, entityId: d.schema.id, recordId }, id));
                 else
-                    guards.push(...await storeReferenceGuards(ctx, d, recordId, d.fields.get(id)!, member.reference));
+                    guards.push(...await storeReferenceGuards(ctx, d, recordId, d.fields.get(id)!, member.reference,verified));
         }
         if (f.type !== 'relation' || value === null)
             continue;
@@ -89,7 +90,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         ref: Ref;
         expectedVersion: number;
         changes: Record<string, CellValue>;
-    }, operation: 'patch' | 'transition' | 'delete' | 'undo' = 'patch'): Promise<PreparedRecordChange> {
+    }, operation: 'patch' | 'transition' | 'delete' | 'undo' = 'patch',verified?:ReadonlyMap<string,readonly SqlPredicate[]>): Promise<PreparedRecordChange> {
         const d = registry.get(request.ref.appId, request.ref.entityId);
         writable(scope, request.changes);
         request={...request,changes:normalizeValues(d,request.changes)};
@@ -108,7 +109,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
                 next.fields[id] = scope.readableFieldIds.includes(id) ? { state: 'value', value: validateCell(d.fields.get(id)!.field, v) } : { state: 'redacted', reason: 'policy' };
         const projection = Object.keys(row).map(c => `json_extract(payload,'$.${c}') AS ${identifier(c)}`).join(',');
         const postScope = trustedPredicate(`EXISTS(SELECT 1 FROM (SELECT ${projection} FROM (SELECT ? AS payload)) AS ${identifier(d.table.tableId)} WHERE ${scope.rowPredicate.sql})`, [canonical(row), ...scope.rowPredicate.values]);
-        const guards = [postScope, ...await invariant(ctx, d, operation, request.ref, request.expectedVersion, request.changes, raw), schemaGuard(d), ...scope.currentAuthorityGuards, exists(d.table, and(scope.rowPredicate, eq(d.table, d.idColumn, request.ref.recordId), eq(d.table, d.versionColumn, request.expectedVersion))), ...await references(ctx, d, request.changes, request.ref.recordId), ...await uniqueValidationGuards(db,d,complete,row,request.ref.recordId)];
+        const guards = [postScope, ...await invariant(ctx, d, operation, request.ref, request.expectedVersion, request.changes, raw), schemaGuard(d), ...scope.currentAuthorityGuards, exists(d.table, and(scope.rowPredicate, eq(d.table, d.idColumn, request.ref.recordId), eq(d.table, d.versionColumn, request.expectedVersion))), ...await references(ctx, d, request.changes, request.ref.recordId,verified), ...await uniqueValidationGuards(db,d,complete,row,request.ref.recordId)];
         const set = { ...encodeValues(d, request.changes, false), [d.versionColumn]: request.expectedVersion + 1, [d.updatedColumn]: row[d.updatedColumn] as string };
         const mutations: SqlMutation[] = [{ kind: 'update', table: d.table, set, where: and(eq(d.table, d.idColumn, request.ref.recordId), eq(d.table, d.versionColumn, request.expectedVersion)), expectedRows: 1 }, ...await joins(d, request.ref.recordId, request.changes, false)];
         if (!effects)
@@ -184,6 +185,6 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         ref: Ref;
         expectedVersion: number;
         changes: Record<string, CellValue>;
-    }) => internalChange(ctx, scope, request, 'patch');
+    },verified?:ReadonlyMap<string,readonly SqlPredicate[]>) => internalChange(ctx, scope, request, 'patch',verified);
     return { prepareChange, prepareCreate, prepareTransition, prepareDelete, prepareRestoreLifecycle, deletionImpact };
 }
