@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "54e7365ab5e5f4af7a86ec9473601504ef7e8bce23d16cd8cf562c2c00711a5e",
+      "sha256": "f0db83bc9daa2aa68c0b800400cee25a1c8c9542cd3fd4cd108f2c12c15c5298",
       "executable": false
     },
     "DEMO.md": {
@@ -7266,11 +7266,11 @@
       "executable": false
     },
     "src/core/platform/base-auth-input.d.ts": {
-      "sha256": "fc5cf7e498abbf2586138c31d5a0d31dd8f4ac917a49ede5a113b3a8b5420e35",
+      "sha256": "03f83a5b531c8b046c8c7395f4bbf04efa9613a7ab6dd9de371a49012f4c10f8",
       "executable": false
     },
     "src/core/platform/base-auth.server.ts": {
-      "sha256": "bf7d7ca61ad47b8b7457f469f1a51f9897ec8cc0794ab1a2168edffac252fa60",
+      "sha256": "7755ea56aa5a7ccd3b8f620312a8e09ebb1efeeaec758bde957c8e5183902d84",
       "executable": false
     },
     "src/core/platform/base-mail.d.ts": {
@@ -7290,7 +7290,7 @@
       "executable": false
     },
     "src/core/platform/dependencies.server.ts": {
-      "sha256": "b20fd162385d5b8713f828409e9407d98ea13023afa37d47ccc1291a9651b88b",
+      "sha256": "6df203c623b00a8c86361a0f956c78454bfd428f538dc53957e972e8e903c051",
       "executable": false
     },
     "src/core/platform/dev-personas.ts": {
@@ -7298,7 +7298,7 @@
       "executable": false
     },
     "src/core/platform/environment.d.ts": {
-      "sha256": "0cc330a3d1c5d76688c14f22fe3e28ca00dcc403c8d384ca12b4f99ac7f3dbc9",
+      "sha256": "5d69de66b962fee85b30682e27f7972a85bd4dc5f1c56fc1e3cea98e0df04ad7",
       "executable": false
     },
     "src/core/platform/health.ts": {
@@ -7326,7 +7326,11 @@
       "executable": false
     },
     "src/core/platform/owner-claim.server.ts": {
-      "sha256": "7dc24d702bb8d3425999b9fb1c2525e17ca575588cca71df0ba52c696dd16a90",
+      "sha256": "533527e423e10411fd172f2a5dba096c63933fb6a03d5d8693cca97cdaf74604",
+      "executable": false
+    },
+    "src/core/platform/owner-name.server.ts": {
+      "sha256": "3513405702b5bbbbf432de6198f678e7ccd5ee919814bf67d6567340dae1c344",
       "executable": false
     },
     "src/core/platform/restored-owner.server.ts": {
@@ -11334,7 +11338,7 @@
       "executable": false
     },
     "tests/helpers/admission-runtime.mjs": {
-      "sha256": "bc1a8e9b16a9200336fcd05da78be0f78e8805d9d25df7af1bf2538c9fecf8a5",
+      "sha256": "7cff70811ca1f45497202c4f0fd45787fdc65f6802860a2dd1c6a51773306697",
       "executable": false
     },
     "tests/helpers/authoring-host-file.mjs": {
@@ -12514,7 +12518,7 @@
       "executable": false
     },
     "tests/signed-owner-admission.mjs": {
-      "sha256": "d094e604def072220c98dc8f2e6cd9e3efe272aa42dc2652c8097a22b60f134c",
+      "sha256": "3624056a27418b92f7763c77a7f1471ff00ed712c3d25f06f66f05b231b684ec",
       "executable": false
     },
     "tests/start-resources.mjs": {
