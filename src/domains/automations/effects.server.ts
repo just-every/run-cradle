@@ -79,12 +79,13 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
    const body=action.kind==='slack'?serializeSlackMessage(renderSlackEvent('record.changed',action.text,
     {'record.changed':text=>({summary:text,sections:[text]})})):JSON.stringify({event:saved.event.event,
      record:ref,version:saved.event.version,deliveryId:step.id})
-   await delivery.enqueue({id:step.id,tenant:ref.appId,destinationId:action.destinationId,
+   if(!await delivery.get(step.id))await delivery.enqueue({id:step.id,tenant:ref.appId,destinationId:action.destinationId,
     event:'record.'+saved.event.event,protocol:action.kind==='slack'?'slack.incoming-webhook.v1':'webhook',
     body},{maxAttempts:1,retryDelaysMs:[]})
    const result=await delivery.dispatch(step.id)
+   const attempts=await delivery.log(step.id),safe=attempts.at(-1)?.outcome?.kind==='retryable'
    return result?.state==='accepted'?{state:'Complete',result:{deliveryId:step.id,status:result.state}}:
-    result?.state==='rejected'?{state:'Failed',result:{deliveryId:step.id,status:result.state},errorCode:'delivery_rejected'}:
+    result?.state==='rejected'?{state:'Failed',result:{deliveryId:step.id,status:result.state},errorCode:safe?'delivery_retryable':'delivery_rejected'}:
     {state:'Unknown',result:{deliveryId:step.id,status:result?.state??'unknown'},errorCode:'delivery_unknown'}
   },
   async recover(run:AutomationRun,step:AutomationActionRun,action:RecordAutomationAction):Promise<Outcome|null> {

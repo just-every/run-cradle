@@ -1,0 +1,12 @@
+/* Existing shell icon tooltips on the automation and failure-alert screens. */
+.operator-shell:has([aria-label="Record automations"], a[href*="/app/automations?appId="]) :is(button, a):has(> .operator-record-tooltip) { position: relative; }
+.operator-shell:has([aria-label="Record automations"], a[href*="/app/automations?appId="]) .operator-record-tooltip {
+  display: block; position: absolute; z-index: 20; top: calc(100% + 6px);
+  inset-inline-start: 0; width: max-content; max-width: 180px; height: auto;
+  padding: 6px 9px; border-radius: 6px; background: #172423; color: #fff;
+  font: 500 12px/1.4 sans-serif; white-space: nowrap; pointer-events: none;
+  opacity: 0; visibility: hidden; transition: opacity 0s, visibility 0s;
+}
+.operator-shell:has([aria-label="Record automations"], a[href*="/app/automations?appId="]) :is(.operator-mobile-bell, .operator-drawer-header button) > .operator-record-tooltip { inset-inline-start: auto; inset-inline-end: 0; }
+.operator-shell:has([aria-label="Record automations"], a[href*="/app/automations?appId="]) :is(button, a):hover > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 300ms; }
+.operator-shell:has([aria-label="Record automations"], a[href*="/app/automations?appId="]) :is(button, a):focus-visible > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 0ms; }
