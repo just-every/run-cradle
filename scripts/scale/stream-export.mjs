@@ -1,7 +1,7 @@
 import '../../tests/helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {execFileSync} from 'node:child_process'
-import {mkdir,writeFile,open} from 'node:fs/promises'
+import {mkdir,writeFile,open,readFile} from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
 import {recordsImportBrowserRuntime} from '../../tests/helpers/records-import-browser-runtime.mjs'
@@ -25,15 +25,20 @@ try{
  socket=new WebSocket(target.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})});let id=0;const pending=new Map();socket.addEventListener('message',event=>{const body=JSON.parse(String(event.data)),p=pending.get(body.id);if(p){pending.delete(body.id);body.error?p.reject(Error(body.error.message)):p.resolve(body.result)}})
  const call=method=>new Promise((resolve,reject)=>{const next=++id;pending.set(next,{resolve,reject});socket.send(JSON.stringify({id:next,method}))})
  await call('Runtime.enable')
+ const workers=execFileSync('ps',['-eo','pid=,ppid=,args='],{encoding:'utf8'}).split('\n').map(line=>line.trim().split(/\s+/)).filter(parts=>Number(parts[1])===process.pid&&parts.slice(2).join(' ').includes('/workerd serve'))
+ assert.equal(workers.length,1,'Measure only this fixture Worker process');const workerPid=workers[0][0]
+
  for(const format of ['csv','xlsx']){
-  let samples=0,peakUsedHeapBytes=0,peakTotalHeapBytes=0,sampling=false,sampleError
-  const sample=async()=>{if(sampling)return;sampling=true;try{const memory=await call('Runtime.getHeapUsage');samples++;peakUsedHeapBytes=Math.max(peakUsedHeapBytes,memory.usedSize);peakTotalHeapBytes=Math.max(peakTotalHeapBytes,memory.totalSize)}catch(error){sampleError=error}finally{sampling=false}}
-  await sample();timer=setInterval(()=>void sample(),500)
+  let samples=0,peakUsedHeapBytes=0,peakTotalHeapBytes=0,peakWorkerRssBytes=0,rssSamples=0,sampling=null,sampleError
+  const rss=async()=>{const status=await readFile('/proc/'+workerPid+'/status','utf8'),match=/^VmRSS:\s+(\d+) kB/m.exec(status);assert.ok(match);peakWorkerRssBytes=Math.max(peakWorkerRssBytes,Number(match[1])*1024);rssSamples++}
+  const sample=()=>sampling??(sampling=(async()=>{try{const memory=await call('Runtime.getHeapUsage');assert.ok(Number.isFinite(memory.usedSize)&&Number.isFinite(memory.totalSize));samples++;peakUsedHeapBytes=Math.max(peakUsedHeapBytes,memory.usedSize);peakTotalHeapBytes=Math.max(peakTotalHeapBytes,memory.totalSize)}catch(error){sampleError=error}finally{sampling=null}})())
+
+  await sample();await rss();timer=setInterval(()=>{void sample();void rss().catch(error=>{sampleError=error})},500)
   const csrf=(await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json()).csrfToken,started=performance.now(),response=await fetch(h.origin+'/api/v1/records/export-'+format,{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'x-csrf-token':csrf,'content-type':'application/json',accept:format==='csv'?'text/csv':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},body:JSON.stringify({appId,entityId,query:{sort:[{fieldId:title.id,direction:'asc'}]}})})
   assert.equal(response.status,200);const file=path.join(output,'50000.'+format),sink=await open(file,'w'),reader=response.body.getReader();let bytes=0,chunks=0
   try{for(;;){const next=await reader.read();if(next.done)break;await sink.write(next.value);bytes+=next.value.length;chunks++}}finally{await sink.close();clearInterval(timer);timer=undefined}
-  await sample();if(sampleError)throw sampleError;assert.ok(samples>1)
-  const measurement={format,rows,bytes,chunks,elapsedMs:performance.now()-started,peakUsedHeapBytes,peakTotalHeapBytes,samples};result.measurements.push(measurement);console.log(JSON.stringify(measurement))
+  await sampling;await sample();await rss();if(sampleError)throw sampleError;assert.ok(samples>1)
+  const measurement={format,rows,bytes,chunks,elapsedMs:performance.now()-started,peakUsedHeapBytes,peakTotalHeapBytes,samples,peakWorkerRssBytes,rssSamples,memoryScope:'Runtime.getHeapUsage plus whole workerd process RSS; RSS includes native D1 and runtime memory'};result.measurements.push(measurement);console.log(JSON.stringify(measurement))
  }
  // Independent standard-library ZIP/XML/CSV readers: never widen Cradle's intake parser.
  const check=execFileSync('python3',['-c',`import csv,json,sys,zipfile,xml.etree.ElementTree as E
