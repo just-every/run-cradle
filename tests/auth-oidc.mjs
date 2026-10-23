@@ -130,6 +130,7 @@ test('OIDC: a pull-link signed owner grant uses Base one-use admission without c
  await r.link()
  assert.equal((await r.db.prepare('SELECT count(*) n FROM oa_operators').first()).n,1)
  assert.equal((await r.db.prepare('SELECT count(*) n FROM oc_idp_grants').first()).n,1)
+ assert.equal((await r.db.prepare('SELECT display_name FROM oa_operators').first()).display_name,'synthetic-cradle-1','Configured owner name survives IdP admission')
  assert.equal((await r.call('/auth/bootstrap',{token:r.bindings.SETUP_TOKEN,displayName:'Another owner'})).status,409)
  assert.equal((await r.call('/auth/session',undefined,await r.proof())).status,200)
 })

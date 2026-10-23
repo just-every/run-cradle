@@ -14,6 +14,7 @@ declare global {
       INSTALLATION: DurableObjectNamespace
       IDENTITY_PROVIDER?: string
       OWNER_EMAIL?: string
+      OWNER_NAME?: string
       SETUP_TOKEN?: string
       RER_DEV_ORIGIN?: string
       RER_DEV_KEY?: string

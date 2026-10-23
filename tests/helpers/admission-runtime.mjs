@@ -9,7 +9,7 @@ import {migrationInventory} from '../../scripts/migration-groups.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 
 /** Real built Worker, migrations, ES256 admission and Base session. */
-export async function admissionRuntime(port,{managementOrigin='https://management.example.test',ownerEmail='claim-owner@example.test'}={}){
+export async function admissionRuntime(port,{managementOrigin='https://management.example.test',ownerEmail='claim-owner@example.test',ownerName='synthetic-cradle-1'}={}){
  const directory=await mkdtemp(path.join(tmpdir(),'cradle-signed-admission-'))
  const origin=`http://127.0.0.1:${port}`,email=ownerEmail.trim().toLowerCase(),installationId='cradle-admission-test'
  const keys=await webcrypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify'])
@@ -19,7 +19,7 @@ export async function admissionRuntime(port,{managementOrigin='https://managemen
  const close=async()=>{try{await runtime?.dispose()}finally{try{await mail.close()}finally{await rm(directory,{recursive:true,force:true})}}}
  try{
  runtime=await emittedRuntime(directory,port,{APP_ORIGIN:origin,AUTH_ORIGIN:origin,AUTH_LOCAL:'true',
-  OWNER_EMAIL:ownerEmail,SESSION_SECRET:randomBytes(32).toString('hex'),SETUP_TOKEN:randomBytes(32).toString('hex'),
+  OWNER_EMAIL:ownerEmail,OWNER_NAME:ownerName,SESSION_SECRET:randomBytes(32).toString('hex'),SETUP_TOKEN:randomBytes(32).toString('hex'),
   WORKSPACE_NAME:'Admission acceptance',WORKSPACE_TIMEZONE:'UTC',WORKSPACE_CURRENCY:'USD',
   ...mail.bindings,MAIL_FROM:'auth@localhost.test',RER_MANAGEMENT_ORIGIN:managementOrigin,
   RER_INSTALLATION_ID:installationId,RER_OWNER_CLAIM_ISSUER:managementOrigin,

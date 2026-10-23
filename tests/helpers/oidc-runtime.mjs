@@ -11,7 +11,7 @@ export const origin='https://cradle.example.com',issuer='https://identity.exampl
 export const cookie=response=>response.headers.get('set-cookie')?.match(/__Host-operator_session=[^;,]+/)?.[0]??response.headers.get('set-cookie')?.split(';')[0]
 export async function oidcRuntime(t,emitted=false,identityProvider=emitted?issuer:undefined) {
  const fixture=emitted?null:migratedD1(), mails=[],codes=new Map(),assertions=new Set()
- const bindings={IDENTITY_PROVIDER:identityProvider,APP_ORIGIN:origin,OWNER_EMAIL:email,MAIL_FROM:'cradle@example.com',MAIL_PROVIDER:'sendgrid',MAIL_PROVIDER_API_KEY:'network-edge-only',SESSION_SECRET:'test-only-session-secret-with-at-least-32-characters',SETUP_TOKEN:'test-only-setup-secret-with-at-least-32-characters'}
+ const bindings={IDENTITY_PROVIDER:identityProvider,APP_ORIGIN:origin,OWNER_EMAIL:email,OWNER_NAME:'synthetic-cradle-1',MAIL_FROM:'cradle@example.com',MAIL_PROVIDER:'sendgrid',MAIL_PROVIDER_API_KEY:'network-edge-only',SESSION_SECRET:'test-only-session-secret-with-at-least-32-characters',SETUP_TOKEN:'test-only-setup-secret-with-at-least-32-characters'}
  const idp=await provider({issuer,clientId:'cradle-client',redirectUri:origin+'/auth/oidc/auth/callback',alg:'ES256',method:'private_key_jwt',rerInterfaces:['oidc-provider@1.0.0'],claims:{email_verified_at:Math.floor(Date.now()/1000)}})
  let clockNow,transport,gate,ownerGrant,db=fixture?.db
  const network=async(input,init={})=>{

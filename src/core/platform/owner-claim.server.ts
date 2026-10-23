@@ -1,5 +1,6 @@
 import {createOwnerClaimHandler} from '../../../vendor/base/modules/owner-claim/index.mjs'
 import {normalizeEmail} from '../../../vendor/base/modules/operator-auth/index.mjs'
+import {configuredOwnerClaimRequest} from './owner-name.server'
 import {localMailEnabled} from './local-auth.server'
 import type {PlatformBindings} from './bindings'
 
@@ -13,6 +14,7 @@ export async function signedOwnerClaim(request:Request,env:PlatformBindings){
    clientIp:(request:Request)=>request.headers.get('CF-Connecting-IP')??'',
    issuer:env.RER_OWNER_CLAIM_ISSUER??'',installationId:env.RER_OWNER_CLAIM_INSTALLATION_ID??'',appOrigin:env.RER_DEMO==='1'?origin:env.RER_OWNER_CLAIM_APP_ORIGIN??'',
    expectedEmail:email,publicKeys:JSON.parse(env.RER_OWNER_CLAIM_PUBLIC_KEYS??'null')})
-  return await claim(request)
+  const configured=await configuredOwnerClaimRequest(request,env)
+  return configured instanceof Response?configured:await claim(configured)
  }catch{return Response.json({error:'claim_unconfigured'},{status:503,headers:{'cache-control':'no-store','referrer-policy':'no-referrer'}})}
 }
