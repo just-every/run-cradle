@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "90cc7c155ce8607f96032deccf79de991d898d522eff65853573fae7013cfe03",
+      "sha256": "ccef7a5dc4b1470804db1c35d4144bfde982112c54b68b258b3af587b9e3fd08",
       "executable": false
     },
     "DEMO.md": {
@@ -4530,7 +4530,7 @@
       "executable": false
     },
     "docs/contract/WEBHOOK-USER-002/README.md": {
-      "sha256": "c00571a80a62a28936cc4d7ce660e21e74a441a674517d644996722b2357eb1b",
+      "sha256": "26c9be09e1d307ed38127386624b27c581e548f7e6c45767cdd4268509848ced",
       "executable": false
     },
     "docs/current-state.md": {
@@ -7782,7 +7782,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/access.server.ts": {
-      "sha256": "a66dd149cdfd78e26b5b9173de12da3bdcfdc68d3d998039221e2dd4f6580252",
+      "sha256": "6f946c515d951b9eed551fc8c5ded0cfcb9d4ac18e29be9489794873621f4aa7",
       "executable": false
     },
     "src/domains/change-subscriptions/delivery.server.ts": {
@@ -7806,7 +7806,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/service.server.ts": {
-      "sha256": "be95fa8529d9a290fed0b79573579f4aceced6280606a46fe9ea7db7d650c040",
+      "sha256": "d535a14e2ea1899cd1e11c2ec3b6a1e7b885f1e2d90f3a8460a0eea95c027c4f",
       "executable": false
     },
     "src/domains/change-subscriptions/storage.server.ts": {
@@ -11441,6 +11441,10 @@
       "sha256": "308e8de52969fdad07e9aa0543a3c32b78bd6d4fd5ae07cdf5209fd8db6e0cbf",
       "executable": false
     },
+    "tests/helpers/change-subscriptions-adoption.mjs": {
+      "sha256": "b8a247e983aa99a06f579e440a050078d2cee92a59084f3a7bb95fd29b5d58c1",
+      "executable": false
+    },
     "tests/helpers/change-subscriptions-deletes.mjs": {
       "sha256": "bdd6e98103cb6a8354f595692184f7e2640c21afd045f61954865c314be714c8",
       "executable": false
@@ -11454,7 +11458,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-journey.mjs": {
-      "sha256": "e75c76d4a3d2537a908c12d5e41891264e431449c579e3539bf6d2d84deaf004",
+      "sha256": "e19e7c4d9899ef70a67225796d5863957f95f327a225edd073fe83c764d07a7b",
       "executable": false
     },
     "tests/helpers/change-subscriptions-recovery.mjs": {
