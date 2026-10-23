@@ -27,7 +27,7 @@ export function createRecordCalendarSync(db:D1Database,foundation:ServerFoundati
    for(const event of eventRows){try{const row=await records.reader.record(ctx,scope,{appId,entityId,recordId:event.record_id}),title=row.fields[definition.titleFieldId],review=event.review_json?JSON.parse(event.review_json):null
      items.push({recordId:row.id,label:title?.state==='value'?String(title.value??''):'',state:event.state,eventId:event.event_id,review:review?{deleted:review.status==='cancelled',summary:scope.readableFieldIds.includes(definition.titleFieldId)?review.summary:undefined,start:review.start,end:review.end}:null,canResolve:scope.writableFieldIds.includes(definition.startFieldId)&&(!definition.endFieldId||scope.writableFieldIds.includes(definition.endFieldId)),attemptId:event.attempt_id})
     }catch(error){if(!(error instanceof Error)||!('code'in error)||!['forbidden','not_found'].includes(String(error.code)))throw error}}
-   const query=await records.reader.query(ctx,scope,{appId,entityId,limit:1,filter:{kind:'all',conditions:[]}})
+   const query=await records.reader.query(ctx,scope,{limit:1,filter:{kind:'all',conditions:[]}})
    const total=query.total.kind==='exact'?query.total.value:null
    definitions.push({id:d.id,version:d.version,definition,state:stopped?'stopped':'active',items,notOnCalendar:total===null?null:Math.max(0,total-eventRows.filter(e=>e.state!=='cancelled').length)})
   }
