@@ -65,7 +65,7 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
     const provider = (await db.prepare('SELECT adapter_id FROM provider_connections WHERE id=?').bind(request.connectionId).first<{ adapter_id: string }>())!.adapter_id;
     return { provider, attachedBy: ctx.principal.id, ...await run<StoreBrowse>(ctx, request.connectionId, { entityId:request.entityId,fieldId:request.fieldId,op: 'browse', query: request.query, cursor: request.cursor }) };
   }
-  /** The image is fetched now, through the connection of the person who attached the file, and handed on without being kept. */
+  /** Prefer the viewer's own store authority, then explicit attacher sharing; never retain image bytes. */
   async function thumbnail(ctx: RequestContext, input: unknown): Promise<{ state: 'image'; image: StoreThumbnail } | { state: 'reconnect' | 'none' }> {
     const request = fieldAddress.extend({ recordId: idSchema, itemId: z.string().min(1).max(512) }).strict().parse(input), ref = { appId: request.appId, entityId: request.entityId, recordId: request.recordId };
     const scope = await foundation.policy.scope(ctx, { appId: request.appId, entityId: request.entityId, purpose: 'read' }), d = foundation.descriptors.get(request.appId, request.entityId);
@@ -76,9 +76,8 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
     if (!reference || !isStoreReferenceMember(reference)) throw new ApiError('not_found', 'Attachment not found.');
     const { connectionId, attachedBy,provider } = reference.reference;
     if (!connectionId||provider==='chest') return { state: 'none' };
-    const original=await db.prepare('SELECT account_id,account_verified FROM provider_connections WHERE id=? AND adapter_id=? AND owner_id=?').bind(connectionId,provider,attachedBy).first<{account_id:string;account_verified:number}>();
-    if(!original)return {state:'reconnect'};
-    const own=(await db.prepare("SELECT id FROM provider_connections WHERE app_id=? AND owner_id=? AND adapter_id=? AND (id=? OR (account_verified=1 AND ?=1 AND account_id=?)) AND state='connected' AND revoked_at IS NULL ORDER BY created_at DESC,id").bind(request.appId,ctx.principal.id,provider,connectionId,original.account_verified,original.account_id).all<{id:string}>()).results;
+    // Each viewer asks the store with their own account. The store decides whether that account can read this item.
+    const own=(await db.prepare("SELECT id FROM provider_connections WHERE app_id=? AND owner_id=? AND adapter_id=? AND state='connected' AND revoked_at IS NULL ORDER BY created_at DESC,id").bind(request.appId,ctx.principal.id,provider).all<{id:string}>()).results;
     const operation={op:'thumbnail' as const,entityId:request.entityId,fieldId:request.fieldId,recordId:request.recordId,itemId:request.itemId};
     for(const candidate of own){const image=await run<StoreThumbnail|null>(ctx,candidate.id,operation);if(image)return {state:'image',image};}
     if(attachedBy!==ctx.principal.id){
