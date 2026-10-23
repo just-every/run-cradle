@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "152bdf4aa1a959f438341dce89add81fad83949f98971eefcbc53940e378cc35",
+      "sha256": "043b25d79fce5978b36d2a2bb97070662637e52ee3215a0bea75ce85c7ffc10c",
       "executable": false
     },
     "DEMO.md": {
@@ -11758,7 +11758,7 @@
       "executable": false
     },
     "tests/helpers/record-calendar-journey.mjs": {
-      "sha256": "eaf8e413373625989ed50827c882b9e67bde6e90363c777e2ec8a78ddc6647cf",
+      "sha256": "d0bacf727503a3189840c2f7bff883d1e313c1d8d333821135bc394b898f728e",
       "executable": false
     },
     "tests/helpers/record-calendar-provider.mjs": {

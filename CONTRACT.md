@@ -992,7 +992,7 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-Judged from the code and tests at commit `c298a83dbc6168eb634f6969898083d1b60e0d93` (23 October 2026).
+Judged from the code and tests at commit `57a0b65bd58ccf5d701fb0343a3b47d9bad2aa9c` (23 October 2026).
 
 The 23 October c13 Google record-calendar round exercises the versioned sync, durable-effect and reviewed inbound-edit subset through the emitted Worker and desktop/phone controls. INTEG-004 remains partial with the original-session restriction and unproven riders named. No clause status changes; the current rows total 122 done, 66 partial and 24 missing of 212.
 
