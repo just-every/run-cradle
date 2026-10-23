@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d54f743f342fdecc421c447df0f1a8c597400bdcb3517652bf530dcb909cbe08",
+      "sha256": "3fbbbed0d043a0621b6e8744b4f81091c6b6d2a91a4ac23cef057f8c6fa9b8e8",
       "executable": false
     },
     "DEMO.md": {
@@ -10698,11 +10698,11 @@
       "executable": false
     },
     "src/ui/records/store-connect.tsx": {
-      "sha256": "45d68e5c0ba91191a7d1cc12b7dd3531fd467363841404e6dd8f5c9150032d6f",
+      "sha256": "2f19b7c9de4db9d2f113c3dd1ddb4b139846d3df892fca31c376d466cd63498b",
       "executable": false
     },
     "src/ui/records/store-reference-view.tsx": {
-      "sha256": "8980e954f5b8a3f2784e6538edc3146b46ffb40244273f5593f755513ba2abbd",
+      "sha256": "1a602c0027d6879cdb000e97d748458f96d6d8a8e3e370d7a7aaa30e426ffef3",
       "executable": false
     },
     "src/ui/records/store-settings.tsx": {
