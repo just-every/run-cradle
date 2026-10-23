@@ -71,7 +71,7 @@ export async function changeSubscriptionErasure(h,edge){
   const issuerWindows=(await h.db.prepare('SELECT * FROM record_change_windows WHERE subscription_id=?').bind(issued.value.id).all()).results
   check('Issuer subscription and sealed secret removal',()=>assert.equal(issuerRows.length,0))
   check('Issuer cursor window removal',()=>assert.equal(issuerWindows.length,0))
-  await h.request(`${root}/${issued.value.id}/changes?cursor=${encodeURIComponent(issued.value.cursor)}`,{secret:issuerKey.secret,status:401})
+  await h.request(`${root}/${issued.value.id}/changes?cursor=${encodeURIComponent(issued.value.cursor)}`,{secret:issuerKey.secret,status:403})
   for(const entry of observers){
    // Replay both fixed windows and page the original range one audit row at a
    // time: omission in an aggregate page must not hide a retained delete id.
