@@ -1,3 +1,4 @@
+import {automationTriggerLabel} from '../../domains/automations/trigger-label'
 import '../shared/automation-alert-tooltips.css'
 import '../records/records.css'
 import { useEffect,useState } from 'react'
@@ -39,7 +40,7 @@ function ApplicationAutomations({appId}:{appId:string}) {
   }}</ResourceState>
   {error&&<p className="cr-error" role="alert">{error}</p>}
   {data.automations.length?data.automations.map(automation=><article className="cr-card cr-stack" key={automation.id}><h3>{automation.definition.name}</h3>
-   <p>{automation.definition.enabled?'Enabled':'Disabled'} · {automation.definition.event==='created'?'Record created':'Record updated'} · {automation.definition.actions.map(action=>action.kind).join(', ')}</p>
+   <p>{automation.definition.enabled?'Enabled':'Disabled'} · {automationTriggerLabel(automation.definition)} · {automation.definition.steps?automation.definition.steps.map(step=>step.kind).join(', '):automation.definition.actions.map(action=>action.kind).join(', ')}</p>
    <p>Approval expires {automation.expiresAt?<Timestamp value={automation.expiresAt}/>:'before imported definitions can run'}</p>
    <div className="cr-toolbar"><button className="cr-button cr-button--quiet" disabled={busy} onClick={()=>setEditing(automation)}>Edit {automation.definition.name}</button>
     {automation.definition.enabled&&<button className="cr-button cr-button--quiet" disabled={busy} onClick={()=>void disable(automation)}>Disable {automation.definition.name}</button>}
