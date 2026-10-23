@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e55b09572eb8d5c01429403ce9b3e7edffec7bc86a882427bf29d8e3355dd06a",
+      "sha256": "ab0db5428b3cba29293efb5769de572d1a9be03fd647840d51ad98e0224fee32",
       "executable": false
     },
     "DEMO.md": {
@@ -11279,6 +11279,10 @@
     },
     "tests/helpers/change-subscriptions-upgrade.mjs": {
       "sha256": "74cc99f5809c9b590a735b74ff97184116ea92ff0b9c67055b42e95e4e4ee36f",
+      "executable": false
+    },
+    "tests/helpers/change-subscriptions-write-doors.mjs": {
+      "sha256": "f4f83d97533041960914b5c66eab1662edcdf9b4fadd0b0c39280c8a4a78c18a",
       "executable": false
     },
     "tests/helpers/company-archive.mjs": {
