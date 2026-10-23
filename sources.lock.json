@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "49e6a58c4a198cba7aa9ade30ed02195df80fe3707e2e017a9e463e3cb6c3376",
+      "sha256": "d42e5adce8996886a2a47a32dc897dfd5c645ef9759641f588def476204783fb",
       "executable": false
     },
     "DEMO.md": {
@@ -10582,7 +10582,7 @@
       "executable": false
     },
     "src/ui/records/schema/field-editor.tsx": {
-      "sha256": "9c304acd07f1160876cd01d961def4dfd4b040a432e35c94dd749c761ab40b6b",
+      "sha256": "2e42ac8a21e0efb0c059c30a3f10216d45e8f3b446adeefc461a821804cc0489",
       "executable": false
     },
     "src/ui/records/schema/field-type-label.ts": {
@@ -11534,7 +11534,7 @@
       "executable": false
     },
     "tests/helpers/field-browser.mjs": {
-      "sha256": "17709ddcb8956d910be30cb3b557a4c430e346b7c749ac3dd5ba1f63c782a442",
+      "sha256": "f4474e10a13a0658702c7ff937a64915cc30e082194686244e55da41ed1c9e38",
       "executable": false
     },
     "tests/helpers/field-conversion-journey.mjs": {
