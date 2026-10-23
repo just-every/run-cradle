@@ -1,3 +1,4 @@
+import {fieldBrowser} from './helpers/field-browser.mjs'
 import {recordTrashBrowser} from './helpers/record-trash-browser.mjs'
 import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
 import {baseRolesJourney} from './helpers/records-base-roles-journey.mjs'
@@ -39,6 +40,7 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
  }finally{await browser?.close();await h?.close()}
 })
 contract(['PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
+ await fieldBrowser()
  await recordTrashBrowser()
  await baseRolesJourney()
 let h,browser,activePage
