@@ -1,5 +1,5 @@
 declare module '*vendor/base/modules/operator-auth/input.mjs' {
- export function readInput(request:Request):Promise<Record<string,unknown>>
+ export function readInput(request:Pick<Request,'headers'|'body'>):Promise<Record<string,unknown>>
 }
 
 declare module '*vendor/base/modules/operator-auth/page.mjs' {
@@ -7,4 +7,5 @@ declare module '*vendor/base/modules/operator-auth/page.mjs' {
 }
 declare module '*vendor/base/modules/operator-auth/http.mjs' {
  export function escapeHtml(value:string):string
+ export function requirePost(request:Request,config:{origin:string;local?:boolean}):void
 }
