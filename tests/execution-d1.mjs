@@ -20,6 +20,7 @@ test('durable execution: concurrent queue, restart unknown reconciliation, cance
    const schema=structuredClone(extractionSchema.schema);mutate(schema);await assert.rejects(strictAdapter.preflight({...schemaEffect,input:{...schemaEffect.input,schema}}));assert.equal(credentialReads,1);
   }
   const sourceId='01AAAAAAAAAAAAAAAAAAAAAAAA',claim={subject:null,fieldId:null,value:'synthetic-cradle-1',classification:'claim',evidence:[{sourceId,sourceVersion:1,locator:{kind:'page',page:1,region:null},observedAt:'2026-10-23T00:00:00.000Z'}]};
+  const unicode='😀'.repeat(60000);assert.equal(extractionSchema.validate({claims:[{...claim,value:unicode}]},[sourceId]).claims[0].value,unicode,'Model transport preserves the stored cell code-point limit');
   const normalized=extractionSchema.validate({claims:[claim]},[sourceId]);assert.deepEqual(normalized.claims[0].evidence[0].locator,{kind:'page',page:1});assert.deepEqual(extractionSchema.validate(normalized,[sourceId]),normalized);
   assert.throws(()=>extractionSchema.validate({claims:[{...claim,evidence:[{...claim.evidence[0],locator:{kind:'text',start:-1,end:2}}]}]},[sourceId]));assert.throws(()=>extractionSchema.validate({claims:[claim]},[]));
   const id=()=>r.createUlid(),app=id(),connection=id(),release=id(),actor=id(),now=new Date().toISOString();
