@@ -15,7 +15,7 @@ import { queueConsumerOptions } from './queue-consumers.mjs'
 
 // A fresh installation, using the real emitted Worker over canonical HTTPS.
 // Only the outbound mail provider is doubled; credentials come from Base HTTP.
-export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues,inspectMailRedirects=false}={}) {
+export async function launchBaseAuthorityRuntime({providerFetch,configuration={},automaticQueues,inspectMailRedirects=false,hostname='cradle.authority.test'}={}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-base-'))
   let port = Number(process.env.CRADLE_BASE_AUTHORITY_PORT ?? 0)
   const bindings = { ...productionBindings, APP_ORIGIN: 'https://cradle.authority.test', OWNER_EMAIL: 'owner@example.test', MAIL_PROVIDER: 'sendgrid', SESSION_SECRET: 'synthetic-base-authority-session-secret', SETUP_TOKEN: 'synthetic-base-authority-bootstrap-secret',...configuration }
@@ -47,7 +47,7 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
     // before issuing any requests. Pin that listener across subsequent reloads.
     const listener = await runtime.ready
     port = Number(listener.port || 443)
-    const origin = new URL(`https://cradle.authority.test:${port}`).origin
+    const origin = new URL(`https://${hostname}:${port}`).origin
     bindings.APP_ORIGIN = origin
     await runtime.setOptions(optionsFor({}))
     let db = await runtime.getD1Database('DB')
