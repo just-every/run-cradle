@@ -25,7 +25,7 @@ export function createAutomationFailureAlerts(env:PlatformBindings,foundation:Se
    FROM automation_runs r JOIN record_automation_bindings b ON b.automation_id=r.automation_id
    JOIN authority_principals p ON p.id=b.owner_id
    JOIN record_automation_versions v ON v.automation_id=r.automation_id AND v.definition_version=r.definition_version
-   WHERE r.state IN ('Failed','Unknown') AND (r.finished_at>? OR (r.finished_at=? AND r.id>?)) AND NOT EXISTS(SELECT 1 FROM command_admissions observed WHERE observed.command_id=r.id AND observed.action='automation.failure.observed') ORDER BY r.finished_at,r.id LIMIT 100`).bind(afterAt,afterAt,afterId).all<AutomationRun&{operator_id:string;error_code:string|null;finished_at:number}>()
+   WHERE r.state IN ('Failed','Unknown','Partial') AND (r.finished_at>? OR (r.finished_at=? AND r.id>?)) AND NOT EXISTS(SELECT 1 FROM command_admissions observed WHERE observed.command_id=r.id AND observed.action='automation.failure.observed') ORDER BY r.finished_at,r.id LIMIT 100`).bind(afterAt,afterAt,afterId).all<AutomationRun&{operator_id:string;error_code:string|null;finished_at:number}>()
   if(!rows.results.length)break
   for(const run of rows.results){
    const day=new Intl.DateTimeFormat('en-CA',{timeZone:settings.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(run.finished_at)
@@ -41,7 +41,7 @@ export function createAutomationFailureAlerts(env:PlatformBindings,foundation:Se
     const title='Record automation failed',link=automationRunLink(run.app_id,run.automation_id,run.id)
     const body=`${automationFailureCause(run.error_code)} Open this run to review the failure.`
     const effects=await createChannelsIntegration(db,async()=>({guards:[recipient.guard],title,body})).notification(ctx,{kind:'record-automation',operatorId:run.operator_id,campaignId:null,subjectId:run.id,eventId:id,appId:run.app_id,subjectType:'automation-run',delivery:'in-app'})
-    const guard=and(...scope.currentAuthorityGuards,recipient.guard,trustedPredicate("EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND state IN ('Failed','Unknown'))",[run.id]))
+    const guard=and(...scope.currentAuthorityGuards,recipient.guard,trustedPredicate("EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND state IN ('Failed','Unknown','Partial'))",[run.id]))
     const permit={actor:{id:ctx.principal.id,kind:ctx.principal.kind},action:'automation.failure.notify',appId:run.app_id,grantId:null,grantVersion:null,policyVersion:scope.policyVersion,validUntil:ctx.principal.expiresAt,guards:[guard],reservationMutations:[],reservationIds:[]}
     async function observed(){await foundation.admission.commit(ctx,{commandId:run.id,action:'automation.failure.observed',appId:run.app_id,canonicalInputHash:await canonicalHash({runId:run.id}),permit:{...permit,action:'automation.failure.observed'},guards:[guard],mutations:[],audit:[],events:[],outbox:[],committedResult:{runId:run.id}})}
     if(await db.prepare("SELECT 1 FROM command_admissions WHERE command_id=? AND state='committed'").bind(id).first()){await observed();continue}

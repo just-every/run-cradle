@@ -1,3 +1,5 @@
+import {automationDefinitionActions} from './control-contracts'
+import {filterFields} from '../records/filter.server'
 import type { PolicyPort,RequestContext } from '../authority/ports'
 import type { AdmissionPort,SqlMutation } from '../admission/ports'
 import type { DescriptorRegistry } from '../records/descriptors.server'
@@ -16,10 +18,12 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
  return {
   async save(ctx:RequestContext,input:{commandId:string;id?:string;version?:number;expiresAt:string;definition:RecordAutomationDefinition}) {
    const definition=recordAutomationDefinition.parse(input.definition),{appId,entityId}=definition
-   const descriptor=descriptors.get(appId,entityId),permissions=definition.actions.some(a=>a.kind==='update')?'write' as const:'read' as const
+   const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),permissions=allActions.some(a=>a.kind==='update')?'write' as const:'read' as const
    const own=await userDelegationPolicy(db,policy,ctx,{appId,entityId,name:definition.name,permissions,expiresAt:input.expiresAt})
    const guards=[...own.guards]
-   for(const action of definition.actions){
+   const filters=[...allActions.flatMap(action=>action.when?[action.when]:[]),...(definition.steps??[]).flatMap(step=>step.kind==='condition'?[step.when]:step.kind==='branch'?step.paths.map(path=>path.when):step.kind==='repeat'?[step.find]:[])]
+   if(filters.flatMap(filter=>filterFields(filter)).some(field=>!own.scope.readableFieldIds.includes(field)))throw new AuthorityError('forbidden','Conditions and finds require readable fields.')
+   for(const action of allActions){
     if(action.kind==='update'){
      const field=descriptor.schema.fields.find(f=>f.id===action.fieldId)
      if(!field||field.readOnly||field.type==='computed'||!own.scope.writableFieldIds.includes(field.id))throw new AuthorityError('forbidden','Select a writable field in your current scope.')

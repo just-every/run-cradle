@@ -1,3 +1,4 @@
+import {createAutomationControlRuntime} from './control-runtime.server'
 import type { PolicyPort,RequestContext } from '../authority/ports'
 import type { DescriptorRegistry } from '../records/descriptors.server'
 import { resolveBackgroundContext } from '../authority/background.server'
@@ -9,8 +10,8 @@ import { createAutomationRunStore,runSnapshot,type AutomationRun } from './run-s
 import type { createAutomationEffects } from './effects.server'
 
 export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:string;policy:PolicyPort;
- descriptors:DescriptorRegistry;effects:ReturnType<typeof createAutomationEffects>;clock?:()=>Date}) {
- const store=createAutomationRunStore(deps.db,deps.clock)
+ descriptors:DescriptorRegistry;reader:ReturnType<typeof import('../records/query.server').createRecordReader>;effects:ReturnType<typeof createAutomationEffects>;clock?:()=>Date}) {
+ const store=createAutomationRunStore(deps.db,deps.clock),controls=createAutomationControlRuntime(deps)
  async function context(run:AutomationRun,ingress:'queue'|'schedule'):Promise<RequestContext> {
   if(!run.credential_id)throw new AuthorityError('grant_revoked','Automation approval is unavailable.')
   const ctx=await resolveBackgroundContext(deps.db,{credentialId:run.credential_id,principalId:run.principal_id,
@@ -19,6 +20,7 @@ export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:stri
  }
  async function execute(run:AutomationRun,ingress:'queue'|'schedule') {
   const saved=runSnapshot(run)
+  if(saved.definition.steps||saved.definition.actions.some(action=>action.when)){await controls(run,ingress);return}
   const actions=await store.actions(run.id)
   for(const step of actions) {
    const action=saved.definition.actions[step.position]
