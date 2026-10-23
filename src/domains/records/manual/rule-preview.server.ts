@@ -4,9 +4,10 @@ import type { RuleViolationImpact } from './contracts'
 import { canonical } from '../../admission/canonical'
 import { recordValidationViolations } from '../validation-rules'
 import { snapshotValidationValues } from '../validation-values.server'
+import type { CellValue } from '../../../contracts/primitives'
 
 /** Validate the exact retained values; adding a default never rewrites existing rows. */
-export function previewRuleViolations(schema: EntitySchema, prior: EntityDescriptor | undefined, snapshots: Record<string, Record<string, unknown>[]>) {
+export function previewRuleViolations(schema: EntitySchema, prior: EntityDescriptor | undefined, snapshots: Record<string, Record<string, unknown>[]>, overrides: Readonly<Record<string, Readonly<Record<string, CellValue>>>> = {}) {
   const violations = new Map<string, RuleViolationImpact>()
   const unique = new Map<string, Map<string, string[]>>()
   function add(ruleId: string, ruleName: string, message: string, recordId: string) {
@@ -15,7 +16,7 @@ export function previewRuleViolations(schema: EntitySchema, prior: EntityDescrip
     if (!violation.recordIds.includes(recordId)) { violation.recordIds.push(recordId); violation.count++ }
   }
   for (const row of prior ? snapshots[prior.table.tableId] ?? [] : []) {
-    const recordId = String(row[prior!.idColumn]), retained = snapshotValidationValues(prior!, row, snapshots)
+    const recordId = String(row[prior!.idColumn]), retained = {...snapshotValidationValues(prior!, row, snapshots),...overrides[recordId]}
     const values = Object.fromEntries(schema.fields.filter(f => f.type !== 'computed').map(field => [field.id, retained[field.id] ?? null]))
     for (const issue of recordValidationViolations(schema, values)) add(issue.ruleId, issue.ruleName, issue.message, recordId)
     for (const field of schema.fields) if (field.unique && field.type !== 'computed' && values[field.id] !== null) {

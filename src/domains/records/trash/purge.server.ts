@@ -1,6 +1,7 @@
 import type {AdmissionPort,SqlMutation} from '../../admission/ports'
 import type {RequestContext,AuthorityPermit} from '../../authority/ports'
 import type {DescriptorRegistry} from '../descriptors.server'
+import {expireSchemaTrash} from './schema-markers.server'
 import {trashTable,type TrashRow} from './storage.server'
 import {trustedPredicate,identifier} from '../../admission/sql.server'
 import {canonicalHash} from '../../admission/canonical'
@@ -12,7 +13,8 @@ export function recordTrashPurge(db:D1Database,descriptors:DescriptorRegistry,ad
   const now=clock().getTime(),hour=Math.floor(now/3600000)
   const claimed=await db.prepare("INSERT INTO record_trash_maintenance(id,last_hour) VALUES('records',?) ON CONFLICT(id) DO UPDATE SET last_hour=excluded.last_hour WHERE last_hour<excluded.last_hour RETURNING id").bind(hour).first()
   if(!claimed)return
-  const rows=await db.prepare('SELECT * FROM record_trash WHERE expires_at<=? ORDER BY expires_at,app_id,entity_id,record_id LIMIT 100').bind(now).all<TrashRow>()
+  await expireSchemaTrash(db,now)
+  const rows=await db.prepare("SELECT * FROM record_trash WHERE kind='record' AND expires_at<=? ORDER BY expires_at,app_id,entity_id,record_id LIMIT 100").bind(now).all<TrashRow>()
   for(const row of rows.results){
    const group=(await db.prepare('SELECT count(*) n FROM record_trash WHERE group_id=?').bind(row.group_id).first<{n:number}>())!.n
    if(group>1){await db.prepare("UPDATE record_trash SET purge_state='blocked_dependency_group' WHERE group_id=?").bind(row.group_id).run();continue}

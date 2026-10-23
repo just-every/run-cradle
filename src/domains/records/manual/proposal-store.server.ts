@@ -30,7 +30,8 @@ export function createProposalStore(db:D1Database){
   async list(where:'issuer_id'|'proposer_id',id:string,now:string){const rows=(await db.prepare(`${select} WHERE p.${where}=? ORDER BY p.created_at DESC,p.id DESC LIMIT 50`).bind(id).all<ProposalRow>()).results;return Promise.all(rows.map(row=>summary(row,now)))},
   async row(where:'issuer_id'|'proposer_id',id:string,proposalId:string){const row=await db.prepare(`${select} WHERE p.id=? AND p.${where}=?`).bind(proposalId,id).first<ProposalRow>();if(!row)throw new AdmissionError('not_found','Proposal not found.');return row},
   async owner(row:ProposalRow,now:string):Promise<OwnerProposal>{const d=parseStored(row);return {...await summary(row,now),previewHash:row.preview_hash,schemas:d.schemas,impacts:d.impacts,metadata:d.metadata,views:d.views,forms:d.forms,access:d.access,recovery:d.recovery}},
-  /** The agent sees counts and labels it proposed, never record identities or values. */
-  async agent(row:ProposalRow,now:string):Promise<AgentProposal>{const d=parseStored(row);return {...await summary(row,now),previewHash:row.preview_hash,impacts:d.impacts.map(({recordIds,...impact})=>impact),metadata:d.metadata,views:d.views,forms:d.forms,access:d.access}},
+  /** Explicit public projection: new owner impact fields must never silently
+   * expose record values, dependency names, refusals or validation record IDs. */
+  async agent(row:ProposalRow,now:string):Promise<AgentProposal>{const d=parseStored(row);return {...await summary(row,now),previewHash:row.preview_hash,impacts:d.impacts.map(({entityId,label,changes,count,removedFields,deletedTable})=>({entityId,label,changes,count,removedFields,...(deletedTable===undefined?{}:{deletedTable})})),metadata:d.metadata,views:d.views,forms:d.forms,access:d.access}},
  }
 }

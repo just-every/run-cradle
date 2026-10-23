@@ -70,7 +70,7 @@ export function createDescriptorRegistry(descriptors: readonly EntityDescriptor[
 }
 export function generatedName(id: string): string { return 'r_' + id.toLowerCase(); }
 export function physicalName(schema: EntitySchema): string { return generatedName(schema.id) + (schema.version > 1 ? '_v' + schema.version : '') + (/^manual_[0-9A-HJKMNP-TV-Z]{26}$/.test(schema.physicalRevision) ? '_' + schema.physicalRevision.toLowerCase() : '') }
-export function compileSchema(input: EntitySchema, resolve: (appId: string, entityId: string) => EntityDescriptor | undefined, prior?: EntityDescriptor, removedFieldIds: readonly string[] = []): {
+export function compileSchema(input: EntitySchema, resolve: (appId: string, entityId: string) => EntityDescriptor | undefined, prior?: EntityDescriptor, removedFieldIds: readonly string[] = [], reviewedConvertedFieldIds: readonly string[] = []): {
     descriptor: EntityDescriptor;
     sql: string[];
 } {
@@ -92,7 +92,7 @@ export function compileSchema(input: EntitySchema, resolve: (appId: string, enti
             if (!next) continue;
             if (old.readOnly && !next.readOnly)
                 throw new Error('Protected field cannot become generic-writable in schema adoption');
-            if (old.type !== next.type || JSON.stringify(old.relation) !== JSON.stringify(next.relation))
+            if ((old.type !== next.type || JSON.stringify(old.relation) !== JSON.stringify(next.relation)) && !reviewedConvertedFieldIds.includes(old.id))
                 throw new Error('Changing physical type requires an explicit migration');
         }
     }

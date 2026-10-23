@@ -5,9 +5,12 @@ import {createUlid} from '../src/core/shared/ids.ts'
 import {templateBase,newField} from '../src/ui/records/schema/templates.ts'
 import {harness,add} from './helpers/records-manual-harness.mjs'
 import {recordTrashJourney} from './helpers/record-trash-journey.mjs'
+import {fieldConversionJourney} from './helpers/field-conversion-journey.mjs'
+import {fieldTrashJourney} from './helpers/field-trash-journey.mjs'
 import {fieldRulesJourney} from './helpers/records-field-rules.mjs'
 test('[SNAP-002] RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules',async()=>{
  await recordTrashJourney()
+ await fieldTrashJourney()
  await fieldRulesJourney()
  const h=await harness();try{
   const draft=templateBase('crm'),r=await h.runtime(),preview=await r.manual.preview(h.ctx,draft)
@@ -91,14 +94,8 @@ test('RECORDS-001 RECORDS-002 schema preview rejects restricted rows or fields a
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM manual_record_releases WHERE app_id=?').bind(draft.appId).first()).n,1)
  }finally{h.close()}
 })
-test('RECORDS-001 RECORDS-002 unsupported destructive/type changes and invalid lookup sources fail explicitly',async()=>{
- const h=await harness();try{
-  const {draft,r}=await h.create(),edit=await r.manual.read(h.ctx,draft.appId)
-  const removed=structuredClone(edit);removed.tables.pop();await assert.rejects(r.manual.preview(h.ctx,removed),/Table deletion is not supported/)
-  const changed=structuredClone(edit);changed.tables[0].fields[0].type='number';await assert.rejects(r.manual.preview(h.ctx,changed),/changing an existing field type/)
-  const source=structuredClone(edit);source.tables[0].fields.splice(0,1);await assert.rejects(r.manual.preview(h.ctx,source),/Lookup source and result type|Unknown formula dependency/)
-  assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM manual_record_releases').first()).n,1)
- }finally{h.close()}
+test('[FIELD-002] conversion matrix converts reviewed values and refuses undefined mappings',async()=>{
+ await fieldConversionJourney()
 })
 test('RECORDS-001 RECORDS-002 removed values recover by CSV into a new field without rolling back newer edits',async()=>{
  const h=await harness();try{

@@ -8,7 +8,7 @@ import type {TrashRow} from './storage.server'
  * a business record: erase identity-only rows, scrub other held identity values,
  * and anonymize the deleter without making a retained row visible. */
 export async function trashErasurePlaces(db:D1Database,registry:DescriptorRegistry,person:{id:string;name:string;email:string}):Promise<IdentityPlace[]>{
- const held=await db.prepare('SELECT * FROM record_trash').all<TrashRow>(),places:IdentityPlace[]=[],identity=new Set([person.id,person.name,person.email])
+ const held=await db.prepare("SELECT * FROM record_trash WHERE kind='record'").all<TrashRow>(),places:IdentityPlace[]=[],identity=new Set([person.id,person.name,person.email])
  for(const row of held.results){
   const d=registry.get(row.app_id,row.entity_id),current=await db.prepare(`SELECT * FROM ${identifier(d.table.tableId)} WHERE ${identifier(d.idColumn)}=?`).bind(row.record_id).first<Record<string,unknown>>()
   if(current&&(current[d.versionColumn]!==row.record_version||current[d.lifecycleColumn]!=='deleted'))throw new AdmissionError('version_conflict','A held trash record changed; resolve its custody before erasure.')
