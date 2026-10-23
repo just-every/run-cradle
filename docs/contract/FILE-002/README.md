@@ -42,4 +42,4 @@ Migration `9050_personal_file_stores.sql` is additive. A populated emitted-Worke
 
 ## Gap (named in CONTRACT.md and ACCEPTANCE.md)
 
-Gap: Keep a copy is not built; base JSON, CSV-set and workbook export and return of store references is FILE-004 (missing); archive restore and attacher erasure have no journey; Chest has no picker against its own API (link only). No real provider call or consent was used; real consents NOT RUN. See the Status of FILE-002.
+Gap: Keep a copy is not built; store-reference exits and returns are FILE-004 (partial: automatic preview lookup, null-account resolution and bulk confirmation remain incomplete); archive restore and attacher erasure have no journey; Chest has no picker against its own API (link only). No real provider call or consent was used; real consents NOT RUN. See the Status of FILE-002.
