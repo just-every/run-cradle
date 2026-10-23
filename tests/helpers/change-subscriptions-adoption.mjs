@@ -54,9 +54,10 @@ export async function changeSubscriptionAdoption(h,edge){
    assert.equal((await read(record)).fields[valueId].value,index===0?'12.3400':'12.34','The real adoption stores the reviewed conversion')
    const retained=[]
    for(const subscription of subscriptions){
-    const from=subscription.next,result=await page(subscription,from,1)
+    const from=subscription.next,result=await page(subscription,from,1),full=await page(subscription,from)
+    console.log('ADOPTION_RANGE',JSON.stringify({scope:subscription.scope,operation:index===0?'schema':'conversion',one:{items:result.items.map(item=>item.kind),hasMore:result.hasMore,resyncRequired:Boolean(result.resyncRequired)},full:{items:full.items.map(item=>item.kind),hasMore:full.hasMore,resyncRequired:Boolean(full.resyncRequired)}}))
     marker(result,from)
-    assert.deepEqual(await page(subscription,from),result,'A retained pre-adoption cursor replays the same marker at any page size')
+    assert.deepEqual(full,result,'A retained pre-adoption cursor replays the same marker at any page size')
     for(const forbidden of [record.id,valueId,nameId,review.id,'release.adopt','conversion','recordId','fieldId'])assert.ok(!JSON.stringify(result).includes(forbidden),'The marker discloses no record, field, value or adoption cause')
     retained.push({subscription,from,result});subscription.next=result.cursor
    }
