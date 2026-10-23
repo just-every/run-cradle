@@ -24,13 +24,12 @@ import {chromium} from '@playwright/test'
 import {recordsBrowserRuntime} from './helpers/records-browser-runtime.mjs'
 import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './helpers/accessibility-evidence.mjs'
-import {freePort} from './helpers/free-port.mjs'
 const output=path.resolve(process.env.CRADLE_RECORDS_OUTPUT??'.private/records-builder/browser');await mkdir(output,{recursive:true})
 contract(['RECORDS-001','BASE-PUBLIC-003'].join('] ['),'Home presents records and bases before launch work at desktop and phone widths',async()=>{await writeFile(path.join(output,'home-results.json'),JSON.stringify(await homeReview(output),null,2))})
 contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one relation heading, reachable links and policy restrictions',async()=>{
  let h,browser
  try{
-  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? await freePort()));const fixture=await relationFixture(h);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const fixture=await relationFixture(h);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   const receipts=[]
   for(const width of recordsBrowserWidths(accessibilityWidths)){
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
@@ -45,7 +44,7 @@ contract(['PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VI
  await baseRolesJourney()
 let h,browser,activePage
 try{
- h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? await freePort()));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+ h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
  const receipts=[]
  for(const width of recordsBrowserWidths(accessibilityWidths)){
   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width);activePage=page

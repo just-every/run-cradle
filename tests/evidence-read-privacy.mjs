@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {contract} from './contract.mjs'
 import {fileStoresProvider} from './helpers/file-stores-provider.mjs'
-import {freePort} from './helpers/free-port.mjs'
 
 // Resolve TypeScript dependencies only after the loader has registered its hooks.
 const [{fileStoresJourney,fileStoreBindings},{userAutomationRuntime},{STAGING_ENTITY,STAGING_OWNER,STAGING_FILES},{createUlid},{evidenceCommentsJourney}]=await Promise.all([
@@ -15,7 +14,7 @@ const [{fileStoresJourney,fileStoreBindings},{userAutomationRuntime},{STAGING_EN
 ])
 
 contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
- const h=await userAutomationRuntime(await freePort())
+ const h=await userAutomationRuntime(0)
  try{
   await evidenceCommentsJourney(h)
   const command=input=>({commandId:createUlid(),expected:[],input})
@@ -69,7 +68,7 @@ contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and au
 })
 
 contract('FILE-002 COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority; store references attach from each connected store without copying',async()=>{
- const provider=fileStoresProvider(),h=await userAutomationRuntime(await freePort(),{outbound:request=>provider.fetch(request),bindings:fileStoreBindings}),observations={}
+ const provider=fileStoresProvider(),h=await userAutomationRuntime(0,{outbound:request=>provider.fetch(request),bindings:fileStoreBindings}),observations={}
  try{
   const relationId=createUlid(),visible=(await h.create('Visible history')).record,hidden=(await h.create('Hidden history')).record
   const draft={appId:h.appId,name:'Automation acceptance',tables:[{id:h.entityId,label:'Items',primaryFieldId:h.nameId,fields:[

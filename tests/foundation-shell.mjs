@@ -9,10 +9,9 @@ import path from 'node:path'
 import { chromium } from '@playwright/test'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
-import {freePort} from './helpers/free-port.mjs'
 
-const port = Number(process.env.CRADLE_FOUNDATION_PORT ?? await freePort())
-const origin = `http://127.0.0.1:${port}`
+const port = Number(process.env.CRADLE_FOUNDATION_PORT ?? 0)
+let origin = `http://127.0.0.1:${port}`
 const output = process.env.CRADLE_FOUNDATION_EVIDENCE ?? path.join(tmpdir(), 'cradle-foundation-evidence')
 
 test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed responsive shell, records-first navigation, 404 and Base sign-in without a mail viewer', async () => {
@@ -25,7 +24,7 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
     assert.equal(migration.status, 0, migration.stderr + migration.stdout)
     const member = await installLegacyFixture(directory)
     worker = spawn(process.execPath, ['tests/helpers/compiled-worker.mjs', '--port', String(port), '--persist-to', directory, '--var', 'AUTH_LOCAL:true', '--var', 'OWNER_EMAIL:maya@northstar.example', '--var', 'MAIL_PROVIDER:development', '--var', 'MAIL_FROM:auth@localhost.test', '--var', 'SESSION_SECRET:test-only-foundation-session-secret-32-characters', '--var', `APP_ORIGIN:${origin}`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
-    let logs = ''; worker.stdout.on('data', data => { logs += data }); worker.stderr.on('data', data => { logs += data })
+    let logs = ''; worker.stdout.on('data', data => { logs += data; const listener=logs.match(/Emitted Worker listening at (http:\/\/127\.0\.0\.1:\d+)/); if(listener)origin=listener[1] }); worker.stderr.on('data', data => { logs += data })
     for (let i = 0; i < 100; i++) { if ((await fetch(`${origin}/health`).catch(() => null))?.status === 200) break; await new Promise(resolve => setTimeout(resolve, 100)) }
     const {cookie}=await baseHttpSession(origin)
     const json = async route => (await fetch(`${origin}${route}`, { headers: { cookie } })).json()

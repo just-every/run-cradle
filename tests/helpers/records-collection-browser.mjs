@@ -5,7 +5,6 @@ import {mkdir} from 'node:fs/promises'
 import {chromium} from '@playwright/test'
 import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
-import {freePort} from './free-port.mjs'
 import {collectionLookupFixture} from './records-collection-lookups.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
@@ -13,7 +12,7 @@ export async function collectionLookupsBrowser(){
  const output='.private/collection-lookups';await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await recordsBrowserRuntime(await freePort())
+  h=await recordsBrowserRuntime(0)
   const call=async(path,input,status=200)=>{const csrf=input===undefined?null:await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json();const response=await fetch(h.origin+path,{method:input===undefined?'GET':'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json',...(csrf?{'x-csrf-token':csrf.csrfToken}:{})},...(input===undefined?{}:{body:JSON.stringify(input)})}),body=await response.json();assert.equal(response.status,status,JSON.stringify(body));return status===200?body.data:body.error}
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   for(const width of recordsBrowserWidths()){

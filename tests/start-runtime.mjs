@@ -11,12 +11,11 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { chromium } from '@playwright/test'
 import { contract } from './contract.mjs'
-import {freePort} from './helpers/free-port.mjs'
 
 // D1 CLI controls can outlast pooled keepalive; use independently closed HTTP connections.
 const request = (url, init = {}) => fetch(url, { ...init, headers: { ...init.headers, connection: 'close' } })
-const port = Number(process.env.CRADLE_TEST_PORT ?? await freePort())
-const origin = `http://127.0.0.1:${port}`
+const port = Number(process.env.CRADLE_TEST_PORT ?? 0)
+let origin = `http://127.0.0.1:${port}`
 const command = (args) => {
   const result = spawnSync('pnpm', ['exec', 'wrangler', ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
   assert.equal(result.status, 0, result.stderr || result.stdout)
@@ -47,7 +46,7 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
   assert.equal(migration.status, 0, migration.stderr || migration.stdout)
   const localMemberId = await installLegacyFixture(directory)
   worker = spawn(process.execPath, ['tests/helpers/compiled-worker.mjs', '--port', String(port), '--persist-to', directory, '--var', 'AUTH_LOCAL:true', '--var', 'OWNER_EMAIL:maya@northstar.example', '--var', 'MAIL_PROVIDER:development', '--var', 'MAIL_FROM:auth@localhost.test', '--var', 'SESSION_SECRET:test-only-session-secret-32-characters-long', '--var', `APP_ORIGIN:${origin}`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
-  let output = ''; worker.stdout.on('data', chunk => { output += chunk }); worker.stderr.on('data', chunk => { output += chunk })
+  let output = ''; worker.stdout.on('data', chunk => { output += chunk; const listener=output.match(/Emitted Worker listening at (http:\/\/127\.0\.0\.1:\d+)/); if(listener)origin=listener[1] }); worker.stderr.on('data', chunk => { output += chunk })
   let ready = false
   for (let i = 0; i < 100; i++) { if (await responseStatus(request(`${origin}/health`)).catch(() => null) === 200) { ready = true; break }; await new Promise(resolve => setTimeout(resolve, 100)) }
   assert.ok(ready, output)

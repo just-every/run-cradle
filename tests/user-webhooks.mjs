@@ -18,7 +18,7 @@ contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery pres
   const preflight=await edge.deliver({url:edge.receiverOrigin+'/accepted',headers:{},body:'{}'})
   assert.equal(preflight.status,200,JSON.stringify({calls:edge.tlsCalls,errors:edge.transportErrors}));await preflight.arrayBuffer();edge.received.length=0
   await changeSubscriptionsUpgrade(edge)
-  h=await userAutomationRuntime(18953,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
+  h=await userAutomationRuntime(0,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
    EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})
   const destination=(await h.request('/api/user-automations/destinations',{method:'POST',status:201,body:{
    commandId:createUlid(),appId:h.appId,entityId:h.entityId,kind:'webhook',url:edge.receiverOrigin+'/accepted'}})).data

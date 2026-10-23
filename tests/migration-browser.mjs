@@ -1,5 +1,4 @@
-import {createFixtureMail} from './helpers/fixture-mail.mjs'
-import {emittedRuntime} from './helpers/emitted-runtime.mjs'
+import {emittedMailRuntime} from './helpers/emitted-mail-runtime.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import {testDevKey} from './helpers/dev-gate.mjs'
 import { contract } from './contract.mjs'
@@ -13,10 +12,9 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { chromium } from '@playwright/test'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
-import {freePort} from './helpers/free-port.mjs'
 
-const port = Number(process.env.CRADLE_TEST_PORT ?? await freePort())
-const origin = `http://127.0.0.1:${port}`
+let port = Number(process.env.CRADLE_TEST_PORT ?? 0)
+let origin = `http://127.0.0.1:${port}`
 const mode = process.env.CRADLE_RUNTIME_MODE ?? 'dev'
 assert.ok(['dev', 'preview', 'wrangler'].includes(mode))
 const evidence = process.env.CRADLE_MIGRATION_EVIDENCE
@@ -24,7 +22,7 @@ assert.ok(evidence, 'Evidence directory is required')
 await mkdir(evidence, { recursive: true })
 contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-002', `${mode} browser transport, Origin and document boundaries`, async()=>{
 const directory = await mkdtemp(path.join(tmpdir(), 'cradle-migration-browser-'))
-const variables = `APP_ORIGIN=${origin}\nAUTH_LOCAL=true\nRER_DEV_KEY=${testDevKey}\nOWNER_EMAIL=maya@northstar.example\nMAIL_PROVIDER=development\nMAIL_FROM=auth@localhost.test\nSESSION_SECRET=test-only-session-secret-32-characters-long\n`
+let variables = `APP_ORIGIN=${origin}\nAUTH_LOCAL=true\nRER_DEV_KEY=${testDevKey}\nOWNER_EMAIL=maya@northstar.example\nMAIL_PROVIDER=development\nMAIL_FROM=auth@localhost.test\nSESSION_SECRET=test-only-session-secret-32-characters-long\n`
 let worker, browser, output = '', oldVariables, oldEmittedVariables, variablesChanged=false, emittedVariablesChanged=false
 try {
   assert.equal(await fetch(origin).catch(() => null), null, 'Refuse occupied port')
@@ -33,14 +31,14 @@ try {
   const member = await installLegacyFixture(directory)
   // Credential acquisition uses the real emitted app with only SendGrid's
   // paid transport replaced. Dispose it before the selected CLI owns the DB.
-  const mail=await createFixtureMail(port)
-  let credentialRuntime,cookie,csrfToken
+  let credentialRuntime,mail,cookie,csrfToken
   try{
     const bindings=Object.fromEntries(variables.trim().split('\n').map(line=>{const separator=line.indexOf('=');return [line.slice(0,separator),line.slice(separator+1)]}))
-    credentialRuntime=await emittedRuntime(directory,port,{...bindings,...mail.bindings},mail.fetch)
+    ;({runtime:credentialRuntime,mail,port,origin}=await emittedMailRuntime(directory,port,bindings))
+    variables=variables.replace(/^APP_ORIGIN=.*$/m,`APP_ORIGIN=${origin}`)
     await credentialRuntime.ready
     ;({cookie,csrfToken}=await baseHttpSession(origin))
-  }finally{try{await credentialRuntime?.dispose()}finally{await mail.close()}}
+  }finally{try{await credentialRuntime?.dispose()}finally{await mail?.close()}}
   oldVariables = await readFile('.dev.vars').catch(() => null)
   await writeFile('.dev.vars', variables);variablesChanged=true
   if(mode!=='dev'){oldEmittedVariables=await readFile('dist/server/.dev.vars').catch(()=>null);await writeFile('dist/server/.dev.vars',variables);emittedVariablesChanged=true}

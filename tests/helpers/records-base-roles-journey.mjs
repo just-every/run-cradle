@@ -6,14 +6,13 @@ import {chromium} from '@playwright/test'
 import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
-import {freePort} from './free-port.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {newField} from '../../src/ui/records/schema/templates.ts'
 export async function baseRolesJourney(){
  const output=path.resolve('.private/base-roles');await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await recordsBrowserRuntime(await freePort())
+  h=await recordsBrowserRuntime(0)
   const people={creator:{id:createUlid(),name:'Jordan Chen'},editor:{id:createUlid(),name:'Sam Rivera'},reader:{id:createUlid(),name:'Taylor Morgan'},owner:{id:createUlid(),name:'Avery Blake'}}
   for(const [key,person]of Object.entries(people)){
    const now=Date.now();await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,name,email,active) VALUES(?,?,?,?,?,1)').bind(person.id,now,now,person.name,`${key}@procurement.example.test`).run()

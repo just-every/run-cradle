@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {parseCsv} from '../../src/domains/portability/csv.ts'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
-import {freePort} from './free-port.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
 
 const schemaEntity='00000000000000000000000001'
@@ -33,7 +32,7 @@ function conversionCases(owner){
 /** One matrix registration; all schema, data, history and recovery observations
  * go through the emitted Worker, with a separate owned base for each mapping. */
 export async function fieldConversionJourney(existing){
- const h=existing??await userAutomationRuntime(await freePort()),failures=[]
+ const h=existing??await userAutomationRuntime(0),failures=[]
  try{
   const owner=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=(SELECT id FROM oa_operators WHERE email=?)').bind('import-owner@example.test').first()).principal_id
   for(const fixture of conversionCases(owner))try{await conversionCase(h,fixture)}catch(error){failures.push(new Error(`FIELD_CONVERSION ${fixture.name}: ${error.message}`,{cause:error}))}

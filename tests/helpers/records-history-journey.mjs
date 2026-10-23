@@ -4,7 +4,6 @@ import {mkdir} from 'node:fs/promises'
 import {chromium} from '@playwright/test'
 import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
-import {freePort} from './free-port.mjs'
 import {browserCall,liveCommand,liveFixture} from './records-live-fixture.mjs'
 
 /** VIEW-015: editor and bulk actions share a session stack across record and view navigation. */
@@ -12,7 +11,7 @@ export async function historyBrowserJourney(){
  const output='.private/record-history';await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await recordsBrowserRuntime(await freePort());browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  h=await recordsBrowserRuntime(0);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   for(const width of recordsBrowserWidths()){
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    let peerContext
