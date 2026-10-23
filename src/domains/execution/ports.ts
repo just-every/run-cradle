@@ -7,6 +7,7 @@ export interface ExecutionPort { dispatch(ctx: RequestContext, outboxId: string)
 export type ExecutionGuardIdentity = {idempotencyKey:string;attemptId?:string};
 export type ExecutionDependencies = {
  reconciliationAuthority?(ctx:RequestContext,request:EffectRequest,action:string):Promise<AuthorityPermit>;
+ calendarAuthority?(ctx:RequestContext,request:EffectRequest,mode:'dispatch'|'reconcile'|'read'|'cancel'):Promise<AuthorityPermit>;
  notificationMailAuthority?(ctx:RequestContext,request:EffectRequest,mode:'dispatch'|'reconcile'|'read'|'cancel'):Promise<AuthorityPermit>;
  payloads?: import('./payloads.server').PrivatePayloadStore;
  observations?(ctx:RequestContext,input:{attemptId:string;connectionId:string;kind:'accepted'|'unknown'|'refused';receiptId:string;retryAt:string|null;failureCode:string|null;message:string}):Promise<{guards:SqlPredicate[];mutations:SqlMutation[]}>;
