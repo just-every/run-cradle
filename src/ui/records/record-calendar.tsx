@@ -1,3 +1,4 @@
+import {RecordCalendarSync} from './calendar-sync'
 import { useEffect, useRef, useState } from 'react'
 import type { EntitySchema, RecordRow, View } from '../../domains/records/contracts'
 import { CellDisplay } from './record-fields'
@@ -58,5 +59,6 @@ export function RecordCalendar({ records, view, schema, timezone, match }: { rec
     </section>
     {records.some(row => !recordDate(row, start, timezone)) && <section className="cr-section"><h3>Unscheduled</h3>{records.filter(row => !recordDate(row, start, timezone)).map(row => card(row, anchor))}</section>}
     <CalendarFeed view={view} />
+    <RecordCalendarSync schema={schema} records={records} view={view} />
   </div>
 }

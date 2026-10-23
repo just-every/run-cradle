@@ -1,3 +1,7 @@
+import {createRecordCalendarSync} from '../../../domains/records/calendar-sync/service.server'
+import {recordCalendarSyncHttp} from '../../../domains/records/calendar-sync/http.server'
+import {ensureCalendarCapture} from '../../../domains/records/calendar-sync/capture.server'
+import {createUlid} from '../../shared/ids'
 import {metadataTrashPurge} from '../../../domains/records/trash/metadata-purge.server'
 import {recordTrashPurge} from '../../../domains/records/trash/purge.server'
 import {createChangeSubscriptions} from '../../../domains/change-subscriptions/service.server'
@@ -29,6 +33,9 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const providers=createProvidersComposition(platform,foundation)
  validateAuthConfiguration(platform.auth.configuration)
  const records=createRecordsComposition(platform,foundation)
+ const calendarSyncService=createRecordCalendarSync(platform.bindings.DB,foundation,providers,records.services,platform.auth.configuration.appOrigin)
+ await ensureCalendarCapture(platform.bindings.DB,foundation.descriptors)
+ const calendarSync={service:calendarSyncService,http:recordCalendarSyncHttp(calendarSyncService,request=>foundation.authenticate(request,'http',createUlid()))}
  const sheetSource=createSheetsImport(platform.bindings.DB,foundation,providers),sheetSchedules=createSheetSchedules(platform.bindings.DB,foundation,sheetSource,records.csv,clock),sheets={http:sheetsHttp(foundation,sheetSource,sheetSchedules),scheduled:sheetSchedules.scheduled}
  const fileStores={http:fileStoresHttp(foundation,createFileStores(platform.bindings.DB,foundation,providers,records.services.reader,records.services.writer))}
  const warehouse=createWarehouseComposition(platform,foundation,records,clock)
@@ -41,6 +48,6 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)
  const launchImports=createLaunchImportComposition(platform,foundation,records)
- return {trashPurge:async()=>{await purgeRecords();await purgeMetadata()},changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
+ return {calendarSync,trashPurge:async()=>{await purgeRecords();await purgeMetadata()},changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
 export type Runtime=Awaited<ReturnType<typeof createRuntime>>

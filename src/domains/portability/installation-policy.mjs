@@ -3,7 +3,7 @@ import {PortabilityError} from '@runeditrun/rer/modules/portability';
 export const transient = ['Durable Object initialization cache', 'WORK_QUEUE deliveries', 'local caches and logs'];
 export const portabilityPolicy = {
  product:'just-every/cradle',
- excludeTables:['record_capacity','record_trash_maintenance',
+ excludeTables:['record_calendar_catalogues','record_capacity','record_trash_maintenance',
   'company_identity_config','company_scim_users','company_scim_credentials','company_saml_requests','company_saml_assertions',
   'record_presence',
   'sessions','authority_sessions','authority_magic_tokens','authority_credentials','authority_rate_limits',
@@ -31,7 +31,7 @@ export const portabilityPolicy = {
   }
   if(await db.prepare("SELECT 1 FROM authority_principals WHERE kind<>'system' OR human_id IS NOT NULL OR initial_owner<>0 LIMIT 1").first())return false;
   if(tables.warehouse_exports&&await db.prepare(`SELECT 1 FROM "${tables.warehouse_exports.replaceAll('"','""')}" WHERE state='active' OR running_id IS NOT NULL OR watermark_json<>'{}' LIMIT 1`).first())return false;
-  const checks={
+  const checks={record_calendar_definitions:'enabled<>0',record_calendar_changes:"state<>'complete'",
    lifecycle_erasures:"state<>'complete'",lifecycle_erasure_blobs:'1',lifecycle_file_writes:'1',
    operators:'active<>0',authority_principals:"initial_owner<>0 OR (kind<>'system' AND state NOT IN ('removed','erased'))",
    record_change_subscriptions:"state<>'inactive' OR sealed_json IS NOT NULL",
@@ -65,6 +65,8 @@ export const portabilityPolicy = {
   if(table==='authority_grants')row.restore_hold=1;
   if(table==='launch_analysis_requests'){row.authority_json=null;if(['Queued','Running','Unknown'].includes(row.state)){row.state='Failed';row.error_code='forbidden';row.error_message='Restored analyses require a new operator request';}}
   if(table==='launch_automation_authorities')row.principal_json=null;
+  if(table==='record_calendar_definitions'){row.enabled=0;row.actor_json='{}';}
+  if(table==='record_calendar_changes')row.state='complete';
   if(table==='automations')row.enabled=0;
   if(table==='record_automation_versions')row.credential_id=null;
   if(table==='record_automation_events')row.state='complete';
