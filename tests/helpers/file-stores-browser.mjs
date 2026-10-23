@@ -38,4 +38,12 @@ export async function fileStoresBrowser(page,h,width,output){
  await j.capture('file-store-cell-attached')
  assert.equal((await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n,0,'Nothing was copied into private file custody')
  }finally{await page.unroute(edge);await page.context().addCookies(browserCookies(h.cookie,h.origin))}
+ // The installation owner's provider controls are on this same attachment surface.
+ await page.goto(`${h.origin}/app/records/${appId}`);await j.table('Files')
+ await j.action(page.getByRole('link',{name:'synthetic-cradle-site',exact:true}).first());await j.action(page.getByRole('button',{name:'Edit record',exact:true}))
+ await j.action(page.getByRole('button',{name:'Choose from a file store',exact:true}))
+ await j.action(page.getByText('File store policy',{exact:true}))
+ await page.getByLabel('Who may connect Google Drive',{exact:true}).waitFor()
+ await j.capture('file-store-owner-policy')
 }
+
