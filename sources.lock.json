@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "ac136024f9050518dacd8cb21a3df07b04f146f8f149a87d4e7f4822b46e4151",
+      "sha256": "aea65c6a2c9840145d56f2b7a0e0a29e6bca342de680424737f9176a21616e40",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "0298d0393bc6b6a389183f9262810fcdb1e00ebfd05b930fa61ad3cc7057ad08",
+      "sha256": "49e6a58c4a198cba7aa9ade30ed02195df80fe3707e2e017a9e463e3cb6c3376",
       "executable": false
     },
     "DEMO.md": {
@@ -4522,7 +4522,7 @@
       "executable": false
     },
     "docs/contract/WEBHOOK-USER-002/README.md": {
-      "sha256": "1e946a1761abf09a471f5df89fc72a6496d3732fb61cf269ccffdfdf4ad41dd3",
+      "sha256": "c00571a80a62a28936cc4d7ce660e21e74a441a674517d644996722b2357eb1b",
       "executable": false
     },
     "docs/current-state.md": {
@@ -5186,7 +5186,7 @@
       "executable": false
     },
     "migrations/updates/9049_schema_trash.sql": {
-      "sha256": "c8f6404dcb5fdbe7740c718484db474476defbdb3b1f1c1b8fd6fb82f11f2d91",
+      "sha256": "b3cf3a9e2f029abaee5ad5f96f743770f71887af01ca7ad935534f3434a78cd0",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -7774,7 +7774,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/delivery.server.ts": {
-      "sha256": "64cecf05b1ef9ab6d29c3f47e8a83895f1b3fb1d64b4369290f94dfe08c09c4d",
+      "sha256": "b0ca9e8a83ab4d57ebe0c93da6a07135a14677f2706466bfd0e4c8f31c21d686",
       "executable": false
     },
     "src/domains/change-subscriptions/http.server.ts": {
@@ -11446,7 +11446,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-recovery.mjs": {
-      "sha256": "01164816832215432cc709ce6cf7977878a1fd1075e95522a225789f215737b2",
+      "sha256": "37503eadfb15bfba93ef3f1f6aa41ccbcd20fa6ffb6f15d8119e4b3e8d06cde1",
       "executable": false
     },
     "tests/helpers/change-subscriptions-upgrade.mjs": {
@@ -12470,7 +12470,7 @@
       "executable": false
     },
     "tests/repairs-harness.mjs": {
-      "sha256": "23b2d3e66338d90934432189ce512c93c052539366ee7c3885fd326bd0884147",
+      "sha256": "c3d4f3ed8a6fb5e3afe02bf0bc31eaf072e408f251dd734a3f71b86a8fcdf622",
       "executable": false
     },
     "tests/repairs-outcome-http.mjs": {
