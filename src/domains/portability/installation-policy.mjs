@@ -17,7 +17,7 @@ export const portabilityPolicy = {
  // Keep the released secret inventory compatible with older archives. The
  // subscription export transform below nulls sealed_json before any part is emitted.
  secretColumns:{execution_attempts:['sealed_input','reconcile_input'],launch_analysis_requests:['authority_json'],launch_automation_authorities:['principal_json']},
- replaceableTables:['authority_principals','execution_collection_revisions','channel_mail_authority','channel_digest_settings','cradle_restore','cradle_first_run'],
+ replaceableTables:['file_store_policies','authority_principals','execution_collection_revisions','channel_mail_authority','channel_digest_settings','cradle_restore','cradle_first_run'],
  requiredConfiguration:['OWNER_EMAIL','OWNER_NAME','SESSION_SECRET','SETUP_TOKEN','APP_ORIGIN','AUTH_ORIGIN','MAIL_FROM','MAIL_PROVIDER','CONNECTION_ENCRYPTION_KEY'],
  buckets:{FILES:{}},
  async validateStaged({db,tables,manifest}){
