@@ -13,7 +13,7 @@ export function withAdmissionWake(admission: AdmissionPort, db: D1Database, queu
       if(launch)await queue.send({kind:'cradle.launch.events.v1',commandId:plan.commandId})
       const records=await db.prepare("SELECT 1 FROM record_automation_events WHERE command_id=? AND state='pending' LIMIT 1").bind(plan.commandId).first()
       if(records)await queue.send({kind:'cradle.records.automations.v1',commandId:plan.commandId})
-      const changes=await db.prepare("SELECT 1 FROM record_change_subscriptions WHERE app_id=? AND state='active' AND expires_at>? AND EXISTS(SELECT 1 FROM admission_audit WHERE command_id=? AND action IN ('record.create','record.patch','record.delete','record.undo')) LIMIT 1").bind(plan.appId,Date.now(),plan.commandId).first()
+      const changes=await db.prepare("SELECT 1 FROM record_change_subscriptions WHERE app_id=? AND state='active' AND expires_at>? AND EXISTS(SELECT 1 FROM admission_audit WHERE command_id=? AND action IN ('record.create','record.patch','record.delete','record.undo','record.restore')) LIMIT 1").bind(plan.appId,Date.now(),plan.commandId).first()
       if(changes)await queue.send({kind:'cradle.changes.v1',commandId:plan.commandId})
       const warehouse=plan.action==='warehouse.save'
       if(warehouse)await queue.send({kind:'cradle.warehouse.wake.v1'})
