@@ -1,3 +1,4 @@
+import {calendarAuthority} from '../../../domains/records/calendar-sync/authority.server'
 import { createConnectionJobs } from '../../../domains/connections/jobs.server'
 import { connectionRelease } from '../../../domains/connections/provenance.server'
 import { registerConnectionCommands } from '../../../domains/connections/commands.server'
@@ -30,7 +31,7 @@ export function createProvidersComposition(platform:Platform,foundation:ServerFo
  const runtime=createProviderRuntime({db:env.DB,notificationEntities:foundation.entities,admission:foundation.admission,policy:foundation.policy,bucket:env.FILES,auth:platform.auth.configuration,workspaceId:'workspace',
   keyVersion:connectionKeyVersion,encryptionKey:version=>version===connectionKeyVersion?env.CONNECTION_ENCRYPTION_KEY:undefined,secrets,schemas,
   oauth(provider){const family=oauthFamily(provider),pairs={google:[env.GOOGLE_CLIENT_ID,env.GOOGLE_CLIENT_SECRET],xero:[env.XERO_CLIENT_ID,env.XERO_CLIENT_SECRET],microsoft:[env.MICROSOFT_CLIENT_ID,env.MICROSOFT_CLIENT_SECRET],dropbox:[env.DROPBOX_CLIENT_ID,env.DROPBOX_CLIENT_SECRET],box:[env.BOX_CLIENT_ID,env.BOX_CLIENT_SECRET]},[clientId,clientSecret]=pairs[family];if(!clientId||!clientSecret)throw new ApiError('unconfigured',`${provider} OAuth credentials are required.`);return{clientId,clientSecret,redirectUri:`${platform.auth.configuration.appOrigin}/oauth/${family}/callback`}},
-  currentGuards:createExecutionGuards(env.DB,foundation),observations:createDeliveryObservations(env.DB).prepare,
+  calendarAuthority:calendarAuthority(env.DB,foundation.policy),currentGuards:createExecutionGuards(env.DB,foundation),observations:createDeliveryObservations(env.DB).prepare,
  })
  const jobs=createConnectionJobs({db:env.DB,admission:foundation.admission,policy:foundation.policy,service:runtime.connections,releaseId:connectionRelease(env.DB,foundation.policy),backgroundContext:runtime.background.connectionJob})
  registerConnectionCommands(foundation.commands,runtime.connections,jobs)

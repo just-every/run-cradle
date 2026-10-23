@@ -23,7 +23,7 @@ export function createExecutionGuards(db:D1Database,foundation:ServerFoundation)
   }
   if(request.modelBinding)guards.push(trustedPredicate('EXISTS(SELECT 1 FROM execution_model_profiles WHERE id=? AND version=? AND version=? AND app_id=?)',[request.modelBinding.id,request.modelBinding.version,request.controlEpoch,request.appId]))
   if(request.caseId)guards.push(trustedPredicate("EXISTS(SELECT 1 FROM operation_cases WHERE id=? AND app_id=? AND control_epoch=? AND state IN ('active','waiting'))",[request.caseId,request.appId,request.controlEpoch]))
-  if(request.definitionId){if(request.definitionVersion===null)throw new ApiError('validation','An automation definition version is required.');guards.push(trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND definition_version=? AND enabled=1)',[request.definitionId,request.definitionVersion]))}
+  if(request.definitionId&&request.action!=='record.calendar.sync'){if(request.definitionVersion===null)throw new ApiError('validation','An automation definition version is required.');guards.push(trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND definition_version=? AND enabled=1)',[request.definitionId,request.definitionVersion]))}
   for(const guard of guards)if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())throw new ApiError('stale_evidence','The release, source, record or control authority changed before dispatch.')
   return guards
  }
