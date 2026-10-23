@@ -1,3 +1,4 @@
+import {fileStoreActors} from './file-stores-actors.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {workbookDoors} from './workbook-http.mjs'
@@ -15,7 +16,8 @@ export function portableStoreFixture(){
 export function assertNoStoreCredentials(value,forbidden=[]){const text=typeof value==='string'?value:JSON.stringify(value);for(const needle of [...forbidden,'connectionId','sealed_secret','synthetic-cradle-access-','synthetic-cradle-refresh-','thumbnailLink','thumbnailUrl','googleusercontent.com','files.1drv.com','X-Amz-Signature','X-Goog-Signature'])assert.ok(!text.includes(needle),'Export contains no '+needle)}
 export async function importStoreSnapshot(h,snapshot){const d=await workbookDoors(h),bytes=Buffer.from(JSON.stringify(snapshot)),preview=await d.call('/api/v1/records/base-import/preview',d.form(bytes,'synthetic-cradle-stores.json'));return {...await d.adopt(bytes,'synthetic-cradle-stores.json',preview),d}}
 export async function storeReferenceReturns(h){
- const {snapshot,refs}=portableStoreFixture(),{d,preview,job,status}=await importStoreSnapshot(h,snapshot)
+ const {snapshot,refs}=portableStoreFixture(),{people}=await fileStoreActors(h,h.appId);for(const reference of refs)reference.attachedBy=people.editor.id
+ const {d,preview,job,status}=await importStoreSnapshot(h,snapshot)
  assert.equal(status.reconciliation.ok,true);assert.deepEqual(preview.report.storeReferences,{unresolved:5,resolved:0,unverified:0})
  async function check(appId,expected=refs){
   const entities=(await d.call(`/api/v1/apps/${appId}/entities`)).items,entity=entities.find(e=>e.label==='Files'),rows=(await d.call(`/api/v1/apps/${appId}/entities/${entity.id}/query`,{})).items,field=entity.fields.find(f=>f.type==='attachment'),row=rows.find(r=>r.fields[field.id]?.value?.length)
@@ -36,5 +38,15 @@ export async function storeReferenceReturns(h){
  const workbook=await d.call('/api/v1/records/base-export',{appId:preview.identities.appId,format:'xlsx'}),workbookBytes=Buffer.from(workbook.content,'base64'),sheets=readWorkbook(workbookBytes,'synthetic-cradle-stores.xlsx');for(const sheet of sheets)for(const row of sheet.rows)for(const cell of row)assertNoStoreCredentials(cell.value);assert.ok(sheets[0].rows.some(row=>row[1].value===canonical(refs)))
  await returnFiles([{name:'synthetic-cradle-stores.xlsx',bytes:workbookBytes}],{name:'synthetic-cradle-workbook-return',tables:{'sheet-1':{label:'Files',primaryColumnKey:'column-1',columns:{'column-1':{type:'text'},'column-2':{type:'attachment'}}}}})
  const invalid=await d.call('/api/v1/records/base-import/preview',form(null,[{name:'synthetic-cradle-malformed.csv',bytes:Buffer.from('Name,Attachments\r\nsynthetic-cradle-bad,not-an-array\r\n')}],{name:'synthetic-cradle-malformed',tables:{'synthetic-cradle-malformed.csv':{columns:{'column-2':{type:'attachment'}}}}}));assert.equal(invalid.report.tables[0].rejected,1);assert.ok(invalid.report.diagnostics.some(issue=>issue.columnKey==='column-2'&&/Attachments/.test(issue.message)))
+ // Current field policy refuses the complete export before any restricted attachment metadata leaves.
+ const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.app_id=? AND m.principal_id=?').bind(preview.identities.appId,h.operator).first(),rules=JSON.parse(policy.rules_json)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules.map(rule=>rule.entityId===first.entity.id?{...rule,readableFields:rule.readableFields.filter(id=>id!==first.field.id)}:rule)),policy.id).run()
+ const denied=await d.raw('/api/v1/records/base-export',{appId:preview.identities.appId,format:'json'});assert.equal(denied.status,403);assert.ok(!(await denied.text()).includes(refs[0].itemId))
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()
+ // Seed the existing erased identity state: exports must use the anonymous label even for returned captures.
+ const anonymous='Anonymous synthetic-cradle-attacher'
+ await h.db.prepare("UPDATE authority_principals SET state='erased',version=version+1 WHERE id=?").bind(people.editor.id).run()
+ await h.db.prepare('UPDATE operators SET name=?,active=0 WHERE id=?').bind(anonymous,people.editor.id).run()
+ for(const format of ['json','csv-set','xlsx']){const result=await d.call('/api/v1/records/base-export',{appId:preview.identities.appId,format});const texts=format==='json'?[result.content]:format==='csv-set'?csvDownloadEntries(Buffer.from(result.content,'base64')).map(entry=>entry.bytes.toString('utf8')):readWorkbook(Buffer.from(result.content,'base64'),'synthetic-cradle-erased.xlsx').flatMap(sheet=>sheet.rows.flatMap(row=>row.map(cell=>String(cell.value??''))));assert.ok(texts.some(text=>text.includes(anonymous)));assert.ok(texts.every(text=>!text.includes(people.editor.id)))}
  return {snapshot:first.parsed,preview,job,refs}
 }
