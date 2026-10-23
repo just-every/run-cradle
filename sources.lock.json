@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "7fa313c19abdd863ae551c167b2d369a933e85b19854423a6ac2531c26d48a44",
+      "sha256": "a10f48011874cad3e3abc41ece1b4cd91eea4096e50180a2b5b333dc0cda8ab8",
       "executable": false
     },
     "DEMO.md": {
@@ -12518,7 +12518,7 @@
       "executable": false
     },
     "tests/signed-owner-admission.mjs": {
-      "sha256": "3624056a27418b92f7763c77a7f1471ff00ed712c3d25f06f66f05b231b684ec",
+      "sha256": "662f50094653d7fed333bbc66d77f900fdbb6827d486fdccc9451d79f4a41651",
       "executable": false
     },
     "tests/start-resources.mjs": {
