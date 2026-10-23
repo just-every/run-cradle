@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ddc94eec5b3c933e35dcbf2ab4056505f5c027c215fbda786cc6b3b7442b19cb",
+      "sha256": "b451a2973b3ad802b71d96ce6d43646dfb631da9f07928c3610f8251f597fb4f",
       "executable": false
     },
     "DEMO.md": {
@@ -4554,7 +4554,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "a378f4f8b034edd90fa3ac6822e484fcb389b10226f92e5681ab31825183a760",
+      "sha256": "48ced76b1024b4a718e7c382f0b2c9f535ae1d0ab0d2fd2f9c19925aeb78b988",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5530,7 +5530,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "fe9fff098a44ca7e2ca499a8b1fba900cf519053eee7b17a568a7eb239c76070",
+      "sha256": "531fca5166e37b9cd835d29feab45035e18854b93d8da3be14c65d2eb2cf2f6b",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {
@@ -12358,7 +12358,7 @@
       "executable": false
     },
     "tests/local-auth-runtime.mjs": {
-      "sha256": "aef11c374588e0d84b1fab514d7d0260a1f656fa54ac4d84b97b20794489cabb",
+      "sha256": "cd302153e35aa608b085b16c647f3395d05409fed9aa53e322c32a9c67a81b92",
       "executable": false
     },
     "tests/migration-browser.mjs": {
@@ -12598,7 +12598,7 @@
       "executable": false
     },
     "tests/signed-owner-admission.mjs": {
-      "sha256": "1ced9ff5e183798eb6033976bb53b964aa1559a407ad3ace4c9114c3cc76c3bb",
+      "sha256": "f0344fedbbcc46611c56143defd0201a98a5b02c653500d53ceb3b3878535529",
       "executable": false
     },
     "tests/start-resources.mjs": {
@@ -14614,7 +14614,7 @@
       "executable": false
     },
     "wrangler.jsonc": {
-      "sha256": "d2eddf721d65aa9b3ce30a77ed27eff0a38c3a6869c07114a411dd3a5a993313",
+      "sha256": "25b6890260a2d7647f8b3e3883046c7cf46d67b2707501932c0a05afd83422d9",
       "executable": false
     }
   }
