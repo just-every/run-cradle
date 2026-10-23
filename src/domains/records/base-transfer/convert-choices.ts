@@ -12,7 +12,7 @@ export function selectOptionLabels(table:SourceTable,column:SourceColumn,overrid
 /** Choices validate every source cell, not just displayed samples. No writes or row identity allocation. */
 export function columnChoices(table:SourceTable,column:SourceColumn,override:ColumnOverride):{validTypes:Field['type'][];reasons:string[]} {
  const values=table.rows.map(row=>row.values[column.key]),reasons:string[]=[],validTypes:Field['type'][]=[]
- for(const type of ['text','number','date','instant','money','boolean','select','multi_select','url','person'] as const){
+ for(const type of ['text','number','date','instant','money','boolean','select','multi_select','url','person','attachment'] as const){
   const labels=selectOptionLabels(table,column,{...override,type}),options=labels.map((label,i)=>({label,id:'0000000000000000000000'+String(i).padStart(4,'0')}))
   if((type==='select'||type==='multi_select')&&(!labels.length||labels.some(v=>!v||v.length>200)))continue
   const field:Field={id:'00000000000000000000000001',label:column.label,type,required:false,unique:false,...(type==='select'||type==='multi_select'?{options}:{})}
