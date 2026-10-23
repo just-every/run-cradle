@@ -14,7 +14,7 @@ export async function changeSubscriptionDeletes(h,edge){
   const rules=JSON.parse(row.rules_json);for(const rule of rules)edit(rule)
   await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),row.id).run()
  }
- for(const scope of ['table','view','restricted']){
+ for(const scope of ['base','table','view','restricted']){
   try{
    const name=`synthetic-cradle-${scope==='table'?61:scope==='view'?62:63}`,record=(await h.create(name)).record
    const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,name,permissions:'read',expiresAt:new Date(Date.now()+29*86400000).toISOString()}})).data.key
@@ -24,14 +24,14 @@ export async function changeSubscriptionDeletes(h,edge){
     viewId=view.id
    }
    if(scope==='restricted')await policy(key,rule=>{rule.rows={kind:'condition',fieldId:h.nameId,op:'eq',value:name}})
-   const path='/changes-'+scope,subscription=(await h.request(root,{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,...(viewId?{viewId}:{}),url:edge.receiverOrigin+path}})).data
+   const path='/changes-'+scope,subscription=(await h.request(root,{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId:h.appId,...(scope==='base'?{}:{entityId:h.entityId}),...(viewId?{viewId}:{}),url:edge.receiverOrigin+path}})).data
    const route=(cursor,limit=200)=>`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`
    const fetchPage=cursor=>h.request(route(cursor),{secret:key.secret})
    await remove(record);await tick();await tick()
    const pings=edge.received.filter(r=>r.path===path)
    assert.equal(pings.length,1,scope+': exactly one idempotent delete ping')
    const deletion=await fetchPage(subscription.cursor)
-   if(scope==='table'){
+   if(scope==='table'||scope==='base'){
     assert.equal(deletion.data.items.length,1)
     const item=deletion.data.items[0]
     assert.deepEqual(Object.keys(item).sort(),['id','kind','recordId','sequence'])
@@ -45,7 +45,7 @@ export async function changeSubscriptionDeletes(h,edge){
    }
    let cursor=subscription.cursor,more=true,markers=0,paged=[]
    while(more){const part=(await h.request(route(cursor,1),{secret:key.secret})).data;paged.push(...part.items);if(part.resyncRequired){markers++;assert.equal(part.resyncRequired.from,cursor);assert.equal(part.resyncRequired.through,part.cursor)}cursor=part.cursor;more=part.hasMore}
-   assert.deepEqual(paged,deletion.data.items,'Paging the same delete range has no gaps or duplicate items');assert.equal(markers,scope==='table'?0:1)
+   assert.deepEqual(paged,deletion.data.items,'Paging the same delete range has no gaps or duplicate items');assert.equal(markers,['base','table'].includes(scope)?0:1)
    console.log('CHANGE_DELETE '+scope+' PASS')
    const held=(await h.request(`/api/v1/records/trash?appId=${h.appId}`)).data.items.find(item=>item.id===record.id)
    // Current field narrowing applies to restoration, and an unreadable restored row is omitted.
@@ -71,7 +71,7 @@ export async function changeSubscriptionDeletes(h,edge){
    assert.deepEqual(later.items.map(i=>[i.kind,i.recordId]),[['update',record.id]],'Next cursor contains only later changes, once')
    const allPings=edge.received.filter(r=>r.path===path)
    for(const ping of allPings){const verified=await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id});assert.equal(JSON.parse(verified.envelope.body).subscriptionId,subscription.id)}
-   if(scope==='table'){
+   if(scope==='table'||scope==='base'){
     // The signed cursor codec's revision is its issuance-clock seam; move it back
     // 31 days while keeping this seven-day subscription and its key current.
     const bindings=await h.runtime.getBindings(),codec=createCursorCodec(bindings.SESSION_SECRET),position=await codec.decode(subscription.cursor),clock=()=>new Date(Date.now()-31*86400000)
@@ -79,6 +79,20 @@ export async function changeSubscriptionDeletes(h,edge){
     const expired=await h.request(route(old),{secret:key.secret,status:410})
     assert.equal(expired.error.code,'cursor_expired');assert.match(expired.error.message,/resynchroniz/i);assert.equal(expired.resyncRequired.code,later.resyncRequired.code);assert.equal(expired.resyncRequired.message,later.resyncRequired.message);assert.deepEqual(Object.keys(expired.resyncRequired).sort(),Object.keys(later.resyncRequired).sort())
     console.log('CHANGE_CURSOR_RETENTION PASS 410 cursor_expired resynchronize')
+   }
+   if(scope==='view'){
+    const currentView=(await h.request(`/api/v1/views/${viewId}`)).data
+    await h.request('/api/v1/commands/view.delete',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:h.appId,entityId:'00000000000000000000000002',recordId:viewId},version:currentView.version}],input:{viewId}}})
+    await tick()
+    const final=(await fetchPage(later.cursor)).data
+    assert.deepEqual(final.items,[]);assert.equal(final.hasMore,false)
+    assert.deepEqual(Object.keys(final.resyncRequired).sort(),['code','from','message','through'])
+    assert.equal(final.resyncRequired.message,later.resyncRequired.message)
+    for(const forbidden of [record.id,name,h.nameId,h.statusId,'recordId','rowCount'])assert.ok(!JSON.stringify(final).includes(forbidden),'Unavailable scope final page leaks no record content or cause')
+    assert.deepEqual((await fetchPage(later.cursor)).data,final,'Unavailable scope final range replays identically')
+    const listed=(await h.request(root+'?appId='+h.appId,{secret:key.secret})).data.find(row=>row.id===subscription.id)
+    assert.equal(listed.state,'ended');assert.equal(listed.deliveryState,'authority_lost')
+    console.log('CHANGE_DELETED_SCOPE view PASS generic final range and safe listing')
    }
    await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
   }catch(error){console.error('CHANGE_MATRIX_FAILURE '+scope+': '+error.stack);failures.push(error)}

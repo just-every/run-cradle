@@ -2,9 +2,12 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {verifyWebhook} from '../../vendor/base/modules/integrations/core/webhook.ts'
 import {changeSubscriptionDeletes} from './change-subscriptions-deletes.mjs'
+import {changeSubscriptionRecovery,changeSubscriptionFairness} from './change-subscriptions-recovery.mjs'
 import {unbase64} from '../../src/adapters/crypto.server.ts'
 
 export async function changeSubscriptionsJourney(h,edge){
+ const proofFailures=[]
+ for(const proof of [changeSubscriptionRecovery,changeSubscriptionFairness])try{await proof(h,edge)}catch(error){console.error('CHANGE_RECOVERY_MATRIX_FAILURE '+error.stack);proofFailures.push(error)}
  const root='/api/v1/change-subscriptions',issue={commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-2',permissions:'read',expiresAt:new Date(Date.now()+20*86400000).toISOString()}
  const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:issue})).data.key
  const body={commandId:createUlid(),appId:h.appId,entityId:h.entityId,url:edge.receiverOrigin+'/changes'}
@@ -52,7 +55,7 @@ export async function changeSubscriptionsJourney(h,edge){
  await h.create('synthetic-cradle-7');await tick()
  assert.ok(!edge.received.some(r=>r.path==='/revoked-changes'))
  await h.request(`${root}/${stopped.id}/changes?cursor=${encodeURIComponent(stopped.cursor)}`,{secret:revoked.secret,status:401})
- await changeSubscriptionDeletes(h,edge)
+ try{await changeSubscriptionDeletes(h,edge)}catch(error){proofFailures.push(error)}
  const before=edge.received.filter(r=>r.path==='/changes').length
  await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()+8*86400000})
  const expiredSubscription=await h.request(route(subscription.cursor),{secret:key.secret,status:410})
@@ -63,4 +66,5 @@ export async function changeSubscriptionsJourney(h,edge){
  for(const ping of edge.received.filter(r=>r.path==='/changes'))await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
  await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
  assert.deepEqual((await h.request(root+'?appId='+h.appId,{secret:key.secret})).data,[])
+ if(proofFailures.length)throw new AggregateError(proofFailures,'Change-feed synchronization proofs failed')
 }
