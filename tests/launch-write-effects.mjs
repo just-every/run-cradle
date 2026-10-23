@@ -17,9 +17,9 @@ import { clauseAnalysisFixture } from './helpers/launch-clause-analysis.mjs'
 const campaignFields = ownerId => ({ code: 'WRITE-EFFECTS', name: 'Release', ownerId, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Launch', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} })
 const milestoneFields = (campaignId, ownerId) => ({ campaignId, title: 'Release review', ownerId, type: 'Review', status: 'Not started', startDate: '2026-12-01', endDate: null, conflictReason: null })
 const denyField = async (h, kind, field) => writeContext(h, (await h.addPerson({ change: rules => rules.map(rule => rule.entityId === launchEntities[kind] ? { ...rule, writableFields: rule.writableFields.filter(id => id !== launchFieldIds[kind][field]) } : rule) })).session)
-const unchangedDenial = async (h, scope, action, input, revisions) => {
+const unchangedDenial = async (h, scope, action, input, revisions, code = 'forbidden') => {
  const before = await mutationSnapshot(h.db)
- await assert.rejects(scope.prepare(action, input, revisions), error => error.code === 'forbidden', action)
+ await assert.rejects(scope.prepare(action, input, revisions), error => error.code === code, action)
  assert.deepEqual(await mutationSnapshot(h.db), before, action)
 }
 
@@ -91,7 +91,8 @@ test('[RECORDS-001] zero writable fields and explicit deny rules cannot obtain v
   const zero = await h.addPerson({ change: rules => rules.map(rule => rule.entityId === launchEntities.campaign ? { ...rule, writableFields: [] } : rule) })
   await unchangedDenial(h, await writeContext(h, zero.session), 'campaign.patch', { id: updated.id, changes: {} }, expected('campaign', updated))
   const denied = await h.addPerson({ change: rules => [...rules, { ...rules.find(rule => rule.entityId === launchEntities.campaign), id: createUlid(), effect: 'deny', writableFields: [launchFieldIds.campaign.objective] }] })
-  await unchangedDenial(h, await writeContext(h, denied.session), 'campaign.patch', { id: updated.id, changes: { objective: 'Explicit denial' } }, expected('campaign', updated))
+  // A deny rule over every campaign leaves no record this person may act on: the answer is the one for a missing record.
+  await unchangedDenial(h, await writeContext(h, denied.session), 'campaign.patch', { id: updated.id, changes: { objective: 'Explicit denial' } }, expected('campaign', updated), 'not_found')
   assert.equal((await owner.commit('campaign.patch', { id: updated.id, changes: {} }, expected('campaign', updated))).version, updated.version + 1)
  } finally { await h.close() }
 })
