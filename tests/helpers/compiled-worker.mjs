@@ -1,9 +1,9 @@
 import { parseArgs } from 'node:util'
 import { emittedRuntime } from './emitted-runtime.mjs'
-import { createFixtureMail } from './fixture-mail.mjs'
+import { emittedMailRuntime } from './emitted-mail-runtime.mjs'
 
 const { values } = parseArgs({ options: {
-  port: { type: 'string', default: '4185' },
+  port: { type: 'string', default: '0' },
   'persist-to': { type: 'string', default: '.wrangler/state' },
   var: { type: 'string', multiple: true, default: [] },
 } })
@@ -13,9 +13,12 @@ for (const value of values.var) {
   if (separator < 1) throw new Error('Use --var NAME:value')
   bindings[value.slice(0, separator)] = value.slice(separator + 1)
 }
-const mail=bindings.MAIL_PROVIDER==='development'?await createFixtureMail(values.port):null
-let runtime
-try{runtime=await emittedRuntime(values['persist-to'],Number(values.port),{...bindings,...mail?.bindings},mail?.fetch)}
+let runtime,mail
+try{
+ if(bindings.MAIL_PROVIDER==='development')({runtime,mail}=await emittedMailRuntime(values['persist-to'],Number(values.port),bindings))
+ // The unconfigured-health fixture must retain absent required bindings.
+ else runtime=await emittedRuntime(values['persist-to'],Number(values.port),bindings)
+}
 catch(error){await mail?.close();throw error}
 let closing
 const close=()=>closing??=(async()=>{

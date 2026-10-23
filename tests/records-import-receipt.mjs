@@ -38,7 +38,7 @@ async function manifest(h,jobId,tableKey,columnKey){
 }
 
 contract('RECORDS-005','move-in receipt and skipped-attachment manifest come from the retained job for CSV, recorded API and JSON imports, partial and undone',async()=>{
- const h=await userAutomationRuntime(18962)
+ const h=await userAutomationRuntime(0)
  try {
   const receipt=async id=>(await h.request(`${jobs}${id}/receipt.json`)).data
   // CSV set: partial, applied, undone.

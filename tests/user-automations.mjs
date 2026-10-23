@@ -8,7 +8,7 @@ import {createUlid} from '../src/core/shared/ids.ts'
 
 contract('AUTO-USER-001','[AUTO-USER-005] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
  const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[];let testMailStatus=202
- const h=await userAutomationRuntime(18952,{outbound:async request=>{
+ const h=await userAutomationRuntime(0,{outbound:async request=>{
   assert.equal(request.url,relay);assert.equal(request.headers.get('authorization'),'Bearer synthetic-record-relay-key')
   delivered.push(await request.json());return new Response(null,{status:testMailStatus})
  }})

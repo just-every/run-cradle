@@ -11,14 +11,13 @@ import { recordsJourney } from './helpers/records-browser-journey.mjs'
 import { accessibilityTabAway } from './helpers/accessibility-input.mjs'
 import { accessibilityContextOptions, accessibilityWidths } from './helpers/accessibility-evidence.mjs'
 import { uploadSet, overrideType, chooseTarget, chooseMissingTarget, chooseLookup, submitImport, downloadStatus, verifyPreviewLists } from './helpers/base-import-browser.mjs'
-import {freePort} from './helpers/free-port.mjs'
 const output = path.resolve(process.env.CRADLE_IMPORT_OUTPUT ?? process.env.TMPDIR ?? '.private/base-import-browser')
 contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, guarded adoption, stored resume and undo on desktop and phone', async () => {
   await mkdir(output, { recursive: true })
   let runtime, browser
   const receipts = []
   try {
-    runtime = await recordsImportBrowserRuntime(Number(process.env.CRADLE_IMPORT_PORT ?? await freePort()))
+    runtime = await recordsImportBrowserRuntime(0)
     browser = await chromium.launch({ headless: true,args:['--use-mock-keychain','--password-store=basic'], ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) })
     for (const width of accessibilityWidths) {
       const context = await browser.newContext(accessibilityContextOptions({ viewport: { width, height: width === 390 ? 844 : 900 } }))

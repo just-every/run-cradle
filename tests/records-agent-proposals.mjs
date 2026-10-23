@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
-import {freePort} from './helpers/free-port.mjs'
 import {proposalDoor,smallProposal,effectCounts} from './helpers/proposal-door.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
@@ -11,7 +10,7 @@ const issue=async(h,name,appId)=>(await h.request('/api/proposer-keys',{method:'
 const TOOLS=['schema.proposal','schema.proposals','schema.propose','schema.read','schema.withdraw']
 
 contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees only its own proposals and cannot decide, read records or manage keys',async()=>{
- const h=await userAutomationRuntime(await freePort())
+ const h=await userAutomationRuntime(0)
  try {
   const keys={}
   for(const face of ['rest','mcp']){
@@ -64,7 +63,7 @@ contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees
 })
 
 contract('RECORDS-007','the owner alone reviews affected records, adopts, declines and is refused stale, replayed and revoked proposals; existing records stay exact',async()=>{
- const h=await userAutomationRuntime(await freePort())
+ const h=await userAutomationRuntime(0)
  try {
   const first=(await h.create('Kept one')).record,second=(await h.create('Kept two')).record
   const key=await issue(h,'Design agent',h.appId),agent=proposalDoor(h.origin,key.secret,'rest')
@@ -137,7 +136,7 @@ contract('RECORDS-007','the owner alone reviews affected records, adopts, declin
 })
 
 contract('RECORDS-007','a proposing key reads and proposes only under its issuer’s current authority',async()=>{
- const h=await userAutomationRuntime(await freePort())
+ const h=await userAutomationRuntime(0)
  try {
   await h.create('Hidden by policy')
   const key=await issue(h,'Fenced agent',h.appId),rest=proposalDoor(h.origin,key.secret,'rest'),mcp=proposalDoor(h.origin,key.secret,'mcp')

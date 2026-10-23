@@ -5,7 +5,6 @@ import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './accessibility-evidence.mjs'
 import {retainedLaunch} from './records-browser-retained.mjs'
-import {freePort} from './free-port.mjs'
 
 async function chooserHidden(page){
  assert.equal(await page.getByRole('navigation',{name:'Application records',exact:true}).count(),0)
@@ -45,7 +44,7 @@ export async function homeReview(output){
  try{
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   for(const width of recordsBrowserWidths(accessibilityWidths)){
-   h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? await freePort()))
+   h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0))
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');await page.getByRole('heading',{name:'Your business, organised your way.',exact:true}).waitFor();assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
    assert.doesNotMatch(await page.locator('main').innerText(),/NO RECORDS|Start with your first base|Launch readiness|campaign activity|milestones|decisions/i)
