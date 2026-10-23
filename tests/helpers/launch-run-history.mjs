@@ -35,7 +35,10 @@ export async function verifyRunHistory(h,{campaign,owner,risk,mail}){
  await h.command('launch.automation.disable',{id:automation.id},expected(launchEntities.automation,await current(automation.id)))
  await h.command('launch.automation.enable',{id:automation.id},expected(launchEntities.automation,await current(automation.id)))
  // Succeeded, then Failed on a provider refusal, each run on its own scheduler clock (one tick per action).
- const first=Date.now()+60000,second=first+2*3600000
+ // Keep all history clocks in tomorrow's UTC afternoon, away from the shipped
+ // readiness and digest windows, while remaining ahead of real queued work.
+ const tomorrow=new Date(Date.now()+day);tomorrow.setUTCHours(12,0,0,0)
+ const first=tomorrow.getTime(),second=first+2*3600000
  const delivered=await patch('Delivered');await h.tick(first);await h.tick(first+1000)
  mail.refuse=true
  const refused=await patch('Refused');await h.tick(second);await h.tick(second+1000)
