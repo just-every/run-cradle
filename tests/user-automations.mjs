@@ -1,3 +1,4 @@
+import {automationTriggerJourney} from './helpers/automation-trigger-journey.mjs'
 import {automationControlJourney} from './helpers/automation-control-journey.mjs'
 import {automationFailureJourney} from './helpers/automation-failure-journey.mjs'
 import './helpers/typescript-loader.mjs'
@@ -8,7 +9,7 @@ import {automationTestJourney} from './helpers/automation-test-journey.mjs'
 import {automationQuietHours} from './helpers/automation-quiet-hours.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
-contract('AUTO-USER-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
+contract('AUTO-USER-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] [AUTO-USER-002] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
  const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[],receiverCalls=[];let testMailStatus=202,receiverStatus=200
  const h=await userAutomationRuntime(0,{outbound:async request=>{
   if(request.url==='https://relay.example.com/v1/deliver'){const wire=await request.json();receiverCalls.push(wire);const status=typeof receiverStatus==='function'?await receiverStatus(wire):receiverStatus;return status===503?new Response(null,{status:503}):Response.json({status,headers:{},body:''})}
@@ -24,6 +25,7 @@ contract('AUTO-USER-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] real a
   await automationTestJourney(h,delivered,status=>{testMailStatus=status})
   await automationFailureJourney(h,delivered,status=>{receiverStatus=status},receiverCalls)
   await automationControlJourney(h,receiverCalls,status=>{receiverStatus=status})
+  await automationTriggerJourney(h)
   delivered.length=0
   const save={commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{
    name:'Welcome record',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[

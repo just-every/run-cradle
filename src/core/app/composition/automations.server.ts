@@ -1,3 +1,4 @@
+import {createAutomationTriggers} from '../../../domains/automations/triggers.server'
 import {createAutomationFailureAlerts} from '../../../domains/automations/failure-alerts.server'
 import {createAutomationRetry} from '../../../domains/automations/retry.server'
 import type { Platform } from '../../platform'
@@ -22,7 +23,8 @@ export function createAutomationsComposition(platform:Platform,foundation:Server
  const effects=createAutomationEffects({env:platform.bindings,entities,admission,commands,destinations})
  const failures=createAutomationFailureAlerts(platform.bindings,foundation,platform.auth.configuration.appOrigin,clock)
  const runner=createRecordAutomationRuntime({db,appOrigin:platform.auth.configuration.appOrigin,policy,descriptors,reader,effects,clock})
- const runtime={async tick(commandId?:string,ingress:'queue'|'schedule'='schedule'){await runner.tick(commandId,ingress);await failures.tick()}}
+ const triggers=createAutomationTriggers(platform.bindings,foundation,reader,platform.auth.configuration.appOrigin,clock)
+ const runtime={async tick(commandId?:string,ingress:'queue'|'schedule'='schedule'){if(ingress==='schedule')await triggers.tick();await runner.tick(commandId,ingress);await failures.tick()}}
  const tests=createAutomationTests(platform.bindings,foundation,reader,destinations,effects)
  const http=recordAutomationsHttp({retry:createAutomationRetry(db,foundation),tests,configuration,history,destinations,authenticate:request=>foundation.authenticate(request,'http',createUlid()),
   async recipients(ctx,appId,entityId) {

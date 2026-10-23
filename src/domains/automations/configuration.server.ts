@@ -1,3 +1,4 @@
+import {validateAutomationTrigger,automationTriggerConfig} from './trigger-configuration.server'
 import {automationDefinitionActions} from './control-contracts'
 import {filterFields} from '../records/filter.server'
 import type { PolicyPort,RequestContext } from '../authority/ports'
@@ -20,6 +21,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
    const definition=recordAutomationDefinition.parse(input.definition),{appId,entityId}=definition
    const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),permissions=allActions.some(a=>a.kind==='update')?'write' as const:'read' as const
    const own=await userDelegationPolicy(db,policy,ctx,{appId,entityId,name:definition.name,permissions,expiresAt:input.expiresAt})
+   await validateAutomationTrigger(db,definition,descriptor,own.scope,ctx.now)
    const guards=[...own.guards]
    const filters=[...allActions.flatMap(action=>action.when?[action.when]:[]),...(definition.steps??[]).flatMap(step=>step.kind==='condition'?[step.when]:step.kind==='branch'?step.paths.map(path=>path.when):step.kind==='repeat'?[step.find]:[])]
    if(filters.flatMap(filter=>filterFields(filter)).some(field=>!own.scope.readableFieldIds.includes(field)))throw new AuthorityError('forbidden','Conditions and finds require readable fields.')
@@ -54,7 +56,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
    await ensureRecordAutomationTriggers(db,descriptors,[{app_id:appId,entity_id:entityId}])
    const now=Date.parse(ctx.now),version=(old?.version??0)+1,definitionVersion=(old?.definition_version??0)+1
    const row={id,created_at:old?.created_at??now,updated_at:now,version,name:definition.name,trigger_type:'record',
-    trigger_config_json:JSON.stringify({appId,entityId,event:definition.event}),actions_json:JSON.stringify(definition.actions),
+    trigger_config_json:JSON.stringify(automationTriggerConfig(definition)),actions_json:JSON.stringify(definition.actions),
     enabled:Number(definition.enabled),definition_version:definitionVersion,shipped_key:null}
    const mutations:SqlMutation[]=[old?{kind:'update',table:tables.automations,set:row,where:eq(tables.automations,'id',id),expectedRows:1}:{kind:'insert',table:tables.automations,row}]
    if(!old)mutations.push({kind:'insert',table:tables.bindings,row:{automation_id:id,app_id:appId,entity_id:entityId,owner_id:ctx.principal.id}})

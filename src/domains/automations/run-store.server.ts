@@ -1,3 +1,4 @@
+import {namedAutomationFieldsChanged} from './field-trigger.server'
 import { delegationCommandId } from '../authority/user-delegation.server'
 import { recordAutomationDefinition, type RecordAutomationDefinition } from './contracts'
 
@@ -32,6 +33,7 @@ export function createAutomationRunStore(db:D1Database,clock=()=>new Date()) {
       .bind(ref.id,ref.version,event.app_id,event.entity_id).first<{definition_json:string;owner_id:string}>()
      if(!saved)throw new Error('Captured automation definition is unavailable')
      const definition=recordAutomationDefinition.parse(JSON.parse(saved.definition_json))
+     if(definition.trigger?.kind==='fields_updated'&&!await namedAutomationFieldsChanged(db,event,definition.trigger.fieldIds))continue
      const id=await delegationCommandId(event.id,`${ref.id}:${ref.version}`)
      const ancestors=causes.length?await db.prepare(`SELECT id,automation_id FROM automation_runs WHERE id IN (${causes.map(()=>'?').join(',')}) UNION ALL SELECT id,automation_id FROM record_automation_tests WHERE id IN (${causes.map(()=>'?').join(',')})`)
       .bind(...causes,...causes).all<{id:string;automation_id:string}>():{results:[]}
@@ -68,7 +70,7 @@ export function createAutomationRunStore(db:D1Database,clock=()=>new Date()) {
     .bind(runId).all<AutomationActionRun>()).results
   },
   async reject(id:string,code:string){await db.prepare("UPDATE launch_automation_actions SET state='Failed',error_code=?,finished_at=? WHERE id=? AND state='Pending'").bind(code,clock().getTime(),id).run()},
-  async skip(id:string,reason:string){await db.prepare("UPDATE launch_automation_actions SET state='Skipped',result_json=?,finished_at=? WHERE id=? AND state='Pending'").bind(JSON.stringify({reason}),clock().getTime(),id).run()},
+  async markSkipped(id:string,reason:string){await db.prepare("UPDATE launch_automation_actions SET state='Skipped',result_json=?,finished_at=? WHERE id=? AND state='Pending'").bind(JSON.stringify({reason}),clock().getTime(),id).run()},
   async hold(actionId:string,until:number) {
    await db.prepare("UPDATE launch_automation_actions SET result_json=? WHERE id=? AND state='Pending'")
     .bind(JSON.stringify({heldUntil:new Date(until).toISOString()}),actionId).run()
