@@ -161,3 +161,9 @@ delete, view/restricted range signals and replay/paging, signed pings, narrowed
 restore and unreadable restore refusal, and a signed cursor at its issuance
 clock minus 31 days returning `cursor_expired`. The existing subscription journey
 separately moves the scheduled clock eight days and proves `subscription_expired`.
+
+## c12 field/table integration and ct rider
+
+`tests/helpers/field-trash-journey.mjs` proves table-scope final empty range capture and stable replay after restoration while the key remains current. Real issuer-policy changes still revoke old keys; a new current subscription sees no removed field identity or value. Restored records publish the durable queue wake (`tests/helpers/change-subscriptions-deletes.mjs`).
+
+ct approved unavailable-scope semantics on 23 October and requires a generic marker until every write door is projected. Unprojected typed audit facts now signal that same marker. Import Kit custody lacks an audit sequence/time, so every fetched page of a base with retained import custody conservatively carries the marker, including empty pages. No import ping or automation effect is enabled. `tests/helpers/change-subscriptions-imports.mjs` exercises real apply, restart/resume, undo and rollback under base/table/view subscriptions, immutable replay and effect suppression. Ordinary import change projection and the full write-door matrix remain Gap items; no DONE is claimed.
