@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "810a418c728ebf7ef0d385a0d8349e10fc090dd5dc347d79b2715e998289d5da",
+      "sha256": "5cf992cc9ecc3ceffcb58cb48fe29b3737943b576b24a6092ff456bbfffdb3e3",
       "executable": false
     },
     "DEMO.md": {
@@ -10730,7 +10730,7 @@
       "executable": false
     },
     "src/ui/records/store-reference-view.tsx": {
-      "sha256": "c0e8988300e47db190711ecd687aeca3770acc100f2bd2e094fc38cd4239ac69",
+      "sha256": "89ebf237538318a2603e9a8849a17e61aacf7d4d9ba3d8dd8afc03c6a4e46c05",
       "executable": false
     },
     "src/ui/records/store-settings.tsx": {
