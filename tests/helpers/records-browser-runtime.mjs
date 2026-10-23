@@ -7,9 +7,9 @@ import {migrationInventory} from '../../scripts/migration-groups.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {prepareLaunchSetup} from '../../src/apps/launch/setup.server.ts'
 import {completeFirstRun} from './complete-first-run.mjs'
-export async function recordsBrowserRuntime(port=0){
+export async function recordsBrowserRuntime(port=0,{networkEdge,bindings={}}={}){
  const directory=await mkdtemp(path.join(process.env.TMPDIR??tmpdir(),'records-ui-')),owner='00000000000000000000000981'
- const runtime=await emittedRuntime(directory,port,{APP_ORIGIN:`http://127.0.0.1:${port}`,AUTH_LOCAL:'true',OWNER_EMAIL:'records-owner@example.test',MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-records-session-secret-at-least-32-characters'})
+ const runtime=await emittedRuntime(directory,port,{APP_ORIGIN:`http://127.0.0.1:${port}`,AUTH_LOCAL:'true',OWNER_EMAIL:'records-owner@example.test',MAIL_PROVIDER:'development',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-records-session-secret-at-least-32-characters',...bindings},networkEdge)
  try{
   const origin=(await runtime.ready).origin
   const db=await runtime.getD1Database('DB')
