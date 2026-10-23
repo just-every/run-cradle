@@ -43,7 +43,7 @@ export async function fileStoresBrowser(page,h,width,output){
  await j.action(page.getByRole('link',{name:'synthetic-cradle-site',exact:true}).first());await j.action(page.getByRole('button',{name:'Edit record',exact:true}))
  await j.action(page.getByRole('button',{name:'Choose from a file store',exact:true}))
  await j.action(page.getByText('File store policy',{exact:true}))
- await page.getByLabel('Who may connect Google Drive',{exact:true}).waitFor()
+ await page.getByRole('combobox',{name:/^Who may connect Google Drive/}).waitFor()
  await j.capture('file-store-owner-policy')
 }
 
