@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "09d37c8c6737de5547ba612d0b7ec731e841c30c4ae2fbcfd50f849c1b594078",
+      "sha256": "bb7347a6dce58fee359fc43a250be7028f8eccd0d63848c3a145e583baf5da9f",
       "executable": false
     },
     "DEMO.md": {
@@ -3050,7 +3050,7 @@
       "executable": false
     },
     "docs/contract/API-USER-002/README.md": {
-      "sha256": "fe2a78bdbdf28d974c752276b43340c1b61e3feddf1472096f592bdae8da158c",
+      "sha256": "9fb29645905515bda28b3100bfa85a80db83f924fb779c9533d02b6aeb68cfe8",
       "executable": false
     },
     "docs/contract/AUTO-USER-002/README.md": {
@@ -9462,7 +9462,7 @@
       "executable": false
     },
     "src/domains/records/routes.server.ts": {
-      "sha256": "1d71a7707433c73ff934c41bfe957f580e9687e9ec001934d058707c30e31a10",
+      "sha256": "05c877168d5705fa9c744f436540be6b20bb273450ef625c71a70c3810c11cf3",
       "executable": false
     },
     "src/domains/records/schema.ts": {
@@ -12030,7 +12030,7 @@
       "executable": false
     },
     "tests/helpers/rest-api-journey.mjs": {
-      "sha256": "aa71e0e3a8bede1a75b82c2091ddca89b18a91002e4027e408f19037950238c8",
+      "sha256": "a6e9aeaaf95bf1b9cc2016805d72e84c96499c501b4df03550923c653e9fc533",
       "executable": false
     },
     "tests/helpers/saml-provider.mjs": {

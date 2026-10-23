@@ -7,7 +7,8 @@ has schema read, condition/sort/cursor query, record get/create/update/delete,
 batch create/update/delete, and unique-field upsert operations. The retained
 command, view, form, attachment and comment APIs keep their existing contracts;
 this document describes the new record namespace rather than inventing routes
-for unbuilt features.
+for unbuilt features. The document is standard OpenAPI JSON at the response root;
+record operations use the existing data/meta envelope.
 
 Requests use the current API-key scopes, issuer delegation, row/field policy,
 schema and record versions. Create/upsert requires `schemaVersion`; update and
