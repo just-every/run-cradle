@@ -1,3 +1,4 @@
+import {preHydrationImport} from './helpers/base-import-hydration.mjs'
 import {companyWorkbookBrowser} from './helpers/company-workbook-browser.mjs'
 import {fileStoresBrowser,unresolvedStoresBrowser,resolvedStoresBrowser} from './helpers/file-stores-browser.mjs'
 import {browserCookies} from './helpers/session-cookies.mjs'
@@ -24,6 +25,7 @@ contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, gua
       try {
         await context.addCookies(browserCookies(runtime.cookie,runtime.origin))
         const page = await context.newPage(), journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
+        await preHydrationImport(page,runtime,width,name=>journey.capture(name))
         await companyWorkbookBrowser(page,{...journey,companyOutput:name=>path.join(output,`${name}-${width}.png`)},runtime,width)
         await fileStoresBrowser(page,runtime,width,output)
         await unresolvedStoresBrowser(page,runtime,width,output)
