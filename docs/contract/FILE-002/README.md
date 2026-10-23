@@ -38,4 +38,4 @@ Browser: `tests/ui-base-import.mjs` (`[PERM-007 INTEG-003 FILE-002 RECORDS-005]`
 
 ## Gap (named in CONTRACT.md and ACCEPTANCE.md)
 
-Keep a copy, base JSON export and return of attachment fields, archive restore and attacher erasure journeys, and a Chest picker against Chest's API are not built or not run. See the Status of FILE-002.
+Gap: Keep a copy is not built; base JSON, CSV-set and workbook export and return of store references is FILE-004 (missing); archive restore and attacher erasure have no journey; Chest has no picker against its own API (link only). Gap: personal store connections for writers and readers, the owner's connect policy, viewer-own-connection previews and attacher-shared previews are not built; today only the installation owner connects and attaches, and only the attacher sees thumbnails (interim, ct 23 October). No real provider call or consent was used; real consents NOT RUN. See the Status of FILE-002.

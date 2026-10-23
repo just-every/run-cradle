@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "33b782ac41c2f7e2d43599fb05cd95b02a6ef4d9c4a91594c1e55a99585d0329",
+      "sha256": "854432dac7e3e7e25ef7ee90a56768398abdec62478c525a7f5e1d6f324fe767",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ab0db5428b3cba29293efb5769de572d1a9be03fd647840d51ad98e0224fee32",
+      "sha256": "a7c4e4a468bb818c11dea98aa4bab8fc500e916fd5344d63d36c9f430b1ddb82",
       "executable": false
     },
     "DEMO.md": {
@@ -3414,7 +3414,11 @@
       "executable": false
     },
     "docs/contract/FILE-002/README.md": {
-      "sha256": "76e522b5f261f774239dc8b457a50e03e3c4452628f972eeef83b950c46f50c0",
+      "sha256": "efa17f98e97aeedde16f373fcfb20fb351e5b2d948fe9de4443aa6bef4dba28d",
+      "executable": false
+    },
+    "docs/contract/FILE-004/README.md": {
+      "sha256": "6e725b536825e0687a77f6fb9d91181d34e91805d393662bcf1f81f14e847357",
       "executable": false
     },
     "docs/contract/IFACE-006/template-assets-schema-1440.png": {
@@ -3611,6 +3615,10 @@
     },
     "docs/contract/INTEG-003/workbook-merge-preview-390.png": {
       "sha256": "6b34d09d7c37096a872262a0d3d36e5651501732b6ef8e7b4cf0a6e8b5173147",
+      "executable": false
+    },
+    "docs/contract/INTEG-004/README.md": {
+      "sha256": "5a97791c3c54c56c98e7faa5e46710edbaf2d86bd2e60948d22bbd85d1225f9c",
       "executable": false
     },
     "docs/contract/PERM-007/company-settings-configured-1440.png": {
