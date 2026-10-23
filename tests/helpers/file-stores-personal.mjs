@@ -28,7 +28,20 @@ export async function personalStoresJourney(h,provider,fieldId){
  const id=connections['google-drive'],browse=await request(editor.cookie,'/api/v1/records/file-stores/browse',{body:{...address,connectionId:id}}),item=browse.items[0]
  const entity=(await request(editor.cookie,`/api/v1/apps/${h.appId}/entities/${h.entityId}`))
  let record=(await command(editor.cookie,'record.create',{appId:h.appId,entityId:h.entityId,values:{[h.nameId]:'synthetic-cradle-personal-file',[fieldId]:references}},[{ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:entity.version}])).value
- const thumbnail=async(person,status)=>{const r=await fetch(h.origin+'/api/v1/records/file-stores/thumbnail?'+new URLSearchParams({...address,recordId:record.ref.recordId,itemId:item.itemId}),{headers:{cookie:person.cookie}});assert.equal(r.status,status);assert.match(r.headers.get('cache-control'),/no-store/);if(status===200)assert.deepEqual(Buffer.from(await r.arrayBuffer()),provider.png);else await r.json()}
+ const thumbnail=async(person,status,requestedItem=item.itemId)=>{const r=await fetch(h.origin+'/api/v1/records/file-stores/thumbnail?'+new URLSearchParams({...address,recordId:record.ref.recordId,itemId:requestedItem}),{headers:{cookie:person.cookie}});assert.equal(r.status,status);assert.match(r.headers.get('cache-control'),/no-store/);if(status===200)assert.deepEqual(Buffer.from(await r.arrayBuffer()),provider.png);else await r.json()}
+ // Different provider accounts may see the same shared item; access is decided at the network edge.
+ for(const adapterId of ['onedrive','dropbox','box']){
+  const reference=references.find(r=>r.reference.provider===adapterId).reference
+  await thumbnail(reader,404,reference.itemId)
+  const own=await connect(reader,adapterId,'synthetic-cradle-code-reader')
+  await request(reader.cookie,'/api/v1/records/file-stores/browse',{body:{...address,connectionId:own},status:403})
+  await thumbnail(reader,200,reference.itemId)
+  provider.denied.add('synthetic-cradle-access-reader');await thumbnail(reader,404,reference.itemId)
+  await request(editor.cookie,'/api/v1/records/file-stores/settings',{body:{kind:'sharing',appId:h.appId,connectionId:connections[adapterId],enabled:true}})
+  await thumbnail(reader,200,reference.itemId)
+  await request(editor.cookie,'/api/v1/records/file-stores/settings',{body:{kind:'sharing',appId:h.appId,connectionId:connections[adapterId],enabled:false}})
+  await thumbnail(reader,404,reference.itemId);provider.denied.delete('synthetic-cradle-access-reader')
+ }
  const metadata=await request(reader.cookie,`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${record.ref.recordId}`)
  assert.equal(metadata.record.fields[fieldId].value[0].reference.name,item.name);assert.equal(metadata.record.fields[fieldId].value[0].reference.link,item.link)
  await thumbnail(reader,404)

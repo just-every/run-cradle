@@ -17,12 +17,12 @@ export function fileStoresProvider() {
       if (request.method !== 'GET' && !u.pathname.endsWith('/token') && !reads.has(u.pathname)) writes.push(`${request.method} ${u.origin}${u.pathname}`)
       if (u.pathname.endsWith('/token')) {
         const code=(await form()).get('code');assert.ok(['synthetic-cradle-code-1', 'synthetic-cradle-code-2','synthetic-cradle-code-reader'].includes(code))
-        const body = { access_token: code==='synthetic-cradle-code-reader'?'synthetic-cradle-access-reader':'synthetic-cradle-access-1', refresh_token: 'synthetic-cradle-refresh-1', token_type: 'bearer', expires_in: 3600,...(u.hostname==='api.dropboxapi.com'?{account_id:'synthetic-cradle-namespace-1'}:{}) }
+        const body = { access_token: code==='synthetic-cradle-code-reader'?'synthetic-cradle-access-reader':'synthetic-cradle-access-1', refresh_token: 'synthetic-cradle-refresh-1', token_type: 'bearer', expires_in: 3600,...(u.hostname==='api.dropboxapi.com'?{account_id:code==='synthetic-cradle-code-reader'?'synthetic-cradle-namespace-reader':'synthetic-cradle-namespace-1'}:{}) }
         const scope = u.hostname === 'oauth2.googleapis.com' ? storeScopes['google-drive'] : u.hostname === 'login.microsoftonline.com' ? storeScopes.onedrive : u.hostname === 'api.dropboxapi.com' ? storeScopes.dropbox : null
         return Response.json(scope ? { ...body, scope: scope.join(' ') } : body)
       }
       if(u.pathname.endsWith('/revoke')||u.pathname==='/2/auth/token/revoke')return new Response(null,{status:200})
-      if((u.pathname==='/drive/v3/files/root')||(u.pathname==='/v1.0/me/drive')||(u.pathname==='/2.0/users/me'))return Response.json({id:'synthetic-cradle-namespace-1'})
+      if((u.pathname==='/drive/v3/files/root')||(u.pathname==='/v1.0/me/drive')||(u.pathname==='/2.0/users/me'))return Response.json({id:request.headers.get('authorization')==='Bearer synthetic-cradle-access-reader'?'synthetic-cradle-namespace-reader':'synthetic-cradle-namespace-1'})
       if(denied.has(request.headers.get('authorization')?.replace('Bearer ','')))return Response.json({error:'synthetic-cradle-access-denied'},{status:403})
       if (u.hostname.endsWith('.googleusercontent.com') || u.hostname.endsWith('.1drv.com')) { assert.ok(['Bearer synthetic-cradle-access-1','Bearer synthetic-cradle-access-reader'].includes(request.headers.get('authorization'))); return image() }
       assert.ok(['Bearer synthetic-cradle-access-1','Bearer synthetic-cradle-access-reader'].includes(request.headers.get('authorization')))
