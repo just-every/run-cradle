@@ -27,7 +27,7 @@ export function StoreReferenceView({ reference, record }: { reference: StoreRefe
   }, [record?.appId, record?.entityId, record?.recordId, record?.fieldId, reference.itemId, reference.connectionId])
   return <span className="cr-store-reference">
     {preview === 'image' && <img className="cr-store-thumb" src={url} alt="" width={48} height={48} />}
-    {reference.resolution==='unresolved'&&<strong className="cr-badge">Unresolved</strong>}
+    {reference.resolution==='unresolved'&&<><strong className="cr-badge cr-tag cr-tag--warn">Unresolved</strong>{' '}</>}
     <a href={reference.link||undefined} target="_blank" rel="noopener noreferrer">{reference.name}<span className="cr-sr-only"> (opens in {storeLabels[reference.provider]})</span></a>
     <small className="cr-muted"> {typeLabel(reference.mediaType)} · {storeLabels[reference.provider]}{reference.size!==null?` · ${reference.size.toLocaleString()} bytes`:''}</small>
     {record&&reference.resolution==='unresolved'&&reference.provider!=='chest'&&<StoreReferenceResolution reference={reference} record={record}/>}
