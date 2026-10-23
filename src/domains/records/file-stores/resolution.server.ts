@@ -12,9 +12,9 @@ import {canonical,sha256} from '../../../adapters/crypto.server'
 import {ApiError} from '../../../core/registry/errors'
 import {idSchema} from '../validators'
 import {storeDigestSchema,canonicalStoreJson} from '../portable-store-references'
-import {isStoreReferenceMember,referenceValue} from '../store-references'
+import {isStoreReferenceMember,referenceValue,storeProviders} from '../store-references'
 import {trustedPredicate} from '../../admission/sql.server'
-const inputSchema=z.object({appId:idSchema,entityId:idSchema,recordId:idSchema,fieldId:idSchema,itemId:z.string().min(1).max(512),confirmChanged:z.boolean().default(false),observedDigest:storeDigestSchema.nullable().optional()}).strict()
+const inputSchema=z.object({appId:idSchema,entityId:idSchema,recordId:idSchema,fieldId:idSchema,provider:z.enum(storeProviders),itemId:z.string().min(1).max(512),confirmChanged:z.boolean().default(false),observedDigest:storeDigestSchema.nullable().optional()}).strict()
 type Run=<T>(ctx:RequestContext,connectionId:string,request:z.infer<typeof fileStoreRequestSchema>)=>Promise<T>
 const sameDigest=(a:NonNullable<StoreReference['digest']>,b:NonNullable<StoreReference['digest']>)=>a.algorithm===b.algorithm&&(a.algorithm==='quickxor'?a.value===b.value:a.value.toLowerCase()===b.value.toLowerCase())
 /** Resolve only a returned reference, using this writer's own exact account. Metadata jobs never write to a store. */
@@ -26,7 +26,7 @@ export function createStoreResolution(db:D1Database,foundation:ServerFoundation,
   if(!scope.writableFieldIds.includes(request.fieldId))throw new ApiError('forbidden','Write authority on this attachment field is required.')
   const record=await reader.record(ctx,scope,ref),cell=record.fields[request.fieldId]
   if(cell?.state!=='value'||!Array.isArray(cell.value))throw new ApiError('not_found','Attachment field not found.')
-  const members=cell.value as AttachmentMember[],index=members.findIndex(member=>isStoreReferenceMember(member)&&member.reference.itemId===request.itemId),member=members[index]
+  const members=cell.value as AttachmentMember[],index=members.findIndex(member=>isStoreReferenceMember(member)&&member.reference.itemId===request.itemId&&member.reference.provider===request.provider),member=members[index]
   if(!member||!isStoreReferenceMember(member)||!member.reference.portable||member.reference.resolution!=='unresolved')throw new ApiError('not_found','Unresolved reference not found.')
   const before=member.reference,portable=before.portable!
   if(portable.provider==='chest'||portable.account===null)return {state:'unresolved' as const,reason:'No matching account identity is recorded.'}
