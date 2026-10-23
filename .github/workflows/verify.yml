@@ -103,7 +103,10 @@ jobs:
           started=$SECONDS
           for attempt in 1 2 3; do
             mirror=${mirrors[attempt - 1]}
-            sudo sed -i -E "s@^(URIs:[[:space:]]*)https?://(([a-z0-9.-]+\.)?archive\.ubuntu\.com|security\.ubuntu\.com|mirrors\.edge\.kernel\.org)/ubuntu/?@\1${mirror}/@" /etc/apt/sources.list.d/ubuntu.sources
+            # Hosted Ubuntu now uses mirror+file:/etc/apt/apt-mirrors.txt.
+            # Rewrite the Ubuntu source's URI itself so apt cannot keep selecting
+            # Azure through that indirection. Suites and signature checks stay intact.
+            sudo sed -i -E "s@^(URIs:[[:space:]]*).*@\1${mirror}/@" /etc/apt/sources.list.d/ubuntu.sources
             printf 'Chromium apt: libraries attempt %s/3 (60s deadline; mirror %s)\n' "$attempt" "$mirror"
             if sudo env "PATH=$PATH" APT_CONFIG=/var/tmp/cradle-apt/apt.conf timeout --kill-after=5s 60s bash -ec '
               dpkg --configure -a
