@@ -1,3 +1,6 @@
+import {assertNoStoreCredentials} from './store-reference-exits.mjs'
+import {csvDownloadEntries} from './base-csv-download.mjs'
+import {readWorkbook} from '../../src/domains/records/workbooks/read.ts'
 import {personalStoresJourney} from './file-stores-personal.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
@@ -26,7 +29,7 @@ export async function fileStoresJourney(h,provider,existingFields){
   assert.equal(browse.provider,adapterId);assert.equal(browse.items.length,3,label+' lists files, not folders')
   const found=(await h.request('/api/v1/records/file-stores/browse',{method:'POST',body:{...address,connectionId:configured,query:'budget'}})).data;assert.deepEqual(found.items.map(i=>i.name),['synthetic-cradle-budget.xlsx'],label+' searches by name')
   const picked=browse.items.find(i=>i.name==='synthetic-cradle-plan.png')
-  const reference={provider:adapterId,itemId:picked.itemId,name:picked.name,mediaType:picked.mediaType,size:picked.size,modifiedAt:picked.modifiedAt,link:picked.link,connectionId:configured,attachedBy:browse.attachedBy}
+  const reference={provider:adapterId,itemId:picked.itemId,name:picked.name,mediaType:picked.mediaType,size:picked.size,modifiedAt:picked.modifiedAt,link:picked.link,connectionId:configured,attachedBy:browse.attachedBy,account:browse.account,digest:picked.digest,attachedAt:browse.attachedAt}
   members=[...members,{reference}]
   current=(await h.patch(current,{[fieldId]:members})).data.value
   const stored=(await record()).fields[fieldId].value;assert.equal(stored.length,members.length);assert.deepEqual(stored.at(-1).reference,reference,label+' reference reads back as picked')
@@ -41,8 +44,8 @@ export async function fileStoresJourney(h,provider,existingFields){
  const exported=(await h.request('/api/v1/records/export-csv',{method:'POST',body:{appId:h.appId,entityId:h.entityId,viewId:view.id,query:{}}})).data.csv
  for(const member of members)assert.ok(exported.includes(member.reference.itemId)&&exported.includes(member.reference.name),'The CSV names each reference')
  assert.ok(!exported.includes(members[0].reference.connectionId)&&!exported.includes(members[0].reference.attachedBy),'The CSV carries no connection or person')
- // A base export still refuses attachment fields, so none leaves as bytes or as a partial file.
- for(const format of ['json','csv-set','xlsx'])await h.request('/api/v1/records/base-export',{method:'POST',body:{appId:h.appId,format},status:400})
+ // All base exits project public metadata and exclude connection custody and transient previews.
+ for(const format of ['json','csv-set','xlsx']){const exported=(await h.request('/api/v1/records/base-export',{method:'POST',body:{appId:h.appId,format}})).data;const forbidden=Object.values(connections);if(format==='json')assertNoStoreCredentials(exported.content,forbidden);else if(format==='csv-set')for(const entry of csvDownloadEntries(Buffer.from(exported.content,'base64')))assertNoStoreCredentials(entry.bytes.toString('utf8'),forbidden);else for(const sheet of readWorkbook(Buffer.from(exported.content,'base64'),'synthetic-cradle-exit.xlsx'))for(const row of sheet.rows)for(const cell of row)assertNoStoreCredentials(cell.value,forbidden)}
  // A forged reference is refused: another person, an unlinked connection, or a link outside the store.
  const base=members[0].reference
  for(const [forged,status] of [[{...base,attachedBy:createUlid()},403],[{...base,itemId:'synthetic-cradle-forged',connectionId:createUlid()},403],[{...base,itemId:'synthetic-cradle-link',link:'https://evil.example/x'},400],[{...base,itemId:'synthetic-cradle-key',extra:true},400]])await h.patch(current,{[fieldId]:[...members,{reference:forged}]},undefined,createUlid(),status)

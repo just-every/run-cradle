@@ -1,5 +1,5 @@
 import {companyWorkbookBrowser} from './helpers/company-workbook-browser.mjs'
-import {fileStoresBrowser} from './helpers/file-stores-browser.mjs'
+import {fileStoresBrowser,unresolvedStoresBrowser} from './helpers/file-stores-browser.mjs'
 import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -26,6 +26,7 @@ contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, gua
         const page = await context.newPage(), journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
         await companyWorkbookBrowser(page,{...journey,companyOutput:name=>path.join(output,`${name}-${width}.png`)},runtime,width)
         await fileStoresBrowser(page,runtime,width,output)
+        await unresolvedStoresBrowser(page,runtime,width,output)
         const consoleErrors = [], externalRequests = [], batchCheckpoints = []
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()) })
         page.on('request', request => { if (new URL(request.url()).origin !== runtime.origin) externalRequests.push(request.url()) })
