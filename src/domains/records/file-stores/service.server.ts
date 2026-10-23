@@ -62,8 +62,8 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
   async function browse(ctx: RequestContext, input: unknown) {
     const request = fieldAddress.extend({ connectionId: idSchema, query: z.string().trim().min(1).max(200).nullable().default(null), cursor: z.string().min(1).max(2048).nullable().default(null) }).strict().parse(input);
     await authorize(ctx, request); await ownConnection(ctx, request.appId, request.connectionId);
-    const provider = (await db.prepare('SELECT adapter_id FROM provider_connections WHERE id=?').bind(request.connectionId).first<{ adapter_id: string }>())!.adapter_id;
-    return { provider, attachedBy: ctx.principal.id, ...await run<StoreBrowse>(ctx, request.connectionId, { entityId:request.entityId,fieldId:request.fieldId,op: 'browse', query: request.query, cursor: request.cursor }) };
+    const connection = (await db.prepare('SELECT adapter_id,account_id FROM provider_connections WHERE id=?').bind(request.connectionId).first<{ adapter_id: string;account_id:string }>())!,provider=connection.adapter_id;
+    return { provider, account:['google-drive','onedrive'].includes(provider)?connection.account_id:null,attachedAt:ctx.now,attachedBy: ctx.principal.id, ...await run<StoreBrowse>(ctx, request.connectionId, { entityId:request.entityId,fieldId:request.fieldId,op: 'browse', query: request.query, cursor: request.cursor }) };
   }
   /** Prefer the viewer's own store authority, then explicit attacher sharing; never retain image bytes. */
   async function thumbnail(ctx: RequestContext, input: unknown): Promise<{ state: 'image'; image: StoreThumbnail } | { state: 'reconnect' | 'none' }> {
@@ -75,7 +75,7 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
     const reference = cell?.state === 'value' && Array.isArray(cell.value) ? cell.value.find(member => isStoreReferenceMember(member) && member.reference.itemId === request.itemId) : undefined;
     if (!reference || !isStoreReferenceMember(reference)) throw new ApiError('not_found', 'Attachment not found.');
     const { connectionId, attachedBy,provider } = reference.reference;
-    if (!connectionId||provider==='chest') return { state: 'none' };
+    if (reference.reference.resolution==='unresolved'||!connectionId||provider==='chest') return { state: 'none' };
     // Each viewer asks the store with their own account. The store decides whether that account can read this item.
     const own=(await db.prepare("SELECT id FROM provider_connections WHERE app_id=? AND owner_id=? AND adapter_id=? AND state='connected' AND revoked_at IS NULL ORDER BY created_at DESC,id").bind(request.appId,ctx.principal.id,provider).all<{id:string}>()).results;
     const operation={op:'thumbnail' as const,entityId:request.entityId,fieldId:request.fieldId,recordId:request.recordId,itemId:request.itemId};

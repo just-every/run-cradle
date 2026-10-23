@@ -1,3 +1,4 @@
+import {canonicalStoreJson} from '../portable-store-references'
 import type { PortableBase, PortableField } from './json-format'
 
 /** Build once per snapshot: exact record identity and incoming order never use label guesses. */
@@ -19,6 +20,7 @@ export function exportIndex(base: PortableBase['base']) {
   incoming.set(projection.id, targets)
  }
  function scalar(field: PortableField, value: unknown): string {
+  if(field.type==='attachment')return canonicalStoreJson(value)
   if (value === null) return ''
   if(field.type==='computed'&&field.resultType==='array'&&field.resultElementType==='select')return JSON.stringify((value as (string|null)[]).map(id=>id===null?null:options.get(field.id)!.get(id)!))
   if (field.type === 'select' || field.type === 'computed' && field.resultType === 'select') return options.get(field.id)!.get(String(value))!

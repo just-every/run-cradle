@@ -30,6 +30,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         const kept = await db.prepare(`SELECT 1 AS present FROM ${identifier(storage.join!.table.tableId)} WHERE record_id=? AND value=?`).bind(recordId, referenceValue(reference)).first();
         if (kept)
             return [];
+        if(reference.portable||reference.resolution)throw new AdmissionError('forbidden','Returned references can only be preserved on their imported record until resolved.');
         if (reference.attachedBy !== ctx.principal.id)
             throw new AdmissionError('forbidden', 'A store reference is attached by the person whose store it comes from');
         if (reference.provider === 'chest')
