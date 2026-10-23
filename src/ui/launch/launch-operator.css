@@ -1,11 +1,10 @@
 /* Launch operator controls: import, export, selection and bulk edit on the neutral app canvas. */
-.launch-grid-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 0 30px 16px; }
+.launch-grid-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 0 0 16px; }
 .launch-export { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .cr-link-button { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .launch-select-cell { width: 44px; }
 .launch-select-cell input, .launch-card-select input { width: 20px; height: 20px; }
 .launch-card-select { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; margin-right: 4px; vertical-align: middle; }
-.launch-grid-selection { padding: 0 30px; }
 .launch-grid-selection:empty { display: none; }
 .launch-bulk { margin: 16px 0 0; padding: 16px 20px; box-shadow: none; }
 .launch-bulk-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
@@ -27,7 +26,6 @@
 .launch-import .cr-notice--committed { flex-wrap: wrap; }
 .launch-import .cr-notice--committed > * { flex: 1 1 auto; }
 @media (max-width: 767px) {
-  .launch-grid-selection, .launch-grid-actions { padding-inline: 16px; }
   .launch-bulk-form > .cr-button { flex: 1 1 100%; }
   .launch-import-rows thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .launch-import-rows, .launch-import-rows tbody, .launch-import-rows tr, .launch-import-rows td { display: block; width: 100%; }

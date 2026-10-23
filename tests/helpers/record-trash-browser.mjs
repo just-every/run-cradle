@@ -29,7 +29,7 @@ export async function recordTrashBrowser(){
     if(width===390){
      const menu=page.getByRole('button',{name:'Open navigation',exact:true});await page.keyboard.press('Tab');await menu.focus();await page.getByRole('tooltip',{name:'Open navigation',exact:true}).waitFor({state:'visible'});await page.keyboard.press('Tab')
      await menu.click();const close=page.getByRole('button',{name:'Close navigation',exact:true});await page.keyboard.press('Tab');await close.focus();await page.getByRole('tooltip',{name:'Close navigation',exact:true}).waitFor({state:'visible'});assert.equal(await page.getByRole('dialog',{name:'Navigation',exact:true}).evaluate(node=>node.scrollWidth>node.clientWidth),false);await close.click()
-     const bell=page.getByRole('link',{name:'Notifications',exact:true}).first();await page.keyboard.press('Tab');await bell.focus();await bell.getByRole('tooltip').waitFor({state:'visible'});await capture('tooltip',bell)
+     const bell=page.getByRole('link',{name:/unread notifications$/}).first();await page.keyboard.press('Tab');await bell.focus();await bell.getByRole('tooltip').waitFor({state:'visible'});await capture('tooltip',bell)
     }
     await page.locator('summary').filter({hasText:/^Record actions$/}).click()
     await page.getByRole('button',{name:'Delete record',exact:true}).click()

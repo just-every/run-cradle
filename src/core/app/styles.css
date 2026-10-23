@@ -19,11 +19,19 @@
   --color-border: var(--border);
 }
 
+/* Tailwind's smallest step is the app's 13px floor too. */
+@theme {
+  --text-xs: 0.8125rem;
+}
+
 /* The landing's palette, carried through the app. The landing's .lp values match these. */
 :root {
-  /* type */
+  /* type: nothing on screen is smaller than --text-meta */
   --font-display: Lexend, "Lexend Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Cradle Sans", ui-sans-serif, system-ui, sans-serif;
+  --text-meta: 13px;         /* labels, codes, chips and meta lines */
+  --text-small: 14px;        /* secondary text and table cells */
+  --text-body: 15px;         /* names and body text in dense lists */
   /* colour */
   --paper: #f3f3ee;          --background: var(--paper);
   --ink: #12372e;            --foreground: var(--ink);
@@ -76,6 +84,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* <small> keeps its step down from the text around it, never under the 13px floor. */
+small { font-size: max(80%, var(--text-meta)); }
+
 ::selection {
   background: color-mix(in srgb, var(--accent) 72%, white);
   color: var(--accent-foreground);
@@ -87,10 +98,20 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
-/* The app, its public pages and the docs take the ink focus ring; the owner-approved landing keeps the ring above. */
-:is(.operator-shell, .cr-public, .docs-site, .cr-dialog) :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+/* The app, its public pages and the docs take the ink focus ring; the owner-approved landing keeps the ring above.
+   The element list adds no specificity, so a component's own ring (a grid cell's inset ring) wins. */
+:is(.operator-shell, .cr-public, .docs-site, .cr-dialog) :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+/* A field shows focus on its own border: the ring lies over the border, never a second ring outside it. */
+:is(.operator-shell, .cr-public, .docs-site, .cr-dialog) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"]), select, textarea):focus {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+/* Rows in a card (disclosures, list links) ring inside themselves, so a card's rounded clip never cuts the ring. */
+:is(.operator-shell, .cr-dialog) :where(summary, li > a, td[tabindex]):focus-visible {
+  outline-offset: -2px;
 }
 
 /* Every feature route shares the display face for its headings. */

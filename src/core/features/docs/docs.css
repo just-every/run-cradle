@@ -1,5 +1,5 @@
 /* Docs: pages rendered from the repository's Markdown (docs/site.json), between the site's header and footer (src/core/app/site), in the landing's type: Lexend headings,
-   Cradle Sans text, ink on paper, lime only for the current page, the title's strand, bullets, step numbers and callout icons.
+   Cradle Sans text, ink on paper, lime only for the title's strand, bullets, step numbers and callout icons.
    Everything is scoped to .docs-site; the colour tokens are the app's (src/core/app/styles.css), which match the landing's. */
 .docs-site { min-height: 100dvh; background: var(--paper); color: var(--ink); font-family: var(--font-sans); font-size: 17px; line-height: 1.6; --page: 1292px; --gutter: 50px; }
 .docs-site a { color: inherit; text-decoration: none; }
@@ -23,7 +23,7 @@
 .docs-site .docs-strand path:first-child { stroke: var(--lime); stroke-width: 6; }
 .docs-site .docs-strand path:last-child { stroke: var(--ink); stroke-width: 2; opacity: .55; }
 
-/* Section navigation: a white card; each group's label in small capitals, then its pages; the current page sits on a pale tab with a lime bar. */
+/* Section navigation: a white card; each group's label in small capitals, then its pages; the current page sits on a pale tab inside the card. */
 .docs-site .docs-sidebar { padding: 20px 14px 22px; border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--card) 70%, transparent); }
 .docs-site .docs-nav-group + .docs-nav-group { margin-top: 26px; }
 .docs-site .docs-nav-section { margin: 0 0 8px 14px; color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
@@ -31,7 +31,6 @@
 .docs-site .docs-nav-group a { position: relative; display: block; padding: 9px 14px; border-radius: 9px; font-size: 17px; line-height: 1.35; transition: background-color 0.18s; }
 .docs-site .docs-nav-group a:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
 .docs-site .docs-nav-group a[aria-current="page"] { background: var(--tab); color: var(--ink-deep); font-weight: 600; }
-.docs-site .docs-nav-group a[aria-current="page"]::before { content: ""; position: absolute; top: 6px; bottom: 6px; left: 0; width: 4px; border-radius: 4px; background: var(--lime); }
 
 /* Prose: 17px on one measure that every block shares, headings' rules and tables included; a table wider than the measure
    scrolls inside it. Paragraphs avoid orphans and headings balance. */
@@ -72,7 +71,7 @@
 .docs-site .docs-prose code { padding: 0.12em 0.38em; border-radius: 6px; background: var(--tab); color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84em; }
 .docs-site .docs-prose .docs-code-line, .docs-site .docs-prose .docs-code-words > span { white-space: nowrap; }
 .docs-site .docs-code-block { overflow: hidden; border-radius: 14px; background: #0d302c; box-shadow: var(--shadow); }
-.docs-site .docs-code-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px 0; color: #9fb8ab; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.docs-site .docs-code-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px 0; color: #9fb8ab; font-size: var(--text-meta); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
 .docs-site .docs-copy { min-height: 28px; padding: 0 2px; border: 0; background: none; color: var(--lime); font: 600 13px/1 var(--font-sans); letter-spacing: 0.02em; text-transform: none; cursor: pointer; }
 .docs-site .docs-copy:hover { text-decoration: underline; text-underline-offset: 4px; }
 .docs-site .docs-copy:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 4px; }
@@ -112,7 +111,6 @@
 /* Callouts (GitHub alerts) on a pale green row with an icon: an "i" on a lime disc for a note, tip or important point, and an "!"
    on a lime triangle, on butter, for a warning or caution. Quotes take a lime rule. */
 .docs-site .docs-callout { position: relative; padding: 20px 24px 20px 66px; border-radius: 12px; background: var(--ok-row); }
-.docs-site .docs-callout::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 4px; border-radius: 12px 0 0 12px; background: var(--lime); }
 .docs-site .docs-callout::before { content: ""; position: absolute; top: 20px; left: 22px; width: 28px; height: 28px; background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='13' fill='%23d7f25b'/%3E%3Ccircle cx='14' cy='8.6' r='1.9' fill='%230d302c'/%3E%3Crect x='12.3' y='12' width='3.4' height='9.5' rx='1.7' fill='%230d302c'/%3E%3C/svg%3E"); }
 .docs-site .docs-callout:is(.docs-callout--warning, .docs-callout--caution) { background: #fbf0d4; }
 .docs-site .docs-callout:is(.docs-callout--warning, .docs-callout--caution)::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath d='M14 3.2 26 24.6H2Z' fill='%23d7f25b' stroke='%23d7f25b' stroke-width='2.4' stroke-linejoin='round'/%3E%3Crect x='12.4' y='10' width='3.2' height='8.6' rx='1.6' fill='%230d302c'/%3E%3Ccircle cx='14' cy='21.4' r='1.8' fill='%230d302c'/%3E%3C/svg%3E"); }
@@ -122,14 +120,13 @@
 .docs-site .docs-prose blockquote { padding-left: 18px; border-left: 4px solid var(--lime); color: var(--soft); }
 .docs-site .docs-prose blockquote > :last-child { margin-bottom: 0; }
 
-/* On this page */
+/* On this page: the current section is a pale tab that stays right of the list's rule. */
 .docs-site .docs-toc { padding: 4px 0 24px 28px; border-left: 1px solid var(--line); }
 .docs-site .docs-toc-title { margin-bottom: 12px; color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
 .docs-site :is(.docs-toc, .docs-toc-compact) a { display: block; padding: 5px 0; color: var(--soft); font-size: 15px; line-height: 1.4; transition: color 0.18s; }
 .docs-site :is(.docs-toc, .docs-toc-compact) a:hover { color: var(--ink); text-decoration: underline 1.5px var(--eyebrow); text-underline-offset: 4px; }
 .docs-site .docs-toc a { position: relative; }
-.docs-site .docs-toc a[aria-current="location"] { color: var(--ink-deep); font-weight: 600; }
-.docs-site .docs-toc a[aria-current="location"]::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: -29px; width: 4px; border-radius: 4px; background: var(--lime); }
+.docs-site .docs-toc a[aria-current="location"] { margin-left: -10px; padding-inline: 10px; border-radius: 8px; background: var(--tab); color: var(--ink-deep); font-weight: 600; }
 .docs-site :is(.docs-toc, .docs-toc-compact) ul ul { margin: 2px 0 6px; padding-left: 14px; border-left: 1.5px solid var(--line); }
 
 /* The phone menu and the compact contents list: a full-width white bar with a hairline that opens a paper card. */
@@ -194,5 +191,5 @@
 }
 @media (max-width: 359px) {
   .docs-site .docs-prose pre { padding: 6px 10px 10px; }
-  .docs-site .docs-prose pre code { font-size: 12px; }
+  .docs-site .docs-prose pre code { font-size: var(--text-meta); }
 }

@@ -1,0 +1,36 @@
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { sessionFetch } from '../../../../ui/shared/session-fetch'
+
+type Owner = { name: string; initials: string; workspaceName: string }
+
+/** The owner block at the foot of the menu: a button that opens a small menu holding Sign out. */
+export function OwnerMenu({ owner }: { owner: Owner }) {
+  const [open, setOpen] = useState(false), [failed, setFailed] = useState(false), [busy, setBusy] = useState(false)
+  const button = useRef<HTMLButtonElement>(null), item = useRef<HTMLButtonElement>(null)
+  const menu = useId()
+  useEffect(() => { if (open) item.current?.focus() }, [open])
+  const close = () => { setOpen(false); setFailed(false); button.current?.focus() }
+  const keys = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close() }
+    else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); item.current?.focus() }
+    else if (event.key === 'Tab') setOpen(false)
+  }
+  async function signOut() {
+    setBusy(true); setFailed(false)
+    const response = await sessionFetch('/auth/sign-out', { method: 'POST' }).catch(() => null)
+    if (response?.ok) { window.location.assign('/'); return }
+    setBusy(false); setFailed(true)
+  }
+  return <div className="operator-rail-footer" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) { setOpen(false); setFailed(false) } }}>
+    {open && <div className="operator-owner-menu" id={menu} role="menu" aria-label="Account" onKeyDown={keys}>
+      <button ref={item} type="button" role="menuitem" disabled={busy} onClick={() => void signOut()}>Sign out</button>
+      {failed && <p role="alert">Sign out did not finish. Try again.</p>}
+    </div>}
+    <button ref={button} type="button" className="operator-owner-button" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menu : undefined}
+      onClick={() => open ? close() : setOpen(true)}
+      onKeyDown={event => { if (!open && ['ArrowDown', 'ArrowUp'].includes(event.key)) { event.preventDefault(); setOpen(true) } else if (open && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close() } }}>
+      <span className="operator-avatar" aria-hidden="true">{owner.initials}</span>
+      <span className="operator-account-copy"><strong>{owner.name}</strong><small>{owner.workspaceName}</small></span>
+    </button>
+  </div>
+}

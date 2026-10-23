@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { cycleModalFocus } from "../../../../ui/modal-focus"
+import { Tooltip } from "../../../../ui/shared/tooltip"
 import { campaignHref, formatDate, formatMoney } from "./portfolio-format"
 import { CampaignHealth, PersonAvatar, StatusPill } from "./portfolio-presentation"
 import type { CampaignSummary } from "./portfolio-types"
@@ -43,13 +44,12 @@ export const CampaignInspector = ({
         <h2>{campaign.name}</h2>
         <span>{campaign.code}</span>
       </div>
-      <button
+      <Tooltip label="Close campaign inspector"><button
         type="button"
         onClick={onClose}
-        aria-label="Close campaign inspector"
       >
         ×
-      </button>
+      </button></Tooltip>
     </header>
     <div className="portfolio-inspector-status">
       <StatusPill>{campaign.status}</StatusPill>
