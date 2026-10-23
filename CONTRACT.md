@@ -992,7 +992,7 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-Judged from the code and tests at commit `ded9f6ca64cd4c0e17ba241c6d6c800b45bccfae` (23 October 2026).
+Judged from the code and tests at commit `a65433f44facdb173dee691e321062c044c0e4c5` (23 October 2026).
 
 The sd-cradle-c19 repair narrows only the operation model transport to JSON-encoded action input; all six model schemas pass the unchanged strict preflight, with recursive/open mutations refused before credentials (`tests/execution-d1.mjs`). Signed-in owners leave `/signin` through a safe return destination (`tests/local-auth-runtime.mjs`, `tests/foundation-shell.mjs` at 1440/390). Configured owner names reach signed and IdP admission and native/product identity (`tests/signed-owner-admission.mjs`, `tests/auth-oidc.mjs`). Unmounted portfolio pages are removed and their URLs use the ordinary not-found (`tests/foundation-shell.mjs` at 1440/390). No clause status or acceptance point changes; counts remain 122 done, 66 partial and 24 missing of 212.
 

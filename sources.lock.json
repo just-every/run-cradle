@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6a01c8ad81c1b36fe6bcaef14c802ae459d589065105d0812233b2751568a95a",
+      "sha256": "ddc94eec5b3c933e35dcbf2ab4056505f5c027c215fbda786cc6b3b7442b19cb",
       "executable": false
     },
     "DEMO.md": {
@@ -12194,7 +12194,7 @@
       "executable": false
     },
     "tests/helpers/sign-in-forward-journey.mjs": {
-      "sha256": "0403378ad1e4385e8a7af211b3627f1875aea7f26849e1879c22895f17ff1cc3",
+      "sha256": "8c326de6d2d2f474057e7fcbbc86400ae7d5a00a101998d847e2754dfbfd76a0",
       "executable": false
     },
     "tests/helpers/sqlite-d1.mjs": {
@@ -12358,7 +12358,7 @@
       "executable": false
     },
     "tests/local-auth-runtime.mjs": {
-      "sha256": "dc2336c601e15d5e763708bb8220237515dc17ac6079851158760b02029f4e2c",
+      "sha256": "aef11c374588e0d84b1fab514d7d0260a1f656fa54ac4d84b97b20794489cabb",
       "executable": false
     },
     "tests/migration-browser.mjs": {
