@@ -10,7 +10,7 @@ import type { createAutomationEffects } from './effects.server'
 
 export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:string;policy:PolicyPort;
  descriptors:DescriptorRegistry;effects:ReturnType<typeof createAutomationEffects>;clock?:()=>Date}) {
- const store=createAutomationRunStore(deps.db)
+ const store=createAutomationRunStore(deps.db,deps.clock)
  async function context(run:AutomationRun,ingress:'queue'|'schedule'):Promise<RequestContext> {
   if(!run.credential_id)throw new AuthorityError('grant_revoked','Automation approval is unavailable.')
   const ctx=await resolveBackgroundContext(deps.db,{credentialId:run.credential_id,principalId:run.principal_id,

@@ -10,6 +10,7 @@ import type { createRecordAutomationHistory } from './history.server'
 import type { createAutomationDestinations } from './destinations.server'
 
 export function recordAutomationsHttp(deps:{
+ retry:ReturnType<typeof import('./retry.server').createAutomationRetry>;
  tests:ReturnType<typeof createAutomationTests>;
  configuration:ReturnType<typeof createRecordAutomationConfiguration>;
  history:ReturnType<typeof createRecordAutomationHistory>;
@@ -40,6 +41,7 @@ export function recordAutomationsHttp(deps:{
   const ctx=await deps.authenticate(c.req.raw)
   return c.json(reply(ctx,{runs:await deps.history.runs(ctx,idSchema.parse(c.req.param('id')))}))
  })
+ router.post('/:id/runs/:runId/retry',async c=>{const ctx=await deps.authenticate(c.req.raw),input=z.object({commandId:idSchema}).strict().parse(await readBoundedJson(c.req.raw,4096));return c.json(reply(ctx,await deps.retry(ctx,{...input,id:idSchema.parse(c.req.param('id')),runId:idSchema.parse(c.req.param('runId'))})))})
  router.post('/:id/disable',async c=>{
   const ctx=await deps.authenticate(c.req.raw),input=z.object({commandId:idSchema,version:z.number().int().positive()}).strict()
    .parse(await readBoundedJson(c.req.raw,4096))

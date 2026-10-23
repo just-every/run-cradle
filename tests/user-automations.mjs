@@ -1,3 +1,4 @@
+import {automationFailureJourney} from './helpers/automation-failure-journey.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {contract} from './contract.mjs'
@@ -6,19 +7,21 @@ import {automationTestJourney} from './helpers/automation-test-journey.mjs'
 import {automationQuietHours} from './helpers/automation-quiet-hours.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
-contract('AUTO-USER-001','[AUTO-USER-005] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
- const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[];let testMailStatus=202
+contract('AUTO-USER-001','[AUTO-USER-005] [AUTO-USER-006] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
+ const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[],receiverCalls=[];let testMailStatus=202,receiverStatus=200
  const h=await userAutomationRuntime(0,{outbound:async request=>{
+  if(request.url==='https://relay.example.com/v1/deliver'){receiverCalls.push(await request.json());return receiverStatus===503?new Response(null,{status:503}):Response.json({status:receiverStatus,headers:{},body:''})}
   assert.equal(request.url,relay);assert.equal(request.headers.get('authorization'),'Bearer synthetic-record-relay-key')
   delivered.push(await request.json());return new Response(null,{status:testMailStatus})
  }})
  const providerMessages=h.mailMessages
  h.mailMessages=async()=>[...await providerMessages(),...delivered]
  try {
-  await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined,MAIL_API_KEY:'synthetic-record-relay-key',MAIL_RELAY_URL:relay})
+  await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined,MAIL_API_KEY:'synthetic-record-relay-key',MAIL_RELAY_URL:relay,EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-71-relay-secret-0000000000'})
   const settings=(await h.request('/api/v1/settings')).data
   await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}}}})
   await automationTestJourney(h,delivered,status=>{testMailStatus=status})
+  await automationFailureJourney(h,delivered,status=>{receiverStatus=status},receiverCalls)
   const save={commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{
    name:'Welcome record',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[
     {kind:'notify',operatorId:h.operator,title:'A new item needs review'},

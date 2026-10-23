@@ -65,7 +65,9 @@ export async function automationNetworkEdge() {
    outboundSeen++
    try{
     assert.equal(request.url,'https://relay.egress.example.com/v1/deliver')
-    const response=await fetch(relayOrigin+'/v1/deliver',{method:request.method,headers:request.headers,body:await request.text()})
+    // Fetch reserializes this body; let Node compute its own framing header.
+    const headers=new Headers(request.headers);headers.delete('content-length')
+    const response=await fetch(relayOrigin+'/v1/deliver',{method:request.method,headers,body:await request.text()})
     if(!response.ok)networkErrors.push({status:response.status})
     return new WorkerResponse(await response.arrayBuffer(),{status:response.status,headers:response.headers})
    }catch(error){networkErrors.push({code:error.code??error.cause?.code??null,name:error.name});throw error}

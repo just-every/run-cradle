@@ -14,7 +14,7 @@ type CapturedEvent={id:string;command_id:string;app_id:string;entity_id:string;r
  event:string;record_version:number;definitions_json:string;cause_run_ids_json:string;created_at:number}
 
 /** Capture and action receipts are durable; queue delivery never supplies effect authority. */
-export function createAutomationRunStore(db:D1Database) {
+export function createAutomationRunStore(db:D1Database,clock=()=>new Date()) {
  return {
   async stage(commandId?:string) {
    const events=await db.prepare(`SELECT e.* FROM record_automation_events e
@@ -36,7 +36,7 @@ export function createAutomationRunStore(db:D1Database) {
      const ancestors=causes.length?await db.prepare(`SELECT id,automation_id FROM automation_runs WHERE id IN (${causes.map(()=>'?').join(',')}) UNION ALL SELECT id,automation_id FROM record_automation_tests WHERE id IN (${causes.map(()=>'?').join(',')})`)
       .bind(...causes,...causes).all<{id:string;automation_id:string}>():{results:[]}
      const suppressed=causes.length>=10||ancestors.results.some(run=>run.automation_id===ref.id)
-     const state=suppressed?'Suppressed':'Queued',now=Date.now()
+     const state=suppressed?'Suppressed':'Queued',now=clock().getTime()
      const snapshot=JSON.stringify({definition,event:{commandId:event.command_id,event:event.event,
       ref:{appId:event.app_id,entityId:event.entity_id,recordId:event.record_id},version:event.record_version}})
      statements.push(db.prepare(`INSERT INTO automation_runs(id,created_at,updated_at,version,automation_id,
@@ -72,7 +72,7 @@ export function createAutomationRunStore(db:D1Database) {
     .bind(JSON.stringify({heldUntil:new Date(until).toISOString()}),actionId).run()
   },
   async claim(run:AutomationRun,action:AutomationActionRun,guard:{sql:string;values:readonly unknown[]}) {
-   const now=Date.now()
+   const now=clock().getTime()
    const claimed=await db.prepare(`UPDATE launch_automation_actions SET state='Running',started_at=?
     WHERE id=? AND run_id=? AND state='Pending' AND EXISTS(SELECT 1 FROM automations WHERE id=? AND enabled=1)
     AND (${guard.sql}) RETURNING id`).bind(now,action.id,run.id,run.automation_id,...guard.values).first()
@@ -83,10 +83,10 @@ export function createAutomationRunStore(db:D1Database) {
   },
   async actionFinished(id:string,state:'Complete'|'Failed'|'Unknown',result:unknown,errorCode:string|null=null) {
    await db.prepare(`UPDATE launch_automation_actions SET state=?,result_json=?,error_code=?,finished_at=?
-    WHERE id=? AND state='Running'`).bind(state,JSON.stringify(result),errorCode,Date.now(),id).run()
+    WHERE id=? AND state='Running'`).bind(state,JSON.stringify(result),errorCode,clock().getTime(),id).run()
   },
   async finish(runId:string,state:'Complete'|'Failed'|'Unknown'|'Cancelled',errorCode:string|null=null) {
-   const now=Date.now()
+   const now=clock().getTime()
    await db.prepare(`UPDATE automation_runs SET state=?,error_code=?,finished_at=?,updated_at=?,version=version+1
     WHERE id=? AND state IN ('Queued','Running')`).bind(state,errorCode,now,now,runId).run()
   },

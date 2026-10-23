@@ -1,3 +1,4 @@
+import {createRecordAutomationHistory} from '../../../domains/automations/history.server'
 import {createHostedChannelDelivery} from '../../../domains/channels/hosted-delivery.server'
 import seed from '../../../../seed.json'
 import { measureChannelLimits } from '../../../domains/channels/limits.server'
@@ -39,6 +40,7 @@ export function createChannelsComposition(platform: Platform, foundation: Server
   const access: Parameters<typeof registerChannelCommands>[2] = async(ctx,ref)=>{
     if(!ref.subjectId||!ref.subjectType)return false
     try{
+      if(ref.subjectType==='automation-run'){const run=await db.prepare('SELECT automation_id FROM automation_runs WHERE id=?').bind(ref.subjectId).first<{automation_id:string}>();return !!run&&(await createRecordAutomationHistory(db,foundation.policy,foundation.descriptors).runs(ctx,run.automation_id)).some(row=>row.id===ref.subjectId)}
       const scope=await foundation.policy.scope(ctx,{appId:ref.appId,entityId:ref.subjectType,purpose:'read'})
       await foundation.descriptors.get(ref.appId,ref.subjectType)
       const entity=foundation.entities.get(ref.appId,ref.subjectType)

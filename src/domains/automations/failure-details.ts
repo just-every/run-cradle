@@ -1,0 +1,6 @@
+export function automationFailureCause(code:string|null){
+ const causes:Record<string,string>={delivery_rejected:'The receiver refused the delivery.',delivery_retryable:'The receiver asked for another attempt before accepting the delivery.',delivery_unknown:'The receiver may have accepted the delivery, but its acknowledgement is missing.',mail_uncertain:'The mail provider may have accepted the email, but its acknowledgement is missing.',automation_effect_failed:'The action could not finish.',interrupted_before_commit:'The action stopped before its change was committed.',validation:'The action contains a value the current schema does not accept.',effect_unknown:'The external outcome is unknown.'}
+ return code?causes[code]??'The action could not finish. Review its error code before taking further action.':null
+}
+export function automationRunLink(appId:string,automationId:string,runId:string){return `/app/automations?appId=${encodeURIComponent(appId)}&automation=${encodeURIComponent(automationId)}#run-${encodeURIComponent(runId)}`}
+export function safeAutomationRetry(state:string,code:string|null){return state==='Failed'&&['delivery_retryable','interrupted_before_commit'].includes(code??'')}
