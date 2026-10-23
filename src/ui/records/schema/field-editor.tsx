@@ -12,7 +12,7 @@ export function SchemaFieldEditor({field,table,draft,existing,original,savedView
   const originalType=original?.type==='computed'?calculationKind(original)==='lookup'?'computed':calculationKind(original):original?.type
   if(original&&value===originalType){onChange({...original,label:field.label});return}
   const calculation=['computed','formula','rollup','count'].includes(value)
-  const next:Field={id:field.id,label:field.label,type:calculation?'computed':value as Field['type'],required:false,unique:false,...(calculation?{readOnly:true,resultType:value==='rollup'||value==='count'?'number':'text'}:{}),...(['select','multi_select'].includes(value)?{options:[{id:createUlid(),label:'Option 1'}]}:{})}
+  const next:Field={id:field.id,label:field.label,type:calculation?'computed':value as Field['type'],required:!calculation&&field.required,unique:!calculation&&!['multi_select','attachment'].includes(value)&&field.unique,...(calculation?{readOnly:true,resultType:value==='rollup'||value==='count'?'number':'text'}:{}),...(['select','multi_select'].includes(value)?{options:[{id:createUlid(),label:'Option 1'}]}:{})}
   if(calculation&&value!=='formula')next.expression={kind:'rollup',relationFieldId:'',valueFieldId:'',aggregate:value==='computed'?'lookup':value==='count'?'countall':'sum'}
   onChange(next,value==='formula'?'':undefined)
  }
