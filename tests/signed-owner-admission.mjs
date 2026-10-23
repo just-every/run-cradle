@@ -26,7 +26,7 @@ contract('ADMISSION-SIGNED-001','signed first-owner admission binds the installa
   const tokens=await Promise.all([h.token(),h.token()])
   const admitted=await Promise.all(tokens.map((token,index)=>h.request('/auth/owner-claim',{method:'POST',body:{token,...(index?{displayName:'Owner'}:{}),returnTo:'/app'}})))
   assert.deepEqual(admitted.map(response=>response.status).sort(),[303,409],'Only one concurrent claim can bootstrap')
-  const cookie=admitted.find(response=>response.status===303).headers.get('set-cookie').split(';')[0]
+  let cookie=admitted.find(response=>response.status===303).headers.get('set-cookie').split(';')[0]
   const session=await h.request('/auth/session',{cookie});assert.equal(session.status,200)
   const nativeOwner=(await session.json()).operator
   assert.equal(nativeOwner.role,'owner');assert.equal(nativeOwner.email,'claim-owner@example.test')
@@ -45,6 +45,7 @@ contract('ADMISSION-SIGNED-001','signed first-owner admission binds the installa
   assert.equal(signedIn.status,303)
   const returningCookie=signedIn.headers.get('set-cookie').split(';')[0]
   assert.equal((await(await h.request('/auth/session',{cookie:returningCookie})).json()).operator.displayName,renamed,'Later sign-in preserves the person’s chosen name')
+  cookie=returningCookie
   assert.equal((await h.request('/auth/owner-claim',{method:'POST',body:{token:await h.token(),displayName:'Owner'}})).status,409)
   assert.equal((await(await h.request('/auth/session',{cookie})).json()).operator.displayName,renamed,'Repeated claims never overwrite the existing name')
   const config=await h.request('/api/editor/config',{cookie});assert.equal(config.status,200)
