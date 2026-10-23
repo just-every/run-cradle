@@ -38,6 +38,9 @@ export async function recordTrashBrowser(){
     await page.getByRole('checkbox').waitFor();assert.equal(await move.isDisabled(),true)
     await capture('dialog',move)
     await page.getByRole('checkbox').check()
+    // Observe a genuine live refresh before deletion so both widths capture
+    // the confirmation before the following refresh reports the missing row.
+    await page.waitForResponse(r=>r.request().method()==='GET'&&new URL(r.url()).pathname===recordPath&&r.status()===200)
     const deletion=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/api/v1/commands/record.delete'))
     await move.click();assert.equal((await deletion).status(),200)
     const back=page.getByRole('link',{name:'Back to records',exact:true}).last();await page.getByRole('status').filter({has:back}).waitFor()
