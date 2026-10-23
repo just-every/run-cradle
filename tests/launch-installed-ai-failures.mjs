@@ -1,6 +1,7 @@
 import test,{after,before,describe} from 'node:test'
 import assert from 'node:assert/strict'
 import {setup,value,campaign,expected} from './helpers/launch-installed.mjs'
+const {assertStructuredSchema}=await import('../src/adapters/model-schema.server.ts')
 const {launchEntities}=await import('../src/apps/launch/contracts.ts')
 const completed=(output)=>Response.json({id:'edge-response',model:'edge-model',status:'completed',usage:{input_tokens:9,output_tokens:4},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(output)}]}]})
 
@@ -11,7 +12,7 @@ async function enable(h,ceiling){
 
 test('[AI-004/005/006] emitted worker retains failed-call usage, preserves records, resets shared quota at local midnight and rechecks queued authority',async()=>{
  let mode='invalid',calls=0;const contexts=[]
- const h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');calls++;contexts.push((await request.json()).input[0].content[0].text);if(mode==='refused')return new Response('{}',{status:403});if(mode==='unavailable')return new Response('{}',{status:503});return completed(mode==='invalid'?{unexpected:'invalid schema'}:{content:'Immutable authorised readout',proposedLens:null})}})
+ const h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');calls++;const body=await request.json();assertStructuredSchema(body.text.format.schema);const invalid=structuredClone(body.text.format.schema);invalid.properties.proposedLens.anyOf[0].properties.conditions.items.required=['field','operator'];assert.throws(()=>assertStructuredSchema(invalid));contexts.push(body.input[0].content[0].text);if(mode==='refused')return new Response('{}',{status:403});if(mode==='unavailable')return new Response('{}',{status:503});return completed(mode==='invalid'?{unexpected:'invalid schema'}:{content:'Immutable authorised readout',proposedLens:null})}})
  try{
   const c=await campaign(h,'FAILURE');await h.command('launch.comment.create',{campaignId:c.id,body:'COMMENT_SECRET_MUST_NOT_LEAVE',mentions:[]},expected(launchEntities.campaign,c))
   const field=value(await h.command('launch.custom-field.save',{field:{name:'Private operational detail',type:'text'}}));const patched=value(await h.command('launch.campaign.patch',{id:c.id,changes:{customFields:{[field.id]:'CUSTOM_SECRET_MUST_NOT_LEAVE'}}},expected(launchEntities.campaign,c)))

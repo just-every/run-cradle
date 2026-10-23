@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "aea42a1e3fada67fee02079100675288f1daeeabd36facb4b8d67e6e340605c2",
+      "sha256": "47fc1e293550bd2dec9fe51f8ac9c6211e8307728b888107a3f4dccf099d4000",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -5602,7 +5602,7 @@
       "executable": false
     },
     "src/apps/launch/analysis.server.ts": {
-      "sha256": "23c0d23d21573a1f793fa2e3e2a91eef7a3455bbcde1f08a2d50294c8544f345",
+      "sha256": "6e8e0c73ef2ed1e280a419253d54885343cbc1fd43040653659027605dd59489",
       "executable": false
     },
     "src/apps/launch/automation-commands.server.ts": {
@@ -8150,7 +8150,7 @@
       "executable": false
     },
     "src/domains/evidence/extraction.server.ts": {
-      "sha256": "c4c0e390184637d9cc8a13cb82646abb08ae246431290a78fc0ad8562f6f674a",
+      "sha256": "34ddcc354be6513eada161c5b3d4d46639647725ce125f3af8bc789d965db70d",
       "executable": false
     },
     "src/domains/evidence/files.server.ts": {
@@ -12270,7 +12270,7 @@
       "executable": false
     },
     "tests/launch-installed-ai-failures.mjs": {
-      "sha256": "99154f6b0f29fa81f61aa4f23dff57d454e25be534c4be60ff11780068fb1540",
+      "sha256": "662305a74b33351820b76ee30286d714508a1110a943f9061783f4070071461c",
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
