@@ -1,3 +1,4 @@
+import {principalGuards} from '../../authority/guards.server'
 import type {RequestContext} from '../../authority/ports'
 import type {ServerFoundation} from '../../../core/app/foundation.server'
 import type {createProvidersComposition} from '../../../core/app/composition/providers.server'
@@ -21,6 +22,7 @@ export function createRecordCalendarSync(db:D1Database,foundation:ServerFoundati
   let canConfigure=false;try{canConfigure=!!await requireBaseAuthor(db,ctx,appId)}catch{}
   const definitions=[]
   for(const d of rows){const definition=syncDefinition.parse(JSON.parse(d.definition_json)),items=[];let stopped=!d.enabled||!canConfigure
+   try{for(const guard of principalGuards({...ctx,principal:JSON.parse(d.actor_json)}))if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())stopped=true}catch{stopped=true}
    const connection=connections.find(c=>c.id===d.connection_id);if(!connection||connection.state!=='connected')stopped=true
    const approved=await db.prepare("SELECT 1 FROM provider_connections c,json_each(c.scopes_json) s,json_each(json_extract(s.value,'$.actions')) a WHERE c.id=? AND json_extract(s.value,'$.resource')=? AND a.value='record.calendar.sync'").bind(d.connection_id,d.calendar_id).first();if(!approved||!scope.readableFieldIds.includes(definition.startFieldId))stopped=true
    const eventRows=(await db.prepare('SELECT * FROM record_calendar_events WHERE definition_id=? ORDER BY updated_at DESC LIMIT 200').bind(d.id).all<Event>()).results
