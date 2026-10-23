@@ -9,10 +9,10 @@ export async function storeReferenceResolution(h,provider,snapshot){
  const members=row.fields[field.id].value,drive=members.find(m=>m.reference.provider==='google-drive').reference,graph=members.find(m=>m.reference.provider==='onedrive').reference
  const {people,command,request}=await fileStoreActors(h,appId)
  async function connect(adapterId,cookie=h.cookie){const value=(await command(cookie,'connection.configure',{appId,adapterId,name:'synthetic-cradle-return-'+adapterId,accountId:'ignored-source-account',scopes:[],ownership:[],credentialRef:null})).value,id=value.connectionId,consent=(await command(cookie,'connection.begin-consent',{connectionId:id,returnTo:'/app/records'})).value,family={'google-drive':'google',onedrive:'microsoft',dropbox:'dropbox',box:'box'}[adapterId];await request(cookie,'/oauth/'+family+'/callback?'+new URLSearchParams({code:'synthetic-cradle-code-1',state:new URL(consent.authorizationUrl).searchParams.get('state')}),{status:303});return id}
- const call=(reference,extra={})=>d.call('/api/v1/records/file-stores/resolve',{...address,itemId:reference.itemId,...extra})
+ const call=(reference,extra={})=>d.call('/api/v1/records/file-stores/resolve',{...address,provider:reference.provider,itemId:reference.itemId,...extra})
  await connect('google-drive',people.editor.cookie)
  const before=provider.seen.length,unavailable=await call(drive);assert.equal(unavailable.state,'unresolved');assert.equal(provider.seen.length,before,"Another person's matching connection is never used")
- await request(people.reader.cookie,'/api/v1/records/file-stores/resolve',{body:{...address,itemId:drive.itemId},status:403})
+ await request(people.reader.cookie,'/api/v1/records/file-stores/resolve',{body:{...address,provider:'google-drive',itemId:drive.itemId},status:403})
  // The generic record writer cannot bind an imported reference, including by its original attacher.
  await d.call('/api/v1/commands/record.patch',{commandId:createUlid(),expected:[{ref,version:row.version}],input:{ref,changes:{[field.id]:members.map(m=>m.reference.itemId===drive.itemId?{reference:{...m.reference,connectionId:createUlid(),resolution:'resolved'}}:m)}}},403)
  await connect('google-drive');await connect('onedrive')
@@ -31,6 +31,6 @@ export async function storeReferenceResolution(h,provider,snapshot){
  // Connect at the returning base, using the same public consent path.
  const configured=(await d.command('connection.configure',{appId:nullApp,adapterId:'google-drive',name:'synthetic-cradle-unverified-store',accountId:'ignored',scopes:[],ownership:[],credentialRef:null})).value.connectionId,consent=(await d.command('connection.begin-consent',{connectionId:configured,returnTo:'/app/records'})).value
  const callback=await d.raw('/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-1',state:new URL(consent.authorizationUrl).searchParams.get('state')}));assert.equal(callback.status,303);await callback.arrayBuffer()
- const unverified=await d.call('/api/v1/records/file-stores/resolve',{appId:nullApp,entityId:nullEntity.id,recordId:nullRow.id,fieldId:nullField.id,itemId:drive.itemId});assert.equal(unverified.state,'unverified')
+ const unverified=await d.call('/api/v1/records/file-stores/resolve',{appId:nullApp,entityId:nullEntity.id,recordId:nullRow.id,fieldId:nullField.id,provider:'google-drive',itemId:drive.itemId});assert.equal(unverified.state,'unverified')
  assert.deepEqual(provider.writes,[],'Metadata resolution and confirmation never write or share at the provider')
 }
