@@ -45,7 +45,7 @@ contract('ADMISSION-SIGNED-001','signed first-owner admission binds the installa
   assert.equal(signedIn.status,303)
   const returningCookie=signedIn.headers.get('set-cookie').split(';')[0]
   assert.equal((await(await h.request('/auth/session',{cookie:returningCookie})).json()).operator.displayName,renamed,'Later sign-in preserves the person’s chosen name')
-  assert.equal((await h.request('/auth/signout',{method:'POST',cookie:returningCookie,body:{}})).status,303,'Finish the additional email session before testing the signed-admission credential')
+  assert.equal((await h.request('/auth/signout',{method:'POST',cookie:returningCookie,body:{}})).status,204,'Finish the additional email session before testing the signed-admission credential')
   assert.equal((await h.request('/auth/owner-claim',{method:'POST',body:{token:await h.token(),displayName:'Owner'}})).status,409)
   assert.equal((await(await h.request('/auth/session',{cookie})).json()).operator.displayName,renamed,'Repeated claims never overwrite the existing name')
   const config=await h.request('/api/editor/config',{cookie});assert.equal(config.status,200)
