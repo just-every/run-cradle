@@ -4,7 +4,7 @@ import type {ServerFoundation} from '../../../core/app/foundation.server'
 import type {createProvidersComposition} from '../../../core/app/composition/providers.server'
 import type {createRecordServices} from '../service.server'
 import {AdmissionError} from '../../admission/errors'
-import {eq,trustedPredicate} from '../../admission/sql.server'
+import {eq,identifier,trustedPredicate} from '../../admission/sql.server'
 import {canonicalHash} from '../../admission/canonical'
 import {delegationCommandId} from '../../authority/user-delegation.server'
 import {requireBaseAuthor} from '../manual/base-access.server'
@@ -29,9 +29,9 @@ export function createRecordCalendarSync(db:D1Database,foundation:ServerFoundati
    for(const event of eventRows){try{const row=await records.reader.record(ctx,scope,{appId,entityId,recordId:event.record_id}),title=row.fields[definition.titleFieldId],review=event.review_json?JSON.parse(event.review_json):null
      items.push({recordId:row.id,label:title?.state==='value'?String(title.value??''):'',state:event.state,eventId:event.event_id,review:review?{deleted:review.status==='cancelled',summary:scope.readableFieldIds.includes(definition.titleFieldId)?review.summary:undefined,start:scope.readableFieldIds.includes(definition.startFieldId)?review.start:undefined,end:scope.readableFieldIds.includes(definition.endFieldId??definition.startFieldId)?review.end:undefined}:null,canResolve:scope.writableFieldIds.includes(definition.startFieldId)&&(!definition.endFieldId||scope.writableFieldIds.includes(definition.endFieldId)),attemptId:event.attempt_id})
     }catch(error){if(!(error instanceof Error)||!('code'in error)||!['forbidden','not_found'].includes(String(error.code)))throw error}}
-   const query=await records.reader.query(ctx,scope,{limit:1,filter:{kind:'all',conditions:[]}})
-   const total=query.total.kind==='exact'?query.total.value:null
-   definitions.push({id:d.id,version:d.version,definition,state:stopped?'stopped':'active',items,notOnCalendar:total===null?null:Math.max(0,total-eventRows.filter(e=>e.state!=='cancelled').length)})
+   const descriptor=records.descriptors.get(appId,entityId),table=identifier(descriptor.table.tableId),authentication=scope.currentAuthorityGuards
+   const count=await db.prepare(`SELECT count(*) AS total FROM ${table} WHERE (${scope.rowPredicate.sql}) AND ${identifier(descriptor.lifecycleColumn)} NOT IN ('archived','deleted') AND ${authentication.map(g=>`(${g.sql})`).join(' AND ')||'1'} AND NOT EXISTS(SELECT 1 FROM record_calendar_events e WHERE e.definition_id=? AND e.record_id=${table}.${identifier(descriptor.idColumn)} AND e.event_id IS NOT NULL AND e.state<>'cancelled')`).bind(...scope.rowPredicate.values,...authentication.flatMap(g=>g.values),d.id).first<{total:number}>()
+   definitions.push({id:d.id,version:d.version,definition,state:stopped?'stopped':'active',items,notOnCalendar:count?.total??null})
   }
   return {definitions,connections,canConfigure}
  }
