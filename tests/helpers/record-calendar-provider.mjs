@@ -70,7 +70,7 @@ export function recordCalendarProvider() {
       const calendarId = decodeURIComponent((listEntry ?? calendar)[1]), eventId = calendar?.[2] ? decodeURIComponent(calendar[2]) : null
       log.calendarId = calendarId; log.eventId = eventId
       const isRead = method === 'GET'; (isRead ? reads : writes).push(log)
-      if (!isRead) log.body = request.body ? await request.json() : null
+      if (!isRead) {const raw = await request.text(); log.body = raw ? JSON.parse(raw) : null}
       const calendarInfo = calendars.get(calendarId)
       if (denied.has(calendarId)) {log.outcome = 403; return error(403, 'forbidden')}
       if (!calendarInfo) {log.outcome = 404; return error(404, 'notFound')}
