@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9b227ed3257a8f9131dccd24e435b46b0e88ce3c3bc7efa7c491998a1e5a3a03",
+      "sha256": "a8e216f26f184a7d026566497a256d5a4a108b591e04de1c8559efb637a6962d",
       "executable": false
     },
     "DEMO.md": {
@@ -7609,6 +7609,10 @@
       "sha256": "2e3804710ac7b420eb2aa7cbb3dd939571b494b04fc05b9e5bf69e773ef84c6a",
       "executable": false
     },
+    "src/domains/change-subscriptions/restore.server.ts": {
+      "sha256": "658cf00277e22a0a5d120d299e07f794933cd259dec67db30feaf37f687c8143",
+      "executable": false
+    },
     "src/domains/change-subscriptions/schema.ts": {
       "sha256": "ca7124ff7f69a8e252a6be032f34b832e1600342b9d62343f009079f9279e8a9",
       "executable": false
@@ -11230,7 +11234,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-journey.mjs": {
-      "sha256": "9fbee4285a8979951deea0cad85216797c86b48c13a7583ba35202f5dba78396",
+      "sha256": "f17a494c058a398a154a42b6b89565f8bca133ace4b922fad419e71aed118580",
       "executable": false
     },
     "tests/helpers/company-archive.mjs": {
