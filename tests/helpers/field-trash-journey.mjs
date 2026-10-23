@@ -38,6 +38,11 @@ export async function fieldTrashJourney(existing){
   const fieldSubscription=await subscribe(entityId)
   const changes=async subscription=>(await h.request(`/api/v1/change-subscriptions/${subscription.id}/changes?cursor=${encodeURIComponent(subscription.cursor)}`,{secret:subscription.key.secret})).data
   const first=await create(entityId,{[nameId]:'synthetic-cradle-331',[valueId]:'synthetic-cradle-332'}),second=await create(secondId,{[secondName]:'synthetic-cradle-333'})
+  await h.request('/api/v1/commands/record.delete',{method:'POST',body:{commandId:createUlid(),expected:[{ref:second.ref,version:second.version}],input:{ref:second.ref,confirmation:second.id}}})
+  const recordMarker=(await listing()).find(item=>item.kind==='record'&&item.id===second.id),unsafe=await readDraft();unsafe.tables=unsafe.tables.filter(table=>table.id!==secondId)
+  const blocked=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:unsafe})).data;assert.ok(blocked.impacts.find(item=>item.entityId===secondId).refusals.some(reason=>reason.includes('records already in Trash')))
+  const refused=await h.request('/api/v1/commands/release.adopt',{method:'POST',status:400,body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:blocked.id}}});assert.equal(refused.error.code,'validation')
+  await restore('record',secondId,second.id,recordMarker.version)
   const firstHistory=await history(first),secondHistory=await history(second)
   assert.ok(firstHistory.some(item=>item.action==='record.create'));assert.ok(secondHistory.some(item=>item.action==='record.create'))
   const originalFieldPage=await changes(fieldSubscription)
