@@ -19,7 +19,7 @@ import { snapshotViews, prepareViewRemovals, prepareFormRemovals, type ViewSnaps
 import { previewRuleViolations } from './rule-preview.server'
 import {planFieldConversions} from './conversions.server'
 import {schemaDependents} from './dependents.server'
-import {prepareSchemaTrash,liveSchemaPredicate,type SchemaRestorePlan} from '../trash/schema-markers.server'
+import {prepareSchemaTrash,restoreSchemaMutations,liveSchemaPredicate,type SchemaRestorePlan} from '../trash/schema-markers.server'
 import { validateLinkPickers } from '../link-picker-schema'
 export const releases=registerTable('manual_record_releases',['id','app_id','owner_id','preview_id','detail_json','created_at'])
 export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuards?:SqlPredicate[]; prior:EntitySchema[]; removals:Record<string,string[]>; policy:{id:string;version:number;rules_json:string}|null; baseVersion:number; snapshots:Record<string,Record<string,unknown>[]>; conversionPlan?:ReturnType<typeof planFieldConversions>; restoration?:SchemaRestorePlan; viewSnapshots?:ViewSnapshot[]; formSnapshots?:ViewSnapshot[]; policyOwnerId?:string; baseOwnerId?:string }
@@ -123,7 +123,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    rules.push(...ownerRules(policyOwnerId,detail.schemas.filter(s=>!detail.prior.some(p=>p.id===s.id))).filter(rule=>detail.schemas.some(s=>s.id===rule.entityId)))
   }
   const roleChanges=await prepareRoleSchemaUpdates(db,detail,ctx.now)
-  const mutations:SqlMutation[]=[...prepareSchemaTrash(detail,releaseId,ctx.principal.id,ctx.now),...(detail.restoration?.mutations??[]),...roleChanges.mutations,...activation.mutations,...prepareViewRemovals(detail.viewSnapshots??[],detail.schemas,detail.removals,ctx.now),...prepareFormRemovals(detail.formSnapshots??[],detail.schemas,detail.removals,ctx.now)]
+  const mutations:SqlMutation[]=[...prepareSchemaTrash(detail,releaseId,ctx.principal.id,ctx.now),...restoreSchemaMutations(detail.restoration),...roleChanges.mutations,...activation.mutations,...prepareViewRemovals(detail.viewSnapshots??[],detail.schemas,detail.removals,ctx.now),...prepareFormRemovals(detail.formSnapshots??[],detail.schemas,detail.removals,ctx.now)]
   if(!detail.policy||canonical(rules)!==detail.policy.rules_json)mutations.push(detail.policy?{kind:'update',table:policies,set:{rules_json:canonical(rules),version:detail.policy.version+1,updated_at:time},where:trustedPredicate('id=? AND version=?',[policyId,detail.policy.version]),expectedRows:1}:{kind:'insert',table:policies,row:{id:policyId,app_id:detail.appId,name:'Manual base owner',rules_json:canonical(rules),version:1,created_at:time,updated_at:time}})
   if(!detail.policy)mutations.push({kind:'insert',table:memberships,row:{principal_id:ctx.principal.id,app_id:detail.appId,policy_id:policyId,legacy:0,state:'active',version:1}})
   const baseRow={id:detail.appId,owner_id:detail.baseOwnerId??ctx.principal.id,name:detail.name,version:detail.baseVersion+1,release_id:releaseId,updated_at:ctx.now}

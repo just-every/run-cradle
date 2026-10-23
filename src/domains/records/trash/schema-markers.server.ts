@@ -4,6 +4,7 @@ import type {SqlMutation,SqlPredicate} from '../../admission/ports'
 import type {StoredPreview} from '../manual/release.server'
 import {trashTable,trashLifetime} from './storage.server'
 import {trustedPredicate} from '../../admission/sql.server'
+import {viewTable,formTable} from '../metadata.server'
 import {canonical} from '../../admission/canonical'
 export type SchemaTrashDetail={schema:EntitySchema;fieldId?:string;position?:number;releaseId:string}
 export type SchemaRestorePlan={values:Record<string,Record<string,Record<string,CellValue>>>;guards:SqlPredicate[];mutations:SqlMutation[]}
@@ -25,3 +26,6 @@ export async function expireSchemaTrash(db:D1Database,now:number){
  await db.prepare("UPDATE record_trash SET purge_state='blocked_recovery_custody' WHERE kind IN ('field','table') AND expires_at<=? AND purge_state='held'").bind(now).run()
 }
 export function markerFence(row:{app_id:string;entity_id:string;record_id:string;record_version:number;kind:'record'|'field'|'table';detail_json:string},now:number){return trustedPredicate("EXISTS(SELECT 1 FROM record_trash WHERE app_id=? AND entity_id=? AND record_id=? AND record_version=? AND kind=? AND detail_json=? AND expires_at>? AND purge_state='held')",[row.app_id,row.entity_id,row.record_id,row.record_version,row.kind,row.detail_json,now])}
+
+/** Only server-authored restore artifacts can name these three fixed stores. */
+export function restoreSchemaMutations(plan:SchemaRestorePlan|undefined):SqlMutation[]{return (plan?.mutations??[]).map(mutation=>{const table=[trashTable,viewTable,formTable].find(table=>table.tableId===mutation.table.tableId);if(!table||!['update','delete'].includes(mutation.kind))throw new Error('Invalid schema restore artifact');if(mutation.kind==='insert')throw new Error('Schema restore cannot insert metadata');return {...mutation,table,where:trustedPredicate(mutation.where.sql,mutation.where.values)}})}
