@@ -5,6 +5,7 @@ import { campaignLifecycle } from '../../../../apps/launch/lifecycle'
 import { RelatedRecords } from '../../../../ui/launch/related-records';
 import { CampaignActions } from '../../../../ui/launch/campaign-actions';
 import { useEffect, useState, type FormEvent } from "react";
+import { Tooltip } from "../../../../ui/shared/tooltip";
 
 import { ResourceBoundary } from "../../../app/ui/operator";
 
@@ -209,13 +210,12 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
                 <p>Current version {campaign.version}</p>
                 <h2>Edit campaign</h2>
               </div>
-              <button
+              <Tooltip label="Close campaign editor"><button
                 type="button"
                 onClick={() => setEditing(false)}
-                aria-label="Close campaign editor"
               >
                 ×
-              </button>
+              </button></Tooltip>
             </header>
             <form onSubmit={saveCampaign}>
               <label>

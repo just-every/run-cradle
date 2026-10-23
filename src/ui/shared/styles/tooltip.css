@@ -1,0 +1,9 @@
+/* The shared tooltip (src/ui/shared/tooltip.tsx): forest ink with paper text, placed beside its control by script.
+   It sits inside its control, so it outranks the control's own descendant rules (a header's spans, the menu
+   button's bars) and sets every box property itself. */
+[role="tooltip"].cr-tooltip {
+  position: fixed; z-index: 1000; display: block; width: max-content; height: auto; min-width: 0; max-width: min(260px, calc(100vw - 16px)); margin: 0;
+  padding: 6px 10px; border: 0; border-radius: 8px; background: var(--ink-deep); color: #fff; box-shadow: 0 4px 14px rgba(13, 48, 44, .22);
+  font: 600 var(--text-meta)/1.35 var(--font-sans); letter-spacing: 0; text-align: left; text-transform: none; white-space: normal; overflow-wrap: anywhere;
+  opacity: 1; visibility: visible; transform: none; pointer-events: none;
+}
