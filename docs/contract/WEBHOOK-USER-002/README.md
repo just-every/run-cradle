@@ -113,10 +113,10 @@ erasure redacts the canonical retained values.
 
 ## Recovery, fair dispatch and unavailable scopes
 
-The dispatcher serves the 200 lowest durable audit watermarks first, breaking ties
+The dispatcher serves the 200 oldest durable dispatch positions first, breaking ties
 by subscription ID. Each batch advances through the same ordered audit rows;
 active subscriptions beyond 200 therefore progress over successive ticks even
-while earlier subscriptions keep changing. This needs no new table or migration.
+while earlier subscriptions keep changing. This reuses the subscription table with an additive dispatch-position column in 9049; no new table is created.
 The safe subscription listing retains its existing 200-row bound.
 
 HTTP 429 is a definite refusal: Base queues a bounded retry with the same logical

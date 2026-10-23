@@ -28,8 +28,9 @@ export function changeSubscriptionDelivery(env:PlatformBindings,service:ReturnTy
  }
  return {async tick(commandId?:string){
   await db.prepare('DELETE FROM record_change_windows WHERE captured_at<?').bind(clock().getTime()-retentionMs).run()
-  const rows=await db.prepare("SELECT * FROM record_change_subscriptions WHERE state='active' ORDER BY last_sequence,id LIMIT 200").all<Subscription>()
+  const rows=await db.prepare("SELECT * FROM record_change_subscriptions WHERE state='active' ORDER BY last_dispatch_at,id LIMIT 200").all<Subscription>()
   for(const row of rows.results){
+   await db.prepare("UPDATE record_change_subscriptions SET last_dispatch_at=MAX(last_dispatch_at+1,?) WHERE id=? AND state='active'").bind(clock().getTime(),row.id).run()
    if(row.expires_at<=clock().getTime()){await db.prepare("UPDATE record_change_subscriptions SET state='expired',sealed_json=NULL WHERE id=? AND expires_at<=?").bind(row.id,clock().getTime()).run();continue}
    let ctx
    try{ctx=await authorize(row)}catch(error){const code=error instanceof Error&&'code'in error?String(error.code):'inactive';const state=['not_found','schema_conflict','forbidden'].includes(code)?'ended':'inactive';await db.prepare('UPDATE record_change_subscriptions SET state=?,delivery_state=?,sealed_json=NULL WHERE id=?').bind(state,'authority_lost',row.id).run();continue}

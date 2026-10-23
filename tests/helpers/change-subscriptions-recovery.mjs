@@ -114,7 +114,8 @@ async function fairDelivery({h,subscribe,remove,tick,current,pings}){
  assert.ok(pings.get(late.id).length>0,'A newly added subscription beyond 200 is not starved by continuously changing earlier subscriptions')
  for(const subscription of subscribers)assert.ok(pings.get(subscription.id).length>1,'Existing subscriptions beyond the batch boundary also continue receiving changes')
  for(const subscription of [...subscribers,late])await remove(subscription)
- console.log('CHANGE_SUBSCRIPTION_FAIRNESS PASS 202 public subscriptions, bounded sweeps under continued writes')
+ await idleBaseFairness(arguments[0])
+ console.log('CHANGE_SUBSCRIPTION_FAIRNESS PASS 202 public subscriptions, bounded sweeps under continued writes and 201 idle cross-base subscriptions')
 }
 
 // A received HTTP 429 is a definite refusal, unlike a lost acknowledgement.
@@ -139,4 +140,20 @@ export async function changeSubscriptionRetry(h,edge){
   if(subscription)await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
   await h.request(`/api/user-keys/${key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId:h.appId}})
  }
+}
+
+async function idleBaseFairness({h,edge,subscribe,remove,tick,current,pings}){
+ const appId=createUlid(),entityId=createUlid(),fieldId=createUlid(),draft={appId,name:'synthetic-cradle-391',tables:[{id:entityId,label:'Idle items',fields:[{id:fieldId,label:'Name',type:'text',required:false,unique:false}]}]}
+ const preview=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:draft})).data
+ await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}}})
+ const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:{commandId:createUlid(),appId,entityId,name:'synthetic-cradle-392',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}})).data.key,idle=[]
+ let busy
+ try{
+  for(let n=0;n<201;n++)idle.push((await h.request(root,{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId,entityId,url:edge.receiverOrigin+'/changes-idle'}})).data)
+  busy=await subscribe('/changes-recovery-fair')
+  const record=(await h.create('synthetic-cradle-393')).record
+  for(let n=0;n<3;n++){await h.patch(await current(record),{[h.statusId]:'synthetic-cradle-'+(394+n)});await tick()}
+  assert.ok(pings.get(busy.id).length>0,'Idle low-watermark subscriptions in another base cannot starve a later busy subscription')
+  assert.ok(!edge.received.some(ping=>idle.some(subscription=>subscription.id===ping.headers['webhook-destination'])),'An idle base produces no invented record notification')
+ }finally{if(busy)await remove(busy);for(const subscription of idle)await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}});await h.request(`/api/user-keys/${key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId}})}
 }
