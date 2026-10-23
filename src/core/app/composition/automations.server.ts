@@ -21,7 +21,7 @@ export function createAutomationsComposition(platform:Platform,foundation:Server
  const history=createRecordAutomationHistory(db,policy,descriptors)
  const effects=createAutomationEffects({env:platform.bindings,entities,admission,commands,destinations})
  const failures=createAutomationFailureAlerts(platform.bindings,foundation,platform.auth.configuration.appOrigin,clock)
- const runner=createRecordAutomationRuntime({db,appOrigin:platform.auth.configuration.appOrigin,policy,descriptors,effects,clock})
+ const runner=createRecordAutomationRuntime({db,appOrigin:platform.auth.configuration.appOrigin,policy,descriptors,reader,effects,clock})
  const runtime={async tick(commandId?:string,ingress:'queue'|'schedule'='schedule'){await runner.tick(commandId,ingress);await failures.tick()}}
  const tests=createAutomationTests(platform.bindings,foundation,reader,destinations,effects)
  const http=recordAutomationsHttp({retry:createAutomationRetry(db,foundation),tests,configuration,history,destinations,authenticate:request=>foundation.authenticate(request,'http',createUlid()),

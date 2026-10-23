@@ -1,3 +1,4 @@
+import {automationControlBrowser} from './helpers/automation-control-browser.mjs'
 import {randomBytes} from 'node:crypto'
 import {automationFailureBrowser} from './helpers/automation-failure-browser.mjs'
 import {userInfo} from 'node:os'
@@ -13,7 +14,7 @@ import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {userKeyBrowser} from './helpers/user-key-browser.mjs'
 import {userAutomationBrowser} from './helpers/user-automation-browser.mjs'
 
-contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone',async()=>{
+contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone',async()=>{
  const output=path.resolve(process.env.CRADLE_AUTOMATIONS_OUTPUT??'.private/user-automation-browser')
  await mkdir(output,{recursive:true});let h,browser
  const receipts=[]
@@ -31,6 +32,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] owners issue
     await userKeyBrowser(page,h,journey,width)
     await userAutomationBrowser(page,h,journey,width)
     await automationFailureBrowser(page,h,journey,width,output)
+    await automationControlBrowser(page,h,journey,width,output)
     assert.equal(consoleErrors,0,'No browser console errors')
     receipts.push({width,checkpoints:journey.checkpoints,consoleErrors})
    }finally{await context.close()}
