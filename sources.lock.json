@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "4755848195e641f95f8a96e575d1003edf5f52e6e0b69998e5dd373368e18ac7",
+      "sha256": "4b6693b8e2b797e054f99d02d667b9f0a12e96964276229cc904b226adef787e",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "df1bc3eb13c09cb05a2562aedcfa021d0b9de988056ec3ca2757e45edba14928",
+      "sha256": "0f19e24b85404e7d47ffef23e7a079ec6d4d090705c2e1972ab8c8250300db6b",
       "executable": false
     },
     "DEMO.md": {
@@ -3758,7 +3758,7 @@
       "executable": false
     },
     "docs/contract/SNAP-002/README.md": {
-      "sha256": "7590f405f1d5b4b2242e82496bbe7c2f34d2e2808e8ee3445dc41b11695217e1",
+      "sha256": "f16cec27982d841307192229acb78fc07c9aed9a45756e1da02ac6c70e250137",
       "executable": false
     },
     "docs/contract/SNAP-002/trash-deleted-1440.png": {
@@ -4382,7 +4382,7 @@
       "executable": false
     },
     "docs/contract/WEBHOOK-USER-002/README.md": {
-      "sha256": "b674bc5764a12782e098071aa453d33da03f12464fb8b502e53bacdda487abfd",
+      "sha256": "379e7c9246e2d6c2d4759c4a58e5ee31ac831b423d6bc1a992d18d8ee2cd3191",
       "executable": false
     },
     "docs/current-state.md": {
@@ -7630,7 +7630,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/delivery.server.ts": {
-      "sha256": "9448dc7dbb839443632dd4f6ed9a16fe631f21ebc9184cdb7f97fa8a3fa4ea55",
+      "sha256": "64cecf05b1ef9ab6d29c3f47e8a83895f1b3fb1d64b4369290f94dfe08c09c4d",
       "executable": false
     },
     "src/domains/change-subscriptions/http.server.ts": {
@@ -7646,11 +7646,11 @@
       "executable": false
     },
     "src/domains/change-subscriptions/schema.ts": {
-      "sha256": "ca7124ff7f69a8e252a6be032f34b832e1600342b9d62343f009079f9279e8a9",
+      "sha256": "9e62efa3a6c446a1be81a2d1410335d4399e95c2e77e29dff5f7de2da8a763f0",
       "executable": false
     },
     "src/domains/change-subscriptions/service.server.ts": {
-      "sha256": "b72956225d074dfe54d38d04d332e0f16e64f3d27d0af8330801603e0d65637c",
+      "sha256": "efeee75476986357015bb22e34616d07a1113ad56daacf53ea923de3a6c4e5f9",
       "executable": false
     },
     "src/domains/change-subscriptions/storage.server.ts": {
@@ -9422,7 +9422,7 @@
       "executable": false
     },
     "src/domains/records/trash/erasure.server.ts": {
-      "sha256": "fb5793121484e60464cfafc96045015df41af4dbe9bd26e418bac3ec84a5c283",
+      "sha256": "7509712a04b66ae91228f7720c7674400b5d06786843f9b71dd0a99f26c73ca3",
       "executable": false
     },
     "src/domains/records/trash/http.server.ts": {
@@ -11166,7 +11166,7 @@
       "executable": false
     },
     "tests/helpers/automation-network-edge.mjs": {
-      "sha256": "54cbdf098b87f610dc4a4482310f44bced4973e03d49e9fd42b4c07f9570b40c",
+      "sha256": "f153de4deb7e99cb111cf5e58127b7d6e3326e6b114e1ec1362dbed195c2823f",
       "executable": false
     },
     "tests/helpers/automation-quiet-hours.mjs": {
@@ -11262,11 +11262,23 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-deletes.mjs": {
-      "sha256": "07ad6cfef0aa0028e87082679e4617803d3ffa848bbf4b102cbcf7d2c20a5706",
+      "sha256": "f3dfc1ee068f2d5f7b68aff2ee58e61f7c2c549497d917ee03228e159f745bbc",
+      "executable": false
+    },
+    "tests/helpers/change-subscriptions-erasure.mjs": {
+      "sha256": "8d040f37c8c7da5298b9ae7fde3c9924e1e1afdb9d1c97e187696ddda566b3ef",
       "executable": false
     },
     "tests/helpers/change-subscriptions-journey.mjs": {
-      "sha256": "f17a494c058a398a154a42b6b89565f8bca133ace4b922fad419e71aed118580",
+      "sha256": "ad4e0dcf43f248edca254fb598e77152b1d37ec13e5d4c49793e9bbdff021606",
+      "executable": false
+    },
+    "tests/helpers/change-subscriptions-recovery.mjs": {
+      "sha256": "01164816832215432cc709ce6cf7977878a1fd1075e95522a225789f215737b2",
+      "executable": false
+    },
+    "tests/helpers/change-subscriptions-upgrade.mjs": {
+      "sha256": "74cc99f5809c9b590a735b74ff97184116ea92ff0b9c67055b42e95e4e4ee36f",
       "executable": false
     },
     "tests/helpers/company-archive.mjs": {
@@ -12402,7 +12414,7 @@
       "executable": false
     },
     "tests/user-webhooks.mjs": {
-      "sha256": "78b89ef93351cb1602cb41ce56fc99a109c7ffe4d00d8029307c75015b6ac831",
+      "sha256": "c19f6cf97a1c31cc4fd43b685cd1107963890188d6f912c42691f320c8eb8c4f",
       "executable": false
     },
     "tsconfig.json": {

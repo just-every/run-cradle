@@ -111,15 +111,49 @@ metadata inactive with no secret and never resume sending; issuer erasure
 registers deletion of subscription rows and their sealed secrets. Existing audit
 erasure redacts the canonical retained values.
 
+## Recovery, fair dispatch and unavailable scopes
+
+The dispatcher serves the 200 lowest durable audit watermarks first, breaking ties
+by subscription ID. Each batch advances through the same ordered audit rows;
+active subscriptions beyond 200 therefore progress over successive ticks even
+while earlier subscriptions keep changing. This needs no new table or migration.
+The safe subscription listing retains its existing 200-row bound.
+
+HTTP 429 is a definite refusal: Base queues a bounded retry with the same logical
+notification ID and immutable body. Other explicit 4xx refusals except 408 are
+terminal rejections. Response loss, relay uncertainty, HTTP 408 or server responses
+are uncertain: no automatic resend. The subscription's deliveryState shows failed;
+its cursor remains the recovery source, and later changes have independent signed
+pings. A subscriber saves the last successfully fetched continuation, fetches the
+retained ordered window and deduplicates its change IDs. Unknown outcomes never
+authorize resending an external effect under AUTO-007/AUTO-009.
+
+When a still-current key's subscribed view or table becomes unavailable, the
+subscription ends, loses its sealed secret and lists as ended/authority_lost.
+The changes door returns an empty final captured range with the **same** generic
+resyncRequired marker, no new cause, record ID, value or count, and hasMore=false.
+Replays retain that range. Current scope-authority uncertainty uses the identical
+answer; it does not confirm deletion. A revoked key remains refused, and the
+seven-day subscription and 30-day cursor expiries still apply. No final outbound
+ping bypasses the lost scope's authority. This conservative default is posted to ct.
+View deletion is exercised now; table deletion's final-page proof remains open.
+
+The populated-upgrade journey creates real old-schema audit facts and a deleted
+view before 9045/9047, applies every shipped migration, then uses native sign-in,
+public subscription/fetch and one-row paging to prove order, replay and fresh
+unique sequences. The deleted view receives 30 days from the upgrade clock. This
+also closes SNAP-002's specifically named 9047 backfill proof gap.
+
+Person erasure's existing registered Trash cleanup now anonymizes the retained
+audit reference and deltas of an identity-only held record in the same admission
+that removes its canonical row. The feed consequently returns the existing generic
+range marker. The journey checks entire feed responses, cursor windows and delivery
+envelopes, and confirms the erased issuer's subscription/window/secret removal.
+Broader record-erasure paths remain a gap.
+
 ## Remaining acceptance
 
-The full write-door matrix, archive restoration and person/record erasure of
-retained feed values still need public-door proof. Populated upgrades of the
-9045 audit-sequence and 9047 deleted-view backfill UPDATEs remain unproven.
-Base-scope journeys, deleted-scope final listing, at-least-once delivery after
-uncertainty and paged subscription listing remain
-open. The dispatcher selects only the first 200 active subscriptions per sweep; later subscriptions can starve, so fair delivery beyond that bound is incomplete. No Zapier, Make or Crank application is supplied (INTEG-007 remains
-missing). These obligations are not narrowed by this implementation.
+The complete write-door/base-table-view matrix remains unproven, including bulk/range/undo, forms, CSV/workbook/Sheets merges, automation and MCP paths. Reviewed base-import application/reversal bypasses admission_audit under RECORDS-005's existing effects suppression; typed Launch/repair/lifecycle audit actions are outside the feed projection; restore queue wakes and restored incoming-link audit coverage remain open. Table-scope final listing after table deletion, archive restore and broader person/record-erasure journeys remain unproven. No Zapier, Make or Crank application is supplied (INTEG-007 remains missing).
 
 The existing `tests/user-webhooks.mjs` registration invokes the synchronization
 matrix in `tests/helpers/change-subscriptions-deletes.mjs`: unrestricted id-only

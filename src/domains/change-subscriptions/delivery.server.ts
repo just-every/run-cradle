@@ -28,11 +28,11 @@ export function changeSubscriptionDelivery(env:PlatformBindings,service:ReturnTy
  }
  return {async tick(commandId?:string){
   await db.prepare('DELETE FROM record_change_windows WHERE captured_at<?').bind(clock().getTime()-retentionMs).run()
-  const rows=await db.prepare("SELECT * FROM record_change_subscriptions WHERE state='active' ORDER BY id LIMIT 200").all<Subscription>()
+  const rows=await db.prepare("SELECT * FROM record_change_subscriptions WHERE state='active' ORDER BY last_sequence,id LIMIT 200").all<Subscription>()
   for(const row of rows.results){
    if(row.expires_at<=clock().getTime()){await db.prepare("UPDATE record_change_subscriptions SET state='expired',sealed_json=NULL WHERE id=? AND expires_at<=?").bind(row.id,clock().getTime()).run();continue}
    let ctx
-   try{ctx=await authorize(row)}catch(error){const code=error instanceof Error&&'code'in error?String(error.code):'inactive';const state=['not_found','schema_conflict'].includes(code)?'ended':'inactive';await db.prepare('UPDATE record_change_subscriptions SET state=?,delivery_state=?,sealed_json=NULL WHERE id=?').bind(state,'authority_lost',row.id).run();continue}
+   try{ctx=await authorize(row)}catch(error){const code=error instanceof Error&&'code'in error?String(error.code):'inactive';const state=['not_found','schema_conflict','forbidden'].includes(code)?'ended':'inactive';await db.prepare('UPDATE record_change_subscriptions SET state=?,delivery_state=?,sealed_json=NULL WHERE id=?').bind(state,'authority_lost',row.id).run();continue}
    const pending=await db.prepare("SELECT id,change_sequence,action,subject_json,changes_json,created_at FROM admission_audit WHERE app_id=? AND change_sequence>? AND created_at>=? ORDER BY change_sequence,id LIMIT 200").bind(row.app_id,row.last_sequence,new Date(clock().getTime()-retentionMs).toISOString()).all<Change>()
    for(const change of pending.results){
     // A queue wake is an optimization. Every audit row after the durable watermark

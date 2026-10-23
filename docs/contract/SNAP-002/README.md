@@ -12,7 +12,7 @@ Evidence: `tests/records-manual-release.mjs` — `[SNAP-002] RECORDS-001 RECORDS
 
 ## Gap
 
-Fields and tables have no trash/restore implementation. Interfaces were carved verbatim into IFACE-001 as an acceptance point (ct, 22 October); no interface object is invented here. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, populated released-version upgrades (including the 9047 deleted-view backfill UPDATE), archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
+Fields and tables have no trash/restore implementation. Interfaces were carved verbatim into IFACE-001 as an acceptance point (ct, 22 October); no interface object is invented here. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, other released-version upgrades, archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
 
 ## Deletion dialog correction
 
@@ -26,3 +26,5 @@ and restores the same record at 1440 and 390, with no page overflow or serious/
 critical axe findings. Its host's three icon-only mobile navigation controls have
 300 ms hover tooltips and immediate keyboard-focus tooltips, scoped to record
 detail and deletion states. No test pins the former copy.
+
+The populated pre-9047 deleted-view backfill is proven by `tests/helpers/change-subscriptions-upgrade.mjs`, invoked from `tests/user-webhooks.mjs`: definition and prior timestamps survive, and the migration supplies a full 30-day restore window. Other released-version upgrade coverage remains open.

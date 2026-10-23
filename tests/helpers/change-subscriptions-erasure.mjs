@@ -97,6 +97,7 @@ export async function changeSubscriptionErasure(h,edge){
    }
   }
   if(failures.length)throw new AggregateError(failures,'BASE-DATA-003 change-subscription person/record erasure proof failed')
+  console.log('CHANGE_SUBSCRIPTION_ERASURE PASS identity-only record, whole feed/windows/envelopes, issuer subscription and sealed-secret removal')
  }finally{
   // Erasure owns issuer removal. Observers belong to the surviving owner and
   // are explicitly removed so this helper is safe to reuse in the same test.

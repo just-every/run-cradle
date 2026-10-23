@@ -24,8 +24,23 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
  const belongs=(binding:string,id:string)=>binding.startsWith(id+':')
  const decode=async(token:string)=>{try{return await codec.decode(token)}catch{throw new AuthorityError('validation','Invalid signed change cursor.',400)}}
  function safe(row:Subscription){return {id:row.id,appId:row.app_id,entityId:row.entity_id,viewId:row.view_id,state:row.expires_at<=Date.now()?'expired':row.state,deliveryState:row.delivery_state,createdAt:new Date(row.created_at).toISOString(),expiresAt:new Date(row.expires_at).toISOString()}}
- async function get(ctx:RequestContext,id:string,requireActive=true){await access.key(ctx);const row=await db.prepare('SELECT * FROM record_change_subscriptions WHERE id=? AND credential_id=? AND principal_id=?').bind(id,ctx.principal.credentialId,ctx.principal.id).first<Subscription>();if(!row)throw new AuthorityError('not_found','Subscription not found.',404);await access.scopes(ctx,row);if(requireActive&&(row.state!=='active'||row.expires_at<=Date.parse(ctx.now)))throw new AuthorityError('subscription_expired','Subscription is inactive or expired after 7 days. Refresh an active subscription before it expires.',410);return row}
- async function commit(ctx:RequestContext,commandId:string,action:string,row:Subscription,mutations:SqlMutation[]){const current=await access.scopes(ctx,row),guards=[...principalGuards(ctx),...current.scopes.flatMap(s=>s.currentAuthorityGuards)];const permit:AuthorityPermit={actor:{id:ctx.principal.id,kind:ctx.principal.kind},action,appId:row.app_id,grantId:null,grantVersion:null,policyVersion:current.scopes[0]!.policyVersion,validUntil:ctx.principal.expiresAt,guards,reservationMutations:[],reservationIds:[]};return admission.commit(ctx,{commandId,action,appId:row.app_id,canonicalInputHash:await canonicalHash({action,id:row.id,expiresAt:row.expires_at}),permit,guards,mutations,audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:safe(row)})}
+ async function scopeAvailable(ctx:RequestContext,row:Subscription,allowUnavailable:boolean){
+  if(allowUnavailable&&row.state==='ended'&&row.delivery_state==='authority_lost')return false
+  try{await access.scopes(ctx,row);return true}catch(error){
+   if(!allowUnavailable||row.state!=='active'||!(error instanceof Error&&'code'in error)||!['not_found','schema_conflict','forbidden'].includes(String(error.code)))throw error
+   await db.prepare("UPDATE record_change_subscriptions SET state='ended',delivery_state='authority_lost',sealed_json=NULL WHERE id=? AND state='active'").bind(row.id).run()
+   row.state='ended';row.delivery_state='authority_lost';row.sealed_json=null;return false
+  }
+ }
+ async function get(ctx:RequestContext,id:string,requireActive=true,allowUnavailable=false){
+  await access.key(ctx)
+  const row=await db.prepare('SELECT * FROM record_change_subscriptions WHERE id=? AND credential_id=? AND principal_id=?').bind(id,ctx.principal.credentialId,ctx.principal.id).first<Subscription>()
+  if(!row)throw new AuthorityError('not_found','Subscription not found.',404)
+  await scopeAvailable(ctx,row,allowUnavailable)
+  if(requireActive&&(row.expires_at<=Date.parse(ctx.now)||row.state!=='active'&&!(allowUnavailable&&row.state==='ended'&&row.delivery_state==='authority_lost')))throw new AuthorityError('subscription_expired','Subscription is inactive or expired after 7 days. Refresh an active subscription before it expires.',410)
+  return row
+ }
+ async function commit(ctx:RequestContext,commandId:string,action:string,row:Subscription,mutations:SqlMutation[]){const current=row.state==='ended'&&row.delivery_state==='authority_lost'?{scopes:[]}:await access.scopes(ctx,row),guards=[...principalGuards(ctx),...current.scopes.flatMap(s=>s.currentAuthorityGuards)];const permit:AuthorityPermit={actor:{id:ctx.principal.id,kind:ctx.principal.kind},action,appId:row.app_id,grantId:null,grantVersion:null,policyVersion:current.scopes[0]?.policyVersion??0,validUntil:ctx.principal.expiresAt,guards,reservationMutations:[],reservationIds:[]};return admission.commit(ctx,{commandId,action,appId:row.app_id,canonicalInputHash:await canonicalHash({action,id:row.id,expiresAt:row.expires_at}),permit,guards,mutations,audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:safe(row)})}
  return {access,codec,cursor,get,
   async create(ctx:RequestContext,input:{commandId:string;appId:string;entityId?:string;viewId?:string;url:string}){
    const key=await access.key(ctx)
@@ -38,11 +53,11 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    if(receipt.replay)throw new AuthorityError('version_conflict','Subscription already created. Its secret is shown once; delete it and create a new one to rotate.',409)
    return {...safe(row),signingKey,cursor:await cursor(id,last,now)}
   },
-  async list(ctx:RequestContext,appId:string){await access.key(ctx);const rows=await db.prepare('SELECT * FROM record_change_subscriptions WHERE app_id=? AND credential_id=? ORDER BY created_at,id LIMIT 200').bind(appId,ctx.principal.credentialId).all<Subscription>();const out=[];for(const row of rows.results){await access.scopes(ctx,row);out.push(safe(row))}return out},
+  async list(ctx:RequestContext,appId:string){await access.key(ctx);const rows=await db.prepare('SELECT * FROM record_change_subscriptions WHERE app_id=? AND credential_id=? ORDER BY created_at,id LIMIT 200').bind(appId,ctx.principal.credentialId).all<Subscription>();const out=[];for(const row of rows.results){await scopeAvailable(ctx,row,true);out.push(safe(row))}return out},
   async refresh(ctx:RequestContext,id:string,commandId:string){const row=await get(ctx,id);row.expires_at=Date.parse(ctx.now)+lifetimeMs;await commit(ctx,commandId,'subscription.refresh',row,[{kind:'update',table:subscriptions,set:{expires_at:row.expires_at},where:trustedPredicate("id=? AND credential_id=? AND state='active' AND expires_at>?",[id,ctx.principal.credentialId!,Date.parse(ctx.now)]),expectedRows:1}]);return safe(row)},
-  async remove(ctx:RequestContext,id:string,commandId:string){const row=await get(ctx,id,false);const held=(await db.prepare('SELECT count(*) n FROM record_change_windows WHERE subscription_id=?').bind(id).first<{n:number}>())!.n;await commit(ctx,commandId,'subscription.delete',row,[{kind:'delete',table:windows,where:trustedPredicate('subscription_id=?',[id]),expectedRows:held},{kind:'delete',table:subscriptions,where:trustedPredicate('id=? AND credential_id=?',[id,ctx.principal.credentialId!]),expectedRows:1}]);return {deleted:true}},
+  async remove(ctx:RequestContext,id:string,commandId:string){const row=await get(ctx,id,false,true);const held=(await db.prepare('SELECT count(*) n FROM record_change_windows WHERE subscription_id=?').bind(id).first<{n:number}>())!.n;await commit(ctx,commandId,'subscription.delete',row,[{kind:'delete',table:windows,where:trustedPredicate('subscription_id=?',[id]),expectedRows:held},{kind:'delete',table:subscriptions,where:trustedPredicate('id=? AND credential_id=?',[id,ctx.principal.credentialId!]),expectedRows:1}]);return {deleted:true}},
   async changes(ctx:RequestContext,id:string,input:{cursor:string;through?:string;limit:number}){
-   const row=await get(ctx,id),from=await decode(input.cursor),now=Date.parse(ctx.now)
+   const row=await get(ctx,id,true,true),from=await decode(input.cursor),now=Date.parse(ctx.now)
    if(!belongs(from.binding,id))throw new AuthorityError('validation','Cursor belongs to another subscription.',400)
    if(from.revision<now-retentionMs)throw new CursorExpired(resyncRange(input.cursor,await cursor(id,await position(),now)))
    const requested=input.through?await decode(input.through):null
@@ -52,6 +67,12 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    const window=(await db.prepare('SELECT through_sequence,captured_at FROM record_change_windows WHERE cursor_hash=? AND subscription_id=?').bind(cursorHash,id).first<{through_sequence:number;captured_at:number}>())!
    const upper={binding:id,offset:window.through_sequence,revision:window.captured_at}
    if(upper.offset<from.offset)throw new AuthorityError('validation','Invalid change window.',400)
+   // An unavailable scope never confirms deletion or exposes its retained rows.
+   // Capture the same durable range as any fetch and return the existing marker.
+   if(row.state==='ended'){
+    const continuation=await cursor(id,upper.offset,upper.revision,await digest(input.cursor+':'+upper.offset))
+    return {items:[],cursor:continuation,through:await cursor(id,upper.offset,upper.revision),hasMore:false,resyncRequired:resyncRange(input.cursor,continuation)}
+   }
    const rows=await db.prepare("SELECT id,change_sequence,action,subject_json,changes_json,created_at FROM admission_audit WHERE app_id=? AND change_sequence>? AND change_sequence<=? AND created_at>=? ORDER BY change_sequence,id LIMIT ?").bind(row.app_id,from.offset,upper.offset,new Date(now-retentionMs).toISOString(),input.limit).all<Change>()
    const items:ChangeItem[]=[];let resyncRequired=false
    for(const change of rows.results){const projected=await access.project(ctx,row,change);if(projected?.resyncRequired)resyncRequired=true;if(projected?.item)items.push(projected.item)}
