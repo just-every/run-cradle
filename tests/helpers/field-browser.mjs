@@ -108,7 +108,7 @@ export async function fieldBrowser(){
     assert.equal(live.tables.find(item=>item.id===fixture.orders).fields.some(field=>field.id===fixture.memo),false)
     for(const [index,id]of fixture.records.entries())assert.equal((await h.request(`/api/v1/apps/${fixture.appId}/entities/${fixture.orders}/records/${id}`)).data.record.fields[fixture.amount].value,index===0?'1250.5':null)
     await page.goto(h.origin+'/app/settings');await page.locator('summary').filter({hasText:/^Trash$/}).click()
-    const trash=page.getByRole('region',{name:'Trash',exact:true});await trash.getByLabel('Trash base',{exact:true}).selectOption(fixture.appId)
+    const trash=page.getByRole('region',{name:'Trash',exact:true});await trash.getByRole('combobox').selectOption(fixture.appId)
     for(const label of ['Memo','Legacy orders'])await trash.getByRole('button',{name:'Restore '+label,exact:true}).waitFor()
     await owner.capture('field-and-table-trash',trash)
     if(width===390)await hostTooltips(page)
