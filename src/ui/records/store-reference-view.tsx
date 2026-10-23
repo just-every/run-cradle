@@ -1,3 +1,4 @@
+import {StoreReferenceResolution} from './store-reference-resolution'
 import { useEffect, useState } from 'react'
 import type { Ref, StoreReference } from '../../contracts/primitives'
 import { StoreConnect } from './store-connect'
@@ -29,6 +30,8 @@ export function StoreReferenceView({ reference, record }: { reference: StoreRefe
     {reference.resolution==='unresolved'&&<strong className="cr-badge">Unresolved</strong>}
     <a href={reference.link||undefined} target="_blank" rel="noopener noreferrer">{reference.name}<span className="cr-sr-only"> (opens in {storeLabels[reference.provider]})</span></a>
     <small className="cr-muted"> {typeLabel(reference.mediaType)} · {storeLabels[reference.provider]}{reference.size!==null?` · ${reference.size.toLocaleString()} bytes`:''}</small>
+    {record&&reference.resolution==='unresolved'&&reference.provider!=='chest'&&<StoreReferenceResolution reference={reference} record={record}/>}
+    {reference.resolution==='unverified'&&<small>Unverified</small>}
     {reference.resolution!=='unresolved'&&record&&reference.provider!=='chest'&&preview!=='loading'&&preview!=='image'&&<StoreConnect appId={record.appId} provider={reference.provider} preview/>}
   </span>
 }

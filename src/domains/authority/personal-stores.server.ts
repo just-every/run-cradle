@@ -8,7 +8,7 @@ import { sharedPreviewGuards } from './store-preview.server';
 import type { EntitySchema } from '../records/contracts';
 import type { SqlPredicate } from '../admission/ports';
 export const isPersonalStore = (provider: string) => (fileStoreProviders as readonly string[]).includes(provider);
-export type StoreOperation = { op: 'browse' | 'thumbnail'; entityId: string; fieldId: string; recordId?: string; itemId?: string };
+export type StoreOperation = { op: 'browse' | 'thumbnail' | 'metadata'; entityId: string; fieldId: string; recordId?: string; itemId?: string };
 export async function installationStoreOwner(db:D1Database,ctx:RequestContext) {
  const guards=[...principalGuards(ctx),trustedPredicate("EXISTS(SELECT 1 FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND o.role='owner' AND o.status='active')",[ctx.principal.id])];
  if(ctx.principal.kind!=='human'||!ctx.principal.sessionId||ctx.principal.credentialId)return denied('A current installation owner session is required.');
@@ -51,7 +51,7 @@ export async function personalStorePermit(db:D1Database,policy:PolicyPort,regist
   for(const schema of schemas){
    const fields=schema.fields.filter(f=>f.type==='attachment'&&(!saved||schema.id===saved.entityId&&f.id===saved.fieldId));if(!fields.length)continue;
    let scope;try{scope=await policy.scope(ctx,{appId:request.appId,entityId:schema.id,purpose:'read'});}catch{continue;}
-   if(fields.some(f=>(saved?.op==='browse'?scope.writableFieldIds:scope.readableFieldIds).includes(f.id))){guards.push(...scope.currentAuthorityGuards);if(saved?.op==='thumbnail'&&registry){const entity=registry.get(request.appId,schema.id);if(!entity||!saved.recordId||!saved.itemId)return denied();guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${scope.rowPredicate.sql}))`,[saved.recordId,...scope.rowPredicate.values]),trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table+'_f_'+saved.fieldId.toLowerCase())} WHERE record_id=? AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.itemId')=?)`,[saved.recordId,saved.itemId]));}allowed=true;break;}
+   if(fields.some(f=>(saved?.op==='browse'||saved?.op==='metadata'?scope.writableFieldIds:scope.readableFieldIds).includes(f.id))){guards.push(...scope.currentAuthorityGuards);if((saved?.op==='thumbnail'||saved?.op==='metadata')&&registry){const entity=registry.get(request.appId,schema.id);if(!entity||!saved.recordId||!saved.itemId)return denied();guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${scope.rowPredicate.sql}))`,[saved.recordId,...scope.rowPredicate.values]),trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(entity.table+'_f_'+saved.fieldId.toLowerCase())} WHERE record_id=? AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.itemId')=?)`,[saved.recordId,saved.itemId]));}allowed=true;break;}
   }
   if(!allowed)return denied('Current attachment field authority is required.');
  }
