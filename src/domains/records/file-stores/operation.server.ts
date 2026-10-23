@@ -18,4 +18,7 @@ export async function runFileStoreOperation(db: D1Database, ctx: RequestContext,
   const adapter = fileStoreAdapter(row.adapter_id as FileStoreProvider, credentials), request = fileStoreRequestSchema.parse(JSON.parse(row.request_json));
   const result = request.op === 'browse' ? await adapter.browse(connectionId, ctx.requestId, request) : request.op==='metadata'?await adapter.metadata(connectionId,ctx.requestId,request.itemId): { authorized: true };
   await db.prepare('UPDATE file_store_requests SET result_json=? WHERE job_id=?').bind(JSON.stringify(result), ctx.requestId).run();
+  // Ephemeral file reads settle their own job; they do not advance a data-sync
+  // checkpoint or mutate connection versions underneath other active reads.
+  return {activity:'transient-read' as const};
 }
