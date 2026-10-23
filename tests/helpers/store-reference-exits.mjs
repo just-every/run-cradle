@@ -48,5 +48,9 @@ export async function storeReferenceReturns(h){
  await h.db.prepare("UPDATE authority_principals SET state='erased',version=version+1 WHERE id=?").bind(people.editor.id).run()
  await h.db.prepare('UPDATE operators SET name=?,active=0 WHERE id=?').bind(anonymous,people.editor.id).run()
  for(const format of ['json','csv-set','xlsx']){const result=await d.call('/api/v1/records/base-export',{appId:preview.identities.appId,format});const texts=format==='json'?[result.content]:format==='csv-set'?csvDownloadEntries(Buffer.from(result.content,'base64')).map(entry=>entry.bytes.toString('utf8')):readWorkbook(Buffer.from(result.content,'base64'),'synthetic-cradle-erased.xlsx').flatMap(sheet=>sheet.rows.flatMap(row=>row.map(cell=>String(cell.value??''))));assert.ok(texts.some(text=>text.includes(anonymous)));assert.ok(texts.every(text=>!text.includes(people.editor.id)))}
+ // A raw uploaded-file member must still refuse all exits even when its unavailable bytes are hidden by file projection.
+ const descriptor=(await h.descriptors()).get(preview.identities.appId,first.entity.id),join=descriptor.fields.get(first.field.id).join
+ await h.db.prepare(`INSERT INTO "${join.table.tableId}"(id,record_id,value,position) VALUES(?,?,?,?)`).bind(createUlid(),first.row.id,createUlid(),refs.length).run()
+ for(const format of ['json','csv-set','xlsx']){const refused=await d.raw('/api/v1/records/base-export',{appId:preview.identities.appId,format});assert.equal(refused.status,400);assert.match((await refused.json()).error.message,/uploaded attachment bytes/)}
  return {snapshot:first.parsed,preview,job,refs}
 }
