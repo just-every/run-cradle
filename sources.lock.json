@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "50efc86ad699350d9b0484ab86f3ea73367d7b06c1fd1e490c2becbf64497d24",
+      "sha256": "0298d0393bc6b6a389183f9262810fcdb1e00ebfd05b930fa61ad3cc7057ad08",
       "executable": false
     },
     "DEMO.md": {
@@ -12298,7 +12298,7 @@
       "executable": false
     },
     "tests/records-agent-proposals.mjs": {
-      "sha256": "2bd840030e8f0cb7e8b0aa1143b54be3044ebfd9b626aa168c30bffac291c305",
+      "sha256": "36612adf837198d48451fbacd0988414979f7ff0c3bbbb644d18e174a07a9b67",
       "executable": false
     },
     "tests/records-base-edge-return.mjs": {
@@ -12382,7 +12382,7 @@
       "executable": false
     },
     "tests/records-manual-release.mjs": {
-      "sha256": "33bee2f5f07f4b8df48ad880fb30559db236846ed2daeec68eed1a013ef55ccc",
+      "sha256": "93960e863edfd9024384c3f8db40bc4a408240be47c485a2c01bf1048187d98a",
       "executable": false
     },
     "tests/records-manual-roundtrip.mjs": {
