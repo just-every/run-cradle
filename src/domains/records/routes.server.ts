@@ -9,6 +9,7 @@ import { idSchema, querySchema } from './validators';
 import { AdmissionError } from '../admission/errors';
 export function createRecordHttp(ports: {
     authenticate(request: Request, ingress: RequestContext['ingress'], requestId: string): Promise<RequestContext>;
+    rest?: ReturnType<typeof import('./rest/service.server').createRecordRest>;
     policy: PolicyPort;
     presence: ReturnType<typeof import('./presence.server').createRecordPresence>;
     reader: ReturnType<typeof createRecordReader>;
@@ -22,6 +23,10 @@ export function createRecordHttp(ports: {
             const ctx = await ports.authenticate(request, 'http', requestId);
             if (request.method === 'POST' && request.headers.has('cookie') && request.headers.get('origin') !== url.origin)
                 throw new AdmissionError('forbidden', 'A same-origin request is required');
+            if(ports.rest && (/^\/api\/v1\/apps\/[^/]+\/openapi\.json$/.test(path)||/^\/api\/v1\/apps\/[^/]+\/rest\//.test(path))){
+                if(!['GET','HEAD','OPTIONS'].includes(request.method)&&request.headers.has('cookie')&&request.headers.get('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin request is required');
+                return c.json({data:await ports.rest.handle(ctx,request),meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},{headers:{'cache-control':'no-store'}});
+            }
             let data: unknown;
             const pageInput = { limit: url.searchParams.has('limit') ? Number(url.searchParams.get('limit')) : undefined, cursor: url.searchParams.get('cursor') ?? undefined };
             const impact = path.match(/^\/api\/v1\/apps\/([^/]+)\/entities\/([^/]+)\/records\/([^/]+)\/delete-impact$/);

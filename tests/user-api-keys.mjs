@@ -1,3 +1,4 @@
+import {recordsRestJourney} from './helpers/rest-api-journey.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {randomBytes} from 'node:crypto'
@@ -5,9 +6,10 @@ import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
-contract('API-USER-001','[WEBHOOK-USER-002] scoped subscription credentials and record reads/writes stop on revoke and issuer policy change',async()=>{
+contract('API-USER-001','[API-USER-002] [WEBHOOK-USER-002] scoped subscription credentials and record reads/writes stop on revoke and issuer policy change',async()=>{
  const h=await userAutomationRuntime(18951,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-1'}})
  try {
+  await recordsRestJourney(h)
   const record=(await h.create('Key acceptance')).record
   const issue={commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'Read service',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}
   const issued=(await h.request('/api/user-keys',{method:'POST',status:201,body:issue})).data.key

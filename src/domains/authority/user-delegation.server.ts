@@ -23,7 +23,7 @@ export async function delegationCommandId(commandId:string,step:string) {
  return id
 }
 
-export type DelegationInput={appId:string;entityId:string;name:string;permissions:'read'|'write';expiresAt:string}
+export type DelegationInput={appId:string;entityId:string;name:string;permissions:'read'|'write';allowDelete?:boolean;expiresAt:string}
 
 /** Adds explicit owner administration without changing the owner's data rules. */
 export async function userDelegationPolicy(db:D1Database,ordinary:PolicyPort,ctx:RequestContext,input:DelegationInput) {
@@ -44,6 +44,7 @@ export async function userDelegationPolicy(db:D1Database,ordinary:PolicyPort,ctx
 
 export async function provisionUserDelegate(db:D1Database,ordinary:PolicyPort,admission:AdmissionPort,ctx:RequestContext,
  commandId:string,input:DelegationInput,kind:'api-key'|'automation') {
+ if(input.allowDelete&&(kind!=='api-key'||input.permissions!=='write'))throw new AuthorityError('validation','Delete access requires an explicit writable API key.',400)
  const expiry=Date.parse(input.expiresAt),now=Date.parse(ctx.now)
  if(!Number.isFinite(expiry)||expiry<=now||expiry>now+2592000000)
   throw new AuthorityError('validation','Choose an expiry within 30 days.',400)
@@ -52,7 +53,7 @@ export async function provisionUserDelegate(db:D1Database,ordinary:PolicyPort,ad
   {appId:input.appId,kind:kind==='automation'?'agent':'connector'})
  const principalId=prepared.committedResult.id,policyId=await delegationCommandId(commandId,'policy')
  const source=policyRuleSchema.array().parse(JSON.parse(own.snapshot.row.rules_json)) as Policy['rules']
- const actions=input.permissions==='write'?(kind==='automation'?['record.read','record.patch']:['record.read','record.create','record.patch']):['record.read']
+ const actions=input.permissions==='write'?(kind==='automation'?['record.read','record.patch']:['record.read','record.create','record.patch',...(input.allowDelete?['record.delete']:[])]):['record.read']
  const rules=source.filter(rule=>rule.entityId===input.entityId&&rule.principals.some(p=>p.id===ctx.principal.id&&p.kind==='human'))
   .map(rule=>({...rule,id:createUlid(),principals:[{id:principalId,kind:kind==='automation'?'agent' as const:'connector' as const}],
    purposes:(rule.purposes??['read']).filter(p=>p==='read'||kind==='automation'&&p==='export'),
