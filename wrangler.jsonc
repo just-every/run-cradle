@@ -62,6 +62,7 @@
     }
   ],
   "vars": {
+    "OWNER_NAME": "Owner",
     "MAIL_PROVIDER": "",
     "MAIL_FROM": "",
     "MAIL_RELAY_URL": ""

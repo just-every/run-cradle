@@ -1,10 +1,15 @@
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
+import {readFile} from 'node:fs/promises'
 import {contract} from './contract.mjs'
 import {admissionRuntime} from './helpers/admission-runtime.mjs'
 import {completeFirstRun} from './helpers/complete-first-run.mjs'
 
 contract('ADMISSION-SIGNED-001','signed first-owner admission binds the installation, admits once and gates editor config on the current native owner',async()=>{
+ const built=JSON.parse(await readFile('dist/server/wrangler.json','utf8'))
+ const managed=JSON.parse(await readFile('management/integration/deployment-spec.json','utf8'))
+ assert.equal(built.vars.OWNER_NAME,'Owner','The emitted Worker declares the name setup can override')
+ assert.equal(managed.publicVariables.OWNER_NAME,'Owner','Managed hosting receives the same configured name binding')
  const h=await admissionRuntime(18958,{ownerEmail:'CLAIM-OWNER@EXAMPLE.TEST'})
  try{
   const count=()=>h.db.prepare('SELECT (SELECT count(*) FROM oa_operators) AS operators,(SELECT count(*) FROM oa_sessions) AS sessions,(SELECT count(*) FROM oc_owner_claims) AS claims').first()

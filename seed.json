@@ -345,6 +345,12 @@
       "why": "Base operator-auth first-owner address; no implicit signup."
     },
     {
+      "name": "OWNER_NAME",
+      "required": false,
+      "secret": false,
+      "why": "First-owner display name configured during installation; defaults to Owner."
+    },
+    {
       "name": "SETUP_TOKEN",
       "required": false,
       "secret": true,

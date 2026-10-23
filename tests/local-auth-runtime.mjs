@@ -26,8 +26,8 @@ contract('AUTH-BASE-001 HOME-003 BASE-ACCESS-002 INTEG-002 BASE-SEC-003', 'emitt
    ['?returnTo=%2Fsignin','/app'],
   ]) {
    let response=await h.request('/signin'+search,{headers:{cookie:owner.cookie}})
-   // TanStack may canonicalize the legacy next alias before its loader runs.
-   if(response.status===307&&response.headers.get('location')?.startsWith('/signin?')){
+   // TanStack may canonicalize legacy or rejected search before its loader runs.
+   if(response.status===307&&(response.headers.get('location')==='/signin'||response.headers.get('location')?.startsWith('/signin?'))){
     assert.doesNotMatch(await response.text(),/id="signin-email"/)
     response=await h.request(response.headers.get('location'),{headers:{cookie:owner.cookie}})
    }
