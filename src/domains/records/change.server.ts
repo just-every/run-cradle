@@ -36,7 +36,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
             return reference.connectionId ? (() => { throw new AdmissionError('validation', 'A Chest link carries no connection'); })() : [];
         if (!reference.connectionId)
             throw new AdmissionError('validation', 'A store reference needs the connection it was picked through');
-        const guard = trustedPredicate("EXISTS(SELECT 1 FROM provider_connections WHERE id=? AND adapter_id=? AND owner_id=? AND state='connected' AND revoked_at IS NULL)", [reference.connectionId, reference.provider, ctx.principal.id]);
+        const guard = trustedPredicate("EXISTS(SELECT 1 FROM provider_connections WHERE id=? AND adapter_id=? AND owner_id=? AND state='connected' AND revoked_at IS NULL AND EXISTS(SELECT 1 FROM file_store_policies WHERE provider=adapter_id AND enabled=1))", [reference.connectionId, reference.provider, ctx.principal.id]);
         const live = await db.prepare(`SELECT 1 AS live WHERE ${guard.sql}`).bind(...guard.values).first();
         if (!live)
             throw new AdmissionError('forbidden', 'The connection is not yours or is no longer connected');
