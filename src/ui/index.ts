@@ -2,7 +2,6 @@ export { RecordsPage } from './records/records-page'
 export { RecordDetailPage } from './records/record-detail-page'
 export { OperationStudioPage } from './construction/operation-studio-page'
 export { SearchPage } from './search/search-page'
-export { StrategyPage } from './portfolio/strategy-page'
 
 export { SourcePage } from "./evidence/source-page"
 

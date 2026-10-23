@@ -35,8 +35,6 @@ import { Route as AppLensesTimelineRouteImport } from './routes/app.lenses.timel
 import { Route as AppMilestonesMilestoneIdRouteImport } from './routes/app.milestones.$milestoneId'
 import { Route as AppOperationsIndexRouteImport } from './routes/app.operations.index'
 import { Route as AppOperationsStudioRouteImport } from './routes/app.operations.studio'
-import { Route as AppPortfolioIndexRouteImport } from './routes/app.portfolio.index'
-import { Route as AppPortfolioProblemIdRouteImport } from './routes/app.portfolio.$problemId'
 import { Route as AppRecordsIndexRouteImport } from './routes/app.records.index'
 import { Route as AppRepairsIndexRouteImport } from './routes/app.repairs.index'
 import { Route as AppRepairsRepairIdRouteImport } from './routes/app.repairs.$repairId'
@@ -183,16 +181,6 @@ const AppOperationsStudioRoute = AppOperationsStudioRouteImport.update({
   path: '/operations/studio',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPortfolioIndexRoute = AppPortfolioIndexRouteImport.update({
-  id: '/portfolio/',
-  path: '/portfolio/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPortfolioProblemIdRoute = AppPortfolioProblemIdRouteImport.update({
-  id: '/portfolio/$problemId',
-  path: '/portfolio/$problemId',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppRecordsIndexRoute = AppRecordsIndexRouteImport.update({
   id: '/records/',
   path: '/records/',
@@ -292,7 +280,6 @@ export interface FileRoutesByFullPath {
   '/app/lenses/timeline': typeof AppLensesTimelineRoute
   '/app/milestones/$milestoneId': typeof AppMilestonesMilestoneIdRoute
   '/app/operations/studio': typeof AppOperationsStudioRouteWithChildren
-  '/app/portfolio/$problemId': typeof AppPortfolioProblemIdRoute
   '/app/repairs/$repairId': typeof AppRepairsRepairIdRoute
   '/app/repairs/new': typeof AppRepairsNewRoute
   '/app/risks/$riskId': typeof AppRisksRiskIdRoute
@@ -301,7 +288,6 @@ export interface FileRoutesByFullPath {
   '/app/campaigns/': typeof AppCampaignsIndexRoute
   '/app/decisions/': typeof AppDecisionsIndexRoute
   '/app/operations/': typeof AppOperationsIndexRoute
-  '/app/portfolio/': typeof AppPortfolioIndexRoute
   '/app/records/': typeof AppRecordsIndexRoute
   '/app/repairs/': typeof AppRepairsIndexRoute
   '/app/settings/': typeof AppSettingsIndexRoute
@@ -335,7 +321,6 @@ export interface FileRoutesByTo {
   '/app/lenses/timeline': typeof AppLensesTimelineRoute
   '/app/milestones/$milestoneId': typeof AppMilestonesMilestoneIdRoute
   '/app/operations/studio': typeof AppOperationsStudioRouteWithChildren
-  '/app/portfolio/$problemId': typeof AppPortfolioProblemIdRoute
   '/app/repairs/$repairId': typeof AppRepairsRepairIdRoute
   '/app/repairs/new': typeof AppRepairsNewRoute
   '/app/risks/$riskId': typeof AppRisksRiskIdRoute
@@ -344,7 +329,6 @@ export interface FileRoutesByTo {
   '/app/campaigns': typeof AppCampaignsIndexRoute
   '/app/decisions': typeof AppDecisionsIndexRoute
   '/app/operations': typeof AppOperationsIndexRoute
-  '/app/portfolio': typeof AppPortfolioIndexRoute
   '/app/records': typeof AppRecordsIndexRoute
   '/app/repairs': typeof AppRepairsIndexRoute
   '/app/settings': typeof AppSettingsIndexRoute
@@ -380,7 +364,6 @@ export interface FileRoutesById {
   '/app/lenses/timeline': typeof AppLensesTimelineRoute
   '/app/milestones/$milestoneId': typeof AppMilestonesMilestoneIdRoute
   '/app/operations/studio': typeof AppOperationsStudioRouteWithChildren
-  '/app/portfolio/$problemId': typeof AppPortfolioProblemIdRoute
   '/app/repairs/$repairId': typeof AppRepairsRepairIdRoute
   '/app/repairs/new': typeof AppRepairsNewRoute
   '/app/risks/$riskId': typeof AppRisksRiskIdRoute
@@ -389,7 +372,6 @@ export interface FileRoutesById {
   '/app/campaigns/': typeof AppCampaignsIndexRoute
   '/app/decisions/': typeof AppDecisionsIndexRoute
   '/app/operations/': typeof AppOperationsIndexRoute
-  '/app/portfolio/': typeof AppPortfolioIndexRoute
   '/app/records/': typeof AppRecordsIndexRoute
   '/app/repairs/': typeof AppRepairsIndexRoute
   '/app/settings/': typeof AppSettingsIndexRoute
@@ -426,7 +408,6 @@ export interface FileRouteTypes {
     | '/app/lenses/timeline'
     | '/app/milestones/$milestoneId'
     | '/app/operations/studio'
-    | '/app/portfolio/$problemId'
     | '/app/repairs/$repairId'
     | '/app/repairs/new'
     | '/app/risks/$riskId'
@@ -435,7 +416,6 @@ export interface FileRouteTypes {
     | '/app/campaigns/'
     | '/app/decisions/'
     | '/app/operations/'
-    | '/app/portfolio/'
     | '/app/records/'
     | '/app/repairs/'
     | '/app/settings/'
@@ -469,7 +449,6 @@ export interface FileRouteTypes {
     | '/app/lenses/timeline'
     | '/app/milestones/$milestoneId'
     | '/app/operations/studio'
-    | '/app/portfolio/$problemId'
     | '/app/repairs/$repairId'
     | '/app/repairs/new'
     | '/app/risks/$riskId'
@@ -478,7 +457,6 @@ export interface FileRouteTypes {
     | '/app/campaigns'
     | '/app/decisions'
     | '/app/operations'
-    | '/app/portfolio'
     | '/app/records'
     | '/app/repairs'
     | '/app/settings'
@@ -513,7 +491,6 @@ export interface FileRouteTypes {
     | '/app/lenses/timeline'
     | '/app/milestones/$milestoneId'
     | '/app/operations/studio'
-    | '/app/portfolio/$problemId'
     | '/app/repairs/$repairId'
     | '/app/repairs/new'
     | '/app/risks/$riskId'
@@ -522,7 +499,6 @@ export interface FileRouteTypes {
     | '/app/campaigns/'
     | '/app/decisions/'
     | '/app/operations/'
-    | '/app/portfolio/'
     | '/app/records/'
     | '/app/repairs/'
     | '/app/settings/'
@@ -727,20 +703,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOperationsStudioRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/portfolio/': {
-      id: '/app/portfolio/'
-      path: '/portfolio'
-      fullPath: '/app/portfolio/'
-      preLoaderRoute: typeof AppPortfolioIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/portfolio/$problemId': {
-      id: '/app/portfolio/$problemId'
-      path: '/portfolio/$problemId'
-      fullPath: '/app/portfolio/$problemId'
-      preLoaderRoute: typeof AppPortfolioProblemIdRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/records/': {
       id: '/app/records/'
       path: '/records'
@@ -883,7 +845,6 @@ interface AppRouteChildren {
   AppLensesTimelineRoute: typeof AppLensesTimelineRoute
   AppMilestonesMilestoneIdRoute: typeof AppMilestonesMilestoneIdRoute
   AppOperationsStudioRoute: typeof AppOperationsStudioRouteWithChildren
-  AppPortfolioProblemIdRoute: typeof AppPortfolioProblemIdRoute
   AppRepairsRepairIdRoute: typeof AppRepairsRepairIdRoute
   AppRepairsNewRoute: typeof AppRepairsNewRoute
   AppRisksRiskIdRoute: typeof AppRisksRiskIdRoute
@@ -892,7 +853,6 @@ interface AppRouteChildren {
   AppCampaignsIndexRoute: typeof AppCampaignsIndexRoute
   AppDecisionsIndexRoute: typeof AppDecisionsIndexRoute
   AppOperationsIndexRoute: typeof AppOperationsIndexRoute
-  AppPortfolioIndexRoute: typeof AppPortfolioIndexRoute
   AppRecordsIndexRoute: typeof AppRecordsIndexRoute
   AppRepairsIndexRoute: typeof AppRepairsIndexRoute
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
@@ -921,7 +881,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppLensesTimelineRoute: AppLensesTimelineRoute,
   AppMilestonesMilestoneIdRoute: AppMilestonesMilestoneIdRoute,
   AppOperationsStudioRoute: AppOperationsStudioRouteWithChildren,
-  AppPortfolioProblemIdRoute: AppPortfolioProblemIdRoute,
   AppRepairsRepairIdRoute: AppRepairsRepairIdRoute,
   AppRepairsNewRoute: AppRepairsNewRoute,
   AppRisksRiskIdRoute: AppRisksRiskIdRoute,
@@ -930,7 +889,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppCampaignsIndexRoute: AppCampaignsIndexRoute,
   AppDecisionsIndexRoute: AppDecisionsIndexRoute,
   AppOperationsIndexRoute: AppOperationsIndexRoute,
-  AppPortfolioIndexRoute: AppPortfolioIndexRoute,
   AppRecordsIndexRoute: AppRecordsIndexRoute,
   AppRepairsIndexRoute: AppRepairsIndexRoute,
   AppSettingsIndexRoute: AppSettingsIndexRoute,

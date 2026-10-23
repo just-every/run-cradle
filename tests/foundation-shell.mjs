@@ -7,6 +7,8 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { chromium } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
+import {verifySignInForward} from './helpers/sign-in-forward-journey.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 
@@ -33,7 +35,7 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
     assert.ok(applications.data.items.length > 0, 'Current launch authority exposes its real schema')
     const campaigns = await json('/api/campaigns'), risks = await json('/api/risks/lens'), milestones = await json('/api/milestones/timeline'), decisions = await json('/api/decisions')
     const routes = ['/app', '/app/records', '/app/operations/studio', '/app/overview', '/app/campaigns', `/app/campaigns/${campaigns.items[0].id}`, '/app/lenses/risks', `/app/risks/${risks.items[0].id}`, '/app/lenses/timeline', `/app/milestones/${milestones.items[0].id}`, '/app/lenses/new', '/app/decisions', `/app/decisions/${decisions.items[0].id}`, '/app/automations', '/app/notifications', '/app/search', '/app/settings', '/app/operations', '/app/repairs']
-    browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {})
+    browser = await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
     await mkdir(output, { recursive: true })
     for (const width of [1440, 390]) {
       const context = await browser.newContext({ viewport: { width, height: 960 } })
@@ -66,9 +68,13 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
         await page.screenshot({ path: path.join(output, file), type: 'jpeg', fullPage: true, quality: 75 })
         receipt.routes.push({ route, width, file, status: response.status(), overflow: false })
       }
-      for (const route of ['/unknown-foundation-route', '/app/unknown-foundation-route']) {
+      await verifySignInForward({browser,context,origin,width,output})
+      for (const route of ['/unknown-foundation-route', '/app/unknown-foundation-route', '/app/portfolio', '/app/portfolio/01AAAAAAAAAAAAAAAAAAAAAAAA']) {
         assert.equal((await page.goto(`${origin}${route}`)).status(), 404)
         await page.getByRole('heading', { name: 'Page not found', exact: true }).waitFor()
+        assert.equal(await page.getByText(/No API route/).count(),0)
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
+        const audit=await new AxeBuilder({page}).analyze();assert.deepEqual(audit.violations.filter(v=>['serious','critical'].includes(v.impact)),[])
         await page.screenshot({ path: path.join(output, `404-${route.startsWith('/app') ? 'private' : 'public'}-${width}.jpg`), type: 'jpeg', quality: 75 })
       }
       await context.close()
