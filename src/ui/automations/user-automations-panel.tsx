@@ -1,5 +1,4 @@
 import {automationTriggerLabel} from '../../domains/automations/trigger-label'
-import '../shared/automation-alert-tooltips.css'
 import '../records/records.css'
 import { useEffect,useState } from 'react'
 import type { Page } from '../../contracts/primitives'

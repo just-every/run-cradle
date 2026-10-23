@@ -1,5 +1,7 @@
 /* Form fields: labels above, 44px inputs, 20px checkboxes and radios whose row is the target. */
 .cr-form { min-width: 0; }
+/* A form's own button keeps the rhythm after rows and lists; fields and notices bring their own space. */
+.cr-form > :not(.cr-field, .cr-actions, .cr-notice) + .cr-button { margin-top: 16px; }
 .cr-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin-bottom: 20px; color: var(--ink); font-size: 14px; font-weight: 600; }
 .cr-field label, .cr-field legend { color: var(--ink); font-size: 14px; font-weight: 600; line-height: 1.3; }
 .cr-field small { color: var(--muted); font-size: 13px; font-weight: 400; }

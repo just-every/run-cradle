@@ -2,7 +2,9 @@ import { useDocumentSession } from '../../document-context'
 import { OperatorNavigation, LaunchNavigation, UtilityNavigation } from './operator-navigation'
 import type { Item } from './operator-navigation'
 import { OperatorIcon } from './operator-icon'
+import { OwnerMenu } from './owner-menu'
 import { cycleModalFocus } from '../../../../ui/modal-focus'
+import { Tooltip } from '../../../../ui/shared/tooltip'
 import { BrandLockup } from '../brand-lockup'
 import { Link } from '@tanstack/react-router';
 import {
@@ -78,15 +80,7 @@ const OperatorRail = ({
     />
     {showLaunch && <LaunchNavigation items={launch} currentPath={currentPath} onNavigate={onNavigate} />}
     <UtilityNavigation items={utilities} currentPath={currentPath} unreadNotifications={identity.unreadNotifications} onNavigate={onNavigate} />
-    <div className="operator-rail-footer">
-      <span className="operator-avatar" aria-hidden="true">
-        {identity.initials}
-      </span>
-      <span className="operator-account-copy">
-        <strong>{identity.name}</strong>
-        <small>{identity.workspaceName}</small>
-      </span>
-    </div>
+    <OwnerMenu owner={identity} />
   </div>
 );
 }
@@ -123,33 +117,25 @@ export const OperatorShell = ({
         <OperatorRail currentPath={currentPath} identity={identity} />
       </aside>
       <header className="operator-mobile-header">
-        <button
+        <Tooltip label="Open navigation"><button
           ref={menuButton}
           className="operator-menu-button"
           type="button"
-          aria-label="Open navigation"
           aria-expanded={drawerOpen}
           onClick={() => setDrawerOpen(true)}
         >
           <span />
           <span />
           <span />
-          <span className="operator-record-tooltip" role="tooltip">Open navigation</span>
-        </button>
+        </button></Tooltip>
         <Link className="operator-mobile-brand" to="/app">
           <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
         </Link>
-        <Link
+        <Tooltip label={identity.unreadNotifications ? `${identity.unreadNotifications} unread notifications` : "No unread notifications"}><Link
           className="operator-mobile-bell"
           to="/app/notifications"
-          aria-label={
-            identity.unreadNotifications
-              ? `${identity.unreadNotifications} unread notifications`
-              : "Notifications"
-          }
         >
           <OperatorIcon name="bell" />
-          <span className="operator-record-tooltip" role="tooltip">Notifications</span>
           {identity.unreadNotifications ? (
             <b>
               {identity.unreadNotifications > 99
@@ -157,7 +143,7 @@ export const OperatorShell = ({
                 : identity.unreadNotifications}
             </b>
           ) : null}
-        </Link>
+        </Link></Tooltip>
       </header>
       <main id="main-content" tabIndex={-1} className="operator-main">
         {title || actions ? (
@@ -172,19 +158,17 @@ export const OperatorShell = ({
             ) : null}
           </header>
         ) : null}
-        {children}
+        <div className="operator-content">{children}</div>
       </main>
       <dialog ref={drawer} className="operator-drawer" aria-label="Navigation" onCancel={() => setDrawerOpen(false)} onClose={() => setDrawerOpen(false)}>
         <div className="operator-drawer-header">
           <span>Navigation</span>
-          <button
+          <Tooltip label="Close navigation"><button
             type="button"
             onClick={() => setDrawerOpen(false)}
-            aria-label="Close navigation"
           >
             ×
-            <span className="operator-record-tooltip" role="tooltip">Close navigation</span>
-          </button>
+          </button></Tooltip>
         </div>
         <OperatorRail
           currentPath={currentPath}

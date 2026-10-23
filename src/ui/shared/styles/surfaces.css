@@ -39,6 +39,9 @@
 .cr-detail > :last-child:not(summary) { margin-bottom: 20px; }
 .cr-detail a { display: inline-flex; align-items: center; max-width: 100%; min-height: 28px; overflow-wrap: anywhere; }
 .cr-detail p { overflow-wrap: anywhere; }
+/* A .cr-detail section without a summary holds its own heading inside the frame. */
+section.cr-detail { padding-top: 20px; }
+section.cr-detail > :is(h2, h3, h4) { margin-inline: 20px; }
 
 .cr-dialog { width: min(720px, calc(100vw - 32px)); max-height: 90dvh; padding: 28px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); color: var(--foreground); box-shadow: var(--shadow); }
 .cr-dialog::backdrop { background: #102c2490; }
