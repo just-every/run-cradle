@@ -32,11 +32,12 @@ export async function readCalendarChanges(db:D1Database,ctx:RequestContext,id:st
 }
 /** Provider-confirmed settlement advances the binding in the same admission as its receipt. */
 export async function calendarSettlement(db:D1Database,r:EffectRequest,result:ProviderResult,attemptId:string):Promise<{guards:ReturnType<typeof trustedPredicate>[];mutations:SqlMutation[]}> {
- const b=r.calendarBinding;if(!b||result.state!=='confirmed')return {guards:[],mutations:[]}
+ const b=r.calendarBinding;if(!b)return {guards:[],mutations:[]}
  const event=await db.prepare('SELECT id FROM record_calendar_events WHERE definition_id=? AND record_id=? AND generation=? AND attempt_id=?').bind(b.definitionId,b.recordId,b.generation,attemptId).first<{id:string}>()
  // Retried attempts keep the immutable key; their original attempt binding remains valid.
  const row=event??await db.prepare('SELECT e.id FROM record_calendar_events e JOIN execution_attempts original ON original.id=e.attempt_id JOIN execution_attempts current ON current.id=? AND current.run_id=original.run_id WHERE e.definition_id=? AND e.record_id=? AND e.generation=?').bind(attemptId,b.definitionId,b.recordId,b.generation).first<{id:string}>()
  if(!row)throw new AdmissionError('forbidden','Calendar event settlement lost its generation binding.')
+ if(result.state!=='confirmed')return {guards:[],mutations:[{kind:'update',table:events,set:{state:result.state,updated_at:new Date().toISOString()},where:eq(events,'id',row.id),expectedRows:1}]}
  const value=result.value as {etag?:string|null}
  return {guards:[],mutations:[{kind:'update',table:events,set:{state:b.operation==='cancel'?'cancelled':'synced',event_id:result.externalId??null,etag:value.etag??null,updated_at:new Date().toISOString()},where:eq(events,'id',row.id),expectedRows:1}]}
 }

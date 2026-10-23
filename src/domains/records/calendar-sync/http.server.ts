@@ -1,3 +1,5 @@
+import {errorResponse} from '../../../core/registry/errors.server'
+import {createUlid} from '../../../core/shared/ids'
 import {Hono} from 'hono'
 import {z} from 'zod'
 import {idSchema} from '../validators'
@@ -6,6 +8,7 @@ import {AdmissionError} from '../../admission/errors'
 import type {RequestContext} from '../../authority/ports'
 import type {createRecordCalendarSync} from './service.server'
 export function recordCalendarSyncHttp(service:ReturnType<typeof createRecordCalendarSync>,authenticate:(request:Request)=>Promise<RequestContext>){const app=new Hono()
+ app.onError(error=>errorResponse(error,createUlid(),'Record calendar sync'))
  app.all('*',async c=>{const ctx=await authenticate(c.req.raw),url=new URL(c.req.url),reply=(data:unknown)=>c.json({data,meta:{requestId:ctx.requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now}},200,{'cache-control':'no-store'})
   if(c.req.method!=='GET'&&c.req.header('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin request is required.')
   const path=url.pathname.replace('/api/v1/record-calendar-sync',''),id=(s:string)=>idSchema.parse(s)
