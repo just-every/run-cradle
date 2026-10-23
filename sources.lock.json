@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e3281f1f0f7c94820757653ec2856c1c07424c37b9270fd92c4c054f7c4f1cc5",
+      "sha256": "26e0d834b53a8ce04a83f873acc3a390ac13aaa29e81a92a93ab42b1f63643a2",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6f067a5e3998f9ba835fb2daa528f3cedf92695a40d1ed8609747f22ee617f58",
+      "sha256": "09d37c8c6737de5547ba612d0b7ec731e841c30c4ae2fbcfd50f849c1b594078",
       "executable": false
     },
     "DEMO.md": {
@@ -3047,6 +3047,10 @@
     },
     "docs/contract-transition.md": {
       "sha256": "9632c274699f23f636bfc55578062dd86371d5a6dd69c3f82e330f4683e5cb72",
+      "executable": false
+    },
+    "docs/contract/API-USER-002/README.md": {
+      "sha256": "fe2a78bdbdf28d974c752276b43340c1b61e3feddf1472096f592bdae8da158c",
       "executable": false
     },
     "docs/contract/AUTO-USER-002/README.md": {
@@ -6122,7 +6126,7 @@
       "executable": false
     },
     "src/core/app/application.ts": {
-      "sha256": "302df7d79e7f9bad2c72c74e3892d85d3a1cd7c0b6b1f1ea63084ec406e363c2",
+      "sha256": "087e541ec5f3446404c5680646f03d6b7d3859da31e398e15449eee5bb7c4626",
       "executable": false
     },
     "src/core/app/composition/admission-wake.server.ts": {
@@ -6174,7 +6178,7 @@
       "executable": false
     },
     "src/core/app/composition/records.server.ts": {
-      "sha256": "a3dc6e2743028039459eefcef9d0010d255eec77a4b13b6e955b89c1efab38e3",
+      "sha256": "d380b1d2e918aa71dabc0fdd2d5b0e69ffaa91be9890febac6709fc9a78c83c8",
       "executable": false
     },
     "src/core/app/composition/repair-intake.server.ts": {
@@ -7574,11 +7578,11 @@
       "executable": false
     },
     "src/domains/authority/user-delegation.server.ts": {
-      "sha256": "d71a23194b147648b3c05f7fef4ef97de5a6b1d6b0e89928920e5bf5d4f8007c",
+      "sha256": "11daf222e64c04a883025357c0e45208b8caa0f19eee2e39bb3b5a5f16ea3491",
       "executable": false
     },
     "src/domains/authority/user-keys-http.server.ts": {
-      "sha256": "a7251a24adc5f54cf9fd3d7111ee6d277197ef8d84bb4cbcf6434ba10dc6b53f",
+      "sha256": "3ce34744e4bc2386a4c2ac5f661cd4da9c9113122515e305908e301dc6a7d6e3",
       "executable": false
     },
     "src/domains/authority/user-keys.server.ts": {
@@ -9445,8 +9449,20 @@
       "sha256": "a40bab984049c33f828d494d9a7d1fedb7873cfc2fb6b3a2680867a8b8e85d2f",
       "executable": false
     },
+    "src/domains/records/rest/contracts.ts": {
+      "sha256": "e65ce98e49c31a0042f93b0fc13124a0f3d46f71c38f2b49ee217d074b6226cb",
+      "executable": false
+    },
+    "src/domains/records/rest/openapi.ts": {
+      "sha256": "c8a54cc4a48adf83e4495f467b07b709d207dfbc88a76444ee7de60c41d9100a",
+      "executable": false
+    },
+    "src/domains/records/rest/service.server.ts": {
+      "sha256": "baddf14271d1ee886ee6fc0655ddee4f5d98d637d782cb079811ec74b8ca56cf",
+      "executable": false
+    },
     "src/domains/records/routes.server.ts": {
-      "sha256": "637164847886c5ba0575a33e1eabf52d86d3e0f7155b06a45671febdd9d003a4",
+      "sha256": "1d71a7707433c73ff934c41bfe957f580e9687e9ec001934d058707c30e31a10",
       "executable": false
     },
     "src/domains/records/schema.ts": {
@@ -12013,6 +12029,10 @@
       "sha256": "bd06799f762acd49317a804f15a65e1e48ec476bdd295bb01b2fbde1a3e19363",
       "executable": false
     },
+    "tests/helpers/rest-api-journey.mjs": {
+      "sha256": "aa71e0e3a8bede1a75b82c2091ddca89b18a91002e4027e408f19037950238c8",
+      "executable": false
+    },
     "tests/helpers/saml-provider.mjs": {
       "sha256": "c9938bbb11927a1f7b743ec0b18906f8ae3d03b1c0bbe7c4b90dceac58cd4c3d",
       "executable": false
@@ -12522,7 +12542,7 @@
       "executable": false
     },
     "tests/user-api-keys.mjs": {
-      "sha256": "8f0251a78528efeec369b4fa1bb3552a0b8b38e8da70636c4847b5cd487c35fa",
+      "sha256": "590eff66efa887bd9b6e8ebe1e22e313e02279f4215bedbc3db6af9cf5d56b7f",
       "executable": false
     },
     "tests/user-automations.mjs": {
