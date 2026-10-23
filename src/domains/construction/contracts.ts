@@ -15,3 +15,8 @@ export const improvementEntityId='00000000000000000000001150';
 export type AdoptionReview={candidateId:Id;expected:{ref:{appId:Id;entityId:Id;recordId:Id};version:number};sourceHash:string;parentReleaseId:Id|null;fieldLabels:Record<string,string>;choices:{id:string;label:string;decisionId:Id|null;releaseGrantId:Id|null}[];allowed:boolean;blockers:string[]};
 
 export type SourceIntakeResult={subject:import('../../contracts/primitives').RevisionRef;fieldIds:Id[]};
+/** What building a new application still needs on this installation (GET /api/v1/construction/readiness). */
+export type ConstructionNeed='authority'|'model'|'runner';
+export type ConstructionReadiness={ready:boolean;missing:ConstructionNeed[]};
+export const constructionNeedLabels:Record<ConstructionNeed,string>={authority:'permission to add applications',model:'an AI model',runner:'a build service'};
+export const constructionNeedsText=(missing:ConstructionNeed[])=>missing.map(need=>constructionNeedLabels[need]).join(', ').replace(/, ([^,]*)$/,' and $1');
