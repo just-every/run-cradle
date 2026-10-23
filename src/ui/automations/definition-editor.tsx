@@ -1,3 +1,4 @@
+import {AutomationControlSummary} from './control-summary'
 import { useState,type FormEvent } from 'react'
 import type { EntitySchema } from '../../domains/records/contracts'
 import type { RecordAutomationDefinition } from '../../domains/automations/contracts'
@@ -7,7 +8,7 @@ import { ResourceState } from '../shared/presentation'
 import {AutomationTestPanel} from './test-panel'
 import { AutomationActionEditor } from './action-editor'
 export type SavedAutomation={id:string;version:number;definitionVersion:number;definition:RecordAutomationDefinition;expiresAt:string|null}
-export function AutomationDefinitionEditor({appId,entity,existing,onSaved,onCancel}:{appId:string;entity:EntitySchema;
+function FlatAutomationDefinitionEditor({appId,entity,existing,onSaved,onCancel}:{appId:string;entity:EntitySchema;
  existing?:SavedAutomation;onSaved:()=>void;onCancel:()=>void}) {
  const [definition,setDefinition]=useState<RecordAutomationDefinition>(existing?.definition??{
   name:'',appId,entityId:entity.id,event:'created',enabled:true,actions:[{kind:'notify',operatorId:'',title:'A record was created'}]})
@@ -41,3 +42,5 @@ export function AutomationDefinitionEditor({appId,entity,existing,onSaved,onCanc
   <div className="cr-toolbar"><button className="cr-button" disabled={busy||recipients.resource.state!=='ready'}>{busy?'Saving…':'Save automation'}</button><button className="cr-button cr-button--quiet" type="button" onClick={onCancel} disabled={busy}>Cancel</button></div>
  </form>
 }
+
+export function AutomationDefinitionEditor(props:Parameters<typeof FlatAutomationDefinitionEditor>[0]){return props.existing&&(props.existing.definition.steps||props.existing.definition.actions.some(action=>action.when))?<AutomationControlSummary definition={props.existing.definition} onClose={props.onCancel}/>:<FlatAutomationDefinitionEditor {...props}/>}

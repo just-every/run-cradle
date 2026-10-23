@@ -1,3 +1,5 @@
+import {automationItemHistory} from './control-history.server'
+import {automationDefinitionActions} from './control-contracts'
 import {automationFailureCause,automationRunLink,safeAutomationRetry} from './failure-details'
 import type { PolicyPort,RequestContext } from '../authority/ports'
 import type { DescriptorRegistry } from '../records/descriptors.server'
@@ -22,7 +24,7 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
    for(const row of rows.results){
     const definition=recordAutomationDefinition.parse(JSON.parse(row.definition_json))
     const scope=await policy.scope(ctx,{appId,entityId:definition.entityId,purpose:'read'})
-    if(definition.actions.some(action=>action.kind==='update'&&!scope.writableFieldIds.includes(action.fieldId)))continue
+    if(automationDefinitionActions(definition).some(action=>action.kind==='update'&&!scope.writableFieldIds.includes(action.fieldId)))continue
     const current=and(...scope.currentAuthorityGuards)
     if(!await db.prepare(`SELECT 1 WHERE ${current.sql}`).bind(...current.values).first())continue
     result.push({id:row.id,version:row.version,definitionVersion:row.definition_version,
@@ -37,9 +39,9 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
    const owner=await ownerDelegationSnapshot(db,ctx,binding.app_id),scope=await policy.scope(ctx,{appId:binding.app_id,entityId:binding.entity_id,purpose:'read'})
    const descriptor=descriptors.get(binding.app_id,binding.entity_id),guard=and(owner.guard,...principalGuards(ctx),...scope.currentAuthorityGuards)
    const subject=trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(descriptor.table.tableId)} WHERE ${identifier(descriptor.idColumn)}=run.subject_id AND (${scope.rowPredicate.sql}))`,scope.rowPredicate.values)
-   const rows=await db.prepare(`SELECT run.id,run.definition_version,run.subject_id,run.state,run.queued_at,run.started_at,run.finished_at,run.error_code
+   const rows=await db.prepare(`SELECT run.id,run.definition_version,run.subject_id,run.state,run.queued_at,run.started_at,run.finished_at,run.error_code,run.error_message,run.definition_json
     FROM automation_runs run WHERE run.automation_id=? AND (${guard.sql}) AND (${subject.sql}) ORDER BY run.queued_at DESC LIMIT 100`)
-    .bind(id,...guard.values,...subject.values).all<{id:string;definition_version:number;subject_id:string;state:string;queued_at:number;started_at:number|null;finished_at:number|null;error_code:string|null}>()
+    .bind(id,...guard.values,...subject.values).all<{id:string;definition_version:number;subject_id:string;state:string;queued_at:number;started_at:number|null;finished_at:number|null;error_code:string|null;error_message:string|null;definition_json:string}>()
    const result=[]
    for(const run of rows.results){
     const actions=await db.prepare(`SELECT position,state,error_code,result_json FROM launch_automation_actions WHERE run_id=? AND (${guard.sql}) ORDER BY position`)
@@ -58,8 +60,9 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
      return {position:action.position,state:heldUntil?'Held':action.state,error_code:action.error_code,heldUntil:heldUntil??null}
     })
     const held=visibleActions.find(action=>action.heldUntil)
+    const items=await automationItemHistory(db,ctx,scope,descriptor,guard,run.definition_json,visibleActions)
     const retryable=safeAutomationRetry(run.state,run.error_code)&&!!await db.prepare('SELECT 1 FROM automations WHERE id=? AND enabled=1').bind(id).first()&&(run.error_code!=='delivery_retryable'||!!await db.prepare("SELECT 1 FROM integration_deliveries d JOIN launch_automation_actions a ON a.id=d.id WHERE a.run_id=? AND a.state='Failed' AND d.state='rejected' AND d.attempts<6").bind(run.id).first())
-    result.push({cause:automationFailureCause(run.error_code),href:automationRunLink(binding.app_id,id,run.id),retryable,id:run.id,definitionVersion:run.definition_version,recordId:run.subject_id,recordLabel,state:held&&['Queued','Running'].includes(run.state)?'Held':run.state,
+    result.push({items,cause:run.error_message??automationFailureCause(run.error_code),href:automationRunLink(binding.app_id,id,run.id),retryable,id:run.id,definitionVersion:run.definition_version,recordId:run.subject_id,recordLabel,state:held&&['Queued','Running'].includes(run.state)?'Held':run.state,
      heldUntil:held?.heldUntil??null,
      queuedAt:new Date(run.queued_at).toISOString(),startedAt:run.started_at===null?null:new Date(run.started_at).toISOString(),
      finishedAt:run.finished_at===null?null:new Date(run.finished_at).toISOString(),errorCode:run.error_code,actions:visibleActions})

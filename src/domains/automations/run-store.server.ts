@@ -67,6 +67,8 @@ export function createAutomationRunStore(db:D1Database,clock=()=>new Date()) {
    return (await db.prepare('SELECT id,position,state,idempotency_key,started_at,result_json FROM launch_automation_actions WHERE run_id=? ORDER BY position')
     .bind(runId).all<AutomationActionRun>()).results
   },
+  async reject(id:string,code:string){await db.prepare("UPDATE launch_automation_actions SET state='Failed',error_code=?,finished_at=? WHERE id=? AND state='Pending'").bind(code,clock().getTime(),id).run()},
+  async skip(id:string,reason:string){await db.prepare("UPDATE launch_automation_actions SET state='Skipped',result_json=?,finished_at=? WHERE id=? AND state='Pending'").bind(JSON.stringify({reason}),clock().getTime(),id).run()},
   async hold(actionId:string,until:number) {
    await db.prepare("UPDATE launch_automation_actions SET result_json=? WHERE id=? AND state='Pending'")
     .bind(JSON.stringify({heldUntil:new Date(until).toISOString()}),actionId).run()
@@ -85,10 +87,10 @@ export function createAutomationRunStore(db:D1Database,clock=()=>new Date()) {
    await db.prepare(`UPDATE launch_automation_actions SET state=?,result_json=?,error_code=?,finished_at=?
     WHERE id=? AND state='Running'`).bind(state,JSON.stringify(result),errorCode,clock().getTime(),id).run()
   },
-  async finish(runId:string,state:'Complete'|'Failed'|'Unknown'|'Cancelled',errorCode:string|null=null) {
+  async finish(runId:string,state:'Complete'|'Failed'|'Unknown'|'Cancelled'|'Partial',errorCode:string|null=null,errorMessage:string|null=null) {
    const now=clock().getTime()
-   await db.prepare(`UPDATE automation_runs SET state=?,error_code=?,finished_at=?,updated_at=?,version=version+1
-    WHERE id=? AND state IN ('Queued','Running')`).bind(state,errorCode,now,now,runId).run()
+   await db.prepare(`UPDATE automation_runs SET state=?,error_code=?,error_message=?,finished_at=?,updated_at=?,version=version+1
+    WHERE id=? AND state IN ('Queued','Running')`).bind(state,errorCode,errorMessage,now,now,runId).run()
   },
  }
 }
