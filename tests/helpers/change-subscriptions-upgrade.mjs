@@ -63,12 +63,19 @@ export async function changeSubscriptionsUpgrade(edge){
   const key=(await request('/api/user-keys',{method:'POST',status:201,body:{commandId:createUlid(),appId,entityId,name:'synthetic-cradle-87',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}})).key
   const root='/api/v1/change-subscriptions'
   const subscription=await request(root,{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId,entityId,url:edge.receiverOrigin+'/changes-upgrade'}})
-  const page=(cursor,limit=200)=>request(`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`,{secret:key.secret})
+  const page=(cursor,limit=200,through)=>request(`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}${through?'&through='+encodeURIComponent(through):''}`,{secret:key.secret})
   // A new subscription starts at the current head. The production signing
   // codec is the fixture seam for reading its retained pre-upgrade range;
   // authentication, projection, window capture and replay stay real HTTP.
   const historyCursor=await createCursorCodec(sessionSecret).encode({binding:subscription.id+':upgrade-history',revision:Date.now(),offset:0})
-  const history=await page(historyCursor)
+  // The migration-only window ends before the later real schema adoption.
+  // A separate range containing that adoption must use the new generic marker.
+  const codec=createCursorCodec(sessionSecret),historicalThrough=await codec.encode({binding:subscription.id+':upgrade-through',revision:Date.now(),offset:historical.audits.at(-1).rowid})
+  const history=await page(historyCursor,200,historicalThrough)
+  const adoptionCursor=await codec.encode({binding:subscription.id+':upgrade-adoption',revision:Date.now(),offset:0})
+  const adoptionRange=await page(adoptionCursor)
+  assert.deepEqual(adoptionRange.items,[],'An upgraded range containing schema adoption exposes no record facts')
+  assert.equal(adoptionRange.resyncRequired.code,'resync_required')
   assert.deepEqual(history.items.map(item=>[item.id,item.sequence,item.kind,item.recordId]),historical.audits.map(row=>[row.id,row.rowid,'delete',row.recordId]),'Migrated old audit facts reach the public feed in prior commit order, despite inverse lexical IDs')
   async function create(name){
    const result=await request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}],input:{appId,entityId,values:{[fieldId]:name}}}})
