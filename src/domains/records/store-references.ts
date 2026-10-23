@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { portableStoreSchema,storeDigestSchema } from './portable-store-references';
+import { portableStoreSchema,storeDigestSchema,canonicalStoreJson } from './portable-store-references';
 import type { AttachmentMember, StoreReference } from '../../contracts/primitives';
 
 import {storeProviders,storeLinkAllowed} from './store-reference-links';
@@ -16,7 +16,7 @@ export const attachmentMemberSchema = z.union([z.object({ fileId: idSchema }).st
 export const isStoreReferenceMember = (value: unknown): value is { reference: StoreReference } => !!value && typeof value === 'object' && 'reference' in value;
 const canonicalKeys = ['provider', 'itemId', 'name', 'mediaType', 'size', 'modifiedAt', 'link', 'connectionId', 'attachedBy'] as const;
 /** The join-table value of a reference: canonical JSON, so a ULID file id and a reference never collide. */
-export const referenceValue = (reference: StoreReference): string => JSON.stringify({...Object.fromEntries(canonicalKeys.map(key => [key, reference[key]])),...Object.fromEntries(['account','digest','attachedAt','portable','resolution'].filter(key=>Object.hasOwn(reference,key)).map(key=>[key,reference[key as keyof StoreReference]]))});
+export const referenceValue = (reference: StoreReference): string => JSON.stringify({...Object.fromEntries(canonicalKeys.map(key => [key, reference[key]])),...Object.fromEntries(['account','digest','attachedAt','portable','resolution'].filter(key=>Object.hasOwn(reference,key)).map(key=>[key,key==='portable'||key==='digest'?JSON.parse(canonicalStoreJson(reference[key as keyof StoreReference])):reference[key as keyof StoreReference]]))});
 export const isReferenceValue = (stored: string) => stored.startsWith('{');
 export function attachmentMember(stored: string): AttachmentMember {
   return isReferenceValue(stored) ? { reference: storeReferenceSchema.parse(JSON.parse(stored)) } : { fileId: stored };
