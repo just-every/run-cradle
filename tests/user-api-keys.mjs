@@ -6,7 +6,7 @@ import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
 contract('API-USER-001','[WEBHOOK-USER-002] scoped subscription credentials and record reads/writes stop on revoke and issuer policy change',async()=>{
- const h=await userAutomationRuntime(18951,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-1'}})
+ const h=await userAutomationRuntime(0,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-1'}})
  try {
   const record=(await h.create('Key acceptance')).record
   const issue={commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'Read service',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}

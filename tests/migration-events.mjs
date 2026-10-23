@@ -6,23 +6,23 @@ import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { emittedRuntime } from './helpers/emitted-runtime.mjs'
-import {createFixtureMail} from './helpers/fixture-mail.mjs'
+import {emittedMailRuntime} from './helpers/emitted-mail-runtime.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
 import { expiredToken, revokedToken, authoritySessionControlsSql } from './helpers/session-controls.mjs'
 import { contract } from './contract.mjs'
-import {freePort} from './helpers/free-port.mjs'
 
 contract('BASE-OPS-004','emitted event exports preserve durable failure state without external sending',async(context)=>{
-  const directory=await mkdtemp(path.join(tmpdir(),'cradle-events-')),port=Number(process.env.CRADLE_TEST_PORT ?? await freePort())
+  const directory=await mkdtemp(path.join(tmpdir(),'cradle-events-'))
+  let port=Number(process.env.CRADLE_TEST_PORT ?? 0)
   let runtime,mail,outbound=0
   const networkEdge=()=>{outbound++;throw new Error('Event regression prohibits external sending')}
   const bindings={APP_ORIGIN:`http://127.0.0.1:${port}`,AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long'}
   try {
-    mail=await createFixtureMail(port,networkEdge)
     const migration=spawnSync(process.execPath, ['scripts/migrate-local.mjs', '--persist-to', directory],{encoding:'utf8',maxBuffer:16*1024*1024})
     assert.equal(migration.status,0,migration.stderr||migration.stdout)
     const member=await installLegacyFixture(directory)
-    runtime=await emittedRuntime(directory,port,{...bindings,...mail.bindings},mail.fetch)
+    ;({runtime,mail,port}=await emittedMailRuntime(directory,port,bindings,networkEdge))
+    bindings.APP_ORIGIN=(await runtime.ready).origin
     const worker=await runtime.getWorker()
     let db=await runtime.getD1Database('DB')
     await context.test('[BASE-ACCESS-002] versioned API known and unknown members independently check session controls',async()=>{

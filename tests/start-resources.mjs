@@ -10,10 +10,9 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { chromium } from '@playwright/test'
 import { contract } from './contract.mjs'
-import {freePort} from './helpers/free-port.mjs'
 
-const port = Number(process.env.CRADLE_TEST_PORT ?? await freePort())
-const origin = `http://127.0.0.1:${port}`
+const port = Number(process.env.CRADLE_TEST_PORT ?? 0)
+let origin = `http://127.0.0.1:${port}`
 // Synchronous D1 controls can outlive a pooled connection's keepalive timeout.
 const request = (url, init = {}) => fetch(url, { ...init, headers: { ...init.headers, connection: 'close' } })
 const documentPath = (family, id) => `/app/${family}/${id}${family === 'lenses' ? '/edit' : ''}`
@@ -49,7 +48,7 @@ contract('VIEW-004 AUTH-BASE-001 DOCS-001', 'unavailable Start record documents 
   assert.equal(migration.status, 0, migration.stderr || migration.stdout)
   const localMemberId = await installLegacyFixture(directory)
   worker = spawn(process.execPath, ['tests/helpers/compiled-worker.mjs', '--port', String(port), '--persist-to', directory, '--var', 'AUTH_LOCAL:true', '--var', 'OWNER_EMAIL:maya@northstar.example', '--var', 'MAIL_PROVIDER:development', '--var', 'MAIL_FROM:auth@localhost.test', '--var', 'SESSION_SECRET:test-only-session-secret-32-characters-long', '--var', `APP_ORIGIN:${origin}`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
-  worker.stdout.on('data', chunk => { output += chunk }); worker.stderr.on('data', chunk => { output += chunk })
+  worker.stdout.on('data', chunk => { output += chunk; const listener=output.match(/Emitted Worker listening at (http:\/\/127\.0\.0\.1:\d+)/); if(listener)origin=listener[1] }); worker.stderr.on('data', chunk => { output += chunk })
   let ready = false
   for (let i = 0; i < 150; i++) {
     if ((await request(`${origin}/health`).catch(() => null))?.ok) { ready = true; break }

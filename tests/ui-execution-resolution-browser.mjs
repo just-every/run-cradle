@@ -5,22 +5,20 @@ import {mkdtemp,mkdir,readFile,rm,writeFile} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {chromium} from '@playwright/test'
-import {emittedRuntime} from './helpers/emitted-runtime.mjs'
-import {createFixtureMail} from './helpers/fixture-mail.mjs'
+import {emittedMailRuntime} from './helpers/emitted-mail-runtime.mjs'
 import {installLegacyFixture} from './helpers/install-legacy-fixture.mjs'
 import {executionResolutionFixture} from './helpers/execution-resolution-fixture.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
-import {freePort} from './helpers/free-port.mjs'
 import {REPAIRS_APP_ID} from '../src/apps/repairs/model.ts'
 import {createUlid} from '../src/core/shared/ids.ts'
-const directory=await mkdtemp(path.join(tmpdir(),'cradle-human-resolution-')),output=process.env.CRADLE_RESOLUTION_EVIDENCE??path.resolve('test-results/execution-resolution'),port=await freePort(),origin=`http://127.0.0.1:${port}`
+const directory=await mkdtemp(path.join(tmpdir(),'cradle-human-resolution-')),output=process.env.CRADLE_RESOLUTION_EVIDENCE??path.resolve('test-results/execution-resolution')
+let origin
 let runtime,browser,mail
 const checks=[],pages=[],network=[]
 try{
- mail=await createFixtureMail(port,async()=>{throw new Error('Human decisions must make no external request')})
  const migration=spawnSync(process.execPath,['scripts/migrate-local.mjs','--persist-to',directory],{encoding:'utf8',maxBuffer:32*1024*1024});assert.equal(migration.status,0,migration.stderr)
  const operator=await installLegacyFixture(directory)
- runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-human-evidence-session-secret-32-bytes',APP_ORIGIN:origin,...mail.bindings},mail.fetch)
+ ;({runtime,mail,origin}=await emittedMailRuntime(directory,0,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-human-evidence-session-secret-32-bytes',},async()=>{throw new Error('Human decisions must make no external request')}))
  await runtime.ready
  const db=await runtime.getD1Database('DB'),members=(await db.prepare('SELECT id,email FROM operators ORDER BY id').all()).results,viewer=members.find(m=>m.id!==operator)
  assert.ok(viewer)

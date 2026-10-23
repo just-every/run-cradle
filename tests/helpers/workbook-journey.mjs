@@ -1,13 +1,12 @@
 import assert from 'node:assert/strict'
 import {recordsImportBrowserRuntime} from './records-import-browser-runtime.mjs'
-import {freePort} from './free-port.mjs'
 import {workbookDoors} from './workbook-http.mjs'
 import {workbook,workbookSheets,cell,ooxmlFixture,invalidWorkbooks} from './workbook-fixtures.mjs'
 import {writeWorkbook} from '../../src/domains/records/workbooks/write.ts'
 import {readWorkbook} from '../../src/domains/records/workbooks/read.ts'
 import {sheetsProvider} from './sheets-provider.mjs'
 import {sheetsJourney} from './sheets-journey.mjs'
-export async function workbookJourney(){const provider=sheetsProvider(),h=await recordsImportBrowserRuntime(await freePort(),{outbound:request=>provider.fetch(request),bindings:{GOOGLE_CLIENT_ID:'synthetic-cradle-client-1',GOOGLE_CLIENT_SECRET:'synthetic-cradle-client-secret-1',CONNECTION_ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}})
+export async function workbookJourney(){const provider=sheetsProvider(),h=await recordsImportBrowserRuntime(0,{outbound:request=>provider.fetch(request),bindings:{GOOGLE_CLIENT_ID:'synthetic-cradle-client-1',GOOGLE_CLIENT_SECRET:'synthetic-cradle-client-secret-1',CONNECTION_ENCRYPTION_KEY:Buffer.alloc(32,7).toString('base64')}})
  try{const d=await workbookDoors(h),bytes=workbook(),count=async()=>Number((await h.db.prepare('SELECT count(*) n FROM manual_record_bases').first()).n),before=await count()
   const preview=await d.call('/api/v1/records/base-import/preview',d.form(bytes,'synthetic-cradle.xlsx'));assert.equal(await count(),before);assert.equal(preview.schemaDraft.tables.length,2)
   const orders=preview.schemaDraft.tables[0],fields=Object.fromEntries(orders.fields.map(f=>[f.label,f]));assert.equal(fields.Amount.type,'number');assert.equal(fields.Approved.type,'boolean');assert.equal(fields.Company.type,'relation')

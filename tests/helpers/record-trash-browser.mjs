@@ -6,7 +6,6 @@ import {execFileSync} from 'node:child_process'
 import {chromium} from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
-import {freePort} from './free-port.mjs'
 
 function ownedProcesses(){const rows=execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const m=line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/);return m?{pid:Number(m[1]),parent:Number(m[2]),name:m[3]}:null}).filter(Boolean),owned=new Set([process.pid]);let more=true;while(more){more=false;for(const row of rows)if(owned.has(row.parent)&&!owned.has(row.pid)){owned.add(row.pid);more=true}}return rows.filter(row=>owned.has(row.pid)&&/workerd|chrome|node/.test(row.name))}
 export async function recordTrashBrowser(){
@@ -14,7 +13,7 @@ export async function recordTrashBrowser(){
  const output='docs/contract/SNAP-002';await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await userAutomationRuntime(await freePort());browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  h=await userAutomationRuntime(0);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   console.log('OWNED_PROCESSES '+JSON.stringify(ownedProcesses()))
   for(const width of [1440,390]){
    const created=await h.create(`synthetic-cradle-${30+width} · Packaging labels`)

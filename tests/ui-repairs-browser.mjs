@@ -11,9 +11,8 @@ import { installUiRepairsFixture } from './ui-repairs-fixture.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
 import { installKeyboardInteractions } from './helpers/accessibility-keyboard.mjs'
 import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
-import {freePort} from './helpers/free-port.mjs'
-const port = Number(process.env.CRADLE_TEST_PORT ?? await freePort())
-const origin = `http://127.0.0.1:${port}`
+const port = Number(process.env.CRADLE_TEST_PORT ?? 0)
+let origin = `http://127.0.0.1:${port}`
 const output = process.env.CRADLE_UI_EVIDENCE ?? path.join(tmpdir(), 'cradle-ui-repair-evidence')
 const directory = await mkdtemp(path.join(tmpdir(), 'cradle-ui-repairs-'))
 let worker, browser, activePage
@@ -46,7 +45,7 @@ try {
   const member = await installLegacyFixture(directory)
   await installUiRepairsFixture(directory, member)
   worker = spawn(process.execPath, ['tests/helpers/compiled-worker.mjs', '--port', String(port), '--persist-to', directory, '--var', 'AUTH_LOCAL:true', '--var', 'OWNER_EMAIL:maya@northstar.example', '--var', 'MAIL_PROVIDER:development', '--var', 'MAIL_FROM:auth@localhost.test', '--var', 'SESSION_SECRET:test-only-session-secret-32-characters-long', '--var', `APP_ORIGIN:${origin}`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
-  worker.stdout.on('data', data => { logs += data }); worker.stderr.on('data', data => { logs += data })
+  worker.stdout.on('data', data => { logs += data; const listener=logs.match(/Emitted Worker listening at (http:\/\/127\.0\.0\.1:\d+)/); if(listener)origin=listener[1] }); worker.stderr.on('data', data => { logs += data })
   for (let i = 0; i < 100; i++) { if ((await fetch(`${origin}/health`).catch(() => null))?.status === 200) break; await new Promise(resolve => setTimeout(resolve, 100)) }
   const {cookie}=await baseHttpSession(origin)
   assert.equal((await fetch(`${origin}/api/v1/repairs/intake-context`)).status, 401)
