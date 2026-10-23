@@ -1,6 +1,6 @@
 import type { ProviderResult } from './contracts';
 import { base64, sha256 } from './crypto.server';
-export type Endpoint = 'drive.root' | 'graph.drive' | 'box.account' | 'sheets.read' | 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke' | 'drive.files' | 'drive.file' | 'drive.thumbnail' | 'graph.children' | 'graph.search' | 'graph.item' | 'graph.thumbnail' | 'dropbox.list' | 'dropbox.continue' | 'dropbox.search' | 'dropbox.thumbnail' | 'box.items' | 'box.search' | 'box.thumbnail' | 'microsoft.token' | 'dropbox.token' | 'dropbox.revoke' | 'box.token' | 'box.revoke';
+export type Endpoint = 'drive.root' | 'graph.drive' | 'box.account' | 'box.file' | 'dropbox.metadata' | 'sheets.read' | 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke' | 'drive.files' | 'drive.file' | 'drive.thumbnail' | 'graph.children' | 'graph.search' | 'graph.item' | 'graph.thumbnail' | 'dropbox.list' | 'dropbox.continue' | 'dropbox.search' | 'dropbox.thumbnail' | 'box.items' | 'box.search' | 'box.thumbnail' | 'microsoft.token' | 'dropbox.token' | 'dropbox.revoke' | 'box.token' | 'box.revoke';
 const segment = (s: string) => { if (!s || s.length > 1024 || /[\x00-\x1f]/.test(s)) throw new Error('Invalid provider identifier'); return encodeURIComponent(s); };
 const thumbnailHosts: Record<'drive.thumbnail' | 'graph.thumbnail', (host: string) => boolean> = {
   'drive.thumbnail': host => host.endsWith('.googleusercontent.com') || host === 'drive.google.com',
@@ -41,10 +41,12 @@ export function endpoint(name: Endpoint, ids: string[] = []): { url: string; met
     case 'graph.search': return { url: `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${odata(ids[0] ?? '')}')`, method: 'GET' };
     case 'graph.item': return { url: `https://graph.microsoft.com/v1.0/me/drive/items/${a()}`, method: 'GET' };
     case 'graph.thumbnail': return { url: thumbnailUrl(name, ids[0] ?? ''), method: 'GET' };
+    case 'dropbox.metadata': return { url: 'https://api.dropboxapi.com/2/files/get_metadata', method: 'POST' };
     case 'dropbox.list': return { url: 'https://api.dropboxapi.com/2/files/list_folder', method: 'POST' };
     case 'dropbox.continue': return { url: 'https://api.dropboxapi.com/2/files/list_folder/continue', method: 'POST' };
     case 'dropbox.search': return { url: 'https://api.dropboxapi.com/2/files/search_v2', method: 'POST' };
     case 'dropbox.thumbnail': return { url: 'https://content.dropboxapi.com/2/files/get_thumbnail_v2', method: 'POST' };
+    case 'box.file': return { url: `https://api.box.com/2.0/files/${a()}`, method: 'GET' };
     case 'box.items': return { url: 'https://api.box.com/2.0/folders/0/items', method: 'GET' };
     case 'box.search': return { url: 'https://api.box.com/2.0/search', method: 'GET' };
     case 'box.thumbnail': return { url: `https://api.box.com/2.0/files/${a()}/thumbnail.png`, method: 'GET' };
