@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {mkdir,readFile,writeFile} from 'node:fs/promises'
 import {userInfo} from 'node:os'
 import path from 'node:path'
+import {execFileSync} from 'node:child_process'
 import {chromium} from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import {createUlid} from '../../src/core/shared/ids.ts'
@@ -22,6 +23,7 @@ export async function fieldBrowser(){
  try{
   h=await userAutomationRuntime(await freePort())
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  console.log('FIELD_BROWSER_OWNED_PIDS '+JSON.stringify(ownedProcesses()))
   for(const width of recordsBrowserWidths()){
    const fixture=await fieldFixture(h,width),contexts=[],checkpoints=[]
    try{
@@ -182,3 +184,5 @@ async function hostTooltips(page){
  assert.equal(await bell.getByRole('tooltip').evaluate(node=>getComputedStyle(node).transitionDelay),'0.3s')
  await page.mouse.move(0,0)
 }
+
+function ownedProcesses(){const rows=execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).flatMap(line=>{const match=line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/);return match?[{pid:Number(match[1]),parent:Number(match[2]),name:match[3]}]:[]}),owned=new Set([process.pid]);let more=true;while(more){more=false;for(const row of rows)if(owned.has(row.parent)&&!owned.has(row.pid)){owned.add(row.pid);more=true}}return rows.filter(row=>owned.has(row.pid))}
