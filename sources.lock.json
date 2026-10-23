@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d8af18d1eef867f210697aa9e3af298fe3ff6aa109c276682ba54b65c33bfe85",
+      "sha256": "208bc4457a54c0c6d50cdc8312b1dfb3743ac2fd5cd769d6472f803d635fc8ae",
       "executable": false
     },
     "DEMO.md": {
@@ -3622,7 +3622,7 @@
       "executable": false
     },
     "docs/contract/INTEG-004/implementation.md": {
-      "sha256": "ebede83e87963fc7bab706f28369ed00725924976055f3e20237ac93a21fcb09",
+      "sha256": "b6011a8554d8285b051d805d65225553653daac67247a07c3d3c092732d296ac",
       "executable": false
     },
     "docs/contract/INTEG-004/README.md": {
