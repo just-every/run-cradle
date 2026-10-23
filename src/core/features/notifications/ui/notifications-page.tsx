@@ -1,3 +1,4 @@
+import '../../../../ui/shared/automation-alert-tooltips.css'
 import { Timestamp } from '../../../../ui/shared/presentation'
 import { sessionFetch } from '../../../../ui/shared/session-fetch'
 import { useRef } from 'react'

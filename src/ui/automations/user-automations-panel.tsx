@@ -1,5 +1,6 @@
+import '../shared/automation-alert-tooltips.css'
 import '../records/records.css'
-import { useState } from 'react'
+import { useEffect,useState } from 'react'
 import type { Page } from '../../contracts/primitives'
 import type { EntitySchema } from '../../domains/records/contracts'
 import { createUlid } from '../../core/shared/ids'
@@ -10,6 +11,7 @@ import { AutomationRunHistory } from './run-history'
 
 export function UserAutomationsPanel() {
  const apps=useResource<Page<{id:string;name:string}>>('/api/v1/apps'),[appId,setAppId]=useState('')
+ useEffect(()=>{setAppId(new URLSearchParams(window.location.search).get('appId')??'')},[])
  return <section className="cr-page cr-stack" aria-label="Record automations"><header><h1>Record automations</h1><p>Choose a record trigger and the actions it should run. Your saved approval is bounded by your current access and expiry.</p></header>
   <ResourceState resource={apps.resource} operation="applications" retry={apps.refresh}>{page=><>
    <label className="cr-field">Application<select value={appId} onChange={event=>setAppId(event.target.value)}><option value="">Choose an application</option>{page.items.map(app=><option key={app.id} value={app.id}>{app.name}</option>)}</select></label>
@@ -21,6 +23,7 @@ function ApplicationAutomations({appId}:{appId:string}) {
  const automations=useResource<{automations:SavedAutomation[]}>(`/api/user-automations?appId=${encodeURIComponent(appId)}`)
  const [entityId,setEntityId]=useState(''),[editing,setEditing]=useState<SavedAutomation|'new'|null>(null)
  const [history,setHistory]=useState<string|null>(null),[error,setError]=useState<string|null>(null),[busy,setBusy]=useState(false)
+ useEffect(()=>{setHistory(new URLSearchParams(window.location.search).get('automation'))},[])
  async function disable(automation:SavedAutomation) {
   setBusy(true);setError(null)
   try{await readApi(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:JSON.stringify({commandId:createUlid(),version:automation.version})});automations.refresh()}

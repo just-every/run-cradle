@@ -1,3 +1,4 @@
+import {automationFailureCause,automationRunLink,safeAutomationRetry} from './failure-details'
 import type { PolicyPort,RequestContext } from '../authority/ports'
 import type { DescriptorRegistry } from '../records/descriptors.server'
 import { ownerDelegationSnapshot } from '../authority/delegation.server'
@@ -57,7 +58,8 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
      return {position:action.position,state:heldUntil?'Held':action.state,error_code:action.error_code,heldUntil:heldUntil??null}
     })
     const held=visibleActions.find(action=>action.heldUntil)
-    result.push({id:run.id,definitionVersion:run.definition_version,recordId:run.subject_id,recordLabel,state:held&&['Queued','Running'].includes(run.state)?'Held':run.state,
+    const retryable=safeAutomationRetry(run.state,run.error_code)&&!!await db.prepare('SELECT 1 FROM automations WHERE id=? AND enabled=1').bind(id).first()&&(run.error_code!=='delivery_retryable'||!!await db.prepare("SELECT 1 FROM integration_deliveries d JOIN launch_automation_actions a ON a.id=d.id WHERE a.run_id=? AND a.state='Failed' AND d.state='rejected' AND d.attempts<6").bind(run.id).first())
+    result.push({cause:automationFailureCause(run.error_code),href:automationRunLink(binding.app_id,id,run.id),retryable,id:run.id,definitionVersion:run.definition_version,recordId:run.subject_id,recordLabel,state:held&&['Queued','Running'].includes(run.state)?'Held':run.state,
      heldUntil:held?.heldUntil??null,
      queuedAt:new Date(run.queued_at).toISOString(),startedAt:run.started_at===null?null:new Date(run.started_at).toISOString(),
      finishedAt:run.finished_at===null?null:new Date(run.finished_at).toISOString(),errorCode:run.error_code,actions:visibleActions})
