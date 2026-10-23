@@ -1,3 +1,4 @@
+import {calendarConnectionPolicy} from '../../../domains/records/calendar-sync/connection-policy.server'
 import {calendarAuthority} from '../../../domains/records/calendar-sync/authority.server'
 import { createConnectionJobs } from '../../../domains/connections/jobs.server'
 import { connectionRelease } from '../../../domains/connections/provenance.server'
@@ -22,18 +23,18 @@ import { createUlid } from '../../shared/ids'
 import { ApiError } from '../../registry/errors'
 import type { ModelSchema } from '../../../domains/execution/model-ports'
 export function createProvidersComposition(platform:Platform,foundation:ServerFoundation){
- const env=platform.bindings
+ const env=platform.bindings,providerPolicy=calendarConnectionPolicy(platform.bindings.DB,foundation.policy)
  const connectionKeyVersion=env.CONNECTION_ENCRYPTION_KEY_VERSION??'v1'
  const schemas=new Map<string,ModelSchema>([[modelSchemaKey('cradle.application-source',1),applicationSourceModelSchema],[modelSchemaKey('operation.next-action',1),operationModelSchema],[modelSchemaKey('intelligence.formulation',1),formulationModelSchema]])
  const secrets=new Map<string,{dispatch?:string;readback?:string}>()
  if(env.MAIL_PROVIDER_API_KEY)secrets.set('MAIL_PROVIDER_API_KEY',{dispatch:env.MAIL_PROVIDER_API_KEY,readback:env.MAIL_PROVIDER_API_KEY})
  if(env.AI_PROVIDER_API_KEY)secrets.set('AI_PROVIDER_API_KEY',{dispatch:env.AI_PROVIDER_API_KEY,readback:env.AI_PROVIDER_API_KEY})
- const runtime=createProviderRuntime({db:env.DB,notificationEntities:foundation.entities,admission:foundation.admission,policy:foundation.policy,bucket:env.FILES,auth:platform.auth.configuration,workspaceId:'workspace',
+ const runtime=createProviderRuntime({db:env.DB,notificationEntities:foundation.entities,admission:foundation.admission,policy:providerPolicy,bucket:env.FILES,auth:platform.auth.configuration,workspaceId:'workspace',
   keyVersion:connectionKeyVersion,encryptionKey:version=>version===connectionKeyVersion?env.CONNECTION_ENCRYPTION_KEY:undefined,secrets,schemas,
   oauth(provider){const family=oauthFamily(provider),pairs={google:[env.GOOGLE_CLIENT_ID,env.GOOGLE_CLIENT_SECRET],xero:[env.XERO_CLIENT_ID,env.XERO_CLIENT_SECRET],microsoft:[env.MICROSOFT_CLIENT_ID,env.MICROSOFT_CLIENT_SECRET],dropbox:[env.DROPBOX_CLIENT_ID,env.DROPBOX_CLIENT_SECRET],box:[env.BOX_CLIENT_ID,env.BOX_CLIENT_SECRET]},[clientId,clientSecret]=pairs[family];if(!clientId||!clientSecret)throw new ApiError('unconfigured',`${provider} OAuth credentials are required.`);return{clientId,clientSecret,redirectUri:`${platform.auth.configuration.appOrigin}/oauth/${family}/callback`}},
   calendarAuthority:calendarAuthority(env.DB,foundation.policy),currentGuards:createExecutionGuards(env.DB,foundation),observations:createDeliveryObservations(env.DB).prepare,
  })
- const jobs=createConnectionJobs({db:env.DB,admission:foundation.admission,policy:foundation.policy,service:runtime.connections,releaseId:connectionRelease(env.DB,foundation.policy),backgroundContext:runtime.background.connectionJob})
+ const jobs=createConnectionJobs({db:env.DB,admission:foundation.admission,policy:providerPolicy,service:runtime.connections,releaseId:connectionRelease(env.DB,foundation.policy),backgroundContext:runtime.background.connectionJob})
  registerConnectionCommands(foundation.commands,runtime.connections,jobs)
  registerExecutionCommands(foundation.commands,runtime.dependencies)
  const authenticate=(request:Request)=>foundation.authenticate(request,'http',createUlid())
