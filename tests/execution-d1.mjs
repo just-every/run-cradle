@@ -19,6 +19,20 @@ test('durable execution: concurrent queue, restart unknown reconciliation, cance
   for(const mutate of [schema=>{schema.properties.claims.items.properties.evidence.items.properties.locator={oneOf:[{type:'string'}]}},schema=>{schema.properties.claims.items.properties.evidence.items.properties.locator.anyOf[1].required=['kind','page']}]){
    const schema=structuredClone(extractionSchema.schema);mutate(schema);await assert.rejects(strictAdapter.preflight({...schemaEffect,input:{...schemaEffect.input,schema}}));assert.equal(credentialReads,1);
   }
+  const {operationModelSchema}=await import('../src/domains/operations/model.server.ts');
+  const operationAdapter=r.openaiAdapter({resolve:async()=>{credentialReads++;return {token:'synthetic-cradle-1'}}},(value,ids)=>operationModelSchema.validate(value,ids));
+  const operationEffect={...schemaEffect,input:{...schemaEffect.input,purpose:'operation.next',schemaName:'operation-next',schema:operationModelSchema.schema}};
+  await operationAdapter.preflight(operationEffect);assert.equal(credentialReads,2);
+  for(const input of [{$ref:'#'}, {type:'object',properties:{},required:[],additionalProperties:true}]){
+   const schema=structuredClone(operationModelSchema.schema);schema.properties.selected.anyOf[0].properties.inputJson=input;
+   await assert.rejects(operationAdapter.preflight({...operationEffect,input:{...operationEffect.input,schema}}));assert.equal(credentialReads,2,'Invalid operation transport refuses before credential access');
+  }
+  const operationSource='01AAAAAAAAAAAAAAAAAAAAAAAA',input={caseId:'01BBBBBBBBBBBBBBBBBBBBBBBB',reason:'synthetic-cradle-1',nested:{items:[true,null,1]}};
+  const operation={rationaleSummary:'Investigate current evidence',sourceIds:[operationSource],alternatives:[],selected:{action:'case.pause',inputJson:JSON.stringify(input),expected:[],expectedOutcome:'Paused'},nextWakeAt:null,recommendation:'Review evidence',needsDecision:false};
+  const decoded=operationModelSchema.validate(operation,[operationSource]);assert.deepEqual(decoded.selected,{action:'case.pause',input,expected:[],expectedOutcome:'Paused'});assert.equal(Object.hasOwn(decoded.selected,'inputJson'),false);
+  assert.throws(()=>operationModelSchema.validate({...operation,selected:{...operation.selected,inputJson:'invalid JSON'}},[operationSource]));
+  assert.throws(()=>operationModelSchema.validate(operation,[]),/unauthorized source/);
+  assert.equal(operationModelSchema.validate({...operation,selected:null},[operationSource]).selected,null);
   const sourceId='01AAAAAAAAAAAAAAAAAAAAAAAA',claim={subject:null,fieldId:null,value:'synthetic-cradle-1',classification:'claim',evidence:[{sourceId,sourceVersion:1,locator:{kind:'page',page:1,region:null},observedAt:'2026-10-23T00:00:00.000Z'}]};
   const unicode='😀'.repeat(60000);assert.equal(extractionSchema.validate({claims:[{...claim,value:unicode}]},[sourceId]).claims[0].value,unicode,'Model transport preserves the stored cell code-point limit');
   const normalized=extractionSchema.validate({claims:[claim]},[sourceId]);assert.deepEqual(normalized.claims[0].evidence[0].locator,{kind:'page',page:1});assert.deepEqual(extractionSchema.validate(normalized,[sourceId]),normalized);
