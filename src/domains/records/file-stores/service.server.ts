@@ -1,3 +1,5 @@
+import {createStoreResolution} from './resolution.server';
+import type {createRecordWriter} from '../change.server';
 import {personalStorePermit} from '../../authority/personal-stores.server';
 import {fileStoreAdapter} from '../../../adapters/file-stores.server';
 import type {FileStoreProvider} from '../../connections/oauth.server';
@@ -19,7 +21,7 @@ export const fieldAddress = z.object({ appId: idSchema, entityId: idSchema, fiel
 export type FileStoreConnection = { id: string; provider: string; name: string; state: string; sharePreviews:boolean };
 type Reader = ReturnType<typeof createRecordReader>;
 /** Browsing and thumbnails read a person's own file store through a connection job, so the credential never leaves custody. */
-export function createFileStores(db: D1Database, foundation: ServerFoundation, providers: ReturnType<typeof createProvidersComposition>, reader: Reader) {
+export function createFileStores(db: D1Database, foundation: ServerFoundation, providers: ReturnType<typeof createProvidersComposition>, reader: Reader,writer:ReturnType<typeof createRecordWriter>) {
   /** Only a person who may write this attachment field, through a connection they own, can choose from a store. */
   async function authorize(ctx: RequestContext, address: z.infer<typeof fieldAddress>) {
     if (ctx.principal.kind !== 'human') throw new ApiError('forbidden', 'A person chooses files from their own store.');
@@ -88,5 +90,5 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
     return {state:own.length?'none':'reconnect'};
   }
 
-  return { settings:createFileStoreSettings(db,foundation),connections, browse, thumbnail, identity: (ctx: RequestContext) => ({ attachedBy: ctx.principal.id }) };
+  return { resolve:createStoreResolution(db,foundation,reader,writer,run),settings:createFileStoreSettings(db,foundation),connections, browse, thumbnail, identity: (ctx: RequestContext) => ({ attachedBy: ctx.principal.id }) };
 }

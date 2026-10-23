@@ -10,8 +10,8 @@ export const storeReferenceSchema: z.ZodType<StoreReference> = z.object({
   provider: z.enum(storeProviders), itemId: z.string().min(1).max(512), name: z.string().min(1).max(500), mediaType: z.string().max(255),
   size: z.number().int().min(0).nullable(), modifiedAt: z.iso.datetime().nullable(), link: z.string().max(2048),
   connectionId: idSchema.nullable(), attachedBy: z.string().min(1).max(500),
-  account:z.string().min(1).max(512).nullable().optional(),digest:storeDigestSchema.nullable().optional(),attachedAt:z.iso.datetime().optional(),portable:portableStoreSchema.optional(),resolution:z.literal('unresolved').optional(),
-}).strict().refine(r => r.resolution==='unresolved'&&r.portable ? r.connectionId===null&&r.link===(r.portable.link??'') : storeLinkAllowed(r.provider, r.link), 'Store link does not belong to the provider');
+  account:z.string().min(1).max(512).nullable().optional(),digest:storeDigestSchema.nullable().optional(),attachedAt:z.iso.datetime().optional(),portable:portableStoreSchema.optional(),resolution:z.enum(['unresolved','resolved','unverified']).optional(),
+}).strict().refine(r => r.portable&&r.resolution ? (r.resolution==='unresolved'?r.connectionId===null:!!r.connectionId)&&r.link===(r.portable.link??'') : storeLinkAllowed(r.provider, r.link), 'Store link does not belong to the provider');
 export const attachmentMemberSchema = z.union([z.object({ fileId: idSchema }).strict(), z.object({ reference: storeReferenceSchema }).strict()]);
 export const isStoreReferenceMember = (value: unknown): value is { reference: StoreReference } => !!value && typeof value === 'object' && 'reference' in value;
 const canonicalKeys = ['provider', 'itemId', 'name', 'mediaType', 'size', 'modifiedAt', 'link', 'connectionId', 'attachedBy'] as const;

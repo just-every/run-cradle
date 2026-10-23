@@ -30,7 +30,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  validateAuthConfiguration(platform.auth.configuration)
  const records=createRecordsComposition(platform,foundation)
  const sheetSource=createSheetsImport(platform.bindings.DB,foundation,providers),sheetSchedules=createSheetSchedules(platform.bindings.DB,foundation,sheetSource,records.csv,clock),sheets={http:sheetsHttp(foundation,sheetSource,sheetSchedules),scheduled:sheetSchedules.scheduled}
- const fileStores={http:fileStoresHttp(foundation,createFileStores(platform.bindings.DB,foundation,providers,records.services.reader))}
+ const fileStores={http:fileStoresHttp(foundation,createFileStores(platform.bindings.DB,foundation,providers,records.services.reader,records.services.writer))}
  const warehouse=createWarehouseComposition(platform,foundation,records,clock)
  await ensureRecordAutomationTriggers(platform.bindings.DB,foundation.descriptors)
  const changeSubscriptions=createChangeSubscriptions(platform.bindings,foundation.policy,foundation.admission,records.services,platform.auth.configuration.sessionSecret)
