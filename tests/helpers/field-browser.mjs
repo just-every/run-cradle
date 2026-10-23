@@ -41,6 +41,7 @@ export async function fieldBrowser(){
     assert.equal(await tile('Vendor link').getByLabel('Linked table',{exact:true}).isDisabled(),true)
     assert.equal(await tile('Vendor link').getByLabel('Link cardinality',{exact:true}).isDisabled(),true)
     await owner.capture('existing-field-controls',tile('Amount'))
+    if(width===390)await hostTooltips(page)
     await tile('Amount').getByLabel('Field type',{exact:true}).selectOption('select')
     const options=tile('Amount').getByLabel('Options (one per line)',{exact:true});assert.equal(await options.isEnabled(),true)
     await options.fill('1250.50\nAwaiting quote');await owner.capture('conversion-options',options)
@@ -108,6 +109,7 @@ export async function fieldBrowser(){
     const trash=page.getByRole('region',{name:'Trash',exact:true});await trash.getByLabel('Trash base',{exact:true}).selectOption(fixture.appId)
     for(const label of ['Memo','Legacy orders'])await trash.getByRole('button',{name:'Restore '+label,exact:true}).waitFor()
     await owner.capture('field-and-table-trash',trash)
+    if(width===390)await hostTooltips(page)
     for(const label of ['Memo','Legacy orders']){
      const restored=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/records/trash/restore'))
      await trash.getByRole('button',{name:'Restore '+label,exact:true}).click();assert.equal((await restored).status(),200)
@@ -169,4 +171,14 @@ async function fieldFixture(h,width){
  await h.request(`/api/v1/records/bases/${appId}/collaborators`,{method:'POST',body:{commandId:createUlid(),principalId:person,role:'creator',version:0}})
  const creatorCookie=(await baseHttpSession(h.origin,email)).cookie
  return {appId,orders,vendors,legacy,amount,memo,records,name,creatorCookie,url:`${h.origin}/app/records/${appId}/${orders}`,draft:async()=>(await h.request(`/api/v1/records/bases/${appId}`)).data}
+}
+
+async function hostTooltips(page){
+ const menu=page.getByRole('button',{name:'Open navigation',exact:true})
+ await page.keyboard.press('Tab');await menu.focus();await menu.getByRole('tooltip').waitFor({state:'visible'})
+ assert.equal(await menu.getByRole('tooltip').evaluate(node=>getComputedStyle(node).transitionDelay),'0s')
+ await menu.click();const close=page.getByRole('button',{name:'Close navigation',exact:true});await page.keyboard.press('Tab');await close.focus();await close.getByRole('tooltip').waitFor({state:'visible'});await close.click()
+ const bell=page.getByRole('link',{name:'Notifications',exact:true}).first();await page.keyboard.press('Tab');await bell.focus();await bell.getByRole('tooltip').waitFor({state:'visible'});await bell.blur();await bell.hover();await bell.getByRole('tooltip').waitFor({state:'visible'})
+ assert.equal(await bell.getByRole('tooltip').evaluate(node=>getComputedStyle(node).transitionDelay),'0.3s')
+ await page.mouse.move(0,0)
 }

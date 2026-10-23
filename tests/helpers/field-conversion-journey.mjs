@@ -3,6 +3,7 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {parseCsv} from '../../src/domains/portability/csv.ts'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {freePort} from './free-port.mjs'
+import {baseHttpSession} from './base-http-session.mjs'
 
 const schemaEntity='00000000000000000000000001'
 const field=(id,label,type,extra={})=>({id,label,type,required:false,unique:false,...extra})
@@ -12,7 +13,7 @@ function conversionCases(owner){
  const options=['Ready','Done','Missing','Duplicate','ready'].map(label=>({id:createUlid(),label}))
  const reference={reference:{provider:'chest',itemId:'synthetic-cradle-301',name:'synthetic-cradle-301.pdf',mediaType:'application/pdf',size:12,modifiedAt:null,link:'https://files.example.test/synthetic-cradle-301',connectionId:null,attachedBy:owner}}
  return [
-  {name:'text/select',from:'text',to:'select',options:options.slice(0,2),values:['Ready','Done','ready','Missing',null],after:[options[0].id,options[1].id,null,null,null],losses:[2,3]},
+  {name:'text/select',from:'text',to:'select',options:options.slice(0,2),values:['Ready','Done','ready','Missing',null],after:[options[0].id,options[1].id,null,null,null],losses:[2,3],roles:true},
   {name:'select/text',from:'select',to:'text',options:options.slice(0,2),values:[options[0].id,options[1].id,null],after:['Ready','Done',null],losses:[]},
   {name:'select/relation',from:'select',to:'relation',options,targets:['Ready','Duplicate','Duplicate'],values:[options[0].id,options[2].id,options[3].id,options[4].id,null],after:targets=>[targets[0].ref,null,null,null,null],losses:[1,2,3]},
   {name:'number/money',from:'number',to:'money',values:['12.34','-0.01','9007199254740993.01','1.005',null],after:[money('1234'),money('-1'),money('900719925474099301'),null,null],losses:[3]},
@@ -36,6 +37,7 @@ export async function fieldConversionJourney(existing){
  try{
   const owner=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=(SELECT id FROM oa_operators WHERE email=?)').bind('import-owner@example.test').first()).principal_id
   for(const fixture of conversionCases(owner))try{await conversionCase(h,fixture)}catch(error){failures.push(new Error(`FIELD_CONVERSION ${fixture.name}: ${error.message}`,{cause:error}))}
+  try{await invalidLookupSource(h)}catch(error){failures.push(new Error(`FIELD_LOOKUP_SOURCE: ${error.message}`,{cause:error}))}
  }finally{if(!existing)await h.close()}
  if(failures.length)throw new AggregateError(failures,'Field conversion public-door matrix failed')
 }
@@ -44,7 +46,7 @@ async function conversionCase(h,fixture){
  const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),valueId=createUlid(),targetId=createUlid(),targetName=createUlid()
  const source=field(valueId,'Value',fixture.from,{...(['select','multi_select'].includes(fixture.from)?{options:fixture.options}:{}),...(fixture.computed?{readOnly:true,resultType:'text',expression:{kind:'field',fieldId:nameId}}:{})})
  const draft={appId,name:'synthetic-cradle-302 '+fixture.name,tables:[{id:entityId,label:'Items',primaryFieldId:nameId,fields:[field(nameId,'Name','text',{required:true}),source]}]}
- if(fixture.targets)draft.tables.push({id:targetId,label:'Targets',primaryFieldId:targetName,fields:[field(targetName,'Target','text',{required:true})]})
+ if(fixture.targets||fixture.roles)draft.tables.push({id:targetId,label:'Targets',primaryFieldId:targetName,fields:[field(targetName,'Target','text',{required:true})]})
  const preview=async body=>(await h.request('/api/v1/records/schema-preview',{method:'POST',body})).data
  const adopt=async(p,status=200)=>h.request('/api/v1/commands/release.adopt',{method:'POST',status,body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:p.id}}})
  const readDraft=async()=>(await h.request(`/api/v1/records/bases/${appId}`)).data
@@ -56,6 +58,7 @@ async function conversionCase(h,fixture){
  }
  await adopt(await preview(draft))
  const targets=[];for(const label of fixture.targets??[])targets.push(await create(targetId,{[targetName]:label}))
+ if(fixture.roles)await create(targetId,{[targetName]:'synthetic-cradle-340'})
  const rows=[],beforeHistory=[]
  for(const [index,value] of (fixture.computed?[undefined]:fixture.values).entries()){
   const row=await create(entityId,{[nameId]:`synthetic-cradle-${310+index}`,...(fixture.computed?{}:{[valueId]:value})})
@@ -74,6 +77,14 @@ async function conversionCase(h,fixture){
  const edit=await readDraft(),destination=field(valueId,'Value',fixture.to,{...(fixture.to==='select'?{options:fixture.options}:{}),...(fixture.to==='relation'?{relation:{ownerAppId:appId,entityId:targetId,cardinality:'one',onDelete:'restrict'}}:{}),...(fixture.to==='computed'?{readOnly:true,resultType:'number',expression:{kind:'literal',value:'1',valueType:'number'}}:{})})
  edit.tables.find(table=>table.id===entityId).fields=edit.tables.find(table=>table.id===entityId).fields.map(item=>item.id===valueId?destination:item)
  let review=await preview(edit)
+ const actors=fixture.roles?await reviewActors(h,appId):null
+ if(actors){
+  review=(await actors.creator('/api/v1/records/schema-preview',edit)).data
+  assert.equal(review.requiresOwnerReview,true,'A creator loss conversion is saved for owner review')
+  await actors.creator('/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:review.id}},403)
+  await actors.editor('/api/v1/records/schema-preview',edit,403)
+  assert.equal((await read(rows[2])).fields[valueId].value,fixture.values[2],'A creator cannot apply the lossy conversion before owner review')
+ }
  if(fixture.stale){
   // Data, schema and policy fences are independent; each old review must fail
   // atomically before a fresh conversion preview can be adopted.
@@ -130,4 +141,53 @@ async function conversionCase(h,fixture){
   else assert.equal(original[column],fixture.from==='select'?fixture.options.find(option=>option.id===value).label:value,'Recovery exports the original value, including every lost example')
  }
  console.log('FIELD_CONVERSION '+fixture.name+' PASS converted='+conversion.converted.length+' losses='+conversion.losses.length)
+ if(actors){
+  const removal=await readDraft();removal.tables=removal.tables.filter(table=>table.id!==targetId)
+  const pending=(await actors.creator('/api/v1/records/schema-preview',removal)).data
+  assert.equal(pending.requiresOwnerReview,true,'A creator table deletion requires owner review even though the other table survives')
+  await actors.creator('/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:pending.id}},403)
+  await actors.editor('/api/v1/records/schema-preview',removal,403)
+  assert.ok((await readDraft()).tables.some(table=>table.id===targetId))
+  await adopt(pending)
+  await h.request(`/api/v1/apps/${appId}/entities/${targetId}`,{status:404})
+  assert.deepEqual((await read(rows[0])).fields[valueId].value,after[0],'Owner-reviewed table deletion preserves the surviving converted table')
+  console.log('FIELD_OWNER_REVIEW PASS creator lossy conversion/table deletion, editor refusal, owner adoption of exact previews')
+ }
+}
+
+async function reviewActors(h,appId){
+ const actors={}
+ for(const [index,role] of ['creator','editor'].entries()){
+  const id=createUlid(),email=`synthetic-cradle-${350+index}-${id.toLowerCase()}@example.test`
+  // Native account fixtures use the production projection trigger; role grants,
+  // sign-in, CSRF, preview and adoption all cross the actual public HTTP doors.
+  await h.db.prepare("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member','active',?)").bind(id,email,`synthetic-cradle-${350+index}`,Date.now()).run()
+  const principal=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(id).first()).principal_id
+  await h.request(`/api/v1/records/bases/${appId}/collaborators`,{method:'POST',body:{commandId:createUlid(),principalId:principal,role,destructive:false,version:0}})
+  const signed=await baseHttpSession(h.origin,email)
+  actors[role]=async(route,body,status=200)=>{
+   const response=await fetch(h.origin+route,{method:'POST',headers:{cookie:signed.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':signed.csrfToken},body:JSON.stringify(body)}),value=await response.json()
+   assert.equal(response.status,status,`${role} ${route}: ${value.error?.code??'unexpected response'}`)
+   return value
+  }
+ }
+ return actors
+}
+
+async function invalidLookupSource(h){
+ const appId=createUlid(),target=createUlid(),targetName=createUlid(),source=createUlid(),items=createUlid(),name=createUlid(),link=createUlid(),lookup=createUlid()
+ const draft={appId,name:'synthetic-cradle-360',tables:[{id:target,label:'Targets',primaryFieldId:targetName,fields:[field(targetName,'Name','text'),field(source,'Source','text')]},{id:items,label:'Items',primaryFieldId:name,fields:[field(name,'Name','text'),field(link,'Target','relation',{relation:{ownerAppId:appId,entityId:target,cardinality:'one',onDelete:'restrict'}}),field(lookup,'Lookup','computed',{readOnly:true,resultType:'text',expression:{kind:'rollup',aggregate:'lookup',relationFieldId:link,valueFieldId:source}})]}]}
+ const command=(previewId)=>({commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId}})
+ const initial=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:draft})).data
+ await h.request('/api/v1/commands/release.adopt',{method:'POST',body:command(initial.id)})
+ async function create(entityId,values){const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data;return (await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:schema.version}],input:{appId,entityId,values}}})).data.value}
+ const parent=await create(target,{[targetName]:'synthetic-cradle-361',[source]:'synthetic-cradle-362'}),child=await create(items,{[name]:'synthetic-cradle-363',[link]:parent.ref})
+ const edit=(await h.request(`/api/v1/records/bases/${appId}`)).data;edit.tables.find(table=>table.id===target).fields=edit.tables.find(table=>table.id===target).fields.filter(field=>field.id!==source)
+ const review=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:edit})).data,impact=review.impacts.find(item=>item.entityId===target)
+ assert.ok(impact.refusals.length>0,'Removing a retained lookup source is explicitly refused in review')
+ const dependency=impact.dependencies.find(item=>item.kind==='lookup'&&item.id===items+':'+lookup);assert.ok(dependency);assert.ok(dependency.details.some(detail=>detail.includes(source)))
+ const refused=await h.request('/api/v1/commands/release.adopt',{method:'POST',status:400,body:command(review.id)});assert.equal(refused.error.code,'validation')
+ const still=(await h.request(`/api/v1/records/bases/${appId}`)).data;assert.ok(still.tables.find(table=>table.id===target).fields.some(field=>field.id===source))
+ const record=(await h.request(`/api/v1/apps/${appId}/entities/${items}/records/${child.id}`)).data.record;assert.equal(record.fields[lookup].value,'synthetic-cradle-362');assert.deepEqual(record.fields[link].value,parent.ref)
+ console.log('FIELD_LOOKUP_SOURCE PASS retained dependent lookup blocks invalid source removal in preview and adoption')
 }

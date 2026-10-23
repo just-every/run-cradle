@@ -58,17 +58,17 @@ html:has(style[data-rer-label="Demo"]) .operator-brand .operator-brand-lockup { 
   .operator-page-description { font-size: 14px; }
 }
 
-/* The record detail/deletion host's icon controls: hover after 300 ms,
+/* The record detail/deletion, schema-review and Trash hosts's icon controls: hover after 300 ms,
    keyboard focus immediately. Other screens keep their accepted surfaces. */
 .operator-shell .operator-record-tooltip { display: none; }
-.operator-shell:has(.cr-record-fields, .cr-trash-confirmation) :is(button, a):has(> .operator-record-tooltip) { position: relative; }
-.operator-shell:has(.cr-record-fields, .cr-trash-confirmation) .operator-record-tooltip {
+.operator-shell:has(.cr-record-fields, .cr-trash-confirmation, .cr-schema-builder, .cr-schema-reviews, .cr-schema-trash) :is(button, a):has(> .operator-record-tooltip) { position: relative; }
+.operator-shell:has(.cr-record-fields, .cr-trash-confirmation, .cr-schema-builder, .cr-schema-reviews, .cr-schema-trash) .operator-record-tooltip {
   display: block; position: absolute; z-index: 20; top: calc(100% + 6px);
   inset-inline-start: 0; width: max-content; max-width: 180px; height: auto;
   padding: 6px 9px; border-radius: 6px; background: #172423; color: #fff;
   font: 500 12px/1.4 sans-serif; white-space: nowrap; pointer-events: none;
   opacity: 0; visibility: hidden; transition: opacity 0s, visibility 0s;
 }
-.operator-shell:has(.cr-record-fields, .cr-trash-confirmation) :is(.operator-mobile-bell, .operator-drawer-header button) > .operator-record-tooltip { inset-inline-start: auto; inset-inline-end: 0; }
-.operator-shell:has(.cr-record-fields, .cr-trash-confirmation) :is(button, a):hover > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 300ms; }
-.operator-shell:has(.cr-record-fields, .cr-trash-confirmation) :is(button, a):focus-visible > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 0ms; }
+.operator-shell:has(.cr-record-fields, .cr-trash-confirmation, .cr-schema-builder, .cr-schema-reviews, .cr-schema-trash) :is(.operator-mobile-bell, .operator-drawer-header button) > .operator-record-tooltip { inset-inline-start: auto; inset-inline-end: 0; }
+.operator-shell:has(.cr-record-fields, .cr-trash-confirmation, .cr-schema-builder, .cr-schema-reviews, .cr-schema-trash) :is(button, a):hover > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 300ms; }
+.operator-shell:has(.cr-record-fields, .cr-trash-confirmation, .cr-schema-builder, .cr-schema-reviews, .cr-schema-trash) :is(button, a):focus-visible > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 0ms; }

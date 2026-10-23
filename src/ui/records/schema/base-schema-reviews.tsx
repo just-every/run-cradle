@@ -6,7 +6,7 @@ import { SchemaImpactReview } from './impact-review'
 import { CalculationReview } from './calculation-review'
 export function BaseSchemaReviews({appId}:{appId:string}){
  const reviews=useResource<{items:ManualPreview[]}>(`/api/v1/records/bases/${appId}/reviews`)
- return <section className="cr-card cr-form"><h2>Schema changes awaiting an owner</h2><ResourceState resource={reviews.resource} operation="schema reviews" retry={reviews.refresh}>{data=>data.items.length?<>{data.items.map(preview=><Review key={preview.id} preview={preview} />)}</>:<p>No changes awaiting review.</p>}</ResourceState></section>
+ return <section className="cr-card cr-form cr-schema-reviews"><h2>Schema changes awaiting an owner</h2><ResourceState resource={reviews.resource} operation="schema reviews" retry={reviews.refresh}>{data=>data.items.length?<>{data.items.map(preview=><Review key={preview.id} preview={preview} />)}</>:<p>No changes awaiting review.</p>}</ResourceState></section>
 }
 function Review({preview}:{preview:ManualPreview}){
  const [confirm,setConfirm]=useState(false),command=useCommand<{appId:string;releaseId:string}>(`base-review:${preview.id}`)
