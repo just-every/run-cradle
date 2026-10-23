@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5c3ae9e3a845c8fe0c4f5f13e47fa5d93b25b138a0a896c11fb4514d43048acf",
+      "sha256": "558dae692e6d53f571edc98e7ad28cd58e7815fcc085fa7951b4323d9f6c858e",
       "executable": false
     },
     "DEMO.md": {
@@ -3761,20 +3761,48 @@
       "sha256": "7590f405f1d5b4b2242e82496bbe7c2f34d2e2808e8ee3445dc41b11695217e1",
       "executable": false
     },
+    "docs/contract/SNAP-002/trash-deleted-1440.png": {
+      "sha256": "15ad9336799f2901e6ee37bbbbbaf4850be5530f953ee112db7ebd302d30948f",
+      "executable": false
+    },
+    "docs/contract/SNAP-002/trash-deleted-390.png": {
+      "sha256": "0798bee66a959fa158fd4f462ec6bd5b99f1a7da98d0424b9db9234c662d8887",
+      "executable": false
+    },
+    "docs/contract/SNAP-002/trash-dialog-1440.png": {
+      "sha256": "e7b6e084109d4cdd0097e22d825e06788d313f2ad129c8c2071a6f1799257dfd",
+      "executable": false
+    },
+    "docs/contract/SNAP-002/trash-dialog-390.png": {
+      "sha256": "64520a114954e805baace42b3cf5edeecff458059d324bcfbde7ff8e0e592e69",
+      "executable": false
+    },
     "docs/contract/SNAP-002/trash-list-1440.png": {
-      "sha256": "ee6430b8cb488f555430caf8ce29cb0a47d7afacb11e36eed97da00039417129",
+      "sha256": "531c01483119eedef72d3c62cc6a0676798a78cdcf07c4de1f0605258ff26bff",
       "executable": false
     },
     "docs/contract/SNAP-002/trash-list-390.png": {
-      "sha256": "68d3b317f441801a443bf581df159462ef092ef1c3538bd1961dfe9baa1a480a",
+      "sha256": "fc4044a8be585498a83f7a17203fea8768cd556819c0b4ae3f8278df833861f8",
+      "executable": false
+    },
+    "docs/contract/SNAP-002/trash-record-1440.png": {
+      "sha256": "c7e6c685f9869907860e3c23065c2529678a4227994e2600d352ab6794a59872",
+      "executable": false
+    },
+    "docs/contract/SNAP-002/trash-record-390.png": {
+      "sha256": "bf74c923204b383e8a5201cc25846478e1aa18531d07563bfd38f02e0d014ed3",
       "executable": false
     },
     "docs/contract/SNAP-002/trash-restored-1440.png": {
-      "sha256": "230f80c600d973fdd21d0f9d6f9eb5eceb76c36e14203e242e2f78c178f62391",
+      "sha256": "65805be607571e0d4f0359ad510828a2686bad6699745b2dcba4f88f8120d4fb",
       "executable": false
     },
     "docs/contract/SNAP-002/trash-restored-390.png": {
-      "sha256": "6dc65234d50d88762402a076f08e5f0d00b653face767a8b7a2c4d84dbee4010",
+      "sha256": "73513b62ab8ca64605d6ac1298a7e790237a9dde804a17af07795abe9161fd75",
+      "executable": false
+    },
+    "docs/contract/SNAP-002/trash-tooltip-390.png": {
+      "sha256": "831f8e88761d5df208d5c08433aa53a37c7ab70f3587d7f9d405a3f3c2169188",
       "executable": false
     },
     "docs/contract/VIEW-008/column-controls-1440.png": {
