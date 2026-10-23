@@ -151,7 +151,7 @@ async function screen(h,browser,width,cookie,output,persona,checkpoints){
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,state+': page overflow')
   const report=await new AxeBuilder({page}).analyze(),violations=report.violations.filter(item=>['serious','critical'].includes(item.impact)).map(item=>({id:item.id,targets:item.nodes.map(node=>node.target)}))
   assert.deepEqual(violations,[],state+': serious/critical accessibility');assert.deepEqual(errors,[],state+': browser errors')
-  checkpoints.push({state,persona,width,artifact,serious:0,critical:0,pageOverflow:false})
+  checkpoints.push({state,persona,width,artifact:path.relative(process.cwd(),artifact),serious:0,critical:0,pageOverflow:false})
  }
  return {context,page,capture}
 }

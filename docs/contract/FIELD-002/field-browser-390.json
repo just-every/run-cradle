@@ -1,0 +1,149 @@
+{
+  "width": 390,
+  "checkpoints": [
+    {
+      "state": "existing-field-controls",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-existing-field-controls-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "conversion-options",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-conversion-options-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "conversion-link-controls",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-conversion-link-controls-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "conversion-refused",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-conversion-refused-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "last-table-guard",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-last-table-guard-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "creator-loss-preview",
+      "persona": "creator",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-creator-loss-preview-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "creator-awaiting-owner",
+      "persona": "creator",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-creator-awaiting-owner-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "owner-review-unconfirmed",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-owner-review-unconfirmed-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "owner-review-confirmed",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-owner-review-confirmed-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "owner-adopted-recovery",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-owner-adopted-recovery-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "field-and-table-trash",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-field-and-table-trash-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "field-restored",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-field-restored-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "table-restored",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-table-restored-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "restored-grid",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-restored-grid-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "owner-direct-preview",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-owner-direct-preview-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "state": "builder-adopted-recovery",
+      "persona": "owner",
+      "width": 390,
+      "artifact": "docs/contract/FIELD-002/field-builder-adopted-recovery-390.png",
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    }
+  ]
+}
