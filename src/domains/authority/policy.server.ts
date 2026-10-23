@@ -1,3 +1,4 @@
+import {personalStorePermit} from './personal-stores.server'
 import {liveRecord} from '../records/trash/authority.server'
 import {ownerSheetsRead} from './sheets-read.server'
 import { ownerConnectionControl } from './connection-management'
@@ -86,6 +87,7 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     if(ctx.principal.proposer)return proposerPermit(ctx,request)
     request.cost.forEach(cost=>moneySchema.parse(cost))
     const audMicros=request.cost.filter(c=>c.currency==='AUD').reduce((sum,c)=>sum+canonicalInteger(c.minor)*10n**BigInt(6-c.scale),0n)
+    const personal=await personalStorePermit(db,{scope,authorize},registry,ctx,request);if(personal)return personal
     const loaded=await load(ctx,request.appId),guards:SqlPredicate[]=[...loaded.guards]
     if(ownerConnectionControl(request.action)){
       if(ctx.principal.kind!=='human'||!ctx.principal.sessionId||ctx.principal.credentialId)return denied('A current installation owner session is required to manage connections.')

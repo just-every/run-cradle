@@ -48,7 +48,7 @@ export function fileStoreAdapter(provider: FileStoreProvider, credentials: Crede
         return { items: list.files.map(f => ({ itemId: f.id, name: f.name, mediaType: f.mimeType, size: sizeOrNull(f.size), modifiedAt: isoOrNull(f.modifiedTime), link: f.webViewLink, thumbnail: !!f.thumbnailLink })), next: list.nextPageToken ?? null };
       },
       async thumbnail(id, jobId, itemId) {
-        const headers = await auth(id, jobId), meta = z.object({ thumbnailLink: z.string().optional() }).parse(ok(await transport.request('drive.file', { ids: [itemId], headers, query: new URLSearchParams({ fields: 'thumbnailLink' }), deadline: deadline() }), 'Google Drive metadata'));
+        const headers = await auth(id, jobId), response=await transport.request('drive.file', { ids: [itemId], headers, query: new URLSearchParams({ fields: 'thumbnailLink' }), deadline: deadline() });if([403,404].includes(response.status))return null;const meta = z.object({ thumbnailLink: z.string().optional() }).parse(ok(response, 'Google Drive metadata'));
         return meta.thumbnailLink ? image(await transport.request('drive.thumbnail', { ids: [meta.thumbnailLink], headers, binary: true, maxBytes: 1_000_000, deadline: deadline() })) : null;
       },
     },
@@ -61,7 +61,7 @@ export function fileStoreAdapter(provider: FileStoreProvider, credentials: Crede
         return { items: list.value.filter(f => !f.folder).map(f => ({ itemId: f.id, name: f.name, mediaType: f.file?.mimeType ?? byName(f.name), size: f.size ?? null, modifiedAt: isoOrNull(f.lastModifiedDateTime), link: f.webUrl, thumbnail: thumbnailTypes.has(f.file?.mimeType ?? byName(f.name)) })), next };
       },
       async thumbnail(id, jobId, itemId) {
-        const headers = await auth(id, jobId), item = graphItem.parse(ok(await transport.request('graph.item', { ids: [itemId], headers, query: new URLSearchParams({ '$expand': 'thumbnails' }), deadline: deadline() }), 'OneDrive metadata')), url = item.thumbnails?.[0]?.small?.url;
+        const headers = await auth(id, jobId),response=await transport.request('graph.item', { ids: [itemId], headers, query: new URLSearchParams({ '$expand': 'thumbnails' }), deadline: deadline() });if([403,404].includes(response.status))return null;const item = graphItem.parse(ok(response, 'OneDrive metadata')), url = item.thumbnails?.[0]?.small?.url;
         return url ? image(await transport.request('graph.thumbnail', { ids: [url], headers, binary: true, maxBytes: 1_000_000, deadline: deadline() })) : null;
       },
     },

@@ -1,3 +1,5 @@
+import {fileStoreActors} from './file-stores-actors.mjs'
+import {browserCookies} from './session-cookies.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {workbookDoors} from './workbook-http.mjs'
@@ -9,12 +11,22 @@ export async function fileStoresBrowser(page,h,width,output){
  await d.command('release.adopt',{kind:'manual_schema',previewId:preview.id})
  const entity=(await d.call(`/api/v1/apps/${appId}/entities`)).items.find(e=>e.id===entityId)
  await d.command('record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-site'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:entity.version}])
- const connectionId=(await d.command('connection.configure',{appId,adapterId:'google-drive',name:'Synthetic Cradle Drive',accountId:'me',scopes:[],ownership:[],credentialRef:null})).value.connectionId
- const consent=(await d.command('connection.begin-consent',{connectionId,returnTo:'/app/records'})).value,callback=await d.raw('/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-2',state:new URL(consent.authorizationUrl).searchParams.get('state')}));assert.equal(callback.status,303)
+ const {people}=await fileStoreActors(h,appId)
+ await page.context().addCookies(browserCookies(people.editor.cookie,h.origin))
+ const edge='https://accounts.google.com/**'
+ await page.route(edge,async route=>{const consent=new URL(route.request().url());await route.fulfill({status:302,headers:{location:h.origin+'/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-2',state:consent.searchParams.get('state')})}})})
+ try{
  await page.goto(`${h.origin}/app/records/${appId}`);await j.table('Files')
  await j.action(page.getByRole('link',{name:'synthetic-cradle-site',exact:true}).first());await j.action(page.getByRole('button',{name:'Edit record',exact:true}))
  await j.capture('file-store-cell-empty')
  await j.action(page.getByRole('button',{name:'Choose from a file store',exact:true}))
+ const returned=page.waitForResponse(response=>response.url().includes('/oauth/google/callback')&&response.status()===303)
+ await j.action(page.getByRole('button',{name:'Connect Google Drive',exact:true}));await returned
+ await page.waitForURL(url=>url.origin===h.origin&&url.pathname.startsWith('/app/records'),{timeout:15000})
+ await page.goto(`${h.origin}/app/records/${appId}`);await j.table('Files')
+ await j.action(page.getByRole('link',{name:'synthetic-cradle-site',exact:true}).first());await j.action(page.getByRole('button',{name:'Edit record',exact:true}))
+ await j.action(page.getByRole('button',{name:'Choose from a file store',exact:true}))
+ assert.equal(await page.getByRole('checkbox',{name:'Share previews of files I attach with people who can read this field',exact:true}).isChecked(),false,'Preview sharing starts off and is offered at attach time')
  await j.action(page.getByRole('button',{name:'Show files',exact:true}))
  await page.getByRole('button',{name:'Attach synthetic-cradle-plan.png',exact:true}).waitFor({timeout:8000}).catch(async e=>{throw new Error('Chooser state: '+await page.locator('.cr-store-chooser').innerText()+' | '+e.message)})
  await j.capture('file-store-chooser')
@@ -25,4 +37,5 @@ export async function fileStoresBrowser(page,h,width,output){
  assert.match(await page.locator('.cr-store-reference').innerText(),/Image · Google Drive/)
  await j.capture('file-store-cell-attached')
  assert.equal((await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n,0,'Nothing was copied into private file custody')
+ }finally{await page.unroute(edge);await page.context().addCookies(browserCookies(h.cookie,h.origin))}
 }

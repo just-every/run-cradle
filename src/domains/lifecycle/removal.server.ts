@@ -1,6 +1,8 @@
-import {effects,updateRows} from './changes.server'
+import {effects,updateRows,removeRows} from './changes.server'
 import {AuthorityError} from '../authority/errors'
 export const prepareLifecycleRemoval=(db:D1Database)=>async(ctx:{now:string},id:string)=>{const change=effects()
+  await removeRows(db,change,'connection_credentials','connection_id IN (SELECT id FROM provider_connections WHERE owner_id=?)',[id])
+  await updateRows(db,change,'provider_connections',{state:'revoked',revoked_at:ctx.now,share_previews:0,updated_at:ctx.now},'owner_id=? AND revoked_at IS NULL',[id])
   await updateRows(db,change,'launch_readiness',{state:'Cancelled',updated_at:Date.parse(ctx.now)},"owner_id=? AND state='Outstanding'",[id])
   await updateRows(db,change,'channel_deliveries',{state:'cancelled',updated_at:Date.parse(ctx.now)},"operator_id=? AND state IN ('held','queued','muted')",[id])
   await updateRows(db,change,'oa_sessions',{revoked_at:Date.parse(ctx.now)},'operator_id IN (SELECT base_id FROM cradle_base_operators WHERE principal_id=?) AND revoked_at IS NULL',[id])
