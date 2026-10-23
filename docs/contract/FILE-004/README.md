@@ -1,17 +1,44 @@
-# Store references in base exits and returns
+# FILE-004 — Store references in exits and returns
 
-Base JSON exports attachment cells as native arrays of the FILE-004 portable store objects. CSV sets and workbooks encode those same arrays with recursively sorted keys and no whitespace. Export projects an explicit public allowlist; connection bindings, preview sharing and resolution state remain local. The per-view CSV representation is unchanged. A complete export still requires access to every row and field, and uses the existing RECORDS-006 capture fence. Uploaded attachment bytes and nonempty attachment defaults remain refused.
+Status: missing. Ct, 23 October 2026.
 
-The picker captures the store's content digest, account identity where available and attachment instant. An older reference without captured digest metadata or its attachment instant is refused with a reattach instruction. Export never invents either from a record's creation time. Dropbox and Box account identity is currently null: their OAuth user IDs are not treated as namespace IDs.
+- **FILE-004 — Store references in exits and returns.** A connected-store reference (FILE-002) leaves every base exit (base JSON, CSV-set, workbook) as a portable reference and returns through every base return (RECORDS-005, the RECORDS-006 copy, INTEG-003 workbook import) without copying bytes, calling a store write, or using anyone's credentials but the returning person's own.
 
-JSON imports, copies, CSV returns with the attachment type selected and workbook returns with the attachment type selected preserve every portable object. They initially land unresolved, retain name, type, size, provider and link, and request no thumbnails. Their move-in receipt lists the returned references separately from skipped attachment cells. An erased attacher exports as their current anonymous label, including on an already returned capture.
+  **Shape.** One object per reference, in the field's order, beside FILE-003's `kind:"file"` entries:
+  ```json
+  {"kind":"store","schema":1,
+   "provider":"google-drive|onedrive|dropbox|box|chest",
+   "account":"<store's opaque drive/namespace id, or null>",
+   "itemId":"<store's stable item id>",
+   "name":"…","type":"<MIME>","size":<bytes|null>,"modified":"<ISO 8601 UTC|null>",
+   "digest":{"algorithm":"sha256|sha1|md5|quickxor|dropbox-content-hash","value":"…"}|null,
+   "link":"<store's own https link on the provider's host, or null>",
+   "attachedBy":"<person reference as RECORDS-006 exports people values>",
+   "attachedAt":"<ISO 8601 UTC>"}
+  ```
+  - `digest` is the store's own content hash: Drive sha256, else sha1 or md5; OneDrive sha256, else quickXor; Dropbox content_hash; Box sha1. It is null only where the store gives none (native Google documents, Chest links).
+  - An export never carries the connection ID, a token or other credential, a thumbnail URL, a temporary or signed download URL, sharing settings, resolution state, or bytes.
+  - Base JSON holds the array natively. CSV-set and workbook cells hold the same array as canonical JSON text (sorted keys, no whitespace).
+  - The existing per-view CSV keeps its FILE-002 columns.
+  - Row and field policy, and RECORDS-006 fencing, apply as to any value. An erased attacher exports as their anonymous label.
 
-A writer can use **Check my store** on an unresolved reference. The server requires the writer's own connected account matching both provider and non-null account identity. It runs one read-only metadata operation through the existing connection job. Another person's connection and the thumbnail-sharing exception cannot carry this operation. Missing or refused items remain unresolved. Equal digests resolve; a null captured digest resolves as unverified. Changed content remains unresolved until the person explicitly confirms that file. Confirmation re-fetches metadata, refuses a stale reviewed digest, refreshes name, size, modified and digest, and records `attachment.reference.confirm-changed` in history. The ordinary record writer continues to refuse fabricated imported bindings; only an exact metadata-verified server proof crosses that boundary.
+  **Return.**
+  - Preview makes no writes. It resolves each reference by a read-only connection-job metadata lookup, only through a connection already held by the returning person for the same provider and account, and it names counts for each outcome.
+  - Resolved means the item is found and the digest matches. A null digest also resolves, but is marked "unverified".
+  - Each other outcome lands as a visibly **unresolved** reference: no matching connection; not found or no access; digest changed. An unresolved reference shows its name, type, size, provider and link, with an "Unresolved" badge and no thumbnail. It is listed on the move-in receipt beside the skipped-attachment list.
+  - Import never prompts for consent mid-job, never binds a reference to another person's connection, and never guesses. A cell that is not a valid array is a row error naming the cell.
+  - Afterwards, a person with write authority on the field and a matching connection of their own can resolve references. A changed digest is accepted only by explicit per-reference or bulk confirmation, which is recorded and refreshes name, size, modified and digest from the store.
+  - The portable fields are canonical content, so re-exporting a base whose references are still unresolved reproduces identical objects. Resolution state and connection binding are installation-local, outside the capture envelope.
 
-Remaining gaps: import preview does not perform automatic metadata lookup; it counts all references as unresolved. Null-account references (including current Dropbox, Box and Chest captures) cannot be resolved by guessing a provider connection. Resolution compares the captured algorithm with the provider's current preferred digest; a different algorithm cannot establish equality and requires explicit confirmation. Bulk confirmation and real-provider consent remain unproven. The seeded erased-person export case proves export projection, not the full erasure workflow.
+  *Acceptance:* In the emitted Worker, with stores faked only at the network edge:
+  - A base with references from all four stores, a Chest link and a mixed field round-trips through base JSON, CSV-set and workbook. Every export is scanned and holds no connection ID, sealed secret, edge token, thumbnail URL or temporary URL.
+  - Return to a fresh installation with no connection lands every reference unresolved and visible at 1440 and 390.
+  - Connecting the matching store and resolving binds each reference. A digest changed at the edge stays unresolved until confirmed. Another person's connection is never used.
+  - Re-export before resolution gives byte-equal reference objects.
+  - A restricted field is absent.
+  - A malformed cell is refused naming the cell.
+  - The provider sees no write or sharing call.
 
-Existing public journeys are extended rather than adding test registrations:
+  *Status:* missing — base JSON, CSV-set and workbook exports refuse attachment fields that hold store references (FILE-002 Gap).
 
-- `tests/records-base-exits.mjs`, its existing launch roundtrip, calls `storeReferenceReturns` against the emitted Worker for all three exits/returns, copies, canonical re-export, receipt, malformed cells, restricted attachment export and anonymous attacher projection.
-- `tests/evidence-read-privacy.mjs` calls the four-store picker/export credential scan and `storeReferenceResolution` through authenticated HTTP, with only the provider network edge faked. It covers own-account binding, another person's matching connection, read-only denial, forged binding denial, provider refusal, changed-content confirmation and its audit, stale confirmation and null-digest verification state.
-- `tests/ui-base-import.mjs` extends its existing desktop and phone journey with `unresolvedStoresBrowser` and `resolvedStoresBrowser`, including the actual check and confirmation controls. Browser evidence is recorded by the integrating builder.
+Gap: base JSON, CSV-set and workbook exports refuse attachment fields that hold store references (FILE-002 Gap).
