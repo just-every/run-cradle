@@ -131,6 +131,16 @@ test('[BASE-ACCESS-004 RECORDS-001] every retained launch transport enforces cur
       assert.equal(mutation.status,403)
       const create = await h.request(person.session,'/api/v1/commands/launch.campaign.create',{ method:'POST',body:JSON.stringify({ commandId:createUlid(),expected:[],input:{fields:{code:'DENIED',name:'Unauthorized',ownerId:h.owner,startDate:'2026-10-01',launchDate:'2026-12-01',objective:'No',statusSummary:'No',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}} }) })
       assert.equal(create.status,403)
+      // The command door answers them about an existing record exactly as about a missing
+      // one: no stored version and no check that depends on the record's private values.
+      const { version } = await h.db.prepare('SELECT version FROM campaigns WHERE id=?').bind(first.id).first()
+      const revision = [{ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities.campaign, recordId: first.id }, version }], answers = []
+      for (const [id, expected, changes] of [[createUlid(), [], { name: 'Unauthorized edit' }], [first.id, [], { name: 'Unauthorized edit' }], [first.id, revision, { startDate: '2099-01-01' }], [first.id, revision, { startDate: '2000-01-01' }]]) {
+        const response = await h.request(person.session, '/api/v1/commands/launch.campaign.patch', { method: 'POST', body: JSON.stringify({ commandId: createUlid(), expected, input: { id, changes } }) })
+        const { error } = await response.json()
+        answers.push([response.status, error.code, Object.hasOwn(error, 'currentVersion')])
+      }
+      assert.deepEqual(answers, Array(4).fill([404, 'not_found', false]), person.id)
     }
     // Global search now searches each authorized table independently; it no longer
     // requires the full legacy launch projection. Check readable rows, not that gate.

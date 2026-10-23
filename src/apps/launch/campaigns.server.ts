@@ -7,9 +7,10 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { eq, trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { tables,tagTable,customValueTable,activityTable,type LaunchRow } from './storage.server'
-import { emptyChange,load,versionGuard,operator,recordChange,plan,fail,ref,type LaunchContext,type ChangeSet } from './domain.server'
+import { emptyChange,versionGuard,operator,recordChange,plan,fail,ref,type LaunchContext,type ChangeSet } from './domain.server'
 import { prepareRecord } from './records.server'
 import { readableWire } from './result-projection.server'
+import { loadTarget } from './target-authority.server'
 export async function campaignSidecars(context:LaunchContext,set:ChangeSet,id:string,fields:Record<string,unknown>,now:number,ctx:RequestContext){
  const track=(field:string,before:unknown,after:unknown)=>{if(JSON.stringify(before)===JSON.stringify(after))return;set.audit.push({action:'campaign.updated',subject:ref('campaign',id),changes:[{fieldId:field==='tags'?'00000000000000000000007990':field,before:{state:'value',value:JSON.stringify(before)},after:{state:'value',value:JSON.stringify(after)}}],sourceIds:[],personalContentRefs:[]});set.mutations.push({kind:'insert',table:activityTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,campaign_id:id,subject_id:id,actor_id:ctx.principal.humanId,type:'campaign.updated',field_name:field,previous_value:JSON.stringify(before),next_value:JSON.stringify(after),message:`campaign.updated: ${field}`}})}
  if('tags'in fields){const previous=await context.db.prepare('SELECT id,tag FROM campaign_tags WHERE campaign_id=?').bind(id).all();set.mutations.push({kind:'delete',table:tagTable,where:eq(tagTable,'campaign_id',id),expectedRows:previous.results.length});track('tags',previous.results.map(t=>t.tag),[...new Set(fields.tags as string[])]);for(const tag of [...new Set(fields.tags as string[])])set.mutations.push({kind:'insert',table:tagTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,campaign_id:id,tag}})}
@@ -17,7 +18,7 @@ export async function campaignSidecars(context:LaunchContext,set:ChangeSet,id:st
 }
 export async function prepareCampaign(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,operation:string){
  if(operation==='create'||operation==='patch')return prepareRecord(context,ctx,input,'campaign',operation,async(set,row)=>{await campaignSidecars(context,set,String((row as Record<string,Json>).id),(input.input.fields??input.input.changes) as Record<string,unknown>,Date.parse(ctx.now),ctx)})
- const id=String(input.input.id),before=await load(context.db,'campaign',id),set=emptyChange();versionGuard(set,'campaign',before,input.expected)
+ const id=String(input.input.id),before=await loadTarget(context,ctx,input,`launch.campaign.${operation}`,'campaign',id),set=emptyChange();versionGuard(set,'campaign',before,input.expected)
  if(operation==='delete'){
   if(input.input.confirmationCode!==before.code)fail('confirmationCode must exactly match the campaign code')
   const analysis=await prepareLaunchAnalysisErasure(context,ctx,id);set.guards.push(...analysis.guards);set.mutations.push(...analysis.mutations);const effects=await integration(context,'deleteCampaign')(ctx,id);set.guards.push(...effects.guards);set.mutations.push(...effects.mutations,{kind:'delete',table:tables.campaign,where:eq(tables.campaign,'id',id),expectedRows:1});set.audit.push({action:'campaign.deleted',subject:null,changes:[],sourceIds:[],personalContentRefs:[]});return plan(context,ctx,input,'launch.campaign.delete',set,{deletedId:id},'campaign')

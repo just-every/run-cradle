@@ -3,11 +3,12 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { tables,tagTable,customValueTable,dependencyTable,type LaunchRow } from './storage.server'
-import { emptyChange,load,operator,versionGuard,recordChange,plan,capacity,validateDomain,mappedFields,type LaunchContext } from './domain.server'
+import { emptyChange,operator,versionGuard,recordChange,plan,capacity,validateDomain,mappedFields,type LaunchContext } from './domain.server'
 import { readableWire } from './result-projection.server'
+import { loadTarget } from './target-authority.server'
 import { shiftDate } from './milestones.server'
 export async function prepareDuplicate(context:LaunchContext,ctx:RequestContext,input:CommandInput<{id:string;newCode:string;newLaunchDate?:string}>){
- const before=await load(context.db,'campaign',input.input.id),set=emptyChange();versionGuard(set,'campaign',before,input.expected);await capacity(context.db,set,'campaign');await operator(context.db,set,before.owner_id)
+ const before=await loadTarget(context,ctx,input,'launch.campaign.duplicate','campaign',input.input.id),set=emptyChange();versionGuard(set,'campaign',before,input.expected);await capacity(context.db,set,'campaign');await operator(context.db,set,before.owner_id)
  const now=Date.parse(ctx.now),id=createUlid(),delta=input.input.newLaunchDate?(Date.parse(input.input.newLaunchDate)-Date.parse(String(before.launch_date)))/86400000:0
  const row:LaunchRow={...Object.fromEntries(Object.entries(before).filter(([key])=>tables.campaign.writableColumnIds.includes(key))),id,created_at:now,updated_at:now,version:1,code:input.input.newCode,start_date:shiftDate(String(before.start_date),delta),launch_date:shiftDate(String(before.launch_date),delta),archived_at:null,health_set_by_id:ctx.principal.humanId,health_updated_at:now}
  await validateDomain(context.db,set,'campaign',mappedFields('campaign',row),true,id)

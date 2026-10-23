@@ -7,11 +7,12 @@ import { tables,dependencyTable,type LaunchRow } from './storage.server'
 import { emptyChange,load,versionGuard,recordChange,plan,fail,type LaunchContext } from './domain.server'
 import { prepareRecord } from './records.server'
 import { readableWire } from './result-projection.server'
+import { loadTarget } from './target-authority.server'
 export const localDate=(now:string,timezone:string)=>new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now))
 export const shiftDate=(date:string,days:number)=>new Date(Date.parse(date+'T00:00:00.000Z')+days*86400000).toISOString().slice(0,10)
 export async function prepareMilestone(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,operation:string){
  if(operation==='set-predecessors'){
-  const before=await load(context.db,'milestone',String(input.input.id)),set=emptyChange();versionGuard(set,'milestone',before,input.expected)
+  const before=await loadTarget(context,ctx,input,'launch.milestone.set-predecessors','milestone',String(input.input.id)),set=emptyChange();versionGuard(set,'milestone',before,input.expected)
   const predecessors=input.input.predecessorIds as string[];if(new Set(predecessors).size!==predecessors.length)fail('Duplicate predecessor')
   const edges=(await context.db.prepare('SELECT id,milestone_id,predecessor_id FROM milestone_dependencies ORDER BY id').all<{id:string;milestone_id:string;predecessor_id:string}>()).results
   const graph=new Map<string,string[]>();for(const edge of edges)if(edge.milestone_id!==before.id)graph.set(edge.milestone_id,[...(graph.get(edge.milestone_id)??[]),edge.predecessor_id]);graph.set(before.id,predecessors)

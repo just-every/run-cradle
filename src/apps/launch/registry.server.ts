@@ -19,6 +19,7 @@ import { prepareLens } from './lenses.server'
 import { prepareCustomField } from './custom-fields.server'
 import { prepareBulk } from './bulk.server'
 import type { LaunchContext } from './domain.server'
+import { authorizeTarget } from './target-authority.server'
 export type LaunchHandler=(ctx:RequestContext,input:CommandInput<Record<string,unknown>>)=>Promise<AdmissionPlan<Json>>
 export function createLaunchHandlers(context:LaunchContext):Partial<Record<LaunchAction,LaunchHandler>>{
  const handlers:Partial<Record<LaunchAction,LaunchHandler>>={}
@@ -28,7 +29,8 @@ export function createLaunchHandlers(context:LaunchContext):Partial<Record<Launc
   if(kind==='campaign'&&operation!=='duplicate')handlers[action]=(ctx,input)=>prepareCampaign(context,ctx,input,operation!)
   if(kind==='campaign'&&operation==='duplicate')handlers[action]=(ctx,input)=>prepareDuplicate(context,ctx,input as CommandInput<{id:string;newCode:string;newLaunchDate?:string}>)
   if((kind==='deliverable'||kind==='risk'||kind==='decision')&&['create','patch','delete'].includes(operation!))handlers[action]=(ctx,input)=>prepareRecord(context,ctx,input,kind,operation as 'create'|'patch'|'delete')
-  if((kind==='deliverable'||kind==='risk'||kind==='decision')&&!['create','patch','delete','supersede'].includes(operation!))handlers[action]=(ctx,input)=>prepareTransition(context,ctx,input,kind,operation!)
+  // Command doors establish target authority first; the retained risk automation binds its own subjects.
+  if((kind==='deliverable'||kind==='risk'||kind==='decision')&&!['create','patch','delete','supersede'].includes(operation!))handlers[action]=async(ctx,input)=>{await authorizeTarget(context,ctx,input,`launch.${action}`,kind,String(input.input.id));return prepareTransition(context,ctx,input,kind,operation!)}
   if(action==='decision.supersede')handlers[action]=(ctx,input)=>prepareSupersede(context,ctx,input)
   if(kind==='milestone')handlers[action]=(ctx,input)=>prepareMilestone(context,ctx,input,operation!)
   if(kind==='lens')handlers[action]=(ctx,input)=>prepareLens(context,ctx,input,operation!)

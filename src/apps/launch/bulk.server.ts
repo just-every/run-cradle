@@ -8,6 +8,7 @@ import { emptyChange,load,operator,versionGuard,recordChange,plan,fail,type Laun
 import { prepareCampaign,campaignSidecars } from './campaigns.server'
 import { prepareRecord } from './records.server'
 import type { LaunchKind } from './descriptors.server'
+import { loadTarget } from './target-authority.server'
 const bulkTable=registerTable('launch_bulk',['id','created_at','actor_id','expires_at','undone_at','snapshot_json'])
 type Snapshot={kind:LaunchKind;row:LaunchRow;tags:string[];customFields:Record<string,unknown>;afterVersion:number}
 export async function prepareBulk(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,operation:'apply'|'undo'){
@@ -22,7 +23,7 @@ export async function prepareBulk(context:LaunchContext,ctx:RequestContext,input
  const snapshots:Snapshot[]=[]
  // A rejected bulk change names the first record that fails, then changes nothing.
  const named=async<T>(row:LaunchRow,prepare:()=>Promise<T>)=>{try{return await prepare()}catch(error){if(error instanceof AdmissionError&&error.code!=='version_conflict')throw new AdmissionError(error.code,`${row.name??row.title??row.id}${row.code?` (${row.code})`:''}: ${error.message}`);throw error}}
- for(const id of ids){const row=await load(context.db,kind,id);versionGuard(set,kind,row,input.expected);const tags=kind==='campaign'?(await context.db.prepare('SELECT tag FROM campaign_tags WHERE campaign_id=?').bind(id).all<{tag:string}>()).results.map(t=>t.tag):[],customFields=kind==='campaign'?Object.fromEntries((await context.db.prepare('SELECT field_id,value_json FROM launch_custom_values WHERE campaign_id=?').bind(id).all<{field_id:string;value_json:string}>()).results.map(v=>[v.field_id,JSON.parse(v.value_json)])):{}
+ for(const id of ids){const row=await loadTarget(context,ctx,input,'launch.bulk.apply',kind,id);versionGuard(set,kind,row,input.expected);const tags=kind==='campaign'?(await context.db.prepare('SELECT tag FROM campaign_tags WHERE campaign_id=?').bind(id).all<{tag:string}>()).results.map(t=>t.tag):[],customFields=kind==='campaign'?Object.fromEntries((await context.db.prepare('SELECT field_id,value_json FROM launch_custom_values WHERE campaign_id=?').bind(id).all<{field_id:string;value_json:string}>()).results.map(v=>[v.field_id,JSON.parse(v.value_json)])):{}
   snapshots.push({kind,row,tags,customFields,afterVersion:row.version+1});let changes:Record<string,unknown>={};let action='patch'
   if(change.kind==='field')changes[String(change.field)]=change.value
   else if(change.kind==='tag-add'||change.kind==='tag-remove'){if(kind!=='campaign')fail('Tags belong to campaigns');changes.tags=change.kind==='tag-add'?[...new Set([...tags,String(change.value)])]:tags.filter(t=>t!==change.value)}

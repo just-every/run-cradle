@@ -6,9 +6,10 @@ import { createUlid } from '../../core/shared/ids'
 import { type LaunchKind } from './descriptors.server'
 import { tables,type LaunchRow } from './storage.server'
 import { readableWire } from './result-projection.server'
-import { emptyChange, load,versionGuard,validateDomain,mappedFields,physicalFields,recordChange,plan,capacity,toWire,fail,type LaunchContext,type ChangeSet } from './domain.server'
+import { loadTarget } from './target-authority.server'
+import { emptyChange,versionGuard,validateDomain,mappedFields,physicalFields,recordChange,plan,capacity,toWire,fail,type LaunchContext,type ChangeSet } from './domain.server'
 export async function prepareRecord(context:LaunchContext,ctx:RequestContext,input:CommandInput<{id?:string;fields?:Record<string,unknown>;changes?:Record<string,unknown>}>,kind:LaunchKind,operation:'create'|'patch'|'delete',prepareEffects?:(set:ChangeSet,result:Json)=>Promise<void>){
- const set=emptyChange(),now=Date.parse(ctx.now),id=input.input.id??createUlid(),before=operation==='create'?null:await load(context.db,kind,id)
+ const set=emptyChange(),now=Date.parse(ctx.now),id=input.input.id??createUlid(),before=operation==='create'?null:await loadTarget(context,ctx,input,`launch.${kind}.${operation}`,kind,id)
  const finish=async(result:Json,row?:LaunchRow)=>{await prepareEffects?.(set,result);return plan(context,ctx,input,`launch.${kind}.${operation}`,set,row?await readableWire(context,ctx,set,kind,row):result,kind)}
  if(before)versionGuard(set,kind,before,input.expected)
  if(kind==='decision'&&operation==='patch'&&before&&['Approved','Rejected','Cancelled'].includes(String(before.state)))fail('A terminal decision cannot be edited; create a superseding decision')
