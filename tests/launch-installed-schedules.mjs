@@ -7,7 +7,6 @@ import {pathToFileURL} from 'node:url'
 const repo=path.resolve(process.env.CRADLE_REPO??process.cwd())
 const fromRepo=file=>import(pathToFileURL(path.join(repo,file)).href)
 const {recordsImportBrowserRuntime}=await fromRepo('tests/helpers/records-import-browser-runtime.mjs')
-const {freePort}=await fromRepo('tests/helpers/free-port.mjs')
 const {createUlid}=await fromRepo('src/core/shared/ids.ts')
 const {LAUNCH_APP_ID,launchEntities}=await fromRepo('src/apps/launch/contracts.ts')
 // The held-out Monday is always ahead of the wall clock, so its scheduled ticks are never stale.
@@ -17,7 +16,7 @@ assert.equal(new Date(monday+'T00:00:00Z').getUTCDay(),1)
 
 await test('emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
  let outbound=0
- const h=await recordsImportBrowserRuntime(await freePort(),{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
+ const h=await recordsImportBrowserRuntime(0,{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
  try{
   // Keep the configured Base sender: only its provider request is captured at
   // the test network edge. Exclude the initial sign-in mail from schedule counts.

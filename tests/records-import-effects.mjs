@@ -15,7 +15,7 @@ contract('RECORDS-005 AUTO-USER-001','import job writes fire no automation, noti
  const rows=[]
  try {
   edge=await automationNetworkEdge()
-  h=await userAutomationRuntime(18961,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
+  h=await userAutomationRuntime(0,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
    EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})
   // This case measures import suppression and immediate delivery, independently of wall-clock quiet hours.
   const settings=(await h.request('/api/v1/settings')).data

@@ -10,7 +10,6 @@ import {galleryBrowserJourney} from './helpers/records-gallery-journey.mjs'
 import {calendarFeedJourney} from './helpers/records-calendar-feed.mjs'
 import {recordsBrowserRuntime} from './helpers/records-browser-runtime.mjs'
 import {recordsJourney} from './helpers/records-browser-journey.mjs'
-import {freePort} from './helpers/free-port.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {newField} from '../src/ui/records/schema/templates.ts'
 
@@ -20,7 +19,7 @@ contract('VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIEW-015','reco
  const output=path.resolve('.private/calendar');await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await recordsBrowserRuntime(await freePort())
+  h=await recordsBrowserRuntime(0)
   await h.db.prepare("UPDATE workspace_settings SET timezone='America/New_York'").run()
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   for(const width of [1440,390]){

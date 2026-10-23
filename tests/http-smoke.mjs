@@ -7,10 +7,9 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
-import {freePort} from './helpers/free-port.mjs'
 
-const port = Number(process.env.CRADLE_TEST_PORT ?? await freePort())
-const baseUrl = `http://127.0.0.1:${port}`
+const port = Number(process.env.CRADLE_TEST_PORT ?? 0)
+let baseUrl = `http://127.0.0.1:${port}`
 const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
 
 const waitForWorker = async () => {
@@ -44,7 +43,7 @@ test('the Worker seeds and serves the real portfolio spine locally', async (cont
   })
   let workerOutput = ''
 
-  worker.stdout.on('data', (chunk) => { workerOutput += chunk })
+  worker.stdout.on('data', (chunk) => { workerOutput += chunk; const listener=workerOutput.match(/Emitted Worker listening at (http:\/\/127\.0\.0\.1:\d+)/); if(listener)baseUrl=listener[1] })
   worker.stderr.on('data', (chunk) => { workerOutput += chunk })
   context.after(async () => {
     if (worker.exitCode === null) {

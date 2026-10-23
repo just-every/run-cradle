@@ -4,7 +4,8 @@ import { randomBytes } from 'node:crypto'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { emittedRuntime } from './emitted-runtime.mjs'
+import {emittedRuntime} from './emitted-runtime.mjs'
+import {emittedMailRuntime} from './emitted-mail-runtime.mjs'
 import { migrationInventory } from '../../scripts/migration-groups.mjs'
 import {loadDescriptorRegistry} from '../../src/domains/records/loader.server.ts'
 import {launchDescriptors} from '../../src/apps/launch/descriptors.server.ts'
@@ -13,22 +14,22 @@ import {stagingDescriptor} from '../../src/domains/evidence/staging.server.ts'
 import {sourceIntakeDescriptor} from '../../src/domains/construction/intake.server.ts'
 import {INSTALLATION_AUTHORITY_APP} from '../../src/domains/authority/pending-app.server.ts'
 import {completeFirstRun} from './complete-first-run.mjs'
-import {createFixtureMail,fixtureMessages} from './fixture-mail.mjs'
+import {fixtureMessages} from './fixture-mail.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
 
 /** Native Base owner and a real one-use emailed token captured at the provider edge.
  * No LOCAL_MEMBER_ID or injected production principal is used. */
-export async function recordsImportBrowserRuntime(port=18847,network={}) {
- const directory=await mkdtemp(path.join(tmpdir(),'records-base-owner-')),origin=`http://127.0.0.1:${port}`
+export async function recordsImportBrowserRuntime(port=0,network={}) {
+ const directory=await mkdtemp(path.join(tmpdir(),'records-base-owner-'))
+ let origin=`http://127.0.0.1:${port}`
  const credentials={session:randomBytes(32).toString('hex'),setup:randomBytes(32).toString('hex')}
  const options={origin,email:'import-owner@example.test',name:'Import owner',workspace:'Import records',timezone:'UTC',currency:'USD'}
  const environment={APP_ORIGIN:origin,AUTH_LOCAL:'true',OWNER_EMAIL:options.email,SESSION_SECRET:credentials.session,SETUP_TOKEN:credentials.setup,WORKSPACE_NAME:options.workspace,WORKSPACE_TIMEZONE:options.timezone,WORKSPACE_CURRENCY:options.currency,MAIL_FROM:'auth@localhost.test',...network.bindings}
  let runtime,db,mail
  try {
-  mail=await createFixtureMail(port,network.outbound)
-  Object.assign(environment,mail.bindings)
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE emitted-runtime')
-  runtime=await emittedRuntime(directory,port,environment,mail.fetch)
+  const fixture=await emittedMailRuntime(directory,port,environment,network.outbound)
+  ;({runtime,mail,origin,port}=fixture);Object.assign(environment,fixture.bindings)
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE d1-binding')
   db=await runtime.getD1Database('DB')
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE migrations')

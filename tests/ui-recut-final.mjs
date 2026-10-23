@@ -7,7 +7,6 @@ import {contract} from './contract.mjs'
 import {recordsBrowserRuntime} from './helpers/records-browser-runtime.mjs'
 import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './helpers/accessibility-evidence.mjs'
-import {freePort} from './helpers/free-port.mjs'
 import {waitForResourcePanels} from './helpers/accessibility-readiness.mjs'
 
 const output=path.resolve(process.env.CRADLE_RECUT_OUTPUT??'../evidence/recut-final')
@@ -37,7 +36,7 @@ contract('RECORDS-003] [BASE-PUBLIC-003','final records review preserves spacing
  let h,browser
  await mkdir(output,{recursive:true})
  try{
-  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECUT_PORT ?? await freePort()))
+  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECUT_PORT ?? 0))
   browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   const receipts=[]
   for(const width of accessibilityWidths){

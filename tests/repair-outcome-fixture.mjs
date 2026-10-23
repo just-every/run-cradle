@@ -4,12 +4,10 @@ import {mkdtemp,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {spawnSync} from 'node:child_process'
-import {emittedRuntime} from './helpers/emitted-runtime.mjs'
-import {createFixtureMail} from './helpers/fixture-mail.mjs'
+import {emittedMailRuntime} from './helpers/emitted-mail-runtime.mjs'
 import {installLegacyFixture} from './helpers/install-legacy-fixture.mjs'
 import {installUiRepairsFixture} from './ui-repairs-fixture.mjs'
 import {baseHttpSession} from './helpers/base-http-session.mjs'
-import {freePort} from './helpers/free-port.mjs'
 import {repairProviderEdge} from './repair-outcome-edge.mjs'
 import {issueReviewedGrant} from './repair-outcome-grant-checks.mjs'
 const {createUlid}=await import('../src/core/shared/ids.ts')
@@ -17,14 +15,14 @@ const model=await import('../src/apps/repairs/model.ts')
 const {repairDescriptors}=await import('../src/apps/repairs/descriptors.ts')
 const {environmentKeyring,seal}=await import('../src/domains/connections/crypto.server.ts')
 export async function repairOutcomeFixture(){
- const directory=await mkdtemp(path.join(tmpdir(),'cradle-repair-outcome-')),port=await freePort(),origin=`http://127.0.0.1:${port}`,edge=repairProviderEdge()
+ const directory=await mkdtemp(path.join(tmpdir(),'cradle-repair-outcome-')),edge=repairProviderEdge()
+ let origin
  let runtime,mail
  try{
-  mail=await createFixtureMail(port,edge.fetch)
   const migration=spawnSync(process.execPath,['scripts/migrate-local.mjs','--persist-to',directory],{encoding:'utf8',maxBuffer:16*1024*1024});assert.equal(migration.status,0,migration.stderr+migration.stdout)
   const owner=await installLegacyFixture(directory,{installationOwner:true}),fixture=await installUiRepairsFixture(directory,owner)
   const key=Buffer.alloc(32,9).toString('base64url')
-  runtime=await emittedRuntime(directory,port,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long',APP_ORIGIN:origin,CONNECTION_ENCRYPTION_KEY_VERSION:'test',CONNECTION_ENCRYPTION_KEY:key,...mail.bindings},mail.fetch,{automaticQueues:true})
+  ;({runtime,mail,origin}=await emittedMailRuntime(directory,0,{AUTH_LOCAL:'true',OWNER_EMAIL:'maya@northstar.example',MAIL_FROM:'auth@localhost.test',SESSION_SECRET:'test-only-session-secret-32-characters-long',CONNECTION_ENCRYPTION_KEY_VERSION:'test',CONNECTION_ENCRYPTION_KEY:key,},edge.fetch,{automaticQueues:true}))
   await runtime.ready
   const db=await runtime.getD1Database('DB'),now=new Date().toISOString(),manager='01ARZ3NDEKTSV4RRFFQ69G5FAB',other='01ARZ3NDEKTSV4RRFFQ69G5FAC'
   const policy=(await db.prepare('SELECT p.* FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(owner,model.REPAIRS_APP_ID).first())
