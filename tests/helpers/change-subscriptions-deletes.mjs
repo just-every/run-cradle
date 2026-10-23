@@ -50,7 +50,9 @@ export async function changeSubscriptionDeletes(h,edge){
    const held=(await h.request(`/api/v1/records/trash?appId=${h.appId}`)).data.items.find(item=>item.id===record.id)
    // Current field narrowing applies to restoration, and an unreadable restored row is omitted.
    await policy(key,rule=>{rule.readableFields=rule.readableFields.filter(id=>id!==h.statusId);if(scope==='restricted')rule.rows={kind:'condition',fieldId:h.nameId,op:'eq',value:'synthetic-cradle-64'}})
-   await h.request('/api/v1/records/trash/restore',{method:'POST',body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,recordId:record.id,version:held.version}})
+   const restoreCommand=createUlid()
+   await h.request('/api/v1/records/trash/restore',{method:'POST',body:{commandId:restoreCommand,appId:h.appId,entityId:h.entityId,recordId:record.id,version:held.version}})
+   assert.equal((await h.db.prepare('SELECT state FROM runtime_queue_publications WHERE command_id=?').bind(restoreCommand).first())?.state,'published','A restored change publishes its durable queue wake')
    await tick();await tick()
    assert.deepEqual((await fetchPage(subscription.cursor)).data,deletion.data,'Same cursor replays its captured delete range')
    const restored=(await fetchPage(deletion.data.cursor)).data
