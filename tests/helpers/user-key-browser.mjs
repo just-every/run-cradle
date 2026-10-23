@@ -1,3 +1,4 @@
+import {adminAuditBrowser} from './admin-audit-browser.mjs'
 import assert from 'node:assert/strict'
 
 export async function userKeyBrowser(page,h,journey,width) {
@@ -27,4 +28,5 @@ export async function userKeyBrowser(page,h,journey,width) {
  await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`,{secret:key.secret,status:401})
  assert.equal(await content.getByLabel(/^API key/).count(),0)
  await journey.capture('user-key-revoked')
+ await adminAuditBrowser(page,h,journey)
 }

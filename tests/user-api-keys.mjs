@@ -1,3 +1,4 @@
+import {adminAuditJourney} from './helpers/admin-audit-journey.mjs'
 import {recordsRestJourney} from './helpers/rest-api-journey.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -34,9 +35,11 @@ contract('API-USER-001','[API-USER-002] [WEBHOOK-USER-002] scoped subscription c
   const browser=await fetch(h.origin+'/app/settings',{redirect:'manual',headers:{authorization:`Bearer ${issued.secret}`}})
    .catch(error=>assert.fail(`Browser request transport failed: ${error.cause?.code??error.cause?.name??'unknown'}`))
   assert.equal(browser.status,303);await browser.body?.cancel()
-  await h.request(`/api/user-keys/${issued.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId:h.appId}})
+  const revokeCommand=createUlid()
+  await h.request(`/api/user-keys/${issued.id}/revoke`,{method:'POST',body:{commandId:revokeCommand,appId:h.appId}})
   await h.request(route,{secret:issued.secret,status:401})
   const writable=(await h.request('/api/user-keys',{method:'POST',status:201,body:{...issue,commandId:createUlid(),name:'Write service',permissions:'write'}})).data.key
+  await adminAuditJourney(h,{issueCommand:issue.commandId,revokeCommand,secret:writable.secret})
   const commandId=createUlid(),patched=(await h.patch(record,{[h.statusId]:'updated'},writable.secret,commandId)).data
   assert.equal(patched.state,'committed');assert.equal(patched.value.fields[h.statusId].value,'updated')
   const replay=(await h.patch(record,{[h.statusId]:'updated'},writable.secret,commandId)).data

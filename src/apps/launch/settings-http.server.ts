@@ -1,3 +1,4 @@
+import {adminAuditResponse} from '../../domains/admission/admin-audit.server'
 import { sampleRevisions } from './sample-revisions.server'
 import { Hono } from 'hono'
 import type { ServerFoundation } from '../../core/app/foundation.server'
@@ -7,6 +8,7 @@ import { authorizeLaunchProjection } from './projection-authority.server'
 /** Settings reads for custom-field definitions (SET-001) and installed samples (SET-003). */
 export function createLaunchSettingsRouter(db: D1Database, foundation: ServerFoundation) {
  const router = new Hono()
+ router.get('/admin-audit',c=>adminAuditResponse(c.req.raw,db,foundation))
  const read = (load: () => Promise<unknown[]>) => async (c: import('hono').Context) => {
   const ctx = await foundation.authenticate(c.req.raw, 'http', createUlid())
   const recheck = await authorizeLaunchProjection(db, foundation.policy, ctx)

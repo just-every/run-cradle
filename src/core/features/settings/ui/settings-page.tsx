@@ -1,3 +1,4 @@
+import {AdminAuditPanel} from '../../../../ui/settings/admin-audit-panel'
 import {TrashPanel} from '../../../../ui/settings/trash-panel'
 import {ReadinessSettings} from '../../../../ui/settings/readiness-settings'
 import {LaunchAiSettings} from '../../../../ui/settings/launch-ai-settings'
@@ -66,6 +67,7 @@ export const SettingsPage = () => {
         <LazySettingsPanel title="Trash"><TrashPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Imports"><ImportsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Sample data"><SampleDataPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Admin audit log"><AdminAuditPanel /></LazySettingsPanel>
         <LazySettingsPanel title="People and authority"><AccessPanel /></LazySettingsPanel>
         <details className="cr-detail" onToggle={event => setConnectionsOpen(event.currentTarget.open)}><summary>Connections</summary>{connectionsOpen && <ConnectionPanel />}</details>
       </div>
