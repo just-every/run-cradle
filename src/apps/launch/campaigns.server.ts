@@ -7,8 +7,9 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { eq, trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { tables,tagTable,customValueTable,activityTable,type LaunchRow } from './storage.server'
-import { emptyChange,load,versionGuard,operator,recordChange,plan,toWire,fail,ref,type LaunchContext,type ChangeSet } from './domain.server'
+import { emptyChange,load,versionGuard,operator,recordChange,plan,fail,ref,type LaunchContext,type ChangeSet } from './domain.server'
 import { prepareRecord } from './records.server'
+import { readableWire } from './result-projection.server'
 export async function campaignSidecars(context:LaunchContext,set:ChangeSet,id:string,fields:Record<string,unknown>,now:number,ctx:RequestContext){
  const track=(field:string,before:unknown,after:unknown)=>{if(JSON.stringify(before)===JSON.stringify(after))return;set.audit.push({action:'campaign.updated',subject:ref('campaign',id),changes:[{fieldId:field==='tags'?'00000000000000000000007990':field,before:{state:'value',value:JSON.stringify(before)},after:{state:'value',value:JSON.stringify(after)}}],sourceIds:[],personalContentRefs:[]});set.mutations.push({kind:'insert',table:activityTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,campaign_id:id,subject_id:id,actor_id:ctx.principal.humanId,type:'campaign.updated',field_name:field,previous_value:JSON.stringify(before),next_value:JSON.stringify(after),message:`campaign.updated: ${field}`}})}
  if('tags'in fields){const previous=await context.db.prepare('SELECT id,tag FROM campaign_tags WHERE campaign_id=?').bind(id).all();set.mutations.push({kind:'delete',table:tagTable,where:eq(tagTable,'campaign_id',id),expectedRows:previous.results.length});track('tags',previous.results.map(t=>t.tag),[...new Set(fields.tags as string[])]);for(const tag of [...new Set(fields.tags as string[])])set.mutations.push({kind:'insert',table:tagTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,campaign_id:id,tag}})}
@@ -32,5 +33,5 @@ export async function prepareCampaign(context:LaunchContext,ctx:RequestContext,i
   for(const run of runs.results){set.mutations.push({kind:'update',table:runTable,set:{state:'Cancelled',version:run.version+1,updated_at:Date.parse(ctx.now),finished_at:Date.parse(ctx.now)},where:eq(runTable,'id',run.id),expectedRows:1});const queued=await context.db.prepare("SELECT id FROM admission_outbox WHERE action='launch.automation.execute' AND state='pending' AND json_extract(input_json,'$.runId')=?").bind(run.id).all<{id:string}>();for(const outbox of queued.results)set.mutations.push({kind:'update',table:outboxTable,set:{state:'cancelled',updated_at:ctx.now},where:eq(outboxTable,'id',outbox.id),expectedRows:1})}
  }
  set.mutations.push({kind:'update',table:tables.campaign,set:{archived_at:after.archived_at,owner_id:after.owner_id,updated_at:after.updated_at,version:after.version},where:eq(tables.campaign,'id',id),expectedRows:1});recordChange(set,ctx,'campaign',before,after,`campaign.${operation==='archive'?'archived':'restored'}`);if(operation==='restore')set.events=[]
- return plan(context,ctx,input,`launch.campaign.${operation}`,set,toWire(after),'campaign')
+ return plan(context,ctx,input,`launch.campaign.${operation}`,set,await readableWire(context,ctx,set,'campaign',after),'campaign')
 }

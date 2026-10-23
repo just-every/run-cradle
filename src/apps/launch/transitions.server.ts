@@ -4,7 +4,8 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { eq,trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { tables,type LaunchRow } from './storage.server'
-import { emptyChange,load,versionGuard,operator,recordChange,plan,toWire,fail,capacity,type LaunchContext } from './domain.server'
+import { emptyChange,load,versionGuard,operator,recordChange,plan,fail,capacity,type LaunchContext } from './domain.server'
+import { readableWire } from './result-projection.server'
 export async function prepareTransition(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,kind:'deliverable'|'risk'|'decision',operation:string){
  const before=await load(context.db,kind,String(input.input.id)),set=emptyChange();versionGuard(set,kind,before,input.expected);const now=Date.parse(ctx.now),after:LaunchRow={...before,updated_at:now,version:before.version+1};let linked:LaunchRow|null=null
  if(kind==='deliverable'){after.state=operation==='complete'?'Complete':'Open';after.completed_at=operation==='complete'?now:null;after.completed_by_id=operation==='complete'?ctx.principal.humanId:null}
@@ -28,5 +29,6 @@ export async function prepareTransition(context:LaunchContext,ctx:RequestContext
   }
  }
  set.mutations.push({kind:'update',table:tables[kind],set:Object.fromEntries(Object.entries(after).filter(([k])=>tables[kind].writableColumnIds.includes(k))),where:eq(tables[kind],'id',before.id),expectedRows:1});recordChange(set,ctx,kind,before,after,`${kind}.updated`)
- return plan(context,ctx,input,`launch.${kind}.${operation}`,set,kind==='risk'&&operation==='escalate'?{risk:toWire(after),decision:linked?toWire(linked):null}:toWire(after),kind)
+ const result=await readableWire(context,ctx,set,kind,after)
+ return plan(context,ctx,input,`launch.${kind}.${operation}`,set,kind==='risk'&&operation==='escalate'?{risk:result,decision:linked?await readableWire(context,ctx,set,'decision',linked):null}:result,kind)
 }

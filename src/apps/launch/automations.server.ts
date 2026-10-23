@@ -7,7 +7,8 @@ import { createUlid } from '../../core/shared/ids'
 import seed from '../../../seed.json' with { type: 'json' }
 import { automationDefinition,builtInAutomationActions } from './contracts'
 import { tables } from './storage.server'
-import { emptyChange,load,versionGuard,plan,fail,toWire,recordChange,type LaunchContext } from './domain.server'
+import { emptyChange,load,versionGuard,plan,fail,recordChange,type LaunchContext } from './domain.server'
+import { readableWire } from './result-projection.server'
 const authorities=registerTable('launch_automation_authorities',['automation_id','definition_version','principal_json'])
 export const runTable=registerTable('automation_runs',['id','created_at','updated_at','version','automation_id','definition_version','subject_id','state','queued_at','started_at','finished_at','affected_count','error_code','error_message','trigger_key','definition_json','cause_run_ids_json','retry_of','initiated_by_id'])
 export const actionTable=registerTable('launch_automation_actions',['id','run_id','position','idempotency_key','state','result_json','error_code','error_message','started_at','finished_at'])
@@ -38,7 +39,7 @@ export async function prepareAutomation(context:LaunchContext,ctx:RequestContext
   if(enabled&&!before!.shipped_key)set.mutations.push({kind:'insert',table:authorities,row:{automation_id:id,definition_version:Number(before!.definition_version)+1,principal_json:JSON.stringify(ctx.principal)}})
   if(!enabled){const runs=await context.db.prepare("SELECT id,version FROM automation_runs WHERE automation_id=? AND state='Queued'").bind(id).all<{id:string;version:number}>();set.guards.push(trustedPredicate("(SELECT COUNT(*) FROM automation_runs WHERE automation_id=? AND state='Queued')=?",[id,runs.results.length]));for(const run of runs.results)set.mutations.push({kind:'update',table:runTable,set:{state:'Cancelled',version:run.version+1,updated_at:now,finished_at:now},where:eq(runTable,'id',run.id),expectedRows:1})}
   recordChange(set,ctx,'automation',before,{...before!,enabled,version:before!.version+1,updated_at:now},`automation.${operation}`)
-  return plan(context,ctx,input,`launch.automation.${operation}`,set,{...toWire(before!),enabled:Boolean(enabled),version:before!.version+1,definitionVersion:Number(before!.definition_version)+1},'automation')
+  return plan(context,ctx,input,`launch.automation.${operation}`,set,{...await readableWire(context,ctx,set,'automation',before!),enabled:Boolean(enabled),version:before!.version+1,definitionVersion:Number(before!.definition_version)+1},'automation')
  }
  if(before?.shipped_key)fail('Shipped automations only permit enable/disable; readiness lead time/hour are workspace settings')
  const definition=automationDefinition.parse(input.input.definition);if(definition.trigger.kind==='event'&&!declaredEvents.includes(definition.trigger.event))fail(`Undeclared product event ${definition.trigger.event}`);if(definition.trigger.kind==='schedule'){if(!knownZone(definition.trigger.timezone))fail(`Unknown timezone ${definition.trigger.timezone}`);if(!parseSchedule(definition.trigger.localRule))fail('Schedule must be hourly, daily HH:mm or weekly d HH:mm; more than hourly is forbidden')}

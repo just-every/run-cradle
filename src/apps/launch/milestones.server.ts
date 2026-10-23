@@ -4,8 +4,9 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { eq,trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { tables,dependencyTable,type LaunchRow } from './storage.server'
-import { emptyChange,load,versionGuard,recordChange,plan,toWire,fail,type LaunchContext } from './domain.server'
+import { emptyChange,load,versionGuard,recordChange,plan,fail,type LaunchContext } from './domain.server'
 import { prepareRecord } from './records.server'
+import { readableWire } from './result-projection.server'
 export const localDate=(now:string,timezone:string)=>new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now))
 export const shiftDate=(date:string,days:number)=>new Date(Date.parse(date+'T00:00:00.000Z')+days*86400000).toISOString().slice(0,10)
 export async function prepareMilestone(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,operation:string){
@@ -20,7 +21,7 @@ export async function prepareMilestone(context:LaunchContext,ctx:RequestContext,
   set.mutations.push({kind:'delete',table:dependencyTable,where:eq(dependencyTable,'milestone_id',before.id),expectedRows:edges.filter(e=>e.milestone_id===before.id).length})
   const now=Date.parse(ctx.now);for(const predecessorId of predecessors)set.mutations.push({kind:'insert',table:dependencyTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,milestone_id:before.id,predecessor_id:predecessorId}})
   const after={...before,updated_at:now,version:before.version+1};set.mutations.push({kind:'update',table:tables.milestone,set:{updated_at:now,version:after.version},where:eq(tables.milestone,'id',before.id),expectedRows:1});recordChange(set,ctx,'milestone',before,after,'milestone.dependencies-changed')
-  return plan(context,ctx,input,'launch.milestone.set-predecessors',set,{...toWire(after),predecessorIds:predecessors},'milestone')
+  return plan(context,ctx,input,'launch.milestone.set-predecessors',set,{...await readableWire(context,ctx,set,'milestone',after),predecessorIds:predecessors},'milestone')
  }
  if(!['create','patch','delete'].includes(operation))fail('Unknown milestone operation')
  return prepareRecord(context,ctx,input,'milestone',operation as 'create'|'patch'|'delete',async(set,result)=>{

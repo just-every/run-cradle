@@ -3,7 +3,8 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { trustedPredicate } from '../../domains/admission/sql.server'
 import { createUlid } from '../../core/shared/ids'
 import { tables,tagTable,customValueTable,dependencyTable,type LaunchRow } from './storage.server'
-import { emptyChange,load,operator,versionGuard,recordChange,plan,toWire,capacity,validateDomain,mappedFields,type LaunchContext } from './domain.server'
+import { emptyChange,load,operator,versionGuard,recordChange,plan,capacity,validateDomain,mappedFields,type LaunchContext } from './domain.server'
+import { readableWire } from './result-projection.server'
 import { shiftDate } from './milestones.server'
 export async function prepareDuplicate(context:LaunchContext,ctx:RequestContext,input:CommandInput<{id:string;newCode:string;newLaunchDate?:string}>){
  const before=await load(context.db,'campaign',input.input.id),set=emptyChange();versionGuard(set,'campaign',before,input.expected);await capacity(context.db,set,'campaign');await operator(context.db,set,before.owner_id)
@@ -22,5 +23,5 @@ export async function prepareDuplicate(context:LaunchContext,ctx:RequestContext,
  for(const kind of ['deliverable','milestone'] as const){const children=await context.db.prepare(`SELECT * FROM ${kind==='deliverable'?'deliverables':'milestones'} WHERE campaign_id=?`).bind(before.id).all<LaunchRow>();await capacity(context.db,set,kind,children.results.length);set.guards.push(trustedPredicate(`(SELECT COUNT(*) FROM ${kind==='deliverable'?'deliverables':'milestones'} WHERE campaign_id=?)=?`,[before.id,children.results.length]));for(const child of children.results){await operator(context.db,set,child.owner_id);const childId=createUlid();if(kind==='milestone')milestoneIds.set(child.id,childId);set.guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${kind==='deliverable'?'deliverables':'milestones'} WHERE id=? AND version=?)`,[child.id,child.version]));const copy:LaunchRow={...Object.fromEntries(Object.entries(child).filter(([key])=>tables[kind].writableColumnIds.includes(key))),id:childId,campaign_id:id,created_at:now,updated_at:now,version:1};for(const date of ['due_date','start_date','end_date'])if(copy[date])copy[date]=shiftDate(String(copy[date]),delta);set.mutations.push({kind:'insert',table:tables[kind],row:copy})}}
  const edges=await context.db.prepare('SELECT milestone_id,predecessor_id FROM milestone_dependencies WHERE milestone_id IN(SELECT id FROM milestones WHERE campaign_id=?)').bind(before.id).all<{milestone_id:string;predecessor_id:string}>();for(const e of edges.results)if(milestoneIds.has(e.predecessor_id))set.mutations.push({kind:'insert',table:dependencyTable,row:{id:createUlid(),created_at:now,updated_at:now,version:1,milestone_id:milestoneIds.get(e.milestone_id)!,predecessor_id:milestoneIds.get(e.predecessor_id)!}})
  recordChange(set,ctx,'campaign',null,row,'campaign.duplicated');set.events=[]
- return plan(context,ctx,input,'launch.campaign.duplicate',set,toWire(row),'campaign')
+ return plan(context,ctx,input,'launch.campaign.duplicate',set,await readableWire(context,ctx,set,'campaign',row),'campaign')
 }

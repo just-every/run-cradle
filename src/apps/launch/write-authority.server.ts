@@ -6,18 +6,14 @@ import type { RequestContext } from '../../domains/authority/ports'
 import { trustedPredicate } from '../../domains/admission/sql.server'
 import { AdmissionError } from '../../domains/admission/errors'
 import { LAUNCH_APP_ID, launchEntities } from './contracts'
-import { launchColumns, launchFieldIds, launchTables, type LaunchKind } from './descriptors.server'
-import { launchAttributionFields } from './write-fields.server'
+import { launchFieldIds, launchTables, type LaunchKind } from './descriptors.server'
+import { launchFieldForColumn } from './write-fields.server'
 import { isLaunchMetadataColumn } from './storage.server'
 import type { ChangeSet, LaunchContext } from './domain.server'
 
 type Row = Record<string, SqlScalar>
 type Writes = { kind: LaunchKind; action: string; fields: Set<string>; expected: Map<string, RevisionRef>; proposed: Map<string, Row> }
 const bookkeeping = new Set(['id', 'version', 'created_at', 'updated_at', 'created_by_id', 'definition_version', 'shipped_key'])
-const fieldForColumn = (kind: LaunchKind, column: string): string | undefined => {
- const name = Object.entries(launchColumns[kind]).find(([, value]) => value === column)?.[0] ?? launchAttributionFields[kind]?.[column]
- return name ? launchFieldIds[kind][name] : undefined
-}
 // A composite command retains its own action check and also requires the native
 // action of each secondary entity it actually changes. No persisted policy is
 // expanded: these are the existing actions of the retained launch application.
@@ -69,7 +65,7 @@ export async function authorizeLaunchWrites(context: LaunchContext, ctx: Request
    const next = mutation.kind === 'insert' ? row : mutation.set
    for (const [column, cell] of Object.entries(next)) {
     if (bookkeeping.has(column) || isLaunchMetadataColumn(column) || mutation.kind === 'update' && cell === row[column]) continue
-    const field = fieldForColumn(kind, column)
+    const field = launchFieldForColumn(kind, column)
     if (field) value.fields.add(field)
     else allFields(value)
    }

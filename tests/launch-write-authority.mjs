@@ -5,7 +5,7 @@ import { expected, writeContext, mutationSnapshot, createLegacyImportAdapter } f
 
 const narrowed = (h, kind, field) => h.addPerson({ change: rules => rules.map(rule => rule.entityId === launchEntities[kind] ? { ...rule, writableFields: rule.writableFields.filter(id => id !== field) } : rule) })
 
-test('[RECORDS-001 BASE-ACCESS-004] native and legacy HTTP reject forbidden writes despite complete reads and allowed actions', async () => {
+test('[RECORDS-001 BASE-ACCESS-004] native and legacy HTTP reject forbidden writes and return permitted ones only through readable fields', async () => {
  const h = await launchAuthorityRuntime()
  try {
   const owner = await writeContext(h)
@@ -30,6 +30,19 @@ test('[RECORDS-001 BASE-ACCESS-004] native and legacy HTTP reject forbidden writ
   assert.equal(permitted.status, 200, await permitted.text())
   const row = await h.db.prepare('SELECT name,objective,version FROM campaigns WHERE id=?').bind(campaign.id).first()
   assert.equal(row.name, 'Permitted title edit'); assert.equal(row.objective, originalObjective); assert.equal(row.version, campaign.version + 1)
+  // A collaborator who may read and write only the name gets, on commit, replay and
+  // status, the record's identity and name and no other campaign value.
+  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(person.rules.map(rule => rule.entityId === launchEntities.campaign ? { ...rule, readableFields: [launchFieldIds.campaign.name], writableFields: [launchFieldIds.campaign.name] } : rule)), person.policyId).run()
+  const commandId = createUlid(), command = JSON.stringify({ commandId, expected: expected('campaign', { id: campaign.id, version: row.version }), input: { id: campaign.id, changes: { name: 'Readable title edit' } } })
+  const patch = () => h.request(person.session, '/api/v1/commands/launch.campaign.patch', { method: 'POST', body: command })
+  for (const send of [patch, patch, () => h.request(person.session, `/api/v1/commands/${commandId}`)]) {
+   const response = await send(), text = await response.text()
+   assert.equal(response.status, 200, text)
+   const { data } = JSON.parse(text), value = data.value ?? data.result
+   assert.equal(value.name, 'Readable title edit')
+   assert.deepEqual(Object.keys(value).filter(key => !['id', 'version', 'createdAt', 'updatedAt', 'name'].includes(key)), [], text)
+   assert.ok(!text.includes(originalObjective), text)
+  }
  } finally { await h.close() }
 })
 
