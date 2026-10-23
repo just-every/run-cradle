@@ -1,6 +1,6 @@
 # FILE-004 — Store references in exits and returns
 
-Status: missing. Ct, 23 October 2026.
+Status: partial. Ct, 23 October 2026.
 
 - **FILE-004 — Store references in exits and returns.** A connected-store reference (FILE-002) leaves every base exit (base JSON, CSV-set, workbook) as a portable reference and returns through every base return (RECORDS-005, the RECORDS-006 copy, INTEG-003 workbook import) without copying bytes, calling a store write, or using anyone's credentials but the returning person's own.
 
@@ -39,6 +39,6 @@ Status: missing. Ct, 23 October 2026.
   - A malformed cell is refused naming the cell.
   - The provider sees no write or sharing call.
 
-  *Status:* missing — base JSON, CSV-set and workbook exports refuse attachment fields that hold store references (FILE-002 Gap).
+  *Status:* partial — Base JSON, CSV-set and workbook export portable store references without connection bindings, credentials, preview URLs or bytes; canonical unresolved returns and copies preserve those objects, show their metadata without thumbnails and list them on the move-in receipt. Own matching-account metadata checks resolve equal digests, mark null digests unverified, and require audited explicit confirmation for changed content; current row/field authority, anonymous attacher export and uploaded-byte refusal are proven. Evidence: `tests/records-base-exits.mjs` (existing launch roundtrip), `tests/evidence-read-privacy.mjs`, `tests/ui-base-import.mjs`, `tests/helpers/store-reference-exits.mjs`, `tests/helpers/store-reference-resolution.mjs`, `docs/contract/FILE-004/`. Gap: automatic import-preview lookup, null-account resolution (including current Dropbox, Box and Chest captures), bulk confirmation and cross-algorithm equality remain unbuilt or unproven. Older references without captured digest metadata or attachment instant require reattachment; uploaded bytes stay FILE-003. Full erasure and archive restoration remain FILE-002 gaps. No real provider call or consent; real consents NOT RUN.
 
-Gap: base JSON, CSV-set and workbook exports refuse attachment fields that hold store references (FILE-002 Gap).
+Gap: automatic import-preview lookup, null-account resolution, bulk confirmation and cross-algorithm equality remain unbuilt or unproven; older uncaptured reference metadata requires reattachment. No real-provider consent proof.
