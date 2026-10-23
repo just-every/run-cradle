@@ -64,7 +64,7 @@ export async function verifyInboxScreens({h,page,command,capture}){
  await page.getByRole('button',{name:'Mark all read',exact:true}).click()
  await page.getByText('0 unread notifications.',{exact:true}).waitFor()
  assert.equal((await read()).unreadCount,0,'NOTIFY-005 mark all read')
- assert.equal(await page.locator('.operator-mobile-bell').getAttribute('aria-label'),'Notifications','NOTIFY-005 shell count refresh preserves the current inbox')
+ assert.equal(await page.locator('.operator-mobile-bell').getAttribute('aria-label'),'No unread notifications','NOTIFY-005 shell count refresh preserves the current inbox')
  const otherAfter=await read(other.session)
  assert.deepEqual(otherAfter.notifications.map(item=>({id:item.id,readAt:item.readAt})),otherBefore.notifications.map(item=>({id:item.id,readAt:item.readAt})),'NOTIFY-005 mark all changes only its operator read state')
  assert.equal(otherAfter.unreadCount,otherBefore.unreadCount)

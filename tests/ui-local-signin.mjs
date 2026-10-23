@@ -135,7 +135,21 @@ async function freshViewport(viewport,evidence){
       await accessibilityAction(page,page.getByRole('link',{name:'Open records',exact:true}));await page.getByRole('heading',{name:'Records',exact:true}).waitFor();await check('records')
       await verifyIdentityAndRecovery({browser,context,viewport,origin,evidence,accessibilityScreens})
       await verifyExpiredSession({context,page,viewport,origin,evidence,copy})
-      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,configuredFirstRun:true,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean()})
+      // Sign out from the owner menu at the foot of the navigation (the drawer on a phone): the session ends,
+      // /app no longer opens signed in and the Lobby offers sign-in again.
+      await page.goto(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
+      // The owner menu is a client control: let the document finish hydrating before driving it.
+      await page.waitForLoadState('networkidle');await page.waitForFunction(()=>typeof window.__TSR_ROUTER__?.navigate==='function')
+      if(viewport.width<=900)await page.getByRole('button',{name:'Open navigation',exact:true}).click()
+      const navigation=viewport.width<=900?page.getByRole('dialog',{name:'Navigation',exact:true}):page.locator('.operator-rail')
+      await navigation.locator('button[aria-haspopup="menu"]').focus();await page.keyboard.press('Enter')
+      const signOut=page.getByRole('menuitem',{name:'Sign out',exact:true});await signOut.waitFor()
+      assert.equal(await signOut.evaluate(item=>item===document.activeElement),true,'Opening the owner menu puts focus on Sign out');await page.keyboard.press('Enter')
+      await page.waitForURL(origin+'/');await page.getByRole('link',{name:'Sign in',exact:true}).waitFor()
+      assert.equal((await context.request.get(origin+'/auth/session')).status(),401,'Sign out ends the actual owner session')
+      const signedOut=await context.request.get(origin+'/app',{maxRedirects:0})
+      assert.equal(signedOut.status(),303);assert.equal(new URL(signedOut.headers().location,origin).pathname,'/signin','After sign out /app no longer opens signed in')
+      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,configuredFirstRun:true,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,signedOut:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean()})
       await context.close()
     for(const secret of [vars.SESSION_SECRET,vars.SETUP_TOKEN])assert.equal(installation.output().includes(secret),false,'Local dev must redact secrets')
     await assert.rejects(copy.rer(['reset','--yes','--non-interactive']),error=>error.exitCode===4&&error.errorCode==='safety_refusal','Reset refuses an active app')
@@ -164,7 +178,7 @@ async function freshViewport(viewport,evidence){
   }
 }
 
-contract('AUTH-BASE-001 SET-003 HOME-002 VIEW-001 BASE-ACCESS-002 BASE-ACCESS-003 RECORDS-001 RECORDS-005', 'fresh source zero-setup dev identity, configured first run, expired-session recovery and signed-in records at both sizes',async()=>{
+contract('AUTH-BASE-001 SET-003 HOME-002 VIEW-001 BASE-ACCESS-002 BASE-ACCESS-003 RECORDS-001 RECORDS-005', 'fresh source zero-setup dev identity, configured first run, expired-session recovery, sign-out and signed-in records at both sizes',async()=>{
  const evidence=path.resolve(process.env.CRADLE_LOCAL_EVIDENCE??'tmp/local-signin-evidence')
  const receipt={viewports:[],secretsPrinted:false,realBase:true}
  for(const width of accessibilityWidths){const viewport={width,height:width===390?844:900};receipt.viewports.push(await freshViewport(viewport,evidence))}

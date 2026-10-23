@@ -1,7 +1,8 @@
 // The /contract page's style, after run-site.ts's BASE (rer-consolidation
 // evidence/br-contract SPEC.md sections 3 to 6). The status tokens are Base's
 // defaults at zero specificity, so a seed's rer-theme.css :root wins over them.
-// This file is copied unchanged to src/base by both maintained exporters.
+// Cradle keeps its own copy, apart from Base's foundation/runtime/contract-style.ts: no text is under
+// 13px (the clause kind and the phone eyebrow), the app's floor.
 const DEFAULTS = ':where(:root){--rer-done:#1e8458;--rer-partial:#e9a23b;--rer-missing:#d03f57;--rer-done-ink:#17744c;--rer-partial-ink:#8a5a00;--rer-missing-ink:#b02a43;'
   + '--rer-on-done:#fff;--rer-on-partial:var(--rer-text,#172033);--rer-on-missing:#fff}'
   + 'body{--contract-tint:color-mix(in srgb,var(--rer-text,#172033) 4%,var(--rer-surface,#fff));--site-link:var(--rer-link,var(--site-ink));--heading:var(--rer-font-heading,var(--rer-font-body,inherit))}'
@@ -65,7 +66,7 @@ const PAGE = 'main{max-width:1440px;margin:0 auto;padding:0 56px}'
   + 'td{padding:7px 8px;vertical-align:top;border-top:1px solid var(--site-line)}.title{overflow-wrap:break-word}.ev{overflow-wrap:anywhere}'
   + '.group th{padding:10px 8px;text-align:left;font-size:13.5px;font-weight:400;background:var(--contract-tint);border-top:1px solid var(--site-line)}'
   + '.group-name{font-weight:600;color:var(--site-ink);margin-right:8px}.group-counts{color:var(--site-body)}'
-  + '.id a{font:500 13px/1.45 var(--site-mono);white-space:nowrap}.kind{display:block;font-size:12.5px;line-height:1.35;color:var(--site-body);white-space:nowrap}.st{display:inline-flex;align-items:center;gap:8px;font-weight:500}'
+  + '.id a{font:500 13px/1.45 var(--site-mono);white-space:nowrap}.kind{display:block;font-size:13px;line-height:1.35;color:var(--site-body);white-space:nowrap}.st{display:inline-flex;align-items:center;gap:8px;font-weight:500}'
   + '.path{display:block;font:13px/1.35 var(--site-mono);color:var(--site-ink)}.gap{display:block;color:var(--site-body);font-size:13.5px;line-height:1.4}.path+.gap{margin-top:2px}'
   + '.empty td{padding:22px 8px;color:var(--site-body)}.clear{margin-left:10px;min-height:32px}'
   // How statuses are judged, and the footer.
@@ -81,7 +82,7 @@ const TABLET = '@media(min-width:761px) and (max-width:1280px){.split{grid-templ
   + '@media(min-width:761px) and (max-width:1200px){.layout{grid-template-columns:1fr}.areas{position:static;max-height:none;overflow:visible}}'
 
 const PHONE = '@media(max-width:760px){.bar{padding:18px 16px 0}.bar::after{left:16px;right:16px}.bar .brand{padding-bottom:12px}main{padding:0 16px}'
-  + '.eyebrow{font-size:12px;margin-top:24px}main h1{font-size:30px;line-height:1.1}.lead{font-size:16px}'
+  + '.eyebrow{font-size:13px;margin-top:24px}main h1{font-size:30px;line-height:1.1}.lead{font-size:16px}'
   + '.hero{grid-template-columns:1fr;gap:16px;margin-top:22px}.figure{gap:16px}.big{font-size:72px}.of{font-size:22px}'
   + '.meter{height:30px}.seg{font-size:14px;font-weight:700}.hero-foot{flex-direction:column;gap:12px}.legend{font-size:15px;gap:8px 18px}.legend li{gap:8px}.legend .glyph{width:22px;height:22px}'
   + '.judged{text-align:left}.layout{grid-template-columns:1fr;gap:16px;margin-top:22px}.card{padding:18px 16px}'

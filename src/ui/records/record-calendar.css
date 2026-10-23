@@ -1,14 +1,14 @@
 .cr-calendar-workspace { min-width: 0; }
 .cr-calendar-schedule { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); margin-top: 1rem; }
 .cr-calendar-slot { min-width: 0; min-height: 8rem; padding: .5rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.cr-calendar-slot h3 { font-size: .75rem; margin: 0 0 .5rem; }
+.cr-calendar-slot h3 { font-size: var(--text-meta); margin: 0 0 .5rem; }
 .cr-calendar-slot--outside { background: var(--tile); }
 .cr-calendar-slot--over { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cr-calendar-event { background: var(--card); border: 1px solid var(--line); border-radius: .5rem; padding: .6rem; margin: .4rem 0; overflow-wrap: anywhere; }
 .cr-calendar-event[draggable=true] { cursor: grab; }
-.cr-calendar-event .cr-card-fields { font-size: .75rem; }
-.cr-calendar-range { font-size: .65rem; margin: .3rem 0; }
-.cr-calendar-event .cr-button { font-size: .7rem; padding: .3rem; min-height: 28px; }
+.cr-calendar-event .cr-card-fields { font-size: var(--text-meta); }
+.cr-calendar-range { font-size: var(--text-meta); margin: .3rem 0; }
+.cr-calendar-event .cr-button { font-size: var(--text-meta); padding: .3rem; min-height: 28px; }
 .cr-calendar-schedule--day { grid-template-columns: minmax(0, 1fr); }
 .cr-calendar-feed input { width: 100%; min-width: 0; }
 @media (max-width: 700px) {
