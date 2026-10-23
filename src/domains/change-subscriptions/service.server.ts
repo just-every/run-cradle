@@ -67,9 +67,11 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    const window=(await db.prepare('SELECT through_sequence,captured_at FROM record_change_windows WHERE cursor_hash=? AND subscription_id=?').bind(cursorHash,id).first<{through_sequence:number;captured_at:number}>())!
    const upper={binding:id,offset:window.through_sequence,revision:window.captured_at}
    if(upper.offset<from.offset)throw new AuthorityError('validation','Invalid change window.',400)
-   // An unavailable scope never confirms deletion or exposes its retained rows.
-   // Capture the same durable range as any fetch and return the existing marker.
-   if(row.state==='ended'){
+   // Check the whole captured window before paging so an adoption cannot
+   // leave old field facts visible under the new schema, including at limit=1.
+   const adopted=row.state!=='ended'&&await db.prepare("SELECT 1 FROM admission_audit WHERE app_id=? AND action='release.adopt' AND change_sequence>? AND change_sequence<=? AND created_at>=? LIMIT 1").bind(row.app_id,from.offset,upper.offset,new Date(now-retentionMs).toISOString()).first()
+   if(row.state==='ended'||adopted){
+    if(adopted)await access.scopes(ctx,row)
     const continuation=await cursor(id,upper.offset,upper.revision,await digest(input.cursor+':'+upper.offset))
     return {items:[],cursor:continuation,through:await cursor(id,upper.offset,upper.revision),hasMore:false,resyncRequired:resyncRange(input.cursor,continuation)}
    }
