@@ -22,11 +22,11 @@ export async function readCalendarChanges(db:D1Database,ctx:RequestContext,id:st
   if(marked.status!==200||!marked.body||typeof marked.body!=='object'||!('items'in marked.body)||!Array.isArray(marked.body.items)||'nextPageToken'in marked.body)throw new AdmissionError('validation','Calendar review requires a complete marked-event response.')
   const rows=(await db.prepare("SELECT * FROM record_calendar_events WHERE definition_id=? AND event_id IS NOT NULL AND state<>'cancelled'").bind(d.id).all<Event>()).results
   for(const event of rows){
-   if(event.review_json||!event.etag||event.state!=='synced')continue
+   if(event.review_json||!event.etag||!['synced','refused'].includes(event.state))continue
    const external=marked.body.items.find((item:Record<string,unknown>)=>item.id===event.event_id)
    if(external&&external.etag===event.etag&&external.status!=='cancelled')continue
    const observed=external??{id:event.event_id,status:'cancelled'},now=new Date().toISOString()
-   await db.prepare("UPDATE record_calendar_events SET review_json=?,state='review',updated_at=? WHERE id=? AND etag=? AND review_json IS NULL AND state='synced'").bind(JSON.stringify(observed),now,event.id,event.etag).run()
+   await db.prepare("UPDATE record_calendar_events SET review_json=?,state='review',updated_at=? WHERE id=? AND etag=? AND review_json IS NULL AND state IN ('synced','refused')").bind(JSON.stringify(observed),now,event.id,event.etag).run()
   }
  }
 }
