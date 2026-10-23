@@ -2,6 +2,7 @@ import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {changeSubscriptionsUpgrade} from './helpers/change-subscriptions-upgrade.mjs'
 import {changeSubscriptionsJourney} from './helpers/change-subscriptions-journey.mjs'
+import {changeSubscriptionImports} from './helpers/change-subscriptions-imports.mjs'
 import {randomBytes} from 'node:crypto'
 import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
@@ -63,6 +64,7 @@ contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery pres
   const calls=edge.tlsCalls;await h.tick(change.data.commandId)
   assert.equal((await h.request(`/api/user-automations/${failure.id}/runs`)).data.runs[0].state,'Unknown')
   assert.equal(edge.tlsCalls,calls,'Uncertain external work is not automatically resent')
+  await changeSubscriptionImports(h,edge)
   await changeSubscriptionsJourney(h,edge)
  }finally{await h?.close();await edge?.close()}
 })

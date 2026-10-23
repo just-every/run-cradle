@@ -74,7 +74,12 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
     return {items:[],cursor:continuation,through:await cursor(id,upper.offset,upper.revision),hasMore:false,resyncRequired:resyncRange(input.cursor,continuation)}
    }
    const rows=await db.prepare("SELECT id,change_sequence,action,subject_json,changes_json,created_at FROM admission_audit WHERE app_id=? AND change_sequence>? AND change_sequence<=? AND created_at>=? ORDER BY change_sequence,id LIMIT ?").bind(row.app_id,from.offset,upper.offset,new Date(now-retentionMs).toISOString(),input.limit).all<Change>()
-   const items:ChangeItem[]=[];let resyncRequired=false
+   // Import Kit writes deliberately bypass admission effects (RECORDS-005).
+   // Its retained custody has no audit sequence or write timestamp, so no page
+   // of this base can claim completeness until those writes are projected.
+   // Fetch only: this uncertainty must never wake webhook delivery.
+   const imported=await db.prepare('SELECT 1 FROM ik_jobs WHERE destination=? LIMIT 1').bind(row.app_id).first()
+   const items:ChangeItem[]=[];let resyncRequired=Boolean(imported)
    for(const change of rows.results){const projected=await access.project(ctx,row,change);if(projected?.resyncRequired)resyncRequired=true;if(projected?.item)items.push(projected.item)}
    const next=rows.results.length===input.limit?rows.results.at(-1)!.change_sequence:upper.offset
    await access.scopes(ctx,row)

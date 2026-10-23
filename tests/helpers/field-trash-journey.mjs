@@ -99,5 +99,5 @@ export async function fieldTrashJourney(existing){
   }
   const final=await readDraft();assert.ok(!final.tables.some(table=>table.id===secondId));assert.ok(!final.tables.find(table=>table.id===entityId).fields.some(item=>item.id===valueId))
   console.log('FIELD_TABLE_TRASH PASS identities, values, history, recovery exports, name collisions and expired visible custody hold; physical purge unproven')
- }finally{try{if(h)await cleanup()}finally{try{if(!existing)await h?.close()}finally{await edge?.close()}}}
+ }finally{try{if(!existing)await h?.close()}finally{await edge?.close()}}
 }
