@@ -16,10 +16,12 @@ export async function storeReferenceResolution(h,provider,snapshot){
  // The generic record writer cannot bind an imported reference, including by its original attacher.
  await d.call('/api/v1/commands/record.patch',{commandId:createUlid(),expected:[{ref,version:row.version}],input:{ref,changes:{[field.id]:members.map(m=>m.reference.itemId===drive.itemId?{reference:{...m.reference,connectionId:createUlid(),resolution:'resolved'}}:m)}}},403)
  await connect('google-drive');await connect('onedrive')
+ provider.denied.add('synthetic-cradle-access-1');assert.equal((await call(graph)).state,'unresolved');provider.denied.delete('synthetic-cradle-access-1')
  const graphResult=await call(graph);assert.equal(graphResult.state,'resolved');assert.equal(graphResult.record.fields[field.id].value.find(m=>m.reference.itemId===graph.itemId).reference.attachedBy,attacher)
  provider.changeDigest('google-drive',drive.itemId)
  const changed=await call(drive);assert.equal(changed.state,'changed');assert.ok(changed.item.digest)
  let current=(await d.call(`/api/v1/apps/${appId}/entities/${entity.id}/records/${row.id}`)).record;assert.equal(current.fields[field.id].value.find(m=>m.reference.itemId===drive.itemId).reference.resolution,'unresolved')
+ await d.call('/api/v1/records/file-stores/resolve',{...address,provider:drive.provider,itemId:drive.itemId,confirmChanged:true,observedDigest:drive.portable.digest},409)
  await call(drive,{confirmChanged:true,observedDigest:changed.item.digest});current=(await d.call(`/api/v1/apps/${appId}/entities/${entity.id}/records/${row.id}`)).record
  const resolved=current.fields[field.id].value.find(m=>m.reference.itemId===drive.itemId).reference;assert.equal(resolved.resolution,'resolved');assert.equal(resolved.attachedBy,attacher);assert.deepEqual(resolved.portable.digest,changed.item.digest)
  const history=(await d.call('/api/v1/history?'+new URLSearchParams(ref))).items;assert.ok(history.some(entry=>entry.action==='attachment.reference.confirm-changed'),'Explicit changed-content acceptance is audited')
