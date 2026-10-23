@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ccef7a5dc4b1470804db1c35d4144bfde982112c54b68b258b3af587b9e3fd08",
+      "sha256": "2ab24af38ce07f105612f47c0b97b7dc403566de262798afa705dc5b7737767f",
       "executable": false
     },
     "DEMO.md": {
@@ -11442,7 +11442,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-adoption.mjs": {
-      "sha256": "b8a247e983aa99a06f579e440a050078d2cee92a59084f3a7bb95fd29b5d58c1",
+      "sha256": "e51740f57edd0e7b7eb128bf53cbdde76c5e7c81aee1753cf1080257a9d1726c",
       "executable": false
     },
     "tests/helpers/change-subscriptions-deletes.mjs": {
@@ -11466,7 +11466,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-upgrade.mjs": {
-      "sha256": "b906f0d637ab44166025488e213d4c3a42c4cf7bbc88c801092cefbf42073a17",
+      "sha256": "60ba7a9e8b63429b88997be8157eab52862388b30b4475efec9093b270dfa852",
       "executable": false
     },
     "tests/helpers/change-subscriptions-write-doors.mjs": {
