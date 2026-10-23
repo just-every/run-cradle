@@ -10,7 +10,8 @@ export function createExecutionGuards(db:D1Database,foundation:ServerFoundation)
  return async(ctx,request,mode)=>{
   const guards=[trustedPredicate("NOT EXISTS(SELECT 1 FROM portability_fences WHERE name='restore')")]
   if(mode==='reconcile')return guards
-  guards.push(trustedPredicate("EXISTS(SELECT 1 FROM live_app_releases l JOIN app_releases r ON r.id=l.release_id WHERE l.app_id=? AND l.release_id=? AND r.state='live' AND r.source_hash=l.source_hash)",[request.appId,request.releaseId]))
+  if(request.action==='record.calendar.sync')guards.push(trustedPredicate('EXISTS(SELECT 1 FROM manual_record_bases b JOIN manual_record_releases r ON r.id=b.release_id AND r.app_id=b.id WHERE b.id=? AND b.release_id=?)',[request.appId,request.releaseId]))
+  else guards.push(trustedPredicate("EXISTS(SELECT 1 FROM live_app_releases l JOIN app_releases r ON r.id=l.release_id WHERE l.app_id=? AND l.release_id=? AND r.state='live' AND r.source_hash=l.source_hash)",[request.appId,request.releaseId]))
   for(const revision of request.expected){
    if(revision.ref.entityId===EVIDENCE_SOURCE_ENTITY_ID){guards.push(trustedPredicate('EXISTS(SELECT 1 FROM evidence_sources WHERE id=? AND app_id=? AND current_version=? AND erased_at IS NULL)',[revision.ref.recordId,revision.ref.appId,revision.version]));continue}
    const d=foundation.descriptors.get(revision.ref.appId,revision.ref.entityId)
