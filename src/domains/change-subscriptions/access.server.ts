@@ -26,7 +26,7 @@ export function subscriptionAccess(db:D1Database,policy:PolicyPort,services:Retu
  }
  async function project(ctx:RequestContext,subscription:Subscription,change:Change):Promise<{item:ChangeItem|null;resyncRequired:boolean}|null>{
   const ref=JSON.parse(change.subject_json) as Ref|null
-  if(!ref)return ['record.delete','record.create','record.patch','record.undo','record.restore','member.erase','campaign.deleted'].includes(change.action)||change.action.startsWith('launch.')||change.action.startsWith('repair.')?{item:null,resyncRequired:true}:null
+  if(!ref)return ['release.adopt','record.delete','record.create','record.patch','record.undo','record.restore','member.erase','campaign.deleted'].includes(change.action)||change.action.startsWith('launch.')||change.action.startsWith('repair.')?{item:null,resyncRequired:true}:null
   if(ref.appId!==subscription.app_id||subscription.entity_id&&ref.entityId!==subscription.entity_id)return null
   const access=await scopes(ctx,subscription),scope=access.scopes.find(s=>s.entityId===ref.entityId)
   if(access.view&&ref.entityId!==access.view.entityId)return null
