@@ -16,7 +16,7 @@ export async function recordsRestJourney(h){
  const key=async options=>(await h.request('/api/user-keys',{method:'POST',status:201,body:{...issue,commandId:createUlid(),name:'synthetic-cradle-202 REST key',permissions:'write',...options}})).data.key
  const writable=await key(),deleting=await key({allowDelete:true})
  await h.request('/api/user-keys',{method:'POST',status:400,body:{...issue,commandId:createUlid(),name:'synthetic-cradle-203 invalid delete scope',permissions:'read',allowDelete:true}})
- const document=(await h.request(`/api/v1/apps/${appId}/openapi.json`,{secret:writable.secret})).data
+ const document=await h.request(`/api/v1/apps/${appId}/openapi.json`,{secret:writable.secret})
  const operations=Object.entries(document.paths).flatMap(([path,methods])=>Object.entries(methods).map(([method,operation])=>({path,method:method.toUpperCase(),operation})))
  const endpoint=name=>{const item=operations.find(item=>item.operation['x-cradle-operation']===name&&item.operation['x-cradle-entityId']===entityId);assert.ok(item,`OpenAPI supplies ${name}`);return item}
  const validator=new Ajv2020({allErrors:true});addFormats(validator)
@@ -98,7 +98,7 @@ export async function recordsRestJourney(h){
   const rules=JSON.parse(owner.rules_json).map(rule=>rule.entityId===entityId?{...rule,readableFields:[nameId],writableFields:[]}:rule)
   await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),owner.id).run()
   const narrow=await key({permissions:'read'})
-  const narrowed=(await h.request(`/api/v1/apps/${appId}/openapi.json`,{secret:narrow.secret})).data
+  const narrowed=await h.request(`/api/v1/apps/${appId}/openapi.json`,{secret:narrow.secret})
   assert.ok(!JSON.stringify(narrowed).includes(hiddenId));assert.ok(!JSON.stringify(narrowed).includes(flagId))
   for(const [name,options]of [['schema',{}],['get',{id:inserted.id}],['query',{body:{limit:10}}]]){
    const result=await call(name,{...options,secret:narrow.secret});assert.ok(!JSON.stringify(result).includes(hiddenId));assert.ok(!JSON.stringify(result).includes(flagId));assert.ok(!JSON.stringify(result).includes('synthetic-cradle-205 private value'))
