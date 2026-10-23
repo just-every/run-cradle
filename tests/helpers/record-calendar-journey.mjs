@@ -13,7 +13,7 @@ import {browserCall,liveCommand} from './records-live-fixture.mjs'
 export async function recordCalendarJourney({widths=[1440,390],output='.private/record-calendar-sync'}={}){
  process.env.HOME=userInfo().homedir
  await mkdir(output,{recursive:true})
- const provider=recordCalendarProvider(),h=await recordsBrowserRuntime(0,{networkEdge:request=>provider.fetch(request),bindings:{GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}})
+ const provider=recordCalendarProvider(),h=await recordsBrowserRuntime(0,{networkEdge:async request=>{try{return await provider.fetch(request)}catch(error){if(error.message!=='synthetic-cradle-acknowledgement-lost')console.error('Calendar network-edge error:',error.message);throw error}},bindings:{GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}})
  const worker=await h.runtime.getWorker(),browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
  try{for(const width of widths){const context=await browser.newContext({viewport:{width,height:1000}}),page=await context.newPage()
   try{await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app/records')
@@ -66,7 +66,7 @@ export async function recordCalendarJourney({widths=[1440,390],output='.private/
    await patch({[start.id]:'2026-11-22',[end.id]:'2026-11-23'});await call(syncPath+'/sync',{commandId:createUlid()},403);assert.equal(provider.writes.length,writeCount)
    assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions[0].state,'stopped')
    await h.db.prepare('UPDATE provider_connections SET scopes_json=?,version=version+1 WHERE id=?').bind(scopes,connectionId).run()
-   await patch({[start.id]:null,[end.id]:null});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'DELETE');assert.equal((await binding()).state,'cancelled')
+   await patch({[start.id]:null,[end.id]:null});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'DELETE');assert.equal((await binding()).state,'cancelled',JSON.stringify({lastWrite:{method:provider.writes.at(-1).method,applied:provider.writes.at(-1).applied,outcome:provider.writes.at(-1).outcome}}))
    await patch({[start.id]:'2026-11-25',[end.id]:'2026-11-26'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'POST');assert.notEqual((await binding()).event_id,event.event_id)
    await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions[0].state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
    assert.ok(provider.seen.every(r=>new URL(r.url).hostname==='www.googleapis.com'||new URL(r.url).hostname==='oauth2.googleapis.com'))
