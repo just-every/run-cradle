@@ -9,13 +9,12 @@ import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {submitImport,downloadStatus} from './helpers/base-import-browser.mjs'
 import {browserObservations} from './helpers/browser-observations.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './helpers/accessibility-evidence.mjs'
-import {freePort} from './helpers/free-port.mjs'
 
 contract('RECORDS-002 RECORDS-005','real browser scalar edit, multi-batch undo interruption and reload retain one edited record with persistent downloadable conflicts',async()=>{
  const output=path.resolve(process.env.CRADLE_UNDO_OUTPUT??process.env.TMPDIR??'.private/base-undo-browser');await mkdir(output,{recursive:true})
  let runtime,browser
  try{
-  runtime=await recordsImportBrowserRuntime(Number(process.env.CRADLE_UNDO_PORT ?? await freePort()));browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  runtime=await recordsImportBrowserRuntime(0);browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   for(const width of accessibilityWidths){
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}}))
    try{

@@ -5,7 +5,6 @@ import { chromium } from '@playwright/test'
 import { recordsBrowserRuntime } from './records-browser-runtime.mjs'
 import { recordsJourney } from './records-browser-journey.mjs'
 import { browserCall, liveCommand } from './records-live-fixture.mjs'
-import { freePort } from './free-port.mjs'
 import { createUlid } from '../../src/core/shared/ids.ts'
 import { newField } from '../../src/ui/records/schema/templates.ts'
 
@@ -37,7 +36,7 @@ export async function timelineBrowserJourney() {
   const output = path.resolve('.private/timeline'); await mkdir(output, { recursive: true })
   let h, browser
   try {
-    h = await recordsBrowserRuntime(await freePort())
+    h = await recordsBrowserRuntime(0)
     browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] })
     for (const width of [1440, 390]) {
       const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 1000 } }), page = await context.newPage(), j = recordsJourney(page, h.origin, output, width)

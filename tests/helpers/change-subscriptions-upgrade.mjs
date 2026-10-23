@@ -7,11 +7,9 @@ import path from 'node:path'
 import {migrationInventory} from '../../scripts/migration-groups.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {createCursorCodec} from '../../src/domains/records/cursor.server.ts'
-import {emittedRuntime} from './emitted-runtime.mjs'
-import {createFixtureMail} from './fixture-mail.mjs'
+import {emittedMailRuntime} from './emitted-mail-runtime.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
-import {freePort} from './free-port.mjs'
 
 /** Owns one emitted Worker. Call outside another runtime's lifetime; the caller
  * owns the existing real relay/receiver network edge and its cleanup. */
@@ -19,17 +17,15 @@ export async function changeSubscriptionsUpgrade(edge){
  const directory=await mkdtemp(path.join(tmpdir(),'cradle-change-upgrade-'))
  let runtime,mail
  try{
-  const port=await freePort(),origin=`http://127.0.0.1:${port}`
+  let origin
   const sessionSecret=randomBytes(32).toString('hex'),setupToken=randomBytes(32).toString('hex')
-  mail=await createFixtureMail(port,request=>edge.outbound(request))
-  runtime=await emittedRuntime(directory,port,{
-   APP_ORIGIN:origin,AUTH_LOCAL:'true',OWNER_EMAIL:'upgrade-owner@example.test',
+  ;({runtime,mail,origin}=await emittedMailRuntime(directory,0,{
+   AUTH_LOCAL:'true',OWNER_EMAIL:'upgrade-owner@example.test',
    SESSION_SECRET:sessionSecret,SETUP_TOKEN:setupToken,WORKSPACE_NAME:'Upgrade acceptance',
    WORKSPACE_TIMEZONE:'UTC',WORKSPACE_CURRENCY:'USD',MAIL_FROM:'auth@localhost.test',
    CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
    EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret,
-   ...mail.bindings,
-  },mail.fetch)
+  },request=>edge.outbound(request)))
   const db=await runtime.getD1Database('DB'),migrations=migrationInventory()
   const cut=migrations.findIndex(migration=>migration.name==='9045_change_subscriptions.sql')
   assert.ok(cut>=0,'The actual change-subscription upgrade is available')

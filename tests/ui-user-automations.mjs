@@ -16,7 +16,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] owners issue and revoke keys
  await mkdir(output,{recursive:true});let h,browser
  const receipts=[]
  try {
-  h=await userAutomationRuntime(18957)
+  h=await userAutomationRuntime(0)
   assert.equal(process.env.HOME,userInfo().homedir)
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   console.log('OWNED_BROWSER_PIDS '+execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).split('\n').filter(line=>line.trim().split(/\s+/)[1]===String(process.pid)).join(' | '))

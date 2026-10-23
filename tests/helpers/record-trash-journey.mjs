@@ -5,7 +5,7 @@ import {AUTHORITY_ENTITY_IDS} from '../../src/domains/authority/contracts.ts'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
 export async function recordTrashJourney(){
- const h=await userAutomationRuntime(18955)
+ const h=await userAutomationRuntime(0)
  try{
   const draft=(await h.request(`/api/v1/records/bases/${h.appId}`)).data,parentId=createUlid(),parentName=createUlid(),linkId=createUlid()
   draft.tables.push({id:parentId,label:'Vendors',primaryFieldId:parentName,fields:[{id:parentName,label:'Vendor',type:'text',required:true,unique:false}]})

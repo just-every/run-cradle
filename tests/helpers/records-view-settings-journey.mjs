@@ -9,7 +9,6 @@ import {recordsJourney} from './records-browser-journey.mjs'
 import {browserCall,liveCommand} from './records-live-fixture.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {assertPortableJsonSchema} from './json-schema-assert.mjs'
-import {freePort} from './free-port.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {newField} from '../../src/ui/records/schema/templates.ts'
 const schemaId='00000000000000000000000001',viewId='00000000000000000000000002'
@@ -32,7 +31,7 @@ export async function viewSettingsJourney(){
  const output=path.resolve('.private/view-settings');await mkdir(output,{recursive:true})
  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
  try{for(const width of [1440,390]){
-  const h=await recordsBrowserRuntime(await freePort()),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+  const h=await recordsBrowserRuntime(0),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
   let peerContext
   try{
    page.setDefaultTimeout(15000);await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app')
