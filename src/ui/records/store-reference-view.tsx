@@ -28,6 +28,6 @@ export function StoreReferenceView({ reference, record }: { reference: StoreRefe
     {preview === 'image' && <img className="cr-store-thumb" src={url} alt="" width={48} height={48} />}
     <a href={reference.link} target="_blank" rel="noopener noreferrer">{reference.name}<span className="cr-sr-only"> (opens in {storeLabels[reference.provider]})</span></a>
     <small className="cr-muted"> {typeLabel(reference.mediaType)} · {storeLabels[reference.provider]}{reference.size!==null?` · ${reference.size.toLocaleString()} bytes`:''}</small>
-    {record&&reference.provider!=='chest'&&preview!=='loading'&&preview!=='image'&&<StoreConnect appId={record.appId} provider={reference.provider}/>}
+    {record&&reference.provider!=='chest'&&preview!=='loading'&&preview!=='image'&&<StoreConnect appId={record.appId} provider={reference.provider} preview/>}
   </span>
 }
