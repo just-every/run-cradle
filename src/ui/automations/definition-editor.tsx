@@ -43,4 +43,4 @@ function FlatAutomationDefinitionEditor({appId,entity,existing,onSaved,onCancel}
  </form>
 }
 
-export function AutomationDefinitionEditor(props:Parameters<typeof FlatAutomationDefinitionEditor>[0]){return props.existing&&(props.existing.definition.steps||props.existing.definition.actions.some(action=>action.when))?<AutomationControlSummary definition={props.existing.definition} onClose={props.onCancel}/>:<FlatAutomationDefinitionEditor {...props}/>}
+export function AutomationDefinitionEditor(props:Parameters<typeof FlatAutomationDefinitionEditor>[0]){return props.existing&&(props.existing.definition.trigger||props.existing.definition.steps||props.existing.definition.actions.some(action=>action.when))?<AutomationControlSummary definition={props.existing.definition} onClose={props.onCancel}/>:<FlatAutomationDefinitionEditor {...props}/>}

@@ -47,7 +47,7 @@ export function createAutomationControlRuntime(deps:{db:D1Database;appOrigin:str
    if(step.state==='Complete'||step.state==='Skipped')continue
    if(step.state==='Unknown'){await store.finish(run.id,'Unknown','effect_unknown');return}
    if(step.state==='Failed'){if(item){partial=true;failedItems.add(item);continue}await store.finish(run.id,'Failed','action_failed');return}
-   if(item&&failedItems.has(item)){await store.skip(step.id,'An earlier action on this item failed.');continue}
+   if(item&&failedItems.has(item)){await store.markSkipped(step.id,'An earlier action on this item failed.');continue}
    if(processed++>=20)return
    const ref={...saved.event.ref,recordId:entry.recordId},itemRun={...run,definition_json:JSON.stringify({...saved,event:{...saved.event,ref}})}
    if(step.state==='Running'){
@@ -60,10 +60,10 @@ export function createAutomationControlRuntime(deps:{db:D1Database;appOrigin:str
    let claimed=false
    try{
     const ctx=await context(run,ingress)
-    if(!await branch(ctx,run,saved,entry)||!await matches(ctx,saved,entry.when)||!await matches(ctx,saved,action.when)){await store.skip(step.id,'The step condition did not match.');continue}
+    if(!await branch(ctx,run,saved,entry)||!await matches(ctx,saved,entry.when)||!await matches(ctx,saved,action.when)){await store.markSkipped(step.id,'The step condition did not match.');continue}
     const scope=await policy.scope(ctx,{...ref,purpose:['email','webhook','slack'].includes(action.kind)?'export':'read'}),d=descriptors.get(ref.appId,ref.entityId)
     let record
-    try{record=await reader.record(ctx,scope,ref)}catch(error){if(item&&error instanceof AdmissionError&&['not_found','forbidden'].includes(error.code)){await store.skip(step.id,'The item is no longer readable.');continue}throw error}
+    try{record=await reader.record(ctx,scope,ref)}catch(error){if(item&&error instanceof AdmissionError&&['not_found','forbidden'].includes(error.code)){await store.markSkipped(step.id,'The item is no longer readable.');continue}throw error}
     const subject=trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(d.table.tableId)} WHERE ${identifier(d.idColumn)}=? AND (${scope.rowPredicate.sql}))`,[ref.recordId,...scope.rowPredicate.values])
     const guard=and(...scope.currentAuthorityGuards,subject,trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND enabled=1)',[run.automation_id]))
     const authorize=async()=>{if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())throw new AuthorityError('grant_revoked','Automation authority changed before dispatch.')}

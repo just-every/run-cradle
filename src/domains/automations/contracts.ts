@@ -1,3 +1,4 @@
+import {recordAutomationTrigger} from './trigger-contracts'
 import { z } from 'zod'
 import { idSchema } from '../authority/validators'
 import {automationControlSteps} from './control-contracts'
@@ -12,7 +13,7 @@ export const recordAutomationAction=z.discriminatedUnion('kind',[
 ])
 export const recordAutomationDefinition=z.object({
  name:z.string().trim().min(1).max(100),appId:idSchema,entityId:idSchema,
- event:z.enum(['created','updated']),enabled:z.boolean(),actions:z.array(recordAutomationAction).max(10).default([]),steps:automationControlSteps(recordAutomationAction).optional(),
+ event:z.enum(['created','updated']),trigger:recordAutomationTrigger.optional(),enabled:z.boolean(),actions:z.array(recordAutomationAction).max(10).default([]),steps:automationControlSteps(recordAutomationAction).optional(),
 }).strict().superRefine((definition,ctx)=>{if(Boolean(definition.actions.length)===Boolean(definition.steps?.length))ctx.addIssue({code:'custom',message:'Choose either ordered actions or control steps.'})})
 export type RecordAutomationDefinition=z.infer<typeof recordAutomationDefinition>
 export type RecordAutomationAction=z.infer<typeof recordAutomationAction>
