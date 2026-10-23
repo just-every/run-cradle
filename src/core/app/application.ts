@@ -16,6 +16,9 @@ import { createUserKeyService } from '../../domains/authority/user-keys.server'
 import { createUserKeysHttp } from '../../domains/authority/user-keys-http.server'
 import { createProposerKeyService } from '../../domains/authority/proposer-keys.server'
 import { createProposerKeysHttp } from '../../domains/authority/proposer-keys-http.server'
+import { INSTALLATION_AUTHORITY_APP } from '../../domains/authority/pending-app.server'
+import { createConstructionDoor } from '../../domains/construction/door.server'
+import { createOperationsDoor } from '../../domains/operations/door.server'
 
 import { registerAutomationRoutes } from '../features/automations'
 import { registerCampaignRoutes } from '../features/campaigns'
@@ -107,6 +110,10 @@ export const createApplication = (platform: Platform, config: SeedConfig, runtim
   for (const path of ['/api/v1/repairs/:id/completion-review','/api/v1/repairs/:id/operations','/api/v1/repairs/:id','/api/v1/decisions','/api/v1/decisions/*']) app.all(path, context => repairIntake.outcomeHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/intakes/:id/open-context', '/api/v1/repairs/:id/contractors', '/api/v1/repairs/:id/quotes', '/api/v1/cases/:id', '/api/v1/mandates/:id']) app.all(path, context => repairIntake.caseHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/intakes', '/api/v1/intakes/*']) app.all(path, context => repairIntake.http.fetch(context.req.raw))
+  const operations = createOperationsDoor({ db: platform.bindings.DB, policy: foundation.policy, evidence: records.sources, descriptors: foundation.descriptors, cursorSecret: platform.auth.configuration.sessionSecret, authenticate: request => foundation.authenticate(request, 'http', createUlid()) })
+  for (const path of ['/api/v1/cases', '/api/v1/mandates', '/api/v1/plans/:id', '/api/v1/verifications/:id', '/api/v1/operations/recovery/:id', '/api/v1/commands/mandate.prepare', '/api/v1/commands/mandate.activate', '/api/v1/commands/operation.recovery.outcome']) app.all(path, context => operations.fetch(context.req.raw))
+  const construction = createConstructionDoor({ db: platform.bindings.DB, policy: foundation.policy, admission: foundation.admission, installationAppId: INSTALLATION_AUTHORITY_APP, runner: !!(platform.bindings.CANDIDATE_RUNNER_URL && platform.bindings.CANDIDATE_RUNNER_TOKEN && platform.bindings.CANDIDATE_RUNNER_PUBLIC_KEY), authenticate: foundation.authenticate })
+  for (const path of ['/api/v1/construction/readiness', '/api/v1/candidates/:id', '/api/v1/candidates/:id/adoption-review', '/api/v1/candidates/:id/preview', '/api/v1/evaluations/:id', '/api/v1/construction-jobs/:id', '/api/v1/commands/candidate.prepare', '/api/v1/commands/candidate.revise', '/api/v1/commands/candidate.build', '/api/v1/commands/candidate.evaluate', '/api/v1/commands/candidate.reject', '/api/v1/commands/source.intake.prepare']) app.all(path, context => construction.fetch(context.req.raw))
   for (const path of ['/api/notifications', '/api/notifications/*', '/api/settings', '/api/workspace', '/api/v1/notifications', '/api/v1/settings', '/api/v1/preferences', '/api/v1/deliveries']) app.all(path, context => channels.http.fetch(context.req.raw))
   app.all('/mcp', context => foundation.mcp(context.req.raw))
   for(const path of ['/api/v1/commands/member.erase','/api/v1/commands/launch.campaign.delete','/api/v1/commands/launch.samples.remove','/api/v1/erasures/:id']) app.all(path,context=>lifecycle.http.fetch(context.req.raw))
