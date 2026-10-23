@@ -35,8 +35,9 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     await channels()
     await runtime.providers.jobs.scheduled()
     await runtime.sheets.scheduled()
+    await runtime.calendarSync.service.tick()
     await runtime.automations.runtime.tick()
     await runtime.changeDelivery.tick()
   }
-  return { dispatch, channels, scheduled,changes:(commandId:string)=>runtime.changeDelivery.tick(commandId),warehouse:()=>runtime.warehouse.runtime.scheduled(),launch:(commandId:string)=>runtime.launch.events(commandId),automations:(commandId:string)=>runtime.automations.runtime.tick(commandId,'queue') }
+  return { dispatch, channels, scheduled,changes:(commandId:string)=>runtime.changeDelivery.tick(commandId),warehouse:()=>runtime.warehouse.runtime.scheduled(),launch:(commandId:string)=>runtime.launch.events(commandId),automations:async(commandId:string)=>{await runtime.calendarSync.service.tick();await runtime.automations.runtime.tick(commandId,'queue')} }
 }

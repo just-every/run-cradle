@@ -11,7 +11,7 @@ export function withAdmissionWake(admission: AdmissionPort, db: D1Database, queu
       if(due)await queue.send({kind:'cradle.channels.wake.v1'})
       const launch=await db.prepare("SELECT 1 FROM admission_events WHERE command_id=? AND app_id='00000000000000000000000700' LIMIT 1").bind(plan.commandId).first()
       if(launch)await queue.send({kind:'cradle.launch.events.v1',commandId:plan.commandId})
-      const records=await db.prepare("SELECT 1 FROM record_automation_events WHERE command_id=? AND state='pending' LIMIT 1").bind(plan.commandId).first()
+      const records=await db.prepare("SELECT 1 WHERE EXISTS(SELECT 1 FROM record_automation_events WHERE command_id=?1 AND state='pending') OR EXISTS(SELECT 1 FROM record_calendar_changes WHERE command_id=?1 AND state='pending')").bind(plan.commandId).first()
       if(records)await queue.send({kind:'cradle.records.automations.v1',commandId:plan.commandId})
       const changes=await db.prepare("SELECT 1 FROM record_change_subscriptions WHERE app_id=? AND state='active' AND expires_at>? AND EXISTS(SELECT 1 FROM admission_audit WHERE command_id=? AND action IN ('record.create','record.patch','record.delete','record.undo')) LIMIT 1").bind(plan.appId,Date.now(),plan.commandId).first()
       if(changes)await queue.send({kind:'cradle.changes.v1',commandId:plan.commandId})
