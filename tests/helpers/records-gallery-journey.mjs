@@ -5,7 +5,6 @@ import {chromium} from '@playwright/test'
 import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 import {browserCall,liveCommand} from './records-live-fixture.mjs'
-import {freePort} from './free-port.mjs'
 import {setupRepairs} from '../../src/apps/repairs/setup.server.ts'
 import {repairDescriptors} from '../../src/apps/repairs/descriptors.ts'
 import {REPAIRS_APP_ID,REPAIRS_RELEASE_ID,REPAIR_ENTITIES,repairFieldId} from '../../src/apps/repairs/model.ts'
@@ -35,7 +34,7 @@ export async function galleryBrowserJourney(){
  const output=path.resolve('.private/gallery');await mkdir(output,{recursive:true})
  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
  try{for(const width of [1440,390]){
-  const h=await recordsBrowserRuntime(await freePort()),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+  const h=await recordsBrowserRuntime(0),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
   try{
    page.setDefaultTimeout(15000)
    console.log('gallery fixture',width)
