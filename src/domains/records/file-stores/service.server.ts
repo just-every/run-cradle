@@ -1,3 +1,7 @@
+import {personalStorePermit} from '../../authority/personal-stores.server';
+import {fileStoreAdapter} from '../../../adapters/file-stores.server';
+import type {FileStoreProvider} from '../../connections/oauth.server';
+import {createFileStoreSettings} from './settings.server';
 import { createUlid } from '../../../core/shared/ids';
 import { ApiError } from '../../../core/registry/errors';
 import type { ServerFoundation } from '../../../core/app/foundation.server';
@@ -12,7 +16,7 @@ import { isStoreReferenceMember } from '../store-references';
 import type { createRecordReader } from '../query.server';
 
 export const fieldAddress = z.object({ appId: idSchema, entityId: idSchema, fieldId: idSchema }).strict();
-export type FileStoreConnection = { id: string; provider: string; name: string; state: string };
+export type FileStoreConnection = { id: string; provider: string; name: string; state: string; sharePreviews:boolean };
 type Reader = ReturnType<typeof createRecordReader>;
 /** Browsing and thumbnails read a person's own file store through a connection job, so the credential never leaves custody. */
 export function createFileStores(db: D1Database, foundation: ServerFoundation, providers: ReturnType<typeof createProvidersComposition>, reader: Reader) {
@@ -28,27 +32,38 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
     if (!row || !(fileStoreProviders as readonly string[]).includes(row.adapter_id)) throw new ApiError('forbidden', 'Choose one of your own connected file stores.');
   }
   async function run<T>(ctx: RequestContext, connectionId: string, request: z.infer<typeof fileStoreRequestSchema>): Promise<T> {
-    const prepared = await providers.jobs.prepare(ctx, createUlid(), connectionId, 'connection.sync');
+    const connection=await db.prepare('SELECT app_id,adapter_id FROM provider_connections WHERE id=?').bind(connectionId).first<{app_id:string;adapter_id:FileStoreProvider}>();if(!connection)throw new ApiError('forbidden','Connection unavailable.');
+    const permit=await personalStorePermit(db,foundation.policy,foundation.entities,ctx,{appId:connection.app_id,action:'connection.sync',expected:[],cost:[],connectionId,inputHash:''},undefined,request);
+    const prepared = await providers.jobs.prepare(ctx, createUlid(), connectionId, 'connection.sync',permit??undefined);
     const plan = { ...prepared, mutations: [...prepared.mutations, { kind: 'insert' as const, table: fileStoreRequests, row: { job_id: prepared.committedResult.jobId, connection_id: connectionId, actor_id: ctx.principal.id, request_json: JSON.stringify(request), created_at: ctx.now } }] };
     const saved = await foundation.admission.commit(ctx, plan);
     if (saved.result.state !== 'committed') throw new ApiError('version_conflict', 'The file store request was not admitted.');
     const jobId = saved.result.value.jobId, outbox = await db.prepare("SELECT id FROM admission_outbox WHERE command_id=? AND action='connection.operation'").bind(plan.commandId).first<{ id: string }>();
     if (!outbox) throw new Error('File store outbox missing');
-    await providers.jobs.dispatch(outbox.id);
-    const answer = await db.prepare("SELECT r.result_json FROM file_store_requests r JOIN connection_jobs j ON j.id=r.job_id WHERE r.job_id=? AND r.actor_id=? AND j.state='completed'").bind(jobId, ctx.principal.id).first<{ result_json: string | null }>();
-    await db.prepare('DELETE FROM file_store_requests WHERE job_id=? OR created_at<?').bind(jobId, new Date(Date.parse(ctx.now) - 3_600_000).toISOString()).run();
-    if (!answer || answer.result_json === null) throw new ApiError('provider_unavailable', 'The file store did not answer. Reconnect it or try again.');
-    return JSON.parse(answer.result_json) as T;
+    try {
+      await providers.jobs.dispatch(outbox.id);
+      const answer = await db.prepare("SELECT r.result_json FROM file_store_requests r JOIN connection_jobs j ON j.id=r.job_id WHERE r.job_id=? AND r.actor_id=? AND j.state='completed'").bind(jobId, ctx.principal.id).first<{ result_json: string | null }>();
+      if (!answer || answer.result_json === null) throw new ApiError('provider_unavailable', 'The file store did not answer. Reconnect it or try again.');
+      if(request.op==='thumbnail'){
+        const jobContext={...ctx,requestId:jobId};
+        const image=await fileStoreAdapter(connection.adapter_id,providers.connections(jobContext).credentials).thumbnail(connectionId,jobId,request.itemId);
+        // Authority may have changed while the provider answered. Recheck before handing out bytes.
+        await personalStorePermit(db,foundation.policy,foundation.entities,jobContext,{appId:connection.app_id,action:'connection.sync',expected:[],cost:[],connectionId,inputHash:''});
+        return image as T;
+      }
+      return JSON.parse(answer.result_json) as T;
+    } finally { await db.prepare('DELETE FROM file_store_requests WHERE job_id=?').bind(jobId).run(); }
   }
+
   async function connections(ctx: RequestContext, appId: string): Promise<FileStoreConnection[]> {
-    const rows = await db.prepare(`SELECT id,adapter_id,name,state,revoked_at FROM provider_connections WHERE app_id=? AND owner_id=? AND adapter_id IN (${fileStoreProviders.map(() => '?').join(',')}) ORDER BY created_at,id`).bind(appId, ctx.principal.id, ...fileStoreProviders).all<{ id: string; adapter_id: string; name: string; state: string; revoked_at: string | null }>();
-    return rows.results.map(row => ({ id: row.id, provider: row.adapter_id, name: row.name, state: row.revoked_at ? 'revoked' : row.state }));
+    const rows = await db.prepare(`SELECT id,adapter_id,name,state,revoked_at,share_previews FROM provider_connections WHERE app_id=? AND owner_id=? AND adapter_id IN (${fileStoreProviders.map(() => '?').join(',')}) ORDER BY created_at,id`).bind(appId, ctx.principal.id, ...fileStoreProviders).all<{ id: string; adapter_id: string; name: string; state: string; revoked_at: string | null;share_previews:number }>();
+    return rows.results.map(row => ({ id: row.id, provider: row.adapter_id, name: row.name, state: row.revoked_at ? 'revoked' : row.state,sharePreviews:row.share_previews===1 }));
   }
   async function browse(ctx: RequestContext, input: unknown) {
     const request = fieldAddress.extend({ connectionId: idSchema, query: z.string().trim().min(1).max(200).nullable().default(null), cursor: z.string().min(1).max(2048).nullable().default(null) }).strict().parse(input);
     await authorize(ctx, request); await ownConnection(ctx, request.appId, request.connectionId);
     const provider = (await db.prepare('SELECT adapter_id FROM provider_connections WHERE id=?').bind(request.connectionId).first<{ adapter_id: string }>())!.adapter_id;
-    return { provider, attachedBy: ctx.principal.id, ...await run<StoreBrowse>(ctx, request.connectionId, { op: 'browse', query: request.query, cursor: request.cursor }) };
+    return { provider, attachedBy: ctx.principal.id, ...await run<StoreBrowse>(ctx, request.connectionId, { entityId:request.entityId,fieldId:request.fieldId,op: 'browse', query: request.query, cursor: request.cursor }) };
   }
   /** The image is fetched now, through the connection of the person who attached the file, and handed on without being kept. */
   async function thumbnail(ctx: RequestContext, input: unknown): Promise<{ state: 'image'; image: StoreThumbnail } | { state: 'reconnect' | 'none' }> {
@@ -59,12 +74,20 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
     const cell = (await reader.render(ctx, scope, d, row, [request.fieldId])).fields[request.fieldId];
     const reference = cell?.state === 'value' && Array.isArray(cell.value) ? cell.value.find(member => isStoreReferenceMember(member) && member.reference.itemId === request.itemId) : undefined;
     if (!reference || !isStoreReferenceMember(reference)) throw new ApiError('not_found', 'Attachment not found.');
-    const { connectionId, attachedBy } = reference.reference;
-    if (!connectionId || attachedBy !== ctx.principal.id) return { state: 'none' };
-    const live = await db.prepare("SELECT 1 AS live FROM provider_connections WHERE id=? AND owner_id=? AND state='connected' AND revoked_at IS NULL").bind(connectionId, ctx.principal.id).first();
-    if (!live) return { state: 'reconnect' };
-    const image = await run<StoreThumbnail | null>(ctx, connectionId, { op: 'thumbnail', itemId: request.itemId });
-    return image ? { state: 'image', image } : { state: 'none' };
+    const { connectionId, attachedBy,provider } = reference.reference;
+    if (!connectionId||provider==='chest') return { state: 'none' };
+    const original=await db.prepare('SELECT account_id,account_verified FROM provider_connections WHERE id=? AND adapter_id=? AND owner_id=?').bind(connectionId,provider,attachedBy).first<{account_id:string;account_verified:number}>();
+    if(!original)return {state:'reconnect'};
+    const own=(await db.prepare("SELECT id FROM provider_connections WHERE app_id=? AND owner_id=? AND adapter_id=? AND (id=? OR (account_verified=1 AND ?=1 AND account_id=?)) AND state='connected' AND revoked_at IS NULL ORDER BY created_at DESC,id").bind(request.appId,ctx.principal.id,provider,connectionId,original.account_verified,original.account_id).all<{id:string}>()).results;
+    const operation={op:'thumbnail' as const,entityId:request.entityId,fieldId:request.fieldId,recordId:request.recordId,itemId:request.itemId};
+    for(const candidate of own){const image=await run<StoreThumbnail|null>(ctx,candidate.id,operation);if(image)return {state:'image',image};}
+    if(attachedBy!==ctx.principal.id){
+      // The server's shared-preview permit verifies opt-in, the stored reference and both people's current authority.
+      const permitted=await personalStorePermit(db,foundation.policy,foundation.entities,ctx,{appId:request.appId,action:'connection.sync',expected:[],cost:[],connectionId,inputHash:''},undefined,operation).catch(error=>{if(error?.code==='forbidden')return null;throw error;});
+      if(permitted){const image=await run<StoreThumbnail|null>(ctx,connectionId,operation);if(image)return {state:'image',image};}
+    }
+    return {state:own.length?'none':'reconnect'};
   }
-  return { connections, browse, thumbnail, identity: (ctx: RequestContext) => ({ attachedBy: ctx.principal.id }) };
+
+  return { settings:createFileStoreSettings(db,foundation),connections, browse, thumbnail, identity: (ctx: RequestContext) => ({ attachedBy: ctx.principal.id }) };
 }
