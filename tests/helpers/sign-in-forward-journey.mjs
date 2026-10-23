@@ -21,7 +21,7 @@ export async function verifySignInForward({ browser, context, origin, width, out
     await check('signin-forward-default')
     await page.goto(origin+'/signin?returnTo=%2Fapp%2Fnotifications')
     await page.waitForURL(origin+'/app/notifications')
-    await page.getByRole('heading', { name: 'Notifications', exact: true }).waitFor()
+    await page.locator('#notifications-title').waitFor()
     await check('signin-forward-return')
     await page.goto(origin+'/signin?returnTo=https%3A%2F%2Fattacker.example.test')
     await page.waitForURL(origin+'/app')

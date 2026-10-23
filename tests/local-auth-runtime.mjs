@@ -25,7 +25,12 @@ contract('AUTH-BASE-001 HOME-003 BASE-ACCESS-002 INTEG-002 BASE-SEC-003', 'emitt
    ['?returnTo=%252F%252Fattacker.example.test','/app'],
    ['?returnTo=%2Fsignin','/app'],
   ]) {
-   const response=await h.request('/signin'+search,{headers:{cookie:owner.cookie}})
+   let response=await h.request('/signin'+search,{headers:{cookie:owner.cookie}})
+   // TanStack may canonicalize the legacy next alias before its loader runs.
+   if(response.status===307&&response.headers.get('location')?.startsWith('/signin?')){
+    assert.doesNotMatch(await response.text(),/id="signin-email"/)
+    response=await h.request(response.headers.get('location'),{headers:{cookie:owner.cookie}})
+   }
    assert.equal(response.status,307,'A current owner leaves sign-in before the form')
    assert.equal(response.headers.get('location'),destination)
    assert.match(response.headers.get('cache-control'),/private.*no-store/)
