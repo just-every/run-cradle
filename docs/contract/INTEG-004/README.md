@@ -26,3 +26,7 @@ Bulk and import (ct, 23 October)
 Scopes: the narrowest scope that writes events is used and recorded in `docs/contract/INTEG-004/`: Google `calendar.events.owned` plus calendar listing; Outlook `Calendars.ReadWrite`.
 
 Gap: record calendar sync (`record.calendar.sync` effect class, review queue) is not built; Outlook absent; no real provider consent (NOT RUN).
+
+## Google implementation subset, 23 October
+
+See [implementation.md](implementation.md) for the versioned definition, execution-effect, review and authority paths and their remaining gaps. Google uses `https://www.googleapis.com/auth/calendar.events.owned` plus `https://www.googleapis.com/auth/calendar.calendarlist.readonly`. Outlook requires `Calendars.ReadWrite` and remains unbuilt. The existing calendar registration exercises the synthetic Google edge; real provider consent is NOT RUN.
