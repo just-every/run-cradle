@@ -30,7 +30,7 @@ export async function storeReferenceResolution(h,provider,snapshot){
  const nullEntity=(await d.call(`/api/v1/apps/${nullApp}/entities`)).items.find(e=>e.fields.some(f=>f.type==='attachment')),nullField=nullEntity.fields.find(f=>f.type==='attachment'),nullRow=(await d.call(`/api/v1/apps/${nullApp}/entities/${nullEntity.id}/query`,{})).items.find(r=>r.fields[nullField.id]?.value?.length)
  // Connect at the returning base, using the same public consent path.
  const configured=(await d.command('connection.configure',{appId:nullApp,adapterId:'google-drive',name:'synthetic-cradle-unverified-store',accountId:'ignored',scopes:[],ownership:[],credentialRef:null})).value.connectionId,consent=(await d.command('connection.begin-consent',{connectionId:configured,returnTo:'/app/records'})).value
- await d.call('/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-1',state:new URL(consent.authorizationUrl).searchParams.get('state')}),undefined,303)
+ const callback=await d.raw('/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-1',state:new URL(consent.authorizationUrl).searchParams.get('state')}));assert.equal(callback.status,303);await callback.arrayBuffer()
  const unverified=await d.call('/api/v1/records/file-stores/resolve',{appId:nullApp,entityId:nullEntity.id,recordId:nullRow.id,fieldId:nullField.id,itemId:drive.itemId});assert.equal(unverified.state,'unverified')
  assert.deepEqual(provider.writes,[],'Metadata resolution and confirmation never write or share at the provider')
 }
