@@ -2,6 +2,7 @@ import { createIdpOwnerClaimHandler } from '../../../vendor/base/modules/owner-c
 import { createDependencies } from '../../../vendor/base/modules/dependencies/index.mjs'
 import { securityHeaders, type OperatorAuth } from '../../../vendor/base/modules/operator-auth/index.mjs'
 import { baseAuthConfig } from './base-auth.server'
+import { initialOwnerName } from './owner-name.server'
 import type { PlatformBindings } from './bindings'
 
 /** The optional pull-link door shares Base's accounts and admission with email. */
@@ -29,7 +30,7 @@ export async function dependencyResponse(request: Request, env: PlatformBindings
   return createDependencies({ db: env.DB, origin: config.origin, name: 'Cradle', provider, local: config.local, auth,
     claimOwner: token => claim(new Request(config.origin + '/auth/owner-claim', { method: 'POST',
       headers: { Host: new URL(config.origin).host, Origin: config.origin, 'Content-Type': 'application/json', 'CF-Connecting-IP': request.headers.get('CF-Connecting-IP') ?? '' },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, displayName: initialOwnerName(env, undefined) }),
     })),
   }).handle(request)
 }

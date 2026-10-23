@@ -5,6 +5,7 @@ import type { PlatformBindings } from './bindings'
 import type { AuthConfig, OperatorAuth } from '../../../vendor/base/modules/operator-auth/index.mjs'
 import {hostedMailConfig,hostedMailConfigured} from './hosted-mail.server'
 import { ApiError } from '../registry/errors'
+import { initialOwnerName } from './owner-name.server'
 
 /** The AuthConfig Base's operator-auth and the local dev layer both read. */
 export function baseAuthConfig(env: PlatformBindings): AuthConfig {
@@ -24,6 +25,9 @@ export function createBaseAuth(env: PlatformBindings): OperatorAuth {
   const mailSender = env.MAIL_PROVIDER === 'development' && env.RER_DEMO === '1'
     ? createMailSender({ provider: 'development', mode: 'development' })
     : hostedMailConfigured(env) ? createMailSender(hostedMailConfig(env)!) : undefined
-  return createOperatorAuth({ db: env.DB, config, mailSender, clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
+  const auth = createOperatorAuth({ db: env.DB, config, mailSender, clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
+  return Object.freeze({ ...auth, bootstrap: (request: Request, input: Parameters<OperatorAuth['bootstrap']>[1]) => auth.bootstrap(request, {
+    ...input, displayName: initialOwnerName(env, input.displayName),
+  }) })
 }
 export { createAuthHandler }

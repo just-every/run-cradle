@@ -7,4 +7,5 @@ declare module '*vendor/base/modules/operator-auth/page.mjs' {
 }
 declare module '*vendor/base/modules/operator-auth/http.mjs' {
  export function escapeHtml(value:string):string
+ export function requirePost(request:Request,config:{origin:string;local?:boolean}):void
 }
