@@ -60,6 +60,7 @@ export async function changeSubscriptionsJourney(h,edge){
  console.log('CHANGE_SUBSCRIPTION_LIFETIME PASS 410 subscription_expired')
  await h.create('synthetic-cradle-8');await tick()
  assert.equal(edge.received.filter(r=>r.path==='/changes').length,before)
+ for(const ping of edge.received.filter(r=>r.path==='/changes'))await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
  await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
  assert.deepEqual((await h.request(root+'?appId='+h.appId,{secret:key.secret})).data,[])
 }
