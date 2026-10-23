@@ -89,7 +89,8 @@
                         "instant",
                         "money",
                         "multi_select",
-                        "person"
+                        "person",
+                        "attachment"
                       ]
                     },
                     "required": {
@@ -489,6 +490,13 @@
                       },
                       "additionalProperties": {
                         "anyOf": [
+                          {
+                            "type": "array",
+                            "maxItems": 10000,
+                            "items": {
+                              "$ref": "#/$defs/storeReference"
+                            }
+                          },
                           {
                             "type": "null"
                           },
@@ -1939,6 +1947,142 @@
           "additionalProperties": false
         }
       ]
+    },
+    "storeReference": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "store"
+        },
+        "schema": {
+          "const": 1
+        },
+        "provider": {
+          "enum": [
+            "google-drive",
+            "onedrive",
+            "dropbox",
+            "box",
+            "chest"
+          ]
+        },
+        "account": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "itemId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "type": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "size": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modified": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "digest": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "enum": [
+                    "sha256",
+                    "sha1",
+                    "md5",
+                    "quickxor",
+                    "dropbox-content-hash"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              },
+              "required": [
+                "algorithm",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "link": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attachedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "attachedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "kind",
+        "schema",
+        "provider",
+        "account",
+        "itemId",
+        "name",
+        "type",
+        "size",
+        "modified",
+        "digest",
+        "link",
+        "attachedBy",
+        "attachedAt"
+      ],
+      "additionalProperties": false
     }
   },
   "title": "Cradle portable base v1",

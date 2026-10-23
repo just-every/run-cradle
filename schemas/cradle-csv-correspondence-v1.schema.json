@@ -70,7 +70,8 @@
                     "instant",
                     "money",
                     "multi_select",
-                    "person"
+                    "person",
+                    "attachment"
                   ]
                 },
                 "required": {
