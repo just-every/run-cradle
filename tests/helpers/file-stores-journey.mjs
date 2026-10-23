@@ -1,3 +1,4 @@
+import {personalStoresJourney} from './file-stores-personal.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {storeScopes} from './file-stores-provider.mjs'
@@ -46,9 +47,10 @@ export async function fileStoresJourney(h,provider,existingFields){
  const base=members[0].reference
  for(const [forged,status] of [[{...base,attachedBy:createUlid()},403],[{...base,itemId:'synthetic-cradle-forged',connectionId:createUlid()},403],[{...base,itemId:'synthetic-cradle-link',link:'https://evil.example/x'},400],[{...base,itemId:'synthetic-cradle-key',extra:true},400]])await h.patch(current,{[fieldId]:[...members,{reference:forged}]},undefined,createUlid(),status)
  assert.equal((await record()).fields[fieldId].value.length,members.length,'Forged references change nothing')
+ await personalStoresJourney(h,provider,fieldId)
  // The person loses connection authority: browsing and previews are refused, the attachment keeps name and type.
  const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(h.operator,h.appId).first(),rules=JSON.parse(policy.rules_json)
- await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules.map(r=>r.actions?{...r,actions:r.actions.filter(a=>!a.startsWith('connection.'))}:r)),policy.id).run()
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules.map(r=>r.entityId===h.entityId?{...r,writableFields:r.writableFields.filter(id=>id!==fieldId)}:r)),policy.id).run()
  await h.request('/api/v1/records/file-stores/browse',{method:'POST',body:{...address,connectionId:connections['google-drive']},status:403})
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()
  // A revoked connection leaves the reference showing name and type with a reconnect state, never an error page.
