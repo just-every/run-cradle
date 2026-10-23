@@ -1,3 +1,4 @@
+import './helpers/typescript-loader.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,mkdtemp,rm} from 'node:fs/promises';
@@ -10,6 +11,17 @@ test('durable execution: concurrent queue, restart unknown reconciliation, cance
  try{
   await build({entryPoints:['tests/providers-runtime-entry.ts'],outfile:join(dir,'runtime.mjs'),bundle:true,platform:'node',format:'esm'});const r=await import(join(dir,'runtime.mjs')),db=await mf.getD1Database('DB');for(const f of ['0300_atomic_admission.sql','0500_execution.sql','0501_connections.sql','0502_auth_payload_retention.sql','0504_execution_authority_binding.sql','0505_execution_authorization.sql','0506_connection_jobs.sql','0507_execution_erasure.sql'])await db.exec((await readFile(`migrations/core/${f}`,'utf8')).replace(/\n/g,' '));
   await db.exec('CREATE TABLE test_authority (id TEXT PRIMARY KEY, active INTEGER, remaining INTEGER);INSERT INTO test_authority VALUES(\'grant\',1,100)');
+  // Strict extraction transport must pass before credentials or a paid call.
+  const {extractionSchema}=await import('../src/domains/evidence/extraction.server.ts');
+  let credentialReads=0;const strictAdapter=r.openaiAdapter({resolve:async()=>{credentialReads++;return {token:'synthetic-cradle-1'}}},(value,ids)=>extractionSchema.validate(value,ids));
+  const schemaEffect={attemptId:'synthetic-cradle-1',connectionId:'synthetic-cradle-1',input:{model:'synthetic-cradle-1',purpose:'evidence.extract',instructions:'Extract evidence.',context:'Synthetic evidence',schemaName:'evidence-extraction',schema:extractionSchema.schema,maxOutputTokens:100,authorizedSourceIds:[]}};
+  await strictAdapter.preflight(schemaEffect);assert.equal(credentialReads,1);
+  for(const mutate of [schema=>{schema.properties.claims.items.properties.evidence.items.properties.locator={oneOf:[{type:'string'}]}},schema=>{schema.properties.claims.items.properties.evidence.items.properties.locator.anyOf[1].required=['kind','page']}]){
+   const schema=structuredClone(extractionSchema.schema);mutate(schema);await assert.rejects(strictAdapter.preflight({...schemaEffect,input:{...schemaEffect.input,schema}}));assert.equal(credentialReads,1);
+  }
+  const sourceId='01AAAAAAAAAAAAAAAAAAAAAAAA',claim={subject:null,fieldId:null,value:'synthetic-cradle-1',classification:'claim',evidence:[{sourceId,sourceVersion:1,locator:{kind:'page',page:1,region:null},observedAt:'2026-10-23T00:00:00.000Z'}]};
+  const normalized=extractionSchema.validate({claims:[claim]},[sourceId]);assert.deepEqual(normalized.claims[0].evidence[0].locator,{kind:'page',page:1});assert.deepEqual(extractionSchema.validate(normalized,[sourceId]),normalized);
+  assert.throws(()=>extractionSchema.validate({claims:[{...claim,evidence:[{...claim.evidence[0],locator:{kind:'text',start:-1,end:2}}]}]},[sourceId]));assert.throws(()=>extractionSchema.validate({claims:[claim]},[]));
   const id=()=>r.createUlid(),app=id(),connection=id(),release=id(),actor=id(),now=new Date().toISOString();
   await db.prepare("INSERT INTO provider_connections (id,app_id,adapter_id,name,state,account_id,scopes_json,ownership_json,version,created_at,updated_at) VALUES(?,?,'resend','Mail','connected','sender@example.com','[]','[]',1,?,?)").bind(connection,app,now,now).run();
   const ctx={principal:{id:actor,kind:'human',humanId:actor,sessionId:null,credentialId:null,issuedAt:now,expiresAt:'2099-01-01T00:00:00.000Z',authenticationEpoch:1},requestId:id(),now,ingress:'queue'};
