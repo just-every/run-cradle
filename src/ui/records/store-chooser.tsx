@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { CellValue, Ref, StoreReference } from '../../contracts/primitives'
-import { readApi, useCommand } from '../shared/api'
-import { CommandFeedback } from '../shared/presentation'
+import { readApi } from '../shared/api'
+import { StoreConnect } from './store-connect'
+import { StoreSettings } from './store-settings'
 import { storeLabels } from './store-reference-view'
 
 type Item = { itemId: string; name: string; mediaType: string; size: number | null; modifiedAt: string | null; link: string }
-type Choice = { id: string; provider: StoreReference['provider']; name: string; state: string }
+type Choice = { id: string; provider: StoreReference['provider']; name: string; state: string;sharePreviews:boolean }
 type Browse = { provider: StoreReference['provider']; attachedBy: string; items: Item[]; next: string | null }
 const connectable = ['google-drive', 'onedrive', 'dropbox', 'box'] as const
 /** Pick a file from the person's own connected store. Nothing is copied and the store's sharing is not touched. */
@@ -13,7 +14,6 @@ export function StoreChooser({ appId, entityId, fieldId, subject, value, onChang
   const [connections, setConnections] = useState<Choice[] | null>(null), [selected, setSelected] = useState(''), [query, setQuery] = useState('')
   const [browse, setBrowse] = useState<Browse | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false), [open, setOpen] = useState(false)
   const [chestLink, setChestLink] = useState(''), [chestName, setChestName] = useState('')
-  const configure = useCommand<{ connectionId: string }>(`store-configure:${appId}`), consent = useCommand<{ authorizationUrl: string }>(`store-consent:${appId}`)
   useEffect(() => { let live = true; void readApi<{ connections: Choice[] }>(`/api/v1/records/file-stores/connections?appId=${appId}`).then(r => { if (live) { setConnections(r.data.connections); setSelected(current => current || r.data.connections.find(c => c.state === 'connected')?.id || '') } }).catch(e => { if (live) setError(e instanceof Error ? e.message : 'Could not read your file stores.') }); return () => { live = false } }, [appId])
   const members = Array.isArray(value) ? (value as unknown[]).filter(item => typeof item === 'object' && item !== null && ('fileId' in item || 'reference' in item)) as CellValue[] : []
   async function search(cursor: string | null) {
@@ -27,11 +27,8 @@ export function StoreChooser({ appId, entityId, fieldId, subject, value, onChang
     if (!duplicate) onChange([...members, { reference }] as CellValue)
     setOpen(false); setBrowse(null)
   }
-  async function connect(provider: typeof connectable[number]) {
-    const saved = await configure.submit('/api/v1/commands/connection.configure', { appId, adapterId: provider, name: `My ${storeLabels[provider]}`, accountId: 'me', scopes: [], ownership: [], credentialRef: null }, [])
-    if (!saved) return
-    const result = await consent.submit('/api/v1/commands/connection.begin-consent', { connectionId: saved.connectionId, returnTo: `${location.pathname}${location.search}` }, [])
-    if (result) window.location.assign(result.authorizationUrl)
+  async function share(enabled:boolean){
+    try{await readApi('/api/v1/records/file-stores/settings',{method:'POST',body:JSON.stringify({kind:'sharing',appId,connectionId:selected,enabled})});setConnections(current=>current?.map(c=>c.id===selected?{...c,sharePreviews:enabled}:c)??null)}catch(e){setError(e instanceof Error?e.message:'Could not change preview sharing.')}
   }
   const mine = (connections ?? []).filter(c => c.state === 'connected'), attacher = browse?.attachedBy
   return <div className="cr-stack cr-store-chooser">
@@ -42,7 +39,10 @@ export function StoreChooser({ appId, entityId, fieldId, subject, value, onChang
         <label className="cr-field">Your file store<select value={selected} onChange={event => { setSelected(event.target.value); setBrowse(null) }}>{mine.map(c => <option key={c.id} value={c.id}>{c.name} ({storeLabels[c.provider]})</option>)}</select></label>
         <label className="cr-field">Search by name<input type="search" maxLength={200} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); void search(null) } }} /></label>
         <button type="button" className="cr-button" disabled={busy || !selected} onClick={() => void search(null)}>{busy ? 'Looking…' : browse ? 'Search' : 'Show files'}</button>
-      </div> : <div className="cr-stack"><p>{connections === null ? 'Checking your connections…' : 'Connect a store with read-only access.'}</p><div className="cr-actions">{connectable.map(provider => <button type="button" key={provider} className="cr-button cr-button--quiet" disabled={[configure.result.state, consent.result.state].includes('submitting')} onClick={() => void connect(provider)}>Connect {storeLabels[provider]}</button>)}</div><CommandFeedback {...configure} /><CommandFeedback {...consent} /></div>}
+      </div> : <div className="cr-stack"><p>{connections === null ? 'Checking your connections…' : 'Connect a store with read-only access.'}</p></div>}
+      <div className="cr-actions">{connectable.map(provider => <StoreConnect key={provider} appId={appId} provider={provider}/>)}</div>
+      {selected&&<label><input type="checkbox" checked={connections?.find(c=>c.id===selected)?.sharePreviews??false} onChange={event=>void share(event.target.checked)}/> Share previews of files I attach with people who can read this field</label>}
+      <StoreSettings appId={appId}/>
       {error && <p className="cr-error" role="alert">{error}</p>}
       {browse && (browse.items.length ? <ul className="cr-store-items">{browse.items.map(item => <li key={item.itemId}><span>{item.name}<small className="cr-muted"> {item.mediaType}</small></span><button type="button" className="cr-button cr-button--quiet" aria-label={`Attach ${item.name}`} onClick={() => attach({ provider: browse.provider, itemId: item.itemId, name: item.name, mediaType: item.mediaType, size: item.size, modifiedAt: item.modifiedAt, link: item.link, connectionId: selected, attachedBy: attacher! })}>Attach</button></li>)}</ul> : <p>No files match.</p>)}
       {browse?.next && <button type="button" className="cr-button cr-button--quiet" disabled={busy} onClick={() => void search(browse.next)}>More files</button>}

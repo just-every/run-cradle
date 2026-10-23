@@ -804,6 +804,12 @@
       "name": "9049_schema_trash.sql",
       "sha256": "b3cf3a9e2f029abaee5ad5f96f743770f71887af01ca7ad935534f3434a78cd0",
       "sql": "-- Schema deletions share the existing Trash clock, authority and maintenance path.\nALTER TABLE record_trash ADD COLUMN kind TEXT NOT NULL DEFAULT 'record' CHECK(kind IN ('record','field','table'));\nALTER TABLE record_trash ADD COLUMN detail_json TEXT NOT NULL DEFAULT '{}';\nCREATE INDEX record_trash_kind_expiry ON record_trash(kind,expires_at);\n\n-- Rotate dispatch independently of audit activity in any one base.\nALTER TABLE record_change_subscriptions ADD COLUMN last_dispatch_at INTEGER NOT NULL DEFAULT 0;\nCREATE INDEX record_change_dispatch_order ON record_change_subscriptions(state,last_dispatch_at,id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9050_personal_file_stores.sql",
+      "sha256": "6dfa8df37a96170ea80efecc270791f244569941f7534f034c88e49ab9b95f33",
+      "sql": "-- Existing credentials and migration history remain intact. Preview sharing always starts off.\nALTER TABLE provider_connections ADD COLUMN share_previews INTEGER NOT NULL DEFAULT 0 CHECK(share_previews IN (0,1));\n-- Earlier account strings were caller supplied, so they cannot match another person's store.\nUPDATE provider_connections SET account_id='unverified:'||id WHERE adapter_id IN ('google-drive','onedrive','dropbox','box');\nCREATE TABLE file_store_policies (\n provider TEXT PRIMARY KEY NOT NULL,\n enabled INTEGER NOT NULL DEFAULT 1 CHECK(enabled IN (0,1)),\n connect_role TEXT NOT NULL DEFAULT 'writers' CHECK(connect_role IN ('writers','base-authors','installation-owner')),\n version INTEGER NOT NULL DEFAULT 1,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nINSERT INTO file_store_policies(provider,created_at,updated_at) VALUES\n ('google-drive',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n ('onedrive',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n ('dropbox',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n ('box',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now'));\n-- Remove pre-upgrade transient thumbnail answers. Future requests persist metadata only.\nDELETE FROM file_store_requests;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
