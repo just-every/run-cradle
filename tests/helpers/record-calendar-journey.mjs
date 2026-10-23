@@ -29,6 +29,7 @@ export async function recordCalendarJourney({widths=[1440,390],output='.private/
    const deliver=async body=>{const result=await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body}]);assert.equal(result.outcome,'ok',JSON.stringify(result))}
    const drain=async()=>{const entries=(await h.db.prepare("SELECT id FROM admission_outbox WHERE state='pending' AND action IN ('connection.operation','execution.dispatch','execution.reconcile') AND not_before<=? ORDER BY created_at,id").bind(new Date().toISOString()).all()).results;for(const entry of entries)await deliver({kind:'cradle.outbox.v1',outboxId:entry.id})}
    const open=async()=>{await page.goto(h.origin+recordPath);await page.getByRole('button',{name:'Google Calendar sync',exact:true}).click();await page.getByRole('heading',{name:'Record calendar sync',exact:true}).waitFor()}
+   const initial=await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`);assert.equal(initial.canConfigure,true,JSON.stringify(initial));
    await open();await page.getByLabel('Calendar connection',{exact:true}).selectOption(connectionId)
    const refresh=page.waitForResponse(r=>r.url().endsWith(`/connections/${connectionId}/refresh`)&&r.request().method()==='POST');await page.getByRole('button',{name:'Refresh owned calendars and reviews',exact:true}).click();assert.equal((await refresh).status(),200);await drain()
    await page.getByRole('button',{name:'Google Calendar sync',exact:true}).click();await page.getByRole('button',{name:'Google Calendar sync',exact:true}).click();await page.getByLabel('Owned calendar',{exact:true}).selectOption(provider.ownedCalendarId)
@@ -69,7 +70,7 @@ export async function recordCalendarJourney({widths=[1440,390],output='.private/
    await patch({[start.id]:'2026-11-25',[end.id]:'2026-11-26'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'POST');assert.notEqual((await binding()).event_id,event.event_id)
    await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions[0].state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
    assert.ok(provider.seen.every(r=>new URL(r.url).hostname==='www.googleapis.com'||new URL(r.url).hostname==='oauth2.googleapis.com'))
-  }finally{await context.close()}
+  }catch(error){await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});console.error('Calendar screen at failure:',await page.locator('body').innerText());throw error}finally{await context.close()}
  }}finally{await browser.close();await h.close()}
  return {providerWrites:provider.writes.length}
 }
