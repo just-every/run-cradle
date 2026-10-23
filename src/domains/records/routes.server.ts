@@ -25,7 +25,9 @@ export function createRecordHttp(ports: {
                 throw new AdmissionError('forbidden', 'A same-origin request is required');
             if(ports.rest && (/^\/api\/v1\/apps\/[^/]+\/openapi\.json$/.test(path)||/^\/api\/v1\/apps\/[^/]+\/rest\//.test(path))){
                 if(!['GET','HEAD','OPTIONS'].includes(request.method)&&request.headers.has('cookie')&&request.headers.get('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin request is required');
-                return c.json({data:await ports.rest.handle(ctx,request),meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},{headers:{'cache-control':'no-store'}});
+                const data=await ports.rest.handle(ctx,request);
+                if(path.endsWith('/openapi.json'))return c.json(data as ReturnType<typeof import('./rest/openapi').recordOpenApi>,{headers:{'cache-control':'no-store'}});
+                return c.json({data,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},{headers:{'cache-control':'no-store'}});
             }
             let data: unknown;
             const pageInput = { limit: url.searchParams.has('limit') ? Number(url.searchParams.get('limit')) : undefined, cursor: url.searchParams.get('cursor') ?? undefined };
