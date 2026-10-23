@@ -1,6 +1,6 @@
 import type { ProviderResult } from './contracts';
 import { base64, sha256 } from './crypto.server';
-export type Endpoint = 'sheets.read' | 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke' | 'drive.files' | 'drive.file' | 'drive.thumbnail' | 'graph.children' | 'graph.search' | 'graph.item' | 'graph.thumbnail' | 'dropbox.list' | 'dropbox.continue' | 'dropbox.search' | 'dropbox.thumbnail' | 'box.items' | 'box.search' | 'box.thumbnail' | 'microsoft.token' | 'dropbox.token' | 'dropbox.revoke' | 'box.token' | 'box.revoke';
+export type Endpoint = 'drive.root' | 'graph.drive' | 'dropbox.account' | 'box.account' | 'sheets.read' | 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke' | 'drive.files' | 'drive.file' | 'drive.thumbnail' | 'graph.children' | 'graph.search' | 'graph.item' | 'graph.thumbnail' | 'dropbox.list' | 'dropbox.continue' | 'dropbox.search' | 'dropbox.thumbnail' | 'box.items' | 'box.search' | 'box.thumbnail' | 'microsoft.token' | 'dropbox.token' | 'dropbox.revoke' | 'box.token' | 'box.revoke';
 const segment = (s: string) => { if (!s || s.length > 1024 || /[\x00-\x1f]/.test(s)) throw new Error('Invalid provider identifier'); return encodeURIComponent(s); };
 const thumbnailHosts: Record<'drive.thumbnail' | 'graph.thumbnail', (host: string) => boolean> = {
   'drive.thumbnail': host => host.endsWith('.googleusercontent.com') || host === 'drive.google.com',
@@ -31,6 +31,10 @@ export function endpoint(name: Endpoint, ids: string[] = []): { url: string; met
     case 'google.revoke': return { url: 'https://oauth2.googleapis.com/revoke', method: 'POST' };
     case 'xero.token': return { url: 'https://identity.xero.com/connect/token', method: 'POST' };
     case 'xero.revoke': return { url: 'https://identity.xero.com/connect/revocation', method: 'POST' };
+    case 'drive.root': return {url:'https://www.googleapis.com/drive/v3/files/root?fields=id',method:'GET'};
+    case 'graph.drive': return {url:'https://graph.microsoft.com/v1.0/me/drive',method:'GET'};
+    case 'dropbox.account': return {url:'https://api.dropboxapi.com/2/users/get_current_account',method:'POST'};
+    case 'box.account': return {url:'https://api.box.com/2.0/users/me?fields=id',method:'GET'};
     case 'drive.files': return { url: 'https://www.googleapis.com/drive/v3/files', method: 'GET' };
     case 'drive.file': return { url: `https://www.googleapis.com/drive/v3/files/${a()}`, method: 'GET' };
     case 'drive.thumbnail': return { url: thumbnailUrl(name, ids[0] ?? ''), method: 'GET' };

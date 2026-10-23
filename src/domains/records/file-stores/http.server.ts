@@ -20,6 +20,11 @@ export function fileStoresHttp(foundation: ServerFoundation, stores: ReturnType<
         if (result.state !== 'image') return c.json({ state: result.state }, 404, json);
         return new Response(unbase64(result.image.base64) as BodyInit, { headers: { 'content-type': result.image.contentType, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; sandbox" } });
       }
+      if(url.pathname.endsWith('/settings')){
+        const data=request.method==='GET'?await stores.settings.read(ctx,idSchema.parse(url.searchParams.get('appId'))):request.method==='POST'?await stores.settings.write(ctx,await readJsonBody(request)):null;
+        if(data===null)throw new ApiError('not_found','Unknown file store settings door.');
+        return c.json({data,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now}},200,json);
+      }
       if (request.method === 'GET' && url.pathname.endsWith('/identity')) return c.json({ data: stores.identity(ctx), meta: { requestId, apiVersion: 'cradle.api.v1', evaluatedAt: ctx.now } }, 200, json);
       if (request.method === 'GET' && url.pathname.endsWith('/connections')) return c.json({ data: { connections: await stores.connections(ctx, idSchema.parse(url.searchParams.get('appId'))) }, meta: { requestId, apiVersion: 'cradle.api.v1', evaluatedAt: ctx.now } }, 200, json);
       if (request.method === 'POST' && url.pathname.endsWith('/browse')) {

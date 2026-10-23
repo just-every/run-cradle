@@ -798,6 +798,12 @@
       "name": "9048_automation_test_runs.sql",
       "sha256": "a8dd84aeb5fa336f10e498eed3e12798077565373f1badc60056edf2cf44ad42",
       "sql": "-- Test runs have no automatic execution/recovery path, including after restore.\nCREATE TABLE record_automation_tests (\n id TEXT PRIMARY KEY, automation_id TEXT NOT NULL, owner_id TEXT NOT NULL,\n app_id TEXT NOT NULL, entity_id TEXT NOT NULL, record_id TEXT NOT NULL,\n definition_version INTEGER NOT NULL, record_version INTEGER NOT NULL,\n mode TEXT NOT NULL, state TEXT NOT NULL, created_at TEXT NOT NULL,\n result_json TEXT NOT NULL, confirmation_hash TEXT NOT NULL\n);\nCREATE INDEX record_automation_tests_history ON record_automation_tests(automation_id,created_at,id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9049_personal_file_stores.sql",
+      "sha256": "dbe4fce24fcb61f68d9c617ce03f292ea7f9ed528de751dcadbd2600fadcb3a1",
+      "sql": "-- Existing credentials and migration history remain intact. Preview sharing always starts off.\nALTER TABLE provider_connections ADD COLUMN share_previews INTEGER NOT NULL DEFAULT 0 CHECK(share_previews IN (0,1));\n-- Preserve prior identities and credentials; only a fresh provider response can verify an account.\nALTER TABLE provider_connections ADD COLUMN account_verified INTEGER NOT NULL DEFAULT 0 CHECK(account_verified IN (0,1));\nCREATE TABLE file_store_policies (\n provider TEXT PRIMARY KEY NOT NULL,\n enabled INTEGER NOT NULL DEFAULT 1 CHECK(enabled IN (0,1)),\n connect_role TEXT NOT NULL DEFAULT 'writers' CHECK(connect_role IN ('writers','base-authors','installation-owner')),\n version INTEGER NOT NULL DEFAULT 1,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nINSERT INTO file_store_policies(provider,created_at,updated_at) VALUES\n ('google-drive',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n ('onedrive',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n ('dropbox',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n ('box',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now'));\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

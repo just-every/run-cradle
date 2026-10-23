@@ -1,6 +1,6 @@
 import { createUlid } from '../../core/shared/ids';
 import { canonical,sha256 } from '../../adapters/crypto.server';
-import type { RequestContext,PolicyPort } from '../authority/ports';
+import type { RequestContext,PolicyPort,AuthorityPermit } from '../authority/ports';
 import type { AdmissionPort,AdmissionPlan } from '../admission/ports';
 import { and,eq,registerTable,trustedPredicate } from '../admission/sql.server';
 import { createOutboxReader,settleOutbox } from '../admission/outbox.server';
@@ -8,16 +8,16 @@ import type { createConnectionService } from './service.server';
 type Action='connection.check'|'connection.sync'|'connection.revoke';
 type Job={id:string;command_id:string;connection_id:string;app_id:string;action:Action;actor_json:string;state:string;version:number;lease_owner:string|null;lease_expires_at:string|null};
 export const connectionJobsTable=registerTable('connection_jobs',['id','command_id','connection_id','action','actor_json','state','version','lease_owner','lease_expires_at','result_json','failure_json','created_at','updated_at']);
-export type ConnectionJobDependencies={db:D1Database;admission:AdmissionPort;policy:PolicyPort;service:ReturnType<typeof createConnectionService>|((ctx:RequestContext)=>ReturnType<typeof createConnectionService>);releaseId(ctx:RequestContext,appId:string):Promise<string>;backgroundContext(jobId:string):Promise<RequestContext>};
+export type ConnectionJobDependencies={db:D1Database;admission:AdmissionPort;policy:PolicyPort;service:ReturnType<typeof createConnectionService>|((ctx:RequestContext)=>ReturnType<typeof createConnectionService>);releaseId(ctx:RequestContext,appId:string,permit?:AuthorityPermit):Promise<string>;backgroundContext(jobId:string):Promise<RequestContext>};
 /** Only fixed read/check/intake and revocation operations. This queue cannot send mail, book, or invoice. */
 export function createConnectionJobs(d:ConnectionJobDependencies){
  const outbox=createOutboxReader(d.db),service=(ctx:RequestContext)=>typeof d.service==='function'?d.service(ctx):d.service;
  const get=(id:string)=>d.db.prepare('SELECT j.*,c.app_id FROM connection_jobs j JOIN provider_connections c ON c.id=j.connection_id WHERE j.id=?').bind(id).first<Job>();
- async function prepare(ctx:RequestContext,commandId:string,connectionId:string,action:Action):Promise<AdmissionPlan<{jobId:string;connectionId:string}>>{
-  await service(ctx).read(ctx,connectionId);const row=await d.db.prepare('SELECT app_id FROM provider_connections WHERE id=?').bind(connectionId).first<{app_id:string}>();if(!row)throw new Error('Connection missing');
-  const hash=await sha256(canonical({connectionId})),permit=await d.policy.authorize(ctx,{appId:row.app_id,action,expected:[],cost:[],connectionId,inputHash:hash,commandId}),now=new Date().toISOString(),id=createUlid();
+ async function prepare(ctx:RequestContext,commandId:string,connectionId:string,action:Action,authorization?:AuthorityPermit):Promise<AdmissionPlan<{jobId:string;connectionId:string}>>{
+  if(!authorization&&action!=='connection.revoke')await service(ctx).read(ctx,connectionId);const row=await d.db.prepare('SELECT app_id FROM provider_connections WHERE id=?').bind(connectionId).first<{app_id:string}>();if(!row)throw new Error('Connection missing');
+  const hash=await sha256(canonical({connectionId})),permit=authorization??await d.policy.authorize(ctx,{appId:row.app_id,action,expected:[],cost:[],connectionId,inputHash:hash,commandId}),now=new Date().toISOString(),id=createUlid();
   const revoke=action==='connection.revoke'?await service(ctx).prepareRevocation(ctx,commandId,connectionId):null;
-  return {commandId,action,appId:row.app_id,canonicalInputHash:hash,permit,guards:revoke?.guards??[],mutations:[...(revoke?.mutations??[]),{kind:'insert',table:connectionJobsTable,row:{id,command_id:commandId,connection_id:connectionId,action,actor_json:canonical(ctx.principal),state:'queued',version:1,created_at:now,updated_at:now}}],audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[{action:'connection.operation',version:1,input:{jobId:id},notBefore:now,grantId:null,subject:null,sourceReleaseId:await d.releaseId(ctx,row.app_id),causeRunIds:[]}],committedResult:{jobId:id,connectionId}};
+  return {commandId,action,appId:row.app_id,canonicalInputHash:hash,permit,guards:revoke?.guards??[],mutations:[...(revoke?.mutations??[]),{kind:'insert',table:connectionJobsTable,row:{id,command_id:commandId,connection_id:connectionId,action,actor_json:canonical(ctx.principal),state:'queued',version:1,created_at:now,updated_at:now}}],audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[{action:'connection.operation',version:1,input:{jobId:id},notBefore:now,grantId:null,subject:null,sourceReleaseId:await d.releaseId(ctx,row.app_id,permit),causeRunIds:[]}],committedResult:{jobId:id,connectionId}};
  }
  async function run(ctx:RequestContext,id:string){let job=await get(id);if(!job)throw new Error('Connection operation missing');if(job.state==='completed'||job.state==='failed')return;
   const now=new Date().toISOString(),owner=createUlid(),permit=await d.policy.authorize(ctx,{appId:job.app_id,action:job.action,expected:[],cost:[],connectionId:job.connection_id,inputHash:await sha256(id)});

@@ -7,7 +7,7 @@ export const portabilityPolicy = {
   'company_identity_config','company_scim_users','company_scim_credentials','company_saml_requests','company_saml_assertions',
   'record_presence',
   'sessions','authority_sessions','authority_magic_tokens','authority_credentials','authority_rate_limits',
-  'cradle_base_operators','cradle_base_sessions','connection_credentials','connection_oauth_states',
+  'cradle_base_operators','cradle_base_sessions','connection_credentials','connection_oauth_states','file_store_requests',
   'runtime_transfer_credentials','admission_outbox','portability_%',
   'authority_delegations','authority_schema_proposers','record_automation_destinations','record_automation_context','integration_tokens',
   'ik_stages','ik_d1_assertions','ik_d1_publication_fences','ik_d1_staging%',
@@ -84,7 +84,7 @@ export const portabilityPolicy = {
    if(row.state==='prepared')row.state='refused';
    row.next_check_at=null;
   }
-  if(table==='provider_connections'){row.state='unconfigured';row.credential_ref=null;row.consent_scopes_json='[]';}
+  if(table==='provider_connections'){row.state='unconfigured';row.credential_ref=null;row.consent_scopes_json='[]';if('share_previews' in row)row.share_previews=0;if('account_verified' in row)row.account_verified=0;}
   if(table==='connection_jobs'){
    if(['queued','running','waiting'].includes(row.state))row.state='failed';
    row.lease_owner=null;row.lease_expires_at=null;
