@@ -4,7 +4,7 @@ import type {createRecordServices} from '../service.server'
 import type {EntitySchema,View,Form} from '../contracts'
 import {AdmissionError} from '../../admission/errors'
 import {canonical,canonicalHash} from '../../admission/canonical'
-import {identifier,trustedPredicate} from '../../admission/sql.server'
+import {identifier,trustedPredicate,registerTable} from '../../admission/sql.server'
 import {compileSchema,physicalName,type EntityDescriptor} from '../descriptors.server'
 import {snapshotValidationValues} from '../validation-values.server'
 import {currentSchemaView,currentSchemaForm} from '../metadata-schema'
@@ -56,7 +56,7 @@ export function schemaTrashService(db:D1Database,services:ReturnType<typeof crea
   const preview=await manual.preview(ctx,draft,undefined,plan)
   return manual.adopt(ctx,input.commandId,preview.id)
  }
- function descriptor(schema:EntitySchema){const skeleton={schema,table:{tableId:physicalName(schema)},fields:new Map(),idColumn:'id',versionColumn:'version',createdColumn:'created_at',updatedColumn:'updated_at',lifecycleColumn:'lifecycle',schemaVersionColumn:'schema_version'} as EntityDescriptor;return compileSchema(schema,(app,id)=>services.descriptors.list().find(d=>d.schema.appId===app&&d.schema.id===id),schema.version>1?skeleton:undefined).descriptor}
+ function descriptor(schema:EntitySchema){const skeleton={schema,table:registerTable(physicalName(schema),[]),fields:new Map(),idColumn:'id',versionColumn:'version',createdColumn:'created_at',updatedColumn:'updated_at',lifecycleColumn:'lifecycle',schemaVersionColumn:'schema_version'} as EntityDescriptor;return compileSchema(schema,(app,id)=>services.descriptors.list().find(d=>d.schema.appId===app&&d.schema.id===id),schema.version>1?skeleton:undefined).descriptor}
  async function restoreMetadata(held:StoredPreview,schema:EntitySchema,deletedAt:string,now:string){
   const mutations:SqlMutation[]=[],guards:SqlPredicate[]=[]
   for(const [table,snapshots]of [[viewTable,held.viewSnapshots??[]],[formTable,held.formSnapshots??[]]] as const)for(const snapshot of snapshots){
