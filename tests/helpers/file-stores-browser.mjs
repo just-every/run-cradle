@@ -1,3 +1,4 @@
+import {importStoreSnapshot,portableStoreFixture} from './store-reference-exits.mjs'
 import {fileStoreActors} from './file-stores-actors.mjs'
 import {browserCookies} from './session-cookies.mjs'
 import assert from 'node:assert/strict'
@@ -47,3 +48,9 @@ export async function fileStoresBrowser(page,h,width,output){
  await j.capture('file-store-owner-policy')
 }
 
+
+export async function unresolvedStoresBrowser(page,h,width,output){
+ const j=recordsJourney(page,h.origin,output,width),fixture=portableStoreFixture(),{preview,job}=await importStoreSnapshot(h,fixture.snapshot)
+ let thumbnails=0;const observe=request=>{if(request.url().includes('/file-stores/thumbnail'))thumbnails++};page.on('request',observe)
+ try{await page.goto(`${h.origin}/app/records/${preview.identities.appId}`);await j.table('Files');await j.action(page.getByRole('link',{name:'synthetic-cradle-returned-files',exact:true}).first());await page.locator('.cr-store-reference').first().waitFor();assert.equal(await page.locator('.cr-store-reference .cr-badge').count(),5);assert.equal(await page.locator('.cr-store-thumb').count(),0);for(const reference of fixture.refs){const cell=page.locator('.cr-store-reference').filter({hasText:reference.name});assert.ok((await cell.innerText()).includes('2,048'));assert.equal(await cell.getByRole('link').getAttribute('href'),reference.link)}await j.capture('file-store-return-unresolved');assert.equal(thumbnails,0);await page.goto(`${h.origin}/app/records/?import=base&job=${job.id}&receipt=1`);await page.getByRole('heading',{name:'Unresolved store references',exact:true}).waitFor();await j.capture('file-store-return-receipt')}finally{page.off('request',observe)}
+}

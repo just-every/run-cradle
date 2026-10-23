@@ -11,7 +11,7 @@ export function StoreReferenceView({ reference, record }: { reference: StoreRefe
   const [preview, setPreview] = useState<Preview>(record && reference.connectionId ? 'loading' : 'none')
   const [url, setUrl] = useState('')
   useEffect(() => {
-    if (!record || !reference.connectionId) return
+    if (!record || !reference.connectionId || reference.resolution==='unresolved') return
     let live = true, made = ''
     const query = new URLSearchParams({ appId: record.appId, entityId: record.entityId, recordId: record.recordId, fieldId: record.fieldId, itemId: reference.itemId })
     void (async () => {
@@ -26,8 +26,9 @@ export function StoreReferenceView({ reference, record }: { reference: StoreRefe
   }, [record?.appId, record?.entityId, record?.recordId, record?.fieldId, reference.itemId, reference.connectionId])
   return <span className="cr-store-reference">
     {preview === 'image' && <img className="cr-store-thumb" src={url} alt="" width={48} height={48} />}
-    <a href={reference.link} target="_blank" rel="noopener noreferrer">{reference.name}<span className="cr-sr-only"> (opens in {storeLabels[reference.provider]})</span></a>
+    {reference.resolution==='unresolved'&&<strong className="cr-badge">Unresolved</strong>}
+    <a href={reference.link||undefined} target="_blank" rel="noopener noreferrer">{reference.name}<span className="cr-sr-only"> (opens in {storeLabels[reference.provider]})</span></a>
     <small className="cr-muted"> {typeLabel(reference.mediaType)} · {storeLabels[reference.provider]}{reference.size!==null?` · ${reference.size.toLocaleString()} bytes`:''}</small>
-    {record&&reference.provider!=='chest'&&preview!=='loading'&&preview!=='image'&&<StoreConnect appId={record.appId} provider={reference.provider} preview/>}
+    {reference.resolution!=='unresolved'&&record&&reference.provider!=='chest'&&preview!=='loading'&&preview!=='image'&&<StoreConnect appId={record.appId} provider={reference.provider} preview/>}
   </span>
 }

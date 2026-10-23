@@ -5,9 +5,9 @@ import { StoreConnect } from './store-connect'
 import { StoreSettings } from './store-settings'
 import { storeLabels } from './store-reference-view'
 
-type Item = { itemId: string; name: string; mediaType: string; size: number | null; modifiedAt: string | null; link: string }
+type Item = { itemId: string; name: string; mediaType: string; size: number | null; modifiedAt: string | null; link: string;digest:StoreReference['digest'] }
 type Choice = { id: string; provider: StoreReference['provider']; name: string; state: string;sharePreviews:boolean }
-type Browse = { provider: StoreReference['provider']; attachedBy: string; items: Item[]; next: string | null }
+type Browse = { account:string;attachedAt:string;provider: StoreReference['provider']; attachedBy: string; items: Item[]; next: string | null }
 const connectable = ['google-drive', 'onedrive', 'dropbox', 'box'] as const
 /** Pick a file from the person's own connected store. Nothing is copied and the store's sharing is not touched. */
 export function StoreChooser({ appId, entityId, fieldId, subject, value, onChange }: { appId: string; entityId: string; fieldId: string; subject: Ref; value: CellValue; onChange: (value: CellValue) => void }) {
@@ -44,12 +44,12 @@ export function StoreChooser({ appId, entityId, fieldId, subject, value, onChang
       {selected&&<label><input type="checkbox" checked={connections?.find(c=>c.id===selected)?.sharePreviews??false} onChange={event=>void share(event.target.checked)}/> Share previews of files I attach with people who can read this field</label>}
       <StoreSettings appId={appId}/>
       {error && <p className="cr-error" role="alert">{error}</p>}
-      {browse && (browse.items.length ? <ul className="cr-store-items">{browse.items.map(item => <li key={item.itemId}><span>{item.name}<small className="cr-muted"> {item.mediaType}</small></span><button type="button" className="cr-button cr-button--quiet" aria-label={`Attach ${item.name}`} onClick={() => attach({ provider: browse.provider, itemId: item.itemId, name: item.name, mediaType: item.mediaType, size: item.size, modifiedAt: item.modifiedAt, link: item.link, connectionId: selected, attachedBy: attacher! })}>Attach</button></li>)}</ul> : <p>No files match.</p>)}
+      {browse && (browse.items.length ? <ul className="cr-store-items">{browse.items.map(item => <li key={item.itemId}><span>{item.name}<small className="cr-muted"> {item.mediaType}</small></span><button type="button" className="cr-button cr-button--quiet" aria-label={`Attach ${item.name}`} onClick={() => attach({ provider: browse.provider, itemId: item.itemId, name: item.name, mediaType: item.mediaType, size: item.size, modifiedAt: item.modifiedAt, link: item.link, connectionId: selected, attachedBy: attacher!,account:browse.account,digest:item.digest,attachedAt:browse.attachedAt })}>Attach</button></li>)}</ul> : <p>No files match.</p>)}
       {browse?.next && <button type="button" className="cr-button cr-button--quiet" disabled={busy} onClick={() => void search(browse.next)}>More files</button>}
       <details><summary>Add a Chest link</summary><div className="cr-stack"><p className="cr-muted">Chest is a sibling RunEditRun product; this adds the link only.</p>
         <label className="cr-field">Chest link<input type="url" value={chestLink} onChange={event => setChestLink(event.target.value)} maxLength={2048} /></label>
         <label className="cr-field">Name<input value={chestName} onChange={event => setChestName(event.target.value)} maxLength={500} /></label>
-        <button type="button" className="cr-button cr-button--quiet" disabled={!chestLink || !chestName} onClick={() => { void readApi<{ attachedBy: string }>('/api/v1/records/file-stores/identity').then(r => attach({ provider: 'chest', itemId: chestLink, name: chestName, mediaType: 'application/octet-stream', size: null, modifiedAt: null, link: chestLink, connectionId: null, attachedBy: r.data.attachedBy })).catch(e => setError(e instanceof Error ? e.message : 'Could not add the link.')) }}>Attach Chest link</button></div></details>
+        <button type="button" className="cr-button cr-button--quiet" disabled={!chestLink || !chestName} onClick={() => { void readApi<{ attachedBy: string }>('/api/v1/records/file-stores/identity').then(r => attach({ provider: 'chest', itemId: chestLink, name: chestName, mediaType: 'application/octet-stream', size: null, modifiedAt: null, link: chestLink, connectionId: null, attachedBy: r.data.attachedBy,attachedAt:new Date().toISOString() })).catch(e => setError(e instanceof Error ? e.message : 'Could not add the link.')) }}>Attach Chest link</button></div></details>
     </div>}
   </div>
 }

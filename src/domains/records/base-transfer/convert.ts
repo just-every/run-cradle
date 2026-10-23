@@ -1,3 +1,4 @@
+import {returnStoreReferences} from '../portable-store-references'
 import type { Json } from '../../../../vendor/base/modules/import-kit/src/types'
 import type { Field } from '../contracts'
 import type { SourceColumn,ColumnOverride,NumericOrigin,NumericToken } from './contracts'
@@ -29,6 +30,7 @@ export function dateValue(raw:string,convention:ColumnOverride['dateConvention']
  return out
 }
 export function convertCell(field:Field,column:SourceColumn,value:Json|undefined,override:ColumnOverride,origin?:NumericOrigin,tokens?:NumericToken[]):{value:Json;changed:boolean} {
+ if(field.type==='attachment')return {value:returnStoreReferences(value) as unknown as Json,changed:false}
  if(origin&&value!==origin.lexeme)throw new Error('API numeric token provenance does not match cell')
  if(value===null&&column.typedNulls)return {value:null,changed:false}
  const raw=origin?.lexeme??rawCellText(value,tokens);let converted:unknown=raw
