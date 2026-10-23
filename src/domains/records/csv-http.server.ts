@@ -13,6 +13,8 @@ export function recordsCsvHttp(service:ReturnType<typeof createRecordsCsv>,authe
  const ctx=await authenticate(request,'http',id)
  if(request.method!=='POST'||request.headers.get('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin request is required.')
  const input=await readJsonBody(request,['/api/v1/records/import-preview','/api/v1/records/workbook-sheets'].includes(url.pathname)?64*1024*1024:1048576);let data:unknown
+ if(url.pathname==='/api/v1/records/export-csv'&&request.headers.get('accept')==='text/csv')return await service.exportDownload(ctx,input,'csv')
+ if(url.pathname==='/api/v1/records/export-xlsx'&&request.headers.get('accept')==='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')return await service.exportDownload(ctx,input,'xlsx')
  if(url.pathname==='/api/v1/records/export-csv')data=await service.exportCsv(ctx,input)
  else if(url.pathname==='/api/v1/records/export-xlsx')data=await service.exportXlsx(ctx,input)
  else if(url.pathname==='/api/v1/records/workbook-sheets'){const file=z.object({filename:z.string().max(200),base64:z.string().max(14*1024*1024)}).strict().parse(input);data=readWorkbook(new Uint8Array(Buffer.from(file.base64,'base64')),file.filename).map(sheet=>({name:sheet.name,headers:sheet.headers}))}

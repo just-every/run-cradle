@@ -1,3 +1,4 @@
+import {createStreamExport} from './stream-export.server'
 import {exportViewWorkbook} from './workbooks/export'
 import {readWorkbook} from './workbooks/read'
 import {Buffer} from 'node:buffer'
@@ -104,5 +105,5 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   return admission.commit(ctx,{commandId,action:'import.commit',appId:p.appId,canonicalInputHash:hash,permit,guards,mutations,audit,events:[],outbox:[],committedResult:{id,creates:p.creates,updates:p.updates,unchanged:p.unchanged,rejected:p.rejected}})
  }
  async function exportXlsx(ctx:RequestContext,input:unknown){const snapshot:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]}={rows:[]};const exported=await exportCsv(ctx,input,snapshot);return exportViewWorkbook(snapshot,exported.filename.replace(/\.csv$/i,''))}
- return {exportCsv,exportXlsx,preview,commit,mappings:createCsvMappings(db,services),linkCandidates:createCsvLinkCandidates(db,services)}
+ return {exportDownload:createStreamExport(db,services),exportCsv,exportXlsx,preview,commit,mappings:createCsvMappings(db,services),linkCandidates:createCsvLinkCandidates(db,services)}
 }

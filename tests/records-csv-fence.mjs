@@ -59,6 +59,16 @@ async function recurringCsv(h){
  const workbook=await call('export-xlsx',{query:{sort:[{fieldId:name.id,direction:'asc'}]}}),typed=readWorkbook(Buffer.from(workbook.content,'base64'),'vendors.xlsx')[0],at=label=>typed.headers.indexOf(label)
  assert.equal(typed.rows[0][at('Budget')].value,'1234.5');assert.equal(typed.rows[0][at('Budget')].type,'number');assert.equal(typed.rows[0][at('Due')].value,'2026-10-17');assert.equal(typed.rows[0][at('Approved')].value,true)
  assert.deepEqual(typed.rows.slice(0,4).map(row=>row[at('City')]),['=1+1','+1','-1','@SUM(A1)'].map(value=>({value,type:'text'})))
+ // Binary downloads use the same public door, typed cells and policy as JSON exports.
+ for(const format of ['csv','xlsx']){
+  const accept=format==='csv'?'text/csv':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',http=recordsCsvHttp(r.csv,async()=>h.ctx),response=await http.fetch(new Request(origin+'/api/v1/records/export-'+format,{method:'POST',headers:{origin,accept,'content-type':'application/json'},body:JSON.stringify({...identity,query:{sort:[{fieldId:name.id,direction:'asc'}]}})}))
+  assert.equal(response.status,200);assert.match(response.headers.get('content-disposition'),/attachment; filename\*=/);assert.equal(response.headers.get('cache-control'),'no-store')
+  if(format==='xlsx'){const binary=readWorkbook(new Uint8Array(await response.arrayBuffer()),'streamed.xlsx')[0];assert.deepEqual(binary,typed)}else assert.equal(await response.text(),(await r.csv.exportCsv(h.ctx,{...identity,query:{sort:[{fieldId:name.id,direction:'asc'}]}})).csv)
+ }
+ const interrupted=await recordsCsvHttp(r.csv,async()=>h.ctx).fetch(new Request(origin+'/api/v1/records/export-csv',{method:'POST',headers:{origin,accept:'text/csv','content-type':'application/json'},body:JSON.stringify({...identity,query:{}})})),stream=interrupted.body.getReader()
+ await stream.read();await stream.read() // Header and a row from the first authorized page.
+ await h.db.prepare('UPDATE authority_policies SET version=version+1 WHERE id=?').bind(ownerPolicy.id).run()
+ await assert.rejects(async()=>{while(!(await stream.read()).done){}},/authority|stale|changed/i,'A changed authority aborts the download before a later page')
  const exported=await r.csv.exportCsv(h.ctx,{...identity,query:{}})
  assert.equal((await call('import-preview',{...input,csv:exported.csv})).unchanged,61,'Quoted multi-select labels and exact money survive view CSV export')
  assert.equal((await call('import-preview',input)).unchanged,61)
