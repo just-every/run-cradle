@@ -12294,7 +12294,7 @@
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
-      "sha256": "238444daaf994305e354db6b30a1862b7c8396f4d268ed259c88723303af3098",
+      "sha256": "0b1441245b71a8e642041ab70e650d741084fa8d92e99b3c6a46efccf256ddab",
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
@@ -12446,7 +12446,7 @@
       "executable": false
     },
     "tests/records-import-migration.mjs": {
-      "sha256": "7619dd810adb65aad0a4fd3cd20b6681bb1d0ddb474212d1b23f4f4c23638694",
+      "sha256": "12a1f752bf53d2653658868305f6941e708a6d2aea2d2b6408648fb31b23ce01",
       "executable": false
     },
     "tests/records-import-preview-auth.mjs": {

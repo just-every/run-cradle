@@ -15,7 +15,7 @@ test('[AI-001/002/003 SET-002] existing campaign, risks, lens builder and settin
  }})
  try{
   const c=await campaign(h,'SCREEN'),snapshot=await h.db.prepare('SELECT * FROM campaigns WHERE id=?').bind(c.id).first(),lenses=(await h.db.prepare('SELECT count(*) n FROM lenses').first()).n
-  browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--host-resolver-rules=MAP cradle.authority.test 127.0.0.1','--no-proxy-server']})
+  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP cradle.authority.test 127.0.0.1','--no-proxy-server']})
   const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:1280,height:900}}),page=await context.newPage(),errors=[]
   page.on('pageerror',error=>errors.push(error.message))
   await context.addCookies([{name:h.owner.cookie.split('=')[0],value:h.owner.cookie.slice(h.owner.cookie.indexOf('=')+1),url:h.origin}])
