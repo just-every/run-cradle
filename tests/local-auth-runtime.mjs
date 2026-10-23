@@ -16,6 +16,23 @@ contract('AUTH-BASE-001 HOME-003 BASE-ACCESS-002 INTEG-002 BASE-SEC-003', 'emitt
   assert.match(signin,/id="signin-email"/);assert.doesNotMatch(signin,/Welcome back|Checking sign-in|Continue with local development identity/)
   for(const html of [front,signin])assert.doesNotMatch(html,/owner@example\.test|Launch owner/,'Public identity exposes no private operator identity')
   assert.equal((await(await h.request('/api/session',{headers:{cookie:owner.cookie}})).json()).workspace.name,'Renamed records')
+  for (const [search, destination] of [
+   ['?login_hint=owner@example.test','/app'],
+   ['?returnTo=%2Fapp%2Frecords%3Fimport%3Dbase','/app/records?import=base'],
+   ['?next=%2Fapp%2Fsettings','/app/settings'],
+   ['?returnTo=https%3A%2F%2Fattacker.example.test','/app'],
+   ['?returnTo=%2F%2Fattacker.example.test','/app'],
+   ['?returnTo=%252F%252Fattacker.example.test','/app'],
+   ['?returnTo=%2Fsignin','/app'],
+  ]) {
+   const response=await h.request('/signin'+search,{headers:{cookie:owner.cookie}})
+   assert.equal(response.status,307,'A current owner leaves sign-in before the form')
+   assert.equal(response.headers.get('location'),destination)
+   assert.match(response.headers.get('cache-control'),/private.*no-store/)
+   assert.doesNotMatch(await response.text(),/id="signin-email"/)
+  }
+  const hinted=await(await h.request('/signin?login_hint=synthetic-cradle-1%40example.test')).text()
+  assert.match(hinted,/value="synthetic-cradle-1@example.test"/,'Signed-out email hint remains available')
   await verifyOwnerGmail(h,owner)
   const before=await h.db.prepare('SELECT count(*) n FROM oa_tokens').first()
   await h.reconfigure({AUTH_LOCAL:'true',MAIL_PROVIDER:'development',RER_DEPLOY_SOURCE:'test-deployed-source'})

@@ -24,9 +24,10 @@ export const loadPublicDocument = createServerFn({ method: 'GET' })
   })
 
 export const loadSignInDocument = createServerFn({ method: 'GET' })
-  .handler(async () => {
-    const { publicDocument } = await import('./public-document.server')
-    return publicDocument({ identity: true })
+  .inputValidator((value: { returnTo?: string }) => value)
+  .handler(async ({ data }) => {
+    const { signInDocument } = await import('./sign-in-document.server')
+    return signInDocument(data)
   })
 
 export const loadSetupDocument = createServerFn({ method: 'GET' })
