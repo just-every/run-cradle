@@ -9,6 +9,6 @@ import { publicDocument } from './public-document.server'
 export async function signInDocument(search: { returnTo?: string }) {
   setResponseHeader('cache-control', 'private, no-store')
   const session = await createSessionReader(createPlatform(env)).getIdentity(getRequest())
-  if (session) throw redirect({ href: normalizeSignInSearch(search).returnTo ?? '/app' })
+  if (session) throw redirect({ href: normalizeSignInSearch(search).returnTo ?? '/app', headers: { 'cache-control': 'private, no-store' } })
   return publicDocument({ identity: true })
 }
