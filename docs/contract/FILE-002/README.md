@@ -12,6 +12,10 @@ Before (pristine main `0d77622`): `POST /api/v1/records/schema-preview` with an 
 
 Browser: `tests/ui-base-import.mjs` (`[PERM-007 INTEG-003 FILE-002 RECORDS-005]`, helper `tests/helpers/file-stores-browser.mjs`) opens the chooser from the attachment cell, attaches a Google Drive file, saves, and shows the reference with its on-demand thumbnail at 1440 and 390 (no serious axe finding, no horizontal overflow, nothing copied into private file custody). Screenshots: `file-store-*-1440.png` and `-390.png`.
 
+The personal-connection extension in `tests/helpers/file-stores-personal.mjs` uses native invitation, confirmation and collaborator routes for two editors and a reader. Across all four stores it proves maker isolation (including against the installation owner), preview-only readers with a different provider account, viewer-first access, denial at the provider edge, opt-in attacher sharing, immediate opt-out, and no retained image bytes during the fetch. It also proves current field authority, owner policy and revoke-any, and native deprovisioning. The common lifecycle plan also handles SCIM deprovisioning; a separate SCIM browser journey is not claimed.
+
+Migration `9050_personal_file_stores.sql` is additive. A populated emitted-Worker upgrade preserves the existing provider identity and sealed credentials and leaves sharing off. Dropbox identity comes from the token response’s account_id, avoiding any added account-profile scope.
+
 ## Scopes and why
 
 | Store | Scope asked | Why |
@@ -26,16 +30,16 @@ Browser: `tests/ui-base-import.mjs` (`[PERM-007 INTEG-003 FILE-002 RECORDS-005]`
 
 1. In each provider console create an OAuth client and set the redirect URI to `<app origin>/oauth/<family>/callback` where family is `google`, `microsoft`, `dropbox` or `box`.
 2. Store the client id and secret as `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, `MICROSOFT_CLIENT_ID`/`MICROSOFT_CLIENT_SECRET`, `DROPBOX_CLIENT_ID`/`DROPBOX_CLIENT_SECRET` or `BOX_CLIENT_ID`/`BOX_CLIENT_SECRET` (all optional; a store without them says so when connecting).
-3. As the installation owner, open an attachment field's record, choose **Choose from a file store**, connect the store and review the consent screen.
+3. Under the installation owner’s provider and connect policy, open an attachment field's record, choose **Choose from a file store**, connect the store and review the consent screen.
 
 ## Rules kept
 
-- Only the installation owner can connect a store (the existing connection-control rule). Only that person can attach through their connection. Default for any gap no ruling covers: deny.
-- Reading a reference needs the same row and field authority as any attachment. A thumbnail is fetched only for the person who attached the file, through their connection, and never persisted. A revoked or removed connection leaves name, type and link.
+- The owner-only connect floor was interim (ct, 23 October). Writers connect personal read-only stores for attachment; readers connect for previews only. Connections belong to their maker, including against the installation owner. The installation owner controls provider availability, the connect policy and revocation of any connection. Deprovisioning revokes the person’s connections. Default for any gap no ruling covers: deny.
+- Reading a reference needs the same row and field authority as any attachment. Previews first use the viewer’s own connection where the store grants that viewer the item. Otherwise they use the attacher’s connection only after explicit, audited Share previews opt-in (off by default), with both people’s current authority checked on every request. Thumbnail responses are no-store and no image bytes enter D1 or R2. A revoked or removed connection leaves name, type and link.
 - The store's link opens in the store, where its own sharing applies. The link must be https on that provider's own host.
 - Credentials stay sealed in the existing connection custody, are absent from exports and archives, and every file-store read runs as a connection job.
 - Erasing a person removes the references they attached and revokes and deletes the credentials of connections they own.
 
 ## Gap (named in CONTRACT.md and ACCEPTANCE.md)
 
-Gap: Keep a copy is not built; base JSON, CSV-set and workbook export and return of store references is FILE-004 (missing); archive restore and attacher erasure have no journey; Chest has no picker against its own API (link only). Gap: personal store connections for writers and readers, the owner's connect policy, viewer-own-connection previews and attacher-shared previews are not built; today only the installation owner connects and attaches, and only the attacher sees thumbnails (interim, ct 23 October). No real provider call or consent was used; real consents NOT RUN. See the Status of FILE-002.
+Gap: Keep a copy is not built; base JSON, CSV-set and workbook export and return of store references is FILE-004 (missing); archive restore and attacher erasure have no journey; Chest has no picker against its own API (link only). No real provider call or consent was used; real consents NOT RUN. See the Status of FILE-002.
