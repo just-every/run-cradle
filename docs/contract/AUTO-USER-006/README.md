@@ -23,8 +23,7 @@ owner authority and the durable failed action are rechecked at the retry door.
 Safe external attempts are bounded to six in total.
 
 Proof extends the existing registrations in `tests/user-automations.mjs`
-(`[AUTO-USER-001] [AUTO-USER-005] [AUTO-USER-006] real admitted record triggers run
-notify/email/update once, retain history, and stop disabled or revoked work`),
+(`[AUTO-USER-001]`, extended with `[AUTO-USER-006]`),
 through `tests/helpers/automation-failure-journey.mjs`, and
 `tests/ui-user-automations.mjs` (`[AUTOMATIONS-USER-UI-001]`), through
 `tests/helpers/automation-failure-browser.mjs`. The emitted Worker proves one
