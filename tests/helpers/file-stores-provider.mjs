@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
 const files = [['synthetic-cradle-plan.png', 'image/png', 2048], ['synthetic-cradle-notes.pdf', 'application/pdf', 4096], ['synthetic-cradle-budget.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 8192]]
 export const storeScopes = { 'google-drive': ['https://www.googleapis.com/auth/drive.metadata.readonly'], onedrive: ['Files.Read', 'offline_access'], dropbox: ['files.metadata.read', 'files.content.read'], box: ['root_readonly'] }
-const reads = new Set(['/2/files/list_folder', '/2/files/list_folder/continue', '/2/files/search_v2', '/2/files/get_thumbnail_v2','/2/users/get_current_account','/revoke','/2/auth/token/revoke'])
+const reads = new Set(['/2/files/list_folder', '/2/files/list_folder/continue', '/2/files/search_v2', '/2/files/get_thumbnail_v2','/revoke','/2/auth/token/revoke'])
 /** Synthetic provider edge for the four stores. Records every request so a journey can prove nothing was written or shared. */
 export function fileStoresProvider() {
   const seen = [], writes = [],denied=new Set()
@@ -17,13 +17,12 @@ export function fileStoresProvider() {
       if (request.method !== 'GET' && !u.pathname.endsWith('/token') && !reads.has(u.pathname)) writes.push(`${request.method} ${u.origin}${u.pathname}`)
       if (u.pathname.endsWith('/token')) {
         const code=(await form()).get('code');assert.ok(['synthetic-cradle-code-1', 'synthetic-cradle-code-2','synthetic-cradle-code-reader'].includes(code))
-        const body = { access_token: code==='synthetic-cradle-code-reader'?'synthetic-cradle-access-reader':'synthetic-cradle-access-1', refresh_token: 'synthetic-cradle-refresh-1', token_type: 'bearer', expires_in: 3600 }
+        const body = { access_token: code==='synthetic-cradle-code-reader'?'synthetic-cradle-access-reader':'synthetic-cradle-access-1', refresh_token: 'synthetic-cradle-refresh-1', token_type: 'bearer', expires_in: 3600,...(u.hostname==='api.dropboxapi.com'?{account_id:'synthetic-cradle-namespace-1'}:{}) }
         const scope = u.hostname === 'oauth2.googleapis.com' ? storeScopes['google-drive'] : u.hostname === 'login.microsoftonline.com' ? storeScopes.onedrive : u.hostname === 'api.dropboxapi.com' ? storeScopes.dropbox : null
         return Response.json(scope ? { ...body, scope: scope.join(' ') } : body)
       }
       if(u.pathname.endsWith('/revoke')||u.pathname==='/2/auth/token/revoke')return new Response(null,{status:200})
       if((u.pathname==='/drive/v3/files/root')||(u.pathname==='/v1.0/me/drive')||(u.pathname==='/2.0/users/me'))return Response.json({id:'synthetic-cradle-namespace-1'})
-      if(u.pathname==='/2/users/get_current_account')return Response.json({root_info:{root_namespace_id:'synthetic-cradle-namespace-1'}})
       if(denied.has(request.headers.get('authorization')?.replace('Bearer ','')))return Response.json({error:'synthetic-cradle-access-denied'},{status:403})
       if (u.hostname.endsWith('.googleusercontent.com') || u.hostname.endsWith('.1drv.com')) { assert.ok(['Bearer synthetic-cradle-access-1','Bearer synthetic-cradle-access-reader'].includes(request.headers.get('authorization'))); return image() }
       assert.ok(['Bearer synthetic-cradle-access-1','Bearer synthetic-cradle-access-reader'].includes(request.headers.get('authorization')))
