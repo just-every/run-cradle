@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "5ba5b83fcb59b3658a5e9b9d3f5798b76eceb662e795ad468c421cbefb8167b4",
+      "sha256": "4755848195e641f95f8a96e575d1003edf5f52e6e0b69998e5dd373368e18ac7",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "06344078348deee12c4fb5e6a32d610ab597cecc011e7bf6d19a59332d4ac602",
+      "sha256": "fa63fbf250139d4fe7db38bdb8219ea7178b22cc182375fab013fc1c69c30694",
       "executable": false
     },
     "DEMO.md": {
@@ -4354,7 +4354,7 @@
       "executable": false
     },
     "docs/contract/WEBHOOK-USER-002/README.md": {
-      "sha256": "4d75634a1aa04e75db19ca61122fa8872f0e398a85899ce4d7741fdce4fa3aab",
+      "sha256": "b674bc5764a12782e098071aa453d33da03f12464fb8b502e53bacdda487abfd",
       "executable": false
     },
     "docs/current-state.md": {
@@ -7598,7 +7598,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/access.server.ts": {
-      "sha256": "bab287f30241c3570baa1e65a16f68a0933115e1331ad262e130d2dbd2498d22",
+      "sha256": "666578b5c055a37a029c7c0d3ddb786417212e57df68b657a717be58aaa964c8",
       "executable": false
     },
     "src/domains/change-subscriptions/delivery.server.ts": {
@@ -7606,11 +7606,15 @@
       "executable": false
     },
     "src/domains/change-subscriptions/http.server.ts": {
-      "sha256": "2e3804710ac7b420eb2aa7cbb3dd939571b494b04fc05b9e5bf69e773ef84c6a",
+      "sha256": "19665f05eb585e837a7a4bbd7a4c74599b3c0cd4729837c443553bd787a750d2",
       "executable": false
     },
     "src/domains/change-subscriptions/restore.server.ts": {
       "sha256": "658cf00277e22a0a5d120d299e07f794933cd259dec67db30feaf37f687c8143",
+      "executable": false
+    },
+    "src/domains/change-subscriptions/resync.server.ts": {
+      "sha256": "f0e8750946b7ce5f61e7a18146493997b91b1db7afd86762a972b41713b6685f",
       "executable": false
     },
     "src/domains/change-subscriptions/schema.ts": {
@@ -7618,7 +7622,7 @@
       "executable": false
     },
     "src/domains/change-subscriptions/service.server.ts": {
-      "sha256": "d0d75e006370221343da6a1903112727391c435ecf13cd5bcbe9264a1626b15e",
+      "sha256": "b72956225d074dfe54d38d04d332e0f16e64f3d27d0af8330801603e0d65637c",
       "executable": false
     },
     "src/domains/change-subscriptions/storage.server.ts": {
@@ -11230,7 +11234,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-deletes.mjs": {
-      "sha256": "6f7a3f9f1794c780acc3d262908227f562721b7ae998cf0cb6c0dac33a9734f3",
+      "sha256": "07ad6cfef0aa0028e87082679e4617803d3ffa848bbf4b102cbcf7d2c20a5706",
       "executable": false
     },
     "tests/helpers/change-subscriptions-journey.mjs": {
@@ -11574,7 +11578,7 @@
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
-      "sha256": "38020f6a97b5a93d1dbabfa8fd77c92495a5a40a69f04e3908fc6ef2c8eb7729",
+      "sha256": "27189fd52b9ea5f7e9181f1c5c4a8de00962cd5e766a0819a765278091183e47",
       "executable": false
     },
     "tests/helpers/record-trash-journey.mjs": {

@@ -24,34 +24,35 @@ export function subscriptionAccess(db:D1Database,policy:PolicyPort,services:Retu
   if(!allowed.length)throw new AuthorityError('forbidden','The API key cannot read this scope.')
   return {scopes:allowed,view}
  }
- async function project(ctx:RequestContext,subscription:Subscription,change:Change):Promise<ChangeItem|{kind:'resync_required'}|null>{
+ async function project(ctx:RequestContext,subscription:Subscription,change:Change):Promise<{item:ChangeItem|null;resyncRequired:boolean}|null>{
   const ref=JSON.parse(change.subject_json) as Ref|null
-  if(!ref)return change.action==='record.delete'?{kind:'resync_required'}:null
+  if(!ref)return ['record.delete','record.create','record.patch','record.undo','record.restore'].includes(change.action)?{item:null,resyncRequired:true}:null
   if(ref.appId!==subscription.app_id||subscription.entity_id&&ref.entityId!==subscription.entity_id)return null
   const access=await scopes(ctx,subscription),scope=access.scopes.find(s=>s.entityId===ref.entityId)
   if(access.view&&ref.entityId!==access.view.entityId)return null
   if(change.action==='record.delete'){
    // No tombstone identity crosses a policy we cannot establish on a deleted row.
    // This scope-level sentinel is collapsed to one range marker by the fetch door.
-   if(!scope||!scope.unrestrictedRows||access.view)return {kind:'resync_required'}
-   return {id:change.id,sequence:change.change_sequence,kind:'delete',recordId:ref.recordId}
+   if(!scope||!scope.unrestrictedRows||access.view)return {item:null,resyncRequired:true}
+   return {item:{id:change.id,sequence:change.change_sequence,kind:'delete',recordId:ref.recordId},resyncRequired:false}
   }
-  if(!scope||!['record.create','record.patch','record.undo','record.restore'].includes(change.action))return null
+  if(!['record.create','record.patch','record.undo','record.restore'].includes(change.action))return null
+  if(!scope)return {item:null,resyncRequired:true}
   const restoring=change.action==='record.restore'
   const retained=JSON.parse(change.changes_json) as {fieldId:string;before:Cell;after:Cell}[]
   if(!restoring&&!retained.some(c=>JSON.stringify(c.before)!==JSON.stringify(c.after)))return null
   try{
    const current=await services.reader.record(ctx,scope,ref)
-   if(access.view){const descriptor=services.descriptors.get(ref.appId,ref.entityId),numeric=new Set(descriptor.schema.fields.filter(f=>['number','currency','percent','duration'].includes(f.type)).map(f=>f.id));if(!matchesFilter(current,access.view.filter,numeric,ctx.now))return null}
+   if(access.view){const descriptor=services.descriptors.get(ref.appId,ref.entityId),numeric=new Set(descriptor.schema.fields.filter(f=>['number','currency','percent','duration'].includes(f.type)).map(f=>f.id));if(!matchesFilter(current,access.view.filter,numeric,ctx.now))return {item:null,resyncRequired:true}}
    // Keep restore values at their commit while current authority still narrows
    // every fetch and ordinary relation/file projection protects retained cells.
    const changes=restoring?await restoredCells(db,ref,change.change_sequence):retained
    const fields=changes.filter(c=>scope.readableFieldIds.includes(c.fieldId)&&(!access.view||access.view.fields.includes(c.fieldId)))
-   if(!fields.length&&!restoring)return null
+   if(!fields.length&&!restoring)return {item:null,resyncRequired:true}
    const projected=await Promise.all(fields.map(async c=>({fieldId:c.fieldId,before:await services.reader.projectCell(ctx,scope,ref,c.fieldId,c.before),after:await services.reader.projectCell(ctx,scope,ref,c.fieldId,c.after)})))
    await assertCurrentScopeAuthority(db,ctx,scope)
-   return {id:change.id,sequence:change.change_sequence,kind:restoring?'restore':change.action==='record.create'?'create':'update',recordId:ref.recordId,entityId:ref.entityId,changes:projected}
-  }catch(error){if(error instanceof Error&&'code'in error&&['forbidden','not_found'].includes(String(error.code)))return null;throw error}
+   return {item:{id:change.id,sequence:change.change_sequence,kind:restoring?'restore':change.action==='record.create'?'create':'update',recordId:ref.recordId,entityId:ref.entityId,changes:projected},resyncRequired:fields.length<changes.length}
+  }catch(error){if(error instanceof Error&&'code'in error&&['forbidden','not_found'].includes(String(error.code)))return {item:null,resyncRequired:true};throw error}
  }
  return {key,scopes,project}
 }

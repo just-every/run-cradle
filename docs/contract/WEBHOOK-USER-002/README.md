@@ -54,7 +54,13 @@ field, value, table row count or per-record marker, and coalesces uncertainties
 in that range. A subscriber can infer only that something in the subscribed
 range could not be narrowed for this key; unchanged per-change ping timing/count
 reveals range activity, without identifying a record or its prior readability.
-This is the conservative default: the signal cannot hide all range activity.
+This conservative default was approved by ct on 23 October: the signal cannot
+hide all range activity. The marker has exactly the same code, message and range
+fields for current row/field-policy narrowing and cursor expiry, so the marker
+never confirms a restricted delete. HTTP 410 `cursor_expired` remains explicit
+and includes that same generic marker, whose through cursor starts after a full
+scope resynchronization. A policy-narrowed readable item may accompany a marker;
+current unreadable create/update/restore items are omitted and still request resync.
 Resynchronize the subscribed scope, save the continuation, then fetch later
 changes; replaying a cursor retains the same range, including its marker under
 unchanged authority. Paging advances past the range without dropping it or
@@ -68,7 +74,8 @@ audit after-cell per field before that restore, with null before cells; later
 edits cannot rewrite that payload. No second value store is created. A readable
 restore with no retained readable field deltas still yields a restore item with
 an empty changes list. Every retained cell is projected under current authority.
-Current unreadable rows produce no restore payload or ping; unreadable fields
+Current unreadable rows produce no restore payload and the same generic resync
+marker/ping as any policy-narrowed change; unreadable fields
 are omitted, and relation/file cells use the ordinary projection. A subscriber
 told of a delete receives the readable restore on its next range. View membership
 is checked against the current view and record. Values never travel in a ping.

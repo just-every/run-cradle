@@ -2,6 +2,7 @@ import {Hono} from 'hono'
 import {z} from 'zod'
 import type {RequestContext} from '../authority/ports'
 import {changePageSchema} from './schema'
+import {CursorExpired} from './resync.server'
 import {idSchema} from '../authority/validators'
 import {readBoundedJson} from '../authority/http.server'
 import type {createChangeSubscriptions} from './service.server'
@@ -13,6 +14,6 @@ export function changeSubscriptionsHttp(service:ReturnType<typeof createChangeSu
  router.get('/',async c=>{const ctx=await authenticate(c.req.raw);return c.json(reply(ctx,await service.list(ctx,idSchema.parse(c.req.query('appId')))))})
  router.post('/:id/refresh',async c=>{const ctx=await authenticate(c.req.raw),input=command.parse(await readBoundedJson(c.req.raw,1024));return c.json(reply(ctx,await service.refresh(ctx,idSchema.parse(c.req.param('id')),input.commandId)))})
  router.delete('/:id',async c=>{const ctx=await authenticate(c.req.raw),input=command.parse(await readBoundedJson(c.req.raw,1024));return c.json(reply(ctx,await service.remove(ctx,idSchema.parse(c.req.param('id')),input.commandId)))})
- router.get('/:id/changes',async c=>{const ctx=await authenticate(c.req.raw),input=z.object({cursor:z.string().max(4096),through:z.string().max(4096).optional(),limit:z.coerce.number().int().min(1).max(200).default(100)}).strict().parse(c.req.query());return c.json(reply(ctx,changePageSchema.parse(await service.changes(ctx,idSchema.parse(c.req.param('id')),input))))})
+ router.get('/:id/changes',async c=>{const ctx=await authenticate(c.req.raw),input=z.object({cursor:z.string().max(4096),through:z.string().max(4096).optional(),limit:z.coerce.number().int().min(1).max(200).default(100)}).strict().parse(c.req.query());try{return c.json(reply(ctx,changePageSchema.parse(await service.changes(ctx,idSchema.parse(c.req.param('id')),input))))}catch(error){if(error instanceof CursorExpired)return c.json({error:{code:error.code,message:error.message},resyncRequired:error.resyncRequired},410);throw error}})
  return router
 }

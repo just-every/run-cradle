@@ -21,7 +21,7 @@ export async function recordTrashBrowser(){
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),errors=[]
    page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000)
    try{
-    async function capture(state,target){await page.waitForLoadState('networkidle');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[]);await target.scrollIntoViewIfNeeded();await page.screenshot({path:`${output}/trash-${state}-${width}.png`,fullPage:true})}
+    async function capture(state,target,settle=true){if(settle)await page.waitForLoadState('networkidle');await target.scrollIntoViewIfNeeded();await page.screenshot({path:`${output}/trash-${state}-${width}.png`,fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[])}
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     const recordPath=`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.id}`
     await page.goto(`${h.origin}/app/records/${h.appId}/${h.entityId}/${created.record.id}`)
@@ -41,7 +41,7 @@ export async function recordTrashBrowser(){
     const deletion=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/api/v1/commands/record.delete'))
     await move.click();assert.equal((await deletion).status(),200)
     const back=page.getByRole('link',{name:'Back to records',exact:true}).last();await page.getByRole('status').filter({has:back}).waitFor()
-    await capture('deleted',back)
+    await capture('deleted',page.locator('.cr-record-back'),false)
     await h.request(recordPath,{status:404})
     await page.goto(h.origin+'/app/settings')
     await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Prepare archive'&&!button.disabled))

@@ -54,9 +54,9 @@ export async function changeSubscriptionDeletes(h,edge){
    await tick();await tick()
    assert.deepEqual((await fetchPage(subscription.cursor)).data,deletion.data,'Same cursor replays its captured delete range')
    const restored=(await fetchPage(deletion.data.cursor)).data
-   assert.equal(restored.resyncRequired,undefined)
-   if(scope==='restricted'){assert.deepEqual(restored.items,[]);assert.equal(edge.received.filter(r=>r.path===path).length,1)}
+   if(scope==='restricted'){assert.deepEqual(restored.items,[]);assert.equal(restored.resyncRequired.code,'resync_required');assert.equal(restored.resyncRequired.message,deletion.data.resyncRequired.message);assert.deepEqual(Object.keys(restored.resyncRequired).sort(),Object.keys(deletion.data.resyncRequired).sort());assert.equal(edge.received.filter(r=>r.path===path).length,2)}
    else{
+    assert.equal(restored.resyncRequired,undefined)
     assert.deepEqual(restored.items.map(i=>[i.kind,i.recordId]),[['restore',record.id]],'Restore is the next change after its delete')
     assert.ok(restored.items[0].changes.length>0);assert.ok(restored.items[0].changes.every(c=>c.fieldId!==h.statusId))
     assert.equal(edge.received.filter(r=>r.path===path).length,2)
@@ -67,6 +67,7 @@ export async function changeSubscriptionDeletes(h,edge){
    await h.patch(current,{[h.nameId]:laterName,[h.statusId]:'synthetic-cradle-65'});await tick();await tick()
    if(scope!=='restricted')assert.deepEqual((await fetchPage(deletion.data.cursor)).data,restored,'Captured later window also replays identically under current policy')
    const later=(await fetchPage(restored.cursor)).data
+   assert.equal(later.resyncRequired.code,'resync_required','Current field-policy narrowing uses the same cause-free range marker')
    assert.deepEqual(later.items.map(i=>[i.kind,i.recordId]),[['update',record.id]],'Next cursor contains only later changes, once')
    const allPings=edge.received.filter(r=>r.path===path)
    for(const ping of allPings){const verified=await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id});assert.equal(JSON.parse(verified.envelope.body).subscriptionId,subscription.id)}
@@ -76,7 +77,7 @@ export async function changeSubscriptionDeletes(h,edge){
     const bindings=await h.runtime.getBindings(),codec=createCursorCodec(bindings.SESSION_SECRET),position=await codec.decode(subscription.cursor),clock=()=>new Date(Date.now()-31*86400000)
     const old=await codec.encode({...position,revision:clock().getTime()})
     const expired=await h.request(route(old),{secret:key.secret,status:410})
-    assert.equal(expired.error.code,'cursor_expired');assert.match(expired.error.message,/resynchroniz/i)
+    assert.equal(expired.error.code,'cursor_expired');assert.match(expired.error.message,/resynchroniz/i);assert.equal(expired.resyncRequired.code,later.resyncRequired.code);assert.equal(expired.resyncRequired.message,later.resyncRequired.message);assert.deepEqual(Object.keys(expired.resyncRequired).sort(),Object.keys(later.resyncRequired).sort())
     console.log('CHANGE_CURSOR_RETENTION PASS 410 cursor_expired resynchronize')
    }
    await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
