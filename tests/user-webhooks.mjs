@@ -1,5 +1,6 @@
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
+import {changeSubscriptionsUpgrade} from './helpers/change-subscriptions-upgrade.mjs'
 import {changeSubscriptionsJourney} from './helpers/change-subscriptions-journey.mjs'
 import {randomBytes} from 'node:crypto'
 import {contract} from './contract.mjs'
@@ -15,6 +16,7 @@ contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery pres
   edge=await automationNetworkEdge()
   const preflight=await edge.deliver({url:edge.receiverOrigin+'/accepted',headers:{},body:'{}'})
   assert.equal(preflight.status,200,JSON.stringify({calls:edge.tlsCalls,errors:edge.transportErrors}));await preflight.arrayBuffer();edge.received.length=0
+  await changeSubscriptionsUpgrade(edge)
   h=await userAutomationRuntime(18953,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),
    EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})
   const destination=(await h.request('/api/user-automations/destinations',{method:'POST',status:201,body:{
