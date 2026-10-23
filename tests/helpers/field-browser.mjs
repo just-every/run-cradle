@@ -16,9 +16,9 @@ const text=(id,label,extra={})=>({id,label,type:'text',required:false,unique:fal
 
 /** Native operator sessions, emitted Worker HTTP and actual React controls.
  * Reuses the existing browser registration; no application transport is mocked. */
-export async function fieldBrowser(){
+export async function fieldBrowser(outputDirectory='docs/contract/FIELD-002'){
  assert.equal(process.env.HOME,userInfo().homedir,'Browser uses the execution host real HOME')
- const output=path.resolve('docs/contract/FIELD-002');await mkdir(output,{recursive:true})
+ const output=path.resolve(outputDirectory);await mkdir(output,{recursive:true})
  let h,browser
  try{
   h=await userAutomationRuntime(await freePort())
@@ -38,6 +38,9 @@ export async function fieldBrowser(){
      const value=(await response.json()).data;await active.getByRole('heading',{name:'Review schema changes',exact:true}).waitFor();return value
     }
     await edit()
+    await tile('Order').getByLabel('Field type',{exact:true}).selectOption('number')
+    assert.equal(await tile('Order').getByLabel('Required',{exact:true}).isChecked(),true,'Changing stored type preserves the existing required constraint')
+    await tile('Order').getByLabel('Field type',{exact:true}).selectOption('text')
     assert.equal(await tile('Amount').getByLabel('Field type',{exact:true}).isEnabled(),true)
     assert.equal(await tile('Carrier').getByLabel('Options (one per line)',{exact:true}).isDisabled(),true)
     assert.equal(await tile('Vendor link').getByLabel('Linked table',{exact:true}).isDisabled(),true)
