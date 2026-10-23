@@ -69,6 +69,6 @@ html:has(style[data-rer-label="Demo"]) .operator-brand .operator-brand-lockup { 
   font: 500 12px/1.4 sans-serif; white-space: nowrap; pointer-events: none;
   opacity: 0; visibility: hidden; transition: opacity 0s, visibility 0s;
 }
-.operator-shell:has(.cr-record-fields, .cr-trash-confirmation) .operator-mobile-bell > .operator-record-tooltip { inset-inline-start: auto; inset-inline-end: 0; }
+.operator-shell:has(.cr-record-fields, .cr-trash-confirmation) :is(.operator-mobile-bell, .operator-drawer-header button) > .operator-record-tooltip { inset-inline-start: auto; inset-inline-end: 0; }
 .operator-shell:has(.cr-record-fields, .cr-trash-confirmation) :is(button, a):hover > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 300ms; }
 .operator-shell:has(.cr-record-fields, .cr-trash-confirmation) :is(button, a):focus-visible > .operator-record-tooltip { opacity: 1; visibility: visible; transition-delay: 0ms; }

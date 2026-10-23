@@ -6606,7 +6606,7 @@
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.css": {
-      "sha256": "71ad83d283afff2218f71b6bee3e28c4ea1ccfd8f01f3e3e692ce020945218c1",
+      "sha256": "3fab76e3b928ffe7bdb1ee744fc1d4d884297715e24727e3d414ab88a90e5801",
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.tsx": {
@@ -11574,7 +11574,7 @@
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
-      "sha256": "30902b91f47c2d03cece3461d6dfff0d9880f44c0eb943be3c4ab472a78a8737",
+      "sha256": "38020f6a97b5a93d1dbabfa8fd77c92495a5a40a69f04e3908fc6ef2c8eb7729",
       "executable": false
     },
     "tests/helpers/record-trash-journey.mjs": {

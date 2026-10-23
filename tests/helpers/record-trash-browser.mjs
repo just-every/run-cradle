@@ -25,10 +25,12 @@ export async function recordTrashBrowser(){
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     const recordPath=`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.id}`
     await page.goto(`${h.origin}/app/records/${h.appId}/${h.entityId}/${created.record.id}`)
+    await page.getByRole('button',{name:'Edit record',exact:true}).waitFor()
+    await capture('record',page.getByRole('button',{name:'Edit record',exact:true}))
     if(width===390){
      const menu=page.getByRole('button',{name:'Open navigation',exact:true});await page.keyboard.press('Tab');await menu.focus();await page.getByRole('tooltip',{name:'Open navigation',exact:true}).waitFor({state:'visible'});await page.keyboard.press('Tab')
-     await menu.click();const close=page.getByRole('button',{name:'Close navigation',exact:true});await page.keyboard.press('Tab');await close.focus();await page.getByRole('tooltip',{name:'Close navigation',exact:true}).waitFor({state:'visible'});await close.click()
-     const bell=page.getByRole('link',{name:'Notifications',exact:true}).first();await page.keyboard.press('Tab');await bell.focus();await bell.getByRole('tooltip').waitFor({state:'visible'})
+     await menu.click();const close=page.getByRole('button',{name:'Close navigation',exact:true});await page.keyboard.press('Tab');await close.focus();await page.getByRole('tooltip',{name:'Close navigation',exact:true}).waitFor({state:'visible'});assert.equal(await page.getByRole('dialog',{name:'Navigation',exact:true}).evaluate(node=>node.scrollWidth>node.clientWidth),false);await close.click()
+     const bell=page.getByRole('link',{name:'Notifications',exact:true}).first();await page.keyboard.press('Tab');await bell.focus();await bell.getByRole('tooltip').waitFor({state:'visible'});await capture('tooltip',bell)
     }
     await page.locator('summary').filter({hasText:/^Record actions$/}).click()
     await page.getByRole('button',{name:'Delete record',exact:true}).click()
@@ -38,6 +40,8 @@ export async function recordTrashBrowser(){
     await page.getByRole('checkbox').check()
     const deletion=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/api/v1/commands/record.delete'))
     await move.click();assert.equal((await deletion).status(),200)
+    const back=page.getByRole('link',{name:'Back to records',exact:true}).last();await page.getByRole('status').filter({has:back}).waitFor()
+    await capture('deleted',back)
     await h.request(recordPath,{status:404})
     await page.goto(h.origin+'/app/settings')
     await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(button=>button.textContent==='Prepare archive'&&!button.disabled))
