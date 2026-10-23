@@ -161,3 +161,9 @@ delete, view/restricted range signals and replay/paging, signed pings, narrowed
 restore and unreadable restore refusal, and a signed cursor at its issuance
 clock minus 31 days returning `cursor_expired`. The existing subscription journey
 separately moves the scheduled clock eight days and proves `subscription_expired`.
+
+## 23 October independent schema-adoption proof
+
+`tests/helpers/change-subscriptions-adoption.mjs`, extended through the existing `tests/user-webhooks.mjs` registration, adopts a real schema rename while base, table and view subscriptions are active. A pre-adoption cursor returns the identical cause-free empty range marker before pagination, with signed generic notifications, retained replay and ordered ordinary changes from its continuation. The marker contains no record, field, converted value or adoption cause. Unchanged canonical owner and collaborator policy rules retain their authority epochs; changed rules still invalidate delegated authority.
+
+FIELD-002 conversions remain unlanded and their real conversion replay is unproven. This round does not claim the broader typed/import, lifecycle, archive or erasure doors named in CONTRACT.md. No real provider call or consent was used.
