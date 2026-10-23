@@ -25,7 +25,7 @@ export async function prepareRoleSchemaUpdates(db:D1Database,detail:StoredPrevie
   rules.push(...(row.role?roleRules(row.principal_id,row.role,addedTables):ownerRules(row.principal_id,addedTables)).filter(rule=>addedTables.some(s=>s.id===rule.entityId)))
   rulesByPrincipal[row.principal_id]=canonical(rules)
   guards.push(trustedPredicate("EXISTS(SELECT 1 FROM authority_memberships WHERE app_id=? AND principal_id=? AND state='active' AND version=? AND policy_id=?)",[detail.appId,row.principal_id,row.membership_version,row.id]))
-  mutations.push({kind:'update',table:policies,set:{rules_json:canonical(rules),version:row.version+1,updated_at:Date.parse(now)},where:trustedPredicate('id=? AND version=?',[row.id,row.version]),expectedRows:1})
+  if(canonical(rules)!==row.rules_json)mutations.push({kind:'update',table:policies,set:{rules_json:canonical(rules),version:row.version+1,updated_at:Date.parse(now)},where:trustedPredicate('id=? AND version=?',[row.id,row.version]),expectedRows:1})
  }
  return {mutations,guards,rulesByPrincipal}
 }
