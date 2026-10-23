@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "267dd7fd35b71620c8dfddde1f94bf10cf6533fcf430dfd761a2bedffe3e253b",
+      "sha256": "d54f743f342fdecc421c447df0f1a8c597400bdcb3517652bf530dcb909cbe08",
       "executable": false
     },
     "DEMO.md": {
@@ -8874,7 +8874,7 @@
       "executable": false
     },
     "src/domains/portability/installation-policy.mjs": {
-      "sha256": "31395fb639899b811e9a079a7a94a8e39d0ad358c50360f93ab22294851a543d",
+      "sha256": "6053488cd87385d26b3d160cc465d5c9b3e10a93330a21743883e83a1b8b0b51",
       "executable": false
     },
     "src/domains/portability/record-import.server.ts": {
