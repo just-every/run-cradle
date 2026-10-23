@@ -23,7 +23,8 @@ export async function automationNetworkEdge() {
  const receiver=https.createServer({key,cert},async(req,res)=>{
   const chunks=[];for await(const chunk of req)chunks.push(chunk)
   received.push({path:req.url,headers:req.headers,body:Buffer.concat(chunks).toString('utf8')})
-  if(req.url==='/redirect'){res.writeHead(302,{location:'https://'+hosts[0]+'/followed'});res.end()}
+  if(req.url==='/changes-retry-once'&&received.filter(request=>request.path===req.url).length===1){res.writeHead(429,{'retry-after':'1'});res.end('rate limited')}
+  else if(req.url==='/redirect'){res.writeHead(302,{location:'https://'+hosts[0]+'/followed'});res.end()}
   else if(req.url==='/oversized'){res.writeHead(200);res.end(Buffer.alloc(65537,'x'))}
   else if(req.url==='/stalled'){res.writeHead(200);res.write('waiting')}
   else {res.writeHead(200,{'content-type':'text/plain'});res.end(req.url.startsWith('/services/')?'ok':'accepted')}

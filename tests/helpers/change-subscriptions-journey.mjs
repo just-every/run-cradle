@@ -3,12 +3,12 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {verifyWebhook} from '../../vendor/base/modules/integrations/core/webhook.ts'
 import {changeSubscriptionDeletes} from './change-subscriptions-deletes.mjs'
 import {changeSubscriptionErasure} from './change-subscriptions-erasure.mjs'
-import {changeSubscriptionRecovery,changeSubscriptionFairness} from './change-subscriptions-recovery.mjs'
+import {changeSubscriptionRecovery,changeSubscriptionRetry,changeSubscriptionFairness} from './change-subscriptions-recovery.mjs'
 import {unbase64} from '../../src/adapters/crypto.server.ts'
 
 export async function changeSubscriptionsJourney(h,edge){
  const proofFailures=[]
- for(const proof of [changeSubscriptionErasure,changeSubscriptionRecovery,changeSubscriptionFairness])try{await proof(h,edge)}catch(error){console.error('CHANGE_RECOVERY_MATRIX_FAILURE '+error.stack);proofFailures.push(error)}
+ for(const proof of [changeSubscriptionErasure,changeSubscriptionRecovery,changeSubscriptionRetry,changeSubscriptionFairness])try{await proof(h,edge)}catch(error){console.error('CHANGE_RECOVERY_MATRIX_FAILURE '+error.stack);proofFailures.push(error)}
  const root='/api/v1/change-subscriptions',issue={commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-2',permissions:'read',expiresAt:new Date(Date.now()+20*86400000).toISOString()}
  const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:issue})).data.key
  const body={commandId:createUlid(),appId:h.appId,entityId:h.entityId,url:edge.receiverOrigin+'/changes'}

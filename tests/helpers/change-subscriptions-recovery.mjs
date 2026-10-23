@@ -41,7 +41,7 @@ async function withSubscriptions(h,edge,journey){
  const page=async(subscription,cursor,limit=200)=>(await h.request(`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`,{secret:key.secret})).data
  const current=async record=>(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${record.id}`)).data.record
  const context={h,edge,key,subscribe,remove,tick,page,current,pings}
- try{await journey(context)}catch(error){failure=error}
+ try{await journey(context)}catch(error){console.error('CHANGE_PROOF_FAILURE '+journey.name+': '+error.message);failure=error}
  const cleanup=[]
  for(const id of active){try{await remove(subscriptions.get(id))}catch(error){cleanup.push(error)}}
  try{
@@ -115,4 +115,28 @@ async function fairDelivery({h,subscribe,remove,tick,current,pings}){
  for(const subscription of subscribers)assert.ok(pings.get(subscription.id).length>1,'Existing subscriptions beyond the batch boundary also continue receiving changes')
  for(const subscription of [...subscribers,late])await remove(subscription)
  console.log('CHANGE_SUBSCRIPTION_FAIRNESS PASS 202 public subscriptions, bounded sweeps under continued writes')
+}
+
+// A received HTTP 429 is a definite refusal, unlike a lost acknowledgement.
+export async function changeSubscriptionRetry(h,edge){
+ const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-89',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}})).data.key
+ let subscription
+ try{
+  subscription=(await h.request(root,{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,url:edge.receiverOrigin+'/changes-retry-once'}})).data
+  const record=(await h.create('synthetic-cradle-90')).record,worker=await h.runtime.getWorker()
+  await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.changes.v1',commandId:createUlid()}}])
+  const listed=async()=>(await h.request(root+'?appId='+h.appId,{secret:key.secret})).data.find(row=>row.id===subscription.id)
+  assert.equal((await listed()).deliveryState,'retrying')
+  await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()+2000})
+  assert.equal((await listed()).deliveryState,'delivered')
+  const pings=edge.received.filter(ping=>ping.path==='/changes-retry-once')
+  assert.equal(pings.length,2);assert.equal(pings[0].headers['webhook-id'],pings[1].headers['webhook-id']);assert.equal(pings[0].body,pings[1].body)
+  for(const ping of pings)await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
+  const page=(await h.request(`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(subscription.cursor)}`,{secret:key.secret})).data
+  assert.deepEqual(page.items.map(item=>[item.kind,item.recordId]),[['create',record.id]])
+  console.log('CHANGE_SUBSCRIPTION_DEFINITE_RETRY PASS HTTP429 queued then accepted with same signed id and immutable body')
+ }finally{
+  if(subscription)await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
+  await h.request(`/api/user-keys/${key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId:h.appId}})
+ }
 }
