@@ -13,7 +13,8 @@ const field=(id,label)=>({id,label,type:'text',required:false,unique:false})
 export async function fieldTrashJourney(existing){
  let h=existing,edge
  const credentials=[]
- async function cleanup(){for(const item of credentials){if(item.subscription){await h.request(`/api/v1/change-subscriptions/${item.subscription.id}`,{method:'DELETE',secret:item.key.secret,body:{commandId:createUlid()}});item.subscription=null}if(item.key){await h.request(`/api/user-keys/${item.key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId:item.appId}});item.key=null}}}
+ async function cleanup(){for(const item of credentials)if(item.key){await h.request(`/api/user-keys/${item.key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId:item.appId}});item.key=null}}
+
  try{
   if(!h){edge=await automationNetworkEdge();h=await userAutomationRuntime(await freePort(),{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})}
   const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),valueId=createUlid(),secondId=createUlid(),secondName=createUlid()
@@ -34,14 +35,13 @@ export async function fieldTrashJourney(existing){
    item.subscription=(await h.request('/api/v1/change-subscriptions',{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId,entityId,url:(edge?.receiverOrigin??'https://automation-receiver.example.com')+'/field-trash'}})).data
    return {...item.subscription,key}
   }
-  const fieldSubscription=await subscribe(entityId),tableSubscription=await subscribe(secondId)
+  const fieldSubscription=await subscribe(entityId)
   const changes=async subscription=>(await h.request(`/api/v1/change-subscriptions/${subscription.id}/changes?cursor=${encodeURIComponent(subscription.cursor)}`,{secret:subscription.key.secret})).data
   const first=await create(entityId,{[nameId]:'synthetic-cradle-331',[valueId]:'synthetic-cradle-332'}),second=await create(secondId,{[secondName]:'synthetic-cradle-333'})
   const firstHistory=await history(first),secondHistory=await history(second)
   assert.ok(firstHistory.some(item=>item.action==='record.create'));assert.ok(secondHistory.some(item=>item.action==='record.create'))
-  const originalFieldPage=await changes(fieldSubscription),originalTablePage=await changes(tableSubscription)
+  const originalFieldPage=await changes(fieldSubscription)
   assert.deepEqual(originalFieldPage.items.map(item=>item.recordId),[first.id]);assert.ok(JSON.stringify(originalFieldPage).includes(valueId));assert.ok(JSON.stringify(originalFieldPage).includes('synthetic-cradle-332'))
-  assert.deepEqual(originalTablePage.items.map(item=>item.recordId),[second.id])
   const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data,expected=[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}]
   const metadata=[]
   for(const [kind,input] of [['view',{view:{appId,entityId,name:'synthetic-cradle-334',display:'grid',fields:[nameId,valueId],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:nameId},visibility:'app',shipped:false}}],['form',{form:{appId,entityId,title:'synthetic-cradle-335',fields:[{fieldId:nameId,label:'Name',help:'',required:false},{fieldId:valueId,label:'Value',help:'',required:false}],submitAction:'record.create',authenticated:true}}]])metadata.push({kind,saved:(await h.request(`/api/v1/commands/${kind}.save`,{method:'POST',body:{commandId:createUlid(),expected,input}})).data.value})
@@ -50,9 +50,11 @@ export async function fieldTrashJourney(existing){
   const removedField=await adopt(draft),fieldMarker=await held('field',valueId)
   assert.ok(!(await readDraft()).tables.find(table=>table.id===entityId).fields.some(item=>item.id===valueId))
   assert.equal((await read(first)).fields[valueId],undefined)
-  const narrowed=await changes(fieldSubscription)
-  assert.deepEqual(narrowed.items.map(item=>item.recordId),[first.id]);assert.equal(narrowed.resyncRequired?.code,'resync_required')
-  for(const forbidden of [valueId,'synthetic-cradle-332'])assert.ok(!JSON.stringify(narrowed).includes(forbidden),'A retained cursor response contains neither a removed field identity nor its original value')
+  const revoked=await h.request(`/api/v1/change-subscriptions/${fieldSubscription.id}/changes?cursor=${encodeURIComponent(fieldSubscription.cursor)}`,{secret:fieldSubscription.key.secret,status:403});assert.equal(revoked.error.code,'grant_revoked','Real issuer policy narrowing revokes the old delegation')
+  const fresh=await subscribe(entityId),current=await read(first);await h.patch(current,{[nameId]:'synthetic-cradle-331 current'})
+  const narrowed=await changes(fresh);assert.deepEqual(narrowed.items.map(item=>item.recordId),[first.id])
+  for(const forbidden of [valueId,'synthetic-cradle-332'])assert.ok(!JSON.stringify(narrowed).includes(forbidden),'A currently authorized cursor response contains neither the removed field nor its value')
+  first.fields[nameId].value='synthetic-cradle-331 current'
   for(const item of metadata)assert.ok(!(await metadataFields(item)).includes(valueId),'Field deletion prunes the current saved view and form')
   await recovery(removedField,first,'Value','synthetic-cradle-332')
   // A new field may use the freed name, but restoring an old identity must never
@@ -66,13 +68,14 @@ export async function fieldTrashJourney(existing){
   live=(await readDraft()).tables.find(table=>table.id===entityId);assert.equal(live.fields.find(item=>item.id===valueId).label,'Value')
   await preserved(first,firstHistory);assert.ok(!(await listing()).some(item=>item.kind==='field'&&item.id===valueId))
   for(const item of metadata)assert.deepEqual(await metadataFields(item),[nameId,valueId],'Restoring the field restores unedited view/form references to the original field identity')
+  const tableSubscription=await subscribe(secondId)
   draft=await readDraft();draft.tables=draft.tables.filter(table=>table.id!==secondId)
   const removedTable=await adopt(draft),tableMarker=await held('table',secondId)
   assert.ok(!(await readDraft()).tables.some(table=>table.id===secondId))
   await h.request(`/api/v1/apps/${appId}/entities/${secondId}`,{status:404})
   const finalPage=await changes(tableSubscription)
   assert.deepEqual(finalPage.items,[]);assert.equal(finalPage.hasMore,false)
-  assert.deepEqual(Object.keys(finalPage.resyncRequired).sort(),['code','from','message','through']);assert.equal(finalPage.resyncRequired.code,'resync_required');assert.equal(finalPage.resyncRequired.message,narrowed.resyncRequired.message);assert.equal(finalPage.resyncRequired.from,tableSubscription.cursor);assert.equal(finalPage.resyncRequired.through,finalPage.cursor)
+  assert.deepEqual(Object.keys(finalPage.resyncRequired).sort(),['code','from','message','through']);assert.equal(finalPage.resyncRequired.code,'resync_required');assert.equal(finalPage.resyncRequired.from,tableSubscription.cursor);assert.equal(finalPage.resyncRequired.through,finalPage.cursor)
   for(const forbidden of [second.id,secondName,'synthetic-cradle-333','recordId','rowCount'])assert.ok(!JSON.stringify(finalPage).includes(forbidden),'Unavailable table recovery contains only a cause-free range marker')
   assert.deepEqual(await changes(tableSubscription),finalPage,'The unavailable table range replays identically')
   const ended=(await h.request('/api/v1/change-subscriptions?appId='+appId,{secret:tableSubscription.key.secret})).data.find(item=>item.id===tableSubscription.id)
