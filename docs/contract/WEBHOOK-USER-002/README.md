@@ -153,7 +153,7 @@ Broader record-erasure paths remain a gap.
 
 ## Remaining acceptance
 
-The complete write-door/base-table-view matrix remains unproven, including bulk/range/undo, forms, CSV/workbook/Sheets merges, automation and MCP paths. Reviewed base-import application/reversal bypasses admission_audit under RECORDS-005's existing effects suppression; typed Launch/repair/lifecycle audit actions are outside the feed projection; restore queue wakes and restored incoming-link audit coverage remain open. Table-scope final listing after table deletion, archive restore and broader person/record-erasure journeys remain unproven. No Zapier, Make or Crank application is supplied (INTEG-007 remains missing).
+The complete write-door/base-table-view matrix remains unproven for workbook/Sheets merges and MCP interoperability. `tests/helpers/change-subscriptions-write-doors.mjs` covers create/patch/delete/Trash restore, bulk/undo, range/inverse, authenticated forms, CSV create/update and automation updates under current row/field narrowing. Each door lists the mutation kinds it does not support. Reviewed base-import application/reversal bypasses admission_audit under RECORDS-005's existing effects suppression; typed Launch/repair/lifecycle audit actions are outside the feed projection; restore queue wakes and restored incoming-link audit coverage remain open. Table-scope final listing after table deletion, archive restore and broader person/record-erasure journeys remain unproven. No Zapier, Make or Crank application is supplied (INTEG-007 remains missing).
 
 The existing `tests/user-webhooks.mjs` registration invokes the synchronization
 matrix in `tests/helpers/change-subscriptions-deletes.mjs`: unrestricted id-only

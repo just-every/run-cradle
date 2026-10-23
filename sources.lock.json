@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "4b6693b8e2b797e054f99d02d667b9f0a12e96964276229cc904b226adef787e",
+      "sha256": "33b782ac41c2f7e2d43599fb05cd95b02a6ef4d9c4a91594c1e55a99585d0329",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "dca8d3883384fa4ba63d493a8448ff7a1899851ce1a5d92cb2d7461cce90f4a6",
+      "sha256": "e55b09572eb8d5c01429403ce9b3e7edffec7bc86a882427bf29d8e3355dd06a",
       "executable": false
     },
     "DEMO.md": {
@@ -4382,7 +4382,7 @@
       "executable": false
     },
     "docs/contract/WEBHOOK-USER-002/README.md": {
-      "sha256": "379e7c9246e2d6c2d4759c4a58e5ee31ac831b423d6bc1a992d18d8ee2cd3191",
+      "sha256": "6690e0cdb34ed4dfad79b930b0fae3bfda0634f92f762163c79b92a750a53491",
       "executable": false
     },
     "docs/current-state.md": {
@@ -11270,7 +11270,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-journey.mjs": {
-      "sha256": "ad4e0dcf43f248edca254fb598e77152b1d37ec13e5d4c49793e9bbdff021606",
+      "sha256": "e75c76d4a3d2537a908c12d5e41891264e431449c579e3539bf6d2d84deaf004",
       "executable": false
     },
     "tests/helpers/change-subscriptions-recovery.mjs": {
