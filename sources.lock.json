@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "cffc22f090dc35eea3e04c9ef59cd7a69308546a5d07e4d2d248602a0830cea6",
+      "sha256": "f1c6a2e749fcd4e310968e96e6d1eab94f5a6511ad210e4dd8471b0476a2f0ce",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "2ed737400530150e2c9ec8164f7bcc4687db15aac3e91e7f876acb169a399074",
+      "sha256": "5ed2af8882af3d1c5fe576b4576f25b9ad539eef7a9bd48a05f6274b4b8d84b5",
       "executable": false
     },
     "DEMO.md": {
@@ -12258,11 +12258,11 @@
       "executable": false
     },
     "tests/helpers/record-calendar-journey.mjs": {
-      "sha256": "4a1c2c4746b8ccc93b0a693d529d20f891359ddaec668dee5a7a5f7854f80e69",
+      "sha256": "812fbdae1559363b9c2050e273e5218cad59f4cdf61a548c807adccdbff76ef9",
       "executable": false
     },
     "tests/helpers/record-calendar-proof.mjs": {
-      "sha256": "0e5755ad7087ed3d7d6bf29c68af75832297af4a86914e5c0ac1d45da8421db3",
+      "sha256": "6b9be636cc9bbccd1b795440d45b55a583bcf17a2fad28b54cd960b6621c8f72",
       "executable": false
     },
     "tests/helpers/record-calendar-provider.mjs": {
