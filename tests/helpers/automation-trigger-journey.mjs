@@ -40,8 +40,10 @@ export async function automationTriggerJourney(h){
  }
  const anchor=(await h.create('synthetic-cradle-145 minimum interval')).record
  for(const every of [0,14,20])await h.request('/api/user-automations',{method:'POST',status:400,body:{commandId:createUlid(),expiresAt,definition:{...base,trigger:{kind:'schedule',recordId:anchor.id,startsAt:'2026-10-23T13:17:00Z',schedule:{unit:'minutes',every}}}}})
- const dateId=createUlid(),schema=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
- const draft={appId:h.appId,name:'Automation acceptance',tables:[{id:h.entityId,label:schema.label,primaryFieldId:h.nameId,fields:[...schema.fields.map(({readOnly,...field})=>field),{id:dateId,label:'Due',type:'date',required:false,unique:false}]}]}
+ const dateId=createUlid(),draft=(await h.request(`/api/v1/records/bases/${h.appId}`)).data
+ const table=draft.tables.find(table=>table.id===h.entityId)
+ assert.equal(table.fields.find(field=>field.id===h.phoneLookupId).readOnly,true,'Editing schema preserves the authored phone lookup protection')
+ table.fields.push({id:dateId,label:'Due',type:'date',required:false,unique:false})
  const csrf=(await (await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json()).csrfToken
  const previewResponse=await fetch(h.origin+'/api/v1/records/schema-preview',{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrf},body:JSON.stringify(draft)}),previewEnvelope=await previewResponse.json()
  assert.equal(previewResponse.status,200,JSON.stringify(previewEnvelope.error));const preview=previewEnvelope.data

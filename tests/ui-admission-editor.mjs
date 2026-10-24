@@ -19,7 +19,7 @@ contract('ADMISSION-EDITOR-UI-001','the native owner editor negotiates through a
   edge=await managementEditorEdge(origin,'cradle-admission-test')
   h=await admissionRuntime(18959,{managementOrigin:edge.origin})
   const cookie=await h.claim(),member=await h.member(cookie)
-  browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   for(const width of [1440,390]){
    const context=await browser.newContext({viewport:{width,height:width===390?844:900}})
    try{
