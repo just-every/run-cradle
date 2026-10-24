@@ -21,6 +21,10 @@ export async function signedSlack(origin,path,body,{json=false,stale=false,forge
 export const chatRoute=(route,provider)=>route.startsWith('/api/user-automations/slack/')?route+(route.includes('?')?'&':'?')+'provider='+provider:route
 export async function slackAppJourney(provider='slack'){
  const edge=provider==='teams'?await teamsAppNetworkEdge():await slackAppNetworkEdge({provider}),fixture=edge.fixture;let h
+ const callbackRequest=async(origin,state,stage)=>{
+  try{return await fetch(origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state,code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}})}
+  catch(error){console.error('CHAT_OAUTH_TRANSPORT_FAILURE '+JSON.stringify({provider,stage,name:error.name,cause:{name:error.cause?.name,code:error.cause?.code,syscall:error.cause?.syscall},transportErrors:edge.transportErrors,networkErrors:edge.networkErrors}));throw error}
+ }
  const incoming=(origin,path,body,options)=>provider==='teams'?edge.signed(origin,path,body,options):signedSlack(origin,provider==='nook'?path.replace('/slack/','/nook/'):path,body,options)
  const configuration={provider,clientId:fixture.clientId,clientSecret:fixture.clientSecret,signingSecret:fixture.signingSecret,...(provider==='nook'?{appToken:fixture.botToken,nookOrigin:fixture.providerOrigin}:{}),...(provider==='teams'?{tenantId:fixture.tenantId}:{})}
  const longTitle='synthetic-cradle-120-primary'+('🙂'.repeat(1600)),longText='synthetic-cradle-120-review'+('x'.repeat(3200)),longApproval='synthetic-cradle-120-approved'+('y'.repeat(3200)),longRejection='synthetic-cradle-120-rejected'+('z'.repeat(3200))
@@ -42,7 +46,7 @@ export async function slackAppJourney(provider='slack'){
    assert.equal(authorization.pathname,provider==='teams'?'/'+fixture.tenantId+'/oauth2/v2.0/authorize':'/oauth/v2/authorize')
    assert.equal(authorization.searchParams.get('client_id'),fixture.clientId);assert.equal(authorization.searchParams.get('redirect_uri'),h.origin+'/oauth/'+provider+'/callback')
    assert.ok(authorization.searchParams.get('state'))
-   const callback=state=>fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state,code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}})
+   const callback=state=>callbackRequest(h.origin,state,'initial-install')
    const invalid=await callback('synthetic-cradle-120-forged-state');assert.equal(invalid.status,409);await invalid.arrayBuffer()
    assert.equal(edge.oauthRequests.length,0,'A forged OAuth state never exchanges a code')
    const accepted=await callback(authorization.searchParams.get('state'));assert.equal(accepted.status,303);await accepted.arrayBuffer()
@@ -198,11 +202,11 @@ export async function slackAppJourney(provider='slack'){
   await h.request(settings,{method:'DELETE',body:{}});assert.equal((await h.request(settings)).data.configured,false)
   await h.request(settings,{method:'PUT',body:configuration})
   const reinstall=(await h.request(root+'/install',{method:'POST',body:{}})).data
-  if(provider!=='nook'){const authorization=new URL(reinstall.authorizeUrl),response=await fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state:authorization.searchParams.get('state'),code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}});assert.equal(response.status,303);await response.arrayBuffer()}
+  if(provider!=='nook'){const authorization=new URL(reinstall.authorizeUrl),response=await callbackRequest(h.origin,authorization.searchParams.get('state'),'reinstall-after-restart');assert.equal(response.status,303);await response.arrayBuffer()}
   const beforeStale=await record(pendingCreated)
   await click(payload(pendingMessage,fixture.ownerUserId),{status:403})
   assert.deepEqual(await record(pendingCreated),beforeStale,'Removing and reinstalling the same workspace never revives an old card')
-  if(staleOAuthState){const staleCallback=await fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state:staleOAuthState,code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}});assert.equal(staleCallback.status,409,'An old OAuth state cannot revive after the installation version repeats');await staleCallback.arrayBuffer()}
+  if(staleOAuthState){const staleCallback=await callbackRequest(h.origin,staleOAuthState,'stale-after-restart');assert.equal(staleCallback.status,409,'An old OAuth state cannot revive after the installation version repeats');await staleCallback.arrayBuffer()}
   await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:'synthetic-cradle-120-stale-link-user',command:'/cradle-link',text:staleLinkCode},{status:409})
   assert.equal((await h.request(settings)).data.slackUserId,null,'Removing a provider revokes its linked people; an old code cannot restore them')
   console.log('CHAT_APP_JOURNEY_PASS '+provider)

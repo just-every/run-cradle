@@ -12614,7 +12614,7 @@
       "executable": false
     },
     "tests/helpers/slack-app-journey.mjs": {
-      "sha256": "69dd34079ebadcaf1a45c229e0b81aa88545373e38db33faab653a19950307dc",
+      "sha256": "cda362e485ce398073659417abc62d74ed9b53b59fb5edf39de9011387e527a6",
       "executable": false
     },
     "tests/helpers/slack-app-network-edge.mjs": {
