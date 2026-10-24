@@ -8,7 +8,6 @@ import AxeBuilder from '@axe-core/playwright'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
-import {freePort} from './free-port.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 
 const schemaEntity='00000000000000000000000001'
@@ -21,7 +20,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
  const output=path.resolve(outputDirectory);await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await userAutomationRuntime(await freePort())
+  h=await userAutomationRuntime(0)
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   console.log('FIELD_BROWSER_OWNED_PIDS '+JSON.stringify(ownedProcesses()))
   for(const width of recordsBrowserWidths()){

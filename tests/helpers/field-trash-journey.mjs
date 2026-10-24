@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {parseCsv} from '../../src/domains/portability/csv.ts'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
-import {freePort} from './free-port.mjs'
 import {randomBytes} from 'node:crypto'
 import {automationNetworkEdge} from './automation-network-edge.mjs'
 
@@ -16,7 +15,7 @@ export async function fieldTrashJourney(existing){
  async function cleanup(){for(const item of credentials)if(item.key){await h.request(`/api/user-keys/${item.key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId:item.appId}});item.key=null}}
 
  try{
-  if(!h){edge=await automationNetworkEdge();h=await userAutomationRuntime(await freePort(),{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})}
+  if(!h){edge=await automationNetworkEdge();h=await userAutomationRuntime(0,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},outbound:request=>edge.outbound(request)})}
   const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),valueId=createUlid(),secondId=createUlid(),secondName=createUlid()
   const initial={appId,name:'synthetic-cradle-330',tables:[{id:entityId,label:'Items',primaryFieldId:nameId,fields:[field(nameId,'Name'),field(valueId,'Value')]},{id:secondId,label:'Retained table',primaryFieldId:secondName,fields:[field(secondName,'Name')]}]}
   const readDraft=async()=>(await h.request(`/api/v1/records/bases/${appId}`)).data
