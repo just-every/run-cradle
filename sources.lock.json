@@ -6750,7 +6750,7 @@
       "executable": false
     },
     "src/core/app/ui/operator/owner-menu.tsx": {
-      "sha256": "4476c5169ae301567699f490bf5886e58913afbc20a12a62a5b86286d95f6995",
+      "sha256": "b732fcaac6f91b1895ca7735e27e714d7f6f1e9a4f148c664121f9c01409c32b",
       "executable": false
     },
     "src/core/app/ui/operator/resource-boundary.tsx": {
@@ -12902,7 +12902,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "4a42a7e19a121759a01c5203ae46e2ee61dec58eed6c343b42e686224eeb402c",
+      "sha256": "b2672b422fcceafee2e2190cb6fbebf5c3bc8ea5efc55325e9b016ae48ff2048",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {

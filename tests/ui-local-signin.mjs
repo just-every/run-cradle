@@ -140,6 +140,11 @@ async function freshViewport(viewport,evidence){
       await page.goto(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
       // The owner menu is a client control: let the document finish hydrating before driving it.
       await page.waitForLoadState('networkidle');await page.waitForFunction(()=>typeof window.__TSR_ROUTER__?.navigate==='function')
+      // A second tab of the same browser still shows the app when the first signs out.
+      const otherTab=await context.newPage();installKeyboardInteractions(otherTab);const otherObservations=browserObservations(otherTab,origin)
+      await otherTab.goto(origin+'/app');await otherTab.getByRole('link',{name:'Open records',exact:true}).waitFor()
+      await otherTab.waitForLoadState('networkidle');await otherTab.waitForFunction(()=>typeof window.__TSR_ROUTER__?.navigate==='function')
+      await page.bringToFront()
       if(viewport.width<=900)await page.getByRole('button',{name:'Open navigation',exact:true}).click()
       const navigation=viewport.width<=900?page.getByRole('dialog',{name:'Navigation',exact:true}):page.locator('.operator-rail')
       await navigation.locator('button[aria-haspopup="menu"]').focus();await page.keyboard.press('Enter')
@@ -157,7 +162,17 @@ async function freshViewport(viewport,evidence){
       assert.equal((await context.request.get(origin+'/auth/session')).status(),401,'Sign out ends the actual owner session')
       const signedOut=await context.request.get(origin+'/app',{maxRedirects:0})
       assert.equal(signedOut.status(),303);assert.equal(new URL(signedOut.headers().location,origin).pathname,'/signin','After sign out /app no longer opens signed in')
-      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,configuredFirstRun:true,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,failedSignOutRetried:true,signedOut:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean(abortedSignOut)})
+      // Sign out in the other tab, over the session that already ended: one request answers 401 and the tab lands on
+      // the Lobby as a sign-out that worked does, never on the retry alert.
+      await otherTab.bringToFront();otherObservations.assertClean(undefined,'second tab after the first signed out')
+      if(viewport.width<=900)await otherTab.getByRole('button',{name:'Open navigation',exact:true}).click()
+      const otherNavigation=viewport.width<=900?otherTab.getByRole('dialog',{name:'Navigation',exact:true}):otherTab.locator('.operator-rail')
+      await otherNavigation.locator('button[aria-haspopup="menu"]').focus();await otherTab.keyboard.press('Enter')
+      await otherTab.getByRole('menuitem',{name:'Sign out',exact:true}).waitFor()
+      const endedSignOut=[];otherTab.on('response',response=>{if(['/auth/csrf','/auth/sign-out'].includes(new URL(response.url()).pathname))endedSignOut.push(response.status())})
+      await otherTab.keyboard.press('Enter');await otherTab.waitForURL(origin+'/');await otherTab.getByRole('link',{name:'Sign in',exact:true}).waitFor()
+      assert.deepEqual(endedSignOut,[401],'Sign out over an ended session sends one request, answered 401, and no retry')
+      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,configuredFirstRun:true,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,failedSignOutRetried:true,signedOut:true,endedSessionSignedOut:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean(abortedSignOut)})
       await context.close()
     for(const secret of [vars.SESSION_SECRET,vars.SETUP_TOKEN])assert.equal(installation.output().includes(secret),false,'Local dev must redact secrets')
     await assert.rejects(copy.rer(['reset','--yes','--non-interactive']),error=>error.exitCode===4&&error.errorCode==='safety_refusal','Reset refuses an active app')

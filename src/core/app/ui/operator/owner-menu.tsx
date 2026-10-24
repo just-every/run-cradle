@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
-import { sessionFetch } from '../../../../ui/shared/session-fetch'
+import { SessionFailure, sessionFetch } from '../../../../ui/shared/session-fetch'
 
 type Owner = { name: string; initials: string; workspaceName: string }
 
@@ -17,11 +17,14 @@ export function OwnerMenu({ owner }: { owner: Owner }) {
   }
   // In flight, Sign out keeps focus and ignores presses (aria-disabled: `disabled` would blur it and close the menu).
   // A sign-out that does not finish keeps the menu open with the alert and focus on Sign out, where Enter tries again.
+  // A 401, from the CSRF read or the sign-out itself, means the session already ended (signed out in another tab,
+  // revoked or expired): the owner is signed out, so it lands on / as a sign-out that worked does.
   async function signOut() {
     if (busy) return
     setBusy(true); setFailed(false)
-    const response = await sessionFetch('/auth/sign-out', { method: 'POST' }).catch(() => null)
-    if (response?.ok) { window.location.assign('/'); return }
+    const signedOut = await sessionFetch('/auth/sign-out', { method: 'POST' })
+      .then(response => response.ok || response.status === 401, (error: unknown) => error instanceof SessionFailure && error.status === 401)
+    if (signedOut) { window.location.assign('/'); return }
     setBusy(false); setFailed(true); setOpen(true); item.current?.focus()
   }
   return <div className="operator-rail-footer" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) { setOpen(false); setFailed(false) } }}>
