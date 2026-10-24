@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d59f754e511a6542bb2b7a49689353abfa743db884b3a0152d9b67089f894754",
+      "sha256": "6ab9c39b017fc35be479fc3da55c21415bdd0571faefce2ac2b5f01aa1bc46b7",
       "executable": false
     },
     "DEMO.md": {
@@ -11646,7 +11646,7 @@
       "executable": false
     },
     "tests/helpers/automation-trigger-journey.mjs": {
-      "sha256": "9d29ad5c13006573aa852fd3418d10d957221e3ccaec540c33082a8f25bfca02",
+      "sha256": "b873ff6830865d62dfe02a1a5f370e1b19f1cb420fa2fdaf3bacd1ff989cc2ee",
       "executable": false
     },
     "tests/helpers/available-machine.mjs": {
@@ -12902,7 +12902,7 @@
       "executable": false
     },
     "tests/ui-admission-editor.mjs": {
-      "sha256": "74b59df27c4c135bc0d089bb525cd2be867cfc2cbc78eca31b307efc574191e6",
+      "sha256": "4dde805fa96ac0629a488bb1d121893c0c70dd45ca84e0c01655ff700328ece4",
       "executable": false
     },
     "tests/ui-base-exits.mjs": {
