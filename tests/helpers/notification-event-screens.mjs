@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
 export async function verifyNotificationEventScreens({h,page,command,capture}){
- const width=page.viewportSize().width,actor=await h.addPerson({legacy:true,name:`Event author ${width}`}),other=await h.addPerson({legacy:true,name:`Event recipient ${width}`})
+ const width=page.viewportSize().width,actor=await h.addPerson({legacy:true,name:`Event author ${width}`,change:rules=>rules.map(rule=>rule.entityId===launchEntities.decision?{...rule,rows:{kind:'all',conditions:[]}}:rule)}),other=await h.addPerson({legacy:true,name:`Event recipient ${width}`})
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const actorCommand=async(action,input,expected=[],commandId=createUlid())=>{const response=await h.request(actor.session,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId,input,expected})});assert.equal(response.status,200,await response.clone().text());return(await response.json()).data.value}
  const campaign=(await command('campaign.create',{fields:{code:`EVENT-${width}`,name:'One notification per event',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Prove event recipient identity',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})).data.value
+ // The event author can read its result even though the recipient holds all three decision roles.
  const eventId=createUlid(),input={fields:{campaignId:campaign.id,riskId:null,supersedesId:null,title:'One person holds three decision roles',requesterId:h.owner,assigneeId:h.owner,priority:'High',dueAt:'2027-01-01T12:00:00.000Z',recommendation:'Review once',impact:'Notification identity'}}
  const decision=await actorCommand('decision.create',input,[],eventId)
  const roles=await h.db.prepare('SELECT c.owner_id,d.requester_id,d.assignee_id FROM decisions d JOIN campaigns c ON c.id=d.campaign_id WHERE d.id=?').bind(decision.id).first()
