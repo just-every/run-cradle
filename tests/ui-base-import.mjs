@@ -1,4 +1,4 @@
-import {preHydrationImport} from './helpers/base-import-hydration.mjs'
+import {preHydrationImport,preHydrationSheets} from './helpers/base-import-hydration.mjs'
 import {companyWorkbookBrowser} from './helpers/company-workbook-browser.mjs'
 import {fileStoresBrowser,unresolvedStoresBrowser,resolvedStoresBrowser} from './helpers/file-stores-browser.mjs'
 import {browserCookies} from './helpers/session-cookies.mjs'
@@ -22,10 +22,12 @@ contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, gua
     browser = await chromium.launch({ headless: true,args:['--use-mock-keychain','--password-store=basic'], ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) })
     for (const width of accessibilityWidths) {
       const context = await browser.newContext(accessibilityContextOptions({ viewport: { width, height: width === 390 ? 844 : 900 } }))
+      let page
       try {
         await context.addCookies(browserCookies(runtime.cookie,runtime.origin))
-        const page = await context.newPage(), journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
+        page = await context.newPage();const journey = recordsJourney(page, runtime.origin, output, width,{allAxe:true})
         await preHydrationImport(page,runtime,width,name=>journey.capture(name))
+        await preHydrationSheets(page,runtime,name=>journey.capture(name))
         await companyWorkbookBrowser(page,{...journey,companyOutput:name=>path.join(output,`${name}-${width}.png`)},runtime,width)
         await fileStoresBrowser(page,runtime,width,output)
         await unresolvedStoresBrowser(page,runtime,width,output)
@@ -150,6 +152,9 @@ contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, gua
         await journey.capture('import-edge-lists')
         assert.deepEqual(consoleErrors, []); assert.deepEqual(externalRequests, [])
         receipts.push({ width, jobId: job.id, batchCheckpoints, checkpoints: journey.checkpoints, consoleErrors, externalRequests })
+      } catch(error) {
+        if(page){await page.screenshot({path:path.join(output,`failed-state-${width}.png`),fullPage:true});await writeFile(path.join(output,`failed-dom-${width}.html`),await page.content())}
+        throw error
       } finally { await context.close() }
     }
     await writeFile(path.join(output, 'base-import-results.json'), JSON.stringify(receipts, null, 2))

@@ -22,3 +22,20 @@ export async function preHydrationImport(page,h,width,capture){
   assert.deepEqual(errors,[]);if(capture)await capture('import-before-hydration')
  }finally{release();await page.unroute(pattern,handler);page.off('pageerror',onError)}
 }
+
+/** A pre-hydration source choice must mount its own controls, not leave CSV state. */
+export async function preHydrationSheets(page,h,capture){
+ let release;const gate=new Promise(resolve=>{release=resolve}),pattern=/\/assets\/.*\.js(?:\?.*)?$/,handler=async route=>{await gate;await route.continue()}
+ await page.route(pattern,handler)
+ try{
+  await page.goto(h.origin+'/app/records/?import=base',{waitUntil:'commit'})
+  const sheets=page.getByLabel('Google Sheets',{exact:true});await sheets.check()
+  assert.equal(await sheets.isChecked(),true)
+  assert.equal(await page.getByLabel(/^Google Sheets connection/).count(),0,'The source choice actually precedes hydration')
+  release();await page.waitForLoadState('load')
+  await page.getByLabel(/^Google Sheets connection/).waitFor()
+  await expect(sheets).toBeChecked()
+  assert.equal(await page.getByLabel('CSV files',{exact:true}).count(),0,'Hydration preserves the chosen source controls')
+  if(capture)await capture('sheets-before-hydration')
+ }finally{release();await page.unroute(pattern,handler)}
+}

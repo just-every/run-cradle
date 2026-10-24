@@ -2914,7 +2914,7 @@
       "executable": false
     },
     ".gitignore": {
-      "sha256": "480419fe7c571956c776ad595f3d0d513b751e0a0b22e97c5cdc3c3377cd3e1a",
+      "sha256": "c23ace7ac558fdc9d2cd50d953f3c0d2f6dabe0ee4661b39cdafe8e11000a2df",
       "executable": false
     },
     ".node-version": {
@@ -5154,7 +5154,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "fbd2e9cad6b59e2d55aa94e94871a9bf8e3f20bac414c81ac7b2d6e650e23c35",
+      "sha256": "47093e1421ac2eac187fa68b87d0043403ac0f556c24c64f26011ea28d8b0382",
       "executable": false
     },
     "packaging.json": {
@@ -5590,7 +5590,7 @@
       "executable": false
     },
     "scripts/verify-suite.mjs": {
-      "sha256": "f56da5709d9e367db44315f40a60466a004055a2a0b10eecbe5e4b90ed74ffa8",
+      "sha256": "aa6f7d67c07cee2a230b05e42177ed4bf8a0e6935affe0b81197274061638648",
       "executable": false
     },
     "SEED-COMMAND-CONTRACT.md": {
@@ -10558,7 +10558,7 @@
       "executable": false
     },
     "src/ui/records/base-import/importer.tsx": {
-      "sha256": "f509a9cebbe6591175535c94f3ab229afa2ee846b2e0fe2a78af31521cf03f3b",
+      "sha256": "452a4e5b4538a2ebdf7094deaaa7b3cccd7ce4eda1585edc672132962ad3e0dc",
       "executable": false
     },
     "src/ui/records/base-import/incoming-relations.tsx": {
@@ -11774,7 +11774,7 @@
       "executable": false
     },
     "tests/helpers/base-import-hydration.mjs": {
-      "sha256": "9cb6846697d37b46980e9810f2ab13eb3de4a62ff282e316f36e055bd9b1c6ee",
+      "sha256": "7064ab7987528c8d239b6803a66b38d7784721ba11588a9c96364b1f4733d5f2",
       "executable": false
     },
     "tests/helpers/base-json-limits.mjs": {
@@ -13034,7 +13034,7 @@
       "executable": false
     },
     "tests/ui-base-import.mjs": {
-      "sha256": "f470717792f900062273d9d85e356fd7431f58461ad2025aebe0f9a60e9a6ceb",
+      "sha256": "6331556c11e91ff1ac42c7a4b6f4b9953f78fc6a224ca31d59cb3ace838f1e9e",
       "executable": false
     },
     "tests/ui-base-undo.mjs": {
