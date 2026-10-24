@@ -12010,7 +12010,7 @@
       "executable": false
     },
     "tests/helpers/installer-owned-processes.mjs": {
-      "sha256": "82eacd793771120756b84a913ad6f7a05e69a0ab3a5f2ed6eb24380eec16eca2",
+      "sha256": "2389c1405c8e1fd05b987ae30bd5330437e025a24c72f05a9d1ff966918bf5a6",
       "executable": false
     },
     "tests/helpers/json-schema-assert.mjs": {

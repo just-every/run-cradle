@@ -19,8 +19,10 @@ export async function stopOwnedInstaller(copy,child){
  for(let changed=true;changed;){changed=false;for(const [pid,parent]of rows)if(owned.has(parent)&&!owned.has(pid)){owned.add(pid);changed=true}}
  const identities=[]
  for(const pid of owned){const info=await processInfo(pid);if(info&&!info.zombie)identities.push({pid,start:info.start})}
- async function signal(name){for(const record of identities){const current=await processInfo(record.pid);if(current&&!current.zombie&&current.start===record.start)try{process.kill(record.pid,name)}catch(error){if(error.code!=='ESRCH')throw error}}}
- await signal('SIGTERM')
+ async function signal(name,selected=identities){for(const record of selected){const current=await processInfo(record.pid);if(current&&!current.zombie&&current.start===record.start)try{process.kill(record.pid,name)}catch(error){if(error.code!=='ESRCH')throw error}}}
+ // Let the CLI release its operation lease before touching its children.
+ // Signalling the whole tree together can interrupt that shutdown protocol.
+ await signal('SIGTERM',identities.filter(record=>roots.includes(record.pid)))
  for(let step=0;step<50;step++){
   const alive=await Promise.all(identities.map(async record=>{const current=await processInfo(record.pid);return current&&!current.zombie&&current.start===record.start}))
   if(!alive.some(Boolean))return
