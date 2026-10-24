@@ -248,6 +248,14 @@
       "commands": [
         "node tests/rer-data-roundtrip.mjs"
       ]
+    },
+    {
+      "name": "scale-export",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node --import ./tests/helpers/typescript-loader.mjs scripts/scale/stream-export.mjs"
+      ]
     }
   ]
 }
