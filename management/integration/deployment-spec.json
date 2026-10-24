@@ -917,7 +917,8 @@
   "secretNames": [
     "SESSION_SECRET",
     "SETUP_TOKEN",
-    "CONNECTION_ENCRYPTION_KEY"
+    "CONNECTION_ENCRYPTION_KEY",
+    "INSTALLATION_KEY"
   ],
   "optionalSecretNames": [
     "MAIL_PROVIDER_API_KEY",
@@ -935,7 +936,8 @@
     "EGRESS_RELAY_SECRET",
     "CANDIDATE_RUNNER_TOKEN",
     "CANDIDATE_DEPLOY_TOKEN",
-    "MAIL_API_KEY"
+    "MAIL_API_KEY",
+    "INSTALLATION_KEY_PREVIOUS"
   ],
   "schedules": [
     "* * * * *"

@@ -4570,7 +4570,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "dc7eb52514a55ee7a10695532464facd2f3a7e56dd319ff3b70d2003e65b5f9a",
+      "sha256": "88f00e582de75467a2bad344931a1629c722ae906ceabe625d627c311ad70d57",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5162,7 +5162,7 @@
       "executable": false
     },
     "packaging.json": {
-      "sha256": "d5394e0d0dd701662d8bb92dc5f5410e5b77855b2ba6796f0578f2ba7f96b5b5",
+      "sha256": "58d7c8c744b70143d87cce8a8a4b6e930e7d7d90d8deac785467f0ea0ac51f17",
       "executable": false
     },
     "PLAN.md": {
@@ -5226,15 +5226,15 @@
       "executable": false
     },
     "rer-project.json": {
-      "sha256": "0acddb9a3a3f547ab9fedc147e892883cf4c91bbd15a7123f1eb713f986a2688",
+      "sha256": "10d8e20513e4162a9b8137e34c884a95af6a04332326f952b01901cf5bbf25e8",
       "executable": false
     },
     "rer-setup-managed.json": {
-      "sha256": "563795fe5f47f5ed25dbc614c59c46253126fc4a45f00a51a1b37085b931469b",
+      "sha256": "1b617e4f3f5d9a0164abb6bba8f19a9e1bbddda294f027886b4c8482e8e3d90f",
       "executable": false
     },
     "rer-setup.json": {
-      "sha256": "ba0e359de0713d8583d90f7df9cf4f4770f54c827fcce29813d32609d2a56d25",
+      "sha256": "974493d8019df3427cfc5ad06a7d0bf15d05e74505fcc55fe71fb8337cf0a75f",
       "executable": false
     },
     "RUN-LOCALLY.md": {
@@ -5626,7 +5626,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "70f4aa36423cbde0cf941837bd24699ef8c5942b1cad0fb67b0e3973ee3660ca",
+      "sha256": "dae931cc1df7ff16539ec84522ef52fbdfe23d12642d6e6ec7bd91e0aa96d87f",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {
@@ -7290,7 +7290,7 @@
       "executable": false
     },
     "src/core/platform/base-auth.server.ts": {
-      "sha256": "8659532f69d979de103ba256c4c0c5dafea1f469db26150109de994d12f191d3",
+      "sha256": "78e7a887abc44e5ded2261c540274c20c27c4cd690964cc3c7227704a5c7b755",
       "executable": false
     },
     "src/core/platform/base-mail.d.ts": {
@@ -7310,7 +7310,7 @@
       "executable": false
     },
     "src/core/platform/dependencies.server.ts": {
-      "sha256": "a70fc6b15ce242e86de104705f7e057ba66c56267cd0366e69cba01543bc716f",
+      "sha256": "946837838d6c8f4531c1ea2bc4124874f80e7737bac0d3c948aa4175e2e3aba7",
       "executable": false
     },
     "src/core/platform/dev-personas.ts": {
@@ -7318,7 +7318,7 @@
       "executable": false
     },
     "src/core/platform/environment.d.ts": {
-      "sha256": "5d69de66b962fee85b30682e27f7972a85bd4dc5f1c56fc1e3cea98e0df04ad7",
+      "sha256": "3375e1223771dee25060f8c185eda9fecb9bc599ec7581f84a5fc6b472f5a80c",
       "executable": false
     },
     "src/core/platform/health.ts": {
@@ -11642,7 +11642,7 @@
       "executable": false
     },
     "tests/fixtures/portability/cradle-prior-0.3.0-rer-0.2.80.rer": {
-      "sha256": "ee3060b757aef7e7dd1e2fda0716f4c9e304ddf033a098aadbe989225f4f67c7",
+      "sha256": "9c967e15f0072fb92c2a79c999c1ab7e6d4e6204983cc9b8540942e44605a9a0",
       "executable": false
     },
     "tests/fixtures/portability/cradle-prior.rer": {
@@ -12242,7 +12242,7 @@
       "executable": false
     },
     "tests/helpers/oidc-runtime.mjs": {
-      "sha256": "b47d239a8717f865d785ddfee64ef5e8fd6112244a298764715f5d83c342f703",
+      "sha256": "5f42f5716c26ed3500b953ef77ccbbe7f7194bfdca9101d4c5be10d462ebc67f",
       "executable": false
     },
     "tests/helpers/parallel-chat-journey.mjs": {
@@ -12258,7 +12258,7 @@
       "executable": false
     },
     "tests/helpers/production-bindings.mjs": {
-      "sha256": "2974f4b1ffb5bd18fad062e4b11c347e7b644ccd8aed7f437b2b68b086e69aba",
+      "sha256": "e9c049a0986fee26819e381fec838050f1fa058a4a0cb6819e1fd81c1ba50fb2",
       "executable": false
     },
     "tests/helpers/proposal-door.mjs": {
