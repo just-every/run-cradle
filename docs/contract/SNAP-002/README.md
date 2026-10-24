@@ -2,7 +2,7 @@
 
 No real provider call or consent was used. Canonical record rows and metadata definitions stay in their original storage. A marker holds the deletion time, original lifecycle, version/schema fences and inverse unlink operations. Ordinary read policy excludes marked records even when archived rows are requested. Base exports omit deleted records, saved views and forms.
 
-`GET /api/v1/records/trash?appId=<base>` lists at most 200 records plus 200 of each metadata kind that the current human session may restore. `POST /api/v1/records/trash/restore` accepts `{commandId,appId,entityId,recordId,version,kind}` (`record`, `view` or `form`). Record and view deletion use their existing commands. `POST /api/v1/records/trash/forms/<id>/delete` accepts `{commandId,appId,version}`. Restore rechecks current deletion authority. A stale version, schema change, missing link target or reused metadata name refuses restoration before mutation. The Settings Trash list uses these same doors.
+`GET /api/v1/records/trash?appId=<base>` lists at most 200 records plus 200 of each metadata kind that the current human session may restore. `POST /api/v1/records/trash/restore` accepts `{commandId,appId,entityId,recordId,version,kind}` (`record`, `view`, `form`, `field` or `table`). Fields and isolated tables enter Trash through reviewed `release.adopt` changes (FIELD-002); schema restore rechecks current base-owner destructive authority and restores the original identity, values and history. Schema entries share a separate bounded 200-entry list. Record and view deletion use their existing commands. `POST /api/v1/records/trash/forms/<id>/delete` accepts `{commandId,appId,version}`. Restore rechecks current deletion authority. A stale version, schema change, missing link target or reused metadata name refuses restoration before mutation. The Settings Trash list uses these same doors.
 
 Retention is 30 days from deletion. The scheduled clock seam claims at most one purge run per kind per hour. Simple record and metadata purges are audited irreversible admissions. A record with files/source custody or a multi-record cascade is visibly held for further custody work, rather than silently dropping its dependencies. These cases remain acceptance gaps.
 
@@ -12,7 +12,7 @@ Evidence: `tests/records-manual-release.mjs` — `[SNAP-002] RECORDS-001 RECORDS
 
 ## Gap
 
-Fields and tables have no trash/restore implementation. Interfaces were carved verbatim into IFACE-001 as an acceptance point (ct, 22 October); no interface object is invented here. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, other released-version upgrades, archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
+Fields and isolated tables now have 30-day identity/value/history recovery under FIELD-002. Linked-table deletion/relinking and expired schema physical purge remain unproven. Interfaces were carved verbatim into IFACE-001 as an acceptance point (ct, 22 October); no interface object is invented here. Full unlink/cascade restoration and purge, dependent formula/form fences, attachment/source purge custody, other released-version upgrades, archive restoration, base/record erasure and complete held-value erasure remain unproven. Trash listing is bounded, not paged. Retention and policy are conservative defaults pending ct's ruling.
 
 ## Deletion dialog correction
 
