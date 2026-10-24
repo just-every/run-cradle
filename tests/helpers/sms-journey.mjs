@@ -11,7 +11,7 @@ export const relay='https://relay.example.com/v1/deliver',relaySecret='synthetic
 
 /** Only the provider network edge is fake. Requests originate in the emitted Worker. */
 export async function twilioEdge(config={}){
- const calls=[],incoming=new Map();let uncertain=false,refusal=null,currentToken=authToken
+ const calls=[],incoming=new Map();let uncertain=false,refusal=null,currentToken=authToken,registered=true
  const server=createServer(async(req,res)=>{
   let raw='';for await(const part of req)raw+=part
   const url=new URL(req.url,'http://localhost'),form=new URLSearchParams(raw)
@@ -26,14 +26,14 @@ export async function twilioEdge(config={}){
   if(url.pathname.includes('/a2p/BrandRegistrations/')){res.end(JSON.stringify({status:'APPROVED',identity_status:'VERIFIED'}));return}
   if(url.pathname.endsWith('/Services')){res.end(JSON.stringify({services:[{sid:'synthetic-cradle-106-service'}],meta:{next_page_url:null}}));return}
   if(url.pathname.endsWith('/PhoneNumbers')){res.end(JSON.stringify({phone_numbers:[{phone_number:sendingNumber}],meta:{next_page_url:null}}));return}
-  if(url.pathname.endsWith('/Compliance/Usa2p')){res.end(JSON.stringify({compliance:[{campaign_status:'VERIFIED',brand_registration_sid:'synthetic-cradle-106-brand'}]}));return}
+  if(url.pathname.endsWith('/Compliance/Usa2p')){res.end(JSON.stringify({compliance:registered?[{campaign_status:'VERIFIED',brand_registration_sid:'synthetic-cradle-106-brand'}]:[]}));return}
   const sid=decodeURIComponent(url.pathname.split('/').at(-1).replace(/\.json$/,''))
   if(incoming.has(sid)){res.end(JSON.stringify(incoming.get(sid)));return}
   res.statusCode=404;res.end('{}')
  })
  server.listen(0,'127.0.0.1');await once(server,'listening')
  const local='http://127.0.0.1:'+server.address().port
- return {calls,incoming,setRefusal(value){refusal=value},setUncertain(value){uncertain=value},setToken(value){currentToken=value},async outbound(request){
+ return {calls,incoming,setRegistered(value){registered=value},setRefusal(value){refusal=value},setUncertain(value){uncertain=value},setToken(value){currentToken=value},async outbound(request){
   assert.equal(request.url,config.relayUrl??relay);assert.equal(request.headers.get('authorization'),'Bearer '+(config.secret??relaySecret))
   const wire=await request.json(),url=new URL(wire.url)
   assert.ok(['api.twilio.com','messaging.twilio.com'].includes(url.hostname),'Only declared Twilio hosts reach the fake')
