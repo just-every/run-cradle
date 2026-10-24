@@ -1,3 +1,4 @@
+import {stopOwnedInstaller} from './installer-owned-processes.mjs'
 import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
 import {readFile,writeFile} from 'node:fs/promises'
@@ -26,7 +27,8 @@ export async function localInstallerJourney(copy,_browser,{zeroSetup=false}={}){
  await availableMachine()
  const app=spawn(process.execPath,[zeroSetup?'node_modules/@runeditrun/rer/global/rer.mjs':'node_modules/@runeditrun/rer/bin/rer.mjs','dev','--port',String(port),'--non-interactive'],{cwd:copy.source,stdio:['ignore','pipe','pipe'],env:copy.environment})
  const capture=observeChild(app)
- const close=async()=>{if(zeroSetup||app.exitCode===null&&app.signalCode===null)await command(['dev','--stop']);await capture.close}
+ let closing
+ const close=()=>closing??=(async()=>{await stopOwnedInstaller(copy,app);await capture.close})()
  try{
   for(let i=0;i<1200&&!capture.output().includes(`RER_READY ${origin}`);i++){
    const output=capture.output()
