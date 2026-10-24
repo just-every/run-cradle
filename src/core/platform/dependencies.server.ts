@@ -27,7 +27,7 @@ export async function dependencyResponse(request: Request, env: PlatformBindings
     }
   }
   const claim = createIdpOwnerClaimHandler({ db: env.DB, authConfig: config, clientIp: (request: Request) => request.headers.get('CF-Connecting-IP') ?? '' })
-  return createDependencies({ db: env.DB, origin: config.origin, name: 'Cradle', provider, local: config.local, auth,
+  return createDependencies({ db: env.DB, origin: config.origin, name: 'Cradle', provider, local: config.local, INSTALLATION_KEY: env.INSTALLATION_KEY, INSTALLATION_KEY_PREVIOUS: env.INSTALLATION_KEY_PREVIOUS, auth,
     claimOwner: token => claim(new Request(config.origin + '/auth/owner-claim', { method: 'POST',
       headers: { Host: new URL(config.origin).host, Origin: config.origin, 'Content-Type': 'application/json', 'CF-Connecting-IP': request.headers.get('CF-Connecting-IP') ?? '' },
       body: JSON.stringify({ token, displayName: configuredOwnerName(env) }),
