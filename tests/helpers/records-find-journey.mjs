@@ -42,6 +42,9 @@ export async function findBrowserJourney(page,j,h){
   console.log(`Find ${view.display} at ${page.viewportSize().width}px`)
   await page.getByRole('navigation',{name:'Saved views',exact:true}).getByRole('button',{name:view.name,exact:true}).click()
   await page.getByRole('heading',{name:view.name,exact:true}).waitFor()
+  // The timeline fetches every page after mounting its heading. Finish that
+  // independent load before starting the separate all-pages find traversal.
+  if(view.display==='timeline')await page.getByText('5000 records in this timeline',{exact:true}).waitFor()
   await page.keyboard.press('Control+f')
   const input=page.getByLabel('Find in visible fields',{exact:true}),form=input.locator('xpath=ancestor::form')
   await input.fill('hidden-needle');await input.press('Enter');await form.getByRole('status').filter({hasText:'No matches'}).waitFor()
