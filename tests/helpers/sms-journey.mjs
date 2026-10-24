@@ -138,7 +138,7 @@ export async function smsJourney(){
 /** Provider refusals and ambiguous replies use only the actual public doors. */
 export async function smsRiderJourney(h,edge){
  const riderPhone='+15550100107'
- const name='synthetic-cradle-107-sms-'+createUlid(),refusal={code:30034,message:'US A2P 10DLC - Message from an Unregistered Number. Register this number before sending.'}
+ const name='synthetic-cradle-107-sms-'+createUlid(),refusal={code:30034,message:`US A2P 10DLC - Message to ${riderPhone} from an Unregistered Number. Register this number before sending.`}
  const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name,appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'sms',fieldId:h.nameId,text:'synthetic-cradle-107'}]}}})).data.result.value
  const created=[]
  try{
@@ -151,6 +151,19 @@ export async function smsRiderJourney(h,edge){
   await h.tick(created[0].commandId)
   await h.request(`/api/user-automations/${automation.id}/runs/${run.id}/retry`,{method:'POST',status:403,body:{commandId:createUlid()}})
   assert.equal(edge.calls.filter(call=>call.method==='POST').length,before,'A registration refusal is never retried')
+  // A stored provider message may quote the private destination. Historical
+  // copies must narrow with the current record field policy, too.
+  const principal=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=(SELECT id FROM oa_operators WHERE email=?)').bind('import-owner@example.test').first()).principal_id
+  const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.app_id=? AND m.principal_id=?').bind(h.appId,principal).first()
+  const restricted=JSON.parse(policy.rules_json).map(rule=>({...rule,readableFields:rule.readableFields.filter(id=>id!==h.nameId)}))
+  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(restricted),policy.id).run()
+  try{
+   const hidden=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs
+   assert.ok(!JSON.stringify(hidden).includes(riderPhone),'Provider errors cannot disclose a currently hidden phone value')
+   assert.ok(hidden.every(item=>item.actions.every(action=>!action.smsError)),'A copied provider message requires current phone-field read authority')
+  }finally{await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()}
+  const visible=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.find(item=>item.id===run.id)
+  assert.deepEqual(visible.actions[0].smsError,refusal,'Restored field authority shows the same verbatim provider refusal')
   const replies=[]
   for(const body of ['Please call about the delivery.','STOP','HELP','START']){
    const sid='synthetic-cradle-107-'+createUlid()
