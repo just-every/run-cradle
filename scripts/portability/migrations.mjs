@@ -11,8 +11,9 @@ import {migrationInventory} from '../migration-groups.mjs';
 // Records bases are schema the owner builds at runtime, not migrations: each
 // base's physical table and its indexes and search tables are named r_<entity
 // ULID>... (src/domains/records/descriptors.server.ts generatedName). No
-// migration creates an object in that namespace.
-const recordObject=name=>/^r_[0-9a-hjkmnp-tv-z]{26}(?:_|$)/.test(name);
+// migration creates an object in that namespace. Calendar capture triggers are
+// likewise rebuilt by the seed compiler from the archived record definitions.
+const recordObject=name=>/^(?:r_[0-9a-hjkmnp-tv-z]{26}(?:_|$)|record_calendar_[0-9a-hjkmnp-tv-z]{26}_(?:insert|update)$)/.test(name);
 
 /**
  * Replay the destination's applied files in its recorded order, never the
