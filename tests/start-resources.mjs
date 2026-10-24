@@ -102,7 +102,7 @@ const get = (url, session = cookie) => request(`${origin}${url}`, { redirect: 'm
     await page.goto(`${origin}/docs`)
     const timeOrigin = await page.evaluate(() => performance.timeOrigin)
     await page.getByRole('banner').getByRole('link', { name: 'Sign in', exact: true }).click()
-    await page.waitForURL('**/signin')
+    await page.waitForURL('**/app')
     await navigateFromSignInToApp(page)
     await page.waitForURL('**/app')
     await page.getByText('Live campaigns', { exact: true }).waitFor()

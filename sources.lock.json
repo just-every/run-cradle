@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "fd97dfaf27cf5c128c0da0e098e5a44b625876be005ab50cafe4ea14b90c8f37",
+      "sha256": "1a708303206a358d893636d0290ed835934201b6bd54bb275b2100d5c04a0ae2",
       "executable": false
     },
     "DEMO.md": {
@@ -11882,7 +11882,7 @@
       "executable": false
     },
     "tests/helpers/public-app-navigation.mjs": {
-      "sha256": "9f47a3ebd3a70d2a67480a1d2b220cac9ca5f1972622b92b612618c0fee9a929",
+      "sha256": "16c7aea86bdb9eaae7f06eb1e541f90a50c63f3285b9d2f9924ca1110177cae2",
       "executable": false
     },
     "tests/helpers/queue-consumers.mjs": {
@@ -12378,7 +12378,7 @@
       "executable": false
     },
     "tests/migration-browser.mjs": {
-      "sha256": "1b78bb8c95616d1f8a763fcfcfb60039655fed04a838606da4121bc82cf312c6",
+      "sha256": "ddd487d46caf88355d18d15ae10d37af60522140c89c3cd3bd54be9a3416a372",
       "executable": false
     },
     "tests/migration-events.mjs": {
@@ -12618,11 +12618,11 @@
       "executable": false
     },
     "tests/start-resources.mjs": {
-      "sha256": "8593d5b71b2ac0fcd496667ac01d8f93217e92bd4a6cd3dd6d31218aa5c8a705",
+      "sha256": "e98866b22674702c7003369aabc55e09056790d15a7fbff6a577fa0c7ffb8960",
       "executable": false
     },
     "tests/start-runtime.mjs": {
-      "sha256": "5e4556474ff19d07ba780895d91371f373a8ed193e8b4790d61d9f48d9098eb4",
+      "sha256": "d66f64dcd245c6924d26057c749c415881616db592ef0e8e676cf96a2e6c90d5",
       "executable": false
     },
     "tests/ui-admission-editor.mjs": {

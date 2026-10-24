@@ -92,7 +92,7 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
   }
   for (const document of ['/missing','/assets/missing.js','/@vite/client','/@id/virtual:tanstack-start-dev-client-entry','/@tanstack-start/styles.css','/src/core/app/styles.css','/app/missing','/api/missing']) for (const headers of [{}, { 'sec-fetch-mode': 'navigate' }]) assert.equal(await responseStatus(get(document, cookie, headers)),404,document)
   assert.equal(await new Promise((resolve, reject) => { http.get(`${origin}/health`, { headers: { host: 'unsupported.invalid' } }, response => { response.resume(); resolve(response.statusCode) }).on('error', reject) }), 404)
-  const signinDocument = await (await get('/signin')).text(); const stylesheet = signinDocument.match(/href="(\/assets\/[^\"]+\.css)"/)[1]
+  const signinDocument = await (await get('/signin', null)).text(); const stylesheet = signinDocument.match(/href="(\/assets\/[^\"]+\.css)"/)[1]
   const style = await get(stylesheet); assert.match(style.headers.get('content-type'), /text\/css/); assert.ok((await style.text()).length > 100)
   browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {})
   const captures = new Map()
@@ -102,10 +102,12 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
     const browserContext = await browser.newContext({ viewport, timezoneId: 'Pacific/Honolulu' })
     await browserContext.addCookies(browserCookies(cookie,origin))
     const page = await browserContext.newPage(); const errors=[]; const failed=[]; let navigations=0; let publicNavigation=true
-    page.on('response', response => { if (response.status() >= 400) console.error('START_HTTP_FAILURE', response.status(), response.url()) }); page.on('pageerror', error=>errors.push(error.message)); page.on('console', event=>{if(event.type()==='error')errors.push(event.text())}); page.on('requestfailed', request=>failed.push(request.url())); page.on('request', request=>{if(request.isNavigationRequest()&&request.frame()===page.mainFrame())navigations++; if(request.url().includes('/_serverFn/')){captures.set(request.url(),request.headers());if(publicNavigation)publicTransports.add(request.url())}})
-    // The docs are a public router document with the shared header's Sign in pill; the Lobby at / is plain HTML.
+    page.on('response', response => { if (response.status() >= 400) console.error('START_HTTP_FAILURE', response.status(), response.url()) }); page.on('pageerror', error=>errors.push(error.message)); page.on('console', event=>{if(event.type()==='error')errors.push(event.text())}); page.on('requestfailed', request=>failed.push(request.url())); page.on('request', request=>{if(request.isNavigationRequest()&&request.frame()===page.mainFrame())navigations++; if(request.url().includes('/_serverFn/')){captures.set(request.url(),request.headers());if(publicNavigation){publicTransports.add(request.url());publicNavigation=false}}})
+    // Only the first generated call is the public sign-in loader. Its forward
+    // also starts private app loaders before the destination has settled.
+    // The docs are a public router document; the Lobby at / is plain HTML.
     await page.goto(`${origin}/docs`); const time = await page.evaluate(()=>performance.timeOrigin)
-    await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click(); await page.waitForURL('**/signin');await page.waitForLoadState('networkidle');publicNavigation=false
+    await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click(); await page.waitForURL('**/app');await page.waitForLoadState('networkidle')
     await navigateFromSignInToApp(page); await page.waitForURL('**/app')
     assert.equal(await page.evaluate(()=>performance.timeOrigin),time);assert.equal(navigations,1)
     await page.getByText('Live campaigns',{exact:true}).waitFor(); await page.waitForLoadState('networkidle')
@@ -119,13 +121,13 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
     await page.waitForTimeout(150);assert.deepEqual(errors,[]);assert.deepEqual(failed,[])
     await browserContext.close()
   }
-  assert.equal(publicTransports.size, 1, 'Public identity navigation uses its one generated loader')
+  assert.equal(publicTransports.size, 1, 'Sign-in forwarding uses its one public generated loader')
   assert.ok([...captures.keys()].filter(url=>!publicTransports.has(url)).length >= 2, 'Both real private generated data transports must still run')
   // Replay the exact URL and headers produced by the installed generated client; positive control first.
   for(const [url, original] of captures) {
     const headers={...original};delete headers.cookie;delete headers.host
     const before=await json('/api/campaigns')
-    const positive=await request(url,{headers:{...headers,cookie}});const positiveBody=await positive.text();assert.equal(positive.status,200);assert.match(positiveBody,/Migration|Maya/); wireEvidence.push({ url, control: 'valid', status: positive.status, headers: Object.fromEntries(positive.headers), body: positiveBody })
+    const positive=await request(url,{headers:{...headers,cookie}});const positiveBody=await positive.text();assert.equal(positive.status,200);if(publicTransports.has(url)){assert.match(positiveBody,/"isSerializedRedirect":true/);assert.match(positiveBody,/\/app/);assert.doesNotMatch(positiveBody,/Migration (campaign|risk|milestone|decision|lens|automation|notification) current|Maya Chen|maya@northstar\.example/)}else assert.match(positiveBody,/Migration|Maya/); wireEvidence.push({ url, control: 'valid', status: positive.status, headers: Object.fromEntries(positive.headers), body: positiveBody })
     for(const control of ['', sessionCookieWithToken(cookie,expiredToken),sessionCookieWithToken(cookie,revokedToken)]) {
       const denied=await request(url,{headers:{...headers,...(control?{cookie:control}:{})}});const body=await denied.text()
       if(publicTransports.has(url)) { assert.equal(denied.status,200);assert.match(body,/Migration workspace current/) }
