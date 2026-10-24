@@ -6,13 +6,11 @@ import { uploadAssets, workerOrigin } from './worker.mjs';
 import { readinessWindow, readinessAPI } from './readiness-window.mjs';
 import { uploadVersionId } from './uploaded-worker.mjs';
 import { ownedSiteVersion, waitForSiteDomains, waitForSiteUpload } from './site-readback.mjs';
-import { siteRuntime, siteRuntimeBindings } from './site-runtime.mjs';
 export { servedVersion, siteReadbackSummary } from './site-readback.mjs';
 
 /* A seed's run site (run-<seed>.com): the folder `rer build --site` writes,
- * served on the owner's own account by a Base-generated module Worker (no
- * seed code). Its default binding is its assets; opt-in docs search adds AI
- * and an immutable Base-generated search bundle. The Worker runs
+ * served on the owner's own account by a Base-generated module Worker (fixed
+ * content, no seed code) whose only binding is its assets. The Worker runs
  * first on every request: www.<domain> gets a 301 to the apex with path and
  * query kept, and everything else is answered from the assets. It has no
  * secrets and no schedules, workers.dev stays off, and its name can never be
@@ -60,30 +58,14 @@ export function siteWorkerName(project, environment) {
 }
 
 /** Everything a site deploy will do, with no provider request. */
-export function sitePlan({ project, environment, compatibilityDate, declaration, assets, runtime }) {
+export function sitePlan({ project, environment, compatibilityDate, declaration, assets }) {
   const { domain } = siteDeclaration(declaration);
   assert(/^\d{4}-\d{2}-\d{2}$/.test(compatibilityDate ?? ''), 'invalid-plan');
   assert(typeof assets === 'string' && assets.startsWith('/'), 'invalid-site-assets');
-  runtime = siteRuntime(runtime);
   return { version: 1, worker: siteWorkerName(project, environment), appWorker: ownerWorkerName(project, environment), module: SITE_MODULE, assets, compatibilityDate,
-    bindings: runtime ? [...runtime.bindings] : ['ASSETS'], secrets: [], crons: [], workersDev: false, runWorkerFirst: true, assetsConfig: { ...SITE_ASSETS_CONFIG },
-    ...(runtime ? { runtime } : {}),
+    bindings: ['ASSETS'], secrets: [], crons: [], workersDev: false, runWorkerFirst: true, assetsConfig: { ...SITE_ASSETS_CONFIG },
     domain, hostnames: [domain, `www.${domain}`],
     redirects: [{ from: `https://www.${domain}/*`, to: `https://${domain}/`, status: 301, keeps: ['path', 'query'] }] };
-}
-
-/** Assets-only plans retain the original fingerprint byte for byte. */
-export function siteFingerprint(plan, files, { preparing = false } = {}) {
-  const runtime = siteRuntime(plan.runtime);
-  const identity = { files: files.map(({ path, sha256 }) => ({ path, sha256 })), config: plan.assetsConfig,
-    module: hash(runtime?.source ?? SITE_WORKER), compatibilityDate: plan.compatibilityDate };
-  if (runtime) {
-    const vectors = files.find(file => file.path === 'docs-search-vectors.json');
-    assert(preparing || vectors && /^[a-f0-9]{64}$/.test(vectors.sha256), 'missing-site-search-vectors');
-    identity.runtime = { type: runtime.type, module: runtime.module, endpoint: runtime.endpoint, bindings: runtime.bindings,
-      model: runtime.model, pooling: runtime.pooling, corpusHash: runtime.corpusHash, vectors: preparing ? 'prepare-on-deploy' : vectors.sha256 };
-  }
-  return hash(identity);
 }
 
 async function writeReceipt(path, receipt) {
@@ -97,8 +79,6 @@ async function writeReceipt(path, receipt) {
 export async function siteDeploy({ api, plan, files, receiptPath, readiness = {} }) {
   assert(typeof receiptPath === 'string' && receiptPath.length, 'missing-receipt-path');
   assert(plan?.module === SITE_MODULE && Array.isArray(files) && files.some(file => file.path === 'index.html'), 'invalid-site-assets');
-  const runtime = siteRuntime(plan.runtime);
-  const fingerprint = siteFingerprint(plan, files);
   const zones = await api.zoneRequest(`/zones?name=${plan.domain}&account.id=${api.accountId}`);
   const zone = Array.isArray(zones) ? zones.find(row => row?.name === plan.domain && row.account?.id === api.accountId) : null;
   if (!zone) throw refuse('site-zone-missing', 'zone', plan.domain);
@@ -111,18 +91,19 @@ export async function siteDeploy({ api, plan, files, receiptPath, readiness = {}
     if (row && (!previous || row.service !== plan.worker)) throw refuse('resource-name-collision', 'domain', hostname);
   }
 
+  const fingerprint = hash({ files: files.map(({ path, sha256 }) => ({ path, sha256 })), config: plan.assetsConfig, module: hash(SITE_WORKER), compatibilityDate: plan.compatibilityDate });
   const jwt = await uploadAssets(api, plan.worker, files);
   const body = new FormData();
-  body.set('metadata', new Blob([JSON.stringify({ main_module: SITE_MODULE, compatibility_date: plan.compatibilityDate, bindings: siteRuntimeBindings(runtime),
+  body.set('metadata', new Blob([JSON.stringify({ main_module: SITE_MODULE, compatibility_date: plan.compatibilityDate, bindings: [{ type: 'assets', name: 'ASSETS' }],
     assets: { jwt, config: { ...plan.assetsConfig, run_worker_first: true } }, annotations: { 'workers/message': `rer-site:${fingerprint}` } })], { type: 'application/json' }));
-  body.set(SITE_MODULE, new Blob([runtime?.source ?? SITE_WORKER], { type: 'application/javascript+module' }), SITE_MODULE);
+  body.set(SITE_MODULE, new Blob([SITE_WORKER], { type: 'application/javascript+module' }), SITE_MODULE);
   const window = readiness.window ?? readinessWindow(readiness);
   window.start();
   api = readinessAPI(api, window, 'site-upload-timeout');
   const upload = await api.request(`/workers/scripts/${plan.worker}`, { method: 'PUT', body });
   const versionId = uploadVersionId(upload);
   assert(versionId, 'invalid-upload-version');
-  const readback = () => waitForSiteUpload({ api, worker: plan.worker, versionId, fingerprint, previous, window, runtime, module: SITE_MODULE });
+  const readback = () => waitForSiteUpload({ api, worker: plan.worker, versionId, fingerprint, previous, window });
   await readback();
   await workerOrigin(api, plan.worker, { enable: true, workersDev: false });
   for (const hostname of plan.hostnames) {
