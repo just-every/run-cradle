@@ -16,6 +16,7 @@ import { DeliveryService } from '../../../vendor/base/modules/integrations/core/
 import type { TrustedTransport } from '../../../vendor/base/modules/integrations/core/types.ts'
 import { RelayTransport } from '../integrations/relay-transport.server'
 import { destinations } from './storage.server'
+import {trustedPredicate} from '../admission/sql.server'
 import type {RecordAutomationAction} from './contracts'
 import type {Ref} from '../../contracts/primitives'
 import {renderSlackEvent,serializeSlackMessage} from '../../../vendor/base/modules/integrations/slack/message.ts'
@@ -46,6 +47,15 @@ export function createAutomationDestinations(env:PlatformBindings,policy:PolicyP
     audit:[{action:'automation.destination.create',subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,kind:input.kind,createdAt:new Date(createdAt).toISOString()}})
    if(receipt.replay)throw new AuthorityError('version_conflict','Destination already saved. Its signing key is not recoverable; create a new destination to rotate it.',409)
    return {id,kind:input.kind,...(input.kind==='webhook'?{signingKey}:{})}
+  },
+  async revoke(ctx:RequestContext,input:{commandId:string;appId:string;entityId:string;id:string}) {
+   const own=await userDelegationPolicy(db,policy,ctx,{...input,name:'Revoke automation destination',permissions:'read',expiresAt:ctx.principal.expiresAt})
+   const row=await db.prepare('SELECT 1 FROM record_automation_destinations WHERE id=? AND app_id=? AND owner_id=?').bind(input.id,input.appId,ctx.principal.id).first()
+   if(!row)throw new AuthorityError('not_found','Destination is unavailable.',404)
+   return admission.commit(ctx,{commandId:input.commandId,action:'automation.destination.revoke',appId:input.appId,
+    canonicalInputHash:await digest(canonicalJson(input)),permit:own.permit('automation.destination.revoke'),guards:own.guards,
+    mutations:[{kind:'update',table:destinations,set:{revoked_at:Date.parse(ctx.now)},where:trustedPredicate('id=? AND app_id=? AND owner_id=? AND revoked_at IS NULL',[input.id,input.appId,ctx.principal.id]),expectedRows:1}],
+    audit:[{action:'automation.destination.revoke',subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id:input.id,revoked:true}})
   },
   async preview(ctx:RequestContext,appId:string,action:Extract<RecordAutomationAction,{kind:'webhook'|'slack'}>,ref:Ref,event:string,recordVersion:number,id:string){
    if(!await db.prepare('SELECT 1 FROM record_automation_destinations WHERE id=? AND app_id=? AND owner_id=? AND kind=? AND revoked_at IS NULL').bind(action.destinationId,appId,ctx.principal.id,action.kind).first())throw new AuthorityError('not_found','Destination is unavailable.',404)

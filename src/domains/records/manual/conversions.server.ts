@@ -5,6 +5,8 @@ import { canonical } from '../../admission/canonical'
 import { decimal, format, normalize } from '../exact'
 import { validateCell } from '../validators'
 import { decode } from '../codec.server'
+import { snapshotValidationValues } from '../validation-values.server'
+import { createUlid } from '../../../core/shared/ids'
 
 export type ConversionImpact = {
  fieldId:string; label:string; from:Field['type']; to:Field['type']
@@ -33,7 +35,8 @@ export function planFieldConversions(prior:EntityDescriptor[],schemas:EntitySche
    try{convert=converter(before,field,prior,schemas,snapshots)}catch(error){refuse(`${field.label}: ${message(error)}`);continue}
    const rows=requiredRows(snapshots,old.table.tableId)
    for(const row of rows){
-    const recordId=String(row[old.idColumn]),value=decode(old.fields.get(field.id)!,row)
+    const recordId=String(row[old.idColumn]),storage=old.fields.get(field.id)!
+    const value=storage.join?snapshotValidationValues({...old,fields:new Map([[field.id,storage]])},row,snapshots)[field.id]??null:decode(storage,row)
     let next:CellValue,afterLabel:string
     try{
      const result:ReturnType<Conversion>=value===null?{value:null}:convert(value)
@@ -70,6 +73,8 @@ function converter(before:Field,after:Field,prior:EntityDescriptor[],schemas:Ent
   return {value:matches[0]!.id,label:matches[0]!.label}
  }
  if(before.type==='select'&&after.type==='text')return value=>({value:selectLabel(before,value)})
+ if(before.type==='text'&&after.type==='phone'||before.type==='phone'&&after.type==='text')return value=>({value:stringValue(value)})
+ if(before.type==='relation'&&after.type==='select')return linkedSelectConverter(before,after,prior,schemas,snapshots)
  if(before.type==='select'&&after.type==='relation')return relationConverter(before,after,prior,schemas,snapshots)
  if(before.type==='number'&&after.type==='money')return value=>{
   const amount=decimal(normalize(stringValue(value))),shift=2-amount.scale
@@ -90,6 +95,36 @@ function converter(before:Field,after:Field,prior:EntityDescriptor[],schemas:Ent
  if(before.type==='date'&&after.type==='text'||before.type==='number'&&after.type==='text')return value=>({value:stringValue(value)})
  if(before.type==='text'&&after.type==='number')return value=>({value:normalize(stringValue(value))})
  throw new Error(`Conversion from ${before.type} to ${after.type} has no defined mapping.`)
+}
+
+/** A collection with several links is a named loss, never an arbitrary first link. */
+function linkedSelectConverter(before:Field,after:Field,prior:EntityDescriptor[],schemas:EntitySchema[],snapshots:Record<string,Record<string,unknown>[]>):Conversion {
+ const relation=before.relation,target=relation&&prior.find(d=>d.schema.appId===relation.ownerAppId&&d.schema.id===relation.entityId)
+ const candidate=target&&schemas.find(schema=>schema.appId===target.schema.appId&&schema.id===target.schema.id)
+ const primary=target?.schema.fields.find(field=>field.id===target.schema.primaryFieldId)
+ if(!target||!candidate||!primary||primary.type==='computed'||target.fields.get(primary.id)?.join)throw new Error('Linked select conversion requires a retained target table with a stored scalar primary label.')
+ const labels=new Map<string,string>()
+ for(const row of requiredRows(snapshots,target.table.tableId)){
+  if(['deleted','archived'].includes(String(row[target.lifecycleColumn])))continue
+  const value=decode(target.fields.get(primary.id)!,row)
+  if(value!==null)labels.set(String(row[target.idColumn]),label(primary,value))
+ }
+ return value=>{
+  const refs=Array.isArray(value)?value:[value]
+  if(refs.length===0)return {value:null}
+  if(refs.length!==1)throw new Error(`Multiple linked records (${refs.length}) cannot fit in one select option; the entire multi-link value would be lost.`)
+  const ref=refs[0]
+  if(!ref||typeof ref!=='object'||!('recordId'in ref))throw new Error('Expected a canonical linked record.')
+  const text=labels.get(ref.recordId)
+  if(text===undefined)throw new Error('The linked record has no current primary label.')
+  if(text.length===0||text.length>200)throw new Error('The linked primary label must contain 1 to 200 characters for a select option.')
+  let option=after.options?.find(option=>option.label===text)
+  if(!option){
+   if((after.options?.length??0)>=10000)throw new Error('Select conversion exceeds the 10,000-option limit.')
+   option={id:createUlid(),label:text};(after.options??=[]).push(option)
+  }
+  return {value:option.id,label:text}
+ }
 }
 
 function relationConverter(before:Field,after:Field,prior:EntityDescriptor[],schemas:EntitySchema[],snapshots:Record<string,Record<string,unknown>[]>):Conversion {

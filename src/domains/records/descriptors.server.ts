@@ -145,7 +145,7 @@ export function compileSchema(input: EntitySchema, resolve: (appId: string, enti
         extra.push(`CREATE INDEX ${identifier(tableName + '_' + base + '_idx')} ON ${identifier(tableName)}(${identifier(storage.sortColumn ?? base)},id);`);
     }
     if(cols.length>100)throw new AdmissionError('capacity_limit',`D1 physical columns limit 100 CURRENT ${cols.length}. This table needs a wider storage layout before it can be adopted.`);
-    const searchable = [...fields.values()].filter(s => ['text', 'url'].includes(s.field.type) && !s.join);
+    const searchable = [...fields.values()].filter(s => ['phone', 'text', 'url'].includes(s.field.type) && !s.join);
     const searchTable = searchable.length ? tableName + '_search' : undefined;
     if (searchTable) {
         const quoted = identifier(searchTable), searchCols = searchable.map(s => identifier(s.column));

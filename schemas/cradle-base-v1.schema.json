@@ -78,6 +78,7 @@
                     "type": {
                       "type": "string",
                       "enum": [
+                        "phone",
                         "text",
                         "url",
                         "number",
@@ -172,6 +173,7 @@
                     "resultType": {
                       "type": "string",
                       "enum": [
+                        "phone",
                         "text",
                         "url",
                         "number",
@@ -364,6 +366,7 @@
                     "resultElementType": {
                       "type": "string",
                       "enum": [
+                        "phone",
                         "text",
                         "url",
                         "number",

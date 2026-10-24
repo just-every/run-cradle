@@ -1,14 +1,11 @@
+import { phoneValue } from '../records/phone'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import {RelayTransport} from '../integrations/relay-transport.server'
 import {AuthorityError} from '../authority/errors'
 export type TwilioCredentials={accountSid:string;authToken:string;from:string}
 export function normalizePhone(value:unknown):string {
  if(Array.isArray(value)&&value.length===1)value=value[0]
- if(typeof value!=='string')throw new AuthorityError('validation','Choose a text phone value.',400)
- const raw=value.trim(),digits=raw.replace(/[\s().-]/g,'')
- const number=digits.startsWith('+')?digits:/^\d{10}$/.test(digits)?'+1'+digits:/^1\d{10}$/.test(digits)?'+'+digits:''
- if(!/^\+[1-9]\d{7,14}$/.test(number))throw new AuthorityError('validation','Phone value must normalize to E.164; US numbers may omit +1.',400)
- return number
+ try{return phoneValue(value)}catch(error){throw new AuthorityError('validation',error instanceof Error?error.message:'Invalid phone number.',400)}
 }
 export function twilioTransport(env:PlatformBindings){
  if(!env.EGRESS_RELAY_URL||!env.EGRESS_RELAY_SECRET)throw new AuthorityError('unconfigured','Configure the trusted HTTPS egress relay for Twilio.',503)

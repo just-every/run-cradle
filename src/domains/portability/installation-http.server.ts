@@ -1,3 +1,4 @@
+import {auditOperation} from '../admission/operation-audit.server'
 import {Hono} from 'hono'
 import {z} from 'zod'
 import {createPortability, PortabilityError} from '@runeditrun/rer/modules/portability'
@@ -30,6 +31,7 @@ export function installationArchiveHttp(platform:Platform, foundation:ServerFoun
     if(request.method==='POST'&&c.req.path==='/api/v1/commands/export.start'){
       z.object({scope:z.literal('installation'),format:z.literal('archive')}).strict().parse(await readBoundedJson(request,1024))
       const id=await service.exports.create(ctx.principal.id)
+      await auditOperation(db,ctx,'installation.export',null)
       return respond({id})
     }
     const match=c.req.path.match(/^\/api\/v1\/archive-jobs\/([^/]+)(?:\/(advance|content))?$/)

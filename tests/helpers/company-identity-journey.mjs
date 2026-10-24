@@ -12,6 +12,7 @@ export async function companyIdentityJourney(t,r,native){
  const start=async()=>{const response=await post('/auth/saml/start',{returnTo:'/app'},'');assert.equal(response.status,303,await response.clone().text());return idp.request(response)}
  const finish=(s,response)=>r.raw('/auth/saml/acs',{method:'POST',headers:{cookie:s.binding,'content-type':'application/x-www-form-urlencoded',origin:idp.issuer},body:response.body})
  for(const signResponse of [false,true]){const s=await start(),accepted=await finish(s,idp.response(s,{signResponse}));assert.equal(accepted.status,303,await accepted.clone().text());assert.equal((await r.call('/auth/session',undefined,cookie(accepted))).status,200)}
+ assert.equal((await r.db.prepare("SELECT count(*) n FROM company_identity_audit WHERE action='signin.saml'").first()).n,2,'Each accepted SAML sign-in has one row, without duplicate OIDC labeling')
  for(const options of [{email:'stranger@example.com'},{unsigned:true},{audience:'https://synthetic-cradle-2.example'},{destination:origin+'/wrong'},{expired:true},{requestId:'_wrong'},{wrapped:true}]){
   const s=await start(),response=await finish(s,idp.response(s,options));assert.equal(response.status,options.email?403:400,JSON.stringify(options)+': '+await response.clone().text());assert.ok(!cookie(response)?.includes('operator_session='))
  }
@@ -40,7 +41,8 @@ export async function companyIdentityJourney(t,r,native){
  assert.equal((await r.call('/auth/session',undefined,session)).status,401,'reprovision does not revive old sessions')
  assert.equal((await scim('/Users/'+person.id,'DELETE')).status,204)
  assert.equal((await scim('/Users/'+person.id)).status,404)
- const audit=await r.db.prepare("SELECT action,actor_id FROM company_identity_audit WHERE operator_id=?").bind(person.id).all();assert.ok(audit.results.length>=6);assert.ok(audit.results.every(row=>row.actor_id.startsWith('scim:')))
+ const audit=await r.db.prepare("SELECT action,actor_id FROM company_identity_audit WHERE operator_id=? AND action LIKE 'scim.%'").bind(person.id).all();assert.ok(audit.results.length>=6);assert.ok(audit.results.every(row=>row.actor_id.startsWith('scim:')));assert.deepEqual(audit.results.map(row=>row.action).sort(),['scim.create','scim.create','scim.delete','scim.patch','scim.patch','scim.replace'],'Each accepted SCIM membership mutation is audited exactly once')
+ const samlAudit=(await r.db.prepare("SELECT actor_id FROM company_identity_audit WHERE operator_id=? AND action='signin.saml'").bind(person.id).all()).results;assert.equal(samlAudit.length,2,'Initial and reprovisioned SAML sign-ins each appear exactly once');assert.ok(samlAudit.every(row=>row.actor_id===person.id))
  const html=await(await r.call('/auth/settings/identity',undefined,native)).text();assert.ok(!html.includes(bearer))
  const rotated=await post('/auth/settings/scim',{action:'rotate'});assert.equal(rotated.status,200);const next=(await rotated.json()).credential;assert.equal((await scim('/Users')).status,401);bearer=next
  assert.equal((await scim('/Users')).status,200);assert.equal((await post('/auth/settings/scim',{action:'revoke'})).status,200);assert.equal((await scim('/Users')).status,401)

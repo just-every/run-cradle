@@ -35,7 +35,9 @@ export async function settingsResponse(request:Request,env:PlatformBindings,auth
  }
  if(url.pathname==='/auth/settings/scim'){
   const action=z.enum(['rotate','revoke']).parse(input.action),token=action==='rotate'?secret():undefined,id=crypto.randomUUID()
-  await atomic(db,[guard],[],[db.prepare('UPDATE company_scim_credentials SET revoked_at=coalesce(revoked_at,?)').bind(Date.now()),...(token?[db.prepare('INSERT INTO company_scim_credentials(id,token_hash,owner_id,owner_version,created_at) VALUES(?,?,?,?,?)').bind(id,await digest('cradle-scim:'+token),session.operator.id,session.operator.version,Date.now())]:[]),audit(db,session.operator.id,null,'scim.'+action)])
+  const active=(await db.prepare('SELECT count(*) n FROM company_scim_credentials WHERE revoked_at IS NULL').first<{n:number}>())!.n
+  const auditAction=action==='rotate'?(active?'rotate':'issue'):'revoke'
+  await atomic(db,[guard,trustedPredicate('(SELECT count(*) FROM company_scim_credentials WHERE revoked_at IS NULL)=?',[active])],[],[db.prepare('UPDATE company_scim_credentials SET revoked_at=coalesce(revoked_at,?)').bind(Date.now()),...(token?[db.prepare('INSERT INTO company_scim_credentials(id,token_hash,owner_id,owner_version,created_at) VALUES(?,?,?,?,?)').bind(id,await digest('cradle-scim:'+token),session.operator.id,session.operator.version,Date.now())]:[]),audit(db,session.operator.id,null,'scim.'+auditAction)])
   return json?Response.json({active:!!token,...(token?{credential:token}:{})},{headers}):page(action==='rotate'?'SCIM credential issued; earlier credentials are revoked.':'SCIM provisioning revoked.',token)
  }
  fail('Unknown company settings endpoint',404)

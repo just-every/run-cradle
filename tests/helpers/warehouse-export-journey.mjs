@@ -114,6 +114,8 @@ async function exportFormatJourney(doors, world, format, destination, edge) {
  if(destination==='snowflake'&&format==='csv')edge.snowflake.loseCopyAcknowledgementOnce()
  const fullAt = await tick(), fullKeys = await keys(), fullKey = fileAt(fullKeys, fullAt, 'full')
  assert.ok(fullKey, `The first incremental schedule writes its full baseline: ${JSON.stringify({ fullAt, fullKeys, settings: await list(), stored: await h.db.prepare('SELECT running_id,last_slot FROM warehouse_exports WHERE id=?').bind(id).first() })}`)
+ const auditRows=(await h.db.prepare("SELECT * FROM operation_audit WHERE action='warehouse.export' AND created_at=(SELECT updated_at FROM warehouse_exports WHERE id=?)").bind(id).all()).results
+ assert.equal(auditRows.length,1,'The completed scheduled warehouse export is audited once');assert.equal(auditRows[0].feature,'Warehouse exports');assert.equal(auditRows[0].app_id,LAUNCH_APP_ID)
  const full = await readData(fullKey)
  assert.deepEqual(full.headers.slice(0, 2), ['_record_id', '_operation'])
  assert.ok(rowsById(full).has(edited.id) && rowsById(full).has(deleted.id) && rowsById(full).has(personal.id))

@@ -9,7 +9,10 @@ const remove=(table:string,where:string,reason:string):IdentityPlace=>({table,wh
 export const authIdentityPlaces:IdentityPlace[]=[
  remove('company_scim_credentials',`owner_id ${base}`,'their issued SCIM credentials'),
  remove('company_scim_users',`operator_id ${base}`,'their SCIM identity and names'),
- remove('company_identity_audit',`operator_id ${base} OR actor_id ${base}`,'company identity audit references'),
+ {table:'company_identity_audit',where:`operator_id ${base}`,values:person=>[person.id],action:'set',columns:['operator_id'],set:()=>({operator_id:null}),reason:'anonymous subject in retained company identity audit'},
+ {table:'company_identity_audit',where:`actor_id ${base}`,values:person=>[person.id],action:'set',columns:['actor_id'],set:()=>({actor_id:''}),reason:'anonymous actor in retained company identity audit'},
+ {table:'oa_auth_audit',where:`actor_id ${base}`,values:person=>[person.id],action:'set',columns:['value'],set:()=>({value:''}),reason:'retired identity-bearing authentication audit metadata'},
+ {table:'oa_auth_audit',where:`actor_id ${base}`,values:person=>[person.id],action:'set',columns:['actor_id'],set:()=>({actor_id:''}),reason:'anonymous actor in retained authentication audit'},
  remove('rer_dependency_pending',`approved_by ${base}`,'their pending dependency approvals'),
  remove('oa_setup_links',`owner_id ${base} OR session_id ${sessions}`,'their provider setup attempts'),
  remove('oa_provider_session_pins',`session_id ${sessions}`,'their provider session pins'),

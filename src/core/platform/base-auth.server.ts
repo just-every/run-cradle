@@ -24,6 +24,19 @@ export function createBaseAuth(env: PlatformBindings): OperatorAuth {
   const mailSender = env.MAIL_PROVIDER === 'development' && env.RER_DEMO === '1'
     ? createMailSender({ provider: 'development', mode: 'development' })
     : hostedMailConfigured(env) ? createMailSender(hostedMailConfig(env)!) : undefined
-  return createOperatorAuth({ db: env.DB, config, mailSender, clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
+  return createOperatorAuth({ db: env.DB, config, mailSender, clientIp: request => request.headers.get('CF-Connecting-IP') ?? '', hooks: {
+    async afterConfirm({request,operator,session,method}) {
+      const kind=new URL(request.url).pathname==='/auth/saml/acs'?'saml':method
+      // Failure refuses and revokes the newly issued session through Base's
+      // completion hook; never acknowledge a sign-in without its audit row.
+      if(kind==='saml') {
+        await env.DB.prepare('INSERT INTO company_identity_audit(id,actor_id,operator_id,action,created_at) VALUES(?,?,?,?,?)')
+          .bind('signin:'+session.id,operator.id,operator.id,'signin.saml',Date.now()).run()
+      } else {
+        await env.DB.prepare('INSERT INTO oa_auth_audit(id,actor_id,action,value,created_at) VALUES(?,?,?,?,?)')
+          .bind('signin:'+session.id,operator.id,'signin.'+kind,'',Date.now()).run()
+      }
+    },
+  } })
 }
 export { createAuthHandler }

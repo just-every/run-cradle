@@ -37,6 +37,8 @@ export type SqlMutation = {
     expectedRows: number;
 };
 export type AuditFact = {
+    /** A multi-base command records one fact under each authorized base. */
+    appId?: Id;
     action: string;
     subject: Ref | null;
     changes: {

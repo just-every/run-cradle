@@ -32,7 +32,7 @@ export function validatePortableBase(input:unknown):PortableBase {
  const optionOwners=new Map<string,string>()
  for(const table of base.tables){
   jsonLimit('tableBytes',JSON_TABLE_LIMIT,encodedJsonBytes(table),table.label,'10 MiB')
-  const fields=new Map(table.fields.map(f=>[f.id,f]));if(!fields.has(table.primaryFieldId)||!['text','number','date','select','url'].includes(fields.get(table.primaryFieldId)!.type))throw new ImportInputError(`${table.label}: invalid primary field`)
+  const fields=new Map(table.fields.map(f=>[f.id,f]));if(!fields.has(table.primaryFieldId)||!['phone','text','number','date','select','url'].includes(fields.get(table.primaryFieldId)!.type))throw new ImportInputError(`${table.label}: invalid primary field`)
   if(table.fields.some(field=>field.label==='_record_id'))throw new ImportInputError(`${table.label}: the field name _record_id is reserved`)
   if(new Set(table.fields.map(f=>f.label)).size!==table.fields.length)throw new ImportInputError(`${table.label}: duplicate field labels`)
   for(const field of table.fields){
@@ -47,7 +47,7 @@ export function validatePortableBase(input:unknown):PortableBase {
    try{validateFieldConfiguration(nativePortableField(field,base.id),validateCell)}catch(error){throw new ImportInputError(`${field.label}: ${(error as Error).message}`)}
    validatePortableLinkPicker(field,base)
    if(field.relation&&!tables.has(field.relation.tableId))throw new ImportInputError(`${field.label}: dangling link table`)
-   if(field.lookup){const relation=fields.get(field.lookup.relationFieldId)?.relation,source=relation&&tables.get(relation.tableId)?.fields.find(f=>f.id===field.lookup!.valueFieldId);if(!source||relation?.cardinality!=='one'||!['text','url','number','date','boolean','select'].includes(source.type)||source.type!==field.resultType||canonical(source.options??[])!==canonical(field.options??[]))throw new ImportInputError(`${field.label}: invalid lookup definition`)}
+   if(field.lookup){const relation=fields.get(field.lookup.relationFieldId)?.relation,source=relation&&tables.get(relation.tableId)?.fields.find(f=>f.id===field.lookup!.valueFieldId);if(!source||relation?.cardinality!=='one'||!['phone','text','url','number','date','boolean','select'].includes(source.type)||source.type!==field.resultType||canonical(source.options??[])!==canonical(field.options??[]))throw new ImportInputError(`${field.label}: invalid lookup definition`)}
   }
   try{validateTableRules({fields:table.fields.map(f=>nativePortableField(f,base.id)),validationRules:table.validationRules},validateCell)}catch(error){throw new ImportInputError(`${table.label}: ${(error as Error).message}`)}
   for(const inverse of table.incomingRelations){const relation=tables.get(inverse.sourceEntityId)?.fields.find(f=>f.id===inverse.sourceFieldId)?.relation;if(!relation||relation.tableId!==table.id)throw new ImportInputError(`${inverse.label}: dangling incoming relation`)}

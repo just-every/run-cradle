@@ -1,3 +1,4 @@
+import {auditOperation} from '../admission/operation-audit.server'
 import {z} from 'zod'
 import type {RequestContext} from '../authority/ports'
 import type {createRecordServices} from './service.server'
@@ -52,6 +53,7 @@ export function createStreamExport(db:D1Database,services:ReturnType<typeof crea
   async function* csv(){yield encoder.encode(encodeCsvRecord(headers));for await(const page of pages())for(const {display}of page)yield encoder.encode(encodeCsvRecord(display))}
   async function* workbookRows(){for await(const page of pages())for(const {row,display}of page)yield fields.map((field,i)=>(()=>{const cell=row.fields[field.id];if(cell?.state!=='value')throw new AdmissionError('forbidden','Export contains an unavailable value.');return typedExportCell(field,cell.value,display[i]!)})())}
   const filename=context.filename.replace(/\.csv$/i,format==='xlsx'?'.xlsx':'.csv'),iterator=format==='csv'?csv():streamWorkbook([{name:context.filename.replace(/\.csv$/i,''),headers,rows:workbookRows()}])
+  await auditOperation(db,ctx,'view.export.'+format,request.appId)
   return new Response(byteStream(iterator),{headers:{'content-type':format==='xlsx'?workbookMime:'text/csv;charset=utf-8','content-disposition':"attachment; filename*=UTF-8''"+encodeURIComponent(filename),'cache-control':'no-store','x-content-type-options':'nosniff'}})
  }
 }

@@ -61,7 +61,7 @@ export function previewBaseImport(input:PreparedSource,options:ImportOptions,ide
     if(column.key===primary)throw new ImportInputError(`${table.key}: first/selected primary column cannot be skipped`)
     report.diagnostics.push({code:'COLUMN_SKIPPED',tableKey:table.key,columnKey:column.key,message:`${accountingColumn.skipReason}; ${accountingColumn.nonempty} nonempty values preserved in source`});continue
    }
-   if(!['text','number','date','instant','money','boolean','select','multi_select','url','person','relation','attachment','computed'].includes(type))throw new ImportInputError(`${table.key}.${column.label}: type ${type} is not supported by the native builder; choose TEXT explicitly`)
+   if(!['phone','text','number','date','instant','money','boolean','select','multi_select','url','person','relation','attachment','computed'].includes(type))throw new ImportInputError(`${table.key}.${column.label}: type ${type} is not supported by the native builder; choose TEXT explicitly`)
    const nativeFlags=correspondenceReview?.accepted?source.csvCorrespondence?.tables.find(t=>t.filename===table.key)?.columns.find(c=>c.key===column.key):undefined
    const field:Field={id:identity.fields[column.key],label:fieldLabel,type:type==='computed'?'text':type,required:nativeFlags?.required??false,unique:nativeFlags?.unique??false,...(type==='number'&&(column.sourceType==='percent'||nativeFlags?.numberFormat==='percent')?{numberFormat:'percent' as const}:{})}
    if(type==='select'||type==='multi_select'){

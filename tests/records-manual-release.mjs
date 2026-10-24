@@ -1,3 +1,4 @@
+import {phoneJourney} from './helpers/records-phone-journey.mjs'
 import './helpers/typescript-loader.mjs'
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
@@ -12,6 +13,7 @@ test('[SNAP-002] RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and 
  await recordTrashJourney()
  await fieldTrashJourney()
  await fieldRulesJourney()
+ await phoneJourney()
  const h=await harness();try{
   const draft=templateBase('crm'),r=await h.runtime(),preview=await r.manual.preview(h.ctx,draft)
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM record_schemas').first()).n,0)

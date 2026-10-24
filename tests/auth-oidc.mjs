@@ -21,6 +21,8 @@ test('[PERM-007] company OIDC/SAML and SCIM: optional pull-link shares the email
  assert.equal((await r.call('/auth/oidc/auth/start',{})).status,403)
  const owner=await r.call('/auth/bootstrap',{token:r.bindings.SETUP_TOKEN,displayName:'Owner'});assert.equal(owner.status,303)
  const native=await r.proof();assert.equal((await r.call('/auth/session',undefined,native)).status,200)
+ const emailAudit=(await r.db.prepare("SELECT a.* FROM oa_auth_audit a JOIN oa_sessions s ON a.id='signin:'||s.id WHERE a.action='signin.email'").all()).results
+ assert.equal(emailAudit.length,1,'The confirmed email-link sign-in is audited exactly once');assert.equal(emailAudit[0].value,'')
  if(!emitted){
   for(const invalid of ['invalid','http://identity.example.com/','https://user:password@identity.example.com/','https://identity.example.com/path','https://identity.example.com/path/..','https://identity.example.com/?query=1','https://identity.example.com/#fragment','https://identity.example.com/?','https://identity.example.com/#']){
    r.bindings.IDENTITY_PROVIDER=invalid
@@ -37,6 +39,8 @@ test('[PERM-007] company OIDC/SAML and SCIM: optional pull-link shares the email
  const rejected=await r.finish(await r.begin(),{sub:'stranger',email:'stranger@example.com'});assert.equal(rejected.status,403);assert.ok(!cookie(rejected)?.includes('operator_session='))
  const accepted=await r.finish(await r.begin('//evil.example/'));assert.equal(accepted.status,303,await accepted.clone().text());assert.equal(accepted.headers.get('location'),'/app')
  const session=cookie(accepted);assert.equal((await r.call('/auth/session',undefined,session)).status,200)
+ const oidcAudit=(await r.db.prepare("SELECT a.* FROM oa_auth_audit a JOIN oa_sessions s ON a.id='signin:'||s.id WHERE a.action='signin.oidc'").all()).results
+ assert.equal(oidcAudit.length,1,'The accepted OIDC sign-in is audited exactly once');assert.equal(oidcAudit[0].value,'')
  if(emitted){assert.equal((await r.call('/api/session',undefined,session)).status,200)}else{assert.ok(await r.platform().auth.configuration.base.getSession(new Request(origin+'/auth/session',{headers:{cookie:session}})));assert.equal((await r.db.prepare('SELECT count(*) n FROM oa_operators').first()).n,1)}
  r.idp.options.transport=async uri=>uri.endsWith('/.well-known/openid-configuration')?new Response(null,{status:404}):undefined
  assert.equal((await r.call('/auth/oidc/auth/start',{})).status,502)
@@ -65,7 +69,9 @@ test('OIDC: state, nonce, issuer, signature and PKCE bind the actual callback; r
  const invalid=await r.call('/auth/oidc/auth/callback?'+new URLSearchParams({...grant,state:crypto.randomUUID()}),undefined,start.binding);assert.equal(invalid.status,400)
  const path='/auth/oidc/auth/callback?'+new URLSearchParams(grant)
  const accepted=await r.call(path,undefined,start.binding);assert.equal(accepted.status,303,await accepted.clone().text())
+ const auditBeforeReplay=(await r.db.prepare("SELECT count(*) n FROM oa_auth_audit WHERE action='signin.oidc'").first()).n
  const replay=await r.call(path,undefined,start.binding);assert.equal(replay.status,400);assert.ok(!cookie(replay)?.includes('operator_session='))
+ assert.equal((await r.db.prepare("SELECT count(*) n FROM oa_auth_audit WHERE action='signin.oidc'").first()).n,auditBeforeReplay,'OIDC callback replay adds no audit row')
  const beforeSessions=await r.db.prepare('SELECT count(*) n FROM oa_sessions').first()
  const health=async()=>{const response=await r.call('/auth/providers',undefined,r.owner);assert.equal(response.status,200);return response.json()}
  const beforeHealth=await health();assert.equal(beforeHealth.find(provider=>provider.id==='auth')?.healthy,true)

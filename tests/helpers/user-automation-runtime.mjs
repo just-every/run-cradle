@@ -16,10 +16,13 @@ export async function userAutomationRuntime(port,network) {
    assert.equal(response.status,status,`${method} ${route.split('?')[0]}: ${value?.error?.code??'unexpected response'}`)
    return value
   }
-  const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),statusId=createUlid()
+  const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),statusId=createUlid(),phoneId=createUlid(),phoneLinkId=createUlid(),phoneLookupId=createUlid()
   const draft={appId,name:'Automation acceptance',tables:[{id:entityId,label:'Items',primaryFieldId:nameId,fields:[
    {id:nameId,label:'Name',type:'text',required:true,unique:false},
    {id:statusId,label:'Status',type:'text',required:false,unique:false},
+   {id:phoneId,label:'Phone',type:'phone',required:false,unique:false},
+   {id:phoneLinkId,label:'Phone contact',type:'relation',required:false,unique:false,relation:{ownerAppId:appId,entityId,cardinality:'one',onDelete:'restrict'}},
+   {id:phoneLookupId,label:'Contact phone',type:'computed',required:false,unique:false,readOnly:true,resultType:'phone',expression:{kind:'rollup',aggregate:'lookup',relationFieldId:phoneLinkId,valueFieldId:phoneId}},
   ]}]}
   const preview=(await request('/api/v1/records/schema-preview',{method:'POST',body:draft})).data
   await request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}}})
@@ -27,10 +30,10 @@ export async function userAutomationRuntime(port,network) {
   const entity=entities.find(entity=>entity.id===entityId)
   assert.ok(entity)
   const operator=(await h.db.prepare("SELECT id FROM operators WHERE email='import-owner@example.test'").first()).id
-  async function create(name,secret) {
+  async function create(name,secret,phone) {
    const commandId=createUlid(),result=(await request('/api/v1/commands/record.create',{method:'POST',secret,
     body:{commandId,expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:entity.version}],
-     input:{appId,entityId,values:{[nameId]:name}}}})).data
+     input:{appId,entityId,values:{[nameId]:name,...(phone===undefined?{}:{[phoneId]:phone})}}}})).data
    assert.equal(result.state,'committed')
    return {commandId,record:result.value}
   }
@@ -43,6 +46,6 @@ export async function userAutomationRuntime(port,network) {
    return worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,
     body:{kind:'cradle.records.automations.v1',commandId}}])
   }
-  return Object.assign(h,{request,appId,entityId,nameId,statusId,entity,operator,create,patch,tick})
+  return Object.assign(h,{request,appId,entityId,nameId,statusId,phoneId,phoneLookupId,entity,operator,create,patch,tick})
  }catch(error){await h.close();throw error}
 }

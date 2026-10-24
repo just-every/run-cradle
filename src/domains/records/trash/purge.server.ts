@@ -1,7 +1,7 @@
 import type {AdmissionPort,SqlMutation} from '../../admission/ports'
 import type {RequestContext,AuthorityPermit} from '../../authority/ports'
 import type {DescriptorRegistry} from '../descriptors.server'
-import {expireSchemaTrash} from './schema-markers.server'
+import {purgeExpiredSchema} from './schema-purge.server'
 import {trashTable,type TrashRow} from './storage.server'
 import {trustedPredicate,identifier} from '../../admission/sql.server'
 import {canonicalHash} from '../../admission/canonical'
@@ -13,7 +13,7 @@ export function recordTrashPurge(db:D1Database,descriptors:DescriptorRegistry,ad
   const now=clock().getTime(),hour=Math.floor(now/3600000)
   const claimed=await db.prepare("INSERT INTO record_trash_maintenance(id,last_hour) VALUES('records',?) ON CONFLICT(id) DO UPDATE SET last_hour=excluded.last_hour WHERE last_hour<excluded.last_hour RETURNING id").bind(hour).first()
   if(!claimed)return
-  await expireSchemaTrash(db,now)
+  await purgeExpiredSchema(db,admission,now)
   const rows=await db.prepare("SELECT * FROM record_trash WHERE kind='record' AND expires_at<=? ORDER BY expires_at,app_id,entity_id,record_id LIMIT 100").bind(now).all<TrashRow>()
   for(const row of rows.results){
    const group=(await db.prepare('SELECT count(*) n FROM record_trash WHERE group_id=?').bind(row.group_id).first<{n:number}>())!.n

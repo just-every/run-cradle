@@ -34,7 +34,7 @@ export function compileFilter(d: EntityDescriptor, scope: PolicyScope, filter?: 
         return or(...filter.value.map(v => { const b = bound(v); return and(b.guard, trustedPredicate(`${col} IS ?`, [b.v])); }));
     }
     if (filter.op === 'contains') {
-        if (typeof filter.value !== 'string' || !['text', 'url'].includes(storage.field.type))
+        if (typeof filter.value !== 'string' || !['phone', 'text', 'url'].includes(storage.field.type))
             throw new Error('contains needs text');
         return trustedPredicate(`${col} LIKE ? ESCAPE '\\'`, ['%' + filter.value.replace(/[\\%_]/g, '\\$&') + '%']);
     }

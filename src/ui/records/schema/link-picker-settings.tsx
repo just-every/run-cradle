@@ -5,12 +5,12 @@ import type { Resource } from '../../shared/api'
 import { ResourceState } from '../../shared/presentation'
 
 export type PickerViews = { resource: Resource<Page<View>>; refresh: () => void }
-const scalarTypes = ['text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person']
+const scalarTypes = ['phone','text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person']
 const valueType = (field: Field) => field.type === 'computed' ? field.resultType : field.type
 export function LinkPickerSettings({ field, target, savedViews, onChange }: { field: Field; target?: SchemaDraft['tables'][number]; savedViews?: PickerViews; onChange: (field: Field) => void }) {
  const settings = field.linkPicker
  const primaryId=target?.primaryFieldId??target?.fields[0]?.id
- const searchable = target?.fields.filter(item => ['text', 'url'].includes(valueType(item) ?? '')) ?? []
+ const searchable = target?.fields.filter(item => ['phone','text', 'url'].includes(valueType(item) ?? '')) ?? []
  const displayable = target?.fields.filter(item => scalarTypes.includes(valueType(item) ?? '')) ?? []
  function customize(enabled: boolean) {
   const next = { ...field }

@@ -3,6 +3,8 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {parseCsv} from '../../src/domains/portability/csv.ts'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {randomBytes} from 'node:crypto'
+import {schemaPurgeJourney} from './schema-purge-journey.mjs'
+import {historicalLinkedFieldRestore} from './field-history-restore-journey.mjs'
 import {automationNetworkEdge} from './automation-network-edge.mjs'
 
 const field=(id,label)=>({id,label,type:'text',required:false,unique:false})
@@ -113,18 +115,66 @@ export async function fieldTrashJourney(existing){
   for(const forbidden of [second.id,secondName,'synthetic-cradle-333',option,'recordId','rowCount'])assert.ok(!JSON.stringify(conversionPage).includes(forbidden),'The fetched conversion range discloses no record or field values')
   assert.deepEqual(await changes(conversionSubscription),conversionPage,'The cause-free conversion range replays identically')
   console.log('FIELD_CONVERSION_RANGE PASS cause-free marker, stable replay and no invented record events')
+  await historicalLinkedFieldRestore(h)
+  await linkedTableTrashJourney(h)
+  await schemaPurgeJourney(h)
   await cleanup()
   draft=await readDraft();draft.tables=draft.tables.filter(table=>table.id!==secondId);draft.tables.find(table=>table.id===entityId).fields=draft.tables.find(table=>table.id===entityId).fields.filter(item=>item.id!==valueId)
-  await adopt(draft);await held('field',valueId);await held('table',secondId)
-  const worker=await h.runtime.getWorker();await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()+31*86400000})
+  await adopt(draft);const expiredCandidates=[await held('field',valueId),await held('table',secondId)]
+  const physicalBefore=(await h.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND substr(name,1,28)=?").bind('r_'+secondId.toLowerCase()).all()).results
+  assert.ok(physicalBefore.length>0,'Canonical and historical table storage exists before scheduled expiry')
+  const worker=await h.runtime.getWorker(),scheduled=await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()+31*86400000});assert.equal(scheduled.outcome,'ok','Scheduled expiry completes without a hidden exception')
   const expired=await listing()
-  for(const [kind,entity,id] of [['field',entityId,valueId],['table',secondId,secondId]]){
-   const item=expired.find(item=>item.kind===kind&&item.id===id)
-   assert.ok(item,'Expired schema custody remains explicitly visible until recovery copies can be disposed of')
-   assert.equal(item.restorable,false);assert.equal(item.purgeState,'blocked_recovery_custody')
-   const refused=await restore(kind,entity,id,item.version,409);assert.equal(refused.error.code,'invalid_transition')
+  for(const candidate of expiredCandidates){
+   assert.ok(!expired.some(item=>item.kind===candidate.kind&&item.id===candidate.id),'Physically purged schema values leave the Trash listing')
+   const refused=await restore(candidate.kind,candidate.entityId,candidate.id,candidate.version,409);assert.equal(refused.error.code,'invalid_transition')
+   const tombstone=await h.db.prepare('SELECT purge_state,detail_json FROM record_trash WHERE app_id=? AND entity_id=? AND record_id=? AND kind=?').bind(appId,candidate.entityId,candidate.id,candidate.kind).first()
+   assert.deepEqual(tombstone,{purge_state:'purged',detail_json:'{}'},'Only an identity reservation remains; it carries no recoverable schema or value')
   }
+  assert.deepEqual((await h.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND substr(name,1,28)=?").bind('r_'+secondId.toLowerCase()).all()).results,[],'Every physical table revision, join and search store for the expired table is gone')
+  const retained=await h.db.prepare('SELECT detail_json FROM manual_record_releases WHERE app_id=? UNION ALL SELECT detail_json FROM manual_record_previews WHERE app_id=?').bind(appId,appId).all()
+  for(const row of retained.results)for(const value of ['synthetic-cradle-332','synthetic-cradle-333'])assert.ok(!row.detail_json.includes(value),'Expired values are gone from all release and preview recovery copies')
+  const mainTables=(await h.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND substr(name,1,28)=?").bind('r_'+entityId.toLowerCase()).all()).results
+  for(const table of mainTables){const columns=(await h.db.prepare('PRAGMA table_xinfo("'+table.name+'")').all()).results;assert.ok(!columns.some(column=>column.name==='f_'+valueId.toLowerCase()),'No retained physical revision contains the expired field column')}
+  assert.equal((await read(first)).fields[nameId].value,'synthetic-cradle-331 current','Scheduled disposal preserves current records')
+  assert.equal((await h.db.prepare('PRAGMA foreign_key_check').all()).results.length,0,'Physical disposal leaves no broken foreign keys')
+  console.log('FIELD_SCHEMA_PURGE PASS physical revisions '+physicalBefore.length+' -> 0, all recovery copies redacted, restore refused, live values and FKs preserved')
   const final=await readDraft();assert.ok(!final.tables.some(table=>table.id===secondId));assert.ok(!final.tables.find(table=>table.id===entityId).fields.some(item=>item.id===valueId))
-  console.log('FIELD_TABLE_TRASH PASS identities, values, history, recovery exports, name collisions and expired visible custody hold; physical purge unproven')
+  console.log('FIELD_TABLE_TRASH PASS identities, values, history, recovery exports, name collisions and scheduled physical expiry purge')
  }finally{try{if(!existing)await h?.close()}finally{await edge?.close()}}
+}
+
+
+/** Deleting only the target table previews and holds every inbound link field. */
+async function linkedTableTrashJourney(h){
+ const appId=createUlid(),items=createUlid(),name=createUlid(),single=createUlid(),many=createUlid(),other=createUlid(),otherName=createUlid(),otherLink=createUlid(),targets=createUlid(),title=createUlid()
+ const relation=(id,label,cardinality)=>({id,label,type:'relation',required:false,unique:false,relation:{ownerAppId:appId,entityId:targets,cardinality,onDelete:'restrict'}})
+ const draft={appId,name:'synthetic-cradle-400',tables:[{id:items,label:'Items',primaryFieldId:name,fields:[field(name,'Name'),relation(single,'Main contact','one'),relation(many,'Other contacts','many')]},{id:other,label:'Other source',primaryFieldId:otherName,fields:[field(otherName,'Name'),relation(otherLink,'Contact','one')]},{id:targets,label:'Contacts',primaryFieldId:title,fields:[field(title,'Name')]}]}
+ const preview=async body=>(await h.request('/api/v1/records/schema-preview',{method:'POST',body})).data
+ const adopt=async review=>(await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:review.id}}})).data.value
+ await adopt(await preview(draft))
+ async function create(entityId,values){const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data;return (await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}],input:{appId,entityId,values}}})).data.value}
+ const parents=[];for(const label of ['synthetic-cradle-401','synthetic-cradle-402'])parents.push(await create(targets,{[title]:label}))
+ const first=await create(items,{[name]:'synthetic-cradle-403',[single]:parents[0].ref,[many]:[parents[1].ref,parents[0].ref]}),second=await create(other,{[otherName]:'synthetic-cradle-404',[otherLink]:parents[1].ref})
+ const history=async row=>(await h.request('/api/v1/history?'+new URLSearchParams(row.ref))).data.items
+ const histories=await Promise.all([...parents,first,second].map(history))
+ const edit=(await h.request(`/api/v1/records/bases/${appId}`)).data;edit.tables=edit.tables.filter(table=>table.id!==targets)
+ const review=await preview(edit),impact=review.impacts.find(item=>item.entityId===targets)
+ assert.equal(impact.deletedTable,true);assert.deepEqual(impact.refusals,[])
+ for(const [source,id,label]of [[items,single,'Items · Main contact'],[items,many,'Items · Other contacts'],[other,otherLink,'Other source · Contact']])assert.ok(impact.dependencies.some(item=>item.kind==='relation'&&item.id===source+':'+id&&item.name===label),'Every inbound link names its source table and field')
+ await adopt(review)
+ await h.request(`/api/v1/apps/${appId}/entities/${targets}`,{status:404})
+ for(const row of [first,second]){const current=(await h.request(`/api/v1/apps/${appId}/entities/${row.ref.entityId}/records/${row.id}`)).data.record;assert.equal(current.id,row.id);for(const id of row===first?[single,many]:[otherLink])assert.equal(current.fields[id],undefined,'Inbound links leave live schema while their target is in Trash')}
+ const trash=(await h.request(`/api/v1/records/trash?appId=${appId}`)).data.items,marker=trash.find(item=>item.kind==='table'&&item.id===targets)
+ assert.ok(marker?.restorable);assert.equal(Date.parse(marker.expiresAt)-Date.parse(marker.deletedAt),30*86400000)
+ for(const id of [single,many,otherLink])assert.ok(trash.some(item=>item.kind==='field'&&item.id===id&&item.restorable),'Every inbound field shares the restore window')
+ await h.request('/api/v1/records/trash/restore',{method:'POST',body:{kind:'table',commandId:createUlid(),appId,entityId:targets,recordId:targets,version:marker.version}})
+ for(const [index,row]of [...parents,first,second].entries()){
+  const current=(await h.request(`/api/v1/apps/${appId}/entities/${row.ref.entityId}/records/${row.id}`)).data.record
+  assert.equal(current.id,row.id);assert.equal(current.createdAt,row.createdAt);assert.deepEqual(current.fields,row.fields,'Restoration returns original values and every ordered incoming link')
+  const entries=await history(row);for(const item of histories[index])assert.ok(entries.some(entry=>entry.id===item.id),'Original record history survives linked-table custody')
+ }
+ assert.ok(!(await h.request(`/api/v1/records/trash?appId=${appId}`)).data.items.some(item=>[targets,single,many,otherLink].includes(item.id)),'Atomic table restoration consumes every inbound custody marker')
+ assert.equal((await h.db.prepare('PRAGMA foreign_key_check').all()).results.length,0)
+ console.log('FIELD_LINKED_TABLE_TRASH PASS all inbound previews, 30-day grouped custody, identities, values, ordered links and history')
 }

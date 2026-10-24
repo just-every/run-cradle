@@ -1,3 +1,4 @@
+import { smsPhoneField } from '../records/phone'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {PolicyPort,PolicyScope,RequestContext} from '../authority/ports'
 import type {RecordAutomationAction} from '../automations/contracts'
@@ -13,7 +14,7 @@ import {sha256} from '../../adapters/crypto.server'
 import {canonical} from '../admission/canonical'
 export function smsInput(action:Extract<RecordAutomationAction,{kind:'sms'}>,record:RecordRow,scope:PolicyScope,descriptors:DescriptorRegistry){
  const descriptor=descriptors.get(record.ref.appId,record.ref.entityId),field=descriptor.schema.fields.find(field=>field.id===action.fieldId)
- if(!field||!(field.type==='text'||field.type==='computed'&&field.resultElementType==='text')||!scope.readableFieldIds.includes(action.fieldId))throw new AuthorityError('forbidden','SMS requires a readable text phone field.')
+ if(!field||!(smsPhoneField(field)||field.type==='text'||field.type==='computed'&&field.resultElementType==='text')||!scope.readableFieldIds.includes(action.fieldId))throw new AuthorityError('forbidden','SMS requires a readable phone field.')
  const cell=record.fields[action.fieldId]
  let to:string
  try{to=normalizePhone(cell?.state==='value'?cell.value:null)}catch{throw new AuthorityError('validation',`SMS phone field ${field.label} (${field.id}) is blank or invalid on record ${record.id}.`,400)}

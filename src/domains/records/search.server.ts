@@ -39,13 +39,13 @@ export function createRecordSearch(registry: DescriptorRegistry, policy: PolicyP
             guards.push(...scope.currentAuthorityGuards);
             if (!includeArchived && d.search?.activeRows) scope = { ...scope, rowPredicate: and(scope.rowPredicate, d.search.activeRows) };
             const searchable = d.schema.fields.filter(field => scope.readableFieldIds.includes(field.id) &&
-                (d.search ? d.search.fieldIds.includes(field.id) : ['text', 'url', 'select', 'multi_select'].includes(field.type === 'computed' ? field.resultType ?? '' : field.type)));
+                (d.search ? d.search.fieldIds.includes(field.id) : ['phone', 'text', 'url', 'select', 'multi_select'].includes(field.type === 'computed' ? field.resultType ?? '' : field.type)));
             if (!searchable.length) continue;
             const searchableIds = searchable.map(field => field.id);
             const titleId = d.schema.primaryFieldId ?? [...d.fields.values()].find(storage => ['name', 'title'].includes(storage.column))?.field.id ?? d.schema.fields.find(field => field.type === 'text')?.id;
             const fields = [...new Set([...searchableIds, ...(titleId && scope.readableFieldIds.includes(titleId) ? [titleId] : [])])], items: RecordRow[] = [];
             const sourceIndex = d.search?.index;
-            const columns = sourceIndex ? [...sourceIndex.columns] : searchableIds.map(id => d.fields.get(id)!).filter(storage => ['text', 'url'].includes(storage.field.type) && !storage.join).map(storage => storage.column);
+            const columns = sourceIndex ? [...sourceIndex.columns] : searchableIds.map(id => d.fields.get(id)!).filter(storage => ['phone', 'text', 'url'].includes(storage.field.type) && !storage.join).map(storage => storage.column);
             const indexTable = sourceIndex?.table ?? d.searchTable;
             const indexCoversFields = sourceIndex ? d.search!.fieldIds.every(id => fields.includes(id)) : columns.length === searchableIds.length;
             if (indexTable && indexCoversFields) {

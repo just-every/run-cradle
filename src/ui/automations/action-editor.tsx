@@ -1,3 +1,4 @@
+import { smsPhoneField } from '../../domains/records/phone'
 import {SlackAppAction} from './slack-app-action'
 import { useState } from 'react'
 import type { EntitySchema } from '../../domains/records/contracts'
@@ -39,7 +40,7 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
   {action.kind==='email'&&<><label className="cr-field">Subject<input required maxLength={200} value={action.subject} onChange={event=>onChange({...action,subject:event.target.value})}/></label>
    <label className="cr-field">Message<textarea required maxLength={4000} value={action.text} onChange={event=>onChange({...action,text:event.target.value})}/></label><p className="cr-muted">The recipient must still be able to read the record when the email is sent.</p></>}
   {action.kind==='slack-app'&&<SlackAppAction appId={appId} entity={entity} action={action} onChange={onChange}/>}
-  {action.kind==='sms'&&<><label className="cr-field">Phone field<select required value={action.fieldId} onChange={event=>onChange({...action,fieldId:event.target.value})}><option value="">Choose a text field</option>{entity.fields.filter(field=>field.type==='text'||field.type==='computed'&&field.resultElementType==='text').map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label>
+  {action.kind==='sms'&&<>{action.fieldId&&!entity.fields.some(field=>field.id===action.fieldId&&smsPhoneField(field))&&<p>Choose a Phone field to replace this existing text recipient. Existing sends continue until you change the action.</p>}<label className="cr-field">Phone field<select required value={action.fieldId} onChange={event=>onChange({...action,fieldId:event.target.value})}><option value="">Choose a phone field</option>{entity.fields.filter(smsPhoneField).map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label>
    <label className="cr-field">SMS message<textarea required maxLength={1600} value={action.text} onChange={event=>onChange({...action,text:event.target.value})}/></label>
    <label className="cr-field">Insert record value<select value="" onChange={event=>{if(event.target.value)onChange({...action,text:action.text+'{{'+event.target.value+'}}'})}}><option value="">Choose a field to insert</option>{entity.fields.map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label><p>Numbers use E.164 with a US default. STOP suppresses later messages; START restores them.</p></>}
   {action.kind==='update'&&<><label className="cr-field">Field<select required value={action.fieldId} onChange={event=>onChange({...action,fieldId:event.target.value,value:null})}>

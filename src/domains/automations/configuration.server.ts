@@ -1,3 +1,5 @@
+import {smsPhoneField} from '../records/phone'
+import {automationConfigurationAudit} from './configuration-audit'
 import {validateAutomationTrigger,automationTriggerConfig} from './trigger-configuration.server'
 import {automationDefinitionActions} from './control-contracts'
 import {filterFields} from '../records/filter.server'
@@ -34,7 +36,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
     if(action.kind==='slack-app'){if(!slack)throw new AuthorityError('unconfigured','The Slack app is unavailable.',503);await slack.validate(ctx,appId,entityId,action)}
     if(action.kind==='sms'){
      const field=descriptor.schema.fields.find(f=>f.id===action.fieldId)
-     if(!field||!(field.type==='text'||field.type==='computed'&&field.resultElementType==='text')||!own.scope.readableFieldIds.includes(action.fieldId))throw new AuthorityError('forbidden','SMS requires a readable text phone field.')
+     if(!field||!(smsPhoneField(field)||field.type==='text'||field.type==='computed'&&field.resultElementType==='text')||!own.scope.readableFieldIds.includes(action.fieldId))throw new AuthorityError('forbidden','SMS requires a readable phone field.')
      for(const token of action.text.matchAll(/\{\{([^{}]+)\}\}/g))if(!own.scope.readableFieldIds.includes(token[1]))throw new AuthorityError('forbidden','SMS inserted values require readable fields.')
     }
     if(action.kind==='webhook'||action.kind==='slack'){
@@ -50,9 +52,11 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
    const id=input.id??await delegationCommandId(input.commandId,'automation'),commandId=await delegationCommandId(input.commandId,'configuration')
    const hash=await digest(canonicalJson(input)),prior=await admission.replay(ctx,commandId,'automation.save',appId,hash)
    if(prior)return prior
-   const old=await db.prepare(`SELECT a.version,a.definition_version,a.created_at,b.app_id,b.entity_id,b.owner_id
-    FROM automations a JOIN record_automation_bindings b ON b.automation_id=a.id WHERE a.id=?`).bind(id)
-    .first<{version:number;definition_version:number;created_at:number;app_id:string;entity_id:string;owner_id:string}>()
+   const old=await db.prepare(`SELECT a.version,a.definition_version,a.created_at,a.enabled,b.app_id,b.entity_id,b.owner_id,v.definition_json,c.expires_at
+    FROM automations a JOIN record_automation_bindings b ON b.automation_id=a.id
+    JOIN record_automation_versions v ON v.automation_id=a.id AND v.definition_version=a.definition_version
+    LEFT JOIN authority_credentials c ON c.id=v.credential_id WHERE a.id=?`).bind(id)
+    .first<{version:number;definition_version:number;created_at:number;enabled:number;app_id:string;entity_id:string;owner_id:string;definition_json:string;expires_at:number|null}>()
    if(input.id&&(!old||old.owner_id!==ctx.principal.id||old.app_id!==appId||old.entity_id!==entityId))throw new AuthorityError('not_found','Automation is unavailable.',404)
    if(old&&old.version!==input.version)throw new AuthorityError('version_conflict','Refresh the automation before saving.',409)
    if(old)guards.push(trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND version=?)',[id,old.version]))
@@ -70,7 +74,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
     definition_json:JSON.stringify(definition),principal_id:credential.principalId,credential_id:credential.id,created_at:now}},
     {kind:'update',table:tables.delegationBindings,set:{automation_id:id},where:trustedPredicate('principal_id=? AND automation_id IS NULL',[credential.principalId]),expectedRows:1})
    return admission.commit(ctx,{commandId,action:'automation.save',appId,canonicalInputHash:hash,permit:own.permit('automation.save'),guards,mutations,
-    audit:[{action:'automation.save',subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,version,definitionVersion,enabled:definition.enabled}})
+    audit:automationConfigurationAudit(old?{definition:recordAutomationDefinition.parse(JSON.parse(old.definition_json)),enabled:Boolean(old.enabled),expiresAt:old.expires_at}:null,definition,input.expiresAt).map(action=>({action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]})),events:[],outbox:[],committedResult:{id,version,definitionVersion,enabled:definition.enabled}})
   },
   async disable(ctx:RequestContext,input:{commandId:string;id:string;version:number}) {
    const old=await db.prepare(`SELECT a.version,b.app_id,b.entity_id,b.owner_id FROM automations a JOIN record_automation_bindings b ON b.automation_id=a.id WHERE a.id=?`)

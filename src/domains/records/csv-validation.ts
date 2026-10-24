@@ -8,6 +8,7 @@ export function validateCsvCell(field: Field, value: unknown) {
     if (!(error instanceof AdmissionError) || error.code !== 'validation') throw error
     const required = field.required && (value === null || typeof value === 'string' && !value.trim())
     const reasons: Record<Field['type'], string> = {
+      phone: 'Enter an E.164 phone number; US numbers may omit +1.',
       number: 'Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).',
       date: 'Enter a real calendar date as YYYY-MM-DD or M/D/YYYY.',
       instant: 'Enter a UTC date and time such as 2027-01-15T08:00:00.000Z.',

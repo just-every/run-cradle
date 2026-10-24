@@ -59,6 +59,7 @@
                 },
                 "type": {
                   "enum": [
+                    "phone",
                     "text",
                     "number",
                     "date",

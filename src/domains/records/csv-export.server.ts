@@ -1,3 +1,4 @@
+import { phoneText } from './phone'
 import { AdmissionError } from '../admission/errors'
 import type { CellValue } from '../../contracts/primitives'
 import type { Field } from './contracts'
@@ -11,6 +12,7 @@ export async function exportContext(db:D1Database,name:string,capturedAt:string,
 export function formatWorkspaceCell(field:Field,value:CellValue,context:Awaited<ReturnType<typeof exportContext>>,encode:()=>string):string {
  if(value===null)return encode()
  const type=field.resultType??field.type
+ if(type==='phone'&&typeof value==='string')return phoneText(value)
  if(type==='money'&&typeof value==='object'&&!Array.isArray(value)&&'minor' in value){
   if(value.currency!==context.currency)throw new AdmissionError('validation','Money currency differs from the workspace currency; no exchange conversion is configured.')
   return encode()

@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
+import {adminAuditActions} from './admin-audit-actions.mjs'
+import {adminAuditMemberErasure} from './admin-audit-journey.mjs'
 
 export async function adminAuditBrowser(page,h,journey){
+ await adminAuditActions(h)
+ const erased=await adminAuditMemberErasure(h)
  await page.goto(h.origin+'/app/settings/')
  await page.waitForLoadState('networkidle')
  await page.locator('summary').filter({hasText:/^Admin audit log$/}).click()
@@ -14,6 +18,23 @@ export async function adminAuditBrowser(page,h,journey){
  await panel.getByRole('link',{name:'Export JSON',exact:true}).waitFor()
  assert.ok(await panel.getByText('credential.issue',{exact:true}).count(),'The issued key is recorded')
  assert.ok(await panel.getByText('credential.revoke',{exact:true}).count(),'The revoked key is recorded')
+ for(const action of ['automation.create','automation.edit','automation.enable','automation.renew','automation.destination.change','automation.disable','automation.destination.revoke'])assert.ok(await panel.getByText(action,{exact:true}).count(),action+' is visible in the filtered log')
  assert.ok((await panel.getByRole('link',{name:'Export CSV',exact:true}).getAttribute('href')).includes(h.appId))
  await journey.capture('admin-audit-filtered')
+ await panel.getByLabel('Base',{exact:true}).selectOption('')
+ await panel.getByRole('button',{name:'Apply filters',exact:true}).click()
+ for(const action of ['scim.issue','scim.rotate','scim.revoke'])await panel.getByText(action,{exact:true}).first().waitFor()
+ await journey.capture('admin-audit-company-keys')
+ await panel.getByLabel('Base',{exact:true}).selectOption(h.appId)
+ await panel.getByLabel('Person',{exact:true}).selectOption('')
+ const refreshed=page.waitForResponse(response=>{const url=new URL(response.url());return response.request().method()==='GET'&&url.pathname==='/api/v1/launch/admin-audit'&&url.searchParams.get('base')===h.appId&&!url.searchParams.has('person')})
+ await panel.getByRole('button',{name:'Apply filters',exact:true}).click()
+ const items=(await(await refreshed).json()).data.items,index=items.findIndex(row=>row.eventId===erased.event.eventId)
+ assert.ok(index>=0,'The erased member event survives in the current filtered response')
+ assert.equal(items[index].action,'record.create');assert.equal(items[index].person,'Erased or unavailable person');assert.equal(items[index].personId,null)
+ const row=panel.getByRole('listitem').nth(index)
+ await row.getByText('record.create',{exact:true}).waitFor()
+ await row.getByText('Erased or unavailable person',{exact:false}).waitFor()
+ const text=await panel.innerText();assert.ok(!text.includes(erased.name)&&!text.includes(erased.email),'Former identity is absent from the rendered audit log')
+ await journey.capture('admin-audit-erased-member')
 }

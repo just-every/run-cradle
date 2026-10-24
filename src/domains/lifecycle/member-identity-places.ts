@@ -15,6 +15,7 @@ const place=(table:string,where:string,reason:string)=>({...byId(where,reason),t
 const refs=(column:string)=>`CASE WHEN json_valid(${column}) THEN EXISTS(SELECT 1 FROM json_tree(${column}) WHERE atom=?) ELSE 0 END`
 const base='IN (SELECT base_id FROM cradle_base_operators WHERE principal_id=?)'
 export const memberIdentityPlaces:IdentityPlace[]=[
+ {table:'operation_audit',where:'actor_id=?',values:person=>[person.id],action:'set',columns:['actor_id'],set:()=>({actor_id:null}),reason:'anonymous actor in retained export audit'},
  {...byId('id=?','the operator record','set'),table:'operators',columns:['name','email'],appliedBy:'authority/members.server.ts'},
  {...byId(`id ${base}`,'the Base sign-in identity','set'),table:'oa_operators',columns:['display_name','email'],set:(label,person)=>({display_name:label,email:`erased-${person.id}@invalid.invalid`})},
  {...byId('principal_id=? AND erased_at IS NULL','their private AI contexts','set'),table:'evidence_contexts',columns:['content','source_refs','record_refs'],appliedBy:'evidence/member-erasure.server.ts'},

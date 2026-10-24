@@ -11,8 +11,8 @@ export function validateLinkPickers(schemas:EntitySchema[],views:PickerViewSnaps
   const target=schemas.find(table=>table.appId===field.relation!.ownerAppId&&table.id===field.relation!.entityId)
   if(!target)fail('picker target is unavailable.')
   const type=(id:string)=>{const value=target!.fields.find(field=>field.id===id);return value?.type==='computed'?value.resultType:value?.type}
-  if(config.searchFieldIds.some(id=>!['text','url'].includes(type(id)??'')))fail('search fields must contain text or URLs in the target table.')
-  if(config.displayFieldIds.some(id=>!['text','url','number','date','instant','money','boolean','select','person'].includes(type(id)??'')))fail('display fields must contain scalar values in the target table.')
+  if(config.searchFieldIds.some(id=>!['phone','text','url'].includes(type(id)??'')))fail('search fields must contain text or URLs in the target table.')
+  if(config.displayFieldIds.some(id=>!['phone','text','url','number','date','instant','money','boolean','select','person'].includes(type(id)??'')))fail('display fields must contain scalar values in the target table.')
   if(config.viewId){
    const row=views.find(view=>view.id===config.viewId),view=row&&JSON.parse(row.definition_json) as View|undefined
    if(!row||row.visibility!=='app'||!view||view.visibility!=='app'||view.appId!==target!.appId||view.entityId!==target!.id)fail('the saved view must be active, shared with this app and belong to the target table.')

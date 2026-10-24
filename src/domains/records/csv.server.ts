@@ -1,3 +1,4 @@
+import {auditOperation} from '../admission/operation-audit.server'
 import {createStreamExport} from './stream-export.server'
 import {exportViewWorkbook} from './workbooks/export'
 import {readWorkbook} from './workbooks/read'
@@ -27,7 +28,7 @@ export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.st
 type Preview=CsvImportPreview & {guards:SqlPredicate[]}
 export function createRecordsCsv(db:D1Database,services:ReturnType<typeof createRecordServices>,admission:AdmissionPort){
  const {reader,writer,policy,descriptors,metadata}=services
- async function exportCsv(ctx:RequestContext,input:unknown,snapshot?:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]}){
+ async function exportCsv(ctx:RequestContext,input:unknown,snapshot?:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]},format:'csv'|'xlsx'='csv'){
   const request=z.object({appId:idSchema,entityId:idSchema,viewId:idSchema.optional(),query:querySchema}).strict().parse(input)
   const d=descriptors.get(request.appId,request.entityId),view=request.viewId?await metadata.readView(ctx,request.viewId):null
   if(view&&(view.appId!==request.appId||view.entityId!==request.entityId))throw new AdmissionError('validation','View belongs to another table.')
@@ -62,6 +63,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   await assertGuards(db,guards)
   if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during export. Export again.')
   if(snapshot){snapshot.headers=fields.map(f=>f.label);snapshot.values=rows;snapshot.fields=fields}
+  await auditOperation(db,ctx,'view.export.'+format,request.appId)
   return {csv:encodeCsv(fields.map(f=>f.label),rows),filename:context.filename,count:rows.length,capture:context}
  }
  async function preview(ctx:RequestContext,input:unknown){
@@ -104,6 +106,6 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   mutations.push({kind:'update',table:stored,set:{command_id:commandId},where:trustedPredicate('id=? AND command_id IS NULL AND expires_at>?',[id,ctx.now]),expectedRows:1})
   return admission.commit(ctx,{commandId,action:'import.commit',appId:p.appId,canonicalInputHash:hash,permit,guards,mutations,audit,events:[],outbox:[],committedResult:{id,creates:p.creates,updates:p.updates,unchanged:p.unchanged,rejected:p.rejected}})
  }
- async function exportXlsx(ctx:RequestContext,input:unknown){const snapshot:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]}={rows:[]};const exported=await exportCsv(ctx,input,snapshot);return exportViewWorkbook(snapshot,exported.filename.replace(/\.csv$/i,''))}
+ async function exportXlsx(ctx:RequestContext,input:unknown){const snapshot:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]}={rows:[]};const exported=await exportCsv(ctx,input,snapshot,'xlsx');return exportViewWorkbook(snapshot,exported.filename.replace(/\.csv$/i,''))}
  return {exportDownload:createStreamExport(db,services),exportCsv,exportXlsx,preview,commit,mappings:createCsvMappings(db,services),linkCandidates:createCsvLinkCandidates(db,services)}
 }

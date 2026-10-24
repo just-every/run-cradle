@@ -5,7 +5,7 @@ import type { AuthorityPermit, RequestContext, PolicyPort } from '../../authorit
 import { AdmissionError } from '../../admission/errors'
 import { canonical } from '../../admission/canonical'
 import { registerTable, trustedPredicate } from '../../admission/sql.server'
-import type { DescriptorRegistry } from '../descriptors.server'
+import {createDescriptorRegistry,type DescriptorRegistry} from '../descriptors.server'
 import { compileSchemaSet, stageSchemaSet, prepareSchemaSetActivation } from '../migration.server'
 import type { EntitySchema } from '../contracts'
 import type { ManualPreview, SchemaDraft } from './contracts'
@@ -27,6 +27,7 @@ export type StoredPreview=ManualPreview & { guards:SqlPredicate[]; adoptionGuard
 export type PreviewAuthority={permit:AuthorityPermit;reader:RequestContext;ownerId:string;expiresAt:string;restoration?:SchemaRestorePlan;pendingViews?:import('../link-picker-schema').PickerViewSnapshot[]}
 
 export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:AdmissionPort,registry:DescriptorRegistry){
+ const retainedRegistry=(schemas:EntitySchema[])=>createDescriptorRegistry(registry.list().filter(descriptor=>descriptor.schema.appId!==schemas[0]?.appId||schemas.some(schema=>schema.id===descriptor.schema.id)))
  /** Validate and measure a schema draft; writes nothing. */
  async function buildPreview(draft:SchemaDraft,id:string,authority:PreviewAuthority):Promise<StoredPreview>{
   const {reader,ownerId,permit}=authority,now=reader.now
@@ -40,6 +41,13 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
   for(const table of draft.tables)for(const field of table.fields)if(draft.formulaSources?.[field.id]!==undefined){try{const type=expressionType(field.expression!,table,draft.tables);field.resultType=type==='blank'?'text':type}catch(error){throw new AdmissionError('validation',`${field.label}: ${(error as Error).message}`)}}
   const base=await db.prepare('SELECT version,release_id,owner_id FROM manual_record_bases WHERE id=?').bind(draft.appId).first<{version:number;release_id:string;owner_id:string}>()
   const prior=registry.list(draft.appId).filter(d=>d.schema.physicalRevision.startsWith('manual_'))
+  // A table's incoming fields enter the same custody group. The public impact
+  // preview still enumerates each original source table and field below.
+  const deletedTables=new Set(prior.filter(descriptor=>!draft.tables.some(table=>table.id===descriptor.schema.id)).map(descriptor=>descriptor.schema.id))
+  for(const table of draft.tables){
+   table.fields=table.fields.filter(field=>!(field.relation?.ownerAppId===draft.appId&&deletedTables.has(field.relation.entityId)))
+   if(table.incomingRelations)table.incomingRelations=table.incomingRelations.filter(section=>!deletedTables.has(section.sourceEntityId))
+  }
   const readGuards:SqlPredicate[]=[]
   for(const d of prior){const scope=await policy.scope(reader,{appId:draft.appId,entityId:d.schema.id,purpose:'read'});if(!scope.unrestrictedRows||d.schema.fields.some(f=>!scope.readableFieldIds.includes(f.id)))throw new AdmissionError('forbidden','Schema changes require current read access to every affected row and field.');readGuards.push(...scope.currentAuthorityGuards)}
   if(new Set(draft.tables.map(t=>t.id)).size!==draft.tables.length)throw new AdmissionError('validation','Table identities must be unique.')
@@ -53,7 +61,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    const old=prior.find(p=>p.schema.id===schema.id)
    removals[schema.id]=old?.schema.fields.filter(f=>!schema.fields.some(n=>n.id===f.id)).map(f=>f.id)??[]
    for(const field of schema.fields){
-    if(!['text','url','number','date','instant','money','select','multi_select','person','boolean','relation','attachment','computed'].includes(field.type))throw new AdmissionError('validation',`${field.label}: this builder does not support this type.`)
+    if(!['phone','text','url','number','date','instant','money','select','multi_select','person','boolean','relation','attachment','computed'].includes(field.type))throw new AdmissionError('validation',`${field.label}: this builder does not support this type.`)
     if(field.readOnly&&field.type!=='computed')throw new AdmissionError('validation','Read-only is reserved for lookup fields.')
     if(field.relation&&(field.relation.ownerAppId!==draft.appId||field.relation.onDelete!=='restrict'))throw new AdmissionError('validation','Links must target records in this base and restrict deletion.')
     if(field.type==='computed'&&(!field.expression||!field.resultType))throw new AdmissionError('validation',`${field.label}: a calculation needs an expression and result type.`)
@@ -67,12 +75,12 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
   const overrides=structuredClone(conversionPlan.values)
   for(const [entity,records] of Object.entries(authority.restoration?.values??{}))for(const [record,values] of Object.entries(records))Object.assign((overrides[entity]??={})[record]??={},values)
   const reserved=await db.prepare("SELECT entity_id,record_id,kind FROM record_trash WHERE app_id=? AND kind IN ('field','table')").bind(draft.appId).all<{entity_id:string;record_id:string;kind:string}>()
-  for(const held of reserved.results){if(held.kind==='table'&&schemas.some(schema=>schema.id===held.entity_id))throw new AdmissionError('validation','This table identity is reserved by Trash; restore it instead.');if(held.kind==='field'&&!authority.restoration&&schemas.some(schema=>schema.id===held.entity_id&&schema.fields.some(field=>field.id===held.record_id)))throw new AdmissionError('validation','This field identity is reserved by Trash; restore it instead.')}
+  for(const held of reserved.results){if(held.kind==='table'&&!authority.restoration?.tableIds?.includes(held.entity_id)&&schemas.some(schema=>schema.id===held.entity_id))throw new AdmissionError('validation','This table identity is reserved by Trash; restore it instead.');if(held.kind==='field'&&!authority.restoration&&schemas.some(schema=>schema.id===held.entity_id&&schema.fields.some(field=>field.id===held.record_id)))throw new AdmissionError('validation','This field identity is reserved by Trash; restore it instead.')}
   for(const old of prior)for(const field of old.schema.fields)if(field.type==='attachment'&&(!schemas.some(schema=>schema.id===old.schema.id&&schema.fields.some(next=>next.id===field.id))))(dependents.refusals[old.schema.id]??=[]).push('Attachment deletion is refused: FILE-002 store-reference and file custody disposal is not defined.')
   for(const old of prior.filter(old=>!schemas.some(schema=>schema.id===old.schema.id)))if(await db.prepare("SELECT 1 FROM record_trash WHERE app_id=? AND entity_id=? AND kind='record' LIMIT 1").bind(draft.appId,old.schema.id).first())(dependents.refusals[old.schema.id]??=[]).push('This table contains records already in Trash. Restore or resolve that record custody before deleting the table.')
   const refused=Object.values(conversionPlan.refusals).some(items=>items.length)||Object.values(dependents.refusals).some(items=>items.length)
   let compiled:Awaited<ReturnType<typeof compileSchemaSet>>|undefined
-  if(!refused){try{compiled=await compileSchemaSet(schemas,registry,removals,conversionPlan.fieldIds)}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Schema compilation failed.')}}
+  if(!refused){try{compiled=await compileSchemaSet(schemas,retainedRegistry(schemas),removals,conversionPlan.fieldIds)}catch(error){throw new AdmissionError('validation',error instanceof Error?error.message:'Schema compilation failed.')}}
   if(authority.pendingViews?.length&&(prior.length||base))throw new AdmissionError('validation','Pending picker views are accepted only for a new native base import.')
   validateLinkPickers(schemas,[...viewSnapshot.views,...(authority.pendingViews??[])])
   const impacts:import('./contracts').SchemaImpact[]=schemas.map(schema=>{const old=prior.find(p=>p.schema.id===schema.id),rows=old?snapshot.rows[old.table.tableId]!:[],changes:string[]=[]
@@ -103,7 +111,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    }
   }
   const calculations=compiled?await previewCalculations(db,policy,registry,schemas,compiled.descriptors,snapshot.rows,reader):[]
-  return {policyOwnerId:ownerId,baseOwnerId:base?.owner_id??ownerId,authorId:ownerId,id,appId:draft.appId,name:draft.name,schemas,calculations,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values are kept for recovery. Download the recovery CSV after applying this change. You can import them into a new field by matching the _record_id column (Original record ID); newer records stay unchanged.',access:'New tables and fields become available to members with full-base roles. Existing row and field restrictions stay in place. No other application, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,...viewSnapshot.guards,...dependents.guards,...(authority.restoration?.guards??[]),trustedPredicate(`(SELECT COUNT(*) FROM record_schemas WHERE app_id=? AND ${liveSchemaPredicate})=?`,[draft.appId,prior.length])],prior:prior.map(p=>p.schema),removals,conversionPlan:{...conversionPlan,values:overrides},...(authority.restoration?{restoration:authority.restoration}:{}),policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows,viewSnapshots:viewSnapshot.views,formSnapshots:viewSnapshot.forms}
+  return {policyOwnerId:ownerId,baseOwnerId:base?.owner_id??ownerId,authorId:ownerId,id,appId:draft.appId,name:draft.name,schemas,calculations,impacts,expiresAt:authority.expiresAt,kind:'manual_schema',parentReleaseId:base?.release_id??null,recovery:'Removed values are kept for recovery. Download the recovery CSV after applying this change. You can import them into a new field by matching the _record_id column (Original record ID); newer records stay unchanged.',access:'New tables and fields become available to members with full-base roles. Existing row and field restrictions stay in place. No other application, automation or provider receives access.',guards:[...permit.guards,...readGuards,...snapshot.guards,...viewSnapshot.guards,...dependents.guards,...(authority.restoration?.guards??[]),trustedPredicate(`(SELECT COUNT(*) FROM record_schemas WHERE app_id=? AND ${liveSchemaPredicate})=?`,[draft.appId,prior.length-(authority.restoration?.tableIds?.length??0)])],prior:prior.map(p=>p.schema),removals,conversionPlan:{...conversionPlan,values:overrides},...(authority.restoration?{restoration:authority.restoration}:{}),policy:currentPolicy?{...currentPolicy}:null,baseVersion:base?.version??0,snapshots:snapshot.rows,viewSnapshots:viewSnapshot.views,formSnapshots:viewSnapshot.forms}
  }
  /** Apply a reviewed preview atomically as the adopting owner, with any extra rows of the same release. */
  async function applyRelease(ctx:RequestContext,input:{commandId:string;hash:string;releaseId?:string;detail:StoredPreview;previewId:string;permit:AuthorityPermit;mutations:SqlMutation[];audit:AuditFact[];provenance?:Record<string,unknown>}){
@@ -111,8 +119,8 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
   const refusals=detail.impacts.flatMap(impact=>impact.refusals??[]);if(refusals.length)throw new AdmissionError('validation',`Schema adoption refused: ${refusals.join('; ')}`)
   const violations=detail.impacts.flatMap(impact=>impact.validationViolations??[])
   if(violations.length)throw new AdmissionError('validation',`Schema adoption refused: existing records break ${violations.map(v=>`${v.ruleName} (${v.count} records): ${v.message}`).join('; ')}. Correct the records and preview again.`)
-  const compiled=await compileSchemaSet(detail.schemas,registry,detail.removals,detail.conversionPlan?.fieldIds)
-  await stageSchemaSet(compiled,db,registry,detail.removals,detail.conversionPlan?.fieldIds)
+  const compiled=await compileSchemaSet(detail.schemas,retainedRegistry(detail.schemas),detail.removals,detail.conversionPlan?.fieldIds)
+  await stageSchemaSet(compiled,db,retainedRegistry(detail.schemas),detail.removals,detail.conversionPlan?.fieldIds)
   const activation=await prepareSchemaSetActivation(db,compiled,registry,undefined,detail.conversionPlan?.values)
   const releaseId=input.releaseId??createUlid(),policyId=detail.policy?.id??createUlid(),time=Date.parse(ctx.now)
   const policyOwnerId=detail.policyOwnerId??ctx.principal.id

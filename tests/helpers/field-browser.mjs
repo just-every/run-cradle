@@ -37,6 +37,33 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
      const value=(await response.json()).data;await active.getByRole('heading',{name:'Review schema changes',exact:true}).waitFor();return value
     }
     await edit()
+    await tile('Contact phone').getByLabel('Field type',{exact:true}).selectOption('phone')
+    await owner.capture('phone-type-authoring',tile('Contact phone'))
+    const phonePreview=await preview(),phoneConversion=phonePreview.impacts.find(item=>item.entityId===fixture.orders).conversions.find(item=>item.fieldId===fixture.phone)
+    assert.equal(phoneConversion.losses.length,0);assert.ok(phoneConversion.converted.some(item=>item.after==='+15551234567'))
+    await owner.capture('phone-conversion-preview',page.getByRole('region',{name:'Conversion of Contact phone',exact:true}))
+    await page.getByLabel('I reviewed the data changes and owner access.',{exact:true}).check()
+    const phoneAdoption=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/release.adopt'))
+    await page.getByRole('button',{name:'Adopt schema',exact:true}).click();assert.equal((await phoneAdoption).status(),200)
+    await page.goto(fixture.url);await page.getByText('(555) 123-4567',{exact:true}).first().waitFor()
+    await owner.capture('phone-display',page.getByText('(555) 123-4567',{exact:true}).first())
+    await page.getByRole('button',{name:'New record',exact:true}).click()
+    const phoneInput=page.getByLabel('Contact phone',{exact:true});assert.equal(await phoneInput.getAttribute('type'),'tel')
+    await page.getByLabel('Order *',{exact:true}).fill('Phone validation')
+    await phoneInput.fill('invalid telephone')
+    const invalidPhone=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/record.create'))
+    await page.getByRole('button',{name:'Save record',exact:true}).click();assert.equal((await invalidPhone).status(),400)
+    await page.getByText(/Contact phone:.*Phone must use E.164/).waitFor()
+    await owner.capture('phone-invalid',phoneInput)
+    await phoneInput.fill('(555) 123-4588')
+    const validPhone=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/record.create'))
+    await page.getByRole('button',{name:'Save record',exact:true}).click()
+    const validPhoneResponse=await validPhone;assert.equal(validPhoneResponse.status(),200)
+    const savedPhone=(await validPhoneResponse.json()).data.value;assert.equal(savedPhone.fields[fixture.phone].value,'+15551234588')
+    await page.getByRole('button',{name:'New record',exact:true}).waitFor()
+    await page.getByText('(555) 123-4588',{exact:true}).first().waitFor()
+    await owner.capture('phone-valid-save',page.getByText('(555) 123-4588',{exact:true}).first())
+    await edit()
     await tile('Order').getByLabel('Field type',{exact:true}).selectOption('number')
     assert.equal(await tile('Order').getByLabel('Required',{exact:true}).isChecked(),true,'Changing stored type preserves the existing required constraint')
     await tile('Order').getByLabel('Field type',{exact:true}).selectOption('text')
@@ -45,6 +72,13 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     assert.equal(await tile('Vendor link').getByLabel('Linked table',{exact:true}).isDisabled(),true)
     assert.equal(await tile('Vendor link').getByLabel('Link cardinality',{exact:true}).isDisabled(),true)
     await owner.capture('existing-field-controls',tile('Amount'))
+    await tile('Vendor link').getByLabel('Field type',{exact:true}).selectOption('select')
+    const linkedReview=await preview(),linkedImpact=linkedReview.impacts.find(item=>item.entityId===fixture.orders),linkedConversion=linkedImpact.conversions.find(item=>item.fieldId===fixture.link)
+    assert.equal(linkedConversion.losses.length,0);assert.ok(linkedConversion.converted.some(item=>item.afterLabel==='Northline Freight'),'Linked primary labels become reviewed select options')
+    await page.getByRole('region',{name:'Conversion of Vendor link',exact:true}).getByText('Northline Freight',{exact:false}).first().waitFor()
+    await owner.capture('linked-label-select-preview',page.getByRole('region',{name:'Conversion of Vendor link',exact:true}))
+    await page.getByRole('button',{name:'Cancel schema changes',exact:true}).click();await edit()
+
     await tile('Amount').getByLabel('Field type',{exact:true}).selectOption('select')
     const options=tile('Amount').getByLabel('Options (one per line)',{exact:true});assert.equal(await options.isEnabled(),true)
     await options.fill('1250.50\nAwaiting quote');await owner.capture('conversion-options',options)
@@ -77,7 +111,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await cp.getByRole('navigation',{name:'Schema tables',exact:true}).getByRole('button',{name:'Legacy orders',exact:true}).click()
     await cp.getByRole('button',{name:'Move table to Trash',exact:true}).click()
     const reviewed=await preview(cp),impact=reviewed.impacts.find(item=>item.entityId===fixture.orders),conversion=impact.conversions.find(item=>item.fieldId===fixture.amount)
-    assert.equal(reviewed.requiresOwnerReview,true);assert.equal(conversion.converted.length,1);assert.equal(conversion.losses.length,1)
+    assert.equal(reviewed.requiresOwnerReview,true);assert.equal(conversion.converted.length,2);assert.equal(conversion.converted.filter(item=>item.before===null&&item.after===null).length,1);assert.equal(conversion.losses.length,1)
     assert.ok(reviewed.impacts.some(item=>item.entityId===fixture.legacy&&item.deletedTable))
     assert.ok(impact.dependencies.some(item=>item.name==='Invoice review'),'Preview names the real saved-view dependent')
     for(const value of conversion.converted){await cp.getByText(value.beforeLabel+' → '+value.afterLabel,{exact:false}).waitFor()}
@@ -114,7 +148,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await owner.capture('field-and-table-trash',trash)
     for(const label of ['Memo','Legacy orders']){
      const restored=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/records/trash/restore'))
-     await trash.getByRole('button',{name:'Restore '+label,exact:true}).click();assert.equal((await restored).status(),200)
+     await trash.getByRole('button',{name:'Restore '+label,exact:true}).click();const restoreResponse=await restored;assert.equal(restoreResponse.status(),200,label+': '+await restoreResponse.text())
      await trash.getByRole('status').filter({hasText:'Restored '+label+'.'}).waitFor()
      await owner.capture(label==='Memo'?'field-restored':'table-restored',trash)
     }
@@ -132,6 +166,27 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await page.getByRole('button',{name:'Adopt schema',exact:true}).click();assert.equal((await adopted).status(),200)
     await page.getByRole('heading',{name:'Base ready',exact:true}).waitFor();await page.getByRole('link',{name:'Download recovery data',exact:true}).waitFor()
     await owner.capture('builder-adopted-recovery',page.getByRole('heading',{name:'Base ready',exact:true}))
+    const linkedBefore=(await h.request(`/api/v1/apps/${fixture.appId}/entities/${fixture.orders}/records/${fixture.records[0]}`)).data.record.fields[fixture.link].value
+    await edit();await table('Vendors').click();await page.getByRole('button',{name:'Move table to Trash',exact:true}).click()
+    const linkedDeletion=await preview(),sourceImpact=linkedDeletion.impacts.find(item=>item.entityId===fixture.orders)
+    assert.ok(linkedDeletion.impacts.some(item=>item.entityId===fixture.vendors&&item.deletedTable))
+    assert.ok(sourceImpact.removedFields.some(field=>field.id===fixture.link),'Deletion preview names the inbound field in its source table')
+    await page.getByRole('heading',{name:'Orders',exact:true}).waitFor();await page.getByText(sourceImpact.changes.find(change=>change.startsWith('Remove Vendor link:')),{exact:true}).waitFor()
+    await owner.capture('linked-table-delete-preview',page.getByRole('heading',{name:'Orders',exact:true}))
+    await page.getByLabel('I reviewed the data changes and owner access.',{exact:true}).check()
+    const deleteLinked=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/release.adopt'))
+    await page.getByRole('button',{name:'Adopt schema',exact:true}).click();assert.equal((await deleteLinked).status(),200)
+    await page.goto(h.origin+'/app/settings');await page.locator('summary').filter({hasText:/^Trash$/}).click()
+    const linkedTrash=page.getByRole('region',{name:'Trash',exact:true});await linkedTrash.getByRole('combobox').selectOption(fixture.appId)
+    await linkedTrash.getByRole('button',{name:'Restore Vendors',exact:true}).waitFor()
+    await owner.capture('linked-table-trash',linkedTrash)
+    const restoreLinked=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/records/trash/restore'))
+    await linkedTrash.getByRole('button',{name:'Restore Vendors',exact:true}).click()
+    const linkedResponse=await restoreLinked;assert.equal(linkedResponse.status(),200,await linkedResponse.text())
+    await linkedTrash.getByRole('status').filter({hasText:'Restored Vendors.'}).waitFor()
+    await owner.capture('linked-table-restored',linkedTrash)
+    const linkedAfter=(await h.request(`/api/v1/apps/${fixture.appId}/entities/${fixture.orders}/records/${fixture.records[0]}`)).data.record.fields[fixture.link].value
+    assert.deepEqual(linkedAfter,linkedBefore,'The Settings restore restores the original link identity and value')
     await writeFile(path.join(output,`field-browser-${width}.json`),JSON.stringify({width,checkpoints},null,2))
    }catch(error){
     for(const [index,context]of contexts.entries())for(const page of context.pages())await page.screenshot({path:path.join(output,`field-failed-${index===0?'owner':'creator'}-${width}.png`),fullPage:true})
@@ -157,14 +212,15 @@ async function screen(h,browser,width,cookie,output,persona,checkpoints){
 }
 
 async function fieldFixture(h,width){
- const appId=createUlid(),orders=createUlid(),vendors=createUlid(),legacy=createUlid(),amount=createUlid(),memo=createUlid(),order=createUlid(),carrier=createUlid(),link=createUlid(),vendor=createUlid(),legacyName=createUlid(),option=createUlid(),other=createUlid(),name=`Harbor supply ${width}`
- const draft={appId,name,tables:[{id:orders,label:'Orders',primaryFieldId:order,fields:[text(order,'Order',{required:true}),text(amount,'Amount'),text(memo,'Memo'),{id:carrier,label:'Carrier',type:'select',required:false,unique:false,options:[{id:option,label:'Northline Freight'},{id:other,label:'Unassigned'}]},{id:link,label:'Vendor link',type:'relation',required:false,unique:false,relation:{ownerAppId:appId,entityId:vendors,cardinality:'one',onDelete:'restrict'}}]},{id:vendors,label:'Vendors',primaryFieldId:vendor,fields:[text(vendor,'Vendor',{required:true})]},{id:legacy,label:'Legacy orders',primaryFieldId:legacyName,fields:[text(legacyName,'Order',{required:true})]}]}
+ const appId=createUlid(),orders=createUlid(),vendors=createUlid(),legacy=createUlid(),amount=createUlid(),phone=createUlid(),memo=createUlid(),order=createUlid(),carrier=createUlid(),link=createUlid(),vendor=createUlid(),legacyName=createUlid(),option=createUlid(),other=createUlid(),name=`Harbor supply ${width}`
+ const draft={appId,name,tables:[{id:orders,label:'Orders',primaryFieldId:order,fields:[text(order,'Order',{required:true}),text(amount,'Amount'),text(phone,'Contact phone'),text(memo,'Memo'),{id:carrier,label:'Carrier',type:'select',required:false,unique:false,options:[{id:option,label:'Northline Freight'},{id:other,label:'Unassigned'}]},{id:link,label:'Vendor link',type:'relation',required:false,unique:false,relation:{ownerAppId:appId,entityId:vendors,cardinality:'one',onDelete:'restrict'}}]},{id:vendors,label:'Vendors',primaryFieldId:vendor,fields:[text(vendor,'Vendor',{required:true})]},{id:legacy,label:'Legacy orders',primaryFieldId:legacyName,fields:[text(legacyName,'Order',{required:true})]}]}
  const preview=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:draft})).data
  await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}}})
  async function create(entityId,values){const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data;return (await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:schema.version}],input:{appId,entityId,values}}})).data.value}
+ const vendorRecord=await create(vendors,{[vendor]:'Northline Freight'})
  const records=[]
- for(const [index,value]of ['1250.50','Awaiting quote'].entries())records.push((await create(orders,{[order]:`Harbor order ${1040+index}`,[amount]:value,[memo]:index===0?'Keep dock appointment':'Confirm delivery window',[carrier]:index===0?option:other})).id)
- await create(vendors,{[vendor]:'Northline Freight'});await create(legacy,{[legacyName]:'Legacy order 1042'})
+ for(const [index,value]of ['1250.50','Awaiting quote'].entries())records.push((await create(orders,{[order]:`Harbor order ${1040+index}`,[amount]:value,[phone]:index===0?'(555) 123-4567':'+442079460123',[memo]:index===0?'Keep dock appointment':'Confirm delivery window',[carrier]:index===0?option:other,[link]:index===0?vendorRecord.ref:null})).id)
+ await create(legacy,{[legacyName]:'Legacy order 1042'})
  const schema=(await h.request(`/api/v1/apps/${appId}/entities/${orders}`)).data
  await h.request('/api/v1/commands/view.save',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:schemaEntity,recordId:orders},version:schema.version}],input:{view:{appId,entityId:orders,name:'Invoice review',display:'grid',fields:[order,amount],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:order},visibility:'app',shipped:false}}}})
  const basePerson=createUlid(),email=`field-author-${width}@harbor.example.test`
@@ -172,7 +228,7 @@ async function fieldFixture(h,width){
  const person=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(basePerson).first()).principal_id
  await h.request(`/api/v1/records/bases/${appId}/collaborators`,{method:'POST',body:{commandId:createUlid(),principalId:person,role:'creator',version:0}})
  const creatorCookie=(await baseHttpSession(h.origin,email)).cookie
- return {appId,orders,vendors,legacy,amount,memo,records,name,creatorCookie,url:`${h.origin}/app/records/${appId}/${orders}`,draft:async()=>(await h.request(`/api/v1/records/bases/${appId}`)).data}
+ return {appId,orders,vendors,legacy,amount,phone,memo,link,records,name,creatorCookie,url:`${h.origin}/app/records/${appId}/${orders}`,draft:async()=>(await h.request(`/api/v1/records/bases/${appId}`)).data}
 }
 
 function ownedProcesses(){const rows=execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).flatMap(line=>{const match=line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/);return match?[{pid:Number(match[1]),parent:Number(match[2]),name:match[3]}]:[]}),owned=new Set([process.pid]);let more=true;while(more){more=false;for(const row of rows)if(owned.has(row.parent)&&!owned.has(row.pid)){owned.add(row.pid);more=true}}return rows.filter(row=>owned.has(row.pid))}

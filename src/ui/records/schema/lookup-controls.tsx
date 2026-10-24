@@ -1,7 +1,7 @@
 import type { Expr, Field, Sort } from '../../../domains/records/contracts'
 
 type LookupExpression = Extract<Expr, { kind: 'rollup' }>
-const sortableTypes = ['text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person']
+const sortableTypes = ['phone','text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person']
 
 export function LookupControls({ expression, fields, onChange }: { expression: LookupExpression; fields: Field[]; onChange: (expression: LookupExpression) => void }) {
   const sort = expression.sort ?? []

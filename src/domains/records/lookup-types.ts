@@ -1,6 +1,6 @@
 import type { Field } from './contracts'
 
-const scalarTypes = ['text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person'] as const
+const scalarTypes = ['phone','text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person'] as const
 export function lookupCollection(source: Field): boolean {
   return ['multi_select', 'relation', 'attachment', 'array'].includes(source.type === 'computed' ? source.resultType ?? '' : source.type)
 }

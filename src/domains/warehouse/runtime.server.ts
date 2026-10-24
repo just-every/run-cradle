@@ -111,6 +111,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    await db.batch([
     ...unique.map((guard,index)=>db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,index,...guard.values)),
     db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),slot,startedAt,row.id,runId),
+    ...bases.map(appId=>db.prepare('INSERT INTO operation_audit(id,actor_id,app_id,action,feature,created_at) VALUES(?,?,?,?,?,?)').bind(createUlid(),actor.id,appId,'warehouse.export','Warehouse exports',startedAt)),
     db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
    ])
    committed=true

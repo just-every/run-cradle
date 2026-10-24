@@ -13,6 +13,8 @@ function conversionCases(owner){
  const reference={reference:{provider:'chest',itemId:'synthetic-cradle-301',name:'synthetic-cradle-301.pdf',mediaType:'application/pdf',size:12,modifiedAt:null,link:'https://files.example.test/synthetic-cradle-301',connectionId:null,attachedBy:owner}}
  return [
   {name:'text/select',from:'text',to:'select',options:options.slice(0,2),values:['Ready','Done','ready','Missing',null],after:[options[0].id,options[1].id,null,null,null],losses:[2,3],roles:true},
+  {name:'text/phone',from:'text',to:'phone',values:['(555) 123-4567','+442079460123','not a phone',null],after:['+15551234567','+442079460123',null,null],losses:[2]},
+  {name:'phone/text',from:'phone',to:'text',values:['+15551234567','+442079460123',null],after:['+15551234567','+442079460123',null],losses:[]},
   {name:'required text/number',from:'text',to:'number',required:true,values:['not a number'],refused:true},
   {name:'select/text',from:'select',to:'text',options:options.slice(0,2),values:[options[0].id,options[1].id,null],after:['Ready','Done',null],losses:[]},
   {name:'select/relation',from:'select',to:'relation',options,targets:['Ready','Duplicate','Duplicate'],values:[options[0].id,options[2].id,options[3].id,options[4].id,null],after:targets=>[targets[0].ref,null,null,null,null],losses:[1,2,3]},
@@ -37,6 +39,9 @@ export async function fieldConversionJourney(existing){
  try{
   const owner=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=(SELECT id FROM oa_operators WHERE email=?)').bind('import-owner@example.test').first()).principal_id
   for(const fixture of conversionCases(owner))try{await conversionCase(h,fixture)}catch(error){failures.push(new Error(`FIELD_CONVERSION ${fixture.name}: ${error.message}`,{cause:error}))}
+  try{await refusedTypePairs(h,owner)}catch(error){failures.push(new Error(`FIELD_TYPE_PAIRS: ${error.message}`,{cause:error}))}
+  try{await completeDependentPreview(h)}catch(error){failures.push(new Error(`FIELD_DEPENDENTS: ${error.message}`,{cause:error}))}
+  try{await linkedSelectConversion(h)}catch(error){failures.push(new Error(`FIELD_LINK_SELECT: ${error.message}`,{cause:error}))}
   try{await invalidLookupSource(h)}catch(error){failures.push(new Error(`FIELD_LOOKUP_SOURCE: ${error.message}`,{cause:error}))}
  }finally{if(!existing)await h.close()}
  if(failures.length)throw new AggregateError(failures,'Field conversion public-door matrix failed')
@@ -190,4 +195,112 @@ async function invalidLookupSource(h){
  const still=(await h.request(`/api/v1/records/bases/${appId}`)).data;assert.ok(still.tables.find(table=>table.id===target).fields.some(field=>field.id===source))
  const record=(await h.request(`/api/v1/apps/${appId}/entities/${items}/records/${child.id}`)).data.record;assert.equal(record.fields[lookup].value,'synthetic-cradle-362');assert.deepEqual(record.fields[link].value,parent.ref)
  console.log('FIELD_LOOKUP_SOURCE PASS retained dependent lookup blocks invalid source removal in preview and adoption')
+}
+
+
+/** Linked labels become options through the same reviewed release door. */
+async function linkedSelectConversion(h){
+ for(const cardinality of ['one','many']){
+  const appId=createUlid(),items=createUlid(),name=createUlid(),link=createUlid(),targets=createUlid(),title=createUlid()
+  const draft={appId,name:'synthetic-cradle-370 '+cardinality,tables:[{id:items,label:'Items',primaryFieldId:name,fields:[field(name,'Name','text'),field(link,'Contact','relation',{relation:{ownerAppId:appId,entityId:targets,cardinality,onDelete:'restrict'}})]},{id:targets,label:'Contacts',primaryFieldId:title,fields:[field(title,'Name','text')]}]}
+  const preview=async body=>(await h.request('/api/v1/records/schema-preview',{method:'POST',body})).data
+  const adopt=async p=>(await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:p.id}}})).data.value
+  await adopt(await preview(draft))
+  async function create(entityId,values){const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data;return (await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:schema.version}],input:{appId,entityId,values}}})).data.value}
+  const parents=[];for(const label of ['Morgan Lee','Taylor Kim'])parents.push(await create(targets,{[title]:label}))
+  const values=cardinality==='one'?[parents[0].ref,parents[1].ref,null]:[[parents[0].ref],[parents[0].ref,parents[1].ref],[]]
+  const rows=[];for(const [index,value]of values.entries())rows.push(await create(items,{[name]:'synthetic-cradle-'+(371+index),[link]:value}))
+  const next=(await h.request(`/api/v1/records/bases/${appId}`)).data
+  next.tables.find(table=>table.id===items).fields=next.tables.find(table=>table.id===items).fields.map(value=>value.id===link?field(link,'Contact','select',{options:[{id:createUlid(),label:'Unassigned'}]}):value)
+  const review=await preview(next),impact=review.impacts.find(item=>item.entityId===items),conversion=impact.conversions.find(value=>value.fieldId===link),options=review.schemas.find(table=>table.id===items).fields.find(value=>value.id===link).options
+  assert.deepEqual(impact.refusals,[])
+  assert.ok(options.some(option=>option.label==='Morgan Lee'),'A linked record label becomes an option in the exact reviewed schema')
+  assert.equal(conversion.losses.length,cardinality==='many'?1:0)
+  if(cardinality==='many'){assert.deepEqual(conversion.losses[0].value,values[1]);assert.match(conversion.losses[0].reason,/Multiple linked records/)}
+  const release=await adopt(review)
+  for(const [index,row]of rows.entries()){
+   const current=(await h.request(`/api/v1/apps/${appId}/entities/${items}/records/${row.id}`)).data.record
+   const expected=index===2||cardinality==='many'&&index===1?null:options.find(option=>option.label===(index===0?'Morgan Lee':'Taylor Kim')).id
+   assert.equal(current.fields[link].value,expected,'Only the exact reviewed option is stored; multi-link losses are empty')
+   const history=(await h.request(`/api/v1/history?appId=${appId}&entityId=${items}&recordId=${row.id}`)).data.items
+   assert.ok(history.some(item=>item.action==='record.create'))
+  }
+  const recovery=(await h.request(`/api/v1/records/releases/${release.releaseId}/recovery`)).data,table=recovery.tables.find(value=>value.entityId===items),csv=parseCsv(new TextEncoder().encode(table.csv)),column=csv.headers.indexOf('Contact')
+  for(const [index,row]of rows.entries()){
+   const value=csv.rows.find(value=>value[0]===row.id)[column]
+   if(values[index]===null)assert.equal(value,'\\N');else assert.deepEqual(JSON.parse(value),values[index],'Recovery retains every original link identity and collection member')
+  }
+  console.log('FIELD_LINK_SELECT '+cardinality+' PASS reviewed labels, explicit multi-link loss, identity/history and recovery')
+ }
+}
+
+
+/** All six existing dependent kinds are named by the public impact preview. */
+async function completeDependentPreview(h){
+ const appId=createUlid(),items=createUlid(),name=createUlid(),value=createUlid(),formula=createUlid(),summary=createUlid(),summaryName=createUlid(),link=createUlid(),rollup=createUlid()
+ const draft={appId,name:'synthetic-cradle-380',tables:[{id:items,label:'Items',primaryFieldId:name,fields:[field(name,'Name','text'),field(value,'Value','text'),field(formula,'Value formula','computed',{readOnly:true,resultType:'text',expression:{kind:'field',fieldId:value}})]},{id:summary,label:'Summary',primaryFieldId:summaryName,fields:[field(summaryName,'Name','text'),field(link,'Items','relation',{relation:{ownerAppId:appId,entityId:items,cardinality:'many',onDelete:'restrict'}}),field(rollup,'Value rollup','computed',{readOnly:true,resultType:'text',expression:{kind:'rollup',aggregate:'arrayjoin',relationFieldId:link,valueFieldId:value}})]}]}
+ const preview=async body=>(await h.request('/api/v1/records/schema-preview',{method:'POST',body})).data
+ const first=await preview(draft);await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:first.id}}})
+ const schema=(await h.request(`/api/v1/apps/${appId}/entities/${items}`)).data,expected=[{ref:{appId,entityId:schemaEntity,recordId:items},version:schema.version}]
+ const view=(await h.request('/api/v1/commands/view.save',{method:'POST',body:{commandId:createUlid(),expected,input:{view:{appId,entityId:items,name:'Value view',display:'grid',fields:[name,value],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:name},visibility:'app',shipped:false}}}})).data.value
+ const form=(await h.request('/api/v1/commands/form.save',{method:'POST',body:{commandId:createUlid(),expected,input:{form:{appId,entityId:items,title:'Value form',fields:[{fieldId:value,label:'Value',help:'',required:false}],submitAction:'record.create',authenticated:true}}}})).data.value
+ const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'Value automation',appId,entityId:items,event:'created',enabled:false,actions:[{kind:'update',fieldId:value,value:'12'}]}}})).data.result.value
+ const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:{commandId:createUlid(),appId,entityId:items,name:'Value API key',permissions:'read',expiresAt:new Date(Date.now()+86400000).toISOString()}})).data.key
+ try{
+  const edit=(await h.request(`/api/v1/records/bases/${appId}`)).data;edit.tables.find(table=>table.id===items).fields=edit.tables.find(table=>table.id===items).fields.map(field=>field.id===value?{...field,type:'number'}:field)
+  const review=await preview(edit),impact=review.impacts.find(item=>item.entityId===items)
+  for(const [kind,id,name]of [['formula',items+':'+formula,'Items · Value formula'],['rollup',summary+':'+rollup,'Summary · Value rollup'],['view',view.id,'Value view'],['form',form.id,'Value form'],['automation',automation.id,'Value automation'],['api_key',key.id,'Value API key']]){
+   const dependency=impact.dependencies.find(item=>item.kind===kind&&item.id===id)
+   assert.ok(dependency,kind+' is named once by kind and identity');assert.equal(dependency.name,name);assert.equal(impact.dependencies.filter(item=>item.kind===kind&&item.id===id).length,1);assert.ok(dependency.details.length)
+  }
+  assert.ok(impact.refusals.some(reason=>reason.includes('Value formula')));assert.ok(impact.refusals.some(reason=>reason.includes('Value rollup')));assert.ok(impact.refusals.some(reason=>reason.includes('Value automation')))
+  await h.request('/api/v1/commands/release.adopt',{method:'POST',status:400,body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:review.id}}})
+  assert.equal((await h.request(`/api/v1/apps/${appId}/entities/${items}`)).data.fields.find(field=>field.id===value).type,'text','The incompatible dependent refusal preserves the original schema')
+  console.log('FIELD_DEPENDENTS PASS formula, rollup, view, form, automation and API key names; refused adoption preserves schema')
+ }finally{await h.request(`/api/user-keys/${key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId}})}
+}
+
+
+/** Every ordered pair has either a substantive mapping fixture above or an
+ * explicit preview refusal below. Grouping source fields keeps the journey small. */
+async function refusedTypePairs(h,owner){
+ const types=['text','phone','number','date','instant','money','boolean','select','multi_select','url','person','relation','attachment','computed']
+ const mapped=new Set(['text/select','select/text','select/relation','relation/select','number/money','money/number','text/date','date/text','text/number','number/text','text/phone','phone/text'])
+ let checked=0
+ for(const from of types){
+  const destinations=types.filter(to=>to!==from&&!mapped.has(from+'/'+to))
+  const appId=createUlid(),items=createUlid(),name=createUlid(),targets=createUlid(),title=createUlid(),option=createUlid()
+  const definitions=destinations.map(to=>({to,id:createUlid()}))
+  const extras=type=>type==='select'||type==='multi_select'?{options:[{id:option,label:'Ready'}]}:type==='relation'?{relation:{ownerAppId:appId,entityId:targets,cardinality:'one',onDelete:'restrict'}}:type==='computed'?{readOnly:true,resultType:'text',expression:{kind:'field',fieldId:name}}:{}
+  const draft={appId,name:'synthetic-cradle-390 '+from,tables:[{id:items,label:'Items',primaryFieldId:name,fields:[field(name,'Name','text'),...definitions.map(({to,id})=>field(id,from+' to '+to,from,extras(from)))]},{id:targets,label:'Targets',primaryFieldId:title,fields:[field(title,'Name','text')]}]}
+  const preview=async body=>(await h.request('/api/v1/records/schema-preview',{method:'POST',body})).data
+  const command=previewId=>({commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId}})
+  await h.request('/api/v1/commands/release.adopt',{method:'POST',body:command((await preview(draft)).id)})
+  async function create(entityId,values){const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data;return (await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:schema.version}],input:{appId,entityId,values}}})).data.value}
+  const target=await create(targets,{[title]:'synthetic-cradle-391'})
+  const representative={text:'12',phone:'+15551234567',number:'12.34',date:'2026-10-24',instant:'2026-10-24T00:00:00.000Z',money:money('1234'),boolean:true,select:option,multi_select:[option],url:'https://example.test/field',person:owner,relation:target.ref,attachment:[{reference:{provider:'chest',itemId:'synthetic-cradle-392',name:'synthetic-cradle-392.pdf',mediaType:'application/pdf',size:12,modifiedAt:null,link:'https://files.example.test/synthetic-cradle-392',connectionId:null,attachedBy:owner}}]}
+  const rows=[]
+  for(const populated of [true,false])rows.push(await create(items,{[name]:populated?'synthetic-cradle-393':'synthetic-cradle-394',...(from==='computed'?{}:Object.fromEntries(definitions.map(({id})=>[id,populated?representative[from]:null])))}))
+  const read=async row=>(await h.request(`/api/v1/apps/${appId}/entities/${items}/records/${row.id}`)).data.record
+  const originals=await Promise.all(rows.map(read)),originalSchema=(await h.request(`/api/v1/apps/${appId}/entities/${items}`)).data
+  const releasesBefore=(await h.db.prepare('SELECT count(*) n FROM manual_record_releases WHERE app_id=?').bind(appId).first()).n
+  const edit=(await h.request(`/api/v1/records/bases/${appId}`)).data
+  edit.tables.find(table=>table.id===items).fields=[field(name,'Name','text'),...definitions.map(({to,id})=>field(id,from+' to '+to,to,extras(to)))]
+  const review=await preview(edit),impact=review.impacts.find(item=>item.entityId===items)
+  for(const {to,id}of definitions){
+   const conversion=impact.conversions.find(item=>item.fieldId===id)
+   assert.ok(conversion,from+'/'+to+' has an individual conversion result')
+   assert.deepEqual([conversion.from,conversion.to],[from,to])
+   assert.equal(typeof conversion.refusal,'string');assert.ok(conversion.refusal.length>0,from+'/'+to+' explains why the pair is refused in preview')
+   assert.ok(impact.refusals.includes(conversion.refusal));assert.deepEqual(conversion.converted,[]);assert.deepEqual(conversion.losses,[])
+   checked++
+  }
+  await h.request('/api/v1/commands/release.adopt',{method:'POST',status:400,body:command(review.id)})
+  assert.deepEqual((await h.request(`/api/v1/apps/${appId}/entities/${items}`)).data,originalSchema,'Refused ordered pairs leave live schema untouched')
+  assert.deepEqual(await Promise.all(rows.map(read)),originals,'Refused ordered pairs preserve every populated and empty source value')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM manual_record_releases WHERE app_id=?').bind(appId).first()).n,releasesBefore,'Refused ordered pairs write no release')
+  console.log('FIELD_TYPE_PAIRS '+from+' PASS '+destinations.length+' explicit pair refusals, populated/empty values and zero live writes')
+ }
+ assert.equal(checked+mapped.size,types.length*(types.length-1),'All 182 ordered different-type pairs are covered')
+ console.log('FIELD_TYPE_MATRIX PASS '+mapped.size+' mapped pairs, '+checked+' explicitly refused pairs, 182/182 total')
 }

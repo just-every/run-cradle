@@ -66,8 +66,8 @@ export async function smsJourney(){
   const content=await fetch(h.origin+`/api/v1/archive-jobs/${archive.id}/content`,{headers:{cookie:h.cookie}})
   assert.equal(content.status,200);const archiveText=await content.text()
   assert.ok(!archiveText.includes(authToken)&&!archiveText.includes(JSON.parse(sealed).ciphertext),'Neither plaintext nor encrypted Twilio credentials transfer in an archive')
-  const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-106-sms',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'sms',fieldId:h.nameId,text:'Status {{'+h.statusId+'}} for {{'+h.nameId+'}}'}]}}})).data.result.value
-  async function create(to=phone){const created=await h.create(to);await h.tick(created.commandId);const runs=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs;return {created,run:runs.find(run=>run.recordId===created.record.ref.recordId)}}
+  const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-106-sms',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'sms',fieldId:h.phoneId,text:'Status {{'+h.statusId+'}} for {{'+h.nameId+'}}'}]}}})).data.result.value
+  async function create(to=phone){const created=await h.create(to,undefined,to);await h.tick(created.commandId);const runs=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs;return {created,run:runs.find(run=>run.recordId===created.record.ref.recordId)}}
   const first=await create('(555) 010-0101'),sent=edge.calls.filter(c=>c.method==='POST')
   assert.equal(first.run.state,'Complete');assert.equal(sent.length,1)
   assert.equal(sent[0].form.get('To'),phone);assert.equal(sent[0].form.get('From'),sendingNumber)
@@ -109,9 +109,9 @@ export async function smsJourney(){
   assert.equal(uncertain.run.state,'Unknown');await h.tick(uncertain.created.commandId)
   await h.restart();await h.tick(uncertain.created.commandId)
   assert.equal(edge.calls.filter(c=>c.method==='POST').length,before,'An uncertain acknowledgement survives restart without resend')
-  edge.setUncertain(false);const invalid=await create('synthetic-cradle-106-invalid-phone')
-  assert.equal(invalid.run.state,'Failed');assert.equal(edge.calls.filter(c=>c.method==='POST').length,before,'Invalid phone value sends nothing')
-  assert.ok(JSON.stringify(invalid.run).includes(h.nameId)&&JSON.stringify(invalid.run).includes(invalid.created.record.ref.recordId),'Invalid destination names the field and record')
+  edge.setUncertain(false)
+  const invalid=await h.request('/api/v1/commands/record.create',{method:'POST',status:400,body:{commandId:createUlid(),expected:[{ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:h.entity.version}],input:{appId:h.appId,entityId:h.entityId,values:{[h.nameId]:'Invalid phone',[h.phoneId]:'synthetic-cradle-106-invalid-phone'}}}})
+  assert.match(invalid.error.message,/Phone/);assert.equal(edge.calls.filter(c=>c.method==='POST').length,before,'Invalid typed phone is refused before any automation or provider request')
   const firstStops=(await h.request(historyRoute)).data.items.filter(item=>item.action==='sms.stop').length
   const restoredHistory='/api/v1/history?'+new URLSearchParams(restored.created.record.ref)
   await inbound('STOP',5)
@@ -120,11 +120,11 @@ export async function smsJourney(){
   const ambiguous=await create();assert.ok(JSON.stringify(ambiguous.run).includes('suppressed'))
   assert.equal(edge.calls.filter(c=>c.method==='POST').length,before,'Ambiguous replies still suppress the installation number')
   await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
-  const blankAutomation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-106-blank-phone',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'sms',fieldId:h.statusId,text:'synthetic-cradle-106-message'}]}}})).data.result.value
+  const blankAutomation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-106-blank-phone',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'sms',fieldId:h.phoneId,text:'synthetic-cradle-106-message'}]}}})).data.result.value
   const blank=await h.create('synthetic-cradle-106-no-phone');await h.tick(blank.commandId)
   const blankRun=(await h.request(`/api/user-automations/${blankAutomation.id}/runs`)).data.runs.find(run=>run.recordId===blank.record.ref.recordId)
   assert.equal(blankRun.state,'Failed');assert.equal(edge.calls.filter(c=>c.method==='POST').length,before)
-  assert.ok(JSON.stringify(blankRun).includes(h.statusId)&&JSON.stringify(blankRun).includes(blank.record.ref.recordId),'Blank destination names the field and record')
+  assert.ok(JSON.stringify(blankRun).includes(h.phoneId)&&JSON.stringify(blankRun).includes(blank.record.ref.recordId),'Blank destination names the field and record')
   await smsRiderJourney(h,edge)
   const replacement=authToken+'-replacement';edge.setToken(replacement)
   await h.request(settings,{method:'PUT',body:{accountSid,authToken:replacement,from:sendingNumber}})
