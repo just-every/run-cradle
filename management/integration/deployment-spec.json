@@ -882,6 +882,12 @@
       "name": "9073_chat_installation_instance.sql",
       "sha256": "b6ffee2da756b89ad7f8326fe0a511b301a707346303a3409bff58cb78d23136",
       "sql": "-- A removed/recreated installation must never revive an old external card even\n-- when its integer configuration version and workspace ID happen to match.\nALTER TABLE slack_app_installation ADD COLUMN instance_id TEXT;\nUPDATE slack_app_installation SET instance_id=lower(hex(randomblob(16))) WHERE id='installation';\n-- Legacy cards have no provable installation binding. Leave them NULL so they\n-- refuse rather than guessing from a reusable workspace/version pair.\nALTER TABLE slack_app_actions ADD COLUMN installation_instance TEXT;\n\n-- Old pending consent states require a fresh installation attempt.\nALTER TABLE slack_app_oauth_states ADD COLUMN installation_instance TEXT;\n\nALTER TABLE slack_app_link_codes ADD COLUMN installation_instance TEXT;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9074_parallel_chat_providers.sql",
+      "sha256": "8d08ebbdd46df6d61637658ee6bed18c513b712ee69dbd545e1630f5a04552d7",
+      "sql": "-- Expand one legacy app into independently managed provider installations.\n-- Keep credential ciphertext, installation instance, cards, links and consent intact.\nCREATE TABLE slack_app_installation_next (\n id TEXT PRIMARY KEY CHECK(id IN ('slack','teams','nook')), owner_id TEXT NOT NULL,\n client_id TEXT NOT NULL, sealed_json TEXT NOT NULL, bot_sealed_json TEXT,\n team_id TEXT, team_name TEXT, version INTEGER NOT NULL, updated_at TEXT NOT NULL,\n provider TEXT NOT NULL UNIQUE CHECK(provider IN ('slack','teams','nook')),\n api_origin TEXT, instance_id TEXT, CHECK(id=provider)\n);\nINSERT INTO slack_app_installation_next\n SELECT provider,owner_id,client_id,sealed_json,bot_sealed_json,team_id,team_name,\n version,updated_at,provider,api_origin,instance_id FROM slack_app_installation;\nDROP TABLE slack_app_installation;\nALTER TABLE slack_app_installation_next RENAME TO slack_app_installation;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

@@ -17,7 +17,7 @@ export function slackOAuth(db:D1Database,settings:ReturnType<typeof slackSetting
    if(!credentials.appToken)throw new AuthorityError('unconfigured','Configure the scoped Nook app token.',503)
    const checked=await api('auth.test',credentials.appToken),body=checked.value
    if(checked.status!==200||body.ok!==true||typeof body.team_id!=='string'||typeof body.team!=='string'||!Array.isArray(body.scopes)||scopes.some(scope=>!body.scopes.includes(scope)))throw new AuthorityError('provider_unavailable','The Nook app token must grant the declared chat, channel, command and unfurl scopes.',503)
-   const saved=await db.prepare(`UPDATE slack_app_installation SET bot_sealed_json=?,team_id=?,team_name=?,version=version+1,updated_at=?,instance_id=? WHERE id='installation' AND version=? AND (${guard.sql}) AND (${own.guard.sql})`).bind(await settings.sealBot({token:credentials.appToken,scopes:body.scopes}),externalTeam('nook',body.team_id),body.team,ctx.now,createUlid(),installation.version,...guard.values,...own.guard.values).run()
+   const saved=await db.prepare(`UPDATE slack_app_installation SET bot_sealed_json=?,team_id=?,team_name=?,version=version+1,updated_at=?,instance_id=? WHERE id=? AND version=? AND (${guard.sql}) AND (${own.guard.sql})`).bind(await settings.sealBot({token:credentials.appToken,scopes:body.scopes}),externalTeam('nook',body.team_id),body.team,ctx.now,createUlid(),installation.provider,installation.version,...guard.values,...own.guard.values).run()
    if(!saved.meta.changes)throw new AuthorityError('version_conflict','The Nook configuration changed during installation.',409)
    return {installed:true}
   }
@@ -33,7 +33,7 @@ export function slackOAuth(db:D1Database,settings:ReturnType<typeof slackSetting
   const result=await api('oauth.v2.access',null,new URLSearchParams({client_id:installation.client_id,client_secret:credentials.clientSecret,code,redirect_uri:origin+'/oauth/'+installation.provider+'/callback'}),true),body=result.value
   if(result.status!==200||body.ok!==true||typeof body.access_token!=='string'||!body.access_token||typeof body.team?.id!=='string'||typeof body.team?.name!=='string'||typeof body.scope!=='string'||(installation.provider==='teams'?teamsScopes:scopes).some(scope=>!body.scope.split(',').includes(scope)))throw new AuthorityError('provider_unavailable','Slack OAuth did not grant the required bot scopes. Start installation again.',503)
   const sealed=await settings.sealBot({token:body.access_token,scopes:body.scope.split(',')})
-  const saved=await db.prepare(`UPDATE slack_app_installation SET bot_sealed_json=?,team_id=?,team_name=?,version=version+1,updated_at=?,instance_id=? WHERE id='installation' AND version=? AND (${own.guard.sql}) AND (${guard.sql})`).bind(sealed,externalTeam(installation.provider,body.team.id),body.team.name,ctx.now,createUlid(),installation.version,...own.guard.values,...guard.values).run()
+  const saved=await db.prepare(`UPDATE slack_app_installation SET bot_sealed_json=?,team_id=?,team_name=?,version=version+1,updated_at=?,instance_id=? WHERE id=? AND version=? AND (${own.guard.sql}) AND (${guard.sql})`).bind(sealed,externalTeam(installation.provider,body.team.id),body.team.name,ctx.now,createUlid(),installation.provider,installation.version,...own.guard.values,...guard.values).run()
   if(!saved.meta.changes)throw new AuthorityError('version_conflict','Slack configuration changed during OAuth; install again.',409)
   return {returnTo:origin+'/app/settings/connections'}
  },async channels(){

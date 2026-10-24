@@ -18,6 +18,7 @@ export async function signedSlack(origin,path,body,{json=false,stale=false,forge
 
 /** [INTEG-001] Native sessions and admitted record commands remain real; Slack
  * OAuth, API responses and signed incoming traffic are the only fake boundary. */
+export const chatRoute=(route,provider)=>route.startsWith('/api/user-automations/slack/')?route+(route.includes('?')?'&':'?')+'provider='+provider:route
 export async function slackAppJourney(provider='slack'){
  const edge=provider==='teams'?await teamsAppNetworkEdge():await slackAppNetworkEdge({provider}),fixture=edge.fixture;let h
  const incoming=(origin,path,body,options)=>provider==='teams'?edge.signed(origin,path,body,options):signedSlack(origin,provider==='nook'?path.replace('/slack/','/nook/'):path,body,options)
@@ -25,6 +26,7 @@ export async function slackAppJourney(provider='slack'){
  const longTitle='synthetic-cradle-120-primary'+('🙂'.repeat(1600)),longText='synthetic-cradle-120-review'+('x'.repeat(3200)),longApproval='synthetic-cradle-120-approved'+('y'.repeat(3200)),longRejection='synthetic-cradle-120-rejected'+('z'.repeat(3200))
  try{
   h=await userAutomationRuntime(0,{bindings:edge.bindings,outbound:request=>edge.outbound(request)});edge.setOrigin(h.origin)
+  const request=h.request;h.request=(route,options)=>request(chatRoute(route,provider),options)
   const root='/api/user-automations/slack',settings=root+'/settings'
   assert.equal((await h.request(settings)).data.configured,false)
   await h.request(settings,{method:'PUT',body:configuration})
@@ -52,7 +54,7 @@ export async function slackAppJourney(provider='slack'){
   const staleOAuthState=provider==='nook'?null:new URL((await h.request(root+'/install',{method:'POST',body:{}})).data.authorizeUrl).searchParams.get('state')
   const channels=(await h.request(root+'/channels')).data.channels
   assert.deepEqual(channels.map(channel=>({id:channel.id,name:channel.name})),edge.channels.map(channel=>({id:channel.id,name:channel.name})))
-  const sealed=await h.db.prepare("SELECT sealed_json,bot_sealed_json FROM slack_app_installation WHERE id='installation'").first()
+  const sealed=await h.db.prepare("SELECT sealed_json,bot_sealed_json FROM slack_app_installation WHERE id=?").bind(provider).first()
   assert.ok(sealed?.sealed_json)
   for(const secret of [fixture.clientSecret,fixture.signingSecret,fixture.botToken])assert.ok(!JSON.stringify(sealed).includes(secret),'Slack credentials and OAuth token are sealed at rest')
   async function person(number){
@@ -61,7 +63,7 @@ export async function slackAppJourney(provider='slack'){
    const principalId=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(baseId).first()).principal_id
    const signed=await baseHttpSession(h.origin,email)
    const request=async(route,{method='GET',body,status=200}={})=>{
-    const response=await fetch(h.origin+route,{method,redirect:'manual',headers:{cookie:signed.cookie,...(body?{origin:h.origin,'content-type':'application/json','x-csrf-token':signed.csrfToken}:{})},...(body?{body:JSON.stringify(body)}:{})}).catch(error=>{console.error('CHAT_PERSON_TRANSPORT_FAILURE '+JSON.stringify({method,path:route.split('?')[0],cause:error.cause?.code??error.cause?.name??'unknown',name:error.name}));throw error})
+    const response=await fetch(h.origin+chatRoute(route,provider),{method,redirect:'manual',headers:{cookie:signed.cookie,...(body?{origin:h.origin,'content-type':'application/json','x-csrf-token':signed.csrfToken}:{})},...(body?{body:JSON.stringify(body)}:{})}).catch(error=>{console.error('CHAT_PERSON_TRANSPORT_FAILURE '+JSON.stringify({method,path:route.split('?')[0],cause:error.cause?.code??error.cause?.name??'unknown',name:error.name}));throw error})
     const value=await response.json().catch(()=>null);assert.equal(response.status,status,`${route}: ${value?.error?.message??JSON.stringify(value)}`);return value
    }
    return {principalId,request}
@@ -202,7 +204,7 @@ export async function slackAppJourney(provider='slack'){
   assert.deepEqual(await record(pendingCreated),beforeStale,'Removing and reinstalling the same workspace never revives an old card')
   if(staleOAuthState){const staleCallback=await fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state:staleOAuthState,code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}});assert.equal(staleCallback.status,409,'An old OAuth state cannot revive after the installation version repeats');await staleCallback.arrayBuffer()}
   await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:'synthetic-cradle-120-stale-link-user',command:'/cradle-link',text:staleLinkCode},{status:409})
-  assert.equal((await h.request(settings)).data.slackUserId,fixture.ownerUserId,'An old linking code cannot replace a person association in a new installation')
+  assert.equal((await h.request(settings)).data.slackUserId,null,'Removing a provider revokes its linked people; an old code cannot restore them')
   console.log('CHAT_APP_JOURNEY_PASS '+provider)
  }finally{await h?.close();await edge.close()}
 }

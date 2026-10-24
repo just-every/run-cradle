@@ -75,7 +75,9 @@ export function slackCallbacks(env:PlatformBindings,foundation:ServerFoundation,
   let normalized:any
   if(installation.provider==='teams'){const activity=await teamsWebhook(env,request,raw,installation,credentials);kind=activity.kind;normalized=activity.payload}
   else if(!await verifySlack(request,raw,credentials.signingSecret))return new Response(null,{status:401})
-  const receipt=await sha256(raw),claimed=await db.prepare('INSERT INTO slack_app_webhook_receipts(id,received_at) VALUES(?,?) ON CONFLICT(id) DO NOTHING').bind(receipt,Date.now()).run()
+  const digest=await sha256(raw),receipt=installation.provider+':'+digest
+  // Pre-provider receipts remain replay fences; new receipts are provider-scoped.
+  const claimed=await db.prepare('INSERT INTO slack_app_webhook_receipts(id,received_at) SELECT ?,? WHERE NOT EXISTS(SELECT 1 FROM slack_app_webhook_receipts WHERE id=?) ON CONFLICT(id) DO NOTHING').bind(receipt,Date.now(),digest).run()
   if(!claimed.meta.changes)return new Response(null,{status:409})
   const text=new TextDecoder('utf-8',{fatal:true}).decode(raw)
   if(kind==='link'){

@@ -13,7 +13,7 @@ import {createRelayHandler} from '../../scripts/egress/handler.ts'
 import {PinnedHttpTransport} from '../../scripts/egress/pinned-http.ts'
 
 /** Only DNS/TLS routing is replaced; the real relay and pinned transport process real sockets. */
-export async function automationNetworkEdge({extraHosts=[],receive}={}) {
+export async function automationNetworkEdge({extraHosts=[],receive,sharedSecret}={}) {
  const directory=await mkdtemp(join(tmpdir(),'cradle-automation-tls-'))
  const hosts=['automation-receiver.example.com','hooks.slack.com',...extraHosts],keyFile=join(directory,'receiver.key'),certFile=join(directory,'receiver.crt')
  execFileSync('openssl',['req','-x509','-newkey','ec','-pkeyopt','ec_paramgen_curve:P-256','-nodes','-days','1',
@@ -35,17 +35,22 @@ export async function automationNetworkEdge({extraHosts=[],receive}={}) {
  await new Promise(resolve=>receiver.listen(0,'127.0.0.1',resolve))
  const receiverPort=receiver.address().port,nativeLookup=dns.lookup,nativeRequest=https.request
  dns.lookup=async hostname=>{
+  if(!hosts.includes(hostname)&&nativeLookup.fixtureHosts?.includes(hostname))return nativeLookup(hostname)
   assert.ok(hosts.includes(hostname),'The network edge receives only its declared test destinations')
   return [{address:'93.184.216.34',family:4},...(privateAnswer?[{address:'127.0.0.1',family:4}]:[])]
  }
+ dns.lookup.fixtureHosts=[...new Set([...hosts,...(nativeLookup.fixtureHosts??[])])]
  https.request=(url,options,onResponse)=>{
+  if(!hosts.includes(url.hostname)&&nativeRequest.fixtureHosts?.includes(url.hostname))return nativeRequest(url,options,onResponse)
   assert.ok(hosts.includes(url.hostname));assert.equal(options.rejectUnauthorized,true);assert.equal(options.agent,false)
   options.lookup(url.hostname,{all:false},(error,address,family)=>{assert.equal(error,null);assert.equal(address,'93.184.216.34');assert.equal(family,4)})
   tlsCalls++
-  return nativeRequest({...options,headers:{...options.headers,host:url.host},hostname:'127.0.0.1',port:receiverPort,path:url.pathname+url.search,servername:url.hostname,ca:cert},onResponse)
+  return (nativeRequest.fixtureOriginal??nativeRequest)({...options,headers:{...options.headers,host:url.host},hostname:'127.0.0.1',port:receiverPort,path:url.pathname+url.search,servername:url.hostname,ca:cert},onResponse)
  }
+ https.request.fixtureOriginal=nativeRequest.fixtureOriginal??nativeRequest
+ https.request.fixtureHosts=[...new Set([...hosts,...(nativeRequest.fixtureHosts??[])])]
  syncBuiltinESMExports()
- const secret=randomBytes(32).toString('base64url'),transportErrors=[],networkErrors=[];let outboundSeen=0
+ const secret=sharedSecret??randomBytes(32).toString('base64url'),transportErrors=[],networkErrors=[];let outboundSeen=0
  const transport=new PinnedHttpTransport()
  const relay=http.createServer(createRelayHandler(secret,{async send(wire){
   try{return await transport.send(wire)}catch(error){

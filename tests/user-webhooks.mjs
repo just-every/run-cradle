@@ -1,3 +1,4 @@
+import {parallelChatJourney} from './helpers/parallel-chat-journey.mjs'
 import {slackAppJourney} from './helpers/slack-app-journey.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -13,6 +14,7 @@ import {unbase64} from '../src/adapters/crypto.server.ts'
 
 contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery preserves ordered replay, delete resynchronization and policy-narrowed restores',async()=>{
  for(const provider of ['slack','teams','nook'])await slackAppJourney(provider)
+ await parallelChatJourney()
  let edge,h
  try {
   edge=await automationNetworkEdge()

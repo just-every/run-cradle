@@ -6,12 +6,12 @@ export const slackAppFixture={clientId:'synthetic-cradle-120-client',clientSecre
 
 /** Only Slack's network boundary is fake. OAuth and authenticated API calls
  * traverse the real TLS receiver, public-DNS checks and maintained relay. */
-export async function slackAppNetworkEdge({provider='slack'}={}){
+export async function slackAppNetworkEdge({provider='slack',sharedSecret}={}){
  const fixture={...slackAppFixture,provider,providerOrigin:provider==='nook'?'https://nook.example.com':'https://slack.com'},messages=[],unfurls=[],oauthRequests=[],apiCalls=[],postRequests=[]
  const requiredScopes=['chat:write','channels:read','groups:read','links:read','links:write','commands']
  let origin,uncertain=false,appScopes=requiredScopes
  const channels=[{id:fixture.channelId,name:'synthetic-cradle-120-review',is_member:true,is_archived:false,is_private:false},{id:'synthetic-cradle-120-private-channel',name:'synthetic-cradle-120-private',is_member:true,is_archived:false,is_private:true}]
- const edge=await automationNetworkEdge({extraHosts:[new URL(fixture.providerOrigin).hostname],async receive(req,res,raw){
+ const edge=await automationNetworkEdge({sharedSecret,extraHosts:[new URL(fixture.providerOrigin).hostname],async receive(req,res,raw){
   if(req.headers.host!==new URL(fixture.providerOrigin).hostname)return false
   const url=new URL(req.url,fixture.providerOrigin);if(provider==='nook'){assert.ok(url.pathname.startsWith('/api/slack/'));url.pathname=url.pathname.replace('/api/slack/','/api/')}apiCalls.push({method:req.method,path:req.url})
   const json=(value,status=200)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify(value))}

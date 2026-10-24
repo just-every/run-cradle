@@ -16,10 +16,11 @@ export type ChatCredentials={clientSecret:string;signingSecret:string;appToken?:
 export const externalTeam=(provider:ChatProvider,id:string)=>provider==='slack'?id:provider+':'+id
 export type SlackInstall={instance_id:string;provider:ChatProvider;api_origin:string|null;owner_id:string;client_id:string;sealed_json:string;bot_sealed_json:string|null;team_id:string|null;team_name:string|null;version:number}
 const input=z.object({provider:z.enum(['slack','nook','teams']).default('slack'),clientId:z.string().regex(/^[A-Za-z0-9._-]{1,200}$/),clientSecret:z.string().min(1).max(1000).optional(),signingSecret:z.string().min(1).max(1000).optional(),nookOrigin:z.string().max(2048).optional(),appToken:z.string().min(1).max(4096).optional(),tenantId:z.string().uuid().optional()}).strict().superRefine((value,ctx)=>{for(const key of value.provider==='nook'?['nookOrigin','appToken','signingSecret'] as const:value.provider==='teams'?['clientSecret','tenantId'] as const:['clientSecret','signingSecret'] as const)if(!value[key])ctx.addIssue({code:'custom',path:[key],message:'This provider configuration is required'})})
-export function slackSettings(env:PlatformBindings,foundation:ServerFoundation,origin:string){
+export function slackSettings(env:PlatformBindings,foundation:ServerFoundation,origin:string,provider:ChatProvider='slack'){
  const db=env.DB,version=env.CONNECTION_ENCRYPTION_KEY_VERSION??'v1',ring=environmentKeyring(version,v=>v===version?env.CONNECTION_ENCRYPTION_KEY:undefined)
- async function row(){return db.prepare("SELECT * FROM slack_app_installation WHERE id='installation'").first<SlackInstall>()}
- const guard=(installation:SlackInstall)=>trustedPredicate("EXISTS(SELECT 1 FROM slack_app_installation i JOIN authority_principals p ON p.id=i.owner_id JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE i.id='installation' AND i.version=? AND i.instance_id=? AND p.state='active' AND o.role='owner' AND o.status='active')",[installation.version,installation.instance_id])
+ async function row(){return db.prepare("SELECT * FROM slack_app_installation WHERE id=?").bind(provider).first<SlackInstall>()}
+ const guard=(installation:SlackInstall)=>trustedPredicate("EXISTS(SELECT 1 FROM slack_app_installation i JOIN authority_principals p ON p.id=i.owner_id JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE i.id=? AND i.version=? AND i.instance_id=? AND p.state='active' AND o.role='owner' AND o.status='active')",[provider,installation.version,installation.instance_id])
+ const unchanged=(installation:SlackInstall)=>trustedPredicate('EXISTS(SELECT 1 FROM slack_app_installation WHERE id=? AND version=? AND instance_id=?)',[provider,installation.version,installation.instance_id])
  async function resolve(installed=false){
   const installation=await row();if(!installation)throw new AuthorityError('unconfigured','Configure the chat app in Settings first.',503)
   const current=guard(installation)
@@ -55,19 +56,44 @@ export function slackSettings(env:PlatformBindings,foundation:ServerFoundation,o
    const link=installation?.team_id?await db.prepare(`SELECT l.slack_user_id FROM slack_app_links l JOIN authority_principals p ON p.id=l.principal_id JOIN cradle_base_operators m ON m.principal_id=p.id AND m.base_id=l.base_operator_id JOIN oa_operators o ON o.id=m.base_id WHERE l.team_id=? AND l.principal_id=? AND l.authentication_epoch=? AND p.state='active' AND p.authentication_epoch=l.authentication_epoch AND o.status='active' AND o.version=l.base_operator_version`).bind(installation.team_id,ctx.principal.id,ctx.principal.authenticationEpoch).first<{slack_user_id:string}>():null
    const safe=appId&&entityId?await db.prepare('SELECT fields_json FROM slack_app_unfurl_fields WHERE app_id=? AND entity_id=?').bind(appId,entityId).first<{fields_json:string}>():null
    if(appId&&entityId)await foundation.policy.scope(ctx,{appId,entityId,purpose:'read'})
-   return {provider:installation?.provider??'slack',nookOrigin:installation?.api_origin??'',configured:Boolean(installation),installed:Boolean(installation?.bot_sealed_json),clientId:installation?.client_id??'',teamName:installation?.team_name??'',linked:Boolean(link),slackUserId:link?.slack_user_id??null,canConfigure,canManageUnfurls,unfurlSafeFieldIds:safe?JSON.parse(safe.fields_json) as string[]:[],oauthCallbackUrl:origin+'/oauth/'+(installation?.provider??'slack')+'/callback',interactionUrl:origin+'/webhooks/'+(installation?.provider??'slack')+'/actions',eventsUrl:origin+'/webhooks/'+(installation?.provider??'slack')+'/events',linkCommandUrl:origin+'/webhooks/'+(installation?.provider??'slack')+'/link'}
+   return {provider,nookOrigin:installation?.api_origin??'',configured:Boolean(installation),installed:Boolean(installation?.bot_sealed_json),clientId:installation?.client_id??'',teamName:installation?.team_name??'',linked:Boolean(link),slackUserId:link?.slack_user_id??null,canConfigure,canManageUnfurls,unfurlSafeFieldIds:safe?JSON.parse(safe.fields_json) as string[]:[],oauthCallbackUrl:origin+'/oauth/'+provider+'/callback',interactionUrl:origin+'/webhooks/'+provider+'/actions',eventsUrl:origin+'/webhooks/'+provider+'/events',linkCommandUrl:origin+'/webhooks/'+provider+'/link'}
   },
   async save(ctx:RequestContext,value:unknown){
    const own=await ownerDelegationSnapshot(db,ctx,LAUNCH_APP_ID),configuration=input.parse(value)
+   if(configuration.provider!==provider)throw new AuthorityError('validation','The selected provider must match its configuration.',400)
    if(!env.CONNECTION_ENCRYPTION_KEY)throw new AuthorityError('unconfigured','Configure the private connection encryption key before saving the chat app.',503)
    let apiOrigin:string|null=null
    if(configuration.provider==='nook'){let url:URL;try{url=validateDestination(configuration.nookOrigin!)}catch{throw new AuthorityError('validation','Use the public HTTPS origin of the Nook installation.',400)}if(url.pathname!=='/'||url.search||url.hash)throw new AuthorityError('validation','The Nook origin cannot include a path, query or fragment.',400);apiOrigin=url.origin}
    const sealed=JSON.stringify(await seal(ring,'workspace','installation','slack-app.configuration',JSON.stringify({clientSecret:configuration.clientSecret??'',signingSecret:configuration.signingSecret??'',...(configuration.appToken?{appToken:configuration.appToken}:{}),...(configuration.tenantId?{tenantId:configuration.tenantId}:{})})))
-   const result=await db.prepare(`INSERT INTO slack_app_installation(id,owner_id,client_id,sealed_json,version,updated_at,provider,api_origin,instance_id) SELECT 'installation',?,?,?,1,?,?,?,? WHERE ${own.guard.sql} ON CONFLICT(id) DO UPDATE SET owner_id=excluded.owner_id,client_id=excluded.client_id,sealed_json=excluded.sealed_json,provider=excluded.provider,api_origin=excluded.api_origin,instance_id=excluded.instance_id,bot_sealed_json=NULL,team_id=NULL,team_name=NULL,version=slack_app_installation.version+1,updated_at=excluded.updated_at`).bind(ctx.principal.id,configuration.clientId,sealed,ctx.now,configuration.provider,apiOrigin,createUlid(),...own.guard.values).run()
-   if(!result.meta.changes)throw new AuthorityError('forbidden','Installation ownership changed before saving the chat app.')
+   const previous=await row(),current=and(own.guard,...(previous?[unchanged(previous)]:[])),nonce=createUlid()
+   const write=db.prepare(`INSERT INTO slack_app_installation(id,owner_id,client_id,sealed_json,version,updated_at,provider,api_origin,instance_id) SELECT ?,?,?,?,1,?,?,?,? WHERE ${own.guard.sql} ON CONFLICT(id) DO UPDATE SET owner_id=excluded.owner_id,client_id=excluded.client_id,sealed_json=excluded.sealed_json,provider=excluded.provider,api_origin=excluded.api_origin,instance_id=excluded.instance_id,bot_sealed_json=NULL,team_id=NULL,team_name=NULL,version=slack_app_installation.version+1,updated_at=excluded.updated_at`).bind(provider,ctx.principal.id,configuration.clientId,sealed,ctx.now,provider,apiOrigin,createUlid(),...own.guard.values)
+   const results=await db.batch([
+    db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN (${current.sql}) THEN 1 ELSE 0 END`).bind(nonce,...current.values),
+    ...(previous?[
+     db.prepare('DELETE FROM slack_app_oauth_states WHERE installation_instance=?').bind(previous.instance_id),
+     db.prepare('DELETE FROM slack_app_link_codes WHERE installation_instance=?').bind(previous.instance_id),
+     db.prepare('DELETE FROM slack_app_links WHERE team_id=?').bind(previous.team_id),
+    ]:[]),
+    write,
+    db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
+   ])
+   if(!results[results.length-2].meta.changes)throw new AuthorityError('forbidden','Installation ownership changed before saving the chat app.')
    return this.read(ctx)
   },
-  async remove(ctx:RequestContext){const own=await ownerDelegationSnapshot(db,ctx,LAUNCH_APP_ID);await db.prepare(`DELETE FROM slack_app_installation WHERE id='installation' AND (${own.guard.sql})`).bind(...own.guard.values).run();return this.read(ctx)},
+  async remove(ctx:RequestContext){
+   const own=await ownerDelegationSnapshot(db,ctx,LAUNCH_APP_ID),installation=await row(),nonce=createUlid()
+   if(!installation)return this.read(ctx)
+   const current=and(own.guard,unchanged(installation))
+   await db.batch([
+    db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN (${current.sql}) THEN 1 ELSE 0 END`).bind(nonce,...current.values),
+    db.prepare('DELETE FROM slack_app_oauth_states WHERE installation_instance=?').bind(installation.instance_id),
+    db.prepare('DELETE FROM slack_app_link_codes WHERE installation_instance=?').bind(installation.instance_id),
+    db.prepare('DELETE FROM slack_app_links WHERE team_id=?').bind(installation.team_id),
+    db.prepare('DELETE FROM slack_app_installation WHERE id=?').bind(provider),
+    db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
+   ])
+   return this.read(ctx)
+  },
   async fields(ctx:RequestContext,value:unknown){
    const data=z.object({appId:z.string(),entityId:z.string(),fieldIds:z.array(z.string()).max(500)}).strict().parse(value),ownership=await baseOwner(ctx,data.appId),scope=await foundation.policy.scope(ctx,{appId:data.appId,entityId:data.entityId,purpose:'read'}),descriptor=foundation.descriptors.get(data.appId,data.entityId)
    if(new Set(data.fieldIds).size!==data.fieldIds.length||data.fieldIds.some(id=>!descriptor.fields.has(id)||!scope.readableFieldIds.includes(id)))throw new AuthorityError('forbidden','Choose fields you can currently read in this base.')

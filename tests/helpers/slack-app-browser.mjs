@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
-import {signedSlack} from './slack-app-journey.mjs'
+import {signedSlack,chatRoute} from './slack-app-journey.mjs'
 export async function slackAppBrowser(page,h,journey,width,edge){
  const root='/api/user-automations/slack',f=edge.fixture,provider=f.provider??'slack',label={slack:'Slack',teams:'Teams',nook:'Nook'}[provider]
+ const request=(route,options)=>h.request(chatRoute(route,provider),options)
  const incoming=(path,body)=>provider==='teams'?edge.signed(h.origin,path,body):signedSlack(h.origin,path.replace('/slack/','/'+provider+'/'),body)
- async function settings(){await page.goto(h.origin+'/app/settings');await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/settings');await page.getByText('Chat app',{exact:true}).first().click()}
+ async function settings(){await page.goto(h.origin+'/app/settings');await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/settings');await page.getByText('Chat app',{exact:true}).first().click();await page.getByLabel('Chat provider',{exact:true}).selectOption(provider)}
  await settings()
  const section=page.getByRole('region',{name:'Chat app settings',exact:true})
  await section.getByLabel('Chat provider',{exact:true}).selectOption(provider)
@@ -15,10 +16,10 @@ export async function slackAppBrowser(page,h,journey,width,edge){
  }else await section.getByLabel(label+' client secret',{exact:true}).fill(f.clientSecret)
  if(provider==='teams')await section.getByLabel('Microsoft tenant ID',{exact:true}).fill(f.tenantId)
  else await section.getByLabel(label+' signing secret',{exact:true}).fill(f.signingSecret)
- const configured=page.waitForResponse(response=>response.url().endsWith('/slack/settings')&&response.request().method()==='PUT')
+ const configured=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/slack/settings')&&response.request().method()==='PUT')
  await section.getByRole('button',{name:new RegExp('Save '+label+' credentials|Replace '+label+' credentials')}).click()
  assert.equal((await configured).status(),200)
- const installation=(await h.request(root+'/install',{method:'POST',body:{}})).data
+ const installation=(await request(root+'/install',{method:'POST',body:{}})).data
  if(provider==='nook')assert.equal(installation.installed,true)
  else{
   const authorization=new URL(installation.authorizeUrl)
@@ -26,13 +27,13 @@ export async function slackAppBrowser(page,h,journey,width,edge){
   if(callback.status!==303)console.error('CHAT_BROWSER_CALLBACK_FAILURE '+JSON.stringify({provider,status:callback.status,transportErrors:edge.transportErrors,networkErrors:edge.networkErrors}))
   assert.equal(callback.status,303);await callback.arrayBuffer()
  }
- if((await h.request(root+'/settings')).data.linked)await h.request(root+'/link',{method:'DELETE',body:{}})
+ if((await request(root+'/settings')).data.linked)await request(root+'/link',{method:'DELETE',body:{}})
  await settings()
  await section.getByRole('status').filter({hasText:'Connected to'}).waitFor()
  if(provider==='nook')assert.equal(await section.getByLabel('Nook scoped app token',{exact:true}).inputValue(),'')
  else assert.equal(await section.getByLabel(label+' client secret',{exact:true}).inputValue(),'')
  if(provider!=='teams')assert.equal(await section.getByLabel(label+' signing secret',{exact:true}).inputValue(),'')
- const issued=page.waitForResponse(response=>response.url().endsWith('/slack/link')&&response.request().method()==='POST')
+ const issued=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/slack/link')&&response.request().method()==='POST')
  await section.getByRole('button',{name:'Link your '+label+' account',exact:true}).click()
  const link=(await (await issued).json()).data
  await incoming('/webhooks/slack/link',{team_id:f.teamId,user_id:f.ownerUserId,command:'/cradle-link',text:link.code})
@@ -45,7 +46,7 @@ export async function slackAppBrowser(page,h,journey,width,edge){
  const safe=page.waitForResponse(response=>response.url().endsWith('/slack/unfurl-fields')&&response.request().method()==='PUT')
  await previews.getByRole('button',{name:'Save preview fields',exact:true}).click()
  assert.equal((await safe).status(),200)
- assert.ok((await h.request(root+`/settings?appId=${h.appId}&entityId=${h.entityId}`)).data.unfurlSafeFieldIds.includes(h.statusId))
+ assert.ok((await request(root+`/settings?appId=${h.appId}&entityId=${h.entityId}`)).data.unfurlSafeFieldIds.includes(h.statusId))
  await journey.capture('chat-app-'+provider+'-settings')
  await page.goto(h.origin+'/app/automations')
  await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/automations')
@@ -56,6 +57,7 @@ export async function slackAppBrowser(page,h,journey,width,edge){
  const form=page.getByRole('form',{name:'Automation definition'})
  await form.getByLabel('Automation name',{exact:true}).fill(`synthetic-cradle-120-slack-${width}`)
  await form.getByRole('combobox',{name:/^Action/}).selectOption('slack-app')
+ await form.getByRole('combobox',{name:'Approval provider',exact:true}).selectOption(provider)
  await form.getByRole('combobox',{name:new RegExp('^'+label+' channel')}).selectOption(f.channelId)
  const message='A record needs review '+('x'.repeat(3100))
  await form.getByRole('textbox',{name:new RegExp('^'+label+' app message')}).fill(message)

@@ -21,19 +21,19 @@ export function slackIdentity(db:D1Database,settings:ReturnType<typeof slackSett
   const code=randomSecret(),expiresAt=Date.now()+600000,nonce=createUlid()
   await db.batch([
    db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN (${current.sql}) THEN 1 ELSE 0 END`).bind(nonce,...current.values),
-   db.prepare('DELETE FROM slack_app_link_codes WHERE principal_id=? AND consumed_at IS NULL').bind(ctx.principal.id),
+   db.prepare('DELETE FROM slack_app_link_codes WHERE principal_id=? AND installation_instance=? AND consumed_at IS NULL').bind(ctx.principal.id,installation.instance_id),
    db.prepare('INSERT INTO slack_app_link_codes(code_hash,principal_id,authentication_epoch,base_operator_id,base_operator_version,expires_at,installation_instance) VALUES(?,?,?,?,?,?,?)').bind(await sha256(code),ctx.principal.id,ctx.principal.authenticationEpoch,row.id,row.version,expiresAt,installation.instance_id),
    db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
   ])
   return {code,expiresAt:new Date(expiresAt).toISOString(),instruction:'/cradle-link '+code}
  },async unlink(ctx:RequestContext){
-  const {guard}=await native(ctx),nonce=createUlid()
+  const {guard}=await native(ctx),{installation}=await settings.resolve(true),nonce=createUlid()
   // Unlink revokes pending link authority as well as the current association.
   // A previously copied code cannot silently undo this explicit revocation.
   await db.batch([
    db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,...guard.values),
-   db.prepare('DELETE FROM slack_app_link_codes WHERE principal_id=?').bind(ctx.principal.id),
-   db.prepare('DELETE FROM slack_app_links WHERE principal_id=?').bind(ctx.principal.id),
+   db.prepare('DELETE FROM slack_app_link_codes WHERE principal_id=? AND installation_instance=?').bind(ctx.principal.id,installation.instance_id),
+   db.prepare('DELETE FROM slack_app_links WHERE principal_id=? AND team_id=?').bind(ctx.principal.id,installation.team_id),
    db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
   ])
   return {linked:false}

@@ -5,13 +5,13 @@ import {slackAppFixture} from './slack-app-network-edge.mjs'
 const unescape=value=>value.replace(/\\([\\`*_{}\[\]()#+.!<>-])/g,'$1')
 /** Bot Framework/Graph are the fake network edge; native sessions, signatures,
  * RSA/JWK verification, policy, record commands and relay sockets remain real. */
-export async function teamsAppNetworkEdge(){
+export async function teamsAppNetworkEdge({sharedSecret}={}){
  const fixture={...slackAppFixture,provider:'teams',tenantId:'00000000-0000-4000-8000-000000000120',channelId:'synthetic-cradle-120-team/synthetic-cradle-120-channel'}
  const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048}),kid='synthetic-cradle-120-key',jwk={...publicKey.export({format:'jwk'}),kid,use:'sig',alg:'RS256'}
  const messages=[],unfurls=[],oauthRequests=[],apiCalls=[],postRequests=[],graphPosts=[]
  let origin,uncertain=false
  const channels=[{id:fixture.channelId,name:'synthetic-cradle-120-workspace · synthetic-cradle-120-review',is_member:true},{id:'synthetic-cradle-120-team/synthetic-cradle-120-private-channel',name:'synthetic-cradle-120-workspace · synthetic-cradle-120-private',is_member:true}]
- const edge=await automationNetworkEdge({extraHosts:['login.microsoftonline.com','graph.microsoft.com','login.botframework.com'],async receive(req,res,raw){
+ const edge=await automationNetworkEdge({sharedSecret,extraHosts:['login.microsoftonline.com','graph.microsoft.com','login.botframework.com'],async receive(req,res,raw){
   const host=req.headers.host,url=new URL(req.url,'https://'+host);apiCalls.push({method:req.method,path:req.url,host})
   const json=(value,status=200)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify(value))}
   if(host==='login.botframework.com'){
