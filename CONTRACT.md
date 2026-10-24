@@ -1015,7 +1015,7 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-Judged from the code and tests at commit `f6a858ad5b92c099d0127dbc9bb73eb415709954` (24 October 2026).
+Judged from the code and tests at commit `61ac28b796ac0641146c4ba758fa140f1303ecd2` (24 October 2026).
 
 The 24 October sd-cradle-c27 candidate first demotes PERM-010, SYNC-002, INTEG-003 and INTEG-004 under ct’s 16:12Z verdict. All four are now done candidates: their missing assertions pass locally, PERM-010/SYNC-002/INTEG-004 pass their push groups, and INTEG-003’s independent 50,000-row journey is loaded by the named Nightly journeys scale-export group. Exact final-head Verify, landing and ct’s fresh judgement remain required. INTEG-001 and INTEG-006 retain their prior done-candidate rows; every other clause row is unchanged. Clause-line recount: 130 done, 64 partial, 22 missing of 216. Live provider installations remain NOT RUN non-claims.
 
