@@ -141,7 +141,9 @@
       "recovery": "Preserve exact source, private secrets, deployment receipts and all applied migration bytes. Stop writes and scheduled dispatch; export DB and FILES before changes. Restore into fresh resources, admit the owner through operator-auth, compare data and file integrity, and verify owner workflows before changing traffic. Reapprove connections, grants and automations explicitly.",
       "mail": {
         "providers": [
-          "rer"
+          "rer",
+          "sendgrid",
+          "resend"
         ]
       },
       "wranglerFile": "wrangler.jsonc",

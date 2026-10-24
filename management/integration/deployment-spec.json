@@ -980,7 +980,9 @@
   },
   "mail": {
     "providers": [
-      "rer"
+      "rer",
+      "sendgrid",
+      "resend"
     ]
   }
 }
