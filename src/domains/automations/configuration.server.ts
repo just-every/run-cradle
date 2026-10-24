@@ -15,11 +15,11 @@ import { ensureRecordAutomationTriggers } from './capture.server'
 import { recordAutomationDefinition,type RecordAutomationDefinition } from './contracts'
 import * as tables from './storage.server'
 
-export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyPort,admission:AdmissionPort,descriptors:DescriptorRegistry,appOrigin:string) {
+export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyPort,admission:AdmissionPort,descriptors:DescriptorRegistry,appOrigin:string,slack?:Pick<ReturnType<typeof import('../slack-app/service.server').createSlackApp>,'validate'>) {
  return {
   async save(ctx:RequestContext,input:{commandId:string;id?:string;version?:number;expiresAt:string;definition:RecordAutomationDefinition}) {
    const definition=recordAutomationDefinition.parse(input.definition),{appId,entityId}=definition
-   const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),permissions=allActions.some(a=>a.kind==='update')?'write' as const:'read' as const
+   const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),permissions=allActions.some(a=>a.kind==='update'||a.kind==='slack-app')?'write' as const:'read' as const
    const own=await userDelegationPolicy(db,policy,ctx,{appId,entityId,name:definition.name,permissions,expiresAt:input.expiresAt})
    await validateAutomationTrigger(db,definition,descriptor,own.scope,ctx.now)
    const guards=[...own.guards]
@@ -31,6 +31,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
      if(!field||field.readOnly||field.type==='computed'||!own.scope.writableFieldIds.includes(field.id))throw new AuthorityError('forbidden','Select a writable field in your current scope.')
      validateCell(field,action.value)
     }
+    if(action.kind==='slack-app'){if(!slack)throw new AuthorityError('unconfigured','The Slack app is unavailable.',503);await slack.validate(ctx,appId,entityId,action)}
     if(action.kind==='sms'){
      const field=descriptor.schema.fields.find(f=>f.id===action.fieldId)
      if(!field||!(field.type==='text'||field.type==='computed'&&field.resultElementType==='text')||!own.scope.readableFieldIds.includes(action.fieldId))throw new AuthorityError('forbidden','SMS requires a readable text phone field.')
@@ -42,7 +43,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
      if(!destination)throw new AuthorityError('not_found','Destination is unavailable.',404)
      guards.push(trustedPredicate('EXISTS(SELECT 1 FROM record_automation_destinations WHERE id=? AND app_id=? AND revoked_at IS NULL)',[action.destinationId,appId]))
     }
-    if(['email','webhook','slack','sms'].includes(action.kind)){
+    if(['email','webhook','slack','sms','slack-app'].includes(action.kind)){
      const exported=await policy.scope(ctx,{appId,entityId,purpose:'export'});guards.push(...exported.currentAuthorityGuards)
     }
    }

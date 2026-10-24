@@ -10,6 +10,7 @@ export const recordAutomationAction=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('email'),operatorId:idSchema,subject:z.string().trim().min(1).max(200),text:z.string().trim().min(1).max(4000),when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('update'),fieldId:idSchema,value:cellValueSchema,when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('webhook'),destinationId:idSchema,when:filterSchema.optional()}).strict(),
+ z.object({kind:z.literal('slack-app'),channelId:z.string().regex(/^[A-Za-z0-9_-]{1,200}$/),text:z.string().trim().min(1).max(3000),fieldId:idSchema,approveValue:cellValueSchema,rejectValue:cellValueSchema,when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('slack'),destinationId:idSchema,text:z.string().trim().min(1).max(3000),when:filterSchema.optional()}).strict(),
 ])
 export const recordAutomationDefinition=z.object({

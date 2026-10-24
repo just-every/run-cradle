@@ -3,7 +3,7 @@ import {PortabilityError} from '@runeditrun/rer/modules/portability';
 export const transient = ['Durable Object initialization cache', 'WORK_QUEUE deliveries', 'local caches and logs'];
 export const portabilityPolicy = {
  product:'just-every/cradle',
- excludeTables:['sms_installation','record_calendar_catalogues','record_capacity','record_trash_maintenance',
+ excludeTables:['slack_app_installation','slack_app_oauth_states','slack_app_link_codes','slack_app_links','sms_installation','record_calendar_catalogues','record_capacity','record_trash_maintenance',
   'company_identity_config','company_scim_users','company_scim_credentials','company_saml_requests','company_saml_assertions',
   'record_presence',
   'sessions','authority_sessions','authority_magic_tokens','authority_credentials','authority_rate_limits',
@@ -30,6 +30,7 @@ export const portabilityPolicy = {
    }
   }
   if(await db.prepare("SELECT 1 FROM authority_principals WHERE kind<>'system' OR human_id IS NOT NULL OR initial_owner<>0 LIMIT 1").first())return false;
+  if(tables.slack_app_actions&&await db.prepare(`SELECT 1 FROM "${tables.slack_app_actions.replaceAll('"','""')}" WHERE choice_state='pending' LIMIT 1`).first())return false;
   if(tables.warehouse_exports&&await db.prepare(`SELECT 1 FROM "${tables.warehouse_exports.replaceAll('"','""')}" WHERE state='active' OR running_id IS NOT NULL OR watermark_json<>'{}' LIMIT 1`).first())return false;
   const checks={record_calendar_definitions:'enabled<>0',record_calendar_changes:"state<>'complete'",
    lifecycle_erasures:"state<>'complete'",lifecycle_erasure_blobs:'1',lifecycle_file_writes:'1',
@@ -53,6 +54,7 @@ export const portabilityPolicy = {
   return true;
  },
  exportRow(table,row){
+  if(table==='slack_app_actions'&&row.choice_state==='pending')row.choice_state='retired';
   if(table==='record_change_subscriptions'){row.state='inactive';row.sealed_json=null;row.delivery_state='restore_hold';}
   if(table==='record_sheet_schedules'){row.state='paused';row.running_id=null;row.last_slot=null;row.last_started_at=null;}
   if(table==='warehouse_objects'&&'sealed_json'in row)row.sealed_json=null;

@@ -321,6 +321,21 @@
       ]
     },
     {
+      "id": "slack-app",
+      "required": false,
+      "requiredWhen": "An owner installs the Slack app or enables a Slack app automation action",
+      "why": "The owner's OAuth-installed Slack app posts through slack.com using the trusted HTTPS relay. Signed Slack callbacks link native people, apply their policy-checked decisions and unfurl records they can read using owner-marked safe fields.",
+      "data": [
+        "Owner-approved record primary field and automation text with inserted readable values",
+        "Owner-marked unfurl-safe field values readable by the linked poster",
+        "Native record links, opaque approval identifiers and channel selection",
+        "App credentials and OAuth code for installation; sealed bot token for Slack API calls"
+      ],
+      "adapters": [
+        "automation.egress.v1"
+      ]
+    },
+    {
       "id": "automation-slack",
       "required": false,
       "requiredWhen": "A user enables a Slack automation action",

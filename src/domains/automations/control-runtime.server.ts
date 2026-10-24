@@ -61,7 +61,7 @@ export function createAutomationControlRuntime(deps:{db:D1Database;appOrigin:str
    try{
     const ctx=await context(run,ingress)
     if(!await branch(ctx,run,saved,entry)||!await matches(ctx,saved,entry.when)||!await matches(ctx,saved,action.when)){await store.markSkipped(step.id,'The step condition did not match.');continue}
-    const scope=await policy.scope(ctx,{...ref,purpose:['email','webhook','slack','sms'].includes(action.kind)?'export':'read'}),d=descriptors.get(ref.appId,ref.entityId)
+    const scope=await policy.scope(ctx,{...ref,purpose:['email','webhook','slack','sms','slack-app'].includes(action.kind)?'export':'read'}),d=descriptors.get(ref.appId,ref.entityId)
     let record
     try{record=await reader.record(ctx,scope,ref)}catch(error){if(item&&error instanceof AdmissionError&&['not_found','forbidden'].includes(error.code)){await store.markSkipped(step.id,'The item is no longer readable.');continue}throw error}
     const subject=trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(d.table.tableId)} WHERE ${identifier(d.idColumn)}=? AND (${scope.rowPredicate.sql}))`,[ref.recordId,...scope.rowPredicate.values])
@@ -77,7 +77,7 @@ export function createAutomationControlRuntime(deps:{db:D1Database;appOrigin:str
     if(result.state==='Unknown'){await store.finish(run.id,'Unknown',result.errorCode??null);return}
     if(item){partial=true;failedItems.add(item);continue}await store.finish(run.id,'Failed',result.errorCode??null);return
    }catch(error){
-    const code=error instanceof AuthorityError||error instanceof AdmissionError?error.code:'automation_effect_failed',unknown=claimed&&!(error instanceof AuthorityError)&&!(error instanceof AdmissionError)&&['email','webhook','slack','sms'].includes(action.kind)
+    const code=error instanceof AuthorityError||error instanceof AdmissionError?error.code:'automation_effect_failed',unknown=claimed&&!(error instanceof AuthorityError)&&!(error instanceof AdmissionError)&&['email','webhook','slack','sms','slack-app'].includes(action.kind)
     if(claimed)await store.actionFinished(step.id,unknown?'Unknown':'Failed',{},code)
     if(unknown){await store.finish(run.id,'Unknown',code);return}
     if(item&&!(error instanceof AuthorityError)){partial=true;failedItems.add(item);if(!claimed)await store.reject(step.id,code);continue}

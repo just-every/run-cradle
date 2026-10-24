@@ -16,18 +16,18 @@ import {createAutomationTests} from '../../../domains/automations/test-runs.serv
 import type {createRecordServices} from '../../../domains/records/service.server'
 import { createUlid } from '../../shared/ids'
 
-export function createAutomationsComposition(platform:Platform,foundation:ServerFoundation,reader:ReturnType<typeof createRecordServices>['reader'],clock=()=>new Date()) {
+export function createAutomationsComposition(platform:Platform,foundation:ServerFoundation,reader:ReturnType<typeof createRecordServices>['reader'],clock=()=>new Date(),slack?:ReturnType<typeof import('../../../domains/slack-app/service.server').createSlackApp>) {
  const db=platform.bindings.DB,{policy,admission,descriptors,entities,commands}=foundation
  const destinations=createAutomationDestinations(platform.bindings,policy,admission)
- const configuration=createRecordAutomationConfiguration(db,policy,admission,descriptors,platform.auth.configuration.appOrigin)
+ const configuration=createRecordAutomationConfiguration(db,policy,admission,descriptors,platform.auth.configuration.appOrigin,slack)
  const history=createRecordAutomationHistory(db,policy,descriptors)
- const effects=createAutomationEffects({env:platform.bindings,entities,admission,commands,destinations,reader,descriptors,policy,appOrigin:platform.auth.configuration.appOrigin})
+ const effects=createAutomationEffects({env:platform.bindings,entities,admission,commands,destinations,reader,descriptors,policy,slack,appOrigin:platform.auth.configuration.appOrigin})
  const failures=createAutomationFailureAlerts(platform.bindings,foundation,platform.auth.configuration.appOrigin,clock)
  const runner=createRecordAutomationRuntime({db,appOrigin:platform.auth.configuration.appOrigin,policy,descriptors,reader,effects,clock})
  const triggers=createAutomationTriggers(platform.bindings,foundation,reader,platform.auth.configuration.appOrigin,clock)
  const runtime={async tick(commandId?:string,ingress:'queue'|'schedule'='schedule'){if(ingress==='schedule')await triggers.tick();await runner.tick(commandId,ingress);await failures.tick()}}
  const tests=createAutomationTests(platform.bindings,foundation,reader,destinations,effects)
- const http=recordAutomationsHttp({sms:smsSettings(platform.bindings,platform.auth.configuration.appOrigin),retry:createAutomationRetry(db,foundation),tests,configuration,history,destinations,authenticate:request=>foundation.authenticate(request,'http',createUlid()),
+ const http=recordAutomationsHttp({slack,sms:smsSettings(platform.bindings,platform.auth.configuration.appOrigin),retry:createAutomationRetry(db,foundation),tests,configuration,history,destinations,authenticate:request=>foundation.authenticate(request,'http',createUlid()),
   async recipients(ctx,appId,entityId) {
    const owner=await ownerDelegationSnapshot(db,ctx,appId),scope=await policy.scope(ctx,{appId,entityId,purpose:'read'})
    const guard=and(owner.guard,...scope.currentAuthorityGuards)

@@ -1,3 +1,4 @@
+import {createSlackApp} from '../../../domains/slack-app/service.server'
 import {createRecordCalendarSync} from '../../../domains/records/calendar-sync/service.server'
 import {recordCalendarSyncHttp} from '../../../domains/records/calendar-sync/http.server'
 import {ensureCalendarCapture} from '../../../domains/records/calendar-sync/capture.server'
@@ -30,9 +31,10 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const foundation=await createLaunchFoundation(platform)
  await ensureRecordCapacity(platform.bindings.DB,foundation.descriptors)
  const lifecycle=createLifecycleComposition(platform,foundation)
- const providers=createProvidersComposition(platform,foundation)
  validateAuthConfiguration(platform.auth.configuration)
  const records=createRecordsComposition(platform,foundation)
+ const slackApp=createSlackApp(platform.bindings,foundation,records.services,platform.auth.configuration.appOrigin)
+ const providers=createProvidersComposition(platform,foundation,slackApp)
  const calendarSyncService=createRecordCalendarSync(platform.bindings.DB,foundation,providers,records.services,platform.auth.configuration.appOrigin)
  await ensureCalendarCapture(platform.bindings.DB,foundation.descriptors)
  const calendarSync={service:calendarSyncService,http:recordCalendarSyncHttp(calendarSyncService,request=>foundation.authenticate(request,'http',createUlid()))}
@@ -43,7 +45,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const changeSubscriptions=createChangeSubscriptions(platform.bindings,foundation.policy,foundation.admission,records.services,platform.auth.configuration.sessionSecret)
  const changeDelivery=changeSubscriptionDelivery(platform.bindings,changeSubscriptions,platform.auth.configuration.appOrigin,clock)
  const purgeRecords=recordTrashPurge(platform.bindings.DB,foundation.descriptors,foundation.admission,clock),purgeMetadata=metadataTrashPurge(platform.bindings.DB,foundation.admission,clock)
- const automations=createAutomationsComposition(platform,foundation,records.services.reader,clock)
+ const automations=createAutomationsComposition(platform,foundation,records.services.reader,clock,slackApp)
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)

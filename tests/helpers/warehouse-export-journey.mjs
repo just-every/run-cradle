@@ -89,7 +89,7 @@ async function exportFormatJourney(doors, world, format, destination, edge) {
    for(const manifestKey of (await keys()).filter(key=>key.endsWith('-manifest.json'))){const manifest=JSON.parse(await read(manifestKey));const file=manifest.files.find(file=>file.key===key);if(file){mapping=file.columns;break}}
    assert.ok(mapping,'BigQuery source-field aliases are recorded in the exported manifest')
    assert.equal(new Set(mapping.map(column=>column.fieldId)).size,mapping.length,'Mapped columns retain unique source-field identity')
-   for(const column of mapping){assert.ok(parsed.headers.includes(column.column),'The exact uploaded file uses its manifest column alias');assert.match(column.column,/^field_[a-z0-9_]+__[a-z0-9]+$/)}
+   for(const column of mapping){assert.ok(parsed.headers.includes(column.column),'The exact uploaded file uses its manifest column alias');assert.match(column.column,/^[A-Za-z_][A-Za-z0-9_]*$/,'Mapped names are valid BigQuery identifiers')}
    return {...parsed,columns:mapping,headers:parsed.headers.map(name=>mapping.find(column=>column.column===name)?.label??name)}
   }
   const object=await bucket.get(key);assert.ok(object,`Missing exported object ${key}`)

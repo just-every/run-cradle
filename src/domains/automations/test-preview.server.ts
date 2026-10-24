@@ -21,6 +21,11 @@ export async function automationTestPreview(deps:{db:D1Database;entities:EntityR
     const field=deps.descriptors.get(definition.appId,definition.entityId).fields.get(action.fieldId)?.field
     if(!field||field.readOnly||field.type==='computed'||!scope.writableFieldIds.includes(field.id))throw new Error('The selected field is no longer writable.')
     validateCell(field,action.value);step.output={fieldId:field.id,before:values[field.id]??null,after:action.value};values[field.id]=action.value
+   }else if(action.kind==='slack-app'){
+    const field=deps.descriptors.get(definition.appId,definition.entityId).fields.get(action.fieldId)?.field
+    if(!field||field.readOnly||field.type==='computed'||!scope.writableFieldIds.includes(field.id))throw new Error('The Slack decision field is no longer writable.')
+    validateCell(field,action.approveValue);validateCell(field,action.rejectValue)
+    step.output={channelId:action.channelId,text:action.text,fieldId:action.fieldId,approveValue:action.approveValue,rejectValue:action.rejectValue,sent:false};confirmationEffects.push({position,kind:'slack-app',destination:action.channelId})
    }else if(action.kind==='sms'){
     const sms=smsInput(action,record,scope,deps.descriptors);step.output={to:sms.to,text:sms.body,sent:false};confirmationEffects.push({position,kind:'sms',destination:sms.to})
    }else if(action.kind==='notify'||action.kind==='email'){

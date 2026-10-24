@@ -23,7 +23,7 @@ import { registerExecutionCommands } from '../../../domains/execution/commands.s
 import { createUlid } from '../../shared/ids'
 import { ApiError } from '../../registry/errors'
 import type { ModelSchema } from '../../../domains/execution/model-ports'
-export function createProvidersComposition(platform:Platform,foundation:ServerFoundation){
+export function createProvidersComposition(platform:Platform,foundation:ServerFoundation,slack?:ReturnType<typeof import('../../../domains/slack-app/service.server').createSlackApp>){
  const env=platform.bindings,providerPolicy=calendarConnectionPolicy(platform.bindings.DB,foundation.policy)
  const connectionKeyVersion=env.CONNECTION_ENCRYPTION_KEY_VERSION??'v1'
  const schemas=new Map<string,ModelSchema>([[modelSchemaKey('cradle.application-source',1),applicationSourceModelSchema],[modelSchemaKey('operation.next-action',1),operationModelSchema],[modelSchemaKey('intelligence.formulation',1),formulationModelSchema]])
@@ -39,7 +39,7 @@ export function createProvidersComposition(platform:Platform,foundation:ServerFo
  registerConnectionCommands(foundation.commands,runtime.connections,jobs)
  registerExecutionCommands(foundation.commands,runtime.dependencies)
  const authenticate=(request:Request)=>foundation.authenticate(request,'http',createUlid())
- const connectionHttp=createConnectionHttp({smsWebhook:smsWebhooks(env,platform.auth.configuration.appOrigin),service:runtime.connections,authenticate,webhook:runtime.webhook,webhookSecret:runtime.webhookSecret})
+ const connectionHttp=createConnectionHttp({slackWebhook:slack?.webhook,slackCallback:slack?.callback,smsWebhook:smsWebhooks(env,platform.auth.configuration.appOrigin),service:runtime.connections,authenticate,webhook:runtime.webhook,webhookSecret:runtime.webhookSecret})
  const setupHttp=createConnectionSetupHttp({authenticate,writeCredentials:runtime.writeCredentials})
  const collectionsHttp=createExecutionCollections({db:env.DB,execution:runtime.execution,connections:runtime.connections,profiles:createModelProfileReader({db:env.DB,policy:foundation.policy}),cursorSecret:platform.auth.configuration.sessionSecret,authenticate})
  return {...runtime,schemas,jobs,connectionHttp,setupHttp,collectionsHttp,http:createExecutionHttp(runtime.execution,request=>foundation.authenticate(request,'http',createUlid()))}

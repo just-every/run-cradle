@@ -1,3 +1,4 @@
+import {slackAppJourney} from './helpers/slack-app-journey.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {changeSubscriptionsUpgrade} from './helpers/change-subscriptions-upgrade.mjs'
@@ -11,6 +12,7 @@ import {verifyWebhook} from '../vendor/base/modules/integrations/core/webhook.ts
 import {unbase64} from '../src/adapters/crypto.server.ts'
 
 contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery preserves ordered replay, delete resynchronization and policy-narrowed restores',async()=>{
+ await slackAppJourney()
  let edge,h
  try {
   edge=await automationNetworkEdge()

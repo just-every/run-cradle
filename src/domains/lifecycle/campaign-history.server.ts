@@ -5,6 +5,7 @@ export async function redactCampaignHistory(db:D1Database,change:Effects,ids:str
  const contains=(column:string)=>`EXISTS(SELECT 1 FROM json_tree(${column}) WHERE value IN (SELECT value FROM json_each(?)))`
  await removeRows(db,change,'launch_sample_records','record_id IN (SELECT value FROM json_each(?))',[ids])
  await removeRows(db,change,'launch_bulk',contains('snapshot_json'),[ids])
+ await removeRows(db,change,'slack_app_actions','record_id IN (SELECT value FROM json_each(?))',[ids])
  await removeRows(db,change,'sms_messages','record_id IN (SELECT value FROM json_each(?))',[ids])
  const runs=(await db.prepare(`SELECT id,state FROM automation_runs WHERE subject_id IN (SELECT value FROM json_each(?)) OR ${contains('definition_json')}`).bind(ids,ids).all<{id:string;state:string}>()).results
  for(const run of runs){

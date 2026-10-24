@@ -4517,6 +4517,10 @@
       "sha256": "76f729c6fe6b0ae36363f614826032a0c0d43a267c44364ac186224e4a45ddcb",
       "executable": false
     },
+    "docs/slack-app.md": {
+      "sha256": "82500822d3d5299936729f248b846ebba488a1a836a16199b1cbb975774d7ad2",
+      "executable": false
+    },
     "docs/twilio-sms.md": {
       "sha256": "37c1431ee188341c6c534bb03e74a3ce97a49d9bf045c2afa895952fa5f037a4",
       "executable": false
@@ -4558,7 +4562,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "f82c9f3b21acd522e68c679ab04bcbb142aff24839f718d9f77bb2a99122b77f",
+      "sha256": "8ee7a4731433f9de768e44e9db64f63f724547eadb27fd62ab1e58bcb86ebda9",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5105,6 +5109,10 @@
       "sha256": "27521814ff54b06dca0b274931a536dc62a5846f5a18d72240b4db49fe03d447",
       "executable": false
     },
+    "migrations/updates/9064_slack_app.sql": {
+      "sha256": "6514ff8e06a855983588dac38db41bdbc544542311da71039c86830b88b8d2da",
+      "executable": false
+    },
     "OPERATIONS.json": {
       "sha256": "284c185f980784d740abd49dc2c8c89723740e30590a61056569f093a82f0e58",
       "executable": false
@@ -5554,7 +5562,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "8c453e74bf4071305c63e8a6cad24fe10ac4e659814ab9305a80834b883e3b9e",
+      "sha256": "ad5b0705c4173b4a3df2e4557beb44a75cc63d1f6935a36fba5db816e72b06d4",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {
@@ -6190,7 +6198,7 @@
       "executable": false
     },
     "src/core/app/composition/automations.server.ts": {
-      "sha256": "5b416ca95e1081696ef9cefbdc328fd69f8461f7d14d3c1479d5909eafa17b5a",
+      "sha256": "6e3cb7b2dcbac6b4395ea6416ca741b6ca9328414f8e6b8f5517328e1ba3c0c9",
       "executable": false
     },
     "src/core/app/composition/channels.server.ts": {
@@ -6226,7 +6234,7 @@
       "executable": false
     },
     "src/core/app/composition/providers.server.ts": {
-      "sha256": "7bb2e5a079f3a5262d933c32ac1fb2deea38196d4f607f1498267c23414e571b",
+      "sha256": "c3966148a0e4e9642fa2d5054a2ad1be0382a61798b878f33ac692800b1d950b",
       "executable": false
     },
     "src/core/app/composition/records.server.ts": {
@@ -6238,7 +6246,7 @@
       "executable": false
     },
     "src/core/app/composition/runtime.server.ts": {
-      "sha256": "4b575ee88112af6ce7c903ab5309b6e04bfaf76f077c0e6d47020e3645a75f2f",
+      "sha256": "668144cf88322aa863b96411d8e9b77061339a8b0e914825d202c0875b797131",
       "executable": false
     },
     "src/core/app/composition/warehouse.server.ts": {
@@ -7182,7 +7190,7 @@
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.tsx": {
-      "sha256": "f73f9a5dc157bb9892039708f1aabae006b5cea904fb194efba9cfc9923220c9",
+      "sha256": "7790352a4da1dd416a94fd0ac91f6b462c735a388625eddd74b54a1a2f8872e6",
       "executable": false
     },
     "src/core/features/setup/document.server.ts": {
@@ -7670,11 +7678,11 @@
       "executable": false
     },
     "src/domains/automations/configuration.server.ts": {
-      "sha256": "3b4d72fa7df9b450819bcfc659d136eae294216e7d6cf3b6e5f2af34b9b9b03f",
+      "sha256": "b025d933368185736d233715b96be420e3535232ecabba3cb1ab915f9f328e71",
       "executable": false
     },
     "src/domains/automations/contracts.ts": {
-      "sha256": "a1cb9ce2cc322728348200e7a4d85fb481084d62686bd13a4fe936f9f3f168e2",
+      "sha256": "cff2ae6b52e1835cfddbc68e5aa3cf5d3d541a658b3d17ad308388e4dd722554",
       "executable": false
     },
     "src/domains/automations/control-contracts.ts": {
@@ -7690,7 +7698,7 @@
       "executable": false
     },
     "src/domains/automations/control-runtime.server.ts": {
-      "sha256": "aff132a34dffa6c6d6d9754cf8ce3c71857060e5a9155e9e61241e21e7f8efb7",
+      "sha256": "e35c7d8b242db76b4d69f1ae545dd8a4030610ed01acfefbe4876ab75eee0259",
       "executable": false
     },
     "src/domains/automations/destinations.server.ts": {
@@ -7698,7 +7706,7 @@
       "executable": false
     },
     "src/domains/automations/effects.server.ts": {
-      "sha256": "a9b480262fd29ed31a90316e73207ca38d012b6873d33cfa3952f2fa8cfeba19",
+      "sha256": "a0a074be02857d65240d2f6136278445e66b8203be13876462a4616dab0aef00",
       "executable": false
     },
     "src/domains/automations/email-timing.server.ts": {
@@ -7722,7 +7730,7 @@
       "executable": false
     },
     "src/domains/automations/http.server.ts": {
-      "sha256": "db438a3adce109b050cc53185ece28a6e7185b6bc59911bcff89f7b1f8f111d9",
+      "sha256": "2edda64225d1b0547f812d6a85a60a110aafe5992c2f33f7b1f530b934108fe8",
       "executable": false
     },
     "src/domains/automations/recipients.server.ts": {
@@ -7738,7 +7746,7 @@
       "executable": false
     },
     "src/domains/automations/runtime.server.ts": {
-      "sha256": "d977393f458eed954166e9b4236d3ec9cddd409da6def4f3a57c4ab03bd0c1da",
+      "sha256": "143683f0ae476560114858f275b1f8cd5cd66d5111adadbac8590c99d3cdaa95",
       "executable": false
     },
     "src/domains/automations/schedule-clock.ts": {
@@ -7758,11 +7766,11 @@
       "executable": false
     },
     "src/domains/automations/test-preview.server.ts": {
-      "sha256": "8783f4554d86506bad650f59f3c15992cf2b906318129ea09661beefce608277",
+      "sha256": "1c0fa2d2147fca81094af120280df1a592d8d797f36bd1ed94f35abdd2a862dd",
       "executable": false
     },
     "src/domains/automations/test-runs.server.ts": {
-      "sha256": "18dfb5cbf0a105495667061887e6a3c6f993cbed21bd36d0fbcc152fb8fae4fc",
+      "sha256": "12ee587f590b17d1b944c3b21989af4fe1ad41b32f992cddf8b38571cae09e6a",
       "executable": false
     },
     "src/domains/automations/trigger-configuration.server.ts": {
@@ -7990,7 +7998,7 @@
       "executable": false
     },
     "src/domains/connections/routes.server.ts": {
-      "sha256": "7d73b2f89c9be66a35adb74b2083fd980928a16dd0b9aadb201b805f4022118b",
+      "sha256": "d92820fbcb3a0f8c26b656f4dc7463acebca325ea341007bfc59f965d1213285",
       "executable": false
     },
     "src/domains/connections/schema.ts": {
@@ -8586,7 +8594,7 @@
       "executable": false
     },
     "src/domains/lifecycle/campaign-history.server.ts": {
-      "sha256": "bc8472641cd27251a87fed919111a044e7ff448c21a79cec67b2de584e80f411",
+      "sha256": "22cc1344c412c84356d641e4dd207b119a2352026bc60d7c7cb07c60b55738f7",
       "executable": false
     },
     "src/domains/lifecycle/campaigns.server.ts": {
@@ -8654,7 +8662,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "4d0c7771870aef284eab660dc6756ca0140d1ddab1f359360aad6de3311c6d55",
+      "sha256": "8b54c9d7fe78be9960b8eac778b24e60676d73f8222881d19214516325bdee85",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -8862,7 +8870,7 @@
       "executable": false
     },
     "src/domains/portability/installation-policy.mjs": {
-      "sha256": "1c595e6ae765f10c320fb5d816e9c2d56331d2008ac656d8595b20bdb71ff0c8",
+      "sha256": "037a2c9dc92f1701ffe9879436e4e6db1060c41c7464a96a67bb1c749cdf24ee",
       "executable": false
     },
     "src/domains/portability/record-import.server.ts": {
@@ -9658,7 +9666,7 @@
       "executable": false
     },
     "src/domains/records/trash/erasure.server.ts": {
-      "sha256": "9958ffb4673e601397d1994adef317b9726d36e08069568bf545d002dab105f4",
+      "sha256": "36fe7c92ae39cc7db416be6fcea980a7091c34487614a655e3f8309ea156119c",
       "executable": false
     },
     "src/domains/records/trash/http.server.ts": {
@@ -9839,6 +9847,34 @@
     },
     "src/domains/scorecard/service.server.ts": {
       "sha256": "5767e1e19796efbb3374c8f51ea2b7133d8fef465247263433e8e70cad170079",
+      "executable": false
+    },
+    "src/domains/slack-app/callbacks.server.ts": {
+      "sha256": "dcba6825cd4413d8bed53f2891076cb0bea01be2257ce3b745f4ff463ea9c476",
+      "executable": false
+    },
+    "src/domains/slack-app/effects.server.ts": {
+      "sha256": "b948cc775009427204d09ce42f1e266cf2a282b159140508c6e0523a4c5dad3b",
+      "executable": false
+    },
+    "src/domains/slack-app/identity.server.ts": {
+      "sha256": "49a4aa7af95bc0764274be8a512ed1f69c765cc0e68ace9f257d2916e10d84e0",
+      "executable": false
+    },
+    "src/domains/slack-app/oauth.server.ts": {
+      "sha256": "237908bc5d027b69b28a62096c52738e5264c1ad18a4d98ab707bc3cdbe5463b",
+      "executable": false
+    },
+    "src/domains/slack-app/service.server.ts": {
+      "sha256": "76bed1c7c8425441fd53905871fa8f7f2ac7c4e20e0c4f3d7a192bf2e70f798c",
+      "executable": false
+    },
+    "src/domains/slack-app/settings.server.ts": {
+      "sha256": "ad9939a81a5d1eb483a905c9c443831477f6517155090665a0fe521cb351825e",
+      "executable": false
+    },
+    "src/domains/slack-app/transport.server.ts": {
+      "sha256": "e30ea6f6e26224644b1efc11f79abab5a263b0794628773ef494220b1ccb7e2f",
       "executable": false
     },
     "src/domains/sms/dispatch.server.ts": {
@@ -10170,7 +10206,7 @@
       "executable": false
     },
     "src/ui/automations/action-editor.tsx": {
-      "sha256": "66ee3d08fdf1ffce13acf4c92912e8e27a1799cd1e35737acb525b03dc9e51f2",
+      "sha256": "d3450ada9fab7e21793d1d2b7ddd9d27ef7cc0c9fb3b7fa58f5c1713fb0d0ebd",
       "executable": false
     },
     "src/ui/automations/control-summary.tsx": {
@@ -10193,12 +10229,16 @@
       "sha256": "64a28f7518722e67510037064270ba334980fac8b9bd5b7b83eac97bd63a33c5",
       "executable": false
     },
+    "src/ui/automations/slack-app-action.tsx": {
+      "sha256": "984cc81b246b0684f8f745d6a9d491a528d425061a1dbbc602c7aaee6ad27f96",
+      "executable": false
+    },
     "src/ui/automations/test-panel.tsx": {
       "sha256": "3bd67f1dd973b1742bd21496cdd0dbf61e3b7eedcddc0601bff7423edd2c4ecd",
       "executable": false
     },
     "src/ui/automations/test-step.tsx": {
-      "sha256": "c9a5faeefb3a4615baaa369efed90c054608d18decd14c711e78e5eeb98ac6ba",
+      "sha256": "098467abf0525567c609e98cd02f6e1ad0728bf7688043e4c567ef726b54ae1c",
       "executable": false
     },
     "src/ui/automations/user-automations-panel.tsx": {
@@ -10991,6 +11031,14 @@
     },
     "src/ui/settings/sample-data-panel.tsx": {
       "sha256": "b781d0962a6f9d87a95d5bfe2ad1a0b96a19c04ac8bb267c87ca6ce64831a101",
+      "executable": false
+    },
+    "src/ui/settings/slack-app-panel.tsx": {
+      "sha256": "60dec175f4006f8cd94152b865cf8d66b5ee2c7376daf11d8e6948e76ca2c8a6",
+      "executable": false
+    },
+    "src/ui/settings/slack-unfurl-fields.tsx": {
+      "sha256": "a54412ce5455c5243162c0e6b9aa6a68dc5818ed959b00c19d8e894235b29c94",
       "executable": false
     },
     "src/ui/settings/sms-panel.tsx": {
@@ -12297,12 +12345,24 @@
       "sha256": "8c326de6d2d2f474057e7fcbbc86400ae7d5a00a101998d847e2754dfbfd76a0",
       "executable": false
     },
+    "tests/helpers/slack-app-browser.mjs": {
+      "sha256": "87a445f98249738b98a685a02cf5c873cab7330b76f709e792610ca3b3d574d1",
+      "executable": false
+    },
+    "tests/helpers/slack-app-journey.mjs": {
+      "sha256": "0772e6250cdc5c0f19e45c93bdcb74ad2723cf7e12e27acb2930e2e3bb5cfe04",
+      "executable": false
+    },
+    "tests/helpers/slack-app-network-edge.mjs": {
+      "sha256": "47f66bd35ac3c10a8b36feb837946b49887458a49dc49a4881c6dc544c0aefb7",
+      "executable": false
+    },
     "tests/helpers/sms-browser.mjs": {
       "sha256": "7b0a4140358039908bdb509a24aadbbdb96ec12e77c55bf9cf11f117a00ed1ff",
       "executable": false
     },
     "tests/helpers/sms-journey.mjs": {
-      "sha256": "7f9763717fdb8020d7db7472c6271103f944dde8365ff6da2a2705e0300bcebb",
+      "sha256": "0f45d6b9fee1a64f428c631203659774d37f82a0e487e0394ad857482020376c",
       "executable": false
     },
     "tests/helpers/snowflake-network-edge.mjs": {
@@ -12354,7 +12414,7 @@
       "executable": false
     },
     "tests/helpers/warehouse-export-journey.mjs": {
-      "sha256": "62df9b866a32dcba5a4c458c42187f067b89c24ec3ee49a3143439f5c3ded5a8",
+      "sha256": "ff07c97bf20a51cf98bb318b94be12047f7aed5a40a5bbd0e935132be5495ad0",
       "executable": false
     },
     "tests/helpers/warehouse-network-edge.mjs": {
@@ -12802,7 +12862,7 @@
       "executable": false
     },
     "tests/ui-user-automations.mjs": {
-      "sha256": "0625f9127f2e9dd2a4e3284a6da4ce29e0723752e1205bad255d266fea9c8dea",
+      "sha256": "37fe52ca87693a3c462a09f014970d4e2e3c78bb9cfe8390c264659475fc2947",
       "executable": false
     },
     "tests/user-api-keys.mjs": {
@@ -12814,7 +12874,7 @@
       "executable": false
     },
     "tests/user-webhooks.mjs": {
-      "sha256": "dad57cb6a30fb2fa02fc9715055d0b7a1495fbe5565c1f4c83ec85902caa3673",
+      "sha256": "3e6cba015a4f15b723b8243a3e5f9042fb60d5351873187e69da732fa7a5e82d",
       "executable": false
     },
     "tsconfig.json": {

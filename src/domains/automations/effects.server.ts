@@ -23,7 +23,7 @@ import type { RecordAutomationAction } from './contracts'
 
 type Outcome={state:'Complete'|'Failed'|'Unknown';result:unknown;errorCode?:string}
 export function createAutomationEffects(deps:{env:PlatformBindings;entities:EntityRegistry;admission:AdmissionPort;
- policy:PolicyPort;appOrigin:string;reader:ReturnType<typeof createRecordReader>;descriptors:DescriptorRegistry;commands:CommandRegistry;destinations:ReturnType<typeof createAutomationDestinations>}) {
+ slack?:ReturnType<typeof import('../slack-app/service.server').createSlackApp>;policy:PolicyPort;appOrigin:string;reader:ReturnType<typeof createRecordReader>;descriptors:DescriptorRegistry;commands:CommandRegistry;destinations:ReturnType<typeof createAutomationDestinations>}) {
  const db=deps.env.DB
  return {
   async execute(ctx:RequestContext,run:AutomationRun,step:AutomationActionRun,action:RecordAutomationAction,
@@ -55,6 +55,7 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
     return {state:receipt.result.state==='committed'?'Complete':'Unknown',result:{commandId},
      ...(receipt.result.state==='committed'?{}:{errorCode:'admission_unknown'})}
    }
+   if(action.kind==='slack-app'){if(!deps.slack)throw new AuthorityError('unconfigured','The Slack app is unavailable.',503);return deps.slack.dispatch(ctx,run,step,action,authorize)}
    if(action.kind==='sms')return smsDispatch(deps.env,deps.appOrigin,deps.reader,deps.descriptors,deps.policy)(ctx,run,step,action,scope,authorize)
    if(action.kind==='email') {
     const recipient=await automationRecipient(db,deps.entities,ctx,{...ref,operatorId:action.operatorId})
@@ -99,6 +100,7 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
     return receipt?{state:'Complete',result:{commandId:step.idempotency_key,reconciled:true}}:
      {state:'Failed',result:{commandId:step.idempotency_key},errorCode:'interrupted_before_commit'}
    }
+   if(action.kind==='slack-app'){if(!deps.slack)return {state:'Unknown',result:{deliveryId:step.id},errorCode:'slack_app_acknowledgement_unknown'};return deps.slack.recover(step.id)}
    if(action.kind==='sms'){
     const receipt=await db.prepare('SELECT status,provider_sid FROM sms_messages WHERE id=?').bind(step.id).first<{status:string;provider_sid:string|null}>()
     return receipt&&receipt.status!=='unknown'?{state:receipt.status==='failed'?'Failed':'Complete',result:{deliveryId:step.id,smsStatus:receipt.status,providerMessageId:receipt.provider_sid}}:{state:'Unknown',result:{deliveryId:step.id},errorCode:'sms_acknowledgement_unknown'}

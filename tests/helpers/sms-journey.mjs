@@ -10,7 +10,7 @@ export const sendingNumber='+15550100100',phone='+15550100101'
 export const relay='https://relay.example.com/v1/deliver',relaySecret='synthetic-cradle-106-relay-secret-0000000000'
 
 /** Only the provider network edge is fake. Requests originate in the emitted Worker. */
-export async function twilioEdge(){
+export async function twilioEdge(config={}){
  const calls=[],incoming=new Map();let uncertain=false,currentToken=authToken
  const server=createServer(async(req,res)=>{
   let raw='';for await(const part of req)raw+=part
@@ -33,7 +33,7 @@ export async function twilioEdge(){
  server.listen(0,'127.0.0.1');await once(server,'listening')
  const local='http://127.0.0.1:'+server.address().port
  return {calls,incoming,setUncertain(value){uncertain=value},setToken(value){currentToken=value},async outbound(request){
-  assert.equal(request.url,relay);assert.equal(request.headers.get('authorization'),'Bearer '+relaySecret)
+  assert.equal(request.url,config.relayUrl??relay);assert.equal(request.headers.get('authorization'),'Bearer '+(config.secret??relaySecret))
   const wire=await request.json(),url=new URL(wire.url)
   assert.ok(['api.twilio.com','messaging.twilio.com'].includes(url.hostname),'Only declared Twilio hosts reach the fake')
   const response=await fetch(local+url.pathname+url.search,{method:wire.method,headers:wire.headers,...(wire.method==='GET'?{}:{body:wire.body})})
