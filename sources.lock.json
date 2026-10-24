@@ -6730,7 +6730,7 @@
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.css": {
-      "sha256": "5ad2319caeda61688cd0e06c1756a46777eb47907324dbab721c1746d118dbb7",
+      "sha256": "abcdc1af3a8a48300a3f8e5414dead816a7287b2e1095e163e9d8b0ec3d581ca",
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.tsx": {
@@ -6738,7 +6738,7 @@
       "executable": false
     },
     "src/core/app/ui/operator/owner-menu.tsx": {
-      "sha256": "b3e5f7a0daa2ab026d50e161910a9431306fea23984cc78f730842836f90923f",
+      "sha256": "4476c5169ae301567699f490bf5886e58913afbc20a12a62a5b86286d95f6995",
       "executable": false
     },
     "src/core/app/ui/operator/resource-boundary.tsx": {
@@ -7110,7 +7110,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-ui.css": {
-      "sha256": "d0b7c1a2cd52dcc3dba63cfccf8592f6be7d29de3d505e0d13a5ad02e7c08633",
+      "sha256": "838a3ae4d9439f7e66eced37e4c0cd3322abd8f3345818726361d9a73b841ea3",
       "executable": false
     },
     "src/core/features/risks/index.ts": {
@@ -12854,7 +12854,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "5558be2496dd1951efd4e2f8c155fd948acaa1320c9355dd7365774e27a5569a",
+      "sha256": "4a42a7e19a121759a01c5203ae46e2ee61dec58eed6c343b42e686224eeb402c",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {

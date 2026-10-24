@@ -144,12 +144,20 @@ async function freshViewport(viewport,evidence){
       const navigation=viewport.width<=900?page.getByRole('dialog',{name:'Navigation',exact:true}):page.locator('.operator-rail')
       await navigation.locator('button[aria-haspopup="menu"]').focus();await page.keyboard.press('Enter')
       const signOut=page.getByRole('menuitem',{name:'Sign out',exact:true});await signOut.waitFor()
-      assert.equal(await signOut.evaluate(item=>item===document.activeElement),true,'Opening the owner menu puts focus on Sign out');await page.keyboard.press('Enter')
+      assert.equal(await signOut.evaluate(item=>item===document.activeElement),true,'Opening the owner menu puts focus on Sign out')
+      // A sign-out whose request drops keeps the menu open with an alert, focus on Sign out and the session live;
+      // Enter on Sign out tries again once the route answers.
+      let abortedSignOut
+      await page.route('**/auth/sign-out',route=>{abortedSignOut=route.request();return route.abort('connectionreset')})
+      await page.keyboard.press('Enter');await navigation.getByRole('alert').waitFor()
+      assert.equal(await signOut.evaluate(item=>item===document.activeElement),true,'A failed sign out keeps the owner menu open with focus on Sign out')
+      assert.equal((await context.request.get(origin+'/auth/session')).status(),200,'A failed sign out leaves the session signed in')
+      await page.unroute('**/auth/sign-out');await page.keyboard.press('Enter')
       await page.waitForURL(origin+'/');await page.getByRole('link',{name:'Sign in',exact:true}).waitFor()
       assert.equal((await context.request.get(origin+'/auth/session')).status(),401,'Sign out ends the actual owner session')
       const signedOut=await context.request.get(origin+'/app',{maxRedirects:0})
       assert.equal(signedOut.status(),303);assert.equal(new URL(signedOut.headers().location,origin).pathname,'/signin','After sign out /app no longer opens signed in')
-      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,configuredFirstRun:true,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,signedOut:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean()})
+      receipt.viewports.push({...viewport,zeroSetup:true,devOwnerExchange:true,configuredFirstRun:true,recordsFirstHome:true,importFromFirstHome:true,importAndHomeAxeViolations:0,serverRenderedFirstStep:true,renamedIdentity:true,expiredSessionDenied:true,ownerRecovery:true,failedSignOutRetried:true,signedOut:true,seriousCritical:0,overflow:false,accessibilityScreens,navigationDrawer:receipt.navigationDrawer,browserObservations:observations.assertClean(abortedSignOut)})
       await context.close()
     for(const secret of [vars.SESSION_SECRET,vars.SETUP_TOKEN])assert.equal(installation.output().includes(secret),false,'Local dev must redact secrets')
     await assert.rejects(copy.rer(['reset','--yes','--non-interactive']),error=>error.exitCode===4&&error.errorCode==='safety_refusal','Reset refuses an active app')

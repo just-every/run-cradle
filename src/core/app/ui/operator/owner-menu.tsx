@@ -15,15 +15,20 @@ export function OwnerMenu({ owner }: { owner: Owner }) {
     else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); item.current?.focus() }
     else if (event.key === 'Tab') setOpen(false)
   }
+  // In flight, Sign out keeps focus and ignores presses (aria-disabled: `disabled` would blur it and close the menu).
+  // A sign-out that does not finish keeps the menu open with the alert and focus on Sign out, where Enter tries again.
   async function signOut() {
+    if (busy) return
     setBusy(true); setFailed(false)
     const response = await sessionFetch('/auth/sign-out', { method: 'POST' }).catch(() => null)
     if (response?.ok) { window.location.assign('/'); return }
-    setBusy(false); setFailed(true)
+    setBusy(false); setFailed(true); setOpen(true); item.current?.focus()
   }
   return <div className="operator-rail-footer" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) { setOpen(false); setFailed(false) } }}>
-    {open && <div className="operator-owner-menu" id={menu} role="menu" aria-label="Account" onKeyDown={keys}>
-      <button ref={item} type="button" role="menuitem" disabled={busy} onClick={() => void signOut()}>Sign out</button>
+    {open && <div className="operator-owner-menu">
+      <div id={menu} role="menu" aria-label="Account" onKeyDown={keys}>
+        <button ref={item} type="button" role="menuitem" aria-disabled={busy || undefined} onClick={() => void signOut()}>Sign out</button>
+      </div>
       {failed && <p role="alert">Sign out did not finish. Try again.</p>}
     </div>}
     <button ref={button} type="button" className="operator-owner-button" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menu : undefined}
