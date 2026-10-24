@@ -163,7 +163,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    await patch({[start.id]:'2026-11-25',[end.id]:'2026-11-26'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'POST');assert.notEqual((await binding()).event_id,event.event_id)
    if(width===1440)await recordCalendarBulk({h,worker,provider,body,call,command,deliver,drain,definitionId,appId,entityId,title:title.id,start:start.id,end:end.id})
    if(width===1440)await recordCalendarTrash({call,command,deliver,drain,get,binding,provider,appId,entityId,recordId})
-   const mismatchRecord=await create('synthetic-cradle-calendar-account-drift')
+   const mismatchRecord=(await command('record.create',{appId,entityId,values:{[title.id]:'synthetic-cradle-calendar-account-drift',[start.id]:'2026-11-29',[end.id]:'2026-11-30'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}])).value
    await proof.scopeMismatch({connectionId,otherRecordId:mismatchRecord.ref.recordId,deliver})
    await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
    assert.ok(provider.seen.every(r=>(outlook?['graph.microsoft.com','login.microsoftonline.com']:['www.googleapis.com','oauth2.googleapis.com']).includes(new URL(r.url).hostname)))
