@@ -1,3 +1,4 @@
+import { durationFromText } from './typed-values'
 import { AdmissionError } from '../admission/errors'
 import type { Field } from './contracts'
 import { parseLinkCell } from './base-transfer/parse'
@@ -5,6 +6,7 @@ import { parseLinkCell } from './base-transfer/parse'
 /** Human CSV conversions use decimal strings throughout; no floating point rounding. */
 export function typedCsvValue(field:Field,raw:string):unknown {
  const text=raw.trim()
+ if(field.type==='duration'){try{return durationFromText(text)}catch(error){throw new AdmissionError('validation',`${field.label}: ${(error as Error).message}`)}}
  if(field.type==='date'&&/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(text)){
   const [month,day,year]=text.split('/');return `${year}-${month!.padStart(2,'0')}-${day!.padStart(2,'0')}`
  }

@@ -264,7 +264,7 @@ async function completeDependentPreview(h){
 /** Every ordered pair has either a substantive mapping fixture above or an
  * explicit preview refusal below. Grouping source fields keeps the journey small. */
 async function refusedTypePairs(h,owner){
- const types=['text','phone','number','date','instant','money','boolean','select','multi_select','url','person','relation','attachment','computed']
+ const types=['email','rating','duration','text','phone','number','date','instant','money','boolean','select','multi_select','url','person','relation','attachment','computed']
  const mapped=new Set(['text/select','select/text','select/relation','relation/select','number/money','money/number','text/date','date/text','text/number','number/text','text/phone','phone/text'])
  let checked=0
  for(const from of types){
@@ -278,7 +278,7 @@ async function refusedTypePairs(h,owner){
   await h.request('/api/v1/commands/release.adopt',{method:'POST',body:command((await preview(draft)).id)})
   async function create(entityId,values){const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data;return (await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:schema.version}],input:{appId,entityId,values}}})).data.value}
   const target=await create(targets,{[title]:'synthetic-cradle-391'})
-  const representative={text:'12',phone:'+15551234567',number:'12.34',date:'2026-10-24',instant:'2026-10-24T00:00:00.000Z',money:money('1234'),boolean:true,select:option,multi_select:[option],url:'https://example.test/field',person:owner,relation:target.ref,attachment:[{reference:{provider:'chest',itemId:'synthetic-cradle-392',name:'synthetic-cradle-392.pdf',mediaType:'application/pdf',size:12,modifiedAt:null,link:'https://files.example.test/synthetic-cradle-392',connectionId:null,attachedBy:owner}}]}
+  const representative={email:'synthetic-cradle-395@example.test',rating:'4',duration:'3661',text:'12',phone:'+15551234567',number:'12.34',date:'2026-10-24',instant:'2026-10-24T00:00:00.000Z',money:money('1234'),boolean:true,select:option,multi_select:[option],url:'https://example.test/field',person:owner,relation:target.ref,attachment:[{reference:{provider:'chest',itemId:'synthetic-cradle-392',name:'synthetic-cradle-392.pdf',mediaType:'application/pdf',size:12,modifiedAt:null,link:'https://files.example.test/synthetic-cradle-392',connectionId:null,attachedBy:owner}}]}
   const rows=[]
   for(const populated of [true,false])rows.push(await create(items,{[name]:populated?'synthetic-cradle-393':'synthetic-cradle-394',...(from==='computed'?{}:Object.fromEntries(definitions.map(({id})=>[id,populated?representative[from]:null])))}))
   const read=async row=>(await h.request(`/api/v1/apps/${appId}/entities/${items}/records/${row.id}`)).data.record
@@ -301,6 +301,6 @@ async function refusedTypePairs(h,owner){
   assert.equal((await h.db.prepare('SELECT count(*) n FROM manual_record_releases WHERE app_id=?').bind(appId).first()).n,releasesBefore,'Refused ordered pairs write no release')
   console.log('FIELD_TYPE_PAIRS '+from+' PASS '+destinations.length+' explicit pair refusals, populated/empty values and zero live writes')
  }
- assert.equal(checked+mapped.size,types.length*(types.length-1),'All 182 ordered different-type pairs are covered')
- console.log('FIELD_TYPE_MATRIX PASS '+mapped.size+' mapped pairs, '+checked+' explicitly refused pairs, 182/182 total')
+ assert.equal(checked+mapped.size,types.length*(types.length-1),'All 272 ordered different-type pairs are covered')
+ console.log('FIELD_TYPE_MATRIX PASS '+mapped.size+' mapped pairs, '+checked+' explicitly refused pairs, 272/272 total')
 }

@@ -1,3 +1,4 @@
+import { durationFromText } from '../typed-values'
 import {returnStoreReferences} from '../portable-store-references'
 import type { Json } from '../../../../vendor/base/modules/import-kit/src/types'
 import type { Field } from '../contracts'
@@ -50,6 +51,7 @@ export function convertCell(field:Field,column:SourceColumn,value:Json|undefined
   if(!Array.isArray(labels)||labels.some(label=>typeof label!=='string'))throw new Error('Multiple-select expects a JSON array of exact option labels')
   converted=labels.map(label=>{const option=field.options?.find(o=>o.label===label);if(!option)throw new Error(`Unknown select option ${JSON.stringify(label)}`);return option.id})
  }
+ else if(field.type==='duration')converted=durationFromText(raw)
  else if(field.type==='date')converted=dateValue(raw,override.dateConvention)
  else if(field.type==='select'){
   const option=field.options?.find(o=>o.label===raw)

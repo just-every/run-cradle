@@ -59,7 +59,10 @@
                 },
                 "type": {
                   "enum": [
-                    "phone",
+                    "email",
+                        "rating",
+                        "duration",
+                        "phone",
                     "text",
                     "number",
                     "date",

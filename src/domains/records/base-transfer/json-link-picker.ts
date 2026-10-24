@@ -14,8 +14,8 @@ export function validatePortableLinkPicker(field:PortableField,base:PortableBase
   if(ids.some(id=>!target!.fields.some(field=>field.id===id)))fail('picker references a missing field or a field outside its target table')
  }
  const type=(id:string)=>{const field=target!.fields.find(field=>field.id===id)!;return field.type==='computed'?field.resultType:field.type}
- if(picker.searchFieldIds.some(id=>!['phone','text','url'].includes(type(id)??'')))fail('picker search fields must contain text or URLs')
- if(picker.displayFieldIds.some(id=>!['phone','text','url','number','date','instant','money','boolean','select','person'].includes(type(id)??'')))fail('picker display fields must contain scalar values')
+ if(picker.searchFieldIds.some(id=>!['email','phone','text','url'].includes(type(id)??'')))fail('picker search fields must contain text or URLs')
+ if(picker.displayFieldIds.some(id=>!['email','rating','duration','phone','text','url','number','date','instant','money','boolean','select','person'].includes(type(id)??'')))fail('picker display fields must contain scalar values')
  if(picker.viewId){
   const view=base.views.find(view=>view.id===picker.viewId)
   if(!view||view.tableId!==target!.id||view.visibility!=='app')fail('picker saved view must be included, shared with the app and belong to its target table')

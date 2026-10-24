@@ -78,6 +78,9 @@
                     "type": {
                       "type": "string",
                       "enum": [
+                        "email",
+                        "rating",
+                        "duration",
                         "phone",
                         "text",
                         "url",
@@ -173,6 +176,9 @@
                     "resultType": {
                       "type": "string",
                       "enum": [
+                        "email",
+                        "rating",
+                        "duration",
                         "phone",
                         "text",
                         "url",
@@ -366,6 +372,9 @@
                     "resultElementType": {
                       "type": "string",
                       "enum": [
+                        "email",
+                        "rating",
+                        "duration",
                         "phone",
                         "text",
                         "url",

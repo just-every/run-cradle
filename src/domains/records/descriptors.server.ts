@@ -126,7 +126,7 @@ export function compileSchema(input: EntitySchema, resolve: (appId: string, enti
         }
         const columnDefs = [`${identifier(base)} ${field.type === 'boolean' ? 'INTEGER' : 'TEXT'}${field.required ? ' NOT NULL' : ''}${field.type === 'boolean' ? ` CHECK(${identifier(base)} IN (0,1))` : ''}${field.unique && field.type !== 'money' ? ' UNIQUE' : ''}${target ? ` REFERENCES ${identifier(target.table.tableId)}(id) ON DELETE ${field.relation?.onDelete === 'unlink' ? 'SET NULL' : field.relation?.onDelete === 'restrict' ? 'RESTRICT' : 'CASCADE'}` : ''}`];
         cols.push(base);
-        if (field.type === 'number' || field.type === 'money') {
+        if (['number','money','rating','duration'].includes(field.type)) {
             storage.sortColumn = base + '_order';
             cols.push(storage.sortColumn);
             columnDefs.push(`${identifier(storage.sortColumn)} TEXT${field.required ? ' NOT NULL' : ''} CHECK(length(${identifier(storage.sortColumn)})=161)`);
@@ -145,7 +145,7 @@ export function compileSchema(input: EntitySchema, resolve: (appId: string, enti
         extra.push(`CREATE INDEX ${identifier(tableName + '_' + base + '_idx')} ON ${identifier(tableName)}(${identifier(storage.sortColumn ?? base)},id);`);
     }
     if(cols.length>100)throw new AdmissionError('capacity_limit',`D1 physical columns limit 100 CURRENT ${cols.length}. This table needs a wider storage layout before it can be adopted.`);
-    const searchable = [...fields.values()].filter(s => ['phone', 'text', 'url'].includes(s.field.type) && !s.join);
+    const searchable = [...fields.values()].filter(s => ['email','phone', 'text', 'url'].includes(s.field.type) && !s.join);
     const searchTable = searchable.length ? tableName + '_search' : undefined;
     if (searchTable) {
         const quoted = identifier(searchTable), searchCols = searchable.map(s => identifier(s.column));

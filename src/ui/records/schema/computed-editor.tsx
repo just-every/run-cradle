@@ -8,7 +8,7 @@ import { LookupControls } from './lookup-controls'
 export type CalculationKind='formula'|'lookup'|'rollup'|'count'
 export {calculationKind} from '../../../domains/records/calculation-schema'
 const aggregates=[['sum','SUM'],['average','AVERAGE'],['min','MIN'],['max','MAX'],['count','COUNT'],['counta','COUNTA'],['countall','COUNTALL'],['arrayjoin','ARRAYJOIN'],['arrayunique','ARRAYUNIQUE'],['and','AND'],['or','OR']] as const
-const scalarTypes=['phone','text','url','number','date','instant','money','boolean','select','person'] as const
+const scalarTypes=['email','rating','duration','phone','text','url','number','date','instant','money','boolean','select','person'] as const
 export function ComputedEditor({field,table,draft,onChange}:{field:Field;table:SchemaDraft['tables'][number];draft:SchemaDraft;onChange:(field:Field,source?:string)=>void}){
  const kind=calculationKind(field)
  if(kind==='formula')return <FormulaEditor field={field} table={table} draft={draft} onChange={onChange} />

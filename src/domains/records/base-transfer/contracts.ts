@@ -6,7 +6,7 @@ import type { SourceBundle, SourceLocation, ImportJob, Reconciliation, Json } fr
 import type { D1UndoDisposition } from '../../../../vendor/base/modules/import-kit/src/d1/undo-types'
 
 export type UploadedArtifact = { filename: string; bytes: Uint8Array }
-export type SourceColumn = { typedNulls?: boolean; key: string; label: string; sourceType?: string; options?: string[]; relationTableKey?: string; reciprocalColumnKey?: string; lookup?: { relationColumnKey: string; valueColumnKey: string } }
+export type SourceColumn = { validation?: Field['validation']; typedNulls?: boolean; key: string; label: string; sourceType?: string; options?: string[]; relationTableKey?: string; reciprocalColumnKey?: string; lookup?: { relationColumnKey: string; valueColumnKey: string } }
 /** Original JSON number tokens, keyed by mapped column; survives job/preview serialization. */
 export type NumericOrigin = { lexeme: string; pointer: string }
 export type NumericToken = NumericOrigin & { path: (string | number)[] }

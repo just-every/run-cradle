@@ -11,12 +11,12 @@ export function emptyRuleValue(value: CellValue | undefined) {
 }
 export function compareRuleValues(field: Field, left: CellValue, right: CellValue): number | undefined {
   if (left === null || right === null) return undefined
-  if (field.type === 'number' && typeof left === 'string' && typeof right === 'string') return compare(left, right)
+  if (['number','rating','duration'].includes(field.type) && typeof left === 'string' && typeof right === 'string') return compare(left, right)
   if (field.type === 'money' && typeof left === 'object' && typeof right === 'object' && 'minor' in left && 'minor' in right) {
     if (left.currency !== right.currency || left.scale !== right.scale) return undefined
     return compare(left.minor, right.minor)
   }
-  if (['text', 'url', 'date', 'instant', 'select', 'person'].includes(field.type) && typeof left === 'string' && typeof right === 'string')
+  if (['text', 'url', 'email', 'date', 'instant', 'select', 'person'].includes(field.type) && typeof left === 'string' && typeof right === 'string')
     return left < right ? -1 : left > right ? 1 : 0
   return undefined
 }
@@ -41,7 +41,7 @@ export function fieldValidationViolations(field: Field, value: CellValue): Valid
   if (!limits) return violations
   for (const bound of ['min', 'max'] as const) if (limits[bound] !== undefined) {
     const scalar = field.type === 'money' ? (value as Money).minor : value as string
-    const order = field.type === 'number' || field.type === 'money' ? compare(scalar, limits[bound]!) : scalar < limits[bound]! ? -1 : scalar > limits[bound]! ? 1 : 0
+    const order = ['number','money','rating','duration'].includes(field.type) ? compare(scalar, limits[bound]!) : scalar < limits[bound]! ? -1 : scalar > limits[bound]! ? 1 : 0
     if (bound === 'min' ? order < 0 : order > 0) fail(bound, `${field.label} must be ${bound === 'min' ? 'at least' : 'at most'} ${limits[bound]}.`)
   }
   if (typeof value === 'string') {

@@ -2,7 +2,7 @@ import { calculationKind } from '../../../domains/records/calculation-schema'
 import type { Field } from '../../../domains/records/contracts'
 
 export const manualFieldTypes = [
-  ['text', 'Text'], ['phone', 'Phone'], ['url', 'URL / link'], ['number', 'Number'],
+  ['text', 'Text'], ['email', 'Email'], ['rating', 'Rating'], ['duration', 'Duration'], ['phone', 'Phone'], ['url', 'URL / link'], ['number', 'Number'],
   ['date', 'Date'], ['instant', 'Date and time (UTC)'], ['money', 'Currency'], ['select', 'Select'], ['multi_select', 'Multiple select'], ['person', 'Person'], ['boolean', 'Checkbox'],
   ['relation', 'Link to record'], ['computed', 'Lookup'],
 ] as const

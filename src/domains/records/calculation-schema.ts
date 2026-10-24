@@ -6,7 +6,7 @@ import { normalize } from './exact'
 import { canonical } from '../admission/canonical'
 export type CalculationTable = Pick<EntitySchema,'id'|'fields'>
 type ResultType = Field['type'] | 'array' | 'blank'
-const scalar = ['phone','text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person']
+const scalar = ['email','rating','duration','phone','text', 'url', 'number', 'date', 'instant', 'money', 'boolean', 'select', 'person']
 export function expressionType(expr: Expr, table: CalculationTable, tables: readonly CalculationTable[], depth = 0, cache=new Map<string,ResultType>(), path=new Set<string>()): ResultType {
   if (depth > 64) throw new Error('Expression depth exceeds 64')
   if (expr.kind === 'literal') {
@@ -34,7 +34,7 @@ export function expressionType(expr: Expr, table: CalculationTable, tables: read
     if (['count','counta','countall'].includes(expr.aggregate)) return 'number'
     if (expr.aggregate === 'and' || expr.aggregate === 'or') return 'boolean'
     if (expr.aggregate === 'arrayjoin') return 'text'
-    if (expr.aggregate === 'arrayunique') { if(!['phone','text','number','date','url','select','person','instant'].includes(source.type==='computed'?source.resultType??'':source.type))throw new Error('ARRAYUNIQUE needs a scalar string source');return 'array' }
+    if (expr.aggregate === 'arrayunique') { if(!['email','rating','duration','phone','text','number','date','url','select','person','instant'].includes(source.type==='computed'?source.resultType??'':source.type))throw new Error('ARRAYUNIQUE needs a scalar string source');return 'array' }
     const type = computedType(source,target!,tables,depth,cache,path)
     if (expr.aggregate === 'lookup') { if (!lookupElementType(source)) throw new Error('Lookup source type is unavailable'); return relation.cardinality==='many'||lookupCollection(source)?'array':type }
     if (!type || !['number','money'].includes(type)) throw new Error('SUM, AVERAGE, MIN and MAX require a numeric source field')
@@ -67,7 +67,7 @@ function validateCondition(filter: Filter | undefined, table: CalculationTable, 
   const source = table.fields.find(f => f.id === filter.fieldId)
   if (!source || !scalar.includes(source.type)) throw new Error('Rollup conditions require a stored scalar field')
   if(['empty','not_empty'].includes(filter.op))return
-  if(filter.op==='contains'&&!['phone','text','url'].includes(source.type))throw new Error('contains needs text')
+  if(filter.op==='contains'&&!['email','phone','text','url'].includes(source.type))throw new Error('contains needs text')
   if(filter.op==='next_days'){if(source.type!=='date'||typeof filter.value!=='string'||!/^\d{1,4}$/.test(filter.value))throw new Error('next_days needs a date and bounded integral days');return}
   if(filter.op==='in'){if(!Array.isArray(filter.value)||filter.value.length>200)throw new Error('in needs at most 200 values');for(const value of filter.value)validateCell({...source,required:false},value);return}
   validateCell({...source,required:false},filter.value)

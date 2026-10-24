@@ -55,7 +55,7 @@ export type Field = {
     readOnly?: boolean;
     id: Id;
     label: string;
-    type: 'phone' | 'text' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'multi_select' | 'url' | 'person' | 'relation' | 'attachment' | 'computed';
+    type: 'email' | 'rating' | 'duration' | 'phone' | 'text' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'multi_select' | 'url' | 'person' | 'relation' | 'attachment' | 'computed';
     required: boolean;
     unique: boolean;
     options?: {
@@ -73,7 +73,7 @@ export type Field = {
     numberFormat?: 'percent';
     expression?: Expr;
     resultType?: Field['type'] | 'array';
-    resultElementType?: 'phone' | 'text' | 'url' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'person' | 'relation' | 'attachment';
+    resultElementType?: 'email' | 'rating' | 'duration' | 'phone' | 'text' | 'url' | 'number' | 'date' | 'instant' | 'money' | 'boolean' | 'select' | 'person' | 'relation' | 'attachment';
 };
 export type RuleCondition = { kind: 'all' | 'any'; conditions: RuleCondition[] } | {
     kind: 'condition'; fieldId: Id; op: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'empty' | 'not_empty'; value?: CellValue;

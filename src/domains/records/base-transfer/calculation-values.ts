@@ -22,6 +22,6 @@ export function validatePortableArray(field:PortableField,value:unknown,table:Ta
   return
  }
  if(elementType==='attachment')throw new ImportInputError(`${field.label}: attachment bytes have no portable base representation`)
- const scalar:Field={id:field.id,label:field.label,type:elementType,required:false,unique:false,...((source?.options??field.options)?{options:source?.options??field.options}:{})}
+ const scalar:Field={id:field.id,label:field.label,type:elementType,required:false,unique:false,...(elementType==='rating'?{validation:{max:'10'}}:{}),...((source?.options??field.options)?{options:source?.options??field.options}:{})}
  for(const item of value)if(canonical(validateCell(scalar,item))!==canonical(item))throw new ImportInputError(`${field.label}: array element is not canonical`)
 }

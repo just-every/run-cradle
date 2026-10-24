@@ -6,7 +6,7 @@ export async function snapshotTables(db:D1Database, descriptors:EntityDescriptor
  for(const descriptor of descriptors){
   const tables=[descriptor.table,...[...descriptor.fields.values()].flatMap(f=>f.join?[f.join.table]:[])]
   for(const table of tables){
-   const cols=table.writableColumnIds, expression=`(SELECT COALESCE(json_group_array(json(row)),'[]') FROM (SELECT json_object(${cols.flatMap(c=>[`'${c}'`,identifier(c)]).join(',')}) AS row FROM ${identifier(table.tableId)} ORDER BY id))`
+   const cols=table.writableColumnIds, object=snapshotObject(cols), expression=`(SELECT COALESCE(json_group_array(json(row)),'[]') FROM (SELECT ${object} AS row FROM ${identifier(table.tableId)} ORDER BY id))`
    const result=await db.prepare(`SELECT ${expression} AS snapshot`).first<{snapshot:string}>()
    guards.push(trustedPredicate(`${expression}=?`,[result!.snapshot]))
    rows[table.tableId]=JSON.parse(result!.snapshot)
@@ -19,4 +19,15 @@ export async function snapshotTables(db:D1Database, descriptors:EntityDescriptor
   values[3]=row?.schema_json??'';guards[i]=trustedPredicate(guards[i]!.sql,values)
  }
  return {guards,rows}
+}
+
+/** SQLite JSON functions take at most 127 arguments. Chained json_set keeps
+ * every physical column, including explicit nulls that json_patch would drop. */
+function snapshotObject(columns:readonly string[]):string {
+ let expression='json_object()'
+ for(let offset=0;offset<columns.length;offset+=30){
+  const entries=columns.slice(offset,offset+30).flatMap(column=>[`'$.${column}'`,identifier(column)])
+  expression=`json_set(${expression},${entries.join(',')})`
+ }
+ return expression
 }

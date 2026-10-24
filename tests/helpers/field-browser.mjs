@@ -39,6 +39,13 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await edit()
     await tile('Contact phone').getByLabel('Field type',{exact:true}).selectOption('phone')
     await owner.capture('phone-type-authoring',tile('Contact phone'))
+    for(const [label,type]of [['Email','email'],['Rating','rating'],['Duration','duration']]){
+     await page.getByRole('button',{name:'Add field',exact:true}).click()
+     await tile('New field').getByLabel('Field name',{exact:true}).fill(label)
+     await tile(label).getByLabel('Field type',{exact:true}).selectOption(type)
+     if(type==='rating'){assert.equal(await tile(label).getByLabel('Rating maximum',{exact:true}).inputValue(),'5');await tile(label).getByLabel('Rating maximum',{exact:true}).fill('10')}
+     await owner.capture(type+'-type-authoring',tile(label))
+    }
     const phonePreview=await preview(),phoneConversion=phonePreview.impacts.find(item=>item.entityId===fixture.orders).conversions.find(item=>item.fieldId===fixture.phone)
     assert.equal(phoneConversion.losses.length,0);assert.ok(phoneConversion.converted.some(item=>item.after==='+15551234567'))
     await owner.capture('phone-conversion-preview',page.getByRole('region',{name:'Conversion of Contact phone',exact:true}))
@@ -56,12 +63,22 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await page.getByText(/Contact phone:.*Phone must use E.164/).waitFor()
     await owner.capture('phone-invalid',phoneInput)
     await phoneInput.fill('(555) 123-4588')
+    for(const [label,value]of [['Email','two@example.test,three@example.test'],['Rating','1.5'],['Duration','1:70']]){
+     const input=page.getByLabel(label,{exact:true});await input.fill(value)
+     await page.getByRole('button',{name:'Save record',exact:true}).click()
+     assert.equal(await input.evaluate(node=>node.checkValidity()),label==='Duration','Email and whole-rating constraints refuse invalid browser input')
+     if(label==='Duration')await page.getByText(/Duration:.*whole nonnegative seconds/).waitFor()
+     await owner.capture(label.toLowerCase()+'-invalid',input)
+     await input.fill(label==='Email'?'synthetic-cradle-402@example.test':label==='Rating'?'10':'1:01:01')
+    }
     const validPhone=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/record.create'))
     await page.getByRole('button',{name:'Save record',exact:true}).click()
     const validPhoneResponse=await validPhone;assert.equal(validPhoneResponse.status(),200)
-    const savedPhone=(await validPhoneResponse.json()).data.value;assert.equal(savedPhone.fields[fixture.phone].value,'+15551234588')
+    const savedPhone=(await validPhoneResponse.json()).data.value;assert.equal(savedPhone.fields[fixture.phone].value,'+15551234588');const typedSchema=(await fixture.draft()).tables.find(table=>table.id===fixture.orders);for(const [label,value]of [['Email','synthetic-cradle-402@example.test'],['Rating','10'],['Duration','3661']])assert.equal(savedPhone.fields[typedSchema.fields.find(field=>field.label===label).id].value,value)
     await page.getByRole('button',{name:'New record',exact:true}).waitFor()
     await page.getByText('(555) 123-4588',{exact:true}).first().waitFor()
+    for(const text of ['synthetic-cradle-402@example.test','10','1:01:01'])await page.getByText(text,{exact:true}).first().waitFor()
+    await owner.capture('typed-fields-valid-save',page.getByText('1:01:01',{exact:true}).first())
     await owner.capture('phone-valid-save',page.getByText('(555) 123-4588',{exact:true}).first())
     await edit()
     await tile('Order').getByLabel('Field type',{exact:true}).selectOption('number')

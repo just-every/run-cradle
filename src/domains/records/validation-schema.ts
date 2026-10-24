@@ -12,15 +12,16 @@ export function validateFieldConfiguration(field: Field, parse: ParseCell) {
   }
   if (field.unique && (['multi_select','attachment','computed'].includes(field.type) || field.type === 'relation' && field.relation?.cardinality === 'many')) throw new Error('Uniqueness is available for scalar fields only.')
   const limits = field.validation
+  if (field.type === 'rating' && limits?.max !== undefined && !/^(?:[1-9]|10)$/.test(limits.max)) throw new Error('Rating maximum must be a whole number from 1 to 10.')
   if (field.type === 'computed' && (limits !== undefined || field.defaultValue !== undefined)) throw new Error('Calculated fields cannot declare validation or defaults.')
   if (limits) {
-    if ((limits.min !== undefined || limits.max !== undefined) && !['number', 'money', 'date', 'instant'].includes(field.type)) throw new Error('Min/max bounds require a number, money, date or instant field.')
-    if ((limits.minLength !== undefined || limits.maxLength !== undefined || limits.pattern !== undefined) && !['text', 'url'].includes(field.type)) throw new Error('Length and pattern rules require a text or URL field.')
+    if ((limits.min !== undefined || limits.max !== undefined) && !['number', 'money', 'date', 'instant', 'rating', 'duration'].includes(field.type)) throw new Error('Min/max bounds require a number, money, date or instant field.')
+    if ((limits.minLength !== undefined || limits.maxLength !== undefined || limits.pattern !== undefined) && !['text', 'url', 'email'].includes(field.type)) throw new Error('Length and pattern rules require a text or URL field.')
     for (const value of [limits.min, limits.max]) if (value !== undefined) {
-      if (field.type === 'number' || field.type === 'money') { decimal(value); if (field.type === 'money' && !/^-?(0|[1-9]\d*)$/.test(value)) throw new Error('Money bounds use integer minor units.') }
+      if (['number','money','rating','duration'].includes(field.type)) { decimal(value); if (field.type === 'money' && !/^-?(0|[1-9]\d*)$/.test(value)) throw new Error('Money bounds use integer minor units.') }
       else parse({ ...field, required: false }, value)
     }
-    if (limits.min !== undefined && limits.max !== undefined && (field.type === 'number' || field.type === 'money' ? compare(limits.min, limits.max) > 0 : limits.min > limits.max)) throw new Error('Minimum must not exceed maximum.')
+    if (limits.min !== undefined && limits.max !== undefined && (['number','money','rating','duration'].includes(field.type) ? compare(limits.min, limits.max) > 0 : limits.min > limits.max)) throw new Error('Minimum must not exceed maximum.')
     if (limits.minLength !== undefined && limits.maxLength !== undefined && limits.minLength > limits.maxLength) throw new Error('Minimum length must not exceed maximum length.')
     if (limits.pattern !== undefined) validationPattern(limits.pattern)
   }

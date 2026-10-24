@@ -61,7 +61,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    const old=prior.find(p=>p.schema.id===schema.id)
    removals[schema.id]=old?.schema.fields.filter(f=>!schema.fields.some(n=>n.id===f.id)).map(f=>f.id)??[]
    for(const field of schema.fields){
-    if(!['phone','text','url','number','date','instant','money','select','multi_select','person','boolean','relation','attachment','computed'].includes(field.type))throw new AdmissionError('validation',`${field.label}: this builder does not support this type.`)
+    if(!['email','rating','duration','phone','text','url','number','date','instant','money','select','multi_select','person','boolean','relation','attachment','computed'].includes(field.type))throw new AdmissionError('validation',`${field.label}: this builder does not support this type.`)
     if(field.readOnly&&field.type!=='computed')throw new AdmissionError('validation','Read-only is reserved for lookup fields.')
     if(field.relation&&(field.relation.ownerAppId!==draft.appId||field.relation.onDelete!=='restrict'))throw new AdmissionError('validation','Links must target records in this base and restrict deletion.')
     if(field.type==='computed'&&(!field.expression||!field.resultType))throw new AdmissionError('validation',`${field.label}: a calculation needs an expression and result type.`)
