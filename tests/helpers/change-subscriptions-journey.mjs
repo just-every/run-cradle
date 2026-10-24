@@ -1,3 +1,4 @@
+import {preparedSigningRotation} from './signing-key-rotation.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {verifyWebhook} from '../../vendor/base/modules/integrations/core/webhook.ts'
@@ -29,16 +30,21 @@ export async function changeSubscriptionsJourney(h,edge){
  for(const ping of pings){const verified=await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id});const value=JSON.parse(verified.envelope.body);assert.equal(value.changeCount,1);assert.equal(value.subscriptionId,subscription.id);assert.ok(!ping.body.includes('synthetic-cradle-3'))}
  const originalSigningKey=subscription.signingKey
  const positionBefore=await h.db.prepare('SELECT last_sequence FROM record_change_subscriptions WHERE id=?').bind(subscription.id).first()
- const rotationCommand=createUlid(),rotation=(await h.request(`${root}/${subscription.id}/rotate`,{method:'POST',secret:key.secret,body:{commandId:rotationCommand}})).data
+ await h.create('synthetic-cradle-held-subscription')
+ const rotationCommand=createUlid(),rotation=await preparedSigningRotation({h,edge,path:'/changes',destinationId:subscription.id,priorKey:originalSigningKey,dispatch:tick,
+  rotate:async()=>{
+   const rotated=(await h.request(`${root}/${subscription.id}/rotate`,{method:'POST',secret:key.secret,body:{commandId:rotationCommand}})).data
+   assert.deepEqual(await h.db.prepare('SELECT last_sequence FROM record_change_subscriptions WHERE id=?').bind(subscription.id).first(),positionBefore,'Secret rotation preserves the delivery watermark while a prepared delivery is held')
+   return rotated
+  }})
  assert.notEqual(rotation.signingKey,originalSigningKey)
- assert.deepEqual(await h.db.prepare('SELECT last_sequence FROM record_change_subscriptions WHERE id=?').bind(subscription.id).first(),positionBefore,'Secret rotation preserves the delivery watermark')
  await h.request(`${root}/${subscription.id}/rotate`,{method:'POST',secret:key.secret,status:409,body:{commandId:rotationCommand}})
  subscription.signingKey=rotation.signingKey
  const route=(cursor,limit=200)=>`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`
  await h.request(route('invalid-cursor'),{secret:key.secret,status:400})
  const page=(await h.request(route(subscription.cursor),{secret:key.secret})).data
- assert.deepEqual(page.items.map(i=>i.kind),['create','create','update'])
- assert.equal(new Set(page.items.map(i=>i.id)).size,3)
+ assert.deepEqual(page.items.map(i=>i.kind),['create','create','update','create'])
+ assert.equal(new Set(page.items.map(i=>i.id)).size,4)
  await h.create('synthetic-cradle-later-1');await tick()
  assert.deepEqual((await h.request(route(subscription.cursor),{secret:key.secret})).data,page,'A fixed signed window replays identically')
  const rotatedPing=edge.received.filter(r=>r.path==='/changes').at(-1)
@@ -51,7 +57,7 @@ export async function changeSubscriptionsJourney(h,edge){
  assert.deepEqual(later.items.map(i=>i.recordId),[(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/query`,{method:'POST',body:{limit:20}})).data.items.find(r=>r.fields[h.nameId].value==='synthetic-cradle-later-1').id])
  const current=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${second.record.ref.recordId}`)).data.record
  await h.patch(current,{[h.statusId]:null});await tick()
- assert.equal(edge.received.filter(r=>r.path==='/changes').length,4,'Saving an unchanged value produces no ping')
+ assert.equal(edge.received.filter(r=>r.path==='/changes').length,5,'Saving an unchanged value produces no ping')
  const credential=await h.db.prepare('SELECT principal_id FROM authority_credentials WHERE id=?').bind(key.id).first()
  const membership=await h.db.prepare('SELECT policy_id FROM authority_memberships WHERE principal_id=? AND app_id=?').bind(credential.principal_id,h.appId).first()
  const policy=await h.db.prepare('SELECT rules_json FROM authority_policies WHERE id=?').bind(membership.policy_id).first(),rules=JSON.parse(policy.rules_json)
@@ -75,7 +81,7 @@ export async function changeSubscriptionsJourney(h,edge){
  console.log('CHANGE_SUBSCRIPTION_LIFETIME PASS 410 subscription_expired')
  await h.create('synthetic-cradle-8');await tick()
  assert.equal(edge.received.filter(r=>r.path==='/changes').length,before)
- for(const [index,ping] of edge.received.filter(r=>r.path==='/changes').entries())await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(index<3?originalSigningKey:subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
+ for(const [index,ping] of edge.received.filter(r=>r.path==='/changes').entries())await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(index<4?originalSigningKey:subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
  await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
  assert.deepEqual((await h.request(root+'?appId='+h.appId,{secret:key.secret})).data,[])
  if(proofFailures.length)throw new AggregateError(proofFailures,'Change-feed synchronization proofs failed')

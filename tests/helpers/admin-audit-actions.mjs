@@ -4,7 +4,7 @@ import {proposalDoor,smallProposal} from './proposal-door.mjs'
 
 /** Exercise administration doors, including atomic credential rotation. */
 export async function adminAuditActions(h){
- const endpoint='/api/v1/launch/admin-audit',expected=[]
+ const endpoint='/api/v1/launch/admin-audit',expected=[],replacementSecrets=[]
  async function track(label,action,operation,person='Import owner'){
   const before=new Set((await h.request(endpoint)).data.items.map(row=>row.id)),result=await operation()
   const rows=(await h.request(endpoint)).data.items.filter(row=>!before.has(row.id)&&row.action===action)
@@ -19,6 +19,7 @@ export async function adminAuditActions(h){
  const retiredApi=key,apiRotation=createUlid()
  const carriedSubscription=(await h.request('/api/v1/change-subscriptions',{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,url:'https://receiver.example.com/carried'}})).data
  key=(await track('API rotate','api-key.rotate',()=>h.request(`/api/user-keys/${key.id}/rotate`,{method:'POST',body:{commandId:apiRotation,appId:h.appId}}))).data.key
+ replacementSecrets.push(key.secret)
  await h.request(`/api/user-keys/${retiredApi.id}/rotate`,{method:'POST',status:409,body:{commandId:apiRotation,appId:h.appId}})
  await h.request(`/api/v1/apps/${h.appId}/entities`,{secret:retiredApi.secret,status:401})
  await h.request(`/api/v1/apps/${h.appId}/entities`,{secret:key.secret})
@@ -31,6 +32,7 @@ export async function adminAuditActions(h){
  await track('Subscription renew','subscription.refresh',()=>h.request(subscriptions+'/'+subscription.id+'/refresh',{method:'POST',secret:key.secret,body:{commandId:createUlid()}}),'Audit API key')
  const retiredSubscription=subscription,subscriptionRotation=createUlid()
  subscription=(await track('Subscription rotate','subscription.rotate',()=>h.request(subscriptions+'/'+subscription.id+'/rotate',{method:'POST',secret:key.secret,body:{commandId:subscriptionRotation}}),'Audit API key')).data
+ replacementSecrets.push(subscription.signingKey)
  assert.notEqual(subscription.signingKey,retiredSubscription.signingKey)
  assert.deepEqual(expected.at(-1).keyIds,[retiredSubscription.id,subscription.keyId])
  await h.request(subscriptions+'/'+subscription.id+'/rotate',{method:'POST',secret:key.secret,status:409,body:{commandId:subscriptionRotation}})
@@ -41,6 +43,7 @@ export async function adminAuditActions(h){
  let proposing=await issueProposer()
  const retiredProposing=proposing,proposerRotation=createUlid()
  proposing=(await track('Proposing rotate','proposing-key.rotate',()=>h.request(`/api/proposer-keys/${proposing.id}/rotate`,{method:'POST',body:{commandId:proposerRotation}}))).data.key
+ replacementSecrets.push(proposing.secret)
  await h.request(`/api/proposer-keys/${retiredProposing.id}/rotate`,{method:'POST',status:409,body:{commandId:proposerRotation}})
  await h.request('/api/v1/proposals',{secret:retiredProposing.secret,status:401})
  assert.deepEqual(expected.at(-1).keyIds,[retiredProposing.id,proposing.id])
@@ -52,13 +55,14 @@ export async function adminAuditActions(h){
  let scimKeyId
  for(const action of ['issue','rotate','revoke']){
   const result=await track('SCIM '+action,'scim.'+action,()=>h.request('/auth/settings/scim',{method:'POST',body:{action:action==='issue'?'rotate':action}}))
-  if(action==='rotate')assert.deepEqual(expected.at(-1).keyIds,[scimKeyId,result.keyId],'SCIM rotation retains both key ids')
+  if(action==='rotate'){assert.deepEqual(expected.at(-1).keyIds,[scimKeyId,result.keyId],'SCIM rotation retains both key ids');replacementSecrets.push(result.credential)}
   if(result.keyId)scimKeyId=result.keyId
  }
  const destination=async()=> (await track('Webhook key issue','automation.destination.create',()=>h.request('/api/user-automations/destinations',{method:'POST',status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,kind:'webhook',url:'https://receiver.example.com/automation'}}))).data
  const oldDestination=await destination(),nextDestination=await destination()
  const destinationRotation=createUlid()
  const rotatedDestination=(await track('Webhook rotate','webhook.rotate',()=>h.request(`/api/user-automations/destinations/${oldDestination.id}/rotate`,{method:'POST',body:{commandId:destinationRotation,appId:h.appId,entityId:h.entityId}}))).data
+ replacementSecrets.push(rotatedDestination.signingKey)
  assert.notEqual(rotatedDestination.signingKey,oldDestination.signingKey)
  assert.deepEqual(expected.at(-1).keyIds,[oldDestination.id,rotatedDestination.id])
  await h.request(`/api/user-automations/destinations/${oldDestination.id}/rotate`,{method:'POST',status:409,body:{commandId:destinationRotation,appId:h.appId,entityId:h.entityId}})
@@ -76,9 +80,17 @@ export async function adminAuditActions(h){
  await track('Automation disable','automation.disable',()=>h.request('/api/user-automations/'+automation.id+'/disable',{method:'POST',body:{commandId:createUlid(),version:automation.version}}))
  for(const target of [oldDestination,nextDestination])await track('Webhook key revoke','automation.destination.revoke',()=>h.request('/api/user-automations/destinations/'+target.id+'/revoke',{method:'POST',body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId}}))
  await h.request('/api/user-automations',{method:'POST',status:404,body:{commandId:createUlid(),id:automation.id,version:automation.version+1,expiresAt:renewed,definition:{...definition,enabled:true}}})
+ const rotations=['api-key.rotate','proposing-key.rotate','scim.rotate','webhook.rotate','subscription.rotate']
+ assert.equal(replacementSecrets.length,rotations.length);assert.ok(replacementSecrets.every(secret=>typeof secret==='string'&&secret.length>0))
+ const from=new Date(Math.min(...expected.map(row=>Date.parse(row.createdAt)))).toISOString(),to=new Date(Math.max(...expected.map(row=>Date.parse(row.createdAt)))+1000).toISOString()
+ const exportFilters=new URLSearchParams({from,to})
  for(const format of ['json','csv']){
-  const response=await fetch(h.origin+endpoint+'?format='+format,{headers:{cookie:h.cookie}})
-  assert.equal(response.status,200);const body=await response.text();for(const secret of [retiredApi.secret,key.secret,retiredProposing.secret,proposing.secret])assert.ok(!body.includes(secret),'Audit exports contain no secret')
+  const response=await fetch(h.origin+endpoint+'?'+exportFilters+'&format='+format,{headers:{cookie:h.cookie}})
+  assert.equal(response.status,200);const body=await response.text();for(const secret of [retiredApi.secret,retiredProposing.secret,...replacementSecrets])assert.ok(!body.includes(secret),'Audit exports contain no secret')
+  for(const action of rotations){
+   const rows=format==='json'?JSON.parse(body).data.items.filter(row=>row.action===action):body.split('\r\n').filter(line=>line.includes('"'+action+'"'))
+   assert.equal(rows.length,1,action+' appears exactly once in the time-filtered '+format+' export')
+  }
   for(const row of expected){
    if(row.keyIds)for(const id of row.keyIds)assert.ok(body.includes(id),'Rotation export names both keys')
    if(format==='json')assert.equal(JSON.parse(body).data.items.filter(item=>item.id===row.id&&item.action===row.action&&item.person===row.person).length,1,row.action+' JSON exactly once')

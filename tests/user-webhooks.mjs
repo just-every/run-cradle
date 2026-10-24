@@ -1,3 +1,4 @@
+import {preparedSigningRotation} from './helpers/signing-key-rotation.mjs'
 import {parallelChatJourney} from './helpers/parallel-chat-journey.mjs'
 import {slackAppJourney} from './helpers/slack-app-journey.mjs'
 import './helpers/typescript-loader.mjs'
@@ -43,7 +44,10 @@ contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery pres
   assert.equal(JSON.parse(edge.received.find(request=>request.path.startsWith('/services/')).body).text,'A record is ready for review')
   await assert.rejects(verifyWebhook({body:new TextEncoder().encode(webhook.body+' '),headers:webhook.headers,
    key:unbase64(destination.signingKey),tenant:h.appId,destinationId:destination.id}))
-  const rotated=(await h.request(`/api/user-automations/destinations/${destination.id}/rotate`,{method:'POST',body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId}})).data
+  const heldRecord=await h.create('synthetic-cradle-held-webhook')
+  const rotated=await preparedSigningRotation({h,edge,path:'/accepted',destinationId:destination.id,priorKey:destination.signingKey,
+   dispatch:()=>h.tick(heldRecord.commandId),
+   rotate:async()=>(await h.request(`/api/user-automations/destinations/${destination.id}/rotate`,{method:'POST',body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId}})).data})
   const afterRotation=await h.create('Webhook after rotation');await h.tick(afterRotation.commandId)
   const nextWebhook=edge.received.filter(request=>request.path==='/accepted').at(-1)
   await verifyWebhook({body:new TextEncoder().encode(nextWebhook.body),headers:nextWebhook.headers,key:unbase64(rotated.signingKey),tenant:h.appId,destinationId:destination.id})
