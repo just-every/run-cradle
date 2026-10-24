@@ -76,6 +76,17 @@
       "help": "Generated privately for this installation to protect operator sessions. Keep it with the installation secrets."
     },
     {
+      "name": "INSTALLATION_KEY",
+      "label": "Installation key",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "input": "managed",
+      "generate": "hex",
+      "group": "owner",
+      "help": "Generated privately for this installation to seal dependency signing keys. Keep it with the installation secrets and retain its rotation history."
+    },
+    {
       "name": "SETUP_TOKEN",
       "label": "Setup token",
       "kind": "secret",
