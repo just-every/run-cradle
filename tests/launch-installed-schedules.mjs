@@ -106,6 +106,22 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const text=mail.content.find(part=>part.type==='text/plain').value
    assert.ok(text.includes('Scheduled held-out campaign'));assert.ok(!text.includes('Archived launch excluded'));const launches=text.split('Launches in the next 30 days')[1].split('Open High and Critical risks')[0];assert.ok(launches.includes('Included at thirty days'));assert.ok(!launches.includes('Outside thirty days'))
    await assertAccepted('weekly-digest')
+   const prefs=async()=>{const response=await fetch(h.origin+'/api/v1/settings',{headers:{cookie:h.cookie}});assert.equal(response.status,200);return(await response.json()).data.preferences}
+   const setMuted=async mutedKinds=>{const before=await prefs();await command('preferences.update',{version:before.version,preferences:{timezone:before.timezone,mutedKinds,digestEnabled:before.digestEnabled,progressEnabled:before.progressEnabled}})}
+   const digestRows=async()=>(await h.db.prepare("SELECT d.*,n.subject_id FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE d.kind='weekly-digest' AND d.operator_id=? ORDER BY d.created_at,d.id").bind(owner).all()).results
+   await setMuted(['weekly-digest'])
+   const beforeMuteMail=(await scheduledMail()).length,beforeMuteRows=await digestRows()
+   await tick(addDays(monday,14)+'T09:00:00.000Z')
+   const muted=(await digestRows()).filter(row=>!beforeMuteRows.some(old=>old.id===row.id))
+   assert.equal(muted.length,1,'NOTIFY-007 a muted weekly digest still creates its in-app notice and durable delivery')
+   assert.equal(muted[0].state,'muted','NOTIFY-007 weekly digest obeys the personal kind preference')
+   assert.equal((await scheduledMail()).length,beforeMuteMail,'NOTIFY-007 a muted weekly digest sends no network-edge email')
+   await setMuted([])
+   await tick(addDays(monday,21)+'T09:00:00.000Z')
+   const restored=(await digestRows()).filter(row=>!beforeMuteRows.some(old=>old.id===row.id)&&row.id!==muted[0].id)
+   assert.equal(restored.length,1);assert.equal(restored[0].state,'accepted','NOTIFY-007 unmuting restores the next weekly email')
+   assert.equal((await scheduledMail()).filter(message=>message.custom_args.rer_delivery_id===restored[0].group_id).length,1)
+   assert.equal((await digestRows()).find(row=>row.id===muted[0].id).state,'muted','NOTIFY-007 unmuting never replays the old muted email')
   })
   await t.test('NOTIFY-008: unresolved decision due plus fifteen minutes notifies once and re-arms',async st=>{
    const dueAt=new Date(monday+'T09:50:00.000+05:45').toISOString()
