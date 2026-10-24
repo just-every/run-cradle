@@ -118,9 +118,6 @@ export async function schemaDependents(db:D1Database,prior:EntityDescriptor[],sc
   const ids=[...rule.readableFields,...rule.writableFields,...conditionFields(rule.rows)],affected=ids.filter(id=>change.removed.has(id)||change.converted.has(id))
   if(!change.after||affected.length)add(change,'api_key',key.id,key.name||'Scoped API key',[`Policy rule ${rule.id} (${rule.effect}) for ${change.before.label}`,`Readable fields: ${describe(change,rule.readableFields)}`,`Writable fields: ${describe(change,rule.writableFields)}`,`Row filter fields: ${describe(change,conditionFields(rule.rows))||'none'}`,`Credential actions: ${[...new Set(key.scopes.filter(scope=>scope.appId===key.appId).flatMap(scope=>scope.actions))].join(', ')}`])
  }
- for(const change of changes.values()){
-  add(change,'interface','unavailable','Interface dependents unavailable',['No interface object exists; interface dependencies cannot yet be checked.'])
-  byEntity[change.before.id]!.sort((a,b)=>a.kind.localeCompare(b.kind)||a.id.localeCompare(b.id))
- }
+ for(const change of changes.values())byEntity[change.before.id]!.sort((a,b)=>a.kind.localeCompare(b.kind)||a.id.localeCompare(b.id))
  return {byEntity,guards:stored.guards,refusals}
 }
