@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6ab9c39b017fc35be479fc3da55c21415bdd0571faefce2ac2b5f01aa1bc46b7",
+      "sha256": "6f1cb266a18327119d2b687eaed3b987a26a93e213b2db1ab1db88f0fb9a3fec",
       "executable": false
     },
     "DEMO.md": {
@@ -3038,7 +3038,7 @@
       "executable": false
     },
     "docs/chat-apps.md": {
-      "sha256": "3e8d4bcb70d3e5c7fe8914adc5f602097d00d71a9d1fb45531f1300a3688b7fa",
+      "sha256": "72eb11f80a5f6ed73516ab2f4043924421d99faa6b7c016ecefe3f0eb06cca8c",
       "executable": false
     },
     "docs/CLAIMS.md": {
@@ -12231,6 +12231,10 @@
     },
     "tests/helpers/record-calendar-retry.mjs": {
       "sha256": "da60f5491c78620d1ec132fa007796cd8cc8dc2ff1ce57f4f4c3c0e7defdc932",
+      "executable": false
+    },
+    "tests/helpers/record-calendar-trash.mjs": {
+      "sha256": "d7e4a0678ef75c5a530acac9a4e8f6662fa71670868fd1b06924b2c689a0c880",
       "executable": false
     },
     "tests/helpers/record-calendar-upgrade.mjs": {

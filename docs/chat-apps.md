@@ -74,3 +74,5 @@ A message already accepted by an external provider cannot be recalled by switchi
 Installation archives exclude app credentials, tokens, OAuth state and account
 links. Pending exported decisions are retired. After restoration, configure the
 provider again, install it and link native people again before enabling new effects.
+
+Pending installation and account-link commands belong to the installation that issued them. Removing or reinstalling the app requires fresh commands; earlier approval cards cannot become active again.

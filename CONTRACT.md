@@ -1013,7 +1013,7 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-Judged from the code and tests at commit `49af2f86d17324692db42f0170c5058748e7c42b` (24 October 2026).
+Judged from the code and tests at commit `688149d5067f86e23a8d3e36c1e5ec555d37df96` (24 October 2026).
 
 The 24 October phone and schema recovery judgement moves INTEG-006, FIELD-002 and PERM-011 from partial to done. FIELD-001 remains partial with its phone slice proven. PERM-010, PERM-012 and PERM-013 remain partial with their exact remaining rotation, native administration and CLI/export/erasure proof gaps; PERM-008 remains the partial closing clause. SNAP-002 and PERM-009 retain their wider gaps while linked-table recovery and scheduled schema disposal are now proven under FIELD-002. Clause-line recount: 125 done, 69 partial, 22 missing of 216. Exact-SHA publication and landing checks remain separate from these implementation claims.
 
