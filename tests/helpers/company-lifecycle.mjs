@@ -4,7 +4,7 @@ export async function companyLifecycle(t,doors,world){
  const {h,admin}=doors,idp=await samlProvider(t)
  const post=(path,body)=>h.request(admin,path,{method:'POST',body:JSON.stringify(body),redirect:'manual'})
  const configured=await post('/auth/settings/company',{entityId:idp.issuer,ssoUrl:idp.issuer,certificate:idp.certificate,enabled:true});assert.equal(configured.status,200,await configured.clone().text())
- assert.equal((await post('/auth/settings/identity',{idpSignIn:true})).status,200)
+ const enabled=await post('/auth/settings/identity',{idpSignIn:true});assert.equal(enabled.status,200,await enabled.clone().text())
  const startResponse=await post('/auth/saml/start',{returnTo:'/app'});assert.equal(startResponse.status,303)
  const start=idp.request(startResponse),person=await h.db.prepare('SELECT o.email,m.base_id FROM operators o JOIN cradle_base_operators m ON m.principal_id=o.id WHERE o.id=?').bind(world.leaver.id).first()
  const response=idp.response(start,{origin:h.origin,email:person.email})
