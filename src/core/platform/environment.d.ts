@@ -30,6 +30,8 @@ declare global {
       RER_VERSION?: { id: string }
       APP_ORIGIN?: string
       SESSION_SECRET?: string
+      INSTALLATION_KEY?: string
+      INSTALLATION_KEY_PREVIOUS?: string
       MAIL_FROM?: string
       MAIL_PROVIDER_API_KEY?: string
       MAIL_API_KEY?: string
