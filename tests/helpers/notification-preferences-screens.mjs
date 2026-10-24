@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {expect} from '@playwright/test'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
 const kinds=['decision-assigned','critical-risk-escalated','readiness','comment-mentioned','automation-failed','decision-overdue','outage','progress','weekly-digest','record-automation']
 export async function verifyNotificationPreferencesScreens({h,page,command,capture}){
@@ -9,7 +10,7 @@ export async function verifyNotificationPreferencesScreens({h,page,command,captu
  const campaign=(await command('campaign.create',{fields:{code:`MUTE-${width}`,name:'Personal notification preferences',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Prove personal delivery preferences',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})).data.value
  const expected=[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:campaign.id},version:campaign.version}]
  const open=async()=>{await page.goto(h.origin+'/app/settings');await page.locator('summary').filter({hasText:/^Your notifications$/}).click();await page.getByRole('button',{name:'Save my preferences',exact:true}).waitFor()}
- const save=async()=>{const committed=page.waitForResponse(r=>r.url().endsWith('/api/v1/commands/preferences.update')&&r.request().method()==='POST');await page.getByRole('button',{name:'Save my preferences',exact:true}).click();const response=await committed;assert.equal(response.status(),200,await response.text());await page.getByRole('button',{name:'Save my preferences',exact:true}).waitFor({state:'visible'})}
+ const save=async()=>{const committed=page.waitForResponse(r=>r.url().endsWith('/api/v1/commands/preferences.update')&&r.request().method()==='POST');await page.getByRole('button',{name:'Save my preferences',exact:true}).click();const response=await committed;assert.equal(response.status(),200,await response.text());assert.equal((await response.json()).data.state,'committed');await expect(page.getByRole('button',{name:'Save my preferences',exact:true})).toBeEnabled()}
  await open()
  const muted=[]
  for(const kind of kinds){await page.getByRole('checkbox',{name:`Mute ${kind}`,exact:true}).check();muted.push(kind);await save();assert.deepEqual([...(await preferences(h.ownerSession)).mutedKinds].sort(),[...muted].sort(),`NOTIFY-007 ${kind} is independently mutable in Settings`)}
