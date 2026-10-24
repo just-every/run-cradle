@@ -14,8 +14,8 @@ type Composed = { app: AppType; runtime: Runtime }
 const composed = new WeakMap<object, { bindings: PlatformBindings; schemas: string; application: Promise<Composed> }>()
 
 const admittedSchemas = async (db: D1Database) =>
-  (await db.prepare('SELECT app_id,id,version,physical_revision FROM record_schemas ORDER BY app_id,id').all<{ app_id: string; id: string; version: number; physical_revision: string }>())
-    .results.map(row => `${row.app_id}:${row.id}:${row.version}:${row.physical_revision}`).join('\n')
+  (await db.prepare("SELECT app_id,id,version,physical_revision,EXISTS(SELECT 1 FROM record_trash t WHERE t.app_id=record_schemas.app_id AND t.entity_id=record_schemas.id AND t.kind='table') AS trashed FROM record_schemas ORDER BY app_id,id").all<{ app_id: string; id: string; version: number; physical_revision: string; trashed:number }>())
+    .results.map(row => `${row.app_id}:${row.id}:${row.version}:${row.physical_revision}:${row.trashed}`).join('\n')
 
 const sameBindings = (a: PlatformBindings, b: PlatformBindings) => {
   const keys = Object.keys(a) as (keyof PlatformBindings)[]

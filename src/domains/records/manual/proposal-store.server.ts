@@ -15,7 +15,7 @@ const select=`SELECT p.*,b.label AS key_name,base.name AS base_name,
  FROM record_schema_proposals p LEFT JOIN authority_schema_proposers b ON b.principal_id=p.proposer_id
  LEFT JOIN authority_credentials c ON c.id=p.credential_id LEFT JOIN manual_record_bases base ON base.id=p.app_id`
 
-const agentImpact=({entityId,label,changes,count,removedFields,validationViolations,violatingRecordCount}:SchemaImpact):AgentImpact=>({entityId,label,changes,count,removedFields,
+const agentImpact=({entityId,label,changes,count,removedFields,deletedTable,validationViolations,violatingRecordCount}:SchemaImpact):AgentImpact=>({entityId,label,changes,count,removedFields,...(deletedTable===undefined?{}:{deletedTable}),
  ...(validationViolations?{validationViolations:validationViolations.map(({ruleId,ruleName,message,count})=>({ruleId,ruleName,message,count}))}:{}),...(violatingRecordCount===undefined?{}:{violatingRecordCount})})
 export const parseStored=(row:Pick<ProposalRow,'detail_json'>)=>{const detail=JSON.parse(row.detail_json) as StoredProposal;const wrap=(g:SqlPredicate)=>trustedPredicate(g.sql,g.values);return {...detail,guards:detail.guards.map(wrap),freshness:detail.freshness.map(wrap)}}
 export function createProposalStore(db:D1Database){

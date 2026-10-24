@@ -71,12 +71,18 @@ contract('RECORDS-007','the owner alone reviews affected records, adopts, declin
   assert.deepEqual(current.tables.map(t=>t.label),['Items'])
   const addField=(label,note='')=>{const [field,low,high]=[0,0,0].map(()=>createUlid());const table=current.tables[0];return {field,input:{note,schema:{appId:h.appId,name:'Automation acceptance',tables:[{...table,fields:[...table.fields,{id:field,label,type:'select',required:false,unique:false,options:[{id:low,label:'Low'},{id:high,label:'High'}]}]}]},views:[{entityId:table.id,name:`By ${label}`,display:'board',fields:[h.nameId,field],sort:[],groupBy:[],layout:{titleFieldId:h.nameId,boardFieldId:field}}],forms:[]}}}
   const query=async()=>(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/query`,{method:'POST',body:{limit:200}})).data.items
-  // Destructive or unsupported changes are refused for the agent exactly as for the owner's own preview.
-  const table=current.tables[0],status=table.fields.find(f=>f.id===h.statusId)
-  for(const tables of [[],[{...table,fields:table.fields.map(f=>f.id===status.id?{...f,type:'number'}:f)}]]){
-   const draft={appId:h.appId,name:'Automation acceptance',tables},owner=await h.request('/api/v1/records/schema-preview',{method:'POST',status:400,body:draft})
-   assert.equal((await agent.propose({schema:draft},400)).error.message,owner.error.message)
-  }
+  // Empty bases stay invalid. Supported conversion proposals are inert, and
+  // their agent summary never includes owner-only conversion values or dependents.
+  const table=current.tables[0],status=table.fields.find(f=>f.id===h.statusId),empty={appId:h.appId,name:'Automation acceptance',tables:[]}
+  const owner=await h.request('/api/v1/records/schema-preview',{method:'POST',status:400,body:empty})
+  assert.equal((await agent.propose({schema:empty},400)).error.message,owner.error.message)
+  const conversion={appId:h.appId,name:'Automation acceptance',tables:[{...table,fields:table.fields.map(f=>f.id===status.id?{...f,type:'number'}:f)}]}
+  const ownerConversion=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:conversion})).data
+  assert.equal(ownerConversion.impacts[0].conversions[0].converted.length,2)
+  const proposedConversion=await agent.propose({schema:conversion})
+  for(const identity of [first.id,second.id])assert.ok(!JSON.stringify(proposedConversion).includes(identity),'Conversion proposals do not expose record identities')
+  assert.ok(proposedConversion.impacts.every(impact=>!('conversions'in impact)&&!('dependencies'in impact)&&!('refusals'in impact)),'Owner-only values and dependent metadata stay out of agent summaries')
+  await agent.withdraw(proposedConversion.id)
   // A rule the kept records break tells the agent how many break it; only the owner's review names them.
   const breaking=await agent.propose({schema:{appId:h.appId,name:'Automation acceptance',tables:[{...table,fields:[...table.fields,{id:createUlid(),label:'Owner code',type:'text',required:true,unique:false}]}]}})
   for(const seen of [breaking,await agent.read(breaking.id)]){

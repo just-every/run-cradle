@@ -6,6 +6,8 @@ import { schemaTable, schemaGuard } from './change.server';
 import type { SqlMutation, SqlPredicate } from '../admission/ports';
 import { eq, and } from '../admission/sql.server';
 import { canonical, canonicalHash } from '../admission/canonical';
+import type { CellValue } from '../../contracts/primitives';
+export type PerRecordMigrationValues = Readonly<Record<string, Readonly<Record<string, CellValue>>>>;
 export type SchemaArtifact = {
     schema: EntitySchema;
     physicalSql: string[];
@@ -52,7 +54,7 @@ export async function stageSchema(artifact: SchemaArtifact, registry: Descriptor
     return compiled.descriptor;
 }
 /** Typed copy/backfill is admitted with source-row/count fences and the schema pointer switch. */
-export async function preparePhysicalActivation(liveDb: D1Database, next: EntityDescriptor, prior?: EntityDescriptor, backfill: Readonly<Record<string, import('../../contracts/primitives').CellValue>> = {}): Promise<{
+export async function preparePhysicalActivation(liveDb: D1Database, next: EntityDescriptor, prior?: EntityDescriptor, backfill: Readonly<Record<string, CellValue>> = {}, overrides: PerRecordMigrationValues = {}): Promise<{
     guards: SqlPredicate[];
     mutations: SqlMutation[];
 }> {
@@ -60,20 +62,42 @@ export async function preparePhysicalActivation(liveDb: D1Database, next: Entity
     const { identifier, trustedPredicate, exists } = await import('../admission/sql.server');
     const { createUlid } = await import('../../core/shared/ids');
     const { storedValidationValues } = await import('./validation-values.server');
+    const { referenceValue } = await import('./store-references');
     const metadata = prepareSchemaActivation(next.schema, prior);
     if (!prior)
         return metadata;
     const rows = await liveDb.prepare(`SELECT * FROM ${identifier(prior.table.tableId)} ORDER BY ${identifier(prior.idColumn)}`).all<Record<string, unknown>>();
     const guards: SqlPredicate[] = [...metadata.guards, trustedPredicate(`(SELECT COUNT(*) FROM ${identifier(prior.table.tableId)})=?`, [rows.results.length]), trustedPredicate(`NOT EXISTS(SELECT 1 FROM ${identifier(next.table.tableId)})`)];
     const mutations: SqlMutation[] = [];
+    const sourceIds = new Set(rows.results.map(row => String(row[prior.idColumn])));
+    if (Object.keys(overrides).some(id => !sourceIds.has(id)))
+        throw new Error('Reviewed migration values identify a missing source record');
     for (const row of rows.results) {
         const retained = await storedValidationValues(liveDb, prior, row);
-        const values: Record<string, import('../../contracts/primitives').CellValue> = { ...backfill, ...Object.fromEntries(Object.entries(retained).filter(([id])=>next.fields.has(id))) };
         const id = String(row[prior.idColumn]);
+        const reviewed = overrides[id] ?? {};
+        const values: Record<string, CellValue> = { ...backfill, ...Object.fromEntries(Object.entries(retained).filter(([id])=>next.fields.has(id))), ...reviewed };
         guards.push(exists(prior.table, and(eq(prior.table, prior.idColumn, id), eq(prior.table, prior.versionColumn, Number(row[prior.versionColumn])))));
         mutations.push({ kind: 'insert', table: next.table, row: { ...encodeValues(next, values, true), [next.idColumn]: id, [next.versionColumn]: Number(row[prior.versionColumn]), [next.createdColumn]: String(row[prior.createdColumn]), [next.updatedColumn]: String(row[prior.updatedColumn]), [next.lifecycleColumn]: String(row[prior.lifecycleColumn]), [next.schemaVersionColumn]: next.schema.version } });
+        // A reviewed destination collection is encoded from canonical cells;
+        // source join bytes cannot represent a changed field's meaning.
+        for (const [fieldId, target] of next.fields) {
+            if (!target.join || !(Object.hasOwn(reviewed, fieldId) || !prior.fields.has(fieldId) && Object.hasOwn(backfill, fieldId))) continue;
+            const members = values[fieldId];
+            if (members === null) continue;
+            if (!Array.isArray(members)) throw new Error('Collection migration requires canonical collection values');
+            for (const [position, member] of members.entries()) {
+                let value: string;
+                if (typeof member === 'string') value = member;
+                else if (member && typeof member === 'object' && 'recordId' in member) value = member.recordId;
+                else if (member && typeof member === 'object' && 'reference' in member) value = referenceValue(member.reference);
+                else if (member && typeof member === 'object' && 'fileId' in member) value = member.fileId;
+                else throw new Error('Collection migration has an invalid canonical member');
+                mutations.push({ kind: 'insert', table: target.join.table, row: { id: createUlid(), record_id: id, value, position } });
+            }
+        }
         for (const [fieldId, s] of prior.fields) {
-            if (!s.join)
+            if (!s.join || Object.hasOwn(reviewed, fieldId))
                 continue;
             const target = next.fields.get(fieldId)?.join;
             if (!target) { if (!next.fields.has(fieldId)) continue; throw new Error('Collection migration requires preserved target'); }
@@ -88,7 +112,7 @@ export async function preparePhysicalActivation(liveDb: D1Database, next: Entity
     return { guards, mutations: [...mutations, ...metadata.mutations] };
 }
 /** A changed target requires restaging every incoming FK owner; this closure keeps physical FKs canonical. */
-export async function compileSchemaSet(schemas: readonly EntitySchema[], registry: DescriptorRegistry, removals: Readonly<Record<string, readonly string[]>> = {}): Promise<{
+export async function compileSchemaSet(schemas: readonly EntitySchema[], registry: DescriptorRegistry, removals: Readonly<Record<string, readonly string[]>> = {}, convertedFields: Readonly<Record<string, readonly string[]>> = {}): Promise<{
     artifacts: SchemaArtifact[];
     descriptors: EntityDescriptor[];
 }> {
@@ -109,7 +133,7 @@ export async function compileSchemaSet(schemas: readonly EntitySchema[], registr
     const artifacts: SchemaArtifact[] = [], descriptors: EntityDescriptor[] = [];
     for (const schema of schemas) {
         const prior = registry.list().find(d => d.schema.id === schema.id && d.schema.appId === schema.appId);
-        const compiled = compileSchema(schema, (app, id) => skeletons.get(app + ':' + id) ?? registry.list().find(d => d.schema.appId === app && d.schema.id === id), prior, removals[schema.id]);
+        const compiled = compileSchema(schema, (app, id) => skeletons.get(app + ':' + id) ?? registry.list().find(d => d.schema.appId === app && d.schema.id === id), prior, removals[schema.id], convertedFields[schema.id]);
         descriptors.push(compiled.descriptor);
         const physicalSql = compiled.sql;
         artifacts.push({ schema, physicalSql, sha256: await canonicalHash({ schema, physicalSql }), source: `export const schema = ${JSON.stringify(schema, null, 2)} as const;\n` });
@@ -117,16 +141,16 @@ export async function compileSchemaSet(schemas: readonly EntitySchema[], registr
     validateExpressionGraph([...registry.list().filter(d => !ids.has(d.schema.appId + ':' + d.schema.id)).map(d => d.schema), ...schemas]);
     return { artifacts, descriptors };
 }
-export async function stageSchemaSet(compiled: Awaited<ReturnType<typeof compileSchemaSet>>, liveDb: D1Database, registry: DescriptorRegistry, removals: Readonly<Record<string, readonly string[]>> = {}): Promise<void> { const verified = await compileSchemaSet(compiled.artifacts.map(a => a.schema), registry, removals); for (let i = 0; i < verified.artifacts.length; i++) {
+export async function stageSchemaSet(compiled: Awaited<ReturnType<typeof compileSchemaSet>>, liveDb: D1Database, registry: DescriptorRegistry, removals: Readonly<Record<string, readonly string[]>> = {}, convertedFields: Readonly<Record<string, readonly string[]>> = {}): Promise<void> { const verified = await compileSchemaSet(compiled.artifacts.map(a => a.schema), registry, removals, convertedFields); for (let i = 0; i < verified.artifacts.length; i++) {
     if (verified.artifacts[i]!.sha256 !== compiled.artifacts[i]!.sha256)
         throw new Error('Untrusted physical schema artifact');
     for (const sql of verified.artifacts[i]!.physicalSql)
         await stageStatement(liveDb, sql);
 } }
-export async function prepareSchemaSetActivation(liveDb: D1Database, compiled: Awaited<ReturnType<typeof compileSchemaSet>>, registry: DescriptorRegistry, backfills: Readonly<Record<string, Readonly<Record<string, import('../../contracts/primitives').CellValue>>>> = {}): Promise<{
+export async function prepareSchemaSetActivation(liveDb: D1Database, compiled: Awaited<ReturnType<typeof compileSchemaSet>>, registry: DescriptorRegistry, backfills: Readonly<Record<string, Readonly<Record<string, CellValue>>>> = {}, overrides: Readonly<Record<string, PerRecordMigrationValues>> = {}): Promise<{
     guards: SqlPredicate[];
     mutations: SqlMutation[];
 }> { const plans = []; for (const next of compiled.descriptors) {
     const prior = registry.list().find(d => d.schema.id === next.schema.id && d.schema.appId === next.schema.appId);
-    plans.push(await preparePhysicalActivation(liveDb, next, prior, backfills[next.schema.id]));
+    plans.push(await preparePhysicalActivation(liveDb, next, prior, backfills[next.schema.id], overrides[next.schema.id]));
 } return { guards: plans.flatMap(p => p.guards), mutations: plans.flatMap(p => p.mutations) }; }

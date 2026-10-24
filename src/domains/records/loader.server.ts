@@ -4,7 +4,7 @@ import { compileSchema, createDescriptorRegistry, physicalName, type EntityDescr
 import { entitySchema } from './validators';
 /** Resolve the admitted metadata pointer afresh; source-owned protection survives schema adoption. */
 export async function loadDescriptorRegistry(db: D1Database, sources: readonly EntityDescriptor[]) {
-    const rows = await db.prepare('SELECT id,app_id,version,physical_revision,schema_json FROM record_schemas').all<{
+    const rows = await db.prepare("SELECT id,app_id,version,physical_revision,schema_json FROM record_schemas s WHERE NOT EXISTS(SELECT 1 FROM record_trash t WHERE t.app_id=s.app_id AND t.entity_id=s.id AND t.kind='table')").all<{
         id: string;
         app_id: string;
         version: number;
