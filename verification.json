@@ -76,7 +76,15 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 1/4"
+        "node scripts/verify-suite.mjs test:launch 1/8"
+      ]
+    },
+    {
+      "name": "launch-5",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 5/8"
       ]
     },
     {
