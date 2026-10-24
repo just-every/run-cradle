@@ -100,7 +100,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    await open();await page.getByRole('button',{name:'Read back original effect',exact:true}).waitFor();await capture('unknown');const reconciled=page.waitForResponse(r=>r.url().endsWith('/reconcile')&&r.request().method()==='POST');await page.getByRole('button',{name:'Read back original effect',exact:true}).click();assert.equal((await reconciled).status(),200);event=await binding();assert.equal(event.state,'synced');assert.equal(provider.writes.filter(w=>body(w)?.extendedProperties?.private.cradleRecord===recordId&&w.method==='POST').length,1)
    await proof.effect(event,'create')
    assert.ok(eventValue(event.event_id).description.includes(recordPath))
-   const move=await patch({[start.id]:'2026-11-05',[end.id]:'2026-11-06'});await deliver({kind:'cradle.records.automations.v1',commandId:move.commandId});await drain()
+   const move=await patch({[start.id]:'2026-11-05',[end.id]:'2026-11-06'});await proof.capacity();await deliver({kind:'cradle.records.automations.v1',commandId:move.commandId});await drain()
    event=await binding();await proof.effect(event,'move');assert.equal(eventValue(event.event_id).start.date,'2026-11-05');const movedWrites=provider.writes.length;await deliver({kind:'cradle.records.automations.v1',commandId:move.commandId});await drain();assert.equal(provider.writes.length,movedWrites,'Duplicate ordinary-change delivery creates no second calendar effect')
    const original=await get();provider.externalEdit(provider.ownedCalendarId,event.event_id,{summary:'synthetic-cradle-external-title',start:{date:'2026-11-10'},end:{date:'2026-11-12'}})
    const beforeReviewWrites=provider.writes.length

@@ -6,6 +6,14 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 export function recordCalendarProof({h,call,provider,outlook,appId,entityId,recordId,definitionId}){
  const notificationTitle=`synthetic-cradle-calendar-applied-${recordId}`
  return {
+  async capacity(){
+   const boundary=await h.db.prepare("SELECT created_at FROM execution_attempts WHERE action='record.calendar.sync' ORDER BY created_at DESC,id DESC LIMIT 1 OFFSET 9").first()
+   const due=boundary?Date.parse(boundary.created_at)+60100:0,delay=Math.max(0,due-Date.now())
+   assert.ok(delay<=61000,'Calendar capacity uses the existing bounded real minute window')
+   if(delay){console.log('CALENDAR_VIEWPORT_CAPACITY',JSON.stringify({reason:'Prior viewport exhausted the installation calendar window',due:new Date(due).toISOString(),milliseconds:delay}));await new Promise(resolve=>setTimeout(resolve,delay))}
+   const recent=(await h.db.prepare("SELECT count(*) n FROM execution_attempts WHERE action='record.calendar.sync' AND created_at>strftime('%Y-%m-%dT%H:%M:%fZ','now','-60 seconds')").first()).n
+   assert.ok(recent<10,'The ordinary queued change now has real pacing capacity')
+  },
   async effect(event,operation){
    const rows=(await h.db.prepare("SELECT id,request_json FROM execution_runs WHERE json_extract(request_json,'$.calendarBinding.definitionId')=? AND json_extract(request_json,'$.calendarBinding.recordId')=? AND json_extract(request_json,'$.calendarBinding.generation')=?").bind(definitionId,recordId,event.generation).all()).results
    assert.equal(rows.length,1,`${operation} has exactly one execution effect for this definition, record and generation`)
