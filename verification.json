@@ -172,11 +172,18 @@
       ]
     },
     {
+      "name": "automations-native",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "pnpm test:user-automations"
+      ]
+    },
+    {
       "name": "automations",
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:user-automations",
         "pnpm test:user-automations:browser",
         "pnpm test:admission:browser"
       ]
