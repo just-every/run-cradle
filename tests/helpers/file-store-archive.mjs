@@ -7,16 +7,26 @@ import assert from 'node:assert/strict'
 import {createPortability} from '@runeditrun/rer/modules/portability'
 import {exportArchive} from '@runeditrun/rer/modules/portability/files'
 import {installationBucket} from '../../scripts/portability/bucket.mjs'
-import {portabilityPolicy,transient} from '../../scripts/portability/policy.mjs'
+import {installationPortabilityPolicy,transient} from '../../scripts/portability/policy.mjs'
 import {derivedSearch} from '../../scripts/portability/records.mjs'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {fileStoresProvider} from './file-stores-provider.mjs'
 import {fileStoreBindings} from './file-stores-journey.mjs'
+import {warehouseNetworkEdge} from './warehouse-network-edge.mjs'
+import {addWarehouseArchiveState,assertWarehouseArchive} from './warehouse-archive.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 /** The archive's store reference and retained copy are both authored through the product doors. */
 export async function fileStoreArchive(directory){
- const provider=fileStoresProvider(),calendarProvider=recordCalendarProvider(),h=await userAutomationRuntime(0,{outbound:async request=>{const url=new URL(request.url);if(url.pathname.startsWith('/calendar/'))return calendarProvider.fetch(request);if(url.hostname==='oauth2.googleapis.com'&&url.pathname==='/token'&&(await request.clone().text()).includes('synthetic-cradle-code-calendar-archive'))return calendarProvider.fetch(request);return provider.fetch(request)},bindings:fileStoreBindings,installMigrations:platformInstall})
+ const provider=fileStoresProvider(),calendarProvider=recordCalendarProvider(),warehouseEdge=await warehouseNetworkEdge()
+ let h
  try{
+  h=await userAutomationRuntime(0,{outbound:async request=>{
+   const url=new URL(request.url)
+   if(url.hostname==='relay.egress.example.com')return warehouseEdge.outbound(request)
+   if(url.pathname.startsWith('/calendar/'))return calendarProvider.fetch(request)
+   if(url.hostname==='oauth2.googleapis.com'&&url.pathname==='/token'&&(await request.clone().text()).includes('synthetic-cradle-code-calendar-archive'))return calendarProvider.fetch(request)
+   return provider.fetch(request)
+  },bindings:{...fileStoreBindings,...warehouseEdge.bindings},installMigrations:platformInstall})
   const fieldId=createUlid(),calendarDateId=createUlid(),entity=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
   const preview=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:{appId:h.appId,name:'Automation acceptance',tables:[{id:h.entityId,label:'Items',primaryFieldId:h.nameId,fields:[...entity.fields,{id:calendarDateId,label:'Archive calendar date',type:'date',required:false,unique:false},{id:fieldId,label:'Files',type:'attachment',required:false,unique:false}]}]}})).data
   await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}}})
@@ -39,8 +49,10 @@ export async function fileStoreArchive(directory){
   const values=(await h.db.prepare(`SELECT value FROM "${table}" WHERE record_id=? ORDER BY position`).bind(record.ref.recordId).all()).results.map(row=>row.value)
   assert.equal(values[0],copy.fileId);assert.equal(JSON.parse(values[1]).itemId,members[1].reference.itemId)
   const calendar=await addRecordCalendarArchiveState(h,calendarProvider,calendarDateId,record.ref.recordId)
-  const bucket=await h.runtime.getR2Bucket('FILES'),service=await createPortability({db:h.db,buckets:{FILES:installationBucket(h.db,bucket)},policy:{...portabilityPolicy,derivedTables:await derivedSearch(h.db)}})
+  const warehouse=await addWarehouseArchiveState(h,warehouseEdge);calendar.warehouse=warehouse
+  const warehouseBucket=await h.runtime.getR2Bucket('WAREHOUSE'),bucket=await h.runtime.getR2Bucket('FILES'),service=await createPortability({db:h.db,buckets:{FILES:installationBucket(h.db,bucket),WAREHOUSE:warehouseBucket},policy:{...installationPortabilityPolicy(warehouseBucket),derivedTables:await derivedSearch(h.db)}})
   await exportArchive(service,directory+'/file-stores.rer',transient)
+  await assertWarehouseArchive(directory+'/file-stores.rer',warehouse)
   return {calendar,connectionId,fileId:copy.fileId,...file,table,recordId:record.ref.recordId,values,bytes:provider.payload('google-drive',0),uploadedKey,uploadedFileId:upload.file.id,uploadedBytes}
- }finally{await h.close()}
+ }catch(error){await warehouseEdge.close();throw error}finally{await h?.close()}
 }

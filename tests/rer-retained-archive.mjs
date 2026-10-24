@@ -21,7 +21,7 @@ const quote=name=>'"'+name.replaceAll('"','""')+'"'
 async function matchesArchive(root,path){
  const records=[];for await(const record of fileRecords(path))records.push(record)
  const manifest=records[0],items=records.filter(r=>r.kind==='part').flatMap(r=>r.items),tables=manifest.tables.filter(t=>!platformTable(t.name))
- await bindings(root,async({DB,FILES})=>{
+ await bindings(root,async({DB,FILES,WAREHOUSE})=>{
   for(const table of tables){
    const rows=(await DB.prepare(`SELECT * FROM ${quote(table.name)}`).all()).results
    const actual=rows.map(row=>canonicalJson(encodedRow(table,row,manifest.excludedColumns[table.name]??[]))).sort()
@@ -29,7 +29,7 @@ async function matchesArchive(root,path){
    assert.deepEqual(actual,expected,'Every archived cell: '+table.name)
   }
   for(const object of manifest.objects){
-   const file=await FILES.get(object.key);assert.ok(file,object.key)
+   const file=await ({FILES,WAREHOUSE}[object.bucket]).get(object.key);assert.ok(file,object.key)
    const chunks=items.filter(i=>i.kind==='object'&&i.key===object.key&&i.bucket===object.bucket).sort((a,b)=>a.offset-b.offset)
    assert.deepEqual(Buffer.from(await file.arrayBuffer()),Buffer.concat(chunks.map(i=>Buffer.from(i.data,'base64'))),'Every archived file byte: '+object.key)
    assert.deepEqual(file.httpMetadata,object.httpMetadata)
@@ -39,7 +39,7 @@ async function matchesArchive(root,path){
  console.log('ARCHIVE_MATCH '+JSON.stringify({archive:path.split('/').at(-1),tables:tables.length,rows:tables.reduce((n,t)=>n+t.count,0),objects:manifest.objects.length}))
  return manifest
 }
-contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and a native export of a RER Platform install, restore through rer import with every row and file; an unknown table is refused',async()=>{
+contract('BASE-DATA-001 RECORDS-006 SYNC-002','a backup made by the previous version, and a native export of a RER Platform install, restore through rer import with every row and file; an unknown table is refused',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'cradle-platform-archive-'))
  let target,storesReady
  try{
@@ -90,7 +90,7 @@ contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and
   await target.rer(['reset','--yes','--non-interactive']);await target.command(['run','db:migrate:local'])
   await bindings(target.source,async({DB,FILES})=>{assert.equal((await DB.prepare('SELECT count(*) n FROM evidence_files').first()).n,0);assert.equal(await FILES.get(stores.object_key),null,'Owner reset erases the retained copy bytes');assert.equal(await FILES.get(stores.uploadedKey),null,'Owner reset erases ordinary uploaded bytes equally')})
  }finally{
-  if(storesReady)await storesReady
+  if(storesReady){const source=await storesReady;if(source.stores?.calendar.warehouse)await source.stores.calendar.warehouse.edge.close()}
   if(target){await target.log.close();await rm(target.root,{recursive:true,force:true})}
   await rm(directory,{recursive:true,force:true})
  }
