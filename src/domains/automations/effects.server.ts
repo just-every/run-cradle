@@ -1,4 +1,7 @@
-import type { RequestContext,AuthorityPermit,PolicyScope } from '../authority/ports'
+import {smsDispatch} from '../sms/dispatch.server'
+import type {createRecordReader} from '../records/query.server'
+import type {DescriptorRegistry} from '../records/descriptors.server'
+import type { RequestContext,AuthorityPermit,PolicyScope,PolicyPort } from '../authority/ports'
 import type { AdmissionPort,SqlPredicate } from '../admission/ports'
 import type { CommandRegistry } from '../../core/registry/commands'
 import type { EntityRegistry } from '../authority/scope.server'
@@ -20,7 +23,7 @@ import type { RecordAutomationAction } from './contracts'
 
 type Outcome={state:'Complete'|'Failed'|'Unknown';result:unknown;errorCode?:string}
 export function createAutomationEffects(deps:{env:PlatformBindings;entities:EntityRegistry;admission:AdmissionPort;
- commands:CommandRegistry;destinations:ReturnType<typeof createAutomationDestinations>}) {
+ policy:PolicyPort;appOrigin:string;reader:ReturnType<typeof createRecordReader>;descriptors:DescriptorRegistry;commands:CommandRegistry;destinations:ReturnType<typeof createAutomationDestinations>}) {
  const db=deps.env.DB
  return {
   async execute(ctx:RequestContext,run:AutomationRun,step:AutomationActionRun,action:RecordAutomationAction,
@@ -52,6 +55,7 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
     return {state:receipt.result.state==='committed'?'Complete':'Unknown',result:{commandId},
      ...(receipt.result.state==='committed'?{}:{errorCode:'admission_unknown'})}
    }
+   if(action.kind==='sms')return smsDispatch(deps.env,deps.appOrigin,deps.reader,deps.descriptors,deps.policy)(ctx,run,step,action,scope,authorize)
    if(action.kind==='email') {
     const recipient=await automationRecipient(db,deps.entities,ctx,{...ref,operatorId:action.operatorId})
     const env=deps.env,local=env.RER_DEMO==='1'||localMailEnabled(env)
@@ -94,6 +98,10 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
     const receipt=await db.prepare("SELECT 1 FROM command_admissions WHERE command_id=? AND state='committed'").bind(step.idempotency_key).first()
     return receipt?{state:'Complete',result:{commandId:step.idempotency_key,reconciled:true}}:
      {state:'Failed',result:{commandId:step.idempotency_key},errorCode:'interrupted_before_commit'}
+   }
+   if(action.kind==='sms'){
+    const receipt=await db.prepare('SELECT status,provider_sid FROM sms_messages WHERE id=?').bind(step.id).first<{status:string;provider_sid:string|null}>()
+    return receipt&&receipt.status!=='unknown'?{state:receipt.status==='failed'?'Failed':'Complete',result:{deliveryId:step.id,smsStatus:receipt.status,providerMessageId:receipt.provider_sid}}:{state:'Unknown',result:{deliveryId:step.id},errorCode:'sms_acknowledgement_unknown'}
    }
    if(action.kind==='email') {
     if(localMailEnabled(deps.env)&&deps.env.MAIL_PROVIDER==='development') {

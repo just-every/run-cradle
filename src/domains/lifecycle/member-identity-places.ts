@@ -32,6 +32,8 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('launch_bulk','actor_id=?','bulk edits they made'),
  place('launch_analysis_requests','actor_id=?','analyses they requested'),
  place('business_decisions','requester_id=? OR assignee_id=? OR decided_by=?','business decisions they requested, were assigned or decided'),
+ {...byId('owner_id=?','their sealed Twilio credentials','delete'),table:'sms_installation'},
+ {...byId('actor_id=?','phone copies from SMS actions they ran','delete'),table:'sms_messages'},
  place('record_automation_tests','owner_id=?','automation tests authored by them'),
  place('automation_runs','initiated_by_id=?','automation runs they started'),
  place('evidence_comments','author_id=?','evidence comments they wrote'),

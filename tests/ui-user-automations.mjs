@@ -1,3 +1,5 @@
+import {smsBrowser} from './helpers/sms-browser.mjs'
+import {twilioEdge,relaySecret} from './helpers/sms-journey.mjs'
 import {automationTriggerBrowser} from './helpers/automation-trigger-browser.mjs'
 import {automationControlBrowser} from './helpers/automation-control-browser.mjs'
 import {randomBytes} from 'node:crypto'
@@ -17,10 +19,11 @@ import {userAutomationBrowser} from './helpers/user-automation-browser.mjs'
 
 contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] [AUTO-USER-002] owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone',async()=>{
  const output=path.resolve(process.env.CRADLE_AUTOMATIONS_OUTPUT??'.private/user-automation-browser')
- await mkdir(output,{recursive:true});let h,browser
+ await mkdir(output,{recursive:true});let h,browser,smsEdge
  const receipts=[]
  try {
-  h=await userAutomationRuntime(0,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-81-relay-secret-0000000000'},outbound:async request=>{assert.equal(request.url,'https://relay.example.com/v1/deliver');const wire=await request.json();return wire.url.endsWith('/unknown')?new Response(null,{status:503}):Response.json({status:wire.url.endsWith('/safe')?429:400,headers:{},body:''})}})
+  smsEdge=await twilioEdge()
+  h=await userAutomationRuntime(0,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:relaySecret},outbound:async request=>{assert.equal(request.url,'https://relay.example.com/v1/deliver');const wire=await request.clone().json();if(['api.twilio.com','messaging.twilio.com'].includes(new URL(wire.url).hostname))return smsEdge.outbound(request);return wire.url.endsWith('/unknown')?new Response(null,{status:503}):Response.json({status:wire.url.endsWith('/safe')?429:400,headers:{},body:''})}})
   assert.equal(process.env.HOME,userInfo().homedir)
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   console.log('OWNED_BROWSER_PIDS '+execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).split('\n').filter(line=>line.trim().split(/\s+/)[1]===String(process.pid)).join(' | '))
@@ -30,6 +33,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
     await context.addCookies(browserCookies(h.cookie,h.origin))
     const page=await context.newPage(),journey=recordsJourney(page,h.origin,output,width)
     let consoleErrors=0;page.on('console',message=>{if(message.type()==='error')consoleErrors++})
+    await smsBrowser(page,h,journey,width)
     await userKeyBrowser(page,h,journey,width)
     await userAutomationBrowser(page,h,journey,width)
     await automationFailureBrowser(page,h,journey,width,output)
@@ -40,5 +44,5 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
    }finally{await context.close()}
   }
   await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2))
- }finally{await browser?.close();await h?.close()}
+ }finally{await browser?.close();await h?.close();await smsEdge?.close()}
 })

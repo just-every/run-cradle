@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict'
+import {createUlid} from '../../src/core/shared/ids.ts'
+import {accountSid,authToken,sendingNumber} from './sms-journey.mjs'
+export async function smsBrowser(page,h,journey,width){
+ await page.goto(h.origin+'/app/settings')
+ await page.getByText('Twilio SMS',{exact:true}).first().click()
+ const section=page.getByRole('region',{name:'Twilio SMS settings'})
+ await section.getByLabel('Twilio Account SID',{exact:true}).fill(accountSid)
+ await section.getByLabel('Twilio Auth Token',{exact:true}).fill(authToken)
+ await section.getByLabel('Sending number or Messaging Service',{exact:true}).fill(sendingNumber)
+ const connected=page.waitForResponse(response=>response.url().endsWith('/sms/settings')&&response.request().method()==='PUT')
+ await section.getByRole('button',{name:/Connect Twilio|Replace Twilio credentials/}).click()
+ assert.equal((await connected).status(),200)
+ await section.getByRole('status').filter({hasText:/Connected/}).waitFor()
+ assert.equal(await section.getByLabel('Twilio Auth Token',{exact:true}).inputValue(),'','Secret is cleared after saving')
+ await journey.capture('sms-settings')
+ await page.goto(h.origin+'/app/automations')
+ const panel=page.getByRole('region',{name:'Record automations'})
+ await panel.getByLabel(/^Application/).selectOption(h.appId)
+ await panel.getByLabel(/^Record type/).selectOption(h.entityId)
+ await panel.getByRole('button',{name:'New automation',exact:true}).click()
+ const form=page.getByRole('form',{name:'Automation definition'})
+ await form.getByLabel('Automation name',{exact:true}).fill(`synthetic-cradle-106-sms-${width}`)
+ await form.getByRole('combobox',{name:/^Action/}).selectOption('sms')
+ await form.getByRole('combobox',{name:/^Phone field/}).selectOption(h.nameId)
+ await form.getByRole('textbox',{name:/^SMS message/}).fill('Hello ')
+ await form.getByRole('combobox',{name:/^Insert record value/}).selectOption(h.statusId)
+ assert.equal(await form.getByRole('textbox',{name:/^SMS message/}).inputValue(),'Hello {{'+h.statusId+'}}')
+ await journey.capture('sms-composed-action')
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/user-automations')&&response.request().method()==='POST')
+ await form.getByRole('button',{name:'Save automation',exact:true}).click()
+ const response=await saved;assert.equal(response.status(),201)
+ const automation=(await response.json()).data.result.value
+ await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
+}

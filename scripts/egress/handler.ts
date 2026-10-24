@@ -1,24 +1,27 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createHash, timingSafeEqual } from 'node:crypto'
-import { NodePinnedTransport } from '../../vendor/base/modules/integrations/core/node-transport.ts'
+import {PinnedHttpTransport} from './pinned-http.ts'
+import type {RelayWire,RelayResponse} from '../../src/domains/integrations/relay-transport.server'
 import { validateDestination } from '../../vendor/base/modules/integrations/core/destination.ts'
 import type { TrustedTransport, WireRequest } from '../../vendor/base/modules/integrations/core/types.ts'
 
 const hash=(value:string)=>createHash('sha256').update(value).digest()
-function parseWire(value:unknown):WireRequest {
+function parseWire(value:unknown):RelayWire {
  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('invalid_wire')
- const wire=value as WireRequest
- if(Object.keys(wire).sort().join(',')!=='body,headers,url'||typeof wire.url!=='string'||typeof wire.body!=='string'||
+ const wire=value as RelayWire
+ if(Object.keys(wire).some(key=>!['body','headers','url','method','bodyEncoding'].includes(key))||typeof wire.url!=='string'||typeof wire.body!=='string'||
   !wire.headers||typeof wire.headers!=='object'||Array.isArray(wire.headers))throw new Error('invalid_wire')
  validateDestination(wire.url)
- if(Buffer.byteLength(wire.body)>1048576||Object.keys(wire.headers).length>32)throw new Error('request_limit')
+ if(wire.method!==undefined&&!['GET','POST','PUT','DELETE','HEAD'].includes(wire.method))throw new Error('invalid_method')
+ if(wire.bodyEncoding!==undefined&&(wire.bodyEncoding!=='base64'||!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(wire.body)))throw new Error('invalid_encoding')
+ if(Buffer.byteLength(wire.body,wire.bodyEncoding==='base64'?'base64':'utf8')>1048576||Object.keys(wire.headers).length>32)throw new Error('request_limit')
  for(const [name,content] of Object.entries(wire.headers))
   if(!/^[A-Za-z0-9-]{1,64}$/.test(name)||typeof content!=='string'||content.length>2048||/[\r\n\0]/.test(content))throw new Error('invalid_header')
  return wire
 }
 
 /** The transport seam is only for network-edge tests. The command supplies NodePinnedTransport. */
-export function createRelayHandler(secret:string,transport:TrustedTransport=new NodePinnedTransport({timeoutMs:5000,maxResponseBytes:65536})) {
+export function createRelayHandler(secret:string,transport:{send(wire:RelayWire):Promise<RelayResponse>}=new PinnedHttpTransport()) {
  if(secret.length<32)throw new Error('A private relay credential is required')
  const expected=hash(`Bearer ${secret}`)
  return async(request:IncomingMessage,response:ServerResponse)=>{
@@ -35,9 +38,9 @@ export function createRelayHandler(secret:string,transport:TrustedTransport=new 
    started=true
    const result=await transport.send(wire)
    if(result.status>=300&&result.status<400)return end(422,'redirect_refused')
-   if(Buffer.byteLength(result.body)>65536)return end(502,'response_limit')
+   if(Buffer.byteLength(result.body)>(wire.bodyEncoding==='base64'?1400000:65536))return end(502,'response_limit')
    const headers=Object.fromEntries(Object.entries(result.headers).filter(([name])=>['retry-after','content-type'].includes(name.toLowerCase())))
-   response.writeHead(200);response.end(JSON.stringify({status:result.status,headers,body:result.body}))
+   response.writeHead(200);response.end(JSON.stringify({status:result.status,headers,body:result.body,...(wire.bodyEncoding?{bodyEncoding:result.bodyEncoding}:{})}))
   }catch {if(!response.headersSent)end(started?502:400,started?'delivery_unknown':'invalid_request')}
   finally {clearTimeout(timer)}
  }

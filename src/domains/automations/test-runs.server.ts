@@ -24,7 +24,7 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   if(!binding||binding.owner_id!==ctx.principal.id)throw new AuthorityError('not_found','Only the automation author can test it.',404)
   const own=await ownerDelegationSnapshot(db,ctx,binding.app_id),scope=await policy.scope(ctx,{appId:binding.app_id,entityId:binding.entity_id,purpose:'read'}),ref={appId:binding.app_id,entityId:binding.entity_id,recordId:input.recordId},record=await reader.record(ctx,scope,ref),definition=recordAutomationDefinition.parse(JSON.parse(binding.definition_json))
   if(definition.trigger||definition.steps||definition.actions.some(action=>action.when))throw new AuthorityError('unconfigured','The builder test panel does not yet support these saved triggers or control steps. Use run history for enabled control definitions.',503)
-  if(definition.actions.some(action=>['email','webhook','slack'].includes(action.kind)))await policy.scope(ctx,{appId:ref.appId,entityId:ref.entityId,purpose:'export'})
+  if(definition.actions.some(action=>['email','webhook','slack','sms'].includes(action.kind)))await policy.scope(ctx,{appId:ref.appId,entityId:ref.entityId,purpose:'export'})
   if(definition.actions.some(action=>action.kind==='update'&&(!scope.writableFieldIds.includes(action.fieldId)||!scope.readableFieldIds.includes(action.fieldId))))throw new AuthorityError('forbidden','A test requires current read and write authority for each update field.')
   const narrow=(value:string)=>{const result=JSON.parse(value);for(const step of result.steps??[])if(step.input?.values)step.input.values=Object.fromEntries(Object.entries(step.input.values).filter(([id])=>scope.readableFieldIds.includes(id)));return result}
   const id=input.commandId,mode=input.live?'live':'dry',hash=await canonicalHash(input)
@@ -62,7 +62,7 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
      const sent=await sendBuilderTestMail(env,{id:step.id,email:builder.email,subject:action.subject,text:action.text},async()=>{await authorize();if(!await db.prepare(`SELECT 1 WHERE ${builder.guard.sql}`).bind(...builder.guard.values).first())throw new AuthorityError('forbidden','Builder mail authority changed.')})
      step.state=sent.state;step.output={...step.output as object,to:[builder.email],builderOnly:true,sent:sent.status==='accepted'||sent.status==='development',provider:sent}
     }else step.state='Complete'
-   }catch(error){step.state=error instanceof AuthorityError?'Failed':['email','webhook','slack'].includes(action.kind)?'Unknown':'Failed';step.errorCode=error instanceof Error&&'code'in error?String(error.code):'test_failed';step.output={error:error instanceof Error?error.message:'The test failed.'}}
+   }catch(error){step.state=error instanceof AuthorityError?'Failed':['email','webhook','slack','sms'].includes(action.kind)?'Unknown':'Failed';step.errorCode=error instanceof Error&&'code'in error?String(error.code):'test_failed';step.output={error:error instanceof Error?error.message:'The test failed.'}}
    if(['Unknown','Failed'].includes(step.state)){for(const later of result.steps.slice(step.position+1))if(later.state==='Preview')later.state='Skipped';break}
   }
   result.state=result.steps.some(step=>step.state==='Unknown')?'Unknown':result.steps.some(step=>step.state==='Failed')?'Failed':'Complete'

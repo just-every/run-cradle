@@ -6,6 +6,7 @@ import { cellValueSchema,filterSchema } from '../records/validators'
 
 export const recordAutomationAction=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('notify'),operatorId:idSchema,title:z.string().trim().min(1).max(200),when:filterSchema.optional()}).strict(),
+ z.object({kind:z.literal('sms'),fieldId:idSchema,text:z.string().trim().min(1).max(4000),when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('email'),operatorId:idSchema,subject:z.string().trim().min(1).max(200),text:z.string().trim().min(1).max(4000),when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('update'),fieldId:idSchema,value:cellValueSchema,when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('webhook'),destinationId:idSchema,when:filterSchema.optional()}).strict(),

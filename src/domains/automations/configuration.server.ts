@@ -31,13 +31,18 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
      if(!field||field.readOnly||field.type==='computed'||!own.scope.writableFieldIds.includes(field.id))throw new AuthorityError('forbidden','Select a writable field in your current scope.')
      validateCell(field,action.value)
     }
+    if(action.kind==='sms'){
+     const field=descriptor.schema.fields.find(f=>f.id===action.fieldId)
+     if(!field||!(field.type==='text'||field.type==='computed'&&field.resultElementType==='text')||!own.scope.readableFieldIds.includes(action.fieldId))throw new AuthorityError('forbidden','SMS requires a readable text phone field.')
+     for(const token of action.text.matchAll(/\{\{([^{}]+)\}\}/g))if(!own.scope.readableFieldIds.includes(token[1]))throw new AuthorityError('forbidden','SMS inserted values require readable fields.')
+    }
     if(action.kind==='webhook'||action.kind==='slack'){
      const destination=await db.prepare('SELECT 1 FROM record_automation_destinations WHERE id=? AND app_id=? AND owner_id=? AND kind=? AND revoked_at IS NULL')
       .bind(action.destinationId,appId,ctx.principal.id,action.kind).first()
      if(!destination)throw new AuthorityError('not_found','Destination is unavailable.',404)
      guards.push(trustedPredicate('EXISTS(SELECT 1 FROM record_automation_destinations WHERE id=? AND app_id=? AND revoked_at IS NULL)',[action.destinationId,appId]))
     }
-    if(['email','webhook','slack'].includes(action.kind)){
+    if(['email','webhook','slack','sms'].includes(action.kind)){
      const exported=await policy.scope(ctx,{appId,entityId,purpose:'export'});guards.push(...exported.currentAuthorityGuards)
     }
    }

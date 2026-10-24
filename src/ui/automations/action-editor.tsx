@@ -14,6 +14,7 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
   setSigningKey(null);setError(null);setUrl('')
   if(kind==='notify')onChange({kind,operatorId:'',title:'A record changed'})
   else if(kind==='email')onChange({kind,operatorId:'',subject:'A record changed',text:''})
+  else if(kind==='sms')onChange({kind,fieldId:'',text:''})
   else if(kind==='update')onChange({kind,fieldId:writable[0]?.id??'',value:null})
   else if(kind==='slack')onChange({kind,destinationId:'',text:''})
   else onChange({kind,destinationId:''})
@@ -29,12 +30,15 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
  }
  return <div className="cr-stack">
   <label className="cr-field">Action<select value={action.kind} onChange={event=>select(event.target.value as RecordAutomationAction['kind'])}>
-   <option value="notify">Notify a member</option><option value="email">Email a member</option><option value="update">Update a field</option><option value="webhook">Signed webhook</option><option value="slack">Slack message</option></select></label>
+   <option value="notify">Notify a member</option><option value="email">Email a member</option><option value="sms">Send SMS</option><option value="update">Update a field</option><option value="webhook">Signed webhook</option><option value="slack">Slack message</option></select></label>
   {(action.kind==='notify'||action.kind==='email')&&<label className="cr-field">Recipient<select required value={action.operatorId} onChange={event=>onChange({...action,operatorId:event.target.value})}>
    <option value="">Choose a member</option>{recipients.map(recipient=><option key={recipient.id} value={recipient.id}>{recipient.displayName}</option>)}</select></label>}
   {action.kind==='notify'&&<label className="cr-field">Notification title<input required maxLength={200} value={action.title} onChange={event=>onChange({...action,title:event.target.value})}/></label>}
   {action.kind==='email'&&<><label className="cr-field">Subject<input required maxLength={200} value={action.subject} onChange={event=>onChange({...action,subject:event.target.value})}/></label>
    <label className="cr-field">Message<textarea required maxLength={4000} value={action.text} onChange={event=>onChange({...action,text:event.target.value})}/></label><p className="cr-muted">The recipient must still be able to read the record when the email is sent.</p></>}
+  {action.kind==='sms'&&<><label className="cr-field">Phone field<select required value={action.fieldId} onChange={event=>onChange({...action,fieldId:event.target.value})}><option value="">Choose a text field</option>{entity.fields.filter(field=>field.type==='text'||field.type==='computed'&&field.resultElementType==='text').map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label>
+   <label className="cr-field">SMS message<textarea required maxLength={1600} value={action.text} onChange={event=>onChange({...action,text:event.target.value})}/></label>
+   <label className="cr-field">Insert record value<select value="" onChange={event=>{if(event.target.value)onChange({...action,text:action.text+'{{'+event.target.value+'}}'})}}><option value="">Choose a field to insert</option>{entity.fields.map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label><p>Numbers use E.164 with a US default. STOP suppresses later messages; START restores them.</p></>}
   {action.kind==='update'&&<><label className="cr-field">Field<select required value={action.fieldId} onChange={event=>onChange({...action,fieldId:event.target.value,value:null})}>
    <option value="">Choose a field</option>{writable.map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label>
    {writable.find(field=>field.id===action.fieldId)&&<FieldInput entityId={entity.id} appId={appId} field={writable.find(field=>field.id===action.fieldId)!} value={action.value} onChange={value=>onChange({...action,value})}/>}</>}

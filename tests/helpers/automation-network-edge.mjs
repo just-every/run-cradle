@@ -10,19 +10,21 @@ import {join} from 'node:path'
 import {randomBytes} from 'node:crypto'
 import {Response as WorkerResponse} from 'miniflare'
 import {createRelayHandler} from '../../scripts/egress/handler.ts'
-import {NodePinnedTransport} from '../../vendor/base/modules/integrations/core/node-transport.ts'
+import {PinnedHttpTransport} from '../../scripts/egress/pinned-http.ts'
 
-/** Only DNS/TLS routing is replaced; the real relay and Base transport process real sockets. */
-export async function automationNetworkEdge() {
+/** Only DNS/TLS routing is replaced; the real relay and pinned transport process real sockets. */
+export async function automationNetworkEdge({extraHosts=[],receive}={}) {
  const directory=await mkdtemp(join(tmpdir(),'cradle-automation-tls-'))
- const hosts=['automation-receiver.example.com','hooks.slack.com'],keyFile=join(directory,'receiver.key'),certFile=join(directory,'receiver.crt')
+ const hosts=['automation-receiver.example.com','hooks.slack.com',...extraHosts],keyFile=join(directory,'receiver.key'),certFile=join(directory,'receiver.crt')
  execFileSync('openssl',['req','-x509','-newkey','ec','-pkeyopt','ec_paramgen_curve:P-256','-nodes','-days','1',
   '-keyout',keyFile,'-out',certFile,'-subj',`/CN=${hosts[0]}`,'-addext',`subjectAltName=${hosts.map(host=>'DNS:'+host).join(',')}`],{stdio:'ignore'})
  const cert=await readFile(certFile),key=await readFile(keyFile),received=[],sockets=new Set()
  let privateAnswer=false,tlsCalls=0
  const receiver=https.createServer({key,cert},async(req,res)=>{
   const chunks=[];for await(const chunk of req)chunks.push(chunk)
-  received.push({path:req.url,headers:req.headers,body:Buffer.concat(chunks).toString('utf8')})
+  const body=Buffer.concat(chunks)
+  received.push({path:req.url,method:req.method,headers:req.headers,body:body.toString('utf8')})
+  if(receive&&await receive(req,res,body))return
   if(req.url==='/changes-retry-once'&&received.filter(request=>request.path===req.url).length===1){res.writeHead(429,{'retry-after':'1'});res.end('rate limited')}
   else if(req.url==='/redirect'){res.writeHead(302,{location:'https://'+hosts[0]+'/followed'});res.end()}
   else if(req.url==='/oversized'){res.writeHead(200);res.end(Buffer.alloc(65537,'x'))}
@@ -40,11 +42,11 @@ export async function automationNetworkEdge() {
   assert.ok(hosts.includes(url.hostname));assert.equal(options.rejectUnauthorized,true);assert.equal(options.agent,false)
   options.lookup(url.hostname,{all:false},(error,address,family)=>{assert.equal(error,null);assert.equal(address,'93.184.216.34');assert.equal(family,4)})
   tlsCalls++
-  return nativeRequest({...options,hostname:'127.0.0.1',port:receiverPort,path:url.pathname,servername:url.hostname,ca:cert},onResponse)
+  return nativeRequest({...options,headers:{...options.headers,host:url.host},hostname:'127.0.0.1',port:receiverPort,path:url.pathname,servername:url.hostname,ca:cert},onResponse)
  }
  syncBuiltinESMExports()
  const secret=randomBytes(32).toString('base64url'),transportErrors=[],networkErrors=[];let outboundSeen=0
- const transport=new NodePinnedTransport({timeoutMs:5000,maxResponseBytes:65536})
+ const transport=new PinnedHttpTransport()
  const relay=http.createServer(createRelayHandler(secret,{async send(wire){
   try{return await transport.send(wire)}catch(error){
    const known=['DNS timeout','Transport timeout','Response limit exceeded','Destination DNS is not public','Response aborted','Response incomplete','Transport closed']

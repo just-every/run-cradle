@@ -1,3 +1,4 @@
+import {smsWebhooks} from '../../../domains/sms/webhooks.server'
 import {calendarConnectionPolicy} from '../../../domains/records/calendar-sync/connection-policy.server'
 import {calendarAuthority} from '../../../domains/records/calendar-sync/authority.server'
 import { createConnectionJobs } from '../../../domains/connections/jobs.server'
@@ -38,7 +39,7 @@ export function createProvidersComposition(platform:Platform,foundation:ServerFo
  registerConnectionCommands(foundation.commands,runtime.connections,jobs)
  registerExecutionCommands(foundation.commands,runtime.dependencies)
  const authenticate=(request:Request)=>foundation.authenticate(request,'http',createUlid())
- const connectionHttp=createConnectionHttp({service:runtime.connections,authenticate,webhook:runtime.webhook,webhookSecret:runtime.webhookSecret})
+ const connectionHttp=createConnectionHttp({smsWebhook:smsWebhooks(env,platform.auth.configuration.appOrigin),service:runtime.connections,authenticate,webhook:runtime.webhook,webhookSecret:runtime.webhookSecret})
  const setupHttp=createConnectionSetupHttp({authenticate,writeCredentials:runtime.writeCredentials})
  const collectionsHttp=createExecutionCollections({db:env.DB,execution:runtime.execution,connections:runtime.connections,profiles:createModelProfileReader({db:env.DB,policy:foundation.policy}),cursorSecret:platform.auth.configuration.sessionSecret,authenticate})
  return {...runtime,schemas,jobs,connectionHttp,setupHttp,collectionsHttp,http:createExecutionHttp(runtime.execution,request=>foundation.authenticate(request,'http',createUlid()))}

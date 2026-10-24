@@ -1,3 +1,4 @@
+import {smsInput} from '../sms/dispatch.server'
 import type {RequestContext,PolicyScope} from '../authority/ports'
 import type {RecordRow} from '../records/contracts'
 import type {CellValue} from '../../contracts/primitives'
@@ -20,6 +21,8 @@ export async function automationTestPreview(deps:{db:D1Database;entities:EntityR
     const field=deps.descriptors.get(definition.appId,definition.entityId).fields.get(action.fieldId)?.field
     if(!field||field.readOnly||field.type==='computed'||!scope.writableFieldIds.includes(field.id))throw new Error('The selected field is no longer writable.')
     validateCell(field,action.value);step.output={fieldId:field.id,before:values[field.id]??null,after:action.value};values[field.id]=action.value
+   }else if(action.kind==='sms'){
+    const sms=smsInput(action,record,scope,deps.descriptors);step.output={to:sms.to,text:sms.body,sent:false};confirmationEffects.push({position,kind:'sms',destination:sms.to})
    }else if(action.kind==='notify'||action.kind==='email'){
     const recipient=await automationRecipient(deps.db,deps.entities,ctx,{...record.ref,operatorId:action.operatorId})
     confirmationEffects.push({position,kind:action.kind,destination:recipient.email})

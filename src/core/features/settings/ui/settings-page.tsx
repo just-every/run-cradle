@@ -1,3 +1,4 @@
+import {SmsPanel} from '../../../../ui/settings/sms-panel'
 import {AdminAuditPanel} from '../../../../ui/settings/admin-audit-panel'
 import {TrashPanel} from '../../../../ui/settings/trash-panel'
 import {ReadinessSettings} from '../../../../ui/settings/readiness-settings'
@@ -63,6 +64,7 @@ export const SettingsPage = () => {
         <details className="cr-detail"><summary>Your notifications</summary><PreferencesPanel /></details>
         <details className="cr-detail" onToggle={event=>setKeysOpen(event.currentTarget.open)}><summary>API keys</summary>{keysOpen&&<ApiKeysPanel />}</details>
         <details className="cr-detail"><summary>Usage and model availability</summary><UsagePanel /></details>
+        <LazySettingsPanel title="Twilio SMS"><SmsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Custom fields"><CustomFieldsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Trash"><TrashPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Imports"><ImportsPanel /></LazySettingsPanel>

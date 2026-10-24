@@ -44,8 +44,8 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
     .bind(id,...guard.values,...subject.values).all<{id:string;definition_version:number;subject_id:string;state:string;queued_at:number;started_at:number|null;finished_at:number|null;error_code:string|null;error_message:string|null;definition_json:string}>()
    const result=[]
    for(const run of rows.results){
-    const actions=await db.prepare(`SELECT position,state,error_code,result_json FROM launch_automation_actions WHERE run_id=? AND (${guard.sql}) ORDER BY position`)
-     .bind(run.id,...guard.values).all<{position:number;state:string;error_code:string|null;result_json:string|null}>()
+    const actions=await db.prepare(`SELECT position,state,error_code,result_json,(SELECT status FROM sms_messages WHERE id=launch_automation_actions.id) AS sms_status FROM launch_automation_actions WHERE run_id=? AND (${guard.sql}) ORDER BY position`)
+     .bind(run.id,...guard.values).all<{position:number;state:string;error_code:string|null;result_json:string|null;sms_status:string|null}>()
     if(!await db.prepare(`SELECT 1 FROM automation_runs run WHERE run.id=? AND (${guard.sql}) AND (${subject.sql})`)
      .bind(run.id,...guard.values,...subject.values).first())continue
     const primary=descriptor.schema.primaryFieldId??descriptor.schema.fields.find(field=>field.type==='text')?.id
@@ -57,7 +57,8 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
      storage?.field.options?.find(option=>option.id===label.label)?.label??String(label.label)
     const visibleActions=actions.results.map(action=>{
      const heldUntil=action.state==='Pending'&&action.result_json?JSON.parse(action.result_json).heldUntil:null
-     return {position:action.position,state:heldUntil?'Held':action.state,error_code:action.error_code,heldUntil:heldUntil??null}
+     const sms=action.result_json?JSON.parse(action.result_json):null
+     return {position:action.position,state:heldUntil?'Held':action.state,error_code:action.error_code,heldUntil:heldUntil??null,...((action.sms_status??sms?.smsStatus)?{smsStatus:action.sms_status??sms.smsStatus,skipped:Boolean(sms?.skipped)}:{})}
     })
     const held=visibleActions.find(action=>action.heldUntil)
     const items=await automationItemHistory(db,ctx,scope,descriptor,guard,run.definition_json,visibleActions)

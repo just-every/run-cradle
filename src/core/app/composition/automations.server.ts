@@ -1,3 +1,4 @@
+import {smsSettings} from '../../../domains/sms/settings.server'
 import {createAutomationTriggers} from '../../../domains/automations/triggers.server'
 import {createAutomationFailureAlerts} from '../../../domains/automations/failure-alerts.server'
 import {createAutomationRetry} from '../../../domains/automations/retry.server'
@@ -20,13 +21,13 @@ export function createAutomationsComposition(platform:Platform,foundation:Server
  const destinations=createAutomationDestinations(platform.bindings,policy,admission)
  const configuration=createRecordAutomationConfiguration(db,policy,admission,descriptors,platform.auth.configuration.appOrigin)
  const history=createRecordAutomationHistory(db,policy,descriptors)
- const effects=createAutomationEffects({env:platform.bindings,entities,admission,commands,destinations})
+ const effects=createAutomationEffects({env:platform.bindings,entities,admission,commands,destinations,reader,descriptors,policy,appOrigin:platform.auth.configuration.appOrigin})
  const failures=createAutomationFailureAlerts(platform.bindings,foundation,platform.auth.configuration.appOrigin,clock)
  const runner=createRecordAutomationRuntime({db,appOrigin:platform.auth.configuration.appOrigin,policy,descriptors,reader,effects,clock})
  const triggers=createAutomationTriggers(platform.bindings,foundation,reader,platform.auth.configuration.appOrigin,clock)
  const runtime={async tick(commandId?:string,ingress:'queue'|'schedule'='schedule'){if(ingress==='schedule')await triggers.tick();await runner.tick(commandId,ingress);await failures.tick()}}
  const tests=createAutomationTests(platform.bindings,foundation,reader,destinations,effects)
- const http=recordAutomationsHttp({retry:createAutomationRetry(db,foundation),tests,configuration,history,destinations,authenticate:request=>foundation.authenticate(request,'http',createUlid()),
+ const http=recordAutomationsHttp({sms:smsSettings(platform.bindings,platform.auth.configuration.appOrigin),retry:createAutomationRetry(db,foundation),tests,configuration,history,destinations,authenticate:request=>foundation.authenticate(request,'http',createUlid()),
   async recipients(ctx,appId,entityId) {
    const owner=await ownerDelegationSnapshot(db,ctx,appId),scope=await policy.scope(ctx,{appId,entityId,purpose:'read'})
    const guard=and(owner.guard,...scope.currentAuthorityGuards)

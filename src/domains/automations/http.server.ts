@@ -10,6 +10,7 @@ import type { createRecordAutomationHistory } from './history.server'
 import type { createAutomationDestinations } from './destinations.server'
 
 export function recordAutomationsHttp(deps:{
+ sms:ReturnType<typeof import('../sms/settings.server').smsSettings>;
  retry:ReturnType<typeof import('./retry.server').createAutomationRetry>;
  tests:ReturnType<typeof createAutomationTests>;
  configuration:ReturnType<typeof createRecordAutomationConfiguration>;
@@ -22,6 +23,9 @@ export function recordAutomationsHttp(deps:{
  const reply=(ctx:RequestContext,data:unknown)=>({data,meta:{requestId:ctx.requestId,
   apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}})
  router.use('*',async(c,next)=>{c.header('Cache-Control','no-store');await next()})
+ router.get('/sms/settings',async c=>{const ctx=await deps.authenticate(c.req.raw);return c.json(reply(ctx,await deps.sms.read(ctx)))})
+ router.put('/sms/settings',async c=>{const ctx=await deps.authenticate(c.req.raw);return c.json(reply(ctx,await deps.sms.save(ctx,await readBoundedJson(c.req.raw,8192))))})
+ router.delete('/sms/settings',async c=>{const ctx=await deps.authenticate(c.req.raw);return c.json(reply(ctx,await deps.sms.remove(ctx)))})
  router.get('/',async c=>{
   const ctx=await deps.authenticate(c.req.raw),appId=idSchema.parse(c.req.query('appId'))
   return c.json(reply(ctx,{automations:await deps.history.list(ctx,appId)}))

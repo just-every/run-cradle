@@ -40,7 +40,7 @@ export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:stri
    try {
     const ctx=await context(run,ingress),ref=saved.event.ref
     const scope=await deps.policy.scope(ctx,{appId:ref.appId,entityId:ref.entityId,
-     purpose:['email','webhook','slack'].includes(action.kind)?'export':'read'})
+     purpose:['email','webhook','slack','sms'].includes(action.kind)?'export':'read'})
     const descriptor=deps.descriptors.get(ref.appId,ref.entityId)
     const subject=trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(descriptor.table.tableId)}
      WHERE ${identifier(descriptor.idColumn)}=? AND (${scope.rowPredicate.sql}))`,[ref.recordId,...scope.rowPredicate.values])
@@ -68,9 +68,9 @@ export function createRecordAutomationRuntime(deps:{db:D1Database;appOrigin:stri
    } catch(error) {
     const validation=error instanceof AdmissionError&&error.code==='validation'
     const code=error instanceof AuthorityError||validation?error.code:'automation_effect_failed'
-    const uncertain=claimed&&!(error instanceof AuthorityError)&&['email','webhook','slack'].includes(action.kind)
+    const uncertain=claimed&&!(error instanceof AuthorityError)&&['email','webhook','slack','sms'].includes(action.kind)
     if(claimed)await store.actionFinished(step.id,uncertain?'Unknown':'Failed',validation?{message:error.message}:{},code)
-    await store.finish(run.id,uncertain?'Unknown':error instanceof AuthorityError?'Cancelled':'Failed',code)
+    await store.finish(run.id,uncertain?'Unknown':error instanceof AuthorityError&&error.code!=='validation'?'Cancelled':'Failed',code,error instanceof Error?error.message:undefined)
     return
    }
   }

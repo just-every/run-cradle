@@ -306,6 +306,21 @@
       ]
     },
     {
+      "id": "automation-twilio",
+      "required": false,
+      "requiredWhen": "An owner enables a Twilio SMS automation action",
+      "why": "The owner's Twilio account sends through api.twilio.com and reads US A2P registration from messaging.twilio.com through the configured trusted egress relay. Twilio delivers SMS and enforces carrier registration.",
+      "data": [
+        "Normalized triggering-record phone value",
+        "Owner-approved message text and inserted readable record values",
+        "Sending number or Messaging Service and delivery callback URL",
+        "Account credential for authenticated Twilio API calls"
+      ],
+      "adapters": [
+        "automation.egress.v1"
+      ]
+    },
+    {
       "id": "automation-slack",
       "required": false,
       "requiredWhen": "A user enables a Slack automation action",
