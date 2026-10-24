@@ -37,7 +37,17 @@ export async function warehouseExportJourney(doors, world, edge) {
    [value=>edge.snowflake.refuseDelete(value),/Snowflake.*custody is unconfirmed/,()=>[...edge.snowflake.tables.values()].some(rows=>rows.length)],
   ]){
    control(true)
-   try{const refused=await send();assert.equal(refused.status,503,JSON.stringify(refused.body));assert.match(refused.body.error.message,cause);assert.ok(hasCopies(),'Denied deletion keeps destination copies in custody');assert.equal(await doors.h.db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(world.leaver.id).first('state'),'pending','Erasure is not confirmed while a destination copy remains')}finally{control(false)}
+   try{
+    const maximum=(await doors.h.db.prepare('SELECT count(*) n FROM warehouse_objects').first()).n+1
+    let refused
+    for(let step=0;step<maximum;step++){
+     refused=await send();if(refused.status!==200)break
+     assert.equal(refused.body.data.value.confirmed,false,'A successful bounded cleanup batch cannot confirm erasure while the provider still refuses')
+     assert.equal(await doors.h.db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(world.leaver.id).first('state'),'pending','Every intermediate batch remains publicly pending')
+     assert.ok(hasCopies(),'The refusing destination keeps its managed copies throughout partial cleanup')
+    }
+    assert.equal(refused.status,503,JSON.stringify(refused.body));assert.match(refused.body.error.message,cause);assert.ok(hasCopies(),'Denied deletion keeps destination copies in custody');assert.equal(await doors.h.db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(world.leaver.id).first('state'),'pending','Erasure is not confirmed while a destination copy remains')
+   }finally{control(false)}
   }
  },async erased(){for(const result of formats)await result.erased();edge.bigQuery.assertEmpty();for(const rows of edge.snowflake.tables.values())assert.equal(rows.length,0,'Snowflake has no exported record copies after confirmed erasure')}}
 }
