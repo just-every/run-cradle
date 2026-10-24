@@ -1,3 +1,4 @@
+import {baseStreamInterruption} from './helpers/base-stream-exits.mjs'
 import {readWorkbook} from '../src/domains/records/workbooks/read.ts'
 import {workbookJourney} from './helpers/workbook-journey.mjs'
 import {test} from 'node:test'
@@ -80,6 +81,7 @@ async function recurringCsv(h){
   assert.equal(response.status,200);assert.match(response.headers.get('content-disposition'),/attachment; filename\*=/);assert.equal(response.headers.get('cache-control'),'no-store')
   if(format==='xlsx'){const binary=readWorkbook(new Uint8Array(await response.arrayBuffer()),'streamed.xlsx')[0];assert.deepEqual(binary,typed)}else assert.equal(await response.text(),(await r.csv.exportCsv(h.ctx,{...identity,query:{sort:[{fieldId:name.id,direction:'asc'}]}})).csv)
  }
+ await baseStreamInterruption(h,r,identity.appId)
  const interrupted=await recordsCsvHttp(r.csv,async()=>h.ctx).fetch(new Request(origin+'/api/v1/records/export-csv',{method:'POST',headers:{origin,accept:'text/csv','content-type':'application/json'},body:JSON.stringify({...identity,query:{}})})),stream=interrupted.body.getReader()
  await stream.read();await stream.read() // Header and a row from the first authorized page.
  await h.db.prepare('UPDATE authority_policies SET version=version+1 WHERE id=?').bind(ownerPolicy.id).run()

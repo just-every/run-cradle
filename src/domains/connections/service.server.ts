@@ -1,3 +1,4 @@
+import {calendarConnectionSetup} from '../records/calendar-sync/connection-policy.server';
 import {personalStorePermit,isPersonalStore} from '../authority/personal-stores.server';
 import {storeAccountIdentity} from './store-account.server';
 import { createCredentialAccess,type CredentialOperation } from './credential-access.server';
@@ -35,7 +36,7 @@ export function createConnectionService(d:ConnectionDependencies){
  async function read(ctx:RequestContext,id:string){const row=await get(id);await d.policy.authorize(ctx,{appId:row.app_id,action:'connection.read',expected:[],cost:[],connectionId:id,inputHash:await sha256(id)});const result=dto(row);result.unresolvedCount=(await d.db.prepare("SELECT count(*) AS total FROM execution_attempts WHERE connection_id=? AND state IN ('dispatching','unknown')").bind(id).first<{total:number}>())?.total??0;return result;}
  async function prepareConfigure(ctx:RequestContext,commandId:string,input:unknown){const value=connectionConfigureSchema.parse(input),id=createUlid(),now=new Date().toISOString();
   const personal=isPersonalStore(value.adapterId);if(personal&&(value.credentialRef||value.scopes.length||value.ownership.length))throw new AuthorityError('validation','File stores accept only personal read-only consent.',400);
-  const permit=personal?await personalStorePermit(d.db,d.policy,undefined,ctx,{appId:value.appId,action:'connection.configure',expected:[],cost:[],inputHash:await sha256(canonical(value))},value.adapterId):undefined;
+  const permit=personal?await personalStorePermit(d.db,d.policy,undefined,ctx,{appId:value.appId,action:'connection.configure',expected:[],cost:[],inputHash:await sha256(canonical(value))},value.adapterId):await calendarConnectionSetup(d.db,d.policy,ctx,value,await sha256(canonical(value)));
   const row={id,app_id:value.appId};return buildPlan(ctx,row,'connection.configure',[{kind:'insert',table:connectionsTable,row:{...row,adapter_id:value.adapterId,name:value.name,state:value.credentialRef||['resend','openai'].includes(value.adapterId)?'unconfigured':'consent_required',account_id:personal?'pending-consent':value.accountId,scopes_json:canonical(value.scopes),ownership_json:canonical(value.ownership),credential_ref:value.credentialRef,consent_scopes_json:'[]',control_epoch:0,version:1,owner_id:ctx.principal.id,created_at:now,updated_at:now}}],{connectionId:id},commandId,value,[],[],permit??undefined);
  }
  async function configure(ctx:RequestContext,commandId:string,input:unknown){const admitted=await d.admission.commit(ctx,await prepareConfigure(ctx,commandId,input));if(admitted.result.state!=='committed')throw new Error('Connection admission unavailable');return read(ctx,admitted.result.value.connectionId);}

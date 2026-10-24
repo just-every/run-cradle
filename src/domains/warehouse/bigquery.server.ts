@@ -1,6 +1,7 @@
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {WarehouseObjectMeta,WarehouseRemoteDestination} from './provider-contracts'
 import {RelayTransport} from '../integrations/relay-transport.server'
+import {warehouseTransfers} from './transfers.server'
 import {AuthorityError} from '../authority/errors'
 
 export type BigQueryConfig={kind:'bigquery';project:string;dataset:string;tablePrefix:string;location:string}
@@ -37,7 +38,7 @@ export async function bigQueryTable(config:BigQueryConfig,meta:WarehouseObjectMe
 export function createBigQueryDestination(env:PlatformBindings,config:BigQueryConfig,credentials:BigQueryCredentials):WarehouseRemoteDestination{
  safeConfig(config)
  if(!env.EGRESS_RELAY_URL||!env.EGRESS_RELAY_SECRET)throw new AuthorityError('unconfigured','Trusted egress relay is required for BigQuery exports.',503)
- const relay=new RelayTransport(env.EGRESS_RELAY_URL,env.EGRESS_RELAY_SECRET),project=encodeURIComponent(config.project)
+ const transfers=warehouseTransfers(env),relay=new RelayTransport(env.EGRESS_RELAY_URL,env.EGRESS_RELAY_SECRET),project=encodeURIComponent(config.project)
  const jobs=`https://bigquery.googleapis.com/bigquery/v2/projects/${project}/jobs`
  const location='?location='+encodeURIComponent(config.location)
  const prepared=new Map<string,{access:string;job:Job|null;metadata:string;expiresAt:number}>()
@@ -119,14 +120,24 @@ export function createBigQueryDestination(env:PlatformBindings,config:BigQueryCo
     const metadata={jobReference:{projectId:config.project,jobId:id,location:config.location},labels:{cradle_content:digest},configuration:{load:{destinationTable:{projectId:config.project,datasetId:config.dataset,tableId},sourceFormat:meta.format==='parquet'?'PARQUET':'CSV',writeDisposition:'WRITE_APPEND',createDisposition:'CREATE_IF_NEEDED',columnNameCharacterMap:'STRICT',schema:{fields:meta.headers.map((name,index)=>({name,type:meta.columnTypes[index]==='DOUBLE'?'FLOAT':meta.columnTypes[index]==='BOOLEAN'?'BOOLEAN':'STRING',mode:'NULLABLE'}))},...(meta.format==='csv'?{skipLeadingRows:1,allowQuotedNewlines:true,encoding:'UTF-8',fieldDelimiter:',',quote:'"'}:{})}}}
     try{
      if(body.length>900000){
-      const started=await request(access,`https://bigquery.googleapis.com/upload/bigquery/v2/projects/${project}/jobs?uploadType=resumable`,JSON.stringify(metadata))
-      if(started.status===409){job=await lookup(access,id)}else{
-       const session=started.headers.location
+      const retained=await transfers.get('bigquery',key)
+      if(retained&&retained.sha256!==await hash(body))return unavailable('interrupted upload source changed')
+      const started=retained?null:await request(access,`https://bigquery.googleapis.com/upload/bigquery/v2/projects/${project}/jobs?uploadType=resumable`,JSON.stringify(metadata))
+      if(started?.status===409){job=await lookup(access,id)}else{
+       const session=retained?.uploadId??started!.headers.location
        let url:URL
        try{url=new URL(session)}catch{return unavailable('resumable upload returned no session')}
-       if(started.status!==200||url.protocol!=='https:'||url.hostname!=='bigquery.googleapis.com'||url.username||url.password||url.hash)return unavailable('resumable upload returned an invalid session')
+       if(started&&started.status!==200||url.protocol!=='https:'||url.hostname!=='bigquery.googleapis.com'||url.port&&url.port!=='443'||url.username||url.password||url.hash)return unavailable('resumable upload returned an invalid session')
+       if(!retained)await transfers.set('bigquery',key,{uploadId:url.href,sha256:await hash(body)})
        const chunkSize=786432
        let offset=0,interruptions=0
+       if(retained){
+        const prefix=await request(access,url.href,new Uint8Array(),'application/octet-stream','PUT',{'content-range':`bytes */${body.length}`})
+        if(prefix.status===200||prefix.status===201){offset=body.length}else{
+         const range=/^bytes=0-(\d+)$/.exec(prefix.headers.range??'');offset=range?Number(range[1])+1:0
+         if(prefix.status!==308||offset>body.length||offset!==body.length&&offset%262144!==0)return unavailable('retained resumable prefix is inconsistent')
+        }
+       }
        while(offset<body.length){
         const end=Math.min(offset+chunkSize,body.length)
         let response
@@ -164,6 +175,7 @@ export function createBigQueryDestination(env:PlatformBindings,config:BigQueryCo
    if(done.labels?.cradle_content!==digest||target?.projectId!==config.project||target.datasetId!==config.dataset||target.tableId!==tableId||done.configuration?.load?.sourceFormat!==(meta.format==='parquet'?'PARQUET':'CSV'))return unavailable('load receipt does not match the exact exported file and destination')
    assertSuccess(done)
    if(done.statistics?.load?.outputRows!==String(meta.recordIds.length))return unavailable('loaded row count does not match the exported file')
+   await transfers.set('bigquery',key,null)
   },
   async erase(key,meta){
    const access=await token(),loadId=await jobId('load',key),load=await completed(access,loadId),tableId=await bigQueryTable(config,meta),target=load.configuration?.load?.destinationTable

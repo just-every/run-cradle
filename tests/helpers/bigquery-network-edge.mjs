@@ -38,7 +38,7 @@ function scalar(value,type){
 export async function bigQueryNetworkEdge(){
  const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048,publicKeyEncoding:{type:'spki',format:'pem'},privateKeyEncoding:{type:'pkcs8',format:'pem'}})
  const access={clientEmail:'synthetic-cradle-121@example.invalid',privateKey},destination={kind:'bigquery',project:'synthetic-cradle-121',dataset:'synthetic_cradle_121',tablePrefix:'synthetic_cradle_',location:'US'}
- const tokens=new Set(),jobs=new Map(),tables=new Map(),uploads=[],calls=[],sessions=new Map();let denied=false,pending=false,loseAcknowledgement=false,losePart=false
+ const tokens=new Set(),jobs=new Map(),tables=new Map(),uploads=[],calls=[],sessions=new Map();let denied=false,pending=false,loseAcknowledgement=false,losePart=false,heldPart=null,nextSession=0
  const hash=value=>createHash('sha256').update(value).digest('hex')
  function send(res,status,value){res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify(value))}
  async function acceptLoad(req,res,metadata,media){
@@ -97,7 +97,7 @@ export async function bigQueryNetworkEdge(){
    if(url.searchParams.get('uploadType')==='resumable'){
     const metadata=JSON.parse(body.toString('utf8')),id=metadata.jobReference.jobId
     if(jobs.has(id)){send(res,409,{error:{code:409}});return true}
-    const session='synthetic-cradle-session-'+sessions.size;sessions.set(session,{metadata,parts:[],offset:0});res.writeHead(200,{location:`https://bigquery.googleapis.com/upload/bigquery/v2/projects/${destination.project}/jobs?upload_id=${session}`});res.end('{}');return true
+    const session='synthetic-cradle-session-'+nextSession++;sessions.set(session,{metadata,parts:[],offset:0});res.writeHead(200,{location:`https://bigquery.googleapis.com/upload/bigquery/v2/projects/${destination.project}/jobs?upload_id=${session}`});res.end('{}');return true
    }
    assert.equal(url.searchParams.get('uploadType'),'multipart')
    const {metadata,media}=multipart(body,req.headers['content-type']);return acceptLoad(req,res,metadata,media)
@@ -109,7 +109,7 @@ export async function bigQueryNetworkEdge(){
    const start=Number(match[1]),end=Number(match[2]),total=Number(match[3]);assert.equal(start,session.offset);assert.equal(end-start+1,body.length)
    if(end+1<total)assert.equal(body.length%262144,0,'Non-final BigQuery chunks are a multiple of 256 KiB')
    session.parts.push(body);session.offset=end+1
-   if(session.offset<total){if(losePart){losePart=false;res.destroy();return true}res.writeHead(308,{range:`bytes=0-${end}`});res.end('{}');return true}
+   if(session.offset<total){if(heldPart){const held=heldPart;heldPart=null;held.reached();await held.gate;if(res.destroyed)return true}if(losePart){losePart=false;res.destroy();return true}res.writeHead(308,{range:`bytes=0-${end}`});res.end('{}');return true}
    assert.equal(session.offset,total);sessions.delete(url.searchParams.get('upload_id'));return acceptLoad(req,res,session.metadata,Buffer.concat(session.parts))
   }
   const jobMatch=/\/jobs\/([^/]+)$/.exec(url.pathname)
@@ -143,7 +143,7 @@ export async function bigQueryNetworkEdge(){
   send(res,404,{error:{code:404}});return true
  }
  return {hosts:['oauth2.googleapis.com','bigquery.googleapis.com'],destination,access,receive,tables,jobs,uploads,calls,
-  refuseDelete(value){denied=value},pendingLoads(value){pending=value},loseNextAcknowledgement(){loseAcknowledgement=true},loseNextPart(){losePart=true},
+  refuseDelete(value){denied=value},pendingLoads(value){pending=value},loseNextAcknowledgement(){loseAcknowledgement=true},loseNextPart(){losePart=true},get uploadStarts(){return nextSession},holdNextPart(){let reached,release;const at=new Promise(resolve=>reached=resolve),gate=new Promise(resolve=>release=resolve);heldPart={reached,gate};return {reached:at,release}},
   assertEmpty(){for(const rows of tables.values())assert.equal(rows.length,0,'BigQuery has no exported record copies after confirmed erasure')},
  }
 }

@@ -20,8 +20,8 @@ export async function calendarApproval(ctx:RequestContext,id:string,version:numb
 }
 export async function calendarAuthorContext(db:D1Database,d:Definition,requestId:string,ingress:RequestContext['ingress']='schedule'):Promise<RequestContext>{
  const principal=JSON.parse(d.actor_json) as Principal
- // Pre-approval-version definitions retain their existing conservative session fence until saved again.
- if(principal.credentialId){const approval=await db.prepare('SELECT 1 FROM authority_credentials WHERE id=? AND principal_id=? AND audience=?').bind(principal.credentialId,d.owner_id,audience(d.id,d.version)).first();if(!approval)throw new AdmissionError('forbidden','Calendar approval must be renewed by its author.')}
+ if(!principal.credentialId)throw new AdmissionError('forbidden','Calendar approval must be renewed by its author.');
+ {const approval=await db.prepare('SELECT 1 FROM authority_credentials WHERE id=? AND principal_id=? AND audience=?').bind(principal.credentialId,d.owner_id,audience(d.id,d.version)).first();if(!approval)throw new AdmissionError('forbidden','Calendar approval must be renewed by its author.')}
  if(principal.id!==d.owner_id||principal.kind!=='human')throw new AdmissionError('forbidden','Calendar approval must be renewed by its author.')
  return {principal,requestId,now:new Date().toISOString(),ingress}
 }

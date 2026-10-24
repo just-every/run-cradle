@@ -11,7 +11,7 @@ export async function userAutomationRuntime(port,network) {
    const response=await fetch(h.origin+route,{method,redirect:'manual',headers:{
     ...(secret?{authorization:`Bearer ${secret}`}:{cookie:h.cookie}),
     ...(body?{origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken}:{}),
-   },...(body?{body:JSON.stringify(body)}:{})})
+   },...(body?{body:JSON.stringify(body)}:{})}).catch(error=>{console.error('WORKER_TRANSPORT_FAILURE',JSON.stringify({method,path:route.split('?')[0],cause:error.cause?.code??error.cause?.name??'unknown',message:error.cause?.message??error.message}));throw error})
    const value=await response.json().catch(()=>null)
    assert.equal(response.status,status,`${method} ${route.split('?')[0]}: ${value?.error?.code??'unexpected response'}`)
    return value

@@ -16,7 +16,7 @@ export function changeSubscriptionDelivery(env:PlatformBindings,service:ReturnTy
  async function authorize(row:Subscription){
   const current=await db.prepare("SELECT * FROM record_change_subscriptions WHERE id=? AND state='active' AND expires_at>?").bind(row.id,clock().getTime()).first<Subscription>()
   if(!current)throw new Error('Subscription expired or inactive')
-  const ctx=await resolveBackgroundContext(db,{credentialId:row.credential_id,principalId:row.principal_id,requestId:row.id,audience:appOrigin+'/api/v1',ingress:'schedule'})
+  const ctx=await resolveBackgroundContext(db,{credentialId:current.credential_id,principalId:current.principal_id,requestId:row.id,audience:appOrigin+'/api/v1',ingress:'schedule'})
   await service.access.scopes(ctx,current)
   return {...ctx,now:clock().toISOString()}
  }

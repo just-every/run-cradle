@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto'
+import {csvDownloadEntries} from './base-csv-download.mjs'
 import assert from 'node:assert/strict'
 import {recordsImportBrowserRuntime} from './records-import-browser-runtime.mjs'
 import {workbookDoors} from './workbook-http.mjs'
@@ -21,6 +23,11 @@ export async function workbookJourney(){const provider=sheetsProvider(),h=await 
   const view=(await d.command('view.save',{view:{...identity,name:'Workbook ordered view',display:'grid',fields:[fields.Approved.id,fields.Amount.id,fields.Order.id],filter:{kind:'all',conditions:[]},sort:[{fieldId:fields.Order.id,direction:'desc'}],groupBy:[],layout:{titleFieldId:fields.Order.id},visibility:'app',shipped:false}})).value
   const exported=await d.call('/api/v1/records/export-xlsx',{...identity,viewId:view.id,query:{}}),sheets=readWorkbook(Buffer.from(exported.content,'base64'),'view.xlsx');assert.deepEqual(sheets[0].headers,['Approved','Amount','Order']);assert.equal(sheets[0].rows[0][2].value,'synthetic-cradle-4');assert.equal(sheets[0].rows[0][0].value,true)
   const base=await d.call('/api/v1/records/base-export',{appId:identity.appId,format:'xlsx'});assert.equal(readWorkbook(Buffer.from(base.content,'base64'),'base.xlsx').length,2)
+  const baseJson=JSON.parse((await d.call('/api/v1/records/base-export',{appId:identity.appId,format:'json'})).content)
+  assert.equal(baseJson.base.tables.find(table=>table.id===identity.entityId).records.length,3,'Complete JSON includes every current record')
+  const csvSet=await d.call('/api/v1/records/base-export',{appId:identity.appId,format:'csv-set'}),entries=csvDownloadEntries(Buffer.from(csvSet.content,'base64')),correspondence=JSON.parse(new TextDecoder().decode(entries.find(entry=>entry.name==='correspondence.json').bytes))
+  assert.equal(correspondence.tables.length,baseJson.base.tables.length)
+  for(const table of correspondence.tables){const file=entries.find(entry=>entry.name===table.filename);assert.ok(file);assert.equal(table.rows.length,baseJson.base.tables.find(source=>source.id===table.id).records.length);assert.equal(table.bytes,file.bytes.length);assert.equal(table.sha256,createHash('sha256').update(file.bytes).digest('hex'))}
   const reimport=await d.call('/api/v1/records/base-import/preview',d.form(Buffer.from(base.content,'base64'),'base.xlsx'));assert.equal(reimport.schemaDraft.tables[0].fields.find(f=>f.label==='Amount').type,'number')
   // A percent field leaves as a numeric cell with a percentage format and returns as a percent field, value unchanged.
   const rates=writeWorkbook([{name:'Rates',headers:['Name','Rate'],rows:[[cell('synthetic-cradle-r1'),{value:'0.25',type:'number',format:'percentage'}],[cell('synthetic-cradle-r2'),{value:'0.075',type:'number',format:'percentage'}]]}])

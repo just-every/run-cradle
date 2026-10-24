@@ -63,7 +63,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     const reconfigure = async (changes, https) => { runtimeOptions = optionsFor(changes, https); await runtime.setOptions(runtimeOptions) }
     runtime = new Miniflare(runtimeOptions)
     logs += `Emitted Worker listening at ${await runtime.ready}\n`
-    const db = await runtime.getD1Database('DB')
+    let db = await runtime.getD1Database('DB')
     // Send real HTTP/TLS to our listener with the canonical Host. Miniflare's
     // dispatchFetch rewrites the URL to its proxy origin and cannot prove this guard.
     const dispatch = (url, init = {}) => new Promise((resolve, reject) => {
@@ -74,7 +74,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
       request.on('error',reject);if(init.body)request.write(init.body);request.end()
     })
     assert.equal((await dispatch(new URL('/health',bindings.APP_ORIGIN).href)).status, 200, logs)
-    const fixtureAuth=await createFixtureAuth(db,configuration,owner)
+    let fixtureAuth=await createFixtureAuth(db,configuration,owner)
     const signIn = id => fixtureAuth.signIn(id)
     const request = (session, route, init = {}) => fetch(`${origin}${route}`, { ...init, headers: { cookie: session.cookie, origin, 'x-csrf-token': session.csrf, ...(init.body ? { 'content-type': 'application/json' } : {}), ...init.headers } })
     const ownerSession = await signIn(owner)
@@ -93,6 +93,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
       return { id, policyId, rules, session: await auth.signIn(id) }
     }
     const mailMessages=()=>{if(!mail)throw new Error('Mail capture is not configured for this explicit provider fixture');return fixtureMessages(origin)}
-    return { mailMessages, db, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, runtime, reconfigure, dispatch }
+    const restart=async()=>{await runtime.dispose();runtime=new Miniflare(runtimeOptions);await runtime.ready;db=await runtime.getD1Database('DB');fixtureAuth=await createFixtureAuth(db,configuration,owner)}
+    return { mailMessages, get db(){return db}, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, get runtime(){return runtime}, reconfigure, restart, dispatch }
   } catch (error) { await close(); throw error }
 }

@@ -1,3 +1,6 @@
+import {recordCalendarAuthor} from './record-calendar-author.mjs'
+import {recordCalendarBulk} from './record-calendar-bulk.mjs'
+import {recordCalendarRetry} from './record-calendar-retry.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {recordOutlookProvider} from './record-outlook-provider.mjs'
 import assert from 'node:assert/strict'
@@ -54,7 +57,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    assert.deepEqual({writes:provider.writes.length,changes:(await h.db.prepare('SELECT count(*) n FROM record_calendar_changes WHERE definition_id=?').bind(definitionId).first()).n,effects:(await h.db.prepare("SELECT count(*) n FROM execution_attempts WHERE action='record.calendar.sync'").first()).n},beforeImport,'Imported records start no calendar capture or execution effect, even when scheduled work drains')
    assert.ok((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).notOnCalendar>=1,'The sync list counts imported records not yet on the calendar')
    const nativeSessions=await page.evaluate(async()=> (await(await fetch('/auth/sessions')).json()).sessions),originalNative=nativeSessions.find(s=>s.active).id
-   const fixtureAuth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-records-session-secret-at-least-32-characters',mode:'development'},'00000000000000000000000981'),renewedOwner=await fixtureAuth.signIn()
+   const fixtureAuth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-records-session-secret-at-least-32-characters',mode:'development'},'00000000000000000000000981'),renewedOwner=await fixtureAuth.signIn();h.cookie=renewedOwner.cookie
    await context.addCookies([{name:renewedOwner.cookie.split('=')[0],value:renewedOwner.cookie.slice(renewedOwner.cookie.indexOf('=')+1),url:h.origin}])
    await call(`/auth/sessions/${originalNative}/revoke`,{})
    const approval=JSON.parse((await h.db.prepare('SELECT actor_json FROM record_calendar_definitions WHERE id=?').bind(definitionId).first()).actor_json)
@@ -91,7 +94,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    await call(`/api/v1/record-calendar-sync/connections/${connectionId}/refresh`,{commandId:createUlid()});await drain()
    assert.equal((await items())[0].review.deleted,true,'An external deletion opens a review')
    const deletedVersion=(await get()).version,deletedWrites=provider.writes.length
-   await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:writerId,role:'viewer',version:1})
+   await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:writerId,role:'read-only',version:1})
    await writerCall(syncPath+'/resolve',{commandId:createUlid(),action:'restore'},403)
    assert.equal(provider.writes.length,deletedWrites,'A reader cannot restore the calendar')
    await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:writerId,role:'editor',version:2})
@@ -103,6 +106,8 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    assert.equal((await items())[0].review,null,'The explicit restoration resolves its review')
    await open();await page.locator('[aria-label="Calendar sync definition"]').waitFor();await capture('deleted-restored')
 
+   if(width===1440)await recordCalendarAuthor({h,provider,outlook,call,writerCall,writerContext,writerId,deliver,drain,appId,entityId,recordId:imported.rows[0].id,title:title.id,start:start.id,end:end.id})
+   if(width===1440)await recordCalendarRetry({h,worker,provider,call,patch,drain,binding,syncPath,start:start.id,end:end.id})
    // Current field visibility is re-projected, rather than retained in the next event.
    const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind('00000000000000000000000981',appId).first(),rules=JSON.parse(policy.rules_json)
    await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules.map(r=>r.entityId===entityId?{...r,readableFields:r.readableFields.filter(f=>f!==notes.id),writableFields:r.writableFields.filter(f=>f!==notes.id)}:r)),policy.id).run()
@@ -116,6 +121,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    await patch({[start.id]:null,[end.id]:null});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'DELETE');assert.equal((await binding()).state,'cancelled',JSON.stringify({lastWrite:{method:provider.writes.at(-1).method,applied:provider.writes.at(-1).applied,outcome:provider.writes.at(-1).outcome}}))
    await open();await page.getByText('cancelled',{exact:true}).waitFor();await capture('cancelled')
    await patch({[start.id]:'2026-11-25',[end.id]:'2026-11-26'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'POST');assert.notEqual((await binding()).event_id,event.event_id)
+   if(width===1440)await recordCalendarBulk({h,worker,provider,body,call,command,deliver,drain,definitionId,appId,entityId,title:title.id,start:start.id,end:end.id})
    await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions[0].state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
    assert.ok(provider.seen.every(r=>(outlook?['graph.microsoft.com','login.microsoftonline.com']:['www.googleapis.com','oauth2.googleapis.com']).includes(new URL(r.url).hostname)))
   }catch(error){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});console.error('Calendar screen at failure:',await page.locator('body').innerText());throw error}finally{await writerContext?.close();await context.close()}

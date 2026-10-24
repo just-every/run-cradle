@@ -27,6 +27,12 @@ export async function prepareBaseStream(db:D1Database,services:ReturnType<typeof
  const revision=await reader.revision(),guards=[trustedPredicate('EXISTS(SELECT 1 FROM manual_record_bases WHERE id=? AND name=? AND version=? AND release_id=?)',[appId,base.name,base.version,base.release_id])]
  const scopes=new Map<string,Awaited<ReturnType<typeof policy.scope>>>()
  for(const d of ordered){const scope=await policy.scope(ctx,{appId,entityId:d.schema.id,purpose:'export'});if(!scope.unrestrictedRows||d.schema.fields.some(f=>!scope.readableFieldIds.includes(f.id)))throw new AdmissionError('forbidden','A complete base export requires export access to every row and field in every table.');scopes.set(d.schema.id,scope);guards.push(...scope.currentAuthorityGuards);for(const field of d.schema.fields)if(field.relation?.ownerAppId&&field.relation.ownerAppId!==appId)throw new AdmissionError('forbidden','A base export cannot include a relationship to another base.')}
+ // Preserve the existing immediate refusal even when attachment projection
+ // hides an unavailable uploaded file. The existence probe retains no rows.
+ for(const d of ordered)for(const storage of d.fields.values())if(storage.field.type==='attachment'&&storage.join){
+  const join=storage.join,invalid=await db.prepare(`SELECT 1 FROM ${identifier(join.table.tableId)} WHERE typeof(${identifier(join.valueColumn)})<>'text' OR substr(${identifier(join.valueColumn)},1,1)<>'{' LIMIT 1`).first()
+  if(invalid)throw new AdmissionError('validation',`${storage.field.label}: uploaded attachment bytes have no base JSON representation.`)
+ }
  async function check(){await assertGuards(db,guards);if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during base export. Export again.')}
  const tables:PortableTable[]=ordered.map(d=>{const schema=d.schema as typeof d.schema&{incomingRelations?:PortableTable['incomingRelations']};return {id:schema.id,label:schema.label,primaryFieldId:schema.primaryFieldId??schema.fields[0]!.id,fields:schema.fields.map(field=>portableField(field,schema,descriptors)),incomingRelations:structuredClone(schema.incomingRelations??[]),...(schema.validationRules?{validationRules:structuredClone(schema.validationRules)}:{}),records:[]}})
  const views:PortableBase['base']['views']=[],forms:PortableBase['base']['forms']=[]
@@ -51,7 +57,7 @@ export async function prepareBaseStream(db:D1Database,services:ReturnType<typeof
    const page=await reader.query(pageCtx,scope,{fields:table.fields.map(f=>f.id),includeArchived:true,limit:50,cursor},'export'),records:PortableRecord[]=[]
    for(const row of page.items){if(row.lifecycle!=='active')throw new AdmissionError('validation','This base contains a lifecycle state not represented by base JSON.');const values:PortableRecord['values']={},calculationErrors:NonNullable<PortableRecord['calculationErrors']>={}
     for(const field of descriptors.get(appId,table.id).schema.fields){const cell=row.fields[field.id];if(cell?.state==='unavailable'&&field.type==='computed'){const {state,...error}=cell;calculationErrors[field.id]=error;values[field.id]=null;continue}if(cell?.state!=='value')throw new AdmissionError('forbidden','A base export contains a restricted or unavailable value.');
-     if(!['relation','attachment'].includes(field.type)&&!(field.type==='computed'&&field.resultType==='array')){const native=field.type==='computed'?{...field,type:field.resultType!,required:false}:field;if(canonical(validateCell(native,cell.value))!==canonical(cell.value))throw new AdmissionError('validation',`${field.label}: value is not canonical.`)}
+     if(!['relation','attachment'].includes(field.type)&&!(field.type==='computed'&&field.resultType==='array')){const native=field.type==='computed'&&field.resultType&&field.resultType!=='array'?{...field,type:field.resultType,required:false}:field;if(canonical(validateCell(native,cell.value))!==canonical(cell.value))throw new AdmissionError('validation',`${field.label}: value is not canonical.`)}
      values[field.id]=field.type==='attachment'?await exportStoreCell(db,field.label,cell.value):portableValue(field,cell.value)}
     records.push({id:row.id,values,...(Object.keys(calculationErrors).length?{calculationErrors}:{})})
    }

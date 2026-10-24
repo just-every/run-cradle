@@ -38,8 +38,8 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
   catch(e){setError(e instanceof Error?e.message:'Could not rotate the signing key.')}finally{setBusy(false)}
  }
  return <div className="cr-stack">
-  <label className="cr-field">Action<select value={action.kind} onChange={event=>select(event.target.value as RecordAutomationAction['kind'])}>
-   <option value="notify">Notify a member</option><option value="email">Email a member</option><option value="sms">Send SMS</option><option value="update">Update a field</option><option value="webhook">Signed webhook</option><option value="slack">Slack message</option><option value="slack-app">Slack app approval</option></select></label>
+  <label className="cr-field">Action<select aria-label="Action" value={action.kind} onChange={event=>select(event.target.value as RecordAutomationAction['kind'])}>
+   <option value="notify">Notify a member</option><option value="email">Email a member</option><option value="sms">Send SMS</option><option value="update">Update a field</option><option value="webhook">Signed webhook</option><option value="slack">Slack message</option><option value="slack-app">Chat app approval</option></select></label>
   {(action.kind==='notify'||action.kind==='email')&&<label className="cr-field">Recipient<select required value={action.operatorId} onChange={event=>onChange({...action,operatorId:event.target.value})}>
    <option value="">Choose a member</option>{recipients.map(recipient=><option key={recipient.id} value={recipient.id}>{recipient.displayName}</option>)}</select></label>}
   {action.kind==='notify'&&<label className="cr-field">Notification title<input required maxLength={200} value={action.title} onChange={event=>onChange({...action,title:event.target.value})}/></label>}

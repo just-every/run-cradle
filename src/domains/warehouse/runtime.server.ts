@@ -39,23 +39,33 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
  async function run(row:ExportRow,slot:string){
   const actor=await owner(row.owner_id);if(!actor){await pause(row);return}
   const destination=destinationSchema.parse(JSON.parse(row.destination_json)),store=await warehouseStore(env,bucket,row.id,destination,row.sealed_json)
-  const runId=createUlid(),startedAt=new Date().toISOString(),credential=createUlid(),expiresAt=new Date(Date.now()+300000).toISOString()
-  const acquired=await db.prepare("UPDATE warehouse_exports SET running_id=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,row.id,row.version,slot).first<{id:string}>()
+  const now=Date.now(),resuming=!!row.running_id
+  // The original invocation's internal credential has expired before a stale
+  // lease is reclaimed. The same run/file/job identities survive a restart.
+  if(resuming&&row.running_started_at&&Date.parse(row.running_started_at)+300000>now)return
+  const runId=row.running_id??createUlid(),startedAt=new Date(now).toISOString(),at=row.running_at??clock().toISOString(),runSlot=row.running_slot??slot,revision=row.running_revision??await services.reader.revision(),credential=createUlid(),expiresAt=new Date(now+300000).toISOString()
+  const acquired=resuming
+   ?await db.prepare("UPDATE warehouse_exports SET running_started_at=? WHERE id=? AND version=? AND state='active' AND running_id=? AND running_started_at IS ? RETURNING id").bind(startedAt,row.id,row.version,runId,row.running_started_at).first<{id:string}>()
+   :await db.prepare("UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,startedAt,at,runSlot,revision,row.id,row.version,slot).first<{id:string}>()
   if(!acquired)return
   let reservation:string|undefined,committed=false
-  const keys:string[]=[]
+  const keys=(await db.prepare('SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key').bind(row.id,runId).all<{object_key:string}>()).results.map(value=>value.object_key)
   try{
    reservation=await reserveFileWrite(db,'warehouse:'+row.id,startedAt)
+   if(resuming&&(!row.running_at||row.running_revision===null))throw new Error('Legacy interrupted warehouse export must retire its retained files before restarting.')
+   if(await services.reader.revision()!==revision)throw new Error('Records changed during interrupted warehouse export; retained transfers must be retired before a fresh run.')
    const bases=JSON.parse(row.bases_json) as string[]
    // A fresh, unguessable, non-disclosed credential lasts only for this invocation.
    // It authenticates as the configuring human; it grants no policy permission.
    await db.prepare('INSERT INTO authority_credentials(id,principal_id,token_hash,audience,scopes_json,created_at,expires_at,authentication_epoch) VALUES(?,?,?,?,?,?,?,?)').bind(credential,actor.id,await canonicalHash({nonce:crypto.randomUUID()}),'warehouse-internal',JSON.stringify(bases.map(appId=>({appId,actions:['record.read'],purposes:['read','export']}))),Date.now(),Date.parse(expiresAt),actor.authentication_epoch).run()
    const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
    const ownership=trustedPredicate(`EXISTS(SELECT 1 FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND p.authentication_epoch=? AND o.status='active' AND o.role='owner' AND o.version=?)`,[actor.id,actor.authentication_epoch,actor.version])
-   const guards=[ownership],before=JSON.parse(row.watermark_json) as Watermark,after:Watermark={},files:{key:string;rows:number;sha256:string;schemaHash:string;watermarkBefore:unknown;watermarkAfter:unknown;columns?:{fieldId:string;label:string;column:string}[]}[]=[],omitted:{appId:string;tableId:string;reason:string}[]=[],revision=await services.reader.revision()
-   const at=clock().toISOString(),full=row.mode==='full'||Object.keys(before).length===0
+   const guards=[ownership],before=JSON.parse(row.watermark_json) as Watermark,after:Watermark={},files:{key:string;rows:number;sha256:string;schemaHash:string;watermarkBefore:unknown;watermarkAfter:unknown;columns?:{fieldId:string;label:string;column:string}[]}[]=[],omitted:{appId:string;tableId:string;reason:string}[]=[]
+   const full=row.mode==='full'||Object.keys(before).length===0
    async function put(key:string,body:string|ArrayBuffer,metadata?:WarehouseObjectMeta){
-    await db.prepare('INSERT INTO warehouse_objects(object_key,export_id,run_id,created_at,destination_json,sealed_json,metadata_json,dispatch_state) VALUES(?,?,?,?,?,?,?,?)').bind(key,row.id,runId,startedAt,row.destination_json,row.sealed_json,metadata?JSON.stringify(metadata):null,'prepared').run();keys.push(key)
+    const retained=await db.prepare('SELECT run_id,metadata_json FROM warehouse_objects WHERE object_key=? AND export_id=?').bind(key,row.id).first<{run_id:string;metadata_json:string|null}>()
+    if(retained){if(retained.run_id!==runId||retained.metadata_json!==(metadata?JSON.stringify(metadata):null))throw new Error('Interrupted warehouse file metadata changed; watermark unchanged.')}
+    else{await db.prepare('INSERT INTO warehouse_objects(object_key,export_id,run_id,created_at,destination_json,sealed_json,metadata_json,dispatch_state) VALUES(?,?,?,?,?,?,?,?)').bind(key,row.id,runId,startedAt,row.destination_json,row.sealed_json,metadata?JSON.stringify(metadata):null,'prepared').run();keys.push(key)}
     await assertGuards(db,guards)
     await store.put(key,body,{httpMetadata:{contentType:key.endsWith('.csv')?'text/csv; charset=utf-8':key.endsWith('.parquet')?'application/vnd.apache.parquet':'application/json'},...(metadata?{metadata}:{})})
     const read=await store.get(key);if(!read)throw new Error('Bucket export readback is missing; watermark unchanged.')
@@ -110,7 +120,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    unique.push(trustedPredicate("(SELECT COALESCE(MAX(rowid),0) FROM command_admissions WHERE state='committed')=?",[revision]))
    await db.batch([
     ...unique.map((guard,index)=>db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,index,...guard.values)),
-    db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),slot,startedAt,row.id,runId),
+    db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),runSlot,startedAt,row.id,runId),
     ...bases.map(appId=>db.prepare('INSERT INTO operation_audit(id,actor_id,app_id,action,feature,created_at) VALUES(?,?,?,?,?,?)').bind(createUlid(),actor.id,appId,'warehouse.export','Warehouse exports',startedAt)),
     db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
    ])
@@ -119,7 +129,8 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    if(!committed)for(const key of keys){await store.delete(key);if(await store.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
    await db.prepare('DELETE FROM authority_credentials WHERE id=?').bind(credential).run()
    if(reservation)await finishFileWrite(db,reservation)
-   await db.prepare('UPDATE warehouse_exports SET running_id=NULL WHERE id=? AND running_id=?').bind(row.id,runId).run()
+   if(resuming)await db.prepare('DELETE FROM lifecycle_file_writes WHERE object_key=? AND started_at<=?').bind('warehouse:'+row.id,startedAt).run()
+   await db.prepare('UPDATE warehouse_exports SET running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL WHERE id=? AND running_id=?').bind(row.id,runId).run()
   }
  }
  return {async scheduled(){

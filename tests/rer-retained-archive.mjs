@@ -1,4 +1,4 @@
-import {fileStoreArchive} from './helpers/file-store-archive.mjs'
+import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {chmod,copyFile,mkdtemp,readFile,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
@@ -11,6 +11,8 @@ import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {encodedRow} from '@runeditrun/rer/modules/portability/catalogue'
 import {canonicalJson} from '@runeditrun/rer/modules/portability'
 import {platformTable} from '@runeditrun/rer/internal/modules/portability/bookkeeping.mjs'
+
+const {fileStoreArchive}=await import('./helpers/file-store-archive.mjs')
 
 // rer import reads only an owner's private file, as rer export writes it.
 const place=async(from,to)=>{await copyFile(from,to);await chmod(to,0o600)}

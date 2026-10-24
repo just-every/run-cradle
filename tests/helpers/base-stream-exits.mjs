@@ -22,11 +22,18 @@ export async function baseStreamExits(h,r,snapshot){
   }
  }
  const binary=await request('json','application/vnd.cradle.base+json');assert.equal(binary.status,200);assert.match(binary.headers.get('content-disposition'),/attachment/);assert.deepEqual(await binary.json(),snapshot)
- const interrupted=await request('json','application/vnd.cradle.base+json'),reader=interrupted.body.getReader()
+ await baseStreamInterruption(h,r,snapshot.base.id)
+}
+
+/** Controlled public response consumption proves revocation before stream completion. */
+export async function baseStreamInterruption(h,r,appId){
+ const origin='https://base-exits.example.test',app=baseExportHttp(createBaseExport(h.db,r.services),async()=>h.ctx)
+ const response=await app.fetch(new Request(origin+'/api/v1/records/base-export',{method:'POST',headers:{origin,'content-type':'application/json',accept:'application/vnd.cradle.base+json'},body:JSON.stringify({appId,format:'json'})}))
+ const reader=response.body.getReader()
  await reader.read();await reader.read();await reader.read()
- const policies=(await h.db.prepare('SELECT id,version FROM authority_policies WHERE app_id=?').bind(snapshot.base.id).all()).results
+ const policies=(await h.db.prepare('SELECT id,version FROM authority_policies WHERE app_id=?').bind(appId).all()).results
  try{
-  await h.db.prepare('UPDATE authority_policies SET version=version+1 WHERE app_id=?').bind(snapshot.base.id).run()
+  await h.db.prepare('UPDATE authority_policies SET version=version+1 WHERE app_id=?').bind(appId).run()
   await assert.rejects(async()=>{while(!(await reader.read()).done){}},/authority|changed|stale/i,'An authority change prevents a complete streamed base download')
  }finally{for(const policy of policies)await h.db.prepare('UPDATE authority_policies SET version=? WHERE id=?').bind(policy.version,policy.id).run()}
 

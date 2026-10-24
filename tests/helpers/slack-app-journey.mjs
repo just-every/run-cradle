@@ -10,7 +10,7 @@ import {teamsAppNetworkEdge} from './teams-app-network-edge.mjs'
 export async function signedSlack(origin,path,body,{json=false,stale=false,forged=false,status=200,timestamp}={}){
  const raw=json?JSON.stringify(body):new URLSearchParams(body).toString(),time=timestamp??String(Math.floor(Date.now()/1000)-(stale?600:0))
  const signature='v0='+createHmac('sha256',slackAppFixture.signingSecret).update('v0:'+time+':'+raw).digest('hex')
- const response=await fetch(origin+path,{method:'POST',headers:{'content-type':json?'application/json':'application/x-www-form-urlencoded','x-slack-request-timestamp':time,'x-slack-signature':forged?'v0=synthetic-cradle-120-forged':signature},body:raw})
+ const response=await fetch(origin+path,{method:'POST',headers:{'content-type':json?'application/json':'application/x-www-form-urlencoded','x-slack-request-timestamp':time,'x-slack-signature':forged?'v0=synthetic-cradle-120-forged':signature},body:raw}).catch(error=>{console.error('CHAT_CALLBACK_TRANSPORT_FAILURE '+JSON.stringify({path,cause:error.cause?.code??error.cause?.name??'unknown',name:error.name}));throw error})
  const value=await response.json().catch(()=>null)
  assert.equal(response.status,status,`${path}: ${value?.error?.message??JSON.stringify(value)}`)
  return value

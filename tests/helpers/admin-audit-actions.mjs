@@ -17,11 +17,14 @@ export async function adminAuditActions(h){
  const revokeApi=key=>track('API revoke','credential.revoke',()=>h.request(`/api/user-keys/${key.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId:h.appId}}))
  let key=await issueApi()
  const retiredApi=key,apiRotation=createUlid()
+ const carriedSubscription=(await h.request('/api/v1/change-subscriptions',{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,url:'https://receiver.example.com/carried'}})).data
  key=(await track('API rotate','api-key.rotate',()=>h.request(`/api/user-keys/${key.id}/rotate`,{method:'POST',body:{commandId:apiRotation,appId:h.appId}}))).data.key
  await h.request(`/api/user-keys/${retiredApi.id}/rotate`,{method:'POST',status:409,body:{commandId:apiRotation,appId:h.appId}})
  await h.request(`/api/v1/apps/${h.appId}/entities`,{secret:retiredApi.secret,status:401})
  await h.request(`/api/v1/apps/${h.appId}/entities`,{secret:key.secret})
  assert.deepEqual(expected.at(-1).keyIds,[retiredApi.id,key.id])
+ assert.ok((await h.request('/api/v1/change-subscriptions?appId='+h.appId,{secret:key.secret})).data.some(item=>item.id===carriedSubscription.id),'API rotation carries existing subscription authority to the replacement credential')
+ await h.request('/api/v1/change-subscriptions/'+carriedSubscription.id,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
  const subscriptions='/api/v1/change-subscriptions'
  const createSubscription=async()=> (await track('Subscription issue','subscription.create',()=>h.request(subscriptions,{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,url:'https://receiver.example.com/changes'}}),'Audit API key')).data
  let subscription=await createSubscription()

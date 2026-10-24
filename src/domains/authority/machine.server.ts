@@ -10,6 +10,7 @@ import { delegatedPrincipal } from './delegation.server'
 import { bindProposer } from './proposer.server'
 import { DEV_CREDENTIAL_KIND, devCredentials, isDevMinted, mintedInDevSession } from './dev-credentials.server'
 const scopeSchema=z.array(z.object({appId:z.string(),actions:z.array(z.string()).min(1).max(100),purposes:z.array(z.string()).max(100)}).strict()).min(1).max(100)
+const subscriptions=registerTable('record_change_subscriptions',['credential_id'])
 const credentials=registerTable('authority_credentials',['id','principal_id','token_hash','audience','scopes_json','created_at','expires_at','revoked_at','version','authentication_epoch'])
 /** `devGate` admits a request holding the local dev key; a deployed Worker has none, so dev-minted credentials are refused there. */
 /** `audiences[0]` is the door; a later audience is a key confined to a narrower door (a proposing key). */
@@ -49,9 +50,11 @@ export const createMachineService=(db:D1Database,policy:PolicyPort,admission:Adm
     .bind(oldId,Date.parse(ctx.now),appId).first<{principal_id:string;audience:string;scopes_json:string;expires_at:number;authentication_epoch:number;version:number}>()
    if(!old)throw new AuthorityError('not_found','Active key not found.',404)
    const id=createUlid(),secret=randomSecret(),now=Date.parse(ctx.now)
+   const subscriptionCount=kind==='api-key'?Number(await db.prepare('SELECT count(*) AS n FROM record_change_subscriptions WHERE credential_id=?').bind(oldId).first('n')):0
    const receipt=await admission.commit(ctx,{commandId,action,appId,canonicalInputHash:hash,permit:{...permit,action},guards:[...revoke.guards,trustedPredicate("EXISTS(SELECT 1 FROM authority_principals WHERE id=? AND state='active' AND authentication_epoch=?)",[old.principal_id,old.authentication_epoch])],mutations:[
     {kind:'update',table:credentials,set:{revoked_at:now,version:old.version+1},where:trustedPredicate('id=? AND version=? AND revoked_at IS NULL AND expires_at>?',[oldId,old.version,now]),expectedRows:1},
     {kind:'insert',table:credentials,row:{id,principal_id:old.principal_id,token_hash:await digest(secret),audience:old.audience,scopes_json:old.scopes_json,created_at:now,expires_at:old.expires_at,revoked_at:null,version:1,authentication_epoch:old.authentication_epoch}},
+    ...(subscriptionCount?[{kind:'update' as const,table:subscriptions,set:{credential_id:id},where:trustedPredicate('credential_id=?',[oldId]),expectedRows:subscriptionCount}]:[]),
     ...(await isDevMinted(db,oldId)?[{kind:'insert' as const,table:devCredentials,row:{credential:DEV_CREDENTIAL_KIND,id,created_at:now}}]:[])
    ],audit:[{action,subject:null,changes:[],sourceIds:[oldId,id],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,oldId,expiresAt:new Date(old.expires_at).toISOString()}})
    if(receipt.replay||receipt.result.state!=='committed')throw new AuthorityError('version_conflict','Rotation secret is unavailable.',409)

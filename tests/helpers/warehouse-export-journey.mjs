@@ -44,9 +44,11 @@ export async function warehouseExportJourney(doors, world, edge) {
 async function exportFormatJourney(doors, world, format, destination, edge, manifestBase) {
  const { h, call, command, commit, ref } = doors
  const provider=destination==='bigquery'?edge.bigQuery:destination==='snowflake'?edge.snowflake:null,access=provider?.access??edge.access
- const bucket = destination==='r2'||destination==='bigquery'?await h.runtime.getR2Bucket('WAREHOUSE'):edge.observeBucket,tag=destination+'-'+format
+ const currentBucket=()=>destination==='r2'||destination==='bigquery'?h.runtime.getR2Bucket('WAREHOUSE'):Promise.resolve(edge.observeBucket)
+ const bucket={async list(options){return (await currentBucket()).list(options)},async get(key){return (await currentBucket()).get(key)}}
+ const tag=destination+'-'+format
  const id = createUlid()
- const input = { id, name: 'Analysis export', bases: [LAUNCH_APP_ID,manifestBase.appId], mode: 'incremental', format, destination:destination==='r2'?{kind:'r2'}:provider?.destination??edge.destination,...(destination!=='r2'?{access}:{}), localRule: 'hourly', timezone: 'UTC', version: 0 }
+ const input = { id, name: 'Analysis export', bases: [LAUNCH_APP_ID], mode: 'incremental', format, destination:destination==='r2'?{kind:'r2'}:provider?.destination??edge.destination,...(destination!=='r2'?{access}:{}), localRule: 'hourly', timezone: 'UTC', version: 0 }
  const list = async () => { const response = await call('/api/v1/warehouse-exports'); assert.equal(response.status, 200, JSON.stringify(response.body)); return response.body.data }
  const settings = await list()
  assert.ok(settings.bases.some(base => base.id === LAUNCH_APP_ID), 'An owner can choose the Launch base')
@@ -82,6 +84,37 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  runDay.setUTCHours(1, 0, 0, 0)
  let time = runDay.getTime()
  const tick = async () => { const at = new Date(time).toISOString(); time += 3600000; const result = await doors.tick(at); assert.equal(result.outcome, 'ok', `Scheduled export tick failed: ${JSON.stringify({ result, writes: (await h.db.prepare('SELECT id,object_key FROM lifecycle_file_writes').all()).results })}`); return at }
+ const restartTick=async()=>{
+  const control=destination==='bigquery'?provider:edge,starts=control.uploadStarts,held=control.holdNextPart()
+  const at=new Date(time).toISOString();time+=3600000
+  const before=(await h.db.prepare('SELECT watermark_json FROM warehouse_exports WHERE id=?').bind(id).first()).watermark_json
+  const pending=doors.tick(at).then(result=>({result}),error=>({error}))
+  try{
+   await held.reached
+   const captured=await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(id).first()
+   assert.ok(captured.running_id,'The interrupted scheduled invocation owns a durable run')
+   const transfers=(await h.db.prepare('SELECT transfer_json FROM warehouse_objects WHERE export_id=? AND run_id=?').bind(id,captured.running_id).all()).results
+   const state=transfers.map(row=>JSON.parse(row.transfer_json)).find(row=>row[destination==='bigquery'?'bigquery':'s3'])
+   assert.ok(state,'The upload identity is durable before the first part acknowledgement')
+   if(destination==='bigquery')assert.ok(state.bigquery.sealed,'The resumable session capability is sealed')
+   await h.restart()
+  }finally{held.release()}
+  const interrupted=await pending
+  assert.ok(interrupted.error||interrupted.result?.outcome!=='ok','The original Worker cannot report a completed export after termination')
+  const retained=await h.db.prepare('SELECT running_id,watermark_json FROM warehouse_exports WHERE id=?').bind(id).first()
+  assert.ok(retained.running_id,'Worker termination leaves its run available for recovery')
+  assert.equal(retained.watermark_json,before,'A transfer cut cannot advance the watermark')
+  // Age only the expired invocation's lease/credential; this is a clock fixture,
+  // not a production timeout change or a replacement for the scheduled door.
+  await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-300001).toISOString(),id).run()
+  await h.db.prepare("UPDATE authority_credentials SET expires_at=? WHERE audience='warehouse-internal' AND principal_id=?").bind(Date.now()-1,world.adminId).run()
+  await tick()
+  assert.equal(control.uploadStarts,starts+1,'A restarted Worker reuses the original multipart/resumable session')
+  assert.equal((await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(id).first()).running_id,null,'Recovered readback releases the run lease')
+  const remaining=(await h.db.prepare("SELECT count(*) n FROM warehouse_objects WHERE export_id=? AND transfer_json<>'{}'").bind(id).first()).n
+  assert.equal(remaining,0,'Completed readback retires its upload session custody')
+  return at
+ }
  const keys = async () => { const objects = []; let cursor; do { const page = await bucket.list({ prefix: id + '/', cursor }); objects.push(...page.objects.map(object => object.key)); cursor = page.truncated ? page.cursor : undefined } while (cursor); return objects.sort() }
  const read = async key => { const object = await bucket.get(key); assert.ok(object, `Missing exported object ${key}`); return object.text() }
  const readData = async key => {
@@ -130,20 +163,7 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  assert.ok(JSON.stringify(full.rows).includes(leaver.name), 'The real bucket contains the person’s values before erasure')
  const manifests = fullKeys.filter(key => key.endsWith('-manifest.json'))
  assert.equal(manifests.length, 1, 'A scheduled run writes one manifest')
- const manifestBody=await read(manifests[0])
- assert.ok(Buffer.byteLength(manifestBody)>1048576,'A scheduled manifest above the old transfer budget exports and reads back intact')
- const manifest = JSON.parse(manifestBody)
- for(const table of manifestBase.tables){
-  const file=manifest.files.find(file=>file.key.includes('/'+table.id+'/'))
-  assert.ok(file,'Every empty wide table has a full-baseline schema file')
-  const object=await bucket.get(file.key);assert.ok(object)
-  const captured=await object.arrayBuffer()
-  assert.equal(createHash('sha256').update(Buffer.from(captured)).digest('hex'),file.sha256,'Every manifest file checksum matches independently read bytes')
-  const headers=format==='csv'?unpack(new TextDecoder().decode(captured)).headers:parquetMetadata(captured).schema.slice(1).map(column=>column.name)
-  assert.deepEqual(headers,['_record_id','_operation',...file.columns.map(column=>column.column)],'Every wide file carries the exact output columns in its oversized manifest')
-  if(provider){const upload=destination==='bigquery'?provider.uploads.find(value=>value.jobId==='cradle_load_'+createHash('sha256').update(file.key).digest('hex')):provider.uploads.find(value=>value.key===file.key);assert.ok(upload);assert.ok(Buffer.from(upload.bytes).equals(Buffer.from(captured)),'The remote provider accepted every exact file of the oversized manifest')}
-  assert.deepEqual(file.columns.map(column=>({fieldId:column.fieldId,label:column.label})),table.fields.map(field=>({fieldId:field.id,label:field.label})),'The oversized manifest preserves every exact source field identity and Unicode label')
- }
+ const manifest = JSON.parse(await read(manifests[0]))
  assert.ok(JSON.stringify(manifest).includes('schemaHash'), 'Manifest records the schema hash')
  const manifestTable = manifest.files.find(file => file.key === fullKey)
  assert.equal(manifestTable.rows, full.rows.length, 'Manifest row count matches the read-back table object')
@@ -174,9 +194,7 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  const oversizedTags=Array.from({length:500},(_,index)=>`synthetic-cradle-${index} `+'𝄞'.repeat(480))
  const oversized=await commit('launch.campaign.create',{fields:{...campaignFields(`WARE-${tag}-OVERSIZED`,'Warehouse oversized record',world.adminId),tags:oversizedTags}})
  await commit('launch.campaign.patch',{id:oversized.id,changes:{objective:'ä'.repeat(100000)}},ref('campaign',await current(oversized)))
- if(destination==='bigquery')provider.loseNextPart()
- if(destination==='s3'||destination==='snowflake')edge.loseNextPart()
- const oversizedAt=await tick(),oversizedManifest=JSON.parse(await read(`${id}/${oversizedAt}-manifest.json`))
+ const oversizedAt=destination==='r2'?await tick():await restartTick(),oversizedManifest=JSON.parse(await read(`${id}/${oversizedAt}-manifest.json`))
  const oversizedFiles=oversizedManifest.files.filter(file=>file.key.includes('/'+launchEntities.campaign+'/'))
  const oversizedRows=(await Promise.all(oversizedFiles.map(file=>readData(file.key)))).flatMap(file=>file.rows)
  assert.equal(oversizedRows.filter(row=>row[0]===oversized.id).length,1,'An oversized record appears once after multipart/resumable readback')
@@ -239,6 +257,26 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  assert.ok(audit.filter(row => row.action === 'warehouse.save').length >= 3 && audit.some(row => row.action === 'warehouse.remove'), 'Creating, changing and removing exports are audited')
  const finished=(await list()).exports.find(item=>item.id===id)
  await commit('warehouse.remove',{id,version:finished.version})
+ const manifestId=createUlid()
+ await commit('warehouse.save',{...input,id:manifestId,name:'Portable schema manifest',bases:[manifestBase.appId],mode:'full'})
+ const manifestAt=await tick()
+ const manifestKey=`${manifestId}/${manifestAt}-manifest.json`,manifestObject=await bucket.get(manifestKey);assert.ok(manifestObject)
+ const manifestBody=await manifestObject.text()
+ assert.ok(Buffer.byteLength(manifestBody)>1048576,'A scheduled manifest above the old transfer budget exports and reads back intact')
+ const largeManifest = JSON.parse(manifestBody)
+ for(const table of manifestBase.tables){
+  const file=largeManifest.files.find(file=>file.key.includes('/'+table.id+'/'))
+  assert.ok(file,'Every empty wide table has a full-baseline schema file')
+  const object=await bucket.get(file.key);assert.ok(object)
+  const captured=await object.arrayBuffer()
+  assert.equal(createHash('sha256').update(Buffer.from(captured)).digest('hex'),file.sha256,'Every manifest file checksum matches independently read bytes')
+  const headers=format==='csv'?unpack(new TextDecoder().decode(captured)).headers:parquetMetadata(captured).schema.slice(1).map(column=>column.name)
+  assert.deepEqual(headers,['_record_id','_operation',...file.columns.map(column=>column.column)],'Every wide file carries the exact output columns in its oversized manifest')
+  if(provider){const upload=destination==='bigquery'?provider.uploads.find(value=>value.jobId==='cradle_load_'+createHash('sha256').update(file.key).digest('hex')):provider.uploads.find(value=>value.key===file.key);assert.ok(upload);assert.ok(Buffer.from(upload.bytes).equals(Buffer.from(captured)),'The remote provider accepted every exact file of the oversized manifest')}
+  assert.deepEqual(file.columns.map(column=>({fieldId:column.fieldId,label:column.label})),table.fields.map(field=>({fieldId:field.id,label:field.label})),'The oversized manifest preserves every exact source field identity and Unicode label')
+ }
+ const manifestFinished=(await list()).exports.find(item=>item.id===manifestId)
+ await commit('warehouse.remove',{id:manifestId,version:manifestFinished.version})
  const pausedId=createUlid()
- return {tick,async ownerProbe(session){await commit('warehouse.save',{...input,bases:[LAUNCH_APP_ID],id:pausedId,name:'Owner-loss probe'},[],session)},async paused(){const paused=(await list()).exports.find(item=>item.id===pausedId);assert.equal(paused.state,'paused','Losing ownership pauses the configuring owner’s export');await commit('warehouse.remove',{id:paused.id,version:paused.version})},async erased() { assert.deepEqual(await keys(), [], 'Erasure confirmation leaves no managed warehouse objects containing the person’s values') } }
+ return {tick,async ownerProbe(session){await commit('warehouse.save',{...input,bases:[LAUNCH_APP_ID],id:pausedId,name:'Owner-loss probe'},[],session)},async paused(){const paused=(await list()).exports.find(item=>item.id===pausedId);assert.equal(paused.state,'paused','Losing ownership pauses the configuring owner’s export');await commit('warehouse.remove',{id:paused.id,version:paused.version})},async erased() { assert.deepEqual(await keys(), [], 'Erasure confirmation leaves no managed warehouse objects containing the person’s values');assert.equal((await bucket.list({prefix:manifestId+'/'})).objects.length,0,'Erasure retires the oversized manifest and its schema files') } }
 }

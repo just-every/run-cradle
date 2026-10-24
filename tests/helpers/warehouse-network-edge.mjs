@@ -9,7 +9,7 @@ import {automationNetworkEdge} from './automation-network-edge.mjs'
 export async function warehouseNetworkEdge(){
  const endpoint='https://warehouse-bucket.example.com',access={accessKeyId:'synthetic-cradle-91',secretAccessKey:'synthetic-cradle-92'},objects=new Map(),calls=[],multipart=new Map()
  const destination={kind:'s3',endpoint,region:'us-east-1',bucket:'synthetic-cradle-bucket',prefix:'analysis'},bigQuery=await bigQueryNetworkEdge(),snowflake=await snowflakeNetworkEdge({s3Objects:objects,s3Access:access,stageStorage:destination})
- let refuseDelete=false,losePart=false
+ let refuseDelete=false,losePart=false,heldPart=null,nextUpload=0
  const hash=value=>createHash('sha256').update(value).digest('hex'),hmac=(key,value)=>createHmac('sha256',key).update(value).digest()
  const edge=await automationNetworkEdge({extraHosts:['warehouse-bucket.example.com',...bigQuery.hosts,...snowflake.hosts],async receive(req,res,body){
   if(await bigQuery.receive(req,res,body)||await snowflake.receive(req,res,body))return true
@@ -25,11 +25,11 @@ export async function warehouseNetworkEdge(){
   assert.equal(match[4],hmac(signing,`AWS4-HMAC-SHA256\n${time}\n${match[2]}/${match[3]}/s3/aws4_request\n${hash(canonical)}`).toString('hex'),'S3 validates the canonical method, path, host, timestamp and payload signature')
   const path=parsed.pathname,uploadId=parsed.searchParams.get('uploadId')
   if(req.method==='POST'&&parsed.searchParams.has('uploads')){
-   const id='synthetic-cradle-upload-'+multipart.size;multipart.set(id,{path,parts:new Map(),contentType:req.headers['content-type']});res.writeHead(200);res.end('<InitiateMultipartUploadResult><UploadId>'+id+'</UploadId></InitiateMultipartUploadResult>')
+   const id='synthetic-cradle-upload-'+nextUpload++;multipart.set(id,{path,parts:new Map(),contentType:req.headers['content-type']});res.writeHead(200);res.end('<InitiateMultipartUploadResult><UploadId>'+id+'</UploadId></InitiateMultipartUploadResult>')
   }else if(uploadId){
-   const upload=multipart.get(uploadId);assert.ok(upload);assert.equal(upload.path,path)
+   const upload=multipart.get(uploadId);if(!upload){res.writeHead(404);res.end('<Error><Code>NoSuchUpload</Code></Error>');return true}assert.equal(upload.path,path)
    if(req.method==='PUT'){
-    const index=Number(parsed.searchParams.get('partNumber'));assert.ok(Number.isInteger(index)&&index>0);const etag='"'+hash(body)+'"';upload.parts.set(index,{body,etag});if(losePart){losePart=false;res.destroy();return true}res.writeHead(200,{etag});res.end()
+    const index=Number(parsed.searchParams.get('partNumber'));assert.ok(Number.isInteger(index)&&index>0);const etag='"'+hash(body)+'"';upload.parts.set(index,{body,etag});if(heldPart){const held=heldPart;heldPart=null;held.reached();await held.gate;if(res.destroyed)return true}if(losePart){losePart=false;res.destroy();return true}res.writeHead(200,{etag});res.end()
    }else if(req.method==='POST'){
     const parts=[...body.toString().matchAll(/<Part><PartNumber>(\d+)<\/PartNumber><ETag>(.*?)<\/ETag><\/Part>/g)]
     assert.equal(parts.length,upload.parts.size)
@@ -48,5 +48,5 @@ export async function warehouseNetworkEdge(){
   return true
  }})
  const observeBucket={async list({prefix=''}){return {truncated:false,objects:[...objects.keys()].map(path=>({key:decodeURIComponent(path).slice('/synthetic-cradle-bucket/analysis/'.length)})).filter(object=>object.key.startsWith(prefix))}},async get(key){const object=[...objects.entries()].find(([path])=>decodeURIComponent(path)==='/synthetic-cradle-bucket/analysis/'+key)?.[1];return object?{httpMetadata:{contentType:object.contentType},async text(){return object.body.toString('utf8')},async arrayBuffer(){return object.body.buffer.slice(object.body.byteOffset,object.body.byteOffset+object.body.byteLength)}}:null}}
- return {...edge,access,objects,calls,observeBucket,destination,bigQuery,snowflake,bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},refuseDelete(value){refuseDelete=value},loseNextPart(){losePart=true}}
+ return {...edge,access,objects,calls,observeBucket,destination,bigQuery,snowflake,bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},refuseDelete(value){refuseDelete=value},loseNextPart(){losePart=true},get uploadStarts(){return nextUpload},holdNextPart(){let reached,release;const at=new Promise(resolve=>reached=resolve),gate=new Promise(resolve=>release=resolve);heldPart={reached,gate};return {reached:at,release}}}
 }

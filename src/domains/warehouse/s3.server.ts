@@ -2,6 +2,7 @@ import type {PlatformBindings} from '../../core/platform/bindings'
 import type {S3Destination,S3Access} from './destination-configuration.server'
 import type {WarehouseStage} from './provider-contracts'
 import {RelayTransport} from '../integrations/relay-transport.server'
+import {warehouseTransfers,transferHash} from './transfers.server'
 import {AuthorityError} from '../authority/errors'
 const encode=(value:string)=>encodeURIComponent(value).replace(/[!'()*]/g,char=>'%'+char.charCodeAt(0).toString(16).toUpperCase())
 const bytes=(value:string)=>new TextEncoder().encode(value)
@@ -18,7 +19,7 @@ const partBytes=5*1024*1024,readBytes=1024*1024
  * record nor a manifest is limited by the ordinary relay response envelope. */
 export async function createS3WarehouseStore(env:PlatformBindings,destination:S3Destination,access:S3Access):Promise<WarehouseStage>{
  if(!env.EGRESS_RELAY_URL||!env.EGRESS_RELAY_SECRET)throw new Error('Trusted egress relay is required for S3 exports.')
- const target=destination,relay=new RelayTransport(env.EGRESS_RELAY_URL,env.EGRESS_RELAY_SECRET)
+ const transfers=warehouseTransfers(env),target=destination,relay=new RelayTransport(env.EGRESS_RELAY_URL,env.EGRESS_RELAY_SECRET)
  async function request(method:'PUT'|'GET'|'HEAD'|'DELETE'|'POST',key:string,body?:Uint8Array<ArrayBuffer>,contentType?:string,query:Record<string,string>={},extra:Record<string,string>={}){
   const payload=body??new Uint8Array(),digest=await hash(payload),url=new URL(target.endpoint)
   url.pathname='/'+[target.bucket,...target.prefix?target.prefix.split('/'):[],...key.split('/')].map(encode).join('/')
@@ -33,13 +34,17 @@ export async function createS3WarehouseStore(env:PlatformBindings,destination:S3
   if(response.status<200||response.status>=300)throw new AuthorityError('provider_unavailable',`S3 ${method.toLowerCase()} was refused (${response.status}); exported-copy custody is unconfirmed.`,503)
   return response
  }
- return {
+ const store:WarehouseStage={
   async put(key,body,options){
    const payload=typeof body==='string'?bytes(body):new Uint8Array(body)
    if(payload.length<=readBytes){await request('PUT',key,payload,options.httpMetadata.contentType);return}
-   const started=await request('POST',key,undefined,options.httpMetadata.contentType,{uploads:''})
-   const uploadId=/<UploadId>([^<]+)<\/UploadId>/.exec(text(started!.body))?.[1]
+   const sha256=await transferHash(payload),prior=await transfers.get('s3',key)
+   if(prior&&prior.sha256!==sha256)throw new AuthorityError('version_conflict','Interrupted S3 source changed; its retained transfer must be retired.',409)
+   if(prior){const existing=await store.get(key);if(existing&&await transferHash(new Uint8Array(await existing.arrayBuffer()))===sha256){await transfers.set('s3',key,null);return}}
+   const started=prior?null:await request('POST',key,undefined,options.httpMetadata.contentType,{uploads:''})
+   const uploadId=prior?.uploadId??/<UploadId>([^<]+)<\/UploadId>/.exec(text(started!.body))?.[1]
    if(!uploadId)throw new Error('S3 multipart upload returned no upload identity.')
+   if(!prior)await transfers.set('s3',key,{uploadId,sha256})
    let complete=false
    try{
     const parts=[]
@@ -55,8 +60,8 @@ export async function createS3WarehouseStore(env:PlatformBindings,destination:S3
     }
     const result=await request('POST',key,bytes('<CompleteMultipartUpload>'+parts.join('')+'</CompleteMultipartUpload>'),'application/xml',{uploadId})
     if(/<Error[ >]/.test(text(result!.body)))throw new Error('S3 multipart completion was refused.')
-    complete=true
-   }finally{if(!complete)await request('DELETE',key,undefined,undefined,{uploadId})}
+    complete=true;await transfers.set('s3',key,null)
+   }finally{if(!complete){await request('DELETE',key,undefined,undefined,{uploadId});await transfers.set('s3',key,null)}}
   },
   async get(key){
    const head=await request('HEAD',key);if(!head)return null
@@ -73,6 +78,6 @@ export async function createS3WarehouseStore(env:PlatformBindings,destination:S3
     return output.buffer
    }}
   },
-  async head(key){return request('HEAD',key)},async delete(key){await request('DELETE',key)},
- }
+  async head(key){return request('HEAD',key)},async delete(key){const prior=await transfers.get('s3',key);if(prior){if(!await request('HEAD',key))await request('DELETE',key,undefined,undefined,{uploadId:prior.uploadId});await transfers.set('s3',key,null)}await request('DELETE',key)},
+ };return store
 }
