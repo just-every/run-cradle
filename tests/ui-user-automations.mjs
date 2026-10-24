@@ -1,3 +1,4 @@
+import {browserFailureDiagnostic} from './helpers/browser-failure-diagnostic.mjs'
 import {chatProviderBrowser} from './helpers/chat-provider-browser.mjs'
 import {slackAppBrowser} from './helpers/slack-app-browser.mjs'
 import {slackAppNetworkEdge} from './helpers/slack-app-network-edge.mjs'
@@ -41,7 +42,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
     await slackAppBrowser(page,h,journey,width,slackEdge)
     await warehouseBrowser(page,h,journey,width)
     await smsBrowser(page,h,journey,width,smsEdge)
-    await userKeyBrowser(page,h,journey,width)
+    await userKeyBrowser(page,h,journey,width).catch(async error=>{await browserFailureDiagnostic(page,output,`user-key-failure-${width}`);throw error})
     await userAutomationBrowser(page,h,journey,width)
     await automationFailureBrowser(page,h,journey,width,output)
     await automationControlBrowser(page,h,journey,width,output)
