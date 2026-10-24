@@ -108,3 +108,11 @@ current owner to restart it with a fresh full baseline. Remote credentials never
 transfer in an archive. Reconnect a restored destination with matching configuration before managed-copy erasure can be confirmed; this also
 restores credentials to that schedule's retained object custody. Removed remote
 schedules reappear paused after restore so their custody can be reconnected.
+
+Interrupted transfers retain the original upload identity, export time and job
+key. After the five-minute invocation lease expires, the next scheduled run
+rechecks the configuring owner's current authority and the captured source
+revision before resuming. Changed source is retired before a fresh export;
+watermarks advance only after complete byte and checksum readback. BigQuery's
+resumable session capability stays encrypted in transfer custody. Installation
+archives discard live sessions and leases and require destination reconnection.

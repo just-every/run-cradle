@@ -2922,7 +2922,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "38bceda29f0cd70eab9219ad75d971a143157ab5c32fad2a648c696debdfe5a2",
+      "sha256": "4da2822547df5e5c759750a185e064f75d6950e59c5e892d25ed8a67714ac60a",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2990,7 +2990,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6f1cb266a18327119d2b687eaed3b987a26a93e213b2db1ab1db88f0fb9a3fec",
+      "sha256": "2ad786302afe099ec8e6a93b57138c317174f9b35d25d8b9476cedb8cff32df6",
       "executable": false
     },
     "DEMO.md": {
@@ -3434,7 +3434,7 @@
       "executable": false
     },
     "docs/contract/FILE-002/README.md": {
-      "sha256": "95a929d1b19a85098a56ae7635bb22e13e14951c5bfefe9d0ec7536c5a5f9ec9",
+      "sha256": "a1e03624048b3c9650a01387d04271dbefa972bade1e2c1c221b1eb8a81167fe",
       "executable": false
     },
     "docs/contract/FILE-004/implementation.md": {
@@ -4434,7 +4434,7 @@
       "executable": false
     },
     "docs/exporting-to-your-own-bucket.md": {
-      "sha256": "1095428732b382eac3287a9f76d310f368cc885d9d823598641168cac8108721",
+      "sha256": "d1c642bec37e06344a6ed11b6e6634c06247e7f2d7b21900cac5fa24fa1ff67c",
       "executable": false
     },
     "docs/field-setup-repair-20261006.md": {
@@ -12642,7 +12642,7 @@
       "executable": false
     },
     "tests/helpers/warehouse-export-journey.mjs": {
-      "sha256": "3640f11d4aee59e5659f391c0d7b663827a551c0f7399c7b0e331d0c920d6917",
+      "sha256": "b4d793fd9833fa4f4adae84b9f51fe287e006345148e6615e959897dd1f8a45e",
       "executable": false
     },
     "tests/helpers/warehouse-manifest-base.mjs": {
