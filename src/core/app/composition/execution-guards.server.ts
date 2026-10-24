@@ -1,3 +1,4 @@
+import {trashContext} from '../../../domains/records/trash/authority.server'
 import type { ServerFoundation } from '../foundation.server'
 import type { ExecutionDependencies } from '../../../domains/execution/ports'
 import { trustedPredicate, exists, and, eq } from '../../../domains/admission/sql.server'
@@ -15,7 +16,8 @@ export function createExecutionGuards(db:D1Database,foundation:ServerFoundation)
   for(const revision of request.expected){
    if(revision.ref.entityId===EVIDENCE_SOURCE_ENTITY_ID){guards.push(trustedPredicate('EXISTS(SELECT 1 FROM evidence_sources WHERE id=? AND app_id=? AND current_version=? AND erased_at IS NULL)',[revision.ref.recordId,revision.ref.appId,revision.version]));continue}
    const d=foundation.descriptors.get(revision.ref.appId,revision.ref.entityId)
-   const scope=await foundation.policy.scope(ctx,{appId:revision.ref.appId,entityId:revision.ref.entityId,purpose:'read'})
+   const current=request.action==='record.calendar.sync'&&request.calendarBinding?.operation==='cancel'?trashContext(ctx):ctx
+   const scope=await foundation.policy.scope(current,{appId:revision.ref.appId,entityId:revision.ref.entityId,purpose:'read'})
    guards.push(...scope.currentAuthorityGuards,schemaGuard(d),exists(d.table,and(scope.rowPredicate,eq(d.table,d.idColumn,revision.ref.recordId),eq(d.table,d.versionColumn,revision.version))))
   }
   if(request.context){

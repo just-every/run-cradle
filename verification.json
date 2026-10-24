@@ -205,7 +205,15 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:calendar"
+        "env CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
+      ]
+    },
+    {
+      "name": "records-calendar-sync",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "env CRADLE_RECORDS_CALENDAR_GROUP=sync pnpm test:calendar"
       ]
     },
     {

@@ -1,3 +1,4 @@
+import {trashContext} from '../trash/authority.server'
 import {calendarAuthorContext} from './approval.server'
 import {createUlid} from '../../../core/shared/ids'
 import type {RequestContext,PolicyPort} from '../../authority/ports'
@@ -12,15 +13,15 @@ import {events,type Definition,type Event} from './storage.server'
 import {syncDefinition} from './contracts'
 export function calendarEffects(db:D1Database,policy:PolicyPort,admission:AdmissionPort,records:ReturnType<typeof createRecordServices>,execution:ReturnType<typeof createExecutionService>,origin:string){return async(ctx:RequestContext,d:Definition,recordId:string,commandId:string,restoring=false,paced=false)=>{
  const prior=await db.prepare("SELECT result_json FROM command_admissions WHERE command_id=? AND actor_id=? AND action='record.calendar.sync' AND state='committed'").bind(commandId,ctx.principal.id).first<{result_json:string}>();if(prior)return JSON.parse(prior.result_json);
- const definition=syncDefinition.parse(JSON.parse(d.definition_json)),ref={appId:d.app_id,entityId:d.entity_id,recordId},author=await calendarAuthorContext(db,d,ctx.requestId,ctx.ingress),scope=await policy.scope(author,{appId:d.app_id,entityId:d.entity_id,purpose:'export'}),row=await records.reader.record(author,scope,ref),readable=scope.readableFieldIds
+ const definition=syncDefinition.parse(JSON.parse(d.definition_json)),ref={appId:d.app_id,entityId:d.entity_id,recordId},event=await db.prepare('SELECT * FROM record_calendar_events WHERE definition_id=? AND record_id=?').bind(d.id,recordId).first<Event>()
+ const trashed=!!event?.event_id&&!!await db.prepare("SELECT 1 FROM record_trash WHERE app_id=? AND entity_id=? AND record_id=? AND kind='record'").bind(d.app_id,d.entity_id,recordId).first(),approved=await calendarAuthorContext(db,d,ctx.requestId,ctx.ingress),author=trashed?trashContext(approved):approved,scope=await policy.scope(author,{appId:d.app_id,entityId:d.entity_id,purpose:'export'}),row=await records.reader.record(author,scope,ref),readable=scope.readableFieldIds
  if(ctx.principal.id!==d.owner_id)await records.reader.record(ctx,await policy.scope(ctx,{appId:d.app_id,entityId:d.entity_id,purpose:'read'}),ref)
- const event=await db.prepare('SELECT * FROM record_calendar_events WHERE definition_id=? AND record_id=?').bind(d.id,recordId).first<Event>()
  if(event?.last_record_version===row.version&&!restoring&&event.state==='synced')return {state:'unchanged'}
  if(event?.review_json&&!restoring)throw new AdmissionError('version_conflict','Resolve the calendar review before syncing this event.')
  if(event?.attempt_id){const attempt=await db.prepare('SELECT a.state,r.state AS run_state FROM execution_attempts a JOIN execution_runs r ON r.id=a.run_id WHERE a.id=?').bind(event.attempt_id).first<{state:string;run_state:string}>();if(attempt&&['queued','running','waiting','unknown','partial'].includes(attempt.run_state))throw new AdmissionError('version_conflict','The original calendar effect must settle before another effect can start.')}
  const value=(id:string|undefined)=>{const c=id&&readable.includes(id)?row.fields[id]:undefined;return c?.state==='value'?c.value:null}
  if(!readable.includes(definition.startFieldId))throw new AdmissionError('forbidden','Calendar sync is stopped because its date field is no longer readable.')
- const start=value(definition.startFieldId),cancel=row.lifecycle==='deleted'||!start
+ const start=value(definition.startFieldId),cancel=trashed||row.lifecycle==='deleted'||!start
  if(cancel&&(!event?.event_id||event.state==='cancelled'))return {state:'unchanged'}
  if(!cancel&&typeof start!=='string')throw new AdmissionError('validation','The calendar date is invalid.')
  const deletedReview=restoring&&event?.review_json&&JSON.parse(event.review_json).status==='cancelled'

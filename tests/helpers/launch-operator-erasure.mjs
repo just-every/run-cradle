@@ -11,9 +11,19 @@ async function copiesOf(h, literals) {
  for (const { name } of tables) {
   const columns = (await h.db.prepare(`PRAGMA table_info("${name}")`).all()).results.filter(column => !/^(INTEGER|REAL)/i.test(column.type))
   if (!columns.length) continue
-  const where = columns.map(column => literals.map(() => `instr(CAST("${column.name}" AS TEXT),?)>0`).join(' OR ')).join(' OR ')
-  const n = Number((await h.db.prepare(`SELECT COUNT(*) n FROM "${name}" WHERE ${where}`).bind(...columns.flatMap(() => literals)).first()).n)
-  if (n) found.push(`${name}: ${n}`)
+  const quote=value=>'"'+value.replaceAll('"','""')+'"'
+  const primary=(await h.db.prepare(`PRAGMA table_info(${quote(name)})`).all()).results.filter(column=>column.pk>0).sort((a,b)=>a.pk-b.pk)
+  const keys=primary.length?primary.map(column=>quote(column.name)):['rowid'],rows=new Set()
+  // Scan every column while keeping D1's binding and expression-depth bounds.
+  // Deduplicate by the full primary key so a row matching several batches is
+  // still counted once; WITHOUT ROWID tables remain covered.
+  const width=Math.max(1,Math.min(16,Math.floor(80/Math.max(literals.length,1))))
+  for(let offset=0;offset<columns.length;offset+=width){
+   const batch=columns.slice(offset,offset+width),where=batch.map(column=>literals.map(()=>`instr(CAST(${quote(column.name)} AS TEXT),?)>0`).join(' OR ')).join(' OR ')
+   const matches=(await h.db.prepare(`SELECT ${keys.map((key,index)=>key+' AS key_'+index).join(',')} FROM ${quote(name)} WHERE ${where}`).bind(...batch.flatMap(()=>literals)).all()).results
+   for(const row of matches)rows.add(JSON.stringify(keys.map((_,index)=>row['key_'+index])))
+  }
+  if (rows.size) found.push(`${name}: ${rows.size}`)
  }
  return found
 }

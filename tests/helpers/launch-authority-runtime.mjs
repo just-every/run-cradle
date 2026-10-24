@@ -94,6 +94,6 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     }
     const mailMessages=()=>{if(!mail)throw new Error('Mail capture is not configured for this explicit provider fixture');return fixtureMessages(origin)}
     const restart=async()=>{await runtime.dispose();runtime=new Miniflare(runtimeOptions);await runtime.ready;db=await runtime.getD1Database('DB');fixtureAuth=await createFixtureAuth(db,configuration,owner)}
-    return { mailMessages, workerName:options.name??'', get db(){return db}, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, get runtime(){return runtime}, reconfigure, restart, dispatch }
+    return { mailMessages, get db(){return db}, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, get runtime(){return runtime}, reconfigure, restart, dispatch }
   } catch (error) { await close(); throw error }
 }

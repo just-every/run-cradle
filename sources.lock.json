@@ -3642,7 +3642,7 @@
       "executable": false
     },
     "docs/contract/INTEG-004/implementation.md": {
-      "sha256": "199e1b21e5dc555a482e77384f8de5d412d7dab157786655cae353647c287900",
+      "sha256": "f76b9fe4ae06652a57b15aa245d655ae8a820567110ba48a1fe752ee97a011cb",
       "executable": false
     },
     "docs/contract/INTEG-004/README.md": {
@@ -5145,6 +5145,10 @@
       "sha256": "5fa457a9af303d495dc3b4351b924f53d1a73b4d0193b43e0a8cbf5b9fef9c0b",
       "executable": false
     },
+    "migrations/updates/9073_chat_installation_instance.sql": {
+      "sha256": "b6ffee2da756b89ad7f8326fe0a511b301a707346303a3409bff58cb78d23136",
+      "executable": false
+    },
     "OPERATIONS.json": {
       "sha256": "284c185f980784d740abd49dc2c8c89723740e30590a61056569f093a82f0e58",
       "executable": false
@@ -6254,7 +6258,7 @@
       "executable": false
     },
     "src/core/app/composition/execution-guards.server.ts": {
-      "sha256": "6b907dea99c1cf0617036d5c351b9de191f3365165fcbcee11714a023fb729b3",
+      "sha256": "f1740d0fc4ca8479a9cb04c833a3bf16f05dace07e89de039806d6887fc572ea",
       "executable": false
     },
     "src/core/app/composition/launch-imports.server.ts": {
@@ -9302,7 +9306,7 @@
       "executable": false
     },
     "src/domains/records/calendar-sync/authority.server.ts": {
-      "sha256": "7d218cd217c7d2b5f43ac41acbc0b9d9aaf5c00afc4f623f5f03121d6c5198b7",
+      "sha256": "190d1933a007e6ab6b8b3e008766372a22a2cbd3ded63d91ef8b23eec26f69bc",
       "executable": false
     },
     "src/domains/records/calendar-sync/capture.server.ts": {
@@ -9322,7 +9326,7 @@
       "executable": false
     },
     "src/domains/records/calendar-sync/effects.server.ts": {
-      "sha256": "fbf939cfd869aa0ef7c082ed2778f15d077f4e88b59c0647e5b9918b6db04468",
+      "sha256": "d397a1e6844588811689009b92185dadef17338fcd23720df23213a0e36bb21c",
       "executable": false
     },
     "src/domains/records/calendar-sync/http.server.ts": {
@@ -11938,7 +11942,7 @@
       "executable": false
     },
     "tests/helpers/file-store-archive.mjs": {
-      "sha256": "9d6315208ad441342856cbcb2596a6f82b02954ea719e42c938e1d34e058759b",
+      "sha256": "ac2fb1ce825d0e4daa8e25b4c4155ca6ae5fa905f3945ab372028ecab27f247d",
       "executable": false
     },
     "tests/helpers/file-stores-actors.mjs": {
@@ -11982,7 +11986,7 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "f2ce6551c8fa268cfa7d713930e598a47205b86802b6b6c4a9efea2876ec0784",
+      "sha256": "d533dec41d6926bd74c1a6d01f3a0dfc995059942f4adec40df8cea48e2fb948",
       "executable": false
     },
     "tests/helpers/launch-automation-definitions.mjs": {
@@ -12078,7 +12082,7 @@
       "executable": false
     },
     "tests/helpers/launch-operator-erasure.mjs": {
-      "sha256": "daa2bb8d72f945fcb78a18f91fe3631047b72100696234cde466fd0955ce737a",
+      "sha256": "eaa47c1a9915c98a06454cb431e0a27043a3cdb9d68541ee613a82d3dabe46e8",
       "executable": false
     },
     "tests/helpers/launch-operator-lifecycle.mjs": {
@@ -12205,6 +12209,10 @@
       "sha256": "3310e2c8590b786e25f62e6cc23540dd54adb8ad026159d6c517bb55389445e3",
       "executable": false
     },
+    "tests/helpers/record-calendar-archive.mjs": {
+      "sha256": "ba2f361847065c8aa8055b205a205e8f717a1df57e7f4bc31b655e1ce916e1d8",
+      "executable": false
+    },
     "tests/helpers/record-calendar-author.mjs": {
       "sha256": "7d092fe5ce91098727ec5c659a22c2ddc501744c48432db1e4bc284acf8da985",
       "executable": false
@@ -12214,7 +12222,7 @@
       "executable": false
     },
     "tests/helpers/record-calendar-journey.mjs": {
-      "sha256": "1f3992a90b423a99adba1fc09a2c3c01113a4d950e5bad2fa434518af01ec174",
+      "sha256": "1ca891a3d87f932a6d6f2685dd9e37ae75078ddc25fdc612173b20d40491fcf3",
       "executable": false
     },
     "tests/helpers/record-calendar-provider.mjs": {
@@ -12223,6 +12231,10 @@
     },
     "tests/helpers/record-calendar-retry.mjs": {
       "sha256": "da60f5491c78620d1ec132fa007796cd8cc8dc2ff1ce57f4f4c3c0e7defdc932",
+      "executable": false
+    },
+    "tests/helpers/record-calendar-upgrade.mjs": {
+      "sha256": "782f8d5c330b5f8ff6203ee18efc751724bd53feae6fc541a9cd5c4b9721cbfe",
       "executable": false
     },
     "tests/helpers/record-outlook-provider.mjs": {
@@ -12354,7 +12366,7 @@
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
-      "sha256": "457dd5d067f5f8240f7292a6568dcbbfc8bdaa8951b4730833d7b4c22650a59b",
+      "sha256": "f4889d888bf0acbf324f18d7f6a2532e0561987ec7e314772905779b799c4452",
       "executable": false
     },
     "tests/helpers/records-import-crash-child.mjs": {
@@ -12554,7 +12566,7 @@
       "executable": false
     },
     "tests/helpers/slack-app-browser.mjs": {
-      "sha256": "017f499d02ef5bc6f0727cad787d60c3f45595edfa77528d5c9b9d0898d14dea",
+      "sha256": "f02fe6e28c13691cef024a17fc9fcc96efe952761999ca5db306bc598b083fd5",
       "executable": false
     },
     "tests/helpers/slack-app-journey.mjs": {
@@ -12626,7 +12638,7 @@
       "executable": false
     },
     "tests/helpers/warehouse-export-journey.mjs": {
-      "sha256": "5e84877cfb2e69b1d2eed4dd4673e8b9310ec7c77c4edec32b12ce3f81d54ce3",
+      "sha256": "3640f11d4aee59e5659f391c0d7b663827a551c0f7399c7b0e331d0c920d6917",
       "executable": false
     },
     "tests/helpers/warehouse-manifest-base.mjs": {
@@ -12635,6 +12647,10 @@
     },
     "tests/helpers/warehouse-network-edge.mjs": {
       "sha256": "29c795285342d64e6bad3a4a02dbf8b11363080baa677199fc3b558b3959d631",
+      "executable": false
+    },
+    "tests/helpers/warehouse-r2-restart.mjs": {
+      "sha256": "822f2fe3246c4c4ba3db83e6cfefbb5e6b443c720b805d3c2ffb783af9bd5152",
       "executable": false
     },
     "tests/helpers/workbook-fixtures.mjs": {
@@ -12982,7 +12998,7 @@
       "executable": false
     },
     "tests/rer-retained-archive.mjs": {
-      "sha256": "004377446f891d14b1e33126bdae9cbb7f2d9b3c9ec0f601a217e6245f0c2ffa",
+      "sha256": "2f5623dbbb1be3e427e7e7ac550e50ea40891e11c94e06d1c865745d6e71ab1e",
       "executable": false
     },
     "tests/runtime-configuration.mjs": {
@@ -13058,7 +13074,7 @@
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
-      "sha256": "6c4fe093b5dc1028112a459126dcd39f8da16c4caefbee9e33309cc699f2a9e2",
+      "sha256": "bcdc70f05fca8521ffc4d7066ff7c033f4b83553e4826f000727173dcfab9764",
       "executable": false
     },
     "tests/ui-recut-final.mjs": {
@@ -13078,7 +13094,7 @@
       "executable": false
     },
     "tests/ui-user-automations.mjs": {
-      "sha256": "6653ea41a6f66ed7f0d9c5c97d14e6efa4c725a7184e58db1844dcb6eb8e9bb6",
+      "sha256": "4395ceedbbb1a3f51efb0daaba996273ace81c772b123ba799dfe20e87fd9cc9",
       "executable": false
     },
     "tests/user-api-keys.mjs": {
@@ -14994,7 +15010,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "888257161fd00ef9722ae4877734e89b9871d2e92c3558ea510b7ca9b506cb92",
+      "sha256": "a524e6bbbc3f98300f17677e3da45c5c0264d0474b86194f07f9862ff043411b",
       "executable": false
     },
     "vite.config.ts": {

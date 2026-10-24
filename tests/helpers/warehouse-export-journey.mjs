@@ -195,7 +195,7 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  const oversizedTags=Array.from({length:500},(_,index)=>`synthetic-cradle-${index} `+'𝄞'.repeat(480))
  const oversized=await commit('launch.campaign.create',{fields:{...campaignFields(`WARE-${tag}-OVERSIZED`,'Warehouse oversized record',world.adminId),tags:oversizedTags}})
  await commit('launch.campaign.patch',{id:oversized.id,changes:{objective:'ä'.repeat(100000)}},ref('campaign',await current(oversized)))
- const oversizedAt=destination==='r2'?await(async()=>{const at=new Date(time).toISOString();time+=3600000;return warehouseR2Restart(doors,{id,at,trigger:()=>doors.tick(at),resume:tick,actorId:world.adminId})})():await restartTick(),oversizedManifest=JSON.parse(await read(`${id}/${oversizedAt}-manifest.json`))
+ const oversizedAt=destination==='r2'?await tick():await restartTick(),oversizedManifest=JSON.parse(await read(`${id}/${oversizedAt}-manifest.json`))
  const oversizedFiles=oversizedManifest.files.filter(file=>file.key.includes('/'+launchEntities.campaign+'/'))
  const oversizedRows=(await Promise.all(oversizedFiles.map(file=>readData(file.key)))).flatMap(file=>file.rows)
  assert.equal(oversizedRows.filter(row=>row[0]===oversized.id).length,1,'An oversized record appears once after multipart/resumable readback')
@@ -206,6 +206,7 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  const oversizedParsed=await readData(oversizedFile.key),oversizedRow=oversizedParsed.rows.find(row=>row[0]===oversized.id)
  assert.ok(oversizedRow);assert.equal(oversizedRow[oversizedParsed.headers.indexOf('Objective')],'ä'.repeat(100000))
  assert.ok(oversizedRow[oversizedParsed.headers.indexOf('Tags')].includes(oversizedTags.at(-1)),'The last large multi-value cell is complete')
+ if(destination==='r2'){const at=new Date(time).toISOString();time+=3600000;await warehouseR2Restart(doors,{id,record:oversized,originalKey:oversizedFile.key,format,at,resume:tick})}
  const oversizedKeys=(await keys()).filter(key=>key.endsWith('.'+format)).sort()
  const stable=(await h.db.prepare('SELECT watermark_json FROM warehouse_exports WHERE id=?').bind(id).first()).watermark_json
  await tick()

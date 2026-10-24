@@ -1,3 +1,4 @@
+import {trashContext} from '../trash/authority.server'
 import type {DescriptorRegistry} from '../descriptors.server'
 import {calendarAuthorContext,calendarAuthorGuards} from './approval.server'
 import type {PolicyPort,RequestContext,AuthorityPermit} from '../../authority/ports'
@@ -10,7 +11,8 @@ export function calendarAuthority(db:D1Database,policy:PolicyPort,descriptors:De
  const binding=r.calendarBinding;if(!binding||r.action!=='record.calendar.sync')throw new AdmissionError('forbidden','Calendar effect binding is missing.')
  const d=await db.prepare('SELECT * FROM record_calendar_definitions WHERE id=? AND app_id=?').bind(binding.definitionId,r.appId).first<Definition>()
  if(!d||d.connection_id!==r.connectionId||(ctx.principal.id!==d.owner_id&&binding.reviewResolverId!==ctx.principal.id))throw new AdmissionError('forbidden','Calendar definition belongs to another author.')
- const author=await calendarAuthorContext(db,d,ctx.requestId,ctx.ingress),scope=await policy.scope(author,{appId:d.app_id,entityId:d.entity_id,purpose:'export'}),guards=[...principalGuards(ctx),...scope.currentAuthorityGuards]
+ const approved=await calendarAuthorContext(db,d,ctx.requestId,ctx.ingress),author=binding.operation==='cancel'?trashContext(approved):approved,scope=await policy.scope(author,{appId:d.app_id,entityId:d.entity_id,purpose:'export'}),guards=[...principalGuards(ctx),...scope.currentAuthorityGuards]
+ if(binding.operation==='cancel'&&mode==='dispatch'){const input=r.input as {operation?:unknown;eventId?:unknown}|null;if(input&&(input.operation!=='cancel'||typeof input.eventId!=='string'))throw new AdmissionError('forbidden','A calendar cancellation must name its existing event.');const id=typeof input?.eventId==='string'?input.eventId:null;guards.push(trustedPredicate('EXISTS(SELECT 1 FROM record_calendar_events WHERE definition_id=? AND record_id=? AND event_id IS NOT NULL AND generation IN (?,?) AND (? IS NULL OR event_id=?))',[d.id,binding.recordId,binding.generation-1,binding.generation,id,id]))}
  if(ctx.principal.id!==d.owner_id){const caller=await policy.scope(ctx,{appId:d.app_id,entityId:d.entity_id,purpose:'read'}),descriptor=descriptors.get(d.app_id,d.entity_id),table=identifier(descriptor.table.tableId);guards.push(...caller.currentAuthorityGuards,trustedPredicate(`EXISTS(SELECT 1 FROM ${table} WHERE ${identifier(descriptor.idColumn)}=? AND (${caller.rowPredicate.sql}))`,[binding.recordId,...caller.rowPredicate.values]));if(mode==='read'&&r.fieldIds?.some(id=>!caller.readableFieldIds.includes(id)))throw new AdmissionError('forbidden','Calendar execution details include fields you cannot currently read.')}
  if(mode==='dispatch'){
   const descriptor=descriptors.get(d.app_id,d.entity_id),table=identifier(descriptor.table.tableId)

@@ -50,6 +50,11 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
     receipts.push({width,checkpoints:journey.checkpoints,consoleErrors})
    }finally{await context.close()}
   }
+  // Network fixtures install process-wide DNS/TLS routing. Finish and close
+  // the first provider before another fixture installs its own routing.
+  await h.close();h=undefined
+  await smsEdge.close();smsEdge=undefined
+  await slackEdge.close();slackEdge=undefined
   receipts.push(...await chatProviderBrowser(browser,output))
   await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close();await smsEdge?.close();await slackEdge?.close()}

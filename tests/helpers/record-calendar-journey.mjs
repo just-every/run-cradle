@@ -1,3 +1,4 @@
+import {recordCalendarTrash} from './record-calendar-trash.mjs'
 import {recordCalendarUpgrade} from './record-calendar-upgrade.mjs'
 import {recordCalendarAuthor} from './record-calendar-author.mjs'
 import {recordCalendarBulk} from './record-calendar-bulk.mjs'
@@ -132,6 +133,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    await open();await page.getByText('cancelled',{exact:true}).waitFor();await capture('cancelled')
    await patch({[start.id]:'2026-11-25',[end.id]:'2026-11-26'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'POST');assert.notEqual((await binding()).event_id,event.event_id)
    if(width===1440)await recordCalendarBulk({h,worker,provider,body,call,command,deliver,drain,definitionId,appId,entityId,title:title.id,start:start.id,end:end.id})
+   if(width===1440)await recordCalendarTrash({call,command,deliver,drain,get,binding,provider,appId,entityId,recordId})
    await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
    assert.ok(provider.seen.every(r=>(outlook?['graph.microsoft.com','login.microsoftonline.com']:['www.googleapis.com','oauth2.googleapis.com']).includes(new URL(r.url).hostname)))
   }catch(error){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});console.error('Calendar screen at failure:',await page.locator('body').innerText());throw error}finally{await writerContext?.close();await context.close()}

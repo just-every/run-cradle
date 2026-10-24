@@ -23,6 +23,7 @@ export async function slackAppBrowser(page,h,journey,width,edge){
  else{
   const authorization=new URL(installation.authorizeUrl)
   const callback=await fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state:authorization.searchParams.get('state'),code:f.code}),{redirect:'manual',headers:{cookie:h.cookie}})
+  if(callback.status!==303)console.error('CHAT_BROWSER_CALLBACK_FAILURE '+JSON.stringify({provider,status:callback.status,transportErrors:edge.transportErrors,networkErrors:edge.networkErrors}))
   assert.equal(callback.status,303);await callback.arrayBuffer()
  }
  if((await h.request(root+'/settings')).data.linked)await h.request(root+'/link',{method:'DELETE',body:{}})
