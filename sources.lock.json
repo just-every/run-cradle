@@ -5562,7 +5562,7 @@
       "executable": false
     },
     "scripts/portability/preflight.mjs": {
-      "sha256": "814afa505dc60e2bcba67f9e9191941330b27885d091f3d0f01dea6b1b01d81a",
+      "sha256": "9610ef7ddd9bcd192a3ac35b6a082e1f9de3d00df482324dd3a5cdfceacf94ac",
       "executable": false
     },
     "scripts/portability/records.mjs": {
@@ -11641,6 +11641,10 @@
       "sha256": "d7a1bb86d716549ec0a7c0bfccf442912c4b8e8759d2ec96c4569e6de972cbe9",
       "executable": false
     },
+    "tests/fixtures/portability/cradle-prior-0.3.0-rer-0.2.80.rer": {
+      "sha256": "ee3060b757aef7e7dd1e2fda0716f4c9e304ddf033a098aadbe989225f4f67c7",
+      "executable": false
+    },
     "tests/fixtures/portability/cradle-prior.rer": {
       "sha256": "6fee8a09a585671e9d31d22f3cb3baf4eb351d869909685e464df2900a0d0f9d",
       "executable": false
@@ -12206,7 +12210,7 @@
       "executable": false
     },
     "tests/helpers/local-signin-copy.mjs": {
-      "sha256": "ceb578b0199eba58d69d1b0649fe9b3964af89cb9aded56cff332df4d0a0df84",
+      "sha256": "23247c5104bcd6d78a277ab67ac3790c9e600d18d541fc884d7a71bf3b892f04",
       "executable": false
     },
     "tests/helpers/local-signin-expired.mjs": {
@@ -13078,7 +13082,7 @@
       "executable": false
     },
     "tests/rer-retained-archive.mjs": {
-      "sha256": "4cd6c1834d0b7ffab017464dfbdd91a0b34db74bf87c8b97e39bb4117980268c",
+      "sha256": "1b08f78d3dbbd888d60af723039d020561d242258288f2d60e8e9db6d953ab60",
       "executable": false
     },
     "tests/runtime-configuration.mjs": {

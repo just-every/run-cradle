@@ -15,7 +15,7 @@ export async function preflightImport(path,journal){
 export function transferFailure(error){
  const refused=error instanceof PortabilityError&&(error.status===409||['wrong_product','schema_mismatch','table_inventory','configuration_inventory','erased_row','erasure_epoch','later_journal','invalid_journal'].includes(error.code.split(':')[0]));
  const exitCode=error.message==='archive_json'?2:refused||error.code==='EEXIST'?4:1;
- const reason=error instanceof PortabilityError?error.code.split(':')[0]:/^[A-Z_]+$/.test(error.code??'')?error.code:error.message==='archive_json'?'archive_json':/D1_ERROR/.test(error.message??'')?'database_error':'native_error';
+ const reason=error instanceof PortabilityError?(error.code==='schema_mismatch:legacy_schema'?error.code:error.code.split(':')[0]):/^[A-Z_]+$/.test(error.code??'')?error.code:error.message==='archive_json'?'archive_json':/D1_ERROR/.test(error.message??'')?'database_error':'native_error';
  const fileId=error instanceof PortabilityError&&['stored_file_missing','stored_file_checksum'].includes(reason)?error.code.split(':')[1]:undefined;
  const names=error instanceof PortabilityError&&reason==='unsafe_integer'?error.code.split(':').slice(1):[];
  const location=names.length===2&&names.every(name=>/^[a-z_][a-z0-9_]{0,63}$/.test(name))?names.join('.'):undefined;
