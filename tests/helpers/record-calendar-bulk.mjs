@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import {createUlid} from '../../src/core/shared/ids.ts'
 /** Imported seeds are inert; one reviewed bulk edit then exercises real per-minute fan-out. */
 export async function recordCalendarBulk({h,worker,provider,body,call,command,deliver,drain,definitionId,appId,entityId,title,start,end}){
  const preview=await call('/api/v1/records/import-preview',{appId,entityId,csv:'Calendar title,Calendar date,Calendar end\r\n'+Array.from({length:12},(_,i)=>`synthetic-cradle-paced-${i},2026-12-01,2026-12-02`).join('\r\n')+'\r\n',mapping:[{column:'Calendar title',fieldId:title},{column:'Calendar date',fieldId:start},{column:'Calendar end',fieldId:end}],mergeFieldId:title})

@@ -1,3 +1,4 @@
+import {warehouseR2Restart} from './warehouse-r2-restart.mjs'
 import {warehouseManifestBase} from './warehouse-manifest-base.mjs'
 import assert from 'node:assert/strict'
 import { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds } from './launch-authority-runtime.mjs'
@@ -194,7 +195,7 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  const oversizedTags=Array.from({length:500},(_,index)=>`synthetic-cradle-${index} `+'𝄞'.repeat(480))
  const oversized=await commit('launch.campaign.create',{fields:{...campaignFields(`WARE-${tag}-OVERSIZED`,'Warehouse oversized record',world.adminId),tags:oversizedTags}})
  await commit('launch.campaign.patch',{id:oversized.id,changes:{objective:'ä'.repeat(100000)}},ref('campaign',await current(oversized)))
- const oversizedAt=destination==='r2'?await tick():await restartTick(),oversizedManifest=JSON.parse(await read(`${id}/${oversizedAt}-manifest.json`))
+ const oversizedAt=destination==='r2'?await(async()=>{const at=new Date(time).toISOString();time+=3600000;return warehouseR2Restart(doors,{id,at,trigger:()=>doors.tick(at),resume:tick,actorId:world.adminId})})():await restartTick(),oversizedManifest=JSON.parse(await read(`${id}/${oversizedAt}-manifest.json`))
  const oversizedFiles=oversizedManifest.files.filter(file=>file.key.includes('/'+launchEntities.campaign+'/'))
  const oversizedRows=(await Promise.all(oversizedFiles.map(file=>readData(file.key)))).flatMap(file=>file.rows)
  assert.equal(oversizedRows.filter(row=>row[0]===oversized.id).length,1,'An oversized record appears once after multipart/resumable readback')
@@ -258,7 +259,7 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
  const finished=(await list()).exports.find(item=>item.id===id)
  await commit('warehouse.remove',{id,version:finished.version})
  const manifestId=createUlid()
- await commit('warehouse.save',{...input,id:manifestId,name:'Portable schema manifest',bases:[manifestBase.appId],mode:'full'})
+ await commit('warehouse.save',{...input,id:manifestId,name:'Portable schema manifest',bases:manifestBase.appIds,mode:'full'})
  const manifestAt=await tick()
  const manifestKey=`${manifestId}/${manifestAt}-manifest.json`,manifestObject=await bucket.get(manifestKey);assert.ok(manifestObject)
  const manifestBody=await manifestObject.text()

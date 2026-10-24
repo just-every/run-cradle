@@ -1,4 +1,5 @@
 import {z} from 'zod'
+import {createUlid} from '../../core/shared/ids'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {ServerFoundation} from '../../core/app/foundation.server'
 import type {RequestContext} from '../authority/ports'
@@ -13,12 +14,12 @@ import {validateDestination} from '../../../vendor/base/modules/integrations/cor
 export type ChatProvider='slack'|'nook'|'teams'
 export type ChatCredentials={clientSecret:string;signingSecret:string;appToken?:string;tenantId?:string}
 export const externalTeam=(provider:ChatProvider,id:string)=>provider==='slack'?id:provider+':'+id
-export type SlackInstall={provider:ChatProvider;api_origin:string|null;owner_id:string;client_id:string;sealed_json:string;bot_sealed_json:string|null;team_id:string|null;team_name:string|null;version:number}
+export type SlackInstall={instance_id:string;provider:ChatProvider;api_origin:string|null;owner_id:string;client_id:string;sealed_json:string;bot_sealed_json:string|null;team_id:string|null;team_name:string|null;version:number}
 const input=z.object({provider:z.enum(['slack','nook','teams']).default('slack'),clientId:z.string().regex(/^[A-Za-z0-9._-]{1,200}$/),clientSecret:z.string().min(1).max(1000).optional(),signingSecret:z.string().min(1).max(1000).optional(),nookOrigin:z.string().max(2048).optional(),appToken:z.string().min(1).max(4096).optional(),tenantId:z.string().uuid().optional()}).strict().superRefine((value,ctx)=>{for(const key of value.provider==='nook'?['nookOrigin','appToken','signingSecret'] as const:value.provider==='teams'?['clientSecret','tenantId'] as const:['clientSecret','signingSecret'] as const)if(!value[key])ctx.addIssue({code:'custom',path:[key],message:'This provider configuration is required'})})
 export function slackSettings(env:PlatformBindings,foundation:ServerFoundation,origin:string){
  const db=env.DB,version=env.CONNECTION_ENCRYPTION_KEY_VERSION??'v1',ring=environmentKeyring(version,v=>v===version?env.CONNECTION_ENCRYPTION_KEY:undefined)
  async function row(){return db.prepare("SELECT * FROM slack_app_installation WHERE id='installation'").first<SlackInstall>()}
- const guard=(installation:SlackInstall)=>trustedPredicate("EXISTS(SELECT 1 FROM slack_app_installation i JOIN authority_principals p ON p.id=i.owner_id JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE i.id='installation' AND i.version=? AND p.state='active' AND o.role='owner' AND o.status='active')",[installation.version])
+ const guard=(installation:SlackInstall)=>trustedPredicate("EXISTS(SELECT 1 FROM slack_app_installation i JOIN authority_principals p ON p.id=i.owner_id JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE i.id='installation' AND i.version=? AND i.instance_id=? AND p.state='active' AND o.role='owner' AND o.status='active')",[installation.version,installation.instance_id])
  async function resolve(installed=false){
   const installation=await row();if(!installation)throw new AuthorityError('unconfigured','Configure the chat app in Settings first.',503)
   const current=guard(installation)
@@ -62,7 +63,7 @@ export function slackSettings(env:PlatformBindings,foundation:ServerFoundation,o
    let apiOrigin:string|null=null
    if(configuration.provider==='nook'){let url:URL;try{url=validateDestination(configuration.nookOrigin!)}catch{throw new AuthorityError('validation','Use the public HTTPS origin of the Nook installation.',400)}if(url.pathname!=='/'||url.search||url.hash)throw new AuthorityError('validation','The Nook origin cannot include a path, query or fragment.',400);apiOrigin=url.origin}
    const sealed=JSON.stringify(await seal(ring,'workspace','installation','slack-app.configuration',JSON.stringify({clientSecret:configuration.clientSecret??'',signingSecret:configuration.signingSecret??'',...(configuration.appToken?{appToken:configuration.appToken}:{}),...(configuration.tenantId?{tenantId:configuration.tenantId}:{})})))
-   const result=await db.prepare(`INSERT INTO slack_app_installation(id,owner_id,client_id,sealed_json,version,updated_at,provider,api_origin) SELECT 'installation',?,?,?,1,?,?,? WHERE ${own.guard.sql} ON CONFLICT(id) DO UPDATE SET owner_id=excluded.owner_id,client_id=excluded.client_id,sealed_json=excluded.sealed_json,provider=excluded.provider,api_origin=excluded.api_origin,bot_sealed_json=NULL,team_id=NULL,team_name=NULL,version=slack_app_installation.version+1,updated_at=excluded.updated_at`).bind(ctx.principal.id,configuration.clientId,sealed,ctx.now,configuration.provider,apiOrigin,...own.guard.values).run()
+   const result=await db.prepare(`INSERT INTO slack_app_installation(id,owner_id,client_id,sealed_json,version,updated_at,provider,api_origin,instance_id) SELECT 'installation',?,?,?,1,?,?,?,? WHERE ${own.guard.sql} ON CONFLICT(id) DO UPDATE SET owner_id=excluded.owner_id,client_id=excluded.client_id,sealed_json=excluded.sealed_json,provider=excluded.provider,api_origin=excluded.api_origin,instance_id=excluded.instance_id,bot_sealed_json=NULL,team_id=NULL,team_name=NULL,version=slack_app_installation.version+1,updated_at=excluded.updated_at`).bind(ctx.principal.id,configuration.clientId,sealed,ctx.now,configuration.provider,apiOrigin,createUlid(),...own.guard.values).run()
    if(!result.meta.changes)throw new AuthorityError('forbidden','Installation ownership changed before saving the chat app.')
    return this.read(ctx)
   },

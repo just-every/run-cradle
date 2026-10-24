@@ -61,7 +61,12 @@ message-post route or invent unsupported permissions.
 
 ## Switching and restoration
 
-Switching providers invalidates old pending message decisions. Approval definitions
+Switching providers invalidates old pending message decisions. A random installation
+binding also prevents removing and reinstalling the same workspace from reviving an
+old card, even if its numeric version happens to match. The installation-binding
+upgrade intentionally refuses cards sent by older versions: those cards have no
+provable binding. Request a fresh delivery explicitly; the upgrade never resends
+an old message automatically. Approval definitions
 retain their provider, so an old action cannot send through a newly selected
 provider until the author reviews it and selects a channel for that provider.
 A message already accepted by an external provider cannot be recalled by switching.

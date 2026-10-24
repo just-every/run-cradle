@@ -31,6 +31,7 @@ export async function slackAppJourney(provider='slack'){
   const configured=(await h.request(settings)).data
   assert.equal(configured.configured,true);assert.equal(configured.installed,false)
   for(const secret of [fixture.clientSecret,fixture.signingSecret,fixture.botToken])assert.ok(!JSON.stringify(configured).includes(secret),'Slack credentials are write-only')
+  if(provider==='nook'){edge.setAppScopes(['chat:write']);await h.request(root+'/install',{method:'POST',body:{},status:503});assert.equal((await h.request(settings)).data.installed,false,'A Nook token missing channel, command or unfurl scope cannot install');edge.setAppScopes()}
   const installed=(await h.request(root+'/install',{method:'POST',body:{}})).data
   if(provider==='nook'){assert.equal(installed.installed,true);assert.equal(edge.oauthRequests.length,0,'Nook validates the explicitly configured scoped app token')}
   else{
@@ -48,6 +49,7 @@ export async function slackAppJourney(provider='slack'){
   }
   const installedSettings=(await h.request(settings)).data;assert.equal(installedSettings.installed,true);assert.equal(installedSettings.provider,provider)
   for(const secret of [fixture.clientSecret,fixture.signingSecret,fixture.botToken])assert.ok(!JSON.stringify(installedSettings).includes(secret),'Installed credentials remain write-only')
+  const staleOAuthState=provider==='nook'?null:new URL((await h.request(root+'/install',{method:'POST',body:{}})).data.authorizeUrl).searchParams.get('state')
   const channels=(await h.request(root+'/channels')).data.channels
   assert.deepEqual(channels.map(channel=>({id:channel.id,name:channel.name})),edge.channels.map(channel=>({id:channel.id,name:channel.name})))
   const sealed=await h.db.prepare("SELECT sealed_json,bot_sealed_json FROM slack_app_installation WHERE id='installation'").first()
@@ -59,7 +61,7 @@ export async function slackAppJourney(provider='slack'){
    const principalId=(await h.db.prepare('SELECT principal_id FROM cradle_base_operators WHERE base_id=?').bind(baseId).first()).principal_id
    const signed=await baseHttpSession(h.origin,email)
    const request=async(route,{method='GET',body,status=200}={})=>{
-    const response=await fetch(h.origin+route,{method,redirect:'manual',headers:{cookie:signed.cookie,...(body?{origin:h.origin,'content-type':'application/json','x-csrf-token':signed.csrfToken}:{})},...(body?{body:JSON.stringify(body)}:{})})
+    const response=await fetch(h.origin+route,{method,redirect:'manual',headers:{cookie:signed.cookie,...(body?{origin:h.origin,'content-type':'application/json','x-csrf-token':signed.csrfToken}:{})},...(body?{body:JSON.stringify(body)}:{})}).catch(error=>{console.error('CHAT_PERSON_TRANSPORT_FAILURE '+JSON.stringify({method,path:route.split('?')[0],cause:error.cause?.code??error.cause?.name??'unknown',name:error.name}));throw error})
     const value=await response.json().catch(()=>null);assert.equal(response.status,status,`${route}: ${value?.error?.message??JSON.stringify(value)}`);return value
    }
    return {principalId,request}
@@ -75,6 +77,7 @@ export async function slackAppJourney(provider='slack'){
    await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:userId,command:'/cradle-link',text:issued.code},{status:409})
   }
   await link(h.request,fixture.ownerUserId);await link(editor.request,fixture.editorUserId);await link(denied.request,fixture.deniedUserId)
+  const staleLinkCode=(await h.request(root+'/link',{method:'POST',body:{}})).data.code
   const replacedCode=(await editor.request(root+'/link',{method:'POST',body:{}})).data.code
   const revokedCode=(await editor.request(root+'/link',{method:'POST',body:{}})).data.code
   await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:fixture.editorUserId,command:'/cradle-link',text:replacedCode},{status:409})
@@ -151,14 +154,18 @@ export async function slackAppJourney(provider='slack'){
   const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(editor.principalId,h.appId).first()
   assert.ok(policy)
   const rules=JSON.parse(policy.rules_json).map(rule=>({...rule,readableFields:rule.readableFields.filter(field=>field!==h.statusId),writableFields:rule.writableFields.filter(field=>field!==h.statusId)}))
-  let pendingActionId
+  let pendingActionId,pendingMessage,pendingCreated
   try{
    await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
    const narrowed=await unfurl(fixture.editorUserId);assert.ok(narrowed.includes('synthetic-cradle-120-primary'));assert.ok(!narrowed.includes('synthetic-cradle-120-approved'),'Current poster field policy narrows owner-safe fields')
    const third=await create('synthetic-cradle-120-policy'),thirdMessage=edge.messages.at(-1),thirdBefore=await record(third)
-   pendingActionId=payload(thirdMessage,fixture.editorUserId).actions[0].value
+   pendingActionId=payload(thirdMessage,fixture.editorUserId).actions[0].value;pendingMessage=thirdMessage;pendingCreated=third
    await click(payload(thirdMessage,fixture.editorUserId),{status:403});assert.deepEqual(await record(third),thirdBefore,'A linked person losing field authority cannot click a cached approval')
   }finally{await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()}
+  const legacy=await create('synthetic-cradle-120-legacy'),legacyMessage=edge.messages.at(-1),legacyBefore=await record(legacy),legacyId=payload(legacyMessage,fixture.ownerUserId).actions[0].value
+  await h.db.prepare('UPDATE slack_app_actions SET installation_instance=NULL WHERE id=?').bind(legacyId).run()
+  await click(payload(legacyMessage,fixture.ownerUserId),{status:403})
+  assert.deepEqual(await record(legacy),legacyBefore,'A legacy card with no installation binding refuses even when workspace and numeric version match')
   const pendingBefore=await h.db.prepare('SELECT * FROM slack_app_actions WHERE id=?').bind(pendingActionId).first()
   assert.equal(pendingBefore.choice_state,'pending')
   const archive=(await h.request('/api/v1/commands/export.start',{method:'POST',body:{scope:'installation',format:'archive'}})).data
@@ -187,6 +194,15 @@ export async function slackAppJourney(provider='slack'){
   const replaced=(await h.request(settings)).data;assert.equal(replaced.configured,true);assert.equal(replaced.installed,false,'Replacing app credentials requires fresh OAuth consent')
   assert.ok(!JSON.stringify(replaced).includes(replacement.clientSecret)&&!JSON.stringify(replaced).includes(replacement.signingSecret))
   await h.request(settings,{method:'DELETE',body:{}});assert.equal((await h.request(settings)).data.configured,false)
+  await h.request(settings,{method:'PUT',body:configuration})
+  const reinstall=(await h.request(root+'/install',{method:'POST',body:{}})).data
+  if(provider!=='nook'){const authorization=new URL(reinstall.authorizeUrl),response=await fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state:authorization.searchParams.get('state'),code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}});assert.equal(response.status,303);await response.arrayBuffer()}
+  const beforeStale=await record(pendingCreated)
+  await click(payload(pendingMessage,fixture.ownerUserId),{status:403})
+  assert.deepEqual(await record(pendingCreated),beforeStale,'Removing and reinstalling the same workspace never revives an old card')
+  if(staleOAuthState){const staleCallback=await fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state:staleOAuthState,code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}});assert.equal(staleCallback.status,409,'An old OAuth state cannot revive after the installation version repeats');await staleCallback.arrayBuffer()}
+  await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:'synthetic-cradle-120-stale-link-user',command:'/cradle-link',text:staleLinkCode},{status:409})
+  assert.equal((await h.request(settings)).data.slackUserId,fixture.ownerUserId,'An old linking code cannot replace a person association in a new installation')
   console.log('CHAT_APP_JOURNEY_PASS '+provider)
  }finally{await h?.close();await edge.close()}
 }

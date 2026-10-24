@@ -1,5 +1,4 @@
 import {calendarAuthorContext,calendarAuthorGuards} from './approval.server'
-import {principalGuards} from '../../authority/guards.server'
 import type {RequestContext} from '../../authority/ports'
 import type {ServerFoundation} from '../../../core/app/foundation.server'
 import type {createProvidersComposition} from '../../../core/app/composition/providers.server'

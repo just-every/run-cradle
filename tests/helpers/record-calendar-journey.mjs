@@ -1,3 +1,4 @@
+import {recordCalendarUpgrade} from './record-calendar-upgrade.mjs'
 import {recordCalendarAuthor} from './record-calendar-author.mjs'
 import {recordCalendarBulk} from './record-calendar-bulk.mjs'
 import {recordCalendarRetry} from './record-calendar-retry.mjs'
@@ -37,6 +38,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    const deliver=async body=>{const result=await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body}]);assert.equal(result.outcome,'ok',JSON.stringify(result))}
    const drain=async()=>{const entries=(await h.db.prepare("SELECT id FROM admission_outbox WHERE state='pending' AND action IN ('connection.operation','execution.dispatch','execution.reconcile') AND not_before<=? ORDER BY created_at,id").bind(new Date().toISOString()).all()).results;for(const entry of entries)await deliver({kind:'cradle.outbox.v1',outboxId:entry.id})}
    const open=async()=>{await page.goto(h.origin+recordPath);await page.getByRole('button',{name:'Calendar sync',exact:true}).click();await page.getByRole('heading',{name:'Record calendar sync',exact:true}).waitFor()}
+   if(width===1440)await recordCalendarUpgrade({h,call,base,recordId,connectionId})
    const initial=await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`);assert.equal(initial.canConfigure,true,JSON.stringify(initial));
    await open();await page.getByLabel('Calendar connection',{exact:true}).selectOption(connectionId)
    const refresh=page.waitForResponse(r=>r.url().endsWith(`/connections/${connectionId}/refresh`)&&r.request().method()==='POST');await page.getByRole('button',{name:'Refresh owned calendars and reviews',exact:true}).click();assert.equal((await refresh).status(),200);await drain()
@@ -98,11 +100,19 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    await writerCall(syncPath+'/resolve',{commandId:createUlid(),action:'restore'},403)
    assert.equal(provider.writes.length,deletedWrites,'A reader cannot restore the calendar')
    await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:writerId,role:'editor',version:2})
+   const writerPolicy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(writerId,appId).first()
+   await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(JSON.parse(writerPolicy.rules_json).map(rule=>rule.entityId===entityId?{...rule,purposes:rule.purposes.filter(p=>p!=='export'),readableFields:rule.readableFields.filter(id=>id!==title.id&&id!==notes.id)}:rule)),writerPolicy.id).run()
    await openWriter();await writerPage.getByRole('heading',{name:'Calendar change needs review',exact:true}).waitFor();await capture('deleted-review',writerPage)
    const restoredDeletion=writerPage.waitForResponse(r=>r.url().endsWith('/resolve')&&r.request().method()==='POST');await writerPage.getByRole('button',{name:'Restore calendar from record',exact:true}).click();const restoredDeletionResponse=await restoredDeletion;assert.equal(restoredDeletionResponse.status(),200,await restoredDeletionResponse.text());await drain()
    event=await binding();assert.equal(event.state,'synced');assert.notEqual(event.event_id,deletedEventId,'Restore of an externally deleted event creates a new generation')
    assert.equal(provider.writes.length,deletedWrites+1);assert.equal(provider.writes.at(-1).method,'POST')
    assert.equal((await get()).version,deletedVersion,'Calendar restoration never edits the record')
+   assert.equal(body(provider.writes.at(-1)).summary,'synthetic-cradle-external-title','A date writer without export rights restores the author-approved title')
+   assert.ok(body(provider.writes.at(-1)).description.includes('synthetic-cradle-private-details'),'A writer’s hidden fields do not blank the author-approved calendar projection')
+   const restoredAttempt=await h.db.prepare('SELECT run_id,receipt_id FROM execution_attempts WHERE id=?').bind(event.attempt_id).first()
+   await writerCall('/api/v1/runs/'+restoredAttempt.run_id,undefined,403);await writerCall('/api/v1/attempts/'+event.attempt_id+'/review',undefined,403);await writerCall('/api/v1/receipts/'+restoredAttempt.receipt_id,undefined,403)
+   assert.ok(!(await writerPage.locator('body').innerText()).includes('synthetic-cradle-private-details')&&!(await writerPage.locator('body').innerText()).includes('synthetic-cradle-external-title'),'The clicking writer never receives hidden author title or details')
+
    assert.equal((await items())[0].review,null,'The explicit restoration resolves its review')
    await open();await page.locator('[aria-label="Calendar sync definition"]').waitFor();await capture('deleted-restored')
 
@@ -115,14 +125,14 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    const scopes=(await h.db.prepare('SELECT scopes_json FROM provider_connections WHERE id=?').bind(connectionId).first()).scopes_json
    await h.db.prepare("UPDATE provider_connections SET scopes_json='[]',version=version+1 WHERE id=?").bind(connectionId).run();const writeCount=provider.writes.length
    await patch({[start.id]:'2026-11-22',[end.id]:'2026-11-23'});await call(syncPath+'/sync',{commandId:createUlid()},403);assert.equal(provider.writes.length,writeCount)
-   assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions[0].state,'stopped')
-   await open();await page.getByText('stopped',{exact:true}).waitFor();await capture('stopped')
+   assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).state,'stopped')
+   await open();await page.getByRole('heading').filter({hasText:/^Calendar date · stopped · version /}).waitFor();await capture('stopped')
    await h.db.prepare('UPDATE provider_connections SET scopes_json=?,version=version+1 WHERE id=?').bind(scopes,connectionId).run()
    await patch({[start.id]:null,[end.id]:null});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'DELETE');assert.equal((await binding()).state,'cancelled',JSON.stringify({lastWrite:{method:provider.writes.at(-1).method,applied:provider.writes.at(-1).applied,outcome:provider.writes.at(-1).outcome}}))
    await open();await page.getByText('cancelled',{exact:true}).waitFor();await capture('cancelled')
    await patch({[start.id]:'2026-11-25',[end.id]:'2026-11-26'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'POST');assert.notEqual((await binding()).event_id,event.event_id)
    if(width===1440)await recordCalendarBulk({h,worker,provider,body,call,command,deliver,drain,definitionId,appId,entityId,title:title.id,start:start.id,end:end.id})
-   await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions[0].state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
+   await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
    assert.ok(provider.seen.every(r=>(outlook?['graph.microsoft.com','login.microsoftonline.com']:['www.googleapis.com','oauth2.googleapis.com']).includes(new URL(r.url).hostname)))
   }catch(error){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});console.error('Calendar screen at failure:',await page.locator('body').innerText());throw error}finally{await writerContext?.close();await context.close()}
  }}finally{await browser.close();await h.close()}

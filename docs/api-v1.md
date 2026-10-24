@@ -6,6 +6,37 @@ application and record type, choose read or read/create/update access, and set a
 Cradle stores its digest. The listing contains its scope, expiry and revocation
 state. Revoke it from the same panel. Keys do not sign into the browser.
 
+## Rotate a key
+
+Use **Rotate** beside an active API or proposing key, **Rotate signing key** in
+the webhook action editor, or **Rotate subscription** in API-key Settings. The
+replacement secret is shown once. Save it in the receiver or service before
+closing that result. Rotation preserves an API key's authority and expiry and
+carries its change subscriptions to the replacement credential.
+
+The REST commands accept a fresh `commandId`:
+
+| Command | Additional input |
+| --- | --- |
+| `POST /api/user-keys/:id/rotate` | `appId` |
+| `POST /api/proposer-keys/:id/rotate` | None |
+| `POST /api/user-automations/destinations/:id/rotate` | `appId`, `entityId` |
+| `POST /api/v1/change-subscriptions/:id/rotate` | The subscription's API bearer key |
+| `POST /api/v1/change-subscriptions/owner/:id/rotate` | Owner session and `appId` |
+
+Issuing the replacement and retiring the old credential share one guarded
+transaction. A repeated committed command returns a conflict; it never recovers
+the secret. Subsequent authentication rejects the retired API or proposing key.
+A write already committed stays committed. A delivery prepared before a signing
+key rotation may finish using the retired key; subsequent preparations and retries
+use the current signing key. Subscription cursors and delivery positions remain
+unchanged.
+
+The owner audit log and CSV/JSON exports record one `api-key.rotate`,
+`proposing-key.rotate`, `webhook.rotate`, `subscription.rotate` or `scim.rotate`
+event per rotation, with the actor and retired/replacement key IDs. Secret values
+and digests are never audit metadata. SCIM retains its existing rotation command.
+
 Send `Authorization: Bearer $CRADLE_KEY` over your installation's HTTPS origin.
 Keep the key out of URLs, logs and source files. Local trials use their selected
 loopback origin. Exported installations never carry active API keys.

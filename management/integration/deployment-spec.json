@@ -858,6 +858,30 @@
       "name": "9068_export_audit.sql",
       "sha256": "b5c8e94d68ac5da363272d2f9d9535ef24f5d3d4840f5899fcf42757a663dfcf",
       "sql": "-- Metadata-only custody for read exports that have no command admission.\nCREATE TABLE operation_audit (\n id TEXT PRIMARY KEY NOT NULL,\n actor_id TEXT,\n app_id TEXT,\n action TEXT NOT NULL,\n feature TEXT,\n created_at TEXT NOT NULL\n);\nCREATE INDEX operation_audit_time ON operation_audit(created_at,id);\nCREATE INDEX operation_audit_actor ON operation_audit(actor_id,created_at);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9069_warehouse_transfers.sql",
+      "sha256": "b5b853b1078015693c42b199aff6169d11da0067e10063cb2e5ad13be72a327b",
+      "sql": "-- Multipart and resumable custody survives a Worker interruption. Session\n-- capabilities are sealed; archive export removes all live transfer state.\nALTER TABLE warehouse_objects ADD COLUMN transfer_json TEXT NOT NULL DEFAULT '{}';\nALTER TABLE warehouse_exports ADD COLUMN running_started_at TEXT;\nALTER TABLE warehouse_exports ADD COLUMN running_at TEXT;\nALTER TABLE warehouse_exports ADD COLUMN running_slot TEXT;\nALTER TABLE warehouse_exports ADD COLUMN running_revision INTEGER;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9071_rotation_audit_keys.sql",
+      "sha256": "f4bb08a1adfb989e55e0d84774750ddca9c3f9a35e07a39d96551aa2946e1535",
+      "sql": "-- Key identities are metadata only; credential values and digests never enter the audit.\nALTER TABLE company_identity_audit ADD COLUMN key_ids_json TEXT;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9072_chat_app_providers.sql",
+      "sha256": "5fa457a9af303d495dc3b4351b924f53d1a73b4d0193b43e0a8cbf5b9fef9c0b",
+      "sql": "-- One explicitly selected chat app; switching requires fresh provider consent.\nALTER TABLE slack_app_installation ADD COLUMN provider TEXT NOT NULL DEFAULT 'slack' CHECK(provider IN ('slack','nook','teams'));\nALTER TABLE slack_app_installation ADD COLUMN api_origin TEXT;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9073_chat_installation_instance.sql",
+      "sha256": "b6ffee2da756b89ad7f8326fe0a511b301a707346303a3409bff58cb78d23136",
+      "sql": "-- A removed/recreated installation must never revive an old external card even\n-- when its integer configuration version and workspace ID happen to match.\nALTER TABLE slack_app_installation ADD COLUMN instance_id TEXT;\nUPDATE slack_app_installation SET instance_id=lower(hex(randomblob(16))) WHERE id='installation';\n-- Legacy cards have no provable installation binding. Leave them NULL so they\n-- refuse rather than guessing from a reusable workspace/version pair.\nALTER TABLE slack_app_actions ADD COLUMN installation_instance TEXT;\n\n-- Old pending consent states require a fresh installation attempt.\nALTER TABLE slack_app_oauth_states ADD COLUMN installation_instance TEXT;\n\nALTER TABLE slack_app_link_codes ADD COLUMN installation_instance TEXT;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

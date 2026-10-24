@@ -9,7 +9,7 @@ export async function recordCalendarAuthor({h,provider,outlook,call,writerCall,w
  const consent=(await writerCommand('connection.begin-consent',{connectionId,returnTo:'/app/records'})).value
  const exchanged=await writerContext.request.get(h.origin+`/oauth/${outlook?'microsoft':'google'}/callback?`+new URLSearchParams({code:'synthetic-cradle-code-creator',state:new URL(consent.authorizationUrl).searchParams.get('state')}),{maxRedirects:0});assert.equal(exchanged.status(),303,await exchanged.text())
  await writerCall(`/api/v1/record-calendar-sync/connections/${connectionId}/refresh`,{commandId:createUlid()});await drain()
- const definition={appId,entityId,startFieldId:start,endFieldId:end,titleFieldId:title,fieldIds:[],connectionId,calendarId:provider.ownedCalendarId,enabled:true}
+ const definition={appId,entityId,startFieldId:end,titleFieldId:title,fieldIds:[],connectionId,calendarId:provider.ownedCalendarId,enabled:true}
  const configured=await writerCall('/api/v1/record-calendar-sync',{commandId:createUlid(),approveCalendar:true,definition}),id=configured.value.id,syncPath=`/api/v1/record-calendar-sync/${id}/records/${recordId}`
  await writerCall(syncPath+'/sync',{commandId:createUlid()});await drain()
  const event=await h.db.prepare('SELECT state FROM record_calendar_events WHERE definition_id=? AND record_id=?').bind(id,recordId).first();assert.equal(event.state,'synced','A base creator can approve and dispatch their calendar definition')

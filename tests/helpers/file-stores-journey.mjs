@@ -79,6 +79,9 @@ async function storeCopies(h,provider,fieldId,members){
   files.push({id:copy.fileId,provider:reference.provider});record=copy.record
   assert.ok(record.fields[fieldId].value.some(m=>m.fileId===copy.fileId));assert.ok(!record.fields[fieldId].value.some(m=>m.reference?.provider===reference.provider))
  }
+ const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(h.operator,h.appId).first(),rules=JSON.parse(policy.rules_json)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules.map(r=>r.entityId===h.entityId?{...r,readableFields:r.readableFields.filter(id=>id!==fieldId),writableFields:r.writableFields.filter(id=>id!==fieldId)}:r)),policy.id).run()
+ try{for(const file of files){const denied=await fetch(h.origin+`/api/v1/files/${file.id}/content`,{headers:{cookie:h.cookie}});assert.equal(denied.status,404,'A kept copy follows current row and field read policy');await denied.body?.cancel()}}finally{await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()}
  const before=provider.seen.length;provider.denied.add('synthetic-cradle-access-1')
  try{for(const file of files){const response=await fetch(h.origin+`/api/v1/files/${file.id}/content`,{headers:{cookie:h.cookie}});assert.equal(response.status,200);assert.match(response.headers.get('cache-control'),/no-store/);assert.deepEqual(Buffer.from(await response.arrayBuffer()),provider.payload(file.provider,0))}}finally{provider.denied.delete('synthetic-cradle-access-1')}
  assert.equal(provider.seen.length,before,'Copied bytes survive unsharing/deletion without another provider read')

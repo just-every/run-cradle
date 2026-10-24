@@ -8,7 +8,8 @@ export const slackAppFixture={clientId:'synthetic-cradle-120-client',clientSecre
  * traverse the real TLS receiver, public-DNS checks and maintained relay. */
 export async function slackAppNetworkEdge({provider='slack'}={}){
  const fixture={...slackAppFixture,provider,providerOrigin:provider==='nook'?'https://nook.example.com':'https://slack.com'},messages=[],unfurls=[],oauthRequests=[],apiCalls=[],postRequests=[]
- let origin,uncertain=false
+ const requiredScopes=['chat:write','channels:read','groups:read','links:read','links:write','commands']
+ let origin,uncertain=false,appScopes=requiredScopes
  const channels=[{id:fixture.channelId,name:'synthetic-cradle-120-review',is_member:true,is_archived:false,is_private:false},{id:'synthetic-cradle-120-private-channel',name:'synthetic-cradle-120-private',is_member:true,is_archived:false,is_private:true}]
  const edge=await automationNetworkEdge({extraHosts:[new URL(fixture.providerOrigin).hostname],async receive(req,res,raw){
   if(req.headers.host!==new URL(fixture.providerOrigin).hostname)return false
@@ -26,7 +27,7 @@ export async function slackAppNetworkEdge({provider='slack'}={}){
   if(url.pathname==='/api/conversations.list'){
    assert.equal(req.method,'GET');json({ok:true,channels,response_metadata:{next_cursor:''}});return true
   }
-  if(url.pathname==='/api/auth.test'){json({ok:true,team_id:fixture.teamId,team:'synthetic-cradle-120-workspace',user_id:'synthetic-cradle-120-bot',scopes:['chat:write','channels:read','groups:read','links:read','links:write','commands']});return true}
+  if(url.pathname==='/api/auth.test'){json({ok:true,team_id:fixture.teamId,team:'synthetic-cradle-120-workspace',user_id:'synthetic-cradle-120-bot',scopes:appScopes});return true}
   assert.equal(req.method,'POST')
   const body=JSON.parse(raw.toString())
   if(url.pathname==='/api/chat.postMessage'){
@@ -47,6 +48,6 @@ export async function slackAppNetworkEdge({provider='slack'}={}){
  }})
  return {...edge,fixture,channels,messages,unfurls,oauthRequests,apiCalls,postRequests,
   bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},
-  setOrigin(value){origin=value},setPostUncertain(value){uncertain=value},
+  setOrigin(value){origin=value},setPostUncertain(value){uncertain=value},setAppScopes(value=requiredScopes){appScopes=value},
  }
 }

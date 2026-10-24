@@ -12,8 +12,8 @@ import {events,type Definition,type Event} from './storage.server'
 import {syncDefinition} from './contracts'
 export function calendarEffects(db:D1Database,policy:PolicyPort,admission:AdmissionPort,records:ReturnType<typeof createRecordServices>,execution:ReturnType<typeof createExecutionService>,origin:string){return async(ctx:RequestContext,d:Definition,recordId:string,commandId:string,restoring=false,paced=false)=>{
  const prior=await db.prepare("SELECT result_json FROM command_admissions WHERE command_id=? AND actor_id=? AND action='record.calendar.sync' AND state='committed'").bind(commandId,ctx.principal.id).first<{result_json:string}>();if(prior)return JSON.parse(prior.result_json);
- const definition=syncDefinition.parse(JSON.parse(d.definition_json)),ref={appId:d.app_id,entityId:d.entity_id,recordId},scope=await policy.scope(ctx,{appId:d.app_id,entityId:d.entity_id,purpose:'export'}),row=await records.reader.record(ctx,scope,ref)
- const authorScope=await policy.scope(await calendarAuthorContext(db,d,ctx.requestId,ctx.ingress),{appId:d.app_id,entityId:d.entity_id,purpose:'export'}),readable=scope.readableFieldIds.filter(id=>authorScope.readableFieldIds.includes(id))
+ const definition=syncDefinition.parse(JSON.parse(d.definition_json)),ref={appId:d.app_id,entityId:d.entity_id,recordId},author=await calendarAuthorContext(db,d,ctx.requestId,ctx.ingress),scope=await policy.scope(author,{appId:d.app_id,entityId:d.entity_id,purpose:'export'}),row=await records.reader.record(author,scope,ref),readable=scope.readableFieldIds
+ if(ctx.principal.id!==d.owner_id)await records.reader.record(ctx,await policy.scope(ctx,{appId:d.app_id,entityId:d.entity_id,purpose:'read'}),ref)
  const event=await db.prepare('SELECT * FROM record_calendar_events WHERE definition_id=? AND record_id=?').bind(d.id,recordId).first<Event>()
  if(event?.last_record_version===row.version&&!restoring&&event.state==='synced')return {state:'unchanged'}
  if(event?.review_json&&!restoring)throw new AdmissionError('version_conflict','Resolve the calendar review before syncing this event.')

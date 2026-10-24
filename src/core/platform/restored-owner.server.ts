@@ -39,6 +39,9 @@ export async function restoreOwner(db:D1Database,baseOperatorId:string,ownerId:s
  if(source){
   // Current schema control moves; business actor/record ownership and old policies remain history.
   statements.push(db.prepare('UPDATE manual_record_bases SET owner_id=?,version=version+1 WHERE owner_id=?').bind(ownerId,source))
+  // Only calendar setup moves with the explicitly admitted restored owner. Personal file stores never transfer.
+  statements.push(db.prepare("UPDATE provider_connections SET owner_id=?,version=version+1,control_epoch=control_epoch+1 WHERE owner_id=? AND adapter_id IN ('google-calendar','outlook')").bind(ownerId,source))
+  statements.push(db.prepare("UPDATE record_calendar_definitions SET owner_id=?,enabled=0,actor_json='{}',version=version+1 WHERE owner_id=?").bind(ownerId,source))
   statements.push(db.prepare('INSERT INTO cradle_restore_owner_admissions(id,source_owner_id,owner_id,base_operator_id,created_at) VALUES(?,?,?,?,?)')
    .bind(createUlid(),source,ownerId,baseOperatorId,Date.now()))
  }

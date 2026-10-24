@@ -17,12 +17,12 @@ export function slackIdentity(db:D1Database,settings:ReturnType<typeof slackSett
   return {row,guard}
  }
  return {linkGuard,async code(ctx:RequestContext){
-  const {row,guard}=await native(ctx);await settings.resolve(true)
+  const {row,guard}=await native(ctx),{installation,guard:installed}=await settings.resolve(true),current=and(guard,installed)
   const code=randomSecret(),expiresAt=Date.now()+600000,nonce=createUlid()
   await db.batch([
-   db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,...guard.values),
+   db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN (${current.sql}) THEN 1 ELSE 0 END`).bind(nonce,...current.values),
    db.prepare('DELETE FROM slack_app_link_codes WHERE principal_id=? AND consumed_at IS NULL').bind(ctx.principal.id),
-   db.prepare('INSERT INTO slack_app_link_codes(code_hash,principal_id,authentication_epoch,base_operator_id,base_operator_version,expires_at) VALUES(?,?,?,?,?,?)').bind(await sha256(code),ctx.principal.id,ctx.principal.authenticationEpoch,row.id,row.version,expiresAt),
+   db.prepare('INSERT INTO slack_app_link_codes(code_hash,principal_id,authentication_epoch,base_operator_id,base_operator_version,expires_at,installation_instance) VALUES(?,?,?,?,?,?,?)').bind(await sha256(code),ctx.principal.id,ctx.principal.authenticationEpoch,row.id,row.version,expiresAt,installation.instance_id),
    db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
   ])
   return {code,expiresAt:new Date(expiresAt).toISOString(),instruction:'/cradle-link '+code}
@@ -41,11 +41,11 @@ export function slackIdentity(db:D1Database,settings:ReturnType<typeof slackSett
  async consume(team:string,user:string,code:string){
   const {installation,guard:installed}=await settings.resolve(true)
   if(installation.team_id!==team)throw new AuthorityError('forbidden','This Slack workspace is not installed.')
-  const hash=await sha256(code),row=await db.prepare('SELECT * FROM slack_app_link_codes WHERE code_hash=? AND consumed_at IS NULL AND expires_at>?').bind(hash,Date.now()).first<{principal_id:string;authentication_epoch:number;base_operator_id:string;base_operator_version:number}>()
+  const hash=await sha256(code),row=await db.prepare('SELECT * FROM slack_app_link_codes WHERE code_hash=? AND installation_instance=? AND consumed_at IS NULL AND expires_at>?').bind(hash,installation.instance_id,Date.now()).first<{principal_id:string;authentication_epoch:number;base_operator_id:string;base_operator_version:number}>()
   if(!row)throw new AuthorityError('version_conflict','This link code is expired or already used.',409)
   const existing=await db.prepare('SELECT principal_id FROM slack_app_links WHERE team_id=? AND slack_user_id=?').bind(team,user).first<{principal_id:string}>()
   if(existing&&existing.principal_id!==row.principal_id)throw new AuthorityError('version_conflict','Unlink this Slack account from its current Cradle account first.',409)
-  const now=Date.now(),nonce=createUlid(),valid=and(installed,trustedPredicate(`EXISTS(SELECT 1 FROM slack_app_link_codes c JOIN authority_principals p ON p.id=c.principal_id JOIN cradle_base_operators m ON m.principal_id=p.id AND m.base_id=c.base_operator_id JOIN oa_operators o ON o.id=m.base_id WHERE c.code_hash=? AND c.consumed_at IS NULL AND c.expires_at>? AND p.kind='human' AND p.state='active' AND p.authentication_epoch=c.authentication_epoch AND o.status='active' AND o.version=c.base_operator_version)`,[hash,now]))
+  const now=Date.now(),nonce=createUlid(),valid=and(installed,trustedPredicate(`EXISTS(SELECT 1 FROM slack_app_link_codes c JOIN authority_principals p ON p.id=c.principal_id JOIN cradle_base_operators m ON m.principal_id=p.id AND m.base_id=c.base_operator_id JOIN oa_operators o ON o.id=m.base_id WHERE c.code_hash=? AND c.installation_instance=? AND c.consumed_at IS NULL AND c.expires_at>? AND p.kind='human' AND p.state='active' AND p.authentication_epoch=c.authentication_epoch AND o.status='active' AND o.version=c.base_operator_version)`,[hash,installation.instance_id,now]))
   await db.batch([
    db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN (${valid.sql}) THEN 1 ELSE 0 END`).bind(nonce,...valid.values),
    db.prepare('DELETE FROM slack_app_links WHERE team_id=? AND principal_id=?').bind(team,row.principal_id),
