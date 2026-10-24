@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {contract} from './contract.mjs'
 import {freshLocalCopy} from './helpers/local-signin-copy.mjs'
-import {bindings} from './helpers/rer-data-fixture.mjs'
+import {bindings,ownedData} from './helpers/rer-data-fixture.mjs'
 import {platformArchive} from './helpers/platform-archive.mjs'
 import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {encodedRow} from '@runeditrun/rer/modules/portability/catalogue'
@@ -51,11 +51,22 @@ contract('BASE-DATA-001 RECORDS-006 SYNC-002','a backup made by the previous ver
   await target.command(['run','db:migrate:local'])
   const ledger=()=>bindings(target.source,async({DB})=>(await DB.prepare('SELECT * FROM d1_migrations ORDER BY id').all()).results)
   const before=await ledger()
-  await place('tests/fixtures/portability/cradle-prior.rer',join(target.source,'retained.rer'))
+  // The original Platform v2 archive lacks a schema-object inventory. It stays
+  // untouched as a refusal control; legacy-v1 recovery cannot attest a v2 file.
+  await place('tests/fixtures/portability/cradle-prior.rer',join(target.source,'unverified.rer'))
+  const original=JSON.parse((await readFile(join(target.source,'unverified.rer'),'utf8')).split('\n')[0])
+  assert.ok(original.tables.some(t=>t.name==='rer_migrations'),'the retained backup carries the Platform ledger')
+  const tables=await bindings(target.source,async({DB})=>(await DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' ORDER BY name").all()).results.filter(table=>!platformTable(table.name)))
+  const empty=await ownedData(target.source,tables)
+  await assert.rejects(target.rer(['import','--input','unverified.rer','--yes','--non-interactive']),e=>e.errorCode==='restore_refused'&&e.message.includes('schema_mismatch:legacy_schema'))
+  assert.deepEqual(await ownedData(target.source,tables),empty,'Uninventoried v2 refusal writes no product row or file')
+  assert.deepEqual(await ledger(),before,'Uninventoried v2 refusal changes no destination migration receipt')
+  // Genuine v0.3.0 content exported through rer 0.2.80, never a fabricated archive.
+  await place('tests/fixtures/portability/cradle-prior-0.3.0-rer-0.2.80.rer',join(target.source,'retained.rer'))
   await target.rer(['import','--input','retained.rer','--yes','--non-interactive'])
-  const retained=await matchesArchive(target.source,join(target.source,'retained.rer'))
-  assert.ok(retained.tables.some(t=>t.name==='rer_migrations'),'the retained backup carries the Platform ledger')
+  await matchesArchive(target.source,join(target.source,'retained.rer'))
   assert.deepEqual(await ledger(),before,'restore keeps the destination migration history')
+  assert.equal(await bindings(target.source,async({DB})=>DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='rer_migrations'").first()),null,'The Platform migration ledger never travels into the destination')
   await target.rer(['reset','--yes','--non-interactive'])
   await target.command(['run','db:migrate:local'])
   const reset=await ledger()

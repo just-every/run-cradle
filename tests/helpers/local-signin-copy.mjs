@@ -23,7 +23,7 @@ export async function freshLocalCopy(){
    await log.writeFile(error.stdout+error.stderr)
    console.log('RECOVERY_COMMAND '+JSON.stringify({installation:source,program:program===process.execPath?'node':program,args,exitCode:Number(error.code)}))
    const events=(error.stdout??'').split('\n').flatMap(line=>{try{const event=JSON.parse(line);return event.event==='error'?[event]:[]}catch{return[]}})
-   const message=events[0]?.message??'',reason=/Archive operation refused or failed \(([a-zA-Z_]+(?:; [a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*)?)/.exec(message)?.[1]
+   const message=events[0]?.message??'',reason=/Archive operation refused or failed \(([a-zA-Z_]+(?::[a-zA-Z_]+)?(?:; [a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*)?)/.exec(message)?.[1]
    const errorLocation=/; file ([A-Za-z0-9_-]{1,128})(?:[; )]|$)/.exec(message)?.[1]
    const frames=[...message.matchAll(/(?:catalogue|copies|export|import|storage|format|worker|files|generated)\.mjs:\d+/g)].map(match=>match[0])
    throw Object.assign(new Error(`Fresh clone ${args[1]??'command'} exited ${error.code??'unknown'}${events.length?': '+events.map(event=>event.code).join(', '):''}${reason?' ('+reason+(frames.length?' at '+frames.join(', '):'')+')':''}.`),{exitCode:Number(error.code),errorCode:events[0]?.code,errorLocation})

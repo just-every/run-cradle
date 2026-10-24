@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "findings": [
+    {
+      "rule": "secret.assignment",
+      "path": "tests/fixtures/portability/cradle-prior-0.3.0-rer-0.2.80.rer",
+      "blob": "74eb181da8e8d99b9c3f3cd8d3905c99145539aa",
+      "reason": "Gitleaks generic-api-key matched the R2 object key private/<26-character file ID>/<SHA-256 of the file content> of the 57-byte synthetic file synthetic-cradle-281.txt in this interim rer 0.2.80 export, in its manifest objects entry, its files row and its archive part. That digest path is a storage location and not a credential. The re-export of the original prior backup later replaced this fixture, so the blob remains only in history.",
+      "reviewer": "sd-cradle-c28-land lander (Claude Opus 5.5)",
+      "date": "2026-10-25"
+    }
+  ]
+}
