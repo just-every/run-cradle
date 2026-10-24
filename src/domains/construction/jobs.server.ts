@@ -3,6 +3,7 @@ import type { RequestContext,PolicyPort } from '../authority/ports';
 import type { AdmissionPort } from '../admission/ports';
 import { registerTable,trustedPredicate } from '../admission/sql.server';
 import { canonical,digest,stableId } from './source';
+import { ApiError } from '../../core/registry/errors';
 type Job={created_at:string;id:string;app_id:string;command_id:string;action:string;input_hash:string;input_json:string;state:'queued'|'running'|'complete'|'failed'|'cancelled';step_command_id:string;lease_epoch:number;lease_until:string|null;result_json:string|null;error:string|null};
 export type ConstructionJobHandler=(ctx:RequestContext,commandId:string,input:unknown)=>Promise<unknown>;
 export const constructionJobTable=registerTable('construction_jobs',['id','app_id','command_id','action','input_hash','input_json','state','step_command_id','lease_epoch','lease_until','result_json','error','created_at','updated_at']);
@@ -19,7 +20,7 @@ export class ConstructionJobs {
   await this.admission.commit(ctx,{commandId,action,appId,canonicalInputHash:inputHash,permit,guards:[],mutations:[{kind:'insert',table,row:{id,app_id:appId,command_id:commandId,action,input_hash:inputHash,input_json:canonical(input),state:'queued',step_command_id:stepId,lease_epoch:0,lease_until:null,result_json:null,error:null,created_at:ctx.now,updated_at:ctx.now}}],audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[{action:'construction.process',version:1,input:{jobId:id},notBefore:ctx.now,grantId:permit.grantId,subject:null,sourceReleaseId,causeRunIds:[]}],committedResult:{jobId:id,state:'queued'}});
   return this.status(ctx,id);
  }
- async status(ctx:RequestContext,id:string){const row=await this.db.prepare('SELECT * FROM construction_jobs WHERE id=?').bind(id).first<Job>();if(!row)throw new Error('not_found');await this.policy.authorize(ctx,{appId:row.app_id,action:'candidate.read',expected:[],cost:[],inputHash:await digest(id)});return{jobId:id,commandId:row.command_id,state:row.state,result:row.result_json?JSON.parse(row.result_json):null,error:row.error};}
+ async status(ctx:RequestContext,id:string){const row=await this.db.prepare('SELECT * FROM construction_jobs WHERE id=?').bind(id).first<Job>();if(!row)throw new ApiError('not_found','Construction job not found.');await this.policy.authorize(ctx,{appId:row.app_id,action:'candidate.read',expected:[],cost:[],inputHash:await digest(id)});return{jobId:id,commandId:row.command_id,state:row.state,result:row.result_json?JSON.parse(row.result_json):null,error:row.error};}
  async process(ctx:RequestContext,id:string){
   const job=await this.db.prepare('SELECT * FROM construction_jobs WHERE id=?').bind(id).first<Job>();if(!job)throw new Error('not_found');if(['complete','failed','cancelled'].includes(job.state))return this.status(ctx,id);
   const now=new Date().toISOString();if(job.state==='running'&&job.lease_until&&job.lease_until>now)throw new Error('construction_job_leased');
