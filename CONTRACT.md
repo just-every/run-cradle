@@ -1015,7 +1015,7 @@ Launch readiness is a complete application template on the records platform (cam
 
 ## Status
 
-Judged from the code and tests at commit `53ad027b746b35197c0fe353961787e684a3f3aa` (24 October 2026).
+Judged from the code and tests at commit `c002c03ffa57588472a62fb812aa13ec971ed7d3` (24 October 2026).
 
 The 24 October sd-cradle-c25 candidate retains PERM-010, SYNC-002, INTEG-003 and INTEG-004 as done candidates from c24; final acceptance awaits green exact-SHA landing and ct's fresh judge. FILE-002 remains partial with Chest's picker as its only Gap (FILE-002-CHEST: no duty move, approved by ct). INTEG-001 remains partial because only one provider is active at a time; INTEG-006 is corrected to partial for its unasserted A2P display. RECORDS-002 and SNAP-002's stale linked-table and purge notes now cite FIELD-002. FIELD-001, PERM-008, PERM-012 and PERM-013 retain their rows. Clause-line recount: 128 done, 66 partial, 22 missing of 216. INTEG-003-SYNC is recorded as ct's accepted scope answer in its Evidence/Gap cell; no synced-source behavior is claimed.
 
