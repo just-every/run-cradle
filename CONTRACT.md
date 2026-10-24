@@ -1040,9 +1040,9 @@ The initial judgement was on 16 October 2026 at 212d3e8; the current whole-table
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 102 | 9 | 0 | 111 |
+| Published | 104 | 7 | 0 | 111 |
 | Target and push further | 28 | 55 | 22 | 105 |
-| All | 130 | 64 | 22 | 216 |
+| All | 132 | 62 | 22 | 216 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
