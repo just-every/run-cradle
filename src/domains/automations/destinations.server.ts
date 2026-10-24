@@ -16,6 +16,7 @@ import { DeliveryService } from '../../../vendor/base/modules/integrations/core/
 import type { TrustedTransport } from '../../../vendor/base/modules/integrations/core/types.ts'
 import { RelayTransport } from '../integrations/relay-transport.server'
 import { destinations } from './storage.server'
+import {createUlid} from '../../core/shared/ids'
 import {trustedPredicate} from '../admission/sql.server'
 import type {RecordAutomationAction} from './contracts'
 import type {Ref} from '../../contracts/primitives'
@@ -47,6 +48,21 @@ export function createAutomationDestinations(env:PlatformBindings,policy:PolicyP
     audit:[{action:'automation.destination.create',subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,kind:input.kind,createdAt:new Date(createdAt).toISOString()}})
    if(receipt.replay)throw new AuthorityError('version_conflict','Destination already saved. Its signing key is not recoverable; create a new destination to rotate it.',409)
    return {id,kind:input.kind,...(input.kind==='webhook'?{signingKey}:{})}
+  },
+  async rotate(ctx:RequestContext,input:{commandId:string;appId:string;entityId:string;id:string}){
+   const own=await userDelegationPolicy(db,policy,ctx,{...input,name:'Rotate webhook signing key',permissions:'read',expiresAt:ctx.principal.expiresAt})
+   const hash=await digest(canonicalJson(input)),action='webhook.rotate'
+   if(await admission.replay(ctx,input.commandId,action,input.appId,hash))throw new AuthorityError('version_conflict','Rotation already committed; its signing key cannot be recovered.',409)
+   const row=await db.prepare("SELECT sealed_json FROM record_automation_destinations WHERE id=? AND app_id=? AND owner_id=? AND kind='webhook' AND revoked_at IS NULL").bind(input.id,input.appId,ctx.principal.id).first<{sealed_json:string}>()
+   if(!row)throw new AuthorityError('not_found','Webhook destination is unavailable.',404)
+   const prior=JSON.parse(await open(keyring,input.appId,input.id,'record-automation.destination',JSON.parse(row.sealed_json) as Sealed)) as {url:string;signingKey:string;keyId?:string}
+   const oldId=prior.keyId??input.id,id=createUlid(),signingKey=randomSecret()
+   const sealed=await seal(keyring,input.appId,input.id,'record-automation.destination',JSON.stringify({url:prior.url,signingKey,keyId:id}))
+   const receipt=await admission.commit(ctx,{commandId:input.commandId,action,appId:input.appId,canonicalInputHash:hash,permit:own.permit(action),guards:own.guards,
+    mutations:[{kind:'update',table:destinations,set:{sealed_json:JSON.stringify(sealed)},where:trustedPredicate('id=? AND app_id=? AND owner_id=? AND sealed_json=? AND revoked_at IS NULL',[input.id,input.appId,ctx.principal.id,row.sealed_json]),expectedRows:1}],
+    audit:[{action,subject:null,changes:[],sourceIds:[oldId,id],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,oldId,destinationId:input.id}})
+   if(receipt.replay||receipt.result.state!=='committed')throw new AuthorityError('version_conflict','Rotation signing key is unavailable.',409)
+   return {id,oldId,destinationId:input.id,signingKey}
   },
   async revoke(ctx:RequestContext,input:{commandId:string;appId:string;entityId:string;id:string}) {
    const own=await userDelegationPolicy(db,policy,ctx,{...input,name:'Revoke automation destination',permissions:'read',expiresAt:ctx.principal.expiresAt})

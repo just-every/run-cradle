@@ -1,5 +1,6 @@
 import {adminAuditBrowser} from './admin-audit-browser.mjs'
 import assert from 'node:assert/strict'
+import {createUlid} from '../../src/core/shared/ids.ts'
 
 export async function userKeyBrowser(page,h,journey,width) {
  await page.goto(h.origin+'/app/settings/')
@@ -13,11 +14,44 @@ export async function userKeyBrowser(page,h,journey,width) {
  const issuedResponse=page.waitForResponse(response=>response.url().endsWith('/api/user-keys')&&response.request().method()==='POST')
  await content.getByRole('button',{name:'Issue API key',exact:true}).click()
  const issued=await issuedResponse;assert.equal(issued.status(),201)
- const key=(await issued.json()).data.key
+ let key=(await issued.json()).data.key
  assert.equal(await content.getByLabel(/^API key/).evaluate(input=>input.value.length>32),true)
  await content.getByRole('button',{name:'I saved this key',exact:true}).click()
  assert.equal(await content.getByLabel(/^API key/).count(),0)
  await journey.capture('user-key-issued')
+ const retired=key
+ const rotate=page.waitForResponse(response=>response.url().endsWith(`/api/user-keys/${key.id}/rotate`))
+ await content.getByRole('button',{name:`Rotate Browser reader ${width}`,exact:true}).click()
+ const rotation=await rotate;assert.equal(rotation.status(),200);key=(await rotation.json()).data.key
+ assert.equal(await content.getByLabel(/^API key/).inputValue(),key.secret)
+ await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`,{secret:retired.secret,status:401})
+ await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`,{secret:key.secret})
+ await journey.capture('user-key-rotated')
+ await content.getByRole('button',{name:'I saved this key',exact:true}).click()
+ const subscription=(await h.request('/api/v1/change-subscriptions',{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,url:'https://receiver.example.com/changes'}})).data
+ await page.reload();await page.waitForLoadState('networkidle')
+ await page.locator('summary').filter({hasText:/^API keys$/}).click()
+ await content.getByLabel(/^Application/).selectOption(h.appId)
+ const subscriptionPanel=page.getByRole('region',{name:'Change subscription signing keys',exact:true})
+ const subscriptionRotation=page.waitForResponse(response=>response.url().endsWith(`/change-subscriptions/owner/${subscription.id}/rotate`))
+ await subscriptionPanel.getByRole('button',{name:`Rotate subscription ${subscription.id}`,exact:true}).click()
+ assert.equal((await subscriptionRotation).status(),200)
+ assert.notEqual(await subscriptionPanel.getByLabel('Subscription signing key',{exact:true}).inputValue(),subscription.signingKey)
+ await journey.capture('subscription-key-rotated')
+ await subscriptionPanel.getByRole('button',{name:'I saved the subscription key',exact:true}).click()
+ assert.equal(await subscriptionPanel.getByLabel('Subscription signing key',{exact:true}).count(),0)
+ const proposingName=`Browser proposer ${width}`
+ await content.getByLabel('Proposing key name',{exact:true}).fill(proposingName)
+ const proposingIssued=page.waitForResponse(response=>response.url().endsWith('/api/proposer-keys')&&response.request().method()==='POST')
+ await content.getByRole('button',{name:'Issue proposing key',exact:true}).click()
+ const proposing=(await(await proposingIssued).json()).data.key
+ await content.getByRole('button',{name:'I saved this key',exact:true}).click()
+ const proposingRotation=page.waitForResponse(response=>response.url().endsWith(`/proposer-keys/${proposing.id}/rotate`))
+ await content.getByRole('button',{name:`Rotate ${proposingName}`,exact:true}).click()
+ assert.equal((await proposingRotation).status(),200)
+ await content.getByLabel('Proposing key',{exact:true}).waitFor()
+ await journey.capture('proposing-key-rotated')
+ await content.getByRole('button',{name:'I saved this key',exact:true}).click()
  await page.reload()
  await page.waitForLoadState('networkidle')
  await page.locator('summary').filter({hasText:/^API keys$/}).click()
@@ -28,5 +62,24 @@ export async function userKeyBrowser(page,h,journey,width) {
  await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`,{secret:key.secret,status:401})
  assert.equal(await content.getByLabel(/^API key/).count(),0)
  await journey.capture('user-key-revoked')
+ await page.goto(h.origin+'/app/automations')
+ const automationPanel=page.getByRole('region',{name:'Record automations',exact:true})
+ await automationPanel.getByLabel(/^Application/).selectOption(h.appId)
+ await automationPanel.getByLabel(/^Record type/).selectOption(h.entityId)
+ await automationPanel.getByRole('button',{name:'New automation',exact:true}).click()
+ const form=page.getByRole('form',{name:'Automation definition',exact:true})
+ await form.getByLabel('Action',{exact:true}).selectOption('webhook')
+ await form.getByLabel('HTTPS receiver URL',{exact:true}).fill('https://receiver.example.com/rotation')
+ const destinationSaved=page.waitForResponse(response=>response.url().endsWith('/api/user-automations/destinations'))
+ await form.getByRole('button',{name:'Save private destination',exact:true}).click()
+ const destination=(await(await destinationSaved).json()).data
+ await form.getByRole('button',{name:'I saved the signing key',exact:true}).click()
+ const signingRotation=page.waitForResponse(response=>response.url().endsWith(`/destinations/${destination.id}/rotate`))
+ await form.getByRole('button',{name:'Rotate signing key',exact:true}).click()
+ assert.equal((await signingRotation).status(),200)
+ assert.notEqual(await form.getByLabel('Webhook signing key',{exact:true}).inputValue(),destination.signingKey)
+ await journey.capture('webhook-signing-key-rotated')
+ await form.getByRole('button',{name:'I saved the signing key',exact:true}).click()
+ assert.equal(await form.getByLabel('Webhook signing key',{exact:true}).count(),0)
  await adminAuditBrowser(page,h,journey)
 }

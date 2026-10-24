@@ -28,6 +28,18 @@ export function createUserKeyService(db:D1Database,ordinary:PolicyPort,admission
     revokedAt:row.revoked_at===null&&row.delegation_revoked===null?null:new Date(row.revoked_at??row.delegation_revoked!).toISOString(),
     scopes:JSON.parse(row.scopes_json),entityIds:[...new Set((JSON.parse(row.rules_json) as {entityId:string}[]).map(rule=>rule.entityId))]}))
   },
+  async rotate(ctx:RequestContext,commandId:string,appId:string,id:string){
+   const row=await db.prepare(`SELECT d.label,policy.rules_json,c.expires_at FROM authority_credentials c
+    JOIN authority_delegations d ON d.principal_id=c.principal_id
+    JOIN authority_memberships m ON m.principal_id=d.principal_id AND m.app_id=d.app_id
+    JOIN authority_policies policy ON policy.id=m.policy_id
+    WHERE c.id=? AND d.app_id=? AND d.issuer_id=? AND d.kind='api-key' AND d.revoked_at IS NULL`)
+    .bind(id,appId,ctx.principal.id).first<{label:string;rules_json:string;expires_at:number}>()
+   if(!row)throw new AuthorityError('not_found','API key not found.',404)
+   const entityId=(JSON.parse(row.rules_json) as {entityId:string}[])[0]!.entityId
+   const own=await userDelegationPolicy(db,ordinary,ctx,{appId,entityId,name:row.label,permissions:'read',expiresAt:new Date(row.expires_at).toISOString()})
+   return {...await createMachineService(db,own.policy,admission).rotate(ctx,commandId,appId,id,'api-key'),name:row.label}
+  },
   async revoke(ctx:RequestContext,commandId:string,appId:string,id:string) {
    const row=await db.prepare(`SELECT d.principal_id,p.authentication_epoch,p.version,policy.rules_json,c.expires_at
     FROM authority_credentials c JOIN authority_delegations d ON d.principal_id=c.principal_id

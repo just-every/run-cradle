@@ -2,13 +2,14 @@ import type {RequestContext,AuthorityPermit,PolicyPort} from '../authority/ports
 import type {AdmissionPort,SqlMutation} from '../admission/ports'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {createRecordServices} from '../records/service.server'
+import {ownerDelegationSnapshot} from '../authority/delegation.server'
 import {AuthorityError} from '../authority/errors'
 import {principalGuards} from '../authority/guards.server'
 import {canonicalHash} from '../admission/canonical'
 import {trustedPredicate} from '../admission/sql.server'
 import {digest,randomSecret} from '../authority/crypto.server'
 import {createUlid} from '../../core/shared/ids'
-import {environmentKeyring,seal} from '../connections/crypto.server'
+import {environmentKeyring,seal,open,type Sealed} from '../connections/crypto.server'
 import {validateDestination} from '../../../vendor/base/modules/integrations/core/destination.ts'
 import {createCursorCodec} from '../records/cursor.server'
 import type {ChangeItem} from './schema'
@@ -52,6 +53,32 @@ export function createChangeSubscriptions(env:PlatformBindings,policy:PolicyPort
    const receipt=await commit(ctx,input.commandId,'subscription.create',row,[{kind:'insert',table:subscriptions,row}])
    if(receipt.replay)throw new AuthorityError('version_conflict','Subscription already created. Its secret is shown once; delete it and create a new one to rotate.',409)
    return {...safe(row),signingKey,cursor:await cursor(id,last,now)}
+  },
+  async ownerList(ctx:RequestContext,appId:string){
+   const own=await ownerDelegationSnapshot(db,ctx,appId),guard=own.guard
+   const rows=await db.prepare(`SELECT * FROM record_change_subscriptions WHERE app_id=? AND owner_id=? AND (${guard.sql}) ORDER BY created_at,id LIMIT 200`).bind(appId,ctx.principal.id,...guard.values).all<Subscription>()
+   return rows.results.map(safe)
+  },
+  async rotate(ctx:RequestContext,id:string,commandId:string,ownerAppId?:string){
+   const action='subscription.rotate',hash=await canonicalHash({action,id})
+   let row:Subscription,guards:ReturnType<typeof principalGuards>
+   if(ownerAppId){
+    const own=await ownerDelegationSnapshot(db,ctx,ownerAppId)
+    const found=await db.prepare('SELECT * FROM record_change_subscriptions WHERE id=? AND app_id=? AND owner_id=?').bind(id,ownerAppId,ctx.principal.id).first<Subscription>()
+    if(!found)throw new AuthorityError('not_found','Subscription not found.',404)
+    row=found;guards=[...principalGuards(ctx),own.guard]
+   }else{row=await get(ctx,id);const scopes=await access.scopes(ctx,row);guards=[...principalGuards(ctx),...scopes.scopes.flatMap(scope=>scope.currentAuthorityGuards)]}
+   if(await admission.replay(ctx,commandId,action,row.app_id,hash))throw new AuthorityError('version_conflict','Rotation already committed; its secret cannot be recovered.',409)
+   if(row.state!=='active'||row.expires_at<=Date.parse(ctx.now)||!row.sealed_json)throw new AuthorityError('subscription_expired','Only an active subscription can rotate.',410)
+   const prior=JSON.parse(await open(keyring,row.app_id,row.id,'change-subscription',JSON.parse(row.sealed_json) as Sealed)) as {url:string;signingKey:string;keyId?:string}
+   const oldId=prior.keyId??row.id,keyId=createUlid(),signingKey=randomSecret()
+   const sealed=await seal(keyring,row.app_id,row.id,'change-subscription',JSON.stringify({url:prior.url,signingKey,keyId}))
+   const permit:AuthorityPermit={actor:{id:ctx.principal.id,kind:ctx.principal.kind},action,appId:row.app_id,grantId:null,grantVersion:null,policyVersion:0,validUntil:ctx.principal.expiresAt,guards,reservationMutations:[],reservationIds:[]}
+   const receipt=await admission.commit(ctx,{commandId,action,appId:row.app_id,canonicalInputHash:hash,permit,guards,
+    mutations:[{kind:'update',table:subscriptions,set:{sealed_json:JSON.stringify(sealed)},where:trustedPredicate("id=? AND sealed_json=? AND state='active' AND expires_at>?",[id,row.sealed_json,Date.parse(ctx.now)]),expectedRows:1}],
+    audit:[{action,subject:null,changes:[],sourceIds:[oldId,keyId],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,keyId,oldId}})
+   if(receipt.replay||receipt.result.state!=='committed')throw new AuthorityError('version_conflict','Rotation secret is unavailable.',409)
+   return {...safe(row),keyId,oldId,signingKey}
   },
   async list(ctx:RequestContext,appId:string){await access.key(ctx);const rows=await db.prepare('SELECT * FROM record_change_subscriptions WHERE app_id=? AND credential_id=? ORDER BY created_at,id LIMIT 200').bind(appId,ctx.principal.credentialId).all<Subscription>();const out=[];for(const row of rows.results){await scopeAvailable(ctx,row,true);out.push(safe(row))}return out},
   async refresh(ctx:RequestContext,id:string,commandId:string){const row=await get(ctx,id);row.expires_at=Date.parse(ctx.now)+lifetimeMs;await commit(ctx,commandId,'subscription.refresh',row,[{kind:'update',table:subscriptions,set:{expires_at:row.expires_at},where:trustedPredicate("id=? AND credential_id=? AND state='active' AND expires_at>?",[id,ctx.principal.credentialId!,Date.parse(ctx.now)]),expectedRows:1}]);return safe(row)},

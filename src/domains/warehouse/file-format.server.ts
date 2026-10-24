@@ -1,4 +1,3 @@
-import {AuthorityError} from '../authority/errors'
 import type {Field} from '../records/contracts'
 import {encodeCsv} from '../portability/csv'
 import {encodeWarehouseParquet} from './parquet.server'
@@ -11,8 +10,7 @@ export function warehouseFiles(headers:string[],rows:string[][],fields:Field[],f
  const output:{body:string|ArrayBuffer;rows:number;records:string[][]}[]=[]
  function append(part:string[][]){
   const body=encode(part)
-  if(!remote||size(body)<=maxBytes){output.push({body,rows:part.length,records:part});return}
-  if(part.length<=1)throw new AuthorityError('capacity_limit',`Record ${part[0]?.[0]??'(empty table)'} encoded size ${size(body)} bytes exceeds ${maxBytes===900000?'warehouseBigQueryFileBytes':'warehouseTransferBytes'} value ${maxBytes}; no export watermark was advanced.`,409)
+  if(!remote||size(body)<=maxBytes||part.length<=1){output.push({body,rows:part.length,records:part});return}
   const middle=Math.floor(part.length/2);append(part.slice(0,middle));append(part.slice(middle))
  }
  if(remote&&rows.length){for(let offset=0;offset<rows.length;offset+=200)append(rows.slice(offset,offset+200))}else append(rows)

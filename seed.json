@@ -280,6 +280,17 @@
       ]
     },
     {
+      "id": "microsoft",
+      "required": false,
+      "why": "Owner-authorized Outlook connection for configured record calendar sync.",
+      "data": [
+        "authorized calendar events"
+      ],
+      "adapters": [
+        "outlook"
+      ]
+    },
+    {
       "id": "xero",
       "required": false,
       "why": "Owner-authorized Xero connection for configured accounting actions.",
@@ -334,6 +345,22 @@
       "adapters": [
         "automation.egress.v1"
       ]
+    },
+    {
+      "id": "teams-app",
+      "required": false,
+      "requiredWhen": "An owner installs Microsoft Teams or enables a Teams approval action",
+      "why": "Microsoft tenant OAuth on login.microsoftonline.com and Graph on graph.microsoft.com list joined teams/channels and send Adaptive Cards. Bot Framework keys from login.botframework.com verify callbacks; linked native people retain current Cradle write and read policy.",
+      "data": ["Owner-approved record fields and approval text", "Readable owner-marked unfurl-safe fields", "Native record links and opaque approval IDs", "App credentials, consent code and sealed delegated Graph token"],
+      "adapters": ["automation.egress.v1"]
+    },
+    {
+      "id": "nook-app",
+      "required": false,
+      "requiredWhen": "An owner installs a Nook app or enables a Nook approval action",
+      "why": "The explicitly configured public HTTPS Nook origin receives the declared Slack-compatible app Web API through the trusted relay. A scoped app token and signed callbacks use linked native people and current Cradle policy. The target API is edge-tested; a live Nook installation is not claimed.",
+      "data": ["Owner-approved record fields and approval text", "Readable owner-marked unfurl-safe fields", "Native record links and opaque approval IDs", "Scoped app token and signed interaction metadata"],
+      "adapters": ["automation.egress.v1"]
     },
     {
       "id": "automation-slack",

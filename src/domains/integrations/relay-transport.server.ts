@@ -1,7 +1,7 @@
 import type { TrustedTransport, WireRequest, WireResponse } from '../../../vendor/base/modules/integrations/core/types.ts'
 import { validateDestination } from '../../../vendor/base/modules/integrations/core/destination.ts'
 
-export type RelayWire=WireRequest & {method?:'GET'|'POST'|'PUT'|'DELETE'|'HEAD';bodyEncoding?:'base64'}
+export type RelayWire=WireRequest & {method?:'GET'|'POST'|'PUT'|'DELETE'|'HEAD';bodyEncoding?:'base64';transferPart?:'warehouse-v1'}
 export type RelayResponse=WireResponse & {bodyEncoding?:'base64'}
 
 /** Worker fetch reaches one operator-configured relay; public DNS is pinned there. */
@@ -14,7 +14,7 @@ export class RelayTransport implements TrustedTransport {
  }
  async send(wire:RelayWire):Promise<RelayResponse> {
   validateDestination(wire.url)
-  if((wire.bodyEncoding==='base64'?atob(wire.body).length:new TextEncoder().encode(wire.body).length)>1048576)throw new Error('Egress request limit exceeded')
+  if((wire.bodyEncoding==='base64'?atob(wire.body).length:new TextEncoder().encode(wire.body).length)>(wire.transferPart==='warehouse-v1'?5242880:1048576))throw new Error('Egress request limit exceeded')
   const signal=AbortSignal.timeout(15000)
   // Workers supports manual redirects. Reject every non-2xx acknowledgement
   // below so the relay credential is never forwarded to another location.
@@ -27,7 +27,7 @@ export class RelayTransport implements TrustedTransport {
   finally {await reader.cancel();reader.releaseLock()}
   const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length}
   const result=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)) as RelayResponse
-  if(!Number.isInteger(result.status)||result.status<100||result.status>599||result.status>=300&&result.status<400||
+  if(!Number.isInteger(result.status)||result.status<100||result.status>599||result.status>=300&&result.status<400&&!(result.status===308&&wire.method==='PUT'&&new URL(wire.url).hostname==='bigquery.googleapis.com'&&wire.headers['content-range'])||
    !result.headers||typeof result.headers!=='object'||Array.isArray(result.headers)||Object.values(result.headers).some(value=>typeof value!=='string')||
    typeof result.body!=='string'||new TextEncoder().encode(result.body).length>(wire.bodyEncoding==='base64'?1400000:65536)||result.bodyEncoding!==wire.bodyEncoding)throw new Error('Egress relay response invalid')
   return result

@@ -1,3 +1,4 @@
+import {warehouseManifestBase} from './warehouse-manifest-base.mjs'
 import assert from 'node:assert/strict'
 import { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds } from './launch-authority-runtime.mjs'
 import {createHash} from 'node:crypto'
@@ -11,8 +12,9 @@ const campaignFields = (code, name, ownerId) => ({ code, name, ownerId, startDat
 /** [SYNC-002] Settings and data writes cross the emitted Worker's public doors.
  * R2 reads observe the same local bucket used by its scheduled handler. */
 export async function warehouseExportJourney(doors, world, edge) {
+ const manifestBase=await warehouseManifestBase(doors)
  const formats=[]
- for(const destination of ['r2','s3','bigquery','snowflake'])for(const format of ['csv','parquet'])formats.push(await exportFormatJourney(doors,world,format,destination,edge))
+ for(const destination of ['r2','s3','bigquery','snowflake'])for(const format of ['csv','parquet'])formats.push(await exportFormatJourney(doors,world,format,destination,edge,manifestBase))
  // A native role transition invalidates sessions. One transition exercises the
  // same owner-loss behavior for the entire destination/format matrix.
  const otherBase=await doors.h.db.prepare('SELECT base_id FROM cradle_base_operators WHERE principal_id=?').bind(world.other.id).first('base_id')
@@ -39,12 +41,12 @@ export async function warehouseExportJourney(doors, world, edge) {
  },async erased(){for(const result of formats)await result.erased();edge.bigQuery.assertEmpty();for(const rows of edge.snowflake.tables.values())assert.equal(rows.length,0,'Snowflake has no exported record copies after confirmed erasure')}}
 }
 
-async function exportFormatJourney(doors, world, format, destination, edge) {
+async function exportFormatJourney(doors, world, format, destination, edge, manifestBase) {
  const { h, call, command, commit, ref } = doors
  const provider=destination==='bigquery'?edge.bigQuery:destination==='snowflake'?edge.snowflake:null,access=provider?.access??edge.access
  const bucket = destination==='r2'||destination==='bigquery'?await h.runtime.getR2Bucket('WAREHOUSE'):edge.observeBucket,tag=destination+'-'+format
  const id = createUlid()
- const input = { id, name: 'Analysis export', bases: [LAUNCH_APP_ID], mode: 'incremental', format, destination:destination==='r2'?{kind:'r2'}:provider?.destination??edge.destination,...(destination!=='r2'?{access}:{}), localRule: 'hourly', timezone: 'UTC', version: 0 }
+ const input = { id, name: 'Analysis export', bases: [LAUNCH_APP_ID,manifestBase.appId], mode: 'incremental', format, destination:destination==='r2'?{kind:'r2'}:provider?.destination??edge.destination,...(destination!=='r2'?{access}:{}), localRule: 'hourly', timezone: 'UTC', version: 0 }
  const list = async () => { const response = await call('/api/v1/warehouse-exports'); assert.equal(response.status, 200, JSON.stringify(response.body)); return response.body.data }
  const settings = await list()
  assert.ok(settings.bases.some(base => base.id === LAUNCH_APP_ID), 'An owner can choose the Launch base')
@@ -114,7 +116,7 @@ async function exportFormatJourney(doors, world, format, destination, edge) {
  if(destination==='snowflake'&&format==='csv')edge.snowflake.loseCopyAcknowledgementOnce()
  const fullAt = await tick(), fullKeys = await keys(), fullKey = fileAt(fullKeys, fullAt, 'full')
  assert.ok(fullKey, `The first incremental schedule writes its full baseline: ${JSON.stringify({ fullAt, fullKeys, settings: await list(), stored: await h.db.prepare('SELECT running_id,last_slot FROM warehouse_exports WHERE id=?').bind(id).first() })}`)
- const auditRows=(await h.db.prepare("SELECT * FROM operation_audit WHERE action='warehouse.export' AND created_at=(SELECT updated_at FROM warehouse_exports WHERE id=?)").bind(id).all()).results
+ const auditRows=(await h.db.prepare("SELECT * FROM operation_audit WHERE action='warehouse.export' AND app_id=? AND created_at=(SELECT updated_at FROM warehouse_exports WHERE id=?)").bind(LAUNCH_APP_ID,id).all()).results
  assert.equal(auditRows.length,1,'The completed scheduled warehouse export is audited once');assert.equal(auditRows[0].feature,'Warehouse exports');assert.equal(auditRows[0].app_id,LAUNCH_APP_ID)
  const full = await readData(fullKey)
  assert.deepEqual(full.headers.slice(0, 2), ['_record_id', '_operation'])
@@ -128,7 +130,20 @@ async function exportFormatJourney(doors, world, format, destination, edge) {
  assert.ok(JSON.stringify(full.rows).includes(leaver.name), 'The real bucket contains the person’s values before erasure')
  const manifests = fullKeys.filter(key => key.endsWith('-manifest.json'))
  assert.equal(manifests.length, 1, 'A scheduled run writes one manifest')
- const manifest = JSON.parse(await read(manifests[0]))
+ const manifestBody=await read(manifests[0])
+ assert.ok(Buffer.byteLength(manifestBody)>1048576,'A scheduled manifest above the old transfer budget exports and reads back intact')
+ const manifest = JSON.parse(manifestBody)
+ for(const table of manifestBase.tables){
+  const file=manifest.files.find(file=>file.key.includes('/'+table.id+'/'))
+  assert.ok(file,'Every empty wide table has a full-baseline schema file')
+  const object=await bucket.get(file.key);assert.ok(object)
+  const captured=await object.arrayBuffer()
+  assert.equal(createHash('sha256').update(Buffer.from(captured)).digest('hex'),file.sha256,'Every manifest file checksum matches independently read bytes')
+  const headers=format==='csv'?unpack(new TextDecoder().decode(captured)).headers:parquetMetadata(captured).schema.slice(1).map(column=>column.name)
+  assert.deepEqual(headers,['_record_id','_operation',...file.columns.map(column=>column.column)],'Every wide file carries the exact output columns in its oversized manifest')
+  if(provider){const upload=destination==='bigquery'?provider.uploads.find(value=>value.jobId==='cradle_load_'+createHash('sha256').update(file.key).digest('hex')):provider.uploads.find(value=>value.key===file.key);assert.ok(upload);assert.ok(Buffer.from(upload.bytes).equals(Buffer.from(captured)),'The remote provider accepted every exact file of the oversized manifest')}
+  assert.deepEqual(file.columns.map(column=>({fieldId:column.fieldId,label:column.label})),table.fields.map(field=>({fieldId:field.id,label:field.label})),'The oversized manifest preserves every exact source field identity and Unicode label')
+ }
  assert.ok(JSON.stringify(manifest).includes('schemaHash'), 'Manifest records the schema hash')
  const manifestTable = manifest.files.find(file => file.key === fullKey)
  assert.equal(manifestTable.rows, full.rows.length, 'Manifest row count matches the read-back table object')
@@ -153,6 +168,32 @@ async function exportFormatJourney(doors, world, format, destination, edge) {
  const beforeIdle = (await keys()).filter(key => key.endsWith('.'+format))
  await tick()
  assert.deepEqual((await keys()).filter(key => key.endsWith('.'+format)), beforeIdle, 'A second tick with no changes writes no data file')
+
+ // One valid record is larger than the old per-transfer budget in either
+ // encoding. It crosses the same public write and scheduled export doors.
+ const oversizedTags=Array.from({length:500},(_,index)=>`synthetic-cradle-${index} `+'𝄞'.repeat(480))
+ const oversized=await commit('launch.campaign.create',{fields:{...campaignFields(`WARE-${tag}-OVERSIZED`,'Warehouse oversized record',world.adminId),tags:oversizedTags}})
+ await commit('launch.campaign.patch',{id:oversized.id,changes:{objective:'ä'.repeat(100000)}},ref('campaign',await current(oversized)))
+ if(destination==='bigquery')provider.loseNextPart()
+ if(destination==='s3'||destination==='snowflake')edge.loseNextPart()
+ const oversizedAt=await tick(),oversizedManifest=JSON.parse(await read(`${id}/${oversizedAt}-manifest.json`))
+ const oversizedFiles=oversizedManifest.files.filter(file=>file.key.includes('/'+launchEntities.campaign+'/'))
+ const oversizedRows=(await Promise.all(oversizedFiles.map(file=>readData(file.key)))).flatMap(file=>file.rows)
+ assert.equal(oversizedRows.filter(row=>row[0]===oversized.id).length,1,'An oversized record appears once after multipart/resumable readback')
+ const oversizedFile=oversizedFiles.find(file=>file.rows===1)
+ assert.ok(oversizedFile,'An oversized record remains a complete logical file')
+ const oversizedObject=await bucket.get(oversizedFile.key),oversizedBytes=await oversizedObject.arrayBuffer()
+ assert.ok(oversizedBytes.byteLength>1048576,'The independently read file exceeds the former transfer budget')
+ const oversizedParsed=await readData(oversizedFile.key),oversizedRow=oversizedParsed.rows.find(row=>row[0]===oversized.id)
+ assert.ok(oversizedRow);assert.equal(oversizedRow[oversizedParsed.headers.indexOf('Objective')],'ä'.repeat(100000))
+ assert.ok(oversizedRow[oversizedParsed.headers.indexOf('Tags')].includes(oversizedTags.at(-1)),'The last large multi-value cell is complete')
+ const oversizedKeys=(await keys()).filter(key=>key.endsWith('.'+format)).sort()
+ const stable=(await h.db.prepare('SELECT watermark_json FROM warehouse_exports WHERE id=?').bind(id).first()).watermark_json
+ await tick()
+ assert.deepEqual((await keys()).filter(key=>key.endsWith('.'+format)).sort(),oversizedKeys,'No-change restart writes no duplicate oversized file')
+ assert.ok(stable.includes(oversized.id),'Only verified complete bytes enter the committed watermark')
+ await commit('launch.campaign.delete',{id:oversized.id,confirmationCode:`WARE-${tag}-OVERSIZED`},ref('campaign',await current(oversized)))
+ await tick()
 
  if(destination==='s3'){
   const wide=[]
@@ -199,5 +240,5 @@ async function exportFormatJourney(doors, world, format, destination, edge) {
  const finished=(await list()).exports.find(item=>item.id===id)
  await commit('warehouse.remove',{id,version:finished.version})
  const pausedId=createUlid()
- return {tick,async ownerProbe(session){await commit('warehouse.save',{...input,id:pausedId,name:'Owner-loss probe'},[],session)},async paused(){const paused=(await list()).exports.find(item=>item.id===pausedId);assert.equal(paused.state,'paused','Losing ownership pauses the configuring owner’s export');await commit('warehouse.remove',{id:paused.id,version:paused.version})},async erased() { assert.deepEqual(await keys(), [], 'Erasure confirmation leaves no managed warehouse objects containing the person’s values') } }
+ return {tick,async ownerProbe(session){await commit('warehouse.save',{...input,bases:[LAUNCH_APP_ID],id:pausedId,name:'Owner-loss probe'},[],session)},async paused(){const paused=(await list()).exports.find(item=>item.id===pausedId);assert.equal(paused.state,'paused','Losing ownership pauses the configuring owner’s export');await commit('warehouse.remove',{id:paused.id,version:paused.version})},async erased() { assert.deepEqual(await keys(), [], 'Erasure confirmation leaves no managed warehouse objects containing the person’s values') } }
 }

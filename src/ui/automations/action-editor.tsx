@@ -31,6 +31,12 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
    onChange({...action,destinationId:answer.data.id});setSigningKey(answer.data.signingKey??null);setUrl('')
   }catch(e){setError(e instanceof Error?e.message:'Could not save the destination.')}finally{setBusy(false)}
  }
+ async function rotateDestination(){
+  if(action.kind!=='webhook'||!action.destinationId)return
+  setBusy(true);setError(null);setSigningKey(null)
+  try {const answer=await readApi<{signingKey:string}>(`/api/user-automations/destinations/${action.destinationId}/rotate`,{method:'POST',body:JSON.stringify({commandId:createUlid(),appId,entityId:entity.id})});setSigningKey(answer.data.signingKey)}
+  catch(e){setError(e instanceof Error?e.message:'Could not rotate the signing key.')}finally{setBusy(false)}
+ }
  return <div className="cr-stack">
   <label className="cr-field">Action<select value={action.kind} onChange={event=>select(event.target.value as RecordAutomationAction['kind'])}>
    <option value="notify">Notify a member</option><option value="email">Email a member</option><option value="sms">Send SMS</option><option value="update">Update a field</option><option value="webhook">Signed webhook</option><option value="slack">Slack message</option><option value="slack-app">Slack app approval</option></select></label>
@@ -47,7 +53,8 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
    <option value="">Choose a field</option>{writable.map(field=><option key={field.id} value={field.id}>{field.label}</option>)}</select></label>
    {writable.find(field=>field.id===action.fieldId)&&<FieldInput entityId={entity.id} appId={appId} field={writable.find(field=>field.id===action.fieldId)!} value={action.value} onChange={value=>onChange({...action,value})}/>}</>}
   {(action.kind==='webhook'||action.kind==='slack')&&<>
-   {action.destinationId?<p>Private destination saved. To rotate it, save a new URL.</p>:null}
+   {action.destinationId?<p>Private destination saved.</p>:null}
+   {action.kind==='webhook'&&action.destinationId&&<button className="cr-button cr-button--quiet" type="button" disabled={busy} onClick={()=>void rotateDestination()}>Rotate signing key</button>}
    <label className="cr-field">{action.kind==='slack'?'Slack incoming webhook URL':'HTTPS receiver URL'}<input type="url" value={url} onChange={event=>setUrl(event.target.value)} autoComplete="off" spellCheck={false} placeholder="https://"/></label>
    <button className="cr-button cr-button--quiet" type="button" disabled={busy||!url} onClick={()=>void saveDestination()}>{busy?'Saving…':'Save private destination'}</button>
    {signingKey&&<section className="cr-card"><h4>Copy the signing key now</h4><p>Give this key to your receiver to verify webhooks. It is shown once.</p><textarea aria-label="Webhook signing key" readOnly value={signingKey} rows={2} spellCheck={false}/><button className="cr-button cr-button--quiet" type="button" onClick={()=>setSigningKey(null)}>I saved the signing key</button></section>}

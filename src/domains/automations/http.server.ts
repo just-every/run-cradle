@@ -53,6 +53,10 @@ export function recordAutomationsHttp(deps:{
    .parse(await readBoundedJson(c.req.raw,4096))
   return c.json(reply(ctx,await deps.configuration.disable(ctx,{...input,id:idSchema.parse(c.req.param('id'))})))
  })
+ router.post('/destinations/:id/rotate',async c=>{
+  const ctx=await deps.authenticate(c.req.raw),input=z.object({commandId:idSchema,appId:idSchema,entityId:idSchema}).strict().parse(await readBoundedJson(c.req.raw,4096))
+  return c.json(reply(ctx,await deps.destinations.rotate(ctx,{...input,id:idSchema.parse(c.req.param('id'))})))
+ })
  router.post('/destinations/:id/revoke',async c=>{
   const ctx=await deps.authenticate(c.req.raw),input=z.object({commandId:idSchema,appId:idSchema,entityId:idSchema}).strict().parse(await readBoundedJson(c.req.raw,4096))
   return c.json(reply(ctx,await deps.destinations.revoke(ctx,{...input,id:idSchema.parse(c.req.param('id'))})))

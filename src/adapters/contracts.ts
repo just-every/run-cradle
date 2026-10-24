@@ -1,5 +1,5 @@
 import type { Instant, Json } from '../contracts/primitives';
-export type ProviderId = 'resend' | 'gmail' | 'google-calendar' | 'xero' | 'openai';
+export type ProviderId = 'resend' | 'gmail' | 'google-calendar' | 'outlook' | 'xero' | 'openai';
 export type ProviderResult =
   | { state: 'confirmed'; externalId: string; value: Json; receiptHash: string; requestId: string | null }
   | { state: 'refused'; code: string; message: string; retryAfter?: string; retryable?: boolean }

@@ -36,6 +36,27 @@ export const createMachineService=(db:D1Database,policy:PolicyPort,admission:Adm
     if(receipt.replay)throw new AuthorityError('version_conflict','Credential was already issued; its secret is not recoverable. Revoke it before issuing another.',409)
     return {id,secret,expiresAt:input.expiresAt}
   },
+  /** Keep the delegated principal and its authority lifetime; replace only this credential. */
+  async rotate(ctx:RequestContext,commandId:string,appId:string,oldId:string,kind:'api-key'|'proposing-key'){
+   if(ctx.principal.kind!=='human'||!ctx.principal.sessionId)return denied('A current human session must rotate credentials.')
+   const action=kind+'.rotate',hash=await digest(canonicalJson({oldId,kind}))
+   const permit=await policy.authorize(ctx,{appId,action:'credential.issue',expected:[],cost:[],inputHash:hash})
+   const revoke=await policy.authorize(ctx,{appId,action:'credential.revoke',expected:[],cost:[],inputHash:hash})
+   // Proposing a new base has no ordinary record authority yet. Owner key
+   // administration above authorizes this metadata-only replay refusal.
+   if(await db.prepare('SELECT 1 FROM command_admissions WHERE command_id=? AND actor_id=? AND actor_kind=? AND app_id=? AND action=? AND input_hash=? AND state=\'committed\'').bind(commandId,ctx.principal.id,ctx.principal.kind,appId,action,hash).first())throw new AuthorityError('version_conflict','Rotation already committed; its secret cannot be recovered.',409)
+   const old=await db.prepare("SELECT * FROM authority_credentials WHERE id=? AND revoked_at IS NULL AND expires_at>? AND EXISTS(SELECT 1 FROM json_each(scopes_json) WHERE json_extract(value,'$.appId')=?)")
+    .bind(oldId,Date.parse(ctx.now),appId).first<{principal_id:string;audience:string;scopes_json:string;expires_at:number;authentication_epoch:number;version:number}>()
+   if(!old)throw new AuthorityError('not_found','Active key not found.',404)
+   const id=createUlid(),secret=randomSecret(),now=Date.parse(ctx.now)
+   const receipt=await admission.commit(ctx,{commandId,action,appId,canonicalInputHash:hash,permit:{...permit,action},guards:[...revoke.guards,trustedPredicate("EXISTS(SELECT 1 FROM authority_principals WHERE id=? AND state='active' AND authentication_epoch=?)",[old.principal_id,old.authentication_epoch])],mutations:[
+    {kind:'update',table:credentials,set:{revoked_at:now,version:old.version+1},where:trustedPredicate('id=? AND version=? AND revoked_at IS NULL AND expires_at>?',[oldId,old.version,now]),expectedRows:1},
+    {kind:'insert',table:credentials,row:{id,principal_id:old.principal_id,token_hash:await digest(secret),audience:old.audience,scopes_json:old.scopes_json,created_at:now,expires_at:old.expires_at,revoked_at:null,version:1,authentication_epoch:old.authentication_epoch}},
+    ...(await isDevMinted(db,oldId)?[{kind:'insert' as const,table:devCredentials,row:{credential:DEV_CREDENTIAL_KIND,id,created_at:now}}]:[])
+   ],audit:[{action,subject:null,changes:[],sourceIds:[oldId,id],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,oldId,expiresAt:new Date(old.expires_at).toISOString()}})
+   if(receipt.replay||receipt.result.state!=='committed')throw new AuthorityError('version_conflict','Rotation secret is unavailable.',409)
+   return {id,oldId,secret,expiresAt:new Date(old.expires_at).toISOString()}
+  },
   async revoke(ctx:RequestContext,commandId:string,appId:string,id:string){
    if(ctx.principal.kind!=='human')return denied()
    const hash=await digest(id),permit=await policy.authorize(ctx,{appId,action:'credential.revoke',expected:[],cost:[],inputHash:hash})

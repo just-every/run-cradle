@@ -1,3 +1,4 @@
+import {prepareBaseStream} from './stream-source.server'
 import {auditOperation} from '../../admission/operation-audit.server'
 import {isReferenceValue} from '../store-references'
 import {exportStoreCell} from './export-store.server'
@@ -14,7 +15,7 @@ import { assertGuards } from '../fence.server'
 import { trustedPredicate } from '../../admission/sql.server'
 import { AdmissionError } from '../../admission/errors'
 
-function portableField(field:Field,schema:import('../contracts').EntitySchema,registry:DescriptorRegistry):PortableField {
+export function portableField(field:Field,schema:import('../contracts').EntitySchema,registry:DescriptorRegistry):PortableField {
  const {id,label,type,required,unique}=field
  if(type==='attachment'&&field.defaultValue!==undefined&&field.defaultValue!==null&&(!Array.isArray(field.defaultValue)||field.defaultValue.length))throw new AdmissionError('validation',`${label}: attachment defaults have no portable representation.`)
  if(!['phone','text','url','number','date','instant','money','boolean','select','multi_select','person','relation','attachment','computed'].includes(type))throw new AdmissionError('validation',`${label}: this field type has no base JSON representation.`)
@@ -23,10 +24,10 @@ function portableField(field:Field,schema:import('../contracts').EntitySchema,re
  const lookup=source&&['phone','text','url','number','date','boolean','select'].includes(source.type)&&relation?.cardinality==='one'&&field.expression?.kind==='rollup'&&field.expression.aggregate==='lookup'&&!field.expression.filter&&field.expression.separator===undefined&&field.expression.sort===undefined&&field.expression.limit===undefined?field.expression:null
  return {id,label,type:type as PortableField['type'],required,unique,...(field.validation?{validation:structuredClone(field.validation)}:{}),...(field.defaultValue!==undefined?{defaultValue:structuredClone(field.defaultValue)}:{}),...(field.options?{options:field.options.map(o=>({id:o.id,label:o.label}))}:{}),...(field.linkPicker?{linkPicker:structuredClone(field.linkPicker)}:{}),...(field.numberFormat?{numberFormat:field.numberFormat}:{}),...(field.relation?{relation:{tableId:field.relation.entityId,cardinality:field.relation.cardinality,onDelete:field.relation.onDelete as 'restrict'}}:{}),...(field.expression?{...(lookup?{lookup:{relationFieldId:lookup.relationFieldId,valueFieldId:lookup.valueFieldId}}:{expression:structuredClone(field.expression)}),resultType:field.resultType as PortableField['resultType'],...(field.resultElementType?{resultElementType:field.resultElementType}:{})}: {})}
 }
-function portableValue(field:Field,value:CellValue):PortableBase['base']['tables'][number]['records'][number]['values'][string]{if(field.type!=='relation')return value as PortableBase['base']['tables'][number]['records'][number]['values'][string];const refs=value===null?[]:Array.isArray(value)?value:[value];if(refs.some(ref=>typeof ref!=='object'||!ref||!('recordId'in ref)||ref.appId!==field.relation!.ownerAppId||ref.entityId!==field.relation!.entityId))throw new AdmissionError('validation','Link value does not match its field.');const ids=refs.map(ref=>(ref as {recordId:string}).recordId);return field.relation!.cardinality==='many'?ids:ids[0]??null}
+export function portableValue(field:Field,value:CellValue):PortableBase['base']['tables'][number]['records'][number]['values'][string]{if(field.type!=='relation')return value as PortableBase['base']['tables'][number]['records'][number]['values'][string];const refs=value===null?[]:Array.isArray(value)?value:[value];if(refs.some(ref=>typeof ref!=='object'||!ref||!('recordId'in ref)||ref.appId!==field.relation!.ownerAppId||ref.entityId!==field.relation!.entityId))throw new AdmissionError('validation','Link value does not match its field.');const ids=refs.map(ref=>(ref as {recordId:string}).recordId);return field.relation!.cardinality==='many'?ids:ids[0]??null}
 /** No projection can silently turn a restricted base into a partial export. */
 export function createBaseExport(db:D1Database,services:ReturnType<typeof createRecordServices>){
- return async function exportBase(ctx:RequestContext,appId:string):Promise<PortableBase>{
+ const exportBase=async function(ctx:RequestContext,appId:string):Promise<PortableBase>{
   const {descriptors,policy,reader,metadata}=services
   const base=await db.prepare('SELECT name,version,release_id FROM manual_record_bases WHERE id=?').bind(appId).first<{name:string;version:number;release_id:string}>()
   if(!base)throw new AdmissionError('not_found','Base export is available for records-builder bases.')
@@ -62,4 +63,5 @@ export function createBaseExport(db:D1Database,services:ReturnType<typeof create
   await auditOperation(db,ctx,'base.export',appId)
   return result
  }
+ return Object.assign(exportBase,{prepare:(ctx:RequestContext,appId:string)=>prepareBaseStream(db,services,ctx,appId)})
 }

@@ -3,6 +3,7 @@ export type CursorPayload = {
     binding: string;
     revision: number;
     offset: number;
+    after?: string;
 };
 const enc = new TextEncoder();
 function b64(bytes: Uint8Array): string { return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, ''); }
@@ -18,7 +19,7 @@ export function createCursorCodec(secret: string) {
             if (!body || !sig || rest.length || !await crypto.subtle.verify('HMAC', await key, un64(sig), un64(body)))
                 throw new Error('Invalid signature');
             const p = JSON.parse(new TextDecoder().decode(un64(body)));
-            if (typeof p.binding !== 'string' || !Number.isSafeInteger(p.revision) || !Number.isSafeInteger(p.offset) || p.offset < 0)
+            if (typeof p.binding !== 'string' || (p.after !== undefined && (typeof p.after !== 'string' || !/^[0-9A-HJKMNP-TV-Z]{26}$/.test(p.after))) || !Number.isSafeInteger(p.revision) || !Number.isSafeInteger(p.offset) || p.offset < 0)
                 throw new Error('Invalid cursor');
             return p;
         }

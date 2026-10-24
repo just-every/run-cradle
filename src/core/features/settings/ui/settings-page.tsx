@@ -66,7 +66,7 @@ export const SettingsPage = () => {
         <details className="cr-detail" onToggle={event=>setKeysOpen(event.currentTarget.open)}><summary>API keys</summary>{keysOpen&&<ApiKeysPanel />}</details>
         <details className="cr-detail"><summary>Usage and model availability</summary><UsagePanel /></details>
         <LazySettingsPanel title="Twilio SMS"><SmsPanel /></LazySettingsPanel>
-        <LazySettingsPanel title="Slack app"><SlackAppPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Chat app"><SlackAppPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Custom fields"><CustomFieldsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Trash"><TrashPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Imports"><ImportsPanel /></LazySettingsPanel>

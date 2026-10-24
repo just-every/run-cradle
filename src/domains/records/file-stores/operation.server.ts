@@ -9,7 +9,7 @@ export const fileStoreRequests = registerTable('file_store_requests', ['job_id',
 export const fileStoreRequestSchema = z.discriminatedUnion('op', [
   z.object({ entityId:z.string(),fieldId:z.string(),op: z.literal('browse'), query: z.string().trim().min(1).max(200).nullable(), cursor: z.string().min(1).max(2048).nullable() }).strict(),
   z.object({ entityId:z.string(),fieldId:z.string(),recordId:z.string(),op:z.literal('metadata'),itemId:z.string().min(1).max(512) }).strict(),
-  z.object({ entityId:z.string(),fieldId:z.string(),recordId:z.string(),op: z.literal('thumbnail'), itemId: z.string().min(1).max(512) }).strict(),
+  z.object({ entityId:z.string(),fieldId:z.string(),recordId:z.string(),op: z.enum(['thumbnail','content']), itemId: z.string().min(1).max(512) }).strict(),
 ]);
 /** The fixed read operation a connection job runs for a file store: list, search or one thumbnail. It has no write endpoint. */
 export async function runFileStoreOperation(db: D1Database, ctx: RequestContext, connectionId: string, credentials: CredentialPort) {

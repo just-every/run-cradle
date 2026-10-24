@@ -10,6 +10,7 @@ import {createUlid} from '../src/core/shared/ids.ts'
 import {newField} from '../src/ui/records/schema/templates.ts'
 import {encodeCsv} from '../src/domains/portability/csv.ts'
 import {recordsCsvHttp} from '../src/domains/records/csv-http.server.ts'
+import {createRecordHttp} from '../src/domains/records/routes.server.ts'
 import {compileSchemaSet,stageSchemaSet,prepareSchemaSetActivation} from '../src/domains/records/migration.server.ts'
 
 // Exact money/collection fields exist in storage before the manual builder exposes them.
@@ -56,6 +57,20 @@ async function recurringCsv(h){
  const input={csv,mapping:used.mapping,mergeFieldId:used.mergeFieldId},preview=await call('import-preview',input)
  assert.deepEqual([preview.creates,preview.rejected],[61,3]);assert.equal(preview.rows[0].values[due.id],'2026-10-17');assert.deepEqual(preview.rows[0].values[budget.id],{minor:'123450',currency:'USD',scale:2});assert.equal(preview.rows[0].values[approved.id],true);assert.deepEqual(preview.rows[0].values[tags.id],tags.options.map(option=>option.id))
  await r.csv.commit(h.ctx,createUlid(),preview.id)
+ // Computed filters and sort values page through the public record door,
+ // including ties and sort fields omitted from the returned projection.
+ const readHttp=createRecordHttp({...r.services,authenticate:async()=>h.ctx})
+ for(const direction of ['asc','desc']){
+  const found=[];let cursor
+  do {
+   const response=await readHttp.fetch(new Request(`${origin}/api/v1/apps/${identity.appId}/entities/${identity.entityId}/query`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({fields:[name.id],filter:{kind:'condition',fieldId:calculated.id,op:'eq',value:'hidden needle'},sort:[{fieldId:calculated.id,direction:'asc'},{fieldId:name.id,direction}],limit:13,...(cursor?{cursor}:{})})}))
+   assert.equal(response.status,200,await response.clone().text());const page=(await response.json()).data
+   assert.equal(page.total.value,61);assert.ok(page.items.every(row=>Object.keys(row.fields).length===1))
+   found.push(...page.items.map(row=>row.fields[name.id].value));cursor=page.nextCursor
+  }while(cursor)
+  const expected=rows.map(row=>row[0]).sort();if(direction==='desc')expected.reverse()
+  assert.deepEqual(found,expected,'Computed query pages retain complete order without duplicates or skipped ties')
+ }
  const workbook=await call('export-xlsx',{query:{sort:[{fieldId:name.id,direction:'asc'}]}}),typed=readWorkbook(Buffer.from(workbook.content,'base64'),'vendors.xlsx')[0],at=label=>typed.headers.indexOf(label)
  assert.equal(typed.rows[0][at('Budget')].value,'1234.5');assert.equal(typed.rows[0][at('Budget')].type,'number');assert.equal(typed.rows[0][at('Due')].value,'2026-10-17');assert.equal(typed.rows[0][at('Approved')].value,true)
  assert.deepEqual(typed.rows.slice(0,4).map(row=>row[at('City')]),['=1+1','+1','-1','@SUM(A1)'].map(value=>({value,type:'text'})))
@@ -108,6 +123,23 @@ async function recurringCsv(h){
  assert.ok(await h.db.prepare('SELECT id FROM record_csv_previews WHERE id=?').bind(preview.id).first())
 }
 
+/** More than one raw page, with repeated computed sort keys, through HTTP. */
+async function evaluatedPagingJourney(h){
+ const name=newField('Name'),amount=newField('Amount','number'),computed={...newField('Calculated amount','computed'),readOnly:true,resultType:'number',expression:{kind:'field',fieldId:amount.id}},appId=createUlid(),entityId=createUlid()
+ const {r}=await h.create({appId,name:'synthetic-cradle-paged-query',tables:[{id:entityId,label:'Pages',fields:[name,amount,computed]}]})
+ const source=Array.from({length:241},(_,i)=>['synthetic-cradle-'+String(i).padStart(3,'0'),String(i%7)])
+ const preview=await r.csv.preview(h.ctx,{appId,entityId,csv:encodeCsv(['Name','Amount'],source),mapping:[{column:'Name',fieldId:name.id},{column:'Amount',fieldId:amount.id}],mergeFieldId:name.id})
+ await r.csv.commit(h.ctx,createUlid(),preview.id)
+ const read=createRecordHttp({...r.services,authenticate:async()=>h.ctx}),expected=source.filter(row=>Number(row[1])>1).sort((a,b)=>Number(b[1])-Number(a[1])||a[0].localeCompare(b[0])).map(row=>row[0]),actual=[]
+ let cursor
+ do{
+  const response=await read.fetch(new Request(`https://csv.example.test/api/v1/apps/${appId}/entities/${entityId}/query`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({fields:[name.id],sort:[{fieldId:computed.id,direction:'desc'},{fieldId:name.id,direction:'asc'}],filter:{kind:'condition',fieldId:computed.id,op:'after',value:'1'},limit:13,...(cursor?{cursor}:{})})}))
+  assert.equal(response.status,200,await response.clone().text());const page=(await response.json()).data
+  assert.equal(page.total.value,expected.length);actual.push(...page.items.map(row=>row.fields[name.id].value));cursor=page.nextCursor
+ }while(cursor)
+ assert.deepEqual(actual,expected,'Computed exports/query pages include every permitted row across raw-page boundaries')
+}
+
 test('[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 CSV, workbook and Sheets imports retain review, mapping, scheduled merge and export fences',async()=>{
  const migrations=migrationInventory(),mappingMigration=migrations.find(item=>item.name==='1230_record_csv_mappings.sql')
  const h=await harness(migratedD1(migrations.filter(item=>item!==mappingMigration)))
@@ -122,7 +154,7 @@ test('[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 CSV, workbook an
   const scope=await r.policy.scope(h.ctx,{appId:schema.appId,entityId:schema.id,purpose:'read'})
   assert.equal((await r.services.reader.query(h.ctx,scope,{})).items[0].fields[name.id].value,'Existing vendor')
   assert.equal((await r.manual.read(h.ctx,draft.appId)).name,draft.name)
-  await recurringCsv(h);await csvFenceScenario(h)
+  await evaluatedPagingJourney(h);await recurringCsv(h);await csvFenceScenario(h)
  }finally{h.close()}
  await workbookJourney()
 })

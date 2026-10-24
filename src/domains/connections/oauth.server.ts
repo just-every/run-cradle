@@ -2,13 +2,13 @@ import { z } from 'zod';
 import { base64, bytes, base64url } from '../../adapters/crypto.server';
 import { ProviderTransport } from '../../adapters/transport.server';
 import type { Endpoint } from '../../adapters/transport.server';
-export type OAuthProvider='gmail'|'google-sheets'|'google-calendar'|'google-drive'|'onedrive'|'dropbox'|'box'|'xero';
+export type OAuthProvider='outlook'|'gmail'|'google-sheets'|'google-calendar'|'google-drive'|'onedrive'|'dropbox'|'box'|'xero';
 export type OAuthConfiguration={clientId:string;clientSecret:string;redirectUri:string};
 export type FileStoreProvider='google-drive'|'onedrive'|'dropbox'|'box';
 export const fileStoreProviders:readonly FileStoreProvider[]=['google-drive','onedrive','dropbox','box'];
 /** The route segment and env pair one provider family shares: every Google service uses one client. */
 export type OAuthFamily='google'|'xero'|'microsoft'|'dropbox'|'box';
-export const oauthFamily=(provider:OAuthProvider):OAuthFamily=>provider==='xero'?'xero':provider==='onedrive'?'microsoft':provider==='dropbox'?'dropbox':provider==='box'?'box':'google';
+export const oauthFamily=(provider:OAuthProvider):OAuthFamily=>provider==='xero'?'xero':(provider==='onedrive'||provider==='outlook')?'microsoft':provider==='dropbox'?'dropbox':provider==='box'?'box':'google';
 const families:Record<OAuthFamily,{authorize:string;token:Endpoint;revoke:Endpoint|null;basicToken:boolean;extra:Record<string,string>}>={
  google:{authorize:'https://accounts.google.com/o/oauth2/v2/auth',token:'google.token',revoke:'google.revoke',basicToken:false,extra:{access_type:'offline',prompt:'consent'}},
  xero:{authorize:'https://login.xero.com/identity/connect/authorize',token:'xero.token',revoke:'xero.revoke',basicToken:true,extra:{}},
@@ -17,7 +17,7 @@ const families:Record<OAuthFamily,{authorize:string;token:Endpoint;revoke:Endpoi
  box:{authorize:'https://account.box.com/api/oauth2/authorize',token:'box.token',revoke:'box.revoke',basicToken:false,extra:{}},
 };
 /** Narrowest read scopes that serve each chooser: names, thumbnails and the store's own link; Cradle never asks to write. */
-export const oauthScopes=(provider:OAuthProvider)=>provider==='gmail'?['https://www.googleapis.com/auth/gmail.readonly']:provider==='google-sheets'?['https://www.googleapis.com/auth/spreadsheets.readonly']:provider==='google-calendar'?['https://www.googleapis.com/auth/calendar.events.owned','https://www.googleapis.com/auth/calendar.calendarlist.readonly']:provider==='google-drive'?['https://www.googleapis.com/auth/drive.metadata.readonly']:provider==='onedrive'?['Files.Read','offline_access']:provider==='dropbox'?['files.metadata.read','files.content.read']:provider==='box'?['root_readonly']:['accounting.invoices','offline_access'];
+export const oauthScopes=(provider:OAuthProvider)=>provider==='outlook'?['Calendars.ReadWrite','offline_access']:provider==='gmail'?['https://www.googleapis.com/auth/gmail.readonly']:provider==='google-sheets'?['https://www.googleapis.com/auth/spreadsheets.readonly']:provider==='google-calendar'?['https://www.googleapis.com/auth/calendar.events.owned','https://www.googleapis.com/auth/calendar.calendarlist.readonly']:provider==='google-drive'?['https://www.googleapis.com/auth/drive.readonly']:provider==='onedrive'?['Files.Read','offline_access']:provider==='dropbox'?['files.metadata.read','files.content.read']:provider==='box'?['root_readonly']:['accounting.invoices','offline_access'];
 export function consentURL(provider:OAuthProvider,config:OAuthConfiguration,state:string,challenge:string){const family=families[oauthFamily(provider)],url=new URL(family.authorize);url.search=new URLSearchParams({client_id:config.clientId,redirect_uri:config.redirectUri,response_type:'code',scope:oauthScopes(provider).join(' '),state,code_challenge:challenge,code_challenge_method:'S256',...family.extra}).toString();return url.toString();}
 export const pkceChallenge=async(verifier:string)=>base64url(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes(verifier))));
 export type Tokens={accessToken:string;refreshToken:string|null;expiresAt:string;scopes:string[];accountId?:string};

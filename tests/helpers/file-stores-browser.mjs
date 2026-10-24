@@ -7,12 +7,13 @@ import {workbookDoors} from './workbook-http.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 /** The attachment cell and its chooser at one width: connect, choose, attach, save, and read the reference back. */
 export async function fileStoresBrowser(page,h,width,output){
+ const beforeFiles=(await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n
  const j=recordsJourney(page,h.origin,output,width),d=await workbookDoors(h),appId=createUlid(),entityId=createUlid(),nameId=createUlid(),filesId=createUlid()
  const preview=await d.call('/api/v1/records/schema-preview',{appId,name:`Store files ${width}`,tables:[{id:entityId,label:'Files',primaryFieldId:nameId,fields:[{id:nameId,label:'Name',type:'text',required:true,unique:false},{id:filesId,label:'Attachments',type:'attachment',required:false,unique:false}]}]})
  await d.command('release.adopt',{kind:'manual_schema',previewId:preview.id})
  const entity=(await d.call(`/api/v1/apps/${appId}/entities`)).items.find(e=>e.id===entityId)
- await d.command('record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-site'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:entity.version}])
- const {people}=await fileStoreActors(h,appId)
+ const created=await d.command('record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-site'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:entity.version}])
+ const {people,command}=await fileStoreActors(h,appId)
  await page.context().addCookies(browserCookies(people.editor.cookie,h.origin))
  const edge='https://accounts.google.com/**'
  await page.route(edge,async route=>{const consent=new URL(route.request().url());await route.fulfill({status:302,headers:{location:h.origin+'/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-2',state:consent.searchParams.get('state')})}})})
@@ -37,7 +38,8 @@ export async function fileStoresBrowser(page,h,width,output){
  const thumb=page.locator('.cr-store-thumb');await thumb.waitFor();assert.equal(await thumb.evaluate(image=>image.complete&&image.naturalWidth>0),true,'The thumbnail loaded from the store on demand')
  assert.match(await page.locator('.cr-store-reference').innerText(),/Image · Google Drive/)
  await j.capture('file-store-cell-attached')
- assert.equal((await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n,0,'Nothing was copied into private file custody')
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n,beforeFiles,'Opening and attaching never copies bytes into private custody')
+ assert.equal(await page.getByRole('button',{name:'Keep a copy',exact:true}).count(),0,'An editor cannot request custody copies')
  }finally{await page.unroute(edge);await page.context().addCookies(browserCookies(h.cookie,h.origin))}
  // The installation owner's provider controls are on this same attachment surface.
  await page.goto(`${h.origin}/app/records/${appId}`);await j.table('Files')
@@ -53,6 +55,18 @@ export async function fileStoresBrowser(page,h,width,output){
   await j.action(page.getByRole('button',{name:'Save Google Drive policy',exact:true}));assert.equal((await saved).status(),200)
   assert.equal((await h.db.prepare("SELECT connect_role FROM file_store_policies WHERE provider='google-drive'").first()).connect_role,role)
  }
+ await page.goto(`${h.origin}/app/records/${appId}`);await j.table('Files');await j.action(page.getByRole('link',{name:'synthetic-cradle-site',exact:true}).first())
+ const ref=created.value.ref,before=(await d.call(`/api/v1/apps/${appId}/entities/${entityId}/records/${ref.recordId}`)).record,reference=before.fields[filesId].value[0].reference
+ await page.getByRole('button',{name:'Keep a copy',exact:true}).waitFor();await j.capture('file-store-keep-copy-request')
+ const saved=page.waitForResponse(r=>r.url().endsWith('/file-stores/keep-copy')&&r.request().method()==='POST')
+ await j.action(page.getByRole('button',{name:'Keep a copy',exact:true}));const response=await saved;if(response.status()!==200)assert.fail(await response.text())
+ const attachment=page.getByRole('link',{name:'Open attachment',exact:true});await attachment.waitFor();const copyRecord=(await d.call(`/api/v1/apps/${appId}/entities/${entityId}/records/${ref.recordId}`)).record,copy={record:copyRecord,fileId:copyRecord.fields[filesId].value.find(m=>m.fileId).fileId};assert.ok((await attachment.getAttribute('href')).includes(copy.fileId));await j.capture('file-store-keep-copy-retained')
+ const bytes=await page.request.get(h.origin+`/api/v1/files/${copy.fileId}/content`);assert.equal(bytes.status(),200);assert.deepEqual(await bytes.body(),h.fileStoresProvider.payload('google-drive',0))
+ // The archive journey proves these exact revoked connection fields; the record must show reconnect beside the retained copy.
+ await command(people.editor.cookie,'record.patch',{ref,changes:{[filesId]:[{fileId:copy.fileId},{reference}]}},[{ref,version:copy.record.version}])
+ await h.db.prepare("UPDATE provider_connections SET state='unconfigured',credential_ref=NULL,consent_scopes_json='[]',share_previews=0,account_verified=0 WHERE id=?").bind(reference.connectionId).run()
+ await h.db.prepare('DELETE FROM connection_credentials WHERE connection_id=?').bind(reference.connectionId).run()
+ await page.reload();await page.getByRole('link',{name:'Open attachment',exact:true}).waitFor();await page.locator('.cr-store-reference').getByRole('button',{name:'Connect Google Drive to preview',exact:true}).waitFor();await j.capture('file-store-copy-and-reconnect')
 }
 
 

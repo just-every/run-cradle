@@ -1,3 +1,4 @@
+import {StoreKeepCopy} from './store-keep-copy'
 import {StoreReferenceResolution} from './store-reference-resolution'
 import { useEffect, useState } from 'react'
 import type { Ref, StoreReference } from '../../contracts/primitives'
@@ -31,6 +32,7 @@ export function StoreReferenceView({ reference, record }: { reference: StoreRefe
     <a href={reference.link||undefined} target="_blank" rel="noopener noreferrer">{reference.name}<span className="cr-sr-only"> (opens in {storeLabels[reference.provider]})</span></a>
     <small className="cr-muted"> {typeLabel(reference.mediaType)} · {storeLabels[reference.provider]}{reference.size!==null?` · ${reference.size.toLocaleString()} bytes`:''}</small>
     {record&&reference.resolution==='unresolved'&&reference.provider!=='chest'&&<StoreReferenceResolution reference={reference} record={record}/>}
+    {record&&reference.connectionId&&reference.resolution!=='unresolved'&&reference.provider!=='chest'&&<StoreKeepCopy record={record} reference={reference}/>}
     {reference.resolution==='unverified'&&<>{' '}<span className="cr-tag cr-tag--warn">Unverified</span></>}
     {reference.resolution!=='unresolved'&&record&&reference.provider!=='chest'&&preview!=='loading'&&preview!=='image'&&<StoreConnect appId={record.appId} provider={reference.provider} preview/>}
   </span>

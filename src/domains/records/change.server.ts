@@ -51,7 +51,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
                 throw new AdmissionError('unconfigured', 'Attachment authorization port is required');
             for (const member of value as AttachmentMember[])
                 if ('fileId' in member)
-                    guards.push(...await attachments!.prepareLink(ctx, member.fileId, { appId: d.schema.appId, entityId: d.schema.id, recordId }, id));
+                    guards.push(...(verified?.get('file:'+member.fileId)??await attachments!.prepareLink(ctx, member.fileId, { appId: d.schema.appId, entityId: d.schema.id, recordId }, id)));
                 else
                     guards.push(...await storeReferenceGuards(ctx, d, recordId, d.fields.get(id)!, member.reference,verified));
         }

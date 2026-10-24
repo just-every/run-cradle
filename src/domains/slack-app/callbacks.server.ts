@@ -6,6 +6,10 @@ import type {slackIdentity} from './identity.server'
 import type {slackTransport} from './transport.server'
 import {verifySlack} from './transport.server'
 import {plainValue} from './effects.server'
+import {slackTextBlocks,assertSlackBlockCount} from './blocks.server'
+import {externalTeam} from './settings.server'
+import {teamsWebhook} from './teams-webhook.server'
+import {teamsCard} from './teams-transport.server'
 import {AuthorityError} from '../authority/errors'
 import {and,registerTable,trustedPredicate} from '../admission/sql.server'
 import {canonicalHash} from '../admission/canonical'
@@ -50,12 +54,14 @@ export function slackCallbacks(env:PlatformBindings,foundation:ServerFoundation,
     const record=await records.reader.record(ctx,current,ref),primary=descriptor.schema.primaryFieldId??descriptor.schema.fields.find(field=>field.type==='text')?.id,ids=[...new Set([...(primary?[primary]:[]),...(safe?.fieldIds??[])])]
     const lines=ids.flatMap(id=>{const cell=record.fields[id],field=descriptor.fields.get(id)?.field;return field&&current.readableFieldIds.includes(id)&&cell?.state==='value'?[field.label+': '+plainValue(cell.value)]:[]})
     const result=lines.join('\n')
-    if(!result||result.length>3000)throw new AuthorityError('unconfigured','The allowed record fields cannot fit Slack’s unfurl block; no values were shared.',503)
+    if(!result)throw new AuthorityError('unconfigured','The allowed record fields have no visible values.',503)
+    assertSlackBlockCount(slackTextBlocks(result))
     await records.reader.assertScope(ctx,current)
     return result
    })}catch(error){if(!(error instanceof AuthorityError)&&!(error instanceof Error&&'code'in error&&['forbidden','not_found','grant_revoked','validation','unconfigured'].includes(String(error.code))))throw error}
-   unfurls[item.url]={blocks:[{type:'section',text:{type:'plain_text',text}}]}
+   unfurls[item.url]={blocks:slackTextBlocks(text)}
   }
+  if(installation.provider==='teams')return {unfurls}
   if(Object.keys(unfurls).length){const response=await api('chat.unfurl',bot!.token,{channel:event.channel,ts:event.message_ts,unfurls});if(response.status!==200||response.value.ok!==true)throw new AuthorityError('provider_unavailable','Slack did not acknowledge the record unfurl.',503)}
   return {ok:true}
  }
@@ -64,21 +70,25 @@ export function slackCallbacks(env:PlatformBindings,foundation:ServerFoundation,
   const reader=request.body?.getReader(),parts:Uint8Array[]=[];let size=0
   if(reader)for(;;){const result=await reader.read();if(result.done)break;size+=result.value.length;if(size>65536){await reader.cancel();return new Response(null,{status:413})}parts.push(result.value)}
   const raw=new Uint8Array(size);let offset=0;for(const part of parts){raw.set(part,offset);offset+=part.length}
-  const {credentials}=await settings.resolve()
-  if(!await verifySlack(request,raw,credentials.signingSecret))return new Response(null,{status:401})
+  const {installation,credentials}=await settings.resolve()
+  if(new URL(request.url).pathname.split('/')[2]!==installation.provider)throw new AuthorityError('forbidden','This callback is not for the configured chat provider.')
+  let normalized:any
+  if(installation.provider==='teams'){const activity=await teamsWebhook(env,request,raw,installation,credentials);kind=activity.kind;normalized=activity.payload}
+  else if(!await verifySlack(request,raw,credentials.signingSecret))return new Response(null,{status:401})
   const receipt=await sha256(raw),claimed=await db.prepare('INSERT INTO slack_app_webhook_receipts(id,received_at) VALUES(?,?) ON CONFLICT(id) DO NOTHING').bind(receipt,Date.now()).run()
   if(!claimed.meta.changes)return new Response(null,{status:409})
   const text=new TextDecoder('utf-8',{fatal:true}).decode(raw)
   if(kind==='link'){
-   const form=new URLSearchParams(text),team=form.get('team_id'),user=form.get('user_id'),code=form.get('text')?.trim()
-   if(!team||!user||!code||form.get('command')!=='/cradle-link')throw new AuthorityError('validation','Use /cradle-link with the one-time code from Cradle Settings.',400)
+   const form=normalized??Object.fromEntries(new URLSearchParams(text)),team=installation.provider==='teams'?form.team_id:externalTeam(installation.provider,form.team_id??''),user=form.user_id,code=form.text?.trim()
+   if(!team||!user||!code||form.command!=='/cradle-link')throw new AuthorityError('validation','Use /cradle-link with the one-time code from Cradle Settings.',400)
    await identity.consume(team,user,code)
    return Response.json({response_type:'ephemeral',text:'Cradle account linked.'})
   }
-  if(kind==='actions')return Response.json(await click(JSON.parse(new URLSearchParams(text).get('payload')??'null')))
-  const payload=JSON.parse(text)
+  if(kind==='actions'){const payload=normalized??JSON.parse(new URLSearchParams(text).get('payload')??'null');if(installation.provider==='nook'&&typeof payload?.team?.id==='string')payload.team.id=externalTeam('nook',payload.team.id);const result=await click(payload);return Response.json(installation.provider==='teams'?{statusCode:200,type:'application/vnd.microsoft.activity.message',value:{type:'message',text:result.text}}:result)}
+  const payload=normalized??JSON.parse(text)
+  if(installation.provider==='nook'&&typeof payload.team_id==='string')payload.team_id=externalTeam('nook',payload.team_id)
   if(payload.type==='url_verification'&&typeof payload.challenge==='string'&&payload.challenge.length<=512)return Response.json({challenge:payload.challenge})
-  if(payload.type==='event_callback'&&payload.event?.type==='link_shared')return Response.json(await unfurls(payload))
+  if(payload.type==='event_callback'&&payload.event?.type==='link_shared'){const result=await unfurls(payload);if(installation.provider==='teams'&&'unfurls'in result&&result.unfurls)return Response.json({composeExtension:{type:'result',attachmentLayout:'list',attachments:Object.values(result.unfurls).map((value:any)=>({contentType:'application/vnd.microsoft.card.adaptive',content:teamsCard(value.blocks)}))}});return Response.json(result)}
   return Response.json({ok:true})
  }
 }

@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 /** Real native sessions and generated base role policies for the personal-store journeys. */
 export async function fileStoreActors(h,appId){
- const people={editor:{id:createUlid(),name:'synthetic-cradle-editor-1'},second:{id:createUlid(),name:'synthetic-cradle-editor-2'},reader:{id:createUlid(),name:'synthetic-cradle-reader-1'}}
+ const actorSet=createUlid().toLowerCase()
+ const people={editor:{id:createUlid(),name:'synthetic-cradle-editor-1-'+actorSet},second:{id:createUlid(),name:'synthetic-cradle-editor-2-'+actorSet},reader:{id:createUlid(),name:'synthetic-cradle-reader-1-'+actorSet}}
  async function request(cookie,path,{body,status=200}={}){
   const csrf=(await(await fetch(h.origin+'/auth/csrf',{headers:{cookie}})).json()).csrfToken
   const response=await fetch(h.origin+path,{method:body===undefined?'GET':'POST',redirect:'manual',headers:{cookie,origin:h.origin,'x-csrf-token':csrf,'content-type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})})

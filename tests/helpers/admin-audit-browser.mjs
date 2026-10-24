@@ -18,7 +18,7 @@ export async function adminAuditBrowser(page,h,journey){
  await panel.getByRole('link',{name:'Export JSON',exact:true}).waitFor()
  assert.ok(await panel.getByText('credential.issue',{exact:true}).count(),'The issued key is recorded')
  assert.ok(await panel.getByText('credential.revoke',{exact:true}).count(),'The revoked key is recorded')
- for(const action of ['automation.create','automation.edit','automation.enable','automation.renew','automation.destination.change','automation.disable','automation.destination.revoke'])assert.ok(await panel.getByText(action,{exact:true}).count(),action+' is visible in the filtered log')
+ for(const action of ['api-key.rotate','webhook.rotate','automation.create','automation.edit','automation.enable','automation.renew','automation.destination.change','automation.disable','automation.destination.revoke'])assert.ok(await panel.getByText(action,{exact:true}).count(),action+' is visible in the filtered log')
  assert.ok((await panel.getByRole('link',{name:'Export CSV',exact:true}).getAttribute('href')).includes(h.appId))
  await journey.capture('admin-audit-filtered')
  await panel.getByLabel('Base',{exact:true}).selectOption('')

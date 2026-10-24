@@ -5,6 +5,7 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
 import {slackAppNetworkEdge,slackAppFixture} from './slack-app-network-edge.mjs'
+import {teamsAppNetworkEdge} from './teams-app-network-edge.mjs'
 
 export async function signedSlack(origin,path,body,{json=false,stale=false,forged=false,status=200,timestamp}={}){
  const raw=json?JSON.stringify(body):new URLSearchParams(body).toString(),time=timestamp??String(Math.floor(Date.now()/1000)-(stale?600:0))
@@ -17,28 +18,36 @@ export async function signedSlack(origin,path,body,{json=false,stale=false,forge
 
 /** [INTEG-001] Native sessions and admitted record commands remain real; Slack
  * OAuth, API responses and signed incoming traffic are the only fake boundary. */
-export async function slackAppJourney(){
- const edge=await slackAppNetworkEdge(),fixture=edge.fixture;let h
+export async function slackAppJourney(provider='slack'){
+ const edge=provider==='teams'?await teamsAppNetworkEdge():await slackAppNetworkEdge({provider}),fixture=edge.fixture;let h
+ const incoming=(origin,path,body,options)=>provider==='teams'?edge.signed(origin,path,body,options):signedSlack(origin,provider==='nook'?path.replace('/slack/','/nook/'):path,body,options)
+ const configuration={provider,clientId:fixture.clientId,clientSecret:fixture.clientSecret,signingSecret:fixture.signingSecret,...(provider==='nook'?{appToken:fixture.botToken,nookOrigin:fixture.providerOrigin}:{}),...(provider==='teams'?{tenantId:fixture.tenantId}:{})}
+ const longTitle='synthetic-cradle-120-primary'+('🙂'.repeat(1600)),longText='synthetic-cradle-120-review'+('x'.repeat(3200)),longApproval='synthetic-cradle-120-approved'+('y'.repeat(3200)),longRejection='synthetic-cradle-120-rejected'+('z'.repeat(3200))
  try{
   h=await userAutomationRuntime(0,{bindings:edge.bindings,outbound:request=>edge.outbound(request)});edge.setOrigin(h.origin)
   const root='/api/user-automations/slack',settings=root+'/settings'
   assert.equal((await h.request(settings)).data.configured,false)
-  await h.request(settings,{method:'PUT',body:{clientId:fixture.clientId,clientSecret:fixture.clientSecret,signingSecret:fixture.signingSecret}})
+  await h.request(settings,{method:'PUT',body:configuration})
   const configured=(await h.request(settings)).data
   assert.equal(configured.configured,true);assert.equal(configured.installed,false)
   for(const secret of [fixture.clientSecret,fixture.signingSecret,fixture.botToken])assert.ok(!JSON.stringify(configured).includes(secret),'Slack credentials are write-only')
-  const installed=(await h.request(root+'/install',{method:'POST',body:{}})).data,authorization=new URL(installed.authorizeUrl)
-  assert.equal(authorization.origin,'https://slack.com');assert.equal(authorization.pathname,'/oauth/v2/authorize')
-  assert.equal(authorization.searchParams.get('client_id'),fixture.clientId);assert.equal(authorization.searchParams.get('redirect_uri'),h.origin+'/oauth/slack/callback')
-  assert.ok(authorization.searchParams.get('state'))
-  const callback=state=>fetch(h.origin+'/oauth/slack/callback?'+new URLSearchParams({state,code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}})
-  const invalid=await callback('synthetic-cradle-120-forged-state');assert.equal(invalid.status,409);await invalid.arrayBuffer()
-  assert.equal(edge.oauthRequests.length,0,'A forged OAuth state never exchanges a code')
-  const accepted=await callback(authorization.searchParams.get('state'));assert.equal(accepted.status,303);await accepted.arrayBuffer()
-  assert.equal(edge.oauthRequests.length,1)
-  const installedSettings=(await h.request(settings)).data;assert.equal(installedSettings.installed,true)
+  const installed=(await h.request(root+'/install',{method:'POST',body:{}})).data
+  if(provider==='nook'){assert.equal(installed.installed,true);assert.equal(edge.oauthRequests.length,0,'Nook validates the explicitly configured scoped app token')}
+  else{
+   const authorization=new URL(installed.authorizeUrl)
+   assert.equal(authorization.origin,provider==='teams'?'https://login.microsoftonline.com':'https://slack.com')
+   assert.equal(authorization.pathname,provider==='teams'?'/'+fixture.tenantId+'/oauth2/v2.0/authorize':'/oauth/v2/authorize')
+   assert.equal(authorization.searchParams.get('client_id'),fixture.clientId);assert.equal(authorization.searchParams.get('redirect_uri'),h.origin+'/oauth/'+provider+'/callback')
+   assert.ok(authorization.searchParams.get('state'))
+   const callback=state=>fetch(h.origin+'/oauth/'+provider+'/callback?'+new URLSearchParams({state,code:fixture.code}),{redirect:'manual',headers:{cookie:h.cookie}})
+   const invalid=await callback('synthetic-cradle-120-forged-state');assert.equal(invalid.status,409);await invalid.arrayBuffer()
+   assert.equal(edge.oauthRequests.length,0,'A forged OAuth state never exchanges a code')
+   const accepted=await callback(authorization.searchParams.get('state'));assert.equal(accepted.status,303);await accepted.arrayBuffer()
+   assert.equal(edge.oauthRequests.length,1)
+   const replayed=await callback(authorization.searchParams.get('state'));assert.equal(replayed.status,409);await replayed.arrayBuffer();assert.equal(edge.oauthRequests.length,1,'OAuth state is one-use')
+  }
+  const installedSettings=(await h.request(settings)).data;assert.equal(installedSettings.installed,true);assert.equal(installedSettings.provider,provider)
   for(const secret of [fixture.clientSecret,fixture.signingSecret,fixture.botToken])assert.ok(!JSON.stringify(installedSettings).includes(secret),'Installed credentials remain write-only')
-  const replayed=await callback(authorization.searchParams.get('state'));assert.equal(replayed.status,409);await replayed.arrayBuffer();assert.equal(edge.oauthRequests.length,1,'OAuth state is one-use')
   const channels=(await h.request(root+'/channels')).data.channels
   assert.deepEqual(channels.map(channel=>({id:channel.id,name:channel.name})),edge.channels.map(channel=>({id:channel.id,name:channel.name})))
   const sealed=await h.db.prepare("SELECT sealed_json,bot_sealed_json FROM slack_app_installation WHERE id='installation'").first()
@@ -61,24 +70,26 @@ export async function slackAppJourney(){
   async function link(request,userId){
    const issued=(await request(root+'/link',{method:'POST',body:{}})).data
    assert.ok(issued.code&&issued.expiresAt)
-   await signedSlack(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:userId,command:'/cradle-link',text:issued.code})
+   await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:userId,command:'/cradle-link',text:issued.code})
    assert.equal((await request(settings)).data.linked,true);assert.equal((await request(settings)).data.slackUserId,userId)
-   await signedSlack(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:userId,command:'/cradle-link',text:issued.code},{status:409})
+   await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:userId,command:'/cradle-link',text:issued.code},{status:409})
   }
   await link(h.request,fixture.ownerUserId);await link(editor.request,fixture.editorUserId);await link(denied.request,fixture.deniedUserId)
   const replacedCode=(await editor.request(root+'/link',{method:'POST',body:{}})).data.code
   const revokedCode=(await editor.request(root+'/link',{method:'POST',body:{}})).data.code
-  await signedSlack(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:fixture.editorUserId,command:'/cradle-link',text:replacedCode},{status:409})
+  await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:fixture.editorUserId,command:'/cradle-link',text:replacedCode},{status:409})
   await editor.request(root+'/link',{method:'DELETE',body:{}})
   assert.equal((await editor.request(settings)).data.linked,false)
-  await signedSlack(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:fixture.editorUserId,command:'/cradle-link',text:revokedCode},{status:409})
+  await incoming(h.origin,'/webhooks/slack/link',{team_id:fixture.teamId,user_id:fixture.editorUserId,command:'/cradle-link',text:revokedCode},{status:409})
   assert.equal((await editor.request(settings)).data.linked,false,'Unlinking revokes outstanding codes instead of allowing a later re-link')
   await link(editor.request,fixture.editorUserId)
-  const challenge=await signedSlack(h.origin,'/webhooks/slack/events',{type:'url_verification',challenge:'synthetic-cradle-120-challenge'},{json:true})
-  assert.equal(challenge.challenge,'synthetic-cradle-120-challenge')
-  const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-120-approval',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'slack-app',channelId:fixture.channelId,text:'synthetic-cradle-120-review',fieldId:h.statusId,approveValue:'synthetic-cradle-120-approved',rejectValue:'synthetic-cradle-120-rejected'}]}}})).data.result.value
+  if(provider!=='teams'){const challenge=await incoming(h.origin,'/webhooks/slack/events',{type:'url_verification',challenge:'synthetic-cradle-120-challenge'},{json:true});assert.equal(challenge.challenge,'synthetic-cradle-120-challenge')}
+  const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-120-approval',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'slack-app',provider,channelId:fixture.channelId,text:longText,fieldId:h.statusId,approveValue:longApproval,rejectValue:longRejection}]}}})).data.result.value
   async function create(label){const created=await h.create(label);await h.tick(created.commandId);return created}
-  const first=await create('synthetic-cradle-120-primary'),message=edge.messages.at(-1)
+  const first=await create(longTitle),message=edge.messages.at(-1)
+  const sections=message.body.blocks.filter(block=>block.type==='section'&&block.text.type==='plain_text')
+  assert.equal(sections.map(block=>block.text.text).join(''),longTitle+longText+'Approve → Status: '+longApproval+'\nReject → Status: '+longRejection,'Multi-block title, body and choices preserve every character and Unicode pair')
+  assert.ok(sections.length>3&&sections.every(block=>block.text.text.length<=3000),'Every Slack section fits the provider limit')
   const visibleMessage=message.body.blocks.flatMap(block=>[block.text?.text,...(block.fields??[]).map(field=>field.text)]).filter(Boolean).join('\n')
   assert.ok(visibleMessage.includes('synthetic-cradle-120-primary')&&visibleMessage.includes('synthetic-cradle-120-review'),'The rich record message contains the primary field and composed message')
   assert.ok(visibleMessage.includes('Status')&&visibleMessage.includes('synthetic-cradle-120-approved')&&visibleMessage.includes('synthetic-cradle-120-rejected'),'People see the field and both proposed write values before choosing a decision')
@@ -88,13 +99,13 @@ export async function slackAppJourney(){
   const record=async created=>(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.ref.recordId}`)).data.record
   const before=await record(first)
   const payload=(posted,userId,choice='cradle_approve')=>({type:'block_actions',team:{id:fixture.teamId},user:{id:userId},channel:{id:fixture.channelId},container:{message_ts:posted.ts},actions:[{action_id:choice,value:posted.body.blocks.flatMap(block=>block.elements??[]).find(button=>button.action_id===choice).value}]})
-  async function click(body,options){return signedSlack(h.origin,'/webhooks/slack/actions',{payload:JSON.stringify(body)},options)}
+  async function click(body,options){return incoming(h.origin,'/webhooks/slack/actions',{payload:JSON.stringify(body)},options)}
   for(const [user,options] of [[fixture.editorUserId,{forged:true,status:401}],[fixture.editorUserId,{stale:true,status:401}],[fixture.unlinkedUserId,{status:403}],[fixture.deniedUserId,{status:403}]]){
    await click(payload(message,user),options);assert.deepEqual(await record(first),before,'Refused clicks change no record values or version')
   }
   const validPayload=payload(message,fixture.editorUserId),timestamp=String(Math.floor(Date.now()/1000))
   await click(validPayload,{timestamp})
-  const approved=await record(first);assert.equal(approved.fields[h.statusId].value,'synthetic-cradle-120-approved');assert.equal(approved.version,before.version+1)
+  const approved=await record(first);assert.equal(approved.fields[h.statusId].value,longApproval);assert.equal(approved.version,before.version+1)
   const history='/api/v1/history?'+new URLSearchParams(first.record.ref)
   const writes=(await h.request(history)).data.items.filter(item=>item.action==='record.patch')
   assert.ok(writes.some(item=>item.actor.id===editor.principalId&&item.actor.kind==='human'),'A Slack click writes as the linked native person')
@@ -102,12 +113,12 @@ export async function slackAppJourney(){
   await click(payload(message,fixture.ownerUserId,'cradle_reject'),{status:409});assert.deepEqual(await record(first),approved,'An old message cannot overwrite a newer record version')
   const second=await create('synthetic-cradle-120-second'),secondMessage=edge.messages.at(-1)
   await click(payload(secondMessage,fixture.ownerUserId,'cradle_reject'))
-  assert.equal((await record(second)).fields[h.statusId].value,'synthetic-cradle-120-rejected','The other legitimate decision uses the same native version guard')
+  assert.equal((await record(second)).fields[h.statusId].value,longRejection,'The other legitimate decision uses the same native version guard')
   const url=h.origin+'/app/records/'+h.appId+'/'+h.entityId+'/'+first.record.ref.recordId
   let event=0
   async function unfurl(user){
    const start=edge.unfurls.length
-   await signedSlack(h.origin,'/webhooks/slack/events',{type:'event_callback',team_id:fixture.teamId,event_id:'synthetic-cradle-120-event-'+(++event),event:{type:'link_shared',user,channel:fixture.channelId,message_ts:'1700000000.000001',links:[{url}]}},{json:true})
+   await incoming(h.origin,'/webhooks/slack/events',{type:'event_callback',team_id:fixture.teamId,event_id:'synthetic-cradle-120-event-'+(++event),event:{type:'link_shared',user,channel:fixture.channelId,message_ts:'1700000000.000001',links:[{url}]}},{json:true})
    return JSON.stringify(edge.unfurls.slice(start))
   }
   const safeFields={appId:h.appId,entityId:h.entityId,fieldIds:[h.statusId]}
@@ -133,6 +144,9 @@ export async function slackAppJourney(){
   await h.request(root+'/unfurl-fields',{method:'PUT',body:{appId:h.appId,entityId:h.entityId,fieldIds:[h.statusId]}})
   assert.deepEqual((await h.request(settings+'?'+new URLSearchParams({appId:h.appId,entityId:h.entityId}))).data.unfurlSafeFieldIds,[h.statusId])
   const readable=await unfurl(fixture.editorUserId);assert.ok(readable.includes('synthetic-cradle-120-primary')&&readable.includes('synthetic-cradle-120-approved'))
+  const unfurlBlocks=edge.unfurls.at(-1).unfurls[url].blocks
+  assert.ok(unfurlBlocks.length>1&&unfurlBlocks.every(block=>block.text.text.length<=3000),'Allowed projections larger than one block split across provider-valid blocks')
+  assert.equal(unfurlBlocks.map(block=>block.text.text).join(''),'Name: '+longTitle+'\nStatus: '+longApproval,'Unfurls preserve all allowed values without truncation')
   for(const user of [fixture.unlinkedUserId,fixture.deniedUserId]){const hidden=await unfurl(user);assert.ok(!hidden.includes('synthetic-cradle-120-primary')&&!hidden.includes('synthetic-cradle-120-approved'),'Unlinked or unauthorized posters expose no record values')}
   const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(editor.principalId,h.appId).first()
   assert.ok(policy)
@@ -168,10 +182,11 @@ export async function slackAppJourney(){
   assert.equal(run.state,'Unknown');await h.tick(unknown.commandId);await h.restart();await h.tick(unknown.commandId)
   assert.equal(edge.postRequests.length,count,'Uncertain Slack messages are never resent after queue replay or restart')
   await editor.request(root+'/link',{method:'DELETE',body:{}});assert.equal((await editor.request(settings)).data.linked,false)
-  const replacement={clientId:fixture.clientId,clientSecret:'synthetic-cradle-123-replacement-client-secret',signingSecret:'synthetic-cradle-123-replacement-signing-secret'}
+  const replacement={...configuration,clientId:fixture.clientId,clientSecret:'synthetic-cradle-123-replacement-client-secret',signingSecret:'synthetic-cradle-123-replacement-signing-secret'}
   await h.request(settings,{method:'PUT',body:replacement})
   const replaced=(await h.request(settings)).data;assert.equal(replaced.configured,true);assert.equal(replaced.installed,false,'Replacing app credentials requires fresh OAuth consent')
   assert.ok(!JSON.stringify(replaced).includes(replacement.clientSecret)&&!JSON.stringify(replaced).includes(replacement.signingSecret))
   await h.request(settings,{method:'DELETE',body:{}});assert.equal((await h.request(settings)).data.configured,false)
+  console.log('CHAT_APP_JOURNEY_PASS '+provider)
  }finally{await h?.close();await edge.close()}
 }

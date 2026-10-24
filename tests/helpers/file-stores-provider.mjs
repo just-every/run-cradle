@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
 const files = [['synthetic-cradle-plan.png', 'image/png', 2048], ['synthetic-cradle-notes.pdf', 'application/pdf', 4096], ['synthetic-cradle-budget.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 8192]]
-export const storeScopes = { 'google-drive': ['https://www.googleapis.com/auth/drive.metadata.readonly'], onedrive: ['Files.Read', 'offline_access'], dropbox: ['files.metadata.read', 'files.content.read'], box: ['root_readonly'] }
-const reads = new Set(['/2/files/get_metadata', '/2/files/list_folder', '/2/files/list_folder/continue', '/2/files/search_v2', '/2/files/get_thumbnail_v2','/revoke','/2/auth/token/revoke'])
+export const storeScopes = { 'google-drive': ['https://www.googleapis.com/auth/drive.readonly'], onedrive: ['Files.Read', 'offline_access'], dropbox: ['files.metadata.read', 'files.content.read'], box: ['root_readonly'] }
+const reads = new Set(['/2/files/download','/2/files/get_metadata', '/2/files/list_folder', '/2/files/list_folder/continue', '/2/files/search_v2', '/2/files/get_thumbnail_v2','/revoke','/2/auth/token/revoke'])
 /** Synthetic provider edge for the four stores. Records every request so a journey can prove nothing was written or shared. */
 export function fileStoresProvider() {
   const seen = [], writes = [],denied=new Set()
@@ -25,7 +25,7 @@ export function fileStoresProvider() {
   const image = async () => {await thumbnailObserver?.();return new Response(png, { headers: { 'content-type': 'image/png' } })}
   const named = (prefix, i) => `${prefix}-${i}`
   return {
-    seen, writes, png,denied,changeDigest(provider,itemId){const i=indexOf(itemId);assert.ok(files[i]);changed.add(`${provider}:${i}`)},observeThumbnails(observer){thumbnailObserver=observer},
+    seen, writes, png,payload,denied,changeDigest(provider,itemId){const i=indexOf(itemId);assert.ok(files[i]);changed.add(`${provider}:${i}`)},observeThumbnails(observer){thumbnailObserver=observer},
     async fetch(request) {
       const u = new URL(request.url); seen.push(`${request.method} ${u.origin}${u.pathname}`)
       const form = async () => new URLSearchParams(await request.clone().text())
@@ -39,25 +39,30 @@ export function fileStoresProvider() {
       if(u.pathname.endsWith('/revoke')||u.pathname==='/2/auth/token/revoke')return new Response(null,{status:200})
       if((u.pathname==='/drive/v3/files/root')||(u.pathname==='/v1.0/me/drive')||(u.pathname==='/2.0/users/me'))return Response.json({id:request.headers.get('authorization')==='Bearer synthetic-cradle-access-reader'?'synthetic-cradle-namespace-reader':'synthetic-cradle-namespace-1'})
       if(denied.has(request.headers.get('authorization')?.replace('Bearer ','')))return Response.json({error:'synthetic-cradle-access-denied'},{status:403})
+      if(u.pathname.startsWith('/synthetic-cradle-content-')&&(u.hostname==='synthetic-cradle.files.1drv.com'||u.hostname==='dl.boxcloud.com')){assert.equal(request.headers.get('authorization'),null,'Redirected downloads never receive the store bearer token');return new Response(payload(u.hostname==='dl.boxcloud.com'?'box':'onedrive',indexOf(u.pathname)))}
       if (u.hostname.endsWith('.googleusercontent.com') || u.hostname.endsWith('.1drv.com')) { assert.ok(['Bearer synthetic-cradle-access-1','Bearer synthetic-cradle-access-reader'].includes(request.headers.get('authorization'))); return image() }
       assert.ok(['Bearer synthetic-cradle-access-1','Bearer synthetic-cradle-access-reader'].includes(request.headers.get('authorization')))
       if (u.hostname === 'www.googleapis.com' && u.pathname === '/drive/v3/files') {
         const q = u.searchParams.get('q') ?? '', match = /name contains '([^']*)'/.exec(q)?.[1]
         return Response.json({ files: files.map(drive).filter(f => !match || f.name.includes(match)) })
       }
+      if(u.hostname==='www.googleapis.com'&&u.searchParams.get('alt')==='media'){const i=indexOf(u.pathname);return new Response(payload('google-drive',i))}
       if (u.hostname === 'www.googleapis.com' && u.pathname.startsWith('/drive/v3/files/')) {const i=indexOf(u.pathname);return files[i]?Response.json(drive(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
       if (u.hostname === 'graph.microsoft.com') {
+        if(u.pathname.endsWith('/content')){const i=indexOf(u.pathname.replace(/\/content$/,''));return new Response(null,{status:302,headers:{location:`https://synthetic-cradle.files.1drv.com/synthetic-cradle-content-${i}`}})}
         if (/\/items\//.test(u.pathname)) {const i=indexOf(u.pathname);return files[i]?Response.json(graph(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
         const match = /search\(q='([^']*)'\)/.exec(decodeURIComponent(u.pathname))?.[1]
         return Response.json({ value: [{ id: 'synthetic-cradle-folder', name: 'Folder', webUrl: 'https://synthetic-cradle.sharepoint.com/f', folder: {} }, ...files.map(graph).filter(f => !match || f.name.includes(match))] })
       }
       if (u.hostname === 'api.dropboxapi.com' || u.hostname === 'content.dropboxapi.com') {
+        if(u.pathname==='/2/files/download'){const i=indexOf(JSON.parse(request.headers.get('dropbox-api-arg')).path);return new Response(payload('dropbox',i))}
         if (u.pathname === '/2/files/get_thumbnail_v2') { assert.match(request.headers.get('dropbox-api-arg'), /"id:synthetic-cradle-dropbox-0"/); return image() }
         const body = await request.json(), entries = files.map(dropbox)
         if(u.pathname==='/2/files/get_metadata'){const entry=entries.find(e=>e.id===body.path);return entry?Response.json(entry):Response.json({error:{'.tag':'path',path:{'.tag':'not_found'}}},{status:409})}
         return Response.json(u.pathname === '/2/files/search_v2' ? { matches: entries.filter(e => e.name.includes(body.query)).map(e => ({ metadata: { '.tag': 'metadata', metadata: e } })) } : { entries: [{ '.tag': 'folder', id: 'id:synthetic-cradle-folder', name: 'Folder' }, ...entries], has_more: false, cursor: 'synthetic-cradle-cursor' })
       }
       if (u.hostname === 'api.box.com') {
+        if(u.pathname.endsWith('/content')){const i=indexOf(u.pathname.replace(/\/content$/,''));return new Response(null,{status:302,headers:{location:`https://dl.boxcloud.com/synthetic-cradle-content-${i}`}})}
         if (u.pathname.endsWith('/thumbnail.png')) return image()
         if(u.pathname.startsWith('/2.0/files/')){const i=indexOf(u.pathname);return files[i]?Response.json(box(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
         const query = u.searchParams.get('query')

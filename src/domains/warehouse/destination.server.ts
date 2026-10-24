@@ -13,16 +13,28 @@ export type WarehouseStore=Omit<WarehouseStage,'put'>&{put(key:string,body:strin
 function keyring(env:PlatformBindings){const version=env.CONNECTION_ENCRYPTION_KEY_VERSION??'v1';return environmentKeyring(version,v=>v===version?env.CONNECTION_ENCRYPTION_KEY:undefined)}
 export async function sealWarehouseAccess(env:PlatformBindings,id:string,access:WarehouseAccess){return JSON.stringify(await seal(keyring(env),LAUNCH_APP_ID,id,'warehouse.destination',JSON.stringify(access)))}
 async function warehouseAccess(env:PlatformBindings,id:string,sealed:string){return warehouseAccessSchema.parse(JSON.parse(await open(keyring(env),LAUNCH_APP_ID,id,'warehouse.destination',JSON.parse(sealed) as Sealed)))}
+/** R2 multipart writes keep a single object identity, including large manifests. */
+function r2Stage(bucket:R2Bucket):WarehouseStage{return {
+ async put(key,body,options){
+  const data=typeof body==='string'?new TextEncoder().encode(body):new Uint8Array(body)
+  if(data.length<=1048576){await bucket.put(key,body,options);return}
+  const upload=await bucket.createMultipartUpload(key,options),parts:R2UploadedPart[]=[];let completed=false
+  try{
+   for(let offset=0,index=1;offset<data.length;offset+=5242880,index++)parts.push(await upload.uploadPart(index,data.slice(offset,offset+5242880)))
+   await upload.complete(parts);completed=true
+  }finally{if(!completed)await upload.abort()}
+ },get:key=>bucket.get(key),head:key=>bucket.head(key),delete:key=>bucket.delete(key),
+}}
 type Custody={export_id:string;destination_json:string;sealed_json:string|null;metadata_json:string|null;dispatch_state:string}
 export async function warehouseStore(env:PlatformBindings,bucket:R2Bucket,id:string,destination:WarehouseDestination,sealed:string|null):Promise<WarehouseStore>{
  if(destination.kind==='r2'){
   if(!bucket?.put)throw new AuthorityError('unconfigured','WAREHOUSE R2 binding is required for this export destination.',503)
-  return bucket
+  return r2Stage(bucket)
  }
  if(!sealed)throw new AuthorityError('unconfigured','Reconnect this export destination in Settings before exported-copy custody can be confirmed.',503)
  const access=await warehouseAccess(env,id,sealed)
  if(destination.kind==='s3')return createS3WarehouseStore(env,destination,accessSchema.parse(access))
- const stage=destination.kind==='bigquery'?bucket:await createS3WarehouseStore(env,destination.stageStorage,accessSchema.parse({accessKeyId:'accessKeyId'in access?access.accessKeyId:'',secretAccessKey:'secretAccessKey'in access?access.secretAccessKey:''}))
+ const stage=destination.kind==='bigquery'?r2Stage(bucket):await createS3WarehouseStore(env,destination.stageStorage,accessSchema.parse({accessKeyId:'accessKeyId'in access?access.accessKeyId:'',secretAccessKey:'secretAccessKey'in access?access.secretAccessKey:''}))
  if(!stage?.put)throw new AuthorityError('unconfigured','WAREHOUSE R2 binding is required for BigQuery file staging.',503)
  const remote=destination.kind==='bigquery'?await createBigQueryDestination(env,destination,bigQueryAccessSchema.parse(access)):await createSnowflakeDestination(env,destination,snowflakeAccessSchema.parse(access),stage)
  return {

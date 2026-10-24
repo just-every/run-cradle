@@ -12,8 +12,8 @@ export async function owner(request:Request,auth:OperatorAuth,env:PlatformBindin
  const session=await auth.requireEditorOwner(request)
  return session
 }
-export function audit(db:D1Database,actor:string,operator:string|null,action:string,now=Date.now()){
- return db.prepare('INSERT INTO company_identity_audit(id,actor_id,operator_id,action,created_at) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),actor,operator,action,now)
+export function audit(db:D1Database,actor:string,operator:string|null,action:string,now=Date.now(),keyIds?:string[]){
+ return db.prepare('INSERT INTO company_identity_audit(id,actor_id,operator_id,action,created_at,key_ids_json) VALUES(?,?,?,?,?,?)').bind(crypto.randomUUID(),actor,operator,action,now,keyIds?JSON.stringify(keyIds):null)
 }
 /** Assertions and effects share one D1 transaction; no partial lifecycle writes. */
 export async function atomic(db:D1Database,guards:readonly SqlPredicate[],mutations:readonly SqlMutation[],extra:D1PreparedStatement[]=[]){

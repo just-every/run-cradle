@@ -16,8 +16,11 @@ credentials until their managed copies are erased.
 For BigQuery, provide the project, dataset, location, a table prefix and the
 service-account key's client email and PKCS8 private key. The dataset must already
 exist. The account needs load-job, table creation, query and record-deletion
-permissions. Cradle uploads each exact CSV/Parquet file in a multipart load job
-with `WRITE_APPEND`; a deterministic job ID reconciles a lost acknowledgement.
+permissions. Cradle uploads each exact CSV/Parquet file with `WRITE_APPEND`. Small files use
+a multipart load job; files above 900,000 bytes use a resumable upload in 768 KiB
+chunks into the same deterministic job ID. A lost part acknowledgement is
+reconciled against the upload session’s accepted prefix before another part is
+sent; a lost final acknowledgement is reconciled against that job ID.
 
 For Snowflake, provide the account identifier, owner user, database, schema, table
 prefix, optional warehouse/role, named external stage, RSA PKCS8 private key and
@@ -31,7 +34,9 @@ BigQuery and Snowflake use separate tables for each source base/table and schema
 revision, under your chosen prefix. This keeps different schemas distinct and
 preserves every source field and value. BigQuery files use stable safe aliases
 containing the source field ID, with the original label/field ID → uploaded-column
-map in each public export manifest and its immutable erasure custody. Both CSV
+map in each public export manifest and its immutable erasure custody. Every
+destination’s manifest includes source field IDs, exact labels and output column
+names, so consumers can identify columns across relabeling. Both CSV
 and Parquet use the same mapping, so punctuation, duplicate labels or case-only
 label differences never silently rename or merge data. SQL identifiers in Snowflake are quoted. Record erasure reconciles any
 outstanding load/COPY, deletes matching `_record_id` rows and independently reads
@@ -64,12 +69,24 @@ and fields the owner cannot read are omitted; the manifest explains omitted tabl
 ```
 
 Remote exports partition large tables at record boundaries; the manifest lists every
-part. A single encoded record larger than the declared `warehouseTransferBytes` / `warehouseBigQueryFileBytes` budget (1 MiB, with multipart metadata space reserved for BigQuery)
-is refused with its record identifier and leaves the watermark unchanged. No
-record is truncated. R2 keeps its existing direct-bucket path. Oversized manifests are also refused without advancing the watermark.
+logical file. The `warehouseTransferBytes` / `warehouseBigQueryFileBytes` budgets
+(1 MiB / 900,000 bytes) choose these file boundaries. An individual record above
+the budget stays whole and uses a multipart or resumable transfer; it is never
+truncated. R2 and S3 use 5 MiB upload parts for large objects, including manifests.
+S3 readback uses verified 1 MiB byte ranges. Snowflake receives the completed
+staged object with one `COPY INTO` under the original deterministic request ID;
+transport parts do not become separate table appends. An interrupted S3 part is
+retried with the same upload ID and part number, which replaces that unfinished
+part rather than adding another object. Ordinary relay requests retain their
+1 MiB limit; signed S3 upload parts have a separate bounded 5 MiB envelope.
 
-A run manifest records row counts, the watermark before and after the run, and a
-schema hash. Cradle advances the watermark only after writing the object and
+An unsuccessful transfer never advances the watermark. Partial multipart uploads
+are aborted when the invocation can clean them up. Unknown remote load or erasure
+outcomes stay in managed custody and require reconciliation; they are not treated
+as a successful empty destination.
+
+A run manifest records row counts, each file’s SHA-256 checksum, the watermark
+before and after the run, and a schema hash. Cradle advances the watermark only after writing the object and
 reading it back successfully. Use the manifest to determine which files belong
 to a completed run.
 

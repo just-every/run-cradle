@@ -39,7 +39,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  await ensureCalendarCapture(platform.bindings.DB,foundation.descriptors)
  const calendarSync={service:calendarSyncService,http:recordCalendarSyncHttp(calendarSyncService,request=>foundation.authenticate(request,'http',createUlid()))}
  const sheetSource=createSheetsImport(platform.bindings.DB,foundation,providers),sheetSchedules=createSheetSchedules(platform.bindings.DB,foundation,sheetSource,records.csv,clock),sheets={http:sheetsHttp(foundation,sheetSource,sheetSchedules),scheduled:sheetSchedules.scheduled}
- const fileStores={http:fileStoresHttp(foundation,createFileStores(platform.bindings.DB,foundation,providers,records.services.reader,records.services.writer))}
+ const fileStores={http:fileStoresHttp(foundation,createFileStores(platform.bindings.DB,foundation,providers,records.services.reader,records.services.writer,records.deps))}
  const warehouse=createWarehouseComposition(platform,foundation,records,clock)
  await ensureRecordAutomationTriggers(platform.bindings.DB,foundation.descriptors)
  const changeSubscriptions=createChangeSubscriptions(platform.bindings,foundation.policy,foundation.admission,records.services,platform.auth.configuration.sessionSecret)

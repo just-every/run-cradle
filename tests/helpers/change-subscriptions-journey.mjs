@@ -27,6 +27,13 @@ export async function changeSubscriptionsJourney(h,edge){
  const pings=edge.received.filter(r=>r.path==='/changes')
  assert.equal(pings.length,3,'One verifiable ping for each committed change, including recovery replay')
  for(const ping of pings){const verified=await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id});const value=JSON.parse(verified.envelope.body);assert.equal(value.changeCount,1);assert.equal(value.subscriptionId,subscription.id);assert.ok(!ping.body.includes('synthetic-cradle-3'))}
+ const originalSigningKey=subscription.signingKey
+ const positionBefore=await h.db.prepare('SELECT last_sequence FROM record_change_subscriptions WHERE id=?').bind(subscription.id).first()
+ const rotationCommand=createUlid(),rotation=(await h.request(`${root}/${subscription.id}/rotate`,{method:'POST',secret:key.secret,body:{commandId:rotationCommand}})).data
+ assert.notEqual(rotation.signingKey,originalSigningKey)
+ assert.deepEqual(await h.db.prepare('SELECT last_sequence FROM record_change_subscriptions WHERE id=?').bind(subscription.id).first(),positionBefore,'Secret rotation preserves the delivery watermark')
+ await h.request(`${root}/${subscription.id}/rotate`,{method:'POST',secret:key.secret,status:409,body:{commandId:rotationCommand}})
+ subscription.signingKey=rotation.signingKey
  const route=(cursor,limit=200)=>`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`
  await h.request(route('invalid-cursor'),{secret:key.secret,status:400})
  const page=(await h.request(route(subscription.cursor),{secret:key.secret})).data
@@ -34,6 +41,9 @@ export async function changeSubscriptionsJourney(h,edge){
  assert.equal(new Set(page.items.map(i=>i.id)).size,3)
  await h.create('synthetic-cradle-later-1');await tick()
  assert.deepEqual((await h.request(route(subscription.cursor),{secret:key.secret})).data,page,'A fixed signed window replays identically')
+ const rotatedPing=edge.received.filter(r=>r.path==='/changes').at(-1)
+ await verifyWebhook({body:new TextEncoder().encode(rotatedPing.body),headers:rotatedPing.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
+ await assert.rejects(verifyWebhook({body:new TextEncoder().encode(rotatedPing.body),headers:rotatedPing.headers,key:unbase64(originalSigningKey),tenant:h.appId,destinationId:subscription.id}))
  let cursor=subscription.cursor,items=[],more=true
  while(more){const part=(await h.request(route(cursor,1),{secret:key.secret})).data;items.push(...part.items);cursor=part.cursor;more=part.hasMore}
  assert.deepEqual(items,page.items,'Paging has no gaps or duplicates')
@@ -65,7 +75,7 @@ export async function changeSubscriptionsJourney(h,edge){
  console.log('CHANGE_SUBSCRIPTION_LIFETIME PASS 410 subscription_expired')
  await h.create('synthetic-cradle-8');await tick()
  assert.equal(edge.received.filter(r=>r.path==='/changes').length,before)
- for(const ping of edge.received.filter(r=>r.path==='/changes'))await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
+ for(const [index,ping] of edge.received.filter(r=>r.path==='/changes').entries())await verifyWebhook({body:new TextEncoder().encode(ping.body),headers:ping.headers,key:unbase64(index<3?originalSigningKey:subscription.signingKey),tenant:h.appId,destinationId:subscription.id})
  await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
  assert.deepEqual((await h.request(root+'?appId='+h.appId,{secret:key.secret})).data,[])
  if(proofFailures.length)throw new AggregateError(proofFailures,'Change-feed synchronization proofs failed')

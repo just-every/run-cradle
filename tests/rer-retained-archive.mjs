@@ -1,3 +1,4 @@
+import {fileStoreArchive} from './helpers/file-store-archive.mjs'
 import assert from 'node:assert/strict'
 import {chmod,copyFile,mkdtemp,readFile,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
@@ -63,6 +64,19 @@ contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and
   const native=await matchesArchive(target.source,join(target.source,'platform.rer'))
   assert.ok(!native.tables.some(t=>t.name==='rer_migrations'),'a native export never carries the Platform ledger')
   assert.deepEqual(await ledger(),reset,'restore keeps the destination migration history')
+  // FILE-002: restore real reference/copy cells, while every store credential stays revoked.
+  const stores=await fileStoreArchive(directory)
+  await target.rer(['reset','--yes','--non-interactive']);await target.command(['run','db:migrate:local'])
+  await place(join(directory,'file-stores.rer'),join(target.source,'file-stores.rer'))
+  await target.rer(['import','--input','file-stores.rer','--yes','--non-interactive'])
+  await matchesArchive(target.source,join(target.source,'file-stores.rer'))
+  await bindings(target.source,async({DB,FILES})=>{
+   assert.deepEqual((await DB.prepare(`SELECT value FROM "${stores.table}" WHERE record_id=? ORDER BY position`).bind(stores.recordId).all()).results.map(row=>row.value),stores.values)
+   const connection=await DB.prepare('SELECT state,credential_ref,consent_scopes_json,share_previews FROM provider_connections WHERE id=?').bind(stores.connectionId).first()
+   assert.deepEqual(connection,{state:'unconfigured',credential_ref:null,consent_scopes_json:'[]',share_previews:0},'Restored references require reconnect before provider reads')
+   assert.equal((await DB.prepare('SELECT count(*) n FROM connection_credentials').first()).n,0)
+   assert.deepEqual(Buffer.from(await(await FILES.get(stores.object_key)).arrayBuffer()),stores.bytes,'The requested copy returns with every byte')
+  })
  }finally{
   if(target){await target.log.close();await rm(target.root,{recursive:true,force:true})}
   await rm(directory,{recursive:true,force:true})

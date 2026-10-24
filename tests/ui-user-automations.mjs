@@ -1,3 +1,4 @@
+import {chatProviderBrowser} from './helpers/chat-provider-browser.mjs'
 import {slackAppBrowser} from './helpers/slack-app-browser.mjs'
 import {slackAppNetworkEdge} from './helpers/slack-app-network-edge.mjs'
 import {warehouseBrowser} from './helpers/warehouse-browser.mjs'
@@ -49,6 +50,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
     receipts.push({width,checkpoints:journey.checkpoints,consoleErrors})
    }finally{await context.close()}
   }
+  receipts.push(...await chatProviderBrowser(browser,output))
   await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close();await smsEdge?.close();await slackEdge?.close()}
 })

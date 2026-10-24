@@ -20,7 +20,7 @@ export function changeSubscriptionDelivery(env:PlatformBindings,service:ReturnTy
   await service.access.scopes(ctx,current)
   return {...ctx,now:clock().toISOString()}
  }
- async function secret(row:Subscription){if(!row.sealed_json)throw new Error('Subscription signing secret unavailable');return JSON.parse(await open(keyring,row.app_id,row.id,'change-subscription',JSON.parse(row.sealed_json) as Sealed)) as {url:string;signingKey:string}}
+ async function secret(row:Subscription){row=(await db.prepare("SELECT * FROM record_change_subscriptions WHERE id=? AND state='active' AND expires_at>?").bind(row.id,clock().getTime()).first<Subscription>())!;if(!row?.sealed_json)throw new Error('Subscription signing secret unavailable');return JSON.parse(await open(keyring,row.app_id,row.id,'change-subscription',JSON.parse(row.sealed_json) as Sealed)) as {url:string;signingKey:string}}
  function delivery(row:Subscription){
   if(!env.EGRESS_RELAY_URL||!env.EGRESS_RELAY_SECRET)throw new Error('Trusted egress relay is required')
   const relay=new RelayTransport(env.EGRESS_RELAY_URL,env.EGRESS_RELAY_SECRET)

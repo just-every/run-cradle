@@ -1,3 +1,5 @@
+import {createFixtureAuth} from './base-fixture-auth.mjs'
+import {recordOutlookProvider} from './record-outlook-provider.mjs'
 import assert from 'node:assert/strict'
 import {randomBytes} from 'node:crypto'
 import {mkdir} from 'node:fs/promises'
@@ -10,14 +12,15 @@ import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordCalendarProvider} from './record-calendar-provider.mjs'
 import {browserCall,liveCommand} from './records-live-fixture.mjs'
 
-export async function recordCalendarJourney({widths=[1440,390],output='.private/record-calendar-sync'}={}){
+export async function recordCalendarJourney({widths=[1440,390],providerKind='google',output=`.private/record-calendar-sync-${providerKind}`}={}){
  process.env.HOME=userInfo().homedir
  await mkdir(output,{recursive:true})
- const provider=recordCalendarProvider(),h=await recordsBrowserRuntime(0,{networkEdge:async request=>{try{return await provider.fetch(request)}catch(error){if(error.message!=='synthetic-cradle-acknowledgement-lost')console.error('Calendar network-edge error:',error.message);throw error}},bindings:{GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}})
+ const outlook=providerKind==='outlook',provider=outlook?recordOutlookProvider():recordCalendarProvider(),body=log=>outlook?provider.body(log):log.body,eventValue=id=>outlook?provider.event(provider.ownedCalendarId,id):provider.events.get(provider.key(provider.ownedCalendarId,id)),h=await recordsBrowserRuntime(0,{networkEdge:async request=>{try{return await provider.fetch(request)}catch(error){if(error.message!=='synthetic-cradle-acknowledgement-lost')console.error('Calendar network-edge error:',error.message);throw error}},bindings:{GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',MICROSOFT_CLIENT_ID:'synthetic-cradle-client',MICROSOFT_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}})
  const worker=await h.runtime.getWorker(),browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
  try{for(const width of widths){const context=await browser.newContext({viewport:{width,height:1000}}),page=await context.newPage()
+  let writerContext
   const errors=[];page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(/hydration|did not match/i.test(message.text()))errors.push(message.text())})
-  const capture=async name=>{await page.evaluate(()=>scrollTo(0,0));assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual((await new AxeBuilder({page}).analyze()).violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[]);await page.screenshot({path:`${output}/${name}-${width}.png`,fullPage:true})}
+  const capture=async(name,target=page)=>{await target.evaluate(()=>scrollTo(0,0));assert.equal(await target.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual((await new AxeBuilder({page:target}).analyze()).violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[]);await target.screenshot({path:`${output}/${name}-${width}.png`,fullPage:true})}
   try{await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app/records')
    const call=(path,input,status=200)=>browserCall(page,path,input,status),command=(action,input,expected=[])=>call('/api/v1/commands/'+action,liveCommand(input,expected))
    const title=newField('Calendar title'),notes=newField('Calendar details'),start=newField('Calendar date','date'),end=newField('Calendar end','date'),appId=createUlid(),entityId=createUlid()
@@ -25,16 +28,16 @@ export async function recordCalendarJourney({widths=[1440,390],output='.private/
    await command('release.adopt',{kind:'manual_schema',previewId:preview.id})
    const schema=await call(`/api/v1/apps/${appId}/entities/${entityId}`),create=async(name='synthetic-cradle-event')=>(await command('record.create',{appId,entityId,values:{[title.id]:name,[notes.id]:'synthetic-cradle-private-details',[start.id]:'2026-11-02',[end.id]:'2026-11-03'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}])).value
    const row=await create(),recordId=row.ref.recordId,recordPath=`/app/records/${appId}/${entityId}/${recordId}`,base=`/api/v1/apps/${appId}/entities/${entityId}`
-   const connectionId=(await command('connection.configure',{appId,adapterId:'google-calendar',name:'synthetic-cradle-calendar-connection',accountId:provider.ownedCalendarId,scopes:[{resource:provider.ownedCalendarId,readFields:[],actions:['connection.sync']}],ownership:[],credentialRef:null})).value.connectionId
+   const connectionId=(await command('connection.configure',{appId,adapterId:outlook?'outlook':'google-calendar',name:'synthetic-cradle-calendar-connection',accountId:provider.ownedCalendarId,scopes:[{resource:provider.ownedCalendarId,readFields:[],actions:['connection.sync']}],ownership:[],credentialRef:null})).value.connectionId
    const consent=(await command('connection.begin-consent',{connectionId,returnTo:recordPath})).value
-   const response=await context.request.get(h.origin+'/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-1',state:new URL(consent.authorizationUrl).searchParams.get('state')}),{maxRedirects:0});assert.equal(response.status(),303,await response.text())
+   const response=await context.request.get(h.origin+`/oauth/${outlook?'microsoft':'google'}/callback?`+new URLSearchParams({code:'synthetic-cradle-code-1',state:new URL(consent.authorizationUrl).searchParams.get('state')}),{maxRedirects:0});assert.equal(response.status(),303,await response.text())
    const deliver=async body=>{const result=await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body}]);assert.equal(result.outcome,'ok',JSON.stringify(result))}
    const drain=async()=>{const entries=(await h.db.prepare("SELECT id FROM admission_outbox WHERE state='pending' AND action IN ('connection.operation','execution.dispatch','execution.reconcile') AND not_before<=? ORDER BY created_at,id").bind(new Date().toISOString()).all()).results;for(const entry of entries)await deliver({kind:'cradle.outbox.v1',outboxId:entry.id})}
-   const open=async()=>{await page.goto(h.origin+recordPath);await page.getByRole('button',{name:'Google Calendar sync',exact:true}).click();await page.getByRole('heading',{name:'Record calendar sync',exact:true}).waitFor()}
+   const open=async()=>{await page.goto(h.origin+recordPath);await page.getByRole('button',{name:'Calendar sync',exact:true}).click();await page.getByRole('heading',{name:'Record calendar sync',exact:true}).waitFor()}
    const initial=await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`);assert.equal(initial.canConfigure,true,JSON.stringify(initial));
    await open();await page.getByLabel('Calendar connection',{exact:true}).selectOption(connectionId)
    const refresh=page.waitForResponse(r=>r.url().endsWith(`/connections/${connectionId}/refresh`)&&r.request().method()==='POST');await page.getByRole('button',{name:'Refresh owned calendars and reviews',exact:true}).click();assert.equal((await refresh).status(),200);await drain()
-   await page.getByRole('button',{name:'Google Calendar sync',exact:true}).click();await page.getByRole('button',{name:'Google Calendar sync',exact:true}).click();await page.getByLabel('Owned calendar',{exact:true}).selectOption(provider.ownedCalendarId)
+   await page.getByRole('button',{name:'Calendar sync',exact:true}).click();await page.getByRole('button',{name:'Calendar sync',exact:true}).click();await page.getByLabel('Owned calendar',{exact:true}).selectOption(provider.ownedCalendarId)
    await page.getByLabel('Sync date field',{exact:true}).selectOption(start.id);await page.getByLabel('Sync end date field',{exact:true}).selectOption(end.id);await page.getByLabel('Event title field',{exact:true}).selectOption(title.id)
    await page.getByRole('group',{name:'Further fields visible on the calendar',exact:true}).getByLabel('Calendar details',{exact:true}).check();await page.getByLabel('Approve calendar writes to '+provider.ownedCalendarId,{exact:true}).check()
    const saved=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/v1/record-calendar-sync'&&r.request().method()==='POST');await page.getByRole('button',{name:'Save calendar sync',exact:true}).click();const saveResponse=await saved;assert.equal(saveResponse.status(),200,await saveResponse.text())
@@ -43,25 +46,67 @@ export async function recordCalendarJourney({widths=[1440,390],output='.private/
    const binding=()=>h.db.prepare('SELECT * FROM record_calendar_events WHERE definition_id=? AND record_id=?').bind(definitionId,recordId).first()
    await page.locator('[aria-label="Calendar sync definition"]').waitFor();await page.getByRole('button',{name:'Edit sync',exact:true}).click();await page.getByLabel('Approve calendar writes to '+provider.ownedCalendarId,{exact:true}).check();const edited=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/v1/record-calendar-sync'&&r.request().method()==='POST');await page.getByRole('button',{name:'Save calendar sync',exact:true}).click();const editResponse=await edited;assert.equal(editResponse.status(),200,await editResponse.text());assert.equal((await editResponse.json()).data.value.id,definitionId)
    await page.locator('[aria-label="Calendar sync definition"]').waitFor();await capture('configured')
+   const beforeImport={writes:provider.writes.length,changes:(await h.db.prepare('SELECT count(*) n FROM record_calendar_changes WHERE definition_id=?').bind(definitionId).first()).n,effects:(await h.db.prepare("SELECT count(*) n FROM execution_attempts WHERE action='record.calendar.sync'").first()).n}
+   const imported=await call('/api/v1/records/import-preview',{appId,entityId,csv:'Calendar title,Calendar date,Calendar end\r\nsynthetic-cradle-import-no-effect,2026-12-01,2026-12-02\r\n',mapping:[{column:'Calendar title',fieldId:title.id},{column:'Calendar date',fieldId:start.id},{column:'Calendar end',fieldId:end.id}],mergeFieldId:title.id})
+   assert.equal(imported.creates,1)
+   const importCommit=await command('records.import-commit',{previewId:imported.id});assert.equal(importCommit.state,'committed')
+   await deliver({kind:'cradle.records.automations.v1',commandId:importCommit.commandId});await drain()
+   assert.deepEqual({writes:provider.writes.length,changes:(await h.db.prepare('SELECT count(*) n FROM record_calendar_changes WHERE definition_id=?').bind(definitionId).first()).n,effects:(await h.db.prepare("SELECT count(*) n FROM execution_attempts WHERE action='record.calendar.sync'").first()).n},beforeImport,'Imported records start no calendar capture or execution effect, even when scheduled work drains')
+   assert.ok((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).notOnCalendar>=1,'The sync list counts imported records not yet on the calendar')
+   const nativeSessions=await page.evaluate(async()=> (await(await fetch('/auth/sessions')).json()).sessions),originalNative=nativeSessions.find(s=>s.active).id
+   const fixtureAuth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-records-session-secret-at-least-32-characters',mode:'development'},'00000000000000000000000981'),renewedOwner=await fixtureAuth.signIn()
+   await context.addCookies([{name:renewedOwner.cookie.split('=')[0],value:renewedOwner.cookie.slice(renewedOwner.cookie.indexOf('=')+1),url:h.origin}])
+   await call(`/auth/sessions/${originalNative}/revoke`,{})
+   const approval=JSON.parse((await h.db.prepare('SELECT actor_json FROM record_calendar_definitions WHERE id=?').bind(definitionId).first()).actor_json)
+   assert.equal(approval.sessionId,null,'Definition approval does not retain its author session');assert.ok(approval.credentialId);assert.ok(Date.parse(approval.expiresAt)<=Date.now()+30*86400000)
+   assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).state,'active','Revoking the approving native session preserves the independent bounded definition approval')
+   const activeDefinition=(await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId)
+   await call('/api/v1/record-calendar-sync',{commandId:createUlid(),id:definitionId,version:activeDefinition.version,approveCalendar:true,definition:activeDefinition.definition,expiresAt:new Date(Date.now()+31*86400000).toISOString()},400)
+   assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).version,activeDefinition.version,'Over-cap approval changes nothing')
+   const writerId=createUlid(),writerTime=Date.now()
+   await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,name,email,active) VALUES(?,?,?,?,?,1)').bind(writerId,writerTime,writerTime,'Synthetic calendar writer',`synthetic-cradle-calendar-${writerId.toLowerCase()}@example.test`).run()
+   await h.db.prepare("INSERT INTO authority_principals(id,kind,human_id,state,initial_owner,created_at,updated_at) VALUES(?,'human',?,'active',0,?,?)").bind(writerId,writerId,writerTime,writerTime).run()
+   const writerAuth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-records-session-secret-at-least-32-characters',mode:'development'},writerId),writerSession=await writerAuth.signIn()
+   await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:writerId,role:'editor',version:0})
+   writerContext=await browser.newContext({viewport:{width,height:1000}});await writerContext.addCookies([{name:writerSession.cookie.split('=')[0],value:writerSession.cookie.slice(writerSession.cookie.indexOf('=')+1),url:h.origin}]);const writerPage=await writerContext.newPage(),writerCall=(path,input,status=200)=>browserCall(writerPage,path,input,status)
+   const openWriter=async()=>{await writerPage.goto(h.origin+recordPath);await writerPage.getByRole('button',{name:'Calendar sync',exact:true}).click();await writerPage.getByRole('heading',{name:'Record calendar sync',exact:true}).waitFor()}
    provider.loseAckOnce('create');await call(syncPath+'/sync',{commandId:createUlid()});await drain()
    let event=await binding();assert.equal((await h.db.prepare('SELECT state FROM execution_attempts WHERE id=?').bind(event.attempt_id).first()).state,'unknown')
-   const creates=provider.writes.filter(w=>w.body?.extendedProperties?.private.cradleRecord===recordId&&w.method==='POST');assert.equal(creates.length,1)
-   await open();await page.getByRole('button',{name:'Read back original effect',exact:true}).waitFor();await capture('unknown');const reconciled=page.waitForResponse(r=>r.url().endsWith('/reconcile')&&r.request().method()==='POST');await page.getByRole('button',{name:'Read back original effect',exact:true}).click();assert.equal((await reconciled).status(),200);event=await binding();assert.equal(event.state,'synced');assert.equal(provider.writes.filter(w=>w.body?.extendedProperties?.private.cradleRecord===recordId&&w.method==='POST').length,1)
-   assert.ok(provider.events.get(provider.key(provider.ownedCalendarId,event.event_id)).description.includes(recordPath))
+   const creates=provider.writes.filter(w=>body(w)?.extendedProperties?.private.cradleRecord===recordId&&w.method==='POST');assert.equal(creates.length,1)
+   await open();await page.getByRole('button',{name:'Read back original effect',exact:true}).waitFor();await capture('unknown');const reconciled=page.waitForResponse(r=>r.url().endsWith('/reconcile')&&r.request().method()==='POST');await page.getByRole('button',{name:'Read back original effect',exact:true}).click();assert.equal((await reconciled).status(),200);event=await binding();assert.equal(event.state,'synced');assert.equal(provider.writes.filter(w=>body(w)?.extendedProperties?.private.cradleRecord===recordId&&w.method==='POST').length,1)
+   assert.ok(eventValue(event.event_id).description.includes(recordPath))
    const move=await patch({[start.id]:'2026-11-05',[end.id]:'2026-11-06'});await deliver({kind:'cradle.records.automations.v1',commandId:move.commandId});await drain()
-   event=await binding();assert.equal(provider.events.get(provider.key(provider.ownedCalendarId,event.event_id)).start.date,'2026-11-05');const movedWrites=provider.writes.length;await deliver({kind:'cradle.records.automations.v1',commandId:move.commandId});await drain();assert.equal(provider.writes.length,movedWrites,'Duplicate ordinary-change delivery creates no second calendar effect')
+   event=await binding();assert.equal(eventValue(event.event_id).start.date,'2026-11-05');const movedWrites=provider.writes.length;await deliver({kind:'cradle.records.automations.v1',commandId:move.commandId});await drain();assert.equal(provider.writes.length,movedWrites,'Duplicate ordinary-change delivery creates no second calendar effect')
    const original=await get();provider.externalEdit(provider.ownedCalendarId,event.event_id,{summary:'synthetic-cradle-external-title',start:{date:'2026-11-10'},end:{date:'2026-11-12'}})
    await call(`/api/v1/record-calendar-sync/connections/${connectionId}/refresh`,{commandId:createUlid()});await drain();assert.ok((await items())[0].review);assert.equal((await get()).version,original.version)
    await call(syncPath+'/sync',{commandId:createUlid()},409)
    await open();await page.getByRole('heading',{name:'Calendar change needs review',exact:true}).waitFor();await capture('review')
-   const applied=page.waitForResponse(r=>r.url().endsWith('/resolve')&&r.request().method()==='POST');await page.getByRole('button',{name:'Apply to record',exact:true}).click();const appliedResponse=await applied;assert.equal(appliedResponse.status(),200,await appliedResponse.text());assert.equal((await get()).fields[start.id].value,'2026-11-10')
+   await openWriter();await writerPage.getByRole('heading',{name:'Calendar change needs review',exact:true}).waitFor();assert.equal(await writerPage.getByRole('button',{name:'Edit sync',exact:true}).count(),0,'A date writer cannot edit another author’s definition');await capture('writer-review',writerPage)
+   const applied=writerPage.waitForResponse(r=>r.url().endsWith('/resolve')&&r.request().method()==='POST');await writerPage.getByRole('button',{name:'Apply to record',exact:true}).click();const appliedResponse=await applied;assert.equal(appliedResponse.status(),200,await appliedResponse.text());assert.equal((await get()).fields[start.id].value,'2026-11-10')
    provider.externalEdit(provider.ownedCalendarId,event.event_id,{summary:'synthetic-cradle-second-calendar-edit',start:{date:'2026-11-15'},end:{date:'2026-11-16'}});await call(`/api/v1/record-calendar-sync/connections/${connectionId}/refresh`,{commandId:createUlid()});await drain()
-   const beforeRestore=provider.writes.length;await call(syncPath+'/resolve',{commandId:createUlid(),action:'restore'});await drain();assert.equal(provider.writes.length,beforeRestore+1);assert.equal(provider.writes.at(-1).method,'PUT');assert.equal(provider.writes.at(-1).body.start.date,'2026-11-10')
+   const beforeRestore=provider.writes.length;await call(syncPath+'/resolve',{commandId:createUlid(),action:'restore'});await drain();assert.equal(provider.writes.length,beforeRestore+1);assert.equal(provider.writes.at(-1).method,outlook?'PATCH':'PUT');assert.equal(body(provider.writes.at(-1)).start.date,'2026-11-10')
    await open();await page.locator('[aria-label="Calendar sync definition"]').waitFor();await capture('resolved')
+   event=await binding();const deletedEventId=event.event_id
+   provider.externalDelete(provider.ownedCalendarId,deletedEventId)
+   await call(`/api/v1/record-calendar-sync/connections/${connectionId}/refresh`,{commandId:createUlid()});await drain()
+   assert.equal((await items())[0].review.deleted,true,'An external deletion opens a review')
+   const deletedVersion=(await get()).version,deletedWrites=provider.writes.length
+   await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:writerId,role:'viewer',version:1})
+   await writerCall(syncPath+'/resolve',{commandId:createUlid(),action:'restore'},403)
+   assert.equal(provider.writes.length,deletedWrites,'A reader cannot restore the calendar')
+   await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:writerId,role:'editor',version:2})
+   await openWriter();await writerPage.getByRole('heading',{name:'Calendar change needs review',exact:true}).waitFor();await capture('deleted-review',writerPage)
+   const restoredDeletion=writerPage.waitForResponse(r=>r.url().endsWith('/resolve')&&r.request().method()==='POST');await writerPage.getByRole('button',{name:'Restore calendar from record',exact:true}).click();const restoredDeletionResponse=await restoredDeletion;assert.equal(restoredDeletionResponse.status(),200,await restoredDeletionResponse.text());await drain()
+   event=await binding();assert.equal(event.state,'synced');assert.notEqual(event.event_id,deletedEventId,'Restore of an externally deleted event creates a new generation')
+   assert.equal(provider.writes.length,deletedWrites+1);assert.equal(provider.writes.at(-1).method,'POST')
+   assert.equal((await get()).version,deletedVersion,'Calendar restoration never edits the record')
+   assert.equal((await items())[0].review,null,'The explicit restoration resolves its review')
+   await open();await page.locator('[aria-label="Calendar sync definition"]').waitFor();await capture('deleted-restored')
+
    // Current field visibility is re-projected, rather than retained in the next event.
    const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind('00000000000000000000000981',appId).first(),rules=JSON.parse(policy.rules_json)
    await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules.map(r=>r.entityId===entityId?{...r,readableFields:r.readableFields.filter(f=>f!==notes.id),writableFields:r.writableFields.filter(f=>f!==notes.id)}:r)),policy.id).run()
-   await patch({[start.id]:'2026-11-20',[end.id]:'2026-11-21'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.ok(!provider.writes.at(-1).body.description.includes('synthetic-cradle-private-details'))
+   await patch({[start.id]:'2026-11-20',[end.id]:'2026-11-21'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.ok(!body(provider.writes.at(-1)).description.includes('synthetic-cradle-private-details'))
    const scopes=(await h.db.prepare('SELECT scopes_json FROM provider_connections WHERE id=?').bind(connectionId).first()).scopes_json
    await h.db.prepare("UPDATE provider_connections SET scopes_json='[]',version=version+1 WHERE id=?").bind(connectionId).run();const writeCount=provider.writes.length
    await patch({[start.id]:'2026-11-22',[end.id]:'2026-11-23'});await call(syncPath+'/sync',{commandId:createUlid()},403);assert.equal(provider.writes.length,writeCount)
@@ -72,8 +117,8 @@ export async function recordCalendarJourney({widths=[1440,390],output='.private/
    await open();await page.getByText('cancelled',{exact:true}).waitFor();await capture('cancelled')
    await patch({[start.id]:'2026-11-25',[end.id]:'2026-11-26'});await call(syncPath+'/sync',{commandId:createUlid()});await drain();assert.equal(provider.writes.at(-1).method,'POST');assert.notEqual((await binding()).event_id,event.event_id)
    await command('connection.revoke',{connectionId});assert.equal((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions[0].state,'stopped');await patch({[start.id]:'2026-11-27',[end.id]:'2026-11-28'});await call(syncPath+'/sync',{commandId:createUlid()},403)
-   assert.ok(provider.seen.every(r=>new URL(r.url).hostname==='www.googleapis.com'||new URL(r.url).hostname==='oauth2.googleapis.com'))
-  }catch(error){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});console.error('Calendar screen at failure:',await page.locator('body').innerText());throw error}finally{await context.close()}
+   assert.ok(provider.seen.every(r=>(outlook?['graph.microsoft.com','login.microsoftonline.com']:['www.googleapis.com','oauth2.googleapis.com']).includes(new URL(r.url).hostname)))
+  }catch(error){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});console.error('Calendar screen at failure:',await page.locator('body').innerText());throw error}finally{await writerContext?.close();await context.close()}
  }}finally{await browser.close();await h.close()}
  return {providerWrites:provider.writes.length}
 }

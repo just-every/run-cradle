@@ -28,17 +28,17 @@ try{
  const workers=execFileSync('ps',['-eo','pid=,ppid=,args='],{encoding:'utf8'}).split('\n').map(line=>line.trim().split(/\s+/)).filter(parts=>Number(parts[1])===process.pid&&parts.slice(2).join(' ').includes('/workerd serve'))
  assert.equal(workers.length,1,'Measure only this fixture Worker process');const workerPid=workers[0][0]
 
- for(const format of ['csv','xlsx']){
+ for(const [scope,format] of [['view','csv'],['view','xlsx'],['base','json'],['base','csv-set'],['base','xlsx']]){
   let samples=0,peakUsedHeapBytes=0,peakTotalHeapBytes=0,peakWorkerRssBytes=0,rssSamples=0,sampling=null,sampleError
   const rss=async()=>{const status=await readFile('/proc/'+workerPid+'/status','utf8'),match=/^VmRSS:\s+(\d+) kB/m.exec(status);assert.ok(match);peakWorkerRssBytes=Math.max(peakWorkerRssBytes,Number(match[1])*1024);rssSamples++}
   const sample=()=>sampling??(sampling=(async()=>{try{const memory=await call('Runtime.getHeapUsage');assert.ok(Number.isFinite(memory.usedSize)&&Number.isFinite(memory.totalSize));samples++;peakUsedHeapBytes=Math.max(peakUsedHeapBytes,memory.usedSize);peakTotalHeapBytes=Math.max(peakTotalHeapBytes,memory.totalSize)}catch(error){sampleError=error}finally{sampling=null}})())
 
   await sample();await rss();timer=setInterval(()=>{void sample();void rss().catch(error=>{sampleError=error})},500)
-  const csrf=(await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json()).csrfToken,started=performance.now(),response=await fetch(h.origin+'/api/v1/records/export-'+format,{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'x-csrf-token':csrf,'content-type':'application/json',accept:format==='csv'?'text/csv':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},body:JSON.stringify({appId,entityId,query:{sort:[{fieldId:title.id,direction:'asc'}]}})})
-  assert.equal(response.status,200);const file=path.join(output,'50000.'+format),sink=await open(file,'w'),reader=response.body.getReader();let bytes=0,chunks=0
+  const csrf=(await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json()).csrfToken,started=performance.now(),response=await fetch(h.origin+(scope==='base'?'/api/v1/records/base-export':'/api/v1/records/export-'+format),{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'x-csrf-token':csrf,'content-type':'application/json',accept:format==='csv'?'text/csv':format==='json'?'application/vnd.cradle.base+json':format==='csv-set'?'application/zip':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},body:JSON.stringify(scope==='base'?{appId,format}:{appId,entityId,query:{sort:[{fieldId:title.id,direction:'asc'}]}})})
+  assert.equal(response.status,200);const file=path.join(output,(scope==='base'?'base-':'')+'50000.'+(format==='csv-set'?'zip':format)),sink=await open(file,'w'),reader=response.body.getReader();let bytes=0,chunks=0
   try{for(;;){const next=await reader.read();if(next.done)break;await sink.write(next.value);bytes+=next.value.length;chunks++}}finally{await sink.close();clearInterval(timer);timer=undefined}
   await sampling;await sample();await rss();if(sampleError)throw sampleError;assert.ok(samples>1)
-  const measurement={format,rows,bytes,chunks,elapsedMs:performance.now()-started,peakUsedHeapBytes,peakTotalHeapBytes,samples,peakWorkerRssBytes,rssSamples,memoryScope:'Runtime.getHeapUsage plus whole workerd process RSS; RSS includes native D1 and runtime memory'};result.measurements.push(measurement);console.log(JSON.stringify(measurement))
+  const measurement={scope,format,rows,bytes,chunks,elapsedMs:performance.now()-started,peakUsedHeapBytes,peakTotalHeapBytes,samples,peakWorkerRssBytes,rssSamples,memoryScope:'Runtime.getHeapUsage plus whole workerd process RSS; RSS includes native D1 and runtime memory'};result.measurements.push(measurement);console.log(JSON.stringify(measurement))
  }
  // Independent standard-library ZIP/XML/CSV readers: never widen Cradle's intake parser.
  const check=execFileSync('python3',['-c',`import csv,json,sys,zipfile,xml.etree.ElementTree as E
@@ -48,6 +48,16 @@ with zipfile.ZipFile(p/'50000.xlsx') as z:
  assert z.testzip() is None
  root=E.fromstring(z.read('xl/worksheets/sheet1.xml')); ns={'s':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}; data=root.findall('s:sheetData/s:row',ns); assert len(data)==50001
  assert data[1].findall('s:c',ns)[1].find('s:v',ns).text=='123.45'; assert data[1].findall('s:c',ns)[2].attrib['s']=='4'; assert data[-1].findall('s:c',ns)[0].find('s:is/s:t',ns).text=='synthetic-cradle-049999'
-print(json.dumps({'csvRows':50000,'xlsxRows':50000,'zipChecksums':True,'typedValues':True}))`,output],{encoding:'utf8'});result.independent=JSON.parse(check);result.completed=true
+base=json.loads((p/'base-50000.json').read_text()); table=base['base']['tables'][0]; assert len(table['records'])==50000; fields={f['label']:f['id'] for f in table['fields']}; assert table['records'][0]['values'][fields['Amount']]=='123.45'; assert table['records'][-1]['values'][fields['Name']]=='synthetic-cradle-049999'
+with zipfile.ZipFile(p/'base-50000.zip') as z:
+ assert z.testzip() is None
+ csvname=next(n for n in z.namelist() if n.endswith('.csv')); data=list(csv.reader(z.read(csvname).decode().splitlines())); assert len(data)==50001; assert data[-1][0]=='synthetic-cradle-049999'
+ correspondence=json.loads(z.read('correspondence.json')); assert len(correspondence['tables'][0]['rows'])==50000
+ import hashlib
+ assert correspondence['tables'][0]['sha256']==hashlib.sha256(z.read(csvname)).hexdigest(); assert correspondence['tables'][0]['bytes']==len(z.read(csvname))
+with zipfile.ZipFile(p/'base-50000.xlsx') as z:
+ assert z.testzip() is None
+ root=E.fromstring(z.read('xl/worksheets/sheet1.xml')); data=root.findall('s:sheetData/s:row',ns); assert len(data)==50001; assert data[1].findall('s:c',ns)[1].find('s:v',ns).text=='123.45'; assert data[1].findall('s:c',ns)[2].attrib['s']=='4'; assert data[-1].findall('s:c',ns)[0].find('s:is/s:t',ns).text=='synthetic-cradle-049999'
+print(json.dumps({'csvRows':50000,'xlsxRows':50000,'baseJsonRows':50000,'baseCsvRows':50000,'baseXlsxRows':50000,'correspondenceRows':50000,'zipChecksums':True,'typedValues':True}))`,output],{encoding:'utf8'});result.independent=JSON.parse(check);result.completed=true
 }catch(error){result.completed=false;result.failure={message:error.message,stack:error.stack};console.error(error);process.exitCode=1}
 finally{if(timer)clearInterval(timer);socket?.close();await h?.close();await writeFile(path.join(output,'result.json'),JSON.stringify(result,null,2)+'\n')}

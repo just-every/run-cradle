@@ -2,11 +2,13 @@
 
 The records workspace gives you a complete base JSON download, a one-download CSV set, and the existing selected-view CSV. Settings also downloads a whole-installation archive; its restore path is described below. None of these formats asserts that an unnamed destination can restore behavior it does not support.
 
+Base JSON, the complete CSV set and Excel workbooks stream through policy-checked pages. Downloads include the complete base even when its row count exceeds the import limits. Workbook cells retain their number, percentage, currency, date and boolean types. CSV correspondence retains the exact file hashes, ordered row identities, links and empty-cell distinctions. Exporting does not raise the bounded import limits: a large download may need splitting before returning through an import door. A policy change or a committed edit during a download aborts it; start the download again.
+
 The move-in receipt of every import job (see [importing](importing.md#move-in-receipt)) restates, from the job, what each of these exits keeps and what the import did not carry. Importing any of them back into Cradle starts no automations, notifications, mail or webhooks; only your later edits do. Hosted runs and real-account exports remain unproven.
 
 ## One base JSON file
 
-Open a base and choose **Export base → Download base JSON**. The download has `format: "cradle-base"` and `version: 1`, validated against [cradle-base-v1.schema.json](../schemas/cradle-base-v1.schema.json) and cross-reference rules.
+Open a base and choose **Export base → Download base JSON**. The download has `format: "cradle-base"` and `version: 1`. The [cradle-base-v1.schema.json](../schemas/cradle-base-v1.schema.json) describes its structure and bounded return format; complete exports may exceed that schema’s import row and byte limits. Return still checks every cross-reference before writing.
 
 The allowlist contains the base name and portable ID, ordered tables and fields, durable primary-field ID, field types/required/unique flags, ordered select choices including unused ones, link targets/cardinality/on-delete rules, lookup definitions/results, incoming relation metadata, record IDs and typed values, saved grid/board/other native view fields/filter/sort/group/layout/visibility, and authenticated record-create form definitions. Lookup values are exported and checked against their definitions before import, then recomputed natively. MANY links always use an ordered array, with `[]` for no links; null MANY values are refused instead of silently normalized. Business email fields are ordinary record values and remain included.
 

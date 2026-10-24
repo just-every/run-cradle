@@ -11,7 +11,7 @@ import type { DescriptorRegistry, EntityDescriptor, FieldStorage } from './descr
 import type { Query, RecordRow } from './contracts';
 import { decode } from './codec.server';
 import { and, eq, identifier, trustedPredicate } from '../admission/sql.server';
-import { matchesFilter, sortRecords } from './evaluated-query';
+import { matchesFilter, compareRecords } from './evaluated-query';
 import { canonical } from '../admission/canonical';
 import { compileFilter, filterFields } from './filter.server';
 import { querySchema } from './validators';
@@ -160,24 +160,52 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
         sort.push(`${identifier(d.idColumn)} ASC`);
         const rev = await revision(), binding = await cursor.binding({ principal: ctx.principal.id, session:ctx.principal.sessionId, credential:ctx.principal.credentialId, baseSession:ctx.principal.baseSessionId??null, epoch: ctx.principal.authenticationEpoch, app: scope.appId, entity: scope.entityId, policy: scope.policyVersion, fields: scope.readableFieldIds, revision: d.schema.physicalRevision, query: { ...q, cursor: null, consistencyToken: null }, predicate: (scope.cursorPredicate??scope.rowPredicate).sql, values: (scope.cursorPredicate??scope.rowPredicate).values });
         let offset = 0;
+        let after: {id:string;fields:Record<string,Cell>} | undefined;
         if (q.cursor) {
             const p = await cursor.decode(q.cursor);
             if (p.binding !== binding || p.revision !== rev)
                 throw new AdmissionError('stale_cursor', 'Records or access changed. Refresh this query.');
             offset = p.offset;
+            if (p.after) {
+                const boundaryRow=await raw(ctx,scope,{appId:scope.appId,entityId:scope.entityId,recordId:p.after});
+                if(!boundaryRow)throw new AdmissionError('stale_cursor','The sort boundary changed. Refresh this query.');
+                after=await render(ctx,scope,d,boundaryRow,(q.sort??[]).map(s=>s.fieldId),new Set(),purpose);
+            }
+            if (evaluated && offset > 0 && !after) throw new AdmissionError('stale_cursor','Refresh this evaluated query to continue.');
         }
         const limit = q.limit ?? 100;
         if (evaluated) {
-            const rawRows = await db.prepare(`SELECT * FROM ${identifier(d.table.tableId)} WHERE ${where.sql}`).bind(...where.values).all<Record<string, unknown>>();
+            // Scan bounded raw pages and retain only this result page. The signed
+            // sort boundary avoids retaining every preceding row for later pages.
             const selected = [...new Set([...(q.fields ?? d.schema.fields.map(f => f.id)), ...used])];
-            const rendered = await Promise.all(rawRows.results.map(row => render(ctx, scope, d, row, selected, new Set(), purpose)));
             const numeric = new Set(d.schema.fields.filter(f => f.type === 'number' || f.type === 'computed' && f.resultType === 'number').map(f => f.id));
-            const filtered = rendered.filter(row => matchesFilter(row, q.filter, numeric, new Date().toISOString()));
-            sortRecords(filtered, q.sort ?? [], numeric);
-            const items = filtered.slice(offset, offset + limit).map(row => ({ ...row, fields: Object.fromEntries(Object.entries(row.fields).filter(([id]) => !q.fields || q.fields.includes(id))) }));
-            if (await revision() !== rev)
-                return null;
-            return { items, nextCursor: offset + limit < filtered.length ? await cursor.encode({ binding, revision: rev, offset: offset + limit }) : null, total: { kind: filtered.length > 10000 ? 'at_least' : 'exact', value: Math.min(filtered.length, 10000) }, evaluatedAt: new Date().toISOString() };
+            const compareRow = (a:Pick<RecordRow,'id'|'fields'>,b:Pick<RecordRow,'id'|'fields'>)=>compareRecords(a,b,q.sort??[],numeric);
+            const candidates:RecordRow[]=[];
+            let lastId:string|undefined,total=0;
+            for (;;) {
+                const boundary=lastId===undefined?trustedPredicate('1=1'):trustedPredicate(`${identifier(d.idColumn)}> ?`,[lastId]);
+                const pageWhere=and(where,boundary);
+                const rawRows=await db.prepare(`SELECT * FROM ${identifier(d.table.tableId)} WHERE ${pageWhere.sql} ORDER BY ${identifier(d.idColumn)} ASC LIMIT 200`).bind(...pageWhere.values).all<Record<string,unknown>>();
+                for(const rawRow of rawRows.results){
+                    const row=await render(ctx,scope,d,rawRow,selected,new Set(),purpose);
+                    if(!matchesFilter(row,q.filter,numeric,ctx.now))continue;
+                    total++;
+                    if(after&&compareRow(row,after)<=0)continue;
+                    // Insertion into at most limit+1 entries keeps allocation bounded
+                    // even for a computed sort across the whole underlying table.
+                    let low=0,high=candidates.length;
+                    while(low<high){const middle=(low+high)>>>1;if(compareRow(candidates[middle]!,row)<0)low=middle+1;else high=middle;}
+                    if(low<=limit){candidates.splice(low,0,row);if(candidates.length>limit+1)candidates.pop();}
+                }
+                if(await revision()!==rev)return null;
+                await assertCurrentScopeAuthority(db,ctx,scope);
+                if(rawRows.results.length<200)break;
+                lastId=String(rawRows.results.at(-1)![d.idColumn]);
+            }
+            const hasMore=candidates.length>limit,pageRows=candidates.slice(0,limit),last=pageRows.at(-1);
+            const items=pageRows.map(row=>({...row,fields:Object.fromEntries(Object.entries(row.fields).filter(([id])=>!q.fields||q.fields.includes(id)))}));
+            const nextCursor=hasMore&&last?await cursor.encode({binding,revision:rev,offset:offset+items.length,after:last.id}):null;
+            return {items,nextCursor,total:{kind:total>10000?'at_least':'exact',value:Math.min(total,10000)},evaluatedAt:ctx.now};
         }
         const [rows, count] = await db.batch([db.prepare(`SELECT * FROM ${identifier(d.table.tableId)} WHERE ${where.sql} ORDER BY ${sort.join(',')} LIMIT ? OFFSET ?`).bind(...where.values, limit + 1, offset), db.prepare(`SELECT COUNT(*) AS total FROM (SELECT 1 FROM ${identifier(d.table.tableId)} WHERE ${where.sql} LIMIT 10001)`).bind(...where.values)]);
         const items = await Promise.all((rows!.results as Record<string, unknown>[]).slice(0, limit).map(row => render(ctx, scope, d, row, q.fields, new Set(), purpose)));

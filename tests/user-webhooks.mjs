@@ -12,7 +12,7 @@ import {verifyWebhook} from '../vendor/base/modules/integrations/core/webhook.ts
 import {unbase64} from '../src/adapters/crypto.server.ts'
 
 contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery preserves ordered replay, delete resynchronization and policy-narrowed restores',async()=>{
- await slackAppJourney()
+ for(const provider of ['slack','teams','nook'])await slackAppJourney(provider)
  let edge,h
  try {
   edge=await automationNetworkEdge()
@@ -41,6 +41,11 @@ contract('WEBHOOK-USER-001','[WEBHOOK-USER-002] real Worker signed delivery pres
   assert.equal(JSON.parse(edge.received.find(request=>request.path.startsWith('/services/')).body).text,'A record is ready for review')
   await assert.rejects(verifyWebhook({body:new TextEncoder().encode(webhook.body+' '),headers:webhook.headers,
    key:unbase64(destination.signingKey),tenant:h.appId,destinationId:destination.id}))
+  const rotated=(await h.request(`/api/user-automations/destinations/${destination.id}/rotate`,{method:'POST',body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId}})).data
+  const afterRotation=await h.create('Webhook after rotation');await h.tick(afterRotation.commandId)
+  const nextWebhook=edge.received.filter(request=>request.path==='/accepted').at(-1)
+  await verifyWebhook({body:new TextEncoder().encode(nextWebhook.body),headers:nextWebhook.headers,key:unbase64(rotated.signingKey),tenant:h.appId,destinationId:destination.id})
+  await assert.rejects(verifyWebhook({body:new TextEncoder().encode(nextWebhook.body),headers:nextWebhook.headers,key:unbase64(destination.signingKey),tenant:h.appId,destinationId:destination.id}))
   const wire={url:edge.receiverOrigin+'/accepted',headers:{'content-type':'application/json'},body:'{}'}
   const before=edge.tlsCalls
   const unauthorized=await edge.deliver(wire,false);assert.equal(unauthorized.status,401);await unauthorized.arrayBuffer()

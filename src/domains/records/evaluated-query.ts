@@ -46,11 +46,14 @@ export function matchesFilter(row: RecordRow, filter: Filter | undefined, numeri
     const c = compareValues(a, b, numeric.has(filter.fieldId));
     return filter.op === 'eq' ? c === 0 : filter.op === 'ne' ? c !== 0 : filter.op === 'before' ? c < 0 : c > 0;
 }
-export function sortRecords(rows: RecordRow[], sort: Sort[], numeric: Set<string>): void { rows.sort((a, b) => { for (const s of sort) {
-    const x = a.fields[s.fieldId], y = b.fields[s.fieldId];
-    if (x?.state !== 'value' || y?.state !== 'value')
-        throw new Error('Cannot sort an unavailable field');
-    const c = compareValues(x.value, y.value, numeric.has(s.fieldId));
-    if (c)
-        return s.direction === 'asc' ? c : -c;
-} return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }); }
+export function compareRecords(a: Pick<RecordRow,'id'|'fields'>, b: Pick<RecordRow,'id'|'fields'>, sort: Sort[], numeric: Set<string>): number {
+    for (const s of sort) {
+        const x = a.fields[s.fieldId], y = b.fields[s.fieldId];
+        if (x?.state !== 'value' || y?.state !== 'value')
+            throw new Error('Cannot sort an unavailable field');
+        const c = compareValues(x.value, y.value, numeric.has(s.fieldId));
+        if (c)
+            return s.direction === 'asc' ? c : -c;
+    }
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}

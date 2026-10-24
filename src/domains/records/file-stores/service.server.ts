@@ -1,6 +1,9 @@
+import {createStoreCopy} from './copy.server';
+import {readStoreContent} from '../../../adapters/file-stores-content.server';
+import type {EvidenceDependencies} from '../../evidence/ports';
 import {createStoreResolution} from './resolution.server';
 import type {createRecordWriter} from '../change.server';
-import {personalStorePermit} from '../../authority/personal-stores.server';
+import {storeCopyOwner,personalStorePermit} from '../../authority/personal-stores.server';
 import {fileStoreAdapter} from '../../../adapters/file-stores.server';
 import type {FileStoreProvider} from '../../connections/oauth.server';
 import {createFileStoreSettings} from './settings.server';
@@ -21,7 +24,7 @@ export const fieldAddress = z.object({ appId: idSchema, entityId: idSchema, fiel
 export type FileStoreConnection = { id: string; provider: string; name: string; state: string; sharePreviews:boolean };
 type Reader = ReturnType<typeof createRecordReader>;
 /** Browsing and thumbnails read a person's own file store through a connection job, so the credential never leaves custody. */
-export function createFileStores(db: D1Database, foundation: ServerFoundation, providers: ReturnType<typeof createProvidersComposition>, reader: Reader,writer:ReturnType<typeof createRecordWriter>) {
+export function createFileStores(db: D1Database, foundation: ServerFoundation, providers: ReturnType<typeof createProvidersComposition>, reader: Reader,writer:ReturnType<typeof createRecordWriter>,evidence:EvidenceDependencies) {
   /** Only a person who may write this attachment field, through a connection they own, can choose from a store. */
   async function authorize(ctx: RequestContext, address: z.infer<typeof fieldAddress>) {
     if (ctx.principal.kind !== 'human') throw new ApiError('forbidden', 'A person chooses files from their own store.');
@@ -46,11 +49,12 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
       await providers.jobs.dispatch(outbox.id);
       const answer = await db.prepare("SELECT r.result_json FROM file_store_requests r JOIN connection_jobs j ON j.id=r.job_id WHERE r.job_id=? AND r.actor_id=? AND j.state='completed'").bind(jobId, ctx.principal.id).first<{ result_json: string | null }>();
       if (!answer || answer.result_json === null) throw new ApiError('provider_unavailable', 'The file store did not answer. Reconnect it or try again.');
-      if(request.op==='thumbnail'){
+      if(request.op==='thumbnail'||request.op==='content'){
         const jobContext={...ctx,requestId:jobId};
-        const image=await fileStoreAdapter(connection.adapter_id,providers.connections(jobContext).credentials).thumbnail(connectionId,jobId,request.itemId);
+        const credentials=providers.connections(jobContext).credentials;
+        const image=request.op==='content'?await readStoreContent(connection.adapter_id,credentials,connectionId,jobId,request.itemId):await fileStoreAdapter(connection.adapter_id,credentials).thumbnail(connectionId,jobId,request.itemId);
         // Authority may have changed while the provider answered. Recheck before handing out bytes.
-        await personalStorePermit(db,foundation.policy,foundation.entities,jobContext,{appId:connection.app_id,action:'connection.sync',expected:[],cost:[],connectionId,inputHash:''});
+        await personalStorePermit(db,foundation.policy,foundation.entities,jobContext,{appId:connection.app_id,action:'connection.sync',expected:[],cost:[],connectionId,inputHash:''},undefined,request);
         return image as T;
       }
       return JSON.parse(answer.result_json) as T;
@@ -90,5 +94,5 @@ export function createFileStores(db: D1Database, foundation: ServerFoundation, p
     return {state:own.length?'none':'reconnect'};
   }
 
-  return { resolve:createStoreResolution(db,foundation,reader,writer,run),settings:createFileStoreSettings(db,foundation),connections, browse, thumbnail, identity: (ctx: RequestContext) => ({ attachedBy: ctx.principal.id }) };
+  return { async canCopy(ctx:RequestContext,appId:string){try{await storeCopyOwner(db,ctx,appId);return true}catch(error){if(error instanceof Error&&'code'in error&&error.code==='forbidden')return false;throw error}},copy:createStoreCopy(db,foundation,reader,writer,evidence,run),resolve:createStoreResolution(db,foundation,reader,writer,run),settings:createFileStoreSettings(db,foundation),connections, browse, thumbnail, identity: (ctx: RequestContext) => ({ attachedBy: ctx.principal.id }) };
 }

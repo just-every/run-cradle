@@ -9,12 +9,13 @@ const hash=(value:string)=>createHash('sha256').update(value).digest()
 function parseWire(value:unknown):RelayWire {
  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('invalid_wire')
  const wire=value as RelayWire
- if(Object.keys(wire).some(key=>!['body','headers','url','method','bodyEncoding'].includes(key))||typeof wire.url!=='string'||typeof wire.body!=='string'||
+ if(Object.keys(wire).some(key=>!['body','headers','url','method','bodyEncoding','transferPart'].includes(key))||typeof wire.url!=='string'||typeof wire.body!=='string'||
   !wire.headers||typeof wire.headers!=='object'||Array.isArray(wire.headers))throw new Error('invalid_wire')
  validateDestination(wire.url)
  if(wire.method!==undefined&&!['GET','POST','PUT','DELETE','HEAD'].includes(wire.method))throw new Error('invalid_method')
- if(wire.bodyEncoding!==undefined&&(wire.bodyEncoding!=='base64'||!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(wire.body)))throw new Error('invalid_encoding')
- if(Buffer.byteLength(wire.body,wire.bodyEncoding==='base64'?'base64':'utf8')>1048576||Object.keys(wire.headers).length>32)throw new Error('request_limit')
+ if(wire.bodyEncoding!==undefined&&(wire.bodyEncoding!=='base64'||Buffer.from(wire.body,'base64').toString('base64')!==wire.body))throw new Error('invalid_encoding')
+ if(wire.transferPart!==undefined&&(wire.transferPart!=='warehouse-v1'||wire.bodyEncoding!=='base64'||wire.method!=='PUT'||!/^AWS4-HMAC-SHA256 /.test(wire.headers.authorization??'')))throw new Error('invalid_transfer_part')
+ if(Buffer.byteLength(wire.body,wire.bodyEncoding==='base64'?'base64':'utf8')>(wire.transferPart==='warehouse-v1'?5242880:1048576)||Object.keys(wire.headers).length>32)throw new Error('request_limit')
  for(const [name,content] of Object.entries(wire.headers))
   if(!/^[A-Za-z0-9-]{1,64}$/.test(name)||typeof content!=='string'||content.length>2048||/[\r\n\0]/.test(content))throw new Error('invalid_header')
  return wire
@@ -33,13 +34,13 @@ export function createRelayHandler(secret:string,transport:{send(wire:RelayWire)
   const timer=setTimeout(()=>request.destroy(),15000);let size=0,started=false
   try {
    const chunks:Buffer[]=[]
-   for await(const chunk of request){size+=chunk.length;if(size>2097152)return end(413,'request_limit');chunks.push(Buffer.from(chunk))}
+   for await(const chunk of request){size+=chunk.length;if(size>7340032)return end(413,'request_limit');chunks.push(Buffer.from(chunk))}
    const raw=Buffer.concat(chunks),wire=parseWire(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw)))
    started=true
    const result=await transport.send(wire)
-   if(result.status>=300&&result.status<400)return end(422,'redirect_refused')
+   if(result.status>=300&&result.status<400&&!(result.status===308&&wire.method==='PUT'&&new URL(wire.url).hostname==='bigquery.googleapis.com'&&wire.headers['content-range']))return end(422,'redirect_refused')
    if(Buffer.byteLength(result.body)>(wire.bodyEncoding==='base64'?1400000:65536))return end(502,'response_limit')
-   const headers=Object.fromEntries(Object.entries(result.headers).filter(([name])=>['retry-after','content-type'].includes(name.toLowerCase())))
+   const headers=Object.fromEntries(Object.entries(result.headers).filter(([name])=>['retry-after','content-type','etag','location','content-range','content-length','range'].includes(name.toLowerCase())))
    response.writeHead(200);response.end(JSON.stringify({status:result.status,headers,body:result.body,...(wire.bodyEncoding?{bodyEncoding:result.bodyEncoding}:{})}))
   }catch {if(!response.headersSent)end(started?502:400,started?'delivery_unknown':'invalid_request')}
   finally {clearTimeout(timer)}

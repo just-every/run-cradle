@@ -16,6 +16,11 @@ export function createProposerKeysHttp(service:ReturnType<typeof createProposerK
   const input=z.object({commandId:idSchema,appId:idSchema.optional(),name:z.string().trim().min(1).max(100),expiresAt:instantSchema}).strict().parse(await readBoundedJson(c.req.raw,16384))
   return c.json(reply(ctx,{key:await service.issue(ctx,input.commandId,input)}),201)
  })
+ router.post('/:id/rotate',async c=>{
+  const ctx=await authenticate(c.req.raw)
+  const input=z.object({commandId:idSchema}).strict().parse(await readBoundedJson(c.req.raw,4096))
+  return c.json(reply(ctx,{key:await service.rotate(ctx,input.commandId,idSchema.parse(c.req.param('id')))}))
+ })
  router.post('/:id/revoke',async c=>{
   const ctx=await authenticate(c.req.raw)
   const input=z.object({commandId:idSchema}).strict().parse(await readBoundedJson(c.req.raw,4096))

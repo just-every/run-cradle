@@ -69,10 +69,24 @@ export async function personalStoresJourney(h,provider,fieldId){
  await checkBytes();provider.observeThumbnails(undefined)
  for(const table of ['file_store_requests','connection_jobs','command_admissions','admission_audit']){const rows=(await h.db.prepare(`SELECT * FROM ${table}`).all()).results;assert.ok(!JSON.stringify(rows).includes(provider.png.toString('base64')),'No thumbnail bytes in '+table)}
  assert.equal((await(await h.runtime.getR2Bucket('FILES')).list()).objects.length,0)
+ // Only a base owner may explicitly retain bytes, through the original attacher's connection.
+ const copyReference=references.find(r=>r.reference.provider==='onedrive').reference,copyRequest={commandId:createUlid(),...address,recordId:record.ref.recordId,provider:'onedrive',itemId:copyReference.itemId}
+ for(const person of [editor,second,reader])await request(person.cookie,'/api/v1/records/file-stores/keep-copy',{body:copyRequest,status:403})
+ const copied=await request(h.cookie,'/api/v1/records/file-stores/keep-copy',{body:copyRequest})
+ const content=await fetch(h.origin+`/api/v1/files/${copied.fileId}/content`,{headers:{cookie:h.cookie}})
+ assert.equal(content.status,200);assert.deepEqual(Buffer.from(await content.arrayBuffer()),provider.payload('onedrive',0))
+ const beforeReplay=provider.seen.length;await request(h.cookie,'/api/v1/records/file-stores/keep-copy',{body:copyRequest});assert.equal(provider.seen.length,beforeReplay,'A retried command never re-reads store content')
+ assert.equal((await(await h.runtime.getR2Bucket('FILES')).list()).objects.length,1,'Only the requested file is copied')
  // Native and SCIM removal use the same lifecycle plan; the native door proves the credential revocation.
  const version=(await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(editor.id).first()).version
  await command(h.cookie,'member.remove',{memberId:editor.id,reason:'synthetic-cradle-deprovision'},[{ref:{appId:h.appId,entityId:AUTHORITY_ENTITY_IDS.member,recordId:editor.id},version}])
  assert.equal((await h.db.prepare('SELECT count(*) n FROM provider_connections WHERE owner_id=? AND revoked_at IS NULL').bind(editor.id).first()).n,0)
  assert.equal((await h.db.prepare('SELECT count(*) n FROM connection_credentials WHERE connection_id IN(SELECT id FROM provider_connections WHERE owner_id=?)').bind(editor.id).first()).n,0)
+ const eraseVersion=(await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(editor.id).first()).version
+ await command(h.cookie,'member.erase',{memberId:editor.id,reason:'synthetic-cradle-attacher-erasure'},[{ref:{appId:h.appId,entityId:AUTHORITY_ENTITY_IDS.member,recordId:editor.id},version:eraseVersion}])
+ const remaining=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${record.ref.recordId}`)).data.record.fields[fieldId].value
+ assert.deepEqual(remaining,[{fileId:copied.fileId}],'Erasing the attacher removes only their references, not the owner-requested custody copy')
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM connection_credentials WHERE connection_id IN(SELECT id FROM provider_connections WHERE owner_id=?)').bind(editor.id).first()).n,0)
+ assert.equal((await(await h.runtime.getR2Bucket('FILES')).list()).objects.length,1)
  assert.deepEqual(provider.writes,[])
 }

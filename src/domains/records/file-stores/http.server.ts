@@ -25,8 +25,10 @@ export function fileStoresHttp(foundation: ServerFoundation, stores: ReturnType<
         if(data===null)throw new ApiError('not_found','Unknown file store settings door.');
         return c.json({data,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now}},200,json);
       }
+      if(request.method==='GET'&&url.pathname.endsWith('/copy-permission'))return c.json({data:{allowed:await stores.canCopy(ctx,idSchema.parse(url.searchParams.get('appId')))},meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now}},200,json);
       if (request.method === 'GET' && url.pathname.endsWith('/identity')) return c.json({ data: stores.identity(ctx), meta: { requestId, apiVersion: 'cradle.api.v1', evaluatedAt: ctx.now } }, 200, json);
       if (request.method === 'GET' && url.pathname.endsWith('/connections')) return c.json({ data: { connections: await stores.connections(ctx, idSchema.parse(url.searchParams.get('appId'))) }, meta: { requestId, apiVersion: 'cradle.api.v1', evaluatedAt: ctx.now } }, 200, json);
+      if(request.method==='POST'&&url.pathname.endsWith('/keep-copy')){if(request.headers.get('origin')!==url.origin)throw new ApiError('forbidden','A same-origin request is required.');return c.json({data:await stores.copy(ctx,await readJsonBody(request)),meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now}},200,json);}
       if(request.method==='POST'&&url.pathname.endsWith('/resolve')){if(request.headers.get('origin')!==url.origin)throw new ApiError('forbidden','A same-origin request is required.');return c.json({data:await stores.resolve(ctx,await readJsonBody(request)),meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now}},200,json);}
       if (request.method === 'POST' && url.pathname.endsWith('/browse')) {
         if (request.headers.get('origin') !== url.origin) throw new ApiError('forbidden', 'A same-origin request is required.');

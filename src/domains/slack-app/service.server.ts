@@ -17,7 +17,7 @@ import {slackIdentity} from './identity.server'
 import {slackAppEffects} from './effects.server'
 import {slackCallbacks} from './callbacks.server'
 export function createSlackApp(env:PlatformBindings,foundation:ServerFoundation,records:ReturnType<typeof createRecordServices>,origin:string){
- const settings=slackSettings(env,foundation,origin),api=slackTransport(env),oauth=slackOAuth(env.DB,settings,api,origin),identity=slackIdentity(env.DB,settings)
+ const settings=slackSettings(env,foundation,origin),api=slackTransport(env,settings),oauth=slackOAuth(env.DB,settings,api,origin),identity=slackIdentity(env.DB,settings)
  const effects=slackAppEffects(env,foundation,records,settings,oauth,api,origin),http=new Hono()
  http.onError((error,c)=>errorResponse(error,createUlid(),c.req.method+' '+c.req.path))
  const authenticate=(request:Request)=>foundation.authenticate(request,'http',createUlid())
@@ -31,5 +31,5 @@ export function createSlackApp(env:PlatformBindings,foundation:ServerFoundation,
  http.post('/link',async c=>{const ctx=await authenticate(c.req.raw);return c.json(reply(ctx,await identity.code(ctx)))})
  http.delete('/link',async c=>{const ctx=await authenticate(c.req.raw);return c.json(reply(ctx,await identity.unlink(ctx)))})
  http.put('/unfurl-fields',async c=>{const ctx=await authenticate(c.req.raw);return c.json(reply(ctx,await settings.fields(ctx,await readBoundedJson(c.req.raw,16384))))})
- return {http,...effects,webhook:slackCallbacks(env,foundation,records,settings,identity,api,origin),async callback(request:Request){const ctx=await authenticate(request),url=new URL(request.url);return oauth.callback(ctx,z.string().min(1).max(512).parse(url.searchParams.get('state')),z.string().min(1).max(4096).parse(url.searchParams.get('code')))}}
+ return {http,...effects,webhook:slackCallbacks(env,foundation,records,settings,identity,api,origin),async callback(request:Request){const ctx=await authenticate(request),url=new URL(request.url),{installation}=await settings.resolve();if(url.pathname.split('/')[2]!==installation.provider)throw new Error('OAuth callback provider does not match the configured app.');return oauth.callback(ctx,z.string().min(1).max(512).parse(url.searchParams.get('state')),z.string().min(1).max(4096).parse(url.searchParams.get('code')))}}
 }

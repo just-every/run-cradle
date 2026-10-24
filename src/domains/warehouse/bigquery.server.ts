@@ -56,12 +56,12 @@ export function createBigQueryDestination(env:PlatformBindings,config:BigQueryCo
   if(typeof result.access_token!=='string'||!result.access_token||result.access_token.length>16384||/[\r\n\0]/.test(result.access_token))return unavailable('authorization returned no usable access token')
   return result.access_token as string
  }
- async function request(access:string,url:string,body?:string|Uint8Array<ArrayBuffer>,contentType='application/json'){
+ async function request(access:string,url:string,body?:string|Uint8Array<ArrayBuffer>,contentType='application/json',method?:'PUT',extra:Record<string,string>={}){
   // Job receipts can contain all 500 exported field definitions. Use the
   // existing bounded binary envelope for both directions rather than the
   // smaller legacy notification response limit, including empty-body GETs.
   const payload=body===undefined?new Uint8Array():typeof body==='string'?bytes(body):body
-  const response=await relay.send({url,method:body===undefined?'GET':'POST',headers:{authorization:'Bearer '+access,...(body===undefined?{}:{'content-type':contentType})},body:base64(payload),bodyEncoding:'base64'})
+  const response=await relay.send({url,method:method??(body===undefined?'GET':'POST'),headers:{...extra,authorization:'Bearer '+access,...(body===undefined?{}:{'content-type':contentType})},body:base64(payload),bodyEncoding:'base64'})
   try{return {...response,body:new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(response.body),char=>char.charCodeAt(0)))}}catch{return unavailable('returned an invalid response encoding')}
  }
  async function lookup(access:string,id:string){
@@ -117,14 +117,45 @@ export function createBigQueryDestination(env:PlatformBindings,config:BigQueryCo
    if(!job){
     const boundary='cradle_'+(await hash(bytes(key))).slice(0,32)
     const metadata={jobReference:{projectId:config.project,jobId:id,location:config.location},labels:{cradle_content:digest},configuration:{load:{destinationTable:{projectId:config.project,datasetId:config.dataset,tableId},sourceFormat:meta.format==='parquet'?'PARQUET':'CSV',writeDisposition:'WRITE_APPEND',createDisposition:'CREATE_IF_NEEDED',columnNameCharacterMap:'STRICT',schema:{fields:meta.headers.map((name,index)=>({name,type:meta.columnTypes[index]==='DOUBLE'?'FLOAT':meta.columnTypes[index]==='BOOLEAN'?'BOOLEAN':'STRING',mode:'NULLABLE'}))},...(meta.format==='csv'?{skipLeadingRows:1,allowQuotedNewlines:true,encoding:'UTF-8',fieldDelimiter:',',quote:'"'}:{})}}}
-    const start=bytes(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: ${meta.format==='parquet'?'application/vnd.apache.parquet':'text/csv'}\r\n\r\n`),end=bytes(`\r\n--${boundary}--\r\n`),multipart=new Uint8Array(start.length+body.length+end.length)
-    multipart.set(start);multipart.set(body,start.length);multipart.set(end,start.length+body.length)
     try{
-     const response=await request(access,`https://bigquery.googleapis.com/upload/bigquery/v2/projects/${project}/jobs?uploadType=multipart`,multipart,`multipart/related; boundary=${boundary}`)
-     if(response.status!==200&&response.status!==201&&response.status!==409)return unavailable('load acknowledgement is unknown or refused')
+     if(body.length>900000){
+      const started=await request(access,`https://bigquery.googleapis.com/upload/bigquery/v2/projects/${project}/jobs?uploadType=resumable`,JSON.stringify(metadata))
+      if(started.status===409){job=await lookup(access,id)}else{
+       const session=started.headers.location
+       let url:URL
+       try{url=new URL(session)}catch{return unavailable('resumable upload returned no session')}
+       if(started.status!==200||url.protocol!=='https:'||url.hostname!=='bigquery.googleapis.com'||url.username||url.password||url.hash)return unavailable('resumable upload returned an invalid session')
+       const chunkSize=786432
+       let offset=0,interruptions=0
+       while(offset<body.length){
+        const end=Math.min(offset+chunkSize,body.length)
+        let response
+        try{response=await request(access,url.href,body.slice(offset,end),'application/octet-stream','PUT',{'content-range':`bytes ${offset}-${end-1}/${body.length}`})}
+        catch{
+         if(++interruptions>2)return unavailable('resumable upload was interrupted repeatedly')
+         // Read the existing session's committed prefix. Never invent another
+         // append job or assume a disconnected part was not accepted.
+         response=await request(access,url.href,new Uint8Array(),'application/octet-stream','PUT',{'content-range':`bytes */${body.length}`})
+         if(response.status===200||response.status===201){offset=body.length;break}
+         const prefix=/^bytes=0-(\d+)$/.exec(response.headers.range??'')
+         const accepted=prefix?Number(prefix[1])+1:0
+         if(response.status!==308||accepted<offset||accepted>end||accepted!==body.length&&accepted%262144!==0)return unavailable('resumable prefix readback is inconsistent')
+         offset=accepted;continue
+        }
+        if(end<body.length){if(response.status!==308||response.headers.range!==`bytes=0-${end-1}`)return unavailable('resumable part acknowledgement is unknown or refused')}
+        else if(response.status!==200&&response.status!==201&&response.status!==409)return unavailable('resumable completion acknowledgement is unknown or refused')
+        offset=end
+       }
+      }
+     }else{
+      const start=bytes(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: ${meta.format==='parquet'?'application/vnd.apache.parquet':'text/csv'}\r\n\r\n`),end=bytes(`\r\n--${boundary}--\r\n`),multipart=new Uint8Array(start.length+body.length+end.length)
+      multipart.set(start);multipart.set(body,start.length);multipart.set(end,start.length+body.length)
+      const response=await request(access,`https://bigquery.googleapis.com/upload/bigquery/v2/projects/${project}/jobs?uploadType=multipart`,multipart,`multipart/related; boundary=${boundary}`)
+      if(response.status!==200&&response.status!==201&&response.status!==409)return unavailable('load acknowledgement is unknown or refused')
+     }
     }catch{
-     // A disconnected POST can already have created the job. Its deterministic
-     // ID is the only permitted readback; never retry under another ID.
+     // A final PUT can already have created the deterministic append job.
+     // Only that identity may reconcile an uncertain acknowledgement.
      const known=await lookup(access,id);if(!known)return unavailable('load acknowledgement is unknown');job=known
     }
     job=job??await lookup(access,id)

@@ -54,6 +54,7 @@ export async function fileStoresJourney(h,provider,existingFields){
  for(const [forged,status] of [[{...base,attachedBy:createUlid()},403],[{...base,itemId:'synthetic-cradle-forged',connectionId:createUlid()},403],[{...base,itemId:'synthetic-cradle-link',link:'https://evil.example/x'},400],[{...base,itemId:'synthetic-cradle-key',extra:true},400]])await h.patch(current,{[fieldId]:[...members,{reference:forged}]},undefined,createUlid(),status)
  assert.equal((await record()).fields[fieldId].value.length,members.length,'Forged references change nothing')
  await personalStoresJourney(h,provider,fieldId)
+ await storeCopies(h,provider,fieldId,members)
  // The person loses connection authority: browsing and previews are refused, the attachment keeps name and type.
  const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(h.operator,h.appId).first(),rules=JSON.parse(policy.rules_json)
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules.map(r=>r.entityId===h.entityId?{...r,writableFields:r.writableFields.filter(id=>id!==fieldId)}:r)),policy.id).run()
@@ -64,4 +65,23 @@ export async function fileStoresJourney(h,provider,existingFields){
  const gone=await fetch(h.origin+'/api/v1/records/file-stores/thumbnail?'+new URLSearchParams({...address,recordId:created.ref.recordId,itemId:members[0].reference.itemId}),{headers:{cookie:h.cookie}})
  assert.equal(gone.status,404);assert.deepEqual(await gone.json(),{state:'reconnect'})
  assert.equal((await record()).fields[fieldId].value[0].reference.name,'synthetic-cradle-plan.png')
+}
+
+/** All four content edges enter ordinary custody; a store outage never affects retained bytes. */
+async function storeCopies(h,provider,fieldId,members){
+ const entity=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
+ let record=(await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:entity.version}],input:{appId:h.appId,entityId:h.entityId,values:{[h.nameId]:'synthetic-cradle-kept-copies'}}}})).data.value
+ record=(await h.patch(record,{[fieldId]:members})).data.value
+ const files=[]
+ for(const {reference} of members){
+  const request={commandId:createUlid(),appId:h.appId,entityId:h.entityId,fieldId,recordId:record.ref.recordId,provider:reference.provider,itemId:reference.itemId}
+  const copy=(await h.request('/api/v1/records/file-stores/keep-copy',{method:'POST',body:request})).data
+  files.push({id:copy.fileId,provider:reference.provider});record=copy.record
+  assert.ok(record.fields[fieldId].value.some(m=>m.fileId===copy.fileId));assert.ok(!record.fields[fieldId].value.some(m=>m.reference?.provider===reference.provider))
+ }
+ const before=provider.seen.length;provider.denied.add('synthetic-cradle-access-1')
+ try{for(const file of files){const response=await fetch(h.origin+`/api/v1/files/${file.id}/content`,{headers:{cookie:h.cookie}});assert.equal(response.status,200);assert.match(response.headers.get('cache-control'),/no-store/);assert.deepEqual(Buffer.from(await response.arrayBuffer()),provider.payload(file.provider,0))}}finally{provider.denied.delete('synthetic-cradle-access-1')}
+ assert.equal(provider.seen.length,before,'Copied bytes survive unsharing/deletion without another provider read')
+ for(const table of ['file_store_requests','connection_jobs','command_admissions','admission_audit'])assert.ok(!JSON.stringify((await h.db.prepare(`SELECT * FROM ${table}`).all()).results).includes(provider.payload('google-drive',0).toString('base64')),'No copied bytes in '+table)
+ assert.deepEqual(provider.writes,[])
 }

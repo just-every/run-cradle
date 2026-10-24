@@ -62,6 +62,13 @@ export function createProposerKeyService(db:D1Database,ordinary:PolicyPort,admis
    const bases=await db.prepare('SELECT id,name FROM manual_record_bases WHERE owner_id=? ORDER BY name,id').bind(ctx.principal.id).all<{id:string;name:string}>()
    return {bases:bases.results,keys:rows.results.map(row=>({id:row.id,name:row.name,appId:row.app_id,baseName:row.base_name,createdAt:new Date(row.created_at).toISOString(),expiresAt:new Date(row.expires_at).toISOString(),revokedAt:row.revoked_at===null?null:new Date(row.revoked_at).toISOString()}))}
   },
+  async rotate(ctx:RequestContext,commandId:string,id:string){
+   const row=await db.prepare(`SELECT b.label,b.app_id FROM authority_credentials c JOIN authority_schema_proposers b ON b.principal_id=c.principal_id WHERE c.id=? AND b.issuer_id=? AND b.revoked_at IS NULL`)
+    .bind(id,ctx.principal.id).first<{label:string;app_id:string}>()
+   if(!row)throw new AuthorityError('not_found','Proposing key not found.',404)
+   const own=await owner(ctx,row.app_id)
+   return {...await createMachineService(db,own.policy,admission).rotate(ctx,commandId,row.app_id,id,'proposing-key'),name:row.label,appId:row.app_id,endpoint:`${appOrigin}/mcp`,api:`${appOrigin}/api/v1/proposals`}
+  },
   async revoke(ctx:RequestContext,commandId:string,id:string){
    const row=await db.prepare(`SELECT b.principal_id,b.app_id,p.authentication_epoch,p.version FROM authority_credentials c JOIN authority_schema_proposers b ON b.principal_id=c.principal_id
     JOIN authority_principals p ON p.id=b.principal_id WHERE c.id=? AND b.issuer_id=?`).bind(id,ctx.principal.id).first<{principal_id:string;app_id:string;authentication_epoch:number;version:number}>()

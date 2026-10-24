@@ -10,6 +10,7 @@ export type ConnectionHttpDependencies={slackWebhook?:(request:Request,kind:'lin
 const id=z.string().regex(/^[0-9A-HJKMNP-TV-Z]{26}$/);
 export function createConnectionHttp(d:ConnectionHttpDependencies){const app=new Hono(),service=(ctx:RequestContext)=>typeof d.service==='function'?d.service(ctx):d.service;
  app.onError((error,c)=>errorResponse(error,createUlid(),c.req.method+' '+c.req.path));
+ for(const provider of ['nook','teams']){app.post('/webhooks/'+provider+'/:kind',async c=>{const kind=z.enum(['link','actions','events']).parse(c.req.param('kind'));return d.slackWebhook?d.slackWebhook(c.req.raw,kind):new Response(null,{status:503})});app.get('/oauth/'+provider+'/callback',async c=>{if(!d.slackCallback)return new Response(null,{status:503});return c.redirect((await d.slackCallback(c.req.raw)).returnTo,303)})}
  app.post('/webhooks/slack/:kind',async c=>{const kind=z.enum(['link','actions','events']).parse(c.req.param('kind'));return d.slackWebhook?d.slackWebhook(c.req.raw,kind):new Response(null,{status:503})});
  app.get('/oauth/slack/callback',async c=>{if(!d.slackCallback)return new Response(null,{status:503});return c.redirect((await d.slackCallback(c.req.raw)).returnTo,303)});
  app.post('/webhooks/twilio/:kind',async c=>{const kind=z.enum(['status','inbound']).parse(c.req.param('kind'));if(!d.smsWebhook)return new Response(null,{status:503});return d.smsWebhook(c.req.raw,kind)});

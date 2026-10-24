@@ -1,6 +1,6 @@
 import type { ProviderResult } from './contracts';
 import { base64, sha256 } from './crypto.server';
-export type Endpoint = 'drive.root' | 'graph.drive' | 'box.account' | 'box.file' | 'dropbox.metadata' | 'sheets.read' | 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.update' | 'calendar.calendars' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke' | 'drive.files' | 'drive.file' | 'drive.thumbnail' | 'graph.children' | 'graph.search' | 'graph.item' | 'graph.thumbnail' | 'dropbox.list' | 'dropbox.continue' | 'dropbox.search' | 'dropbox.thumbnail' | 'box.items' | 'box.search' | 'box.thumbnail' | 'microsoft.token' | 'dropbox.token' | 'dropbox.revoke' | 'box.token' | 'box.revoke';
+export type Endpoint = 'outlook.calendars' | 'outlook.list' | 'outlook.get' | 'outlook.insert' | 'outlook.update' | 'outlook.delete' | 'drive.root' | 'graph.drive' | 'box.account' | 'box.file' | 'dropbox.metadata' | 'sheets.read' | 'resend.send' | 'resend.read' | 'gmail.profile' | 'gmail.list' | 'gmail.message' | 'calendar.list' | 'calendar.update' | 'calendar.calendars' | 'calendar.insert' | 'calendar.get' | 'calendar.delete' | 'xero.create' | 'xero.read' | 'xero.search' | 'xero.connections' | 'openai.responses' | 'google.token' | 'google.revoke' | 'xero.token' | 'xero.revoke' | 'drive.files' | 'drive.file' | 'drive.thumbnail' | 'graph.children' | 'graph.search' | 'graph.item' | 'graph.thumbnail' | 'dropbox.list' | 'dropbox.continue' | 'dropbox.search' | 'dropbox.thumbnail' | 'box.items' | 'box.search' | 'box.thumbnail' | 'microsoft.token' | 'dropbox.token' | 'dropbox.revoke' | 'box.token' | 'box.revoke';
 const segment = (s: string) => { if (!s || s.length > 1024 || /[\x00-\x1f]/.test(s)) throw new Error('Invalid provider identifier'); return encodeURIComponent(s); };
 const thumbnailHosts: Record<'drive.thumbnail' | 'graph.thumbnail', (host: string) => boolean> = {
   'drive.thumbnail': host => host.endsWith('.googleusercontent.com') || host === 'drive.google.com',
@@ -18,6 +18,12 @@ export function endpoint(name: Endpoint, ids: string[] = []): { url: string; met
     case 'gmail.profile': return { url: 'https://gmail.googleapis.com/gmail/v1/users/me/profile', method: 'GET' };
     case 'gmail.list': return { url: 'https://gmail.googleapis.com/gmail/v1/users/me/messages', method: 'GET' };
     case 'gmail.message': return { url: `https://gmail.googleapis.com/gmail/v1/users/me/messages/${a()}`, method: 'GET' };
+    case 'outlook.calendars': return {url:'https://graph.microsoft.com/v1.0/me/calendars',method:'GET'};
+    case 'outlook.list': return {url:`https://graph.microsoft.com/v1.0/me/calendars/${a()}/events`,method:'GET'};
+    case 'outlook.get': return {url:`https://graph.microsoft.com/v1.0/me/calendars/${a()}/events/${b()}`,method:'GET'};
+    case 'outlook.insert': return {url:`https://graph.microsoft.com/v1.0/me/calendars/${a()}/events`,method:'POST'};
+    case 'outlook.update': return {url:`https://graph.microsoft.com/v1.0/me/calendars/${a()}/events/${b()}`,method:'PATCH'};
+    case 'outlook.delete': return {url:`https://graph.microsoft.com/v1.0/me/calendars/${a()}/events/${b()}`,method:'DELETE'};
     case 'calendar.calendars': return {url:'https://www.googleapis.com/calendar/v3/users/me/calendarList',method:'GET'};
     case 'calendar.update': return {url:`https://www.googleapis.com/calendar/v3/calendars/${a()}/events/${b()}`,method:'PUT'};
     case 'calendar.list': return { url: `https://www.googleapis.com/calendar/v3/calendars/${a()}/events`, method: 'GET' };

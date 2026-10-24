@@ -1,6 +1,6 @@
 # FILE-002 — Attachments from connected file stores
 
-A person attaches a file that stays in their own store. Cradle keeps its name, type, size, modified time and the store's own link, and nothing else: no bytes, no copy, no sharing change.
+A person attaches a file that stays in their own store. Cradle keeps its name, type, size, modified time and the store's own link, without copying bytes or changing sharing. A base owner can explicitly choose **Keep a copy**; this reads the bytes through the original attacher’s current connection and replaces that reference with an ordinary private attachment. Reading a record, a thumbnail or a reference never copies content.
 
 No real provider call or consent was used. Every journey ran in the emitted Worker against a synthetic provider edge (`tests/helpers/file-stores-provider.mjs`). Real Google, Microsoft, Dropbox and Box consents are NOT RUN.
 
@@ -20,7 +20,7 @@ Migration `9050_personal_file_stores.sql` is additive. A populated emitted-Worke
 
 | Store | Scope asked | Why |
 | --- | --- | --- |
-| Google Drive | `https://www.googleapis.com/auth/drive.metadata.readonly` | The in-app chooser lists and searches files and reads `thumbnailLink` and `webViewLink`. `drive.file` only sees files the app created or opened through Google's own picker, so an in-app chooser would list nothing. OWNER-STEP CHANGE: the c6 plan names `drive.file`; add `drive.metadata.readonly` to the OAuth consent screen instead. |
+| Google Drive | `https://www.googleapis.com/auth/drive.readonly` | The in-app chooser lists and searches files and reads metadata; the owner’s explicit keep-copy request reads file content. `drive.file` only sees files the app created or opened through Google's own picker, so an in-app chooser would list nothing. OWNER-STEP CHANGE: the c6 plan names `drive.file`; add `drive.readonly` to the OAuth consent screen instead. |
 | OneDrive / SharePoint | `Files.Read`, `offline_access` | Microsoft Graph has no metadata-only file scope; `Files.Read` is the narrowest that lists, searches and reads thumbnails. |
 | Dropbox | `files.metadata.read`, `files.content.read` | Listing and search need metadata; `get_thumbnail` is a content endpoint. |
 | Box | `root_readonly` (set on the Box application) | Box states scopes in the application, not the token response. |
@@ -34,7 +34,7 @@ Migration `9050_personal_file_stores.sql` is additive. A populated emitted-Worke
 
 ## Rules kept
 
-- The owner-only connect floor was interim (ct, 23 October). Writers connect personal read-only stores for attachment; readers connect for previews only. Connections belong to their maker, including against the installation owner. The installation owner controls provider availability, the connect policy and revocation of any connection. Deprovisioning revokes the person’s connections. Default for any gap no ruling covers: deny.
+- The owner-only connect floor was interim (ct, 23 October). Writers connect personal read-only stores for attachment; readers connect for previews only. Connections belong to their maker, including against the installation owner. The explicit base-owner keep-copy command is narrowly bound to an existing reference and its original attacher; it checks both people’s current row and field authority, the connection’s content consent and provider policy. It does not grant browsing or credential access to the owner. The installation owner controls provider availability, the connect policy and revocation of any connection. Deprovisioning revokes the person’s connections. Default for any gap no ruling covers: deny.
 - Reading a reference needs the same row and field authority as any attachment. Previews first use the viewer’s own connection where the store grants that viewer the item. Otherwise they use the attacher’s connection only after explicit, audited Share previews opt-in (off by default), with both people’s current authority checked on every request. Thumbnail responses are no-store and no image bytes enter D1 or R2. A revoked or removed connection leaves name, type and link.
 - The store's link opens in the store, where its own sharing applies. The link must be https on that provider's own host.
 - Credentials stay sealed in the existing connection custody, are absent from exports and archives, and every file-store read runs as a connection job.
@@ -42,4 +42,6 @@ Migration `9050_personal_file_stores.sql` is additive. A populated emitted-Worke
 
 ## Gap (named in CONTRACT.md and ACCEPTANCE.md)
 
-Gap: Keep a copy is not built; store-reference exits and returns are FILE-004 (partial: automatic preview lookup, null-account resolution and bulk confirmation remain incomplete); archive restore and attacher erasure have no journey; Chest has no picker against its own API (link only). No real provider call or consent was used; real consents NOT RUN. See the Status of FILE-002.
+Keep-copy uses the same 10 MiB file limit, guarded R2 checksum verification, current-policy download and record erasure as uploaded attachments. The reference replacement and file metadata commit together; a failed or stale request deletes its staged bytes. Replaying the same command returns its receipt without another provider read. Old Google metadata-only consents must be reconnected to approve read-only content access.
+
+Gap: store-reference exits and returns are FILE-004 (partial: automatic preview lookup, null-account resolution and bulk confirmation remain incomplete); archive restore and attacher erasure have no journey; Chest has no picker against its own API (link only). No real provider call or consent was used; real consents NOT RUN. See the Status of FILE-002.
