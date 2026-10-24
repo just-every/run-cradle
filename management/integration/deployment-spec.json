@@ -852,6 +852,12 @@
       "name": "9066_sms_review.sql",
       "sha256": "213dd67f88f419581ae376727aadcd1b6889f4de7cbc4f30a77cb29a58a58897",
       "sql": "-- Preserve provider refusals and owner review of replies with no safe record attribution.\nALTER TABLE sms_messages ADD COLUMN provider_error_json TEXT;\nALTER TABLE sms_inbound_events ADD COLUMN sender_mask TEXT;\nALTER TABLE sms_inbound_events ADD COLUMN body TEXT;\nALTER TABLE sms_inbound_events ADD COLUMN unattributed INTEGER NOT NULL DEFAULT 0 CHECK(unattributed IN (0,1));\nCREATE INDEX sms_inbound_review ON sms_inbound_events(unattributed,created_at,receipt_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9068_export_audit.sql",
+      "sha256": "b5c8e94d68ac5da363272d2f9d9535ef24f5d3d4840f5899fcf42757a663dfcf",
+      "sql": "-- Metadata-only custody for read exports that have no command admission.\nCREATE TABLE operation_audit (\n id TEXT PRIMARY KEY NOT NULL,\n actor_id TEXT,\n app_id TEXT,\n action TEXT NOT NULL,\n feature TEXT,\n created_at TEXT NOT NULL\n);\nCREATE INDEX operation_audit_time ON operation_audit(created_at,id);\nCREATE INDEX operation_audit_actor ON operation_audit(actor_id,created_at);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
