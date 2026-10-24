@@ -1210,4 +1210,5 @@
 }
 .portfolio-section-card > header > a,
 .portfolio-section-action > a { display:inline-flex; align-items:center; min-height:28px; max-width:100%; overflow-wrap:anywhere; }
+.portfolio-section-action { padding:0 18px; }
 .portfolio-activity-list details > summary { min-height:28px; padding:2px 0; }
