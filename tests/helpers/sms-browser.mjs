@@ -3,6 +3,7 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {accountSid,authToken,sendingNumber} from './sms-journey.mjs'
 export async function smsBrowser(page,h,journey,width){
  await page.goto(h.origin+'/app/settings')
+ await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/settings')
  await page.getByText('Twilio SMS',{exact:true}).first().click()
  const section=page.getByRole('region',{name:'Twilio SMS settings'})
  await section.getByLabel('Twilio Account SID',{exact:true}).fill(accountSid)

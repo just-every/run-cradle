@@ -1,3 +1,5 @@
+import type {PlatformBindings} from '../../core/platform/bindings'
+import {warehouseStore,destinationSchema} from './destination.server'
 import type {RequestContext} from '../authority/ports'
 import type {ServerFoundation} from '../../core/app/foundation.server'
 import type {createRecordServices} from '../records/service.server'
@@ -7,7 +9,8 @@ import {createUlid} from '../../core/shared/ids'
 import {canonicalHash} from '../admission/canonical'
 import {identifier,trustedPredicate} from '../admission/sql.server'
 import {assertGuards} from '../records/fence.server'
-import {encodeCsv} from '../portability/csv'
+import type {WarehouseObjectMeta} from './provider-contracts'
+import {warehouseFiles} from './file-format.server'
 import {dueSchedule} from '../../apps/launch/schedule'
 import {reserveFileWrite,finishFileWrite} from '../lifecycle/file-writes.server'
 import {AuthorityError} from '../authority/errors'
@@ -15,7 +18,7 @@ import {AuthorityError} from '../authority/errors'
 type Mark={version:number;updatedAt:string;hash:string}
 type Watermark=Record<string,{schemaHash:string;rows:Record<string,Mark>;at:string}>
 /** Every table and object is read under current owner policy. Custody is durable before R2. */
-export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:ServerFoundation,services:ReturnType<typeof createRecordServices>,csv:ReturnType<typeof createRecordsCsv>,clock=()=>new Date()){
+export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:ServerFoundation,services:ReturnType<typeof createRecordServices>,csv:ReturnType<typeof createRecordsCsv>,clock=()=>new Date(),env:PlatformBindings){
  async function owner(id:string){return db.prepare(`SELECT p.id,p.human_id,p.authentication_epoch,o.version FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND p.kind='human' AND o.role='owner' AND o.status='active'`).bind(id).first<{id:string;human_id:string;authentication_epoch:number;version:number}>()}
  async function pause(row:ExportRow){
   const now=Date.now(),message='A scheduled bucket export paused because its configuring owner no longer has ownership. A current owner can review and save the schedule.'
@@ -35,6 +38,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
  }
  async function run(row:ExportRow,slot:string){
   const actor=await owner(row.owner_id);if(!actor){await pause(row);return}
+  const destination=destinationSchema.parse(JSON.parse(row.destination_json)),store=await warehouseStore(env,bucket,row.id,destination,row.sealed_json)
   const runId=createUlid(),startedAt=new Date().toISOString(),credential=createUlid(),expiresAt=new Date(Date.now()+300000).toISOString()
   const acquired=await db.prepare("UPDATE warehouse_exports SET running_id=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,row.id,row.version,slot).first<{id:string}>()
   if(!acquired)return
@@ -48,13 +52,15 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    await db.prepare('INSERT INTO authority_credentials(id,principal_id,token_hash,audience,scopes_json,created_at,expires_at,authentication_epoch) VALUES(?,?,?,?,?,?,?,?)').bind(credential,actor.id,await canonicalHash({nonce:crypto.randomUUID()}),'warehouse-internal',JSON.stringify(bases.map(appId=>({appId,actions:['record.read'],purposes:['read','export']}))),Date.now(),Date.parse(expiresAt),actor.authentication_epoch).run()
    const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
    const ownership=trustedPredicate(`EXISTS(SELECT 1 FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND p.authentication_epoch=? AND o.status='active' AND o.role='owner' AND o.version=?)`,[actor.id,actor.authentication_epoch,actor.version])
-   const guards=[ownership],before=JSON.parse(row.watermark_json) as Watermark,after:Watermark={},files:{key:string;rows:number;schemaHash:string;watermarkBefore:unknown;watermarkAfter:unknown}[]=[],omitted:{appId:string;tableId:string;reason:string}[]=[],revision=await services.reader.revision()
+   const guards=[ownership],before=JSON.parse(row.watermark_json) as Watermark,after:Watermark={},files:{key:string;rows:number;schemaHash:string;watermarkBefore:unknown;watermarkAfter:unknown;columns?:{fieldId:string;label:string;column:string}[]}[]=[],omitted:{appId:string;tableId:string;reason:string}[]=[],revision=await services.reader.revision()
    const at=clock().toISOString(),full=row.mode==='full'||Object.keys(before).length===0
-   async function put(key:string,body:string){
-    await db.prepare('INSERT INTO warehouse_objects(object_key,export_id,run_id,created_at) VALUES(?,?,?,?)').bind(key,row.id,runId,startedAt).run();keys.push(key)
+   async function put(key:string,body:string|ArrayBuffer,metadata?:WarehouseObjectMeta){
+    await db.prepare('INSERT INTO warehouse_objects(object_key,export_id,run_id,created_at,destination_json,sealed_json,metadata_json,dispatch_state) VALUES(?,?,?,?,?,?,?,?)').bind(key,row.id,runId,startedAt,row.destination_json,row.sealed_json,metadata?JSON.stringify(metadata):null,'prepared').run();keys.push(key)
     await assertGuards(db,guards)
-    await bucket.put(key,body,{httpMetadata:{contentType:key.endsWith('.csv')?'text/csv; charset=utf-8':'application/json'}})
-    const read=await bucket.get(key);if(!read||await read.text()!==body)throw new Error('Bucket export readback differs; watermark unchanged.')
+    await store.put(key,body,{httpMetadata:{contentType:key.endsWith('.csv')?'text/csv; charset=utf-8':key.endsWith('.parquet')?'application/vnd.apache.parquet':'application/json'},...(metadata?{metadata}:{})})
+    const read=await store.get(key);if(!read)throw new Error('Bucket export readback is missing; watermark unchanged.')
+    const actual=new Uint8Array(await read.arrayBuffer()),expected=typeof body==='string'?new TextEncoder().encode(body):new Uint8Array(body)
+    if(actual.length!==expected.length||actual.some((value,index)=>value!==expected[index]))throw new Error('Bucket export readback differs; watermark unchanged.')
     await assertGuards(db,guards)
    }
    for(const appId of bases){
@@ -66,7 +72,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
      guards.push(...scope.currentAuthorityGuards)
      const fields=d.schema.fields.filter(f=>scope.readableFieldIds.includes(f.id)).map(f=>f.id)
      if(!fields.length){omitted.push({appId,tableId:d.schema.id,reason:'no_readable_fields'});continue}
-     const snapshot:{rows:import('../records/contracts').RecordRow[];headers?:string[];values?:string[][]}={rows:[]}
+     const snapshot:{rows:import('../records/contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('../records/contracts').Field[]}={rows:[]}
      await csv.exportCsv(ctx,{appId,entityId:d.schema.id,query:{fields,includeArchived:true}},snapshot)
      if(!snapshot.headers||!snapshot.values)throw new Error('CSV export did not return its verified capture.')
      const parsed={headers:snapshot.headers,rows:snapshot.values}
@@ -84,11 +90,19 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
       if(!exists&&!full)changed.push([id,'delete',...fields.map(()=>'')])
      }
      after[tableId]={schemaHash,rows,at}
-     if(full||changed.length){const key=`${row.id}/${appId}/${d.schema.id}/${at}-${full?'full':'incr'}.csv`;await put(key,encodeCsv(['_record_id','_operation',...parsed.headers],changed));files.push({key,rows:changed.length,schemaHash,watermarkBefore:prior?{at:prior.at,digest:await canonicalHash(prior)}:null,watermarkAfter:{at,digest:await canonicalHash(after[tableId])}})}
+     if(full||changed.length){
+      const columns=destination.kind==='bigquery'?snapshot.fields!.map((field,index)=>({fieldId:field.id,label:parsed.headers[index]!,column:'field_'+(parsed.headers[index]!.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,32)||'column')+'__'+field.id.toLowerCase()})):undefined
+      const headers=['_record_id','_operation',...(columns?columns.map(column=>column.column):parsed.headers)]
+      const parts=warehouseFiles(headers,changed,snapshot.fields!,row.format,destination.kind!=='r2',destination.kind==='bigquery'?900000:1048576)
+      for(let part=0;part<parts.length;part++){
+       const file=parts[part]!,key=`${row.id}/${appId}/${d.schema.id}/${at}-${full?'full':'incr'}${parts.length>1?'-part-'+String(part+1).padStart(4,'0'):''}.${row.format}`
+       await put(key,file.body,{headers,...(columns?{columns}:{}),columnTypes:['STRING','STRING',...snapshot.fields!.map(field=>(field.resultType??field.type)==='number'?'DOUBLE' as const:(field.resultType??field.type)==='boolean'?'BOOLEAN' as const:'STRING' as const)],recordIds:file.records.map(record=>record[0]!),sourceTable:tableId,schemaHash,format:row.format});files.push({key,rows:file.rows,schemaHash,...(columns?{columns}:{}),watermarkBefore:prior?{at:prior.at,digest:await canonicalHash(prior)}:null,watermarkAfter:{at,digest:await canonicalHash(after[tableId])}})
+      }
+     }
     }
    }
    if(await services.reader.revision()!==revision)throw new Error('Records changed during bucket export; watermark unchanged.')
-   await put(`${row.id}/${at}-manifest.json`,JSON.stringify({exportId:row.id,runId,at,mode:full?'full':'incremental',files,omitted,watermarkBefore:{at:row.updated_at,digest:await canonicalHash(before)},watermarkAfter:{at,digest:await canonicalHash(after)}}))
+   await put(`${row.id}/${at}-manifest.json`,JSON.stringify({exportId:row.id,runId,at,format:row.format,destination:destination.kind,mode:full?'full':'incremental',files,omitted,watermarkBefore:{at:row.updated_at,digest:await canonicalHash(before)},watermarkAfter:{at,digest:await canonicalHash(after)}}))
    await assertGuards(db,guards)
    if(await services.reader.revision()!==revision)throw new Error('Records changed before bucket export commit.')
    const nonce=createUlid(),unique=[...new Map(guards.map(guard=>[JSON.stringify(guard),guard])).values()]
@@ -101,7 +115,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    ])
    committed=true
   }finally{
-   if(!committed)for(const key of keys){await bucket.delete(key);if(await bucket.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
+   if(!committed)for(const key of keys){await store.delete(key);if(await store.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
    await db.prepare('DELETE FROM authority_credentials WHERE id=?').bind(credential).run()
    if(reservation)await finishFileWrite(db,reservation)
    await db.prepare('UPDATE warehouse_exports SET running_id=NULL WHERE id=? AND running_id=?').bind(row.id,runId).run()

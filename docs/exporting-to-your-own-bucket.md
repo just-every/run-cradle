@@ -1,12 +1,45 @@
 # Exporting to your own bucket
 
-Scheduled warehouse exports write CSV files to the R2 bucket bound to your
-installation for exports, separately from its file-attachment bucket. R2 and CSV
-are the supported destination and format for this export. BigQuery, Snowflake,
-remote S3 endpoints and Parquet are not yet shipped.
+Scheduled warehouse exports write CSV or Parquet to the R2 bucket bound to your
+installation, your own S3-compatible bucket, a BigQuery dataset, or a Snowflake
+schema through your own named S3-compatible external stage. BigQuery and Snowflake
+are tested against network-edge fakes; no transfer to a real BigQuery or Snowflake
+account has run.
+
+For S3, enter its public HTTPS endpoint, region, bucket and optional prefix in
+Settings. Access keys are sealed with the installation's connection encryption
+key and never read back. Configure the trusted egress relay and grant object
+write, read and delete permissions. Saving new keys replaces the schedule's keys;
+removing the schedule removes its keys. Existing objects retain encrypted custody
+credentials until their managed copies are erased.
+
+For BigQuery, provide the project, dataset, location, a table prefix and the
+service-account key's client email and PKCS8 private key. The dataset must already
+exist. The account needs load-job, table creation, query and record-deletion
+permissions. Cradle uploads each exact CSV/Parquet file in a multipart load job
+with `WRITE_APPEND`; a deterministic job ID reconciles a lost acknowledgement.
+
+For Snowflake, provide the account identifier, owner user, database, schema, table
+prefix, optional warehouse/role, named external stage, RSA PKCS8 private key and
+the stage's S3 connection. Create that external stage in your account first; it
+must point at the same endpoint, bucket and prefix. Cradle verifies `DESC STAGE`
+before dispatch, creates a typed table if needed, and runs `COPY INTO` through the
+SQL API with a deterministic request ID. It never copies from an unverified
+stage. The configuring user needs stage, table and SQL permissions.
+
+BigQuery and Snowflake use separate tables for each source base/table and schema
+revision, under your chosen prefix. This keeps different schemas distinct and
+preserves every source field and value. BigQuery files use stable safe aliases
+containing the source field ID, with the original label/field ID → uploaded-column
+map in each public export manifest and its immutable erasure custody. Both CSV
+and Parquet use the same mapping, so punctuation, duplicate labels or case-only
+label differences never silently rename or merge data. SQL identifiers in Snowflake are quoted. Record erasure reconciles any
+outstanding load/COPY, deletes matching `_record_id` rows and independently reads
+back a zero count before deleting the staged file. A pending or unknown load
+cannot be bypassed by an erasure confirmation.
 
 In Settings → **Scheduled bucket exports**, an installation owner chooses the bases, a full or incremental export, a schedule
-and its time zone. Use an hourly, daily or weekly schedule; schedules more frequent
+its file format, destination and time zone. Use an hourly, daily or weekly schedule; schedules more frequent
 than hourly are refused. Creating, changing and removing an export are audited.
 Removing a schedule stops future runs; it does not erase files already written.
 
@@ -16,8 +49,12 @@ successful watermark, with explicit tombstone rows for deletions. Use those rows
 to remove the corresponding records from your analysis copy. An incremental tick
 with no changes writes no data file.
 
-Each table's CSV adds `_record_id` and `_operation` (`upsert` or `delete`) before
-the same field order and value formatting as Cradle's CSV export. The first
+Each table's file adds `_record_id` and `_operation` (`upsert` or `delete`) before
+the same field order and value formatting as Cradle's CSV export. Parquet uses flat
+UTF-8 columns, with numeric and boolean fields stored as typed DOUBLE and BOOLEAN
+columns; blank numeric/boolean values and tombstones use nulls. Structured values
+retain the CSV text representation. The MIT-licensed, pure-JavaScript
+`hyparquet-writer` writes these files inside the Worker. The first
 incremental run establishes a full baseline. Tables without export permission
 and fields the owner cannot read are omitted; the manifest explains omitted tables. Objects have stable keys:
 
@@ -25,6 +62,11 @@ and fields the owner cannot read are omitted; the manifest explains omitted tabl
 <export id>/<base>/<table>/<run time>-full.csv
 <export id>/<base>/<table>/<run time>-incr.csv
 ```
+
+Remote exports partition large tables at record boundaries; the manifest lists every
+part. A single encoded record larger than the declared `warehouseTransferBytes` / `warehouseBigQueryFileBytes` budget (1 MiB, with multipart metadata space reserved for BigQuery)
+is refused with its record identifier and leaves the watermark unchanged. No
+record is truncated. R2 keeps its existing direct-bucket path. Oversized manifests are also refused without advancing the watermark.
 
 A run manifest records row counts, the watermark before and after the run, and a
 schema hash. Cradle advances the watermark only after writing the object and
@@ -40,8 +82,12 @@ receive an in-app notice.
 Erasing a person also deletes retained export objects that may contain their
 values. Erasure is not confirmed while a managed export copy remains. A downstream
 copy downloaded or imported into another system is outside Cradle's custody;
-you must erase that copy in its destination as well.
+you must erase that copy in its destination as well. A destination deletion refusal or
+unconfirmed readback leaves the erasure pending and names the destination cause.
 
 Whole-installation archives include the managed export bucket. Restoring an archive
 pauses its schedules and clears their watermarks; review and save a schedule as a
-current owner to restart it with a fresh full baseline.
+current owner to restart it with a fresh full baseline. Remote credentials never
+transfer in an archive. Reconnect a restored destination with matching configuration before managed-copy erasure can be confirmed; this also
+restores credentials to that schedule's retained object custody. Removed remote
+schedules reappear paused after restore so their custody can be reconnected.

@@ -816,6 +816,24 @@
       "name": "9060_twilio_sms.sql",
       "sha256": "890672c9b5e88722844b10d92e8c94616a71e785d421da6a35da28a45b28c6c7",
       "sql": "-- Owner-managed Twilio credentials and durable one-attempt SMS custody.\nCREATE TABLE sms_installation (\n id TEXT PRIMARY KEY CHECK(id='installation'), owner_id TEXT NOT NULL,\n account_sid TEXT NOT NULL, from_value TEXT NOT NULL, sealed_json TEXT NOT NULL,\n version INTEGER NOT NULL, updated_at TEXT NOT NULL\n);\nCREATE TABLE sms_messages (\n id TEXT PRIMARY KEY, run_id TEXT NOT NULL, command_id TEXT NOT NULL,\n actor_id TEXT NOT NULL, app_id TEXT NOT NULL, entity_id TEXT NOT NULL, record_id TEXT NOT NULL,\n field_id TEXT NOT NULL, recipient TEXT NOT NULL, sender TEXT NOT NULL,\n provider_sid TEXT UNIQUE, status TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL\n);\nCREATE INDEX sms_messages_recipient ON sms_messages(recipient,created_at);\nCREATE TABLE sms_suppressions (recipient_hash TEXT PRIMARY KEY, updated_at INTEGER NOT NULL);\nCREATE TABLE sms_webhook_receipts (id TEXT PRIMARY KEY, received_at INTEGER NOT NULL);\nCREATE TABLE sms_inbound_events (receipt_id TEXT PRIMARY KEY, recipient_hash TEXT NOT NULL, event TEXT NOT NULL, created_at INTEGER NOT NULL);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9061_warehouse_format.sql",
+      "sha256": "749e8196b802e8348cafe7ae5af111af799ecc7a953d9e4c46ef63c32ef3a776",
+      "sql": "-- Existing schedules retain CSV and their watermark until an owner changes them.\nALTER TABLE warehouse_exports ADD COLUMN format TEXT NOT NULL DEFAULT 'csv' CHECK(format IN ('csv','parquet'));\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9062_warehouse_destinations.sql",
+      "sha256": "edf9fdedd435995e9fbba6aadf970fac6f6a7e9ab017b5c8a5d0e36446a48d24",
+      "sql": "-- Preserve all R2 schedules and custody. Each object retains its own immutable\n-- destination and sealed credential snapshot even after a schedule is changed.\nALTER TABLE warehouse_exports ADD COLUMN destination_json TEXT NOT NULL DEFAULT '{\"kind\":\"r2\"}';\nALTER TABLE warehouse_exports ADD COLUMN sealed_json TEXT;\nALTER TABLE warehouse_objects ADD COLUMN destination_json TEXT NOT NULL DEFAULT '{\"kind\":\"r2\"}';\nALTER TABLE warehouse_objects ADD COLUMN sealed_json TEXT;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9063_warehouse_provider_custody.sql",
+      "sha256": "27521814ff54b06dca0b274931a536dc62a5846f5a18d72240b4db49fe03d447",
+      "sql": "-- The object key deterministically identifies a provider job/request. Schema\n-- and row IDs exist before dispatch and survive unknown provider responses.\nALTER TABLE warehouse_objects ADD COLUMN metadata_json TEXT;\nALTER TABLE warehouse_objects ADD COLUMN dispatch_state TEXT NOT NULL DEFAULT 'prepared' CHECK(dispatch_state IN ('prepared','dispatching','confirmed'));\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

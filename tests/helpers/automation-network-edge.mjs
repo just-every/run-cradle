@@ -42,7 +42,7 @@ export async function automationNetworkEdge({extraHosts=[],receive}={}) {
   assert.ok(hosts.includes(url.hostname));assert.equal(options.rejectUnauthorized,true);assert.equal(options.agent,false)
   options.lookup(url.hostname,{all:false},(error,address,family)=>{assert.equal(error,null);assert.equal(address,'93.184.216.34');assert.equal(family,4)})
   tlsCalls++
-  return nativeRequest({...options,headers:{...options.headers,host:url.host},hostname:'127.0.0.1',port:receiverPort,path:url.pathname,servername:url.hostname,ca:cert},onResponse)
+  return nativeRequest({...options,headers:{...options.headers,host:url.host},hostname:'127.0.0.1',port:receiverPort,path:url.pathname+url.search,servername:url.hostname,ca:cert},onResponse)
  }
  syncBuiltinESMExports()
  const secret=randomBytes(32).toString('base64url'),transportErrors=[],networkErrors=[];let outboundSeen=0

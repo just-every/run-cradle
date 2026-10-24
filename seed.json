@@ -344,6 +344,50 @@
       "adapters": [
         "oidc-provider@1"
       ]
+    },
+    {
+      "id": "warehouse-s3",
+      "required": false,
+      "requiredWhen": "An installation owner chooses an S3-compatible warehouse destination",
+      "why": "The buyer-selected public HTTPS S3-compatible endpoint receives SigV4-authenticated exports through the trusted egress relay. The buyer controls the bucket and object-erasure permissions.",
+      "data": [
+        "Currently authorized selected-base record values and record identifiers",
+        "CSV or Parquet files, deletion tombstones and run manifests",
+        "SigV4 access-key identity and request signature"
+      ],
+      "adapters": [
+        "automation.egress.v1"
+      ]
+    },
+    {
+      "id": "warehouse-bigquery",
+      "required": false,
+      "requiredWhen": "An installation owner chooses BigQuery for scheduled warehouse exports",
+      "why": "The buyer's service-account key signs OAuth assertions for oauth2.googleapis.com. bigquery.googleapis.com receives multipart CSV/Parquet load jobs and record-erasure SQL through the trusted egress relay.",
+      "data": [
+        "Currently authorized selected-base record values and record identifiers",
+        "Export schema, file bytes and load-job identity",
+        "Service-account identity and signed OAuth assertion",
+        "Record-erasure IDs and verified count results"
+      ],
+      "adapters": [
+        "automation.egress.v1"
+      ]
+    },
+    {
+      "id": "warehouse-snowflake",
+      "required": false,
+      "requiredWhen": "An installation owner chooses Snowflake for scheduled warehouse exports",
+      "why": "The buyer's Snowflake account SQL API authenticates with a key-pair JWT. Its named external S3-compatible stage supplies the exact exported CSV/Parquet files for COPY INTO and policy-aware erasure verification.",
+      "data": [
+        "Currently authorized selected-base record values and record identifiers",
+        "Export schema, stage file path and deterministic SQL request identity",
+        "Owner user identity and signed key-pair JWT",
+        "Record-erasure IDs and verified count results"
+      ],
+      "adapters": [
+        "automation.egress.v1"
+      ]
     }
   ],
   "env": [
@@ -574,7 +618,9 @@
     },
     "concurrentSessions": 40,
     "timelineRecords": 10000,
-    "timelineAxisIntervals": 1500
+    "timelineAxisIntervals": 1500,
+    "warehouseTransferBytes": 1048576,
+    "warehouseBigQueryFileBytes": 900000
   },
   "accessibility": {
     "level": "WCAG 2.2 AA",

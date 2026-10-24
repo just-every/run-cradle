@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {createUlid} from '../../src/core/shared/ids.ts'
 import { LAUNCH_APP_ID } from './launch-authority-runtime.mjs'
 
 const FIVE_MINUTES = 5 * 60 * 1000
@@ -18,7 +19,7 @@ async function copiesOf(h, literals) {
 }
 
 /** [OPS-005] Erasure of the removed operator from the same fixture, read back through the doors. */
-export async function verifyErasure(doors, w, { confirm }) {
+export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  const { h, call, command, memberRef, member, count } = doors
  const { leaver } = w
  const before = await member(leaver.id), label = `Anonymous ${leaver.id.slice(-8)}`
@@ -36,7 +37,10 @@ export async function verifyErasure(doors, w, { confirm }) {
  assert.ok((await copiesOf(h, literals)).length > 0, 'Before erasure their name and email appear in stored rows')
 
  const started = Date.now()
- const erased = await command('member.erase', { memberId: leaver.id, reason: 'Owner privacy request' }, memberRef(before))
+ const body=JSON.stringify({commandId:createUlid(),expected:memberRef(before),input:{memberId:leaver.id,reason:'Owner privacy request'}})
+ const send=()=>call('/api/v1/commands/member.erase',{method:'POST',body})
+ if(erasureProbe)await erasureProbe(send)
+ const erased = await send()
  assert.equal(erased.status, 200, JSON.stringify(erased.body))
  let receipt = await call(`/api/v1/erasures/${leaver.id}`)
  while (receipt.body.data.state !== 'complete' && Date.now() - started < FIVE_MINUTES) receipt = await call(`/api/v1/erasures/${leaver.id}`)

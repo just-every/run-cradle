@@ -32,6 +32,9 @@ importers:
       hono:
         specifier: 4.13.7
         version: 4.13.7
+      hyparquet-writer:
+        specifier: 0.17.0
+        version: 0.17.0
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -93,6 +96,9 @@ importers:
       highlight.js:
         specifier: 10.7.3
         version: 10.7.3
+      hyparquet:
+        specifier: 1.31.5
+        version: 1.31.5
       miniflare:
         specifier: 5.20260907.0-alpha
         version: 5.20260907.0-alpha
@@ -1266,6 +1272,12 @@ packages:
   hono@4.13.7:
     resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
     engines: {node: '>=16.9.0'}
+
+  hyparquet-writer@0.17.0:
+    resolution: {integrity: sha512-GZ4QeopztjSli/Sz1dSOP/TrSKtwG2ydP2yuPMxeiZnho+PCXF7x+wx8OIVtpQn8rcv559IH1EJMHnTbv0sn+Q==}
+
+  hyparquet@1.31.5:
+    resolution: {integrity: sha512-KPVfaxW8xOiO2/4fjeiBfFNEXhGVw9tfcb9ha2iNZdJ3J/yBjEwIeAnTyyuhllFFTb9YO9wg0DfRAOnm6KCvBg==}
 
   inline-style-parser@0.1.1:
     resolution: {integrity: sha512-7NXolsK4CAS5+xvdj5OMMbI962hU/wvwoxk+LWR9Ek9bVtyuuYScDN6eS0rUm6TxApFpw7CX1o4uJzcd4AyD3Q==}
@@ -2864,6 +2876,12 @@ snapshots:
   highlight.js@10.7.3: {}
 
   hono@4.13.7: {}
+
+  hyparquet-writer@0.17.0:
+    dependencies:
+      hyparquet: 1.31.5
+
+  hyparquet@1.31.5: {}
 
   inline-style-parser@0.1.1: {}
 

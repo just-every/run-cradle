@@ -1,3 +1,4 @@
+import {warehouseBrowser} from './helpers/warehouse-browser.mjs'
 import {smsBrowser} from './helpers/sms-browser.mjs'
 import {twilioEdge,relaySecret} from './helpers/sms-journey.mjs'
 import {automationTriggerBrowser} from './helpers/automation-trigger-browser.mjs'
@@ -33,6 +34,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
     await context.addCookies(browserCookies(h.cookie,h.origin))
     const page=await context.newPage(),journey=recordsJourney(page,h.origin,output,width)
     let consoleErrors=0;page.on('console',message=>{if(message.type()==='error')consoleErrors++})
+    await warehouseBrowser(page,h,journey,width)
     await smsBrowser(page,h,journey,width)
     await userKeyBrowser(page,h,journey,width)
     await userAutomationBrowser(page,h,journey,width)

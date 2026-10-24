@@ -59,7 +59,7 @@ export const SettingsPage = () => {
     </div>
     <div className="cr-settings-side">
       <ArchivePanel />
-      <div className="cr-card"><LazySettingsPanel title="Scheduled bucket exports"><WarehousePanel /></LazySettingsPanel></div>
+      <div className="cr-card"><LazySettingsPanel title="Scheduled warehouse exports"><WarehousePanel /></LazySettingsPanel></div>
       <div className="cr-card cr-settings-rows">
         <details className="cr-detail"><summary>Your notifications</summary><PreferencesPanel /></details>
         <details className="cr-detail" onToggle={event=>setKeysOpen(event.currentTarget.open)}><summary>API keys</summary>{keysOpen&&<ApiKeysPanel />}</details>

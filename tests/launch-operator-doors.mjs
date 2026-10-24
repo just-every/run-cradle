@@ -1,3 +1,4 @@
+import {warehouseNetworkEdge} from './helpers/warehouse-network-edge.mjs'
 import {companyLifecycle} from './helpers/company-lifecycle.mjs'
 import test, { after } from 'node:test'
 import assert from 'node:assert/strict'
@@ -11,8 +12,10 @@ import { warehouseExportJourney } from './helpers/warehouse-export-journey.mjs'
 // High-stakes launch doors through the emitted Worker: data import, sample removal,
 // ownership handover and paging. Each request uses the app's own routes and session.
 const analysis = clauseAnalysisFixture()
-const h = await launchAuthorityRuntime(analysis.configuration, { installedLaunchDefinitions: true, installationOwner: true, providerFetch: analysis.providerFetch })
-after(() => h.close())
+const warehouseEdge=await warehouseNetworkEdge()
+let h
+try{h=await launchAuthorityRuntime({...analysis.configuration,...warehouseEdge.bindings}, { installedLaunchDefinitions: true, installationOwner: true, providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?warehouseEdge.outbound(request):analysis.providerFetch(request) })}catch(error){await warehouseEdge.close();throw error}
+after(async()=>{await h.close();await warehouseEdge.close()})
 const envelope = (input, expected = []) => JSON.stringify({ commandId: createUlid(), expected, input })
 async function call(route, init = {}, session = h.ownerSession) {
  const response = await h.request(session, route, init)
@@ -116,7 +119,7 @@ test('[VIEW-007] campaign pages follow a keyset cursor: a record added before th
  assert.deepEqual([...first.items.map(item => item.id), ...rest], before, 'Every existing record appears once and in order')
 })
 
-test('[PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV exports follow current policy before a leaver is removed and erased through company SCIM for good', async t => {
+test('[PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good', async t => {
  const person = await h.addPerson({ name: 'Alex Successor' })
  const member = async (id = person.id, session = h.ownerSession) => (await call(`/api/v1/members?appId=${LAUNCH_APP_ID}`, {}, session)).body.data.items.find(item => item.id === id)
  const memberRef = row => [{ ref: { appId: LAUNCH_APP_ID, entityId: '00000000000000000000000101', recordId: row.id }, version: row.version }]
@@ -203,10 +206,10 @@ test('[PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole
  // [OPS-004] [OPS-005] One leaver's journey on the same installation: blocked, removed, read back, erased, irreversible.
  const doors = lifecycleDoors(h, await h.signIn(next.id))
  const world = await seedLeaver(doors, next.id)
- const warehouse = await warehouseExportJourney(doors, world)
+ const warehouse = await warehouseExportJourney(doors, world, warehouseEdge)
  const company=await companyLifecycle(t,doors,world)
  await verifyRemoval(doors, world, company)
- await verifyErasure(doors, world, { confirm })
+ await verifyErasure(doors, world, { confirm, erasureProbe:warehouse.erasureProbe })
  await company.erased()
  await warehouse.erased()
 })

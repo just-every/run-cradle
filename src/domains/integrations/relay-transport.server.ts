@@ -14,7 +14,7 @@ export class RelayTransport implements TrustedTransport {
  }
  async send(wire:RelayWire):Promise<RelayResponse> {
   validateDestination(wire.url)
-  if(new TextEncoder().encode(wire.body).length>1048576)throw new Error('Egress request limit exceeded')
+  if((wire.bodyEncoding==='base64'?atob(wire.body).length:new TextEncoder().encode(wire.body).length)>1048576)throw new Error('Egress request limit exceeded')
   const signal=AbortSignal.timeout(15000)
   // Workers supports manual redirects. Reject every non-2xx acknowledgement
   // below so the relay credential is never forwarded to another location.
