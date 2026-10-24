@@ -4574,7 +4574,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "88f00e582de75467a2bad344931a1629c722ae906ceabe625d627c311ad70d57",
+      "sha256": "5613b439d4a1a1fa124b1b0159a2aea8f67ef5c426ea37dae7db37f3f56038bc",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5155,6 +5155,10 @@
     },
     "migrations/updates/9074_parallel_chat_providers.sql": {
       "sha256": "8d08ebbdd46df6d61637658ee6bed18c513b712ee69dbd545e1630f5a04552d7",
+      "executable": false
+    },
+    "migrations/updates/9075_base_dependency_key_custody.sql": {
+      "sha256": "ff1fac10084215abb6f7ed9257b2aa51b349855dbb401e838e304986d5f1d81f",
       "executable": false
     },
     "OPERATIONS.json": {

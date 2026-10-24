@@ -888,6 +888,12 @@
       "name": "9074_parallel_chat_providers.sql",
       "sha256": "8d08ebbdd46df6d61637658ee6bed18c513b712ee69dbd545e1630f5a04552d7",
       "sql": "-- Expand one legacy app into independently managed provider installations.\n-- Keep credential ciphertext, installation instance, cards, links and consent intact.\nCREATE TABLE slack_app_installation_next (\n id TEXT PRIMARY KEY CHECK(id IN ('slack','teams','nook')), owner_id TEXT NOT NULL,\n client_id TEXT NOT NULL, sealed_json TEXT NOT NULL, bot_sealed_json TEXT,\n team_id TEXT, team_name TEXT, version INTEGER NOT NULL, updated_at TEXT NOT NULL,\n provider TEXT NOT NULL UNIQUE CHECK(provider IN ('slack','teams','nook')),\n api_origin TEXT, instance_id TEXT, CHECK(id=provider)\n);\nINSERT INTO slack_app_installation_next\n SELECT provider,owner_id,client_id,sealed_json,bot_sealed_json,team_id,team_name,\n version,updated_at,provider,api_origin,instance_id FROM slack_app_installation;\nDROP TABLE slack_app_installation;\nALTER TABLE slack_app_installation_next RENAME TO slack_app_installation;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9075_base_dependency_key_custody.sql",
+      "sha256": "ff1fac10084215abb6f7ed9257b2aa51b349855dbb401e838e304986d5f1d81f",
+      "sql": "-- Adopt Base's dependency-key custody contract without changing released rows.\n-- Existing signing keys remain eligible for Base's atomic plaintext upgrade;\n-- the installation secret stays in private settings and is never stored here.\nALTER TABLE rer_dependency_installation\n ADD COLUMN keys_sealed INTEGER NOT NULL DEFAULT 0 CHECK (keys_sealed IN (0, 1));\nALTER TABLE rer_dependency_installation\n ADD COLUMN key_ids TEXT NOT NULL DEFAULT '[]'\n CHECK (json_valid(key_ids) AND json_type(key_ids) = 'array');\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
