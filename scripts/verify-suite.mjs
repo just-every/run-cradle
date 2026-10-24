@@ -8,5 +8,6 @@ const match = /^(\d+)\/(\d+)$/.exec(shard ?? '');
 if (extra || !match || Number(match[1]) < 1 || Number(match[1]) > Number(match[2])) throw Error('Usage: verify-suite.mjs PACKAGE_SCRIPT INDEX/TOTAL');
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const command = pkg.scripts?.[suite];
-if (!command?.startsWith('node --test ') || /[;&|\n]/.test(command)) throw Error(`Expected a single Node test suite: ${suite}`);
-run(command.replace('node --test ', `node --test --test-shard=${shard} `));
+const prefix = /^node (?:--import \.\/tests\/helpers\/typescript-loader\.mjs )?--test /.exec(command ?? '')?.[0];
+if (!prefix || /[;&|\n]/.test(command)) throw Error(`Expected a single Node test suite: ${suite}`);
+run(command.replace(prefix, `${prefix}--test-shard=${shard} `));
