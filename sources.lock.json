@@ -4445,12 +4445,16 @@
       "sha256": "b15ed50d38fcb05b9a976159a92793fbc9ff19de53ed681e109ff5a7a5bbeb00",
       "executable": false
     },
+    "docs/getting-started.md": {
+      "sha256": "f410f2402f730f287467b365165ebb2748dbeb7daed49c95a5140813b4e74a3c",
+      "executable": false
+    },
     "docs/importing.md": {
       "sha256": "ab89fc9ae1b6a16126627862e952c3cf26fed958b7b3137d843cdf80302158a1",
       "executable": false
     },
     "docs/install.md": {
-      "sha256": "72cb5d2ac13a766a28b9915d0e4856b16da6a9a6ff98903a7cac02a89c27ae79",
+      "sha256": "546e6a39c5c428e789d9995d7160cb917e9f61dd54d1b6486eba9962a4a2db95",
       "executable": false
     },
     "docs/installation-archives.md": {
@@ -4514,7 +4518,7 @@
       "executable": false
     },
     "docs/site.json": {
-      "sha256": "76f729c6fe6b0ae36363f614826032a0c0d43a267c44364ac186224e4a45ddcb",
+      "sha256": "e91a800b689bd04e5759f1f494682b9397406a354447aee2191db08f3d8dd04b",
       "executable": false
     },
     "docs/slack-app.md": {

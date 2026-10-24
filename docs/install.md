@@ -1,7 +1,7 @@
 # Install Cradle
 
-Cradle runs on your own computer first: macOS, Linux or Windows with WSL2,
-with Git and Node 22 or later installed. Rer then provisions this project’s pinned
+Cradle runs on your own computer first: macOS, Linux or Windows with WSL2.
+Git is required; rer brings Node and pnpm. It provisions this project’s pinned
 Node 22.20.0 and pnpm 10.12.4.
 
 ## Run it on your computer
@@ -10,12 +10,12 @@ One line installs rer, clones Cradle and starts it. The
 checkout runs Cradle's pinned rer 0.2.68:
 
 ```sh
-npx -y @runeditrun/rer dev just-every/run-cradle
+curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-cradle
 ```
 
-No Node? `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-cradle` does the same, and the installer brings its own Node. To set Cradle up without starting it, use `setup` in place of `dev`.
+Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-cradle` does the same. If the installer prints a line that puts `rer` on your PATH, run that line too. To set Cradle up without starting it, use `setup` in place of `dev`.
 
-To start it again later, run `cd run-cradle && rer dev`. The first `rer dev` installs the dependencies, creates a local owner, applies
+To start it again later, run the same line from the same folder, or `cd run-cradle && rer dev`. The first `rer dev` installs the dependencies, creates a local owner, applies
 migrations and starts the app. Open the `RER_OPEN` address it prints. The browser
 lands signed in as you. Treat that address as a password: it carries this copy's
 development key. Finish your workspace details at `/setup`; you can change them
@@ -50,7 +50,9 @@ Import needs an empty installation and your confirmation. [Installation archives
 
 ## Host it online
 
-Follow the [hosting instructions](installation.md#host-it-online) to create a
+**Or let Run Edit Run host it.** [Run Edit Run](https://app.runeditrun.com/?product=cradle&plan=assisted) can set Cradle up on your own Cloudflare account and keep it updated; sign-ups are by request for now.
+
+To do it yourself, follow the [hosting instructions](installation.md#host-it-online) to create a
 private configuration file (mode 0600) with your Cloudflare credentials, receiving
 owner email and email provider settings. Deploy does not ask setup questions.
 Always set `OWNER_EMAIL` explicitly: the local trial address `owner@run-cradle.test`
