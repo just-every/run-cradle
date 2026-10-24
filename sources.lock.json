@@ -11990,7 +11990,7 @@
       "executable": false
     },
     "tests/helpers/field-conversion-journey.mjs": {
-      "sha256": "fce8fab5525217bab908097b69d7bffa37d0e94a49d44522871005c4460148bf",
+      "sha256": "2bf9454d65742b2774e08c0b58d1a8ef52db25a0d3f96285c760c787bcfbab6e",
       "executable": false
     },
     "tests/helpers/field-history-restore-journey.mjs": {
@@ -13082,7 +13082,7 @@
       "executable": false
     },
     "tests/rer-data-roundtrip.mjs": {
-      "sha256": "c6f9e2099149c225d6edfd6c721a59f1090a6c49d91a89b3fbcf72647302a667",
+      "sha256": "3ffc4388c04f21ff0a17f80e0674fd78ad322bad8f9915bd957ca3500c8b383d",
       "executable": false
     },
     "tests/rer-retained-archive.mjs": {
@@ -13154,7 +13154,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "b2672b422fcceafee2e2190cb6fbebf5c3bc8ea5efc55325e9b016ae48ff2048",
+      "sha256": "294f73324a2079ec3dec37f3775357634dc0624e74b36b42625503a22d14d90f",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
