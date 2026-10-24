@@ -26,6 +26,7 @@ try {
   const {cookie}=await baseHttpSession(origin)
   const campaigns = await (await fetch(`${origin}/api/campaigns`, { headers: { cookie } })).json()
   assert.ok(campaigns.items.length)
+  assert.equal((await fetch(`${origin}/api/v1/cases`)).status, 401, 'Your operations refuses a read without a session')
   browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {})
   await mkdir(output, { recursive: true })
   const widths = accessibilityEvidence ? accessibilityWidths : [1440, 1024, 390]

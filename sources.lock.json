@@ -8682,7 +8682,7 @@
       "executable": false
     },
     "src/domains/operations/door.server.ts": {
-      "sha256": "2e3cf64a42c41b00e9214562954796fa5ed0ab54b4b3522929c61cba0688737d",
+      "sha256": "22aafbb46e0d08c52c610fb727d651c14d8346a78e5c65e9dc4405350703ead3",
       "executable": false
     },
     "src/domains/operations/environment.server.ts": {
@@ -12658,7 +12658,7 @@
       "executable": false
     },
     "tests/ui-cradle-browser.mjs": {
-      "sha256": "e1ebdaedf64d34a0b50199716ba84e28b1c6cecec03e17ed1e0cfac6bcc39377",
+      "sha256": "e1825b7d875c65927e4171ac9ae455968b35899dbd1c71f173e82e84dbf9650e",
       "executable": false
     },
     "tests/ui-execution-resolution-browser.mjs": {
