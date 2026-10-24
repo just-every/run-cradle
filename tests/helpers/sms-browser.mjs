@@ -42,6 +42,6 @@ export async function smsBrowser(page,h,journey,width,edge){
  await page.goto(h.origin+'/app/settings');await page.getByText('Twilio SMS',{exact:true}).first().click()
  const replies=page.getByRole('region',{name:'Unattributed SMS replies'})
  for(const reply of rider.replies)await replies.getByText(reply.body,{exact:true}).first().waitFor()
- assert.ok(!(await replies.innerText()).includes('+15550100101'))
+ assert.ok(!(await replies.innerText()).includes('+15550100107'))
  await journey.capture('sms-unattributed-replies')
 }
