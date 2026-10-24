@@ -17,9 +17,13 @@ export async function verifyNotificationEventScreens({h,page,command,capture}){
  await flush()
  const first=await notices(decision.id),firstDeliveries=await deliveries(decision.id)
  assert.equal(first.length,1);assert.equal(first[0].operator_id,h.owner);assert.equal(firstDeliveries.length,1);await oneMail(firstDeliveries[0])
- await actorCommand('decision.create',input,[],eventId);await flush()
- assert.deepEqual(await notices(decision.id),first,'NOTIFY-006 replaying the same product event creates no second in-app notice')
- assert.deepEqual(await deliveries(decision.id),firstDeliveries,'NOTIFY-006 replaying the same product event creates no second email delivery');await oneMail(firstDeliveries[0])
+ // Retained launch creation audits include an entity marker that is not a readable field.
+ // Its replay must fail closed; this is separate from the repeated product event below.
+ const replay=await h.request(actor.session,'/api/v1/commands/launch.decision.create',{method:'POST',body:JSON.stringify({commandId:eventId,input,expected:[]})})
+ assert.equal(replay.status,403,'Current field-read authority refuses the retained entity audit marker')
+ await flush()
+ assert.deepEqual(await notices(decision.id),first,'NOTIFY-006 a refused command replay creates no second in-app notice')
+ assert.deepEqual(await deliveries(decision.id),firstDeliveries,'NOTIFY-006 a refused command replay creates no second email delivery');await oneMail(firstDeliveries[0])
  await page.goto(h.origin+'/app/notifications');await page.locator(`#notification-${first[0].id}`).waitFor();await capture('notification-duplicate-roles')
  const repeatedEvent=createUlid()
  await actorCommand('decision.assign',{id:decision.id,assigneeId:h.owner},ref('decision',decision),repeatedEvent);await flush()
