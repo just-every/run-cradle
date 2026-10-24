@@ -301,6 +301,8 @@ async function refusedTypePairs(h,owner){
   assert.equal((await h.db.prepare('SELECT count(*) n FROM manual_record_releases WHERE app_id=?').bind(appId).first()).n,releasesBefore,'Refused ordered pairs write no release')
   console.log('FIELD_TYPE_PAIRS '+from+' PASS '+destinations.length+' explicit pair refusals, populated/empty values and zero live writes')
  }
+ assert.equal(mapped.size,12,'Exactly 12 ordered type pairs have reviewed mappings')
+ assert.equal(checked,260,'Exactly 260 ordered type pairs are explicitly refused')
  assert.equal(checked+mapped.size,types.length*(types.length-1),'All 272 ordered different-type pairs are covered')
  console.log('FIELD_TYPE_MATRIX PASS '+mapped.size+' mapped pairs, '+checked+' explicitly refused pairs, 272/272 total')
 }
