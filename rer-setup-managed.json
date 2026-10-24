@@ -72,7 +72,8 @@
       "ownerVisible": false,
       "input": "managed",
       "generate": "hex",
-      "group": "owner"
+      "group": "owner",
+      "help": "Generated privately for this installation to protect operator sessions. Keep it with the installation secrets."
     },
     {
       "name": "SETUP_TOKEN",
@@ -81,7 +82,8 @@
       "required": true,
       "ownerVisible": false,
       "generate": "hex",
-      "group": "owner"
+      "group": "owner",
+      "help": "Generated privately for this installation to authorize first-owner setup. Keep it with the installation secrets."
     },
     {
       "name": "MAIL_PROVIDER",
@@ -157,7 +159,8 @@
         "field": "MAIL_PROVIDER",
         "equals": "rer"
       },
-      "group": "hosting-mail"
+      "group": "hosting-mail",
+      "help": "Use the managed mail credential supplied for this installation by Run Edit Run."
     },
     {
       "name": "MAIL_PROVIDER_API_KEY",
@@ -182,7 +185,8 @@
           },
           "required": true
         }
-      ]
+      ],
+      "help": "Use an API key from the selected SendGrid or Resend account with permission to send from your verified sender."
     },
     {
       "name": "CONNECTION_ENCRYPTION_KEY",
@@ -192,7 +196,8 @@
       "ownerVisible": false,
       "input": "managed",
       "generate": "base64",
-      "group": "owner"
+      "group": "owner",
+      "help": "Generated privately to encrypt saved connection credentials. Preserve it with backups so those credentials remain readable."
     },
     {
       "name": "EGRESS_RELAY_URL",

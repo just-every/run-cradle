@@ -5226,15 +5226,15 @@
       "executable": false
     },
     "rer-project.json": {
-      "sha256": "16706045df5c210c2950e49ecab38b7128dffce54b8a3e6ea25edd16b0d57d9f",
+      "sha256": "0acddb9a3a3f547ab9fedc147e892883cf4c91bbd15a7123f1eb713f986a2688",
       "executable": false
     },
     "rer-setup-managed.json": {
-      "sha256": "53897a3e513c8479aee54d707d8a1389c7d31eb1ee8c4661ff393f527f57a13a",
+      "sha256": "563795fe5f47f5ed25dbc614c59c46253126fc4a45f00a51a1b37085b931469b",
       "executable": false
     },
     "rer-setup.json": {
-      "sha256": "fb7157ca38d211c3e3c95884bd21c03f808781e6a104e31bf70d473cd7b288e1",
+      "sha256": "ba0e359de0713d8583d90f7df9cf4f4770f54c827fcce29813d32609d2a56d25",
       "executable": false
     },
     "RUN-LOCALLY.md": {
@@ -12282,7 +12282,7 @@
       "executable": false
     },
     "tests/helpers/record-calendar-journey.mjs": {
-      "sha256": "84fa81036c08d24aec8addc59edb7bdb1b98999aaa7d87fbe89de681bcd015ab",
+      "sha256": "56efe415fe3d4e930866983c47354d45cd81d77b762f161f4bc1584d59ff8cb3",
       "executable": false
     },
     "tests/helpers/record-calendar-provider.mjs": {
@@ -12633,6 +12633,10 @@
       "sha256": "8c326de6d2d2f474057e7fcbbc86400ae7d5a00a101998d847e2754dfbfd76a0",
       "executable": false
     },
+    "tests/helpers/signing-key-rotation.mjs": {
+      "sha256": "fe48450a91122bb3aa44653e58845c75325e79a1cf573b93e443410076a5e037",
+      "executable": false
+    },
     "tests/helpers/slack-app-browser.mjs": {
       "sha256": "3ca62764791d922cf734832b434a4352a85c29f54f9b4a5f15847534a6345b50",
       "executable": false
@@ -12699,6 +12703,10 @@
     },
     "tests/helpers/versioned-session-proof.mjs": {
       "sha256": "42d01e7616f776a24b9615ef6914b18cdde17cd78b4baae236bd984c99247b50",
+      "executable": false
+    },
+    "tests/helpers/warehouse-archive.mjs": {
+      "sha256": "70f5c8f68a0b06fe24363a9f4c703f14760028c22c89ae3d2633213a18d65ea9",
       "executable": false
     },
     "tests/helpers/warehouse-browser.mjs": {
