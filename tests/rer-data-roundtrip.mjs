@@ -11,7 +11,7 @@ import {sourceErasure,identityMatches,hasIdentityCopy} from './helpers/rer-sourc
 import {archiveIntegrity,rebind} from './helpers/rer-archive-integrity.mjs';
 import {retirementUpgrade,personalImport,capturePersonalArchive,refusedOldArchive,retiredPersonalImport} from './helpers/rer-erasure-archive.mjs';
 import assert from 'node:assert/strict';
-import {copyFile,readFile,readdir,writeFile,appendFile,rm,mkdir,mkdtemp,rename} from 'node:fs/promises';
+import {copyFile,readFile,readdir,writeFile,appendFile,rm,mkdir,mkdtemp,cp} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createServer} from 'node:net';
 import {contract} from './contract.mjs';
@@ -158,7 +158,7 @@ contract('PERM-007 INTEG-003 SCALE-001 SC-03 SC-06 SC-08','real rer setup twice,
   if(complete)for(const copy of [source,target])await rm(copy.root,{recursive:true,force:true});
   else{
    await mkdir('tmp',{recursive:true});const retained=await mkdtemp('tmp/rer-data-failure-');
-   await rename(source.root,join(retained,'source'));await rename(target.root,join(retained,'target'));
+   await cp(source.root,join(retained,'source'),{recursive:true});await rm(source.root,{recursive:true,force:true});await cp(target.root,join(retained,'target'),{recursive:true});await rm(target.root,{recursive:true,force:true});
    console.log('Native transfer failure fixtures retained privately at '+retained);
   }
  }

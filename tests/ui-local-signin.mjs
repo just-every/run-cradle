@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdir, lstat, writeFile, rm, rename, mkdtemp } from 'node:fs/promises'
+import { mkdir, lstat, writeFile, rm, cp, mkdtemp } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
@@ -195,7 +195,8 @@ async function freshViewport(viewport,evidence){
     if(failed){
       await mkdir(evidence,{recursive:true})
       const retained=await mkdtemp(path.join(evidence,`failed-${viewport.width}-`))
-      await rename(copy.root,path.join(retained,'installation'))
+      await cp(copy.root,path.join(retained,'installation'),{recursive:true})
+      await rm(copy.root,{recursive:true,force:true})
       console.log('Stopped native browser fixture retained privately at '+retained)
     }else await rm(copy.root,{recursive:true,force:true})
   }
