@@ -19,8 +19,8 @@ export function baseAuthConfig(env: PlatformBindings): AuthConfig {
 }
 
 /** Base owns credentials, bootstrap, mail and session admission. */
-export function createBaseAuth(env: PlatformBindings): OperatorAuth {
-  const config = baseAuthConfig(env)
+export function createBaseAuth(env: PlatformBindings, externalIssuers: string[] = []): OperatorAuth {
+  const config = { ...baseAuthConfig(env), externalIssuers }
   if (env.MAIL_PROVIDER === 'development' && !capturedMailEnabled(env)) throw new ApiError('unconfigured', 'Development mail requires explicit local configuration.')
   const mailSender = env.MAIL_PROVIDER === 'development' && env.RER_DEMO === '1'
     ? createMailSender({ provider: 'development', mode: 'development' })

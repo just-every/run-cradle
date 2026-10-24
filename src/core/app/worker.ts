@@ -44,7 +44,7 @@ export default {
       const health = await checkHealth(bindings)
       return Response.json(health.status === 'ok' ? { status: 'ok', database: 'available', ...(bindings.RER_VERSION ? {ok:true,deployment:{sourceSha:bindings.RER_DEPLOY_SOURCE,fingerprint:bindings.RER_DEPLOY_FINGERPRINT,versionId:bindings.RER_VERSION.id}} : {}) } : health, { status: health.status === 'ok' ? 200 : 503 })
     }
-    if (isCompanyRequest(path)||path==='/auth/settings/identity'&&request.method==='GET') {
+    if (isCompanyRequest(path)||path==='/auth/settings/identity') {
       const response=await companyResponse(request,bindings,createBaseAuth(bindings))
       if(response)return response
     }

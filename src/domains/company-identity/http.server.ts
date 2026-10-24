@@ -1,15 +1,25 @@
 import {pageResponse} from '../../../vendor/base/modules/operator-auth/page.mjs'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {OperatorAuth} from '../../../vendor/base/modules/operator-auth/index.mjs'
-import {samlResponse} from './saml.server'
+import {samlResponse,configuration} from './saml.server'
+import {createBaseAuth,createAuthHandler} from '../../core/platform/base-auth.server'
 import {settingsResponse} from './settings.server'
 import {scimResponse} from './scim.server'
 import {headers} from './shared.server'
 export const isCompanyRequest=(path:string)=>path==='/scim/v2'||path.startsWith('/scim/v2/')||path.startsWith('/auth/saml/')||['/auth/settings/company','/auth/settings/scim'].includes(path)
 export async function companyResponse(request:Request,env:PlatformBindings,auth:OperatorAuth):Promise<Response|null>{
  const path=new URL(request.url).pathname
- if(!isCompanyRequest(path)&&!(path==='/auth/settings/identity'&&request.method==='GET'))return null
+ if(!isCompanyRequest(path)&&path!=='/auth/settings/identity')return null
  try{
+  const saml=await configuration(env.DB)
+  if(saml?.enabled){
+   // Base's provider-readiness registry accepts HTTPS identifiers. Register the
+   // configured SAML HTTP entry point; this adapter still verifies the actual
+   // SAML issuer, certificate and generation before admitting any principal.
+   const entry=new URL(saml.sso_url);entry.search=''
+   auth=createBaseAuth(env,[entry.href])
+  }
+  if(path==='/auth/settings/identity'&&request.method==='POST')return await createAuthHandler(auth)(request)??null
   if(path.startsWith('/scim/v2'))return scimResponse(request,env)
   if(path.startsWith('/auth/saml/'))return await samlResponse(request,env,auth)
   return await settingsResponse(request,env,auth)
