@@ -41,8 +41,11 @@ async function matchesArchive(root,path){
 }
 contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and a native export of a RER Platform install, restore through rer import with every row and file; an unknown table is refused',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'cradle-platform-archive-'))
- let target
+ let target,storesReady
  try{
+  // A separate installation can prepare its new fixture while the original CLI controls run.
+  // Capture failures immediately, then report them at the existing restore boundary.
+  storesReady=fileStoreArchive(directory).then(stores=>({stores}),error=>({error}))
   // The previous listed version's backup, made on RER Platform: it carries Platform's migration ledger.
   target=await freshLocalCopy()
   await target.command(['run','db:migrate:local'])
@@ -68,7 +71,8 @@ contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and
   assert.ok(!native.tables.some(t=>t.name==='rer_migrations'),'a native export never carries the Platform ledger')
   assert.deepEqual(await ledger(),reset,'restore keeps the destination migration history')
   // FILE-002: restore real reference/copy cells, while every store credential stays revoked.
-  const stores=await fileStoreArchive(directory)
+  const source=await storesReady;if('error' in source)throw source.error
+  const stores=source.stores
   await target.rer(['reset','--yes','--non-interactive']);await target.command(['run','db:migrate:local'])
   await place(join(directory,'file-stores.rer'),join(target.source,'file-stores.rer'))
   await target.rer(['import','--input','file-stores.rer','--yes','--non-interactive'])
@@ -86,6 +90,7 @@ contract('BASE-DATA-001 RECORDS-006','a backup made by the previous version, and
   await target.rer(['reset','--yes','--non-interactive']);await target.command(['run','db:migrate:local'])
   await bindings(target.source,async({DB,FILES})=>{assert.equal((await DB.prepare('SELECT count(*) n FROM evidence_files').first()).n,0);assert.equal(await FILES.get(stores.object_key),null,'Owner reset erases the retained copy bytes');assert.equal(await FILES.get(stores.uploadedKey),null,'Owner reset erases ordinary uploaded bytes equally')})
  }finally{
+  if(storesReady)await storesReady
   if(target){await target.log.close();await rm(target.root,{recursive:true,force:true})}
   await rm(directory,{recursive:true,force:true})
  }

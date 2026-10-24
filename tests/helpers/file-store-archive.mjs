@@ -1,4 +1,5 @@
 import './typescript-loader.mjs'
+import {platformInstall} from './platform-archive.mjs'
 import {recordCalendarProvider} from './record-calendar-provider.mjs'
 import {addRecordCalendarArchiveState} from './record-calendar-archive.mjs'
 import {createHash} from 'node:crypto'
@@ -14,7 +15,7 @@ import {fileStoreBindings} from './file-stores-journey.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 /** The archive's store reference and retained copy are both authored through the product doors. */
 export async function fileStoreArchive(directory){
- const provider=fileStoresProvider(),calendarProvider=recordCalendarProvider(),h=await userAutomationRuntime(0,{outbound:async request=>{const url=new URL(request.url);if(url.pathname.startsWith('/calendar/'))return calendarProvider.fetch(request);if(url.hostname==='oauth2.googleapis.com'&&url.pathname==='/token'&&(await request.clone().text()).includes('synthetic-cradle-code-calendar-archive'))return calendarProvider.fetch(request);return provider.fetch(request)},bindings:fileStoreBindings})
+ const provider=fileStoresProvider(),calendarProvider=recordCalendarProvider(),h=await userAutomationRuntime(0,{outbound:async request=>{const url=new URL(request.url);if(url.pathname.startsWith('/calendar/'))return calendarProvider.fetch(request);if(url.hostname==='oauth2.googleapis.com'&&url.pathname==='/token'&&(await request.clone().text()).includes('synthetic-cradle-code-calendar-archive'))return calendarProvider.fetch(request);return provider.fetch(request)},bindings:fileStoreBindings,installMigrations:platformInstall})
  try{
   const fieldId=createUlid(),calendarDateId=createUlid(),entity=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
   const preview=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:{appId:h.appId,name:'Automation acceptance',tables:[{id:h.entityId,label:'Items',primaryFieldId:h.nameId,fields:[...entity.fields,{id:calendarDateId,label:'Archive calendar date',type:'date',required:false,unique:false},{id:fieldId,label:'Files',type:'attachment',required:false,unique:false}]}]}})).data

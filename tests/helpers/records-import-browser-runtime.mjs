@@ -33,7 +33,9 @@ export async function recordsImportBrowserRuntime(port=0,network={}) {
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE d1-binding')
   db=await runtime.getD1Database('DB')
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE migrations')
-  for(const migration of migrationInventory())await db.exec(migration.sql.replace(/^\s*--.*$/gm,'').replaceAll('\n',' '))
+  // Archive fixtures use the actual installer's SQL bytes and migration ledger.
+  if(network.installMigrations)await network.installMigrations(db)
+  else for(const migration of migrationInventory())await db.exec(migration.sql.replace(/^\s*--.*$/gm,'').replaceAll('\n',' '))
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE ready')
   await runtime.ready
   const post=(route,body)=>fetch(origin+route,{method:'POST',redirect:'manual',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)})
