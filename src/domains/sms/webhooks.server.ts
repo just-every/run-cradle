@@ -51,7 +51,7 @@ export function smsWebhooks(env:PlatformBindings,origin:string){
    const keyword=(inbound.body??'').trim().toUpperCase(),hash=await sha256(from)
    event=stops.has(keyword)?'stop':starts.has(keyword)?'start':['HELP','INFO'].includes(keyword)?'help':'inbound'
    receipt='inbound:'+sid
-   statements.push(db.prepare('INSERT INTO sms_inbound_events(receipt_id,recipient_hash,event,created_at) VALUES(?,?,?,?)').bind(receipt,hash,event,now))
+   statements.push(db.prepare('INSERT INTO sms_inbound_events(receipt_id,recipient_hash,event,created_at,sender_mask,body,unattributed) VALUES(?,?,?,?,?,?,?)').bind(receipt,hash,event,now,message?null:'••• '+from.slice(-4),message?null:inbound.body??'',message?0:1))
    if(event==='stop')statements.push(db.prepare('INSERT INTO sms_suppressions(recipient_hash,updated_at) VALUES(?,?) ON CONFLICT(recipient_hash) DO UPDATE SET updated_at=excluded.updated_at').bind(hash,now))
    if(event==='start')statements.push(db.prepare('DELETE FROM sms_suppressions WHERE recipient_hash=?').bind(hash))
   }

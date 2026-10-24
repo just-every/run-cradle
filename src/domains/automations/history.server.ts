@@ -58,7 +58,7 @@ export function createRecordAutomationHistory(db:D1Database,policy:PolicyPort,de
     const visibleActions=actions.results.map(action=>{
      const heldUntil=action.state==='Pending'&&action.result_json?JSON.parse(action.result_json).heldUntil:null
      const sms=action.result_json?JSON.parse(action.result_json):null
-     return {position:action.position,state:heldUntil?'Held':action.state,error_code:action.error_code,heldUntil:heldUntil??null,...((action.sms_status??sms?.smsStatus)?{smsStatus:action.sms_status??sms.smsStatus,skipped:Boolean(sms?.skipped)}:{})}
+     return {position:action.position,state:heldUntil?'Held':action.state,error_code:action.error_code,heldUntil:heldUntil??null,...((action.sms_status??sms?.smsStatus)?{smsStatus:action.sms_status??sms.smsStatus,skipped:Boolean(sms?.skipped),...(sms?.smsError?{smsError:sms.smsError}:{})}:{})}
     })
     const held=visibleActions.find(action=>action.heldUntil)
     const items=await automationItemHistory(db,ctx,scope,descriptor,guard,run.definition_json,visibleActions)

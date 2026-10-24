@@ -39,7 +39,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
     let consoleErrors=0;page.on('console',message=>{if(message.type()==='error')consoleErrors++})
     await slackAppBrowser(page,h,journey,width,slackEdge)
     await warehouseBrowser(page,h,journey,width)
-    await smsBrowser(page,h,journey,width)
+    await smsBrowser(page,h,journey,width,smsEdge)
     await userKeyBrowser(page,h,journey,width)
     await userAutomationBrowser(page,h,journey,width)
     await automationFailureBrowser(page,h,journey,width,output)

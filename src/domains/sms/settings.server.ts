@@ -19,9 +19,10 @@ export function smsSettings(env:PlatformBindings,origin:string){
  }
  async function read(ctx:RequestContext){
   await ownerDelegationSnapshot(db,ctx,LAUNCH_APP_ID)
-  if(!await db.prepare("SELECT 1 FROM sms_installation WHERE id='installation'").first())return {configured:false,from:'',a2pStatus:'Not configured',inboundUrl:origin+'/webhooks/twilio/inbound'}
+  const replies=(await db.prepare('SELECT receipt_id,created_at,sender_mask,body,event FROM sms_inbound_events WHERE unattributed=1 ORDER BY created_at DESC,receipt_id DESC LIMIT 100').all<{receipt_id:string;created_at:number;sender_mask:string;body:string;event:string}>()).results.map(row=>({id:row.receipt_id,receivedAt:new Date(row.created_at).toISOString(),from:row.sender_mask,body:row.body,event:row.event}))
+  if(!await db.prepare("SELECT 1 FROM sms_installation WHERE id='installation'").first())return {replies,configured:false,from:'',a2pStatus:'Not configured',inboundUrl:origin+'/webhooks/twilio/inbound'}
   const {row,credentials}=await resolve()
-  return {configured:true,accountSid:row.account_sid,from:row.from_value,a2pStatus:await a2pRegistration(env,credentials),inboundUrl:origin+'/webhooks/twilio/inbound'}
+  return {replies,configured:true,accountSid:row.account_sid,from:row.from_value,a2pStatus:await a2pRegistration(env,credentials),inboundUrl:origin+'/webhooks/twilio/inbound'}
  }
  return {resolve,read,async save(ctx:RequestContext,value:unknown){
   const own=await ownerDelegationSnapshot(db,ctx,LAUNCH_APP_ID),credentials=input.parse(value)

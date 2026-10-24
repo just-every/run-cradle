@@ -846,6 +846,12 @@
       "name": "9065_schema_trash.sql",
       "sha256": "e36e1a5f91314dc66df96f5defdb888a0f8a2964458c07b3aa378e8c2f3ca357",
       "sql": "-- Schema deletions share the existing Trash clock, authority and maintenance path.\nALTER TABLE record_trash ADD COLUMN kind TEXT NOT NULL DEFAULT 'record' CHECK(kind IN ('record','field','table'));\nALTER TABLE record_trash ADD COLUMN detail_json TEXT NOT NULL DEFAULT '{}';\nCREATE INDEX record_trash_kind_expiry ON record_trash(kind,expires_at);\n\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9066_sms_review.sql",
+      "sha256": "213dd67f88f419581ae376727aadcd1b6889f4de7cbc4f30a77cb29a58a58897",
+      "sql": "-- Preserve provider refusals and owner review of replies with no safe record attribution.\nALTER TABLE sms_messages ADD COLUMN provider_error_json TEXT;\nALTER TABLE sms_inbound_events ADD COLUMN sender_mask TEXT;\nALTER TABLE sms_inbound_events ADD COLUMN body TEXT;\nALTER TABLE sms_inbound_events ADD COLUMN unattributed INTEGER NOT NULL DEFAULT 0 CHECK(unattributed IN (0,1));\nCREATE INDEX sms_inbound_review ON sms_inbound_events(unattributed,created_at,receipt_id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

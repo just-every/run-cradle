@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
-import {createHmac,randomBytes} from 'node:crypto'
+import {createHmac,randomBytes,createHash} from 'node:crypto'
 import {once} from 'node:events'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
@@ -11,7 +11,7 @@ export const relay='https://relay.example.com/v1/deliver',relaySecret='synthetic
 
 /** Only the provider network edge is fake. Requests originate in the emitted Worker. */
 export async function twilioEdge(config={}){
- const calls=[],incoming=new Map();let uncertain=false,currentToken=authToken
+ const calls=[],incoming=new Map();let uncertain=false,refusal=null,currentToken=authToken
  const server=createServer(async(req,res)=>{
   let raw='';for await(const part of req)raw+=part
   const url=new URL(req.url,'http://localhost'),form=new URLSearchParams(raw)
@@ -19,6 +19,7 @@ export async function twilioEdge(config={}){
   assert.equal(req.headers.authorization,'Basic '+Buffer.from(accountSid+':'+currentToken).toString('base64'))
   res.setHeader('content-type','application/json')
   if(req.method==='POST'&&url.pathname.endsWith('/Messages.json')){
+   if(refusal){res.statusCode=400;res.end(JSON.stringify(refusal));return}
    if(uncertain){res.statusCode=503;res.end('{}');return}
    res.statusCode=201;res.end(JSON.stringify({sid:'synthetic-cradle-106-message-'+calls.filter(c=>c.method==='POST').length,status:'queued'}));return
   }
@@ -32,7 +33,7 @@ export async function twilioEdge(config={}){
  })
  server.listen(0,'127.0.0.1');await once(server,'listening')
  const local='http://127.0.0.1:'+server.address().port
- return {calls,incoming,setUncertain(value){uncertain=value},setToken(value){currentToken=value},async outbound(request){
+ return {calls,incoming,setRefusal(value){refusal=value},setUncertain(value){uncertain=value},setToken(value){currentToken=value},async outbound(request){
   assert.equal(request.url,config.relayUrl??relay);assert.equal(request.headers.get('authorization'),'Bearer '+(config.secret??relaySecret))
   const wire=await request.json(),url=new URL(wire.url)
   assert.ok(['api.twilio.com','messaging.twilio.com'].includes(url.hostname),'Only declared Twilio hosts reach the fake')
@@ -124,10 +125,52 @@ export async function smsJourney(){
   const blankRun=(await h.request(`/api/user-automations/${blankAutomation.id}/runs`)).data.runs.find(run=>run.recordId===blank.record.ref.recordId)
   assert.equal(blankRun.state,'Failed');assert.equal(edge.calls.filter(c=>c.method==='POST').length,before)
   assert.ok(JSON.stringify(blankRun).includes(h.statusId)&&JSON.stringify(blankRun).includes(blank.record.ref.recordId),'Blank destination names the field and record')
+  await smsRiderJourney(h,edge)
   const replacement=authToken+'-replacement';edge.setToken(replacement)
   await h.request(settings,{method:'PUT',body:{accountSid,authToken:replacement,from:sendingNumber}})
   assert.ok(!JSON.stringify((await h.request(settings)).data).includes(replacement),'A replaced token remains write-only')
   await h.request(settings,{method:'DELETE',body:{}})
   assert.equal((await h.request(settings)).data.configured,false)
  }finally{await h?.close();await edge.close()}
+}
+
+
+/** Provider refusals and ambiguous replies use only the actual public doors. */
+export async function smsRiderJourney(h,edge){
+ const riderPhone='+15550100107'
+ const name='synthetic-cradle-107-sms-'+createUlid(),refusal={code:30034,message:'US A2P 10DLC - Message from an Unregistered Number. Register this number before sending.'}
+ const automation=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name,appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'sms',fieldId:h.nameId,text:'synthetic-cradle-107'}]}}})).data.result.value
+ const created=[]
+ try{
+  edge.setRefusal(refusal)
+  for(let i=0;i<2;i++){const row=await h.create(riderPhone);await h.tick(row.commandId);created.push(row)}
+  const runs=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs,run=runs.find(item=>item.recordId===created[0].record.ref.recordId)
+  assert.equal(run.state,'Failed');assert.equal(run.retryable,false)
+  assert.deepEqual(run.actions[0].smsError,refusal,'The Twilio code and message are retained verbatim in public run history')
+  const before=edge.calls.filter(call=>call.method==='POST').length
+  await h.tick(created[0].commandId)
+  await h.request(`/api/user-automations/${automation.id}/runs/${run.id}/retry`,{method:'POST',status:403,body:{commandId:createUlid()}})
+  assert.equal(edge.calls.filter(call=>call.method==='POST').length,before,'A registration refusal is never retried')
+  const replies=[]
+  for(const body of ['Please call about the delivery.','STOP','HELP','START']){
+   const sid='synthetic-cradle-107-'+createUlid()
+   edge.incoming.set(sid,{sid,account_sid:accountSid,from:riderPhone,to:sendingNumber,body,direction:'inbound',date_created:new Date().toUTCString()})
+   const url=h.origin+'/webhooks/twilio/inbound',value={AccountSid:accountSid,MessageSid:sid,From:riderPhone,To:sendingNumber,Body:body}
+   await callback(url,value)
+   await callback(url,value,{status:401})
+   const listed=(await h.request('/api/user-automations/sms/settings')).data.replies.filter(item=>item.id==='inbound:'+sid)
+   assert.equal(listed.length,1,'Each ambiguous reply is retained once despite webhook replay')
+   assert.equal(listed[0].body,body);assert.equal(listed[0].from,'••• '+riderPhone.slice(-4));assert.ok(Number.isFinite(Date.parse(listed[0].receivedAt)))
+   assert.ok(!JSON.stringify(listed).includes(riderPhone),'Owner review masks the sending number')
+   replies.push(listed[0])
+   const stopped=await h.db.prepare('SELECT count(*) n FROM sms_suppressions WHERE recipient_hash=?').bind(createHash('sha256').update(riderPhone).digest('hex')).first()
+   if(body==='STOP')assert.ok(stopped.n>0,'Ambiguous STOP changes installation consent')
+   if(body==='START')assert.equal(stopped.n,0,'Ambiguous START removes installation suppression')
+   for(const row of created){const history=(await h.request('/api/v1/history?'+new URLSearchParams(row.record.ref))).data.items;assert.ok(!history.some(item=>['sms.inbound','sms.stop','sms.help','sms.start'].includes(item.action)),'An ambiguous reply is never attached to either record')}
+  }
+  return {name,run,refusal,replies}
+ }finally{
+  edge.setRefusal(null)
+  await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
+ }
 }

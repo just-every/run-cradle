@@ -102,8 +102,8 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
    }
    if(action.kind==='slack-app'){if(!deps.slack)return {state:'Unknown',result:{deliveryId:step.id},errorCode:'slack_app_acknowledgement_unknown'};return deps.slack.recover(step.id)}
    if(action.kind==='sms'){
-    const receipt=await db.prepare('SELECT status,provider_sid FROM sms_messages WHERE id=?').bind(step.id).first<{status:string;provider_sid:string|null}>()
-    return receipt&&receipt.status!=='unknown'?{state:receipt.status==='failed'?'Failed':'Complete',result:{deliveryId:step.id,smsStatus:receipt.status,providerMessageId:receipt.provider_sid}}:{state:'Unknown',result:{deliveryId:step.id},errorCode:'sms_acknowledgement_unknown'}
+    const receipt=await db.prepare('SELECT status,provider_sid,provider_error_json FROM sms_messages WHERE id=?').bind(step.id).first<{status:string;provider_sid:string|null;provider_error_json:string|null}>()
+    return receipt&&receipt.status!=='unknown'?{state:receipt.status==='failed'?'Failed':'Complete',result:{deliveryId:step.id,smsStatus:receipt.status,providerMessageId:receipt.provider_sid,...(receipt.provider_error_json?{smsError:JSON.parse(receipt.provider_error_json)}:{})},...(receipt.status==='failed'?{errorCode:'sms_rejected'}:{})}:{state:'Unknown',result:{deliveryId:step.id},errorCode:'sms_acknowledgement_unknown'}
    }
    if(action.kind==='email') {
     if(localMailEnabled(deps.env)&&deps.env.MAIL_PROVIDER==='development') {

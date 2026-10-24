@@ -38,8 +38,8 @@ export function smsDispatch(env:PlatformBindings,origin:string,reader:ReturnType
   const {row,credentials}=await settings.resolve(),recipientHash=await sha256(to)
   await authorize();await reader.assertScope(ctx,scope)
   if(await db.prepare('SELECT 1 FROM sms_suppressions WHERE recipient_hash=?').bind(recipientHash).first())return {state:'Complete' as const,result:{deliveryId:step.id,smsStatus:'suppressed',skipped:true}}
-  const prior=await db.prepare('SELECT status,provider_sid FROM sms_messages WHERE id=?').bind(step.id).first<{status:string;provider_sid:string|null}>()
-  if(prior)return {state:prior.status==='unknown'?'Unknown' as const:'Complete' as const,result:{deliveryId:step.id,smsStatus:prior.status,providerMessageId:prior.provider_sid},...(prior.status==='unknown'?{errorCode:'sms_acknowledgement_unknown'}:{})}
+  const prior=await db.prepare('SELECT status,provider_sid,provider_error_json FROM sms_messages WHERE id=?').bind(step.id).first<{status:string;provider_sid:string|null;provider_error_json:string|null}>()
+  if(prior)return {state:prior.status==='unknown'?'Unknown' as const:prior.status==='failed'?'Failed' as const:'Complete' as const,result:{deliveryId:step.id,smsStatus:prior.status,providerMessageId:prior.provider_sid,...(prior.provider_error_json?{smsError:JSON.parse(prior.provider_error_json)}:{})},...(prior.status==='unknown'?{errorCode:'sms_acknowledgement_unknown'}:prior.status==='failed'?{errorCode:'sms_rejected'}:{})}
   const now=Date.now(),commandId=saved.event.commandId??run.id
   const claimed=await db.prepare(`INSERT INTO sms_messages(id,run_id,command_id,actor_id,app_id,entity_id,record_id,field_id,recipient,sender,provider_sid,status,created_at,updated_at)
    SELECT ?,?,?,?,?,?,?,?,?,?,NULL,'unknown',?,? WHERE EXISTS(SELECT 1 FROM sms_installation WHERE id='installation' AND version=?) AND NOT EXISTS(SELECT 1 FROM sms_suppressions WHERE recipient_hash=?) ON CONFLICT(id) DO NOTHING`)
@@ -51,13 +51,14 @@ export function smsDispatch(env:PlatformBindings,origin:string,reader:ReturnType
   // The durable unknown claim precedes the only network attempt. No ambiguous
   // response, interrupted process, queue replay or manual retry can resend it.
   const response=await twilioRequest(env,credentials,messagesUrl(credentials)+'.json',form,step.id)
-  let parsed:{sid?:string;status?:string;from?:string|null}={};try{parsed=JSON.parse(response.body)}catch{/* An unparseable acknowledgement remains unknown. */}
+  let parsed:{sid?:string;status?:string;from?:string|null;code?:string|number;message?:string}={};try{parsed=JSON.parse(response.body)}catch{/* An unparseable acknowledgement remains unknown. */}
   const accepted=response.status===201&&typeof parsed.sid==='string',rejected=response.status>=400&&response.status<500&&response.status!==408&&response.status!==429
   const status=accepted&&['queued','sent','delivered','undelivered','failed'].includes(parsed.status??'')?parsed.status!:accepted?'queued':rejected?'failed':'unknown'
+  const smsError=rejected&&typeof parsed.message==='string'&&(typeof parsed.code==='string'||typeof parsed.code==='number')?{code:parsed.code,message:parsed.message}:null
   let sender=credentials.from
   if(accepted&&parsed.from)try{sender=normalizePhone(parsed.from)}catch{/* Messaging Service may not have allocated its sender yet. */}
-  await db.prepare("UPDATE sms_messages SET provider_sid=coalesce(provider_sid,?),sender=?,status=CASE WHEN status='unknown' THEN ? ELSE status END,updated_at=? WHERE id=?").bind(accepted?parsed.sid!:null,sender,status,Date.now(),step.id).run()
+  await db.prepare("UPDATE sms_messages SET provider_sid=coalesce(provider_sid,?),sender=?,status=CASE WHEN status='unknown' THEN ? ELSE status END,provider_error_json=?,updated_at=? WHERE id=?").bind(accepted?parsed.sid!:null,sender,status,smsError?JSON.stringify(smsError):null,Date.now(),step.id).run()
   if(accepted)await db.prepare(`INSERT INTO admission_audit(id,command_id,actor_id,actor_kind,app_id,action,subject_json,changes_json,source_ids_json,personal_refs_json,created_at) VALUES(?,?,?,'automation',?,'sms.queued',?,'[]','[]','[]',?) ON CONFLICT(id) DO NOTHING`).bind(step.id,commandId,ctx.principal.id,ref.appId,canonical(ref),new Date().toISOString()).run()
-  return {state:accepted?'Complete' as const:rejected?'Failed' as const:'Unknown' as const,result:{deliveryId:step.id,smsStatus:status,providerMessageId:accepted?parsed.sid:null},...(accepted?{}:{errorCode:rejected?'sms_rejected':'sms_acknowledgement_unknown'})}
+  return {state:accepted?'Complete' as const:rejected?'Failed' as const:'Unknown' as const,result:{deliveryId:step.id,smsStatus:status,providerMessageId:accepted?parsed.sid:null,...(smsError?{smsError}:{})},...(accepted?{}:{errorCode:rejected?'sms_rejected':'sms_acknowledgement_unknown'})}
  }
 }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
-import {accountSid,authToken,sendingNumber} from './sms-journey.mjs'
-export async function smsBrowser(page,h,journey,width){
+import {accountSid,authToken,sendingNumber,smsRiderJourney} from './sms-journey.mjs'
+export async function smsBrowser(page,h,journey,width,edge){
  await page.goto(h.origin+'/app/settings')
  await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/settings')
  await page.getByText('Twilio SMS',{exact:true}).first().click()
@@ -33,4 +33,15 @@ export async function smsBrowser(page,h,journey,width){
  const response=await saved;assert.equal(response.status(),201)
  const automation=(await response.json()).data.result.value
  await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
+ const rider=await smsRiderJourney(h,edge)
+ await page.goto(h.origin+rider.run.href)
+ const run=page.locator(`#run-${rider.run.id}`)
+ await run.getByText(`Twilio ${rider.refusal.code}: ${rider.refusal.message}`,{exact:true}).waitFor()
+ assert.equal(await run.getByRole('button',{name:'Retry safe action'}).count(),0)
+ await journey.capture('sms-registration-refusal')
+ await page.goto(h.origin+'/app/settings');await page.getByText('Twilio SMS',{exact:true}).first().click()
+ const replies=page.getByRole('region',{name:'Unattributed SMS replies'})
+ for(const reply of rider.replies)await replies.getByText(reply.body,{exact:true}).first().waitFor()
+ assert.ok(!(await replies.innerText()).includes('+15550100101'))
+ await journey.capture('sms-unattributed-replies')
 }
