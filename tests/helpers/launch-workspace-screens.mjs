@@ -12,6 +12,7 @@ export async function verifyWorkspaceScreens({h,page,command,capture}){
   const response=page.waitForResponse(response=>response.url().endsWith('/api/settings')&&response.request().method()==='PATCH')
   await page.getByRole('button',{name:'Save workspace',exact:true}).click()
   const saved=await response;assert.equal(saved.status(),200)
+  await page.waitForLoadState('networkidle')
   assert.equal((await read('/api/settings')).settings.workspace.currency,currency)
   await capture(`clause-workspace-${currency.toLowerCase()}-${timezone==='Europe/London'?'london':'brisbane'}`)
   assert.equal(await page.getByLabel('Currency',{exact:true}).inputValue(),currency,'OPS-006 saved currency remains visible')
