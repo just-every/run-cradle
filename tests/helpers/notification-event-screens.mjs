@@ -8,6 +8,13 @@ export async function verifyNotificationEventScreens({h,page,command,capture,set
  await verifyNotificationInAppClauses({h,page,capture,actor,other})
  await verifyNotificationEmailPolicy({h,page,capture,actor,other})
  await verifyNotificationDeliveryFailures({h,page,capture,actor,setNotificationMailStatus})
+ const workspace=async()=>{const r=await h.request(h.ownerSession,'/api/v1/settings');assert.equal(r.status,200);return(await r.json()).data}
+ const before=await workspace()
+ const quiet=async(start,end)=>{const current=await workspace(),r=await h.request(h.ownerSession,'/api/v1/commands/settings.update',{method:'POST',body:JSON.stringify({commandId:createUlid(),expected:[],input:{version:current.version,changes:{quietHoursStart:start,quietHoursEnd:end}}})});assert.equal(r.status,200,await r.clone().text());assert.equal((await r.json()).data.state,'committed')}
+ // Event identity assertions need an open delivery window, independent of time.
+ await quiet('00:00','00:00')
+ try{
+
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const actorCommand=async(action,input,expected=[],commandId=createUlid())=>{const response=await h.request(actor.session,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId,input,expected})});assert.equal(response.status,200,await response.clone().text());return(await response.json()).data.value}
  const campaign=(await command('campaign.create',{fields:{code:`EVENT-${width}`,name:'One notification per event',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Prove event recipient identity',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})).data.value
@@ -54,4 +61,5 @@ export async function verifyNotificationEventScreens({h,page,command,capture,set
  await command('decision.outcome',{id:decision.id,outcome:'Cancelled',rationale:'Acceptance complete'},ref('decision',currentDecision))
  await command('campaign.archive',{id:campaign.id},ref('campaign',await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()))
  await command('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},ref('campaign',await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()))
+ }finally{await quiet(before.quietHours.start,before.quietHours.end)}
 }
