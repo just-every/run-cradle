@@ -67,7 +67,9 @@ export async function assertWarehouseArchive(path,fixture){
 }
 /** Runs inside the real installation after rer import and fresh native-owner
  * bootstrap. Cron and queue wake are public runtime doors, not policy calls. */
-export async function restoredWarehouseArchive(runtime,db,request,fixture){
+export async function restoredWarehouseArchive(runtime,db,request,fixture,readMail){
+ const mailBefore=(await readMail()).length
+ assert.equal((await db.prepare('SELECT active FROM channel_mail_authority').first()).active,0,'Restore leaves mail authority inactive')
  const {edge,configurations,at}=fixture,bucket=await runtime.getR2Bucket('WAREHOUSE'),beforeWrites=writeCount(edge),beforeKeys=(await bucket.list()).objects.map(row=>row.key).sort(),beforeAudits=(await db.prepare("SELECT count(*) n FROM operation_audit WHERE action='warehouse.export'").first()).n
  const restored=(await db.prepare('SELECT * FROM warehouse_exports ORDER BY id').all()).results
  assert.deepEqual(restored.map(row=>row.id).sort(),configurations.map(row=>row.id).sort())
@@ -97,7 +99,43 @@ export async function restoredWarehouseArchive(runtime,db,request,fixture){
   const authorized=await db.prepare('SELECT state,owner_id FROM warehouse_exports WHERE id=?').bind(input.id).first()
   assert.equal(authorized.state,'active','A fresh owner save explicitly reauthorizes this schedule');assert.notEqual(authorized.owner_id,fixture.sourceOwnerId,'The restored schedule runs under the fresh owner, not its source authority')
  }
- assert.equal((await worker.scheduled({cron:'* * * * *',scheduledTime:at+10800000})).outcome,'ok')
+ assert.equal((await worker.scheduled({cron:'* * * * *',scheduledTime:at+10800000})).outcome,'ok','Reauthorized export completion publishes in-app progress independently of inactive mail authority')
+ assert.equal((await db.prepare('SELECT active FROM channel_mail_authority').first()).active,0,'Export completion never reactivates mail authority')
+ assert.equal((await readMail()).length,mailBefore,'Reauthorized export sends no provider-edge mail after restore')
  assert.ok(writeCount(edge)>beforeWrites,'Freshly authorized remote export sends a new transfer')
  for(const input of configurations){const schedule=await db.prepare('SELECT running_id,watermark_json FROM warehouse_exports WHERE id=?').bind(input.id).first();assert.equal(schedule.running_id,null);assert.notEqual(schedule.watermark_json,'{}','Each freshly authorized schedule completes its own new export')}
+}
+
+/** A real provider refusal must still publish the default failed-export notice
+ * to the fresh starter after actual restore. Repeating it exercises admission
+ * replay with inactive mail authority, while preserving the provider failure. */
+export async function restoredWarehouseFailure(runtime,db,request,fixture,readMail){
+ const {edge,at}=fixture,remote=fixture.configurations.find(input=>input.destination.kind==='s3')
+ const current=(await request('/api/v1/warehouse-exports')).exports.find(row=>row.id===remote.id)
+ await request('/api/v1/commands/warehouse.save',{commandId:createUlid(),expected:[],input:{...remote,mode:'full',version:current.version}})
+ const owner=(await db.prepare('SELECT owner_id FROM warehouse_exports WHERE id=?').bind(remote.id).first()).owner_id
+ const starter=(await db.prepare('SELECT human_id FROM authority_principals WHERE id=?').bind(owner).first()).human_id
+ assert.equal((await request('/api/v1/preferences')).progressEnabled,false,'Restored starter has not opted into successful completion notices')
+ const settings=await request('/api/v1/settings')
+ await request('/api/v1/commands/settings.update',{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{timezone:'UTC',quietHoursStart:new Date(Date.now()+10800000).toISOString().slice(11,16),quietHoursEnd:new Date(Date.now()+14400000).toISOString().slice(11,16)}}})
+ const before=(await readMail()).length,worker=await runtime.getWorker(),tick=()=>worker.scheduled({cron:'* * * * *',scheduledTime:at+14400000})
+ const notices=async()=>(await db.prepare("SELECT n.id,n.operator_id,n.title,n.version FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.subject_id=? AND c.subject_type='warehouse-export' AND c.event_kind='progress' ORDER BY n.id").bind(remote.id).all()).results
+ edge.refusePut(true)
+ try{
+  assert.equal((await tick()).outcome,'exception','A provider-refused export remains an actual failed scheduled invocation')
+  const failed=await notices()
+  assert.equal(failed.length,1,'An owed failed-export in-app notice survives inactive mail authority')
+  assert.equal(failed[0].operator_id,starter,'Only the retained fresh starter receives the failed-export notice')
+  assert.equal(failed[0].title,'Export needs attention')
+  const inbox=await request('/api/v1/notifications')
+  assert.ok(inbox.items.some(notice=>notice.id===failed[0].id),'The fresh starter reads the owed notice through the public inbox')
+  assert.equal((await tick()).outcome,'exception','Repeated provider failure is not swallowed by notification replay')
+  assert.deepEqual(await notices(),failed,'Replaying the same failed-export event never duplicates or updates its notice')
+  assert.equal((await db.prepare('SELECT active FROM channel_mail_authority').first()).active,0)
+  const wakeId=createUlid(),wake=await worker.queue('cradle-work',[{id:wakeId,timestamp:Date.now(),attempts:1,body:{kind:'cradle.channels.wake.v1'}}])
+  assert.deepEqual(wake.retryMessages,[{msgId:wakeId,delaySeconds:30}],'Inactive mail authority refuses dispatch and the actual queue requests its bounded retry')
+  assert.deepEqual(wake.explicitAcks,[],'The refused mail wake is never acknowledged')
+  assert.equal((await readMail()).length,before,'No provider-edge mail is sent for the restored failed export')
+  console.log('RESTORED_NOTIFICATION '+JSON.stringify({mailActive:0,failedNotices:failed.length,repeatedNotices:(await notices()).length,newProviderMail:0}))
+ }finally{edge.refusePut(false)}
 }

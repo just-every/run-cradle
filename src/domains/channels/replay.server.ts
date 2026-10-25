@@ -1,12 +1,17 @@
 import type {RequestContext} from '../authority/ports'
 import {NOTIFICATION_APP,NOTIFICATION_PRINCIPAL} from './mail-authority.server'
+import {IN_APP_NOTIFICATION_PRINCIPAL,notificationPrincipalGuard} from './notification-authority.server'
 import {AdmissionError} from '../admission/errors'
 /** Internal replay visibility follows server-persisted command/attempt lineage, never client result or run IDs. */
 export function createNotificationReplay(db:D1Database){return async(ctx:RequestContext,command:{commandId:string;result?:unknown})=>{
  const fail=():never=>{throw new AdmissionError('forbidden','Notification command replay is outside this delivery authority')}
- if(ctx.principal.id!==NOTIFICATION_PRINCIPAL||ctx.principal.kind!=='system'||!ctx.principal.credentialId||Date.parse(ctx.principal.expiresAt)<=Date.now())return fail()
- if(!await db.prepare('SELECT 1 FROM channel_mail_authority WHERE id=? AND epoch=? AND active=1').bind(NOTIFICATION_PRINCIPAL,ctx.principal.authenticationEpoch).first())return fail()
- const saved=await db.prepare('SELECT action,result_json FROM command_admissions WHERE command_id=? AND actor_id=? AND app_id=?').bind(command.commandId,NOTIFICATION_PRINCIPAL,NOTIFICATION_APP).first<{action:string;result_json:string}>();if(!saved)return fail()
+ if(![NOTIFICATION_PRINCIPAL,IN_APP_NOTIFICATION_PRINCIPAL].includes(ctx.principal.id)||ctx.principal.kind!=='system'||!ctx.principal.credentialId||Date.parse(ctx.principal.expiresAt)<=Date.now())return fail()
+ const saved=await db.prepare('SELECT action,result_json FROM command_admissions WHERE command_id=? AND actor_id=? AND app_id=?').bind(command.commandId,ctx.principal.id,NOTIFICATION_APP).first<{action:string;result_json:string}>();if(!saved)return fail()
+ if(['progress.notify','automation.stop.notify'].includes(saved.action)){
+  if(ctx.principal.id!==IN_APP_NOTIFICATION_PRINCIPAL)return fail()
+  const guard=notificationPrincipalGuard(ctx.principal.authenticationEpoch)
+  if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())return fail()
+ }else if(ctx.principal.id!==NOTIFICATION_PRINCIPAL||!await db.prepare('SELECT 1 FROM channel_mail_authority WHERE id=? AND epoch=? AND active=1').bind(NOTIFICATION_PRINCIPAL,ctx.principal.authenticationEpoch).first())return fail()
  if(saved.action==='progress.notify'){
   const value=JSON.parse(saved.result_json)?.value
   if(value?.eventId!==ctx.principal.credentialId||!['base-import','warehouse-export'].includes(value?.subjectType)||!['completed','failed'].includes(value?.outcome))return fail()
