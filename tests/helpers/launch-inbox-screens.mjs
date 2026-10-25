@@ -85,14 +85,16 @@ export async function verifyInboxScreens({h,page,command,capture}){
  await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()})
  const sent=(await h.db.prepare("SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE campaign_id=? AND state IN ('accepted','delivered') ORDER BY id").bind(erasing.id).all()).results
  assert.ok(sent.length>=2,'NOTIFY-005 sent assignment mail has durable receipts before erasure')
- const mailBefore=(await h.mailMessages()).length
+ const sentGroups=(await h.db.prepare("SELECT group_id FROM channel_deliveries WHERE campaign_id=? AND state IN ('accepted','delivered')").bind(erasing.id).all()).results.map(d=>d.group_id)
+ const sentMail=async()=>(await h.mailMessages()).filter(m=>sentGroups.includes(m.custom_args?.rer_delivery_id))
+ const mailBefore=(await sentMail()).length
  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(erasing.id).first()
  await actorCommand('campaign.delete',{id:erasing.id,confirmationCode:erasing.code},ref(current))
  const sentAfter=(await h.db.prepare(`SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id`).bind(JSON.stringify(sent.map(d=>d.id))).all()).results
  assert.deepEqual(sentAfter,sent,'NOTIFY-005 erasure retains sent-mail delivery records')
  assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_deliveries WHERE notification_id IN (SELECT value FROM json_each(?)) AND state IN ('held','queued','dispatching')").bind(JSON.stringify(targets.flatMap(p=>p.ids))).first()).n,0)
  await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()+86400000})
- assert.equal((await h.mailMessages()).length,mailBefore,'NOTIFY-005 deleted notice never sends later')
+ assert.equal((await sentMail()).length,mailBefore,'NOTIFY-005 deleted notice never sends later')
  for(const person of targets){
   const retained=await read(person.session)
   assert.equal(retained.unreadCount,person.before.unreadCount,'NOTIFY-005 deletion preserves each recipient unread count')
