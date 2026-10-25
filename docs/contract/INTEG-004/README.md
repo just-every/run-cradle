@@ -1,6 +1,6 @@
 # INTEG-004 — Google Calendar and Outlook
 
-Status: partial. Ct, 23 October 2026.
+Status: done (DONE-JUSTIFIED by ct, 25 October 2026). Evidence: `tests/ui-records-calendar.mjs` via `tests/helpers/record-calendar-journey.mjs`, `tests/helpers/record-calendar-author.mjs`, `tests/helpers/record-calendar-retry.mjs`, `tests/helpers/record-calendar-bulk.mjs`, `tests/helpers/record-calendar-upgrade.mjs` and `tests/helpers/record-calendar-trash.mjs` (journey at 1440/390; author, retry, bulk, upgrade and Trash helpers at 1440 only; mandatory records-calendar-sync push group); `tests/rer-retained-archive.mjs` via `tests/helpers/record-calendar-archive.mjs`; `tests/helpers/record-calendar-proof.mjs` (push records-calendar-sync, Google/Outlook 1440/390; resolved-credential adapter guards and exact imported-record counts).
 
 Sync definition and authority (ct, 23 October)
 - A base owner or creator turns sync on for one date or date-range field. They choose a calendar connection they control and an owned calendar on it. They also choose the event title field and any further fields to show in the event. The setup screen states that everyone who can see that calendar will see those values.
@@ -29,4 +29,4 @@ Real Google/Microsoft provider consent is NOT RUN. Recorded network-edge journey
 
 ## Google and Outlook implementation
 
-See [implementation.md](implementation.md) for the versioned definition, execution-effect, review and authority paths and their remaining gaps. Google uses `https://www.googleapis.com/auth/calendar.events.owned` plus `https://www.googleapis.com/auth/calendar.calendarlist.readonly`. Outlook uses `Calendars.ReadWrite`. The existing calendar registration exercises recorded Google and Microsoft Graph edges; real provider consent is NOT RUN.
+See [implementation.md](implementation.md) for the versioned definition, execution-effect, review and authority paths. Google uses `https://www.googleapis.com/auth/calendar.events.owned` plus `https://www.googleapis.com/auth/calendar.calendarlist.readonly`. Outlook uses `Calendars.ReadWrite`. The existing calendar registration exercises recorded Google and Microsoft Graph edges; real provider consent is NOT RUN.
