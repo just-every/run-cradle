@@ -24,8 +24,14 @@ export async function campaignErasure(db:D1Database,ctx:RequestContext,id:string
  for(const source of sources){const effects=await prepareKnowledgeErasure(db,LAUNCH_APP_ID,source,ctx.now);change.guards.push(...effects.guards);for(const m of effects.mutations)knowledge.set(m.table.tableId+JSON.stringify(m.kind==='insert'?m.row:m.where),m)}
  change.mutations.push(...knowledge.values())
  await updateRows(db,change,'evidence_nodes',{erased_at:ctx.now,invalidated_at:ctx.now},"id IN (WITH RECURSIVE descendants(id) AS (SELECT id FROM evidence_nodes WHERE object_id IN (SELECT value FROM json_each(?)) UNION SELECT child_id FROM evidence_dependencies JOIN descendants ON parent_id=descendants.id) SELECT id FROM descendants)",[sourceIds])
- await removeRows(db,change,'channel_deliveries','campaign_id=? OR notification_id IN (SELECT notification_id FROM channel_notifications WHERE campaign_id=?)',[id,id])
- await removeRows(db,change,'notifications','subject_id IN (SELECT value FROM json_each(?)) OR id IN (SELECT notification_id FROM channel_notifications WHERE campaign_id=?)',[ids,id])
+ // Keep inbox/read identity and sent-mail receipts, but erase copied content and
+ // prevent every pending delivery before detaching the erased campaign lineage.
+ const notices='subject_id IN (SELECT value FROM json_each(?)) OR id IN (SELECT notification_id FROM channel_notifications WHERE campaign_id=?)'
+ const deliveries=`campaign_id=? OR notification_id IN (SELECT id FROM notifications WHERE ${notices})`
+ await removeRows(db,change,'channel_deliveries',`(${deliveries}) AND state NOT IN ('accepted','delivered','unknown')`,[id,ids,id])
+ await updateRows(db,change,'channel_deliveries',{campaign_id:null,error_code:null,error_message:null},deliveries,[id,ids,id])
+ await updateRows(db,change,'notifications',{unavailable:1,subject_id:null,title:'Notification unavailable',body:''},notices,[ids,id])
+ await updateRows(db,change,'channel_notifications',{campaign_id:null,failure:null},'campaign_id=?',[id])
  await removeRows(db,change,'portability_preview_rows','preview_id IN (SELECT value FROM json_each(?))',[JSON.stringify(previews)])
  await removeRows(db,change,'portability_previews','id IN (SELECT value FROM json_each(?))',[JSON.stringify(previews)])
  await updateRows(db,change,'evidence_source_versions',{content:null,file_ids:'[]'},'source_id IN (SELECT value FROM json_each(?))',[sourceIds])
