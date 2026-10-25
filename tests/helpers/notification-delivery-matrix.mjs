@@ -35,6 +35,8 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  await setPrefs(other.session,[])
  const worker=await h.runtime.getWorker(),tick=async at=>{const result=await worker.scheduled({cron:'* * * * *',scheduledTime:at});assert.equal(result.outcome,'ok',JSON.stringify(result));return result}
  const row=async(table,id)=>h.db.prepare(`SELECT id,version FROM ${table} WHERE id=?`).bind(id).first()
+ const digestBefore=await h.db.prepare("SELECT recipients_json FROM channel_digest_settings WHERE id='digest'").first()
+ const digestAutomation=await h.db.prepare("SELECT id,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
  const readinessAutomation=await h.db.prepare("SELECT id,version,enabled,trigger_config_json FROM automations WHERE shipped_key='launch-readiness'").first()
  // The preceding concurrency journey deliberately leaves readiness disabled.
  if(!readinessAutomation.enabled)await request(h.ownerSession,'launch.automation.enable',{id:readinessAutomation.id},ref('automation',readinessAutomation))
@@ -216,6 +218,14 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  // Leave later walkthrough screens on their original configuration.
  for(const c of campaigns){const current=await row('campaigns',c.id);await request(h.ownerSession,'launch.campaign.archive',{id:c.id},ref('campaign',current));await request(h.ownerSession,'launch.campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await row('campaigns',c.id)))}
  if(!readinessAutomation.enabled)await request(h.ownerSession,'launch.automation.disable',{id:readinessAutomation.id},ref('automation',await row('automations',readinessAutomation.id)))
+ // The matrix owns its digest configuration. Leaving it enabled lets later
+ // Unknown-delivery ticks legitimately send two unrelated Monday digests.
+ const digestNow=await h.db.prepare("SELECT version FROM channel_digest_settings WHERE id='digest'").first()
+ await request(h.ownerSession,'digest.update',{version:digestNow.version,recipientIds:JSON.parse(digestBefore.recipients_json)})
+ const digestCurrent=await h.db.prepare('SELECT id,version,enabled FROM automations WHERE id=?').bind(digestAutomation.id).first()
+ if(digestCurrent.enabled!==digestAutomation.enabled)await request(h.ownerSession,`launch.automation.${digestAutomation.enabled?'enable':'disable'}`,{id:digestCurrent.id},ref('automation',digestCurrent))
+ assert.equal((await h.db.prepare("SELECT recipients_json FROM channel_digest_settings WHERE id='digest'").first()).recipients_json,digestBefore.recipients_json,'NOTIFY-007 restores the original digest recipients after all matrix assertions')
+ assert.equal((await h.db.prepare('SELECT enabled FROM automations WHERE id=?').bind(digestAutomation.id).first()).enabled,digestAutomation.enabled,'NOTIFY-007 restores the original digest schedule after all matrix assertions')
  const now=await settings();await request(h.ownerSession,'settings.update',{version:now.version,changes:{timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,originalOther]]){const current=await preferences(session);await request(session,'preferences.update',{version:current.version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})}
  await progress.close()
