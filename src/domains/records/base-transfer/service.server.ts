@@ -32,6 +32,8 @@ import { requestContext } from '../../../../vendor/base/modules/import-kit/src/d
 import { stored } from '../../../../vendor/base/modules/import-kit/src/d1/jobs'
 import type { D1ImportContext } from '../../../../vendor/base/modules/import-kit/src/d1/types'
 import type { ImportJob, Reconciliation } from '../../../../vendor/base/modules/import-kit/src/types'
+import {publishProgress} from '../../channels/integration.server'
+import {trustedPredicate} from '../../admission/sql.server'
 
 export type PreviewBuilder=(source:PreparedSource,options:ImportOptions,identities:ImportIdentities)=>BasePreview|Promise<BasePreview>
 export function createBaseImportService(db:D1Database,policy:PolicyPort,registry:DescriptorRegistry,manual:ReturnType<typeof createManualSchemas>,buildPreview:PreviewBuilder){
@@ -136,7 +138,15 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   const c=await jobContext(ctx,id),authority=c.authorization.predicate(operation==='resume'?'apply':operation,c.destination)
   await db.prepare(`UPDATE ik_jobs SET cradle_restore_hold=0 WHERE id=? AND cradle_restore_hold=1 AND (${authority.sql})`).bind(id,...(authority.params??[])).run()
   if((await jobBinding(ctx,id)).cradle_restore_hold)throw new AdmissionError('forbidden','Current base owner authority is required to continue this restored import.')
-  return operation==='resume'?resumeD1Import(id,c):operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
+  if(operation!=='resume')return operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
+  const before=await readD1ImportJob(id,c),starterId=c.authorization.principalId
+  if(['undone','rolling_back','rolled_back','undoing'].includes(before.state))return resumeD1Import(id,c)
+  const notify=(outcome:'completed'|'failed')=>publishProgress(db,{subjectType:'base-import',subjectId:id,starterId,eventId:`base-import:${id}:${outcome}`,outcome,ingress:ctx.ingress,guard:trustedPredicate(`EXISTS(SELECT 1 FROM ik_jobs WHERE id=? AND principal_id=?${outcome==='completed'?" AND state='completed'":''})`,[id,starterId])})
+  let job:ImportJob
+  try{job=await resumeD1Import(id,c)}catch(error){await notify('failed');throw error}
+  if(job.state==='completed')await notify('completed')
+  else if(job.state==='failed')await notify('failed')
+  return job
  }
  return {preview,uploadPreview,review,adopt,status,receipt,attachmentManifest,resume:(ctx:RequestContext,id:string)=>act(ctx,id,'resume'),undo:(ctx:RequestContext,id:string)=>act(ctx,id,'undo'),rollback:(ctx:RequestContext,id:string)=>act(ctx,id,'rollback'),originals:async(ctx:RequestContext,id:string)=>readD1ImportOriginals(id,await jobContext(ctx,id))}
 }
