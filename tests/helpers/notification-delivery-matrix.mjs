@@ -9,7 +9,7 @@ const paths={
  'critical-risk-escalated':'risk.escalate',
  readiness:'emitted readiness schedule',
  'comment-mentioned':'comment.create',
- 'automation-failed':null,
+ 'automation-failed':'saved automation with disabled AI',
  'decision-overdue':'emitted overdue schedule',
  outage:null,
  progress:null,
@@ -60,6 +60,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    // Drain unrelated prior work before measuring this real event path.
    await tick(Date.now())
    const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[]
+   const failure=kind==='automation-failed'?await launch('automation.save',{definition:{name:`Synthetic failed delivery ${phase}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'request-ai-analysis',input:{campaignId:campaigns[0].id}}]}}):null
    if(kind==='weekly-digest'){
     const a=await h.db.prepare("SELECT id,version,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
     if(!a.enabled)await request(h.ownerSession,'launch.automation.enable',{id:a.id},ref('automation',a))
@@ -69,6 +70,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    }else{
     for(const [index,operator]of [h.owner,other.id].entries()){
      const c=await campaign(operator,`synthetic-cradle-${phase*20+Object.keys(paths).indexOf(kind)*2+index}`)
+     if(failure)await launch('campaign.patch',{id:c.id,changes:{statusSummary:'Trigger the disabled-AI action'}},ref('campaign',c))
      if(kind==='comment-mentioned')await launch('comment.create',{campaignId:c.id,body:'Synthetic muted delivery event',mentions:[operator]},ref('campaign',c))
      if(kind==='decision-assigned'||kind==='decision-overdue')subjects.push((await launch('decision.create',{fields:{campaignId:c.id,riskId:null,supersedesId:null,title:'Synthetic delivery decision',requesterId:operator,assigneeId:operator,priority:'High',dueAt:new Date(kind==='decision-overdue'?at-20*60000:Date.parse('2099-01-01T12:00:00Z')).toISOString(),recommendation:'Review',impact:'Delivery matrix'}})).id)
      if(kind==='critical-risk-escalated'){
@@ -79,6 +81,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
     }
     await tick(kind==='readiness'||kind==='decision-overdue'?at:Date.now())
    }
+   if(failure)await launch('automation.disable',{id:failure.id},ref('automation',await row('automations',failure.id)))
    const fresh=(await read(kind)).filter(n=>!old.has(n.id)&&(!subjects.length||subjects.includes(n.subject_id)))
    await assertRows(kind,fresh,muted)
    if(muted)retained.push({kind,ids:fresh.filter(n=>n.operator_id===h.owner).map(n=>n.id)})
@@ -95,5 +98,5 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  for(const c of campaigns){const current=await row('campaigns',c.id);await request(h.ownerSession,'launch.campaign.archive',{id:c.id},ref('campaign',current));await request(h.ownerSession,'launch.campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await row('campaigns',c.id)))}
  const now=await settings();await request(h.ownerSession,'settings.update',{version:now.version,changes:{timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,originalOther]]){const current=await preferences(session);await request(session,'preferences.update',{version:current.version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})}
- console.log('NOTIFY-007 unproved: automation-failed; outage/progress have no event producer; record-automation requests in-app-only delivery')
+ console.log('NOTIFY-007 unproved: outage/progress have no event producer; record-automation requests in-app-only delivery')
 }
