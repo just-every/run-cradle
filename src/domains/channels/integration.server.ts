@@ -9,7 +9,7 @@ const empty=():ChannelEffects=>({guards:[],mutations:[]})
 const labels:Record<string,string>={'decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated','readiness':'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','outage':'An operational outage needs attention','progress':'Progress update','weekly-digest':'Weekly portfolio digest','record-automation':'A record automation ran'}
 export function createChannelsIntegration(db:D1Database,project?:RecipientProjection){
  async function notification(ctx:RequestContext,input:NotificationInput):Promise<ChannelEffects>{
-  if(input.operatorId===(ctx.principal.humanId??ctx.principal.id))return empty()
+  if(input.operatorId===(input.actorId===undefined?(ctx.principal.humanId??ctx.principal.id):input.actorId))return empty()
   const oldEvent=await db.prepare('SELECT notification_id FROM channel_events WHERE event_id=? AND operator_id=?').bind(input.eventId,input.operatorId).first<{notification_id:string}>()
   if(oldEvent)return {...empty(),notificationId:oldEvent.notification_id}
   const active=await db.prepare('SELECT id FROM operators WHERE id=? AND active=1').bind(input.operatorId).first();if(!active)return empty()

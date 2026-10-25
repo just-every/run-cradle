@@ -1,3 +1,4 @@
+import {createChannelsIntegration} from '../channels/integration.server';
 import {calendarConnectionSetup} from '../records/calendar-sync/connection-policy.server';
 import {personalStorePermit,isPersonalStore} from '../authority/personal-stores.server';
 import {storeAccountIdentity} from './store-account.server';
@@ -17,7 +18,7 @@ import { connectionConfigureSchema, safeReturnTo } from './validators';
 import { connectionsTable, credentialsTable, oauthTable, webhooksTable } from './tables.server';
 import { consentURL, oauthFamily, oauthTransport, pkceChallenge } from './oauth.server';
 import type { OAuthConfiguration, OAuthFamily, OAuthProvider, Tokens } from './oauth.server';
-type Row={id:string;app_id:string;adapter_id:string;name:string;state:Connection['state'];account_id:string;scopes_json:string;ownership_json:string;credential_ref:string|null;consent_scopes_json:string;control_epoch:number;version:number;last_checked_at:string|null;last_sync_at:string|null;revoked_at:string|null;created_at:string;updated_at:string};
+type Row={id:string;app_id:string;adapter_id:string;name:string;owner_id:string|null;state:Connection['state'];account_id:string;scopes_json:string;ownership_json:string;credential_ref:string|null;consent_scopes_json:string;control_epoch:number;version:number;last_checked_at:string|null;last_sync_at:string|null;revoked_at:string|null;created_at:string;updated_at:string};
 type CredentialRow={connection_id:string;sealed_json:string;expires_at:string|null;version:number;refresh_owner:string|null;refresh_expires_at:string|null};
 type OAuthRow={id:string;connection_id:string;actor_id:string;session_id:string;provider:OAuthProvider;state_hash:string;verifier_sealed:string;redirect_uri:string;return_to:string;expires_at:string;consumed_at:string|null;connection_epoch:number};
 export type ConnectionDependencies={credentialAuthority?(ctx:RequestContext,id:string,purpose:'dispatch'|'readback',operation:CredentialOperation):Promise<AuthorityPermit>;transport?:ProviderTransport;sync?(ctx:RequestContext,connectionId:string):Promise<void|{activity:'transient-read'}>;db:D1Database;admission:AdmissionPort;policy:PolicyPort;workspaceId:string;keyring:Keyring;appOrigin:string;secret(reference:string,purpose:'dispatch'|'readback'):Promise<string|undefined>;oauth(provider:OAuthProvider):OAuthConfiguration;context():Promise<RequestContext>};
@@ -83,7 +84,14 @@ export function createConnectionService(d:ConnectionDependencies){
    // Mail/model capability cannot be proven by a gratuitous effect. Configuration is distinct from measured availability.
    available=true;
   }catch{available=false;}
-  const now=new Date().toISOString();await change(ctx,row,'connection.check',[{kind:'update',table:connectionsTable,set:{state:available?'connected':'unavailable',last_checked_at:measured?now:null,version:row.version+1,updated_at:now},where:and(eq(connectionsTable,'id',id),eq(connectionsTable,'version',row.version)),expectedRows:1}],{connectionId:id,available,measured});return read(ctx,id);
+  const now=new Date().toISOString(),plan=await buildPlan(ctx,row,'connection.check',[{kind:'update',table:connectionsTable,set:{state:available?'connected':'unavailable',last_checked_at:measured?now:null,version:row.version+1,updated_at:now},where:and(eq(connectionsTable,'id',id),eq(connectionsTable,'version',row.version)),expectedRows:1}],{connectionId:id,available,measured});
+  // Only a measured connected -> unavailable transition is an outage. The
+  // capability result is a product event, rather than an owner's self-action.
+  if(!available&&row.state==='connected'&&row.last_checked_at){
+   const owners=await d.db.prepare(`SELECT DISTINCT p.human_id AS id FROM authority_principals p WHERE p.state='active' AND p.human_id IS NOT NULL AND (p.id=? OR (? IS NULL AND EXISTS(SELECT 1 FROM cradle_base_operators m JOIN oa_operators o ON o.id=m.base_id WHERE m.principal_id=p.id AND o.role='owner' AND o.status='active')))` ).bind(row.owner_id,row.owner_id).all<{id:string}>();
+   for(const owner of owners.results){const notice=await createChannelsIntegration(d.db).notification({...ctx,now},{kind:'outage',operatorId:owner.id,campaignId:null,subjectId:id,subjectType:'connection',eventId:`connection-outage:${id}:${row.version}`,actorId:null});plan.guards.push(...notice.guards);plan.mutations.push(...notice.mutations);}
+  }
+  await d.admission.commit(ctx,plan);return read(ctx,id);
  }
  async function sync(ctx:RequestContext,id:string){const row=await get(id);await d.policy.authorize(ctx,{appId:row.app_id,action:'connection.sync',expected:[],cost:[],connectionId:id,inputHash:await sha256(id)});if(!d.sync)throw new Error('Connection sync requires scoped source intake integration');const activity=await d.sync(ctx,id);if(activity?.activity==='transient-read')return dto(await get(id));const current=await get(id);await change(ctx,current,'connection.sync',[{kind:'update',table:connectionsTable,set:{last_sync_at:new Date().toISOString(),version:current.version+1,updated_at:new Date().toISOString()},where:and(eq(connectionsTable,'id',id),eq(connectionsTable,'version',current.version)),expectedRows:1}],{connectionId:id,synced:true});return dto(await get(id));}
  async function commandIdentity(action:string,input:{connectionId?:string;appId?:string;returnTo?:string}){const appId=input.appId??(input.connectionId?(await get(input.connectionId)).app_id:null);if(!appId)throw new Error('Connection app is required');return {appId,canonicalInputHash:await sha256(canonical(action==='connection.begin-consent'?{connectionId:input.connectionId,returnTo:safeReturnTo(input.returnTo!)}:input))};}

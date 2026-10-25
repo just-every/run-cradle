@@ -7806,7 +7806,7 @@
       "executable": false
     },
     "src/domains/automations/failure-alerts.server.ts": {
-      "sha256": "f834f13fd63df69cda78c57a94a37cfb7a6e10a4b83540a00e30383eebec6919",
+      "sha256": "144a32cd7c23fae1133c7d3fee5aad1070e32e24e5c34354abb6e7e09c0e7213",
       "executable": false
     },
     "src/domains/automations/failure-details.ts": {
@@ -7946,15 +7946,15 @@
       "executable": false
     },
     "src/domains/channels/inbox-subject.server.ts": {
-      "sha256": "8115d16aeb72c33b719c5d8745499ecc44eb8644fc29655cd7d552326484ea8d",
+      "sha256": "017ea6e6b8e7ac0f8e43ce457bc62df050d7c7b76f7042e920294aeb15afdfda",
       "executable": false
     },
     "src/domains/channels/inbox.server.ts": {
-      "sha256": "d5440ac9240951bb8aa06eadebcd48170d1eb7a48082a40736c07abe73fce709",
+      "sha256": "503625ae7733445f7162d9260367f0a9f7834bbfa5c89cc714e3075e7160fb0b",
       "executable": false
     },
     "src/domains/channels/integration.server.ts": {
-      "sha256": "cf63060b65a1d0477da912f0d130fdc849535fe71c2e56dee20bb8d65e39d363",
+      "sha256": "961d15c24aba82e625ce3f2c04e6b4b55bb5e039751ab3cafd3d855aba5dc195",
       "executable": false
     },
     "src/domains/channels/limits.server.ts": {
@@ -7970,11 +7970,11 @@
       "executable": false
     },
     "src/domains/channels/ports.ts": {
-      "sha256": "143702111eac172b80fce748cdaa2534599c3c024dc1f7a54c9fef1fe23c388e",
+      "sha256": "cb444ceb95e9b52d4c1149e8ca259f7abc6df9dbb1fee8633dd215568d739fb9",
       "executable": false
     },
     "src/domains/channels/recipient.server.ts": {
-      "sha256": "0bec2665d4ec7d27a093ddebfa885c49e89d8b1874fd35acf9676a734d691877",
+      "sha256": "7b8808ab89dd2bc7a89a4f563e5fd39d1c526e4cecffa6fee73ac010b0443909",
       "executable": false
     },
     "src/domains/channels/registry.server.ts": {
@@ -8006,7 +8006,7 @@
       "executable": false
     },
     "src/domains/channels/send-guards.server.ts": {
-      "sha256": "709e7a7d0be826588c31052abdd8b5f69caad7738a65ef72fdfdbe1371703792",
+      "sha256": "0dd61c69ba7e7be4ff2a5cc5983b9cc7539166cba2cbcecfb6b86dd35971b986",
       "executable": false
     },
     "src/domains/channels/settings.server.ts": {
@@ -8098,7 +8098,7 @@
       "executable": false
     },
     "src/domains/connections/service.server.ts": {
-      "sha256": "cbe2bdf63ca9d4bfa92acc81d21b693f28d62105db36f46d228b4da38165b593",
+      "sha256": "b2a29544dd24a1956c23eb4225c9aa3a9454d7aa8ebb374bca016dff5331aa0c",
       "executable": false
     },
     "src/domains/connections/setup.server.ts": {
@@ -12134,7 +12134,7 @@
       "executable": false
     },
     "tests/helpers/launch-inbox-screens.mjs": {
-      "sha256": "e332c7f5b6c42cd7fab11ec2cf20d4c318f1816bbd8313f395d85def1608eb0b",
+      "sha256": "8acae71c9fc6f82ec744dd2ee2c307b52193f5bb0c3cc4c6b371437520ec4cee",
       "executable": false
     },
     "tests/helpers/launch-installed.mjs": {
@@ -12250,7 +12250,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "f3589f1744d2756126d22cd2b83738822699c428a7e6e9b2220404541fc7a2e6",
+      "sha256": "9150e00137bd1d7c423aba5e878e59f426db53614a71cf9b5096b5ce1755396f",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -13182,7 +13182,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "bc6c6987f6dc308c919a36becf15048c2b81480d8c2a1cd00b955be78f3c08e4",
+      "sha256": "95aa584dd442b77abad0dd17ecf20fac597f62d2cb643583acedf5f02c8a8828",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {

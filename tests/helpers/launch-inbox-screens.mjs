@@ -90,14 +90,8 @@ export async function verifyInboxScreens({h,page,command,capture}){
  const mailBefore=(await sentMail()).length
  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(erasing.id).first()
  await actorCommand('campaign.delete',{id:erasing.id,confirmationCode:erasing.code},ref(current))
- const sentAfter=(await h.db.prepare(`SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id`).bind(JSON.stringify(sent.map(d=>d.id))).all()).results
- assert.deepEqual(sentAfter,sent,'NOTIFY-005 erasure retains sent-mail delivery records')
- assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_deliveries WHERE notification_id IN (SELECT value FROM json_each(?)) AND state IN ('held','queued','dispatching')").bind(JSON.stringify(targets.flatMap(p=>p.ids))).first()).n,0)
- await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()+86400000})
- assert.equal((await sentMail()).length,mailBefore,'NOTIFY-005 deleted notice never sends later')
  for(const person of targets){
   const retained=await read(person.session)
-  assert.equal(retained.unreadCount,person.before.unreadCount,'NOTIFY-005 deletion preserves each recipient unread count')
   for(const id of person.ids){
    const notice=retained.notifications.find(item=>item.id===id),before=person.before.notifications.find(item=>item.id===id)
    assert.ok(notice,'NOTIFY-005 deleted campaign retains each recipient notice')
@@ -115,8 +109,14 @@ export async function verifyInboxScreens({h,page,command,capture}){
    await row.getByText('Related record is unavailable',{exact:false}).waitFor()
    assert.equal(await row.getByRole('link',{name:'Related record',exact:true}).count(),0)
   }
+  assert.equal(retained.unreadCount,person.before.unreadCount,'NOTIFY-005 deletion preserves each recipient unread count')
   await capture(`clause-inbox-deleted-${person.id===h.owner?'owner':'other'}`)
  }
+ const sentAfter=(await h.db.prepare(`SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id`).bind(JSON.stringify(sent.map(d=>d.id))).all()).results
+ assert.deepEqual(sentAfter,sent,'NOTIFY-005 erasure retains sent-mail delivery records')
+ assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_deliveries WHERE notification_id IN (SELECT value FROM json_each(?)) AND state IN ('held','queued','dispatching')").bind(JSON.stringify(targets.flatMap(p=>p.ids))).first()).n,0)
+ await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()+86400000})
+ assert.equal((await sentMail()).length,mailBefore,'NOTIFY-005 deleted notice never sends later')
  await page.context().clearCookies()
  await page.context().addCookies([{name:h.ownerSession.cookie.split('=')[0],value:h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
 }
