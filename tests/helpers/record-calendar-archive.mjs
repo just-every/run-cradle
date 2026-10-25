@@ -4,7 +4,8 @@ import {randomBytes} from 'node:crypto'
 import path from 'node:path'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {emittedMailRuntime} from './emitted-mail-runtime.mjs'
-import {restoredWarehouseArchive} from './warehouse-archive.mjs'
+import {fixtureMessages} from './fixture-mail.mjs'
+import {restoredWarehouseArchive,restoredWarehouseFailure} from './warehouse-archive.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 const bindings=()=>({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64')})
 async function drain(runtime,db){const worker=await runtime.getWorker();for(let pass=0;pass<4;pass++){const rows=(await db.prepare("SELECT id FROM admission_outbox WHERE state='pending' AND action IN ('connection.operation','execution.dispatch','execution.reconcile') AND not_before<=? ORDER BY created_at,id").bind(new Date().toISOString()).all()).results;if(!rows.length)return;for(const row of rows)assert.equal((await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.outbox.v1',outboxId:row.id}}])).outcome,'ok')}}
@@ -33,7 +34,7 @@ export async function restoredRecordCalendar(root,fixture){
   const cookie=boot.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ');await completeFirstRun(f.origin,cookie)
   const home=await fetch(f.origin+'/app',{headers:{cookie}});assert.equal(home.status,200);await home.arrayBuffer()
   const request=async(route,body,status=200)=>{const csrf=(await(await fetch(f.origin+'/auth/csrf',{headers:{cookie}})).json()).csrfToken,response=await fetch(f.origin+route,{method:body===undefined?'GET':'POST',redirect:'manual',headers:{cookie,origin:f.origin,'content-type':'application/json','x-csrf-token':csrf},...(body===undefined?{}:{body:JSON.stringify(body)})}),value=await response.json().catch(()=>null);assert.equal(response.status,status,route.split('?')[0]+': '+(value?.error?.code??'unexpected response'));return value?.data}
-  await restoredWarehouseArchive(f.runtime,db,request,fixture.warehouse)
+  await restoredWarehouseArchive(f.runtime,db,request,fixture.warehouse,()=>fixtureMessages(f.origin))
   const listPath=`/api/v1/record-calendar-sync?appId=${definition.appId}&entityId=${definition.entityId}`,list=await request(listPath),restored=list.definitions.find(d=>d.id===definitionId),syncPath=`/api/v1/record-calendar-sync/${definitionId}/records/${recordId}`
   assert.ok(restored);assert.equal(restored.state,'stopped');assert.equal(restored.canManage,true);assert.equal(list.connections.find(c=>c.id===definition.connectionId).state,'unconfigured')
   await request(syncPath+'/sync',{commandId:createUlid()},403)
@@ -47,5 +48,6 @@ export async function restoredRecordCalendar(root,fixture){
   await request('/api/v1/commands/record.patch',{commandId:createUlid(),expected:[{ref:record.ref,version:record.version}],input:{appId:definition.appId,entityId:definition.entityId,rows:[{recordId,changes:{[definition.startFieldId]:'2026-12-09'}}]}})
   await request(syncPath+'/sync',{commandId:createUlid()});await drain(f.runtime,db)
   assert.equal(provider.writes.length,before+1);assert.equal(provider.writes.at(-1).method,'PUT');assert.equal(provider.writes.at(-1).body.start.date,'2026-12-09','A fresh native owner reconnects, reapproves and dispatches after archive restore')
+  await restoredWarehouseFailure(f.runtime,db,request,fixture.warehouse,()=>fixtureMessages(f.origin))
  }finally{await f.runtime.dispose();await f.mail.close()}
 }
