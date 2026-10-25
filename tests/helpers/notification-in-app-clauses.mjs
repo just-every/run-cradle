@@ -44,7 +44,7 @@ export async function verifyNotificationInAppClauses({h,page,capture}){
  const retried=await row('automation_runs',retry.runId);assert.equal(retried.state,'Failed');assert.equal(retried.initiated_by_id,actor.id)
  await check('automation-failed',retry.runId,[actor.id])
  await command('automation.disable',{id:failure.id},ref('automation',await row('automations',failure.id)))
- const scheduled=await command('automation.save',{definition:{name:`Subjectless failure ${width}`,enabled:true,trigger:{kind:'schedule',localRule:'0 * * * *',timezone:'UTC'},actions:[{command:'request-ai-analysis',input:{campaignId:c.id}}]}})
+ const scheduled=await command('automation.save',{definition:{name:`Subjectless failure ${width}`,enabled:true,trigger:{kind:'schedule',localRule:'hourly',timezone:'UTC'},actions:[{command:'request-ai-analysis',input:{campaignId:c.id}}]}})
  const at=Math.ceil((Date.now()+86400000)/3600000)*3600000;await tick(at)
  const global=await h.db.prepare("SELECT * FROM automation_runs WHERE automation_id=? AND state='Failed'").bind(scheduled.id).first();assert.ok(global,'NOTIFY-001 actual subjectless scheduled run failed');assert.equal(global.initiated_by_id,null);assert.equal(global.subject_id,null)
  const active=(await h.db.prepare('SELECT id FROM operators WHERE active=1').all()).results.map(o=>o.id)
