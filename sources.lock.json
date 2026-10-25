@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "3f0a7c0729a2cf8531bb6a652ae2245829cff24af76ffe909d2abf7ddd39ac09",
+      "sha256": "1757abbd72b6e636e5c2dfab02d10d11726e0ae0b33fceef9679f51ea44443ea",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "dd2542328c13029d4702e23591af06e9847bdb6e422afba28e5ab6f216615cb3",
+      "sha256": "2f68d2fb91fcf92494ccd0c61d0943a9e8021c527e84e3b990aa8eea9d65af41",
       "executable": false
     },
     "DEMO.md": {
@@ -15258,7 +15258,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "388f9f5a321525048043265a88b7d3d721bfd4e44ab93b0e3fcb35f686b453ba",
+      "sha256": "392fede0d651eb0e5d57d0d070548abf538fac09805b7b791da424fb102dd3ab",
       "executable": false
     },
     "vite.config.ts": {
