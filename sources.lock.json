@@ -12134,7 +12134,7 @@
       "executable": false
     },
     "tests/helpers/launch-inbox-screens.mjs": {
-      "sha256": "43b4e5f541b5b402a9eff4cc3a92eb30060d26593dbe4485797e66ab07c3d81b",
+      "sha256": "3669200f2d87d21f57c260d8e91177c2cee06a6038f73cb5b5cd37e42b7352bd",
       "executable": false
     },
     "tests/helpers/launch-installed.mjs": {

@@ -71,5 +71,13 @@ export async function verifyInboxScreens({h,page,command,capture}){
  await capture('clause-inbox-all-read')
  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()
  await create('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},ref(current))
- assert.equal((await read()).notifications.some(item=>item.id===deletedNotice.id),false,'NOTIFY-005 remaining gap: campaign erasure removes notices rather than retaining unavailable items')
+ for(const session of [h.ownerSession,other.session]){
+  const retained=await read(session)
+  for(const before of (session===h.ownerSession?archived:otherAfter).notifications){
+   const notice=retained.notifications.find(item=>item.id===before.id)
+   assert.ok(notice,'NOTIFY-005 deleted campaign retains each recipient notice')
+   assert.equal(notice.subject.available,false)
+   assert.equal(notice.subject.href,undefined)
+  }
+ }
 }
