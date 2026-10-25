@@ -51,7 +51,9 @@ export async function addWarehouseArchiveState(h,edge){
  }
  assert.equal((await h.db.prepare("SELECT count(*) n FROM warehouse_exports WHERE running_id IS NOT NULL AND watermark_json<>'{}'").first()).n,configurations.length,'The export source contains populated schedules and interrupted invocations')
  assert.equal((await h.db.prepare("SELECT count(*) n FROM warehouse_objects WHERE transfer_json<>'{}'").first()).n,pending.length)
- return {edge,configurations,pending,completedKeys:completed.map(row=>row.object_key),at,sourceOwnerId:h.operator}
+ const sourcePolicy=await h.db.prepare("SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id='00000000000000000000000700'").bind(h.operator).first()
+ assert.ok(sourcePolicy)
+ return {edge,configurations,pending,completedKeys:completed.map(row=>row.object_key),at,sourceOwnerId:h.operator,sourcePolicy}
 }
 /** Inspect the actual emitted archive, rather than invoking exportRow directly. */
 export async function assertWarehouseArchive(path,fixture){
@@ -68,6 +70,19 @@ export async function assertWarehouseArchive(path,fixture){
 /** Runs inside the real installation after rer import and fresh native-owner
  * bootstrap. Cron and queue wake are public runtime doors, not policy calls. */
 export async function restoredWarehouseArchive(runtime,db,request,fixture,readMail){
+ const freshOwner=(await db.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first()).id
+ const sourcePolicy=await db.prepare('SELECT rules_json FROM authority_policies WHERE id=?').bind(fixture.sourcePolicy.id).first()
+ assert.equal(sourcePolicy.rules_json,fixture.sourcePolicy.rules_json,'Restore preserves the archived owner policy as history')
+ const restoredPolicy=await db.prepare("SELECT p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id='00000000000000000000000700'").bind(freshOwner).first()
+ const originalRules=JSON.parse(sourcePolicy.rules_json),freshRules=JSON.parse(restoredPolicy.rules_json)
+ assert.equal(freshRules.length,originalRules.length)
+ for(const original of originalRules){
+  const fresh=freshRules.find(rule=>rule.id===original.id);assert.ok(fresh)
+  if(['00000000000000000000001211','00000000000000000000001212'].includes(original.entityId)){
+   assert.equal(original.rows.value,fixture.sourceOwnerId)
+   assert.deepEqual(fresh.rows,{...original.rows,value:freshOwner},'The fresh owner receives only their own personal channel rows')
+  }else assert.deepEqual(fresh.rows,original.rows,'Restore never rewrites business row predicates to the fresh owner')
+ }
  const mailBefore=(await readMail()).length
  assert.equal((await db.prepare('SELECT active FROM channel_mail_authority').first()).active,0,'Restore leaves mail authority inactive')
  const {edge,configurations,at}=fixture,bucket=await runtime.getR2Bucket('WAREHOUSE'),beforeWrites=writeCount(edge),beforeKeys=(await bucket.list()).objects.map(row=>row.key).sort(),beforeAudits=(await db.prepare("SELECT count(*) n FROM operation_audit WHERE action='warehouse.export'").first()).n
