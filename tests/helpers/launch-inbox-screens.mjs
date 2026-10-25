@@ -98,6 +98,7 @@ export async function verifyInboxScreens({h,page,command,capture}){
    assert.equal(notice.subject.available,false)
    assert.equal(notice.subject.href,undefined)
    assert.equal(notice.readAt,before.readAt,'NOTIFY-005 deletion preserves individual read state')
+   for(const key of ['id','kind','createdAt','updatedAt'])assert.equal(notice[key],before[key],`NOTIFY-005 deletion preserves ${key}`)
    const stored=await h.db.prepare('SELECT * FROM notifications WHERE id=?').bind(id).first()
    assert.equal(stored.title,'Notification unavailable','NOTIFY-005 erased notification title is neutral')
    assert.equal(stored.body,'','NOTIFY-005 erased notification body is empty')
