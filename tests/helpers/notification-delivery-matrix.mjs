@@ -112,7 +112,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    assert.equal(kept.length,inAppOnly.length,'NOTIFY-007 in-app-only: all notices retained after unmute and later ticks')
    assert.ok(kept.every(n=>n.delivery_id===null),'NOTIFY-007 in-app-only: no delivery replay after unmute')
    assert.equal((await h.mailMessages()).filter(m=>m.subject===titles['record-automation']).length,0,'NOTIFY-007 in-app-only: no old-mail replay')
-   console.log(`NOTIFY-007 matrix ${kind} ${muted?'muted':'restored'}: two notices, exact recipient mail counts`)
+   console.log(`NOTIFY-007 matrix ${kind} ${muted?'muted':'unmuted'}: two notices, ${kind==='record-automation'?'in-app-only, zero delivery rows and mail':'exact recipient mail counts'}`)
   }
  }
  async function assertOld(previous){
