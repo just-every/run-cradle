@@ -209,7 +209,8 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  // every delivery assertion, read exactly those fixture notices through each
  // recipient’s public door; deletion now correctly retains them. The inbox
  // journey must still prove its unchanged real-time read-all cutoff.
- for(const notice of futureNotices)await request(notice.operator_id===h.owner?h.ownerSession:other.session,'notification.read',{notificationId:notice.id})
+ const collateral=(await h.db.prepare('SELECT n.id,n.operator_id FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE c.campaign_id IN (SELECT value FROM json_each(?)) AND n.created_at>?').bind(JSON.stringify(campaigns.map(c=>c.id)),Date.now()).all()).results
+ for(const notice of new Map([...futureNotices,...collateral].map(n=>[n.id,n])).values())await request(notice.operator_id===h.owner?h.ownerSession:other.session,'notification.read',{notificationId:notice.id})
  // Leave later walkthrough screens on their original configuration.
  for(const c of campaigns){const current=await row('campaigns',c.id);await request(h.ownerSession,'launch.campaign.archive',{id:c.id},ref('campaign',current));await request(h.ownerSession,'launch.campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await row('campaigns',c.id)))}
  if(!readinessAutomation.enabled)await request(h.ownerSession,'launch.automation.disable',{id:readinessAutomation.id},ref('automation',await row('automations',readinessAutomation.id)))

@@ -44,6 +44,14 @@ export async function verifyNotificationInAppClauses({h,page,capture,actor,other
  await command('automation.disable',{id:failure.id},ref('automation',await row('automations',failure.id)))
  // The separate full probe found missing notices for active operators without
  // Launch membership on subjectless failures; NOTIFY-001 remains partial.
+ // Future schedule probes also generate overdue notices on this fixture's
+ // Critical-risk decision. Read only those retained future fixture notices,
+ // through the recipient's own door, after every acceptance assertion.
+ for(const notice of (await h.db.prepare('SELECT n.id,n.operator_id FROM notifications n JOIN channel_notifications m ON m.notification_id=n.id WHERE m.campaign_id=? AND n.created_at>?').bind(c.id,Date.now()).all()).results){
+  const session=notice.operator_id===h.owner?h.ownerSession:notice.operator_id===other.id?other.session:actor.session
+  assert.ok([h.owner,other.id,actor.id].includes(notice.operator_id))
+  await request(session,'notification.read',{notificationId:notice.id})
+ }
  await command('campaign.archive',{id:c.id},ref('campaign',await row('campaigns',c.id)))
  await command('campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await row('campaigns',c.id)))
  const current=(await(await h.request(h.ownerSession,'/api/v1/settings')).json()).data
