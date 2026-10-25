@@ -2,7 +2,8 @@ import type {ServerFoundation} from '../../core/app/foundation.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import {resolveBackgroundContext} from '../authority/background.server'
 import type {RequestContext} from '../authority/ports'
-import {NOTIFICATION_PRINCIPAL,NOTIFICATION_APP} from '../channels/mail-authority.server'
+import {NOTIFICATION_APP} from '../channels/mail-authority.server'
+import {notificationContext,notificationPrincipalGuard} from '../channels/notification-authority.server'
 import {automationRecipient} from './recipients.server'
 import {createChannelsIntegration} from '../channels/integration.server'
 import {sendBuilderTestMail} from './test-mail.server'
@@ -22,11 +23,9 @@ export function createAutomationFailureAlerts(env:PlatformBindings,foundation:Se
   // Owner-requested disable has no error code. Only product-fenced runs emit.
   const stopped=await db.prepare(`SELECT r.id,p.human_id AS operator_id FROM automation_runs r JOIN record_automation_bindings b ON b.automation_id=r.automation_id JOIN automations a ON a.id=r.automation_id AND a.enabled=1 JOIN authority_principals p ON p.id=b.owner_id JOIN operators o ON o.id=p.human_id WHERE r.state='Cancelled' AND r.error_code IS NOT NULL AND p.state='active' AND o.active=1 AND NOT EXISTS(SELECT 1 FROM channel_events e WHERE e.event_id='automation-stop:'||r.id) ORDER BY r.finished_at,r.id LIMIT 100`).all<{id:string;operator_id:string}>()
   for(const run of stopped.results){
-   const authority=await db.prepare('SELECT epoch FROM channel_mail_authority WHERE id=? AND active=1').bind(NOTIFICATION_PRINCIPAL).first<{epoch:number}>()
-   if(!authority)throw new Error('Notification authority is unavailable')
-   const now=clock().getTime(),ctx:RequestContext={principal:{id:NOTIFICATION_PRINCIPAL,kind:'system',humanId:null,sessionId:null,credentialId:run.id,issuedAt:new Date(now).toISOString(),expiresAt:new Date(now+60000).toISOString(),authenticationEpoch:authority.epoch},requestId:run.id,now:new Date(now).toISOString(),ingress:'schedule'},eventId=`automation-stop:${run.id}`
+   const ctx=await notificationContext(db,run.id,'schedule',clock().getTime()),eventId=`automation-stop:${run.id}`
    const notice=await createChannelsIntegration(db).notification(ctx,{kind:'outage',operatorId:run.operator_id,campaignId:null,subjectId:run.id,subjectType:'automation-stop',eventId})
-   const guard=trustedPredicate("EXISTS(SELECT 1 FROM automation_runs r JOIN automations a ON a.id=r.automation_id WHERE r.id=? AND r.state='Cancelled' AND r.error_code IS NOT NULL AND a.enabled=1) AND EXISTS(SELECT 1 FROM channel_mail_authority WHERE id=? AND active=1 AND epoch=?)",[run.id,NOTIFICATION_PRINCIPAL,ctx.principal.authenticationEpoch])
+   const guard=and(notificationPrincipalGuard(ctx.principal.authenticationEpoch),trustedPredicate("EXISTS(SELECT 1 FROM automation_runs r JOIN automations a ON a.id=r.automation_id WHERE r.id=? AND r.state='Cancelled' AND r.error_code IS NOT NULL AND a.enabled=1)",[run.id]))
    const action='automation.stop.notify'
    await foundation.admission.commit(ctx,{commandId:await delegationCommandId(run.id,'outage'),action,appId:NOTIFICATION_APP,canonicalInputHash:await canonicalHash({eventId}),permit:{actor:{id:ctx.principal.id,kind:ctx.principal.kind},action,appId:NOTIFICATION_APP,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards:[guard],reservationMutations:[],reservationIds:[]},guards:notice.guards,mutations:notice.mutations,audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{runId:run.id}})
   }
