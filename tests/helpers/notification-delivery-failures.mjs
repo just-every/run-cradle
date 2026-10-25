@@ -43,7 +43,7 @@ export async function verifyNotificationDeliveryFailures({h,page,capture,actor,s
  for(const item of cases)assert.equal(legacy.find(d=>d.id===item.delivery.id).state,item.state,'NOTIFY-003 Settings readback retains failed and Unknown records')
  await page.goto(h.origin+'/app/notifications');await page.locator(`#notification-${unknown.notice.id}`).waitFor();await capture('notify003-in-app-retained')
  await page.goto(h.origin+'/app/settings');const status=page.getByRole('heading',{name:'Delivery status',exact:true}).locator('..');await status.waitFor();await capture('notify003-delivery-status')
- for(const item of cases)assert.equal(await status.getByText(item.state==='unknown'?'Unknown':'Failed',{exact:true}).count(),cases.filter(c=>c.state===item.state).length,`NOTIFY-003 Settings visibly identifies ${item.state} delivery`)
+ for(const item of cases)assert.equal(await status.locator(`[data-delivery-id="${item.delivery.id}"]`).getByText(item.state==='unknown'?'Unknown':'Failed',{exact:true}).count(),1,`NOTIFY-003 Settings visibly identifies ${item.state} delivery`)
  const current=await settings();await request(h.ownerSession,'settings.update',{version:current.version,changes:{quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
  await request(h.ownerSession,'preferences.update',{version:(await settings()).preferences.version,preferences:{timezone:pref.timezone,mutedKinds:pref.mutedKinds,digestEnabled:pref.digestEnabled,progressEnabled:pref.progressEnabled}})
  await command('campaign.archive',{id:c.id},ref('campaign',await row('campaigns',c.id)));await command('campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await row('campaigns',c.id)))
