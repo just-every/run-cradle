@@ -26,6 +26,9 @@ export async function verifyNotificationDeliveryFailures({h,page,capture,actor,s
   assert.equal(delivery.state,'queued','NOTIFY-003 known-safe HTTP 429 schedules the first retry')
   assert.equal(delivery.attempts,1)
   assert.equal(delivery.first_failure_at,firstAt,'NOTIFY-003 first refusal time is durable')
+  const changed=await settings()
+  await request(h.ownerSession,'settings.update',{version:changed.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}})
+  assert.equal((await row('channel_deliveries',delivery.id)).due_at,firstAt+60000,'NOTIFY-003 Settings rescheduling never advances a safe retry')
   const key=delivery.group_id
   for(const [index,seconds]of [60,300,900,1800,3600].entries()){
    const due=firstAt+seconds*1000,current=await row('channel_deliveries',delivery.id)

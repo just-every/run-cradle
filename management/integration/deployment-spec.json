@@ -894,6 +894,12 @@
       "name": "9075_base_dependency_key_custody.sql",
       "sha256": "ff1fac10084215abb6f7ed9257b2aa51b349855dbb401e838e304986d5f1d81f",
       "sql": "-- Adopt Base's dependency-key custody contract without changing released rows.\n-- Existing signing keys remain eligible for Base's atomic plaintext upgrade;\n-- the installation secret stays in private settings and is never stored here.\nALTER TABLE rer_dependency_installation\n ADD COLUMN keys_sealed INTEGER NOT NULL DEFAULT 0 CHECK (keys_sealed IN (0, 1));\nALTER TABLE rer_dependency_installation\n ADD COLUMN key_ids TEXT NOT NULL DEFAULT '[]'\n CHECK (json_valid(key_ids) AND json_type(key_ids) = 'array');\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9076_notification_mail_retry.sql",
+      "sha256": "c70c4d99e62f007ca9bbc271fa227f389f90d284d2b9ca2839e721b1fb41d0fe",
+      "sql": "-- Retain the first confirmed safe refusal across schedules and restarts.\nALTER TABLE channel_deliveries ADD COLUMN first_failure_at INTEGER;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

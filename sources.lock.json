@@ -4574,7 +4574,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "5613b439d4a1a1fa124b1b0159a2aea8f67ef5c426ea37dae7db37f3f56038bc",
+      "sha256": "0dff37b6b07e5ad1112cb5f2ff0b0f438f6c0a1c6dce96b576644cc0cc819936",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5159,6 +5159,10 @@
     },
     "migrations/updates/9075_base_dependency_key_custody.sql": {
       "sha256": "ff1fac10084215abb6f7ed9257b2aa51b349855dbb401e838e304986d5f1d81f",
+      "executable": false
+    },
+    "migrations/updates/9076_notification_mail_retry.sql": {
+      "sha256": "c70c4d99e62f007ca9bbc271fa227f389f90d284d2b9ca2839e721b1fb41d0fe",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -7942,7 +7946,7 @@
       "executable": false
     },
     "src/domains/channels/hosted-delivery.server.ts": {
-      "sha256": "7c668e80aaa2d96484231bc6c9db91b0af515f08410611d8fed06964f50baeda",
+      "sha256": "b7e62c85aabf959ac9cec692d0b4cab5c13e7441289c4cc80834dd0dd4d7b7ce",
       "executable": false
     },
     "src/domains/channels/inbox-subject.server.ts": {
@@ -7967,6 +7971,10 @@
     },
     "src/domains/channels/mail-bridge.server.ts": {
       "sha256": "9bd41988422d1906455d90e5741fc27e2e9a0ebb8a49679ce32653fcd8c6f0c7",
+      "executable": false
+    },
+    "src/domains/channels/mail-retry.ts": {
+      "sha256": "dec4e9c17570fa85f982e827fd5f0182a63d6410fcce88a5d4bf06df01649922",
       "executable": false
     },
     "src/domains/channels/ports.ts": {
@@ -12246,7 +12254,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-failures.mjs": {
-      "sha256": "916ea0d4378cc4ffaba19c0ffe2019dcf36175d402f4d1ff6ab554b9de03cbd2",
+      "sha256": "df582059f33d8d6360ad6c1bd6fea32b336403521e79df9b20369e2937112b05",
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
