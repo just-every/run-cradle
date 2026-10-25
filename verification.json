@@ -124,7 +124,15 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 8/8"
+        "node scripts/verify-suite.mjs test:launch 8/16"
+      ]
+    },
+    {
+      "name": "launch-effects",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 16/16"
       ]
     },
     {
