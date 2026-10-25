@@ -132,9 +132,12 @@ export async function restoredWarehouseFailure(runtime,db,request,fixture,readMa
   assert.equal((await tick()).outcome,'exception','Repeated provider failure is not swallowed by notification replay')
   assert.deepEqual(await notices(),failed,'Replaying the same failed-export event never duplicates or updates its notice')
   assert.equal((await db.prepare('SELECT active FROM channel_mail_authority').first()).active,0)
+  const pendingBefore=(await db.prepare('SELECT id,state,attempts,group_id FROM channel_deliveries WHERE notification_id=?').bind(failed[0].id).all()).results
+  assert.equal(pendingBefore.length,1);assert.equal(pendingBefore[0].state,'queued','The restored failed notice positively owes immediately due email')
   const wakeId=createUlid(),wake=await worker.queue('cradle-work',[{id:wakeId,timestamp:Date.now(),attempts:1,body:{kind:'cradle.channels.wake.v1'}}])
   assert.deepEqual(wake.retryMessages,[{msgId:wakeId,delaySeconds:30}],'Inactive mail authority refuses dispatch and the actual queue requests its bounded retry')
   assert.deepEqual(wake.explicitAcks,[],'The refused mail wake is never acknowledged')
+  assert.deepEqual((await db.prepare('SELECT id,state,attempts,group_id FROM channel_deliveries WHERE notification_id=?').bind(failed[0].id).all()).results,pendingBefore,'Mail refusal preserves pending custody without a dispatch claim')
   assert.equal((await readMail()).length,before,'No provider-edge mail is sent for the restored failed export')
   console.log('RESTORED_NOTIFICATION '+JSON.stringify({mailActive:0,failedNotices:failed.length,repeatedNotices:(await notices()).length,newProviderMail:0}))
  }finally{edge.refusePut(false)}
