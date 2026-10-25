@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "6bd24931ed9dc6eef18c952716f4bbb5aa2058402924c022532d1011d7233342",
+      "sha256": "351ce677c9f1fb218d27f3bbb5ed7692e0b1060e99b657aac3fd9fcaae2cd0cc",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a4610c81ea917f06410fcc513de0e3c6b8d71193c846f113634748ef98095ecd",
+      "sha256": "45b2244deff61ab7341172370312786dc87f24ecb52ac1d21c6973951a19da1d",
       "executable": false
     },
     "DEMO.md": {
@@ -12246,7 +12246,11 @@
       "executable": false
     },
     "tests/helpers/notification-event-screens.mjs": {
-      "sha256": "9a2aa1d9ef698bdca236f4a8334d305d2d43be1df1dafc62663f41dd75854cdd",
+      "sha256": "f4d060e598568361ca6b7945f7c85fbd124a0177b8e081155d28f5f16bfe65f2",
+      "executable": false
+    },
+    "tests/helpers/notification-in-app-clauses.mjs": {
+      "sha256": "86acc8ab694913ad62ddb931609285ee9392dda68a03f1285f0444010d3b627b",
       "executable": false
     },
     "tests/helpers/notification-preferences-screens.mjs": {
@@ -13166,7 +13170,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "cf626f763d6cba6291d83f2aa775ccfe1f693aae5ba74eb940bb2a093ec64aa2",
+      "sha256": "10ff8e577893fec12197f43b34913186f02189c0edbc80c8ef341f85fb51dc9b",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
