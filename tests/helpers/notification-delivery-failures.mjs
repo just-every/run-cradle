@@ -14,7 +14,42 @@ export async function verifyNotificationDeliveryFailures({h,page,capture,actor,s
  await request(h.ownerSession,'preferences.update',{version:pref.version,preferences:{timezone:pref.timezone,mutedKinds:[],digestEnabled:pref.digestEnabled,progressEnabled:pref.progressEnabled}})
  await tick()
  const c=await command('campaign.create',{fields:{code:`synthetic-cradle-notify003-${width}`,name:'Visible notification delivery outcomes',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-12-01',objective:'Prove retained notices and delivery outcomes',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
- const cases=[],start=(await h.mailMessages()).length
+ // A confirmed HTTP 429 is safe to retry; a lost acknowledgement is not.
+ const rateStart=(await h.mailMessages()).length
+ setNotificationMailStatus(429)
+ let rate
+ try{
+  const comment=await command('comment.create',{campaignId:c.id,body:'synthetic-cradle-304 rate-limited notification',mentions:[h.owner]},ref('campaign',c)),firstAt=Date.now()
+  await tick(firstAt)
+  const delivery=await h.db.prepare('SELECT d.* FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE n.subject_id=?').bind(comment.id).first()
+  assert.ok(delivery,'NOTIFY-003 rate limit retains its notification-linked delivery')
+  assert.equal(delivery.state,'queued','NOTIFY-003 known-safe HTTP 429 schedules the first retry')
+  assert.equal(delivery.attempts,1)
+  assert.equal(delivery.first_failure_at,firstAt,'NOTIFY-003 first refusal time is durable')
+  const key=delivery.group_id
+  for(const [index,seconds]of [60,300,900,1800,3600].entries()){
+   const due=firstAt+seconds*1000,current=await row('channel_deliveries',delivery.id)
+   assert.equal(current.due_at,due,'NOTIFY-003 retry follows AUTO-007 from the first failure')
+   await tick(due-1)
+   assert.equal((await h.mailMessages()).length,rateStart+index+1,'NOTIFY-003 no retry before its scheduled instant')
+   await tick(due)
+   const next=await row('channel_deliveries',delivery.id)
+   assert.equal(next.attempts,index+2,'NOTIFY-003 exactly one attempt at each retry instant')
+   assert.equal(next.first_failure_at,firstAt,'NOTIFY-003 retries never reset the failure clock')
+   assert.equal(next.group_id,key,'NOTIFY-003 safe retries retain the provider action key')
+   assert.equal(next.state,index===4?'failed':'queued','NOTIFY-003 only the fifth failed retry is terminal')
+  }
+  const messages=(await h.mailMessages()).slice(rateStart)
+  assert.equal(messages.length,6,'NOTIFY-003 initial submission plus exactly five safe retries')
+  assert.ok(messages.every(m=>m.custom_args?.rer_delivery_id===key),'NOTIFY-003 all retry submissions retain the exact provider key')
+  const inbox=(await(await h.request(h.ownerSession,'/api/notifications')).json()).notifications,notice=inbox.find(n=>n.id===delivery.notification_id)
+  assert.ok(notice,'NOTIFY-003 exhausted rate-limit notice remains in-app')
+  assert.equal(notice.deliveryState,'failed');assert.ok(notice.failure,'NOTIFY-003 exhausted rate limit marks the notification failed')
+  const listed=(await(await h.request(h.ownerSession,'/api/v1/deliveries')).json()).data.items.find(d=>d.id===delivery.id)
+  assert.equal(listed.state,'failed');assert.equal(listed.notificationId,notice.id)
+  rate={state:'failed',delivery:await row('channel_deliveries',delivery.id),notice}
+ }finally{setNotificationMailStatus(202)}
+ const cases=[rate],start=(await h.mailMessages()).length
  try{
   for(const [status,state]of [[400,'failed'],[502,'unknown']]){
    setNotificationMailStatus(status)
