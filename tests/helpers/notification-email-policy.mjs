@@ -1,9 +1,8 @@
 import assert from 'node:assert/strict'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
 
-export async function verifyNotificationEmailPolicy({h,page,capture}){
- const width=page.viewportSize().width,all=rules=>rules.map(rule=>rule.effect==='allow'?{...rule,rows:{kind:'all',conditions:[]}}:rule)
- const actor=await h.addPerson({legacy:true,name:`Email event author ${width}`,change:all}),other=await h.addPerson({legacy:true,name:`Email recipient ${width}`,change:all})
+export async function verifyNotificationEmailPolicy({h,page,capture,actor,other}){
+ const width=page.viewportSize().width
  const request=async(session,action,input,expected=[])=>{const r=await h.request(session,'/api/v1/commands/'+action,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})});assert.equal(r.status,200,`${action}: ${await r.clone().text()}`);const data=(await r.json()).data;assert.equal(data.state,'committed');return data.value}
  const command=(action,input,expected=[])=>request(actor.session,'launch.'+action,input,expected)
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
