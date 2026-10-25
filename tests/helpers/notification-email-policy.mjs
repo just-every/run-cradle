@@ -53,6 +53,9 @@ export async function verifyNotificationEmailPolicy({h,page,capture}){
  assert.equal((await h.mailMessages()).length,digestBefore+2,'NOTIFY-002 digest sends both recipients immediately while personal local time is 01:00 inside quiet hours')
  const digestMail=(await h.mailMessages()).slice(digestBefore);assert.ok(digestMail.every(m=>m.subject==='Weekly portfolio digest'))
  await tick(+monday+59000);assert.equal((await h.mailMessages()).length,digestBefore+2,'NOTIFY-002 digest is never held or replayed')
+ // Future schedule fixtures must be read explicitly: a later real-time read-all
+ // cutoff cannot include a notification created on this emitted Monday.
+ for(const notice of (await h.db.prepare("SELECT id,operator_id FROM notifications WHERE kind='weekly-digest' AND created_at=? AND operator_id IN (?,?)").bind(+monday,h.owner,other.id).all()).results)await request(notice.operator_id===h.owner?h.ownerSession:other.session,'notification.read',{notificationId:notice.id})
  await request(h.ownerSession,'digest.update',{version:(await h.db.prepare("SELECT version FROM channel_digest_settings WHERE id='digest'").first()).version,recipientIds:JSON.parse(digest.recipients_json)})
  if(!automation.enabled){const a=await h.db.prepare('SELECT id,version FROM automations WHERE id=?').bind(automation.id).first();await command('automation.disable',{id:a.id},ref('automation',a))}
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,otherBefore]])await request(session,'preferences.update',{version:(await prefs(session)).version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})
