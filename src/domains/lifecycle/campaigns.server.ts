@@ -4,6 +4,7 @@ import {prepareKnowledgeErasure} from '../knowledge/erasure.server'
 import {AuthorityError} from '../authority/errors'
 import type {RequestContext} from '../authority/ports'
 import {effects,append,removeRows,updateRows} from './changes.server'
+import {trustedPredicate} from '../admission/sql.server'
 import {retainCleanup} from './cleanup.server'
 import {prepareExecutionErasure} from '../execution/erasure.server'
 import {LAUNCH_APP_ID,launchEntities} from '../../apps/launch/contracts'
@@ -26,11 +27,18 @@ export async function campaignErasure(db:D1Database,ctx:RequestContext,id:string
  await updateRows(db,change,'evidence_nodes',{erased_at:ctx.now,invalidated_at:ctx.now},"id IN (WITH RECURSIVE descendants(id) AS (SELECT id FROM evidence_nodes WHERE object_id IN (SELECT value FROM json_each(?)) UNION SELECT child_id FROM evidence_dependencies JOIN descendants ON parent_id=descendants.id) SELECT id FROM descendants)",[sourceIds])
  // Keep inbox/read identity and sent-mail receipts, but erase copied content and
  // prevent every pending delivery before detaching the erased campaign lineage.
- const notices='subject_id IN (SELECT value FROM json_each(?)) OR id IN (SELECT notification_id FROM channel_notifications WHERE campaign_id=?)'
- const deliveries=`campaign_id=? OR notification_id IN (SELECT id FROM notifications WHERE ${notices})`
- await removeRows(db,change,'channel_deliveries',`(${deliveries}) AND state NOT IN ('accepted','delivered','unknown')`,[id,ids,id])
- await updateRows(db,change,'channel_deliveries',{campaign_id:null,error_code:null,error_message:null},`(${deliveries}) AND state IN ('accepted','delivered','unknown')`,[id,ids,id])
- await updateRows(db,change,'notifications',{unavailable:1,subject_id:null,title:'Notification unavailable',body:''},notices,[ids,id])
+ // Resolve each affected set once. Admission guards bind through a JSON payload;
+ // nesting the unindexed lineage scans there repeats them for every delivery.
+ const noticeQuery='SELECT id FROM notifications WHERE subject_id IN (SELECT value FROM json_each(?)) UNION SELECT notification_id AS id FROM channel_notifications WHERE campaign_id=?'
+ const notices=(await db.prepare(noticeQuery).bind(ids,id).all<{id:string}>()).results,noticeIds=JSON.stringify(notices.map(row=>row.id))
+ const deliveryWhere='campaign_id=? OR notification_id IN (SELECT value FROM json_each(?))'
+ const deliveries=(await db.prepare(`SELECT id FROM channel_deliveries WHERE ${deliveryWhere}`).bind(id,noticeIds).all<{id:string}>()).results,deliveryIds=JSON.stringify(deliveries.map(row=>row.id))
+ // Keep the selection guarded too: a notice or delivery arriving during
+ // preparation must reject the whole erasure rather than escape redaction.
+ change.guards.push(trustedPredicate(`(SELECT count(*) FROM (${noticeQuery}))=?`,[ids,id,notices.length]),trustedPredicate(`(SELECT count(*) FROM channel_deliveries WHERE ${deliveryWhere})=?`,[id,noticeIds,deliveries.length]))
+ await removeRows(db,change,'channel_deliveries',"id IN (SELECT value FROM json_each(?)) AND state NOT IN ('accepted','delivered','unknown')",[deliveryIds])
+ await updateRows(db,change,'channel_deliveries',{campaign_id:null,error_code:null,error_message:null},"id IN (SELECT value FROM json_each(?)) AND state IN ('accepted','delivered','unknown')",[deliveryIds])
+ await updateRows(db,change,'notifications',{unavailable:1,subject_id:null,title:'Notification unavailable',body:''},'id IN (SELECT value FROM json_each(?))',[noticeIds])
  await updateRows(db,change,'channel_notifications',{campaign_id:null,failure:null},'campaign_id=?',[id])
  await removeRows(db,change,'portability_preview_rows','preview_id IN (SELECT value FROM json_each(?))',[JSON.stringify(previews)])
  await removeRows(db,change,'portability_previews','id IN (SELECT value FROM json_each(?))',[JSON.stringify(previews)])
