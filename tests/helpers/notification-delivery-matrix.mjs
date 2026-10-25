@@ -14,9 +14,9 @@ const paths={
  outage:null,
  progress:null,
  'weekly-digest':'emitted Monday digest',
- 'record-automation':null,
+ 'record-automation':'saved notify-operator action (in-app-only)',
 }
-const titles={'decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest'}
+const titles={'decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
 export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  assert.deepEqual(Object.keys(paths).sort(),[...notificationKinds].sort(),'NOTIFY-007 matrix accounts for exactly the production kind list')
  const request=async(session,action,input,expected=[])=>{
@@ -58,7 +58,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   }
  }
  const monday=new Date();monday.setUTCHours(0,0,0,0);monday.setUTCDate(monday.getUTCDate()+7-(monday.getUTCDay()+6)%7+(width===390?14:0))
- const retained=[],digestNotices=[]
+ const retained=[],digestNotices=[],inAppOnly=[]
  for(const [phase,muted]of [[0,true],[1,false]]){
   await setPrefs(h.ownerSession,muted?[...notificationKinds]:[])
   const date=new Date(+monday+phase*7*86400000).toISOString().slice(0,10),at=Date.parse(date+'T08:00:00Z')
@@ -68,7 +68,13 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    await tick(Date.now())
    const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[],mailStart=(await h.mailMessages()).length
    const failure=kind==='automation-failed'?await launch('automation.save',{definition:{name:`Synthetic failed delivery ${phase}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'request-ai-analysis',input:{campaignId:campaigns[0].id}}]}}):null
-   if(kind==='weekly-digest'){
+   if(kind==='record-automation'){
+    const c=await campaign(h.owner,`synthetic-cradle-in-app-${width}-${phase}`)
+    const definition=await launch('automation.save',{definition:{name:`Synthetic in-app-only ${width} ${phase}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[h.owner,other.id].map(operatorId=>({command:'notify-operator',input:{operatorId,subjectId:c.id,title:titles[kind],body:'Retained without requesting email'}}))}})
+    await launch('campaign.patch',{id:c.id,changes:{statusSummary:'Trigger both in-app-only recipients'}},ref('campaign',c))
+    await tick(Date.now())
+    await launch('automation.disable',{id:definition.id},ref('automation',await row('automations',definition.id)))
+   }else if(kind==='weekly-digest'){
     const a=await h.db.prepare("SELECT id,version,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
     if(!a.enabled)await request(h.ownerSession,'launch.automation.enable',{id:a.id},ref('automation',a))
     const digest=await h.db.prepare("SELECT version FROM channel_digest_settings WHERE id='digest'").first()
@@ -90,11 +96,20 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    }
    if(failure)await launch('automation.disable',{id:failure.id},ref('automation',await row('automations',failure.id)))
    const fresh=(await read(kind)).filter(n=>!old.has(n.id)&&(!subjects.length||subjects.includes(n.subject_id)))
-   await assertRows(kind,fresh,muted,(await h.mailMessages()).slice(mailStart))
+   if(kind==='record-automation'){
+    assert.deepEqual(fresh.map(n=>n.operator_id).sort(),[h.owner,other.id].sort(),'NOTIFY-007 in-app-only: both recipients retain exactly one notice')
+    for(const n of fresh)assert.equal(n.delivery_id,null,'NOTIFY-007 in-app-only: zero delivery rows for muted and unmuted recipients')
+    assert.equal((await h.mailMessages()).slice(mailStart).filter(m=>m.subject===titles[kind]).length,0,'NOTIFY-007 in-app-only: zero provider-edge mail for both recipients')
+    inAppOnly.push(...fresh)
+   }else await assertRows(kind,fresh,muted,(await h.mailMessages()).slice(mailStart))
    if(kind==='weekly-digest')digestNotices.push(...fresh)
-   if(muted)retained.push({kind,ids:fresh.filter(n=>n.operator_id===h.owner).map(n=>n.id)})
+   if(muted&&kind!=='record-automation')retained.push({kind,ids:fresh.filter(n=>n.operator_id===h.owner).map(n=>n.id)})
    // Unmuting must never replay a prior muted event, even after later ticks.
    for(const previous of retained)await assertOld(previous)
+   const kept=(await read('record-automation')).filter(n=>inAppOnly.some(old=>old.id===n.id))
+   assert.equal(kept.length,inAppOnly.length,'NOTIFY-007 in-app-only: all notices retained after unmute and later ticks')
+   assert.ok(kept.every(n=>n.delivery_id===null),'NOTIFY-007 in-app-only: no delivery replay after unmute')
+   assert.equal((await h.mailMessages()).filter(m=>m.subject===titles['record-automation']).length,0,'NOTIFY-007 in-app-only: no old-mail replay')
    console.log(`NOTIFY-007 matrix ${kind} ${muted?'muted':'restored'}: two notices, exact recipient mail counts`)
   }
  }
