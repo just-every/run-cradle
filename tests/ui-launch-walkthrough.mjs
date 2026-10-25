@@ -97,7 +97,7 @@ try {
   recordLaunchConsole(page,receipt,viewport.width)
   page.on('request',request=>{if(new URL(request.url()).origin!==h.origin)receipt.external.push(new URL(request.url()).origin)})
   await context.addCookies([{name: h.ownerSession.cookie.split('=')[0], value: h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
-  const capture=async(name,options={})=>{
+  const capture=async(name,{operatorName='Mira Example',...options}={})=>{
    await page.waitForLoadState('networkidle');await page.evaluate(()=>window.scrollTo(0,0))
    if(!accessibilityCaptureOnly)assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} page overflow`)
    let evidence,violations
@@ -113,7 +113,7 @@ try {
     if(violations.length){await writeFile(path.join(output,`axe-failure-${name}-${viewport.width}.json`),stringifySafeEvidence(violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))));await page.screenshot({path:path.join(output,`failed-${name}-${viewport.width}.png`),fullPage:true})}
     assert.deepEqual(violations.map(v=>v.id),[],`${name} accessibility`)
    }
-   if(viewport.width===1440){const footer=page.locator('.operator-rail .operator-rail-footer');assert.ok(await footer.evaluate(el=>{const box=el.getBoundingClientRect();return box.top>=0&&box.bottom<=innerHeight&&box.height>0}),'Full owner row visible');assert.equal(await footer.locator('strong').innerText(),'Mira Example');assert.equal(await footer.locator('small').innerText(),workspaceName,'Workspace identity visible')}
+   if(viewport.width===1440){const footer=page.locator('.operator-rail .operator-rail-footer');assert.ok(await footer.evaluate(el=>{const box=el.getBoundingClientRect();return box.top>=0&&box.bottom<=innerHeight&&box.height>0}),'Full operator row visible');assert.equal(await footer.locator('strong').innerText(),operatorName);assert.equal(await footer.locator('small').innerText(),workspaceName,'Workspace identity visible')}
    const file=accessibilityEvidence?`a11y-${name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-${viewport.width}.png`:`${name}-${viewport.width}.png`
    if(!accessibilityEvidence)await page.screenshot({path:path.join(output,file),fullPage:true})
    receipt.screens.push({file,viewport,overflow:false,seriousCritical:0,...(evidence?{wcagViolationCount:evidence.axe.wcag22aa.length,targetSizeViolationCount:evidence.axe.targetSize.length,smallTargetCount:evidence.layout.targetsBelow24.length,controls:evidence.layout.controls.length,tabOrderComplete:evidence.keyboard?.missing?.length===0,tabbableCount:evidence.keyboard?.tabbableCount??null}: {})})

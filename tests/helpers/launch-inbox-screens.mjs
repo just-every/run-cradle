@@ -115,7 +115,8 @@ export async function verifyInboxScreens({h,page,command,capture}){
    assert.equal(await row.getByRole('link',{name:'Related record',exact:true}).count(),0)
   }
   assert.equal(retained.unreadCount,person.before.unreadCount,'NOTIFY-005 deletion preserves each recipient unread count')
-  await capture(`clause-inbox-deleted-${person.id===h.owner?'owner':'other'}`)
+  const operatorName=(await h.db.prepare('SELECT name FROM operators WHERE id=?').bind(person.id).first()).name
+  await capture(`clause-inbox-deleted-${person.id===h.owner?'owner':'other'}`,{operatorName})
  }
  const sentAfter=(await h.db.prepare(`SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id`).bind(JSON.stringify(sent.map(d=>d.id))).all()).results
  assert.deepEqual(sentAfter,sent,'NOTIFY-005 erasure retains sent-mail delivery records')
