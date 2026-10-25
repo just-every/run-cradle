@@ -136,6 +136,11 @@ export async function verifyInboxScreens({h,page,command,capture}){
  const sentAfter=(await h.db.prepare(`SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id`).bind(JSON.stringify(sent.map(d=>d.id))).all()).results
  assert.deepEqual(sentAfter,sent,'NOTIFY-005 erasure retains sent-mail delivery records')
  assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_deliveries WHERE notification_id IN (SELECT value FROM json_each(?)) AND state IN ('held','queued','dispatching')").bind(JSON.stringify(targets.flatMap(p=>p.ids))).first()).n,0)
+ // The first due tick must be outside quiet hours: the next-day tick alone
+ // lands inside tomorrow's same quiet window and could hide a later-send bug.
+ assert.equal(new Date(laterThanDue-60001).toISOString().slice(11,16),quietEnd,'NOTIFY-005 pending due time is the end of the configured quiet window')
+ assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:laterThanDue})).outcome,'ok','NOTIFY-005 the post-erasure due tick completes outside quiet hours')
+ assert.equal((await h.mailMessages()).length,mailBefore,'NOTIFY-005 deleted pending mail never sends when quiet hours have ended, including newly assigned groups')
  assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Math.max(Date.now()+86400000,laterThanDue)})).outcome,'ok','NOTIFY-005 the post-erasure scheduled tick completes')
  assert.equal((await h.mailMessages()).length,mailBefore,'NOTIFY-005 deleted notice never sends later, including newly assigned delivery groups')
  console.log('NOTIFY-005 erasure '+JSON.stringify({width,accepted:sent.length,pending:pending.length,providerBefore:mailBefore,providerAfter:(await h.mailMessages()).length,newSends:0}))
