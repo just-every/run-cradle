@@ -69,15 +69,43 @@ export async function verifyInboxScreens({h,page,command,capture}){
  assert.deepEqual(otherAfter.notifications.map(item=>({id:item.id,readAt:item.readAt})),otherBefore.notifications.map(item=>({id:item.id,readAt:item.readAt})),'NOTIFY-005 mark all changes only its operator read state')
  assert.equal(otherAfter.unreadCount,otherBefore.unreadCount)
  await capture('clause-inbox-all-read')
- const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()
- await create('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},ref(current))
- for(const session of [h.ownerSession,other.session]){
-  const retained=await read(session)
-  for(const before of (session===h.ownerSession?archived:otherAfter).notifications){
-   const notice=retained.notifications.find(item=>item.id===before.id)
+ const erasing=await actorCommand('campaign.create',{fields:{code:`synthetic-cradle-erasure-${width}`,name:'Erased campaign private name',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Erased campaign objective',statusSummary:'Erased campaign summary',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+ const targets=[]
+ for(const person of [{id:h.owner,session:h.ownerSession},other]){
+  const sender=person.id===h.owner?actorCommand:create
+  const comment=await sender('comment.create',{campaignId:erasing.id,body:'Erased confidential comment',mentions:[person.id]},ref(erasing))
+  const decision=await sender('decision.create',{fields:{campaignId:erasing.id,riskId:null,supersedesId:null,title:'Erased confidential decision',requesterId:person.id===h.owner?other.id:h.owner,assigneeId:null,priority:'High',dueAt:'2099-01-01T12:00:00.000Z',recommendation:'Erased recommendation',impact:'Erased impact'}})
+  await sender('decision.assign',{id:decision.id,assigneeId:person.id},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.decision,recordId:decision.id},version:decision.version}])
+  const before=await read(person.session),notices=before.notifications.filter(n=>[comment.id,decision.id].includes(n.subject.id))
+  assert.equal(notices.length,2,'NOTIFY-005 two generated deleted-campaign notices per recipient')
+  const mark=await h.request(person.session,`/api/notifications/${notices[0].id}/read`,{method:'POST'})
+  assert.equal(mark.status,204)
+  targets.push({...person,before:await read(person.session),ids:notices.map(n=>n.id)})
+ }
+ const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(erasing.id).first()
+ await actorCommand('campaign.delete',{id:erasing.id,confirmationCode:erasing.code},ref(current))
+ for(const person of targets){
+  const retained=await read(person.session)
+  assert.equal(retained.unreadCount,person.before.unreadCount,'NOTIFY-005 deletion preserves each recipient unread count')
+  for(const id of person.ids){
+   const notice=retained.notifications.find(item=>item.id===id),before=person.before.notifications.find(item=>item.id===id)
    assert.ok(notice,'NOTIFY-005 deleted campaign retains each recipient notice')
    assert.equal(notice.subject.available,false)
    assert.equal(notice.subject.href,undefined)
+   assert.equal(notice.readAt,before.readAt,'NOTIFY-005 deletion preserves individual read state')
+   const stored=await h.db.prepare('SELECT * FROM notifications WHERE id=?').bind(id).first()
+   assert.equal(stored.title,'Notification unavailable','NOTIFY-005 erased notification title is neutral')
+   assert.equal(stored.body,'','NOTIFY-005 erased notification body is empty')
+   assert.equal(stored.subject_id,null)
+   await page.context().clearCookies()
+   await page.context().addCookies([{name:person.session.cookie.split('=')[0],value:person.session.cookie.slice(person.session.cookie.indexOf('=')+1),url:h.origin}])
+   await page.goto(`${h.origin}/app/notifications`)
+   const row=page.locator(`#notification-${id}`)
+   await row.getByText('Related record is unavailable',{exact:false}).waitFor()
+   assert.equal(await row.getByRole('link',{name:'Related record',exact:true}).count(),0)
   }
+  await capture(`clause-inbox-deleted-${person.id===h.owner?'owner':'other'}`)
  }
+ await page.context().clearCookies()
+ await page.context().addCookies([{name:h.ownerSession.cookie.split('=')[0],value:h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
 }
