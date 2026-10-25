@@ -1,3 +1,4 @@
+import type {AdmissionPlan} from '../admission/ports'
 import {recordProgressReceipt} from '../channels/integration.server'
 import {delegationCommandId} from '../authority/user-delegation.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
@@ -52,7 +53,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
   if(!acquired)return
   let reservation:string|undefined,committed=false
   const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
-  const progress=async(state:'completed'|'failed',files=0)=>{const occurrence=`${row.version}:${runSlot}:${state}`,guard=trustedPredicate(`EXISTS(SELECT 1 FROM warehouse_exports WHERE id=? AND owner_id=? AND version=? AND (running_id=? OR (last_slot=? AND updated_at=?))) AND EXISTS(SELECT 1 FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND p.authentication_epoch=? AND o.role='owner' AND o.status='active')`,[row.id,actor.id,row.version,runId,runSlot,startedAt,actor.id,actor.authentication_epoch]);await recordProgressReceipt(db,foundation.admission,ctx,{id:await delegationCommandId(row.id,occurrence),appId:JSON.parse(row.bases_json)[0],sourceType:'export',sourceId:row.id,occurrence,state,summary:state==='completed'?`Export completed: ${files} data files written.`:'Export failed: destination delivery or the current data check failed. Review destination access and the receipt before trying again.',counts:{dataFiles:files},guard})}
+  const progress=async(state:'completed'|'failed',files=0,commitAtomic?:AdmissionPlan<unknown>['commitAtomic'])=>{const occurrence=`${row.version}:${runSlot}:${state}`,guard=trustedPredicate(`EXISTS(SELECT 1 FROM warehouse_exports WHERE id=? AND owner_id=? AND version=? AND (running_id=? OR (last_slot=? AND updated_at=?))) AND EXISTS(SELECT 1 FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND p.authentication_epoch=? AND o.role='owner' AND o.status='active')`,[row.id,actor.id,row.version,runId,runSlot,startedAt,actor.id,actor.authentication_epoch]);return recordProgressReceipt(db,foundation.inertAdmission,ctx,{id:await delegationCommandId(row.id,occurrence),appId:JSON.parse(row.bases_json)[0],sourceType:'export',sourceId:row.id,occurrence,state,summary:state==='completed'?`Export completed: ${files} data files written.`:'Export failed: destination delivery or the current data check failed. Review destination access and the receipt before trying again.',counts:{dataFiles:files},guard,commitAtomic})}
   const keys=(await db.prepare('SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key').bind(row.id,runId).all<{object_key:string}>()).results.map(value=>value.object_key)
   try{
    reservation=await reserveFileWrite(db,'warehouse:'+row.id,startedAt)
@@ -121,14 +122,14 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    const nonce=createUlid(),unique=[...new Map(guards.map(guard=>[JSON.stringify(guard),guard])).values()]
    unique.push(trustedPredicate("EXISTS(SELECT 1 FROM warehouse_exports WHERE id=? AND running_id=? AND version=? AND state='active')",[row.id,runId,row.version]))
    unique.push(trustedPredicate("(SELECT COALESCE(MAX(rowid),0) FROM command_admissions WHERE state='committed')=?",[revision]))
-   await db.batch([
+   const commitData=async(statements:Parameters<NonNullable<AdmissionPlan<unknown>['commitAtomic']>>[0]=[])=>{await db.batch([
     ...unique.map((guard,index)=>db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,index,...guard.values)),
+    ...statements,
     db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),runSlot,startedAt,row.id,runId),
     ...bases.map(appId=>db.prepare('INSERT INTO operation_audit(id,actor_id,app_id,action,feature,created_at) VALUES(?,?,?,?,?,?)').bind(createUlid(),actor.id,appId,'warehouse.export','Warehouse exports',startedAt)),
     db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
-   ])
-   committed=true
-   await progress('completed',files.length)
+   ]);committed=true}
+   if(!await progress('completed',files.length,commitData))await commitData()
   }catch(error){if(!committed)await progress('failed');throw error}finally{
    if(!committed)for(const key of keys){await store.delete(key);if(await store.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
    await db.prepare('DELETE FROM authority_credentials WHERE id=?').bind(credential).run()

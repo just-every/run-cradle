@@ -149,10 +149,9 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   await db.prepare(`UPDATE ik_jobs SET cradle_restore_hold=0 WHERE id=? AND cradle_restore_hold=1 AND (${authority.sql})`).bind(id,...(authority.params??[])).run()
   if((await jobBinding(ctx,id)).cradle_restore_hold)throw new AdmissionError('forbidden','Current base owner authority is required to continue this restored import.')
   if(operation!=='resume')return operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
-  const before=await readD1ImportJob(id,c)
   let job:ImportJob
   try{job=await resumeD1Import(id,c)}catch(error){await progress(ctx,await readD1ImportJob(id,c),c,'failed');throw error}
-  if(before.state!=='completed'&&job.state==='completed')await progress(ctx,job,c,'completed')
+  if(job.state==='completed')await progress(ctx,job,c,'completed')
   return job
  }
  return {preview,uploadPreview,review,adopt,status,receipt,attachmentManifest,resume:(ctx:RequestContext,id:string)=>act(ctx,id,'resume'),undo:(ctx:RequestContext,id:string)=>act(ctx,id,'undo'),rollback:(ctx:RequestContext,id:string)=>act(ctx,id,'rollback'),originals:async(ctx:RequestContext,id:string)=>readD1ImportOriginals(id,await jobContext(ctx,id))}
