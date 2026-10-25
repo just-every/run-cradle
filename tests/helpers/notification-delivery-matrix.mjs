@@ -43,7 +43,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  const campaign=async(operator,code)=>{
   const c=await launch('campaign.create',{fields:{code,name:code,ownerId:operator,startDate:'2026-01-01',launchDate:'2027-12-01',objective:'Synthetic notification delivery',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}});campaigns.push(c);return c
  }
- const read=async kind=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,d.id AS delivery_id,d.state,d.group_id,d.error_code,d.error_message FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=?').bind(kind).all()).results
+ const read=async kind=>(await h.db.prepare('SELECT n.id,n.version,n.updated_at,n.operator_id,n.subject_id,d.id AS delivery_id,d.state,d.group_id,d.error_code,d.error_message FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=?').bind(kind).all()).results
  const assertRows=async(kind,rows,muted,edgeMessages,recipients=[h.owner,other.id])=>{
   assert.deepEqual(rows.map(r=>r.operator_id).sort(),[...recipients].sort(),`NOTIFY-007 ${kind}: exactly the event owners retain one notice each`)
   const messages=await h.mailMessages()
@@ -68,7 +68,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const provider=h.notificationOutageProvider
   assert.ok(provider,'NOTIFY-009 real capability checks require the network-edge provider')
   const connection=(await request(h.ownerSession,'connection.configure',{appId,adapterId:'google-calendar',name:`synthetic-cradle-${width}-${phase}`,accountId:provider.ownedCalendarId,scopes:[{resource:provider.ownedCalendarId,readFields:[],actions:['connection.sync']}],ownership:[],credentialRef:null})).connectionId
-  const check=async()=>{await request(h.ownerSession,'connection.check',{connectionId:connection});await tick(Date.now());const r=await raw(`/api/v1/connections/${connection}`);return r.data}
+  const check=async()=>{await request(h.ownerSession,'connection.check',{connectionId:connection});await tick(Date.now());await tick(Date.now());const r=await raw(`/api/v1/connections/${connection}`);return r.data}
   const eventRows=async(type)=>(await read('outage')).filter(n=>n.subject_id===(type==='connection'?connection:stoppedRun))
   const initial=await read('outage')
   await check()
@@ -82,9 +82,12 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   provider.deny(provider.ownedCalendarId)
   assert.equal((await check()).state,'unavailable')
   let rows=await eventRows('connection')
+  const connectionEvents=async()=>(await h.db.prepare('SELECT e.event_id FROM channel_events e JOIN notifications n ON n.id=e.notification_id WHERE n.subject_id=? ORDER BY e.event_id').bind(connection).all()).results
+  const firstEvents=await connectionEvents();assert.equal(firstEvents.length,1,'NOTIFY-009 one transition creates one event')
   await assertRows('outage',rows,muted,(await h.mailMessages()).slice(connectionMail),[h.owner])
   assert.equal((await check()).state,'unavailable')
-  assert.deepEqual(await eventRows('connection'),rows,'NOTIFY-009 repeat unavailable check emits no second notice or email')
+  assert.deepEqual(await eventRows('connection'),rows,'NOTIFY-009 repeat unavailable check emits no second notice or update')
+  assert.deepEqual(await connectionEvents(),firstEvents,'NOTIFY-009 repeat unavailable check creates no second event')
   assert.equal((await h.mailMessages()).slice(connectionMail).filter(m=>m.subject===titles.outage).length,muted?0:1)
   const inbox=(await raw('/api/notifications')).notifications.find(n=>n.id===rows[0].id)
   assert.equal(inbox.subject.available,true);assert.equal(inbox.subject.href,'/app/settings')
@@ -103,7 +106,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const created=await request(h.ownerSession,'record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-private-stop'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}])
   await new Promise(resolve=>setTimeout(resolve,Math.max(0,expires-Date.now()+25)))
   const stopMail=(await h.mailMessages()).length
-  await tick(Date.now())
+  await tick(Date.now());await tick(Date.now())
   const run=await h.db.prepare("SELECT id,state FROM automation_runs WHERE automation_id=?").bind(saved.id).first()
   assert.ok(run);assert.equal(run.state,'Cancelled','NOTIFY-009 product fences expired approval before any new effect')
   let stoppedRun=run.id
