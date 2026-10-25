@@ -99,9 +99,18 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    if(failure)await launch('automation.disable',{id:failure.id},ref('automation',await row('automations',failure.id)))
    const fresh=(await read(kind)).filter(n=>!old.has(n.id)&&(!subjects.length||subjects.includes(n.subject_id)))
    if(kind==='record-automation'){
-    assert.deepEqual(fresh.map(n=>n.operator_id).sort(),[h.owner,other.id].sort(),'NOTIFY-007 in-app-only: both recipients retain exactly one notice')
-    for(const n of fresh)assert.equal(n.delivery_id,null,'NOTIFY-007 in-app-only: zero delivery rows for muted and unmuted recipients')
-    assert.equal((await h.mailMessages()).slice(mailStart).filter(m=>m.subject===titles[kind]).length,0,'NOTIFY-007 in-app-only: zero provider-edge mail for both recipients')
+    const edgeMessages=(await h.mailMessages()).slice(mailStart)
+    for(const [operatorId,session,isMuted]of [[h.owner,h.ownerSession,phase===0],[other.id,other.session,false]]){
+     const state=isMuted?'muted':'on',label=`NOTIFY-007 in-app-only ${state}`
+     const persisted=await preferences(session)
+     assert.equal(persisted.mutedKinds.includes(kind),isMuted,`${label}: recipient preference read back through their own Settings session`)
+     const notices=fresh.filter(n=>n.operator_id===operatorId)
+     assert.equal(notices.length,1,`${label}: exactly one fresh in-app notice for this recipient`)
+     assert.equal(notices[0].delivery_id,null,`${label}: zero mail delivery rows for this notice`)
+     const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(operatorId).first()).email
+     assert.equal(edgeMessages.flatMap(m=>m.personalizations.flatMap(p=>p.to)).filter(r=>r.email===email).length,0,`${label}: zero provider-edge email addressed to this recipient`)
+    }
+    assert.equal(fresh.length,2,'NOTIFY-007 in-app-only: no extra recipient notices')
     inAppOnly.push(...fresh)
    }else await assertRows(kind,fresh,muted,(await h.mailMessages()).slice(mailStart))
    if(kind==='weekly-digest')digestNotices.push(...fresh)
