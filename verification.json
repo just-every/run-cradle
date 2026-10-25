@@ -112,11 +112,18 @@
       ]
     },
     {
+      "name": "launch-operator-doors",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:launch:doors"
+      ]
+    },
+    {
       "name": "launch-doors",
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:launch:doors",
         "pnpm test:launch:walkthrough"
       ]
     },
