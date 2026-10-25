@@ -7,8 +7,9 @@ import {contract} from './contract.mjs'
 import {freshLocalCopy} from './helpers/local-signin-copy.mjs'
 import {bindings} from './helpers/rer-data-fixture.mjs'
 import {place,matchesArchive} from './helpers/archive-correspondence.mjs'
-import {fileStoreArchive} from './helpers/file-store-archive.mjs'
-import {restoredRecordCalendar} from './helpers/record-calendar-archive.mjs'
+// Load application TypeScript only after the retained loader has registered.
+const {fileStoreArchive}=await import('./helpers/file-store-archive.mjs')
+const {restoredRecordCalendar}=await import('./helpers/record-calendar-archive.mjs')
 
 contract('BASE-DATA-001 RECORDS-006 FILE-002 INTEG-004 SYNC-002','file references, copied bytes, calendar and warehouse custody restore through rer import without restored provider authority, and owner reset erases file bytes',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'cradle-integrations-archive-'))
