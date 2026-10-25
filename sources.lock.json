@@ -7930,7 +7930,7 @@
       "executable": false
     },
     "src/domains/channels/delivery.server.ts": {
-      "sha256": "697f4edc7c6d5a30bcfe04e7b49eef57e2d4d279ae17b7671aaf60753e6132dd",
+      "sha256": "833a665c4f6052e8d43a2153a7f4873540e7c0819adfd06326dbddb809d4c266",
       "executable": false
     },
     "src/domains/channels/digest-settings.server.ts": {
@@ -7942,7 +7942,7 @@
       "executable": false
     },
     "src/domains/channels/hosted-delivery.server.ts": {
-      "sha256": "e058249ea7e9d4bab894ecb8f0c01472ce8c429a92543fb0799438179ebf1854",
+      "sha256": "7c668e80aaa2d96484231bc6c9db91b0af515f08410611d8fed06964f50baeda",
       "executable": false
     },
     "src/domains/channels/inbox-subject.server.ts": {
@@ -7962,7 +7962,7 @@
       "executable": false
     },
     "src/domains/channels/mail-authority.server.ts": {
-      "sha256": "ba91082b8f7980789466b59d6d1b40aae3aab18180fc4c739c33ec38e99ae49c",
+      "sha256": "98b796cd0a04cc16d681506816d0912f5a4d25bbd2ab45d8ca542fc896964ea5",
       "executable": false
     },
     "src/domains/channels/mail-bridge.server.ts": {
@@ -7986,7 +7986,7 @@
       "executable": false
     },
     "src/domains/channels/reschedule.server.ts": {
-      "sha256": "4e55622cf25e2f5db172b69ee084ecc783ef4d3c7c3fd16b3d91fd6798cff4ed",
+      "sha256": "1e764a5f4e022fd3117a9769093eb245bb35b9137984209ab4af6b1a389b0aa0",
       "executable": false
     },
     "src/domains/channels/retry.server.ts": {
@@ -8002,7 +8002,7 @@
       "executable": false
     },
     "src/domains/channels/schema.ts": {
-      "sha256": "324a8df46dfb4e442b65c210d871118dd9c7a8461ead2d519c877edb04bc7261",
+      "sha256": "8fa6adfd8269dfec4970883ad438b589851efcda3344234cc67bc9f00cc1391f",
       "executable": false
     },
     "src/domains/channels/send-guards.server.ts": {
@@ -8018,7 +8018,7 @@
       "executable": false
     },
     "src/domains/channels/tables.server.ts": {
-      "sha256": "754143dcc41a01d8eae775dd65456e512929edaf0bd9f663d56f6e05f579acd0",
+      "sha256": "1d8f3695fae65b25771816e92411cbe673c84124e9f3bf3c27679e3f9054a820",
       "executable": false
     },
     "src/domains/channels/validators.ts": {

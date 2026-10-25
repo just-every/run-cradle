@@ -4,7 +4,7 @@ import { trustedPredicate } from '../admission/sql.server'
 import type { ChannelEffects } from './ports'
 import * as t from './tables.server'
 import { createUlid } from '../../core/shared/ids'
-export type DeliveryRow={id:string;notification_id:string|null;operator_id:string;campaign_id:string|null;kind:string;state:string;due_at:number;created_at:number;version:number;attempts:number;run_id:string|null;attempt_id:string|null;group_id:string|null}
+export type DeliveryRow={id:string;notification_id:string|null;operator_id:string;campaign_id:string|null;kind:string;state:string;due_at:number;created_at:number;version:number;attempts:number;run_id:string|null;attempt_id:string|null;group_id:string|null;first_failure_at:number|null}
 export type MailEnvelope={from:string;to:string;subject:string;text:string;expiresAt:null}
 export type ChannelMailPort={prepare(ctx:RequestContext,commandId:string,input:{deliveryIds:string[];operatorId:string;envelope:MailEnvelope}):Promise<AdmissionPlan<{runId:string;attemptId?:string}>>;prepareFailure(ctx:RequestContext,deliveryId:string):Promise<AdmissionPlan<{deliveryId:string;state:string}>>;sender(ctx:RequestContext):Promise<string>;context(deliveryId:string):Promise<RequestContext>}
 export function createChannelDelivery(db:D1Database,admission:AdmissionPort,mail:ChannelMailPort){
