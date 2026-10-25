@@ -124,7 +124,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    unique.push(trustedPredicate("(SELECT COALESCE(MAX(rowid),0) FROM command_admissions WHERE state='committed')=?",[revision]))
    const commitData=async(statements:Parameters<NonNullable<AdmissionPlan<unknown>['commitAtomic']>>[0]=[])=>{await db.batch([
     ...unique.map((guard,index)=>db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,index,...guard.values)),
-    ...statements,
+    ...statements.map(s=>db.prepare(s.sql).bind(...s.values)),
     db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),runSlot,startedAt,row.id,runId),
     ...bases.map(appId=>db.prepare('INSERT INTO operation_audit(id,actor_id,app_id,action,feature,created_at) VALUES(?,?,?,?,?,?)').bind(createUlid(),actor.id,appId,'warehouse.export','Warehouse exports',startedAt)),
     db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
