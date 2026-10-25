@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import {expect} from '@playwright/test'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
-const kinds=['decision-assigned','critical-risk-escalated','readiness','comment-mentioned','automation-failed','decision-overdue','outage','progress','weekly-digest','record-automation']
+import {notificationKinds as kinds} from '../../src/domains/channels/ports.ts'
+import {verifyNotificationDeliveryMatrix} from './notification-delivery-matrix.mjs'
 export async function verifyNotificationPreferencesScreens({h,page,command,capture}){
- const width=page.viewportSize().width,actor=await h.addPerson({legacy:true,name:`Notification actor ${width}`}),other=await h.addPerson({legacy:true,name:`Notification recipient ${width}`})
+ const width=page.viewportSize().width,actor=await h.addPerson({legacy:true,name:`Notification actor ${width}`,change:rules=>rules.map(rule=>rule.effect==='allow'?{...rule,rows:{kind:'all',conditions:[]}}:rule)}),other=await h.addPerson({legacy:true,name:`Notification recipient ${width}`})
  const preferences=async session=>{const response=await h.request(session,'/api/v1/settings');assert.equal(response.status,200);return(await response.json()).data.preferences}
  const otherBefore=await preferences(other.session)
  const actorCommand=async(action,input,expected=[])=>{const response=await h.request(actor.session,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})});assert.equal(response.status,200,await response.clone().text());return(await response.json()).data.value}
@@ -31,6 +32,7 @@ export async function verifyNotificationPreferencesScreens({h,page,command,captu
  const second=await actorCommand('comment.create',{campaignId:campaign.id,body:'Unmuting restores the next email',mentions:[h.owner,other.id]},expected)
  await flush();await assertDelivery(second.id,'accepted');await assertDelivery(first.id,'muted')
  assert.deepEqual(await preferences(other.session),otherBefore,'NOTIFY-007 mute and unmute never change another operator preferences')
+ await verifyNotificationDeliveryMatrix({h,actor,other,width})
  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()
  await command('campaign.archive',{id:campaign.id},[{ref:expected[0].ref,version:current.version}])
  const archived=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()
