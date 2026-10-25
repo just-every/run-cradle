@@ -4,7 +4,7 @@ import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtim
 export async function verifyNotificationInAppClauses({h,page,capture}){
  const width=page.viewportSize().width
  const actor=await h.addPerson({legacy:true,name:`Notification initiator ${width}`,change:rules=>rules.map(rule=>rule.effect==='allow'?{...rule,rows:{kind:'all',conditions:[]}}:rule)})
- const other=await h.addPerson({legacy:true,name:`Notification target ${width}`})
+ const other=await h.addPerson({legacy:true,name:`Notification target ${width}`,change:rules=>rules.map(rule=>rule.effect==='allow'?{...rule,rows:{kind:'all',conditions:[]}}:rule)})
  const request=async(session,action,input,expected=[])=>{
   const response=await h.request(session,'/api/v1/commands/'+action,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})})
   assert.equal(response.status,200,`${action}: ${await response.clone().text()}`)
