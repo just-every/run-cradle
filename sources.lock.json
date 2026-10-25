@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "1757abbd72b6e636e5c2dfab02d10d11726e0ae0b33fceef9679f51ea44443ea",
+      "sha256": "6bd24931ed9dc6eef18c952716f4bbb5aa2058402924c022532d1011d7233342",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "2f68d2fb91fcf92494ccd0c61d0943a9e8021c527e84e3b990aa8eea9d65af41",
+      "sha256": "a4610c81ea917f06410fcc513de0e3c6b8d71193c846f113634748ef98095ecd",
       "executable": false
     },
     "DEMO.md": {
@@ -12242,7 +12242,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "62c0433186a02168ec02dfca691ee6718548a5684a4db201a905cbe6d330d132",
+      "sha256": "3bcf4d9fd8769fec1a6758771ab7120a6edec6bf79a2c9840f12dd1bea094aeb",
       "executable": false
     },
     "tests/helpers/notification-event-screens.mjs": {
