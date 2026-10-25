@@ -22,7 +22,7 @@ export async function verifyNotificationInAppClauses({h,page,capture}){
   for(const id of ids){const session=id===h.owner?h.ownerSession:id===actor.id?actor.session:id===other.id?other.session:await h.signIn(id);const response=await h.request(session,'/api/notifications');assert.equal(response.status,200);const inbox=(await response.json()).notifications;assert.ok(inbox.some(n=>actual.some(a=>a.operator_id===id&&a.id===n.id)),`NOTIFY-001 ${kind}: retained in recipient public inbox`)}
   return actual
  }
- const d=await command('decision.create',{fields:{campaignId:c.id,riskId:null,supersedesId:null,title:'Assign to the target, not the requester or campaign owner',requesterId:actor.id,assigneeId:null,priority:'High',dueAt:'2099-01-01T12:00:00Z',recommendation:'Review',impact:'Recipient isolation'}})
+ const d=await command('decision.create',{fields:{campaignId:c.id,riskId:null,supersedesId:null,title:'Assign to the target, not the requester or campaign owner',requesterId:actor.id,assigneeId:null,priority:'High',dueAt:'2099-01-01T12:00:00.000Z',recommendation:'Review',impact:'Recipient isolation'}})
  await command('decision.assign',{id:d.id,assigneeId:other.id},ref('decision',d));await check('decision-assigned',d.id,[other.id])
  const comment=await command('comment.create',{campaignId:c.id,body:'Mention only the target',mentions:[other.id]},ref('campaign',c));await check('comment-mentioned',comment.id,[other.id])
  const risk=await command('risk.create',{fields:{campaignId:c.id,title:'Escalate to the campaign owner, not the risk owner',ownerId:other.id,severity:'Critical',dueDate:null,signal:'Synthetic risk',mitigation:'Review'}})
