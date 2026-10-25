@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "da93093ed0a3b2408503af481f54af26b9b12cffdbb1f2148188d60a35dd9d1a",
+      "sha256": "38a03957a3039cb2aba5c6e97a98ab7bad49a9b8881b9bf57458082658bbccaa",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2934,7 +2934,7 @@
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "7643d69c5a5f1dbe7bf3043ede9b7e59343f157773c689e5cd6515c75e460551",
+      "sha256": "fe98d3417e88965f89a4473eb00ee785e3d66ede214518107a999d9f8d4a6f1c",
       "executable": false
     },
     "authoring/README.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "489f743a8a9371c9e181bf65087dd691ed105baa68a379fa895983c2eae98727",
+      "sha256": "698cae4dbd4986e9d7cf892bd19d3c482ba63aa6c8174fabecd50ebd0c23f91e",
       "executable": false
     },
     "DEMO.md": {
@@ -3650,7 +3650,7 @@
       "executable": false
     },
     "docs/contract/INTEG-004/README.md": {
-      "sha256": "288dc4b10ab55f60c90929056d884f4243effcd65c780c81e864308b06834849",
+      "sha256": "5a00795f1c8183a2fdbcd4104fb66f9f6751325cc95aede97c1188de06a2d153",
       "executable": false
     },
     "docs/contract/PERM-007/company-settings-configured-1440.png": {
@@ -5226,7 +5226,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "bc43f06c00c58367f9eb4987e0bbc2cf4985e8414e09b52cff03b059c3edcd8e",
+      "sha256": "f75d98d22a0e80f021882d1aac6c18293de3d00a0419ed3b0126e7776ce35439",
       "executable": false
     },
     "RELEASE.json": {
@@ -5606,7 +5606,7 @@
       "executable": false
     },
     "scripts/scale/stream-export.mjs": {
-      "sha256": "ec91443e330994b724e27bd47a19ff28bae251f0d7bb8b4108a27026ee102d51",
+      "sha256": "2d34ea6a9d392b1a8df66b19680586e9f18910e48aafcc90e546d44874f457aa",
       "executable": false
     },
     "scripts/sync-managed-setup.mjs": {
@@ -11718,7 +11718,7 @@
       "executable": false
     },
     "tests/helpers/admin-audit-actions.mjs": {
-      "sha256": "2fde62f83aa6bba2edeee642ca2d234eed18726f75ac455431c1e4ba5736ed48",
+      "sha256": "9608748678c97fc364ac640c075275ff1b939027b7499bdf28643d76157b323b",
       "executable": false
     },
     "tests/helpers/admin-audit-browser.mjs": {
@@ -12302,11 +12302,11 @@
       "executable": false
     },
     "tests/helpers/record-calendar-journey.mjs": {
-      "sha256": "812fbdae1559363b9c2050e273e5218cad59f4cdf61a548c807adccdbff76ef9",
+      "sha256": "f8e4a4fec894ca85c8966951ae8287dba121f8619c4e291f6eef73f0643a9ac9",
       "executable": false
     },
     "tests/helpers/record-calendar-proof.mjs": {
-      "sha256": "6b9be636cc9bbccd1b795440d45b55a583bcf17a2fad28b54cd960b6621c8f72",
+      "sha256": "3fc162aff75fb2ca4ce120ae4f7e35dcd4a0d01d3fcb8cbf07b896b08da69d4a",
       "executable": false
     },
     "tests/helpers/record-calendar-provider.mjs": {
