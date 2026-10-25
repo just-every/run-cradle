@@ -1,6 +1,35 @@
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {createUlid} from '../../src/core/shared/ids.ts'
+import {recordCalendarAdapter} from '../../src/adapters/record-calendar.server.ts'
+import {outlookCalendarAdapter} from '../../src/adapters/outlook-calendar.server.ts'
+import {ProviderTransport} from '../../src/adapters/transport.server.ts'
+
+/** Exercise the exported adapter contract with real transport and the recorded network edge. */
+export async function resolvedCalendarScopeMismatch({provider,outlook,connectionId,recordId,definitionId,attemptId,commandId}){
+ const resolutions=[],requests=[],beforeWrites=provider.writes.length
+ let accountId=provider.ownedCalendarId
+ const credentials={async resolve(id,purpose,operation){
+  assert.equal(id,connectionId);assert.deepEqual(operation,{attemptId})
+  resolutions.push(purpose)
+  return {token:'synthetic-cradle-access-1',accountId,scopes:outlook?['Calendars.ReadWrite']:['https://www.googleapis.com/auth/calendar.events.owned']}
+ }}
+ const transport=new ProviderTransport(async(url,options)=>{
+  const request=new Request(url,options);requests.push({method:request.method,url:request.url})
+  return provider.fetch(request)
+ })
+ const adapter=(outlook?outlookCalendarAdapter:recordCalendarAdapter)(credentials,transport)
+ const effect={attemptId,commandId,connectionId,idempotencyKey:`cradle/calendar/${definitionId}/${recordId}/1`,canonicalInputHash:'synthetic-cradle-scope-hash',input:{calendarId:provider.ownedCalendarId,operation:'create',summary:'synthetic-cradle-scope',description:'synthetic-cradle-scope',start:'2026-11-02',end:'2026-11-03',recordId,definitionId},deadline:new Date(Date.now()+60000).toISOString(),firstPossibleEffectAt:new Date().toISOString(),externalId:null}
+ await adapter.preflight(effect)
+ assert.deepEqual(resolutions,['dispatch'],'The matching-account control reaches and resolves adapter credentials')
+ accountId=provider.foreignCalendarId
+ await assert.rejects(()=>adapter.preflight(effect),{message:'Calendar scope mismatch'},adapter.id+' refuses the resolved mismatched credential')
+ assert.equal((await adapter.execute(effect)).state,'unknown',adapter.id+' starts no effect with a mismatched credential')
+ assert.equal((await adapter.reconcile(effect)).state,'unknown',adapter.id+' reads nothing with a mismatched credential')
+ assert.deepEqual(resolutions,['dispatch','dispatch','dispatch','readback'],'Each adapter entry point resolves its credential before the scope guard')
+ assert.deepEqual(requests,[],adapter.id+' mismatch reaches no network transport request')
+ assert.equal(provider.writes.length,beforeWrites,adapter.id+' mismatch makes zero transport writes at the recorded network edge')
+}
 
 /** Observe real HTTP commands, their durable custody, and the provider's receiving edge. */
 export function recordCalendarProof({h,call,provider,outlook,appId,entityId,recordId,definitionId}){
@@ -36,6 +65,7 @@ export function recordCalendarProof({h,call,provider,outlook,appId,entityId,reco
    const prepared=await call(`/api/v1/record-calendar-sync/${definitionId}/records/${otherRecordId}/sync`,{commandId:createUlid()}),runId=prepared.value.runId
    const original=(await call(`/api/v1/runs/${runId}/attempts`)).items
    assert.equal(original.length,1);assert.equal(original[0].state,'prepared')
+   await resolvedCalendarScopeMismatch({provider,outlook,connectionId,recordId:otherRecordId,definitionId,attemptId:original[0].id,commandId:original[0].commandId})
    const outbox=await h.db.prepare("SELECT id FROM admission_outbox WHERE action='execution.dispatch' AND json_extract(input_json,'$.runId')=? AND state='pending'").bind(runId).first()
    assert.ok(outbox,'The public sync command has a real prepared delivery')
    const writes=provider.writes.length

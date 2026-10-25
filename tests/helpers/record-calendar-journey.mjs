@@ -70,13 +70,18 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
    const snapshots=(await h.db.prepare('SELECT definition_version,definition_json FROM record_calendar_versions WHERE definition_id=? ORDER BY definition_version').bind(definitionId).all()).results
    assert.deepEqual(snapshots.map(s=>s.definition_version),[originalDefinition.version,editedValue.version]);assert.equal(snapshots[0].definition_json,originalSnapshot.definition_json,'Editing retains the original snapshot');assert.deepEqual(JSON.parse(snapshots[0].definition_json),originalDefinition.definition);assert.ok(JSON.parse(snapshots[1].definition_json).fieldIds.includes(title.id),'The new snapshot contains the edit')
    await page.locator('[aria-label="Calendar sync definition"]').waitFor();await capture('configured')
+   const notOnCalendar=async()=>(await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).notOnCalendar
+   const beforeImportCount=await notOnCalendar()
+   assert.equal(beforeImportCount,1,'Only the original unsynced record is counted before import')
    const beforeImport={writes:provider.writes.length,changes:(await h.db.prepare('SELECT count(*) n FROM record_calendar_changes WHERE definition_id=?').bind(definitionId).first()).n,effects:(await h.db.prepare("SELECT count(*) n FROM execution_attempts WHERE action='record.calendar.sync'").first()).n}
    const imported=await call('/api/v1/records/import-preview',{appId,entityId,csv:'Calendar title,Calendar date,Calendar end\r\nsynthetic-cradle-import-no-effect,2026-12-01,2026-12-02\r\n',mapping:[{column:'Calendar title',fieldId:title.id},{column:'Calendar date',fieldId:start.id},{column:'Calendar end',fieldId:end.id}],mergeFieldId:title.id})
    assert.equal(imported.creates,1)
    const importCommit=await command('records.import-commit',{previewId:imported.id});assert.equal(importCommit.state,'committed')
    await deliver({kind:'cradle.records.automations.v1',commandId:importCommit.commandId});await drain()
    assert.deepEqual({writes:provider.writes.length,changes:(await h.db.prepare('SELECT count(*) n FROM record_calendar_changes WHERE definition_id=?').bind(definitionId).first()).n,effects:(await h.db.prepare("SELECT count(*) n FROM execution_attempts WHERE action='record.calendar.sync'").first()).n},beforeImport,'Imported records start no calendar capture or execution effect, even when scheduled work drains')
-   assert.ok((await call(`/api/v1/record-calendar-sync?appId=${appId}&entityId=${entityId}`)).definitions.find(d=>d.id===definitionId).notOnCalendar>=1,'The sync list counts imported records not yet on the calendar')
+   const afterImportCount=await notOnCalendar()
+   assert.equal(afterImportCount,2,'The sync list counts the original and imported unsynced records exactly')
+   assert.equal(afterImportCount-beforeImportCount,1,'Import adds exactly its one record to notOnCalendar')
    const nativeSessions=await page.evaluate(async()=> (await(await fetch('/auth/sessions')).json()).sessions),originalNative=nativeSessions.find(s=>s.active).id
    const fixtureAuth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-records-session-secret-at-least-32-characters',mode:'development'},'00000000000000000000000981'),renewedOwner=await fixtureAuth.signIn();h.cookie=renewedOwner.cookie
    await context.addCookies([{name:renewedOwner.cookie.split('=')[0],value:renewedOwner.cookie.slice(renewedOwner.cookie.indexOf('=')+1),url:h.origin}])
