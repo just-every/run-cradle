@@ -8,6 +8,11 @@ import type {LaunchKind} from '../../apps/launch/descriptors.server'
 import {launchEntities,LAUNCH_APP_ID} from '../../apps/launch/contracts'
 /** Recipient access is evaluated without inventing a login or delegating the event actor's rights. */
 export async function legacyRecipientGuards(db:D1Database,input:NotificationInput,now:string){
+ if(input.kind==='progress'&&['base-import','warehouse-export'].includes(input.subjectType??'')){
+  const source=input.subjectType==='base-import'?'ik_jobs':'warehouse_exports',owner=input.subjectType==='base-import'?'principal_id':'owner_id'
+  const guard=trustedPredicate(`EXISTS(SELECT 1 FROM ${source} j JOIN authority_principals p ON p.id=j.${owner} WHERE j.id=? AND p.human_id=? AND p.state='active')`,[input.subjectId,input.operatorId])
+  return await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first()?[guard]:null
+ }
  if(input.kind==='outage'&&input.subjectType==='connection'){
   const guard=trustedPredicate(`EXISTS(SELECT 1 FROM provider_connections c WHERE c.id=? AND c.revoked_at IS NULL AND (EXISTS(SELECT 1 FROM authority_principals p WHERE p.id=c.owner_id AND p.human_id=? AND p.state='active') OR (c.owner_id IS NULL AND EXISTS(SELECT 1 FROM cradle_base_operators m JOIN oa_operators o ON o.id=m.base_id JOIN authority_principals p ON p.id=m.principal_id WHERE p.human_id=? AND p.state='active' AND o.role='owner' AND o.status='active'))))`,[input.subjectId,input.operatorId,input.operatorId])
   return await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first()?[guard]:null
