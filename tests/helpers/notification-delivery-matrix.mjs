@@ -54,7 +54,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   }
  }
  const monday=new Date();monday.setUTCHours(0,0,0,0);monday.setUTCDate(monday.getUTCDate()+7-(monday.getUTCDay()+6)%7+(width===390?14:0))
- const retained=[]
+ const retained=[],digestNotices=[]
  for(const [phase,muted]of [[0,true],[1,false]]){
   await setPrefs(h.ownerSession,muted?[...notificationKinds]:[])
   const date=new Date(+monday+phase*7*86400000).toISOString().slice(0,10),at=Date.parse(date+'T08:00:00Z')
@@ -87,6 +87,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    if(failure)await launch('automation.disable',{id:failure.id},ref('automation',await row('automations',failure.id)))
    const fresh=(await read(kind)).filter(n=>!old.has(n.id)&&(!subjects.length||subjects.includes(n.subject_id)))
    await assertRows(kind,fresh,muted,(await h.mailMessages()).slice(mailStart))
+   if(kind==='weekly-digest')digestNotices.push(...fresh)
    if(muted)retained.push({kind,ids:fresh.filter(n=>n.operator_id===h.owner).map(n=>n.id)})
    // Unmuting must never replay a prior muted event, even after later ticks.
    for(const previous of retained)await assertOld(previous)
@@ -97,6 +98,10 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const rows=(await read(previous.kind)).filter(n=>previous.ids.includes(n.id));assert.equal(rows.length,previous.ids.length)
   for(const n of rows){assert.equal(n.state,'muted',`NOTIFY-007 ${previous.kind}: no old-mail replay`);assert.equal((await h.mailMessages()).filter(m=>n.group_id&&m.custom_args?.rer_delivery_id===n.group_id).length,0,`NOTIFY-007 ${previous.kind}: no old provider mail`)}
  }
+ // The scheduled matrix deliberately creates future-dated digest notices. Mark
+ // only those fixture notices read through the public door after every delivery
+ // assertion, so the later inbox journey can use its real-time read cutoff.
+ for(const notice of digestNotices)await request(notice.operator_id===h.owner?h.ownerSession:other.session,'notification.read',{notificationId:notice.id})
  // Leave later walkthrough screens on their original configuration.
  for(const c of campaigns){const current=await row('campaigns',c.id);await request(h.ownerSession,'launch.campaign.archive',{id:c.id},ref('campaign',current));await request(h.ownerSession,'launch.campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await row('campaigns',c.id)))}
  const now=await settings();await request(h.ownerSession,'settings.update',{version:now.version,changes:{timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
