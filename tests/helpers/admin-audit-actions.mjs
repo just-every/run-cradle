@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {parseCsv} from '../../src/domains/portability/csv.ts'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {proposalDoor,smallProposal} from './proposal-door.mjs'
 
@@ -87,12 +88,18 @@ export async function adminAuditActions(h){
  for(const format of ['json','csv']){
   const response=await fetch(h.origin+endpoint+'?'+exportFilters+'&format='+format,{headers:{cookie:h.cookie}})
   assert.equal(response.status,200);const body=await response.text();for(const secret of [retiredApi.secret,retiredProposing.secret,...replacementSecrets])assert.ok(!body.includes(secret),'Audit exports contain no secret')
+  const parsed=format==='csv'?parseCsv(new TextEncoder().encode(body)):null
+  const exported=format==='json'?JSON.parse(body).data.items:parsed.rows.map(cells=>Object.fromEntries(parsed.headers.map((header,index)=>[header,cells[index]])))
   for(const action of rotations){
-   const rows=format==='json'?JSON.parse(body).data.items.filter(row=>row.action===action):body.split('\r\n').filter(line=>line.includes('"'+action+'"'))
+   const rows=exported.filter(row=>row.action===action),original=expected.find(row=>row.action===action)
    assert.equal(rows.length,1,action+' appears exactly once in the time-filtered '+format+' export')
+   assert.ok(original,action+' has independently captured audit custody')
+   assert.equal(rows[0].id,original.id,action+' '+format+' rotation identity')
+   assert.equal(rows[0].personId,original.personId,action+' '+format+' actor ID')
+   assert.equal(rows[0].person,original.person,action+' '+format+' actor name')
+   assert.deepEqual(format==='json'?rows[0].keyIds:rows[0].keyIds.split(' '),original.keyIds,action+' '+format+' complete ordered old/new key-ID pair')
   }
   for(const row of expected){
-   if(row.keyIds)for(const id of row.keyIds)assert.ok(body.includes(id),'Rotation export names both keys')
    if(format==='json')assert.equal(JSON.parse(body).data.items.filter(item=>item.id===row.id&&item.action===row.action&&item.person===row.person).length,1,row.action+' JSON exactly once')
    else assert.equal(body.split('\r\n').filter(line=>line.includes(row.id)&&line.includes(row.action)&&line.includes(row.person)).length,1,row.action+' CSV exactly once')
   }
