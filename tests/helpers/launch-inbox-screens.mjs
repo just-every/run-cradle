@@ -144,6 +144,29 @@ export async function verifyInboxScreens({h,page,command,capture}){
  assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Math.max(Date.now()+86400000,laterThanDue)})).outcome,'ok','NOTIFY-005 the post-erasure scheduled tick completes')
  assert.equal((await h.mailMessages()).length,mailBefore,'NOTIFY-005 deleted notice never sends later, including newly assigned delivery groups')
  console.log('NOTIFY-005 erasure '+JSON.stringify({width,accepted:sent.length,pending:pending.length,providerBefore:mailBefore,providerAfter:(await h.mailMessages()).length,newSends:0}))
+ // A live nonurgent control proves this same provider path can send after
+ // quiet hours, and positively observes preparation assigning a fresh group.
+ const control=await actorCommand('campaign.create',{fields:{code:`synthetic-cradle-erasure-control-${width}`,name:'Live delivery control',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Verify pending delivery',statusSummary:'Live control',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+ await actorCommand('comment.create',{campaignId:control.id,body:'Live nonurgent delivery control',mentions:[h.owner]},ref(control))
+ const controlPending=(await h.db.prepare("SELECT id,state,due_at,group_id FROM channel_deliveries WHERE campaign_id=?").bind(control.id).all()).results
+ assert.equal(controlPending.length,1)
+ assert.equal(controlPending[0].state,'held','NOTIFY-005 live control positively has pending nonurgent mail')
+ assert.ok(controlPending[0].due_at>Date.now())
+ const erasedPending=async()=>(await h.db.prepare('SELECT id,state,group_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id').bind(JSON.stringify(pending.map(delivery=>delivery.id))).all()).results
+ const erasedBeforeControl=await erasedPending()
+ assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:laterThanDue+86400000})).outcome,'ok','NOTIFY-005 live control tick completes outside quiet hours on the following day')
+ const controlAccepted=await h.db.prepare('SELECT state,group_id,receipt_id FROM channel_deliveries WHERE id=?').bind(controlPending[0].id).first()
+ assert.equal(controlAccepted.state,'accepted','NOTIFY-005 a live pending delivery still reaches the provider')
+ assert.ok(controlAccepted.receipt_id)
+ assert.ok(controlAccepted.group_id)
+ assert.notEqual(controlAccepted.group_id,controlPending[0].group_id,'NOTIFY-005 preparation assigns a fresh delivery group')
+ const withControl=await h.mailMessages()
+ assert.equal(withControl.length,mailBefore+1,'NOTIFY-005 the live control is the only new unfiltered provider send')
+ assert.equal(withControl[mailBefore].custom_args?.rer_delivery_id,controlAccepted.group_id)
+ assert.deepEqual(await erasedPending(),erasedBeforeControl,'NOTIFY-005 live control never revives erased pending deliveries')
+ assert.deepEqual((await h.db.prepare('SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id').bind(JSON.stringify(sent.map(delivery=>delivery.id))).all()).results,sent,'NOTIFY-005 later ticks preserve erased accepted receipts')
+ console.log('NOTIFY-005 live control '+JSON.stringify({width,pending:1,newProviderSends:1,newDeliveryGroup:true,erasedNewSends:0}))
+ await actorCommand('campaign.delete',{id:control.id,confirmationCode:control.code},ref(control))
  const currentSettings=(await(await h.request(h.ownerSession,'/api/v1/settings')).json()).data
  await saveQuiet(currentSettings.version,{timezone:originalSettings.timezone,quietHoursStart:originalSettings.quietHours.start,quietHoursEnd:originalSettings.quietHours.end})
  await page.context().clearCookies()
