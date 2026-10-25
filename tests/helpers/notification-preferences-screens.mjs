@@ -4,6 +4,13 @@ import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtim
 import {notificationKinds as kinds} from '../../src/domains/channels/ports.ts'
 import {verifyNotificationDeliveryMatrix} from './notification-delivery-matrix.mjs'
 export async function verifyNotificationPreferencesScreens({h,page,command,capture}){
+ const workspace=async()=>{const r=await h.request(h.ownerSession,'/api/v1/settings');assert.equal(r.status,200);return(await r.json()).data}
+ const before=await workspace()
+ const quiet=async(start,end)=>{const current=await workspace(),r=await h.request(h.ownerSession,'/api/v1/commands/settings.update',{method:'POST',body:JSON.stringify({commandId:createUlid(),expected:[],input:{version:current.version,changes:{quietHoursStart:start,quietHoursEnd:end}}})});assert.equal(r.status,200,await r.clone().text());assert.equal((await r.json()).data.state,'committed')}
+ // Muting must be the only reason mail stops in this journey, at every hour.
+ await quiet('00:00','00:00')
+ try{
+
  const width=page.viewportSize().width,actor=await h.addPerson({legacy:true,name:`Notification actor ${width}`,change:rules=>rules.map(rule=>rule.effect==='allow'?{...rule,rows:{kind:'all',conditions:[]}}:rule)}),other=await h.addPerson({legacy:true,name:`Notification recipient ${width}`})
  const preferences=async session=>{const response=await h.request(session,'/api/v1/settings');assert.equal(response.status,200);return(await response.json()).data.preferences}
  const otherBefore=await preferences(other.session)
@@ -37,4 +44,5 @@ export async function verifyNotificationPreferencesScreens({h,page,command,captu
  await command('campaign.archive',{id:campaign.id},[{ref:expected[0].ref,version:current.version}])
  const archived=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()
  await command('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},[{ref:expected[0].ref,version:archived.version}])
+ }finally{await quiet(before.quietHours.start,before.quietHours.end)}
 }

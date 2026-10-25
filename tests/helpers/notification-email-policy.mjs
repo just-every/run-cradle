@@ -12,7 +12,9 @@ export async function verifyNotificationEmailPolicy({h,page,capture,actor,other}
  const setPrefs=async(session,timezone)=>{const p=await prefs(session);await request(session,'preferences.update',{version:p.version,preferences:{timezone,mutedKinds:[],digestEnabled:true,progressEnabled:p.progressEnabled}})}
  const configure=async changes=>{const s=await settings();await request(h.ownerSession,'settings.update',{version:s.version,changes})}
  const tick=async at=>(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at})
- await tick(Date.now())
+ // Drain prior journeys' held mail through the real settings/schedule doors
+ // before measuring this policy's own closed-window events.
+ await configure({quietHoursStart:'00:00',quietHoursEnd:'00:00'});await tick(Date.now())
  // Choose an IANA workspace timezone whose actual local hour is 22. The product
  // clock stays real for HTTP events; only the emitted schedule supplies later ticks.
  let offset=(22-new Date().getUTCHours()+24)%24;if(offset>14)offset-=24
