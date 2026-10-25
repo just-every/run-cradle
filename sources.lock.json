@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "351ce677c9f1fb218d27f3bbb5ed7692e0b1060e99b657aac3fd9fcaae2cd0cc",
+      "sha256": "ca2df918741250916e14944750cb58d092bc5bf07305b4f126654bd65f8c0c89",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "45b2244deff61ab7341172370312786dc87f24ecb52ac1d21c6973951a19da1d",
+      "sha256": "7bc54ede33ee337eff8eaa5decc4355f4aa92b799390b6bc2956e525df61ddb5",
       "executable": false
     },
     "DEMO.md": {
@@ -12245,12 +12245,16 @@
       "sha256": "3bcf4d9fd8769fec1a6758771ab7120a6edec6bf79a2c9840f12dd1bea094aeb",
       "executable": false
     },
+    "tests/helpers/notification-email-policy.mjs": {
+      "sha256": "405de2f9f3c928a414fd0dd558599fcbc9fe1a1983ca1f2d15a0d85e51d58e87",
+      "executable": false
+    },
     "tests/helpers/notification-event-screens.mjs": {
-      "sha256": "f4d060e598568361ca6b7945f7c85fbd124a0177b8e081155d28f5f16bfe65f2",
+      "sha256": "eac6c76c13a27abd4f2a598d12c7ae38df874142fa88389992624d51eec0fc37",
       "executable": false
     },
     "tests/helpers/notification-in-app-clauses.mjs": {
-      "sha256": "86acc8ab694913ad62ddb931609285ee9392dda68a03f1285f0444010d3b627b",
+      "sha256": "35e4e977766494d2b0096cd8ea4adeb910b8385733161ee155af9f2d39d99ebc",
       "executable": false
     },
     "tests/helpers/notification-preferences-screens.mjs": {
@@ -13170,7 +13174,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "10ff8e577893fec12197f43b34913186f02189c0edbc80c8ef341f85fb51dc9b",
+      "sha256": "e7b7dc2fe894b6b71927d31d3220b4b09af9b6cccfa1365dfe35fbda583777ee",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
