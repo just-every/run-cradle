@@ -10,6 +10,8 @@ export async function verifyNotificationInAppClauses({h,page,capture}){
   assert.equal(response.status,200,`${action}: ${await response.clone().text()}`)
   const data=(await response.json()).data;assert.equal(data.state,'committed');return data.value
  }
+ const settings=await(await h.request(h.ownerSession,'/api/v1/settings')).json(),original=settings.data
+ await request(h.ownerSession,'settings.update',{version:original.version,changes:{timezone:'UTC'}})
  const command=(action,input,expected=[])=>request(actor.session,'launch.'+action,input,expected)
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const row=(table,id)=>h.db.prepare(`SELECT * FROM ${table} WHERE id=?`).bind(id).first()
@@ -30,7 +32,7 @@ export async function verifyNotificationInAppClauses({h,page,capture}){
  await page.goto(h.origin+'/app/notifications');await page.locator(`#notification-${riskNotices[0].id}`).waitFor();await capture('notify001-campaign-owner')
  const readiness=await h.db.prepare("SELECT id,version,enabled,trigger_config_json FROM automations WHERE shipped_key='launch-readiness'").first()
  if(!readiness.enabled)await command('automation.enable',{id:readiness.id},ref('automation',readiness))
- const date=new Date(Date.now()+60*86400000+width*86400000).toISOString().slice(0,10),hour=JSON.parse(readiness.trigger_config_json).hour
+ const date=new Date(Date.now()+(60+(width===390?14:0))*86400000).toISOString().slice(0,10),hour=JSON.parse(readiness.trigger_config_json).hour
  const milestone=await command('milestone.create',{fields:{campaignId:c.id,title:'Readiness for its target, not the campaign owner',ownerId:other.id,type:'Launch',status:'Not started',startDate:date,endDate:null,conflictReason:null}})
  await tick(Date.parse(date+`T${String(hour).padStart(2,'0')}:00:00Z`));await check('readiness',milestone.id,[other.id])
  if(!readiness.enabled)await command('automation.disable',{id:readiness.id},ref('automation',await row('automations',readiness.id)))
@@ -50,5 +52,7 @@ export async function verifyNotificationInAppClauses({h,page,capture}){
  await command('automation.disable',{id:scheduled.id},ref('automation',await row('automations',scheduled.id)))
  await command('campaign.archive',{id:c.id},ref('campaign',await row('campaigns',c.id)))
  await command('campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await row('campaigns',c.id)))
+ const current=(await(await h.request(h.ownerSession,'/api/v1/settings')).json()).data
+ await request(h.ownerSession,'settings.update',{version:current.version,changes:{timezone:original.timezone}})
  console.log(`NOTIFY-001 ${width}: five events, starter, campaign-owner and all-active-operator failure recipients`)
 }
