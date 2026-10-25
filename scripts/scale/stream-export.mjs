@@ -52,7 +52,12 @@ base=json.loads((p/'base-50000.json').read_text()); table=base['base']['tables']
 with zipfile.ZipFile(p/'base-50000.zip') as z:
  assert z.testzip() is None
  csvname=next(n for n in z.namelist() if n.endswith('.csv')); data=list(csv.reader(z.read(csvname).decode().splitlines())); assert len(data)==50001; assert data[-1][0]=='synthetic-cradle-049999'
- correspondence=json.loads(z.read('correspondence.json')); assert len(correspondence['tables'][0]['rows'])==50000
+ correspondence=json.loads(z.read('correspondence.json')); identities=correspondence['tables'][0]['rows']; assert len(identities)==50000
+ primary_index=next(i for i,c in enumerate(correspondence['tables'][0]['columns']) if c['key']==correspondence['tables'][0]['primaryColumnKey'])
+ for position,(identity,csvrow) in enumerate(zip(identities,data[1:],strict=True),start=1):
+  assert identity['ordinal']==position, f'Correspondence ordinal at CSV position {position}: {identity}'
+  assert identity['id']==str(position).zfill(26), f'Correspondence identity at CSV position {position}: {identity}'
+  assert identity['primary']==csvrow[primary_index]==f'synthetic-cradle-{position-1:06d}', f'Correspondence primary at CSV position {position}: {identity}'
  import hashlib
  assert correspondence['tables'][0]['sha256']==hashlib.sha256(z.read(csvname)).hexdigest(); assert correspondence['tables'][0]['bytes']==len(z.read(csvname))
 with zipfile.ZipFile(p/'base-50000.xlsx') as z:
