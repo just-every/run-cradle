@@ -268,14 +268,16 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  assert.equal(await h.db.prepare('SELECT 1 FROM channel_preferences WHERE operator_id=?').bind(starter.id).first(),null)
  assert.equal((await preferences(starter.session)).progressEnabled,false)
  const defaultMail=(await h.mailMessages()).length,failed=await failedExport(starter)
+ assert.equal((await preferences(starter.session)).progressEnabled,false)
  assert.deepEqual((await rows(failed)).map(n=>n.operator_id),[starter.id],'NOTIFY-009 failed export reaches its starter with no preference set')
  await tick(Date.now()) // The provider has recovered; this same schedule now completes.
  assert.equal((await preferences(starter.session)).progressEnabled,false)
- assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id LIKE ?').bind(`warehouse-export:${failed}:%:completed`).first()).n,0,'NOTIFY-009 successful export with no preference produces no notice')
+ const completed=await h.db.prepare('SELECT version,last_slot FROM warehouse_exports WHERE id=?').bind(failed).first();assert.ok(completed.last_slot,'NOTIFY-009 export completion is durable')
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id=?').bind(`warehouse-export:${failed}:${completed.version}:${completed.last_slot}:completed`).first()).n,0,'NOTIFY-009 successful export with no preference produces no notice')
  await check(failed,starter,false,defaultMail,false)
  await removeExport(starter,failed)
  await prefs(starter,[],true)
- const successMail=(await h.mailMessages()).length,success=await saveExport(starter);await tick(Date.now())
+ const successMail=(await h.mailMessages()).length,success=await saveExport(starter);await tick(Date.now());await tick(Date.now())
  await check(success,starter,false,successMail)
  const unchanged=await rows(success);await tick(Date.now());assert.deepEqual(await rows(success),unchanged,'NOTIFY-009 repeated scheduled observation never repeats progress')
  await removeExport(starter,success)
@@ -295,16 +297,23 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    assert.equal(refusal.status,500,'NOTIFY-009 current native constraint rejects the pending duplicate import row')
    assert.equal((await refusal.json()).error.code,'internal')
   }else{let next=first;for(let n=0;n<5&&next.state!=='completed';n++)next=await json(person,`${prefix}/jobs/${job.id}/resume`,{});assert.equal(next.state,'completed')}
+  const status=await json(person,`${prefix}/jobs/${job.id}`)
+  if(fail)assert.ok(status.progress.appliedRecords>0&&status.progress.appliedRecords<status.progress.plannedRecords,'NOTIFY-009 failure retains a publicly reported partial import')
+  const before=await rows(job.id),repeated=await h.request(person.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
+  assert.equal(repeated.status,fail?500:200)
+  assert.deepEqual(await rows(job.id),before,'NOTIFY-009 repeated import observation never repeats progress')
   return job.id
  }
  return {async events(muted,phase){
   for(const person of people)for(const source of ['import','export'])for(const failed of [false,true]){
+   // New-base imports require the installation owner; export schedules accept either current owner.
+   if(source==='import'&&person!==owner)continue
    await tick(Date.now())
    const mailStart=(await h.mailMessages()).length
    let id
    if(source==='import'){id=await importJob(person,failed);await tick(Date.now())}
    else if(failed){id=await failedExport(person);await parkExport(person,id);await tick(Date.now())}
-   else{id=await saveExport(person);await tick(Date.now())}
+   else{id=await saveExport(person);await tick(Date.now());await tick(Date.now())}
    await check(id,person,muted&&person.id===h.owner,mailStart)
    if(source==='export')await removeExport(person,id)
   }
