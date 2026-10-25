@@ -1,4 +1,5 @@
 import {createUlid} from '../shared/ids'
+import {restoredChannelSelfScope} from '../../domains/channels/restored-owner-policy.server'
 import type {Policy} from '../../domains/authority/contracts'
 
 type Restore={pending:number;source_owner_id:string|null;current_owner_id:string|null}
@@ -26,7 +27,7 @@ export async function restoreOwner(db:D1Database,baseOperatorId:string,ownerId:s
  statements.push(db.prepare(`SELECT CASE WHEN ${current} THEN 1 ELSE json_extract('owner changed','$') END`).bind(...identity))
  for(const membership of scoped.results){
   const rules=JSON.parse(membership.rules_json) as Policy['rules']
-  const transferred=rules.map(rule=>({...rule,principals:rule.principals.map(principal=>principal.kind==='human'&&principal.id===source?{...principal,id:ownerId}:principal)}))
+  const transferred=rules.map(original=>{const rule=restoredChannelSelfScope(original,membership.app_id,source,ownerId);return {...rule,principals:rule.principals.map(principal=>principal.kind==='human'&&principal.id===source?{...principal,id:ownerId}:principal)}})
   const id=createUlid(),now=Date.now()
   statements.push(db.prepare(`SELECT CASE WHEN EXISTS(SELECT 1 FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id
    WHERE m.principal_id=? AND m.cradle_restore_active=1 AND m.app_id=? AND m.policy_id=? AND m.version=? AND p.version=? AND p.rules_json=?) THEN 1 ELSE json_extract('scope changed','$') END`)
