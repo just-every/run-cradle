@@ -69,11 +69,13 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[],mailStart=(await h.mailMessages()).length
    const failure=kind==='automation-failed'?await launch('automation.save',{definition:{name:`Synthetic failed delivery ${phase}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'request-ai-analysis',input:{campaignId:campaigns[0].id}}]}}):null
    if(kind==='record-automation'){
-    const c=await campaign(h.owner,`synthetic-cradle-in-app-${width}-${phase}`)
-    const definition=await launch('automation.save',{definition:{name:`Synthetic in-app-only ${width} ${phase}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[h.owner,other.id].map(operatorId=>({command:'notify-operator',input:{operatorId,subjectId:c.id,title:titles[kind],body:'Retained without requesting email'}}))}})
-    await launch('campaign.patch',{id:c.id,changes:{statusSummary:'Trigger both in-app-only recipients'}},ref('campaign',c))
-    await tick(Date.now())
-    await launch('automation.disable',{id:definition.id},ref('automation',await row('automations',definition.id)))
+    for(const [index,operatorId]of [h.owner,other.id].entries()){
+     const c=await campaign(operatorId,`synthetic-cradle-in-app-${width}-${phase}-${index}`)
+     const definition=await launch('automation.save',{definition:{name:`Synthetic in-app-only ${width} ${phase} ${index}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'notify-operator',input:{operatorId,subjectId:c.id,title:titles[kind],body:'Retained without requesting email'}}]}})
+     await launch('campaign.patch',{id:c.id,changes:{statusSummary:'Trigger the in-app-only recipient'}},ref('campaign',c))
+     await tick(Date.now())
+     await launch('automation.disable',{id:definition.id},ref('automation',await row('automations',definition.id)))
+    }
    }else if(kind==='weekly-digest'){
     const a=await h.db.prepare("SELECT id,version,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
     if(!a.enabled)await request(h.ownerSession,'launch.automation.enable',{id:a.id},ref('automation',a))
