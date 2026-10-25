@@ -33,7 +33,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  const setPrefs=async(session,mutedKinds)=>{const p=await preferences(session);await request(session,'preferences.update',{version:p.version,preferences:{timezone:'UTC',mutedKinds,digestEnabled:true,progressEnabled:true}})}
  await request(h.ownerSession,'settings.update',{version:original.version,changes:{timezone:'UTC',quietHoursStart:'00:00',quietHoursEnd:'00:00'}})
  await setPrefs(other.session,[])
- const worker=await h.runtime.getWorker(),tick=at=>worker.scheduled({cron:'* * * * *',scheduledTime:at})
+ const worker=await h.runtime.getWorker(),tick=async at=>{const result=await worker.scheduled({cron:'* * * * *',scheduledTime:at});assert.equal(result.outcome,'ok',JSON.stringify(result));return result}
  const row=async(table,id)=>h.db.prepare(`SELECT id,version FROM ${table} WHERE id=?`).bind(id).first()
  const readinessAutomation=await h.db.prepare("SELECT id,version,enabled,trigger_config_json FROM automations WHERE shipped_key='launch-readiness'").first()
  // The preceding concurrency journey deliberately leaves readiness disabled.
@@ -108,7 +108,11 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   assert.ok(run);assert.equal(run.state,'Cancelled','NOTIFY-009 product fences expired approval before any new effect')
   let stoppedRun=run.id
   const stopped=await eventRows('automation-stop')
+  assert.equal(stopped.length,1,JSON.stringify({run:await h.db.prepare('SELECT id,state,error_code FROM automation_runs WHERE id=?').bind(run.id).first(),events:(await h.db.prepare('SELECT * FROM channel_events WHERE event_id=?').bind('automation-stop:'+run.id).all()).results}))
   await assertRows('outage',stopped,muted,(await h.mailMessages()).slice(stopMail),[h.owner])
+  const stopInbox=(await raw('/api/notifications')).notifications.find(n=>n.id===stopped[0].id)
+  assert.equal(stopInbox.subject.available,true);assert.ok(stopInbox.subject.href.includes(run.id))
+  assert.ok((await raw(`/api/user-automations/${saved.id}/runs`)).data.runs.some(r=>r.id===run.id),'NOTIFY-009 current owner can open the stopped run')
   rows.push(...stopped)
   await tick(Date.now());assert.deepEqual(await eventRows('automation-stop'),stopped,'NOTIFY-009 repeated automation stop observation emits nothing new')
   assert.equal((await h.mailMessages()).slice(stopMail).filter(m=>m.subject===titles.outage).length,muted?0:1)
