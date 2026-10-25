@@ -100,7 +100,15 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 3/4"
+        "node scripts/verify-suite.mjs test:launch 3/8"
+      ]
+    },
+    {
+      "name": "launch-7",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 7/8"
       ]
     },
     {
@@ -108,7 +116,15 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 4/4"
+        "node scripts/verify-suite.mjs test:launch 4/8"
+      ]
+    },
+    {
+      "name": "launch-8",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node scripts/verify-suite.mjs test:launch 8/8"
       ]
     },
     {
