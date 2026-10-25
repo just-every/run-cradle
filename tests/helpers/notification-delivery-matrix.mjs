@@ -16,6 +16,7 @@ const paths={
  'weekly-digest':'emitted Monday digest',
  'record-automation':null,
 }
+const titles={'decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest'}
 export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  assert.deepEqual(Object.keys(paths).sort(),[...notificationKinds].sort(),'NOTIFY-007 matrix accounts for exactly the production kind list')
  const request=async(session,action,input,expected=[])=>{
@@ -38,11 +39,13 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const c=await launch('campaign.create',{fields:{code,name:code,ownerId:operator,startDate:'2026-01-01',launchDate:'2027-12-01',objective:'Synthetic notification delivery',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}});campaigns.push(c);return c
  }
  const read=async kind=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,d.id AS delivery_id,d.state,d.group_id,d.error_code,d.error_message FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=?').bind(kind).all()).results
- const assertRows=async(kind,rows,muted)=>{
+ const assertRows=async(kind,rows,muted,edgeMessages)=>{
   assert.deepEqual(rows.map(r=>r.operator_id).sort(),[h.owner,other.id].sort(),`NOTIFY-007 ${kind}: both recipients retain exactly one notice`)
   const messages=await h.mailMessages()
   for(const n of rows){
    const state=n.operator_id===h.owner&&muted?'muted':'accepted'
+   const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(n.operator_id).first()).email
+   assert.equal(edgeMessages.filter(m=>m.subject===titles[kind]).flatMap(m=>m.personalizations.flatMap(p=>p.to)).filter(r=>r.email===email).length,state==='muted'?0:1,`NOTIFY-007 ${kind}: exact recipient mail count includes every provider request`)
    assert.ok(n.delivery_id,`NOTIFY-007 ${kind}: a durable delivery accompanies the notice`)
    assert.equal(n.state,state,`NOTIFY-007 ${kind}: recipient delivery state ${JSON.stringify(n)}`)
    const mail=messages.filter(m=>n.group_id&&m.custom_args?.rer_delivery_id===n.group_id)
@@ -59,7 +62,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    if(!path)continue
    // Drain unrelated prior work before measuring this real event path.
    await tick(Date.now())
-   const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[]
+   const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[],mailStart=(await h.mailMessages()).length
    const failure=kind==='automation-failed'?await launch('automation.save',{definition:{name:`Synthetic failed delivery ${phase}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'request-ai-analysis',input:{campaignId:campaigns[0].id}}]}}):null
    if(kind==='weekly-digest'){
     const a=await h.db.prepare("SELECT id,version,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
@@ -83,7 +86,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    }
    if(failure)await launch('automation.disable',{id:failure.id},ref('automation',await row('automations',failure.id)))
    const fresh=(await read(kind)).filter(n=>!old.has(n.id)&&(!subjects.length||subjects.includes(n.subject_id)))
-   await assertRows(kind,fresh,muted)
+   await assertRows(kind,fresh,muted,(await h.mailMessages()).slice(mailStart))
    if(muted)retained.push({kind,ids:fresh.filter(n=>n.operator_id===h.owner).map(n=>n.id)})
    // Unmuting must never replay a prior muted event, even after later ticks.
    for(const previous of retained)await assertOld(previous)
