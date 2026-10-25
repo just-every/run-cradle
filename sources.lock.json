@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "22032affba83c53671f2375d3a16ab2a5ad577c779c15a2ee63a34a817d4ec19",
+      "sha256": "7fb284c053c93ae173c97549311c7eda2f7108e3310498b7352d25f6b29fbb6c",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5867a82aa6b57f3b88c99f77c8878f6345eee022d5ba64347fe7f7c6e60cc5c6",
+      "sha256": "355dbd42d81a52dae12605f9bb3a973ca1cfcff576d723c49ebba7a6e4a2ba62",
       "executable": false
     },
     "DEMO.md": {
@@ -7946,7 +7946,7 @@
       "executable": false
     },
     "src/domains/channels/inbox-subject.server.ts": {
-      "sha256": "3adf0e1f12cbf1682777dc471fe30c7d4e0e72843617739691609553781af65d",
+      "sha256": "04c4efbc9fbc08e1f12339315b0a8196640d41466c08dbc5d921d366b59d6548",
       "executable": false
     },
     "src/domains/channels/inbox.server.ts": {
@@ -7954,7 +7954,7 @@
       "executable": false
     },
     "src/domains/channels/integration.server.ts": {
-      "sha256": "961d15c24aba82e625ce3f2c04e6b4b55bb5e039751ab3cafd3d855aba5dc195",
+      "sha256": "50c7a40612489c40b968627412b049659c999067c8504b3859313a0edbe2f35c",
       "executable": false
     },
     "src/domains/channels/limits.server.ts": {
@@ -7970,11 +7970,11 @@
       "executable": false
     },
     "src/domains/channels/ports.ts": {
-      "sha256": "cb444ceb95e9b52d4c1149e8ca259f7abc6df9dbb1fee8633dd215568d739fb9",
+      "sha256": "dfcb64b4898363c69bd3a91ca75d71eeb26b66b16aed82fb0f86aef45f329249",
       "executable": false
     },
     "src/domains/channels/recipient.server.ts": {
-      "sha256": "7b8808ab89dd2bc7a89a4f563e5fd39d1c526e4cecffa6fee73ac010b0443909",
+      "sha256": "8b377754837c48c34f4ef5e5287b15d9fcf2d9d47a7f940c2354b5b422699d58",
       "executable": false
     },
     "src/domains/channels/registry.server.ts": {
@@ -7982,7 +7982,7 @@
       "executable": false
     },
     "src/domains/channels/replay.server.ts": {
-      "sha256": "188cf7b10a0e523eac89318078a5ee5de9aa858d484ae40b124b6586f7df68f2",
+      "sha256": "edc023e935baad52e52b28b4ff6ba4765b9d139de74860083a39de044734a36a",
       "executable": false
     },
     "src/domains/channels/reschedule.server.ts": {
@@ -9222,7 +9222,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/service.server.ts": {
-      "sha256": "3081df391a0a3bed8e585af089ba557acddf3bcd5c021aba78a47661ce5a2630",
+      "sha256": "4521d40ec7b549b4ff1de914ab8897ae376ebdf29aa377ebed2c5c65a7a356af",
       "executable": false
     },
     "src/domains/records/base-transfer/source-api.ts": {
@@ -10122,7 +10122,7 @@
       "executable": false
     },
     "src/domains/warehouse/runtime.server.ts": {
-      "sha256": "26b6ae706591fcd387615c7c52c8327b4d1737c7addd1f21b11d2e88e6113829",
+      "sha256": "346b7b422eccadfbe26cd7a875e50b96641f678f4e06819feb70f4e3e457515e",
       "executable": false
     },
     "src/domains/warehouse/s3.server.ts": {
@@ -12250,7 +12250,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "03922c7b43b778f365cecdef621f16f57a349a945a07b6c59ccede799dfebdf1",
+      "sha256": "4921ab67f1f27d10ebd624cf712a845c99dc75d1ce70825a184529d19c36ed1e",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -12766,7 +12766,7 @@
       "executable": false
     },
     "tests/helpers/warehouse-network-edge.mjs": {
-      "sha256": "29c795285342d64e6bad3a4a02dbf8b11363080baa677199fc3b558b3959d631",
+      "sha256": "d7f4fbc747509d81d57ac9df93d6f915710cfcba748de3d1891333903a55952f",
       "executable": false
     },
     "tests/helpers/warehouse-r2-restart.mjs": {
@@ -13182,7 +13182,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "a1093bf10a1cafa4e51509b147f4520e141654e896d01f2e75bf0d6bbe5fbae9",
+      "sha256": "aee2e24600cb986c56dcbf0e7785a6bc5755f00eb6cf52134f1f47536ecbdb2f",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
