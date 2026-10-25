@@ -2,8 +2,8 @@ import { recordLaunchConsole, verifyDisabledAiReadout, assertNoUnexpectedLaunchC
 import { modalKeyboardOrder } from './helpers/accessibility-modal-keyboard.mjs'
 import { contract } from './contract.mjs'
 import assert from 'node:assert/strict'
-import {randomBytes} from 'node:crypto'
 import {recordCalendarProvider} from './helpers/record-calendar-provider.mjs'
+import {warehouseNetworkEdge} from './helpers/warehouse-network-edge.mjs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium, expect } from '@playwright/test'
@@ -31,8 +31,11 @@ const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-
 let notificationMailStatus=202
 const setNotificationMailStatus=status=>{notificationMailStatus=status}
 const outageProvider=recordCalendarProvider()
-const h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}, {providerFetch:request=>outageProvider.fetch(request),installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})
+const progressProvider=await warehouseNetworkEdge()
+let h
+try{h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',...progressProvider.bindings,CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}, {providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?progressProvider.outbound(request):outageProvider.fetch(request),installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})}catch(error){await progressProvider.close();throw error}
 h.notificationOutageProvider=outageProvider
+h.notificationProgressProvider=progressProvider
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006','CAMP-007']}
 let browser
 const command=async(action,input,expected=[])=>{
@@ -258,7 +261,7 @@ try {
   await context.close()
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])
-} finally {if(browser)await browser.close();await h.close();await writeFile(path.join(output,'receipt.json'),stringifySafeEvidence(receipt))}
+} finally {if(browser)await browser.close();await h.close();await progressProvider.close();await writeFile(path.join(output,'receipt.json'),stringifySafeEvidence(receipt))}
 console.log(`Launch walkthrough passed ${receipt.screens.length} real-runtime screens`)
 
 })

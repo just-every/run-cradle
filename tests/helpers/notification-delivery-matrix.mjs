@@ -12,7 +12,7 @@ const paths={
  'automation-failed':'saved automation with disabled AI',
  'decision-overdue':'emitted overdue schedule',
  outage:'connection.check and expired user automation approval',
- progress:null,
+ progress:'resumable base imports and scheduled warehouse exports',
  'weekly-digest':'emitted Monday digest',
  'record-automation':'saved notify-operator action (in-app-only)',
 }
@@ -135,12 +135,14 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  }
  const monday=new Date();monday.setUTCHours(0,0,0,0);monday.setUTCDate(monday.getUTCDate()+7-(monday.getUTCDay()+6)%7+(width===390?14:0))
  const retained=[],futureNotices=[],inAppOnly=[]
+ const progress=await progressMatrix({h,width,request,preferences,tick,retained})
  for(const [phase,muted]of [[0,true],[1,false]]){
   await setPrefs(h.ownerSession,muted?[...notificationKinds]:[])
   const date=new Date(+monday+phase*7*86400000).toISOString().slice(0,10),at=Date.parse(date+'T08:00:00Z')
   for(const [kind,path]of Object.entries(paths)){
    if(!path)continue
    if(kind==='outage'){await operational(muted,phase);continue}
+   if(kind==='progress'){await progress.events(muted,phase);continue}
    // Drain unrelated prior work before measuring this real event path.
    await tick(Date.now())
    const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[],mailStart=(await h.mailMessages()).length
@@ -216,5 +218,97 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  if(!readinessAutomation.enabled)await request(h.ownerSession,'launch.automation.disable',{id:readinessAutomation.id},ref('automation',await row('automations',readinessAutomation.id)))
  const now=await settings();await request(h.ownerSession,'settings.update',{version:now.version,changes:{timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,originalOther]]){const current=await preferences(session);await request(session,'preferences.update',{version:current.version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})}
- console.log('NOTIFY-007 unproved: progress has no event producer; outage generated and record-automation in-app-only delivery covered')
+ await progress.close()
+ console.log('NOTIFY-007 all offered kinds have generated-event delivery rows')
+}
+
+/** Progress uses retained job starters, including default failures before any preference exists. */
+async function progressMatrix({h,width,request,preferences,tick,retained}){
+ const edge=h.notificationProgressProvider;assert.ok(edge)
+ const starter=await h.addPerson({legacy:true,name:`synthetic-cradle-${width+900}`,change:rules=>rules.map(r=>r.effect==='allow'?{...r,rows:{kind:'all',conditions:[]}}:r)})
+ const baseId=await h.db.prepare('SELECT base_id FROM cradle_base_operators WHERE principal_id=?').bind(starter.id).first('base_id')
+ const role=async value=>{const r=await h.request(h.ownerSession,'/auth/operator/role',{method:'POST',body:JSON.stringify({operatorId:baseId,role:value})});assert.equal(r.status,200,await r.clone().text())}
+ await role('owner');starter.session=await h.signIn(starter.id)
+ const owner={id:h.owner,session:h.ownerSession},people=[owner,starter]
+ const json=async(person,path,body,status=200)=>{const r=await h.request(person.session,path,body===undefined?{}:{method:'POST',body:JSON.stringify(body)});const value=await r.json();assert.equal(r.status,status,JSON.stringify(value));return value.data}
+ const prefs=async(person,mutedKinds,progressEnabled)=>{const p=await preferences(person.session);await request(person.session,'preferences.update',{version:p.version,preferences:{timezone:'UTC',mutedKinds,digestEnabled:false,progressEnabled}})}
+ const rows=async subject=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,n.title,n.version,n.updated_at,d.id AS delivery_id,d.state,d.group_id FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=? AND n.subject_id=?').bind('progress',subject).all()).results
+ const check=async(subject,person,muted,mailStart,enabled=true)=>{
+  const notices=await rows(subject),p=await preferences(person.session)
+  assert.equal(p.progressEnabled,enabled,'NOTIFY-009 starter completion preference read back')
+  assert.equal(p.mutedKinds.includes('progress'),muted,'NOTIFY-007 progress email preference read back for this recipient')
+  assert.deepEqual(notices.map(n=>n.operator_id),[person.id],'NOTIFY-009 progress reaches exactly its retained starter')
+  const [notice]=notices;assert.ok(notice.delivery_id);assert.equal(notice.state,muted?'muted':'accepted')
+  const mail=(await h.mailMessages()).slice(mailStart),eventMail=mail.filter(m=>m.subject===notice.title)
+  const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(person.id).first()).email
+  assert.deepEqual(eventMail.flatMap(m=>m.personalizations.flatMap(p=>p.to.map(r=>r.email))),muted?[]:[email],'NOTIFY-007 progress exact provider-edge recipient mail')
+  assert.equal(mail.filter(m=>m.custom_args?.rer_delivery_id===notice.group_id).length,muted?0:1,'NOTIFY-007 progress exact durable receipt mail count')
+  const inbox=await h.request(person.session,'/api/notifications');assert.equal(inbox.status,200)
+  const item=(await inbox.json()).notifications.find(n=>n.id===notice.id);assert.ok(item);assert.equal(item.subject.available,true);assert.equal(item.subject.href,'/app/settings')
+  if(muted)retained.push({kind:'progress',ids:[notice.id]})
+  return notice
+ }
+ const saveExport=async person=>{
+  const id=createUlid(),at=new Date(),localRule=`daily ${at.toISOString().slice(11,16)}`
+  await request(person.session,'warehouse.save',{id,name:`synthetic-cradle-${width+1000}`,bases:[LAUNCH_APP_ID],mode:'full',format:'csv',destination:edge.destination,access:edge.access,localRule,timezone:'UTC',version:0})
+  const saved=(await json(person,'/api/v1/warehouse-exports')).exports.find(e=>e.id===id);assert.ok(saved);assert.equal(saved.version,1)
+  return id
+ }
+ const removeExport=async(person,id)=>{const saved=(await json(person,'/api/v1/warehouse-exports')).exports.find(e=>e.id===id);await request(person.session,'warehouse.remove',{id,version:saved.version})}
+ const parkExport=async(person,id)=>{const saved=(await json(person,'/api/v1/warehouse-exports')).exports.find(e=>e.id===id),later=new Date(Date.now()+3600000);await request(person.session,'warehouse.save',{id,name:saved.name,bases:saved.bases,mode:saved.mode,format:saved.format,destination:saved.destination,localRule:`daily ${later.toISOString().slice(11,16)}`,timezone:'UTC',version:saved.version})}
+ const failedExport=async person=>{
+  const id=await saveExport(person),before=edge.calls.length
+  edge.refusePut(true)
+  try{const result=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()});assert.equal(result.outcome,'exception','NOTIFY-009 provider refusal fails the actual scheduled export')}
+  finally{edge.refusePut(false)}
+  assert.ok(edge.calls.slice(before).some(c=>c.method==='PUT'),'NOTIFY-009 export reached its provider edge before failing')
+  return id
+ }
+ // CT's one defaults assertion: no row/preferences, failed export on, success off, opt-in success on.
+ assert.equal(await h.db.prepare('SELECT 1 FROM channel_preferences WHERE operator_id=?').bind(starter.id).first(),null)
+ assert.equal((await preferences(starter.session)).progressEnabled,false)
+ const defaultMail=(await h.mailMessages()).length,failed=await failedExport(starter)
+ assert.deepEqual((await rows(failed)).map(n=>n.operator_id),[starter.id],'NOTIFY-009 failed export reaches its starter with no preference set')
+ await tick(Date.now()) // The provider has recovered; this same schedule now completes.
+ assert.equal((await preferences(starter.session)).progressEnabled,false)
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id LIKE ?').bind(`warehouse-export:${failed}:%:completed`).first()).n,0,'NOTIFY-009 successful export with no preference produces no notice')
+ await check(failed,starter,false,defaultMail,false)
+ await removeExport(starter,failed)
+ await prefs(starter,[],true)
+ const successMail=(await h.mailMessages()).length,success=await saveExport(starter);await tick(Date.now())
+ await check(success,starter,false,successMail)
+ const unchanged=await rows(success);await tick(Date.now());assert.deepEqual(await rows(success),unchanged,'NOTIFY-009 repeated scheduled observation never repeats progress')
+ await removeExport(starter,success)
+ console.log(`NOTIFY-009 ${width}: failed export default on, success opt-in, starter only`)
+
+ const importJob=async(person,fail)=>{
+  const filename='synthetic-cradle-1.csv',csv='Name\n'+Array.from({length:25},(_,i)=>`synthetic-cradle-${fail&&i===24?1:i+1}`).join('\n')+'\n',options={name:`synthetic-cradle-${width+1100}`,tables:{[filename]:{columns:{'column-1':{type:'text'}}}}},prefix='/api/v1/records/base-import'
+  const upload=async(route,preview)=>{const body=new FormData();body.append('files',new Blob([csv],{type:'text/csv'}),filename);body.set('options',JSON.stringify(options));if(preview){body.set('identities',JSON.stringify(preview.identities));body.set('fingerprint',preview.fingerprint);body.set('acceptLoss','true')}const r=await fetch(h.origin+prefix+route,{method:'POST',headers:{cookie:person.session.cookie,origin:h.origin,'x-csrf-token':person.session.csrf},body});const value=await r.json();assert.equal(r.status,200,JSON.stringify(value));return value.data}
+  const preview=await upload('/preview'),review=await upload('/review',preview),job=await json(person,prefix+'/adopt',{reviewId:review.reviewId,fingerprint:review.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true})
+  const first=await json(person,`${prefix}/jobs/${job.id}/resume`,{});assert.equal(first.state,'applying','NOTIFY-009 import spans multiple admitted batches')
+  if(fail){
+   const draft=await json(person,`/api/v1/records/bases/${preview.identities.appId}`),table=preview.identities.tables[filename]
+   draft.tables.find(t=>t.id===table.entityId).fields.find(f=>f.id===table.fields['column-1']).unique=true
+   const changed=await json(person,'/api/v1/records/schema-preview',draft)
+   await request(person.session,'release.adopt',{kind:'manual_schema',previewId:changed.id})
+   const refusal=await h.request(person.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
+   assert.equal(refusal.status,500,'NOTIFY-009 current native constraint rejects the pending duplicate import row')
+   assert.equal((await refusal.json()).error.code,'internal')
+  }else{let next=first;for(let n=0;n<5&&next.state!=='completed';n++)next=await json(person,`${prefix}/jobs/${job.id}/resume`,{});assert.equal(next.state,'completed')}
+  return job.id
+ }
+ return {async events(muted,phase){
+  for(const person of people)for(const source of ['import','export'])for(const failed of [false,true]){
+   await tick(Date.now())
+   const mailStart=(await h.mailMessages()).length
+   let id
+   if(source==='import'){id=await importJob(person,failed);await tick(Date.now())}
+   else if(failed){id=await failedExport(person);await parkExport(person,id);await tick(Date.now())}
+   else{id=await saveExport(person);await tick(Date.now())}
+   await check(id,person,muted&&person.id===h.owner,mailStart)
+   if(source==='export')await removeExport(person,id)
+  }
+  assert.equal((await preferences(starter.session)).mutedKinds.includes('progress'),false,'NOTIFY-007 unaffected starter remains unmuted')
+  console.log(`NOTIFY-009 ${width} ${phase}: import/export completion/failure, exact starters and provider mail; muted=${muted}`)
+ },async close(){await role('member')}}
 }
