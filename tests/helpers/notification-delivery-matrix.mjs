@@ -37,14 +37,14 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  const campaign=async(operator,code)=>{
   const c=await launch('campaign.create',{fields:{code,name:code,ownerId:operator,startDate:'2026-01-01',launchDate:'2027-12-01',objective:'Synthetic notification delivery',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}});campaigns.push(c);return c
  }
- const read=async kind=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,d.id AS delivery_id,d.state,d.group_id FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=?').bind(kind).all()).results
+ const read=async kind=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,d.id AS delivery_id,d.state,d.group_id,d.error_code,d.error_message FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=?').bind(kind).all()).results
  const assertRows=async(kind,rows,muted)=>{
   assert.deepEqual(rows.map(r=>r.operator_id).sort(),[h.owner,other.id].sort(),`NOTIFY-007 ${kind}: both recipients retain exactly one notice`)
   const messages=await h.mailMessages()
   for(const n of rows){
    const state=n.operator_id===h.owner&&muted?'muted':'accepted'
    assert.ok(n.delivery_id,`NOTIFY-007 ${kind}: a durable delivery accompanies the notice`)
-   assert.equal(n.state,state,`NOTIFY-007 ${kind}: recipient delivery state`)
+   assert.equal(n.state,state,`NOTIFY-007 ${kind}: recipient delivery state ${JSON.stringify(n)}`)
    const mail=messages.filter(m=>n.group_id&&m.custom_args?.rer_delivery_id===n.group_id)
    assert.equal(mail.length,state==='muted'?0:1,`NOTIFY-007 ${kind}: exact provider-edge email count`)
    if(mail.length){const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(n.operator_id).first()).email;assert.deepEqual(mail[0].personalizations.flatMap(p=>p.to.map(r=>r.email)),[email],`NOTIFY-007 ${kind}: provider recipient`)}
