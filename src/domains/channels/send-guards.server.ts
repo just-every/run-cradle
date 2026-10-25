@@ -25,7 +25,7 @@ export async function notificationSendGuards(db:D1Database,ctx:RequestContext,id
   if(!n||!notificationKinds.includes(n.event_kind))return denied()
   const access=n.event_kind==='comment-mentioned'&&n.campaign_id===null&&/^[0-9A-HJKMNP-TV-Z]{26}$/.test(n.subject_type)
    ?await commentRecipientGuards(db,entities,{...ctx,now:new Date(now).toISOString()},{notificationId:n.id,appId:n.app_id,entityId:n.subject_type,recordId:n.subject_id,operatorId})
-   :await legacyRecipientGuards(db,{kind:n.event_kind,operatorId,campaignId:n.campaign_id,subjectId:n.subject_id,eventId:n.id},new Date(now).toISOString())
+   :await legacyRecipientGuards(db,{kind:n.event_kind,operatorId,campaignId:n.campaign_id,subjectType:n.subject_type,subjectId:n.subject_id,eventId:n.id},new Date(now).toISOString())
   if(!access)return denied()
   guards.push(...access,trustedPredicate('EXISTS(SELECT 1 FROM notifications WHERE id=? AND version=? AND unavailable=0)',[n.id,n.version]))
   if(deliveryTime(now,pref?.timezone??settings.timezone,settings.quiet_hours_start,settings.quiet_hours_end,['decision-assigned','critical-risk-escalated','outage','weekly-digest'].includes(n.event_kind))>now)return denied()

@@ -2,6 +2,8 @@ import { recordLaunchConsole, verifyDisabledAiReadout, assertNoUnexpectedLaunchC
 import { modalKeyboardOrder } from './helpers/accessibility-modal-keyboard.mjs'
 import { contract } from './contract.mjs'
 import assert from 'node:assert/strict'
+import {randomBytes} from 'node:crypto'
+import {recordCalendarProvider} from './helpers/record-calendar-provider.mjs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium, expect } from '@playwright/test'
@@ -28,7 +30,9 @@ contract('VIEW-004', '[NOTIFY-001] [NOTIFY-002] [NOTIFY-003] [NOTIFY-006] [NOTIF
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
 let notificationMailStatus=202
 const setNotificationMailStatus=status=>{notificationMailStatus=status}
-const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})
+const outageProvider=recordCalendarProvider()
+const h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}, {providerFetch:request=>outageProvider.fetch(request),installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})
+h.notificationOutageProvider=outageProvider
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006','CAMP-007']}
 let browser
 const command=async(action,input,expected=[])=>{

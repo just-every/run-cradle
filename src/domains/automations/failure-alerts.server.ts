@@ -1,6 +1,7 @@
 import type {ServerFoundation} from '../../core/app/foundation.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import {resolveBackgroundContext} from '../authority/background.server'
+import {createNotificationMailAuthority,NOTIFICATION_PRINCIPAL,NOTIFICATION_APP} from '../channels/mail-authority.server'
 import {automationRecipient} from './recipients.server'
 import {createChannelsIntegration} from '../channels/integration.server'
 import {sendBuilderTestMail} from './test-mail.server'
@@ -17,6 +18,15 @@ import {AdmissionError} from '../admission/errors'
 export function createAutomationFailureAlerts(env:PlatformBindings,foundation:ServerFoundation,origin:string,clock:()=>Date){
  const db=env.DB
  return {async tick(){
+  // Owner-requested disable has no error code. Only product-fenced runs emit.
+  const stopped=await db.prepare(`SELECT r.id,p.human_id AS operator_id FROM automation_runs r JOIN record_automation_bindings b ON b.automation_id=r.automation_id JOIN authority_principals p ON p.id=b.owner_id JOIN operators o ON o.id=p.human_id WHERE r.state='Cancelled' AND r.error_code IS NOT NULL AND p.state='active' AND o.active=1 AND NOT EXISTS(SELECT 1 FROM channel_events e WHERE e.event_id='automation-stop:'||r.id) ORDER BY r.finished_at,r.id LIMIT 100`).all<{id:string;operator_id:string}>()
+  for(const run of stopped.results){
+   const ctx=await createNotificationMailAuthority(db).context(run.id),eventId=`automation-stop:${run.id}`
+   const notice=await createChannelsIntegration(db).notification(ctx,{kind:'outage',operatorId:run.operator_id,campaignId:null,subjectId:run.id,subjectType:'automation-stop',eventId})
+   const guard=trustedPredicate("EXISTS(SELECT 1 FROM automation_runs WHERE id=? AND state='Cancelled' AND error_code IS NOT NULL) AND EXISTS(SELECT 1 FROM channel_mail_authority WHERE id=? AND active=1 AND epoch=?)",[run.id,NOTIFICATION_PRINCIPAL,ctx.principal.authenticationEpoch])
+   const action='automation.stop.notify'
+   await foundation.admission.commit(ctx,{commandId:await delegationCommandId(run.id,'outage'),action,appId:NOTIFICATION_APP,canonicalInputHash:await canonicalHash({eventId}),permit:{actor:{id:ctx.principal.id,kind:ctx.principal.kind},action,appId:NOTIFICATION_APP,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards:[guard],reservationMutations:[],reservationIds:[]},guards:notice.guards,mutations:notice.mutations,audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{runId:run.id}})
+  }
   const settings=await db.prepare('SELECT timezone FROM workspace_settings ORDER BY id LIMIT 1').first<{timezone:string}>()
   if(!settings)throw new Error('Workspace timezone is required for failure alerts')
   let afterAt=-1,afterId='',sent=0

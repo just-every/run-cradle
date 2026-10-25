@@ -11,12 +11,12 @@ const paths={
  'comment-mentioned':'comment.create',
  'automation-failed':'saved automation with disabled AI',
  'decision-overdue':'emitted overdue schedule',
- outage:null,
+ outage:'connection.check and expired user automation approval',
  progress:null,
  'weekly-digest':'emitted Monday digest',
  'record-automation':'saved notify-operator action (in-app-only)',
 }
-const titles={'decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
+const titles={outage:'An operational outage needs attention','decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
 export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  assert.deepEqual(Object.keys(paths).sort(),[...notificationKinds].sort(),'NOTIFY-007 matrix accounts for exactly the production kind list')
  assert.deepEqual(Object.entries(paths).filter(([,path])=>path===null).map(([kind])=>kind).sort(),[...notificationKindsWithoutProducer].sort(),'NOTIFY-007 missing-producer paths match the Settings disclosure list')
@@ -44,10 +44,12 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const c=await launch('campaign.create',{fields:{code,name:code,ownerId:operator,startDate:'2026-01-01',launchDate:'2027-12-01',objective:'Synthetic notification delivery',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}});campaigns.push(c);return c
  }
  const read=async kind=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,d.id AS delivery_id,d.state,d.group_id,d.error_code,d.error_message FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=?').bind(kind).all()).results
- const assertRows=async(kind,rows,muted,edgeMessages)=>{
-  assert.deepEqual(rows.map(r=>r.operator_id).sort(),[h.owner,other.id].sort(),`NOTIFY-007 ${kind}: both recipients retain exactly one notice`)
+ const assertRows=async(kind,rows,muted,edgeMessages,recipients=[h.owner,other.id])=>{
+  assert.deepEqual(rows.map(r=>r.operator_id).sort(),[...recipients].sort(),`NOTIFY-007 ${kind}: exactly the event owners retain one notice each`)
   const messages=await h.mailMessages()
   for(const n of rows){
+   const session=n.operator_id===h.owner?h.ownerSession:other.session
+   assert.equal((await preferences(session)).mutedKinds.includes(kind),n.operator_id===h.owner&&muted,`NOTIFY-007 ${kind}: recipient email preference read back`)
    const state=n.operator_id===h.owner&&muted?'muted':'accepted'
    const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(n.operator_id).first()).email
    assert.equal(edgeMessages.filter(m=>m.subject===titles[kind]).flatMap(m=>m.personalizations.flatMap(p=>p.to)).filter(r=>r.email===email).length,state==='muted'?0:1,`NOTIFY-007 ${kind}: exact recipient mail count includes every provider request`)
@@ -58,6 +60,72 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    if(mail.length){const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(n.operator_id).first()).email;assert.deepEqual(mail[0].personalizations.flatMap(p=>p.to.map(r=>r.email)),[email],`NOTIFY-007 ${kind}: provider recipient`)}
   }
  }
+ const raw=async(path,input,status=200)=>{const response=await h.request(h.ownerSession,path,input?{method:'POST',body:JSON.stringify(input)}:{});assert.equal(response.status,status,await response.clone().text());return response.json()}
+ const operational=async(muted,phase)=>{
+  const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),statusId=createUlid()
+  const preview=(await raw('/api/v1/records/schema-preview',{appId,name:`synthetic-cradle-outage-${width}-${phase}`,tables:[{id:entityId,label:'Items',primaryFieldId:nameId,fields:[{id:nameId,label:'Name',type:'text',required:true,unique:false},{id:statusId,label:'Status',type:'text',required:false,unique:false}]}]})).data
+  await request(h.ownerSession,'release.adopt',{kind:'manual_schema',previewId:preview.id})
+  const provider=h.notificationOutageProvider
+  assert.ok(provider,'NOTIFY-009 real capability checks require the network-edge provider')
+  const connection=(await request(h.ownerSession,'connection.configure',{appId,adapterId:'google-calendar',name:`synthetic-cradle-${width}-${phase}`,accountId:provider.ownedCalendarId,scopes:[{resource:provider.ownedCalendarId,readFields:[],actions:['connection.sync']}],ownership:[],credentialRef:null})).connectionId
+  const check=async()=>{await request(h.ownerSession,'connection.check',{connectionId:connection});await tick(Date.now());const r=await raw(`/api/v1/connections/${connection}`);return r.data}
+  const eventRows=async(type)=>(await read('outage')).filter(n=>n.subject_id===(type==='connection'?connection:stoppedRun))
+  const initial=await read('outage')
+  await check()
+  assert.equal((await read('outage')).length,initial.length,'NOTIFY-009 a never-successful connection emits no outage')
+  const consent=await request(h.ownerSession,'connection.begin-consent',{connectionId:connection,returnTo:'/app/settings'}),url=new URL(consent.authorizationUrl)
+  const callback=await h.request(h.ownerSession,'/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-1',state:url.searchParams.get('state')}),{redirect:'manual'})
+  assert.equal(callback.status,303,await callback.clone().text())
+  provider.allow(provider.ownedCalendarId)
+  assert.equal((await check()).state,'connected')
+  const connectionMail=(await h.mailMessages()).length
+  provider.deny(provider.ownedCalendarId)
+  assert.equal((await check()).state,'unavailable')
+  let rows=await eventRows('connection')
+  await assertRows('outage',rows,muted,(await h.mailMessages()).slice(connectionMail),[h.owner])
+  assert.equal((await check()).state,'unavailable')
+  assert.deepEqual(await eventRows('connection'),rows,'NOTIFY-009 repeat unavailable check emits no second notice or email')
+  assert.equal((await h.mailMessages()).slice(connectionMail).filter(m=>m.subject===titles.outage).length,muted?0:1)
+  const inbox=(await raw('/api/notifications')).notifications.find(n=>n.id===rows[0].id)
+  assert.equal(inbox.subject.available,true);assert.equal(inbox.subject.href,'/app/settings')
+  await request(h.ownerSession,'notification.read',{notificationId:rows[0].id})
+  provider.allow(provider.ownedCalendarId);assert.equal((await check()).state,'connected')
+  const recoveryMail=(await h.mailMessages()).length
+  provider.deny(provider.ownedCalendarId);assert.equal((await check()).state,'unavailable')
+  const later=(await eventRows('connection')).filter(n=>!rows.some(old=>old.id===n.id))
+  await assertRows('outage',later,muted,(await h.mailMessages()).slice(recoveryMail),[h.owner])
+  rows.push(...later);provider.allow(provider.ownedCalendarId)
+  // Connections and record automations each have exactly one author/owner. The
+  // other recipient stays unmuted, but has no ownership and receives nothing.
+  const expires=Date.now()+8000
+  const saved=(await raw('/api/user-automations',{commandId:createUlid(),expiresAt:new Date(expires).toISOString(),definition:{name:`synthetic-cradle-stop-${width}-${phase}`,appId,entityId,event:'created',enabled:true,actions:[{kind:'update',fieldId:statusId,value:'must not run'}]}},201)).data.result.value
+  const schema=(await raw(`/api/v1/apps/${appId}/entities/${entityId}`)).data
+  const created=await request(h.ownerSession,'record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-private-stop'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}])
+  await new Promise(resolve=>setTimeout(resolve,Math.max(0,expires-Date.now()+25)))
+  const stopMail=(await h.mailMessages()).length
+  await tick(Date.now())
+  const run=await h.db.prepare("SELECT id,state FROM automation_runs WHERE automation_id=?").bind(saved.id).first()
+  assert.ok(run);assert.equal(run.state,'Cancelled','NOTIFY-009 product fences expired approval before any new effect')
+  let stoppedRun=run.id
+  const stopped=await eventRows('automation-stop')
+  await assertRows('outage',stopped,muted,(await h.mailMessages()).slice(stopMail),[h.owner])
+  rows.push(...stopped)
+  await tick(Date.now());assert.deepEqual(await eventRows('automation-stop'),stopped,'NOTIFY-009 repeated automation stop observation emits nothing new')
+  assert.equal((await h.mailMessages()).slice(stopMail).filter(m=>m.subject===titles.outage).length,muted?0:1)
+  const current=(await raw(`/api/v1/apps/${appId}/entities/${entityId}/records/${created.ref.recordId}`)).data.record
+  assert.equal(current.fields[statusId]?.value??null,null,'NOTIFY-009 stopped automation has no new effect')
+  await raw(`/api/user-automations/${saved.id}/disable`,{commandId:createUlid(),version:saved.version})
+  const voluntary=(await raw('/api/user-automations',{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-owner-stop',appId,entityId,event:'created',enabled:true,actions:[{kind:'update',fieldId:statusId,value:'must not run'}]}},201)).data.result.value
+  await request(h.ownerSession,'record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-voluntary-stop'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}])
+  await raw(`/api/user-automations/${voluntary.id}/disable`,{commandId:createUlid(),version:voluntary.version})
+  const beforeVoluntary=await read('outage');await tick(Date.now())
+  assert.deepEqual(await read('outage'),beforeVoluntary,'NOTIFY-006 owner-requested stop creates no outage')
+  const fresh=(await read('outage')).filter(n=>!initial.some(old=>old.id===n.id))
+  assert.deepEqual(fresh.map(n=>n.id).sort(),rows.map(n=>n.id).sort(),'NOTIFY-009 no non-owner outage recipients')
+  assert.equal((await preferences(other.session)).mutedKinds.includes('outage'),false)
+  if(muted)retained.push({kind:'outage',ids:rows.map(n=>n.id)})
+  console.log(`NOTIFY-009 ${width} ${phase}: connection outage/repeat/recovery and product-fenced automation stop, owner only; muted=${muted}`)
+ }
  const monday=new Date();monday.setUTCHours(0,0,0,0);monday.setUTCDate(monday.getUTCDate()+7-(monday.getUTCDay()+6)%7+(width===390?14:0))
  const retained=[],digestNotices=[],inAppOnly=[]
  for(const [phase,muted]of [[0,true],[1,false]]){
@@ -65,6 +133,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const date=new Date(+monday+phase*7*86400000).toISOString().slice(0,10),at=Date.parse(date+'T08:00:00Z')
   for(const [kind,path]of Object.entries(paths)){
    if(!path)continue
+   if(kind==='outage'){await operational(muted,phase);continue}
    // Drain unrelated prior work before measuring this real event path.
    await tick(Date.now())
    const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[],mailStart=(await h.mailMessages()).length
@@ -138,5 +207,5 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  if(!readinessAutomation.enabled)await request(h.ownerSession,'launch.automation.disable',{id:readinessAutomation.id},ref('automation',await row('automations',readinessAutomation.id)))
  const now=await settings();await request(h.ownerSession,'settings.update',{version:now.version,changes:{timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,originalOther]]){const current=await preferences(session);await request(session,'preferences.update',{version:current.version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})}
- console.log('NOTIFY-007 unproved: outage/progress have no event producer; record-automation requests in-app-only delivery')
+ console.log('NOTIFY-007 unproved: progress has no event producer; outage generated and record-automation in-app-only delivery covered')
 }
