@@ -9,6 +9,7 @@ export async function verifyNotificationEmailPolicy({h,page,capture}){
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const settings=async()=>(await(await h.request(h.ownerSession,'/api/v1/settings')).json()).data
  const original=await settings(),prefs=async session=>(await(await h.request(session,'/api/v1/preferences')).json()).data,otherBefore=await prefs(other.session)
+ assert.deepEqual(original.quietHours,{start:'18:00',end:'08:00'},'NOTIFY-002 default workspace quiet hours')
  const setPrefs=async(session,timezone)=>{const p=await prefs(session);await request(session,'preferences.update',{version:p.version,preferences:{timezone,mutedKinds:[],digestEnabled:true,progressEnabled:p.progressEnabled}})}
  const configure=async changes=>{const s=await settings();await request(h.ownerSession,'settings.update',{version:s.version,changes})}
  const tick=async at=>(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at})
@@ -40,7 +41,7 @@ export async function verifyNotificationEmailPolicy({h,page,capture}){
  await tick(end+59000)
  const grouped=(await h.mailMessages()).slice(start+2);assert.equal(grouped.length,2,'NOTIFY-002 exactly one grouped provider message per operator within 60 seconds')
  const accepted=await rows(ordinary.map(c=>c.id));assert.ok(accepted.every(r=>r.state==='accepted'))
- for(const id of [h.owner,other.id]){const deliveries=accepted.filter(r=>r.operator_id===id);assert.equal(new Set(deliveries.map(r=>r.group_id)).size,1);const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(id).first()).email;const mails=grouped.filter(m=>m.personalizations.flatMap(p=>p.to).some(to=>to.email===email));assert.equal(mails.length,1);for(const body of ['synthetic-cradle-201 held event','synthetic-cradle-202 held event'])assert.ok(mails[0].content.some(part=>part.value.includes(body)),'NOTIFY-002 grouped mail retains both held events')}
+ for(const id of [h.owner,other.id]){const deliveries=accepted.filter(r=>r.operator_id===id);assert.equal(new Set(deliveries.map(r=>r.group_id)).size,1);const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(id).first()).email;const mails=grouped.filter(m=>m.personalizations.flatMap(p=>p.to).some(to=>to.email===email));assert.equal(mails.length,1);assert.equal(mails[0].content.find(part=>part.type==='text/plain').value.split('You were mentioned in a comment').length-1,2,'NOTIFY-002 grouped mail contains both notification entries')}
  const authBefore=(await h.mailMessages()).length,email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(h.owner).first()).email
  const auth=await h.request(h.ownerSession,'/auth/magic-link',{method:'POST',body:JSON.stringify({email,returnTo:'/app'})});assert.equal(auth.status,202);assert.equal((await h.mailMessages()).length,authBefore+1,'NOTIFY-002 authentication mail bypasses quiet hours without a schedule tick')
  const digest=await h.db.prepare("SELECT * FROM channel_digest_settings WHERE id='digest'").first(),automation=await h.db.prepare("SELECT id,version,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
