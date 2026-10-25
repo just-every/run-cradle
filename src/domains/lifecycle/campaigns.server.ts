@@ -29,7 +29,7 @@ export async function campaignErasure(db:D1Database,ctx:RequestContext,id:string
  const notices='subject_id IN (SELECT value FROM json_each(?)) OR id IN (SELECT notification_id FROM channel_notifications WHERE campaign_id=?)'
  const deliveries=`campaign_id=? OR notification_id IN (SELECT id FROM notifications WHERE ${notices})`
  await removeRows(db,change,'channel_deliveries',`(${deliveries}) AND state NOT IN ('accepted','delivered','unknown')`,[id,ids,id])
- await updateRows(db,change,'channel_deliveries',{campaign_id:null,error_code:null,error_message:null},deliveries,[id,ids,id])
+ await updateRows(db,change,'channel_deliveries',{campaign_id:null,error_code:null,error_message:null},`(${deliveries}) AND state IN ('accepted','delivered','unknown')`,[id,ids,id])
  await updateRows(db,change,'notifications',{unavailable:1,subject_id:null,title:'Notification unavailable',body:''},notices,[ids,id])
  await updateRows(db,change,'channel_notifications',{campaign_id:null,failure:null},'campaign_id=?',[id])
  await removeRows(db,change,'portability_preview_rows','preview_id IN (SELECT value FROM json_each(?))',[JSON.stringify(previews)])
