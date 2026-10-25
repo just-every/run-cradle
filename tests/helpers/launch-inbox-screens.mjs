@@ -73,6 +73,14 @@ export async function verifyInboxScreens({h,page,command,capture}){
  assert.deepEqual(otherAfter.notifications.map(item=>({id:item.id,readAt:item.readAt})),otherBefore.notifications.map(item=>({id:item.id,readAt:item.readAt})),'NOTIFY-005 mark all changes only its operator read state')
  assert.equal(otherAfter.unreadCount,otherBefore.unreadCount)
  await capture('clause-inbox-all-read')
+ // This runner gives the inbox its own runtime. Fix the quiet-hours window so
+ // the erased campaign positively contains both held comments and accepted assignments.
+ const settingsResponse=await h.request(h.ownerSession,'/api/v1/settings')
+ assert.equal(settingsResponse.status,200)
+ const originalSettings=(await settingsResponse.json()).data
+ const quietStart=new Date(Date.now()-3600000).toISOString().slice(11,16),quietEnd=new Date(Date.now()+7200000).toISOString().slice(11,16)
+ const saveQuiet=async(version,changes)=>{const response=await h.request(h.ownerSession,'/api/v1/commands/settings.update',{method:'POST',body:JSON.stringify({commandId:createUlid(),expected:[],input:{version,changes}})});assert.equal(response.status,200,await response.clone().text())}
+ await saveQuiet(originalSettings.version,{timezone:'UTC',quietHoursStart:quietStart,quietHoursEnd:quietEnd})
  const erasing=await actorCommand('campaign.create',{fields:{code:`synthetic-cradle-erasure-${width}`,name:'Erased campaign private name',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Erased campaign objective',statusSummary:'Erased campaign summary',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
  const targets=[]
  for(const person of [{id:h.owner,session:h.ownerSession},other]){
@@ -89,9 +97,16 @@ export async function verifyInboxScreens({h,page,command,capture}){
  await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()})
  const sent=(await h.db.prepare("SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE campaign_id=? AND state IN ('accepted','delivered') ORDER BY id").bind(erasing.id).all()).results
  assert.ok(sent.length>=2,'NOTIFY-005 sent assignment mail has durable receipts before erasure')
+ assert.ok(sent.every(delivery=>delivery.receipt_id),'NOTIFY-005 accepted fixture mail has provider receipts')
+ const pending=(await h.db.prepare("SELECT id,due_at,group_id FROM channel_deliveries WHERE campaign_id=? AND state IN ('held','queued') ORDER BY id").bind(erasing.id).all()).results
+ assert.equal(pending.length,2,'NOTIFY-005 both recipients positively have pending comment mail before erasure')
+ assert.ok(pending.every(delivery=>delivery.due_at>Date.now()),'NOTIFY-005 pending fixture mail is due after deletion')
  const sentGroups=(await h.db.prepare("SELECT group_id FROM channel_deliveries WHERE campaign_id=? AND state IN ('accepted','delivered')").bind(erasing.id).all()).results.map(d=>d.group_id)
- const sentMail=async()=>(await h.mailMessages()).filter(m=>sentGroups.includes(m.custom_args?.rer_delivery_id))
- const mailBefore=(await sentMail()).length
+ const providerBefore=await h.mailMessages()
+ assert.equal(providerBefore.filter(message=>sentGroups.includes(message.custom_args?.rer_delivery_id)).length,sent.length,'NOTIFY-005 accepted fixture mail positively reached the provider edge')
+ // The baseline and later assertion deliberately count EVERY provider call.
+ // Preparation assigns a new group ID, so filtering by an old group is unsound.
+ const mailBefore=providerBefore.length,laterThanDue=Math.max(...pending.map(delivery=>delivery.due_at))+60001
  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(erasing.id).first()
  await actorCommand('campaign.delete',{id:erasing.id,confirmationCode:erasing.code},ref(current))
  for(const person of targets){
@@ -121,8 +136,11 @@ export async function verifyInboxScreens({h,page,command,capture}){
  const sentAfter=(await h.db.prepare(`SELECT id,state,provider_id,receipt_id FROM channel_deliveries WHERE id IN (SELECT value FROM json_each(?)) ORDER BY id`).bind(JSON.stringify(sent.map(d=>d.id))).all()).results
  assert.deepEqual(sentAfter,sent,'NOTIFY-005 erasure retains sent-mail delivery records')
  assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_deliveries WHERE notification_id IN (SELECT value FROM json_each(?)) AND state IN ('held','queued','dispatching')").bind(JSON.stringify(targets.flatMap(p=>p.ids))).first()).n,0)
- await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()+86400000})
- assert.equal((await sentMail()).length,mailBefore,'NOTIFY-005 deleted notice never sends later')
+ assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Math.max(Date.now()+86400000,laterThanDue)})).outcome,'ok','NOTIFY-005 the post-erasure scheduled tick completes')
+ assert.equal((await h.mailMessages()).length,mailBefore,'NOTIFY-005 deleted notice never sends later, including newly assigned delivery groups')
+ console.log('NOTIFY-005 erasure '+JSON.stringify({width,accepted:sent.length,pending:pending.length,providerBefore:mailBefore,providerAfter:(await h.mailMessages()).length,newSends:0}))
+ const currentSettings=(await(await h.request(h.ownerSession,'/api/v1/settings')).json()).data
+ await saveQuiet(currentSettings.version,{timezone:originalSettings.timezone,quietHoursStart:originalSettings.quietHours.start,quietHoursEnd:originalSettings.quietHours.end})
  await page.context().clearCookies()
  await page.context().addCookies([{name:h.ownerSession.cookie.split('=')[0],value:h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
 }
