@@ -12254,11 +12254,11 @@
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
-      "sha256": "405de2f9f3c928a414fd0dd558599fcbc9fe1a1983ca1f2d15a0d85e51d58e87",
+      "sha256": "af55e0534f8acdf074abdce14b90114100dd96665a8864c4b1287f4d6654d9d5",
       "executable": false
     },
     "tests/helpers/notification-event-screens.mjs": {
-      "sha256": "fc7bd38ce3bcc801ddf55e0fc8df356a83b1519286881ee9d677899dd9417d38",
+      "sha256": "469764bc762b066a9725425dc411b27a8ae53d7fcdc1604783988f53d61f44bf",
       "executable": false
     },
     "tests/helpers/notification-in-app-clauses.mjs": {
@@ -12266,7 +12266,7 @@
       "executable": false
     },
     "tests/helpers/notification-preferences-screens.mjs": {
-      "sha256": "26f46b4b671b15f2c3d6790b36afac7869990793208af72e6dd8c834901b3218",
+      "sha256": "e768200eae5f3ef6f00f573da9602126c67cfa5c0fdd51f5814d10907417b0c0",
       "executable": false
     },
     "tests/helpers/offline-provider-guard.mjs": {
