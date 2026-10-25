@@ -21,7 +21,7 @@ const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.
 const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
-export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch} = {}) {
+export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch,mailResponse} = {}) {
   const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
   const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
   assert.equal(available,true,'Authority test listener must be unoccupied')
@@ -33,7 +33,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     await rm(directory, { recursive: true, force: true })
   }
   try {
-    if(!overrides.MAIL_PROVIDER||overrides.MAIL_PROVIDER==='development')mail=await createFixtureMail(port,providerFetch)
+    if(!overrides.MAIL_PROVIDER||overrides.MAIL_PROVIDER==='development')mail=await createFixtureMail(port,providerFetch,mailResponse)
     migrateFixture(directory)
     const owner = await installLegacyFixture(directory, { installedLaunchDefinitions, installationOwner })
     const configuration = { appOrigin: origin, sessionSecret: 'synthetic-launch-authority-test-signing-key', mode: 'development' }

@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
+import {verifyNotificationDeliveryFailures} from './notification-delivery-failures.mjs'
 import {verifyNotificationEmailPolicy} from './notification-email-policy.mjs'
 import {verifyNotificationInAppClauses} from './notification-in-app-clauses.mjs'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
-export async function verifyNotificationEventScreens({h,page,command,capture}){
+export async function verifyNotificationEventScreens({h,page,command,capture,setNotificationMailStatus}){
  const width=page.viewportSize().width,actor=await h.addPerson({legacy:true,name:`Event author ${width}`,change:rules=>rules.map(rule=>rule.effect==='allow'?{...rule,rows:{kind:'all',conditions:[]}}:rule)}),other=await h.addPerson({legacy:true,name:`Event recipient ${width}`,change:rules=>rules.map(rule=>rule.effect==='allow'?{...rule,rows:{kind:'all',conditions:[]}}:rule)})
  await verifyNotificationInAppClauses({h,page,capture,actor,other})
  await verifyNotificationEmailPolicy({h,page,capture,actor,other})
+ await verifyNotificationDeliveryFailures({h,page,capture,actor,setNotificationMailStatus})
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const actorCommand=async(action,input,expected=[],commandId=createUlid())=>{const response=await h.request(actor.session,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId,input,expected})});assert.equal(response.status,200,await response.clone().text());return(await response.json()).data.value}
  const campaign=(await command('campaign.create',{fields:{code:`EVENT-${width}`,name:'One notification per event',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Prove event recipient identity',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})).data.value

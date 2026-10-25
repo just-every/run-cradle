@@ -10,7 +10,7 @@ function captureDirectory(port){
 const capturePath=port=>join(captureDirectory(port),'messages.ndjson')
 
 /** Test-only provider edge: the real Worker serializes and sends every message. */
-export async function createFixtureMail(port,otherNetworkEdge){
+export async function createFixtureMail(port,otherNetworkEdge,mailResponse){
  const directory=captureDirectory(port)
  await mkdir(directory,{mode:0o700})
  let file
@@ -28,6 +28,7 @@ export async function createFixtureMail(port,otherNetworkEdge){
    const write=pending.then(()=>file.writeFile(JSON.stringify(message)+'\n'))
    pending=write
    await write
+   if(mailResponse){const response=await mailResponse(message);if(response)return response}
    return new Response(null,{status:202,headers:{'x-message-id':crypto.randomUUID()}})
   },
   close(){return closing??=(async()=>{
