@@ -1,3 +1,6 @@
+import type {AdmissionPort,SqlPredicate} from '../admission/ports'
+import {canonicalHash} from '../admission/canonical'
+import {erasureAdmissionGuard} from '../lifecycle/file-writes.server'
 import {legacyRecipientGuards} from './recipient.server'
 import type { RequestContext } from '../authority/ports'
 import { trustedPredicate } from '../admission/sql.server'
@@ -48,4 +51,14 @@ export function createChannelsIntegration(db:D1Database,project?:RecipientProjec
   return effects
  }
  return {notification,withdrawCampaign:(ctx:RequestContext,id:string)=>withdraw(ctx,'d.campaign_id=?',[id]),deleteCampaign:(ctx:RequestContext,id:string)=>withdraw(ctx,'d.campaign_id=?',[id],true),withdrawNotification:(ctx:RequestContext,id:string)=>withdraw(ctx,'d.notification_id=?',[id]),async prepareRemoval(ctx:RequestContext,id:string){return {...await withdraw(ctx,'d.operator_id=?',[id]),blockers:[]}},async prepareErasure(ctx:RequestContext,id:string,_label:string){const effects=await withdraw(ctx,'d.operator_id=?',[id],true),pref=await db.prepare('SELECT version FROM channel_preferences WHERE operator_id=?').bind(id).first<{version:number}>();if(pref)effects.mutations.push({kind:'delete',table:t.preferences,where:trustedPredicate('operator_id=? AND version=?',[id,pref.version]),expectedRows:1});return effects}}
+}
+
+/** A terminal operation fact is also its durable, owner-readable receipt. */
+export async function recordProgressReceipt(db:D1Database,admission:AdmissionPort,ctx:RequestContext,input:{id:string;appId:string;sourceType:'import'|'export';sourceId:string;occurrence:string;state:'completed'|'failed';summary:string;counts:Record<string,number>;guard:SqlPredicate}){
+ const operatorId=ctx.principal.humanId;if(!operatorId)return
+ const action=`${input.sourceType}.progress.result`,value={sourceType:input.sourceType,sourceId:input.sourceId,occurrence:input.occurrence,state:input.state,summary:input.summary,counts:input.counts},hash=await canonicalHash(value)
+ if(await admission.replay(ctx,input.id,action,input.appId,hash))return
+ const guard=input.guard,effects=await createChannelsIntegration(db,async()=>({guards:[guard],title:labels.progress,body:input.summary})).notification(ctx,{kind:'progress',operatorId,campaignId:null,subjectId:input.id,subjectType:'progress-receipt',eventId:input.id,actorId:null})
+ if(!effects.notificationId)return // The existing progress opt-in suppresses the entire notice.
+ await admission.commit(ctx,{commandId:input.id,action,appId:input.appId,canonicalInputHash:hash,permit:{actor:{id:ctx.principal.id,kind:ctx.principal.kind},action,appId:input.appId,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards:[guard,erasureAdmissionGuard(ctx.now)],reservationMutations:[],reservationIds:[]},guards:effects.guards,mutations:effects.mutations,audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:value})
 }

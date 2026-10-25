@@ -1,3 +1,5 @@
+import {recordProgressReceipt} from '../channels/integration.server'
+import {delegationCommandId} from '../authority/user-delegation.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import {warehouseStore,destinationSchema} from './destination.server'
 import type {RequestContext} from '../authority/ports'
@@ -49,6 +51,8 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    :await db.prepare("UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,startedAt,at,runSlot,revision,row.id,row.version,slot).first<{id:string}>()
   if(!acquired)return
   let reservation:string|undefined,committed=false
+  const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
+  const progress=async(state:'completed'|'failed',files=0)=>{const occurrence=`${row.version}:${runSlot}:${state}`,guard=trustedPredicate(`EXISTS(SELECT 1 FROM warehouse_exports WHERE id=? AND owner_id=? AND version=? AND (running_id=? OR (last_slot=? AND updated_at=?))) AND EXISTS(SELECT 1 FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND p.authentication_epoch=? AND o.role='owner' AND o.status='active')`,[row.id,actor.id,row.version,runId,runSlot,startedAt,actor.id,actor.authentication_epoch]);await recordProgressReceipt(db,foundation.admission,ctx,{id:await delegationCommandId(row.id,occurrence),appId:JSON.parse(row.bases_json)[0],sourceType:'export',sourceId:row.id,occurrence,state,summary:state==='completed'?`Export completed: ${files} data files written.`:'Export failed: destination delivery or the current data check failed. Review destination access and the receipt before trying again.',counts:{dataFiles:files},guard})}
   const keys=(await db.prepare('SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key').bind(row.id,runId).all<{object_key:string}>()).results.map(value=>value.object_key)
   try{
    reservation=await reserveFileWrite(db,'warehouse:'+row.id,startedAt)
@@ -58,7 +62,6 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    // A fresh, unguessable, non-disclosed credential lasts only for this invocation.
    // It authenticates as the configuring human; it grants no policy permission.
    await db.prepare('INSERT INTO authority_credentials(id,principal_id,token_hash,audience,scopes_json,created_at,expires_at,authentication_epoch) VALUES(?,?,?,?,?,?,?,?)').bind(credential,actor.id,await canonicalHash({nonce:crypto.randomUUID()}),'warehouse-internal',JSON.stringify(bases.map(appId=>({appId,actions:['record.read'],purposes:['read','export']}))),Date.now(),Date.parse(expiresAt),actor.authentication_epoch).run()
-   const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
    const ownership=trustedPredicate(`EXISTS(SELECT 1 FROM authority_principals p JOIN cradle_base_operators m ON m.principal_id=p.id JOIN oa_operators o ON o.id=m.base_id WHERE p.id=? AND p.state='active' AND p.authentication_epoch=? AND o.status='active' AND o.role='owner' AND o.version=?)`,[actor.id,actor.authentication_epoch,actor.version])
    const guards=[ownership],before=JSON.parse(row.watermark_json) as Watermark,after:Watermark={},files:{key:string;rows:number;sha256:string;schemaHash:string;watermarkBefore:unknown;watermarkAfter:unknown;columns?:{fieldId:string;label:string;column:string}[]}[]=[],omitted:{appId:string;tableId:string;reason:string}[]=[]
    const full=row.mode==='full'||Object.keys(before).length===0
@@ -125,7 +128,8 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
     db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
    ])
    committed=true
-  }finally{
+   await progress('completed',files.length)
+  }catch(error){if(!committed)await progress('failed');throw error}finally{
    if(!committed)for(const key of keys){await store.delete(key);if(await store.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
    await db.prepare('DELETE FROM authority_credentials WHERE id=?').bind(credential).run()
    if(reservation)await finishFileWrite(db,reservation)

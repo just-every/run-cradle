@@ -1,3 +1,9 @@
+import {recordProgressReceipt} from '../../channels/integration.server'
+import {createAdmissionService} from '../../admission/service.server'
+import {createReplayAccess} from '../../authority/context.server'
+import {trustedPredicate} from '../../admission/sql.server'
+import type {SqlScalar} from '../../admission/ports'
+import {delegationCommandId} from '../../authority/user-delegation.server'
 import {AuthorityError} from '../../authority/errors'
 import { Buffer } from 'node:buffer'
 import {restoredJobAuthority} from './restored-job.server'
@@ -132,11 +138,22 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
    attachments:csv?parseCsvAttachmentCell(String(r.values[columnKey])):parseApiAttachmentValue(r.values[columnKey]!)}))
   return {filename:`${table.label}-${column.label}-attachments.csv`,lines,csv:attachmentManifestCsv(lines)}
  }
+ async function progress(ctx:RequestContext,job:ImportJob,c:D1ImportContext,state:'completed'|'failed'){
+  if(!ctx.principal.humanId||!(await db.prepare('SELECT progress_enabled FROM channel_preferences WHERE operator_id=?').bind(ctx.principal.humanId).first<{progress_enabled:number}>())?.progress_enabled)return
+  const current=await loadDescriptorRegistry(db,registry.list()),entities=createApplicationEntityRegistry(current),livePolicy=createPolicyPort(db,entities),admission=createAdmissionService(db,createReplayAccess(db,livePolicy,entities)),authority=c.authorization.predicate('read',c.destination)
+  const occurrence=`${job.checkpoint}:${job.fence}:${state}`,receiptId=await delegationCommandId(job.id,occurrence)
+  await recordProgressReceipt(db,admission,ctx,{id:receiptId,appId:job.destination,sourceType:'import',sourceId:job.id,occurrence,state,summary:state==='completed'?`Import completed: ${job.checkpoint} of ${job.total} entries applied.`:'Import failed: the next batch could not be applied. Review the import receipt and current schema before resuming.',counts:{appliedEntries:job.checkpoint,totalEntries:job.total},guard:trustedPredicate(`EXISTS(SELECT 1 FROM ik_jobs WHERE id=? AND principal_id=? AND checkpoint=? AND fence=?) AND (${authority.sql})`,[job.id,ctx.principal.id,job.checkpoint,job.fence,...(authority.params??[])] as SqlScalar[])})
+ }
  async function act(ctx:RequestContext,id:string,operation:'resume'|'undo'|'rollback'):Promise<ImportJob>{
   const c=await jobContext(ctx,id),authority=c.authorization.predicate(operation==='resume'?'apply':operation,c.destination)
   await db.prepare(`UPDATE ik_jobs SET cradle_restore_hold=0 WHERE id=? AND cradle_restore_hold=1 AND (${authority.sql})`).bind(id,...(authority.params??[])).run()
   if((await jobBinding(ctx,id)).cradle_restore_hold)throw new AdmissionError('forbidden','Current base owner authority is required to continue this restored import.')
-  return operation==='resume'?resumeD1Import(id,c):operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
+  if(operation!=='resume')return operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
+  const before=await readD1ImportJob(id,c)
+  let job:ImportJob
+  try{job=await resumeD1Import(id,c)}catch(error){await progress(ctx,await readD1ImportJob(id,c),c,'failed');throw error}
+  if(before.state!=='completed'&&job.state==='completed')await progress(ctx,job,c,'completed')
+  return job
  }
  return {preview,uploadPreview,review,adopt,status,receipt,attachmentManifest,resume:(ctx:RequestContext,id:string)=>act(ctx,id,'resume'),undo:(ctx:RequestContext,id:string)=>act(ctx,id,'undo'),rollback:(ctx:RequestContext,id:string)=>act(ctx,id,'rollback'),originals:async(ctx:RequestContext,id:string)=>readD1ImportOriginals(id,await jobContext(ctx,id))}
 }
