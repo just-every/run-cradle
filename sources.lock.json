@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "4599e10612e1fdc6b7387d561b053c28b28cd19256b2cf4b5aacc7ca9f3c938f",
+      "sha256": "41a29e8be70c8713dbcfef7cda0ae11bec5b6ae6ad9b4fc11d9c2ef24fb924c7",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "673473a002fc5e061e90acc88dc18839d63403222094d18fb34cc65b81a46d24",
+      "sha256": "d0d3747475234c85f7c87e300a6def381c2635a70b3d55c59500139d10a86e0d",
       "executable": false
     },
     "DEMO.md": {
@@ -7970,7 +7970,7 @@
       "executable": false
     },
     "src/domains/channels/ports.ts": {
-      "sha256": "55f7b2bdd10d566d6e3635d1a342721b464ae4c245d80f6aa81eb105250f1925",
+      "sha256": "143702111eac172b80fce748cdaa2534599c3c024dc1f7a54c9fef1fe23c388e",
       "executable": false
     },
     "src/domains/channels/recipient.server.ts": {
@@ -11214,7 +11214,7 @@
       "executable": false
     },
     "src/ui/settings/preferences-panel.tsx": {
-      "sha256": "e4d7ba084da81683b38a9d4110d22ba814497b563781b03d490d10b5abec3e02",
+      "sha256": "dab7e7a2f2044968f9642a9b598c1f1277a422303719458ce17f5bc4e6b2b472",
       "executable": false
     },
     "src/ui/settings/proposer-keys-panel.tsx": {
@@ -12250,7 +12250,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "3ee7a676a672a59c9c6b180f02a607b9fa1e301881a246af4ac94206ca63cbbf",
+      "sha256": "f3589f1744d2756126d22cd2b83738822699c428a7e6e9b2220404541fc7a2e6",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -12266,7 +12266,7 @@
       "executable": false
     },
     "tests/helpers/notification-preferences-screens.mjs": {
-      "sha256": "e768200eae5f3ef6f00f573da9602126c67cfa5c0fdd51f5814d10907417b0c0",
+      "sha256": "7450dd6294e0056f6305d2f1cb2a04bfc4e4e77c6c0ca9fed18198cfbd6bebaf",
       "executable": false
     },
     "tests/helpers/offline-provider-guard.mjs": {

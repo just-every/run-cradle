@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {expect} from '@playwright/test'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
-import {notificationKinds as kinds} from '../../src/domains/channels/ports.ts'
+import {notificationKinds as kinds,notificationKindsWithoutProducer} from '../../src/domains/channels/ports.ts'
 import {verifyNotificationDeliveryMatrix} from './notification-delivery-matrix.mjs'
 export async function verifyNotificationPreferencesScreens({h,page,command,capture}){
  const workspace=async()=>{const r=await h.request(h.ownerSession,'/api/v1/settings');assert.equal(r.status,200);return(await r.json()).data}
@@ -20,6 +20,16 @@ export async function verifyNotificationPreferencesScreens({h,page,command,captu
  const open=async()=>{await page.goto(h.origin+'/app/settings');await page.locator('summary').filter({hasText:/^Your notifications$/}).click();await page.getByRole('button',{name:'Save my preferences',exact:true}).waitFor()}
  const save=async()=>{const committed=page.waitForResponse(r=>r.url().endsWith('/api/v1/commands/preferences.update')&&r.request().method()==='POST');await page.getByRole('button',{name:'Save my preferences',exact:true}).click();const response=await committed;assert.equal(response.status(),200,await response.text());assert.equal((await response.json()).data.state,'committed');await expect(page.getByRole('button',{name:'Save my preferences',exact:true})).toBeEnabled()}
  await open()
+ for(const kind of kinds){
+  const checkbox=page.getByRole('checkbox',{name:`Mute ${kind}`,exact:true})
+  await expect(checkbox).toHaveAccessibleDescription(notificationKindsWithoutProducer.includes(kind)?/\S/:'')
+  if(notificationKindsWithoutProducer.includes(kind)){
+   const description=page.locator(`[id="${await checkbox.getAttribute('aria-describedby')}"]`)
+   await expect(description).toBeVisible()
+   assert.ok(await description.evaluate(element=>parseFloat(getComputedStyle(element).fontSize)>=13),'NOTIFY-007 disclosure uses normal row text at least 13px')
+  }
+ }
+ await expect(page.getByRole('checkbox',{name:'Include progress notifications',exact:true})).toHaveAccessibleDescription(notificationKindsWithoutProducer.includes('progress')?/\S/:'')
  const muted=[]
  for(const kind of kinds){await page.getByRole('checkbox',{name:`Mute ${kind}`,exact:true}).check();muted.push(kind);await save();assert.deepEqual([...(await preferences(h.ownerSession)).mutedKinds].sort(),[...muted].sort(),`NOTIFY-007 ${kind} is independently mutable in Settings`)}
  assert.deepEqual(await preferences(other.session),otherBefore,'NOTIFY-007 Settings changes affect only their operator')
