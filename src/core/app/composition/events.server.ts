@@ -30,7 +30,8 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     await runtime.launch.scheduled()
     await runtime.lifecycle.cleanup.maintain()
     await runtime.trashPurge()
-    await runtime.warehouse.runtime.scheduled()
+    let exportFailure:unknown
+    try{await runtime.warehouse.runtime.scheduled()}catch(error){exportFailure=error}
     // Admit due notifications before dispatching effects in this same invocation.
     await channels()
     await runtime.providers.jobs.scheduled()
@@ -38,6 +39,7 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     await runtime.calendarSync.service.tick()
     await runtime.automations.runtime.tick()
     await runtime.changeDelivery.tick()
+    if(exportFailure)throw exportFailure
   }
   return { dispatch, channels, scheduled,changes:(commandId:string)=>runtime.changeDelivery.tick(commandId),warehouse:()=>runtime.warehouse.runtime.scheduled(),launch:(commandId:string)=>runtime.launch.events(commandId),automations:async(commandId:string)=>{await runtime.calendarSync.service.tick();await runtime.automations.runtime.tick(commandId,'queue')} }
 }

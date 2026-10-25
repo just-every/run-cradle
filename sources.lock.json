@@ -6290,7 +6290,7 @@
       "executable": false
     },
     "src/core/app/composition/events.server.ts": {
-      "sha256": "4d124307c7fb8829f4b47cfda86dbd4d86e8c628fe37ca3cb502cf7d5f5a18f4",
+      "sha256": "643cd80e7ee968985f76bb380c2b877084908f3548ae308cd50fa46e09f16bd4",
       "executable": false
     },
     "src/core/app/composition/execution-guards.server.ts": {
@@ -12250,7 +12250,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "03922c7b43b778f365cecdef621f16f57a349a945a07b6c59ccede799dfebdf1",
+      "sha256": "931abdeb96fd5be4eecc056dd928e7f2c9f82d4f73e68815b80d09feb6794987",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -13182,7 +13182,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "a1093bf10a1cafa4e51509b147f4520e141654e896d01f2e75bf0d6bbe5fbae9",
+      "sha256": "8353b934260a478ec2814a95e838766780028d471eef21138887ff2a4fa63510",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {

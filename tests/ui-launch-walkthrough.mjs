@@ -30,9 +30,11 @@ contract('VIEW-004', '[NOTIFY-001] [NOTIFY-002] [NOTIFY-003] [NOTIFY-006] [NOTIF
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
 let notificationMailStatus=202
 const setNotificationMailStatus=status=>{notificationMailStatus=status}
-const outageProvider=recordCalendarProvider()
-const h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}, {providerFetch:request=>outageProvider.fetch(request),installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})
+const outageProvider=recordCalendarProvider(),exportRequests=[]
+const exportEdge=async request=>{if(request.url!=='https://synthetic-cradle-relay.example.com/v1/deliver')return outageProvider.fetch(request);assert.equal(request.headers.get('authorization'),'Bearer synthetic-cradle-93-progress-relay-secret');const wire=await request.json();assert.equal(new URL(wire.url).hostname,'synthetic-cradle-warehouse.example.com');exportRequests.push(wire);return Response.json({status:wire.method==='PUT'?403:wire.method==='HEAD'?404:204,headers:{},body:Buffer.from(wire.method==='PUT'?'synthetic-cradle-export-refused':'').toString('base64'),bodyEncoding:wire.bodyEncoding})}
+const h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1',EGRESS_RELAY_URL:'https://synthetic-cradle-relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-93-progress-relay-secret'}, {providerFetch:exportEdge,installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})
 h.notificationOutageProvider=outageProvider
+h.notificationExportRequests=exportRequests
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006','CAMP-007']}
 let browser
 const command=async(action,input,expected=[])=>{

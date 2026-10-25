@@ -12,11 +12,11 @@ const paths={
  'automation-failed':'saved automation with disabled AI',
  'decision-overdue':'emitted overdue schedule',
  outage:'connection.check and expired user automation approval',
- progress:null,
+ progress:'base import batches and scheduled warehouse exports',
  'weekly-digest':'emitted Monday digest',
  'record-automation':'saved notify-operator action (in-app-only)',
 }
-const titles={outage:'An operational outage needs attention','decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
+const titles={progress:'Progress update',outage:'An operational outage needs attention','decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
 export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  assert.deepEqual(Object.keys(paths).sort(),[...notificationKinds].sort(),'NOTIFY-007 matrix accounts for exactly the production kind list')
  assert.deepEqual(Object.entries(paths).filter(([,path])=>path===null).map(([kind])=>kind).sort(),[...notificationKindsWithoutProducer].sort(),'NOTIFY-007 missing-producer paths match the Settings disclosure list')
@@ -133,6 +133,74 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   if(muted)retained.push({kind:'outage',ids:rows.map(n=>n.id)})
   console.log(`NOTIFY-009 ${width} ${phase}: connection outage/repeat/recovery and product-fenced automation stop, owner only; muted=${muted}`)
  }
+ const progressEvents=async(muted,phase)=>{
+  const progressStart=await read('progress'),kept=[]
+  const result=async(state,sourceType,before,mailStart)=>{
+   const fresh=(await read('progress')).filter(n=>!before.some(old=>old.id===n.id))
+   await assertRows('progress',fresh,muted,(await h.mailMessages()).slice(mailStart),[h.owner])
+   const inbox=(await raw('/api/notifications')).notifications.find(n=>n.id===fresh[0].id)
+   assert.equal(inbox.subject.available,true);assert.equal(inbox.subject.href,`/api/v1/commands/${fresh[0].subject_id}`)
+   const receipt=(await raw(inbox.subject.href)).data.result
+   assert.equal(receipt.state,state);assert.equal(receipt.sourceType,sourceType)
+   assert.ok(Object.values(receipt.counts).every(Number.isInteger))
+   const denied=await h.request(other.session,inbox.subject.href);assert.equal(denied.status,404,'NOTIFY-009 result receipt is starter-only')
+   kept.push(...fresh);return {fresh,receipt}
+  }
+  const multipart=async(path,bytes,options,preview)=>{
+   const form=new FormData();form.append('files',new File([bytes],'synthetic-cradle-94.csv',{type:'text/csv'}));form.append('options',JSON.stringify(options))
+   if(preview){form.append('identities',JSON.stringify(preview.identities));form.append('fingerprint',preview.fingerprint);form.append('acceptLoss','true')}
+   const response=await fetch(h.origin+path,{method:'POST',headers:{cookie:h.ownerSession.cookie,origin:h.origin,'x-csrf-token':h.ownerSession.csrf},body:form})
+   assert.equal(response.status,200,await response.clone().text());return(await response.json()).data
+  }
+  const imports=[]
+  for(const failed of [false,true]){
+   const before=await read('progress'),mailStart=(await h.mailMessages()).length
+   const csv='Name\r\n'+Array.from({length:25},(_,i)=>`synthetic-cradle-${failed&&i===24?0:i}`).join('\r\n')+'\r\n',options={name:`synthetic-cradle-progress-${width}-${phase}-${failed}`,tables:{}}
+   const preview=await multipart('/api/v1/records/base-import/preview',csv,options),review=await multipart('/api/v1/records/base-import/review',csv,options,preview)
+   let job=(await raw('/api/v1/records/base-import/adopt',{reviewId:review.reviewId,fingerprint:preview.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true})).data
+   assert.ok(job.total>20,'NOTIFY-009 import is a multi-batch job')
+   if(failed){
+    const draft={...preview.schemaDraft,tables:preview.schemaDraft.tables.map(t=>({...t,fields:t.fields.map(f=>f.id===t.primaryFieldId?{...f,unique:true}:f)}))}
+    const change=(await raw('/api/v1/records/schema-preview',draft)).data
+    await request(h.ownerSession,'release.adopt',{kind:'manual_schema',previewId:change.id})
+   }
+   let failureStatus
+   for(let batch=0;batch<10&&job.state!=='completed';batch++){
+    const response=await h.request(h.ownerSession,`/api/v1/records/base-import/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
+    if(response.status!==200){assert.ok(failed);assert.ok([409,500].includes(response.status),await response.clone().text());failureStatus=response.status;break}
+    job=(await response.json()).data
+   }
+   if(failed)assert.ok(failureStatus,'NOTIFY-009 current unique schema rejects the duplicate import batch')
+   else assert.equal(job.state,'completed')
+   await tick(Date.now())
+   const checked=await result(failed?'failed':'completed','import',before,mailStart)
+   assert.equal(checked.receipt.counts.totalEntries,25)
+   if(!failed)assert.equal(checked.receipt.counts.appliedEntries,25)
+   const repeated=await h.request(h.ownerSession,`/api/v1/records/base-import/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
+   assert.equal(repeated.status,failed?failureStatus:200)
+   await tick(Date.now())
+   assert.deepEqual((await read('progress')).filter(n=>checked.fresh.some(old=>old.id===n.id)),checked.fresh,'NOTIFY-009 repeated import result creates no second notice or update')
+   imports.push(preview.identities.appId)
+  }
+  for(const failed of [false,true]){
+   const before=await read('progress'),mailStart=(await h.mailMessages()).length,id=createUlid()
+   const definition={id,name:`synthetic-cradle-export-${width}-${phase}-${failed}`,bases:[imports[0]],mode:'full',format:'csv',destination:failed?{kind:'s3',endpoint:'https://synthetic-cradle-warehouse.example.com',region:'us-east-1',bucket:'synthetic-cradle-95',prefix:'results'}:{kind:'r2'},...(failed?{access:{accessKeyId:'synthetic-cradle-96',secretAccessKey:'synthetic-cradle-97'}}:{}),localRule:'hourly',timezone:'UTC',version:0}
+   const saved=await request(h.ownerSession,'warehouse.save',definition)
+   const run=await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()});assert.equal(run.outcome,failed?'exception':'ok')
+   const checked=await result(failed?'failed':'completed','export',before,mailStart)
+   assert.equal(checked.receipt.sourceId,id)
+   if(failed){assert.equal(checked.receipt.counts.dataFiles,0);assert.ok(h.notificationExportRequests.some(r=>r.method==='PUT'),'NOTIFY-009 failed export crossed the refusing provider edge')}
+   else assert.ok(checked.receipt.counts.dataFiles>0)
+   const repeat=await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()});assert.equal(repeat.outcome,failed?'exception':'ok')
+   assert.deepEqual((await read('progress')).filter(n=>checked.fresh.some(old=>old.id===n.id)),checked.fresh,'NOTIFY-009 repeated export occurrence creates no second notice or update')
+   await request(h.ownerSession,'warehouse.remove',{id,version:saved.version})
+  }
+  const fresh=(await read('progress')).filter(n=>!progressStart.some(old=>old.id===n.id))
+  assert.deepEqual(fresh.map(n=>n.id).sort(),kept.map(n=>n.id).sort(),'NOTIFY-009 import/export results notify exactly their starter and nobody else')
+  assert.equal((await preferences(other.session)).mutedKinds.includes('progress'),false)
+  if(muted)retained.push({kind:'progress',ids:kept.map(n=>n.id)})
+  console.log(`NOTIFY-009 ${width} ${phase}: import/export completion and failure, exact starter receipts/mail; muted=${muted}`)
+ }
  const monday=new Date();monday.setUTCHours(0,0,0,0);monday.setUTCDate(monday.getUTCDate()+7-(monday.getUTCDay()+6)%7+(width===390?14:0))
  const retained=[],futureNotices=[],inAppOnly=[]
  for(const [phase,muted]of [[0,true],[1,false]]){
@@ -141,6 +209,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   for(const [kind,path]of Object.entries(paths)){
    if(!path)continue
    if(kind==='outage'){await operational(muted,phase);continue}
+   if(kind==='progress'){await progressEvents(muted,phase);continue}
    // Drain unrelated prior work before measuring this real event path.
    await tick(Date.now())
    const before=await read(kind),old=new Set(before.map(n=>n.id)),subjects=[],mailStart=(await h.mailMessages()).length
@@ -216,5 +285,5 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  if(!readinessAutomation.enabled)await request(h.ownerSession,'launch.automation.disable',{id:readinessAutomation.id},ref('automation',await row('automations',readinessAutomation.id)))
  const now=await settings();await request(h.ownerSession,'settings.update',{version:now.version,changes:{timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,originalOther]]){const current=await preferences(session);await request(session,'preferences.update',{version:current.version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})}
- console.log('NOTIFY-007 unproved: progress has no event producer; outage generated and record-automation in-app-only delivery covered')
+ console.log('NOTIFY-007 every offered kind has a generated event; record-automation remains the covered in-app-only path')
 }
