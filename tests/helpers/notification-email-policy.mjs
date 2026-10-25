@@ -61,6 +61,12 @@ export async function verifyNotificationEmailPolicy({h,page,capture,actor,other}
  if(!automation.enabled){const a=await h.db.prepare('SELECT id,version FROM automations WHERE id=?').bind(automation.id).first();await command('automation.disable',{id:a.id},ref('automation',a))}
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,otherBefore]])await request(session,'preferences.update',{version:(await prefs(session)).version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})
  await configure({timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end})
+ // The future quiet-window/digest tick also makes this fixture's Critical
+ // decision overdue. Read those exact future retained notices after the proof.
+ for(const notice of (await h.db.prepare('SELECT n.id,n.operator_id FROM notifications n JOIN channel_notifications m ON m.notification_id=n.id WHERE m.campaign_id=? AND n.created_at>?').bind(c.id,Date.now()).all()).results){
+  assert.ok([h.owner,other.id,actor.id].includes(notice.operator_id))
+  await request(notice.operator_id===h.owner?h.ownerSession:notice.operator_id===other.id?other.session:actor.session,'notification.read',{notificationId:notice.id})
+ }
  const current=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(c.id).first();await command('campaign.archive',{id:c.id},ref('campaign',current));await command('campaign.delete',{id:c.id,confirmationCode:c.code},ref('campaign',await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(c.id).first()))
  console.log(`NOTIFY-002 ${width}: urgent 60-second tick, held grouping, authentication and digest exceptions; in-app-only counterparts remain a Gap`)
 }

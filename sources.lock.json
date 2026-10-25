@@ -12254,7 +12254,7 @@
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
-      "sha256": "af55e0534f8acdf074abdce14b90114100dd96665a8864c4b1287f4d6654d9d5",
+      "sha256": "0db57514d75674e71982a6de219199674c48bb7a80dd0e3048d55a35375946a4",
       "executable": false
     },
     "tests/helpers/notification-event-screens.mjs": {
