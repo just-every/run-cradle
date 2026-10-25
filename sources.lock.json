@@ -12210,7 +12210,7 @@
       "executable": false
     },
     "tests/helpers/launch-workspace-screens.mjs": {
-      "sha256": "d5011cb2f1f39bc2fe02544450e295b53971b59390911f48bd48f8ccb9ad9760",
+      "sha256": "db7b75cbc7603595fb6c565f532a8c3200166c18b56a430430b43ff6b092f1f9",
       "executable": false
     },
     "tests/helpers/launch-write-context.mjs": {
