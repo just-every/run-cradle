@@ -14,7 +14,8 @@ import {warehouseFiles} from './file-format.server'
 import {dueSchedule} from '../../apps/launch/schedule'
 import {reserveFileWrite,finishFileWrite} from '../lifecycle/file-writes.server'
 import {AuthorityError} from '../authority/errors'
-import {publishProgress} from '../channels/integration.server'
+import {owedProgressStatement,oweProgress,deliverOwedProgress} from '../channels/progress-owed.server'
+import type {OwedProgress} from '../channels/progress-owed.server'
 
 type Mark={version:number;updatedAt:string;hash:string}
 type Watermark=Record<string,{schemaHash:string;rows:Record<string,Mark>;at:string}>
@@ -50,7 +51,8 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    :await db.prepare("UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,startedAt,at,runSlot,revision,row.id,row.version,slot).first<{id:string}>()
   if(!acquired)return
   const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
-  let reservation:string|undefined,committed=false
+  let reservation:string|undefined,committed=false,failure:{error:unknown}|undefined
+  const progress=(outcome:OwedProgress['outcome']):OwedProgress=>({subjectType:'warehouse-export',subjectId:row.id,starterId:row.owner_id,eventId:`warehouse-export:${row.id}:${row.version}:${runSlot}:${outcome}`,outcome})
   const keys=(await db.prepare('SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key').bind(row.id,runId).all<{object_key:string}>()).results.map(value=>value.object_key)
   try{
    reservation=await reserveFileWrite(db,'warehouse:'+row.id,startedAt)
@@ -123,18 +125,23 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
     ...unique.map((guard,index)=>db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,index,...guard.values)),
     db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),runSlot,startedAt,row.id,runId),
     ...bases.map(appId=>db.prepare('INSERT INTO operation_audit(id,actor_id,app_id,action,feature,created_at) VALUES(?,?,?,?,?,?)').bind(createUlid(),actor.id,appId,'warehouse.export','Warehouse exports',startedAt)),
+    // The completion notice is owed in the same commit as the watermark.
+    await owedProgressStatement(db,progress('completed')),
     db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
    ])
    committed=true
-  }finally{try{
+  }catch(error){failure={error};throw error}finally{try{
    if(!committed)for(const key of keys){await store.delete(key);if(await store.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
    await db.prepare('DELETE FROM authority_credentials WHERE id=?').bind(credential).run()
    if(reservation)await finishFileWrite(db,reservation)
    if(resuming)await db.prepare('DELETE FROM lifecycle_file_writes WHERE object_key=? AND started_at<=?').bind('warehouse:'+row.id,startedAt).run()
    await db.prepare('UPDATE warehouse_exports SET running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL WHERE id=? AND running_id=?').bind(row.id,runId).run()
   }finally{
-   const outcome=committed?'completed':'failed'
-   await publishProgress(db,{subjectType:'warehouse-export',subjectId:row.id,starterId:row.owner_id,eventId:`warehouse-export:${row.id}:${row.version}:${runSlot}:${outcome}`,outcome,ingress:ctx.ingress,guard:trustedPredicate(`EXISTS(SELECT 1 FROM warehouse_exports WHERE id=? AND owner_id=? AND version=?${committed?' AND last_slot=?':''})`,[row.id,row.owner_id,row.version,...committed?[runSlot]:[]])})
+   const owed=progress(committed?'completed':'failed')
+   try{if(!committed)await oweProgress(db,owed);await deliverOwedProgress(db,ctx.ingress,owed.eventId)}
+   // An in-flight provider or export error stays the reported cause; the owed
+   // notice is retried on a later tick, which reports its own failure.
+   catch(publication){if(!failure)throw publication}
   }
   }
  }

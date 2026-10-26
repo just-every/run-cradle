@@ -32,8 +32,7 @@ import { requestContext } from '../../../../vendor/base/modules/import-kit/src/d
 import { stored } from '../../../../vendor/base/modules/import-kit/src/d1/jobs'
 import type { D1ImportContext } from '../../../../vendor/base/modules/import-kit/src/d1/types'
 import type { ImportJob, Reconciliation } from '../../../../vendor/base/modules/import-kit/src/types'
-import {publishProgress} from '../../channels/integration.server'
-import {trustedPredicate} from '../../admission/sql.server'
+import {oweProgress,deliverOwedProgress} from '../../channels/progress-owed.server'
 
 export type PreviewBuilder=(source:PreparedSource,options:ImportOptions,identities:ImportIdentities)=>BasePreview|Promise<BasePreview>
 export function createBaseImportService(db:D1Database,policy:PolicyPort,registry:DescriptorRegistry,manual:ReturnType<typeof createManualSchemas>,buildPreview:PreviewBuilder){
@@ -141,9 +140,15 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   if(operation!=='resume')return operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
   const before=await readD1ImportJob(id,c),starterId=c.authorization.principalId
   if(['undone','rolling_back','rolled_back','undoing'].includes(before.state))return resumeD1Import(id,c)
-  const notify=(outcome:'completed'|'failed')=>publishProgress(db,{subjectType:'base-import',subjectId:id,starterId,eventId:`base-import:${id}:${outcome}`,outcome,ingress:ctx.ingress,guard:trustedPredicate(`EXISTS(SELECT 1 FROM ik_jobs WHERE id=? AND principal_id=?${outcome==='completed'?" AND state='completed'":''})`,[id,starterId])})
+  // Completion is owed by the ik_jobs trigger in the kit's completing batch; a failure is owed here.
+  const notify=async(outcome:'completed'|'failed')=>{const eventId=`base-import:${id}:${outcome}`;if(outcome==='failed')await oweProgress(db,{subjectType:'base-import',subjectId:id,starterId,eventId,outcome});await deliverOwedProgress(db,ctx.ingress,eventId)}
   let job:ImportJob
-  try{job=await resumeD1Import(id,c)}catch(error){await notify('failed');throw error}
+  try{job=await resumeD1Import(id,c)}catch(error){
+   // The import error stays the reported cause; an unpublished notice stays
+   // owed and a later tick reports its own publication failure.
+   await notify('failed').catch(()=>undefined)
+   throw error
+  }
   if(job.state==='completed')await notify('completed')
   else if(job.state==='failed')await notify('failed')
   return job
