@@ -383,7 +383,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   const targets=await(await fetch(inspector)).json(),target=targets.find(t=>String(t.id).startsWith('core:user:'))
   assert.ok(target,'NOTIFY-009 the owned emitted Worker exposes its inspector target')
   const socket=new WebSocket(target.webSocketDebuggerUrl),pending=new Map(),scripts=[]
-  let serial=0,hit,breakpoint
+  let serial=0,hit,breakpoint,stopped=false
   const paused=new Promise(resolve=>hit=resolve)
   await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})})
   const command=(method,params={})=>new Promise((resolve,reject)=>{const requestId=++serial;pending.set(requestId,{resolve,reject});socket.send(JSON.stringify({id:requestId,method,params}))})
@@ -406,14 +406,18 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    }
    assert.ok(breakpoint,'NOTIFY-009 the after-claim boundary is present in the emitted Worker')
    const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
-   await paused
-   const processes=execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const [pid,ppid,...name]=line.trim().split(/\s+/);return {pid:Number(pid),ppid:Number(ppid),name:name.join(' ')}})
+   // An execution that ends before its boundary is a failure with its outcome,
+   // never a wait for a pause that cannot come.
+   const ended=await Promise.race([paused.then(()=>null),invocation])
+   if(ended)assert.fail(`NOTIFY-009 the scheduled execution ended before its interruption boundary: ${JSON.stringify({outcome:ended.result?.outcome??String(ended.error),export:await h.db.prepare('SELECT state,running_id,running_failures,running_stalls,running_stopped_slot,last_slot FROM warehouse_exports WHERE id=?').bind(id).first(),objects:(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(id).first()).n})}`)
+   const processes=execFileSync('ps',['-axo','pid,ppid,stat,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const [pid,ppid,stat,...name]=line.trim().split(/\s+/);return {pid:Number(pid),ppid:Number(ppid),stat,name:name.join(' ')}})
    const owned=new Set([process.pid]);let changed=true
    while(changed){changed=false;for(const child of processes)if(owned.has(child.ppid)&&!owned.has(child.pid)){owned.add(child.pid);changed=true}}
-   const workers=processes.filter(child=>owned.has(child.pid)&&/workerd$/.test(child.name))
-   assert.equal(workers.length,1,'NOTIFY-009 this fixture owns exactly one workerd to interrupt')
+   // An earlier stopped workerd that is not yet reaped has exited; it is not a candidate.
+   const workers=processes.filter(child=>owned.has(child.pid)&&!child.stat.startsWith('Z')&&/workerd$/.test(child.name))
+   assert.equal(workers.length,1,`NOTIFY-009 this fixture owns exactly one workerd to interrupt: ${JSON.stringify(workers)}`)
    console.log(`NOTIFY-009 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
-   process.kill(workers[0].pid,'SIGKILL')
+   process.kill(workers[0].pid,'SIGKILL');stopped=true
    await invocation
    socket.close()
    await h.restart()
@@ -424,7 +428,12 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    const attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(eventId).first()
    assert.equal(attempt.token,claim.running_id,'NOTIFY-009 the retained attempt belongs to the interrupted execution')
    return {id,eventId,claim}
-  }finally{socket.close()}
+  }finally{
+   // A failure before the stop resumes the paused Worker, so the runtime closes and
+   // the failure is reported instead of holding the shard until its cap.
+   if(breakpoint&&!stopped)await command('Debugger.resume').catch(()=>{})
+   socket.close()
+  }
  }
  for(const muted of [false,true]){
   await prefs(starter,muted?['progress']:[],true)
