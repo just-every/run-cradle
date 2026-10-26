@@ -609,7 +609,11 @@ async function verifyImportStarterHandover(width){
   await handover(owner,successor)
   try{
    const mailStart=(await h.mailMessages()).length
-   assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()})).outcome,'ok')
+   const publishedAt=Date.now(),worker=await h.runtime.getWorker()
+   assert.equal((await worker.scheduled({cron:'* * * * *',scheduledTime:publishedAt})).outcome,'ok')
+   // Publication uses the real request clock. Advance the next scheduled door
+   // past that fresh delivery's due instant before asserting provider acceptance.
+   assert.equal((await worker.scheduled({cron:'* * * * *',scheduledTime:publishedAt+60000})).outcome,'ok')
    const inbox=(await json(owner,'/api/v1/notifications')).items,otherInbox=(await json(successor,'/api/v1/notifications')).items
    for(const [id,outcome]of [[completed,'completed'],[failed,'failed']]){
     const expected=progressText.import[outcome],rows=await notices(id)
