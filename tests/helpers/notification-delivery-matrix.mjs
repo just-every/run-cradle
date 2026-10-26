@@ -380,12 +380,13 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  const interruptedExport=async(retainedId,boundary='SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key',condition)=>{
   const id=retainedId??await saveExport(starter),inspector=new URL(await h.runtime.getInspectorURL())
   const state=async()=>({export:await h.db.prepare('SELECT state,running_id,running_failures,running_stalls,running_stopped_slot,last_slot FROM warehouse_exports WHERE id=?').bind(id).first(),objects:(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(id).first()).n})
-  const saved=await state(),matches=[],pauses=[]
+  const saved=await state(),matches=[],pauses=[],resolutions=[]
   inspector.protocol='http:';inspector.pathname='/json'
   const targets=await(await fetch(inspector)).json(),target=targets.find(t=>String(t.id).startsWith('core:user:'))
   assert.ok(target,'NOTIFY-009 the owned emitted Worker exposes its inspector target')
   const socket=new WebSocket(target.webSocketDebuggerUrl),pending=new Map(),scripts=[]
-  let serial=0,hit,breakpoint,contextId,stopped=false
+  const breakpoints=new Set(),bindings=new Map()
+  let serial=0,hit,contextId,stopped=false
   const paused=new Promise(resolve=>hit=resolve)
   await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})})
   const command=(method,params={})=>new Promise((resolve,reject)=>{const requestId=++serial;pending.set(requestId,{resolve,reject});socket.send(JSON.stringify({id:requestId,method,params}))})
@@ -393,25 +394,32 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    const message=JSON.parse(event.data)
    if(message.id&&pending.has(message.id)){const waiter=pending.get(message.id);pending.delete(message.id);message.error?waiter.reject(new Error(message.error.message)):waiter.resolve(message.result)}
    if(message.method==='Debugger.scriptParsed')scripts.push(message.params)
-   if(message.method==='Debugger.paused'){pauses.push({reason:message.params.reason,hitBreakpoints:message.params.hitBreakpoints,location:message.params.callFrames?.[0]?.location});if(message.params.hitBreakpoints?.includes(breakpoint))hit()}
+   if(message.method==='Debugger.breakpointResolved')resolutions.push(message.params)
+   if(message.method==='Debugger.paused'){pauses.push({reason:message.params.reason,hitBreakpoints:message.params.hitBreakpoints,location:message.params.callFrames?.[0]?.location});if(message.params.hitBreakpoints?.some(id=>breakpoints.has(id)))hit()}
   })
   try{
    await command('Debugger.enable')
    const needle=boundary
-   for(const script of scripts){
-    const {scriptSource}=await command('Debugger.getScriptSource',{scriptId:script.scriptId}),offset=scriptSource.indexOf(needle)
+   const sources=await Promise.all(scripts.map(async script=>({...script,...await command('Debugger.getScriptSource',{scriptId:script.scriptId})})))
+   for(const script of sources){
+    const {scriptSource}=script,offset=scriptSource.indexOf(needle)
     if(offset<0)continue
     assert.equal(scriptSource.indexOf(needle,offset+1),-1,'NOTIFY-009 the emitted after-claim boundary is unambiguous')
     const before=scriptSource.slice(0,offset),location={scriptId:script.scriptId,lineNumber:before.split('\n').length-1,columnNumber:offset-before.lastIndexOf('\n')-1}
     const match={scriptId:script.scriptId,url:script.url,executionContextId:script.executionContextId,requested:location}
     matches.push(match)
-    if(!breakpoint){
-     const resolved=await command('Debugger.setBreakpoint',{location,...condition?{condition}:{}})
-     breakpoint=resolved.breakpointId;contextId=script.executionContextId
-     match.locations=[resolved.actualLocation]
+    assert.ok(script.url,'NOTIFY-009 the emitted boundary has a module URL')
+    const binding=JSON.stringify([script.url,location.lineNumber,location.columnNumber])
+    // The module URL binds current and later parsed instances of this boundary.
+    if(!bindings.has(binding)){
+     const resolved=await command('Debugger.setBreakpointByUrl',{url:script.url,lineNumber:location.lineNumber,columnNumber:location.columnNumber,...condition?{condition}:{}})
+     assert.ok(resolved.locations.length,'NOTIFY-009 the interruption boundary resolves in the emitted module')
+     bindings.set(binding,resolved);breakpoints.add(resolved.breakpointId)
     }
+    contextId??=script.executionContextId
+    match.locations=bindings.get(binding).locations
    }
-   assert.ok(breakpoint,'NOTIFY-009 the after-claim boundary is present in the emitted Worker')
+   assert.ok(breakpoints.size,'NOTIFY-009 the after-claim boundary is present in the emitted Worker')
    const before=await state(),counterBefore=await command('Runtime.evaluate',{expression:'globalThis.__retainedObjects',contextId,returnByValue:true})
    const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
    // An execution that ends before its boundary is a failure with its outcome,
@@ -419,9 +427,9 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    const ended=await Promise.race([paused.then(()=>null),invocation])
    if(ended){
     const counter=await command('Runtime.evaluate',{expression:'globalThis.__retainedObjects',contextId,returnByValue:true}),conditionResult=condition?await command('Runtime.evaluate',{expression:condition,contextId,returnByValue:true}):undefined
-    assert.fail(`NOTIFY-009 the breakpoint did not pause before the scheduled execution ended: ${JSON.stringify({outcome:ended.result?.outcome??String(ended.error),targets:targets.map(({id,title,url})=>({id,title,url})),matches,saved,before,counterBefore,counter,conditionResult,pauses,after:await state()})}`)
+    assert.fail(`NOTIFY-009 the breakpoint did not pause before the scheduled execution ended: ${JSON.stringify({outcome:ended.result?.outcome??String(ended.error),targets:targets.map(({id,title,url})=>({id,title,url})),matches,saved,before,counterBefore,counter,conditionResult,pauses,resolutions,after:await state()})}`)
    }
-   if(condition)console.log(`NOTIFY-009 ${width}: progress breakpoint paused ${JSON.stringify({matches,saved,before,counterBefore,counter:await command('Runtime.evaluate',{expression:'globalThis.__retainedObjects',contextId,returnByValue:true}),pauses})}`)
+   if(condition)console.log(`NOTIFY-009 ${width}: progress breakpoint paused ${JSON.stringify({matches,saved,before,counterBefore,counter:await command('Runtime.evaluate',{expression:'globalThis.__retainedObjects',contextId,returnByValue:true}),pauses,resolutions})}`)
    const processes=execFileSync('ps',['-axo','pid,ppid,stat,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const [pid,ppid,stat,...name]=line.trim().split(/\s+/);return {pid:Number(pid),ppid:Number(ppid),stat,name:name.join(' ')}})
    const owned=new Set([process.pid]);let changed=true
    while(changed){changed=false;for(const child of processes)if(owned.has(child.ppid)&&!owned.has(child.pid)){owned.add(child.pid);changed=true}}
@@ -443,7 +451,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   }finally{
    // A failure before the stop resumes the paused Worker, so the runtime closes and
    // the failure is reported instead of holding the shard until its cap.
-   if(breakpoint&&!stopped)await command('Debugger.resume').catch(()=>{})
+   if(breakpoints.size&&!stopped)await command('Debugger.resume').catch(()=>{})
    socket.close()
   }
  }
