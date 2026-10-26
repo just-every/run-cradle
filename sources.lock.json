@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "3066093d845162e515d0a2f80e6415f3b9e152be7caca2db378e41c82ba01dec",
+      "sha256": "b8fca56d46358e886a35bece5e17977ebc82022bbc93839bdd1d1d6e7feb7183",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "0c413ca97ef9198fd5a7231dc8a876299003b9634ee2ea189379e74ee097b4fd",
+      "sha256": "0d30af4ff0b9c5064dc72d6e31cfccae6373df38a6876b8a24f1003416c597da",
       "executable": false
     },
     "DEMO.md": {
@@ -9242,7 +9242,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/service.server.ts": {
-      "sha256": "375a8fffc32055498c057b27607f4ef0c671c36787feefbace2a0c1129db79c0",
+      "sha256": "2de0db053082729aa19096e5ee4833ab17938e8bc78a115c616061a5f5808428",
       "executable": false
     },
     "src/domains/records/base-transfer/source-api.ts": {
@@ -12282,7 +12282,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "7277c28efa35fc4ab07cea1a1de22412efdd36a0549012e76d0f4de2a436c09e",
+      "sha256": "6bc4d5ec542754e2a265b82b21634edd12753ddce7974192fee3f6a9733f62d0",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
