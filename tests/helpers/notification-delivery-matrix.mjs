@@ -274,6 +274,9 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  const now=await settings();await request(h.ownerSession,'settings.update',{version:now.version,changes:{timezone:original.timezone,quietHoursStart:original.quietHours.start,quietHoursEnd:original.quietHours.end}})
  for(const [session,p]of [[h.ownerSession,original.preferences],[other.session,originalOther]]){const current=await preferences(session);await request(session,'preferences.update',{version:current.version,preferences:{timezone:p.timezone,mutedKinds:p.mutedKinds,digestEnabled:p.digestEnabled,progressEnabled:p.progressEnabled}})}
  await progress.close()
+ // The handover case owns a separate installation and runs after the surrounding
+ // matrix has restored its settings, preferences and operational ownership.
+ await verifyImportStarterHandover(width)
  console.log('NOTIFY-007 all offered kinds have generated-event delivery rows')
 }
 
@@ -533,8 +536,6 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  for(const id of [lostExport,lostImport])assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,0,'NOTIFY-009 recovered failure leaves no owed row')
  await prefs(owner,failurePreferences.mutedKinds,failurePreferences.progressEnabled)
  console.log(`NOTIFY-009 ${width}: failed export and import survive a failed ${journal?'journal settlement':'post-failure debt'} write, no import resume, removed export schedule, exactly one notice and mail each`)
-
- await verifyImportStarterHandover(width)
 
  return {async events(muted,phase){
   for(const person of people)for(const source of ['import','export'])for(const failed of [false,true]){
