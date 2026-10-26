@@ -426,6 +426,45 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    return {id,eventId,claim}
   }finally{socket.close()}
  }
+ for(const muted of [false,true]){
+  await prefs(starter,muted?['progress']:[],true)
+  const matchingMail=(await h.mailMessages()).length,matching=await interruptedExport(),heldAt=Date.now()
+  // Advance only the notification lease, not the current execution ownership.
+  await h.db.prepare("UPDATE channel_progress_attempts SET live_until='2000-01-01T00:00:00.000Z' WHERE event_id=?").bind(matching.eventId).run()
+  await tick(heldAt+60000)
+  assert.deepEqual(await rows(matching.id),[],'NOTIFY-009 an expired notification lease does not publish failure while the matching active execution claim remains')
+  assert.equal((await h.mailMessages()).length,matchingMail,'NOTIFY-009 a matching active claim suppresses every premature failure mail')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE event_id=? AND outcome=?').bind(matching.eventId,'failed').first()).n,1,'NOTIFY-009 matching-claim protection preserves its write-ahead failed debt')
+  // The synthetic crash clock makes the old execution credential expire before
+  // the real scheduled door reclaims and completes the same retained run.
+  await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),matching.id).run()
+  await tick(heldAt+120000);await tick(heldAt+180000)
+  await check(matching.id,starter,muted,matchingMail,['export','completed'])
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-009 successful protected resume never creates a false failure event')
+  assert.equal((await h.mailMessages()).slice(matchingMail).filter(message=>message.subject===progressText.export.failed.title).length,0,'NOTIFY-009 successful protected resume never sends failure mail')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(matching.id).first()).n,0,'NOTIFY-009 successful protected resume leaves no notification debt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-009 successful protected resume leaves no attempt')
+  await removeExport(starter,matching.id)
+
+  const controlMail=(await h.mailMessages()).length,control=await interruptedExport(),controlAt=Date.now()
+  // Crash fixture: the debt names a different execution from the retained
+  // active claim. Matching merely the export id would suppress it incorrectly.
+  await h.db.prepare("UPDATE channel_progress_attempts SET token='synthetic-cradle-1501',live_until='2000-01-01T00:00:00.000Z' WHERE event_id=?").bind(control.eventId).run()
+  await tick(controlAt+60000);await tick(controlAt+120000)
+  const published=await check(control.id,starter,muted,controlMail,['export','failed'])
+  await tick(controlAt+180000)
+  assert.deepEqual(await rows(control.id),[published],'NOTIFY-009 an unrelated claim does not hold or repeat another execution outcome')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(control.id).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no debt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(control.eventId).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no attempt')
+  await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),control.id).run()
+  const retiredControl=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:controlAt+240000})
+  assert.equal(retiredControl.outcome,'exception','NOTIFY-009 the nonmatching control cannot commit across its published outcome admission')
+  assert.equal((await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(control.id).first()).running_id,null,'NOTIFY-009 the refused control resume releases its execution claim')
+  await removeExport(starter,control.id)
+ }
+ await prefs(starter,[],true)
+ console.log(`NOTIFY-009 ${width}: expired notification lease discriminates matching and unrelated active claims; protected resume completes once with no false failure or debt`)
+
  // Repeated interrupted resumptions follow the finite recovery policy: no report
  // while recovery continues, exactly one needs-attention outcome once it stops,
  // the resumable claim kept, and the next scheduled time reporting its own outcome.
