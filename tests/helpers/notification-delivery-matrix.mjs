@@ -353,6 +353,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  assert.ok((await h.db.prepare('SELECT last_slot FROM warehouse_exports WHERE id=?').bind(owed).first()).last_slot,'NOTIFY-009 the export committed before its notice publication failed')
  assert.deepEqual(await rows(owed),[],'NOTIFY-009 no notice exists while the notification principal is unavailable')
  await tick(committedAt+60000)
+ assert.equal((await rows(owed)).length,1,'NOTIFY-009 exactly one starter notice for the committed export after recovery')
  const recovered=await check(owed,starter,true,owedMail,['export','completed'])
  for(const offset of [300000,3600000]){
   await tick(committedAt+offset)
@@ -400,6 +401,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  const importMail=(await h.mailMessages()).length,imported=await importJob(owner,false,true),importedAt=Date.now()
  assert.deepEqual(await rows(imported),[],'NOTIFY-009 no import notice exists while the notification principal is unavailable')
  await tick(importedAt+60000)
+ assert.equal((await rows(imported)).length,1,'NOTIFY-009 exactly one starter notice for the committed import after recovery')
  const importNotice=await check(imported,owner,true,importMail,['import','completed'])
  for(const offset of [300000,3600000]){
   await tick(importedAt+offset)
