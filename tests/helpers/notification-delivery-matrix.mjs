@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
+import {createServer} from 'node:net'
+import {mkdir} from 'node:fs/promises'
+import path from 'node:path'
+import {chromium} from '@playwright/test'
 import {notificationKinds,notificationKindsWithoutProducer} from '../../src/domains/channels/ports.ts'
-import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
+import {launchAuthorityRuntime,createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
 
 // Entries with a gap deliberately earn no delivery claim. Importing the product
 // inventory makes a newly offered kind fail until its real producer is reviewed.
@@ -366,7 +370,26 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  await prefs(starter,[],true)
  console.log(`NOTIFY-009 ${width}: committed export owed its notice through an unavailable notification principal; one notice after recovery`)
 
- const importJob=async(person,fail,owed=false)=>{
+ // Completion describes the current job only: removal or a saved new version
+ // must retire an unpublished old completion without creating mail.
+ for(const operation of ['removed','edited']){
+  const id=await saveExport(starter),mailBefore=(await h.mailMessages()).length
+  await h.db.prepare("UPDATE authority_principals SET state='removed' WHERE id=? AND kind='system'").bind(system).run()
+  let blocked
+  try{blocked=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()})}
+  finally{await h.db.prepare("UPDATE authority_principals SET state='active' WHERE id=? AND kind='system'").bind(system).run()}
+  assert.equal(blocked.outcome,'exception')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,1,'NOTIFY-009 completion was owed before the export changed')
+  if(operation==='removed')await removeExport(starter,id)
+  else await parkExport(starter,id)
+  await tick(Date.now()+60000)
+  assert.deepEqual(await rows(id),[],`NOTIFY-009 ${operation} export completion is not delivered`)
+  assert.equal((await h.mailMessages()).length,mailBefore,`NOTIFY-009 ${operation} export completion creates no provider-edge mail`)
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,0,`NOTIFY-009 ${operation} export completion debt is retired`)
+  if(operation==='edited')await removeExport(starter,id)
+ }
+
+ const importJob=async(person,fail,owed=false,beforeFailure)=>{
   const filename='synthetic-cradle-1.csv',csv='Name\n'+Array.from({length:25},(_,i)=>`synthetic-cradle-${fail&&i===24?1:i+1}`).join('\n')+'\n',options={name:`synthetic-cradle-${width+1100}`,tables:{[filename]:{columns:{'column-1':{type:'text'}}}}},prefix='/api/v1/records/base-import'
   const upload=async(route,preview)=>{const body=new FormData();body.append('files',new Blob([csv],{type:'text/csv'}),filename);body.set('options',JSON.stringify(options));if(preview){body.set('identities',JSON.stringify(preview.identities));body.set('fingerprint',preview.fingerprint);body.set('acceptLoss','true')}const r=await fetch(h.origin+prefix+route,{method:'POST',headers:{cookie:person.session.cookie,origin:h.origin,'x-csrf-token':person.session.csrf},body});const value=await r.json();assert.equal(r.status,200,JSON.stringify(value));return value.data}
   const preview=await upload('/preview'),review=await upload('/review',preview),job=await json(person,prefix+'/adopt',{reviewId:review.reviewId,fingerprint:review.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true})
@@ -376,6 +399,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    draft.tables.find(t=>t.id===table.entityId).fields.find(f=>f.id===table.fields['column-1']).unique=true
    const changed=await json(person,'/api/v1/records/schema-preview',draft)
    await request(person.session,'release.adopt',{kind:'manual_schema',previewId:changed.id})
+   if(beforeFailure)await beforeFailure()
    const refusal=await h.request(person.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
    assert.equal(refusal.status,500,'NOTIFY-009 current native constraint rejects the pending duplicate import row')
    assert.equal((await refusal.json()).error.code,'internal')
@@ -391,6 +415,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   const status=await json(person,`${prefix}/jobs/${job.id}`)
   if(owed){assert.equal(status.job.state,'completed','NOTIFY-009 the import committed before its notice publication failed');return job.id}
   if(fail)assert.ok(status.progress.appliedRecords>0&&status.progress.appliedRecords<status.progress.plannedRecords,'NOTIFY-009 failure retains a publicly reported partial import')
+  if(beforeFailure)return job.id
   const before=await rows(job.id),repeated=await h.request(person.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
   assert.equal(repeated.status,fail?500:200)
   assert.deepEqual(await rows(job.id),before,'NOTIFY-009 repeated import observation never repeats progress')
@@ -410,6 +435,107 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  }
  console.log(`NOTIFY-009 ${width}: committed import owed its notice through an unavailable notification principal; one notice after recovery`)
 
+ // Public undo reverses a completed import before its publication can recover.
+ const undoneMail=(await h.mailMessages()).length,undoneImport=await importJob(owner,false,true)
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(undoneImport).first()).n,1)
+ let undo
+ for(let n=0;n<8;n++){undo=await json(owner,`/api/v1/records/base-import/jobs/${undoneImport}/undo`,{});if(undo.state==='undone')break}
+ assert.equal(undo.state,'undone','NOTIFY-009 public import undo completes before publication')
+ await tick(Date.now()+60000)
+ assert.deepEqual(await rows(undoneImport),[],'NOTIFY-009 undone import completion is not delivered')
+ assert.equal((await h.mailMessages()).length,undoneMail,'NOTIFY-009 undone import completion creates no provider-edge mail')
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(undoneImport).first()).n,0,'NOTIFY-009 undone import completion debt is retired')
+
+ // Losing the imported base's membership removes both API and rendered links.
+ // This newly created base is isolated from every later matrix event.
+ const inaccessibleImport=await importJob(owner,false,true)
+ const destination=(await h.db.prepare('SELECT destination FROM ik_jobs WHERE id=?').bind(inaccessibleImport).first()).destination
+ const membership=await h.db.prepare("SELECT state FROM authority_memberships WHERE principal_id=? AND app_id=?").bind(owner.id,destination).first()
+ assert.equal(membership.state,'active')
+ await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE principal_id=? AND app_id=?").bind(owner.id,destination).run()
+ try{
+  const denied=await h.request(owner.session,`/api/v1/records/bases/${destination}`)
+  assert.equal(denied.status,403,'NOTIFY-009 the starter has lost current base access')
+  await tick(Date.now()+60000)
+  const [notice]=await rows(inaccessibleImport);assert.ok(notice)
+  const inbox=await h.request(owner.session,'/api/notifications');assert.equal(inbox.status,200)
+  const item=(await inbox.json()).notifications.find(n=>n.id===notice.id);assert.ok(item)
+  assert.equal(item.subject.available,false,'NOTIFY-005 inaccessible progress subject is unavailable')
+  assert.equal(item.subject.href,undefined,'NOTIFY-005 inaccessible progress subject has no link')
+  assert.equal(item.title,'Notification unavailable');assert.equal(item.body,'')
+  let browser,context
+  try{
+   browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
+   context=await browser.newContext({viewport:{width,height:width===390?844:900}})
+   await context.addCookies([{name:owner.session.cookie.split('=')[0],value:owner.session.cookie.slice(owner.session.cookie.indexOf('=')+1),url:h.origin}])
+   const page=await context.newPage(),errors=[]
+   page.on('pageerror',error=>errors.push(error.message))
+   await page.goto(h.origin+'/app/notifications')
+   const rendered=page.locator(`#notification-${notice.id}`)
+   await rendered.getByRole('heading',{name:'Notification unavailable',exact:true}).waitFor()
+   assert.equal(await rendered.getByRole('link',{name:'Related record',exact:true}).count(),0,'NOTIFY-005 inaccessible progress row renders no Related record link')
+   assert.equal(await rendered.locator('p').first().textContent(),'','NOTIFY-009 inaccessible progress row renders no body content')
+   assert.ok((await rendered.textContent()).includes('Related record is unavailable'))
+   await rendered.scrollIntoViewIfNeeded()
+   const output=path.resolve(process.env.CRADLE_LAUNCH_NOTIFICATIONS_EVIDENCE??'../evidence/de-launch-notifications')
+   await mkdir(output,{recursive:true})
+   await page.screenshot({path:path.join(output,`inaccessible-progress-${width}.png`)})
+   assert.deepEqual(errors,[])
+  }finally{try{await context?.close()}finally{await browser?.close()}}
+ }finally{await h.db.prepare("UPDATE authority_memberships SET state='active',version=version+1 WHERE principal_id=? AND app_id=?").bind(owner.id,destination).run()}
+
+ // A single failed persistence write cannot lose a real failure outcome. The
+ // fixture faults c41's post-failure INSERT, or the journal design's settlement
+ // DELETE; the latter must leave its write-ahead fact held until the lease ends.
+ const failurePreferences=await preferences(owner.session)
+ await prefs(owner,[],true)
+ const journal=await h.db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='channel_progress_attempts'").first()
+ const faultFailure=()=>h.db.prepare(journal
+  ?"CREATE TRIGGER synthetic_cradle_abort_failure_settlement BEFORE DELETE ON channel_progress_attempts BEGIN SELECT RAISE(ABORT,'synthetic-cradle-1401'); END"
+  :"CREATE TRIGGER synthetic_cradle_abort_failure_settlement BEFORE INSERT ON channel_progress_owed WHEN NEW.outcome='failed' BEGIN SELECT RAISE(ABORT,'synthetic-cradle-1401'); END").run()
+ const clearFailure=()=>h.db.prepare('DROP TRIGGER IF EXISTS synthetic_cradle_abort_failure_settlement').run()
+ const failureMail=(await h.mailMessages()).length
+ let lostExport,lostImport
+ await faultFailure()
+ try{lostExport=await failedExport(starter)}finally{await clearFailure()}
+ await removeExport(starter,lostExport)
+ try{lostImport=await importJob(owner,true,false,faultFailure)}finally{await clearFailure()}
+ assert.deepEqual(await rows(lostExport),[],'NOTIFY-009 an unsettled export failure is not published while its attempt is live')
+ assert.deepEqual(await rows(lostImport),[],'NOTIFY-009 an unsettled import failure is not published while its attempt is live')
+ const failureAt=Date.now()
+ await tick(failureAt+60000)
+ assert.deepEqual(await rows(lostExport),[],'NOTIFY-009 a live export attempt holds its write-ahead failure')
+ assert.deepEqual(await rows(lostImport),[],'NOTIFY-009 a live import attempt holds its write-ahead failure')
+ await tick(failureAt+300000)
+ const exportFailure=await rows(lostExport),importFailure=await rows(lostImport)
+ assert.equal(exportFailure.length,1,'NOTIFY-009 failed export recovers exactly one failure notice after its settlement write failed and its schedule was removed')
+ assert.equal(importFailure.length,1,'NOTIFY-009 failed import recovers exactly one failure notice after its settlement write failed without another resume')
+ assert.deepEqual(exportFailure.map(n=>n.operator_id),[starter.id],'NOTIFY-009 removed export failure reaches exactly its starter')
+ assert.deepEqual({title:exportFailure[0].title,body:exportFailure[0].body},progressText.export.failed)
+ assert.equal(exportFailure[0].state,'accepted')
+ const failureMessages=(await h.mailMessages()).slice(failureMail)
+ assert.deepEqual(failureMessages.filter(m=>m.subject===progressText.export.failed.title).flatMap(m=>m.personalizations.flatMap(p=>p.to.map(r=>r.email))),[starterEmail],'NOTIFY-009 recovered export failure mails exactly its starter')
+ const exportReceipt=failureMessages.filter(m=>exportFailure[0].group_id&&m.custom_args?.rer_delivery_id===exportFailure[0].group_id)
+ assert.equal(exportReceipt.length,1);assert.equal(exportReceipt[0].subject,progressText.export.failed.title)
+ assert.ok(exportReceipt[0].content.map(c=>c.value).join('\n').includes(`${progressText.export.failed.title}\n${progressText.export.failed.body}`),'NOTIFY-009 recovered export failure provider-edge body states failure')
+ const exportInbox=await h.request(starter.session,'/api/notifications');assert.equal(exportInbox.status,200)
+ const removedSubject=(await exportInbox.json()).notifications.find(n=>n.id===exportFailure[0].id);assert.ok(removedSubject)
+ assert.equal(removedSubject.subject.available,false);assert.equal(removedSubject.subject.href,undefined)
+ assert.equal(removedSubject.title,'Notification unavailable');assert.equal(removedSubject.body,'')
+ await check(lostImport,owner,false,failureMail,['import','failed'])
+ for(const offset of [3600000,86400000]){
+  await tick(failureAt+offset)
+  assert.deepEqual(await rows(lostExport),exportFailure,'NOTIFY-009 later ticks never repeat the recovered export failure')
+  assert.deepEqual(await rows(lostImport),importFailure,'NOTIFY-009 later ticks never repeat the recovered import failure')
+  const messages=(await h.mailMessages()).slice(failureMail)
+  for(const [notice,expected]of [[exportFailure[0],progressText.export.failed],[importFailure[0],progressText.import.failed]])assert.equal(messages.filter(m=>m.subject===expected.title&&m.custom_args?.rer_delivery_id===notice.group_id).length,1,'NOTIFY-009 later ticks never repeat recovered failure mail')
+ }
+ for(const id of [lostExport,lostImport])assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,0,'NOTIFY-009 recovered failure leaves no owed row')
+ await prefs(owner,failurePreferences.mutedKinds,failurePreferences.progressEnabled)
+ console.log(`NOTIFY-009 ${width}: failed export and import survive a failed ${journal?'journal settlement':'post-failure debt'} write, no import resume, removed export schedule, exactly one notice and mail each`)
+
+ await verifyImportStarterHandover(width)
+
  return {async events(muted,phase){
   for(const person of people)for(const source of ['import','export'])for(const failed of [false,true]){
    // New-base imports require the installation owner; export schedules accept either current owner.
@@ -426,4 +552,77 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal((await preferences(starter.session)).mutedKinds.includes('progress'),false,'NOTIFY-007 unaffected starter remains unmuted')
   console.log(`NOTIFY-009 ${width} ${phase}: import/export completion/failure, exact starters and provider mail; muted=${muted}`)
  },starter,async close(){await role('member')}}
+}
+
+/** Handover revokes both sessions, so this public-door case owns a separate
+ * installation rather than invalidating the surrounding browser's session. */
+async function verifyImportStarterHandover(width){
+ const listener=createServer()
+ await new Promise((resolve,reject)=>{listener.once('error',reject);listener.listen(0,'127.0.0.1',resolve)})
+ const port=listener.address().port
+ await new Promise((resolve,reject)=>listener.close(error=>error?reject(error):resolve()))
+ const previousPort=process.env.CRADLE_AUTHORITY_PORT
+ let h
+ try{process.env.CRADLE_AUTHORITY_PORT=String(port);h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})}
+ finally{if(previousPort===undefined)delete process.env.CRADLE_AUTHORITY_PORT;else process.env.CRADLE_AUTHORITY_PORT=previousPort}
+ try{
+  const owner={id:h.owner,session:h.ownerSession},successor=await h.addPerson({legacy:true,name:`synthetic-cradle-${width+1200}`}),system='00000000000000000000000001'
+  const json=async(person,path,body,status=200)=>{const response=await h.request(person.session,path,body===undefined?{}:{method:'POST',body:JSON.stringify(body)});const value=await response.json();assert.equal(response.status,status,JSON.stringify(value));return value.data}
+  const command=async(person,action,input,expected=[])=>{const data=await json(person,'/api/v1/commands/'+action,{commandId:createUlid(),input,expected});assert.equal(data.state,'committed');return data.value}
+  const settings=await json(owner,'/api/v1/settings')
+  await command(owner,'settings.update',{version:settings.version,changes:{timezone:'UTC',quietHoursStart:'00:00',quietHoursEnd:'00:00'}})
+  for(const person of [owner,successor]){const p=(await json(person,'/api/v1/settings')).preferences;await command(person,'preferences.update',{version:p.version,preferences:{timezone:'UTC',mutedKinds:[],digestEnabled:false,progressEnabled:true}})}
+  for(const a of (await h.db.prepare('SELECT id,version FROM automations WHERE enabled=1').all()).results)await command(owner,'launch.automation.disable',{id:a.id},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.automation,recordId:a.id},version:a.version}])
+  const notices=async id=>(await h.db.prepare("SELECT n.id,n.operator_id,n.title,n.body,d.state,d.group_id FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind='progress' AND n.subject_id=?").bind(id).all()).results
+  const importing=async failed=>{
+   const filename=`synthetic-cradle-${failed?2:1}.csv`,text='Name\n'+Array.from({length:25},(_,i)=>`synthetic-cradle-${failed&&i===24?1:i+1}`).join('\n')+'\n',options={name:`synthetic-cradle-${width+1300+(failed?1:0)}`,tables:{[filename]:{columns:{'column-1':{type:'text'}}}}},prefix='/api/v1/records/base-import'
+   const upload=async(route,preview)=>{const body=new FormData();body.append('files',new Blob([text],{type:'text/csv'}),filename);body.set('options',JSON.stringify(options));if(preview){body.set('identities',JSON.stringify(preview.identities));body.set('fingerprint',preview.fingerprint);body.set('acceptLoss','true')}const r=await fetch(h.origin+prefix+route,{method:'POST',headers:{cookie:owner.session.cookie,origin:h.origin,'x-csrf-token':owner.session.csrf},body});const value=await r.json();assert.equal(r.status,200,JSON.stringify(value));return value.data}
+   const preview=await upload('/preview'),review=await upload('/review',preview),job=await json(owner,prefix+'/adopt',{reviewId:review.reviewId,fingerprint:review.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true})
+   assert.equal((await json(owner,`${prefix}/jobs/${job.id}/resume`,{})).state,'applying','NOTIFY-009 handover import spans multiple real batches')
+   if(failed){const draft=await json(owner,`/api/v1/records/bases/${preview.identities.appId}`),table=preview.identities.tables[filename];draft.tables.find(t=>t.id===table.entityId).fields.find(f=>f.id===table.fields['column-1']).unique=true;const changed=await json(owner,'/api/v1/records/schema-preview',draft);await command(owner,'release.adopt',{kind:'manual_schema',previewId:changed.id})}
+   await h.db.prepare("UPDATE authority_principals SET state='removed' WHERE id=? AND kind='system'").bind(system).run()
+   let refused
+   try{for(let n=0;n<6&&!refused;n++){const response=await h.request(owner.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'});if(response.status!==200)refused=response}}
+   finally{await h.db.prepare("UPDATE authority_principals SET state='active' WHERE id=? AND kind='system'").bind(system).run()}
+   assert.equal(refused?.status,500,'NOTIFY-009 import outcome reports its error while publication is held')
+   const status=await json(owner,`${prefix}/jobs/${job.id}`)
+   if(failed)assert.ok(status.progress.appliedRecords>0&&status.progress.appliedRecords<status.progress.plannedRecords,'NOTIFY-009 handover failure retains a real partial import')
+   else assert.equal(status.job.state,'completed','NOTIFY-009 handover completion is committed')
+   assert.deepEqual(await notices(job.id),[],'NOTIFY-009 handover precedes publication of each real outcome')
+   return job.id
+  }
+  // Handover moves manual base ownership, so the former owner cannot resume an
+  // unfinished import. Commit each outcome with publication held, then change
+  // initial_owner through the public door before the independent scheduled tick.
+  const completed=await importing(false),failed=await importing(true)
+  const handover=async(from,to)=>{
+   const previous=(await h.mailMessages()).length,asked=await h.request(from.session,'/auth/step-up',{method:'POST',body:JSON.stringify({action:'owner:transfer',returnTo:'/app/settings'})})
+   assert.equal(asked.status,202,await asked.text())
+   const links=(await h.mailMessages()).slice(previous).flatMap(message=>[...message.content.find(part=>part.type==='text/plain').value.matchAll(/https?:\/\/\S+/g)].map(match=>new URL(match[0]))).filter(url=>url.pathname==='/auth/confirm')
+   assert.equal(links.length,1,'NOTIFY-009 ownership handover uses a fresh public email-link confirmation')
+   const confirmed=await h.request(from.session,'/auth/confirm',{method:'POST',body:JSON.stringify({token:links[0].searchParams.get('token')}),redirect:'manual'});assert.equal(confirmed.status,303)
+   const member=(await json(from,`/api/v1/members?appId=${LAUNCH_APP_ID}`)).items.find(item=>item.id===to.id);assert.ok(member)
+   await command(from,'member.transfer-ownership',{memberId:to.id},[{ref:{appId:LAUNCH_APP_ID,entityId:'00000000000000000000000101',recordId:to.id},version:member.version}])
+   owner.session=await h.signIn(owner.id);successor.session=await h.signIn(successor.id)
+   assert.equal((await h.db.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first()).id,to.id,'NOTIFY-009 public ownership handover selects its target')
+  }
+  await handover(owner,successor)
+  try{
+   const mailStart=(await h.mailMessages()).length
+   assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()})).outcome,'ok')
+   const inbox=(await json(owner,'/api/v1/notifications')).items,otherInbox=(await json(successor,'/api/v1/notifications')).items
+   for(const [id,outcome]of [[completed,'completed'],[failed,'failed']]){
+    const expected=progressText.import[outcome],rows=await notices(id)
+    assert.equal((await h.db.prepare('SELECT principal_id FROM ik_jobs WHERE id=?').bind(id).first()).principal_id,owner.id,'NOTIFY-009 handover preserves the import starter')
+    assert.deepEqual(rows.map(n=>n.operator_id),[owner.id],'NOTIFY-009 import outcome reaches exactly its starter after ownership handover')
+    const [notice]=rows;assert.equal(notice.state,'accepted');assert.deepEqual({title:notice.title,body:notice.body},expected)
+    const item=inbox.find(n=>n.id===notice.id);assert.ok(item);assert.deepEqual({title:item.title,body:item.body},expected,'NOTIFY-009 former owner reads the literal import outcome through their own inbox')
+    assert.deepEqual(otherInbox.filter(n=>n.id===notice.id||n.subject.id===id),[],'NOTIFY-009 the new installation owner receives no import outcome')
+    const mail=(await h.mailMessages()).slice(mailStart),email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner.id).first()).email
+    assert.deepEqual(mail.filter(m=>m.subject===expected.title).flatMap(m=>m.personalizations.flatMap(p=>p.to.map(r=>r.email))),[email],'NOTIFY-009 import outcome mail reaches exactly its starter, never the new installation owner')
+    const receipt=mail.filter(m=>notice.group_id&&m.custom_args?.rer_delivery_id===notice.group_id);assert.equal(receipt.length,1);assert.equal(receipt[0].subject,expected.title);assert.ok(receipt[0].content.map(c=>c.value).join('\n').includes(`${expected.title}\n${expected.body}`),'NOTIFY-009 handover import provider-edge body states its outcome')
+   }
+  }finally{await handover(successor,owner)}
+  console.log(`NOTIFY-009 ${width}: import completion and failure reach their starter after public installation ownership handover, never the new installation owner`)
+ }finally{await h.close()}
 }

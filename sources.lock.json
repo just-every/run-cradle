@@ -4574,7 +4574,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "c7f69b66cac7ef1bed6783ab18e3bec6a09668c8f9bd394fd56e5e0556815cf4",
+      "sha256": "1fb62e81773f2873123035f77e1425fc425c68a190eeebd9a4a49604df18b7e9",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5163,6 +5163,10 @@
     },
     "migrations/updates/9076_channel_progress_owed.sql": {
       "sha256": "9d3d530ddcc84e1e61260be291f788a114912e8672ac39d985def1954bda589a",
+      "executable": false
+    },
+    "migrations/updates/9077_channel_progress_attempts.sql": {
+      "sha256": "f369a1967517cd2bab537eb50b391e2d6f0c08a8e8fd13998fc1f1718f3cb5c0",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -6294,7 +6298,7 @@
       "executable": false
     },
     "src/core/app/composition/events.server.ts": {
-      "sha256": "a81696227e89167d1930f81bf1285828bf5c2fd06dc71056647e6a2054aa58d9",
+      "sha256": "8861134e3100f9ce1073a2df4af71628adcdbb01d2e529a15f6d627a8af5d93b",
       "executable": false
     },
     "src/core/app/composition/execution-guards.server.ts": {
@@ -7950,11 +7954,11 @@
       "executable": false
     },
     "src/domains/channels/inbox-subject.server.ts": {
-      "sha256": "04c4efbc9fbc08e1f12339315b0a8196640d41466c08dbc5d921d366b59d6548",
+      "sha256": "2d529833648ce700fe947b57085dd14b9bc72a58050d9f7d20d61ac217871464",
       "executable": false
     },
     "src/domains/channels/inbox.server.ts": {
-      "sha256": "503625ae7733445f7162d9260367f0a9f7834bbfa5c89cc714e3075e7160fb0b",
+      "sha256": "8f487befd8810f2c5e4641e5d3aae7300418129e8929a0f81396dc27cf2ae2c6",
       "executable": false
     },
     "src/domains/channels/integration.server.ts": {
@@ -7982,7 +7986,7 @@
       "executable": false
     },
     "src/domains/channels/progress-owed.server.ts": {
-      "sha256": "76df836b7485a1f4eea9ca9a90afa218a77937ea3c01f37c120ed2ff5c326668",
+      "sha256": "ead380e5e46183650e2ddb047a15dd2db0b54917ff64f617e92c717a95561ce0",
       "executable": false
     },
     "src/domains/channels/recipient.server.ts": {
@@ -8782,7 +8786,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "28c4f160c59869505874a141313740075ca75cdd8093b13a9650a8d5cbcecf5c",
+      "sha256": "57c5a51e5343c8436f8a7fac158656fb6a20e3d8d1ce14f868775be7d8ff7227",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -8994,7 +8998,7 @@
       "executable": false
     },
     "src/domains/portability/installation-policy.mjs": {
-      "sha256": "df6dad01624d33d225a2bfcc1a9ef66524967f654f52140ddd7dd1b81f245b00",
+      "sha256": "a8757ee76d0ed3494c5e318bcd2820c5bb904284d08ad06d877af58b41858546",
       "executable": false
     },
     "src/domains/portability/record-import.server.ts": {
@@ -9238,7 +9242,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/service.server.ts": {
-      "sha256": "c6f506f8304c666902c56eab2e6658748b59745f533c96b6cb88b605d2feca3d",
+      "sha256": "375a8fffc32055498c057b27607f4ef0c671c36787feefbace2a0c1129db79c0",
       "executable": false
     },
     "src/domains/records/base-transfer/source-api.ts": {
@@ -10138,7 +10142,7 @@
       "executable": false
     },
     "src/domains/warehouse/runtime.server.ts": {
-      "sha256": "2f47c93eaea599cb45e55b428997b484bbc21f659515427c07176a8ae011941b",
+      "sha256": "d2b2ea3dcd73daca86df946d8daef981f7feaa9e5412f41d72f12fb250063c6a",
       "executable": false
     },
     "src/domains/warehouse/s3.server.ts": {
@@ -12278,7 +12282,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "fccb960792c7a33ccd6cdd2b443fc77e3abda2ee0fd3eb7564c7ccc331a02271",
+      "sha256": "e8e7cc96908d2ae0ac9374c04988278178bef347881609be23949c6a7adefcd3",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -12910,7 +12914,7 @@
       "executable": false
     },
     "tests/lifecycle-erasure.mjs": {
-      "sha256": "91b9ad834b051b0893bab0e95ae13d25b2d4ea016beafbac99f30ccc7020eb91",
+      "sha256": "84180983cf9bc4033d0bf0e64f9cea357ebf280e682faa56be145422d94845b5",
       "executable": false
     },
     "tests/lifecycle-identity-security.mjs": {
