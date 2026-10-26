@@ -468,7 +468,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal(item.title,'Notification unavailable');assert.equal(item.body,'')
   let browser,context
   try{
-   browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
+   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
    context=await browser.newContext({viewport:{width,height:width===390?844:900}})
    await context.addCookies([{name:owner.session.cookie.split('=')[0],value:owner.session.cookie.slice(owner.session.cookie.indexOf('=')+1),url:h.origin}])
    const page=await context.newPage(),errors=[]
