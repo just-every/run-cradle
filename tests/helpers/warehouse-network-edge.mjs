@@ -9,7 +9,7 @@ import {automationNetworkEdge} from './automation-network-edge.mjs'
 export async function warehouseNetworkEdge(){
  const endpoint='https://warehouse-bucket.example.com',access={accessKeyId:'synthetic-cradle-91',secretAccessKey:'synthetic-cradle-92'},objects=new Map(),calls=[],multipart=new Map()
  const destination={kind:'s3',endpoint,region:'us-east-1',bucket:'synthetic-cradle-bucket',prefix:'analysis'},bigQuery=await bigQueryNetworkEdge(),snowflake=await snowflakeNetworkEdge({s3Objects:objects,s3Access:access,stageStorage:destination})
- let refuseDelete=false,refusePut=false,losePart=false,heldPart=null,nextUpload=0
+ let refuseDelete=false,refusePut=false,losePart=false,heldPart=null,heldPut=null,nextUpload=0
  const hash=value=>createHash('sha256').update(value).digest('hex'),hmac=(key,value)=>createHmac('sha256',key).update(value).digest()
  const edge=await automationNetworkEdge({extraHosts:['warehouse-bucket.example.com',...bigQuery.hosts,...snowflake.hosts],async receive(req,res,body){
   if(await bigQuery.receive(req,res,body)||await snowflake.receive(req,res,body))return true
@@ -38,7 +38,7 @@ export async function warehouseNetworkEdge(){
     objects.set(path,{body:Buffer.concat(buffers),contentType:upload.contentType});multipart.delete(uploadId);res.writeHead(200);res.end('<CompleteMultipartUploadResult/>')
    }else if(req.method==='DELETE'){multipart.delete(uploadId);res.writeHead(204);res.end()}
    else {res.writeHead(405);res.end()}
-  }else if(req.method==='PUT'){objects.set(path,{body,contentType:req.headers['content-type']});res.writeHead(200);res.end()}
+  }else if(req.method==='PUT'){if(heldPut){const held=heldPut;heldPut=null;held.reached();await held.gate;if(res.destroyed)return true}objects.set(path,{body,contentType:req.headers['content-type']});res.writeHead(200);res.end()}
   else if(req.method==='DELETE'){if(refuseDelete){res.writeHead(403);res.end('denied')}else{objects.delete(path);res.writeHead(204);res.end()}}
   else if(req.method==='HEAD'||req.method==='GET'){
    const object=objects.get(path),range=/^bytes=(\d+)-(\d+)$/.exec(req.headers.range??'')
@@ -49,5 +49,5 @@ export async function warehouseNetworkEdge(){
   return true
  }})
  const observeBucket={async list({prefix=''}){return {truncated:false,objects:[...objects.keys()].map(path=>({key:decodeURIComponent(path).slice('/synthetic-cradle-bucket/analysis/'.length)})).filter(object=>object.key.startsWith(prefix))}},async get(key){const object=[...objects.entries()].find(([path])=>decodeURIComponent(path)==='/synthetic-cradle-bucket/analysis/'+key)?.[1];return object?{httpMetadata:{contentType:object.contentType},async text(){return object.body.toString('utf8')},async arrayBuffer(){return object.body.buffer.slice(object.body.byteOffset,object.body.byteOffset+object.body.byteLength)}}:null}}
- return {...edge,access,objects,calls,observeBucket,destination,bigQuery,snowflake,bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},refuseDelete(value){refuseDelete=value},refusePut(value){refusePut=value},loseNextPart(){losePart=true},get uploadStarts(){return nextUpload},holdNextPart(){let reached,release;const at=new Promise(resolve=>reached=resolve),gate=new Promise(resolve=>release=resolve);heldPart={reached,gate};return {reached:at,release}}}
+ return {...edge,access,objects,calls,observeBucket,destination,bigQuery,snowflake,bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.egress.example.com/v1/deliver',EGRESS_RELAY_SECRET:edge.secret},refuseDelete(value){refuseDelete=value},refusePut(value){refusePut=value},loseNextPart(){losePart=true},get uploadStarts(){return nextUpload},holdNextPart(){let reached,release;const at=new Promise(resolve=>reached=resolve),gate=new Promise(resolve=>release=resolve);heldPart={reached,gate};return {reached:at,release}},holdNextPut(){let reached,release;const at=new Promise(resolve=>reached=resolve),gate=new Promise(resolve=>release=resolve);heldPut={reached,gate};return {reached:at,release}}}
 }

@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "b8fca56d46358e886a35bece5e17977ebc82022bbc93839bdd1d1d6e7feb7183",
+      "sha256": "1463c974d4c2f4c32a82887dd0b5b8228ff25df731b921cf2e93f193607f1540",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "0d30af4ff0b9c5064dc72d6e31cfccae6373df38a6876b8a24f1003416c597da",
+      "sha256": "82fc73775078efa5ca9543026bff24d37110e72b84480893df0cb0e02ee896e0",
       "executable": false
     },
     "DEMO.md": {
@@ -4574,7 +4574,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "1fb62e81773f2873123035f77e1425fc425c68a190eeebd9a4a49604df18b7e9",
+      "sha256": "93f739ca22f01788904f39e6df10c2711c196bbb86b8403f3831cf6fa93e7b3a",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -7962,7 +7962,7 @@
       "executable": false
     },
     "src/domains/channels/integration.server.ts": {
-      "sha256": "eb8c1b2441c6ab5deb3ee1e5dcaeee6e3dc926122af69b32656605936f4b20c1",
+      "sha256": "63fe0db070dd3e81efb5a9266731704f93c42cc7666ae502b98f022da6b6e614",
       "executable": false
     },
     "src/domains/channels/limits.server.ts": {
@@ -7986,7 +7986,7 @@
       "executable": false
     },
     "src/domains/channels/progress-owed.server.ts": {
-      "sha256": "70683fdf85893d158337586b3756fc6abd8b84d78dc4d59449b7e2a8bfad38eb",
+      "sha256": "5726c0a1abc5af8bfdc87aa6064a4cfa65cf0337a33ac6181e1e4770620c67cf",
       "executable": false
     },
     "src/domains/channels/recipient.server.ts": {
@@ -8998,7 +8998,7 @@
       "executable": false
     },
     "src/domains/portability/installation-policy.mjs": {
-      "sha256": "a8757ee76d0ed3494c5e318bcd2820c5bb904284d08ad06d877af58b41858546",
+      "sha256": "a1675dc88c9d9098fd737218c302bea10b7745a925ef537015d0b50c85e1a04e",
       "executable": false
     },
     "src/domains/portability/record-import.server.ts": {
@@ -10118,7 +10118,7 @@
       "executable": false
     },
     "src/domains/warehouse/configuration.server.ts": {
-      "sha256": "d0954db5e0c9540090c82b27aa0bdca566b1e76eccfef095b6ede3d7cc2fb779",
+      "sha256": "d187b0a497e01385e3f94dde02f75584e6fec966436463ee62a4c430464927ba",
       "executable": false
     },
     "src/domains/warehouse/destination-configuration.server.ts": {
@@ -10142,7 +10142,7 @@
       "executable": false
     },
     "src/domains/warehouse/runtime.server.ts": {
-      "sha256": "d2b2ea3dcd73daca86df946d8daef981f7feaa9e5412f41d72f12fb250063c6a",
+      "sha256": "f29fa908ee51200a877857987ad0d486c4c6726ffad873db320a038da5e83277",
       "executable": false
     },
     "src/domains/warehouse/s3.server.ts": {
@@ -12282,7 +12282,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "6bc4d5ec542754e2a265b82b21634edd12753ddce7974192fee3f6a9733f62d0",
+      "sha256": "a67762e4681f5aaa172ed0447f35453d70552c8f08bf5c488c42a4ba305bdc38",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -12798,7 +12798,7 @@
       "executable": false
     },
     "tests/helpers/warehouse-network-edge.mjs": {
-      "sha256": "d7f4fbc747509d81d57ac9df93d6f915710cfcba748de3d1891333903a55952f",
+      "sha256": "bda5ccf2f2e5ac6f9604c334ab245486824abe3c845a32936e3d3c5c17b8f951",
       "executable": false
     },
     "tests/helpers/warehouse-r2-restart.mjs": {
