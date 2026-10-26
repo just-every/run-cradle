@@ -600,6 +600,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal(item.subject.available,false,'NOTIFY-005 inaccessible progress subject is unavailable')
   assert.equal(item.subject.href,undefined,'NOTIFY-005 inaccessible progress subject has no link')
   assert.equal(item.title,'Notification unavailable');assert.equal(item.body,'')
+  assert.deepEqual(item.outcome,progressText.import.completed,'NOTIFY-005 the retained starter reads the generic outcome beside the unavailable subject')
   let browser,context
   try{
    browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
@@ -613,6 +614,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    assert.equal(await rendered.getByRole('link',{name:'Related record',exact:true}).count(),0,'NOTIFY-005 inaccessible progress row renders no Related record link')
    assert.equal(await rendered.locator('p').first().textContent(),'','NOTIFY-009 inaccessible progress row renders no body content')
    assert.ok((await rendered.textContent()).includes('Related record is unavailable'))
+   assert.ok((await rendered.textContent()).includes(`${progressText.import.completed.title}. ${progressText.import.completed.body}`),'NOTIFY-005 the rendered row shows the retained starter\'s generic outcome')
    await rendered.scrollIntoViewIfNeeded()
    const output=path.resolve(process.env.CRADLE_LAUNCH_NOTIFICATIONS_EVIDENCE??'../evidence/de-launch-notifications')
    await mkdir(output,{recursive:true})
@@ -659,6 +661,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  const removedSubject=(await exportInbox.json()).notifications.find(n=>n.id===exportFailure[0].id);assert.ok(removedSubject)
  assert.equal(removedSubject.subject.available,false);assert.equal(removedSubject.subject.href,undefined)
  assert.equal(removedSubject.title,'Notification unavailable');assert.equal(removedSubject.body,'')
+ assert.deepEqual(removedSubject.outcome,progressText.export.failed,'NOTIFY-005 the removed export\'s starter reads its generic outcome')
  await check(lostImport,owner,false,failureMail,['import','failed'])
  for(const offset of [3600000,86400000]){
   await tick(failureAt+offset)
@@ -670,6 +673,36 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  for(const id of [lostExport,lostImport])assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,0,'NOTIFY-009 recovered failure leaves no owed row')
  await prefs(owner,failurePreferences.mutedKinds,failurePreferences.progressEnabled)
  console.log(`NOTIFY-009 ${width}: failed export and import survive a failed ${journal?'journal settlement':'post-failure debt'} write, no import resume, removed export schedule, exactly one notice and mail each`)
+
+ // A starter who muted progress mail still reads a removed failed export's
+ // generic outcome beside its neutral subject; nobody else sees it.
+ await prefs(starter,['progress'],true)
+ const mutedMail=(await h.mailMessages()).length,mutedFailure=await failedExport(starter)
+ await removeExport(starter,mutedFailure)
+ const [mutedNotice]=await rows(mutedFailure)
+ assert.deepEqual({to:mutedNotice.operator_id,title:mutedNotice.title,body:mutedNotice.body,state:mutedNotice.state},{to:starter.id,...progressText.export.failed,state:'muted'})
+ const mutedItem=(await(await h.request(starter.session,'/api/notifications')).json()).notifications.find(n=>n.id===mutedNotice.id)
+ assert.deepEqual({title:mutedItem.title,body:mutedItem.body,available:mutedItem.subject.available,label:mutedItem.subject.label,href:mutedItem.subject.href},{title:'Notification unavailable',body:'',available:false,label:'Unavailable',href:undefined},'NOTIFY-005 the removed export subject stays neutral')
+ assert.deepEqual(mutedItem.outcome,progressText.export.failed,'NOTIFY-005 the muted retained starter reads the generic needs-attention outcome')
+ assert.equal((await h.mailMessages()).slice(mutedMail).length,0,'NOTIFY-007 muting suppresses only mail')
+ assert.deepEqual((await(await h.request(owner.session,'/api/notifications')).json()).notifications.filter(n=>n.id===mutedNotice.id||n.subject.id===mutedFailure),[],'NOTIFY-005 another operator never sees this outcome')
+ let outcomeBrowser,outcomeContext
+ try{
+  outcomeBrowser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  outcomeContext=await outcomeBrowser.newContext({viewport:{width,height:width===390?844:900}})
+  await outcomeContext.addCookies([{name:starter.session.cookie.split('=')[0],value:starter.session.cookie.slice(starter.session.cookie.indexOf('=')+1),url:h.origin}])
+  const page=await outcomeContext.newPage(),errors=[]
+  page.on('pageerror',error=>errors.push(error.message))
+  await page.goto(h.origin+'/app/notifications')
+  const rendered=page.locator(`#notification-${mutedNotice.id}`)
+  await rendered.getByRole('heading',{name:'Notification unavailable',exact:true}).waitFor()
+  assert.equal(await rendered.locator('a').count(),0,'NOTIFY-005 the removed export row renders no link')
+  assert.equal(await rendered.locator('p').first().textContent(),'','NOTIFY-005 the removed export row renders no subject content')
+  assert.ok((await rendered.textContent()).includes(`${progressText.export.failed.title}. ${progressText.export.failed.body}`),'NOTIFY-005 the rendered row shows the muted starter\'s generic outcome')
+  assert.deepEqual(errors,[])
+ }finally{try{await outcomeContext?.close()}finally{await outcomeBrowser?.close()}}
+ await prefs(starter,[],true)
+ console.log(`NOTIFY-005 ${width}: a muted starter reads a removed failed export's generic outcome beside its neutral subject, with no link, mail or disclosure`)
 
  return {async events(muted,phase){
   for(const person of people)for(const source of ['import','export'])for(const failed of [false,true]){
