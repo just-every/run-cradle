@@ -1,5 +1,6 @@
 import type { Runtime } from './runtime.server'
 import { createOutboxReader } from '../../../domains/admission/outbox.server'
+import { deliverOwedProgress } from '../../../domains/channels/progress-owed.server'
 import { ApiError } from '../../registry/errors'
 import type { Platform } from '../../platform'
 
@@ -30,6 +31,8 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     await runtime.launch.scheduled()
     await runtime.lifecycle.cleanup.maintain()
     await runtime.trashPurge()
+    // Owed import and export notices retry every tick, whatever their job's schedule.
+    await deliverOwedProgress(platform.bindings.DB, 'schedule')
     await runtime.warehouse.runtime.scheduled()
     // Admit due notifications before dispatching effects in this same invocation.
     await channels()
