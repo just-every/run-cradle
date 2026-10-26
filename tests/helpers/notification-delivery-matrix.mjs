@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {createServer} from 'node:net'
+import {execFileSync} from 'node:child_process'
 import {mkdir} from 'node:fs/promises'
 import path from 'node:path'
 import {chromium} from '@playwright/test'
@@ -42,7 +43,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  const setPrefs=async(session,mutedKinds)=>{const p=await preferences(session);await request(session,'preferences.update',{version:p.version,preferences:{timezone:'UTC',mutedKinds,digestEnabled:true,progressEnabled:true}})}
  await request(h.ownerSession,'settings.update',{version:original.version,changes:{timezone:'UTC',quietHoursStart:'00:00',quietHoursEnd:'00:00'}})
  await setPrefs(other.session,[])
- const worker=await h.runtime.getWorker(),tick=async at=>{const result=await worker.scheduled({cron:'* * * * *',scheduledTime:at});assert.equal(result.outcome,'ok',JSON.stringify(result));return result}
+ const tick=async at=>{const result=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at});assert.equal(result.outcome,'ok',JSON.stringify(result));return result}
  const row=async(table,id)=>h.db.prepare(`SELECT id,version FROM ${table} WHERE id=?`).bind(id).first()
  const digestBefore=await h.db.prepare("SELECT recipients_json FROM channel_digest_settings WHERE id='digest'").first()
  const digestAutomation=await h.db.prepare("SELECT id,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
@@ -372,6 +373,95 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  await removeExport(starter,owed)
  await prefs(starter,[],true)
  console.log(`NOTIFY-009 ${width}: committed export owed its notice through an unavailable notification principal; one notice after recovery`)
+
+ // Restart an actual claimed execution at its emitted after-claim boundary.
+ // The inspector locates application code; it neither replaces that code nor
+ // supplies a production hook. Only the fixture's own workerd PID is stopped.
+ const interruptedExport=async()=>{
+  const id=await saveExport(starter),inspector=new URL(await h.runtime.getInspectorURL())
+  inspector.protocol='http:';inspector.pathname='/json'
+  const targets=await(await fetch(inspector)).json(),target=targets.find(t=>String(t.id).startsWith('core:user:'))
+  assert.ok(target,'NOTIFY-009 the owned emitted Worker exposes its inspector target')
+  const socket=new WebSocket(target.webSocketDebuggerUrl),pending=new Map(),scripts=[]
+  let serial=0,hit,breakpoint
+  const paused=new Promise(resolve=>hit=resolve)
+  await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})})
+  const command=(method,params={})=>new Promise((resolve,reject)=>{const requestId=++serial;pending.set(requestId,{resolve,reject});socket.send(JSON.stringify({id:requestId,method,params}))})
+  socket.addEventListener('message',event=>{
+   const message=JSON.parse(event.data)
+   if(message.id&&pending.has(message.id)){const waiter=pending.get(message.id);pending.delete(message.id);message.error?waiter.reject(new Error(message.error.message)):waiter.resolve(message.result)}
+   if(message.method==='Debugger.scriptParsed')scripts.push(message.params)
+   if(message.method==='Debugger.paused'&&message.params.hitBreakpoints?.includes(breakpoint))hit()
+  })
+  try{
+   await command('Debugger.enable')
+   const needle='SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key'
+   for(const script of scripts){
+    const {scriptSource}=await command('Debugger.getScriptSource',{scriptId:script.scriptId}),offset=scriptSource.indexOf(needle)
+    if(offset<0)continue
+    assert.equal(scriptSource.indexOf(needle,offset+1),-1,'NOTIFY-009 the emitted after-claim boundary is unambiguous')
+    const before=scriptSource.slice(0,offset),location={scriptId:script.scriptId,lineNumber:before.split('\n').length-1,columnNumber:offset-before.lastIndexOf('\n')-1}
+    breakpoint=(await command('Debugger.setBreakpoint',{location})).breakpointId
+    break
+   }
+   assert.ok(breakpoint,'NOTIFY-009 the after-claim boundary is present in the emitted Worker')
+   const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
+   await paused
+   const processes=execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const [pid,ppid,...name]=line.trim().split(/\s+/);return {pid:Number(pid),ppid:Number(ppid),name:name.join(' ')}})
+   const owned=new Set([process.pid]);let changed=true
+   while(changed){changed=false;for(const child of processes)if(owned.has(child.ppid)&&!owned.has(child.pid)){owned.add(child.pid);changed=true}}
+   const workers=processes.filter(child=>owned.has(child.pid)&&/workerd$/.test(child.name))
+   assert.equal(workers.length,1,'NOTIFY-009 this fixture owns exactly one workerd to interrupt')
+   console.log(`NOTIFY-009 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
+   process.kill(workers[0].pid,'SIGKILL')
+   await invocation
+   socket.close()
+   await h.restart()
+   const claim=await h.db.prepare('SELECT running_id,running_started_at,running_slot,version,last_slot FROM warehouse_exports WHERE id=?').bind(id).first()
+   assert.ok(claim.running_id,'NOTIFY-009 a runtime interruption retains the real export claim')
+   assert.equal(claim.last_slot,null,'NOTIFY-009 the interrupted execution has not committed')
+   const eventId=`warehouse-export:${id}:${claim.version}:${claim.running_slot}:failed`
+   const attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(eventId).first()
+   assert.equal(attempt.token,claim.running_id,'NOTIFY-009 the retained attempt belongs to the interrupted execution')
+   return {id,eventId,claim}
+  }finally{socket.close()}
+ }
+ for(const muted of [false,true]){
+  await prefs(starter,muted?['progress']:[],true)
+  const matchingMail=(await h.mailMessages()).length,matching=await interruptedExport(),heldAt=Date.now()
+  // Advance only the notification lease, not the current execution ownership.
+  await h.db.prepare("UPDATE channel_progress_attempts SET live_until='2000-01-01T00:00:00.000Z' WHERE event_id=?").bind(matching.eventId).run()
+  await tick(heldAt+60000)
+  assert.deepEqual(await rows(matching.id),[],'NOTIFY-009 an expired notification lease does not publish failure while the matching active execution claim remains')
+  assert.equal((await h.mailMessages()).length,matchingMail,'NOTIFY-009 a matching active claim suppresses every premature failure mail')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE event_id=? AND outcome=?').bind(matching.eventId,'failed').first()).n,1,'NOTIFY-009 matching-claim protection preserves its write-ahead failed debt')
+  // The synthetic crash clock makes the old execution credential expire before
+  // the real scheduled door reclaims and completes the same retained run.
+  await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),matching.id).run()
+  await tick(heldAt+120000);await tick(heldAt+180000)
+  await check(matching.id,starter,muted,matchingMail,['export','completed'])
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-009 successful protected resume never creates a false failure event')
+  assert.equal((await h.mailMessages()).slice(matchingMail).filter(message=>message.subject===progressText.export.failed.title).length,0,'NOTIFY-009 successful protected resume never sends failure mail')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(matching.id).first()).n,0,'NOTIFY-009 successful protected resume leaves no notification debt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-009 successful protected resume leaves no attempt')
+  await removeExport(starter,matching.id)
+
+  const controlMail=(await h.mailMessages()).length,control=await interruptedExport(),controlAt=Date.now()
+  // Crash fixture: the debt names a different execution from the retained
+  // active claim. Matching merely the export id would suppress it incorrectly.
+  await h.db.prepare("UPDATE channel_progress_attempts SET token='synthetic-cradle-1501',live_until='2000-01-01T00:00:00.000Z' WHERE event_id=?").bind(control.eventId).run()
+  await tick(controlAt+60000);await tick(controlAt+120000)
+  const published=await check(control.id,starter,muted,controlMail,['export','failed'])
+  await tick(controlAt+180000)
+  assert.deepEqual(await rows(control.id),[published],'NOTIFY-009 an unrelated claim does not hold or repeat another execution outcome')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(control.id).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no debt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(control.eventId).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no attempt')
+  await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),control.id).run()
+  await tick(controlAt+240000)
+  await removeExport(starter,control.id)
+ }
+ await prefs(starter,[],true)
+ console.log(`NOTIFY-009 ${width}: expired notification lease discriminates matching and unrelated active claims; protected resume completes once with no false failure or debt`)
 
  // Completion describes the current job only: removal or a saved new version
  // must retire an unpublished old completion without creating mail.
