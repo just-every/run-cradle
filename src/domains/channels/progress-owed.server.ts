@@ -32,8 +32,8 @@ export async function progressAttemptStatements(db:D1Database,owed:OwedProgress,
  // cannot replace the winning attempt's journal or lease.
  const insert=db.prepare(`INSERT OR IGNORE INTO channel_progress_owed(event_id,subject_type,subject_id,starter_id,outcome,created_at) SELECT ?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM command_admissions WHERE command_id=?)${condition}`)
   .bind(owed.eventId,owed.subjectType,owed.subjectId,owed.starterId,owed.outcome,new Date().toISOString(),await commandOf(owed.eventId),...values)
- const attempt=db.prepare(`INSERT INTO channel_progress_attempts(event_id,token,live_until) SELECT ?,?,? WHERE EXISTS(SELECT 1 FROM channel_progress_owed WHERE event_id=?)${condition} ON CONFLICT(event_id) DO UPDATE SET token=excluded.token,live_until=excluded.live_until`)
-  .bind(owed.eventId,token,liveUntil,owed.eventId,...values)
+ const attempt=db.prepare(`INSERT INTO channel_progress_attempts(event_id,token,live_until) SELECT ?,?,? WHERE 1${condition} ON CONFLICT(event_id) DO UPDATE SET token=excluded.token,live_until=excluded.live_until`)
+  .bind(owed.eventId,token,liveUntil,...values)
  return [claim?insert:statement,attempt]
 }
 export async function settleProgressAttempt(db:D1Database,eventId:string,token:string,failed:boolean){
@@ -45,6 +45,9 @@ export async function settleProgressAttempt(db:D1Database,eventId:string,token:s
 
 /** Publishes owed notices, one event or all, independently of any job schedule. */
 export async function deliverOwedProgress(db:D1Database,ingress:RequestContext['ingress'],eventId?:string,now=new Date()){
+ // An already-admitted failure still needs a live apply fence on a later
+ // attempt, but its lease is transient even if that request terminates.
+ await db.prepare('DELETE FROM channel_progress_attempts WHERE live_until<=? AND NOT EXISTS(SELECT 1 FROM channel_progress_owed WHERE event_id=channel_progress_attempts.event_id)').bind(now.toISOString()).run()
  const rows=(await db.prepare(`SELECT event_id,subject_type,subject_id,starter_id,outcome FROM channel_progress_owed${eventId?' WHERE event_id=?':''} ORDER BY created_at,event_id`).bind(...eventId?[eventId]:[]).all<Row>()).results
  for(const row of rows)await publish(db,{eventId:row.event_id,subjectType:row.subject_type,subjectId:row.subject_id,starterId:row.starter_id,outcome:row.outcome},ingress,now)
 }
