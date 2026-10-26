@@ -12918,7 +12918,7 @@
       "executable": false
     },
     "tests/lifecycle-erasure.mjs": {
-      "sha256": "84180983cf9bc4033d0bf0e64f9cea357ebf280e682faa56be145422d94845b5",
+      "sha256": "c04d1faae0768cf98ee8d1b255d2cf488b0fca2cf688f31085f71a94d61d4dbd",
       "executable": false
     },
     "tests/lifecycle-identity-security.mjs": {

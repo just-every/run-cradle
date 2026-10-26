@@ -31,6 +31,7 @@ import {createCommandHttp} from '../src/core/registry/http.ts'
 import {registerExecutionCommands} from '../src/domains/execution/commands.server.ts'
 import {trustedPredicate} from '../src/domains/admission/sql.server.ts'
 import {createUlid} from '../src/core/shared/ids.ts'
+import {launchAuthorityRuntime,LAUNCH_APP_ID,launchEntities} from './helpers/launch-authority-runtime.mjs'
 
 contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installation transfer creates its checkpoint atomically',async()=>{
  const h=await fixture()
@@ -54,6 +55,7 @@ contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installa
   assert.ok(h.sql.prepare('SELECT count(*) n FROM rer_portability_journal WHERE source=?').get(state.source_identity).n>0)
   assert.deepEqual(await custodyMatches(h,[identity.name,identity.email]),{matches:0,stores:[]})
  }finally{h.close()}
+ await verifyLiveImportStarterErasure()
 })
 
 contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decodes compressed files, retires custody atomically, preserves controls and fences old archives',async()=>{
@@ -209,3 +211,104 @@ contract('BASE-DATA-001','erasing an operator who recorded a human effect resolu
   assert.equal(receipt.actorId,h.person);assert.equal(receipt.outcome,'done','The decision and its actor stay; only identity text is anonymised')
  }finally{h.close()}
 })
+
+/** A real emitted import is interrupted after its durable journal, while its
+ * apply fence is live. Public ownership handover makes its starter erasable. */
+async function verifyLiveImportStarterErasure(){
+ const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
+ let inspector
+ try{
+  const starter={id:h.owner,session:h.ownerSession},successor=await h.addPerson({legacy:true,name:'synthetic-cradle-4301'})
+  const raw=async(person,route,body)=>{const response=await h.request(person.session,route,body===undefined?{}:{method:'POST',body:JSON.stringify(body)});return {status:response.status,value:await response.json()}}
+  const json=async(person,route,body)=>{const response=await raw(person,route,body);assert.equal(response.status,200,JSON.stringify(response));return response.value.data}
+  const command=async(person,action,input,expected=[])=>{const data=await json(person,'/api/v1/commands/'+action,{commandId:createUlid(),input,expected});assert.equal(data.state,'committed');return data.value}
+  // The installed sample campaigns are unrelated business subjects; the starter
+  // retires them through the public delete door before the import scenario.
+  for(const sample of (await h.db.prepare('SELECT id,version,code FROM campaigns ORDER BY id').all()).results)await command(starter,'launch.campaign.delete',{id:sample.id,confirmationCode:sample.code},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:sample.id},version:sample.version}])
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM campaigns').first()).n,0)
+  const settings=await json(starter,'/api/v1/settings')
+  await command(starter,'settings.update',{version:settings.version,changes:{timezone:'UTC',quietHoursStart:'00:00',quietHoursEnd:'00:00'}})
+  for(const person of [starter,successor]){const p=(await json(person,'/api/v1/settings')).preferences;await command(person,'preferences.update',{version:p.version,preferences:{timezone:'UTC',mutedKinds:[],digestEnabled:false,progressEnabled:true}})}
+  for(const a of (await h.db.prepare('SELECT id,version FROM automations WHERE enabled=1').all()).results)await command(starter,'launch.automation.disable',{id:a.id},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.automation,recordId:a.id},version:a.version}])
+  const filename='synthetic-cradle-4302.csv',text='Name\n'+Array.from({length:25},(_,i)=>'synthetic-cradle-'+(4400+i)).join('\n')+'\n',options={name:'synthetic-cradle-4303',tables:{[filename]:{columns:{'column-1':{type:'text'}}}}},prefix='/api/v1/records/base-import'
+  const upload=async(route,preview)=>{const body=new FormData();body.append('files',new Blob([text],{type:'text/csv'}),filename);body.set('options',JSON.stringify(options));if(preview){body.set('identities',JSON.stringify(preview.identities));body.set('fingerprint',preview.fingerprint);body.set('acceptLoss','true')}const response=await fetch(h.origin+prefix+route,{method:'POST',headers:{cookie:starter.session.cookie,origin:h.origin,'x-csrf-token':starter.session.csrf},body});const value=await response.json();assert.equal(response.status,200,JSON.stringify(value));return value.data}
+  const preview=await upload('/preview'),review=await upload('/review',preview),job=await json(starter,prefix+'/adopt',{reviewId:review.reviewId,fingerprint:review.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true}),route=prefix+'/jobs/'+job.id
+  assert.equal((await json(starter,route+'/resume',{})).state,'applying')
+  const before=(await json(starter,route)).progress.appliedRecords
+  assert.ok(before>0&&before<25,'Live-import erasure starts with a real bounded partial import')
+  inspector=await interruptImportJournal(h,()=>raw(starter,route+'/resume',{}))
+  const eventId='base-import:'+job.id+':failed',scalar=async(sql,...values)=>(await h.db.prepare(sql).bind(...values).first()).n
+  const attempts=()=>scalar('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?',eventId),owed=()=>scalar('SELECT count(*) n FROM channel_progress_owed WHERE starter_id=?',starter.id)
+  assert.equal(await attempts(),1,'The interrupted import retains its actual admitted attempt token')
+  assert.equal(await owed(),1,'The interrupted import retains its actual write-ahead failure')
+  assert.equal(await scalar("SELECT count(*) n FROM channel_progress_attempts WHERE event_id=? AND live_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')",eventId),1,'Erasure exercises a live import attempt lease')
+  const askedAt=(await h.mailMessages()).length,asked=await h.request(starter.session,'/auth/step-up',{method:'POST',body:JSON.stringify({action:'owner:transfer',returnTo:'/app/settings'})})
+  assert.equal(asked.status,202,await asked.text())
+  const links=(await h.mailMessages()).slice(askedAt).flatMap(message=>[...message.content.find(part=>part.type==='text/plain').value.matchAll(/https?:\/\/\S+/g)].map(match=>new URL(match[0]))).filter(url=>url.pathname==='/auth/confirm')
+  assert.equal(links.length,1,'Live-import erasure confirms ownership handover through the fresh public email link')
+  const confirmed=await h.request(starter.session,'/auth/confirm',{method:'POST',body:JSON.stringify({token:links[0].searchParams.get('token')}),redirect:'manual'});assert.equal(confirmed.status,303)
+  const member=(await json(starter,'/api/v1/members?appId='+LAUNCH_APP_ID)).items.find(person=>person.id===successor.id)
+  assert.ok(member)
+  const expected=(id,version)=>[{ref:{appId:LAUNCH_APP_ID,entityId:'00000000000000000000000101',recordId:id},version}]
+  await command(starter,'member.transfer-ownership',{memberId:successor.id},expected(successor.id,member.version))
+  successor.session=await h.signIn(successor.id);starter.session=await h.signIn(starter.id)
+  assert.equal((await h.db.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first()).id,successor.id)
+  const version=async()=>(await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(starter.id).first()).version
+  await command(successor,'member.remove',{memberId:starter.id,reason:'synthetic-cradle-4304'},expected(starter.id,await version()))
+  assert.equal(await scalar("SELECT count(*) n FROM channel_progress_attempts WHERE event_id=? AND live_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')",eventId),1,'The import attempt remains live at the public erasure door')
+  const original=await h.db.prepare('SELECT name,email FROM operators WHERE id=?').bind(starter.id).first()
+  const mailStart=(await h.mailMessages()).length,eraseStarted=Date.now(),erased=await command(successor,'member.erase',{memberId:starter.id,reason:'synthetic-cradle-4305'},expected(starter.id,await version()))
+  assert.equal(erased.confirmed,true);assert.equal(erased.erasureState,'complete')
+  const eraseMilliseconds=Date.now()-eraseStarted;assert.ok(eraseMilliseconds<=300000,'Erasure of a live import completes within the existing five-minute lifecycle bound')
+  for(const [store,rows]of [['channel_progress_attempts',1],['channel_progress_owed',1]]){const place=erased.plan.places.find(item=>item.store===store);assert.ok(place,'Live-import erasure inventories '+store);assert.equal(place.action,'delete');assert.equal(place.rows,rows,'Live-import erasure reports the true '+store+' count')}
+  assert.equal(await attempts(),0,'Erasure removes the live import token in its native transaction')
+  assert.equal(await owed(),0,'Erasure removes every owed row naming the import starter')
+  assert.equal(await scalar('SELECT count(*) n FROM notifications WHERE operator_id=?',starter.id),0)
+  assert.equal(await scalar('SELECT count(*) n FROM channel_deliveries WHERE operator_id=?',starter.id),0)
+  // The import job row is the accepted receipt the lifecycle policy keeps: its
+  // principal reference now names an erased principal whose identity was replaced
+  // (BASELINE.md BASE-DATA-003: audit is kept with the reference anonymised).
+  assert.equal(await scalar('SELECT count(*) n FROM ik_jobs WHERE id=? AND principal_id=?',job.id,starter.id),1,'The import job receipt keeps its anonymised starter reference')
+  assert.equal((await h.db.prepare('SELECT state FROM authority_principals WHERE id=?').bind(starter.id).first()).state,'erased')
+  const anonymised=await h.db.prepare('SELECT name,email FROM operators WHERE id=?').bind(starter.id).first()
+  assert.ok(anonymised.name!==original.name&&anonymised.email!==original.email,'The retained reference resolves to no original identity')
+  assert.equal(await scalar('SELECT count(*) n FROM operators WHERE name=? OR email=?',original.name,original.email),0,'No operator row keeps the erased identity')
+  // A refused request can be answered before its body is read, after which the
+  // server closes that connection; the client must not reuse it for the next one.
+  const refused=async(person,path)=>(await h.request(person.session,path,{method:'POST',body:'{}',headers:{connection:'close'}})).status
+  const denied=await refused(starter,route+'/resume')
+  assert.ok([401,403,404].includes(denied),'An erased starter cannot resume the interrupted import')
+  const successorResume=await refused(successor,route+'/resume')
+  assert.ok([403,404].includes(successorResume),'Ownership handover never lets the replacement owner apply the erased starter import')
+  const at=Date.now()
+  for(const offset of [60000,360000,3600000,86400000])assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+offset})).outcome,'ok')
+  assert.equal(await scalar('SELECT count(*) n FROM ik_provenance WHERE job_id=?',job.id),before,'Later public resumes and scheduled ticks apply none of the erased starter remaining import')
+  assert.equal(await attempts(),0);assert.equal(await owed(),0)
+  assert.equal(await scalar("SELECT count(*) n FROM notifications WHERE kind='progress' AND subject_id=?",job.id),0,'No import outcome reaches any operator after starter erasure')
+  assert.equal((await h.mailMessages()).length,mailStart,'No later provider-edge mail revives the erased starter or redirects their outcome')
+  console.log('LIVE_IMPORT_ERASURE '+JSON.stringify({beforeApplied:before,attemptsBefore:1,owedBefore:1,places:erased.plan.places.filter(place=>place.store==='channel_progress_attempts'||place.store==='channel_progress_owed'),attemptsAfter:0,owedAfter:0,state:erased.erasureState,eraseMilliseconds,retainedImportJobs:await scalar('SELECT count(*) n FROM ik_jobs WHERE id=?',job.id),retainedStarterReferences:await scalar('SELECT count(*) n FROM ik_jobs WHERE id=? AND principal_id=?',job.id,starter.id),laterMail:0}))
+ }finally{inspector?.close();await h.close()}
+}
+
+/** Locate the real emitted apply predicate; restart the repository runtime while
+ * it is paused after journaling, rather than replacing any application behavior. */
+async function interruptImportJournal(h,trigger){
+ const endpoint=new URL(await h.runtime.getInspectorURL());endpoint.protocol='http:';endpoint.pathname='/json'
+ const target=(await(await fetch(endpoint)).json()).find(item=>String(item.id).startsWith('core:user:'));assert.ok(target)
+ const ws=new WebSocket(target.webSocketDebuggerUrl),pending=new Map(),scripts=[];let serial=0,hit
+ await new Promise((resolve,reject)=>{ws.addEventListener('open',resolve,{once:true});ws.addEventListener('error',reject,{once:true})})
+ const command=(method,params={})=>new Promise((resolve,reject)=>{const id=++serial;pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}))})
+ ws.addEventListener('message',event=>{const value=JSON.parse(event.data);if(value.id&&pending.has(value.id)){const request=pending.get(value.id);pending.delete(value.id);value.error?request.reject(new Error(value.error.message)):request.resolve(value.result)}if(value.method==='Debugger.scriptParsed')scripts.push(value.params);if(value.method==='Debugger.paused')hit?.(value.params)})
+ const close=()=>ws.close()
+ try{
+  await command('Debugger.enable')
+  const needle=' AND EXISTS(SELECT 1 FROM channel_progress_attempts WHERE event_id=? AND token=? AND live_until>strftime'
+  let point
+  for(const script of scripts){const {scriptSource}=await command('Debugger.getScriptSource',{scriptId:script.scriptId}),at=scriptSource.indexOf(needle);if(at<0)continue;assert.equal(scriptSource.indexOf(needle,at+1),-1);const before=scriptSource.slice(0,at);point=await command('Debugger.setBreakpoint',{location:{scriptId:script.scriptId,lineNumber:before.split('\n').length-1,columnNumber:at-(before.lastIndexOf('\n')+1)}});break}
+  assert.ok(point,'The emitted native import exposes its production attempt predicate to the debugger')
+  const paused=new Promise(resolve=>{hit=data=>{if(data.hitBreakpoints?.includes(point.breakpointId))resolve()}}),request=trigger().then(value=>({value}),error=>({error:String(error)}))
+  await paused
+  await h.restart();close();await request
+  return {close}
+ }catch(error){close();throw error}
+}
