@@ -218,6 +218,7 @@ async function verifyLiveImportStarterErasure(){
  const h=await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
  let inspector
  try{
+  await h.db.prepare('DELETE FROM campaigns').run()
   const starter={id:h.owner,session:h.ownerSession},successor=await h.addPerson({legacy:true,name:'synthetic-cradle-4301'})
   const raw=async(person,route,body)=>{const response=await h.request(person.session,route,body===undefined?{}:{method:'POST',body:JSON.stringify(body)});return {status:response.status,value:await response.json()}}
   const json=async(person,route,body)=>{const response=await raw(person,route,body);assert.equal(response.status,200,JSON.stringify(response));return response.value.data}
@@ -251,8 +252,10 @@ async function verifyLiveImportStarterErasure(){
   assert.equal((await h.db.prepare('SELECT id FROM authority_principals WHERE initial_owner=1').first()).id,successor.id)
   const version=async()=>(await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(starter.id).first()).version
   await command(successor,'member.remove',{memberId:starter.id,reason:'synthetic-cradle-4304'},expected(starter.id,await version()))
-  const mailStart=(await h.mailMessages()).length,erased=await command(successor,'member.erase',{memberId:starter.id,reason:'synthetic-cradle-4305'},expected(starter.id,await version()))
+  assert.equal(await scalar("SELECT count(*) n FROM channel_progress_attempts WHERE event_id=? AND live_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')",eventId),1,'The import attempt remains live at the public erasure door')
+  const mailStart=(await h.mailMessages()).length,eraseStarted=Date.now(),erased=await command(successor,'member.erase',{memberId:starter.id,reason:'synthetic-cradle-4305'},expected(starter.id,await version()))
   assert.equal(erased.confirmed,true);assert.equal(erased.erasureState,'complete')
+  const eraseMilliseconds=Date.now()-eraseStarted;assert.ok(eraseMilliseconds<=300000,'Erasure of a live import completes within the existing five-minute lifecycle bound')
   for(const [store,rows]of [['channel_progress_attempts',1],['channel_progress_owed',1]]){const place=erased.plan.places.find(item=>item.store===store);assert.ok(place,'Live-import erasure inventories '+store);assert.equal(place.action,'delete');assert.equal(place.rows,rows,'Live-import erasure reports the true '+store+' count')}
   assert.equal(await attempts(),0,'Erasure removes the live import token in its native transaction')
   assert.equal(await owed(),0,'Erasure removes every owed row naming the import starter')
@@ -268,7 +271,7 @@ async function verifyLiveImportStarterErasure(){
   assert.equal(await attempts(),0);assert.equal(await owed(),0)
   assert.equal(await scalar("SELECT count(*) n FROM notifications WHERE kind='progress' AND subject_id=?",job.id),0,'No import outcome reaches any operator after starter erasure')
   assert.equal((await h.mailMessages()).length,mailStart,'No later provider-edge mail revives the erased starter or redirects their outcome')
-  console.log('LIVE_IMPORT_ERASURE '+JSON.stringify({beforeApplied:before,attemptsBefore:1,owedBefore:1,attemptsAfter:0,owedAfter:0,state:erased.erasureState,laterMail:0}))
+  console.log('LIVE_IMPORT_ERASURE '+JSON.stringify({beforeApplied:before,attemptsBefore:1,owedBefore:1,places:erased.plan.places.filter(place=>place.store==='channel_progress_attempts'||place.store==='channel_progress_owed'),attemptsAfter:0,owedAfter:0,state:erased.erasureState,eraseMilliseconds,retainedImportJobs:await scalar('SELECT count(*) n FROM ik_jobs WHERE id=?',job.id),retainedStarterReferences:await scalar('SELECT count(*) n FROM ik_jobs WHERE id=? AND principal_id=?',job.id,starter.id),laterMail:0}))
  }finally{inspector?.close();await h.close()}
 }
 

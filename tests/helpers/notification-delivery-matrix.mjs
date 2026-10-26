@@ -377,8 +377,8 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  // Restart an actual claimed execution at its emitted after-claim boundary.
  // The inspector locates application code; it neither replaces that code nor
  // supplies a production hook. Only the fixture's own workerd PID is stopped.
- const interruptedExport=async()=>{
-  const id=await saveExport(starter),inspector=new URL(await h.runtime.getInspectorURL())
+ const interruptedExport=async retainedId=>{
+  const id=retainedId??await saveExport(starter),inspector=new URL(await h.runtime.getInspectorURL())
   inspector.protocol='http:';inspector.pathname='/json'
   const targets=await(await fetch(inspector)).json(),target=targets.find(t=>String(t.id).startsWith('core:user:'))
   assert.ok(target,'NOTIFY-009 the owned emitted Worker exposes its inspector target')
@@ -457,7 +457,9 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(control.id).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no debt')
   assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(control.eventId).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no attempt')
   await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),control.id).run()
-  await tick(controlAt+240000)
+  const retiredControl=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:controlAt+240000})
+  assert.equal(retiredControl.outcome,'exception','NOTIFY-009 the nonmatching control cannot commit across its published outcome admission')
+  assert.equal((await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(control.id).first()).running_id,null,'NOTIFY-009 the refused control resume releases its execution claim')
   await removeExport(starter,control.id)
  }
  await prefs(starter,[],true)
