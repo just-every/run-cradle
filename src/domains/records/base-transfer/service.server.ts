@@ -138,7 +138,7 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   await db.prepare(`UPDATE ik_jobs SET cradle_restore_hold=0 WHERE id=? AND cradle_restore_hold=1 AND (${authority.sql})`).bind(id,...(authority.params??[])).run()
   if((await jobBinding(ctx,id)).cradle_restore_hold)throw new AdmissionError('forbidden','Current base owner authority is required to continue this restored import.')
   if(operation!=='resume')return operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
-  const before=await readD1ImportJob(id,c),starterId=c.authorization.principalId
+  const before=await readD1ImportJob(id,c),starterId=before.principalId
   if(['undone','rolling_back','rolled_back','undoing'].includes(before.state))return resumeD1Import(id,c)
   const eventId=`base-import:${id}:failed`,token=crypto.randomUUID(),liveUntil=new Date(Date.now()+300000).toISOString()
   const notify=(outcome:'completed'|'failed')=>deliverOwedProgress(db,ctx.ingress,`base-import:${id}:${outcome}`)
