@@ -14,7 +14,7 @@ import {warehouseFiles} from './file-format.server'
 import {dueSchedule} from '../../apps/launch/schedule'
 import {reserveFileWrite,finishFileWrite} from '../lifecycle/file-writes.server'
 import {AuthorityError} from '../authority/errors'
-import {owedProgressStatement,oweProgress,deliverOwedProgress} from '../channels/progress-owed.server'
+import {owedProgressStatement,progressAttemptStatements,settleProgressAttempt,deliverOwedProgress} from '../channels/progress-owed.server'
 import type {OwedProgress} from '../channels/progress-owed.server'
 
 type Mark={version:number;updatedAt:string;hash:string}
@@ -46,10 +46,12 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
   // lease is reclaimed. The same run/file/job identities survive a restart.
   if(resuming&&row.running_started_at&&Date.parse(row.running_started_at)+300000>now)return
   const runId=row.running_id??createUlid(),startedAt=new Date(now).toISOString(),at=row.running_at??clock().toISOString(),runSlot=row.running_slot??slot,revision=row.running_revision??await services.reader.revision(),credential=createUlid(),expiresAt=new Date(now+300000).toISOString()
-  const acquired=resuming
-   ?await db.prepare("UPDATE warehouse_exports SET running_started_at=? WHERE id=? AND version=? AND state='active' AND running_id=? AND running_started_at IS ? RETURNING id").bind(startedAt,row.id,row.version,runId,row.running_started_at).first<{id:string}>()
-   :await db.prepare("UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,startedAt,at,runSlot,revision,row.id,row.version,slot).first<{id:string}>()
-  if(!acquired)return
+  const claim=resuming
+   ?db.prepare("UPDATE warehouse_exports SET running_started_at=? WHERE id=? AND version=? AND state='active' AND running_id=? AND running_started_at IS ? RETURNING id").bind(startedAt,row.id,row.version,runId,row.running_started_at)
+   :db.prepare("UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,startedAt,at,runSlot,revision,row.id,row.version,slot)
+  const failedProgress:OwedProgress={subjectType:'warehouse-export',subjectId:row.id,starterId:row.owner_id,eventId:`warehouse-export:${row.id}:${row.version}:${runSlot}:failed`,outcome:'failed'}
+  const claimed=await db.batch([claim,...await progressAttemptStatements(db,failedProgress,runId,expiresAt,{id:row.id,startedAt})])
+  if(!claimed[0].results.length)return
   const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
   let reservation:string|undefined,committed=false,failure:{error:unknown}|undefined
   const progress=(outcome:OwedProgress['outcome']):OwedProgress=>({subjectType:'warehouse-export',subjectId:row.id,starterId:row.owner_id,eventId:`warehouse-export:${row.id}:${row.version}:${runSlot}:${outcome}`,outcome})
@@ -127,6 +129,8 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
     ...bases.map(appId=>db.prepare('INSERT INTO operation_audit(id,actor_id,app_id,action,feature,created_at) VALUES(?,?,?,?,?,?)').bind(createUlid(),actor.id,appId,'warehouse.export','Warehouse exports',startedAt)),
     // The completion notice is owed in the same commit as the watermark.
     await owedProgressStatement(db,progress('completed')),
+    db.prepare('DELETE FROM channel_progress_owed WHERE event_id=?').bind(failedProgress.eventId),
+    db.prepare('DELETE FROM channel_progress_attempts WHERE event_id=? AND token=?').bind(failedProgress.eventId,runId),
     db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
    ])
    committed=true
@@ -138,7 +142,11 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    await db.prepare('UPDATE warehouse_exports SET running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL WHERE id=? AND running_id=?').bind(row.id,runId).run()
   }finally{
    const owed=progress(committed?'completed':'failed')
-   try{if(!committed)await oweProgress(db,owed);await deliverOwedProgress(db,ctx.ingress,owed.eventId)}
+   if(!committed)try{await settleProgressAttempt(db,failedProgress.eventId,runId,true)}catch(journal){
+    if(!failure)throw journal
+    if(failure.error instanceof Error)Object.defineProperty(failure.error,'cause',{value:journal,configurable:true})
+   }
+   try{await deliverOwedProgress(db,ctx.ingress,owed.eventId)}
    // An in-flight provider or export error stays the reported cause; the owed
    // notice is retried on a later tick, which reports its own failure.
    catch(publication){if(!failure)throw publication}
