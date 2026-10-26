@@ -16,6 +16,11 @@ const paths={
  'weekly-digest':'emitted Monday digest',
  'record-automation':'saved notify-operator action (in-app-only)',
 }
+// Literal public progress wording, never read back from the notice under test.
+const progressText={
+ import:{completed:{title:'Import completed',body:'The import you started has finished. Open Settings to review it.'},failed:{title:'Import needs attention',body:'The import you started did not finish. Open Settings to review it.'}},
+ export:{completed:{title:'Export completed',body:'The export you started has finished. Open Settings to review it.'},failed:{title:'Export needs attention',body:'The export you started did not finish. Open Settings to review it.'}},
+}
 const titles={outage:'An operational outage needs attention','decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
 export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  assert.deepEqual(Object.keys(paths).sort(),[...notificationKinds].sort(),'NOTIFY-007 matrix accounts for exactly the production kind list')
@@ -50,7 +55,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   assert.deepEqual(rows.map(r=>r.operator_id).sort(),[...recipients].sort(),`NOTIFY-007 ${kind}: exactly the event owners retain one notice each`)
   const messages=await h.mailMessages()
   for(const n of rows){
-   const session=n.operator_id===h.owner?h.ownerSession:other.session
+   const session=sessionOf(n.operator_id)
    assert.equal((await preferences(session)).mutedKinds.includes(kind),n.operator_id===h.owner&&muted,`NOTIFY-007 ${kind}: recipient email preference read back`)
    const state=n.operator_id===h.owner&&muted?'muted':'accepted'
    const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(n.operator_id).first()).email
@@ -62,6 +67,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
    if(mail.length){const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(n.operator_id).first()).email;assert.deepEqual(mail[0].personalizations.flatMap(p=>p.to.map(r=>r.email)),[email],`NOTIFY-007 ${kind}: provider recipient`)}
   }
  }
+ const sessionOf=id=>{const session=id===h.owner?h.ownerSession:id===other.id?other.session:id===progress.starter.id?progress.starter.session:null;assert.ok(session,`No matrix session for recipient ${id}`);return session}
  const raw=async(path,input,status=200)=>{const response=await h.request(h.ownerSession,path,input?{method:'POST',body:JSON.stringify(input)}:{});assert.equal(response.status,status,await response.clone().text());return response.json()}
  const operational=async(muted,phase)=>{
   const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),statusId=createUlid()
@@ -100,10 +106,37 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const later=(await eventRows('connection')).filter(n=>!rows.some(old=>old.id===n.id))
   await assertRows('outage',later,muted,(await h.mailMessages()).slice(recoveryMail),[h.owner])
   rows.push(...later);provider.allow(provider.ownedCalendarId)
+  // Owner selection: a connection authored by a second current owner notifies
+  // only its author; a legacy connection without owner_id (created before
+  // 9044_file_store_connections.sql) notifies every active installation Base owner.
+  const starter=progress.starter
+  // The second current owner joins this base through its public collaborators door.
+  await raw(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:starter.id,role:'owner',destructive:false,version:0})
+  const asStarter=async(path,input,status=200)=>{const response=await h.request(starter.session,path,{method:'POST',body:JSON.stringify(input)});assert.equal(response.status,status,await response.clone().text());return response.json()}
+  for(const [label,session,legacy,recipients]of [['second-owner',starter.session,false,[starter.id]],['legacy-null-owner',h.ownerSession,true,[h.owner,starter.id]]]){
+   const id=(await request(session,'connection.configure',{appId,adapterId:'google-calendar',name:`synthetic-cradle-${label}-${width}-${phase}`,accountId:provider.ownedCalendarId,scopes:[{resource:provider.ownedCalendarId,readFields:[],actions:['connection.sync']}],ownership:[],credentialRef:null})).connectionId
+   const probe=async()=>{await request(session,'connection.check',{connectionId:id});await tick(Date.now());await tick(Date.now());return(await raw(`/api/v1/connections/${id}`)).data}
+   const begin=await request(session,'connection.begin-consent',{connectionId:id,returnTo:'/app/settings'})
+   const back=await h.request(session,'/oauth/google/callback?'+new URLSearchParams({code:'synthetic-cradle-code-1',state:new URL(begin.authorizationUrl).searchParams.get('state')}),{redirect:'manual'})
+   assert.equal(back.status,303,await back.clone().text())
+   assert.equal((await probe()).state,'connected')
+   const author=(await h.db.prepare('SELECT owner_id FROM provider_connections WHERE id=?').bind(id).first()).owner_id
+   assert.equal(author,legacy?h.owner:starter.id,`NOTIFY-009 ${label}: connection.configure records its authoring owner`)
+   if(legacy)await h.db.prepare('UPDATE provider_connections SET owner_id=NULL WHERE id=?').bind(id).run()
+   const mailStart=(await h.mailMessages()).length
+   provider.deny(provider.ownedCalendarId);assert.equal((await probe()).state,'unavailable')
+   const selected=(await read('outage')).filter(n=>n.subject_id===id)
+   assert.deepEqual(selected.map(n=>n.operator_id).sort(),[...recipients].sort(),`NOTIFY-009 ${label}: exact outage recipient set`)
+   await assertRows('outage',selected,muted,(await h.mailMessages()).slice(mailStart),recipients)
+   provider.allow(provider.ownedCalendarId)
+   rows.push(...selected)
+  }
   // Connections and record automations each have exactly one author/owner. The
   // other recipient stays unmuted, but has no ownership and receives nothing.
   const expires=Date.now()+8000
   const saved=(await raw('/api/user-automations',{commandId:createUlid(),expiresAt:new Date(expires).toISOString(),definition:{name:`synthetic-cradle-stop-${width}-${phase}`,appId,entityId,event:'created',enabled:true,actions:[{kind:'update',fieldId:statusId,value:'must not run'}]}},201)).data.result.value
+  // The second owner's automation expires in the same approval window.
+  const authored=(await asStarter('/api/user-automations',{commandId:createUlid(),expiresAt:new Date(expires).toISOString(),definition:{name:`synthetic-cradle-second-owner-stop-${width}-${phase}`,appId,entityId,event:'created',enabled:true,actions:[{kind:'update',fieldId:statusId,value:'must not run'}]}},201)).data.result.value
   const schema=(await raw(`/api/v1/apps/${appId}/entities/${entityId}`)).data
   const created=await request(h.ownerSession,'record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-private-stop'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}])
   await new Promise(resolve=>setTimeout(resolve,Math.max(0,expires-Date.now()+25)))
@@ -115,15 +148,23 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const stopped=await eventRows('automation-stop')
   assert.equal(stopped.length,1,JSON.stringify({run:await h.db.prepare('SELECT id,state,error_code FROM automation_runs WHERE id=?').bind(run.id).first(),events:(await h.db.prepare('SELECT * FROM channel_events WHERE event_id=?').bind('automation-stop:'+run.id).all()).results}))
   await assertRows('outage',stopped,muted,(await h.mailMessages()).slice(stopMail),[h.owner])
+  const authoredRun=await h.db.prepare("SELECT id,state FROM automation_runs WHERE automation_id=?").bind(authored.id).first()
+  assert.equal(authoredRun?.state,'Cancelled','NOTIFY-009 the second owner\'s expired approval is fenced before any new effect')
+  const authoredStop=(await read('outage')).filter(n=>n.subject_id===authoredRun.id)
+  assert.deepEqual(authoredStop.map(n=>n.operator_id),[starter.id],'NOTIFY-009 an automation stop notifies exactly its author, never the installation owner')
+  await assertRows('outage',authoredStop,muted,(await h.mailMessages()).slice(stopMail),[starter.id])
   const stopInbox=(await raw('/api/notifications')).notifications.find(n=>n.id===stopped[0].id)
   assert.equal(stopInbox.subject.available,true);assert.ok(stopInbox.subject.href.includes(run.id))
   assert.ok((await raw(`/api/user-automations/${saved.id}/runs`)).data.runs.some(r=>r.id===run.id),'NOTIFY-009 current owner can open the stopped run')
-  rows.push(...stopped)
+  rows.push(...stopped,...authoredStop)
   await tick(Date.now());assert.deepEqual(await eventRows('automation-stop'),stopped,'NOTIFY-009 repeated automation stop observation emits nothing new')
-  assert.equal((await h.mailMessages()).slice(stopMail).filter(m=>m.subject===titles.outage).length,muted?0:1)
+  assert.deepEqual((await read('outage')).filter(n=>n.subject_id===authoredRun.id),authoredStop,'NOTIFY-009 repeated observation never repeats the second owner\'s stop')
+  // The installation owner's stop mails only when unmuted; the second owner is never muted.
+  assert.equal((await h.mailMessages()).slice(stopMail).filter(m=>m.subject===titles.outage).length,muted?1:2)
   const current=(await raw(`/api/v1/apps/${appId}/entities/${entityId}/records/${created.ref.recordId}`)).data.record
   assert.equal(current.fields[statusId]?.value??null,null,'NOTIFY-009 stopped automation has no new effect')
   await raw(`/api/user-automations/${saved.id}/disable`,{commandId:createUlid(),version:saved.version})
+  await asStarter(`/api/user-automations/${authored.id}/disable`,{commandId:createUlid(),version:authored.version})
   const voluntary=(await raw('/api/user-automations',{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-owner-stop',appId,entityId,event:'created',enabled:true,actions:[{kind:'update',fieldId:statusId,value:'must not run'}]}},201)).data.result.value
   await request(h.ownerSession,'record.create',{appId,entityId,values:{[nameId]:'synthetic-cradle-voluntary-stop'}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}])
   await raw(`/api/user-automations/${voluntary.id}/disable`,{commandId:createUlid(),version:voluntary.version})
@@ -132,7 +173,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   const fresh=(await read('outage')).filter(n=>!initial.some(old=>old.id===n.id))
   assert.deepEqual(fresh.map(n=>n.id).sort(),rows.map(n=>n.id).sort(),'NOTIFY-009 no non-owner outage recipients')
   assert.equal((await preferences(other.session)).mutedKinds.includes('outage'),false)
-  if(muted)retained.push({kind:'outage',ids:rows.map(n=>n.id)})
+  if(muted)retained.push({kind:'outage',ids:rows.filter(n=>n.operator_id===h.owner).map(n=>n.id)})
   console.log(`NOTIFY-009 ${width} ${phase}: connection outage/repeat/recovery and product-fenced automation stop, owner only; muted=${muted}`)
  }
  const monday=new Date();monday.setUTCHours(0,0,0,0);monday.setUTCDate(monday.getUTCDate()+7-(monday.getUTCDay()+6)%7+(width===390?14:0))
@@ -242,19 +283,24 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  const owner={id:h.owner,session:h.ownerSession},people=[owner,starter]
  const json=async(person,path,body,status=200)=>{const r=await h.request(person.session,path,body===undefined?{}:{method:'POST',body:JSON.stringify(body)});const value=await r.json();assert.equal(r.status,status,JSON.stringify(value));return value.data}
  const prefs=async(person,mutedKinds,progressEnabled)=>{const p=await preferences(person.session);await request(person.session,'preferences.update',{version:p.version,preferences:{timezone:'UTC',mutedKinds,digestEnabled:false,progressEnabled}})}
- const rows=async subject=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,n.title,n.version,n.updated_at,d.id AS delivery_id,d.state,d.group_id FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=? AND n.subject_id=?').bind('progress',subject).all()).results
- const check=async(subject,person,muted,mailStart,enabled=true)=>{
-  const notices=await rows(subject),p=await preferences(person.session)
+ const rows=async subject=>(await h.db.prepare('SELECT n.id,n.operator_id,n.subject_id,n.title,n.body,n.version,n.updated_at,d.id AS delivery_id,d.state,d.group_id FROM notifications n LEFT JOIN channel_deliveries d ON d.notification_id=n.id WHERE n.kind=? AND n.subject_id=?').bind('progress',subject).all()).results
+ const check=async(subject,person,muted,mailStart,[source,outcome],enabled=true)=>{
+  const expected=progressText[source][outcome],notices=await rows(subject),p=await preferences(person.session)
   assert.equal(p.progressEnabled,enabled,'NOTIFY-009 starter completion preference read back')
   assert.equal(p.mutedKinds.includes('progress'),muted,'NOTIFY-007 progress email preference read back for this recipient')
   assert.deepEqual(notices.map(n=>n.operator_id),[person.id],'NOTIFY-009 progress reaches exactly its retained starter')
   const [notice]=notices;assert.ok(notice.delivery_id);assert.equal(notice.state,muted?'muted':'accepted')
-  const mail=(await h.mailMessages()).slice(mailStart),eventMail=mail.filter(m=>m.subject===notice.title)
+  assert.deepEqual({title:notice.title,body:notice.body},expected,`NOTIFY-009 ${source} ${outcome} notice states its outcome`)
+  const mail=(await h.mailMessages()).slice(mailStart)
   const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(person.id).first()).email
-  assert.deepEqual(eventMail.flatMap(m=>m.personalizations.flatMap(p=>p.to.map(r=>r.email))),muted?[]:[email],'NOTIFY-007 progress exact provider-edge recipient mail')
-  assert.equal(mail.filter(m=>m.custom_args?.rer_delivery_id===notice.group_id).length,muted?0:1,'NOTIFY-007 progress exact durable receipt mail count')
+  // Mail is selected by its durable receipt and recipient, never by the notice's own title.
+  const receipts=mail.filter(m=>notice.group_id&&m.custom_args?.rer_delivery_id===notice.group_id).map(m=>({to:m.personalizations.flatMap(p=>p.to.map(r=>r.email)),subject:m.subject,text:(m.content??[]).map(c=>c.value).join('\n')}))
+  assert.equal(receipts.length,muted?0:1,'NOTIFY-007 progress exact durable receipt mail count')
+  for(const receipt of receipts){assert.deepEqual(receipt.to,[email],'NOTIFY-007 progress exact provider-edge recipient mail');assert.equal(receipt.subject,expected.title,`NOTIFY-009 ${source} ${outcome} provider-edge subject`);assert.ok(receipt.text.includes(`${expected.title}\n${expected.body}`),`NOTIFY-009 ${source} ${outcome} provider-edge body: ${receipt.text}`)}
+  if(muted)assert.equal(mail.filter(m=>m.personalizations.some(p=>p.to.some(r=>r.email===email))).length,0,'NOTIFY-007 muted starter receives no provider-edge mail')
   const inbox=await h.request(person.session,'/api/notifications');assert.equal(inbox.status,200)
   const item=(await inbox.json()).notifications.find(n=>n.id===notice.id);assert.ok(item);assert.equal(item.subject.available,true);assert.equal(item.subject.href,'/app/settings')
+  assert.deepEqual({title:item.title,body:item.body},expected,`NOTIFY-009 ${source} ${outcome} public inbox wording`)
   if(muted)retained.push({kind:'progress',ids:[notice.id]})
   return notice
  }
@@ -284,16 +330,42 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  assert.equal((await preferences(starter.session)).progressEnabled,false)
  const completed=await h.db.prepare('SELECT version,last_slot FROM warehouse_exports WHERE id=?').bind(failed).first();assert.ok(completed.last_slot,'NOTIFY-009 export completion is durable')
  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id=?').bind(`warehouse-export:${failed}:${completed.version}:${completed.last_slot}:completed`).first()).n,0,'NOTIFY-009 successful export with no preference produces no notice')
- await check(failed,starter,false,defaultMail,false)
+ await check(failed,starter,false,defaultMail,['export','failed'],false)
  await removeExport(starter,failed)
  await prefs(starter,[],true)
  const successMail=(await h.mailMessages()).length,success=await saveExport(starter);await tick(Date.now());await tick(Date.now())
- await check(success,starter,false,successMail)
+ await check(success,starter,false,successMail,['export','completed'])
  const unchanged=await rows(success);await tick(Date.now());assert.deepEqual(await rows(success),unchanged,'NOTIFY-009 repeated scheduled observation never repeats progress')
  await removeExport(starter,success)
  console.log(`NOTIFY-009 ${width}: failed export default on, success opt-in, starter only`)
 
- const importJob=async(person,fail)=>{
+ // A committed export never loses its owed notice. Only this synthetic D1 makes
+ // the retained in-app notification principal unavailable while the real Worker
+ // commits; recovery ticks at +1 min, +5 min and +1 h then owe exactly one notice.
+ const system='00000000000000000000000001'
+ await prefs(starter,['progress'],true)
+ const owedMail=(await h.mailMessages()).length,owed=await saveExport(starter),committedAt=Date.now()
+ await h.db.prepare("UPDATE authority_principals SET state='removed' WHERE id=? AND kind='system'").bind(system).run()
+ let failing
+ try{failing=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:committedAt})}
+ finally{await h.db.prepare("UPDATE authority_principals SET state='active' WHERE id=? AND kind='system'").bind(system).run()}
+ assert.equal(failing.outcome,'exception','NOTIFY-009 the tick whose completion notice cannot be published still reports its exception')
+ assert.ok((await h.db.prepare('SELECT last_slot FROM warehouse_exports WHERE id=?').bind(owed).first()).last_slot,'NOTIFY-009 the export committed before its notice publication failed')
+ assert.deepEqual(await rows(owed),[],'NOTIFY-009 no notice exists while the notification principal is unavailable')
+ await tick(committedAt+60000)
+ assert.equal((await rows(owed)).length,1,'NOTIFY-009 exactly one starter notice for the committed export after recovery')
+ const recovered=await check(owed,starter,true,owedMail,['export','completed'])
+ for(const offset of [300000,3600000]){
+  await tick(committedAt+offset)
+  assert.deepEqual(await rows(owed),[recovered],'NOTIFY-009 further ticks never repeat the owed export notice')
+ }
+ const starterEmail=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(starter.id).first()).email
+ assert.equal((await h.mailMessages()).slice(owedMail).filter(m=>m.personalizations.some(p=>p.to.some(r=>r.email===starterEmail))).length,0,'NOTIFY-009 the owed export notice sends zero provider-edge mail while progress email is muted')
+ await removeExport(starter,owed)
+ await prefs(starter,[],true)
+ console.log(`NOTIFY-009 ${width}: committed export owed its notice through an unavailable notification principal; one notice after recovery`)
+
+ const importJob=async(person,fail,owed=false)=>{
   const filename='synthetic-cradle-1.csv',csv='Name\n'+Array.from({length:25},(_,i)=>`synthetic-cradle-${fail&&i===24?1:i+1}`).join('\n')+'\n',options={name:`synthetic-cradle-${width+1100}`,tables:{[filename]:{columns:{'column-1':{type:'text'}}}}},prefix='/api/v1/records/base-import'
   const upload=async(route,preview)=>{const body=new FormData();body.append('files',new Blob([csv],{type:'text/csv'}),filename);body.set('options',JSON.stringify(options));if(preview){body.set('identities',JSON.stringify(preview.identities));body.set('fingerprint',preview.fingerprint);body.set('acceptLoss','true')}const r=await fetch(h.origin+prefix+route,{method:'POST',headers:{cookie:person.session.cookie,origin:h.origin,'x-csrf-token':person.session.csrf},body});const value=await r.json();assert.equal(r.status,200,JSON.stringify(value));return value.data}
   const preview=await upload('/preview'),review=await upload('/review',preview),job=await json(person,prefix+'/adopt',{reviewId:review.reviewId,fingerprint:review.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true})
@@ -306,14 +378,37 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    const refusal=await h.request(person.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
    assert.equal(refusal.status,500,'NOTIFY-009 current native constraint rejects the pending duplicate import row')
    assert.equal((await refusal.json()).error.code,'internal')
+  }else if(owed){
+   // The import kit commits completion before its notice publishes; only this
+   // synthetic D1 makes the retained notification principal unavailable meanwhile.
+   await h.db.prepare("UPDATE authority_principals SET state='removed' WHERE id=? AND kind='system'").bind(system).run()
+   let refused
+   try{for(let n=0;n<6&&!refused;n++){const r=await h.request(person.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'});if(r.status!==200)refused=r}}
+   finally{await h.db.prepare("UPDATE authority_principals SET state='active' WHERE id=? AND kind='system'").bind(system).run()}
+   assert.equal(refused?.status,500,'NOTIFY-009 the request whose import completion notice cannot be published still reports its exception')
   }else{let next=first;for(let n=0;n<5&&next.state!=='completed';n++)next=await json(person,`${prefix}/jobs/${job.id}/resume`,{});assert.equal(next.state,'completed')}
   const status=await json(person,`${prefix}/jobs/${job.id}`)
+  if(owed){assert.equal(status.job.state,'completed','NOTIFY-009 the import committed before its notice publication failed');return job.id}
   if(fail)assert.ok(status.progress.appliedRecords>0&&status.progress.appliedRecords<status.progress.plannedRecords,'NOTIFY-009 failure retains a publicly reported partial import')
   const before=await rows(job.id),repeated=await h.request(person.session,`${prefix}/jobs/${job.id}/resume`,{method:'POST',body:'{}'})
   assert.equal(repeated.status,fail?500:200)
   assert.deepEqual(await rows(job.id),before,'NOTIFY-009 repeated import observation never repeats progress')
   return job.id
  }
+ // Native import completion has the same commit-then-publish shape and owes its
+ // notice in the kit's completing batch; recovery ticks deliver exactly one.
+ await prefs(owner,[...notificationKinds],true)
+ const importMail=(await h.mailMessages()).length,imported=await importJob(owner,false,true),importedAt=Date.now()
+ assert.deepEqual(await rows(imported),[],'NOTIFY-009 no import notice exists while the notification principal is unavailable')
+ await tick(importedAt+60000)
+ assert.equal((await rows(imported)).length,1,'NOTIFY-009 exactly one starter notice for the committed import after recovery')
+ const importNotice=await check(imported,owner,true,importMail,['import','completed'])
+ for(const offset of [300000,3600000]){
+  await tick(importedAt+offset)
+  assert.deepEqual(await rows(imported),[importNotice],'NOTIFY-009 further ticks never repeat the owed import notice')
+ }
+ console.log(`NOTIFY-009 ${width}: committed import owed its notice through an unavailable notification principal; one notice after recovery`)
+
  return {async events(muted,phase){
   for(const person of people)for(const source of ['import','export'])for(const failed of [false,true]){
    // New-base imports require the installation owner; export schedules accept either current owner.
@@ -324,10 +419,10 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    if(source==='import'){id=await importJob(person,failed);await tick(Date.now())}
    else if(failed){id=await failedExport(person);await parkExport(person,id);await tick(Date.now())}
    else{id=await saveExport(person);await tick(Date.now());await tick(Date.now())}
-   await check(id,person,muted&&person.id===h.owner,mailStart)
+   await check(id,person,muted&&person.id===h.owner,mailStart,[source,failed?'failed':'completed'])
    if(source==='export')await removeExport(person,id)
   }
   assert.equal((await preferences(starter.session)).mutedKinds.includes('progress'),false,'NOTIFY-007 unaffected starter remains unmuted')
   console.log(`NOTIFY-009 ${width} ${phase}: import/export completion/failure, exact starters and provider mail; muted=${muted}`)
- },async close(){await role('member')}}
+ },starter,async close(){await role('member')}}
 }

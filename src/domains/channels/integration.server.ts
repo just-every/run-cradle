@@ -5,14 +5,6 @@ import { createUlid } from '../../core/shared/ids'
 import type { ChannelEffects, NotificationInput, RecipientProjection } from './ports'
 import { deliveryTime } from './clock'
 import * as t from './tables.server'
-import {createAdmissionService} from '../admission/service.server'
-import {canonicalHash} from '../admission/canonical'
-import {delegationCommandId} from '../authority/user-delegation.server'
-import {NOTIFICATION_APP} from './mail-authority.server'
-import {notificationContext,notificationPrincipalGuard} from './notification-authority.server'
-import {createNotificationReplay} from './replay.server'
-import {erasureAdmissionGuard} from '../lifecycle/file-writes.server'
-import type {SqlPredicate} from '../admission/ports'
 const empty=():ChannelEffects=>({guards:[],mutations:[]})
 const labels:Record<string,string>={'decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated','readiness':'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','outage':'An operational outage needs attention','progress':'Progress update','weekly-digest':'Weekly portfolio digest','record-automation':'A record automation ran'}
 export function createChannelsIntegration(db:D1Database,project?:RecipientProjection){
@@ -61,16 +53,4 @@ export function createChannelsIntegration(db:D1Database,project?:RecipientProjec
   return effects
  }
  return {notification,withdrawCampaign:(ctx:RequestContext,id:string)=>withdraw(ctx,'d.campaign_id=?',[id]),deleteCampaign:(ctx:RequestContext,id:string)=>withdraw(ctx,'d.campaign_id=?',[id],true),withdrawNotification:(ctx:RequestContext,id:string)=>withdraw(ctx,'d.notification_id=?',[id]),async prepareRemoval(ctx:RequestContext,id:string){return {...await withdraw(ctx,'d.operator_id=?',[id]),blockers:[]}},async prepareErasure(ctx:RequestContext,id:string,_label:string){const effects=await withdraw(ctx,'d.operator_id=?',[id],true),pref=await db.prepare('SELECT version FROM channel_preferences WHERE operator_id=?').bind(id).first<{version:number}>();if(pref)effects.mutations.push({kind:'delete',table:t.preferences,where:trustedPredicate('operator_id=? AND version=?',[id,pref.version]),expectedRows:1});return effects}}
-}
-
-/** Async job facts use the same admission, recipient and delivery rules as other notices. */
-export async function publishProgress(db:D1Database,input:{subjectType:'base-import'|'warehouse-export';subjectId:string;starterId:string;eventId:string;outcome:'completed'|'failed';guard:SqlPredicate;ingress:RequestContext['ingress']}){
- const starter=await db.prepare('SELECT human_id FROM authority_principals WHERE id=?').bind(input.starterId).first<{human_id:string|null}>()
- if(!starter?.human_id)throw new Error('Progress requires the retained human starter')
- const commandId=await delegationCommandId(input.eventId,'progress'),ctx=await notificationContext(db,input.eventId,input.ingress)
- const effects=await createChannelsIntegration(db).notification(ctx,{kind:'progress',operatorId:starter.human_id,campaignId:null,subjectId:input.subjectId,subjectType:input.subjectType,eventId:input.eventId,actorId:null,progressOutcome:input.outcome})
- const action='progress.notify',guard=notificationPrincipalGuard(ctx.principal.authenticationEpoch),value={eventId:input.eventId,subjectId:input.subjectId,subjectType:input.subjectType,starterId:input.starterId,operatorId:starter.human_id,outcome:input.outcome,notificationId:effects.notificationId??null}
- const admission=createAdmissionService(db,{authorizeReplay:createNotificationReplay(db),additionalGuards:current=>[trustedPredicate("NOT EXISTS(SELECT 1 FROM portability_fences WHERE name IN ('restore','snapshot'))",[]),erasureAdmissionGuard(current.now)]})
- // A no-op completion is recorded too, so opting in never replays old success.
- await admission.commit(ctx,{commandId,action,appId:NOTIFICATION_APP,canonicalInputHash:await canonicalHash({eventId:input.eventId,subjectId:input.subjectId,subjectType:input.subjectType,starterId:input.starterId,outcome:input.outcome}),permit:{actor:{id:ctx.principal.id,kind:'system'},action,appId:NOTIFICATION_APP,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards:[guard,input.guard],reservationMutations:[],reservationIds:[]},guards:effects.guards,mutations:effects.mutations,audit:[{action,subject:null,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:value})
 }
