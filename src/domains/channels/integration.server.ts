@@ -26,7 +26,9 @@ export function createChannelsIntegration(db:D1Database,project?:RecipientProjec
   if(input.kind==='progress'){
    if(!input.progressOutcome||!['base-import','warehouse-export'].includes(input.subjectType??''))throw new Error('Progress requires its job source and outcome')
    const name=input.subjectType==='base-import'?'Import':'Export'
-   text={title:`${name} ${input.progressOutcome==='failed'?'needs attention':'completed'}`,body:input.progressOutcome==='failed'?`The ${name.toLowerCase()} you started did not finish. Open Settings to review it.`:`The ${name.toLowerCase()} you started has finished. Open Settings to review it.`}
+   // An export run whose finite automatic recovery stopped says so, and what happens next.
+   const stopped=input.subjectType==='warehouse-export'&&input.progressOutcome==='failed'&&!!await db.prepare("SELECT 1 FROM warehouse_exports WHERE id=? AND running_stopped_slot IS NOT NULL AND ('warehouse-export:'||id||':'||version||':'||running_slot||':failed')=?").bind(input.subjectId,input.eventId).first()
+   text={title:`${name} ${input.progressOutcome==='failed'?'needs attention':'completed'}`,body:stopped?'Automatic recovery of the export you started stopped after repeated unsuccessful attempts. It tries again at its next scheduled time.':input.progressOutcome==='failed'?`The ${name.toLowerCase()} you started did not finish. Open Settings to review it.`:`The ${name.toLowerCase()} you started has finished. Open Settings to review it.`}
   }
   const prefs=await db.prepare('SELECT version,timezone,muted_json,progress_enabled FROM channel_preferences WHERE operator_id=?').bind(input.operatorId).first<{version:number;timezone:string|null;muted_json:string;progress_enabled:number}>()
   effects.guards.push(trustedPredicate(prefs?'EXISTS(SELECT 1 FROM channel_preferences WHERE operator_id=? AND version=?)':'NOT EXISTS(SELECT 1 FROM channel_preferences WHERE operator_id=?)',prefs?[input.operatorId,prefs.version]:[input.operatorId]))
