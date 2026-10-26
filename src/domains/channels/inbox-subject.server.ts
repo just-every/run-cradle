@@ -1,3 +1,5 @@
+import {launchDescriptors} from '../../apps/launch/descriptors.server'
+import {LAUNCH_APP_ID} from '../../apps/launch/contracts'
 import {automationRunLink} from '../automations/failure-details'
 import type {PolicyPort,RequestContext} from '../authority/ports'
 import {baseAccess} from '../records/manual/base-access.server'
@@ -7,7 +9,7 @@ const denied=(error:unknown)=>error instanceof Error&&'code'in error&&['forbidde
 /** A base appears in Records only while at least one of its tables is readable. */
 async function readableBase(db:D1Database,ctx:RequestContext,policy:PolicyPort,appId:string){
  try{await baseAccess(db,ctx,appId)}catch(error){if(denied(error))return false;throw error}
- const tables=(await db.prepare("SELECT id FROM record_schemas s WHERE app_id=? AND NOT EXISTS(SELECT 1 FROM record_trash t WHERE t.app_id=s.app_id AND t.entity_id=s.id AND t.kind='table')").bind(appId).all<{id:string}>()).results
+ const tables=appId===LAUNCH_APP_ID?launchDescriptors.map(d=>({id:d.schema.id})):(await db.prepare("SELECT id FROM record_schemas s WHERE app_id=? AND NOT EXISTS(SELECT 1 FROM record_trash t WHERE t.app_id=s.app_id AND t.entity_id=s.id AND t.kind='table')").bind(appId).all<{id:string}>()).results
  for(const table of tables){
   try{const scope=await policy.scope(ctx,{appId,entityId:table.id,purpose:'read'});await assertGuards(db,scope.currentAuthorityGuards);return true}
   catch(error){if(!denied(error))throw error}
