@@ -32,7 +32,7 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     await runtime.lifecycle.cleanup.maintain()
     await runtime.trashPurge()
     // Owed import and export notices retry every tick, whatever their job's schedule.
-    await deliverOwedProgress(platform.bindings.DB, 'schedule')
+    await deliverOwedProgress(platform.bindings.DB, 'schedule',undefined,clock())
     await runtime.warehouse.runtime.scheduled()
     // Admit due notifications before dispatching effects in this same invocation.
     await channels()
