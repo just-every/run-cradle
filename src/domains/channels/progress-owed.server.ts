@@ -36,10 +36,12 @@ export async function progressAttemptStatements(db:D1Database,owed:OwedProgress,
   .bind(owed.eventId,token,liveUntil,...values)
  return [claim?insert:statement,attempt]
 }
-export async function settleProgressAttempt(db:D1Database,eventId:string,token:string,failed:boolean){
+/** An export execution settles only while no later execution holds its run. */
+export async function settleProgressAttempt(db:D1Database,eventId:string,token:string,failed:boolean,claim?:{id:string;startedAt:string}){
+ const fence=claim?' AND NOT EXISTS(SELECT 1 FROM warehouse_exports WHERE id=? AND running_id=? AND running_started_at<>?)':'',values=claim?[claim.id,token,claim.startedAt]:[]
  await db.batch([
-  ...failed?[]:[db.prepare('DELETE FROM channel_progress_owed WHERE event_id=? AND EXISTS(SELECT 1 FROM channel_progress_attempts WHERE event_id=? AND token=?)').bind(eventId,eventId,token)],
-  db.prepare('DELETE FROM channel_progress_attempts WHERE event_id=? AND token=?').bind(eventId,token),
+  ...failed?[]:[db.prepare(`DELETE FROM channel_progress_owed WHERE event_id=? AND EXISTS(SELECT 1 FROM channel_progress_attempts WHERE event_id=? AND token=?)${fence}`).bind(eventId,eventId,token,...values)],
+  db.prepare(`DELETE FROM channel_progress_attempts WHERE event_id=? AND token=?${fence}`).bind(eventId,token,...values),
  ])
 }
 
@@ -61,10 +63,11 @@ async function publish(db:D1Database,input:OwedProgress,ingress:RequestContext['
  if(!starter?.human_id)throw new Error('Progress requires the retained human starter')
  // A crashed request becomes recoverable after its bounded attempt lease. An
  // interrupted export run that still holds its active export's claim for this
- // version and slot is not failed yet: a later tick resumes that same run, which
- // settles it. The lease predicate is also admitted below, so a concurrent
- // request cannot acquire the attempt between this read and publication.
- const idle=trustedPredicate(`NOT EXISTS(SELECT 1 FROM channel_progress_attempts a WHERE a.event_id=? AND (a.live_until>? OR EXISTS(SELECT 1 FROM warehouse_exports w WHERE w.id=? AND w.state='active' AND w.running_id=a.token AND ('warehouse-export:'||w.id||':'||w.version||':'||w.running_slot||':failed')=a.event_id)))`,[input.eventId,now.toISOString(),input.subjectId])
+ // version and slot is not failed yet while its finite automatic recovery
+ // continues: a later tick resumes that same run, which settles it. The lease
+ // predicate is also admitted below, so a concurrent request cannot acquire the
+ // attempt between this read and publication.
+ const idle=trustedPredicate(`NOT EXISTS(SELECT 1 FROM channel_progress_attempts a WHERE a.event_id=? AND (a.live_until>? OR EXISTS(SELECT 1 FROM warehouse_exports w WHERE w.id=? AND w.state='active' AND w.running_id=a.token AND w.running_stopped_slot IS NULL AND ('warehouse-export:'||w.id||':'||w.version||':'||w.running_slot||':failed')=a.event_id)))`,[input.eventId,now.toISOString(),input.subjectId])
  if(!await db.prepare(`SELECT 1 WHERE ${idle.sql}`).bind(...idle.values).first())return
  const job=input.subjectType==='base-import'
   ?trustedPredicate(`EXISTS(SELECT 1 FROM ik_jobs WHERE id=? AND principal_id=? AND ${input.outcome==='completed'?"state='completed'":"state<>'completed'"})`,[input.subjectId,input.starterId])
