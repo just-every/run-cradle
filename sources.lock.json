@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "4e855587ab04b58e915e098351350c10794662517ec0a0b3af2c012ef0a644c0",
+      "sha256": "80ed5b510aed079aa7d6cf02efc611de54482396348ae1501e88aa09b6bb60b0",
       "executable": false
     },
     "CLAUDE.md": {
@@ -10878,7 +10878,7 @@
       "executable": false
     },
     "src/ui/records/record-fields.tsx": {
-      "sha256": "1006a25ba9503449f01e5da74013f46f9700b7fd48d92ae244d291292bba93c6",
+      "sha256": "ce48c621f2efb8619c159f344e3bfb45985421221694a73069faac47d5d9283d",
       "executable": false
     },
     "src/ui/records/record-form.tsx": {
@@ -10970,7 +10970,7 @@
       "executable": false
     },
     "src/ui/records/schema/field-type-label.ts": {
-      "sha256": "b672d6670eff74484b91e27a334f3a5292b08a54e2eb91431133f3ef4c7c2e2a",
+      "sha256": "3dc432b95bd0046232c74895d0b417167eae877990755ae5e974dbc3b95d83d2",
       "executable": false
     },
     "src/ui/records/schema/field-validation.tsx": {
@@ -11342,7 +11342,7 @@
       "executable": false
     },
     "src/ui/shared/presentation.tsx": {
-      "sha256": "8baf541b3d49df77fb2920f13ce3dfed898896a1a6efd6acbb5084636b819e77",
+      "sha256": "2189fb08dd377c2feee9bef39cc38b90c4f69b8de9112c5f848a65779b8ec0cf",
       "executable": false
     },
     "src/ui/shared/ribbon-valley.tsx": {
