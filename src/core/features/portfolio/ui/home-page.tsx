@@ -6,7 +6,7 @@ import { useResource } from '../../../../ui/shared/api'
 import { SchemaBuilderPanel, newBase, type BuilderTarget } from '../../../../ui/records/schema/schema-builder'
 import { ResourceBoundary } from '../../../app/ui/operator'
 import { useAppStudioReady } from '../../../app/ui/operator/operator-shell'
-import { activityActions } from './activity-presentation'
+import { activityActions, activityFieldLabel } from './activity-presentation'
 import { decodePortfolio, useApiResource } from './portfolio-api'
 import { formatDateTime } from './portfolio-format'
 import { PortfolioPageShell, useOperatorSession } from './portfolio-page-shell'
@@ -31,12 +31,12 @@ export const HomePage = () => {
   const workspace = session.resource.data.workspace
   const launch = portfolio.resource.state === 'ready' ? portfolio.resource.data : null
   const activity: HomeActivity[] = [
-    ...activityActions(launch?.recentActivity ?? []).map(entry => ({
+    ...activityActions(launch?.recentActivity ?? []).flatMap(action => action.facts.map(entry => ({
       id: entry.id,
-      name: entry.subjectTitle || entry.description,
-      detail: [entry.actor?.name, entry.subjectTitle ? entry.description.replace(` “${entry.subjectTitle}”`, '') : ''].filter(Boolean).join(' · '),
+      name: entry.subjectTitle || action.description,
+      detail: [entry.actor?.name, entry.fieldName ? `${changeFieldLabel(entry.fieldName)} changed` : entry.subjectTitle ? action.description.replace(` “${entry.subjectTitle}”`, '') : ''].filter(Boolean).join(' · '),
       occurredAt: entry.occurredAt,
-    })),
+    }))),
     ...(bases.resource.state === 'ready' ? bases.resource.data.items.flatMap(base => base.latestChange ? [{
       ...base.latestChange, id: `${base.id}:${base.latestChange.id}`, detail: base.name,
     }] : []) : []),
@@ -73,6 +73,12 @@ export const HomePage = () => {
 
 function ActivityLine({ entry, timezone }: { entry: HomeActivity; timezone: string }) {
   return <span className="cr-home-meta" id={`activity-detail-${entry.id}`}>{entry.detail && `${entry.detail} · `}<time dateTime={entry.occurredAt}>{formatDateTime(entry.occurredAt, timezone)}</time></span>
+}
+function changeFieldLabel(field: string) {
+  const labels: Record<string, string> = { id: 'Record', budget_minor: 'Budget', spend_minor: 'Spend', health: 'Reported health', health_updated_at: 'Health report time', health_set_by_id: 'Health reporter', supersedes_id: 'Previous decision' }
+  if (/^[0-9A-HJKMNP-TV-Z]{26}$/i.test(field)) return 'Custom field'
+  const label = labels[field] ?? activityFieldLabel(field)
+  return label.charAt(0) + label.slice(1).toLowerCase()
 }
 function quantity(value: number, name: string) { return `${value.toLocaleString('en-US')} ${name}${value === 1 ? '' : 's'}` }
 function changedAge(value: string, evaluatedAt: string) {

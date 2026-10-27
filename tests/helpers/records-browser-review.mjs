@@ -114,6 +114,16 @@ export async function homeReview(output){
     const shown=await page.getByRole('region',{name:'Recent activity',exact:true}).getByRole('listitem').evaluateAll(rows=>rows.map(row=>({name:row.querySelector('strong')?.textContent,occurredAt:row.querySelector('time')?.getAttribute('datetime')})))
     assert.deepEqual(shown,writes.slice(-10).reverse(),'Home merges native and launch changes by recency and shows only the newest ten')
     await j.capture('home-newest-ten')
+    // A multi-field action can fill the portfolio's raw-fact window. Home still
+    // shows ten distinct changes instead of collapsing the window to one row.
+    const target=campaigns[0],currentReply=await page.request.get(`${h.origin}/api/campaigns/${target.id}`);assert.equal(currentReply.status(),200);const currentCampaign=(await currentReply.json()).campaign
+    const changedName=`Home multi-field campaign ${width}`,changed=await command('launch.campaign.patch',{id:target.id,changes:{code:`HOME-MULTI-${width}`,name:changedName,startDate:'2026-02-01',launchDate:'2028-01-01',objective:'Reviewed together',statusSummary:'Ready for review',phase:campaignLifecycle.phases[1],status:campaignLifecycle.statuses[1],health:60,budgetMinor:100,spendMinor:50,tags:['Review']}},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:target.id},version:currentCampaign.version}])
+    await page.goto(h.origin+'/app');await homeBases(page,h.origin);await page.waitForLoadState('networkidle')
+    const changes=await page.getByRole('region',{name:'Recent activity',exact:true}).getByRole('listitem').evaluateAll(rows=>rows.map(row=>({name:row.querySelector('strong')?.textContent,detail:row.querySelector('.cr-home-meta')?.textContent,occurredAt:row.querySelector('time')?.getAttribute('datetime')})))
+    assert.equal(changes.length,10,'Home keeps the newest ten field changes from a multi-field action')
+    assert.ok(changes.every(row=>row.name===changedName&&row.occurredAt===changed.updatedAt),'Every shown change belongs to the newest committed update')
+    assert.equal(new Set(changes.map(row=>row.detail)).size,10,'Each quiet line identifies a different field change')
+    await j.capture('home-multi-field-changes')
    }
    receipts.push({width,baseId:base.appId,recordId:record.id,emptyHomeExercised:true,homeSummaryMatchesQuery:true,newestTenMergeExercised:width===1440,checkpoints:j.checkpoints});await context.close();await h.close();h=null
   }
