@@ -1,3 +1,7 @@
 .cr-record-person { display: inline-flex; align-items: center; gap: 0.5rem; max-width: 100%; vertical-align: middle; }
 .cr-record-person > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .cr-record-person .cr-record-person__avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 1.75rem; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--lime); color: var(--ink-deep); font-weight: 600; font-size: var(--text-meta); line-height: 1; }
+
+@media (max-width: 640px) {
+  .cr-record-link > a { display: inline-flex; align-items: center; min-height: 44px; }
+}
