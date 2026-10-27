@@ -12298,7 +12298,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "a681690743e2fa2995b35226de7c73394c74728e743f64880c697a1e4f877d0b",
+      "sha256": "1a7bf82668898aae90d65bffbc43da84e6f698e20ad5ed30afd1f567725da4aa",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -12814,7 +12814,7 @@
       "executable": false
     },
     "tests/helpers/warehouse-network-edge.mjs": {
-      "sha256": "bda5ccf2f2e5ac6f9604c334ab245486824abe3c845a32936e3d3c5c17b8f951",
+      "sha256": "13571cc7a0133b585590cdb299398c95c85cf39a0fc717d9896a3ceb4cee7080",
       "executable": false
     },
     "tests/helpers/warehouse-r2-restart.mjs": {
