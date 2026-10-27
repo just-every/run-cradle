@@ -900,6 +900,12 @@
       "name": "9076_channel_progress_owed.sql",
       "sha256": "9d3d530ddcc84e1e61260be291f788a114912e8672ac39d985def1954bda589a",
       "sql": "-- Additive: a progress notice owed to a job's starter is written in the same\n-- commit as the job's outcome and deleted only by the notification admission\n-- that publishes it, so a failed publication is retried on a later tick.\nCREATE TABLE channel_progress_owed (\n event_id TEXT PRIMARY KEY,\n subject_type TEXT NOT NULL CHECK(subject_type IN ('base-import','warehouse-export')),\n subject_id TEXT NOT NULL,\n starter_id TEXT NOT NULL,\n outcome TEXT NOT NULL CHECK(outcome IN ('completed','failed')),\n created_at TEXT NOT NULL\n);\n-- Native import completion commits inside the import kit's own batch; the owed\n-- completion notice joins that same atomic state change.\nCREATE TRIGGER channel_progress_owed_import AFTER UPDATE OF state ON ik_jobs\nWHEN NEW.state='completed' AND OLD.state<>'completed'\nBEGIN\n INSERT OR IGNORE INTO channel_progress_owed(event_id,subject_type,subject_id,starter_id,outcome,created_at)\n VALUES('base-import:'||NEW.id||':completed','base-import',NEW.id,NEW.principal_id,'completed',strftime('%Y-%m-%dT%H:%M:%fZ','now'));\nEND;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9077_channel_progress_attempts.sql",
+      "sha256": "f369a1967517cd2bab537eb50b391e2d6f0c08a8e8fd13998fc1f1718f3cb5c0",
+      "sql": "-- A write-ahead failure fact is held while its bounded attempt is live.\n-- No personal reference is added: the event belongs to channel_progress_owed.\nCREATE TABLE channel_progress_attempts (\n event_id TEXT PRIMARY KEY,\n token TEXT NOT NULL,\n live_until TEXT NOT NULL\n);\n-- The import kit owns the completion batch; remove its speculative failure in\n-- that same commit, alongside 9076's completion fact, without changing the kit.\nCREATE TRIGGER channel_progress_attempt_completed AFTER UPDATE OF state ON ik_jobs\nWHEN NEW.state='completed' AND OLD.state<>'completed'\nBEGIN\n DELETE FROM channel_progress_owed WHERE subject_type='base-import' AND subject_id=NEW.id AND outcome='failed';\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
