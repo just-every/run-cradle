@@ -1,4 +1,4 @@
-import {displayAction,tableAction} from './records-table-tools.mjs'
+import {displayAction,tableAction,viewLink,closeTablePanel} from './records-table-tools.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {baseAction,baseMenu,chooseBase} from './records-base-menu.mjs'
@@ -105,7 +105,7 @@ export async function impactReview(page,j){
 export async function gridReview(page,j){
  const grid=page.locator('table.cr-table');await grid.getByRole('columnheader',{name:'Deal',exact:true}).waitFor();assert.equal(await grid.getByRole('columnheader',{name:'Record',exact:true}).count(),0);assert.equal(await grid.getByRole('columnheader',{name:'Deal',exact:true}).count(),1)
  const row=grid.getByRole('row').filter({has:page.getByRole('link',{name:'First deal',exact:true})});assert.equal((await row.innerText()).split('First deal').length-1,1)
- const selected=page.locator('.cr-view-bar__pills a').filter({hasText:/^Deals$/});assert.equal(await selected.getAttribute('aria-current'),'page');assert.equal(await selected.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(215, 242, 91)')
+ const selected=await viewLink(page,'Deals',j.action);assert.equal(await selected.getAttribute('aria-current'),'page');assert.equal(await selected.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(215, 242, 91)');await closeTablePanel(page,'Views',j.action)
  const menu=await baseMenu(page,j.action),active=menu.locator('[aria-current="page"]');assert.equal(await active.count(),1);assert.equal(await active.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(215, 242, 91)');await j.action(menu.getByRole('button',{name:'Close',exact:true}))
  await j.setChecked(row.getByRole('checkbox'),true);await page.getByRole('button',{name:'Edit 1 selected',exact:true}).waitFor();await j.setChecked(row.getByRole('checkbox'),false)
 }

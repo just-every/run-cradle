@@ -1,3 +1,4 @@
+import {displayAction} from './records-table-tools.mjs'
 import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
@@ -37,7 +38,7 @@ export async function exerciseTemplates(page,j,origin,width){
  await j.action(page.getByRole('link',{name:'Use Launch readiness',exact:true}))
  await page.waitForURL(url=>url.pathname.startsWith('/app/records/00000000000000000000000700/'))
  const launchQuery=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/query'))
- await j.action(page.locator('.cr-view-bar__pills').getByRole('link',{name:'Campaigns',exact:true}))
+ await displayAction(page,'Campaigns',j.action)
  await launchQuery
  await page.getByRole('columnheader',{name:'Name',exact:true}).waitFor()
  await j.capture('template-launch-included')

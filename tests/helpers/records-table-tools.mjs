@@ -13,14 +13,18 @@ export async function closeTablePanel(page, name, action = control => control.cl
  const panel = page.getByRole('dialog', { name, exact: true })
  if (await panel.isVisible()) await action(panel.getByRole('button', { name: 'Close', exact: true }))
 }
+export async function viewLink(page, name, action = control => control.click()) {
+ await page.locator('.cr-view-bar').waitFor()
+ const bar = page.getByRole('navigation', { name: 'Record views', exact: true })
+ if (await bar.isVisible()) return bar.getByRole('link', { name, exact: true })
+ const sheet = page.getByRole('dialog', { name: 'Views', exact: true })
+ if (!await sheet.isVisible()) await action(page.locator('.cr-view-bar__opener'))
+ return sheet.getByRole('link', { name, exact: true })
+}
 export async function displayAction(page, name, action = control => control.click()) {
  for(const panel of ['Sort and group','Visible columns','Summary','Keyboard shortcuts','Table tools']) await closeTablePanel(page,panel,action)
  if (name === 'Form') return tableAction(page, 'Forms', action)
- await page.locator('.cr-view-bar').waitFor()
- const bar = page.getByRole('navigation', { name: 'Record views', exact: true })
- if (await bar.isVisible()) return action(bar.getByRole('link', { name, exact: true }))
- await action(page.locator('.cr-view-bar__opener'))
- await action(page.getByRole('dialog', { name: 'Views', exact: true }).getByRole('link', { name, exact: true }))
+ await action(await viewLink(page, name, action))
 }
 export async function sortAndGroup(page, action = control => control.click()) {
  const panel=page.getByRole('dialog',{name:'Sort and group',exact:true})

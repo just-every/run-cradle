@@ -1,4 +1,4 @@
-import {displayAction,tableAction} from './helpers/records-table-tools.mjs'
+import {displayAction,tableAction,viewLink,closeTablePanel} from './helpers/records-table-tools.mjs'
 import {baseAction} from './helpers/records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
@@ -71,7 +71,7 @@ contract('RECORDS-003] [BASE-PUBLIC-003','final records review preserves spacing
     const back=page.getByRole('link',{name:'← Back to records',exact:true});assert.equal(new URL(await back.getAttribute('href'),h.origin).href,dealsUrl)
     await capture(page,j,'record-detail');await j.action(back);await heading.waitFor();await j.action(page.locator('table.cr-table').getByRole('link',{name:'First deal',exact:true}));await linkHeading.waitFor()
     await j.action(companyLink);await page.getByRole('heading',{name:'Acme Co',level:1,exact:true}).waitFor();await capture(page,j,'company-link-reached')
-    await j.action(page.getByRole('link',{name:'← Back to records',exact:true}));await page.locator('.cr-view-bar').waitFor();assert.equal(await page.locator('.cr-view-bar__pills a[aria-current=page]').filter({hasText:/^Companies$/}).count(),1)
+    await j.action(page.getByRole('link',{name:'← Back to records',exact:true}));await page.locator('.cr-view-bar').waitFor();assert.equal(await (await viewLink(page,'Companies',j.action)).and(page.locator('[aria-current=page]')).count(),1);await closeTablePanel(page,'Views',j.action)
     await page.goto(dealsUrl);await displayAction(page,view.name,j.action);await page.getByRole('heading',{name:'Reviewed deals',level:2,exact:true}).waitFor();await savedGridRecord(result);await capture(page,j,'saved-view-retained')
     assert.deepEqual(consoleErrors,[],`${width}: console errors`);assert.deepEqual(externalRequests,[],`${width}: external requests`)
     receipts.push({width,baseId:base.appId,viewId:view.id,closedGap,openGap,relationGap,consoleErrors,externalRequests,checkpoints:j.checkpoints})
