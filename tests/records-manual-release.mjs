@@ -35,7 +35,9 @@ test('[SNAP-002] RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and 
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM app_releases').first()).n,0,'No fabricated AI/source release')
  }finally{h.close()}
 })
-test('RECORDS-001 RECORDS-002 populated schema add/rename/remove preserves incoming references and provides restricted recovery',async()=>{
+test("RECORDS-001 RECORDS-002 recovery export journey preserves references, restricted custody, newer edits and original record identities",async()=>{
+ const cases=[
+  ["RECORDS-001 RECORDS-002 populated schema add/rename/remove preserves incoming references and provides restricted recovery", async()=>{
  const h=await harness();try{
   const {draft,r}=await h.create(),company=r.registry.get(draft.appId,draft.tables[0].id).schema,contact=r.registry.get(draft.appId,draft.tables[1].id).schema
   const c=await add(h,r,company,{[company.fields[0].id]:'Kept',[company.fields[1].id]:'https://retained.example'}),p=await add(h,r,contact,{[contact.fields[0].id]:'Contact',[contact.fields[2].id]:c.ref})
@@ -48,8 +50,38 @@ test('RECORDS-001 RECORDS-002 populated schema add/rename/remove preserves incom
   await h.db.prepare('UPDATE authority_policies SET rules_json=\'[]\',version=version+1 WHERE app_id=?').bind(draft.appId).run()
   await assert.rejects(live.manual.recovery(h.ctx,result.releaseId),/permit|access|authority/i)
  }finally{h.close()}
+}],
+  ["RECORDS-001 RECORDS-002 removed values recover by CSV into a new field without rolling back newer edits", async()=>{
+ const h=await harness();try{
+  const {draft,r}=await h.create(),company=r.registry.get(draft.appId,draft.tables[0].id).schema
+  const original=await add(h,r,company,{[company.fields[0].id]:'Recover me',[company.fields[1].id]:'https://recover.example'})
+  const edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].fields.splice(1,1);const preview=await r.manual.preview(h.ctx,edit),removed=(await r.manual.adopt(h.ctx,createUlid(),preview.id)).result.value
+  const after=await h.runtime(),recovery=await after.manual.recovery(h.ctx,removed.releaseId),csv=recovery.tables.find(t=>t.entityId===company.id).csv
+  const restore=await after.manual.read(h.ctx,draft.appId),website=newField('Recovered website','url'),note=newField('Current notes');restore.tables[0].fields.push(website,note);const p=await after.manual.preview(h.ctx,restore);await after.manual.adopt(h.ctx,createUlid(),p.id)
+  const live=await h.runtime();await live.commands.get('record.patch').execute(h.ctx,{commandId:createUlid(),expected:[{ref:original.ref,version:1}],input:{ref:original.ref,changes:{[note.id]:'Keep this newer edit'}}})
+  const plan=await live.csv.preview(h.ctx,{appId:draft.appId,entityId:company.id,csv,mapping:[{column:'Company',fieldId:company.fields[0].id},{column:'Website',fieldId:website.id}],mergeFieldId:company.fields[0].id});assert.equal(plan.updates,1);assert.equal(plan.creates,0);await live.csv.commit(h.ctx,createUlid(),plan.id)
+  const scope=await live.policy.scope(h.ctx,{appId:draft.appId,entityId:company.id,purpose:'read'}),row=await live.services.reader.record(h.ctx,scope,original.ref);assert.equal(row.fields[website.id].value,'https://recover.example');assert.equal(row.fields[note.id].value,'Keep this newer edit')
+ }finally{h.close()}
+}],
+  ["RECORDS-001 RECORDS-002 recovery matches original record IDs even when names are duplicate or changed", async()=>{
+ const h=await harness();try{
+  const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
+  const a=await add(h,r,schema,{[schema.fields[0].id]:'Duplicate',[schema.fields[1].id]:'https://first.example'}),b=await add(h,r,schema,{[schema.fields[0].id]:'Duplicate',[schema.fields[1].id]:'https://second.example'})
+  const edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].fields.splice(1,1);const preview=await r.manual.preview(h.ctx,edit),release=(await r.manual.adopt(h.ctx,createUlid(),preview.id)).result.value
+  const after=await h.runtime(),csv=(await after.manual.recovery(h.ctx,release.releaseId)).tables.find(t=>t.entityId===schema.id).csv,restore=await after.manual.read(h.ctx,draft.appId),field=newField('Restored','url');restore.tables[0].fields.push(field);const proposal=await after.manual.preview(h.ctx,restore);await after.manual.adopt(h.ctx,createUlid(),proposal.id)
+  const live=await h.runtime();assert.equal((await live.manual.recovery(h.ctx,release.releaseId)).tables.find(t=>t.entityId===schema.id).csv,csv);const plan=await live.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv,mapping:[{column:'Website',fieldId:field.id}],mergeFieldId:'_record_id'});assert.equal(plan.updates,2);assert.equal(plan.creates,0);await live.csv.commit(h.ctx,createUlid(),plan.id)
+  const scope=await live.policy.scope(h.ctx,{appId:draft.appId,entityId:schema.id,purpose:'read'});assert.equal((await live.services.reader.record(h.ctx,scope,a.ref)).fields[field.id].value,'https://first.example');assert.equal((await live.services.reader.record(h.ctx,scope,b.ref)).fields[field.id].value,'https://second.example')
+  await assert.rejects(live.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:csv.replace(a.id,createUlid()),mapping:[{column:'Website',fieldId:field.id}],mergeFieldId:'_record_id'}),/original record is unavailable/)
+ }finally{h.close()}
+}]
+ ]
+ for(const [point,run] of cases){
+  try{await run()}catch(error){throw new Error(point+': '+error.message,{cause:error})}
+ }
 })
-for(const kind of ['data','schema','policy','session'])test(`RECORDS-001 RECORDS-002 stale ${kind} preview rejected atomically`,async()=>{
+test('RECORDS-001 RECORDS-002 stale data, schema, policy and session preview refusal table is atomic',async()=>{
+ for(const kind of ['data','schema','policy','session']){
+  try{await (async()=>{
  const h=await harness();try{
   const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[0].id).schema,c=await add(h,r,schema,{[schema.fields[0].id]:'Before'})
   const edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].label='Changed';const preview=await r.manual.preview(h.ctx,edit)
@@ -60,6 +92,8 @@ for(const kind of ['data','schema','policy','session'])test(`RECORDS-001 RECORDS
   await assert.rejects(r.manual.adopt(h.ctx,createUlid(),preview.id),/stale|current|authority|permit/i)
   assert.equal((await h.db.prepare('SELECT version FROM manual_record_bases WHERE id=?').bind(draft.appId).first()).version,1)
  }finally{h.close()}
+})()}catch(error){throw new Error('RECORDS-001 RECORDS-002 stale '+kind+' preview: '+error.message,{cause:error})}
+ }
 })
 test('RECORDS-001 RECORDS-002 admission race rejects migration after preparation without pointer or data changes',async()=>{
  const h=await harness();try{
@@ -84,7 +118,9 @@ test('RECORDS-001 RECORDS-004 CSV preserves punctuation, multiline Unicode, empt
   const roundtrip=await live.csv.exportCsv(h.ctx,{appId:target.appId,entityId:d.id,query:{fields:[d.fields[1].id,d.fields[0].id,d.fields[3].id,d.fields[2].id],sort:[{fieldId:d.fields[0].id,direction:'desc'}]}});assert.equal(roundtrip.csv,exported.csv)
  }finally{h.close()}
 })
-test('RECORDS-001 RECORDS-002 schema preview rejects restricted rows or fields and never enlarges another membership',async()=>{
+test("RECORDS-001 RECORDS-002 schema preview permission refusal table preserves restricted rows, fields and shared memberships",async()=>{
+ const cases=[
+  ["RECORDS-001 RECORDS-002 schema preview rejects restricted rows or fields and never enlarges another membership", async()=>{
  const h=await harness();try{
   const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
   await add(h,r,schema,{[schema.fields[0].id]:'Secret company'})
@@ -97,41 +133,8 @@ test('RECORDS-001 RECORDS-002 schema preview rejects restricted rows or fields a
   await assert.rejects(r.manual.preview(h.ctx,edit),/every affected row and field/)
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM manual_record_releases WHERE app_id=?').bind(draft.appId).first()).n,1)
  }finally{h.close()}
-})
-test('[FIELD-002] conversion matrix converts reviewed values and refuses undefined mappings',async()=>{
- await fieldConversionJourney()
-})
-test('RECORDS-001 RECORDS-002 removed values recover by CSV into a new field without rolling back newer edits',async()=>{
- const h=await harness();try{
-  const {draft,r}=await h.create(),company=r.registry.get(draft.appId,draft.tables[0].id).schema
-  const original=await add(h,r,company,{[company.fields[0].id]:'Recover me',[company.fields[1].id]:'https://recover.example'})
-  const edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].fields.splice(1,1);const preview=await r.manual.preview(h.ctx,edit),removed=(await r.manual.adopt(h.ctx,createUlid(),preview.id)).result.value
-  const after=await h.runtime(),recovery=await after.manual.recovery(h.ctx,removed.releaseId),csv=recovery.tables.find(t=>t.entityId===company.id).csv
-  const restore=await after.manual.read(h.ctx,draft.appId),website=newField('Recovered website','url'),note=newField('Current notes');restore.tables[0].fields.push(website,note);const p=await after.manual.preview(h.ctx,restore);await after.manual.adopt(h.ctx,createUlid(),p.id)
-  const live=await h.runtime();await live.commands.get('record.patch').execute(h.ctx,{commandId:createUlid(),expected:[{ref:original.ref,version:1}],input:{ref:original.ref,changes:{[note.id]:'Keep this newer edit'}}})
-  const plan=await live.csv.preview(h.ctx,{appId:draft.appId,entityId:company.id,csv,mapping:[{column:'Company',fieldId:company.fields[0].id},{column:'Website',fieldId:website.id}],mergeFieldId:company.fields[0].id});assert.equal(plan.updates,1);assert.equal(plan.creates,0);await live.csv.commit(h.ctx,createUlid(),plan.id)
-  const scope=await live.policy.scope(h.ctx,{appId:draft.appId,entityId:company.id,purpose:'read'}),row=await live.services.reader.record(h.ctx,scope,original.ref);assert.equal(row.fields[website.id].value,'https://recover.example');assert.equal(row.fields[note.id].value,'Keep this newer edit')
- }finally{h.close()}
-})
-test('RECORDS-001 RECORDS-002 recovery matches original record IDs even when names are duplicate or changed',async()=>{
- const h=await harness();try{
-  const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
-  const a=await add(h,r,schema,{[schema.fields[0].id]:'Duplicate',[schema.fields[1].id]:'https://first.example'}),b=await add(h,r,schema,{[schema.fields[0].id]:'Duplicate',[schema.fields[1].id]:'https://second.example'})
-  const edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].fields.splice(1,1);const preview=await r.manual.preview(h.ctx,edit),release=(await r.manual.adopt(h.ctx,createUlid(),preview.id)).result.value
-  const after=await h.runtime(),csv=(await after.manual.recovery(h.ctx,release.releaseId)).tables.find(t=>t.entityId===schema.id).csv,restore=await after.manual.read(h.ctx,draft.appId),field=newField('Restored','url');restore.tables[0].fields.push(field);const proposal=await after.manual.preview(h.ctx,restore);await after.manual.adopt(h.ctx,createUlid(),proposal.id)
-  const live=await h.runtime();assert.equal((await live.manual.recovery(h.ctx,release.releaseId)).tables.find(t=>t.entityId===schema.id).csv,csv);const plan=await live.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv,mapping:[{column:'Website',fieldId:field.id}],mergeFieldId:'_record_id'});assert.equal(plan.updates,2);assert.equal(plan.creates,0);await live.csv.commit(h.ctx,createUlid(),plan.id)
-  const scope=await live.policy.scope(h.ctx,{appId:draft.appId,entityId:schema.id,purpose:'read'});assert.equal((await live.services.reader.record(h.ctx,scope,a.ref)).fields[field.id].value,'https://first.example');assert.equal((await live.services.reader.record(h.ctx,scope,b.ref)).fields[field.id].value,'https://second.example')
-  await assert.rejects(live.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:csv.replace(a.id,createUlid()),mapping:[{column:'Website',fieldId:field.id}],mergeFieldId:'_record_id'}),/original record is unavailable/)
- }finally{h.close()}
-})
-test('RECORDS-001 RECORDS-002 recovery rechecks session after its final policy read',async()=>{
- const h=await harness();try{
-  const {draft,r}=await h.create(),edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].label='Renamed';const preview=await r.manual.preview(h.ctx,edit),release=(await r.manual.adopt(h.ctx,createUlid(),preview.id)).result.value,live=await h.runtime(),prepare=h.db.prepare.bind(h.db)
-  h.db.prepare=(sql)=>{const statement=prepare(sql);if(sql.startsWith('SELECT p.rules_json FROM authority_memberships')){const first=statement.first.bind(statement);statement.first=async(...args)=>{const result=await first(...args);await prepare('UPDATE authority_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),h.session).run();return result}}return statement}
-  await assert.rejects(live.manual.recovery(h.ctx,release.releaseId),/stale/)
- }finally{h.close()}
-})
-test('RECORDS-001 RECORDS-002 shared field policy does not silently adopt inaccessible new fields',async()=>{
+}],
+  ["RECORDS-001 RECORDS-002 shared field policy does not silently adopt inaccessible new fields", async()=>{
  const h=await harness();try{
   const {draft,r}=await h.create(),current=await h.db.prepare('SELECT rules_json FROM authority_policies WHERE app_id=?').bind(draft.appId).first(),rules=JSON.parse(current.rules_json)
   const shared=structuredClone(rules.find(rule=>rule.entityId===draft.tables[0].id));shared.id=createUlid();shared.principals.push({kind:'human',id:createUlid()});rules.push(shared)
@@ -139,7 +142,25 @@ test('RECORDS-001 RECORDS-002 shared field policy does not silently adopt inacce
   const live=await h.runtime(),edit=await live.manual.read(h.ctx,draft.appId);edit.tables[0].fields.push(newField('Added'));await assert.rejects(live.manual.preview(h.ctx,edit),/dedicated owner field policy/)
   assert.equal((await h.db.prepare('SELECT version FROM manual_record_bases WHERE id=?').bind(draft.appId).first()).version,1)
  }finally{h.close()}
+}]
+ ]
+ for(const [point,run] of cases){
+  try{await run()}catch(error){throw new Error(point+': '+error.message,{cause:error})}
+ }
 })
+test('[FIELD-002] conversion matrix converts reviewed values and refuses undefined mappings',async()=>{
+ await fieldConversionJourney()
+})
+
+
+test('RECORDS-001 RECORDS-002 recovery rechecks session after its final policy read',async()=>{
+ const h=await harness();try{
+  const {draft,r}=await h.create(),edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].label='Renamed';const preview=await r.manual.preview(h.ctx,edit),release=(await r.manual.adopt(h.ctx,createUlid(),preview.id)).result.value,live=await h.runtime(),prepare=h.db.prepare.bind(h.db)
+  h.db.prepare=(sql)=>{const statement=prepare(sql);if(sql.startsWith('SELECT p.rules_json FROM authority_memberships')){const first=statement.first.bind(statement);statement.first=async(...args)=>{const result=await first(...args);await prepare('UPDATE authority_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),h.session).run();return result}}return statement}
+  await assert.rejects(live.manual.recovery(h.ctx,release.releaseId),/stale/)
+ }finally{h.close()}
+})
+
 test('RECORDS-001 select lookup preserves human option metadata and rejects mismatched options',async()=>{
  const h=await harness();try{
   const draft=templateBase('crm'),company=draft.tables[0],contact=draft.tables[1],status=newField('Status','select');status.options=[{id:createUlid(),label:'Active'}];company.fields.push(status)
