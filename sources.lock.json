@@ -12746,7 +12746,7 @@
       "executable": false
     },
     "tests/helpers/user-automation-runtime.mjs": {
-      "sha256": "6b31e1ec6d83a61bd6fe98f8676e2f1232b81a15fc9c9a4ab30f9f9b2fccdf10",
+      "sha256": "e474f148c486b851ee4ad14d6ce4944485e5b2e689221cbcc67dbf9cb8a44aa6",
       "executable": false
     },
     "tests/helpers/user-key-browser.mjs": {

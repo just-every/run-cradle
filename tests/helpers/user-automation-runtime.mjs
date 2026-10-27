@@ -1,14 +1,22 @@
 import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
 import {recordsImportBrowserRuntime} from './records-import-browser-runtime.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
+// Use the HTTP client shipped with the Miniflare test runtime.
+const {Agent}=createRequire(import.meta.resolve('miniflare'))('undici')
+
 export async function userAutomationRuntime(port,network) {
  const h=await recordsImportBrowserRuntime(port,network)
+ // Browser work can cross workerd's idle-close boundary. This helper owns a
+ // non-reusing pool: one connection per call, with no replay of any command.
+ const dispatcher=new Agent({pipelining:0}),closeWorker=h.close.bind(h)
+ const close=async()=>{try{await closeWorker()}finally{await dispatcher.close()}}
  try {
-  const csrf=await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})
+  const csrf=await fetch(h.origin+'/auth/csrf',{dispatcher,headers:{cookie:h.cookie}})
   assert.equal(csrf.status,200);const csrfToken=(await csrf.json()).csrfToken
   async function request(route,{method='GET',body,secret,status=200}={}) {
-   const response=await fetch(h.origin+route,{method,redirect:'manual',headers:{
+   const response=await fetch(h.origin+route,{dispatcher,method,redirect:'manual',headers:{
     ...(secret?{authorization:`Bearer ${secret}`}:{cookie:h.cookie}),
     ...(body?{origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken}:{}),
    },...(body?{body:JSON.stringify(body)}:{})}).catch(error=>{console.error('WORKER_TRANSPORT_FAILURE',JSON.stringify({method,path:route.split('?')[0],cause:error.cause?.code??error.cause?.name??'unknown',message:error.cause?.message??error.message}));throw error})
@@ -46,6 +54,6 @@ export async function userAutomationRuntime(port,network) {
    return worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,
     body:{kind:'cradle.records.automations.v1',commandId}}])
   }
-  return Object.assign(h,{request,appId,entityId,nameId,statusId,phoneId,phoneLookupId,entity,operator,create,patch,tick})
- }catch(error){await h.close();throw error}
+  return Object.assign(h,{close,request,appId,entityId,nameId,statusId,phoneId,phoneLookupId,entity,operator,create,patch,tick})
+ }catch(error){await close();throw error}
 }
