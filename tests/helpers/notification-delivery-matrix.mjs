@@ -536,6 +536,80 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%'").bind(run.id).first()).n,0,'NOTIFY-009 the later completion leaves no attempt')
   await removeExport(starter,run.id)
  }
+ // Destination authority can fail before the resumed claim batch. The durable
+ // recovery count must advance even though no new attempt lease can be written.
+ for(const muted of [false,true]){
+  await prefs(starter,muted?['progress']:[],true)
+  const mail=(await h.mailMessages()).length,run=await interruptedExport(),at=Date.now()
+  const sealed=(await h.db.prepare('SELECT sealed_json FROM warehouse_exports WHERE id=?').bind(run.id).first()).sealed_json
+  const attempt=await h.db.prepare('SELECT * FROM channel_progress_attempts WHERE event_id=?').bind(run.eventId).first()
+  await h.db.prepare('UPDATE warehouse_exports SET sealed_json=NULL WHERE id=?').bind(run.id).run()
+  try{
+   await aged(run.id)
+   assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+60000})).outcome,'exception','NOTIFY-009 pre-claim resume fails without destination authority')
+   const counted=await recoveryState(run.id)
+   assert.equal(counted.running_failures,1,'NOTIFY-009 pre-claim resume failure is counted durably')
+   assert.equal(counted.running_id,run.claim.running_id,'NOTIFY-009 pre-claim failure retains safe claim custody')
+   assert.deepEqual(await h.db.prepare('SELECT * FROM channel_progress_attempts WHERE event_id=?').bind(run.eventId).first(),attempt,'NOTIFY-009 pre-claim failure never reaches the attempt claim batch')
+   assert.deepEqual(await rows(run.id),[],'NOTIFY-009 pre-claim failure is not reported before the finite bound')
+   await aged(run.id);await tick(at+420000)
+   const stopped=await check(run.id,starter,muted,mail,['export','stopped'])
+   assert.equal((await recoveryState(run.id)).running_id,run.claim.running_id)
+   assert.ok((await recoveryState(run.id)).running_stopped_slot)
+   await tick(at+480000);await tick(at+3600000)
+   assert.deepEqual(await rows(run.id),[stopped],'NOTIFY-009 pre-claim recovery stop is published once')
+   assert.equal((await h.mailMessages()).slice(mail).length,muted?0:1,'NOTIFY-009 pre-claim recovery stop mails only the unmuted starter once')
+   assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(run.id).first()).n,0)
+   assert.equal((await h.request(starter.session,`/api/notifications/${stopped.id}/read`,{method:'POST',body:'{}'})).status,204)
+  }finally{await h.db.prepare('UPDATE warehouse_exports SET sealed_json=? WHERE id=?').bind(sealed,run.id).run()}
+  await aged(run.id)
+  assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+86400000+60000})).outcome,'exception')
+  await tick(at+86400000+120000)
+  assert.deepEqual((await rows(run.id)).map(n=>n.title).sort(),[progressText.export.stopped.title,progressText.export.completed.title].sort(),'NOTIFY-009 pre-claim recovery preserves the later distinct completion')
+  assert.equal((await recoveryState(run.id)).running_id,null)
+  await removeExport(starter,run.id)
+ }
+ console.log(`NOTIFY-009 ${width}: pre-claim resume failure is counted, bounded and reported once with safe custody and later completion`)
+
+ // Let an old real execution continue after another scheduled invocation has
+ // re-claimed its run. Each request waits only at its own provider edge.
+ for(const muted of [false,true]){
+  await prefs(starter,muted?['progress']:[],true)
+  const mail=(await h.mailMessages()).length,id=await saveExport(starter),at=Date.now(),oldHold=edge.holdNextPut()
+  const old=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at})
+  let replacementHold,replacement
+  try{
+   await oldHold.reached
+   const original=await recoveryState(id);assert.ok(original.running_id)
+   await aged(id)
+   replacementHold=edge.holdNextPut()
+   replacement=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+60000})
+   const ended=await Promise.race([replacementHold.reached.then(()=>null),replacement])
+   assert.equal(ended,null,'NOTIFY-009 replacement reaches the provider while the stale execution is still live')
+   const current=await recoveryState(id)
+   assert.equal(current.running_id,original.running_id)
+   assert.notEqual(current.running_started_at,original.running_started_at,'NOTIFY-009 re-claim replaces execution ownership')
+   const custody=async()=>({objects:(await h.db.prepare('SELECT * FROM warehouse_objects WHERE export_id=? ORDER BY object_key').bind(id).all()).results,attempts:(await h.db.prepare("SELECT * FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%' ORDER BY event_id").bind(id).all()).results,owed:(await h.db.prepare('SELECT * FROM channel_progress_owed WHERE subject_id=? ORDER BY event_id').bind(id).all()).results,writes:(await h.db.prepare('SELECT * FROM lifecycle_file_writes WHERE object_key=? AND started_at=?').bind('warehouse:'+id,current.running_started_at).all()).results})
+   const before=await custody(),deletes=edge.calls.filter(c=>c.method==='DELETE').length
+   assert.ok(before.objects.length&&before.attempts.length&&before.owed.length&&before.writes.length,'NOTIFY-009 replacement positively holds object, attempt, debt and file-write custody')
+   oldHold.release()
+   assert.equal((await old).outcome,'exception','NOTIFY-009 stale execution is refused after re-claim')
+   assert.deepEqual(await recoveryState(id),current,'NOTIFY-009 stale execution cannot commit or release the replacement claim')
+   assert.deepEqual(await custody(),before,'NOTIFY-009 stale execution cannot clean up objects, settle the replacement attempt or retire its debt')
+   assert.equal(edge.calls.filter(c=>c.method==='DELETE').length,deletes,'NOTIFY-009 stale execution performs no provider cleanup')
+   assert.deepEqual(await rows(id),[],'NOTIFY-009 stale execution cannot report over a live replacement')
+   assert.equal((await h.mailMessages()).length,mail,'NOTIFY-009 no false failure mail while replacement remains live')
+   replacementHold.release()
+   assert.equal((await replacement).outcome,'ok','NOTIFY-009 the concurrently valid replacement completes')
+   await tick(at+120000)
+   await check(id,starter,muted,mail,['export','completed'])
+   assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,0)
+   assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%'").bind(id).first()).n,0)
+  }finally{oldHold.release();replacementHold?.release();await old;await replacement}
+  await removeExport(starter,id)
+ }
+ console.log(`NOTIFY-009 ${width}: stale execution after re-claim cannot commit, clean up, settle or publish over its live replacement`)
+
  // An execution that adds retained objects before it stops made useful progress:
  // it extends recovery, but never past four unsuccessful executions in total.
  {
