@@ -16,9 +16,10 @@ const suites = [
   { name: 'base-import', nodeArgs: ['--import', './tests/helpers/typescript-loader.mjs'], file: 'tests/ui-base-import.mjs', output: 'CRADLE_IMPORT_OUTPUT' },
   { name: 'base-undo', nodeArgs: ['--import', './tests/helpers/typescript-loader.mjs'], file: 'tests/ui-base-undo.mjs', output: 'CRADLE_UNDO_OUTPUT' },
   { name: 'base-exits', nodeArgs: ['--import', './tests/helpers/typescript-loader.mjs'], file: 'tests/ui-base-exits.mjs', output: 'CRADLE_EXITS_OUTPUT' },
-  { name: 'launch-authority', file: 'tests/ui-launch-authority-browser.mjs', output: 'CRADLE_AUTHORITY_EVIDENCE' },
-  { name: 'launch-optional-fields', file: 'tests/ui-launch-optional-browser.mjs', output: 'CRADLE_OPTIONAL_EVIDENCE' },
+  { name: 'launch-authority', file: 'tests/launch-authority-browser.mjs', output: 'CRADLE_AUTHORITY_EVIDENCE' },
+  { name: 'launch-optional-fields', file: 'tests/launch-optional-fields.mjs', output: 'CRADLE_OPTIONAL_EVIDENCE' },
   { name: 'launch-walkthrough', file: 'tests/ui-launch-walkthrough.mjs', output: 'CRADLE_LAUNCH_EVIDENCE' },
+  { name: 'launch-notifications', file: 'tests/ui-launch-notifications.mjs', output: 'CRADLE_LAUNCH_NOTIFICATIONS_EVIDENCE' },
   { name: 'repairs', file: 'tests/ui-repairs-browser.mjs', output: 'CRADLE_UI_EVIDENCE' },
   { name: 'local-signin', file: 'tests/ui-local-signin.mjs', output: 'CRADLE_LOCAL_EVIDENCE' },
 ]
