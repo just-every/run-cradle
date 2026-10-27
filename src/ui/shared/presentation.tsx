@@ -12,10 +12,15 @@ export function money(value: Money) {
   return `${negative ? '−' : ''}${value.currency === 'AUD' ? 'A$' : `${value.currency} `}${whole}${value.scale ? `.${digits.slice(-value.scale)}` : ''}`
 }
 const noTimestampSubscription = () => () => {}
-export function Timestamp({ value }: { value: string | null }) {
+/** False on the server and while hydrating, so the first client render repeats the server's UTC bytes. */
+export const useLocalTime = () => useSyncExternalStore(noTimestampSubscription, () => true, () => false)
+/** The viewer's own zone at an instant, as Intl names it for their locale ("AEST", "GMT+10", "UTC"), never an IANA id. */
+export const zoneName = (date: Date) => new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(date).find(part => part.type === 'timeZoneName')!.value
+export function Timestamp({ value, zone = false }: { value: string | null; zone?: boolean }) {
   // First document/client render uses identical UTC bytes; localize after hydration.
-  const client = useSyncExternalStore(noTimestampSubscription, () => true, () => false)
-  return value ? <time dateTime={value}>{client ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : new Date(value).toISOString()}</time> : <span>Not recorded</span>
+  const client = useLocalTime()
+  // Each value names its own zone (daylight saving can split one column); the no-break space keeps it beside the time.
+  return value ? <time dateTime={value}>{client ? `${new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}${zone ? `\u00a0${zoneName(new Date(value))}` : ''}` : new Date(value).toISOString()}</time> : <span>Not recorded</span>
 }
 const stateTone = { loading: '', signed_out: 'cr-tag--access', forbidden: 'cr-tag--access', not_found: 'cr-tag--warn', failed: 'cr-tag--error' } as const
 export function ResourceState<T>({ resource, operation, retry, children }: { resource: Resource<T>; operation: string; retry: () => void; children: (data: T) => ReactNode }) {

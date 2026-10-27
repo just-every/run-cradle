@@ -13,7 +13,7 @@ import type { Field } from '../../domains/records/contracts'
 import type { Member } from '../../domains/authority/contracts'
 import { useEffect, useState } from 'react'
 import { readApi } from '../shared/api'
-import { money, Timestamp } from '../shared/presentation'
+import { money, Timestamp, useLocalTime, zoneName } from '../shared/presentation'
 import './record-person.css'
 import { decimal, format } from '../../domains/records/exact'
 
@@ -44,7 +44,7 @@ export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undef
   if ((field?.type === 'person' || field?.type === 'computed' && field.resultType === 'person') && typeof value === 'string') return appId ? <PersonName appId={appId} id={value} /> : <span className="cr-error">Person lookup unavailable</span>
   if (typeof value === 'string' && (field?.type === 'phone' || field?.type === 'computed' && field.resultType === 'phone')) return <>{phoneText(value)}</>
   if (typeof value === 'string' && (field?.type === 'duration' || field?.type === 'computed' && field.resultType === 'duration')) return <>{durationText(value)}</>
-  if (typeof value === 'string' && (field?.type === 'instant' || field?.type === 'computed' && field.resultType === 'instant')) return <Timestamp value={value} />
+  if (typeof value === 'string' && (field?.type === 'instant' || field?.type === 'computed' && field.resultType === 'instant')) return <Timestamp value={value} zone />
   if (field?.type === 'computed' && typeof value === 'string') return <span className="cr-derived">{value}</span>
   if (typeof value === 'string' && field?.numberFormat === 'percent') return <>{percentText(value)}</>
   if (typeof value === 'string') return <>{value}</>
@@ -52,8 +52,15 @@ export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undef
   const values = Array.isArray(value) ? value : [value]
   return <>{values.map((item, i) => <span key={i} className={typeof item === 'object' && item !== null && 'recordId' in item ? 'cr-record-link' : undefined}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
 }
+/** The viewer's wall-clock minutes for a datetime-local input; `new Date` reads that offset-free form back in the same zone. */
+function localInput(value: string) {
+  const date = new Date(value), two = (part: number) => String(part).padStart(2, '0')
+  return `${String(date.getFullYear()).padStart(4, '0')}-${two(date.getMonth() + 1)}-${two(date.getDate())}T${two(date.getHours())}:${two(date.getMinutes())}`
+}
 export function FieldInput({ appId, entityId, subject, field, value, onChange, error, inputId }: { appId: string; entityId: string; subject?: Ref; inputId?: string; field: Field; value: CellValue; onChange: (value: CellValue) => void; error?: string }) {
   const id = inputId ?? `field-${field.id}`
+  // Until hydration the zone is unknown, so an instant is edited and named in UTC, as the server rendered it.
+  const local = useLocalTime()
   const common = { id, required: field.required, 'aria-invalid': !!error, 'aria-describedby': error ? `${id}-error` : undefined }
   let input
   if (field.type === 'boolean') input = <div className="cr-boolean"><input {...common} type="checkbox" required={false} aria-required={field.required} aria-describedby={`${id}-state${error ? ` ${id}-error` : ''}`} checked={value === true} onChange={e => onChange(e.target.checked)} /><span id={`${id}-state`}>{value === null ? 'Not set' : value ? 'Yes' : 'No'}</span>{!field.required && value !== null && <button type="button" className="cr-button cr-button--quiet" onClick={() => onChange(null)}>Clear {field.label}</button>}</div>
@@ -64,8 +71,9 @@ export function FieldInput({ appId, entityId, subject, field, value, onChange, e
   else if (field.type === 'attachment') input = <><CellDisplay cell={{ state: 'value', value }} appId={appId} record={subject ? { ...subject, fieldId: field.id } : undefined} />{subject && <StoreChooser appId={appId} entityId={entityId} fieldId={field.id} subject={subject} value={value} onChange={onChange} />}<FileUpload label={`Add ${field.label}`} fieldId={field.id} appId={appId} subject={subject} onUploaded={file => onChange([...(Array.isArray(value) ? value.filter(item => typeof item === 'object' && item !== null && ('fileId' in item || 'reference' in item)) : []), { fileId: file.id }])} /></>
   else if (field.type === 'duration') input = <DurationInput {...common} value={value} onChange={onChange} />
   else if (field.type === 'text') input = <textarea {...common} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} />
-  else input = <input {...common} type={field.type === 'rating' ? 'number' : field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : field.type === 'date' ? 'date' : field.type === 'instant' ? 'datetime-local' : field.type === 'url' ? 'url' : 'text'} min={field.type === 'rating' ? '1' : undefined} max={field.type === 'rating' ? field.validation?.max??'5' : undefined} step={field.type === 'rating' ? '1' : undefined} inputMode={field.type === 'number' ? 'decimal' : undefined} value={typeof value === 'string' ? field.type === 'instant' ? value.slice(0, 16) : value : ''} onChange={e => onChange(e.target.value ? field.type === 'instant' ? new Date(`${e.target.value}Z`).toISOString() : e.target.value : null)} />
-  return <div className="cr-field"><label htmlFor={id}>{field.label}{field.required ? ' *' : ''}{field.type === 'instant' ? ' (UTC)' : ''}</label>{input}{field.unique && <small>Each record must have a distinct value.</small>}{error && <p id={`${id}-error`} className="cr-error">{error}</p>}</div>
+  else if (field.type === 'instant') input = <input {...common} type="datetime-local" value={typeof value === 'string' ? local ? localInput(value) : value.slice(0, 16) : ''} onChange={e => onChange(e.target.value ? new Date(local ? e.target.value : `${e.target.value}Z`).toISOString() : null)} />
+  else input = <input {...common} type={field.type === 'rating' ? 'number' : field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : field.type === 'date' ? 'date' : field.type === 'url' ? 'url' : 'text'} min={field.type === 'rating' ? '1' : undefined} max={field.type === 'rating' ? field.validation?.max??'5' : undefined} step={field.type === 'rating' ? '1' : undefined} inputMode={field.type === 'number' ? 'decimal' : undefined} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value || null)} />
+  return <div className="cr-field"><label htmlFor={id}>{field.label}{field.type === 'instant' ? ` · ${local ? zoneName(typeof value === 'string' ? new Date(value) : new Date()) : 'UTC'}` : ''}{field.required ? ' *' : ''}</label>{input}{field.unique && <small>Each record must have a distinct value.</small>}{error && <p id={`${id}-error`} className="cr-error">{error}</p>}</div>
 }
 
 // A render batch shares the policy-checked people read rather than fetching once per cell.
