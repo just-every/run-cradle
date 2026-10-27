@@ -1,7 +1,7 @@
 .cr-base-menu { position: relative; }
 .cr-base-menu__count { display: inline-grid; place-items: center; min-width: 22px; margin-left: 8px; border-radius: 50%; background: var(--tile); }
 
-.cr-base-menu .cr-view-sheet__body h3 { margin: 12px 12px 0; color: var(--muted); font: 600 13px/1.4 var(--font-sans); }
+.cr-base-menu .cr-view-sheet__body h3 { margin: 12px 12px 0; color: var(--muted); font: 600 var(--text-meta)/1.4 var(--font-sans); }
 .cr-base-menu .cr-view-sheet__body [aria-current=page] { background: var(--lime); font-weight: 600; }
 
 .cr-base-heading { display: flex; align-items: center; flex-wrap: wrap; min-width: 0; justify-content: flex-start; gap: 12px; }

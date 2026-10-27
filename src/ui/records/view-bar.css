@@ -1,5 +1,5 @@
 .cr-view-sheet { position: fixed; inset: var(--sheet-top, 100px) auto auto var(--sheet-left, 24px); margin: 0; width: min(360px, calc(100vw - 32px)); max-height: min(720px, calc(100dvh - 32px)); padding: 20px; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); color: var(--ink); box-shadow: var(--shadow); font-family: var(--font-sans); }
-.cr-view-sheet::backdrop { background: #0002; }
+.cr-view-sheet::backdrop { background: #102c2490; }
 .cr-view-sheet__heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
 .cr-view-sheet__heading h2 { margin: 0; font: 500 24px/1.2 var(--font-display); }
 .cr-view-sheet__body { display: grid; gap: 8px; min-width: 0; }
