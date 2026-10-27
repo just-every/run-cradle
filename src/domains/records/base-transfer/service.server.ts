@@ -32,6 +32,7 @@ import { requestContext } from '../../../../vendor/base/modules/import-kit/src/d
 import { stored } from '../../../../vendor/base/modules/import-kit/src/d1/jobs'
 import type { D1ImportContext } from '../../../../vendor/base/modules/import-kit/src/d1/types'
 import type { ImportJob, Reconciliation } from '../../../../vendor/base/modules/import-kit/src/types'
+import {progressAttemptStatements,settleProgressAttempt,deliverOwedProgress} from '../../channels/progress-owed.server'
 
 export type PreviewBuilder=(source:PreparedSource,options:ImportOptions,identities:ImportIdentities)=>BasePreview|Promise<BasePreview>
 export function createBaseImportService(db:D1Database,policy:PolicyPort,registry:DescriptorRegistry,manual:ReturnType<typeof createManualSchemas>,buildPreview:PreviewBuilder){
@@ -136,7 +137,32 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   const c=await jobContext(ctx,id),authority=c.authorization.predicate(operation==='resume'?'apply':operation,c.destination)
   await db.prepare(`UPDATE ik_jobs SET cradle_restore_hold=0 WHERE id=? AND cradle_restore_hold=1 AND (${authority.sql})`).bind(id,...(authority.params??[])).run()
   if((await jobBinding(ctx,id)).cradle_restore_hold)throw new AdmissionError('forbidden','Current base owner authority is required to continue this restored import.')
-  return operation==='resume'?resumeD1Import(id,c):operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
+  if(operation!=='resume')return operation==='undo'?undoD1Import(id,c):rollbackD1Import(id,c)
+  const before=await readD1ImportJob(id,c),starterId=before.principalId
+  if(['undone','rolling_back','rolled_back','undoing'].includes(before.state))return resumeD1Import(id,c)
+  const eventId=`base-import:${id}:failed`,token=crypto.randomUUID(),liveUntil=new Date(Date.now()+300000).toISOString()
+  const notify=(outcome:'completed'|'failed')=>deliverOwedProgress(db,ctx.ingress,`base-import:${id}:${outcome}`)
+  if(before.state==='completed'){const job=await resumeD1Import(id,c);await notify('completed');return job}
+  // A failed write-ahead batch refuses the attempt before the kit applies work.
+  await db.batch(await progressAttemptStatements(db,{subjectType:'base-import',subjectId:id,starterId,eventId,outcome:'failed'},token,liveUntil))
+  // The same live token fences every native apply batch, so a request whose
+  // journal lease expired cannot apply records after recovery published failure.
+  const attemptContext={...c,authorization:{...c.authorization,predicate:(action:Parameters<typeof c.authorization.predicate>[0],destination:string)=>{
+   const authority=c.authorization.predicate(action,destination)
+   return {sql:`(${authority.sql}) AND EXISTS(SELECT 1 FROM channel_progress_attempts WHERE event_id=? AND token=? AND live_until>strftime('%Y-%m-%dT%H:%M:%fZ','now'))`,params:[...(authority.params??[]),eventId,token]}
+  }}}
+  let job:ImportJob
+  try{job=await resumeD1Import(id,attemptContext)}catch(error){
+   try{await settleProgressAttempt(db,eventId,token,true)}catch(journal){if(error instanceof Error)Object.defineProperty(error,'cause',{value:journal,configurable:true})}
+   // Publication may fail only after the failure fact is durable. The original
+   // import error remains the response cause; the tick recovers the journal.
+   try{await notify('failed')}catch{}
+   throw error
+  }
+  await settleProgressAttempt(db,eventId,token,job.state==='failed')
+  if(job.state==='completed')await notify('completed')
+  else if(job.state==='failed')await notify('failed')
+  return job
  }
  return {preview,uploadPreview,review,adopt,status,receipt,attachmentManifest,resume:(ctx:RequestContext,id:string)=>act(ctx,id,'resume'),undo:(ctx:RequestContext,id:string)=>act(ctx,id,'undo'),rollback:(ctx:RequestContext,id:string)=>act(ctx,id,'rollback'),originals:async(ctx:RequestContext,id:string)=>readD1ImportOriginals(id,await jobContext(ctx,id))}
 }
