@@ -98,7 +98,7 @@ async function assertBoard(h, schema, records) {
   await context.addCookies([{ name: h.ownerSession.cookie.split('=')[0], value: h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=') + 1), url: h.origin }])
   const page = await context.newPage()
   await page.goto(`${h.origin}/app/records/${LAUNCH_APP_ID}/${launchEntities.campaign}`)
-  await page.getByRole('button', { name: 'Board', exact: true }).click()
+  await page.getByRole('navigation', { name: 'Record views', exact: true }).getByRole('link', { name: 'Board', exact: true }).click()
   const status = schema.fields.find(field => field.id === launchFieldIds.campaign.status)
   assert.equal(await page.getByLabel('Board columns', { exact: true }).inputValue(), status.id, 'The default Board groups campaigns by Status')
   await page.locator('.cr-board').waitFor()
