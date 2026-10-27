@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import type { BaseAccess } from '../../domains/records/manual/base-role'
-import { LAUNCH_APP_ID, launchEntities } from '../../apps/launch/contracts'
+import { LAUNCH_APP_ID } from '../../apps/launch/contracts'
 import { useResource } from '../shared/api'
+import { CustomFieldsPanel } from '../settings/custom-fields-panel'
 import { BaseCollaborators } from './schema/base-collaborators'
 import { BaseSchemaReviews } from './schema/base-schema-reviews'
 import { ExportBasePanel } from './export-base'
@@ -10,7 +11,7 @@ import './base-menu.css'
 
 export type BaseSummary = { id: string; name: string; entryUrl: string }
 export function BaseMenu({ apps, appId, manual, onCreate, onEdit }: { apps: BaseSummary[]; appId?: string; manual: boolean; onCreate(): void; onEdit(): void }) {
-  const [open, setOpen] = useState(false), [panel, setPanel] = useState<'people' | 'reviews' | 'export' | null>(null)
+  const [open, setOpen] = useState(false), [panel, setPanel] = useState<'people' | 'reviews' | 'export' | 'fields' | null>(null)
   const anchor = useRef<HTMLButtonElement>(null)
   const access = useResource<BaseAccess>(manual && appId ? `/api/v1/records/bases/${appId}/access` : null)
   const canManage = access.resource.state === 'ready' && access.resource.data.canManage
@@ -26,11 +27,11 @@ export function BaseMenu({ apps, appId, manual, onCreate, onEdit }: { apps: Base
       <a href="/app/records/?import=base">Import a base</a>
       {appId && <h3>This base</h3>}
       {canAdopt && <button type="button" onClick={() => { setOpen(false); onEdit() }}>Edit fields</button>}
-      {appId === LAUNCH_APP_ID && <a href={`/app/records/${appId}/${launchEntities.customField}`}>Edit fields</a>}
+      {appId === LAUNCH_APP_ID && <button type="button" onClick={() => show('fields')}>Edit fields</button>}
       {canManage && <button type="button" onClick={() => show('people')}>People</button>}
       {canManage && count > 0 && <button type="button" onClick={() => show('reviews')}>Review changes ({count})</button>}
       {manual && <button type="button" onClick={() => show('export')}>Export base</button>}
     </ViewSheet>
-    <ViewSheet wide title={panel === 'people' ? 'People' : panel === 'reviews' ? 'Review changes' : 'Export base'} open={panel !== null} onClose={() => setPanel(null)} anchor={anchor}>{appId && (panel === 'people' ? <BaseCollaborators appId={appId} /> : panel === 'reviews' ? <BaseSchemaReviews appId={appId} /> : <ExportBasePanel appId={appId} id="cr-export-base" />)}</ViewSheet>
+    <ViewSheet wide title={panel === 'people' ? 'People' : panel === 'reviews' ? 'Review changes' : panel === 'fields' ? 'Edit fields' : 'Export base'} open={panel !== null} onClose={() => setPanel(null)} anchor={anchor}>{appId && (panel === 'people' ? <BaseCollaborators appId={appId} /> : panel === 'reviews' ? <BaseSchemaReviews appId={appId} /> : panel === 'fields' ? <CustomFieldsPanel /> : <ExportBasePanel appId={appId} id="cr-export-base" />)}</ViewSheet>
   </div>
 }

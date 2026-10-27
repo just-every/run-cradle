@@ -40,7 +40,7 @@ export function RecordsPage({ appId, entityId, importBase = false, importJobId, 
   }, [appId, apps.resource, principalId, importBase, builder, navigate])
   useEffect(() => {
     if (importBase || builder || !appId || entityId || apps.resource.state !== 'ready' || entities.resource.state !== 'ready') return
-    const first = entities.resource.data.items.find(entity => entity.label !== 'Private source intake' && !(appId === LAUNCH_APP_ID && entity.id === launchEntities.customField))
+    const first = entities.resource.data.items.find(entity => entity.label !== 'Private source intake')
     if (first) void navigate({ to: '/app/records/$appId/$entityId', params: { appId, entityId: first.id }, replace: true })
   }, [appId, entityId, apps.resource, entities.resource, importBase, builder, navigate])
   const base = apps.resource.state === 'ready' ? apps.resource.data.items.find(app => app.id === appId) : undefined
