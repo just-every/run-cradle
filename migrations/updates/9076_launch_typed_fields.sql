@@ -304,7 +304,7 @@ WHERE app_id = '00000000000000000000000700'
 
 -- Retain distinct historical launch_readiness.state choices after the template's choices.
 WITH source_options AS (
- SELECT CAST(key AS INTEGER) AS ordinal, json(value) AS option FROM json_each('[{"id":"00000000000000000000000001","label":"Outstanding"},{"id":"00000000000000000000000002","label":"Acknowledged"}]')
+ SELECT CAST(key AS INTEGER) AS ordinal, json(value) AS option FROM json_each('[{"id":"00000000000000000000000001","label":"Outstanding"},{"id":"00000000000000000000000002","label":"Acknowledged"},{"id":"00000000000000000000000003","label":"Cancelled"}]')
 ), extra_values AS (
  SELECT state AS stored_value, 100000 + row_number() OVER (ORDER BY state COLLATE BINARY) AS ordinal
  FROM launch_readiness
@@ -317,7 +317,7 @@ WITH source_options AS (
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
         'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
- SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Outstanding"},{"id":"00000000000000000000000002","label":"Acknowledged"}]}', '$.options', json((
+ SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Outstanding"},{"id":"00000000000000000000000002","label":"Acknowledged"},{"id":"00000000000000000000000003","label":"Cancelled"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
  ))) AS value
 )

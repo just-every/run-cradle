@@ -12,7 +12,7 @@ export const riskSeverities = ['Low', 'Medium', 'High', 'Critical'] as const
 export const riskStates = ['Watching', 'In progress', 'Needs decision', 'Escalated', 'Resolved'] as const
 export const decisionPriorities = ['Critical', 'High', 'Medium', 'Low'] as const
 export const decisionStates = ['Awaiting approval', 'In review', 'Approved', 'Rejected', 'Cancelled'] as const
-export const readinessStates = ['Outstanding', 'Acknowledged'] as const
+export const readinessStates = ['Outstanding', 'Acknowledged', 'Cancelled'] as const
 const text=z.string().trim().min(1).max(1000), reason=z.string().trim().min(1).max(10000)
 export const campaignFields=z.object({code:text.max(100),name:text,ownerId:idSchema,startDate:dateSchema,launchDate:dateSchema,objective:z.string().max(100000),statusSummary:z.string().max(280),phase:text,status:text,health:z.number().int().min(0).max(100),budgetMinor:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),spendMinor:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),tags:z.array(text).max(500),customFields:z.record(idSchema,cellValueSchema)}).strict()
 export const deliverableFields=z.object({campaignId:idSchema,title:text,ownerId:idSchema,dueDate:dateSchema.nullable()}).strict()

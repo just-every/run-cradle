@@ -50,7 +50,7 @@ export async function verifyOverdueClauses(h) {
 
   const csv = async (kind, fields, session = h.ownerSession) => {
    const ids = h.r.launchFieldIds[kind]
-   const body = await call('/api/v1/records/export-csv', { method: 'POST', body: JSON.stringify({ appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: campaign.id }, sort: [{ fieldId: ids.title, direction: 'asc' }] } }) }, session)
+   const body = await call('/api/v1/records/export-csv', { method: 'POST', body: JSON.stringify({ appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities.campaign, recordId: campaign.id } }, sort: [{ fieldId: ids.title, direction: 'asc' }] } }) }, session)
    const parsed = parseCsv(new TextEncoder().encode(body.data.csv))
    const schema = h.r.launchDescriptors.find(item => item.schema.id === h.r.launchEntities[kind]).schema
    assert.deepEqual(parsed.headers, fields.map(field => schema.fields.find(item => item.id === ids[field]).label), 'CSV retains exactly the selected columns in displayed order')
