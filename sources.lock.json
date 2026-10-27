@@ -13242,7 +13242,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "e624d2acd05fc7f7b5b7d0eab76e15ba60f60622e127f490eabf48aad51acdd4",
+      "sha256": "037f2a229739f77877a9812710e7687559bb9dab943577a72f452cf3d89c10be",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
