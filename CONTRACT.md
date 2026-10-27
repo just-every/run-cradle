@@ -1171,7 +1171,7 @@ The initial judgement was on 16 October 2026 at 212d3e8; the current whole-table
 | `HOME-002` | Public product landing | published | done | `tests/foundation-shell.mjs`, `tests/ui-local-signin.mjs` |  |
 | `HOME-003` | Installed Lobby | published | done | `tests/installed-home.mjs`, `tests/public-document-runtime.mjs` |  |
 | `DOCS-001` | Public docs | published | done | `tests/public-document-runtime.mjs`, `tests/start-resources.mjs` |  |
-| `AUTH-BASE-001` | Install and sign in | published | done | `tests/auth-base-only-runtime.mjs`, `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs` |  |
+| `AUTH-BASE-001` | Install and sign in | published | done | `tests/auth-base-only-runtime.mjs` (including “AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration”), `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs` |  |
 | `OPS-001` | Equal operators | published | done | `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs` |  |
 | `OPS-002` | Management | published | done | `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs` |  |
 | `OPS-003` | Workspace timezone | published | partial | `src/core/features/setup/server.ts`, `src/domains/channels/settings.server.ts`, `tests/installed-home.mjs`, `tests/ui-launch-walkthrough.mjs` | Explicit-zone owner-authored schedules do not move with the workspace; shared Timestamp presentation uses browser timezone. Shipped schedules, deadline redisplay, IANA validation and preservation have named proof. |
