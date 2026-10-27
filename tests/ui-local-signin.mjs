@@ -1,3 +1,4 @@
+import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, lstat, writeFile, rm, cp, mkdtemp } from 'node:fs/promises'
 import path from 'node:path'
