@@ -1054,8 +1054,8 @@ The initial judgement was on 16 October 2026 at 212d3e8; the whole-table baselin
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 105 | 6 | 0 | 111 |
-| Target and push further | 28 | 56 | 22 | 106 |
-| All | 133 | 62 | 22 | 217 |
+| Target and push further | 27 | 57 | 22 | 106 |
+| All | 132 | 63 | 22 | 217 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
