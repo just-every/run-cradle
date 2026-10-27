@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4417bc13c6ddf32b356933343234d6863e93c2503770a2f5b0a8ef43b431cb42",
+      "sha256": "83518d906ef3e63261c6b73b652cca0aa92337adb51ba02c482799742905d51e",
       "executable": false
     },
     "DEMO.md": {
@@ -12946,7 +12946,7 @@
       "executable": false
     },
     "tests/records-base-exits.mjs": {
-      "sha256": "6851963cd6e346f608432fc57246a765a6d77d02d5c0b0d3a68b0c51a8ea70b3",
+      "sha256": "60f7e445b4e93f27a06ae919fd29d718e6a56ce3c9a9ac840d7fc2f46e6450e6",
       "executable": false
     },
     "tests/records-base-export-policy.mjs": {
