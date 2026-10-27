@@ -76,7 +76,8 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 1/8"
+        "node scripts/verify-suite.mjs test:launch 1/17",
+        "node scripts/verify-suite.mjs test:launch 9/17"
       ]
     },
     {
@@ -84,7 +85,8 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 5/8"
+        "node scripts/verify-suite.mjs test:launch 5/17",
+        "node scripts/verify-suite.mjs test:launch 13/17"
       ]
     },
     {
@@ -92,7 +94,10 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 2/4"
+        "node scripts/verify-suite.mjs test:launch 2/17",
+        "node scripts/verify-suite.mjs test:launch 6/17",
+        "node scripts/verify-suite.mjs test:launch 10/17",
+        "node scripts/verify-suite.mjs test:launch 14/17"
       ]
     },
     {
@@ -100,7 +105,8 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 3/8"
+        "node scripts/verify-suite.mjs test:launch 3/17",
+        "node scripts/verify-suite.mjs test:launch 11/17"
       ]
     },
     {
@@ -108,7 +114,8 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 7/8"
+        "node scripts/verify-suite.mjs test:launch 7/17",
+        "node scripts/verify-suite.mjs test:launch 16/17"
       ]
     },
     {
@@ -116,7 +123,8 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 4/8"
+        "node scripts/verify-suite.mjs test:launch 4/17",
+        "node scripts/verify-suite.mjs test:launch 12/17"
       ]
     },
     {
@@ -124,7 +132,8 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 8/16"
+        "node scripts/verify-suite.mjs test:launch 8/17",
+        "node scripts/verify-suite.mjs test:launch 15/17"
       ]
     },
     {
@@ -132,7 +141,7 @@
       "browser": false,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 16/16"
+        "node scripts/verify-suite.mjs test:launch 17/17"
       ]
     },
     {
