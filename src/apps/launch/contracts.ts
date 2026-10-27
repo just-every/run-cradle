@@ -4,6 +4,15 @@ import type { CommandInput } from '../../contracts/primitives'
 
 export const LAUNCH_APP_ID = '00000000000000000000000700'
 export const launchEntities = { campaign:'00000000000000000000000701',deliverable:'00000000000000000000000702',milestone:'00000000000000000000000703',risk:'00000000000000000000000704',decision:'00000000000000000000000705',lens:'00000000000000000000000706',automation:'00000000000000000000000707',customField:'00000000000000000000000708',readiness:'00000000000000000000000709' } as const
+/** Retained choice values shared by the template and launch validation. */
+export const deliverableStates = ['Open', 'Complete'] as const
+export const milestoneTypes = ['Launch', 'Review', 'Approval', 'Decision', 'Event', 'Publish'] as const
+export const milestoneStatuses = ['Not started', 'On track', 'Watch', 'At risk', 'Blocked', 'Complete'] as const
+export const riskSeverities = ['Low', 'Medium', 'High', 'Critical'] as const
+export const riskStates = ['Watching', 'In progress', 'Needs decision', 'Escalated', 'Resolved'] as const
+export const decisionPriorities = ['Critical', 'High', 'Medium', 'Low'] as const
+export const decisionStates = ['Awaiting approval', 'In review', 'Approved', 'Rejected', 'Cancelled'] as const
+export const readinessStates = ['Outstanding', 'Acknowledged'] as const
 const text=z.string().trim().min(1).max(1000), reason=z.string().trim().min(1).max(10000)
 export const campaignFields=z.object({code:text.max(100),name:text,ownerId:idSchema,startDate:dateSchema,launchDate:dateSchema,objective:z.string().max(100000),statusSummary:z.string().max(280),phase:text,status:text,health:z.number().int().min(0).max(100),budgetMinor:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),spendMinor:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),tags:z.array(text).max(500),customFields:z.record(idSchema,cellValueSchema)}).strict()
 export const deliverableFields=z.object({campaignId:idSchema,title:text,ownerId:idSchema,dueDate:dateSchema.nullable()}).strict()
