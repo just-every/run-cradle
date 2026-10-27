@@ -141,6 +141,11 @@ test('[RECORDS-001 FIELD-001 VIEW-004] a populated Launch upgrade preserves reco
   const exported = parseCsv(new TextEncoder().encode(csv.csv))
   for (const row of beforeRows.campaign) assert.equal(exported.rows.find(value => value[0] === row.code)?.[2], status.options.find(option => (option.retainedValue ?? option.label) === row.status).label, 'Campaign CSV exports the same choice label shown by the renderer')
   const decisions = (await h.read(entityPath('decision') + '/query', {})).items
+  const due = beforeRows.decision.find(row => row.due_at !== null)?.due_at
+  if (due !== undefined) {
+   const boundary = due - 1, result = await h.read(entityPath('decision') + '/query', { filter: condition(launchFieldIds.decision.dueAt, 'after', new Date(boundary).toISOString()) })
+   assert.deepEqual(ids(result.items), beforeRows.decision.filter(row => row.due_at !== null && row.due_at > boundary).map(row => row.id).sort(), 'Canonical instant filters bind the retained millisecond timestamp')
+  }
   for (const stored of beforeRows.decision) {
    const record = decisions.find(row => row.id === stored.id)
    assert.ok(record, 'Every retained decision remains readable')
