@@ -36,7 +36,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Planning"},{"id":"00000000000000000000000002","label":"Build"},{"id":"00000000000000000000000003","label":"Production"},{"id":"00000000000000000000000004","label":"Review"},{"id":"00000000000000000000000005","label":"Launch prep"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -67,7 +67,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"On track"},{"id":"00000000000000000000000002","label":"Watch"},{"id":"00000000000000000000000003","label":"At risk"},{"id":"00000000000000000000000004","label":"Blocked"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -98,7 +98,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Open"},{"id":"00000000000000000000000002","label":"Complete"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -129,7 +129,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Launch"},{"id":"00000000000000000000000002","label":"Review"},{"id":"00000000000000000000000003","label":"Approval"},{"id":"00000000000000000000000004","label":"Decision"},{"id":"00000000000000000000000005","label":"Event"},{"id":"00000000000000000000000006","label":"Publish"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -160,7 +160,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Not started"},{"id":"00000000000000000000000002","label":"On track"},{"id":"00000000000000000000000003","label":"Watch"},{"id":"00000000000000000000000004","label":"At risk"},{"id":"00000000000000000000000005","label":"Blocked"},{"id":"00000000000000000000000006","label":"Complete"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -191,7 +191,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Low"},{"id":"00000000000000000000000002","label":"Medium"},{"id":"00000000000000000000000003","label":"High"},{"id":"00000000000000000000000004","label":"Critical"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -222,7 +222,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Watching"},{"id":"00000000000000000000000002","label":"In progress"},{"id":"00000000000000000000000003","label":"Needs decision"},{"id":"00000000000000000000000004","label":"Escalated"},{"id":"00000000000000000000000005","label":"Resolved"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -253,7 +253,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Critical"},{"id":"00000000000000000000000002","label":"High"},{"id":"00000000000000000000000003","label":"Medium"},{"id":"00000000000000000000000004","label":"Low"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -284,7 +284,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Awaiting approval"},{"id":"00000000000000000000000002","label":"In review"},{"id":"00000000000000000000000003","label":"Approved"},{"id":"00000000000000000000000004","label":"Rejected"},{"id":"00000000000000000000000005","label":"Cancelled"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)
@@ -315,7 +315,7 @@ WITH source_options AS (
  SELECT ordinal, option FROM source_options
  UNION ALL
  SELECT ordinal, json_object('id', '00000000000000000000' || printf('%06d', ordinal),
-        'label', stored_value, 'retainedValue', stored_value) FROM extra_values
+        'label', CASE WHEN stored_value = '' THEN 'Empty choice' ELSE stored_value END, 'retainedValue', stored_value) FROM extra_values
 ), patch AS (
  SELECT json_set('{"type":"select","options":[{"id":"00000000000000000000000001","label":"Outstanding"},{"id":"00000000000000000000000002","label":"Acknowledged"}]}', '$.options', json((
    SELECT json_group_array(json(option)) FROM (SELECT option FROM options ORDER BY ordinal)

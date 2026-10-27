@@ -72,11 +72,13 @@ test('[RECORDS-001 FIELD-001 VIEW-004] a populated Launch upgrade preserves reco
  const h = await templateUpdateHarness()
  try {
   await h.command('launch.samples.install', {})
-  const campaign = (await h.request('/api/campaigns')).items[0]
+  const [campaign, emptyChoiceCampaign] = (await h.request('/api/campaigns')).items
+  assert.ok(emptyChoiceCampaign, 'The upgrade fixture holds a second campaign for an empty historical choice')
   // The launch command intentionally refuses choices outside its domain. This
   // historical stored-value fixture models a value retained from an older owner.
   await h.request('/api/v1/commands/launch.campaign.patch', { commandId: createUlid(), expected: [{ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities.campaign, recordId: campaign.id }, version: campaign.version }], input: { id: campaign.id, changes: { status: 'External review' } } }, 400)
   await h.db.prepare('UPDATE campaigns SET status=? WHERE id=?').bind('External review', campaign.id).run()
+  await h.db.prepare('UPDATE campaigns SET status=? WHERE id=?').bind('', emptyChoiceCampaign.id).run()
   await h.installMainEraSchemas()
   const beforeRows = await h.rows(), beforeAuthority = await h.authority(), beforeSchemas = await h.storedSchemas()
   await h.update()
@@ -111,6 +113,9 @@ test('[RECORDS-001 FIELD-001 VIEW-004] a populated Launch upgrade preserves reco
    assert.equal(choice?.retainedValue ?? choice?.label, stored.status)
    assert.equal(record.allowedActions.find(action => action.action === 'record.patch')?.enabled, false, 'Retained writes stay protected for the record round')
   }
+  const emptyOption = fields[launchFieldIds.campaign.status].options.find(option => option.retainedValue === '')
+  assert.ok(emptyOption && emptyOption.label.trim().length > 0, 'An empty historical choice has a visible option label and keeps its exact stored value')
+  assert.equal(records.find(record => record.id === emptyChoiceCampaign.id).fields[launchFieldIds.campaign.status].value, emptyOption.id, 'An empty stored value decodes to its option identity instead of a blank cell')
   const decisions = (await h.read(entityPath('decision') + '/query', {})).items
   for (const stored of beforeRows.decision) {
    const record = decisions.find(row => row.id === stored.id)
