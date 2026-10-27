@@ -491,6 +491,56 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal((await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(control.id).first()).running_id,null,'NOTIFY-009 the refused control resume releases its execution claim')
   await removeExport(starter,control.id)
  }
+ // Keep the actual interrupted claim and token. Only the retained event's
+ // version or slot is obsolete: either identity component must independently
+ // release an expired notification attempt through the same scheduled door.
+ const obsoleteFailures=[]
+ for(const muted of [false,true])for(const obsolete of ['version','slot']){
+  await prefs(starter,muted?['progress']:[],true)
+  const id=await saveExport(starter),saved=(await json(starter,'/api/v1/warehouse-exports')).exports.find(e=>e.id===id)
+  // Retain a real positive previous version for the obsolete-version fixture.
+  await request(starter.session,'warehouse.save',{id,name:saved.name,bases:saved.bases,mode:saved.mode,format:saved.format,destination:saved.destination,localRule:saved.localRule,timezone:saved.timezone,version:saved.version})
+  const mailStart=(await h.mailMessages()).length,control=await interruptedExport(id),at=Date.now()
+  const label=`NOTIFY-009 ${width} obsolete-${obsolete} muted=${muted}`
+  const eventId=`warehouse-export:${control.id}:${obsolete==='version'?control.claim.version-1:control.claim.version}:${obsolete==='slot'?'2000-01-01':control.claim.running_slot}:failed`
+  try{
+   await h.db.batch([
+    h.db.prepare('UPDATE channel_progress_owed SET event_id=? WHERE event_id=?').bind(eventId,control.eventId),
+    h.db.prepare("UPDATE channel_progress_attempts SET event_id=?,live_until='2000-01-01T00:00:00.000Z' WHERE event_id=?").bind(eventId,control.eventId),
+   ])
+   const claim=await h.db.prepare('SELECT state,running_id,running_started_at,running_slot,version,running_stopped_slot,owner_id FROM warehouse_exports WHERE id=?').bind(control.id).first()
+   assert.deepEqual(claim,{state:'active',running_id:control.claim.running_id,running_started_at:control.claim.running_started_at,running_slot:control.claim.running_slot,version:control.claim.version,running_stopped_slot:null,owner_id:starter.id},`${label}: the active claim and retained starter are unchanged`)
+   const attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(eventId).first()
+   assert.equal(attempt.token,claim.running_id,`${label}: the expired attempt still matches the active claim token`)
+   assert.ok(attempt.live_until<new Date(at).toISOString(),`${label}: the notification attempt has expired`)
+   assert.notEqual(eventId,control.eventId,`${label}: only the retained event identity is obsolete`)
+   await tick(at+60000);await tick(at+120000)
+   assert.deepEqual((await rows(control.id)).map(n=>n.operator_id),[starter.id],`${label}: obsolete event publishes exactly one notice to its retained starter`)
+   const published=await check(control.id,starter,muted,mailStart,['export','failed'])
+   assert.deepEqual((await h.db.prepare('SELECT event_id,operator_id,notification_id FROM channel_events WHERE event_id=?').bind(eventId).all()).results,[{event_id:eventId,operator_id:starter.id,notification_id:published.id}],`${label}: the obsolete event has exactly its starter notice`)
+   assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(control.id).first()).n,0,`${label}: publication clears the debt`)
+   assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=? OR event_id=?').bind(eventId,control.eventId).first()).n,0,`${label}: publication clears the expired attempt`)
+   const deliveredMail=(await h.mailMessages()).slice(mailStart)
+   await tick(at+180000)
+   assert.deepEqual(await rows(control.id),[published],`${label}: later observation cannot repeat or update the notice`)
+   assert.deepEqual((await h.mailMessages()).slice(mailStart),deliveredMail,`${label}: later observation sends no additional provider mail`)
+   console.log(`${label}: PASS exact starter, notice, durable delivery, provider-edge mail and debt/attempt cleanup`)
+  }catch(error){
+   // Finish each independent fixture so a guard-removal run identifies both
+   // identity controls, in both preference states, before failing this journey.
+   console.error(`${label}: FAIL ${error.message}`)
+   obsoleteFailures.push(error)
+  }finally{
+   // Let the current run release its claim before public removal. Publication
+   // may have fenced its retained records snapshot, as in the token control.
+   await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),control.id).run()
+   await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+240000})
+   assert.equal((await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(control.id).first()).running_id,null,`${label}: fixture resume releases its claim`)
+   await tick(at+300000)
+   await removeExport(starter,control.id)
+  }
+ }
+ if(obsoleteFailures.length)throw new AggregateError(obsoleteFailures,`NOTIFY-009 ${width}: obsolete event identity controls failed`)
  await prefs(starter,[],true)
  console.log(`NOTIFY-009 ${width}: expired notification lease discriminates matching and unrelated active claims; protected resume completes once with no false failure or debt`)
 

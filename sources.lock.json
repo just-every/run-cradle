@@ -4550,7 +4550,7 @@
       "executable": false
     },
     "docs/verification.md": {
-      "sha256": "917a19d8eaa35e99d1cafd12714e491720f2252ec8f6f6b1c2046b5c597ebdae",
+      "sha256": "1e2638d563ff8a291691192bbee1617ba24a46c5b275237dfb18731061a3c4a1",
       "executable": false
     },
     "docs/workbooks.md": {
@@ -12302,7 +12302,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "e3e3a800e1a45de7cc223514bbc4b38f604d3d6a53ff943e9a9aa446ec194f14",
+      "sha256": "04b91c2c72c6282813f114c4f204fafebc86df3f551f76f28b63793cd89693bc",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
@@ -15326,7 +15326,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "d6406959404d10c1709e5154ff8a1ebf7233c4d81525710bef2eeec9ec9af97e",
+      "sha256": "6e91db89cffffbf2ad2c5d39603ab1b3cf615624dc37b52e1e0245e585edddbf",
       "executable": false
     },
     "vite.config.ts": {

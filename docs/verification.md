@@ -12,10 +12,10 @@ rer's production hosted-output and hydration checks. The other shards call the
 application runner directly. All invocations retain the 200-test budget check.
 
 Push verification has eight explicitly assigned cost-map shards, each with three
-concurrent lanes. `verification.json` records each command or Launch suite file's
+concurrent lanes. `verification.json` records each command or Launch/Base suite file's
 weight in seconds, its lane and any exclusive timing-probe policy. Assignments do
-not depend on package file order: the Launch file list is expanded from its package
-script, and each file runs directly with that script's loader and Node options.
+not depend on package file order: the Launch and Base file lists are expanded from their package
+scripts, and each file runs directly with its script's loader and Node options.
 There is no Node `--test-shard` split. An unweighted new file is named in a fatal
 plan diagnostic with the default shard (`balanced-8`) and an instruction to add its
 weight and explicit assignment. Stale weights and missing or duplicate assignments
