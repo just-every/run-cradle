@@ -10878,7 +10878,7 @@
       "executable": false
     },
     "src/ui/records/record-grid.tsx": {
-      "sha256": "237f7d56de6be597f3e3630fb6417d8b85add5111f1f05046b887269a4fb956e",
+      "sha256": "cb75d2a2cab01802398b053634e63fb4aef605b07c782080063e014b0e810235",
       "executable": false
     },
     "src/ui/records/record-label.ts": {
@@ -10890,7 +10890,7 @@
       "executable": false
     },
     "src/ui/records/record-table.tsx": {
-      "sha256": "8eddcc9df5fe425b73318b0b1bf87295e8221e9e4e2a901220d6cf3a6b4d728c",
+      "sha256": "d77ebc3b105d206706fbcfeef1c83c2d8318fd9736394068895c08ba768c468c",
       "executable": false
     },
     "src/ui/records/record-timeline.css": {
@@ -10906,11 +10906,11 @@
       "executable": false
     },
     "src/ui/records/records-page.tsx": {
-      "sha256": "b1593d0cfddcf592df54d4dd1c73910cf46870aeaa09f057943d569133aff221",
+      "sha256": "0cee5384602093d783e19069291d0bae6099e722460e8a5cd0a9778e914bd6c7",
       "executable": false
     },
     "src/ui/records/records.css": {
-      "sha256": "49bcf254db22598da85595c72f7fe5b4764f6766072a5d07b694224e4ae0b4da",
+      "sha256": "fc6f853199aeed780d7fb440322961f3432259cd887ad2e242b15081579a51d2",
       "executable": false
     },
     "src/ui/records/relationship-picker.tsx": {
@@ -10926,7 +10926,7 @@
       "executable": false
     },
     "src/ui/records/saved-views.tsx": {
-      "sha256": "a5707cd0dc5bcb20b9958e90285700355da90a2df19fd769e6f6adc767b0757a",
+      "sha256": "1126bb3f34be2ed844301ae523357379cf88d20f6543bf1e038984f7f766aa56",
       "executable": false
     },
     "src/ui/records/schema/base-collaborators.tsx": {
@@ -11058,11 +11058,11 @@
       "executable": false
     },
     "src/ui/records/table-tools.css": {
-      "sha256": "39e21a3e3813a0f5cc31ad1bebf61ba94f5966e129ddcd2e78eb37d17f1491cc",
+      "sha256": "f095495862cfac65625af849a15ea85ea32dc4ba9c8a38e26a98dcbfc1152881",
       "executable": false
     },
     "src/ui/records/table-tools.tsx": {
-      "sha256": "7c415895edaf8b08017c8344336e9d26763e288fd4f65576d08519a79a32975e",
+      "sha256": "244d8eb5c7b3990a3c1867721bd1262bb15f2640c4b18a257fd990ea035aceb5",
       "executable": false
     },
     "src/ui/records/timeline-axis.ts": {
@@ -11094,11 +11094,11 @@
       "executable": false
     },
     "src/ui/records/view-bar.css": {
-      "sha256": "f462576d439988716736385c09557fbaea134ca34653c8913d4c5d91b3b3fe81",
+      "sha256": "bd5a43330444fe0db2e7105a024a4870915028b95a73713eaaa131f7b598c05e",
       "executable": false
     },
     "src/ui/records/view-bar.tsx": {
-      "sha256": "3c71b6e3b0d4ef61f513ccd5baa751f42c162efd774d236cb478d7ebc6bbb024",
+      "sha256": "aeaef9016e4219cac5a97d1a8bc1da29968d67fe2b894a1a0a01dc347421799a",
       "executable": false
     },
     "src/ui/records/view-formatting.css": {
@@ -12374,7 +12374,7 @@
       "executable": false
     },
     "tests/helpers/record-calendar-journey.mjs": {
-      "sha256": "f52d1dc0aed4f2e84c8fd557f8497132a0ce97ce3a01418deb9033341b685c28",
+      "sha256": "901bb8116c9189ce0b541cc9074a3c5995bc3de6b1dcaa42100ac782e2cddd7e",
       "executable": false
     },
     "tests/helpers/record-calendar-proof.mjs": {
@@ -12414,7 +12414,7 @@
       "executable": false
     },
     "tests/helpers/records-base-menu.mjs": {
-      "sha256": "2f7d2378bf3bf0164c90f7831ad5ef56f5ead3b1c2f4e882e67fa18566adb0ba",
+      "sha256": "f28281890b25b2c42188a79b50ccc5abcdb83e23318d7a5b92959b68e171a1bf",
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
@@ -12526,11 +12526,11 @@
       "executable": false
     },
     "tests/helpers/records-grid-range-browser.mjs": {
-      "sha256": "d17adc7b6fce2420a1da40e7cbd448d7510c924a22ec7bb66e4f4e0368a422fd",
+      "sha256": "1469e48257d667e48049e027ccf2dec67c3088340b8a9a2a66a2338bd78ea7f3",
       "executable": false
     },
     "tests/helpers/records-history-journey.mjs": {
-      "sha256": "2fbe78e5b4e55fc6e24ea79facec0c66da94dc84bd1683d0e6b57a769a4388da",
+      "sha256": "589fbda345555f153c80ca18f409b958abd114f9ec742b7fb36375b8101be320",
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
@@ -12574,7 +12574,7 @@
       "executable": false
     },
     "tests/helpers/records-live-journey.mjs": {
-      "sha256": "a9f5f849149d5cf64420d3eea796e4aa7ca87308a586d2a6aa39d8f0514d24f5",
+      "sha256": "ef9200be4372f69dc761b3c26caebd189425eea9141de8ed446160463022f4a1",
       "executable": false
     },
     "tests/helpers/records-lookups-journey.mjs": {
@@ -12606,7 +12606,7 @@
       "executable": false
     },
     "tests/helpers/records-timeline-journey.mjs": {
-      "sha256": "a25d568861ac8883e7ed0105673f1f2eccf030c19768573333e12647c698129a",
+      "sha256": "34df9af5886db8cae0612a72d0810f1765f61c9a7fd2490aa7c82c52dad0eae7",
       "executable": false
     },
     "tests/helpers/records-tsx-loader.mjs": {
@@ -12638,7 +12638,7 @@
       "executable": false
     },
     "tests/helpers/records-view-settings-journey.mjs": {
-      "sha256": "f8a30bd6243d40415d3dbe2b8b69e91ecf3ad4f638c6051db6ec778ff8373484",
+      "sha256": "72501f10973a65516fbb91488aaa7409bb234da1c15ab8fd53095c5c33aea957",
       "executable": false
     },
     "tests/helpers/rer-archive-integrity.mjs": {
@@ -13034,7 +13034,7 @@
       "executable": false
     },
     "tests/records-grid-range.mjs": {
-      "sha256": "87943a37ca5a8639414dc645bb92d5fd9376fe4dd6f50e123c98ea31d5185a23",
+      "sha256": "29373d2eda0b137e042edcc380a75ba40eafb9cb6adafb9917f0601caf8d32ac",
       "executable": false
     },
     "tests/records-import-content-native.mjs": {
@@ -13258,11 +13258,11 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "f4a2f3d377925d3015b95071b99671b9e61257d5cab0bcefc03a9f98d0f20a94",
+      "sha256": "807f0bdd9c192aca0665652386ad610569d569df87d8f3f1730319ee741001ef",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
-      "sha256": "e1f159d86fa3d518190ebdc3d367f6d072e0f7a89668c0596dadbbba106b5f7e",
+      "sha256": "384b202b6eb8cb0a6bd5ba2e815dc8ce17e93165685da24e4ec91a6263f98efe",
       "executable": false
     },
     "tests/ui-recut-final.mjs": {
