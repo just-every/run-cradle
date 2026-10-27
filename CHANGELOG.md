@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Breaking change for Records API consumers of the Launch readiness tables** at `/api/v1/apps/00000000000000000000000700/entities/*`: `updates/9076_launch_typed_fields.sql` types the existing fields without changing any stored row. Percent changes from an unformatted number-field decimal string to a fractional decimal string (`"49"` → `"0.49"`, displayed as 49%; the retained command stores 49, not 4900). Single select changes from the stored string to an option ID string; read labels from the entity schema. A relation changes from a bare record ID string to `{appId, entityId, recordId}`. Person changes from a text field containing a principal ID to a person field whose value is that same principal ID string; readable names and avatars come from the person lookup. Money changes from a number-field decimal string under a “(minor units)” label to `{minor: "4800000", currency: "USD", scale: 2}`, with fixed USD and scale 2. Due at changes from epoch milliseconds represented as text to a UTC ISO 8601 string (`"1793801700123"` → `"2026-11-04T14:15:00.123Z"`); its retained storage stays integer milliseconds. Records create and patch remain disabled on these retained tables.
+
 - Erasing an operator is final: Base's operator status and role routes now refuse any change to an erased person, so they cannot be re-activated (OPS-005). Adds `updates/9039`, an additive trigger.
 - OPS-004 and OPS-005 are done, each with a named journey over the launch HTTP doors.
 
