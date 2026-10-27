@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 
-const businessTables = ['campaigns', 'campaign_tags', 'launch_custom_values', 'deliverables', 'milestones', 'milestone_dependencies', 'risks', 'decisions', 'comments', 'launch_readiness', 'notifications', 'channel_notifications', 'channel_deliveries', 'channel_events', 'automations', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'activity_entries']
+const businessTables = ['campaigns', 'campaign_tags', 'launch_custom_values', 'deliverables', 'milestones', 'milestone_dependencies', 'risks', 'decisions', 'evidence_comments', 'launch_readiness', 'notifications', 'channel_notifications', 'channel_deliveries', 'channel_events', 'automations', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'activity_entries']
 const observedTables = [...businessTables, 'lenses', 'launch_lens_history', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
 async function snapshot(db, tables = observedTables) {
  const rows = await db.batch(tables.map(table => db.prepare(`SELECT * FROM ${table} ORDER BY 1`)))
