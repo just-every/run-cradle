@@ -1,4 +1,4 @@
-import {sortAndGroup,tableAction} from './records-table-tools.mjs'
+import {displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
 import {compileSchema} from '../../src/domains/records/descriptors.server.ts'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'

@@ -1,4 +1,5 @@
-import { gridRangeBrowserJourney } from './helpers/records-grid-range-browser.mjs'
+// Table tools Fill down and Ctrl/Cmd+D run in the existing Home browser scenario;
+// this native range contract also runs on CI workers without Chromium.
 import './helpers/typescript-loader.mjs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -115,5 +116,4 @@ test('VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, 
     assert.equal(hiddenResponse.status,403)
     assert.doesNotMatch(await hiddenResponse.text(),/810045\.75/,'Conflict diagnosis must not disclose a value hidden after preparation')
   } finally { await storage?.close(); await rm(directory, { recursive: true, force: true }) }
-  await gridRangeBrowserJourney()
 })

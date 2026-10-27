@@ -16,6 +16,7 @@ export async function gridRangeBrowserJourney() {
     await context.addCookies([{ name: runtime.cookie.split('=')[0], value: runtime.cookie.slice(runtime.cookie.indexOf('=') + 1), url: runtime.origin }])
     const page = await context.newPage()
     await page.goto(runtime.origin + '/app/records')
+    await page.getByRole('button', { name: /^Base ▾/ }).waitFor()
     const appId = createUlid(), entityId = createUlid(), name = newField('Item'), value = newField('Quantity', 'number')
     const preview = await browserCall(page, '/api/v1/records/schema-preview', { appId, name: 'Stock counts', tables: [{ id: entityId, label: 'Stock', primaryFieldId: name.id, fields: [name, value] }] })
     await browserCall(page, '/api/v1/commands/release.adopt', liveCommand({ kind: 'manual_schema', previewId: preview.id }))

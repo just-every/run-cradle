@@ -28,7 +28,7 @@ export async function recordCalendarJourney({widths=[1440,390],providerKind='goo
   let writerContext
   const errors=[];page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(/hydration|did not match/i.test(message.text()))errors.push(message.text())})
   const capture=async(name,target=page)=>{await target.evaluate(()=>scrollTo(0,0));assert.equal(await target.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual((await new AxeBuilder({page:target}).analyze()).violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[]);await target.screenshot({path:`${output}/${name}-${width}.png`,fullPage:true})}
-  try{await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app/records')
+  try{await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
    const call=(path,input,status=200)=>browserCall(page,path,input,status),command=(action,input,expected=[])=>call('/api/v1/commands/'+action,liveCommand(input,expected))
    const title=newField('Calendar title'),notes=newField('Calendar details'),start=newField('Calendar date','date'),end=newField('Calendar end','date'),appId=createUlid(),entityId=createUlid()
    const preview=await call('/api/v1/records/schema-preview',{appId,name:`synthetic-cradle-calendar-${width}`,tables:[{id:entityId,label:'Calendar records',primaryFieldId:title.id,fields:[title,notes,start,end]}]})

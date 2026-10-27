@@ -33,7 +33,7 @@ contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIE
    try{
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     async function call(url,input){return page.evaluate(async({url,input})=>{const csrf=await (await fetch('/auth/csrf')).json();const response=await fetch(url,{method:input===undefined?'GET':'POST',headers:{'content-type':'application/json','x-csrf-token':csrf.csrfToken},...(input===undefined?{}:{body:JSON.stringify(input)})});if(!response.ok)throw Error(`${response.status}: ${await response.text()}`);return (await response.json()).data},{url,input})}
-    await page.goto(h.origin+'/app/records')
+    await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
     const title=newField('Event'),start=newField('Starts','date'),end=newField('Ends','date'),appId=createUlid(),entityId=createUlid(),instantId=createUlid(),instantTitle=newField('Appointment'),instantStart=newField('Start time','instant'),instantEnd=newField('End time','instant')
     const preview=await call('/api/v1/records/schema-preview',{appId,name:`Operations calendar ${width}`,tables:[{id:entityId,label:'Visits',primaryFieldId:title.id,fields:[title,start,end]},{id:instantId,label:'Appointments',primaryFieldId:instantTitle.id,fields:[instantTitle,instantStart,instantEnd]}]})
     await call('/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}})

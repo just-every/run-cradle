@@ -211,6 +211,7 @@
 .cr-shortcuts dd { margin: 0; }
 .cr-editable-grid .cr-col-select { position: sticky; left: 0; z-index: 2; background: var(--card); }
 @media (max-width: 600px) {
+  .cr-editable-grid .cr-records-table :is(th, td):not(.cr-col-primary):not(.cr-col-select) { position: static !important; }
   .cr-editable-grid .cr-records-table .cr-col-primary { position: sticky !important; left: 56px !important; z-index: 1; background: var(--card); }
   .cr-editable-grid .cr-records-table td.cr-col-select { min-width: 56px; width: 56px; }
   .cr-records-page:has(.cr-selection-bar), .cr-records-page:has(.cr-quiet-undo) { padding-bottom: 120px; }

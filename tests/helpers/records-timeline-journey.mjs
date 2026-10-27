@@ -44,7 +44,7 @@ export async function timelineBrowserJourney() {
       try {
         page.setDefaultTimeout(20000)
         await context.addCookies([{ name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=') + 1), url: h.origin }])
-        await page.goto(h.origin + '/app/records')
+        await page.goto(h.origin + '/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
         const f = await fixture(page, h, width), call = (url, input, status) => browserCall(page, url, input, status)
         const patch = () => page.waitForResponse(response => response.url().endsWith('/commands/record.patch') && response.request().method() === 'POST')
         const getRow = async key => (await call(`${f.base}/records/${f.rows[key].id}`)).record

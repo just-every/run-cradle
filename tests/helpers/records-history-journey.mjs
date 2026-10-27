@@ -18,7 +18,7 @@ export async function historyBrowserJourney(){
    let peerContext
    try{
     page.setDefaultTimeout(15000)
-    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app/records')
+    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
     const f=await liveFixture(page,h,width),schema=await browserCall(page,`/api/v1/apps/${f.appId}/entities/${f.entityId}`)
     const second=(await browserCall(page,'/api/v1/commands/record.create',liveCommand({appId:f.appId,entityId:f.entityId,values:{[f.title.id]:'PO-1043',[f.notes.id]:'Check labels',[f.due.id]:'2026-11-02'}},[{ref:{appId:f.appId,entityId:'00000000000000000000000001',recordId:f.entityId},version:schema.version}]))).value
     const query=async()=> (await browserCall(page,`/api/v1/apps/${f.appId}/entities/${f.entityId}/query`,{})).items

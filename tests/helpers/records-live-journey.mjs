@@ -4,7 +4,7 @@ import path from 'node:path'
 import {browserCall,liveCommand,liveFixture} from './records-live-fixture.mjs'
 
 export async function liveBrowserJourney(page,j,h,browser,width,output){
- await page.goto(h.origin+'/app/records')
+ await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
  const f=await liveFixture(page,h,width),context=await browser.newContext({viewport:{width,height:900}}),peer=await context.newPage()
  peer.setDefaultTimeout(8000)
  await context.addCookies([{name:f.peerCookie.split('=')[0],value:f.peerCookie.slice(f.peerCookie.indexOf('=')+1),url:h.origin}])
