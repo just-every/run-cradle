@@ -4,8 +4,23 @@ import assert from 'node:assert/strict'
 // proving that Start's hydrated router survives real private link navigation.
 // All assertions stay inside the callers' existing tagged registrations.
 export async function navigateFromSignInToApp(page, { mailConfigured = true } = {}) {
+  const assertHomeReady = async () => {
+    const bases = page.getByRole('region', { name: 'Your bases', exact: true })
+    await bases.waitFor()
+    await page.getByRole('region', { name: 'Recent activity', exact: true }).waitFor()
+    await page.waitForLoadState('networkidle')
+    const response = await page.request.get(new URL('/api/v1/apps', page.url()).href)
+    assert.equal(response.status(), 200, 'The signed-in Home discovers its authorized bases')
+    const apps = (await response.json()).data.items
+    for (const base of apps) {
+      const link = bases.getByRole('link', { name: base.name, exact: true })
+      await link.waitFor()
+      assert.equal(await link.getAttribute('href'), base.entryUrl)
+    }
+    assert.equal(await bases.getByRole('listitem').count(), apps.length, 'Home lists the current authorized bases once')
+  }
   await page.waitForURL('**/app')
-  await page.getByText('Live campaigns', { exact: true }).waitFor()
+  await assertHomeReady()
   await page.waitForLoadState('networkidle')
   assert.equal(await page.locator('#signin-email').count(), 0)
   await page.waitForFunction(() => window.__TSR_ROUTER__?.state.location.pathname === '/app')
@@ -34,7 +49,7 @@ export async function navigateFromSignInToApp(page, { mailConfigured = true } = 
     assert.equal(await page.evaluate(() => performance.timeOrigin), timeOrigin)
     await router.evaluate(current => current.navigate({ to: '/app' }))
     await page.waitForURL('**/app')
-    await page.getByText('Live campaigns', { exact: true }).waitFor()
+    await assertHomeReady()
     await page.waitForLoadState('networkidle')
     await assertRoute('/app', ['__root__', '/app', '/app/'])
     assert.equal(await page.evaluate(() => window.__signInNavigationSentinel?.router === window.__TSR_ROUTER__), true)

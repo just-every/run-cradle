@@ -113,7 +113,7 @@ try {
     await page.goto(`${h.origin}/docs`)
     await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click()
     await navigateFromSignInToApp(page)
-    await page.getByText('Live campaigns',{exact:true}).waitFor()
+    await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
     const wire=receipt.generatedRequests.find(request=>new URL(request.url).searchParams.get('payload').includes('/api/portfolio'))
     assert.ok(wire,'observe the real generated client transport')
     const headers={...wire.headers,cookie:repair.session.cookie};delete headers.host
