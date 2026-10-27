@@ -131,4 +131,18 @@ export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  const search=await recordThread(h,{...subject},doors.admin)
  assert.ok(!JSON.stringify(search).includes(comment.body))
  assert.deepEqual(await copiesOf(h,[comment.body]),[],'The body leaves every stored receipt and search index, including exported product rows')
+ // The ownership journey already left a separate active workspace admin. Their
+ // ordinary app policy permits redaction without making them the comment author.
+ const admin=await h.db.prepare("SELECT p.id FROM authority_principals p JOIN cradle_base_operators b ON b.principal_id=p.id JOIN oa_operators o ON o.id=b.base_id WHERE p.state='active' AND o.status='active' AND o.role='admin' ORDER BY p.id LIMIT 1").first()
+ assert.ok(admin,'The existing ownership journey provides a workspace admin')
+ const adminSession=await h.signIn(admin.id),adminBody='A second privacy request handled by an administrator'
+ const added=await command('comment.add',{subject,body:adminBody,mentions:[]},expected)
+ assert.equal(added.status,200,JSON.stringify(added.body))
+ const adminTarget=added.body.data.value,adminThread=await recordThread(h,subject,adminSession)
+ assert.equal(adminThread.items.find(item=>item.id===adminTarget.id).canRedact,true)
+ const adminRedaction=await command('comment.redact',{subject,id:adminTarget.id,version:adminTarget.version,reason:'Administrator handled the request'},expected,adminSession)
+ assert.equal(adminRedaction.status,200,JSON.stringify(adminRedaction.body))
+ const adminAudit=(await h.db.prepare('SELECT actor_id,reason,created_at FROM evidence_comment_redactions WHERE comment_id=?').bind(adminTarget.id).all()).results
+ assert.equal(adminAudit.length,1);assert.equal(adminAudit[0].actor_id,admin.id);assert.ok(adminAudit[0].reason&&Date.parse(adminAudit[0].created_at))
+ assert.deepEqual(await copiesOf(h,[adminBody]),[],'Admin redaction also removes the body from every stored receipt and search index')
 }
