@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { readApi, RequestFailure, type Resource } from '../shared/api'
+import { useDocumentData } from '../../core/app/document-data'
+import type { Success } from '../../contracts/primitives'
 
 type Presence = { participants: { id: string; name: string }[]; revision: number; accessRevision: string }
 
@@ -7,7 +9,10 @@ type Presence = { participants: { id: string; name: string }[]; revision: number
 export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: string | null, restart: () => void, refreshKey = 0) {
   const identity = JSON.stringify(input)
   const key = JSON.stringify([url, identity, presenceUrl])
-  const [loaded, setLoaded] = useState<{ key: string; resource: Resource<T> }>({ key, resource: { state: 'loading', data: null } })
+  const documentData = useDocumentData()
+  const seeded = identity === undefined && Object.prototype.hasOwnProperty.call(documentData, url) ? documentData[url] as Success<T> : undefined
+  const initial: Resource<T> = seeded ? { state: 'ready', data: seeded.data } : { state: 'loading', data: null }
+  const [loaded, setLoaded] = useState<{ key: string; resource: Resource<T> }>(() => ({ key, resource: initial }))
   const setResource = (resource: Resource<T>) => setLoaded({ key, resource })
   const [participants, setParticipants] = useState<Presence['participants']>([])
   const [notice, setNotice] = useState('Connecting to live updates…')
@@ -18,7 +23,7 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
   useEffect(() => {
     const abort = new AbortController()
     let timer: ReturnType<typeof setTimeout> | undefined, running = false, paused = false, previous: number | undefined, previousAccess: string | undefined, requested = 0, completed = -1
-    setResource({ state: 'loading', data: null }); setParticipants([]); setNotice('Connecting to live updates…')
+    setResource(initial); setParticipants([]); setNotice('Connecting to live updates…')
     if (!presenceUrl) return
     const heartbeatUrl = presenceUrl
     function failed(error: unknown) {
