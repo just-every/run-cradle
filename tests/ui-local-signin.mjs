@@ -109,8 +109,22 @@ async function freshViewport(viewport,evidence){
       await page.getByRole('region',{name:'Recent activity',exact:true}).waitFor()
       await navigateClient('/setup');await page.waitForURL(origin+'/app')
       await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
+      await page.waitForLoadState('networkidle')
       const homeText=await page.locator('body').innerText()
-      assert.doesNotMatch(homeText,/This work is outside your access|loopback_required|Launch|Campaign|campaigns/)
+      assert.doesNotMatch(homeText,/This work is outside your access|loopback_required/)
+      const discovery=await context.request.get(origin+'/api/v1/apps');assert.equal(discovery.status(),200)
+      const bases=(await discovery.json()).data.items,baseRegion=page.getByRole('region',{name:'Your bases',exact:true})
+      const portfolioReply=await context.request.get(origin+'/api/portfolio'),portfolio=await portfolioReply.json(),{LAUNCH_APP_ID}=await import('../src/apps/launch/contracts.ts')
+      for(const base of bases){
+        const link=baseRegion.getByRole('link',{name:base.name,exact:true});await link.waitFor();assert.equal(await link.getAttribute('href'),base.entryUrl)
+        const summary=await link.evaluate(element=>(element.getAttribute('aria-describedby')??'').split(/\s+/).map(id=>document.getElementById(id)?.textContent??'').join(' '))
+        assert.ok(summary.trim(),'Each authorized base has its quiet summary')
+        const values=base.id===LAUNCH_APP_ID&&portfolioReply.status()===200?[portfolio.metrics.liveCampaigns,portfolio.metrics.needsAttention]:[base.tableCount,base.recordCount]
+        const shownCounts=Array.from(summary.matchAll(/\b\d[\d,]*\b/g),match=>Number(match[0].replaceAll(',',''))).slice(0,2)
+        assert.deepEqual(shownCounts,values,'Home summarizes the current authorized read')
+      }
+      assert.equal(await baseRegion.getByRole('listitem').count(),bases.length,'Home lists every authorized base once')
+      assert.equal(await page.getByRole('region',{name:'Portfolio metrics',exact:true}).count(),0,'Home leaves the template dashboard with its base')
       const homeResponse=await context.request.get(origin+'/app')
       assert.equal(homeResponse.status(),200)
       const homeHtml=await homeResponse.text()
