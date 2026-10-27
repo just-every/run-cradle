@@ -1,7 +1,6 @@
 import { BaseMenu, type BaseSummary } from './base-menu'
 import { LAUNCH_APP_ID, launchEntities } from '../../apps/launch/contracts'
 import { useDocumentSession } from '../../core/app/document-context'
-import { useNavigate } from '@tanstack/react-router'
 import { ImportReceipt } from './base-import/receipt'
 import { BaseImporter } from './base-import/importer'
 import './records.css'
@@ -21,7 +20,7 @@ export function RecordsPage({ appId, entityId, importBase = false, importJobId, 
   const apps = useResource<Page<AppSummary>>(importBase ? null : '/api/v1/apps')
   const [builder, setBuilder] = useState<BuilderTarget | null>(null)
   const [reviewing, setReviewing] = useState(false)
-  const session = useDocumentSession(), navigate = useNavigate()
+  const session = useDocumentSession()
   const principalId = session?.operator.id
   let remembered: string | null = null
   try { if (principalId) remembered = localStorage.getItem(`cradle.lastBase.${principalId}`) } catch { /* Use the first readable base when storage is unavailable. */ }
@@ -42,8 +41,11 @@ export function RecordsPage({ appId, entityId, importBase = false, importJobId, 
     if (!appId && !bases.length) { setBuilder(newBase()); return }
     if (entityId || !target || entities.resource.state !== 'ready') return
     const first = entities.resource.data.items.find(entity => entity.label !== 'Private source intake')
-    if (first) void navigate({ to: '/app/records/$appId/$entityId', params: { appId: target.id, entityId: first.id }, replace: true })
-  }, [appId, entityId, target?.id, apps.resource, entities.resource, importBase, builder, navigate])
+    // Enter the resolved table as its own document, just like the base links.
+    // Its shell and readers then hydrate together instead of mounting a
+    // transient client leaf while the router is replacing the entry page.
+    if (first) window.location.replace(`/app/records/${encodeURIComponent(target.id)}/${encodeURIComponent(first.id)}`)
+  }, [appId, entityId, target?.id, apps.resource, entities.resource, importBase, builder])
   const base = apps.resource.state === 'ready' ? apps.resource.data.items.find(app => app.id === appId) : undefined
   const header = <div className="cr-base-heading"><h1>{base?.name ?? 'Records'}</h1><BaseMenu apps={apps.resource.state === 'ready' ? apps.resource.data.items : []} appId={base?.id} manual={entities.resource.state === 'ready' && entities.resource.data.items.some(entity => entity.physicalRevision.startsWith('manual_'))} onCreate={() => setBuilder(newBase())} onEdit={() => base && setBuilder({ kind: 'edit', appId: base.id })} /></div>
   return <OperatorFeaturePage currentPath="/app/records" title=""><div className="cr-page cr-records-page">{importBase && receipt && importJobId ? <ImportReceipt jobId={importJobId} /> : importBase ? <BaseImporter initialJobId={importJobId} /> : <>{(builder || reviewing || (apps.resource.state !== 'loading' && apps.resource.state !== 'ready') || (entities.resource.state !== 'loading' && entities.resource.state !== 'ready') || (!appId && apps.resource.state === 'ready' && !apps.resource.data.items.length)) && <header className="cr-page-header">{header}</header>}{!builder && !!appId && !!entityId && <AgentProposals onOpenChange={setReviewing} />}{reviewing ? null : builder ? <SchemaBuilderPanel target={builder} onTarget={setBuilder} onClose={() => setBuilder(null)} /> : <ResourceState resource={apps.resource} operation="applications" retry={apps.refresh}>{() => appId ? <EntityBrowser appId={appId} entityId={entityId} entities={entities.resource} retry={entities.refresh} heading={header} /> : null}</ResourceState>}</>}</div></OperatorFeaturePage>
