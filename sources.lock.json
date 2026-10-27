@@ -13202,7 +13202,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "3f241630c732ba25966331a282d0e31f4069a481981f3ca8cfab2bddea6b3222",
+      "sha256": "e624d2acd05fc7f7b5b7d0eab76e15ba60f60622e127f490eabf48aad51acdd4",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
