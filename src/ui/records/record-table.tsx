@@ -35,7 +35,7 @@ function RecordTableContent({ schema, tabs }: { schema: EntitySchema; tabs: Reac
   const [savingView, setSavingView] = useState(false)
   const [savedView, setSavedView] = useState<View | null>(null)
   const [display, setDisplay] = useState<'grid' | 'board' | 'cards' | 'form'>('grid')
-  const [boardFieldId, setBoardFieldId] = useState(schema.fields.find(field => field.type === 'select' || field.type === 'person' || field.type === 'relation' && field.relation?.cardinality === 'one')?.id ?? '')
+  const [boardFieldId, setBoardFieldId] = useState(schema.fields.find(field => field.type === 'select' && field.label === 'Status')?.id ?? schema.fields.find(field => field.type === 'select')?.id ?? schema.fields.find(field => field.type === 'person')?.id ?? schema.fields.find(field => field.type === 'relation' && field.relation?.cardinality === 'one')?.id ?? '')
   const [selection, setSelection] = useState<RecordRow[]>([])
   const [bulkOpen, setBulkOpen] = useState(false)
   const [visible, setVisible] = useState<string[]>(schema.fields.map(field => field.id))
