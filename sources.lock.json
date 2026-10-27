@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "1470b92e8295af079ed83d5e363df8339feeaff930204dc97f88da751b9e0e37",
+      "sha256": "9aff2261b26996618841754ee3045042af148673a923da89bf737aedbe4862a9",
       "executable": false
     },
     "CLAUDE.md": {
@@ -12890,7 +12890,7 @@
       "executable": false
     },
     "tests/launch-template-update.mjs": {
-      "sha256": "98457cdfb44abde291ee68a6203cb1df7b2d72734578ab97e6f1135de7da87af",
+      "sha256": "5e672c6200a648d96f109a2c28d9324e41240d6289a84e5821b3b05c0c1e4bdc",
       "executable": false
     },
     "tests/launch-write-authority.mjs": {
