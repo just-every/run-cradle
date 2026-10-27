@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import type { BaseAccess } from '../../domains/records/manual/base-role'
 import { LAUNCH_APP_ID } from '../../apps/launch/contracts'
 import { useResource } from '../shared/api'
+import { AccessPanel } from '../settings/access-panel'
 import { CustomFieldsPanel } from '../settings/custom-fields-panel'
 import { BaseCollaborators } from './schema/base-collaborators'
 import { BaseSchemaReviews } from './schema/base-schema-reviews'
@@ -28,10 +29,10 @@ export function BaseMenu({ apps, appId, manual, onCreate, onEdit }: { apps: Base
       {appId && <h3>This base</h3>}
       {canAdopt && <button type="button" onClick={() => { setOpen(false); onEdit() }}>Edit fields</button>}
       {appId === LAUNCH_APP_ID && <button type="button" onClick={() => show('fields')}>Edit fields</button>}
-      {canManage && <button type="button" onClick={() => show('people')}>People</button>}
+      {(canManage || appId === LAUNCH_APP_ID) && <button type="button" onClick={() => show('people')}>People</button>}
       {canManage && count > 0 && <button type="button" onClick={() => show('reviews')}>Review changes ({count})</button>}
       {manual && <button type="button" onClick={() => show('export')}>Export base</button>}
     </ViewSheet>
-    <ViewSheet wide title={panel === 'people' ? 'People' : panel === 'reviews' ? 'Review changes' : panel === 'fields' ? 'Edit fields' : 'Export base'} open={panel !== null} onClose={() => setPanel(null)} anchor={anchor}>{appId && (panel === 'people' ? <BaseCollaborators appId={appId} /> : panel === 'reviews' ? <BaseSchemaReviews appId={appId} /> : panel === 'fields' ? <CustomFieldsPanel /> : <ExportBasePanel appId={appId} id="cr-export-base" />)}</ViewSheet>
+    <ViewSheet wide title={panel === 'people' ? 'People' : panel === 'reviews' ? 'Review changes' : panel === 'fields' ? 'Edit fields' : 'Export base'} open={panel !== null} onClose={() => setPanel(null)} anchor={anchor}>{appId && (panel === 'people' ? appId === LAUNCH_APP_ID ? <AccessPanel /> : <BaseCollaborators appId={appId} /> : panel === 'reviews' ? <BaseSchemaReviews appId={appId} /> : panel === 'fields' ? <CustomFieldsPanel /> : <ExportBasePanel appId={appId} id="cr-export-base" />)}</ViewSheet>
   </div>
 }
