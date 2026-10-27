@@ -1,4 +1,3 @@
-import {prepareComment,prepareCommentDelete} from './comments.server'
 import { canonicalHash } from '../../domains/admission/canonical'
 import { prepareSupersede } from './supersede.server'
 import { prepareAutomation } from './automations.server'
@@ -24,8 +23,6 @@ export type LaunchHandler=(ctx:RequestContext,input:CommandInput<Record<string,u
 export function createLaunchHandlers(context:LaunchContext):Partial<Record<LaunchAction,LaunchHandler>>{
  const handlers:Partial<Record<LaunchAction,LaunchHandler>>={}
  for(const action of Object.keys(launchInputs) as LaunchAction[]){const[kind,operation]=action.split('.')
-  if(action==='comment.delete')handlers[action]=(ctx,input)=>prepareCommentDelete(context,ctx,input as CommandInput<{id:string;version:number}>)
-  if(action==='comment.create')handlers[action]=(ctx,input)=>prepareComment(context,ctx,input as CommandInput<{campaignId:string;body:string;mentions:string[]}>)
   if(kind==='campaign'&&operation!=='duplicate')handlers[action]=(ctx,input)=>prepareCampaign(context,ctx,input,operation!)
   if(kind==='campaign'&&operation==='duplicate')handlers[action]=(ctx,input)=>prepareDuplicate(context,ctx,input as CommandInput<{id:string;newCode:string;newLaunchDate?:string}>)
   if((kind==='deliverable'||kind==='risk'||kind==='decision')&&['create','patch','delete'].includes(operation!))handlers[action]=(ctx,input)=>prepareRecord(context,ctx,input,kind,operation as 'create'|'patch'|'delete')

@@ -3,7 +3,7 @@ import { writeContext, mutationSnapshot } from './launch-write-context.mjs'
 
 const day = (date, offset) => new Date(Date.parse(`${date}T12:00:00Z`) + offset * 86400000).toISOString().slice(0, 10)
 const fields = (h, campaign, changes = {}) => ({ campaignId: campaign.id, title: 'Evidence requires review', ownerId: h.actor, severity: 'High', dueDate: null, signal: 'Supplier evidence', mitigation: 'Review the evidence', ...changes })
-const tables = ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'notifications', 'lenses', 'automations', 'automation_runs', 'launch_analyses', 'launch_custom_fields', 'launch_readiness', 'comments', 'campaign_tags', 'launch_custom_values', 'milestone_dependencies', 'channel_notifications', 'channel_deliveries', 'channel_events', 'notification_reads', 'channel_preferences']
+const tables = ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'notifications', 'lenses', 'automations', 'automation_runs', 'launch_analyses', 'launch_custom_fields', 'launch_readiness', 'evidence_comments', 'campaign_tags', 'launch_custom_values', 'milestone_dependencies', 'channel_notifications', 'channel_deliveries', 'channel_events', 'notification_reads', 'channel_preferences']
 
 async function snapshot(db, riskId) {
  const rows = await db.batch(tables.map(table => db.prepare(`SELECT * FROM ${table}${table === 'risks' ? ' WHERE id<>?' : ''} ORDER BY 1`).bind(...table === 'risks' ? [riskId] : [])))

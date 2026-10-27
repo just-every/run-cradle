@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { createUlid,LAUNCH_APP_ID,launchEntities } from './launch-authority-runtime.mjs'
 
-const tables=['campaigns','deliverables','milestones','risks','decisions','comments','lenses','launch_custom_fields','launch_custom_values','campaign_tags','milestone_dependencies','automations','automation_runs','launch_automation_actions','workspace','workspace_settings','sample_installations','launch_sample_records','notifications','channel_notifications','channel_deliveries','channel_events','activity_entries','admission_audit','admission_events','admission_outbox','command_admissions']
+const tables=['campaigns','deliverables','milestones','risks','decisions','evidence_comments','lenses','launch_custom_fields','launch_custom_values','campaign_tags','milestone_dependencies','automations','automation_runs','launch_automation_actions','workspace','workspace_settings','sample_installations','launch_sample_records','notifications','channel_notifications','channel_deliveries','channel_events','activity_entries','admission_audit','admission_events','admission_outbox','command_admissions']
 async function snapshot(db){const rows=await db.batch(tables.map(table=>db.prepare(`SELECT * FROM ${table} ORDER BY 1`)));return rows.map(row=>row.results)}
 const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
 

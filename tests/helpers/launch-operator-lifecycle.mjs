@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {recordThread} from './record-comment-command.mjs'
 import { createUlid, LAUNCH_APP_ID, launchEntities } from './launch-authority-runtime.mjs'
 
 // OPS-004 / OPS-005 fixture: one leaver whose work stays behind, two remaining digest recipients,
@@ -47,7 +48,7 @@ export async function seedLeaver(doors, adminId) {
  const milestone = await commit('launch.milestone.create', { fields: { campaignId: owned.id, title: 'Readiness gate', ownerId: leaver.id, type: 'Launch', status: 'Not started', startDate: monday, endDate: null, conflictReason: null } }, [], leaver.session)
  const later = await commit('launch.milestone.create', { fields: { campaignId: owned.id, title: 'Beyond the lead window', ownerId: leaver.id, type: 'Launch', status: 'Not started', startDate: addDays(monday, 4), endDate: null, conflictReason: null } }, [], leaver.session)
  const control = await commit('launch.milestone.create', { fields: { campaignId: owned.id, title: 'Control gate', ownerId: stay.id, type: 'Launch', status: 'Not started', startDate: addDays(monday, 4), endDate: null, conflictReason: null } })
- const comment = await commit('launch.comment.create', { campaignId: owned.id, body: 'Supplier call is booked for Tuesday.', mentions: [] }, ref('campaign', owned), leaver.session)
+ const comment = await commit('comment.add', { subject:ref('campaign',owned)[0].ref, body: 'Supplier call is booked for Tuesday.', mentions: [] }, ref('campaign', owned), leaver.session)
  const unresolved = await commit('launch.decision.create', { fields: decisionFields(owned.id, 'Approve the press kit', leaver.id, leaver.id) }, [], leaver.session)
  const decided = await commit('launch.decision.create', { fields: decisionFields(owned.id, 'Choose the launch region', leaver.id, leaver.id) }, [], leaver.session)
  const outcome = await commit('launch.decision.outcome', { id: decided.id, outcome: 'Approved', rationale: 'Region confirmed' }, ref('decision', decided), leaver.session)
@@ -121,8 +122,8 @@ export async function verifyRemoval(doors, w, company) {
  named(detail.risks.find(item => item.id === w.risk.id).owner)
  named(detail.deliverables.find(item => item.id === w.deliverable.id).owner)
  for (const id of [w.milestone.id, w.later.id]) named(detail.milestones.find(item => item.id === id).owner)
- const comment = detail.comments.find(item => item.id === w.comment.id)
- assert.deepEqual([comment.authorId, comment.authorName], [leaver.id, 'Casey Leaver'])
+ const comment = (await recordThread(h,doors.ref('campaign',w.owned)[0].ref,doors.admin)).items.find(item=>item.id===w.comment.id)
+ assert.deepEqual([comment.author.id, comment.authorLabel], [leaver.id, 'Casey Leaver'])
  const acted = detail.activity.filter(item => item.actor?.id === leaver.id)
  assert.ok(acted.length > 5); acted.forEach(item => named(item.actor))
  named((await call(`/api/risks/${w.risk.id}`)).body.risk.owner)

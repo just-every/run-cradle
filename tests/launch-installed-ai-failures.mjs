@@ -14,7 +14,7 @@ test('[AI-004/005/006] emitted worker retains failed-call usage, preserves recor
  let mode='invalid',calls=0;const contexts=[]
  const h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');calls++;const body=await request.json();assertStructuredSchema(body.text.format.schema);const invalid=structuredClone(body.text.format.schema);invalid.properties.proposedLens.anyOf[0].properties.conditions.items.required=['field','operator'];assert.throws(()=>assertStructuredSchema(invalid));contexts.push(body.input[0].content[0].text);if(mode==='refused')return new Response('{}',{status:403});if(mode==='unavailable')return new Response('{}',{status:503});return completed(mode==='invalid'?{unexpected:'invalid schema'}:{content:'Immutable authorised readout',proposedLens:null})}})
  try{
-  const c=await campaign(h,'FAILURE');await h.command('launch.comment.create',{campaignId:c.id,body:'COMMENT_SECRET_MUST_NOT_LEAVE',mentions:[]},expected(launchEntities.campaign,c))
+  const c=await campaign(h,'FAILURE');await h.command('comment.add',{subject:expected(launchEntities.campaign,c)[0].ref,body:'COMMENT_SECRET_MUST_NOT_LEAVE',mentions:[]},expected(launchEntities.campaign,c))
   const field=value(await h.command('launch.custom-field.save',{field:{name:'Private operational detail',type:'text'}}));const patched=value(await h.command('launch.campaign.patch',{id:c.id,changes:{customFields:{[field.id]:'CUSTOM_SECRET_MUST_NOT_LEAVE'}}},expected(launchEntities.campaign,c)))
   await enable(h,3)
   const now=Date.now(),midnight=Math.floor((now+14*3600000)/86400000)*86400000+86400000-14*3600000,before=midnight-1000

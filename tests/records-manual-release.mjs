@@ -72,6 +72,9 @@ test("RECORDS-001 RECORDS-002 recovery export journey preserves references, rest
   const live=await h.runtime();assert.equal((await live.manual.recovery(h.ctx,release.releaseId)).tables.find(t=>t.entityId===schema.id).csv,csv);const plan=await live.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv,mapping:[{column:'Website',fieldId:field.id}],mergeFieldId:'_record_id'});assert.equal(plan.updates,2);assert.equal(plan.creates,0);await live.csv.commit(h.ctx,createUlid(),plan.id)
   const scope=await live.policy.scope(h.ctx,{appId:draft.appId,entityId:schema.id,purpose:'read'});assert.equal((await live.services.reader.record(h.ctx,scope,a.ref)).fields[field.id].value,'https://first.example');assert.equal((await live.services.reader.record(h.ctx,scope,b.ref)).fields[field.id].value,'https://second.example')
   await assert.rejects(live.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:csv.replace(a.id,createUlid()),mapping:[{column:'Website',fieldId:field.id}],mergeFieldId:'_record_id'}),/original record is unavailable/)
+  const prepare=h.db.prepare.bind(h.db)
+  h.db.prepare=(sql)=>{const statement=prepare(sql);if(sql.startsWith('SELECT p.rules_json FROM authority_memberships')){const first=statement.first.bind(statement);statement.first=async(...args)=>{const result=await first(...args);await prepare('UPDATE authority_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),h.session).run();return result}}return statement}
+  await assert.rejects(live.manual.recovery(h.ctx,release.releaseId),/stale/)
  }finally{h.close()}
 }]
  ]
@@ -152,14 +155,6 @@ test('[FIELD-002] conversion matrix converts reviewed values and refuses undefin
  await fieldConversionJourney()
 })
 
-
-test('RECORDS-001 RECORDS-002 recovery rechecks session after its final policy read',async()=>{
- const h=await harness();try{
-  const {draft,r}=await h.create(),edit=await r.manual.read(h.ctx,draft.appId);edit.tables[0].label='Renamed';const preview=await r.manual.preview(h.ctx,edit),release=(await r.manual.adopt(h.ctx,createUlid(),preview.id)).result.value,live=await h.runtime(),prepare=h.db.prepare.bind(h.db)
-  h.db.prepare=(sql)=>{const statement=prepare(sql);if(sql.startsWith('SELECT p.rules_json FROM authority_memberships')){const first=statement.first.bind(statement);statement.first=async(...args)=>{const result=await first(...args);await prepare('UPDATE authority_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),h.session).run();return result}}return statement}
-  await assert.rejects(live.manual.recovery(h.ctx,release.releaseId),/stale/)
- }finally{h.close()}
-})
 
 test('RECORDS-001 select lookup preserves human option metadata and rejects mismatched options',async()=>{
  const h=await harness();try{

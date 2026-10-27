@@ -1,3 +1,4 @@
+import { LAUNCH_APP_ID, launchEntities } from '../../../apps/launch/contracts'
 import type { Database } from '../shared/repository'
 import { executeBatch, millis, queryOne } from '../shared/repository'
 import type { SampleData } from './data'
@@ -68,8 +69,9 @@ export const createSampleDataRepository = (database: Database) => ({
         ...entity(entry), entry.campaignId, entry.subjectId, entry.actorId, entry.type, entry.fieldName,
         entry.previousValue, entry.nextValue, entry.message,
       ])),
-      ...data.comments.map((comment) => insert('comments', ['id', 'created_at', 'updated_at', 'version', 'campaign_id', 'author_id', 'body', 'deleted_at'], [
-        ...entity(comment), comment.campaignId, comment.authorId, comment.body, millis(comment.deletedAt),
+      ...data.comments.map((comment) => insert('evidence_comments', ['id', 'app_id', 'entity_id', 'record_id', 'author_id', 'author_kind', 'author_label', 'body', 'mentions_json', 'version', 'created_at', 'updated_at', 'deleted_at'], [
+        comment.id, LAUNCH_APP_ID, launchEntities.campaign, comment.campaignId, comment.authorId, 'human', data.operators.find(operator => operator.id === comment.authorId)!.name,
+        comment.body, '[]', comment.version, comment.createdAt, comment.updatedAt, comment.deletedAt,
       ])),
       ...data.automations.map((automation) => insert('automations', ['id', 'created_at', 'updated_at', 'version', 'name', 'trigger_type', 'trigger_config_json', 'actions_json', 'enabled', 'definition_version'], [
         ...entity(automation), automation.name, automation.triggerType, JSON.stringify(automation.triggerConfig),

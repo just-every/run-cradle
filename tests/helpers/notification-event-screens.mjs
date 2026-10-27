@@ -1,3 +1,4 @@
+import {recordAction,recordInput} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import {verifyNotificationDeliveryFailures} from './notification-delivery-failures.mjs'
 import {verifyNotificationEmailPolicy} from './notification-email-policy.mjs'
@@ -16,7 +17,7 @@ export async function verifyNotificationEventScreens({h,page,command,capture,set
  try{
 
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
- const actorCommand=async(action,input,expected=[],commandId=createUlid())=>{const response=await h.request(actor.session,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId,input,expected})});assert.equal(response.status,200,await response.clone().text());return(await response.json()).data.value}
+ const actorCommand=async(action,input,expected=[],commandId=createUlid())=>{const response=await h.request(actor.session,`/api/v1/commands/${recordAction(action)}`,{method:'POST',body:JSON.stringify({commandId,input:recordInput(action,input,expected),expected})});assert.equal(response.status,200,await response.clone().text());return(await response.json()).data.value}
  const campaign=(await command('campaign.create',{fields:{code:`EVENT-${width}`,name:'One notification per event',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Prove event recipient identity',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})).data.value
  // The event author can read every referenced subject on replay even though the recipient holds all three decision roles.
  const eventId=createUlid(),input={fields:{campaignId:campaign.id,riskId:null,supersedesId:null,title:'One person holds three decision roles',requesterId:h.owner,assigneeId:h.owner,priority:'High',dueAt:'2027-01-01T12:00:00.000Z',recommendation:'Review once',impact:'Notification identity'}}
@@ -24,8 +25,8 @@ export async function verifyNotificationEventScreens({h,page,command,capture,set
  const roles=await h.db.prepare('SELECT c.owner_id,d.requester_id,d.assignee_id FROM decisions d JOIN campaigns c ON c.id=d.campaign_id WHERE d.id=?').bind(decision.id).first()
  assert.deepEqual(roles,{owner_id:h.owner,requester_id:h.owner,assignee_id:h.owner},'NOTIFY-006 one recipient holds campaign-owner, requester and assignee roles on the same event')
  const worker=await h.runtime.getWorker(),flush=()=>worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()})
- const notices=async subject=>(await h.db.prepare('SELECT n.*,c.last_event_at FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.subject_id=?').bind(subject).all()).results
- const deliveries=async subject=>(await h.db.prepare('SELECT d.* FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE n.subject_id=?').bind(subject).all()).results
+ const notices=async subject=>(await h.db.prepare('SELECT n.*,c.last_event_at FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.subject_id=? OR n.id IN (SELECT notification_id FROM channel_events WHERE event_id=?)').bind(subject,subject).all()).results
+ const deliveries=async subject=>(await h.db.prepare('SELECT d.* FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE n.subject_id=? OR n.id IN (SELECT notification_id FROM channel_events WHERE event_id=?)').bind(subject,subject).all()).results
  const oneMail=async row=>{assert.equal(row.state,'accepted');assert.equal((await h.mailMessages()).filter(m=>m.custom_args?.rer_delivery_id===row.group_id).length,1,'NOTIFY-006 exactly one network-edge email for the event recipient')}
  await flush()
  const first=await notices(decision.id),firstDeliveries=await deliveries(decision.id)
@@ -49,7 +50,7 @@ export async function verifyNotificationEventScreens({h,page,command,capture,set
  assert.deepEqual(await deliveries(decision.id),firstDeliveries,'NOTIFY-006 unread coalescing keeps the original one-email delivery');await oneMail(firstDeliveries[0])
  await page.reload();await page.locator(`#notification-${first[0].id}`).waitFor();await capture('notification-unread-coalesced')
  const beforeSelfMail=(await h.mailMessages()).length,currentCampaign=await h.db.prepare('SELECT id,version FROM campaigns WHERE id=?').bind(campaign.id).first()
- const comment=await actorCommand('comment.create',{campaignId:campaign.id,body:'Self action reaches only the other recipients',mentions:[actor.id,h.owner,other.id]},ref('campaign',currentCampaign));await flush()
+ const comment=await actorCommand('comment.add',{campaignId:campaign.id,body:'Self action reaches only the other recipients',mentions:[actor.id,h.owner,other.id]},ref('campaign',currentCampaign));await flush()
  const mentioned=await notices(comment.id),mentionedDeliveries=await deliveries(comment.id)
  assert.deepEqual(mentioned.map(n=>n.operator_id).sort(),[h.owner,other.id].sort(),'NOTIFY-006 the actor receives no in-app notice while both other operators do')
  assert.deepEqual(mentionedDeliveries.map(n=>n.operator_id).sort(),[h.owner,other.id].sort(),'NOTIFY-006 the actor receives no email delivery while both other operators do')

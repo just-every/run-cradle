@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {recordThread} from './record-comment-command.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import { LAUNCH_APP_ID } from './launch-authority-runtime.mjs'
 
@@ -38,7 +39,7 @@ export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  const literals = [before.name, before.email]
  const baseId = (await h.db.prepare('SELECT base_id FROM cradle_base_operators WHERE principal_id=?').bind(leaver.id).first()).base_id
  const authored = {
-  comments: await count('SELECT COUNT(*) n FROM comments WHERE author_id=?', leaver.id),
+  comments: await count('SELECT COUNT(*) n FROM evidence_comments WHERE author_id=?', leaver.id),
   activity: await count('SELECT COUNT(*) n FROM activity_entries WHERE actor_id=?', leaver.id),
   outcomes: await count('SELECT COUNT(*) n FROM decisions WHERE outcome_by_id=?', leaver.id),
  }
@@ -81,15 +82,15 @@ export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  assert.equal(reads.risk.risk.owner.name, label)
  assert.equal(reads.milestone.milestone.owner.name, label)
  assert.deepEqual([reads.decided.decision.requester.name, reads.decided.decision.assignee.name], [label, label])
- const comment = reads.owned.comments.find(item => item.id === w.comment.id)
- assert.equal(comment.authorName, label); assert.equal(comment.body, 'Supplier call is booked for Tuesday.')
+ const comment = (await recordThread(h,doors.ref('campaign',w.owned)[0].ref,doors.admin)).items.find(item=>item.id===w.comment.id)
+ assert.equal(comment.authorLabel, label); assert.equal(comment.body, 'Supplier call is booked for Tuesday.')
  assert.ok(reads.owned.activity.filter(item => item.actor?.id === leaver.id).every(item => item.actor.name === label))
  assert.deepEqual(await copiesOf(h, literals), [], 'Their name and email appear nowhere else')
 
  // Their notifications and delivery records are deleted; what they authored stays under the label.
  for (const table of ['notifications', 'channel_deliveries', 'notification_reads', 'channel_preferences']) assert.equal(await count(`SELECT COUNT(*) n FROM ${table} WHERE operator_id=?`, leaver.id), 0, `${table} are deleted`)
  assert.deepEqual({
-  comments: await count('SELECT COUNT(*) n FROM comments WHERE author_id=?', leaver.id),
+  comments: await count('SELECT COUNT(*) n FROM evidence_comments WHERE author_id=?', leaver.id),
   activity: await count('SELECT COUNT(*) n FROM activity_entries WHERE actor_id=?', leaver.id),
   outcomes: await count("SELECT COUNT(*) n FROM decisions WHERE outcome_by_id=? AND state='Approved'", leaver.id),
  }, authored, 'Comments, activity entries and decision outcomes remain')

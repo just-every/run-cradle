@@ -1,3 +1,4 @@
+import {recordAction,recordInput} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import {notificationKinds,notificationKindsWithoutProducer} from '../../src/domains/channels/ports.ts'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
@@ -8,7 +9,7 @@ const paths={
  'decision-assigned':'decision.create',
  'critical-risk-escalated':'risk.escalate',
  readiness:'emitted readiness schedule',
- 'comment-mentioned':'comment.create',
+ 'comment-mentioned':'comment.add',
  'automation-failed':'saved automation with disabled AI',
  'decision-overdue':'emitted overdue schedule',
  outage:'connection.check and expired user automation approval',
@@ -25,7 +26,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
   assert.equal(response.status,200,`${action}: ${await response.clone().text()}`)
   const data=(await response.json()).data;assert.equal(data.state,'committed');return data.value
  }
- const launch=(action,input,expected=[])=>request(actor.session,'launch.'+action,input,expected)
+ const launch=(action,input,expected=[])=>request(actor.session,recordAction(action),recordInput(action,input,expected),expected)
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const settings=async()=>{const response=await h.request(h.ownerSession,'/api/v1/settings');assert.equal(response.status,200);return(await response.json()).data}
  const original=await settings(),preferences=async(session)=>{const response=await h.request(session,'/api/v1/settings');assert.equal(response.status,200);return(await response.json()).data.preferences}
@@ -163,7 +164,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
     for(const [index,operator]of [h.owner,other.id].entries()){
      const c=await campaign(operator,`synthetic-cradle-${phase*20+Object.keys(paths).indexOf(kind)*2+index}`)
      if(failure)await launch('campaign.patch',{id:c.id,changes:{statusSummary:'Trigger the disabled-AI action'}},ref('campaign',c))
-     if(kind==='comment-mentioned')await launch('comment.create',{campaignId:c.id,body:'Synthetic muted delivery event',mentions:[operator]},ref('campaign',c))
+     if(kind==='comment-mentioned')await launch('comment.add',{campaignId:c.id,body:'Synthetic muted delivery event',mentions:[operator]},ref('campaign',c))
      if(kind==='decision-assigned'||kind==='decision-overdue')subjects.push((await launch('decision.create',{fields:{campaignId:c.id,riskId:null,supersedesId:null,title:'Synthetic delivery decision',requesterId:operator,assigneeId:operator,priority:'High',dueAt:new Date(kind==='decision-overdue'?at-20*60000:Date.parse('2099-01-01T12:00:00Z')).toISOString(),recommendation:'Review',impact:'Delivery matrix'}})).id)
      if(kind==='critical-risk-escalated'){
       const risk=await launch('risk.create',{fields:{campaignId:c.id,title:'Synthetic Critical risk',ownerId:operator,severity:'Critical',dueDate:null,signal:'Delivery probe',mitigation:'Review'}})
