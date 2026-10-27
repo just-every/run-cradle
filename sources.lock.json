@@ -13182,7 +13182,7 @@
       "executable": false
     },
     "tests/ui-launch-authority-browser.mjs": {
-      "sha256": "257740012a24f1d8b38ddda30656f1031d5f57e09875087f50f9a835007e3697",
+      "sha256": "f5d48931857a6288c2c7cba3ccf79245c0d995f7b38f39a0cc8336eddf03d4a4",
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
@@ -13198,7 +13198,7 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "78a5a209984de156d26e533e539374cb99a721ea0a051b422aaa39d98bde154f",
+      "sha256": "3f241630c732ba25966331a282d0e31f4069a481981f3ca8cfab2bddea6b3222",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
