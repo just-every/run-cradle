@@ -1,8 +1,8 @@
-import { activityEntries, automationRuns, automations, comments, decisions, lenses, notificationReads, notifications, risks, sampleInstallations } from './operations'
+import { activityEntries, automationRuns, automations, decisions, lenses, notificationReads, notifications, risks, sampleInstallations } from './operations'
 import { campaignTags, campaigns, deliverables, milestoneDependencies, milestones } from './portfolio'
 import { operators, sessions, workspace, workspaceSettings } from './foundation'
 
-export { activityEntries, automationRuns, automations, campaignTags, campaigns, comments, decisions, deliverables, lenses, milestoneDependencies, milestones, notificationReads, notifications, operators, risks, sampleInstallations, sessions, workspace, workspaceSettings }
+export { activityEntries, automationRuns, automations, campaignTags, campaigns, decisions, deliverables, lenses, milestoneDependencies, milestones, notificationReads, notifications, operators, risks, sampleInstallations, sessions, workspace, workspaceSettings }
 
 export const schema = {
   activityEntries,
@@ -10,7 +10,6 @@ export const schema = {
   automations,
   campaignTags,
   campaigns,
-  comments,
   decisions,
   deliverables,
   lenses,
