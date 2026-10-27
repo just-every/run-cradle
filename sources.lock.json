@@ -7170,7 +7170,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.tsx": {
-      "sha256": "1dfc1028b4274c04945de099a00b6b20c0c0407bd1d8ae2f1efba6618fac2665",
+      "sha256": "ce7963095ec79eb11c5b5c60c907dc6e8f6a594d0962d2cc0b8c644d9c5a302c",
       "executable": false
     },
     "src/core/features/portfolio/ui/index.tsx": {
@@ -12414,7 +12414,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-review.mjs": {
-      "sha256": "e273a56d503fd59b61d236125057a804c660e3d55d409a78d5c4418071e08bf6",
+      "sha256": "612f55da409d64102d8797a37a77e6a3c35819386794ad1f49fdc46c04c24d49",
       "executable": false
     },
     "tests/helpers/records-browser-runtime.mjs": {
