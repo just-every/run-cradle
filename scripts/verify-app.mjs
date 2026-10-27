@@ -15,6 +15,40 @@ export async function verificationPlan() {
     }
   }
   if (plan.push.filter(shard => shard.hosted).length !== 1) throw Error('Push verification must include exactly one hosted production check');
+  if (!plan.costMap || !plan.push.some(shard => shard.name === plan.costMap.defaultShard)) throw Error('Missing named default cost-map shard');
+  if (plan.push.length > 8) throw Error('Push verification permits at most eight shard jobs');
+  const {nodeSuite} = await import('./verify-suite.mjs');
+  const units = plan.costMap.units, assigned = new Set();
+  if (!units || typeof units !== 'object') throw Error('Missing verification cost map');
+  for (const [id, unit] of Object.entries(units)) {
+    if (!/^[a-zA-Z0-9_./:-]+$/.test(id) || !Number.isFinite(unit.seconds) || unit.seconds <= 0) throw Error(`Invalid cost-map weight: ${id}`);
+    if (unit.suite) {
+      if (!plan.costMap.suites.includes(unit.suite) || !(await nodeSuite(unit.suite)).files.includes(unit.file)) throw Error(`Stale cost-map file: ${unit.file}; remove its weight and assignment`);
+      await readFile(new URL('../' + unit.file, import.meta.url));
+    } else if (typeof unit.command !== 'string' || !unit.command.trim() || unit.command.includes('--test-shard')) throw Error(`Invalid cost-map command: ${id}`);
+    if (typeof unit.exclusive !== 'boolean' || typeof unit.browser !== 'boolean') throw Error(`Missing unit execution policy: ${id}`);
+  }
+  for (const suite of plan.costMap.suites) {
+    const {files} = await nodeSuite(suite);
+    for (const file of files) {
+      const matches = Object.values(units).filter(unit => unit.suite === suite && unit.file === file);
+      if (!matches.length) throw Error(`Unweighted suite file: ${file}; default shard ${plan.costMap.defaultShard}; add its weight in verification.json and explicitly assign it before CI can run`);
+      if (matches.length !== 1) throw Error(`Duplicate cost-map file: ${file}`);
+    }
+  }
+  for (const shard of plan.push) {
+    if (!Array.isArray(shard.lanes) || shard.lanes.length !== 3 || !Array.isArray(shard.isolated) || shard.commands.length !== 1 || shard.commands[0] !== `node scripts/verify-suite.mjs --lanes ${shard.name}`) throw Error(`Invalid lane wiring: ${shard.name}`);
+    for (const [exclusive, ids] of [[true, shard.isolated], ...shard.lanes.map(ids => [false, ids])]) {
+      if (!Array.isArray(ids)) throw Error(`Missing lane: ${shard.name}`);
+      for (const id of ids) {
+        const unit = units[id];
+        if (!unit || assigned.has(id)) throw Error(`Unknown or multiply assigned cost-map unit: ${id}`);
+        if (unit.exclusive !== exclusive || (unit.browser && !shard.browser)) throw Error(`Unsafe lane policy: ${id}`);
+        assigned.add(id);
+      }
+    }
+  }
+  for (const id of Object.keys(units)) if (!assigned.has(id)) throw Error(`Unassigned cost-map unit: ${id}`);
   return plan;
 }
 

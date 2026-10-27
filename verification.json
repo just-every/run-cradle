@@ -1,289 +1,566 @@
 {
+  "costMap": {
+    "defaultShard": "balanced-8",
+    "suites": [
+      "test:launch"
+    ],
+    "units": {
+      "foundation-1": {
+        "seconds": 10,
+        "command": "pnpm test:smoke",
+        "browser": false,
+        "exclusive": false
+      },
+      "foundation-2": {
+        "seconds": 90,
+        "command": "pnpm test:start",
+        "browser": true,
+        "exclusive": false
+      },
+      "foundation-3": {
+        "seconds": 10,
+        "command": "pnpm test:integration",
+        "browser": false,
+        "exclusive": false
+      },
+      "foundation-4": {
+        "seconds": 20,
+        "command": "pnpm test:domains",
+        "browser": false,
+        "exclusive": false
+      },
+      "foundation-5": {
+        "seconds": 90,
+        "command": "pnpm test:lifecycle-erasure",
+        "browser": false,
+        "exclusive": true
+      },
+      "foundation-records-1": {
+        "seconds": 40,
+        "command": "pnpm test:execution-resolution",
+        "browser": false,
+        "exclusive": false
+      },
+      "foundation-records-2": {
+        "seconds": 40,
+        "command": "pnpm test:migration",
+        "browser": false,
+        "exclusive": false
+      },
+      "foundation-records-3": {
+        "seconds": 10,
+        "command": "pnpm test:records",
+        "browser": false,
+        "exclusive": false
+      },
+      "foundation-records-4": {
+        "seconds": 105,
+        "command": "pnpm test:foundation",
+        "browser": true,
+        "exclusive": false
+      },
+      "repairs": {
+        "seconds": 313,
+        "command": "pnpm test:repairs",
+        "browser": true,
+        "exclusive": false
+      },
+      "repairs-execution": {
+        "seconds": 46,
+        "command": "pnpm test:execution-resolution:browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "repairs-ui": {
+        "seconds": 72,
+        "command": "pnpm test:ui",
+        "browser": true,
+        "exclusive": false
+      },
+      "repairs-browser": {
+        "seconds": 66,
+        "command": "pnpm test:repairs:browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "repairs-outcome": {
+        "seconds": 466,
+        "command": "pnpm test:repairs:outcome",
+        "browser": true,
+        "exclusive": false
+      },
+      "base": {
+        "seconds": 506,
+        "command": "pnpm test:base",
+        "browser": false,
+        "exclusive": false
+      },
+      "launch-operator-doors": {
+        "seconds": 114,
+        "command": "pnpm test:launch:doors",
+        "browser": true,
+        "exclusive": false
+      },
+      "launch-doors": {
+        "seconds": 529,
+        "command": "pnpm test:launch:walkthrough",
+        "browser": true,
+        "exclusive": false
+      },
+      "launch-notifications": {
+        "seconds": 359,
+        "command": "pnpm test:launch:notifications",
+        "browser": true,
+        "exclusive": false
+      },
+      "launch-recut": {
+        "seconds": 46,
+        "command": "pnpm test:recut:browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "records-native-1": {
+        "seconds": 140,
+        "command": "pnpm test:records:release",
+        "browser": false,
+        "exclusive": false
+      },
+      "records-native-2": {
+        "seconds": 185,
+        "command": "pnpm test:records:base-native",
+        "browser": false,
+        "exclusive": false
+      },
+      "records-native-3": {
+        "seconds": 43,
+        "command": "pnpm test:admission",
+        "browser": false,
+        "exclusive": false
+      },
+      "records-exits": {
+        "seconds": 158,
+        "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-json-metadata-native.mjs tests/records-base-json-http.mjs tests/records-base-required.mjs tests/records-base-export-policy.mjs tests/records-base-metadata-conflicts.mjs tests/records-base-edge-return.mjs tests/records-base-exit-restart.mjs tests/records-csv-correspondence-http.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "records-roundtrips": {
+        "seconds": 471,
+        "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-exits.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "records-browser-desktop": {
+        "seconds": 326,
+        "command": "CRADLE_RECORDS_BROWSER_WIDTH=1440 pnpm test:records:browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "records-browser-phone": {
+        "seconds": 454,
+        "command": "CRADLE_RECORDS_BROWSER_WIDTH=390 pnpm test:records:browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "records-base-browser-1": {
+        "seconds": 170,
+        "command": "pnpm test:records:base-browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "records-base-browser-2": {
+        "seconds": 83,
+        "command": "pnpm test:records:base-exits-browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "automations-native": {
+        "seconds": 402,
+        "command": "pnpm test:user-automations",
+        "browser": false,
+        "exclusive": false
+      },
+      "automations-1": {
+        "seconds": 180,
+        "command": "pnpm test:user-automations:browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "automations-2": {
+        "seconds": 75,
+        "command": "pnpm test:admission:browser",
+        "browser": true,
+        "exclusive": false
+      },
+      "identity-1": {
+        "seconds": 160,
+        "command": "pnpm test:oidc",
+        "browser": false,
+        "exclusive": false
+      },
+      "identity-2": {
+        "seconds": 436,
+        "command": "node --test --test-concurrency=1 tests/installed-home.mjs tests/public-document-runtime.mjs tests/local-auth-runtime.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "runtime-1": {
+        "seconds": 16,
+        "command": "pnpm test:contract",
+        "browser": true,
+        "exclusive": false
+      },
+      "runtime-2": {
+        "seconds": 5,
+        "command": "pnpm source:check",
+        "browser": true,
+        "exclusive": false
+      },
+      "runtime-3": {
+        "seconds": 7,
+        "command": "pnpm check:deployment-spec",
+        "browser": true,
+        "exclusive": false
+      },
+      "records-calendar": {
+        "seconds": 395,
+        "command": "env CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar",
+        "browser": true,
+        "exclusive": false
+      },
+      "records-calendar-sync": {
+        "seconds": 480,
+        "command": "env CRADLE_RECORDS_CALENDAR_GROUP=sync pnpm test:calendar",
+        "browser": true,
+        "exclusive": true
+      },
+      "retained-archive": {
+        "seconds": 523,
+        "command": "node --test --test-concurrency=1 tests/rer-retained-archive.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "retained-integrations": {
+        "seconds": 314,
+        "command": "node --test --test-concurrency=1 tests/rer-integrations-archive.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-authority-browser.mjs": {
+        "seconds": 137,
+        "suite": "test:launch",
+        "file": "tests/launch-authority-browser.mjs",
+        "browser": true,
+        "exclusive": false
+      },
+      "tests/launch-installed-ai-failures.mjs": {
+        "seconds": 155,
+        "suite": "test:launch",
+        "file": "tests/launch-installed-ai-failures.mjs",
+        "browser": false,
+        "exclusive": true
+      },
+      "tests/launch-installed-event-control.mjs": {
+        "seconds": 289,
+        "suite": "test:launch",
+        "file": "tests/launch-installed-event-control.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-installed-network-cancel.mjs": {
+        "seconds": 56,
+        "suite": "test:launch",
+        "file": "tests/launch-installed-network-cancel.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-installed-retries.mjs": {
+        "seconds": 188,
+        "suite": "test:launch",
+        "file": "tests/launch-installed-retries.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-installed-runtime.mjs": {
+        "seconds": 123,
+        "suite": "test:launch",
+        "file": "tests/launch-installed-runtime.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-installed-schedules.mjs": {
+        "seconds": 8,
+        "suite": "test:launch",
+        "file": "tests/launch-installed-schedules.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-installed-ui.mjs": {
+        "seconds": 69,
+        "suite": "test:launch",
+        "file": "tests/launch-installed-ui.mjs",
+        "browser": true,
+        "exclusive": false
+      },
+      "tests/launch-operator-doors.mjs": {
+        "seconds": 208,
+        "suite": "test:launch",
+        "file": "tests/launch-operator-doors.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-optional-fields.mjs": {
+        "seconds": 73,
+        "suite": "test:launch",
+        "file": "tests/launch-optional-fields.mjs",
+        "browser": true,
+        "exclusive": false
+      },
+      "tests/launch-production-composition.mjs": {
+        "seconds": 58,
+        "suite": "test:launch",
+        "file": "tests/launch-production-composition.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-scoped-authority.mjs": {
+        "seconds": 160,
+        "suite": "test:launch",
+        "file": "tests/launch-scoped-authority.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-search-authority.mjs": {
+        "seconds": 50,
+        "suite": "test:launch",
+        "file": "tests/launch-search-authority.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-setup-race.mjs": {
+        "seconds": 94,
+        "suite": "test:launch",
+        "file": "tests/launch-setup-race.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-write-authority.mjs": {
+        "seconds": 152,
+        "suite": "test:launch",
+        "file": "tests/launch-write-authority.mjs",
+        "browser": false,
+        "exclusive": false
+      },
+      "tests/launch-write-effects.mjs": {
+        "seconds": 323,
+        "suite": "test:launch",
+        "file": "tests/launch-write-effects.mjs",
+        "browser": false,
+        "exclusive": true
+      },
+      "tests/launch-write-service.mjs": {
+        "seconds": 52,
+        "suite": "test:launch",
+        "file": "tests/launch-write-service.mjs",
+        "browser": false,
+        "exclusive": false
+      }
+    }
+  },
   "push": [
     {
-      "name": "foundation",
+      "name": "balanced-1",
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:smoke",
-        "pnpm test:start",
-        "pnpm test:integration",
-        "pnpm test:domains",
-        "pnpm test:lifecycle-erasure"
+        "node scripts/verify-suite.mjs --lanes balanced-1"
+      ],
+      "isolated": [],
+      "lanes": [
+        [
+          "retained-integrations"
+        ],
+        [
+          "launch-notifications"
+        ],
+        [
+          "launch-doors"
+        ]
       ]
     },
     {
-      "name": "foundation-records",
+      "name": "balanced-2",
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:execution-resolution",
-        "pnpm test:migration",
-        "pnpm test:records",
-        "pnpm test:foundation"
+        "node scripts/verify-suite.mjs --lanes balanced-2"
+      ],
+      "isolated": [
+        "tests/launch-write-effects.mjs"
+      ],
+      "lanes": [
+        [
+          "identity-1",
+          "foundation-records-1"
+        ],
+        [
+          "tests/launch-write-authority.mjs",
+          "tests/launch-search-authority.mjs"
+        ],
+        [
+          "records-native-1",
+          "tests/launch-installed-ui.mjs"
+        ]
       ]
     },
     {
-      "name": "repairs",
+      "name": "balanced-3",
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:repairs"
+        "node scripts/verify-suite.mjs --lanes balanced-3"
+      ],
+      "isolated": [
+        "tests/launch-installed-ai-failures.mjs",
+        "foundation-5"
+      ],
+      "lanes": [
+        [
+          "records-native-2",
+          "records-base-browser-2",
+          "foundation-3"
+        ],
+        [
+          "automations-1",
+          "foundation-2",
+          "foundation-records-3"
+        ],
+        [
+          "records-base-browser-1",
+          "tests/launch-setup-race.mjs",
+          "foundation-4"
+        ]
       ]
     },
     {
-      "name": "repairs-execution",
+      "name": "balanced-4",
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:execution-resolution:browser"
+        "node scripts/verify-suite.mjs --lanes balanced-4"
+      ],
+      "isolated": [
+        "records-calendar-sync"
+      ],
+      "lanes": [
+        [
+          "launch-recut"
+        ],
+        [
+          "repairs-execution"
+        ],
+        [
+          "records-native-3"
+        ]
       ]
     },
     {
-      "name": "repairs-ui",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:ui"
-      ]
-    },
-    {
-      "name": "repairs-browser",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:repairs:browser"
-      ]
-    },
-    {
-      "name": "repairs-outcome",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:repairs:outcome"
-      ]
-    },
-    {
-      "name": "base",
+      "name": "balanced-5",
       "browser": false,
       "hosted": false,
       "commands": [
-        "pnpm test:base"
+        "node scripts/verify-suite.mjs --lanes balanced-5"
+      ],
+      "isolated": [],
+      "lanes": [
+        [
+          "retained-archive"
+        ],
+        [
+          "base",
+          "foundation-records-2"
+        ],
+        [
+          "records-roundtrips",
+          "tests/launch-installed-network-cancel.mjs"
+        ]
       ]
     },
     {
-      "name": "launch-1",
+      "name": "balanced-6",
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 1/8"
+        "node scripts/verify-suite.mjs --lanes balanced-6"
+      ],
+      "isolated": [],
+      "lanes": [
+        [
+          "repairs-outcome",
+          "tests/launch-production-composition.mjs"
+        ],
+        [
+          "records-browser-phone",
+          "repairs-ui"
+        ],
+        [
+          "identity-2",
+          "automations-2",
+          "foundation-1"
+        ]
       ]
     },
     {
-      "name": "launch-5",
+      "name": "balanced-7",
       "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 5/8"
+        "node scripts/verify-suite.mjs --lanes balanced-7"
+      ],
+      "isolated": [],
+      "lanes": [
+        [
+          "automations-native",
+          "launch-operator-doors",
+          "tests/launch-installed-schedules.mjs"
+        ],
+        [
+          "records-calendar",
+          "tests/launch-installed-runtime.mjs"
+        ],
+        [
+          "records-browser-desktop",
+          "tests/launch-authority-browser.mjs",
+          "repairs-browser"
+        ]
       ]
     },
     {
-      "name": "launch-2",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "node scripts/verify-suite.mjs test:launch 2/4"
-      ]
-    },
-    {
-      "name": "launch-3",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "node scripts/verify-suite.mjs test:launch 3/8"
-      ]
-    },
-    {
-      "name": "launch-7",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "node scripts/verify-suite.mjs test:launch 7/8"
-      ]
-    },
-    {
-      "name": "launch-4",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "node scripts/verify-suite.mjs test:launch 4/8"
-      ]
-    },
-    {
-      "name": "launch-8",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "node scripts/verify-suite.mjs test:launch 8/16"
-      ]
-    },
-    {
-      "name": "launch-effects",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "node scripts/verify-suite.mjs test:launch 16/16"
-      ]
-    },
-    {
-      "name": "launch-operator-doors",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:launch:doors"
-      ]
-    },
-    {
-      "name": "launch-doors",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:launch:walkthrough"
-      ]
-    },
-    {
-      "name": "launch-notifications",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:launch:notifications"
-      ]
-    },
-    {
-      "name": "launch-recut",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:recut:browser"
-      ]
-    },
-    {
-      "name": "records-native",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "pnpm test:records:release",
-        "pnpm test:records:base-native",
-        "pnpm test:admission"
-      ]
-    },
-    {
-      "name": "records-exits",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-json-metadata-native.mjs tests/records-base-json-http.mjs tests/records-base-required.mjs tests/records-base-export-policy.mjs tests/records-base-metadata-conflicts.mjs tests/records-base-edge-return.mjs tests/records-base-exit-restart.mjs tests/records-csv-correspondence-http.mjs"
-      ]
-    },
-    {
-      "name": "records-roundtrips",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-base-exits.mjs"
-      ]
-    },
-    {
-      "name": "records-browser-desktop",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "CRADLE_RECORDS_BROWSER_WIDTH=1440 pnpm test:records:browser"
-      ]
-    },
-    {
-      "name": "records-browser-phone",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "CRADLE_RECORDS_BROWSER_WIDTH=390 pnpm test:records:browser"
-      ]
-    },
-    {
-      "name": "records-base-browser",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:records:base-browser",
-        "pnpm test:records:base-exits-browser"
-      ]
-    },
-    {
-      "name": "automations-native",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "pnpm test:user-automations"
-      ]
-    },
-    {
-      "name": "automations",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "pnpm test:user-automations:browser",
-        "pnpm test:admission:browser"
-      ]
-    },
-    {
-      "name": "identity",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "pnpm test:oidc",
-        "node --test --test-concurrency=1 tests/installed-home.mjs tests/public-document-runtime.mjs tests/local-auth-runtime.mjs"
-      ]
-    },
-    {
-      "name": "runtime",
+      "name": "balanced-8",
       "browser": true,
       "hosted": true,
       "commands": [
-        "pnpm test:contract",
-        "pnpm source:check",
-        "pnpm check:deployment-spec"
-      ]
-    },
-    {
-      "name": "records-calendar",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "env CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
-      ]
-    },
-    {
-      "name": "records-calendar-sync",
-      "browser": true,
-      "hosted": false,
-      "commands": [
-        "env CRADLE_RECORDS_CALENDAR_GROUP=sync pnpm test:calendar"
-      ]
-    },
-    {
-      "name": "retained-archive",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "node --test --test-concurrency=1 tests/rer-retained-archive.mjs"
-      ]
-    },
-    {
-      "name": "retained-integrations",
-      "browser": false,
-      "hosted": false,
-      "commands": [
-        "node --test --test-concurrency=1 tests/rer-integrations-archive.mjs"
+        "node scripts/verify-suite.mjs --lanes balanced-8"
+      ],
+      "isolated": [],
+      "lanes": [
+        [
+          "tests/launch-operator-doors.mjs",
+          "tests/launch-installed-retries.mjs",
+          "foundation-records-4",
+          "runtime-1",
+          "runtime-3"
+        ],
+        [
+          "repairs",
+          "tests/launch-scoped-authority.mjs",
+          "tests/launch-write-service.mjs"
+        ],
+        [
+          "tests/launch-installed-event-control.mjs",
+          "records-exits",
+          "tests/launch-optional-fields.mjs",
+          "runtime-2"
+        ]
       ]
     }
   ],

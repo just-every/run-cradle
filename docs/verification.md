@@ -6,18 +6,33 @@ with `PLAYWRIGHT_SKIP_BROWSER_GC=1 pnpm exec playwright install chromium`.
 
 Push and pull-request CI builds the app once, checks types and the managed setup
 specification, then shares that production build across the parallel shards in
-`verification.json`. Every push shard must pass the final `verify` job. The runtime
+`verification.json`. Every push shard must pass the final `verify` job. The hosted
 shard calls `rer verify` with only its declared application commands, retaining
 rer's production hosted-output and hydration checks. The other shards call the
 application runner directly. All invocations retain the 200-test budget check.
 
-The launch Node suite is partitioned into four file shards from its package script,
-so newly added files join the same public suite automatically. Browser shards
-install Chromium; their dependency/browser cache keys are separate from tool-only
-shards. Disk cleanup runs only if the runner has less than 20 GiB free.
+Push verification has eight explicitly assigned cost-map shards, each with three
+concurrent lanes. `verification.json` records each command or Launch suite file's
+weight in seconds, its lane and any exclusive timing-probe policy. Assignments do
+not depend on package file order: the Launch file list is expanded from its package
+script, and each file runs directly with that script's loader and Node options.
+There is no Node `--test-shard` split. An unweighted new file is named in a fatal
+plan diagnostic with the default shard (`balanced-8`) and an instruction to add its
+weight and explicit assignment. Stale weights and missing or duplicate assignments
+also fail before CI emits a matrix. Updating a weight never relocates another unit.
 
-The `launch-notifications` shard keeps `pnpm test:launch:notifications` as its
-single command and contract registration. That command runs each declared
+Each lane copies the tracked checkout into a private workspace, shares the production build and dependencies, retains a Git link for real clone
+journeys, and owns its temporary/state directories,
+receipts and an authority port below Linux’s ephemeral range. Timing-budget probes run exclusively before any of
+the job's concurrent lanes start. The runner waits for every unit, preserves any
+failure and prints `VERIFY_UNIT` wall timings plus one GitHub notice annotation per
+job. `VERIFY_NPROC` and `VERIFY_RESOURCES` report runner CPU and memory capacity.
+Browser shards install Chromium; dependency/browser cache keys remain separate
+from tool-only shards. Disk cleanup runs only if the runner has less than 20 GiB
+free. The nightly tier retains its three original serial shards.
+
+The `launch-notifications` cost-map unit keeps `pnpm test:launch:notifications`
+as its command and contract registration. That command runs each declared
 accessibility width in a separate Node process concurrently. Each process owns
 its listener port, temporary D1 stores, browser and provider captures, including
 its own workerd descendants for interruption tests. Within a width, preferences,
@@ -62,6 +77,7 @@ a declared plan, reusable release/nightly workflow, cancellation of superseded
 runs, browser-aware cache keys and one hosted-output worker. Cradle retains a
 shared build artifact to avoid rebuilding the app in each worker.
 
-Push Verify targets a total of 15 minutes or less. The new split needs a completed
+Push Verify targets a total of 10 minutes or less, at most eight shard jobs and a
+longest job no more than 1.5 times the mean. The cost-map split needs a completed
 GitHub Actions run on the final candidate before that target can be reported as
 measured; the previous run is baseline evidence only.

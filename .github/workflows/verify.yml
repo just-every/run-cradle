@@ -63,7 +63,9 @@ jobs:
       - id: plan
         env:
           TIER: ${{ inputs.tier || 'push' }}
-        run: echo "matrix=$(node scripts/verify-ci.mjs --matrix "$TIER")" >> "$GITHUB_OUTPUT"
+        run: |
+          matrix=$(node scripts/verify-ci.mjs --matrix "$TIER")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
       - run: npm install --global pnpm@10.12.4
       - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:

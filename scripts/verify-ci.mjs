@@ -5,6 +5,7 @@ const [mode, tier] = process.argv.slice(2);
 if (mode === '--matrix') {
   if (!['push', 'all'].includes(tier)) throw Error('Usage: verify-ci.mjs --matrix push|all');
   const shards = tier === 'push' ? plan.push : [...plan.push, ...plan.nightly];
+  // verificationPlan rejects unweighted files before emitting any runnable matrix.
   console.log(JSON.stringify({include: shards.map(({name, browser}) => ({name, browser}))}));
 } else {
   const shard = [...plan.push, ...plan.nightly].find(item => item.name === mode);

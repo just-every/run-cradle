@@ -2910,7 +2910,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "f963f226a1c7f4885b99fbe420d785ff6945e17e57ffe939492bc4c339df6218",
+      "sha256": "1571a238af2b85ce541c0251315d121ad69b05892fc056e417e0c6c2929f47ac",
       "executable": false
     },
     ".gitignore": {
@@ -4550,7 +4550,7 @@
       "executable": false
     },
     "docs/verification.md": {
-      "sha256": "379bbba4592d976cf5c678c14a620e835430c1680d4200c998ecc1636491ee5e",
+      "sha256": "917a19d8eaa35e99d1cafd12714e491720f2252ec8f6f6b1c2046b5c597ebdae",
       "executable": false
     },
     "docs/workbooks.md": {
@@ -5642,15 +5642,15 @@
       "executable": false
     },
     "scripts/verify-app.mjs": {
-      "sha256": "dc2f2b29c0c0091db23b53bfef7c5860b6403126079f48179cb923f3bf5d3b6a",
+      "sha256": "89a4efcde13aa787c513828966420dc6b9ab9f62635aec93a79a2c1de391dbff",
       "executable": false
     },
     "scripts/verify-ci.mjs": {
-      "sha256": "198d4b8ba54fffcc2b2f3aee9d3f34ed79046f212645e7f07a22da62adae1ba3",
+      "sha256": "b7fadc61b43adefb2902080573641f833cc845d56ced5a4f7acd4c98aebca17c",
       "executable": false
     },
     "scripts/verify-suite.mjs": {
-      "sha256": "aa6f7d67c07cee2a230b05e42177ed4bf8a0e6935affe0b81197274061638648",
+      "sha256": "f20d3c46a6fd86fd23935a1932e130fc0a113e47dbc7730c644c83b15ba446e7",
       "executable": false
     },
     "SEED-COMMAND-CONTRACT.md": {
@@ -15326,7 +15326,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "1cb7e010dc4004f30da54e36ff2d184852cc36ced6c5ca927630536e7cdee9b7",
+      "sha256": "d6406959404d10c1709e5154ff8a1ebf7233c4d81525710bef2eeec9ec9af97e",
       "executable": false
     },
     "vite.config.ts": {
