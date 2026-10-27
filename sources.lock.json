@@ -7294,7 +7294,7 @@
       "executable": false
     },
     "src/core/features/session/service.ts": {
-      "sha256": "c24184e10f03c24f0aab014424f72cb7d8e0bb119b77d40870a4a86debcf781a",
+      "sha256": "846d67b2cde641c196ea002ed48f6bdca729a24a1d253cdffd3680b20c9e4554",
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.css": {
