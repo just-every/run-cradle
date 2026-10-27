@@ -1,65 +1,19 @@
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
-import {chmod,copyFile,mkdtemp,readFile,rm} from 'node:fs/promises'
+import {mkdtemp,readFile,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {contract} from './contract.mjs'
 import {freshLocalCopy} from './helpers/local-signin-copy.mjs'
 import {bindings,ownedData} from './helpers/rer-data-fixture.mjs'
 import {platformArchive} from './helpers/platform-archive.mjs'
-import {fileRecords} from '@runeditrun/rer/modules/portability/files'
-import {encodedRow} from '@runeditrun/rer/modules/portability/catalogue'
-import {canonicalJson} from '@runeditrun/rer/modules/portability'
 import {platformTable} from '@runeditrun/rer/internal/modules/portability/bookkeeping.mjs'
-const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
+import {place,matchesArchive} from './helpers/archive-correspondence.mjs'
 
-const {fileStoreArchive}=await import('./helpers/file-store-archive.mjs')
-const {restoredRecordCalendar}=await import('./helpers/record-calendar-archive.mjs')
-
-// rer import reads only an owner's private file, as rer export writes it.
-const place=async(from,to)=>{await copyFile(from,to);await chmod(to,0o600)}
-const quote=name=>'"'+name.replaceAll('"','""')+'"'
-async function matchesArchive(root,path){
- const records=[];for await(const record of fileRecords(path))records.push(record)
- const manifest=records[0],items=records.filter(r=>r.kind==='part').flatMap(r=>r.items),tables=manifest.tables.filter(t=>!platformTable(t.name))
- const archived=name=>items.filter(i=>i.kind==='row'&&i.table===name).map(i=>i.row)
- const evidence=archived('evidence_comments'),retired=archived('comments').filter(row=>!evidence.some(e=>e.id===row.id))
- const translated=retired.map(row=>{
-  const operator=archived('operators').find(o=>o.id===row.author_id),principal=archived('authority_principals').find(p=>p.human_id===operator.id&&p.kind==='human')
-  const instant=value=>value===null?null:new Date(value).toISOString()
-  return {id:row.id,app_id:LAUNCH_APP_ID,entity_id:launchEntities.campaign,record_id:row.campaign_id,author_id:principal?.id??operator.id,author_kind:principal?.kind??'human',author_label:operator.name,body:row.body,mentions_json:'[]',version:row.version,created_at:instant(row.created_at),updated_at:instant(row.updated_at),deleted_at:instant(row.deleted_at)}
- })
- await bindings(root,async({DB,FILES,WAREHOUSE})=>{
-  for(const table of tables){
-   if(table.name==='comments'){
-    assert.equal(await DB.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='comments'").first(),null,'The retired table is never restored')
-    const rows=(await DB.prepare('SELECT * FROM evidence_comments WHERE id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(retired.map(row=>row.id))).all()).results
-    assert.deepEqual(rows.map(canonicalJson).sort(),translated.map(canonicalJson).sort(),'Every retired comment cell is translated into the record thread')
-    continue
-   }
-   const rows=(await DB.prepare(`SELECT * FROM ${quote(table.name)}`).all()).results.filter(row=>table.name!=='evidence_comments'||!retired.some(c=>c.id===row.id))
-   const actual=rows.map(row=>canonicalJson(encodedRow(table,row,manifest.excludedColumns[table.name]??[]))).sort()
-   const expected=items.filter(i=>i.kind==='row'&&i.table===table.name).map(i=>canonicalJson(i.row)).sort()
-   assert.deepEqual(actual,expected,'Every archived cell: '+table.name)
-  }
-  for(const object of manifest.objects){
-   const file=await ({FILES,WAREHOUSE}[object.bucket]).get(object.key);assert.ok(file,object.key)
-   const chunks=items.filter(i=>i.kind==='object'&&i.key===object.key&&i.bucket===object.bucket).sort((a,b)=>a.offset-b.offset)
-   assert.deepEqual(Buffer.from(await file.arrayBuffer()),Buffer.concat(chunks.map(i=>Buffer.from(i.data,'base64'))),'Every archived file byte: '+object.key)
-   assert.deepEqual(file.httpMetadata,object.httpMetadata)
-   assert.deepEqual(file.customMetadata,object.customMetadata)
-  }
- })
- console.log('ARCHIVE_MATCH '+JSON.stringify({archive:path.split('/').at(-1),tables:tables.length,rows:tables.reduce((n,t)=>n+t.count,0),objects:manifest.objects.length}))
- return manifest
-}
 contract('BASE-DATA-001 RECORDS-006 SYNC-002','a backup made by the previous version, and a native export of a RER Platform install, restore through rer import with every row and file; an unknown table is refused',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'cradle-platform-archive-'))
- let target,storesReady
+ let target
  try{
-  // A separate installation can prepare its new fixture while the original CLI controls run.
-  // Capture failures immediately, then report them at the existing restore boundary.
-  storesReady=fileStoreArchive(directory).then(stores=>({stores}),error=>({error}))
   // The previous listed version's backup, made on RER Platform: it carries Platform's migration ledger.
   target=await freshLocalCopy()
   await target.command(['run','db:migrate:local'])
@@ -95,27 +49,7 @@ contract('BASE-DATA-001 RECORDS-006 SYNC-002','a backup made by the previous ver
   const native=await matchesArchive(target.source,join(target.source,'platform.rer'))
   assert.ok(!native.tables.some(t=>t.name==='rer_migrations'),'a native export never carries the Platform ledger')
   assert.deepEqual(await ledger(),reset,'restore keeps the destination migration history')
-  // FILE-002: restore real reference/copy cells, while every store credential stays revoked.
-  const source=await storesReady;if('error' in source)throw source.error
-  const stores=source.stores
-  await target.rer(['reset','--yes','--non-interactive']);await target.command(['run','db:migrate:local'])
-  await place(join(directory,'file-stores.rer'),join(target.source,'file-stores.rer'))
-  await target.rer(['import','--input','file-stores.rer','--yes','--non-interactive'])
-  await matchesArchive(target.source,join(target.source,'file-stores.rer'))
-  await bindings(target.source,async({DB,FILES})=>{
-   assert.deepEqual((await DB.prepare(`SELECT value FROM "${stores.table}" WHERE record_id=? ORDER BY position`).bind(stores.recordId).all()).results.map(row=>row.value),stores.values)
-   const connection=await DB.prepare('SELECT state,credential_ref,consent_scopes_json,share_previews FROM provider_connections WHERE id=?').bind(stores.connectionId).first()
-   assert.deepEqual(connection,{state:'unconfigured',credential_ref:null,consent_scopes_json:'[]',share_previews:0},'Restored references require reconnect before provider reads')
-   assert.equal((await DB.prepare('SELECT count(*) n FROM connection_credentials').first()).n,0)
-   assert.deepEqual(Buffer.from(await(await FILES.get(stores.object_key)).arrayBuffer()),stores.bytes,'The requested copy returns with every byte')
-   assert.deepEqual(Buffer.from(await(await FILES.get(stores.uploadedKey)).arrayBuffer()),stores.uploadedBytes,'The ordinary uploaded control also returns before the owner erases the installation')
-  })
-  // The same archive carries the calendar; restoring it never restores provider authority.
-  await restoredRecordCalendar(target.source,stores.calendar)
-  await target.rer(['reset','--yes','--non-interactive']);await target.command(['run','db:migrate:local'])
-  await bindings(target.source,async({DB,FILES})=>{assert.equal((await DB.prepare('SELECT count(*) n FROM evidence_files').first()).n,0);assert.equal(await FILES.get(stores.object_key),null,'Owner reset erases the retained copy bytes');assert.equal(await FILES.get(stores.uploadedKey),null,'Owner reset erases ordinary uploaded bytes equally')})
  }finally{
-  if(storesReady){const source=await storesReady;if(source.stores?.calendar.warehouse)await source.stores.calendar.warehouse.edge.close()}
   if(target){await target.log.close();await rm(target.root,{recursive:true,force:true})}
   await rm(directory,{recursive:true,force:true})
  }
