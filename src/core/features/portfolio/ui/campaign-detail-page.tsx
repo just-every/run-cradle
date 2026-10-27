@@ -1,5 +1,9 @@
 import {AnalysisPanel} from '../../../../ui/launch/analysis-panel'
-import {CampaignComments} from '../../../../ui/launch/campaign-comments'
+import {RecordComments} from '../../../../ui/evidence/record-comments'
+import {LAUNCH_APP_ID, launchEntities} from '../../../../apps/launch/contracts'
+import type {RecordDetail} from '../../../../domains/records/contracts'
+import {useLiveRecords} from '../../../../ui/records/live-records'
+import {ResourceState} from '../../../../ui/shared/presentation'
 import { CampaignCustomFields } from "../../../../ui/launch/campaign-custom-fields";
 import { campaignLifecycle } from '../../../../apps/launch/lifecycle'
 import { RelatedRecords } from '../../../../ui/launch/related-records';
@@ -383,9 +387,7 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
                 </p>
               ) : null}
             </SectionCard>
-            <SectionCard title="Comments">
-              <CampaignComments campaign={campaign} comments={detail.resource.data.comments} onChanged={detail.retry} />
-            </SectionCard>
+            <CampaignRecordComments campaign={campaign} />
             <SectionCard title="Activity" collapsible className="portfolio-priority-history">
               <ActivityList timezone={session.resource.data.workspace.timezone} activity={activity} />
               {activity.length === 0 ? (
@@ -489,3 +491,10 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
 export const CampaignDetailPage = ({ campaignId }: CampaignDetailPageProps) => (
   <DetailContent campaignId={campaignId} />
 );
+
+/** The retained page uses the same record identity and revision as Records. */
+function CampaignRecordComments({campaign}:{campaign:{id:string;version:number}}) {
+  const base=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.campaign}`
+  const detail=useLiveRecords<RecordDetail>(`${base}/records/${campaign.id}`,undefined,`${base}/presence`,()=>{},campaign.version)
+  return <ResourceState resource={detail.resource} operation="campaign record" retry={detail.refresh}>{data=><RecordComments record={data.record} />}</ResourceState>
+}

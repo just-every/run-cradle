@@ -114,7 +114,7 @@ export const createCampaignRepository = (database: Database) => ({
   },
 
   async detailParts(id: string) {
-    const [deliverables, milestones, risks, decisions, comments, activity] = await Promise.all([
+    const [deliverables, milestones, risks, decisions, activity] = await Promise.all([
       queryAll<{ id: string, title: string, dueDate: string | null, state: string, version: number, ownerId: string, ownerName: string }>(database, `SELECT d.id, d.title, d.due_date AS dueDate, d.state, d.version, o.id AS ownerId, o.name AS ownerName,
         d.completed_at AS completedAt FROM deliverables d JOIN operators o ON o.id = d.owner_id WHERE d.campaign_id = ? ORDER BY d.due_date ASC, d.id ASC`, [id]),
       queryAll<{ id: string, title: string, type: string, status: string, startDate: string, endDate: string | null, conflictReason: string | null, version: number, ownerId: string, ownerName: string }>(database, `SELECT m.id, m.title, m.type, m.status, m.start_date AS startDate, m.end_date AS endDate, m.conflict_reason AS conflictReason, m.version,
@@ -125,8 +125,6 @@ export const createCampaignRepository = (database: Database) => ({
         requester.id AS requesterId, requester.name AS requesterName, assignee.id AS assigneeId, assignee.name AS assigneeName
         FROM decisions d JOIN operators requester ON requester.id = d.requester_id LEFT JOIN operators assignee ON assignee.id = d.assignee_id
         WHERE d.campaign_id = ? AND d.state IN ('Awaiting approval','In review') ORDER BY d.due_at ASC, d.id ASC`, [id]),
-      queryAll(database, `SELECT c.id, c.body, c.created_at AS createdAt, c.version, o.id AS authorId, o.name AS authorName
-        FROM comments c JOIN operators o ON o.id = c.author_id WHERE c.campaign_id = ? AND c.deleted_at IS NULL ORDER BY c.created_at ASC, c.id ASC`, [id]),
       queryAll<{ id: string, type: string, subjectId: string, subjectTitle: string, fieldName: string | null, previousValue: string | null, nextValue: string | null, message: string, createdAt: number, actorId: string | null, actorName: string | null }>(database, `SELECT a.id, a.type, a.subject_id AS subjectId, COALESCE((SELECT title FROM decisions WHERE id=a.subject_id),(SELECT title FROM risks WHERE id=a.subject_id),(SELECT title FROM milestones WHERE id=a.subject_id),(SELECT title FROM deliverables WHERE id=a.subject_id),(SELECT name FROM campaigns WHERE id=a.subject_id),(SELECT next_value FROM activity_entries history WHERE history.subject_id=a.subject_id AND history.field_name IN ('title','name') AND history.next_value IS NOT NULL ORDER BY history.created_at DESC,history.id DESC LIMIT 1),'Removed record') AS subjectTitle, a.message, a.created_at AS createdAt, a.field_name AS fieldName, a.previous_value AS previousValue,
         a.next_value AS nextValue, o.id AS actorId, o.name AS actorName FROM activity_entries a LEFT JOIN operators o ON o.id = a.actor_id
         WHERE a.campaign_id = ? ORDER BY a.created_at DESC, a.id DESC`, [id]),
@@ -147,7 +145,6 @@ export const createCampaignRepository = (database: Database) => ({
         occurredAt: iso(entry.createdAt),
         actor: entry.actorId && entry.actorName ? person(entry.actorId, entry.actorName) : null,
       })),
-      comments,
       customFields: custom.map((field) => ({ id: field.id, name: field.name, type: field.type, options: JSON.parse(field.optionsJson) as string[], value: field.valueJson === null ? null : JSON.parse(field.valueJson) as string | boolean | string[] })),
       decisions: decisions.map((decision) => ({
         id: decision.id,
