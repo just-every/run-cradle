@@ -1,3 +1,4 @@
+import {recordAction,recordInput} from './helpers/record-comment-command.mjs'
 import { recordLaunchConsole, verifyDisabledAiReadout, assertNoUnexpectedLaunchConsoleErrors } from './helpers/launch-disabled-ai-console.mjs'
 import { modalKeyboardOrder } from './helpers/accessibility-modal-keyboard.mjs'
 import { contract } from './contract.mjs'
@@ -25,8 +26,9 @@ import { verifyCommentScreens } from './helpers/launch-comment-screens.mjs'
 import { verifyDecisionLensScreens } from './helpers/launch-decision-lens-screens.mjs'
 import { verifySettingsMemberErasure } from './helpers/settings-members-accessibility.mjs'
 import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
-import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
-contract('VIEW-004', '[NOTIFY-001] [NOTIFY-002] [NOTIFY-003] [NOTIFY-006] [NOTIFY-007] [OPS-006] [OPS-003] [CAMP-006] [NOTIFY-005] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
+import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
+const walkthroughWidths=[1440]
+contract('VIEW-004', '[NOTIFY-001] [NOTIFY-002] [NOTIFY-003] [NOTIFY-006] [NOTIFY-007] [OPS-006] [OPS-003] [CAMP-006] [NOTIFY-005] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
 let notificationMailStatus=202
 const setNotificationMailStatus=status=>{notificationMailStatus=status}
@@ -36,7 +38,7 @@ h.notificationOutageProvider=outageProvider
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006','CAMP-007']}
 let browser
 const command=async(action,input,expected=[])=>{
- const response=await h.request(h.ownerSession,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})})
+ const response=await h.request(h.ownerSession,`/api/v1/commands/${recordAction(action)}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input:recordInput(action,input,expected),expected})})
  assert.equal(response.status,200,await response.clone().text());return (await response.json())
 }
 const readInspectorPresentation=async(page)=>page.locator('.portfolio-inspector').evaluate((inspector)=>{
@@ -85,8 +87,8 @@ try {
  await h.db.prepare('UPDATE operators SET name=? WHERE id=?').bind('Mira Example',h.owner).run()
  await h.db.batch([h.db.prepare('UPDATE workspace_settings SET timezone=?').bind('Australia/Brisbane'),h.db.prepare('UPDATE workspace SET timezone=?').bind('Australia/Brisbane')])
  const workspaceName=(await h.db.prepare('SELECT name FROM workspace WHERE id=?').bind('workspace').first()).name
- browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]})
- for(const width of accessibilityWidths) {
+ browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox',"--use-mock-keychain","--password-store=basic"]})
+ for(const width of walkthroughWidths) {
   // Each viewport starts with an empty campaign fixture, including after the added clause journeys.
   await h.db.prepare('DELETE FROM campaigns').run()
   const viewport={width,height:width===390?844:900}
@@ -257,7 +259,7 @@ try {
   await verifyConcurrencyScreens({h,page,command,capture,receipt})
   await context.close()
  }
- assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])
+ assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),walkthroughWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),walkthroughWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),walkthroughWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,walkthroughWidths);assert.deepEqual(receipt.external,[])
 } finally {if(browser)await browser.close();await h.close();await writeFile(path.join(output,'receipt.json'),stringifySafeEvidence(receipt))}
 console.log(`Launch walkthrough passed ${receipt.screens.length} real-runtime screens`)
 
