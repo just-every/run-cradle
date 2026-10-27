@@ -38,6 +38,20 @@ async function templateChoices(page,j,origin){
  assert.deepEqual((await readApps()).map(app=>app.id),before.map(app=>app.id),'Using or cancelling a template must preserve the existing bases')
  await page.goto(origin+'/app/records');await region().waitFor()
 }
+export async function homeBases(page,origin){
+ const response=await page.request.get(origin+'/api/v1/apps');assert.equal(response.status(),200)
+ const apps=(await response.json()).data.items,bases=page.getByRole('region',{name:'Your bases',exact:true})
+ await bases.waitFor()
+ for(const base of apps){const link=bases.getByRole('link',{name:base.name,exact:true});await link.waitFor();assert.equal(await link.getAttribute('href'),base.entryUrl)}
+ assert.equal(await bases.getByRole('listitem').count(),apps.length,'Home lists every authorized base once')
+ await page.getByRole('region',{name:'Recent activity',exact:true}).waitFor()
+ return apps
+}
+async function openRecords(page,j){
+ let link=page.getByRole('navigation',{name:'Operator navigation',exact:true}).getByRole('link',{name:'Records',exact:true}).filter({visible:true})
+ if(!await link.count()){await j.action(page.getByRole('button',{name:'Open navigation',exact:true}));link=page.getByRole('dialog',{name:'Navigation',exact:true}).getByRole('link',{name:'Records',exact:true})}
+ await j.action(link)
+}
 export async function homeReview(output){
  let h,browser
  const receipts=[]
@@ -46,19 +60,29 @@ export async function homeReview(output){
   for(const width of recordsBrowserWidths(accessibilityWidths)){
    h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0))
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
-   await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');await page.getByRole('heading',{name:'Your business, organised your way.',exact:true}).waitFor();assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
-   assert.doesNotMatch(await page.locator('main').innerText(),/NO RECORDS|Start with your first base|Launch readiness|campaign activity|milestones|decisions/i)
-   assert.equal(await page.locator('.cr-home-records .cr-eyebrow').evaluate(e=>getComputedStyle(e).color),'rgb(63, 107, 54)')
-   await j.capture('fresh-home');await j.action(page.getByRole('link',{name:'Open records',exact:true}));await page.getByRole('button',{name:'Create base',exact:true}).waitFor()
+   await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');const initialBases=await homeBases(page,h.origin);assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
+   if(initialBases.length===0){
+    const empty=page.getByRole('region',{name:'Your bases',exact:true}),create=empty.getByRole('button',{name:'New base',exact:true})
+    await create.waitFor();assert.equal(await empty.locator('a,button').count(),1,'The empty base list has one way to start')
+    await j.action(create);await page.getByLabel('Base name',{exact:true}).waitFor();await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await create.waitFor()
+    assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0,'Cancelling a new base leaves the empty installation intact')
+   }
+   assert.equal(await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:'App studio',exact:true}).count(),0,'App studio is not mixed into the base list')
+   await j.capture('fresh-home');await openRecords(page,j);await page.getByRole('button',{name:'Create base',exact:true}).waitFor()
    const choose=await page.getByRole('heading',{name:'Choose an application',exact:true}).boundingBox(),templates=page.getByRole('region',{name:'Start from a template',exact:true}),t=await templates.boundingBox()
    assert.ok(t.y>=choose.y+choose.height,JSON.stringify({choose,t}));await templateChoices(page,j,h.origin)
    await j.action(page.getByRole('button',{name:'Create base',exact:true}));await chooserHidden(page);await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await page.getByRole('navigation',{name:'Application records',exact:true}).waitFor();await j.capture('base-actions')
    await j.action(page.getByRole('button',{name:'Create base',exact:true}));await page.getByLabel('Base name',{exact:true}).fill(`Home records ${width}`);await page.getByLabel('Table name',{exact:true}).fill('Notes');await page.getByLabel('Field name',{exact:true}).fill('Note')
    const base=await j.adopt(),record=await j.record({Note:`Existing record ${width}`})
-   await page.goto(h.origin+'/app');await page.getByRole('heading',{name:'Your business, organised your way.',exact:true}).waitFor();assert.doesNotMatch(await page.locator('main').innerText(),/NO RECORDS|Start with your first base|Launch readiness|campaign activity|milestones|decisions/i);await j.capture('records-only-home')
-   await j.action(page.getByRole('link',{name:'Open records',exact:true}));await j.action(page.getByRole('navigation',{name:'Application records',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}));await j.table('Notes');await page.getByRole('link',{name:`Existing record ${width}`,exact:true}).waitFor()
-   const verifyLaunch=await retainedLaunch(page,j,h,width);await verifyLaunch();await page.goto(h.origin+'/app');await page.getByText('Launch readiness template',{exact:true}).waitFor();assert.equal(await page.locator('.portfolio-metric-grid .portfolio-metric').count(),4);assert.equal(await page.getByRole('link',{name:'Open records',exact:true}).count(),1);await j.capture('records-and-launch-home')
-   receipts.push({width,baseId:base.appId,recordId:record.id,checkpoints:j.checkpoints});await context.close();await h.close();h=null
+   await page.goto(h.origin+'/app');const native=(await homeBases(page,h.origin)).find(app=>app.id===base.appId);assert.ok(native);assert.equal(native.tableCount,1);assert.equal(native.recordCount,1);assert.equal(native.latestChange.name,`Existing record ${width}`)
+   const entitiesReply=await page.request.get(`${h.origin}/api/v1/apps/${base.appId}/entities`);assert.equal(entitiesReply.status(),200);const entity=(await entitiesReply.json()).data.items[0]
+   const csrfReply=await page.request.get(h.origin+'/auth/csrf');assert.equal(csrfReply.status(),200);const {csrfToken}=await csrfReply.json()
+   const queryReply=await page.request.post(`${h.origin}/api/v1/apps/${base.appId}/entities/${entity.id}/query`,{headers:{origin:h.origin,'x-csrf-token':csrfToken},data:{}});assert.equal(queryReply.status(),200)
+   const visible=(await queryReply.json()).data;assert.equal(native.recordCount,visible.total.value,'Discovery counts exactly the records available through the current query door');assert.equal(native.latestChange.id,visible.items[0].id);assert.equal(native.latestChange.href,`/app/records/${base.appId}/${entity.id}/${visible.items[0].id}`)
+   await page.getByRole('region',{name:'Recent activity',exact:true}).getByText(native.latestChange.name,{exact:true}).waitFor();await j.capture('records-only-home')
+   await j.action(page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}));await j.table('Notes');await page.getByRole('link',{name:`Existing record ${width}`,exact:true}).waitFor()
+   const verifyLaunch=await retainedLaunch(page,j,h,width);await verifyLaunch();await page.goto(h.origin+'/app');const current=await homeBases(page,h.origin);assert.ok(current.some(app=>app.id===base.appId));assert.ok(current.some(app=>app.name==='Launch readiness'));assert.equal(await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}).getAttribute('href'),base.entryUrl??`/app/records/${base.appId}`);await j.capture('records-and-launch-home')
+   receipts.push({width,baseId:base.appId,recordId:record.id,emptyHomeExercised:initialBases.length===0,homeSummaryMatchesQuery:true,checkpoints:j.checkpoints});await context.close();await h.close();h=null
   }
   return receipts
  }finally{await browser?.close();await h?.close()}

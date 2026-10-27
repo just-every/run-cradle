@@ -16,7 +16,7 @@ import type { View, Form, EntitySchema, Query } from './contracts';
 import type { RequestContext, PolicyPort } from '../authority/ports';
 import type { DescriptorRegistry } from './descriptors.server';
 import type { SqlMutation, SqlPredicate } from '../admission/ports';
-import { registerTable, eq, and,exists } from '../admission/sql.server';
+import { registerTable, eq, and,exists, identifier, trustedPredicate } from '../admission/sql.server';
 import { canonical } from '../admission/canonical';
 import { idSchema, filterSchema, querySchema } from './validators';
 import { createUlid } from '../../core/shared/ids';
@@ -129,10 +129,35 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
             offset = parsed.offset;
         } return { items: items.slice(offset, offset + limit), nextCursor: offset + limit < items.length ? await cursorCodec.encode({ binding, revision, offset: offset + limit }) : null, total: { kind: items.length > 10000 ? 'at_least' as const : 'exact' as const, value: Math.min(items.length, 10000) }, evaluatedAt: new Date().toISOString() }; },
         async apps(ctx: RequestContext) {
-            const items: { id: string; name: string; entryUrl: string }[] = [];
+            const items: { id: string; name: string; entryUrl: string; tableCount: number; recordCount: number; latestChange: {id:string;name:string;occurredAt:string;href:string}|null }[] = [];
             for (const appId of [...new Set(descriptors.list().map(d => d.schema.appId))].sort()) {
                 const entities = await this.entities(ctx, appId);
-                if (entities.length) items.push({ id: appId, name: (entities.some(e=>e.physicalRevision.startsWith('manual_')) ? (await db.prepare('SELECT name FROM manual_record_bases WHERE id=?').bind(appId).first<{name:string}>())?.name : undefined) ?? (appId===LAUNCH_APP_ID?'Launch readiness':entities.filter(e=>e.label!=='Private source intake').map(entity => entity.label).join(' · ')), entryUrl: `/app/records/${appId}` });
+                if (!entities.length) continue;
+                const name = (entities.some(e=>e.physicalRevision.startsWith('manual_')) ? (await db.prepare('SELECT name FROM manual_record_bases WHERE id=?').bind(appId).first<{name:string}>())?.name : undefined) ?? (appId===LAUNCH_APP_ID?'Launch readiness':entities.filter(e=>e.label!=='Private source intake').map(entity => entity.label).join(' · '));
+                const tables = entities.filter(e=>e.label!=='Private source intake');
+                let recordCount = 0, latestChange: (typeof items)[number]['latestChange'] = null;
+                // Summaries travel with discovery, never as a browser read per base.
+                // Apply the same live-row predicate and authority guards as records.
+                for (const entity of tables) {
+                    const d = descriptors.get(appId, entity.id), scope = await policy.scope(ctx, {appId,entityId:entity.id,purpose:'read'});
+                    const where = and(scope.rowPredicate, ...scope.currentAuthorityGuards, trustedPredicate(`${identifier(d.lifecycleColumn)} NOT IN ('archived','deleted')`));
+                    const table = identifier(d.table.tableId);
+                    const count = await db.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ${where.sql}`).bind(...where.values).first<{n:number}>();
+                    recordCount += count!.n;
+                    if (entity.physicalRevision.startsWith('manual_')) {
+                        const row = await db.prepare(`SELECT * FROM ${table} WHERE ${where.sql} ORDER BY ${identifier(d.updatedColumn)} DESC,${identifier(d.idColumn)} DESC LIMIT 1`).bind(...where.values).first<Record<string,unknown>>();
+                        if (row) {
+                            const primary = entity.primaryFieldId ? entity.fields.find(field=>field.id===entity.primaryFieldId) : entity.fields.find(field=>field.type==='text');
+                            const projected = await reader.render(ctx,scope,d,row,primary ? [primary.id] : []), cell = primary ? projected.fields[primary.id] : undefined;
+                            const value = cell?.state === 'value' ? cell.value : null;
+                            const label = (primary?.type === 'select' || primary?.resultType === 'select' ? primary.options?.find(option=>option.id===value)?.label : typeof value === 'boolean' ? value ? 'Yes' : 'No' : typeof value === 'string' && value.trim() ? value : null) || name;
+                            const change = {id:projected.id,name:label,occurredAt:projected.updatedAt,href:`/app/records/${appId}/${entity.id}/${projected.id}`};
+                            if (!latestChange || change.occurredAt > latestChange.occurredAt || change.occurredAt === latestChange.occurredAt && change.id > latestChange.id) latestChange = change;
+                        }
+                    }
+                    await reader.assertScope(ctx,scope);
+                }
+                items.push({ id:appId,name,entryUrl:`/app/records/${appId}`,tableCount:tables.length,recordCount,latestChange });
             }
             return items;
         },

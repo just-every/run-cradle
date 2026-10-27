@@ -33,9 +33,10 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
     assert.equal((await fetch(`${origin}/api/v1/apps`)).status, 401, 'App discovery requires a session')
     const applications = await json('/api/v1/apps')
     assert.ok(applications.data.items.length > 0, 'Current launch authority exposes its real schema')
+    const readiness = await json('/api/v1/construction/readiness')
     const campaigns = await json('/api/campaigns'), risks = await json('/api/risks/lens'), milestones = await json('/api/milestones/timeline'), decisions = await json('/api/decisions')
     const routes = ['/app', '/app/records', '/app/operations/studio', '/app/overview', '/app/campaigns', `/app/campaigns/${campaigns.items[0].id}`, '/app/lenses/risks', `/app/risks/${risks.items[0].id}`, '/app/lenses/timeline', `/app/milestones/${milestones.items[0].id}`, '/app/lenses/new', '/app/decisions', `/app/decisions/${decisions.items[0].id}`, '/app/automations', '/app/notifications', '/app/search', '/app/settings', '/app/operations', '/app/repairs']
-    browser = await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+    browser = await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
     await mkdir(output, { recursive: true })
     for (const width of [1440, 390]) {
       const context = await browser.newContext({ viewport: { width, height: 960 } })
@@ -52,11 +53,22 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
         const heading = page.locator('.operator-main h1').first()
         if (await heading.count()) assert.match(await heading.evaluate(el => getComputedStyle(el).fontFamily), /Lexend/, `${route} October type`)
         if (route === '/app') {
-          assert.equal(await page.getByRole('link', { name: 'Open records', exact: true }).count(), 1)
+          const bases = page.getByRole('region', { name: 'Your bases', exact: true })
+          await bases.waitFor()
+          for (const base of applications.data.items) {
+            const link = bases.getByRole('link', { name: base.name, exact: true })
+            assert.equal(await link.getAttribute('href'), base.entryUrl, 'Home opens each authorized base')
+          }
+          await page.getByRole('region', { name: 'Recent activity', exact: true }).waitFor()
           if (width === 390) await page.getByRole('button', { name: 'Open navigation' }).click()
           const nav = page.getByRole('navigation', { name: 'Operator navigation', exact: true }).filter({ visible: true })
           assert.equal(await nav.getByRole('link', { name: 'Home', exact: true }).count(), 1)
           assert.equal(await nav.getByRole('link', { name: 'Records', exact: true }).count(), 1)
+          assert.equal(await nav.getByRole('link', { name: 'Automations', exact: true }).count(), 1)
+          assert.equal(await nav.getByRole('link', { name: 'App studio', exact: true }).count(), Number(readiness.data.ready), 'App studio is offered only on a ready installation')
+          assert.equal(await page.getByRole('navigation', { name: 'Launch readiness', exact: true }).count(), 0, 'Template work opens from its base')
+          const utilities = page.getByRole('navigation', { name: 'Workspace utilities', exact: true }).filter({ visible: true })
+          for (const name of ['Search', 'Notifications', 'Settings']) assert.equal(await utilities.getByRole('link', { name, exact: true }).count(), 1)
           assert.equal(await nav.getByRole('link', { name: 'Repairs', exact: true }).count(), 0)
           assert.equal(await nav.getByRole('link', { name: 'Today', exact: true }).count(), 0)
           if (width === 390) { await page.keyboard.press('Escape'); assert.equal(await page.getByRole('button', { name: 'Open navigation' }).evaluate(el => el === document.activeElement), true) }

@@ -78,7 +78,11 @@ try {
       await page.waitForURL(`${origin}${pathname}`)
       await page.waitForLoadState('networkidle')
     }
-    await navigateOperator('App studio', '/app/operations/studio')
+    const readiness = await (await context.request.get(origin + '/api/v1/construction/readiness')).json()
+    assert.equal(readiness.data.ready, false, 'The fixture has no construction model or runner')
+    assert.equal(await page.getByRole('link', { name: 'App studio', exact: true }).count(), 0, 'An unavailable job stays out of the daily menu')
+    await page.goto(`${origin}/app/operations/studio`)
+    await page.waitForLoadState('networkidle')
     await page.getByRole('heading', { name: 'App studio', exact: true }).waitFor()
     assert.equal(await page.getByRole('button', { name: 'Prepare operation', exact: true }).count(), 0, 'An installation that cannot construct offers no prepare that would fail')
     if (accessibilityEvidence) await auditAccessibility(page, { screen: 'app-studio-unconfigured', width, output })

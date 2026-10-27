@@ -81,6 +81,21 @@ async function configuredInstallation() {
     const firstVisit = await h.request('/app', { headers: { cookie } })
     assert.equal(firstVisit.status, 200, 'The owner opens the app without a second setup')
     await firstVisit.arrayBuffer()
+    const read = async route => {
+      const response = await h.request(route, { headers: { cookie } })
+      assert.equal(response.status, 200, route)
+      return response.json()
+    }
+    const apps = (await read('/api/v1/apps')).data.items
+    for (const base of apps) {
+      assert.equal(base.entryUrl, `/app/records/${base.id}`, 'Home discovery opens each authorized base')
+      assert.equal(Number.isInteger(base.tableCount), true, 'One discovery read supplies the table count')
+      assert.equal(Number.isInteger(base.recordCount), true, 'One discovery read supplies the record count')
+      assert.equal(base.latestChange, null, 'A fresh install has no native record changes')
+    }
+    const readiness = (await read('/api/v1/construction/readiness')).data
+    assert.equal(readiness.ready, false, 'An installation without construction cannot offer App studio')
+    assert.equal((await h.request('/api/v1/apps')).status, 401, 'Base summaries never expose installation data without a session')
     const setup = await h.request('/setup', { headers: { cookie } })
     assert.equal(setup.status, 303)
     assert.equal(new URL(setup.headers.get('location'), h.origin).pathname, '/app')

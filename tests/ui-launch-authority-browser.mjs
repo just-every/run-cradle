@@ -16,7 +16,7 @@ const h=await launchAuthorityRuntime()
 let browser, production
 try {
   await mkdir(output,{recursive:true})
-  browser=await chromium.launch({args:['--host-resolver-rules=MAP cradle.authority.test 127.0.0.1','--no-proxy-server']})
+  browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--host-resolver-rules=MAP cradle.authority.test 127.0.0.1','--no-proxy-server']})
   const sample=(await (await h.request(h.ownerSession,'/api/campaigns')).json()).items[0]
   const repair=await h.addPerson({appId:'00000000000000000000000600',name:'Repairs colleague'})
   const revoked=await h.addPerson({name:'Revoked launch colleague'})
@@ -125,7 +125,7 @@ try {
     await context.clearCookies()
     await context.addCookies([{name:repair.session.cookie.split('=')[0],value:repair.session.cookie.slice(repair.session.cookie.indexOf('=')+1),url:h.origin}])
     await page.goto(`${h.origin}/app`)
-    await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
+    await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
     await page.getByRole('heading',{name:'This work is outside your access',exact:true}).waitFor()
     assert.ok(!(await page.locator('body').innerText()).includes(sample.name))
     await capture(page,'scoped-home',width)
@@ -179,7 +179,7 @@ try {
     const ownerDocument=await page.goto(`${productionOrigin}/app`)
     assert.equal(ownerDocument.status(),200)
     assert.equal(new URL(page.url()).pathname,'/app')
-    await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
+    await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
     await capture(page,'production-home',width)
     await context.close()
   }
