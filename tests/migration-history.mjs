@@ -89,7 +89,7 @@ test('[ACT-002 COLLAB-001 VIEW-006] an existing Launch comment joins the record 
   assert.equal(created.status,200,await created.clone().text());const campaign=(await created.json()).data.value,subject={appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:campaign.id},id=createUlid(),deletedId=createUlid(),at=Date.now()-60000
   await db.batch([id,deletedId].map(comment=>db.prepare('INSERT INTO comments(id,created_at,updated_at,version,campaign_id,author_id,body,deleted_at) VALUES(?,?,?,3,?,?,?,?)').bind(comment,at,at+1000,campaign.id,owner,'A conversation kept across the update',comment===deletedId?at+2000:null)))
   const policy=await db.prepare('SELECT p.* FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(owner,LAUNCH_APP_ID).first(),rules=JSON.parse(policy.rules_json)
-  for(const rule of rules)rule.actions=rule.actions.map(action=>action==='comment.add'?'launch.comment.create':action==='comment.delete'?'launch.comment.delete':action)
+  for(const rule of rules)rule.actions=rule.actions.filter(action=>action!=='comment.redact').map(action=>action==='comment.add'?'launch.comment.create':action==='comment.delete'?'launch.comment.delete':action)
   const campaignRule=rules.find(rule=>rule.entityId===subject.entityId)
   const deny={...structuredClone(campaignRule),id:createUlid(),effect:'deny',rows:{kind:'condition',fieldId:campaignRule.readableFields[0],op:'eq',value:'A different campaign'},actions:['launch.comment.create','launch.comment.delete']};rules.push(deny)
   await db.prepare('UPDATE authority_policies SET rules_json=? WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
@@ -102,7 +102,7 @@ test('[ACT-002 COLLAB-001 VIEW-006] an existing Launch comment joins the record 
   assert.equal(page.canAdd,true);assert.equal(comment.author.id,owner);assert.equal(comment.author.kind,'human');assert.equal(comment.authorLabel,'Maya Chen');assert.equal(comment.body,'A conversation kept across the update');assert.equal(comment.createdAt,new Date(at).toISOString());assert.equal(comment.updatedAt,new Date(at+1000).toISOString());assert.equal(comment.version,3);assert.equal(comment.canDelete,true);assert.equal(comment.canEdit,false);assert.deepEqual(comment.mentions,[])
   assert.equal(page.items.find(item=>item.id===deletedId).deletedAt,new Date(at+2000).toISOString())
   const translated=await db.prepare('SELECT rules_json,version FROM authority_policies WHERE id=?').bind(policy.id).first()
-  assert.deepEqual(JSON.parse(translated.rules_json),rules.map(rule=>({...rule,actions:[...new Set(rule.actions.map(action=>action==='launch.comment.create'?'comment.add':action==='launch.comment.delete'?'comment.delete':action))]})));assert.equal(translated.version,policy.version+1)
+  assert.deepEqual(JSON.parse(translated.rules_json).map(rule=>({...rule,actions:rule.actions.filter(action=>action!=='comment.redact')})),rules.map(rule=>({...rule,actions:[...new Set(rule.actions.map(action=>action==='launch.comment.create'?'comment.add':action==='launch.comment.delete'?'comment.delete':action))]})));assert.equal(translated.version,policy.version+2)
   assert.equal(await db.prepare("SELECT 1 FROM sqlite_master WHERE name='comments'").first(),null)
   const stable=async()=>({comments:(await db.prepare('SELECT * FROM evidence_comments ORDER BY id').all()).results,policies:(await db.prepare('SELECT * FROM authority_policies ORDER BY id').all()).results})
   const before=await stable();await runtime.dispose();runtime=null

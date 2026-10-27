@@ -65,6 +65,7 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
   const detail = useApiResource(
     `/api/campaigns/${encodeURIComponent(campaignId)}`,
     decodeCampaignDetail,
+    { keepPreviousData: true },
   );
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState<EditValues | null>(null);

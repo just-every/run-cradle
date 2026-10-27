@@ -103,4 +103,32 @@ export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  assert.notEqual(restore.status, 200, `Re-activation is refused: ${await restore.clone().text()}`)
  assert.equal((await h.db.prepare('SELECT status FROM oa_operators WHERE id=?').bind(baseId).first()).status, 'inactive')
  assert.deepEqual([(await member(leaver.id)).state, (await h.request(leaver.session, '/api/v1/session')).status], ['erased', 401])
+
+ // OPS-005 retains the anonymous author's words until an owner/admin explicitly
+ // redacts the body. Record authority alone never makes a member an admin.
+ const subject=doors.ref('campaign',reads.owned.campaign)[0].ref,expected=doors.ref('campaign',reads.owned.campaign)
+ assert.equal(comment.canDelete,false,'Another person cannot delete the erased author’s comment')
+ const input={subject,id:comment.id,version:comment.version,reason:'Personal information removal requested'}
+ const memberThread=await recordThread(h,subject,w.stay.session)
+ assert.equal(memberThread.items.find(item=>item.id===comment.id).canRedact,false)
+ assert.equal((await command('comment.redact',input,expected,w.stay.session)).status,403,'A non-admin member is refused')
+ assert.equal((await command('comment.redact',{...input,reason:'  '},expected)).status,400,'A reason is required')
+ assert.equal((await command('comment.redact',{...input,version:comment.version+1},expected)).status,409,'A stale redaction changes nothing')
+ assert.equal(await count('SELECT count(*) n FROM evidence_comment_redactions WHERE comment_id=?',comment.id),0)
+ const redaction={commandId:createUlid(),expected,input},sendRedaction=()=>call('/api/v1/commands/comment.redact',{method:'POST',body:JSON.stringify(redaction)})
+ for(let i=0;i<2;i++){const result=await sendRedaction();assert.equal(result.status,200,JSON.stringify(result.body))}
+ const redacted=(await recordThread(h,subject,doors.admin)).items.find(item=>item.id===comment.id)
+ assert.deepEqual([redacted.id,redacted.authorLabel,redacted.createdAt],[comment.id,label,comment.createdAt],'Redaction preserves the place, author label and original time')
+ assert.deepEqual([redacted.body,redacted.redacted,redacted.version,redacted.canEdit,redacted.canDelete,redacted.canRedact],[null,true,comment.version+1,false,false,false])
+ const audit=(await h.db.prepare('SELECT * FROM evidence_comment_redactions WHERE comment_id=?').bind(comment.id).all()).results
+ assert.equal(audit.length,1,'Replaying a redaction records it once')
+ assert.deepEqual([audit[0].reason,audit[0].actor_id,audit[0].actor_kind,audit[0].app_id,audit[0].entity_id,audit[0].record_id],[input.reason,w.adminId,'human',subject.appId,subject.entityId,subject.recordId])
+ assert.ok(Number.isFinite(Date.parse(audit[0].created_at)))
+ assert.ok(!JSON.stringify(audit).includes(comment.body),'The audit never stores the old body')
+ const history=await call('/api/v1/history?'+new URLSearchParams(subject))
+ assert.equal(history.status,200);assert.ok(!JSON.stringify(history.body).includes(comment.body),'Record history contains no old body')
+ assert.equal(history.body.data.items.filter(item=>item.commandId===redaction.commandId).length,1)
+ const search=await recordThread(h,{...subject},doors.admin)
+ assert.ok(!JSON.stringify(search).includes(comment.body))
+ assert.deepEqual(await copiesOf(h,[comment.body]),[],'The body leaves every stored receipt and search index, including exported product rows')
 }

@@ -41,3 +41,32 @@ WHERE EXISTS (
  WHERE action.value IN ('launch.comment.create','launch.comment.delete')
 );
 DROP TABLE comments;
+
+-- Metadata-only redaction custody: never retain the prior comment body.
+CREATE TABLE IF NOT EXISTS evidence_comment_redactions (
+ id TEXT PRIMARY KEY NOT NULL, comment_id TEXT NOT NULL UNIQUE,
+ app_id TEXT NOT NULL, entity_id TEXT NOT NULL, record_id TEXT NOT NULL,
+ actor_id TEXT NOT NULL, actor_kind TEXT NOT NULL, reason TEXT NOT NULL,
+ created_at TEXT NOT NULL
+);
+-- Reuse each rule's existing record restrictions. Denials remain denials.
+-- A current workspace owner/admin session is also required at admission time.
+UPDATE authority_policies
+SET rules_json=(SELECT json_group_array(json(CASE
+ WHEN EXISTS(SELECT 1 FROM json_each(rule.value,'$.actions') WHERE value='comment.delete')
+  AND NOT EXISTS(SELECT 1 FROM json_each(rule.value,'$.actions') WHERE value='comment.redact')
+  AND (json_extract(rule.value,'$.effect')='deny' OR EXISTS(
+   SELECT 1 FROM json_each(rule.value,'$.principals') principal
+   JOIN cradle_base_operators projection ON projection.principal_id=json_extract(principal.value,'$.id')
+   JOIN oa_operators operator ON operator.id=projection.base_id
+   WHERE json_extract(principal.value,'$.kind')='human' AND operator.role IN ('owner','admin') AND operator.status='active'))
+ THEN json_insert(rule.value,'$.actions[#]','comment.redact') ELSE rule.value END))
+ FROM json_each(authority_policies.rules_json) rule), version=version+1
+WHERE EXISTS(SELECT 1 FROM json_each(rules_json) rule
+ WHERE EXISTS(SELECT 1 FROM json_each(rule.value,'$.actions') WHERE value='comment.delete')
+ AND NOT EXISTS(SELECT 1 FROM json_each(rule.value,'$.actions') WHERE value='comment.redact')
+ AND (json_extract(rule.value,'$.effect')='deny' OR EXISTS(
+  SELECT 1 FROM json_each(rule.value,'$.principals') principal
+  JOIN cradle_base_operators projection ON projection.principal_id=json_extract(principal.value,'$.id')
+  JOIN oa_operators operator ON operator.id=projection.base_id
+  WHERE json_extract(principal.value,'$.kind')='human' AND operator.role IN ('owner','admin') AND operator.status='active')));
