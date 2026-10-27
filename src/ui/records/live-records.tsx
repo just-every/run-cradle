@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { readApi, RequestFailure, type Resource } from '../shared/api'
 import { useDocumentData } from '../../core/app/document-data'
 import type { Success } from '../../contracts/primitives'
+import { LAUNCH_APP_ID, launchEntities } from '../../apps/launch/contracts'
 
 type Presence = { participants: { id: string; name: string }[]; revision: number; accessRevision: string }
 
@@ -10,7 +11,8 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
   const identity = JSON.stringify(input)
   const key = JSON.stringify([url, identity, presenceUrl])
   const documentData = useDocumentData()
-  const seeded = identity === undefined && Object.prototype.hasOwnProperty.call(documentData, url) ? documentData[url] as Success<T> : undefined
+  const campaignRecord = `/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.campaign}/records/`
+  const seeded = identity === undefined && url.startsWith(campaignRecord) && Object.prototype.hasOwnProperty.call(documentData, url) ? documentData[url] as Success<T> : undefined
   const initial: Resource<T> = seeded ? { state: 'ready', data: seeded.data } : { state: 'loading', data: null }
   const [loaded, setLoaded] = useState<{ key: string; resource: Resource<T> }>(() => ({ key, resource: initial }))
   const setResource = (resource: Resource<T>) => setLoaded({ key, resource })
