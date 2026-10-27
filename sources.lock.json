@@ -12314,7 +12314,7 @@
       "executable": false
     },
     "tests/helpers/public-app-navigation.mjs": {
-      "sha256": "16c7aea86bdb9eaae7f06eb1e541f90a50c63f3285b9d2f9924ca1110177cae2",
+      "sha256": "04388c6b5351c037bc1c333568a588cc5a9136b5bb99708401f64aaa885130fe",
       "executable": false
     },
     "tests/helpers/queue-consumers.mjs": {
@@ -12906,7 +12906,7 @@
       "executable": false
     },
     "tests/migration-browser.mjs": {
-      "sha256": "ddd487d46caf88355d18d15ae10d37af60522140c89c3cd3bd54be9a3416a372",
+      "sha256": "6489a6b9505cbe301b800c6fc6b61be2d02ea2d93faab61ba41bd1cbad311dad",
       "executable": false
     },
     "tests/migration-events.mjs": {
@@ -13146,7 +13146,7 @@
       "executable": false
     },
     "tests/start-resources.mjs": {
-      "sha256": "e98866b22674702c7003369aabc55e09056790d15a7fbff6a577fa0c7ffb8960",
+      "sha256": "b90c0ed55e370815d4244af9212aa51fba0b3a3c470645f349e15972f33d33f9",
       "executable": false
     },
     "tests/start-runtime.mjs": {
@@ -13182,7 +13182,7 @@
       "executable": false
     },
     "tests/ui-launch-authority-browser.mjs": {
-      "sha256": "ae55c726fe752cbff821bfda6fea136c3b626d3e702728e6b1b34d5e2fd5baca",
+      "sha256": "257740012a24f1d8b38ddda30656f1031d5f57e09875087f50f9a835007e3697",
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
