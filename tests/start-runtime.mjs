@@ -112,9 +112,8 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
     assert.equal(await page.evaluate(()=>performance.timeOrigin),time);assert.equal(navigations,1)
     await page.getByRole('region',{name:'Your bases',exact:true}).waitFor(); await page.waitForLoadState('networkidle')
     const appTime=await page.evaluate(()=>performance.timeOrigin);const appDocuments=navigations
-    const bases=await json('/api/v1/apps'),launch=bases.data.items[0]
-    assert.ok(launch,'The authorized included base is discoverable')
-    await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:launch.name,exact:true}).click();await page.waitForURL(new URL(launch.entryUrl,origin).href);await page.getByRole('navigation',{name:'Record types',exact:true}).waitFor()
+    if(viewport.width<600) await page.getByRole('button',{name:'Open navigation',exact:true}).click()
+    await page.getByRole('navigation',{name:'Operator navigation',exact:true}).filter({visible:true}).getByRole('link',{name:'Records',exact:true}).click();await page.waitForURL('**/app/records');await page.getByRole('navigation',{name:'Application records',exact:true}).waitFor()
     assert.equal(await page.evaluate(()=>performance.timeOrigin),appTime);assert.equal(navigations,appDocuments)
     assert.ok(time>0)
     for (const document of documents) { await page.goto(`${origin}${document}`); await page.waitForLoadState('networkidle'); assert.ok(!(await page.locator('body').innerText()).includes('Could not load this page'), document) }
