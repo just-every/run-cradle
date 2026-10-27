@@ -40,5 +40,5 @@ export function TableTools({ exports, onImport, onGallery, onForms, onFind, onPa
 }
 export function QuietUndo() {
   const history = useGridHistory()
-  return <>{history.feedback}{history.canUndo ? <div className="cr-quiet-undo" role="group" aria-label="Recent edit"><button type="button" className="cr-button cr-button--quiet" onClick={history.undo}>Undo</button></div> : null}</>
+  return history.canUndo ? <div className="cr-quiet-undo" role="group" aria-label="Recent edit"><button type="button" className="cr-button cr-button--quiet" onClick={history.undo}>Undo</button></div> : null
 }
