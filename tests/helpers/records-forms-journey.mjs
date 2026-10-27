@@ -1,3 +1,4 @@
+import {tableAction} from './records-table-tools.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -33,7 +34,7 @@ export async function conditionalFormsJourney(){
     page.setDefaultTimeout(15000)
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     await page.goto(`${h.origin}/app/records/${appId}/${entityId}`)
-    await page.getByRole('button',{name:'Form',exact:true}).click()
+    await tableAction(page,'Forms')
     await page.getByRole('button',{name:'Edit form',exact:true}).click()
     const editor=page.locator('form').filter({has:page.getByLabel('Form title',{exact:true})})
     const tile=label=>editor.locator('fieldset.cr-field-tile').filter({has:page.locator('legend').getByText(label,{exact:true})})
