@@ -536,6 +536,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%'").bind(run.id).first()).n,0,'NOTIFY-009 the later completion leaves no attempt')
   await removeExport(starter,run.id)
  }
+ const preClaimStarted=performance.now()
  // Destination authority can fail before the resumed claim batch. The durable
  // recovery count must advance even though no new attempt lease can be written.
  for(const muted of [false,true]){
@@ -569,8 +570,10 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.equal((await recoveryState(run.id)).running_id,null)
   await removeExport(starter,run.id)
  }
+ console.log(`NOTIFICATION_SCENARIO width=${width} journey=pre-claim-resume seconds=${((performance.now()-preClaimStarted)/1000).toFixed(3)}`)
  console.log(`NOTIFY-009 ${width}: pre-claim resume failure is counted, bounded and reported once with safe custody and later completion`)
 
+ const staleWorkerStarted=performance.now()
  // Let an old real execution continue after another scheduled invocation has
  // re-claimed its run. Each request waits only at its own provider edge.
  for(const muted of [false,true]){
@@ -608,6 +611,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   }finally{oldHold.release();replacementHold?.release();await old;await replacement}
   await removeExport(starter,id)
  }
+ console.log(`NOTIFICATION_SCENARIO width=${width} journey=stale-worker seconds=${((performance.now()-staleWorkerStarted)/1000).toFixed(3)}`)
  console.log(`NOTIFY-009 ${width}: stale execution after re-claim cannot commit, clean up, settle or publish over its live replacement`)
 
  // An execution that adds retained objects before it stops made useful progress:
@@ -763,7 +767,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.deepEqual(item.outcome,progressText.import.completed,'NOTIFY-005 the retained starter reads the generic outcome beside the unavailable subject')
   let browser,context
   try{
-   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+   browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
    context=await browser.newContext({viewport:{width,height:width===390?844:900}})
    await context.addCookies([{name:owner.session.cookie.split('=')[0],value:owner.session.cookie.slice(owner.session.cookie.indexOf('=')+1),url:h.origin}])
    const page=await context.newPage(),errors=[]
@@ -848,7 +852,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  assert.deepEqual((await(await h.request(owner.session,'/api/notifications')).json()).notifications.filter(n=>n.id===mutedNotice.id||n.subject.id===mutedFailure),[],'NOTIFY-005 another operator never sees this outcome')
  let outcomeBrowser,outcomeContext
  try{
-  outcomeBrowser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  outcomeBrowser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
   outcomeContext=await outcomeBrowser.newContext({viewport:{width,height:width===390?844:900}})
   await outcomeContext.addCookies([{name:starter.session.cookie.split('=')[0],value:starter.session.cookie.slice(starter.session.cookie.indexOf('=')+1),url:h.origin}])
   const page=await outcomeContext.newPage(),errors=[]
