@@ -6846,7 +6846,7 @@
       "executable": false
     },
     "src/core/app/versioned-loaders.ts": {
-      "sha256": "400b41c0f793e4d9402100f82adcf46357cbb4b0897a6c022b45cc32cd6f7531",
+      "sha256": "2da635ab22affcf16160e4e4148073df5ab11e9967cfcf8608121bc1c869ca34",
       "executable": false
     },
     "src/core/app/worker.ts": {
@@ -10782,7 +10782,7 @@
       "executable": false
     },
     "src/ui/records/live-records.tsx": {
-      "sha256": "7bec907fcd3c771ff7b5a6beae54bf7999ae0e9af42f44c338a6de7d8ad741a3",
+      "sha256": "561d1f084d9b1ebddca1a4b878e618423c64c45331104cfc5b574ba3222c9451",
       "executable": false
     },
     "src/ui/records/manual-import-mappings.tsx": {
