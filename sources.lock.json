@@ -6310,7 +6310,7 @@
       "executable": false
     },
     "src/core/app/composition/channels.server.ts": {
-      "sha256": "ba7941db768e3875783bbc1b30ba83d3cd4effe16102937691087b613d66c872",
+      "sha256": "9a960e3d535887de966421e5a65e5d9eeb16d30f9cc205cb450e28df792fde70",
       "executable": false
     },
     "src/core/app/composition/entities.server.ts": {
