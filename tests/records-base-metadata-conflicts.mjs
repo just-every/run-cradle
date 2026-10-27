@@ -10,7 +10,7 @@ import {baseImportHttp} from '../src/domains/records/base-transfer/http.server.t
 import {RECORD_VIEW_ENTITY_ID,RECORD_FORM_ENTITY_ID} from '../src/domains/records/contracts.ts'
 import {createUlid} from '../src/core/shared/ids.ts'
 
-for(const kind of ['view','form'])for(const edit of ['public-save','same-version'])contract('RECORDS-005 RECORDS-006',`${edit} ${kind} remains intact with terminal undo, exact attribution and durable downloadable conflict evidence`,async()=>{
+async function metadataConflictCase(kind,edit){
  const h=await harness()
  try{
   const snapshot=portableFixture(),bytes=new TextEncoder().encode(JSON.stringify(snapshot)),source=prepareJsonSource({filename:'metadata.json',bytes}),ids=allocateJsonIdentities(snapshot,'copy'),preview=previewJsonImport(source,{name:snapshot.base.name},ids),applied=await applyPreview(h,preview),r=applied.r,id=kind==='view'?preview.portableViews[0].id:preview.portableForms[0].id,table=kind==='view'?'record_views':'record_forms',metadata=kind==='view'?await r.services.metadata.readView(h.ctx,id):await r.services.metadata.readForm(h.ctx,id),{version,createdAt,updatedAt,id:_,schema,...definition}=metadata,label='Owner edited '+kind
@@ -30,4 +30,10 @@ for(const kind of ['view','form'])for(const edit of ['public-save','same-version
   const authenticate=async()=>h.ctx,http=baseImportHttp(service,{prepare:prepareJsonSource,identities:allocateJsonIdentities},authenticate,authenticate),response=await http.request('http://localhost/api/v1/records/base-import/jobs/'+job.id+'/report.json');assert.equal(response.status,200);assert.deepEqual(await response.json(),status)
   assert.equal((await service.resume(h.ctx,job.id)).state,'undone');assert.deepEqual(await service.status(h.ctx,job.id),status);assert.deepEqual(await h.db.prepare(`SELECT * FROM ${table} WHERE id=?`).bind(id).first(),editedRow)
  }finally{h.close()}
+}
+
+contract('RECORDS-005 RECORDS-006','owner-edited metadata matrix remains intact with terminal undo, exact attribution and durable downloadable conflict evidence',async()=>{
+ for(const kind of ['view','form'])for(const edit of ['public-save','same-version']){
+  try{await metadataConflictCase(kind,edit)}catch(error){throw new Error(`RECORDS-005 RECORDS-006 ${edit} ${kind}: ${error.message}`,{cause:error})}
+ }
 })
