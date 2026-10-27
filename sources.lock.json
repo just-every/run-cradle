@@ -2906,11 +2906,11 @@
       "executable": false
     },
     ".github/workflows/verify-nightly.yml": {
-      "sha256": "2cd740e7fcbb73ebe38016bdd962b7939be31babdec871edd153aa7fbf88e4f2",
+      "sha256": "813cdf291a2ec6ab1f5f7ae3ff7e052891a8fe95438f9e8b5e5595029b51cfdc",
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "9e47c90af20bc11247a6fc6a46e3161f6de0e9170851c5e4b20af28751a90bab",
+      "sha256": "f963f226a1c7f4885b99fbe420d785ff6945e17e57ffe939492bc4c339df6218",
       "executable": false
     },
     ".gitignore": {
@@ -5317,6 +5317,14 @@
       "sha256": "945c39565f96ce85c60fa5e4b4814588e90b9c63688fc16b42aaaf6a37cb00d2",
       "executable": false
     },
+    "scripts/chromium-probe.mjs": {
+      "sha256": "a96db3da1f58d4c0297ae8a71c78085698e13c548754fbb9737702a990667aa1",
+      "executable": false
+    },
+    "scripts/ci/verify-reuse.sh": {
+      "sha256": "7b8bcbddebe1fd0309f135b0cb7b3d3abf156b9c4da393a7705e1ab275377b53",
+      "executable": false
+    },
     "scripts/delivery/base/artifact.mjs": {
       "sha256": "129f210f1556e816ba94ffe74359ac553cd26466aaf8c6c299765e9cea29aa07",
       "executable": false
@@ -5527,6 +5535,10 @@
     },
     "scripts/evidence/runtime-secret-scan.mjs": {
       "sha256": "3698a50eb86e0b8c09c2922331cb53a3c908b0ab547363cff0f7047afea0bc51",
+      "executable": false
+    },
+    "scripts/install-chromium-deps.py": {
+      "sha256": "c76977f3507ed719ee274551938db2b33041a4262e54b946f59cc293b8429527",
       "executable": false
     },
     "scripts/installer/deploy.mjs": {
@@ -12770,7 +12782,7 @@
       "executable": false
     },
     "tests/helpers/user-automation-runtime.mjs": {
-      "sha256": "6b31e1ec6d83a61bd6fe98f8676e2f1232b81a15fc9c9a4ab30f9f9b2fccdf10",
+      "sha256": "e474f148c486b851ee4ad14d6ce4944485e5b2e689221cbcc67dbf9cb8a44aa6",
       "executable": false
     },
     "tests/helpers/user-key-browser.mjs": {
