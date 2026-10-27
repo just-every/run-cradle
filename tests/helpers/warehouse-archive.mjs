@@ -6,11 +6,12 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 
 const hour=()=>Math.ceil(Date.now()/3600000)*3600000
 const writeCount=edge=>edge.calls.filter(call=>['PUT','POST','DELETE'].includes(call.method)).length
-const scheduleColumns=['state','sealed_json','running_id','running_started_at','running_at','running_slot','running_revision','watermark_json','last_slot']
+const scheduleColumns=['state','sealed_json','running_id','running_started_at','running_at','running_slot','running_revision','watermark_json','last_slot','running_stopped_slot']
 function assertCleared(schedule){
  assert.equal(schedule.state,'paused','Every restored schedule needs a fresh owner save')
  for(const column of scheduleColumns.filter(column=>!['state','watermark_json'].includes(column)))assert.equal(schedule[column],null,'No retained schedule authority or invocation: '+column)
  assert.equal(schedule.watermark_json,'{}','A restored export starts with no inherited watermark')
+ for(const column of ['running_failures','running_stalls','running_objects'])assert.equal(schedule[column],0,'No inherited recovery accounting: '+column)
 }
 /** Public owner commands and a scheduled Worker produce actual completed R2/S3
  * transfers. The interrupted lease and accepted R2 part are a crash fixture,
@@ -45,16 +46,47 @@ export async function addWarehouseArchiveState(h,edge){
   const transfer=JSON.stringify({[input.destination.kind]:{uploadId,sha256}})
   await h.db.batch([
    h.db.prepare("INSERT INTO warehouse_objects(object_key,export_id,run_id,created_at,destination_json,sealed_json,metadata_json,dispatch_state,transfer_json) VALUES(?,?,?,?,?,?,NULL,'prepared',?)").bind(key,input.id,runId,startedAt,schedule.destination_json,schedule.sealed_json,transfer),
-   h.db.prepare('UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=?').bind(runId,startedAt,new Date(at+3600000).toISOString(),new Date(at+3600000).toISOString().slice(0,13),revision,input.id),
+   h.db.prepare('UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=?,running_failures=3,running_stalls=1,running_objects=1,running_stopped_slot=? WHERE id=?').bind(runId,startedAt,new Date(at+3600000).toISOString(),new Date(at+3600000).toISOString().slice(0,13),revision,new Date(at+3600000).toISOString().slice(0,13),input.id),
   ])
   pending.push({key,uploadId,transfer})
  }
  assert.equal((await h.db.prepare("SELECT count(*) n FROM warehouse_exports WHERE running_id IS NOT NULL AND watermark_json<>'{}'").first()).n,configurations.length,'The export source contains populated schedules and interrupted invocations')
  assert.equal((await h.db.prepare("SELECT count(*) n FROM warehouse_objects WHERE transfer_json<>'{}'").first()).n,pending.length)
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM warehouse_exports WHERE running_failures>0 AND running_stalls>0 AND running_objects>0 AND running_stopped_slot IS NOT NULL AND running_id IS NOT NULL').first()).n,configurations.length,'The source positively contains every populated recovery field and retained claim')
+ const importing=await liveImportArchiveState(h)
  const sourcePolicy=await h.db.prepare("SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id='00000000000000000000000700'").bind(h.operator).first()
  assert.ok(sourcePolicy)
- return {edge,configurations,pending,completedKeys:completed.map(row=>row.object_key),at,sourceOwnerId:h.operator,sourcePolicy}
+ return {edge,configurations,pending,completedKeys:completed.map(row=>row.object_key),at,sourceOwnerId:h.operator,sourcePolicy,importing}
 }
+
+/** A real bounded native apply commits records, then a refused settlement leaves
+ * its actual journal live. This is synthetic D1 fault injection at persistence,
+ * not a replacement importer or a fabricated progress attempt. */
+async function liveImportArchiveState(h){
+ const filename='synthetic-cradle-archive-import.csv',text='Name\n'+Array.from({length:25},(_,i)=>'synthetic-cradle-'+(5100+i)).join('\n')+'\n',options={name:'Synthetic archive import',tables:{[filename]:{columns:{'column-1':{type:'text'}}}}},prefix='/api/v1/records/base-import'
+ const csrf=(await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json()).csrfToken
+ const upload=async(route,preview)=>{
+  const body=new FormData();body.append('files',new Blob([text],{type:'text/csv'}),filename);body.set('options',JSON.stringify(options))
+  if(preview){body.set('identities',JSON.stringify(preview.identities));body.set('fingerprint',preview.fingerprint);body.set('acceptLoss','true')}
+  const response=await fetch(h.origin+prefix+route,{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'x-csrf-token':csrf},body}),value=await response.json()
+  assert.equal(response.status,200,JSON.stringify(value));return value.data
+ }
+ const preview=await upload('/preview'),review=await upload('/review',preview),job=(await h.request(prefix+'/adopt',{method:'POST',body:{reviewId:review.reviewId,fingerprint:review.fingerprint,physicalFingerprint:review.physicalFingerprint,acceptLoss:true}})).data
+ await h.db.prepare("CREATE TRIGGER synthetic_cradle_archive_settlement BEFORE DELETE ON channel_progress_attempts BEGIN SELECT RAISE(ABORT,'synthetic-cradle-archive-settlement'); END").run()
+ try{await h.request(prefix+'/jobs/'+job.id+'/resume',{method:'POST',body:{},status:500})}
+ finally{await h.db.prepare('DROP TRIGGER synthetic_cradle_archive_settlement').run()}
+ const status=(await h.request(prefix+'/jobs/'+job.id)).data
+ assert.equal(status.job.state,'applying','Archive source has a real incomplete native import')
+ assert.ok(status.progress.appliedRecords>0&&status.progress.appliedRecords<status.progress.plannedRecords,'Archive source positively retains a bounded partial import')
+ const event='base-import:'+job.id+':failed',attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(event).first()
+ assert.ok(attempt?.token,'Archive source retains its actual import attempt')
+ assert.ok(Date.parse(attempt.live_until)>Date.now(),'Archive creation exercises a live native import attempt')
+ assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE event_id=? AND subject_id=? AND starter_id=?').bind(event,job.id,h.operator).first()).n,1,'The live import positively has its own write-ahead progress debt')
+ console.log('ARCHIVE_RECOVERY_SOURCE '+JSON.stringify({exportRecoveryFields:4,liveImportAttempts:1,owedImportOutcomes:1,appliedRecords:status.progress.appliedRecords,plannedRecords:status.progress.plannedRecords}))
+ const applied=(await h.db.prepare('SELECT count(*) n FROM ik_provenance WHERE job_id=?').bind(job.id).first()).n
+ return {id:job.id,applied}
+}
+
 /** Inspect the actual emitted archive, rather than invoking exportRow directly. */
 export async function assertWarehouseArchive(path,fixture){
  const items=[]
@@ -62,6 +94,10 @@ export async function assertWarehouseArchive(path,fixture){
  const schedules=items.filter(item=>item.kind==='row'&&item.table==='warehouse_exports').map(item=>item.row),objects=items.filter(item=>item.kind==='row'&&item.table==='warehouse_objects').map(item=>item.row)
  assert.deepEqual(schedules.map(row=>row.id).sort(),fixture.configurations.map(row=>row.id).sort())
  for(const schedule of schedules)assertCleared(schedule)
+ for(const table of ['channel_progress_attempts','channel_progress_owed'])assert.deepEqual(items.filter(item=>item.kind==='row'&&item.table===table),[],'Archive excludes live progress custody: '+table)
+ const imported=items.find(item=>item.kind==='row'&&item.table==='ik_jobs'&&item.row.id===fixture.importing.id)?.row
+ assert.ok(imported,'Archive retains the real incomplete import job as history')
+ assert.deepEqual({hold:imported.cradle_restore_hold,token:imported.lease_token,expires:imported.lease_expires},{hold:1,token:null,expires:null},'Archive independently clears import execution authority')
  assert.deepEqual(objects.map(row=>row.object_key).sort(),[...fixture.completedKeys,...fixture.pending.map(row=>row.key)].sort(),'All completed and interrupted object custody remains portable')
  for(const object of objects){assert.equal(object.transfer_json,'{}','Archive clears every live upload session');assert.equal(object.sealed_json,null,'Archive clears every destination credential snapshot')}
  const serialized=JSON.stringify(items)
@@ -89,6 +125,11 @@ export async function restoredWarehouseArchive(runtime,db,request,fixture,readMa
  const restored=(await db.prepare('SELECT * FROM warehouse_exports ORDER BY id').all()).results
  assert.deepEqual(restored.map(row=>row.id).sort(),configurations.map(row=>row.id).sort())
  for(const schedule of restored)assertCleared(schedule)
+ const importState=async()=>({job:await db.prepare('SELECT cradle_restore_hold,lease_token,lease_expires FROM ik_jobs WHERE id=?').bind(fixture.importing.id).first(),applied:(await db.prepare('SELECT count(*) n FROM ik_provenance WHERE job_id=?').bind(fixture.importing.id).first()).n})
+ const retainedImport=await importState()
+ assert.deepEqual(retainedImport.job,{cradle_restore_hold:1,lease_token:null,lease_expires:null},'Restored import requires current owner authority and has no old execution lease')
+ assert.equal(retainedImport.applied,fixture.importing.applied,'Restore retains the actual partially applied import without continuing it')
+ for(const table of ['channel_progress_attempts','channel_progress_owed'])assert.equal((await db.prepare('SELECT count(*) n FROM '+table).first()).n,0,'Restore contains no old progress custody: '+table)
  const objects=(await db.prepare('SELECT * FROM warehouse_objects').all()).results
  assert.ok(objects.length>fixture.pending.length,'Restore retains completed and interrupted destination custody')
  for(const object of objects){assert.equal(object.transfer_json,'{}');assert.equal(object.sealed_json,null)}
@@ -97,6 +138,11 @@ export async function restoredWarehouseArchive(runtime,db,request,fixture,readMa
  const worker=await runtime.getWorker()
  assert.equal((await worker.scheduled({cron:'* * * * *',scheduledTime:at+7200000})).outcome,'ok')
  assert.equal((await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.warehouse.wake.v1'}}])).outcome,'ok')
+ assert.deepEqual(await importState(),retainedImport,'Scheduled and queue wake never resume the restored import')
+ for(const table of ['channel_progress_attempts','channel_progress_owed'])assert.equal((await db.prepare('SELECT count(*) n FROM '+table).first()).n,0,'Runtime wake never revives old progress custody: '+table)
+ assert.equal((await db.prepare("SELECT count(*) n FROM notifications WHERE kind='progress' AND subject_id=?").bind(fixture.importing.id).first()).n,0,'Runtime wake never publishes an old import outcome')
+ assert.equal((await readMail()).length,mailBefore,'Restoration and runtime wake send no old progress mail')
+ console.log('ARCHIVE_RECOVERY_RESTORED '+JSON.stringify({exportClaims:0,recoveryCounters:0,importAttempts:0,owedOutcomes:0,importRestoreHold:retainedImport.job.cradle_restore_hold,newProviderMail:0}))
  assert.equal(writeCount(edge),beforeWrites,'Restore, cron and queue wake start zero old remote transfers')
  assert.deepEqual((await bucket.list()).objects.map(row=>row.key).sort(),beforeKeys,'Restore, cron and queue wake create zero old R2 objects')
  assert.equal((await db.prepare("SELECT count(*) n FROM warehouse_exports WHERE state='active' OR running_id IS NOT NULL OR watermark_json<>'{}'").first()).n,0,'Fresh owner sign-in alone supplies no schedule authority')
