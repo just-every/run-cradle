@@ -11,7 +11,7 @@ import {fileRecords} from '@runeditrun/rer/modules/portability/files'
 import {encodedRow} from '@runeditrun/rer/modules/portability/catalogue'
 import {canonicalJson} from '@runeditrun/rer/modules/portability'
 import {platformTable} from '@runeditrun/rer/internal/modules/portability/bookkeeping.mjs'
-import {LAUNCH_APP_ID,launchEntities} from '../src/apps/launch/contracts.ts'
+const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
 
 const {fileStoreArchive}=await import('./helpers/file-store-archive.mjs')
 const {restoredRecordCalendar}=await import('./helpers/record-calendar-archive.mjs')

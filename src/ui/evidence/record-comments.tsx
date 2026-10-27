@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Page } from '../../contracts/primitives'
 import type { RecordRow } from '../../domains/records/contracts'
 import { useCommand, useResource, type Resource } from '../shared/api'
@@ -19,6 +19,10 @@ export function RecordComments({ record, onChanged }: { record: RecordRow; onCha
   const lastReady = useRef<{ url: string; resource: Resource<Thread> } | null>(null)
   if (thread.resource.state === 'ready') lastReady.current = { url, resource: thread.resource }
   const resource = thread.resource.state === 'loading' && lastReady.current?.url === url ? lastReady.current.resource : thread.resource
+  useEffect(() => {
+    window.addEventListener('records-live-changed', thread.refresh)
+    return () => window.removeEventListener('records-live-changed', thread.refresh)
+  }, [thread.refresh])
   const command = useCommand(`delete-comment:${record.id}`)
   function refresh() { setEditing(undefined); setRedacting(undefined); setCursor(undefined); thread.refresh(); onChanged?.() }
   async function remove(comment: RecordComment) {

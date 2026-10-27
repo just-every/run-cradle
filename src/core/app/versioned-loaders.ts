@@ -7,4 +7,16 @@ permitted.push(new RegExp(`^/api/v1/comments\\?appId=${id}&entityId=${id}&record
 export const loadVersionedDocumentData=createServerFn({method:'GET'}).validator((value:unknown)=>{
  if(!Array.isArray(value)||value.length<1||value.length>3||!value.every(path=>typeof path==='string'&&permitted.some(pattern=>pattern.test(path))))throw notFound()
  return value as string[]
-}).handler(async({data})=>{const {loadDocumentResources}=await import('./document.server');return loadDocumentResources(data)})
+}).handler(async({data})=>{
+ const paths=new Set(data)
+ // A record document renders its schema and first thread page together. These
+ // dependencies derive only from the validated record path, never caller URLs.
+ for(const path of data){
+  const record=new RegExp(`^/api/v1/apps/(${id})/entities/(${id})/records/(${id})$`).exec(path)
+  if(!record)continue
+  const [,appId,entityId,recordId]=record
+  paths.add(`/api/v1/apps/${appId}/entities/${entityId}`)
+  paths.add(`/api/v1/comments?${new URLSearchParams({appId:appId!,entityId:entityId!,recordId:recordId!,q:'',limit:'30'})}`)
+ }
+ const {loadDocumentResources}=await import('./document.server');return loadDocumentResources([...paths])
+})
