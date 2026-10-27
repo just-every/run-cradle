@@ -7374,7 +7374,7 @@
       "executable": false
     },
     "src/core/platform/restored-owner.server.ts": {
-      "sha256": "f0105ff2d8794413b13ae05ecea2e1431a30b488bc9d8a950d770a810b2ddec6",
+      "sha256": "6b238daa75ef356ec493bc8d5dde3ed213ad027d1151847a580a82ca4e738dcc",
       "executable": false
     },
     "src/core/platform/schema/common.ts": {
@@ -8003,6 +8003,10 @@
     },
     "src/domains/channels/reschedule.server.ts": {
       "sha256": "4e55622cf25e2f5db172b69ee084ecc783ef4d3c7c3fd16b3d91fd6798cff4ed",
+      "executable": false
+    },
+    "src/domains/channels/restored-owner-policy.server.ts": {
+      "sha256": "6d6620cba2aeaeaf84254f127adf66dd67b01f223dd4d8d7517e61e658757aab",
       "executable": false
     },
     "src/domains/channels/retry.server.ts": {
@@ -12778,7 +12782,7 @@
       "executable": false
     },
     "tests/helpers/warehouse-archive.mjs": {
-      "sha256": "c8bf32ce8aff8c11075161ad4cc9d524c70806f314c6dc29fcdec201a06ad036",
+      "sha256": "b1e960e2d2d337b9ebcd8462f858cbcd6d04b25432553c058ac41ce2004759bc",
       "executable": false
     },
     "tests/helpers/warehouse-browser.mjs": {
