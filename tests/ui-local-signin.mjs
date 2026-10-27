@@ -147,6 +147,9 @@ async function freshViewport(viewport,evidence){
       assert.equal((await context.request.get(origin+'/auth/session')).status(),200)
       await accessibilityAction(page,page.getByRole('link',{name:'Import a base',exact:true}));await page.getByRole('heading',{name:'Import a base',exact:true}).waitFor();await check('import-base')
       await page.goto(origin+'/app');await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
+      // Home is server-rendered before the drawer's client handler is attached.
+      // Finish the same bootstrap required by the other client controls below.
+      await page.waitForLoadState('networkidle');await page.waitForFunction(()=>typeof window.__TSR_ROUTER__?.navigate==='function')
       if(viewport.width<=900)await accessibilityAction(page,page.getByRole('button',{name:'Open navigation',exact:true}));await accessibilityAction(page,page.getByRole('navigation',{name:'Operator navigation',exact:true}).getByRole('link',{name:'Records',exact:true}).filter({visible:true}));await page.getByRole('heading',{name:'Records',exact:true}).waitFor();await check('records')
       await verifyIdentityAndRecovery({browser,context,viewport,origin,evidence,accessibilityScreens})
       await verifyExpiredSession({context,page,viewport,origin,evidence,copy})
