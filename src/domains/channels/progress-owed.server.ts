@@ -59,10 +59,12 @@ async function publish(db:D1Database,input:OwedProgress,ingress:RequestContext['
  if(await db.prepare("SELECT 1 FROM command_admissions WHERE command_id=? AND state='committed'").bind(commandId).first()){await db.prepare('DELETE FROM channel_progress_owed WHERE event_id=?').bind(input.eventId).run();return}
  const starter=await db.prepare('SELECT human_id FROM authority_principals WHERE id=?').bind(input.starterId).first<{human_id:string|null}>()
  if(!starter?.human_id)throw new Error('Progress requires the retained human starter')
- // A crashed request becomes recoverable after its bounded attempt lease.
- // The lease predicate is also admitted below, so a concurrent request cannot
- // acquire the attempt between this read and notification publication.
- const idle=trustedPredicate('NOT EXISTS(SELECT 1 FROM channel_progress_attempts WHERE event_id=? AND live_until>?)',[input.eventId,now.toISOString()])
+ // A crashed request becomes recoverable after its bounded attempt lease. An
+ // interrupted export run that still holds its active export's claim for this
+ // version and slot is not failed yet: a later tick resumes that same run, which
+ // settles it. The lease predicate is also admitted below, so a concurrent
+ // request cannot acquire the attempt between this read and publication.
+ const idle=trustedPredicate(`NOT EXISTS(SELECT 1 FROM channel_progress_attempts a WHERE a.event_id=? AND (a.live_until>? OR EXISTS(SELECT 1 FROM warehouse_exports w WHERE w.id=? AND w.state='active' AND w.running_id=a.token AND ('warehouse-export:'||w.id||':'||w.version||':'||w.running_slot||':failed')=a.event_id)))`,[input.eventId,now.toISOString(),input.subjectId])
  if(!await db.prepare(`SELECT 1 WHERE ${idle.sql}`).bind(...idle.values).first())return
  const job=input.subjectType==='base-import'
   ?trustedPredicate(`EXISTS(SELECT 1 FROM ik_jobs WHERE id=? AND principal_id=? AND ${input.outcome==='completed'?"state='completed'":"state<>'completed'"})`,[input.subjectId,input.starterId])
