@@ -5,14 +5,14 @@ import { useCommand, useResource } from '../shared/api'
 import { CommandFeedback, ResourceState, Timestamp } from '../shared/presentation'
 import { CommentComposer, type RecordComment } from './comment-composer'
 
-export function RecordComments({ record }: { record: RecordRow }) {
+export function RecordComments({ record, onChanged }: { record: RecordRow; onChanged?: () => void }) {
   const [search, setSearch] = useState('')
   const [cursor, setCursor] = useState<string>()
   const [editing, setEditing] = useState<string>()
   const query = new URLSearchParams({ ...record.ref, q: search, limit: '30', ...(cursor ? { cursor } : {}) })
   const thread = useResource<Page<RecordComment> & {canAdd: boolean}>(`/api/v1/comments?${query}`)
   const command = useCommand(`delete-comment:${record.id}`)
-  function refresh() { setEditing(undefined); setCursor(undefined); thread.refresh() }
+  function refresh() { setEditing(undefined); setCursor(undefined); thread.refresh(); onChanged?.() }
   async function remove(comment: RecordComment) {
     const result = await command.submit('/api/v1/commands/comment.delete', { subject: record.ref, id: comment.id, version: comment.version }, [{ ref: record.ref, version: record.version }])
     if (result) refresh()

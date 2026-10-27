@@ -387,7 +387,7 @@ const DetailContent = ({ campaignId }: CampaignDetailPageProps) => {
                 </p>
               ) : null}
             </SectionCard>
-            <CampaignRecordComments campaign={campaign} />
+            <CampaignRecordComments campaign={campaign} onChanged={detail.retry} />
             <SectionCard title="Activity" collapsible className="portfolio-priority-history">
               <ActivityList timezone={session.resource.data.workspace.timezone} activity={activity} />
               {activity.length === 0 ? (
@@ -493,8 +493,8 @@ export const CampaignDetailPage = ({ campaignId }: CampaignDetailPageProps) => (
 );
 
 /** The retained page uses the same record identity and revision as Records. */
-function CampaignRecordComments({campaign}:{campaign:{id:string;version:number}}) {
+function CampaignRecordComments({campaign,onChanged}:{campaign:{id:string;version:number};onChanged:()=>void}) {
   const base=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.campaign}`
   const detail=useLiveRecords<RecordDetail>(`${base}/records/${campaign.id}`,undefined,`${base}/presence`,()=>{},campaign.version)
-  return <ResourceState resource={detail.resource} operation="campaign record" retry={detail.refresh}>{data=><RecordComments record={data.record} />}</ResourceState>
+  return <ResourceState resource={detail.resource} operation="campaign record" retry={detail.refresh}>{data=><RecordComments record={data.record} onChanged={onChanged} />}</ResourceState>
 }
