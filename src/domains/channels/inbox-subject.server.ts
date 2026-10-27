@@ -1,5 +1,5 @@
 import {launchDescriptors} from '../../apps/launch/descriptors.server'
-import {LAUNCH_APP_ID} from '../../apps/launch/contracts'
+import {LAUNCH_APP_ID,launchEntities} from '../../apps/launch/contracts'
 import {automationRunLink} from '../automations/failure-details'
 import type {PolicyPort,RequestContext} from '../authority/ports'
 import {baseAccess} from '../records/manual/base-access.server'
@@ -34,6 +34,8 @@ export async function launchInboxSubject(db:D1Database,row:{kind:string;subject_
  if(row.kind==='outage'&&row.subject_type==='automation-stop'){const run=await db.prepare('SELECT r.automation_id,b.app_id FROM automation_runs r JOIN record_automation_bindings b ON b.automation_id=r.automation_id WHERE r.id=?').bind(row.subject_id).first<{automation_id:string;app_id:string}>();return run?automationRunLink(run.app_id,run.automation_id,row.subject_id):null}
  if(row.kind==='weekly-digest')return '/app/overview'
  if(row.kind==='automation-failed')return await db.prepare('SELECT 1 FROM automation_runs WHERE id=?').bind(row.subject_id).first()?'/app/automations':null
+ // A mention retained from the retired campaign thread follows its comment into the record thread.
+ if(row.kind==='comment-mentioned')return row.campaign_id&&await db.prepare('SELECT 1 FROM evidence_comments WHERE id=? AND app_id=? AND entity_id=? AND record_id=? AND deleted_at IS NULL').bind(row.subject_id,LAUNCH_APP_ID,launchEntities.campaign,row.campaign_id).first()?`/app/campaigns/${encodeURIComponent(row.campaign_id)}`:null
  const target=({'decision-assigned':['decisions','decisions'],'decision-overdue':['decisions','decisions'],'critical-risk-escalated':['risks','risks'],'readiness':['milestones','milestones'],'record-automation':['campaigns','campaigns'],'outage':['campaigns','campaigns']} as Record<string,[string,string]>)[row.kind]
  return target&&await db.prepare(`SELECT 1 FROM ${target[0]} WHERE id=?`).bind(row.subject_id).first()?`/app/${target[1]}/${subject}`:null
 }

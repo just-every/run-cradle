@@ -58,7 +58,7 @@ export async function verifyInboxScreens({h,page,command,capture}){
  const deleted=await actorCommand('comment.add',{campaignId:campaign.id,body:'Withdrawn supplier note',mentions:[h.owner]},ref(campaign))
  const deletedNoticeId=(await commentNotices(h.db,deleted.id)).find(item=>item.operator_id===h.owner).id,deletedNotice=(await read()).notifications.find(item=>item.id===deletedNoticeId)
  await actorCommand('comment.delete',{id:deleted.id,version:deleted.version},ref(campaign))
- assert.equal((await read()).notifications.find(item=>item.id===deletedNotice.id).subject.href,`/app/records/${LAUNCH_APP_ID}/${launchEntities.campaign}/${campaign.id}`,'A deleted comment notice still opens its readable record')
+ assert.equal((await read()).notifications.find(item=>item.id===deletedNotice.id).subject.available,false,'NOTIFY-005 deleted comment has no missing-record link')
  await create('campaign.archive',{id:firstCampaign.id},ref(firstCampaign))
  await create('campaign.archive',{id:campaign.id},ref(campaign))
  const archived=await read()
