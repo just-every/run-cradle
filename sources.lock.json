@@ -10854,7 +10854,7 @@
       "executable": false
     },
     "src/ui/records/record-fields.tsx": {
-      "sha256": "75c8add38007f9f192b33f45597e71e8ea4288c704fac05581ac576fb40acbbc",
+      "sha256": "1006a25ba9503449f01e5da74013f46f9700b7fd48d92ae244d291292bba93c6",
       "executable": false
     },
     "src/ui/records/record-form.tsx": {
@@ -10878,7 +10878,7 @@
       "executable": false
     },
     "src/ui/records/record-person.css": {
-      "sha256": "c98a6e980145caee55b55e9a521747ab5067a0f0d7f5d67158005bbb255c0450",
+      "sha256": "979c3de29e8cdeedba3be95b841cdbdcbf278aa74541c48f7c18c11ecf217c61",
       "executable": false
     },
     "src/ui/records/record-table.tsx": {
