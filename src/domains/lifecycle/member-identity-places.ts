@@ -78,7 +78,7 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('admission_audit',`actor_id=? OR ${refs('subject_json')} OR ${refs('changes_json')} OR ${refs('personal_refs_json')}`,'audit entries they acted in or that reference them'),
  place('admission_events',`${refs('subject_json')} OR ${refs('payload_json')}`,'events that reference them'),
  place('admission_outbox',`${refs('input_json')} OR ${refs('subject_json')}`,'queued commands that reference them'),
- {...byId('event_id IN (SELECT event_id FROM channel_progress_owed WHERE starter_id=? UNION SELECT 'base-import:'||subject_id||':failed' FROM channel_progress_owed WHERE starter_id=? AND subject_type='base-import')','their held import and export attempts','delete'),table:'channel_progress_attempts'},
+ {...byId("event_id IN (SELECT event_id FROM channel_progress_owed WHERE starter_id=? UNION SELECT 'base-import:'||subject_id||':failed' FROM channel_progress_owed WHERE starter_id=? AND subject_type='base-import')",'their held import and export attempts','delete'),table:'channel_progress_attempts'},
  {...byId('starter_id=?','their unpublished import and export progress notices','delete'),table:'channel_progress_owed'},
  // Order matters for deletes: reads and deliveries before their notifications.
  {...byId('operator_id=?','their notification reads','delete'),table:'notification_reads'},
