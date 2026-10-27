@@ -16,8 +16,9 @@ export function ViewSheet({ open, onClose, title, anchor, children, wide = false
       node.style.setProperty('--sheet-top', `${Math.max(16, Math.min(rect.bottom + 8, innerHeight - node.offsetHeight - 16))}px`)
     }
     node.showModal(); place()
+    const observer = new ResizeObserver(place); observer.observe(node)
     window.addEventListener('resize', place)
-    return () => { window.removeEventListener('resize', place); node.close(); if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true }) }
+    return () => { observer.disconnect(); window.removeEventListener('resize', place); node.close(); if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true }) }
   }, [open, anchor])
   return <dialog ref={dialog} className={`cr-view-sheet${wide ? ' cr-view-sheet--wide' : ''}`} aria-label={title} onCancel={event => { event.preventDefault(); close.current() }} onClick={event => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) close.current() } }}>
     <header className="cr-view-sheet__heading"><h2>{title}</h2><button type="button" className="cr-button cr-button--quiet" onClick={onClose}>Close</button></header>

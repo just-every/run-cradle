@@ -1,3 +1,4 @@
+import './base-menu.css'
 import { ViewSummary } from './view-summary'
 import { GridHistoryProvider } from './grid-history'
 import { FindInView, type ViewMatch } from './find-in-view'
@@ -23,8 +24,8 @@ import { SavedRecordViews, SaveRecordView } from './saved-views'
 import { Tooltip } from '../shared/tooltip'
 
 /** One table of a base, in one card: its title, tabs and actions, the chip toolbar, open panels, then the records. */
-export function RecordTable(props: { schema: EntitySchema; tabs: ReactNode }) { return <GridHistoryProvider key={`${props.schema.appId}:${props.schema.id}:${props.schema.version}`} schema={props.schema}><RecordTableContent {...props} /></GridHistoryProvider> }
-function RecordTableContent({ schema, tabs }: { schema: EntitySchema; tabs: ReactNode }) {
+export function RecordTable(props: { schema: EntitySchema; tabs: ReactNode; heading: ReactNode }) { return <GridHistoryProvider key={`${props.schema.appId}:${props.schema.id}:${props.schema.version}`} schema={props.schema}><RecordTableContent {...props} /></GridHistoryProvider> }
+function RecordTableContent({ schema, tabs, heading }: { schema: EntitySchema; tabs: ReactNode; heading: ReactNode }) {
   const [match, setMatch] = useState<ViewMatch | null>(null)
   useEffect(() => { const refresh = () => setRevision(value => value + 1); window.addEventListener('records-changed', refresh); return () => window.removeEventListener('records-changed', refresh) }, [])
   const [query, setQuery] = useState<Query>({ limit: 50 })
@@ -48,10 +49,11 @@ function RecordTableContent({ schema, tabs }: { schema: EntitySchema; tabs: Reac
   const live = useLiveRecords<Page<RecordRow>>(`${base}/query`, readQuery, !viewingSaved && display !== 'form' ? `${base}/presence` : null, () => setQuery(current => ({ ...current, cursor: undefined })), revision)
   const resource = live.resource
 
-  if (importing) { const Import = schema.physicalRevision.startsWith('manual_') ? ManualImport : ImportRecords; return <><div className="cr-tabs-row">{tabs}</div><Import schema={schema} onClose={() => setImporting(false)} onSaved={(summary?: CsvImportSummary) => { if (summary) setImportSummary(summary); live.reload(); setImporting(false); setRevision(value => value + 1) }} /></> }
-  if (creating) return <section className="cr-card cr-records-card"><div className="cr-tabs-row">{tabs}</div><RecordEditor schema={schema} onCancel={() => setCreating(false)} onSaved={() => { live.reload(); setCreating(false); setRevision(value => value + 1) }} /></section>
-  return <>{bulkOpen && <BulkEditor schema={schema} records={selection} onChanged={() => { live.reload(); setRevision(value => value + 1) }} onClose={() => { setBulkOpen(false); setSelection([]) }} />}<section className="cr-card cr-records-card">
-    <header className={`cr-records-card-head${selection.length ? ' cr-records-card-head--selected' : ''}`}><h2>{schema.label}</h2>{tabs}<div className="cr-actions">{selection.length > 0 && <button className="cr-button cr-button--quiet" onClick={() => setBulkOpen(true)}>Edit {selection.length} selected</button>}{!viewingSaved && <ExportCsv schema={schema} query={{ ...query, fields: visible }} />}<button className="cr-button cr-button--quiet" onClick={() => { setImportSummary(null); setImporting(true) }}>Import CSV</button><button className="cr-button" disabled={!schema.fields.some(field => !field.readOnly && field.type !== 'computed')} onClick={() => setCreating(true)}>New record</button></div></header>
+  const title = <header className="cr-page-header cr-base-heading-row">{heading}<Tooltip label="New record"><button type="button" className="cr-button cr-base-heading-row__new" disabled={creating || !schema.fields.some(field => !field.readOnly && field.type !== 'computed')} onClick={() => setCreating(true)}><span className="cr-base-heading-row__label">New record</span><span className="cr-base-heading-row__symbol" aria-hidden="true">+</span></button></Tooltip></header>
+  if (importing) { const Import = schema.physicalRevision.startsWith('manual_') ? ManualImport : ImportRecords; return <>{title}<div className="cr-tabs-row">{tabs}</div><Import schema={schema} onClose={() => setImporting(false)} onSaved={(summary?: CsvImportSummary) => { if (summary) setImportSummary(summary); live.reload(); setImporting(false); setRevision(value => value + 1) }} /></> }
+  if (creating) return <>{title}<section className="cr-card cr-records-card"><div className="cr-tabs-row">{tabs}</div><RecordEditor schema={schema} onCancel={() => setCreating(false)} onSaved={() => { live.reload(); setCreating(false); setRevision(value => value + 1) }} /></section></>
+  return <>{title}{bulkOpen && <BulkEditor schema={schema} records={selection} onChanged={() => { live.reload(); setRevision(value => value + 1) }} onClose={() => { setBulkOpen(false); setSelection([]) }} />}<section className="cr-card cr-records-card">
+    <header className={`cr-records-card-head${selection.length ? ' cr-records-card-head--selected' : ''}`}>{tabs}<div className="cr-actions">{selection.length > 0 && <button className="cr-button cr-button--quiet" onClick={() => setBulkOpen(true)}>Edit {selection.length} selected</button>}{!viewingSaved && <ExportCsv schema={schema} query={{ ...query, fields: visible }} />}<button className="cr-button cr-button--quiet" onClick={() => { setImportSummary(null); setImporting(true) }}>Import CSV</button></div></header>
     {!viewingSaved && display !== 'form' && <LiveRecordsStatus {...live} />}
     {importSummary && <p role="status">Import complete: {importSummary.creates} created · {importSummary.updates} updated · {importSummary.unchanged} unchanged · {importSummary.rejected} rejected.</p>}
     <nav className="cr-tabs cr-display-tabs" aria-label="Record display">{(['grid', 'board', 'cards', 'form'] as const).map(mode => <button type="button" key={mode} className="cr-tab" aria-pressed={!viewingSaved && display === mode} onClick={() => { setSavedView(null); setDisplay(mode); setSelection([]); setSavingView(false) }}>{mode === 'cards' ? 'Gallery' : mode.charAt(0).toUpperCase() + mode.slice(1)}</button>)}</nav>

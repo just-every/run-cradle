@@ -1,3 +1,4 @@
+import {baseAction} from './helpers/records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
 import path from 'node:path'
@@ -46,13 +47,13 @@ contract('RECORDS-003] [BASE-PUBLIC-003','final records review preserves spacing
    page.on('request',request=>{const url=new URL(request.url());if(['http:','https:'].includes(url.protocol)&&url.origin!==h.origin)externalRequests.push(url.href)})
    try{
     await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
-    await page.goto(h.origin+'/app/records');await page.getByRole('heading',{name:'Choose an application',level:2,exact:true}).waitFor();await capture(page,j,'records-empty')
-    await j.action(page.getByRole('button',{name:'Create base',exact:true}));await page.getByLabel('Base name',{exact:true}).fill(`Final review ${width}`)
+    await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor();assert.equal(await page.getByRole('heading',{name:'Choose an application',exact:true}).count(),0);await capture(page,j,'records-entry')
+    await baseAction(page,'New base',j.action);await page.getByLabel('Base name',{exact:true}).fill(`Final review ${width}`)
     await page.getByLabel('Table name',{exact:true}).fill('Companies');await page.getByLabel('Field name',{exact:true}).fill('Company')
     await j.action(page.getByRole('button',{name:'Add table',exact:true}));await page.getByLabel('Table name',{exact:true}).fill('Deals');await page.getByLabel('Field name',{exact:true}).fill('Deal')
     await j.field('Value','number');await j.field('Company link','relation',async editor=>editor.getByLabel('Linked table',{exact:true}).selectOption({label:'Companies'}))
     const base=await j.adopt();await j.record({Company:'Acme Co'});await j.table('Deals');await j.record({Deal:'First deal',Value:'12','Company link':{link:'Acme Co'}})
-    const dealsUrl=page.url(),heading=page.getByRole('heading',{name:'Deals',level:2,exact:true}),cardHead=page.locator('.cr-records-card-head'),displayTabs=page.getByRole('navigation',{name:'Record display',exact:true}),savedTabs=page.getByRole('navigation',{name:'Saved views',exact:true})
+    const dealsUrl=page.url(),heading=page.getByRole('navigation',{name:'Record types',exact:true}).getByRole('link',{name:'Deals',exact:true}).and(page.locator('[aria-current=page]')),cardHead=page.locator('.cr-records-card-head'),displayTabs=page.getByRole('navigation',{name:'Record display',exact:true}),savedTabs=page.getByRole('navigation',{name:'Saved views',exact:true})
     await heading.waitFor();const closedGap=await comfortableGap(cardHead,displayTabs);await capture(page,j,'records-deals-closed')
     await j.action(displayTabs.getByRole('button',{name:'Form',exact:true}));await page.getByRole('heading',{name:'No forms for these records',level:2,exact:true}).waitFor();await capture(page,j,'records-forms-empty');await j.action(displayTabs.getByRole('button',{name:'Grid',exact:true}))
     await j.action(page.getByRole('button',{name:'Save view',exact:true}));const editor=page.locator('form.cr-card').filter({has:page.getByRole('heading',{name:'Save this work view',exact:true})})
@@ -69,7 +70,7 @@ contract('RECORDS-003] [BASE-PUBLIC-003','final records review preserves spacing
     const back=page.getByRole('link',{name:'← Back to records',exact:true});assert.equal(new URL(await back.getAttribute('href'),h.origin).href,dealsUrl)
     await capture(page,j,'record-detail');await j.action(back);await heading.waitFor();await j.action(page.locator('table.cr-table').getByRole('link',{name:'First deal',exact:true}));await linkHeading.waitFor()
     await j.action(companyLink);await page.getByRole('heading',{name:'Acme Co',level:1,exact:true}).waitFor();await capture(page,j,'company-link-reached')
-    await j.action(page.getByRole('link',{name:'← Back to records',exact:true}));await page.getByRole('heading',{name:'Companies',level:2,exact:true}).waitFor()
+    await j.action(page.getByRole('link',{name:'← Back to records',exact:true}));await page.getByRole('navigation',{name:'Record types',exact:true}).getByRole('link',{name:'Companies',exact:true}).and(page.locator('[aria-current=page]')).waitFor()
     await page.goto(dealsUrl);await j.action(savedTabs.getByRole('button',{name:view.name,exact:true}));await page.getByRole('heading',{name:'Reviewed deals',level:2,exact:true}).waitFor();await savedGridRecord(result);await capture(page,j,'saved-view-retained')
     assert.deepEqual(consoleErrors,[],`${width}: console errors`);assert.deepEqual(externalRequests,[],`${width}: external requests`)
     receipts.push({width,baseId:base.appId,viewId:view.id,closedGap,openGap,relationGap,consoleErrors,externalRequests,checkpoints:j.checkpoints})

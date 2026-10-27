@@ -1,3 +1,4 @@
+import {baseAction} from './helpers/records-base-menu.mjs'
 import {fieldBrowser} from './helpers/field-browser.mjs'
 import {recordTrashBrowser} from './helpers/record-trash-browser.mjs'
 import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
@@ -50,8 +51,8 @@ try{
   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width);activePage=page
   await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
   const verifyRetained=await retainedLaunch(page,j,h,width)
-  await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:'Create base',exact:true}).waitFor()
-  await j.action(page.getByRole('button',{name:'Create base',exact:true}));await page.getByLabel('Base name',{exact:true}).fill(`CRM ${width}`);await page.getByLabel('Table name',{exact:true}).fill('Companies');await page.getByLabel('Field name',{exact:true}).fill('Company')
+  await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
+  await baseAction(page,'New base',j.action);await page.getByLabel('Base name',{exact:true}).fill(`CRM ${width}`);await page.getByLabel('Table name',{exact:true}).fill('Companies');await page.getByLabel('Field name',{exact:true}).fill('Company')
   await j.field('Website','url');await j.field('Renewal','date')
   await j.action(page.getByRole('button',{name:'Add table',exact:true}));await page.getByLabel('Table name',{exact:true}).fill('Contacts');await page.getByLabel('Field name',{exact:true}).fill('Contact');await j.field('Email');await j.field('Company link','relation',async e=>e.getByLabel('Linked table',{exact:true}).selectOption({label:'Companies'}));await j.field('Company name','computed',async e=>{await e.getByLabel('Lookup link',{exact:true}).selectOption({label:'Company link'});await e.getByLabel('Lookup source field',{exact:true}).selectOption({label:'Company'})})
   await j.action(page.getByRole('button',{name:'Add table',exact:true}));await page.getByLabel('Table name',{exact:true}).fill('Deals');await page.getByLabel('Field name',{exact:true}).fill('Deal');await j.field('Value','number');await j.field('Close date','date');await j.field('Approved','boolean');await j.field('Stage','select',async e=>e.getByLabel('Options (one per line)').fill('New\nQualified\nWon'));await j.field('Company link','relation',async e=>e.getByLabel('Linked table',{exact:true}).selectOption({label:'Companies'}));await j.field('Company name','computed',async e=>{await e.getByLabel('Lookup link',{exact:true}).selectOption({label:'Company link'});await e.getByLabel('Lookup source field',{exact:true}).selectOption({label:'Company'})})

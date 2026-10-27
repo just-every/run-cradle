@@ -61,7 +61,7 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
           assert.equal(await nav.getByRole('link', { name: 'Today', exact: true }).count(), 0)
           if (width === 390) { await page.keyboard.press('Escape'); assert.equal(await page.getByRole('button', { name: 'Open navigation' }).evaluate(el => el === document.activeElement), true) }
         }
-        if (route === '/app/records') assert.equal(await page.getByRole('navigation', { name: 'Application records' }).count(), 1)
+        if (route === '/app/records') { await page.getByRole('button', { name: /^Base ▾/ }).waitFor();assert.equal(await page.getByRole('heading', { name: 'Choose an application', exact: true }).count(), 0) }
         if (width === 1440 && route !== '/app') assert.notEqual(await page.locator('.operator-rail').getByRole('link', { name: 'Home', exact: true }).getAttribute('aria-current'), 'page', 'Home is active only on the home route')
         if (route.includes('/app/campaigns/')) assert.equal(await page.getByRole('heading', { name: 'Manage campaign work' }).evaluate(el => !!el.closest('.portfolio-page')), true)
         const file = `route-${String(index).padStart(2, '0')}-${width}.jpg`

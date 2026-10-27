@@ -10,10 +10,6 @@
 .cr-records-page .cr-table { min-width: 640px; }
 .cr-records-page .cr-page-header .cr-actions { justify-content: flex-end; }
 
-/* Base bar: base tabs on the left, quiet pills on the right. */
-.cr-base-bar { display: grid; gap: 16px; margin-bottom: 24px; }
-.cr-base-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
-.cr-base-actions { justify-content: flex-end; }
 .cr-export-base p { margin: 0 0 12px; color: var(--muted); }
 .cr-tabs-row { margin-bottom: 24px; }
 
@@ -21,7 +17,6 @@
 .cr-records-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .cr-records-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin-bottom: 24px; }
 .cr-records-card-head > .cr-actions { margin-left: auto; }
-.cr-records-card-head > h2 { margin-right: 4px; }
 .cr-records-toolbar { margin: 0 0 8px; }
 .cr-chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
 .cr-records-panel, .cr-records-card form.cr-card { margin: 16px 0 8px; padding: 20px; border: 0; border-radius: var(--r-tile); background: var(--tile); box-shadow: none; }

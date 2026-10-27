@@ -1,7 +1,7 @@
-.cr-view-sheet { position: fixed; inset: var(--sheet-top, 100px) auto auto var(--sheet-left, 24px); margin: 0; width: min(360px, calc(100vw - 32px)); max-height: min(720px, calc(100dvh - 32px)); padding: 20px; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); color: var(--ink); box-shadow: 0 16px 48px #0002; font-family: var(--font-sans); }
+.cr-view-sheet { position: fixed; inset: var(--sheet-top, 100px) auto auto var(--sheet-left, 24px); margin: 0; width: min(360px, calc(100vw - 32px)); max-height: min(720px, calc(100dvh - 32px)); padding: 20px; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); color: var(--ink); box-shadow: var(--shadow); font-family: var(--font-sans); }
 .cr-view-sheet::backdrop { background: #0002; }
 .cr-view-sheet__heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
-.cr-view-sheet__heading h2 { margin: 0; font: 600 18px/1.3 var(--font-sans); }
+.cr-view-sheet__heading h2 { margin: 0; font: 500 24px/1.2 var(--font-display); }
 .cr-view-sheet__body { display: grid; gap: 8px; min-width: 0; }
 .cr-view-sheet__body > button, .cr-view-sheet__body > a, .cr-view-sheet__body .cr-menu-row { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 10px 12px; text-align: left; justify-content: flex-start; border: 0; border-radius: var(--r-tile); background: transparent; color: var(--ink); font: inherit; text-decoration: none; }
 .cr-view-sheet__body button:hover, .cr-view-sheet__body a:hover { background: var(--tile); }

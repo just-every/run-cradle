@@ -1,3 +1,4 @@
+import {baseAction,baseMenu} from './records-base-menu.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
@@ -36,23 +37,23 @@ export async function baseRolesJourney(){
     const preview=await call(h.cookie,'/api/v1/records/schema-preview',{appId,name:`Purchasing ${width}`,tables:[{id:entityId,label:'Orders',primaryFieldId:title.id,fields:[title,notes]}]})
     await call(h.cookie,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}})
     await page.goto(tablePath);const original=await j.record({Order:'Grove Equipment replenishment',Notes:'Confirm dock appointment before dispatch'})
-    await page.getByRole('button',{name:'Base collaborators',exact:true}).click();await page.getByRole('heading',{name:'Base collaborators',exact:true}).waitFor()
+    await baseAction(page,'People');await page.getByRole('heading',{name:'Base collaborators',exact:true}).waitFor()
     for(const [key,role]of [['creator','creator'],['editor','editor'],['reader','read-only'],['owner','owner']]){
      const form=page.getByRole('form',{name:`Role for ${people[key].name}`,exact:true});await form.getByLabel('Base role',{exact:true}).selectOption(role)
      const saved=page.waitForResponse(r=>r.url().endsWith('/collaborators')&&r.request().method()==='POST');await form.getByRole('button',{name:'Add to this base',exact:true}).click();const savedResponse=await saved;assert.equal(savedResponse.status(),200,await savedResponse.text())
      await page.getByRole('form',{name:`Role for ${people[key].name}`,exact:true}).getByRole('button',{name:'Save base role',exact:true}).waitFor()
     }
     await j.capture('base-collaborators')
-    await creatorPage.goto(tablePath);await creatorPage.getByRole('button',{name:'Edit base schema',exact:true}).click();await creatorPage.getByRole('heading',{name:'Edit base schema',exact:true}).waitFor()
+    await creatorPage.goto(tablePath);await baseAction(creatorPage,'Edit fields');await creatorPage.getByRole('heading',{name:'Edit base schema',exact:true}).waitFor()
     await cj.field('PO number');await cj.adopt();await creatorPage.getByRole('columnheader',{name:/PO number/}).waitFor();await cj.capture('creator-adopted-field')
     const live=await call(people.editor.cookie,base);assert.ok(live.fields.some(field=>field.label==='PO number'))
     const ownership=await h.db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first();assert.equal(ownership.owner_id,'00000000000000000000000981')
-    await creatorPage.getByRole('button',{name:'Edit base schema',exact:true}).click();await creatorPage.getByRole('group',{name:'Notes',exact:true}).getByRole('button',{name:'Remove field',exact:true}).click()
+    await baseAction(creatorPage,'Edit fields');await creatorPage.getByRole('group',{name:'Notes',exact:true}).getByRole('button',{name:'Remove field',exact:true}).click()
     const prepared=creatorPage.waitForResponse(response=>response.url().endsWith('/schema-preview')&&response.request().method()==='POST');await creatorPage.getByRole('button',{name:'Preview schema changes',exact:true}).click();const preparedResponse=await prepared;assert.equal(preparedResponse.status(),200);const destructive=(await preparedResponse.json()).data;assert.equal(destructive.requiresOwnerReview,true);await creatorPage.getByText(/Saved for a base owner to review/).waitFor();await cj.capture('creator-awaiting-owner')
     const adopt={commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:destructive.id}}
     assert.equal((await request(people.creator.cookie,'/api/v1/commands/release.adopt',adopt)).status,403)
     // A base owner who is not the installation owner reviews and adopts the creator's exact preview.
-    await cookie(context,people.owner.cookie);await page.goto(tablePath);await page.getByRole('button',{name:'Review schema changes',exact:true}).click();await page.getByRole('heading',{name:'Schema changes awaiting an owner',exact:true}).waitFor()
+    await cookie(context,people.owner.cookie);await page.goto(tablePath);await baseAction(page,/^Review changes/);await page.getByRole('heading',{name:'Schema changes awaiting an owner',exact:true}).waitFor()
     await page.getByLabel('I reviewed this schema change and its recovery data.',{exact:true}).check();await j.capture('owner-review')
     await j.command(page.getByRole('button',{name:'Adopt reviewed schema',exact:true}),'release.adopt')
     const after=await call(people.editor.cookie,base);assert.equal(after.fields.some(field=>field.id===notes.id),false)
@@ -60,7 +61,7 @@ export async function baseRolesJourney(){
     const recovery=await call(people.owner.cookie,`/api/v1/records/releases/${release}/recovery`);assert.match(recovery.tables[0].csv,/Confirm dock appointment/)
     assert.equal((await h.db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first()).owner_id,ownership.owner_id)
     const denied=await request(people.editor.cookie,'/api/v1/records/schema-preview',await call(people.creator.cookie,`/api/v1/records/bases/${appId}`));assert.equal(denied.status,403)
-    await cookie(context,people.editor.cookie);await page.goto(tablePath);assert.equal(await page.getByRole('button',{name:'Edit base schema',exact:true}).count(),0)
+    await cookie(context,people.editor.cookie);await page.goto(tablePath);const editorMenu=await baseMenu(page);assert.equal(await editorMenu.getByRole('button',{name:'Edit fields',exact:true}).count(),0);await editorMenu.getByRole('button',{name:'Close',exact:true}).click()
     await page.getByRole('button',{name:'Save view',exact:true}).click();await page.getByLabel('Name',{exact:true}).fill('Warehouse orders');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
     const savedView=await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
     await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Warehouse orders',exact:true}).click();await page.getByRole('button',{name:'View history',exact:true}).click();await page.getByRole('heading',{name:'Recent view changes',exact:true}).waitFor();await j.capture('editor-collaborative-view')

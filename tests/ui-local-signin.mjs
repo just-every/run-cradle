@@ -132,7 +132,7 @@ async function freshViewport(viewport,evidence){
       assert.equal((await context.request.get(origin+'/auth/session')).status(),200)
       await accessibilityAction(page,page.getByRole('link',{name:'Import a base',exact:true}));await page.getByRole('heading',{name:'Import a base',exact:true}).waitFor();await check('import-base')
       await page.goto(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
-      await accessibilityAction(page,page.getByRole('link',{name:'Open records',exact:true}));await page.getByRole('heading',{name:'Records',exact:true}).waitFor();await check('records')
+      await accessibilityAction(page,page.getByRole('link',{name:'Open records',exact:true}));const bases=(await(await context.request.get(origin+'/api/v1/apps')).json()).data.items;if(bases.length)await page.getByRole('heading',{name:bases[0].name,exact:true}).waitFor();else await page.getByLabel('Base name',{exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'Choose an application',exact:true}).count(),0);await check('records')
       await verifyIdentityAndRecovery({browser,context,viewport,origin,evidence,accessibilityScreens})
       await verifyExpiredSession({context,page,viewport,origin,evidence,copy})
       // Sign out from the owner menu at the foot of the navigation (the drawer on a phone): the session ends,

@@ -1,3 +1,4 @@
+import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {submitImport} from './base-import-browser.mjs'
@@ -30,12 +31,11 @@ export async function exerciseTemplates(page,j,origin,width){
  const receipts=[]
  const readApps=async()=>{const response=await page.request.get(origin+'/api/v1/apps');assert.equal(response.status(),200);return(await response.json()).data.items}
  await page.goto(origin+'/app/records')
- await page.getByRole('region',{name:'Start from a template',exact:true}).waitFor()
+ await baseAction(page,'New base',j.action);await page.getByRole('region',{name:'Start from a template',exact:true}).waitFor()
  await j.capture('template-catalogue')
  const before=await readApps()
- await j.action(page.getByRole('button',{name:'Create base',exact:true}))
  await j.action(page.getByRole('link',{name:'Use Launch readiness',exact:true}))
- await page.waitForURL(origin+'/app/records/00000000000000000000000700')
+ await page.waitForURL(url=>url.pathname.startsWith('/app/records/00000000000000000000000700/'))
  const launchQuery=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/query'))
  await j.action(page.getByRole('navigation',{name:'Record types',exact:true}).getByRole('link',{name:'Campaigns',exact:true}))
  await launchQuery
@@ -46,7 +46,7 @@ export async function exerciseTemplates(page,j,origin,width){
  for(const [name,table,label]of templates){
   const fixture=operationsRecords[name],title=fixture?`${fixture.title} ${width}`:`${name} live ${width}`,edited=fixture?`${fixture.title} reviewed ${width}`:`${name} edited ${width}`
   await page.goto(origin+'/app/records')
-  await j.action(page.getByRole('button',{name:'Create base',exact:true}))
+  await baseAction(page,'New base',j.action)
   await page.getByRole('heading',{name:'Build your base',exact:true}).waitFor()
   await j.action(page.getByRole('button',{name:`Use ${name}`,exact:true}))
   await page.getByLabel('Base name',{exact:true}).fill(`${name} ${width}`)
@@ -67,7 +67,7 @@ export async function exerciseTemplates(page,j,origin,width){
 
 async function schemaOnlyCopy(page,j,origin,appId,width){
  await page.goto(`${origin}/app/records/${appId}`)
- await j.action(page.getByRole('button',{name:'Export base',exact:true}))
+ await baseAction(page,'Export base',j.action)
  await j.setChecked(page.getByLabel('Include records in base JSON',{exact:true}),false)
  const pending=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/records/base-export'))
  await j.action(page.getByRole('button',{name:'Prepare schema-only JSON',exact:true}))

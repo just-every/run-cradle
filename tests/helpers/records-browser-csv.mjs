@@ -1,3 +1,4 @@
+import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {encodeCsv,parseCsv} from '../../src/domains/portability/csv.ts'
@@ -5,7 +6,7 @@ import {encodeCsv,parseCsv} from '../../src/domains/portability/csv.ts'
 export async function exerciseCsv(page,j,origin,width){
  async function build(name){
   await page.goto(origin+'/app/records')
-  await j.action(page.getByRole('button',{name:'Create base',exact:true}))
+  await baseAction(page,'New base',j.action)
   await page.getByLabel('Base name',{exact:true}).fill(`${name} ${width}`)
   await page.getByLabel('Table name',{exact:true}).fill('Rows')
   await page.getByLabel('Field name',{exact:true}).fill('Key')
