@@ -1,7 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { fixture } from './repair-case-harness.mjs'
-test('case admission rejects stale/forged identity, inactive/wrong mandate and unauthorized copied sources without partial writes', async () => {
+test("repair case admission guard table refuses initial and prepared authority, identity and source races atomically",async()=>{
+ const cases=[
+  {name:"case admission rejects stale/forged identity, inactive/wrong mandate and unauthorized copied sources without partial writes",run:async()=>{
   const h = await fixture()
   try {
     const id = await h.report(), baseline = await h.counts(), open = h.registry.get('repair.open')
@@ -16,8 +18,8 @@ test('case admission rejects stale/forged identity, inactive/wrong mandate and u
     await assert.rejects(open.execute(h.ctx, await h.command(captured)))
     assert.deepEqual(await h.counts(), baseline)
   } finally { await h.close() }
-})
-test('prepared case admission guards membership, mandate, source, owner and intake races; concurrent opens remain atomic', async () => {
+}},
+  {name:"prepared case admission guards membership, mandate, source, owner and intake races; concurrent opens remain atomic",run:async()=>{
   const h = await fixture()
   try {
     const open = h.registry.get('repair.open'), id = await h.report(h.b.ev.sourceId)
@@ -43,7 +45,13 @@ test('prepared case admission guards membership, mandate, source, owner and inta
       assert.deepEqual(await h.counts(),{operation_cases:round+1,repair_jobs:round+1,repair_work_orders:round+1,operation_wakes:0})
     }
   } finally { await h.close() }
+}}
+ ]
+ for(const {name,run} of cases){
+  try{await run()}catch(error){throw new Error(name+': '+error.message,{cause:error})}
+ }
 })
+
 
 test('mandate-only sources retain owner-field permission on admission and original-key replay',async()=>{
  const h=await fixture()
