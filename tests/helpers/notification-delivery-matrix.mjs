@@ -386,8 +386,8 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    assert.equal(workers.length,1,`NOTIFY-009 this fixture owns exactly one workerd to interrupt: ${JSON.stringify(workers)}`)
    console.log(`NOTIFY-009 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
    process.kill(workers[0].pid,'SIGKILL');onStopped()
-   await invocation
    release()
+   await invocation
    await h.restart()
    const claim=await h.db.prepare('SELECT running_id,running_started_at,running_slot,version,last_slot FROM warehouse_exports WHERE id=?').bind(id).first()
    assert.ok(claim.running_id,'NOTIFY-009 a runtime interruption retains the real export claim')

@@ -12286,7 +12286,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "1a7bf82668898aae90d65bffbc43da84e6f698e20ad5ed30afd1f567725da4aa",
+      "sha256": "b0f4b3d7ebd052a5f8e502729840ef666f5e9dfa897d180ff59c649b43fc3fc1",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
