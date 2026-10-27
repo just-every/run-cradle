@@ -1,3 +1,4 @@
+import {displayAction,tableAction} from './records-table-tools.mjs'
 import {baseAction,baseMenu} from './records-base-menu.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
@@ -62,9 +63,9 @@ export async function baseRolesJourney(){
     assert.equal((await h.db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first()).owner_id,ownership.owner_id)
     const denied=await request(people.editor.cookie,'/api/v1/records/schema-preview',await call(people.creator.cookie,`/api/v1/records/bases/${appId}`));assert.equal(denied.status,403)
     await cookie(context,people.editor.cookie);await page.goto(tablePath);const editorMenu=await baseMenu(page);assert.equal(await editorMenu.getByRole('button',{name:'Edit fields',exact:true}).count(),0);await editorMenu.getByRole('button',{name:'Close',exact:true}).click()
-    await page.getByRole('button',{name:'Save view',exact:true}).click();await page.getByLabel('Name',{exact:true}).fill('Warehouse orders');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
+    await tableAction(page,'Save view');await page.getByLabel('Name',{exact:true}).fill('Warehouse orders');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
     const savedView=await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
-    await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Warehouse orders',exact:true}).click();await page.getByRole('button',{name:'View history',exact:true}).click();await page.getByRole('heading',{name:'Recent view changes',exact:true}).waitFor();await j.capture('editor-collaborative-view')
+    await displayAction(page,'Warehouse orders');await page.getByRole('button',{name:'View history',exact:true}).click();await page.getByRole('heading',{name:'Recent view changes',exact:true}).waitFor();await j.capture('editor-collaborative-view')
     const views=await call(people.reader.cookie,`/api/v1/apps/${appId}/views`);assert.ok(views.items.some(view=>view.id===savedView.id));assert.equal(views.items.find(view=>view.id===savedView.id).access.canEdit,false)
     const history=await call(people.reader.cookie,`/api/v1/views/${savedView.id}/history`);assert.equal(history.items.length,1);assert.equal(history.items[0].actor_name,people.editor.name)
     const schema=await call(people.reader.cookie,base),definition={appId,entityId,name:'My receiving list',display:'grid',fields:schema.fields.map(field=>field.id),filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:title.id},visibility:'app',shipped:false}

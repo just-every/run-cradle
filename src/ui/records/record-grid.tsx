@@ -1,5 +1,7 @@
 import {useViewColor} from './view-formatting'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId } from 'react'
+import { useGridHistory } from './grid-history'
+import { useTableGridTools } from './table-tools'
 import type { EntitySchema, Field, RecordRow } from '../../domains/records/contracts'
 import { CellDisplay } from './record-fields'
 import { primaryRecordField, recordLabel } from './record-label'
@@ -8,25 +10,31 @@ import { useGridInteraction } from './grid-interaction'
 import type { ViewMatch } from './find-in-view'
 
 export function RecordsGrid({ schema, rows, visible, groupBy, selection, onSelection, match, onCreate }: { schema: EntitySchema; rows: RecordRow[]; visible: string[]; groupBy?: string | string[]; selection: RecordRow[]; onSelection(rows: RecordRow[]): void; match?: ViewMatch | null; onCreate?: () => void }) {
+  const history = useGridHistory()
+  rows = history.reconcile(rows)
   const color=useViewColor(schema.fields)
   const tableId = useId(), fields = visible.flatMap(id => schema.fields.find(field => field.id === id) ?? [])
   const groupIds = typeof groupBy === 'string' ? [groupBy] : groupBy ?? []
   const groupLabel = (row: RecordRow) => groupIds.map(id => <span key={id}><CellDisplay appId={schema.appId} field={schema.fields.find(field => field.id === id)} cell={row.fields[id]} /> </span>)
   const primary = primaryRecordField(schema), primaryVisible = !!primary && visible.includes(primary.id)
   const grid = useGridInteraction(schema, rows, fields)
-  const [widths, setWidths] = useState<Record<string, number>>({}), [frozen, setFrozen] = useState(false)
+  const tools = useTableGridTools(), widths = tools?.widths ?? {}, frozen = tools?.frozen ?? true
+  if (tools) tools.fill.current = grid.fill
+  const canFill = grid.bounds.top !== grid.bounds.bottom && !grid.history.busy
+  useEffect(() => { tools?.setCanFill(canFill) }, [canFill])
+  useEffect(() => () => { if (tools) { tools.fill.current = null; tools.setCanFill(false) } }, [])
+
   const groups = new Map<string, RecordRow[]>()
   for (const row of rows) { const key = groupBy ? JSON.stringify(groupIds.map(id => row.fields[id])) : ''; groups.set(key, [...(groups.get(key) ?? []), row]) }
   useEffect(() => {
     if (!match) return
     grid.region.current?.querySelector<HTMLElement>(`[data-record-id="${match.recordId}"][data-field-id="${match.fieldId}"]`)?.scrollIntoView({ block: 'center', inline: 'center' })
   }, [match, rows])
-  const style = (field: Field, column: number) => ({ width: widths[field.id] ?? 180, minWidth: widths[field.id] ?? 180, ...(frozen && column === 0 ? { position: 'sticky' as const, left: 48, zIndex: 1, background: 'var(--cr-surface, #fff)' } : {}) })
+  const style = (field: Field, column: number) => ({ width: widths[field.id] ?? 180, minWidth: widths[field.id] ?? 180, ...(column === 0 && frozen ? { position: 'sticky' as const, left: 56, zIndex: 1, background: 'var(--card)' } : {}) })
   return <div className="cr-grid-workspace">
-    <div className="cr-actions cr-grid-actions"><button className="cr-button cr-button--quiet" type="button" disabled={!grid.history.canUndo} onClick={grid.history.undo}>Undo</button><button className="cr-button cr-button--quiet" type="button" disabled={!grid.history.canRedo} onClick={grid.history.redo}>Redo</button><button className="cr-button cr-button--quiet" type="button" disabled={grid.bounds.top === grid.bounds.bottom || grid.history.busy} onClick={grid.fill}>Fill down</button><button className="cr-button cr-button--quiet" type="button" aria-pressed={frozen} onClick={() => setFrozen(value => !value)}>Freeze first column</button><span className="cr-muted">Enter to edit · Shift + arrows to select · Copy, paste or fill a range</span></div>
-    {grid.errors.length > 0 && <div className="cr-notice" role="alert"><p>Nothing was changed. Fix these cells and paste again.</p><ul>{grid.errors.map((error, index) => <li key={index}>{error}</li>)}</ul></div>}{grid.history.feedback}
+    {grid.errors.length > 0 && <div className="cr-notice" role="alert"><p>Nothing was changed. Fix these cells and paste again.</p><ul>{grid.errors.map((error, index) => <li key={index}>{error}</li>)}</ul></div>}
     <div ref={grid.region} className="cr-table-wrap cr-editable-grid" tabIndex={0} role="region" aria-label={`${schema.label} table; scroll for more columns`} onKeyDown={grid.key} onPaste={grid.paste} onCopy={grid.copy}>
-      <table className="cr-table cr-records-table"><thead><tr><th id={`${tableId}-select`} scope="col" className="cr-col-select"><span className="cr-sr-only">Select</span></th>{groupBy && <th id={`${tableId}-group`} scope="col">Group</th>}{fields.map((field, column) => <th key={field.id} id={`${tableId}-${field.id}`} scope="col" aria-label={field.label} style={style(field, column)}>{field.label}<span className="cr-th-type" aria-hidden="true">{fieldTypeLabel(field)}</span><input className="cr-column-width" type="range" min="100" max="480" aria-label={`Width of ${field.label}`} value={widths[field.id] ?? 180} onChange={event => setWidths(current => ({ ...current, [field.id]: Number(event.target.value) }))} /></th>)}{!primaryVisible && <th id={`${tableId}-record`} scope="col">Record</th>}<th id={`${tableId}-state`} scope="col" className="cr-col-state">State</th></tr></thead>
+      <table className="cr-table cr-records-table"><thead><tr><th id={`${tableId}-select`} scope="col" className="cr-col-select"><span className="cr-sr-only">Select</span></th>{groupBy && <th id={`${tableId}-group`} scope="col">Group</th>}{fields.map((field, column) => <th key={field.id} id={`${tableId}-${field.id}`} scope="col" className={field.id === primary?.id ? 'cr-col-primary' : undefined} aria-label={field.label} style={style(field, column)}>{field.label}<span className="cr-th-type" aria-hidden="true">{fieldTypeLabel(field)}</span><span className="cr-column-resize" aria-hidden="true" onPointerDown={event => { if (event.pointerType === 'touch' || !tools) return; event.preventDefault(); const edge = event.currentTarget, start = event.clientX, width = widths[field.id] ?? 180; edge.setPointerCapture(event.pointerId); const move = (next: PointerEvent) => tools.setWidth(field.id, Math.max(100, Math.min(480, width + next.clientX - start))); const stop = () => { edge.removeEventListener('pointermove', move); edge.removeEventListener('pointerup', stop); edge.removeEventListener('pointercancel', stop) }; edge.addEventListener('pointermove', move); edge.addEventListener('pointerup', stop); edge.addEventListener('pointercancel', stop) }} /></th>)}{!primaryVisible && <th id={`${tableId}-record`} scope="col">Record</th>}<th id={`${tableId}-state`} scope="col" className="cr-col-state">State</th></tr></thead>
       {[...groups].map(([key, records], groupIndex) => <tbody key={key}>{groupBy && <tr><th id={`${tableId}-rowgroup-${groupIndex}`} scope="rowgroup" className="cr-record-group" colSpan={fields.length + 2 + (primaryVisible ? 0 : 1) + (groupBy ? 1 : 0)}>{groupLabel(records[0]!)} · {records.length} on this page</th></tr>}{records.map(row => {
         const rowIndex = rows.indexOf(row)
         return <tr key={row.id} data-view-color={color(row)}><td className="cr-col-select" headers={`${tableId}-select${groupBy ? ` ${tableId}-rowgroup-${groupIndex}` : ''}`}><label className="cr-selection"><input type="checkbox" aria-label={`Select ${recordLabel(row, schema)}`} checked={selection.some(item => item.id === row.id)} onChange={event => onSelection(event.target.checked ? [...selection, row] : selection.filter(item => item.id !== row.id))} /></label></td>{groupBy && <td headers={`${tableId}-group ${tableId}-rowgroup-${groupIndex}`}>{groupLabel(row)}</td>}{fields.map((field, column) => {

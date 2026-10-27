@@ -1,3 +1,4 @@
+import {sortAndGroup,tableAction} from './records-table-tools.mjs'
 import {compileSchema} from '../../src/domains/records/descriptors.server.ts'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -39,9 +40,9 @@ export async function viewSettingsJourney(){
    peerContext=await browser.newContext({viewport:{width,height:width===390?844:1000}});await peerContext.addCookies([{name:f.peerCookie.split('=')[0],value:f.peerCookie.slice(f.peerCookie.indexOf('=')+1),url:h.origin}]);const peer=await peerContext.newPage();await peer.goto(f.path)
    const privateView=(await browserCall(page,'/api/v1/commands/view.save',liveCommand({view:{appId:f.appId,entityId:f.entityId,name:'My receiving queue',display:'grid',fields:[f.title.id],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:f.title.id},visibility:'private',shipped:false}}))).value
    assert.ok(!(await browserCall(peer,`/api/v1/apps/${f.appId}/views`)).items.some(v=>v.id===privateView.id));await browserCall(peer,`/api/v1/views/${privateView.id}/query`,{},404)
-   await page.goto(f.path);await page.getByLabel('Group',{exact:true}).selectOption(f.stage.id)
-   await page.getByRole('button',{name:'Summary',exact:true}).click();const rawSummary=page.getByRole('region',{name:'Whole-query summary',exact:true});await rawSummary.getByRole('combobox',{name:/^Summary field/}).selectOption(f.units.id);await rawSummary.getByRole('combobox',{name:/^Calculation/}).selectOption('sum');await rawSummary.getByRole('button',{name:'Calculate summary',exact:true}).click();await rawSummary.locator('strong').filter({hasText:/Sum: 6$/}).waitFor();await j.capture('view-table-summary');await page.getByRole('button',{name:'Summary',exact:true}).click()
-   await page.getByRole('button',{name:'Save view',exact:true}).click();await page.getByLabel('Name',{exact:true}).fill('Dispatch exceptions');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
+   await page.goto(f.path);await sortAndGroup(page);await page.getByLabel('Group',{exact:true}).selectOption(f.stage.id)
+   await tableAction(page,'Summary');const rawSummary=page.getByRole('region',{name:'Whole-query summary',exact:true});await rawSummary.getByRole('combobox',{name:/^Summary field/}).selectOption(f.units.id);await rawSummary.getByRole('combobox',{name:/^Calculation/}).selectOption('sum');await rawSummary.getByRole('button',{name:'Calculate summary',exact:true}).click();await rawSummary.locator('strong').filter({hasText:/Sum: 6$/}).waitFor();await j.capture('view-table-summary');await tableAction(page,'Summary')
+   await tableAction(page,'Save view');await page.getByLabel('Name',{exact:true}).fill('Dispatch exceptions');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
    await page.getByRole('button',{name:'Add summary column',exact:true}).click();await page.getByLabel('Summary column 1',{exact:true}).selectOption(f.units.id);await page.getByLabel('Summary calculation 1',{exact:true}).selectOption('sum')
    await page.getByRole('button',{name:'Add summary column',exact:true}).click();await page.getByLabel('Summary column 2',{exact:true}).selectOption(f.notes.id);await page.getByLabel('Summary calculation 2',{exact:true}).selectOption('empty')
    await page.getByRole('button',{name:'Add colour rule',exact:true}).click();let rule=page.getByRole('group',{name:'Colour rule 1',exact:true});await rule.getByLabel('Field',{exact:true}).selectOption(f.stage.id);await rule.getByLabel('Status',{exact:true}).selectOption(f.stage.options[1].id);await page.getByLabel('Colour 1',{exact:true}).selectOption('coral')
@@ -50,7 +51,7 @@ export async function viewSettingsJourney(){
    await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
    const get=async()=> (await browserCall(page,`/api/v1/apps/${f.appId}/views`)).items.find(v=>v.name==='Dispatch exceptions')
    let view=await get();assert.equal(view.summaries.length,2);assert.equal(view.formatting.length,2)
-   const open=async(target,name='Dispatch exceptions')=>{await target.goto(f.path);await target.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name,exact:true}).click();await target.getByRole('region',{name:'Saved view summaries',exact:true}).locator('dd').first().waitFor()}
+   const open=async(target,name='Dispatch exceptions')=>{await target.goto(f.path);await displayAction(target,name);await target.getByRole('region',{name:'Saved view summaries',exact:true}).locator('dd').first().waitFor()}
    await open(page);const summary=page.getByRole('region',{name:'Saved view summaries',exact:true});assert.deepEqual(await summary.locator('dd').allTextContents(),['6','1']);assert.deepEqual((await summary.getByRole('list',{name:'Group counts'}).locator('li').allTextContents()).sort(),['Ready · 2','Shipped · 1'])
    const shipped=page.locator(`tr[data-view-color="coral"]`);assert.equal(await shipped.count(),1);assert.equal(await shipped.locator(`td[data-field-id="${f.units.id}"][data-view-color="lilac"]`).count(),1)
    await j.capture('view-summary-colours')

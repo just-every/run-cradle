@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useDocumentSession } from '../../core/app/document-context'
+import { Tooltip } from '../shared/tooltip'
 import { readApi, RequestFailure, type Resource } from '../shared/api'
 
 type Presence = { participants: { id: string; name: string }[]; revision: number; accessRevision: string }
@@ -71,5 +73,6 @@ export function useLiveRecords<T>(url: string, input: unknown, presenceUrl: stri
 }
 
 export function LiveRecordsStatus({ participants, notice }: { participants: Presence['participants']; notice: string }) {
-  return <div className="cr-live-records"><span>{notice}</span>{participants.length > 0 && <span aria-label="People viewing">Viewing: {participants.map(person => person.name).join(', ')}</span>}</div>
+  const session = useDocumentSession(), others = participants.filter(person => person.id !== session?.operator.id)
+  return <>{others.slice(0, 1).map(person => <Tooltip key={person.id} label={`Viewing: ${person.name}`}><span className="cr-presence-avatar" tabIndex={0} aria-label={`Viewing: ${person.name}`}>{person.name.slice(0, 1)}{others.length > 1 && <span className="cr-presence-avatar__count">+{others.length - 1}</span>}</span></Tooltip>)}{notice !== 'Live updates on' && notice !== 'Connecting to live updates…' && <span role="status">{notice}</span>}</>
 }

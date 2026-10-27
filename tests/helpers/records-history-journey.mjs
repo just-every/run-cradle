@@ -1,3 +1,4 @@
+import {displayAction,tableAction,tableCommand} from './records-table-tools.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
@@ -37,25 +38,24 @@ export async function historyBrowserJourney(){
     await bulk.getByLabel('Field to change',{exact:true}).selectOption(f.notes.id);await bulk.getByLabel('Notes',{exact:true}).fill('Warehouse handoff complete')
     await j.command(bulk.getByRole('button',{name:'Preview changes',exact:true}),'record.bulk-preview');await j.capture('history-bulk-preview')
     await j.command(bulk.getByRole('button',{name:'Confirm 2 changes',exact:true}),'record.bulk-commit');await bulk.getByRole('button',{name:'Close',exact:true}).click()
-    await j.command(page.locator('.cr-grid-actions').getByRole('button',{name:'Undo',exact:true}),'record.patch')
+    await tableCommand(page,'Undo',j)
     assert.equal(await note(f.row.id),'Owner confirmed carrier');assert.equal(await note(second.id),'Check labels');await j.capture('history-bulk-undo')
-    const saved=page.getByRole('navigation',{name:'Saved views',exact:true})
-    await saved.getByRole('button',{name:'Dispatch calendar',exact:true}).click();await j.command(toolbar().getByRole('button',{name:'Redo',exact:true}),'record.patch')
+    await displayAction(page,'Dispatch calendar');await tableCommand(page,'Redo',j)
     assert.equal(await note(f.row.id),'Warehouse handoff complete');assert.equal(await note(second.id),'Warehouse handoff complete');await j.capture('history-calendar-redo')
     peerContext=await browser.newContext({viewport:{width,height:900}});await peerContext.addCookies([{name:f.peerCookie.split('=')[0],value:f.peerCookie.slice(f.peerCookie.indexOf('=')+1),url:h.origin}]);const peer=await peerContext.newPage();await peer.goto(f.path)
     async function peerEdit(changes){const row=(await browserCall(peer,`/api/v1/apps/${f.appId}/entities/${f.entityId}/records/${f.row.id}`)).record;await browserCall(peer,'/api/v1/commands/record.patch',liveCommand({ref:row.ref,changes},[{ref:row.ref,version:row.version}]))}
     await peerEdit({[f.due.id]:'2026-11-03'})
-    await saved.getByRole('button',{name:'Dispatch cards',exact:true}).click();await j.command(toolbar().getByRole('button',{name:'Undo',exact:true}),'record.patch')
+    await displayAction(page,'Dispatch cards');await tableCommand(page,'Undo',j)
     assert.equal(await note(f.row.id),'Owner confirmed carrier');assert.equal((await query()).find(row=>row.id===f.row.id).fields[f.due.id].value,'2026-11-03');await j.capture('history-unrelated-edit-preserved')
     await peerEdit({[f.notes.id]:'Avery booking update'})
-    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await toolbar().getByRole('button',{name:'Redo',exact:true}).click();const refused=await response;assert.equal(refused.status(),409);const failure=(await refused.json()).error
+    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Redo');const refused=await response;assert.equal(refused.status(),409);const failure=(await refused.json()).error
     assert.equal(failure.issues.length,1);assert.equal(failure.issues[0].fieldId,f.notes.id);assert.equal(await note(second.id),'Check labels');await j.capture('history-cell-conflict')
     await peerEdit({[f.notes.id]:'Owner confirmed carrier'})
-    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await toolbar().getByRole('button',{name:'Redo',exact:true}).click();const changedBack=await response;assert.equal(changedBack.status(),409);assert.equal((await changedBack.json()).error.issues[0].fieldId,f.notes.id);assert.equal(await note(second.id),'Check labels');await page.getByRole('article').filter({has:page.getByRole('heading',{name:'PO-1042',exact:true})}).getByText('Owner confirmed carrier',{exact:true}).waitFor();await j.capture('history-changed-back-conflict')
+    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Redo');const changedBack=await response;assert.equal(changedBack.status(),409);assert.equal((await changedBack.json()).error.issues[0].fieldId,f.notes.id);assert.equal(await note(second.id),'Check labels');await page.getByRole('article').filter({has:page.getByRole('heading',{name:'PO-1042',exact:true})}).getByText('Owner confirmed carrier',{exact:true}).waitFor();await j.capture('history-changed-back-conflict')
     const policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=? AND id<>?').bind(f.appId,f.policyId).first(),rules=JSON.parse(policy.rules_json)
     for(const rule of rules)if(rule.entityId===f.entityId)rule.writableFields=[]
     await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
-    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await toolbar().getByRole('button',{name:'Undo',exact:true}).click();assert.equal((await response).status(),403);assert.equal(await note(f.row.id),'Owner confirmed carrier');await j.capture('history-authority-refused')
+    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Undo');assert.equal((await response).status(),403);assert.equal(await note(f.row.id),'Owner confirmed carrier');await j.capture('history-authority-refused')
    }catch(error){await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});throw error}finally{await peerContext?.close();await context.close()}
   }
  }finally{await browser?.close();await h?.close()}

@@ -1,3 +1,4 @@
+import {closeTablePanel,displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import {mkdir} from 'node:fs/promises'
@@ -50,27 +51,26 @@ export async function galleryBrowserJourney(){
    }
    console.log('gallery render',width)
    await page.goto(table)
-   await page.getByRole('navigation',{name:'Record display'}).getByRole('button',{name:'Gallery',exact:true}).click()
+   await displayAction(page,'Gallery')
    await page.waitForFunction(()=>Array.from(document.querySelectorAll('.cr-gallery-cover')).filter(img=>img.complete&&img.naturalWidth>0).length===2);assert.equal(await page.locator('.cr-gallery-cover').count(),2)
-   await page.getByLabel('Group',{exact:true}).selectOption(f.group)
-   await page.getByLabel('Sort',{exact:true}).selectOption(f.title)
+   await sortAndGroup(page);await page.getByLabel('Group',{exact:true}).selectOption(f.group)
+   await sortAndGroup(page);await page.getByLabel('Sort',{exact:true}).selectOption(f.title)
    await j.capture('gallery-grouped')
-   await page.getByRole('button',{name:'Filter records',exact:true}).click();await page.getByRole('button',{name:'Add condition',exact:true}).click()
-   await page.getByLabel('Field',{exact:true}).selectOption(f.group);await page.locator('#cr-panel-filter').getByLabel('trade',{exact:true}).fill('Plumbing')
+   await closeTablePanel(page,'Sort and group');await page.getByRole('button',{name:'Filter',exact:true}).click();await page.getByRole('button',{name:'Add condition',exact:true}).click()
+   await page.getByLabel('Field',{exact:true}).selectOption(f.group);await page.getByRole('dialog',{name:'Filter',exact:true}).getByLabel('trade',{exact:true}).fill('Plumbing')
    await page.getByRole('button',{name:'Apply filters',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.cr-gallery-card').length===2)
    await page.waitForFunction(()=>Array.from(document.querySelectorAll('.cr-gallery-cover')).filter(img=>img.complete&&img.naturalWidth>0).length===1);assert.equal(await page.locator('.cr-gallery-cover').count(),1)
    await j.capture('gallery-filtered')
-   await page.getByRole('button',{name:'Remove condition 1',exact:true}).click();await page.getByRole('button',{name:'Apply filters',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.cr-gallery-card').length===3)
-   await page.getByRole('button',{name:'Filter records',exact:true}).click()
-   await page.getByRole('button',{name:'Visible columns',exact:true}).click();await page.getByRole('checkbox',{name:'serial',exact:true}).uncheck();await page.getByRole('button',{name:'Visible columns',exact:true}).click()
+   await page.getByRole('button',{name:'Filter',exact:true}).click();await page.getByRole('button',{name:'Remove condition 1',exact:true}).click();await page.getByRole('button',{name:'Apply filters',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.cr-gallery-card').length===3)
+   await tableAction(page,'Visible columns');await page.getByRole('checkbox',{name:'serial',exact:true}).uncheck();await closeTablePanel(page,'Visible columns')
    assert.equal(await page.locator('.cr-gallery-group-title').count(),2)
-   await page.getByRole('button',{name:'Save view',exact:true}).click()
+   await tableAction(page,'Save view')
    await page.getByLabel('Name',{exact:true}).fill('Equipment catalog')
    await page.getByLabel('Gallery cover',{exact:true}).selectOption(f.cover)
    await page.getByLabel('Image fit',{exact:true}).selectOption('contain')
    await j.capture('gallery-settings')
    await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
-   await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Equipment catalog',exact:true}).click()
+   await displayAction(page,'Equipment catalog')
    await page.waitForFunction(()=>Array.from(document.querySelectorAll('.cr-gallery-cover')).filter(img=>img.complete&&img.naturalWidth>0).length===2);assert.equal(await page.locator('.cr-gallery-cover').count(),2)
    assert.equal(await page.locator('.cr-gallery-cover').first().evaluate(img=>getComputedStyle(img).objectFit),'contain')
    await j.capture('gallery-saved-fit')
@@ -78,7 +78,7 @@ export async function galleryBrowserJourney(){
    assert.equal(view.layout.coverFieldId,f.cover);assert.equal(view.coverFit,'contain');assert.deepEqual(view.groupBy,[f.group]);assert.ok(!view.fields.includes(repairFieldId('assets','serial')))
    const cards=await browserCall(page,`/api/v1/views/${view.id}/query`,{});assert.deepEqual(cards.records.items.map(row=>row.fields[f.title].value),['Empty inspection','Portable pump','Cold room A'])
    await page.locator('.cr-gallery-card').filter({has:page.getByRole('heading',{name:'Cold room A',exact:true})}).getByRole('link',{name:'Open record',exact:true}).click();await page.getByRole('heading',{name:'Cold room A',exact:true}).waitFor()
-   await page.goto(table);await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Equipment catalog',exact:true}).click();await page.locator('.cr-gallery-card').first().waitFor()
+   await page.goto(table);await displayAction(page,'Equipment catalog');await page.locator('.cr-gallery-card').first().waitFor()
    const row=(await browserCall(page,base+'/records/'+f.ids[0])).record,fileId=row.fields[f.cover].value[0].fileId
    // Restrict the cover while retaining the title and every ordinary field. The saved gallery remains usable.
    const rules=f.rules.map(rule=>rule.entityId===f.entityId?{...rule,readableFields:rule.readableFields.filter(id=>id!==f.cover)}:rule)

@@ -63,7 +63,7 @@ export function useGridInteraction(schema: EntitySchema, rows: RecordRow[], fiel
     const modifier = event.metaKey || event.ctrlKey
     if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? history.redo() : history.undo(); return }
     if (modifier && event.key.toLowerCase() === 'd') { event.preventDefault(); fill(); return }
-    const moves: Record<string, Point> = { ArrowDown: { row: end.row + 1, column: end.column }, ArrowUp: { row: end.row - 1, column: end.column }, ArrowLeft: { row: end.row, column: end.column - 1 }, ArrowRight: { row: end.row, column: end.column + 1 }, Tab: { row: end.column === (event.shiftKey ? 0 : fields.length - 1) ? end.row + (event.shiftKey ? -1 : 1) : end.row, column: (end.column + (event.shiftKey ? fields.length - 1 : 1)) % fields.length } }
+    const moves: Record<string, Point> = { ArrowDown: { row: end.row + 1, column: end.column }, ArrowUp: { row: end.row - 1, column: end.column }, ArrowLeft: { row: end.row, column: end.column - 1 }, ArrowRight: { row: end.row, column: end.column + 1 } }
     if (moves[event.key]) { event.preventDefault(); focus(moves[event.key]!, event.shiftKey && event.key !== 'Tab') }
     else if (event.key === 'Enter' || event.key === 'F2') { event.preventDefault(); edit(end) }
     else if (event.key === 'Escape') { setErrors([]); focus(anchor) }

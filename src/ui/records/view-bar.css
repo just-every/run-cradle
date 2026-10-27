@@ -17,3 +17,16 @@
 @media (max-width: 600px) {
   .cr-view-sheet .cr-view-sheet__body .cr-actions > button.cr-button { min-height: 44px; }
 }
+
+.cr-view-bar { min-width: 0; margin-bottom: 20px; }
+.cr-view-bar__pills { flex-wrap: wrap; }
+.cr-view-bar__pills .cr-view-bar__divider { margin-left: 12px; }
+.cr-view-bar__opener { display: none; }
+.cr-view-bar [aria-current=page] { background: var(--lime); color: var(--ink); }
+@media (max-width: 600px) {
+  .cr-view-bar { margin-bottom: 12px; }
+  .cr-view-bar__pills { display: none; }
+  .cr-view-bar__opener { display: inline-flex; min-height: 44px; }
+}
+.cr-view-sheet__body { grid-template-columns: minmax(0, 1fr); }
+.cr-view-sheet__body > * { min-width: 0; max-width: 100%; }
