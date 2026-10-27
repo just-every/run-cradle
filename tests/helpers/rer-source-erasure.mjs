@@ -3,6 +3,7 @@ const {LAUNCH_APP_ID,launchEntities}=await import('../../src/apps/launch/contrac
 import {unrelatedImport} from './rer-erasure-archive.mjs'
 import {compressedPdf,encodedText,gzipMetadata} from './erasure-attachments.mjs'
 import {mentionAuthorityControls} from './rer-mention-policy.mjs'
+import {commentNotices} from './record-comment-command.mjs'
 import {erasureWriteRace} from './rer-erasure-race.mjs'
 import {retentionRows} from './rer-retention.mjs'
 import assert from 'node:assert/strict'
@@ -65,14 +66,15 @@ export async function sourceErasure(copy,origin,prior,populate,restart,prepareId
   const request=(body,action='erase')=>fetch(origin+'/api/v1/commands/member.'+action,{method:'POST',headers:{cookie:prior.cookie,origin,connection:'close','content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify(body)})
   const mention=async(expectedStatus=200)=>{const campaign=await bindings(copy.source,async({DB})=>DB.prepare('SELECT version FROM campaigns WHERE id=?').bind(identity.campaign).first());const response=await fetch(origin+'/api/v1/commands/comment.add',{method:'POST',headers:{cookie:prior.cookie,origin,connection:'close','content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({commandId:id(),expected:[{ref:{appId,entityId:launchEntities.campaign,recordId:identity.campaign},version:campaign.version}],input:{subject:{appId,entityId:launchEntities.campaign,recordId:identity.campaign},body:'Plain mention @'+identity.person,mentions:[identity.person]}})});const result=await response.json();assert.equal(response.status,expectedStatus,'Public launch comment mention: '+JSON.stringify(result.error??{}));return result.data?.value?.id}
   await mentionAuthorityControls(copy,prior,mention)
-  const activeMention=await mention();await bindings(copy.source,async({DB})=>assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE operator_id=? AND subject_id=?').bind(identity.person,activeMention).first()).n,1,'Current mention notifies exactly one recipient'))
+  const activeMention=await mention();await bindings(copy.source,async({DB})=>assert.deepEqual((await commentNotices(DB,activeMention)).map(notice=>notice.operator_id),[identity.person],'Current mention notifies exactly one recipient'))
   if(prepareIdentity)await prepareIdentity(identity);identity.version=(await bindings(copy.source,async({DB})=>DB.prepare('SELECT version FROM authority_principals WHERE id=?').bind(identity.person).first())).version;
   const removal={commandId:id(),expected:[{ref:{appId,entityId,recordId:identity.person},version:identity.version}],input:{memberId:identity.person,reason:'Owner removed access before erasure'}}
   const removed=await request(removal,'remove'),removedBody=await removed.json();assert.equal(removed.status,200,'Normal owner removal completes: '+JSON.stringify(removedBody.error??{}));assert.equal(removedBody.data.value.state,'removed')
   if(populate)await populate(identity)
   unrelated=await unrelatedImport(copy,origin,prior.cookie)
   before=await identityMatches(copy.source);assert.ok(before.matches.length>=5,'Canaries reach multiple real stores before erasure');await retentionRows(copy.source,'before-operator-erasure');console.log('ERASURE_FILE_INVENTORY '+JSON.stringify({objects:before.objects,bytes:before.objectBytes}))
-  const removedMention=await mention();await bindings(copy.source,async({DB})=>assert.equal((await DB.prepare('SELECT count(*) n FROM notifications WHERE subject_id=?').bind(removedMention).first()).n,0,'Removed mention notifies nobody'))
+  const removedMentionEffects=()=>bindings(copy.source,async({DB})=>({comments:(await DB.prepare('SELECT count(*) n FROM evidence_comments').first()).n,notices:(await DB.prepare('SELECT * FROM notifications WHERE operator_id=? ORDER BY id').bind(identity.person).all()).results,events:(await DB.prepare('SELECT * FROM channel_events WHERE operator_id=? ORDER BY event_id').bind(identity.person).all()).results}))
+  const beforeRemovedMention=await removedMentionEffects();await mention(403);assert.deepEqual(await removedMentionEffects(),beforeRemovedMention,'Removed mention is refused without a comment or notification')
   const value={commandId:id(),expected:[{ref:{appId,entityId,recordId:identity.person},version:identity.version+1}],input:{memberId:identity.person,reason:'Owner confirmed permanent identity erasure'}}
   // This roundtrip fixture deliberately keeps an opaque binary on a campaign, not
   // in the person's intake. It cannot be inspected and never blocks erasure: it
