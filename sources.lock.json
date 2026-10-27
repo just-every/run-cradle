@@ -7273,12 +7273,16 @@
       "sha256": "c76e93a994125a34406f09ee1f8a694b4d1b4a6a429fc6e5f1f4845ab7ee79ea",
       "executable": false
     },
+    "src/core/features/session/proposal-reviewer.server.ts": {
+      "sha256": "9553e69783b920b0720f5078d2891b2a6a67a92806b12dec650352ac5de7dcc2",
+      "executable": false
+    },
     "src/core/features/session/routes.ts": {
       "sha256": "662a6f56f3f13559c9ce4f1db1c7f03a96ec17f4ab72710e6e27f231fbd23dda",
       "executable": false
     },
     "src/core/features/session/service.ts": {
-      "sha256": "98b23fc93b7b13f6e9b26009da3c3ed38211befdf83c0abe811f344aaca4cffd",
+      "sha256": "c24184e10f03c24f0aab014424f72cb7d8e0bb119b77d40870a4a86debcf781a",
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.css": {
@@ -7454,7 +7458,7 @@
       "executable": false
     },
     "src/core/shared/session.ts": {
-      "sha256": "19fda47b43385064eefb6727da96bf70ea51d8a08c819f2cb03f7ae3db5506ff",
+      "sha256": "4eca45ed4101bab7c9c54af8cb056af76a4fe8ec7c1b9106d6e09815191a2bef",
       "executable": false
     },
     "src/core/shared/workspace-money-input.ts": {
@@ -10810,7 +10814,7 @@
       "executable": false
     },
     "src/ui/records/proposals/agent-proposals.tsx": {
-      "sha256": "f27878595b22a87b688e17040b6196a23dfc3e4695553a7a44f2e97460c1ebf3",
+      "sha256": "d8a31f95c0ffe8e9e04e40baa709c7f0ce97f43a8664dc76d3d22176b9ca3644",
       "executable": false
     },
     "src/ui/records/proposals/proposal-review.tsx": {
