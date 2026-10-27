@@ -5,6 +5,9 @@ import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './accessibility-evidence.mjs'
 import {retainedLaunch} from './records-browser-retained.mjs'
+import {LAUNCH_APP_ID,launchEntities} from '../../src/apps/launch/contracts.ts'
+import {campaignLifecycle} from '../../src/apps/launch/lifecycle.ts'
+import {createUlid} from '../../src/core/shared/ids.ts'
 
 async function chooserHidden(page){
  assert.equal(await page.getByRole('navigation',{name:'Application records',exact:true}).count(),0)
@@ -61,12 +64,18 @@ export async function homeReview(output){
    h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0))
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');const initialBases=await homeBases(page,h.origin);assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
-   if(initialBases.length===0){
+   const membership=await h.db.prepare('SELECT principal_id,state FROM authority_memberships WHERE app_id=?').bind(LAUNCH_APP_ID).first();assert.ok(membership)
+   await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE principal_id=? AND app_id=?").bind(membership.principal_id,LAUNCH_APP_ID).run()
+   try{
+    await page.goto(h.origin+'/app');assert.deepEqual(await homeBases(page,h.origin),[],'Removing the only base membership leaves real discovery empty')
     const empty=page.getByRole('region',{name:'Your bases',exact:true}),create=empty.getByRole('button',{name:'New base',exact:true})
-    await create.waitFor();assert.equal(await empty.locator('a,button').count(),1,'The empty base list has one way to start')
-    await j.action(create);await page.getByLabel('Base name',{exact:true}).waitFor();await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await create.waitFor()
+    await create.waitFor();assert.equal(await empty.locator('a,button').count(),1,'The empty base list has one way to start');await j.capture('empty-home')
+    await j.action(create);await page.getByLabel('Base name',{exact:true}).waitFor();await j.capture('empty-home-builder');await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await create.waitFor()
     assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0,'Cancelling a new base leaves the empty installation intact')
+   }finally{
+    await h.db.prepare('UPDATE authority_memberships SET state=?,version=version+1 WHERE principal_id=? AND app_id=?').bind(membership.state,membership.principal_id,LAUNCH_APP_ID).run()
    }
+   await page.goto(h.origin+'/app');assert.deepEqual((await homeBases(page,h.origin)).map(base=>base.id),initialBases.map(base=>base.id),'Restoring membership restores the original authorized bases')
    assert.equal(await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:'App studio',exact:true}).count(),0,'App studio is not mixed into the base list')
    await j.capture('fresh-home');await openRecords(page,j);await page.getByRole('button',{name:'Create base',exact:true}).waitFor()
    const choose=await page.getByRole('heading',{name:'Choose an application',exact:true}).boundingBox(),templates=page.getByRole('region',{name:'Start from a template',exact:true}),t=await templates.boundingBox()
@@ -82,7 +91,31 @@ export async function homeReview(output){
    await page.getByRole('region',{name:'Recent activity',exact:true}).getByText(native.latestChange.name,{exact:true}).waitFor();await j.capture('records-only-home')
    await j.action(page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}));await j.table('Notes');await page.getByRole('link',{name:`Existing record ${width}`,exact:true}).waitFor()
    const verifyLaunch=await retainedLaunch(page,j,h,width);await verifyLaunch();await page.goto(h.origin+'/app');const current=await homeBases(page,h.origin);assert.ok(current.some(app=>app.id===base.appId));assert.ok(current.some(app=>app.name==='Launch readiness'));assert.equal(await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}).getAttribute('href'),base.entryUrl??`/app/records/${base.appId}`);await j.capture('records-and-launch-home')
-   receipts.push({width,baseId:base.appId,recordId:record.id,emptyHomeExercised:initialBases.length===0,homeSummaryMatchesQuery:true,checkpoints:j.checkpoints});await context.close();await h.close();h=null
+   if(width===1440){
+    const sessionReply=await page.request.get(h.origin+'/api/session');assert.equal(sessionReply.status(),200);const owner=(await sessionReply.json()).operator.id
+    const command=async(action,input,expected=[])=>{
+     const response=await page.request.post(h.origin+'/api/v1/commands/'+action,{headers:{origin:h.origin,'x-csrf-token':csrfToken},data:{commandId:createUlid(),input,expected}})
+     const reply=await response.json();assert.equal(response.status(),200,JSON.stringify(reply));assert.equal(reply.data.state,'committed',JSON.stringify(reply));return reply.data.value
+    }
+    const campaigns=[]
+    for(let index=0;index<11;index++)campaigns.push(await command('launch.campaign.create',{fields:{code:`HOME-MERGE-${width}-${index}`,name:`Home activity campaign ${index+1}`,ownerId:owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Before activity merge review',statusSummary:'Current',phase:campaignLifecycle.phases[0],status:campaignLifecycle.statuses[0],health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}}))
+    // Creates emit a fact per field. One-field edits produce eleven distinct
+    // recent events, so the portfolio read includes more changes than Home shows.
+    const writes=[]
+    for(const [index,campaign]of campaigns.entries()){
+     const changed=await command('launch.campaign.patch',{id:campaign.id,changes:{objective:`Reviewed activity merge ${index+1}`}},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:campaign.id},version:campaign.version}])
+     writes.push({name:campaign.name,occurredAt:changed.updatedAt})
+     if(index===5){
+      const title=`Merged native change ${width}`,changed=await command('record.patch',{ref:visible.items[0].ref,changes:{[entity.fields[0].id]:title}},[{ref:visible.items[0].ref,version:visible.items[0].version}])
+      writes.push({name:title,occurredAt:changed.updatedAt})
+     }
+    }
+    await page.goto(h.origin+'/app');await homeBases(page,h.origin);await page.waitForLoadState('networkidle')
+    const shown=await page.getByRole('region',{name:'Recent activity',exact:true}).getByRole('listitem').evaluateAll(rows=>rows.map(row=>({name:row.querySelector('strong')?.textContent,occurredAt:row.querySelector('time')?.getAttribute('datetime')})))
+    assert.deepEqual(shown,writes.slice(-10).reverse(),'Home merges native and launch changes by recency and shows only the newest ten')
+    await j.capture('home-newest-ten')
+   }
+   receipts.push({width,baseId:base.appId,recordId:record.id,emptyHomeExercised:true,homeSummaryMatchesQuery:true,newestTenMergeExercised:width===1440,checkpoints:j.checkpoints});await context.close();await h.close();h=null
   }
   return receipts
  }finally{await browser?.close();await h?.close()}

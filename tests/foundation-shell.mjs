@@ -68,7 +68,11 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
           assert.equal(await nav.getByRole('link', { name: 'App studio', exact: true }).count(), Number(readiness.data.ready), 'App studio is offered only on a ready installation')
           assert.equal(await page.getByRole('navigation', { name: 'Launch readiness', exact: true }).count(), 0, 'Template work opens from its base')
           const utilities = page.getByRole('navigation', { name: 'Workspace utilities', exact: true }).filter({ visible: true })
-          for (const name of ['Search', 'Notifications', 'Settings']) assert.equal(await utilities.getByRole('link', { name, exact: true }).count(), 1)
+          for (const [name, href] of [['Search','/app/search'],['Notifications','/app/notifications'],['Settings','/app/settings']]) {
+            const link = utilities.locator(`a[href="${href}"]`)
+            assert.equal(await link.count(), 1)
+            assert.equal(await link.getByText(name, { exact: true }).count(), 1, 'Each utility keeps its label alongside any unread count')
+          }
           assert.equal(await nav.getByRole('link', { name: 'Repairs', exact: true }).count(), 0)
           assert.equal(await nav.getByRole('link', { name: 'Today', exact: true }).count(), 0)
           if (width === 390) { await page.keyboard.press('Escape'); assert.equal(await page.getByRole('button', { name: 'Open navigation' }).evaluate(el => el === document.activeElement), true) }
