@@ -12890,7 +12890,7 @@
       "executable": false
     },
     "tests/launch-template-update.mjs": {
-      "sha256": "7a411a057048c5b607e48943fe63ecc3b0166d97066fdaa9d79d40dc035aa942",
+      "sha256": "8bb1efeb422bff4e2020744bbdc45007129153ccc70b39ae445b966a94091916",
       "executable": false
     },
     "tests/launch-write-authority.mjs": {
