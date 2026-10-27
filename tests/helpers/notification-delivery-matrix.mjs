@@ -293,10 +293,11 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.deepEqual({title:notice.title,body:notice.body},expected,`NOTIFY-009 ${source} ${outcome} notice states its outcome`)
   const mail=(await h.mailMessages()).slice(mailStart)
   const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(person.id).first()).email
-  // Mail is selected by its durable receipt and recipient, never by the notice's own title.
+  // Mail is selected by the expected wording and by its durable receipt, never by the notice's own title.
+  assert.deepEqual(mail.filter(m=>m.subject===expected.title).flatMap(m=>m.personalizations.flatMap(p=>p.to.map(r=>r.email))),muted?[]:[email],'NOTIFY-007 progress exact provider-edge recipient mail')
   const receipts=mail.filter(m=>notice.group_id&&m.custom_args?.rer_delivery_id===notice.group_id).map(m=>({to:m.personalizations.flatMap(p=>p.to.map(r=>r.email)),subject:m.subject,text:(m.content??[]).map(c=>c.value).join('\n')}))
   assert.equal(receipts.length,muted?0:1,'NOTIFY-007 progress exact durable receipt mail count')
-  for(const receipt of receipts){assert.deepEqual(receipt.to,[email],'NOTIFY-007 progress exact provider-edge recipient mail');assert.equal(receipt.subject,expected.title,`NOTIFY-009 ${source} ${outcome} provider-edge subject`);assert.ok(receipt.text.includes(`${expected.title}\n${expected.body}`),`NOTIFY-009 ${source} ${outcome} provider-edge body: ${receipt.text}`)}
+  for(const receipt of receipts){assert.deepEqual(receipt.to,[email],'NOTIFY-009 progress receipt recipient');assert.equal(receipt.subject,expected.title,`NOTIFY-009 ${source} ${outcome} provider-edge subject`);assert.ok(receipt.text.includes(`${expected.title}\n${expected.body}`),`NOTIFY-009 ${source} ${outcome} provider-edge body: ${receipt.text}`)}
   if(muted)assert.equal(mail.filter(m=>m.personalizations.some(p=>p.to.some(r=>r.email===email))).length,0,'NOTIFY-007 muted starter receives no provider-edge mail')
   const inbox=await h.request(person.session,'/api/notifications');assert.equal(inbox.status,200)
   const item=(await inbox.json()).notifications.find(n=>n.id===notice.id);assert.ok(item);assert.equal(item.subject.available,true);assert.equal(item.subject.href,'/app/settings')
