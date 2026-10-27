@@ -23,9 +23,16 @@ export function createChannelsIntegration(db:D1Database,project?:RecipientProjec
   else {const access=await legacyRecipientGuards(db,input,ctx.now);if(!access)return empty();effects.guards.push(...access)}
   if(input.kind==='record-automation'&&input.title!==undefined&&input.body!==undefined)text={title:input.title,body:input.body}
   if(input.kind==='weekly-digest'){if(!input.body)throw new Error('Digest requires authorized portfolio projection');text={title:'Weekly portfolio digest',body:input.body}}
+  if(input.kind==='progress'){
+   if(!input.progressOutcome||!['base-import','warehouse-export'].includes(input.subjectType??''))throw new Error('Progress requires its job source and outcome')
+   const name=input.subjectType==='base-import'?'Import':'Export'
+   // An export run whose finite automatic recovery stopped says so, and what happens next.
+   const stopped=input.subjectType==='warehouse-export'&&input.progressOutcome==='failed'&&!!await db.prepare("SELECT 1 FROM warehouse_exports WHERE id=? AND running_stopped_slot IS NOT NULL AND ('warehouse-export:'||id||':'||version||':'||running_slot||':failed')=?").bind(input.subjectId,input.eventId).first()
+   text={title:`${name} ${input.progressOutcome==='failed'?'needs attention':'completed'}`,body:stopped?'Automatic recovery of the export you started stopped after repeated unsuccessful attempts. It tries again at its next scheduled time.':input.progressOutcome==='failed'?`The ${name.toLowerCase()} you started did not finish. Open Settings to review it.`:`The ${name.toLowerCase()} you started has finished. Open Settings to review it.`}
+  }
   const prefs=await db.prepare('SELECT version,timezone,muted_json,progress_enabled FROM channel_preferences WHERE operator_id=?').bind(input.operatorId).first<{version:number;timezone:string|null;muted_json:string;progress_enabled:number}>()
-  if(input.kind==='progress'&&!prefs?.progress_enabled)return empty()
   effects.guards.push(trustedPredicate(prefs?'EXISTS(SELECT 1 FROM channel_preferences WHERE operator_id=? AND version=?)':'NOT EXISTS(SELECT 1 FROM channel_preferences WHERE operator_id=?)',prefs?[input.operatorId,prefs.version]:[input.operatorId]))
+  if(input.kind==='progress'&&input.progressOutcome!=='failed'&&!prefs?.progress_enabled)return effects
   const settings=await db.prepare('SELECT id,version,timezone,quiet_hours_start,quiet_hours_end FROM workspace_settings ORDER BY id LIMIT 1').first<{id:string;version:number;timezone:string;quiet_hours_start:string;quiet_hours_end:string}>();if(!settings)throw new Error('Workspace notification settings are required')
   effects.guards.push(trustedPredicate('EXISTS(SELECT 1 FROM workspace_settings WHERE id=? AND version=?)',[settings.id,settings.version]))
   const repeat=await db.prepare(`SELECT n.id,n.version FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.operator_id=? AND n.subject_id=? AND c.app_id=? AND c.event_kind=? AND c.last_event_at>? AND n.unavailable=0 AND NOT EXISTS(SELECT 1 FROM notification_reads r WHERE r.notification_id=n.id AND r.operator_id=n.operator_id) ORDER BY c.last_event_at DESC LIMIT 1`).bind(input.operatorId,input.subjectId,appId,input.kind,now-3600000).first<{id:string;version:number}>()

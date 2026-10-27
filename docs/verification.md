@@ -16,6 +16,18 @@ so newly added files join the same public suite automatically. Browser shards
 install Chromium; their dependency/browser cache keys are separate from tool-only
 shards. Disk cleanup runs only if the runner has less than 20 GiB free.
 
+The `launch-notifications` shard keeps `pnpm test:launch:notifications` as its
+single command and contract registration. That command runs each declared
+accessibility width in a separate Node process concurrently. Each process owns
+its listener port, temporary D1 stores, browser and provider captures, including
+its own workerd descendants for interruption tests. Within a width, preferences,
+the generated-event matrix and event screens retain their order; inbox erasure
+still starts with a fresh runtime and unfiltered provider history. The parent
+waits for every child to finish cleanup, requires every width to pass and merges
+their receipts in declared width order. Scenario and width wall times are printed
+as `NOTIFICATION_SCENARIO` and `NOTIFICATION_WIDTH`; no assertion, mutation,
+viewport or timeout is removed to obtain concurrency.
+
 The fresh-clone browser installer, dev-identity archive rehearsal and full
 portable-installation restore journeys run on
 `v*` release tags, nightly at 03:23 UTC, and through manual **Nightly journeys**.
