@@ -2,6 +2,7 @@ import { createGrantCommands } from '../../domains/authority/grant-commands.serv
 import { createRepairDecisionAuthority } from '../../domains/decisions/authority.server'
 import {erasureAdmissionGuard} from '../../domains/lifecycle/file-writes.server'
 import { createNotificationReplay } from '../../domains/channels/replay.server'
+import { IN_APP_NOTIFICATION_PRINCIPAL } from '../../domains/channels/notification-authority.server'
 import { NOTIFICATION_PRINCIPAL } from '../../domains/channels/mail-authority.server'
 import { withAdmissionWake } from './composition/admission-wake.server'
 import type { Platform } from '../platform'
@@ -32,7 +33,7 @@ export async function createServerFoundation(platform: Platform, inputs: {
   const ordinaryReplay=createReplayAccess(db,policy,entities)
   const notificationReplay=createNotificationReplay(db)
   const inertAdmission=createAdmissionService(db,{
-    authorizeReplay: (ctx,command) => ctx.principal.id===NOTIFICATION_PRINCIPAL && ctx.principal.kind==='system' ? notificationReplay(ctx,command) : ordinaryReplay.authorizeReplay(ctx,command),
+    authorizeReplay: (ctx,command) => (ctx.principal.id===NOTIFICATION_PRINCIPAL || ctx.principal.id===IN_APP_NOTIFICATION_PRINCIPAL && ['progress.notify','automation.stop.notify'].includes(command.action)) && ctx.principal.kind==='system' ? notificationReplay(ctx,command) : ordinaryReplay.authorizeReplay(ctx,command),
     executionStatus:commandExecutionStatus(db),
     additionalGuards:ctx=>[...inputs.admissionGuards(),erasureAdmissionGuard(ctx.now)],
     captureRecordEvents:true,
