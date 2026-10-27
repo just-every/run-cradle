@@ -1,3 +1,4 @@
+import { LAUNCH_APP_ID, launchEntities } from '../../../apps/launch/contracts'
 import { readActivityMessage } from '../../../apps/launch/activity-message'
 import type { Database } from '../shared/repository'
 import { execute, executeBatch, iso, queryAll, queryOne } from '../shared/repository'
@@ -125,9 +126,20 @@ export const createCampaignRepository = (database: Database) => ({
         requester.id AS requesterId, requester.name AS requesterName, assignee.id AS assigneeId, assignee.name AS assigneeName
         FROM decisions d JOIN operators requester ON requester.id = d.requester_id LEFT JOIN operators assignee ON assignee.id = d.assignee_id
         WHERE d.campaign_id = ? AND d.state IN ('Awaiting approval','In review') ORDER BY d.due_at ASC, d.id ASC`, [id]),
-      queryAll<{ id: string, type: string, subjectId: string, subjectTitle: string, fieldName: string | null, previousValue: string | null, nextValue: string | null, message: string, createdAt: number, actorId: string | null, actorName: string | null }>(database, `SELECT a.id, a.type, a.subject_id AS subjectId, COALESCE((SELECT title FROM decisions WHERE id=a.subject_id),(SELECT title FROM risks WHERE id=a.subject_id),(SELECT title FROM milestones WHERE id=a.subject_id),(SELECT title FROM deliverables WHERE id=a.subject_id),(SELECT name FROM campaigns WHERE id=a.subject_id),(SELECT next_value FROM activity_entries history WHERE history.subject_id=a.subject_id AND history.field_name IN ('title','name') AND history.next_value IS NOT NULL ORDER BY history.created_at DESC,history.id DESC LIMIT 1),'Removed record') AS subjectTitle, a.message, a.created_at AS createdAt, a.field_name AS fieldName, a.previous_value AS previousValue,
+      queryAll<{ id: string, type: string, subjectId: string, subjectTitle: string, fieldName: string | null, previousValue: string | null, nextValue: string | null, message: string, createdAt: number, actorId: string | null, actorName: string | null }>(database, `SELECT a.id AS id, a.type, a.subject_id AS subjectId, COALESCE((SELECT title FROM decisions WHERE id=a.subject_id),(SELECT title FROM risks WHERE id=a.subject_id),(SELECT title FROM milestones WHERE id=a.subject_id),(SELECT title FROM deliverables WHERE id=a.subject_id),(SELECT name FROM campaigns WHERE id=a.subject_id),(SELECT next_value FROM activity_entries history WHERE history.subject_id=a.subject_id AND history.field_name IN ('title','name') AND history.next_value IS NOT NULL ORDER BY history.created_at DESC,history.id DESC LIMIT 1),'Removed record') AS subjectTitle, a.message, a.created_at AS createdAt, a.field_name AS fieldName, a.previous_value AS previousValue,
         a.next_value AS nextValue, o.id AS actorId, o.name AS actorName FROM activity_entries a LEFT JOIN operators o ON o.id = a.actor_id
-        WHERE a.campaign_id = ? ORDER BY a.created_at DESC, a.id DESC`, [id]),
+        WHERE a.campaign_id = ?
+        UNION ALL
+        SELECT a.id, CASE a.action WHEN 'comment.add' THEN 'comment.created' ELSE 'comment.deleted' END,
+        json_extract(a.personal_refs_json,'$[0]'), NULL,
+        json_object('commandId',a.command_id,'message',CASE a.action WHEN 'comment.add' THEN 'Comment added' ELSE 'Comment deleted' END),
+        CAST(unixepoch(a.created_at,'subsec')*1000 AS INTEGER), NULL, NULL, NULL,
+        COALESCE(o.id,p.id), COALESCE(o.name,p.kind)
+        FROM admission_audit a LEFT JOIN authority_principals p ON p.id=a.actor_id
+        LEFT JOIN operators o ON o.id=p.human_id
+        WHERE a.app_id=? AND json_extract(a.subject_json,'$.entityId')=?
+        AND json_extract(a.subject_json,'$.recordId')=? AND a.action IN ('comment.add','comment.delete')
+        ORDER BY createdAt DESC, id DESC`, [id, LAUNCH_APP_ID, launchEntities.campaign, id]),
     ])
     const custom = await queryAll<{ id: string, name: string, type: string, optionsJson: string, valueJson: string | null }>(database, `SELECT f.id, f.name, f.type, f.options_json AS optionsJson, v.value_json AS valueJson
       FROM launch_custom_fields f LEFT JOIN launch_custom_values v ON v.field_id = f.id AND v.campaign_id = ? ORDER BY f.created_at ASC, f.id ASC`, [id])
