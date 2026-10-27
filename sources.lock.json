@@ -7122,7 +7122,7 @@
       "executable": false
     },
     "src/core/features/notifications/ui/notifications-page.tsx": {
-      "sha256": "e5c0a8e578824390bcb804a071f9299c6d49120b4f09f78cf6358437e00354cb",
+      "sha256": "008f1f87648dfbb6bef3237f1a7680f30562e3fa573a840233f5f83678d6e568",
       "executable": false
     },
     "src/core/features/portfolio/index.ts": {
@@ -7950,7 +7950,7 @@
       "executable": false
     },
     "src/domains/channels/contracts.ts": {
-      "sha256": "182f2db2093137666126a2e1e8b885cc96c9d1d02d9a6a6d0e027c9512e435af",
+      "sha256": "b5cd7d085447443cb172c9d8fae87834aee65ea74ce1a0e676ed98bef1b6fd64",
       "executable": false
     },
     "src/domains/channels/delivery.server.ts": {
@@ -7974,7 +7974,7 @@
       "executable": false
     },
     "src/domains/channels/inbox.server.ts": {
-      "sha256": "8f487befd8810f2c5e4641e5d3aae7300418129e8929a0f81396dc27cf2ae2c6",
+      "sha256": "27cb6e3fd8ec94c2e9cb316ef5267f46906bb34dde429bb21f7da0a82bd90dd2",
       "executable": false
     },
     "src/domains/channels/integration.server.ts": {
@@ -12298,7 +12298,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "a67762e4681f5aaa172ed0447f35453d70552c8f08bf5c488c42a4ba305bdc38",
+      "sha256": "e9e8aa8e3e860cbf0b88c8c013ea180d2c33c00064c2ec5f9ea7a00bde255fda",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
