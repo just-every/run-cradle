@@ -7,17 +7,28 @@ import {automationRecipient} from '../automations/recipients.server';
 import {createChannelsIntegration} from '../channels/integration.server';
 import {AuthorityError} from '../authority/errors';
 import type {ChannelEffects} from '../channels/ports';
+import {LAUNCH_APP_ID,launchEntities} from '../../apps/launch/contracts';
+import {launchTables} from '../../apps/launch/descriptors.server';
+
+/** Launch work keeps its campaign, so archive, deletion and erasure settle its
+ * mention notices and pending mail exactly as they settle the campaign's own. */
+async function launchCampaign(db:D1Database,subject:Ref){
+ if(subject.appId!==LAUNCH_APP_ID)return null;
+ if(subject.entityId===launchEntities.campaign)return subject.recordId;
+ const kind=(['deliverable','milestone','risk','decision'] as const).find(kind=>launchEntities[kind]===subject.entityId);
+ return kind?(await db.prepare(`SELECT campaign_id FROM ${launchTables[kind]} WHERE id=?`).bind(subject.recordId).first<{campaign_id:string}>())?.campaign_id??null:null;
+}
 
 /** Recipient identity is real operator data; read authority belongs to that recipient. */
 export function createCommentMentions(deps:Pick<EvidenceDependencies,'db'|'access'>,entities:EntityRegistry,appOrigin:string){
  const {db}=deps;
  const prepare:MentionPort['prepare']=async(ctx,subject,commentId,memberIds)=>{
-  const effects:ChannelEffects={guards:[],mutations:[]};
+  const effects:ChannelEffects={guards:[],mutations:[]},campaignId=await launchCampaign(db,subject);
   for(const operatorId of memberIds){
    const recipient=await automationRecipient(db,entities,ctx,{...subject,operatorId});
    const href=new URL(`/app/records/${subject.appId}/${subject.entityId}/${subject.recordId}`,appOrigin).href;
    const integration=createChannelsIntegration(db,async()=>({guards:[recipient.guard],title:'You were mentioned in a comment',body:`Open the record to read the comment: ${href}`}));
-   const next=await integration.notification(ctx,{kind:'comment-mentioned',operatorId,campaignId:null,subjectId:subject.recordId,eventId:commentId,appId:subject.appId,subjectType:subject.entityId});
+   const next=await integration.notification(ctx,{kind:'comment-mentioned',operatorId,campaignId,subjectId:subject.recordId,eventId:commentId,appId:subject.appId,subjectType:subject.entityId});
    effects.guards.push(...next.guards);effects.mutations.push(...next.mutations);
   }
   return effects;

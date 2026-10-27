@@ -23,7 +23,8 @@ export async function notificationSendGuards(db:D1Database,ctx:RequestContext,id
  for(const id of ids){
   const n=await db.prepare('SELECT n.id,n.title,n.body,n.subject_id,n.version,c.app_id,c.subject_type,c.event_kind,c.campaign_id FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id JOIN channel_notifications c ON c.notification_id=n.id WHERE d.id=? AND n.unavailable=0 AND n.operator_id=d.operator_id AND c.event_kind=d.kind').bind(id).first<{id:string;title:string;body:string;subject_id:string;version:number;event_kind:NotificationKind;campaign_id:string|null;app_id:string;subject_type:string}>()
   if(!n||!notificationKinds.includes(n.event_kind))return denied()
-  const access=n.event_kind==='comment-mentioned'&&n.campaign_id===null&&/^[0-9A-HJKMNP-TV-Z]{26}$/.test(n.subject_type)
+  // A record-thread mention keeps its own comment authority, with or without its Launch campaign.
+  const access=n.event_kind==='comment-mentioned'&&/^[0-9A-HJKMNP-TV-Z]{26}$/.test(n.subject_type)
    ?await commentRecipientGuards(db,entities,{...ctx,now:new Date(now).toISOString()},{notificationId:n.id,appId:n.app_id,entityId:n.subject_type,recordId:n.subject_id,operatorId})
    :await legacyRecipientGuards(db,{kind:n.event_kind,operatorId,campaignId:n.campaign_id,subjectType:n.subject_type,subjectId:n.subject_id,eventId:n.id},new Date(now).toISOString())
   if(!access)return denied()

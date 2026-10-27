@@ -62,7 +62,7 @@ export async function verifyInboxScreens({h,page,command,capture}){
  await create('campaign.archive',{id:firstCampaign.id},ref(firstCampaign))
  await create('campaign.archive',{id:campaign.id},ref(campaign))
  const archived=await read()
- for(const {notice}of notices){const subject=archived.notifications.find(item=>item.id===notice.id).subject;assert.equal(subject.available,true,'A shared mention keeps its currently readable record link after archival');assert.match(subject.href,new RegExp('^/app/records/'))}
+ for(const {notice}of notices)assert.equal(archived.notifications.find(item=>item.id===notice.id).subject.available,false,'NOTIFY-005 archived subject is unavailable')
  assert.equal(archived.notifications.find(item=>item.id===automated.id).subject.available,false,'NOTIFY-005 archived legacy automation subject is unavailable')
  await page.reload();await page.getByText('Related record is unavailable',{exact:false}).first().waitFor()
  await capture('clause-inbox-unavailable')
