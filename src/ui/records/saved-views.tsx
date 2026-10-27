@@ -11,7 +11,7 @@ import { useGridHistory } from './grid-history'
 import { RecordsGrid } from './record-grid'
 import { FindInView, type ViewMatch } from './find-in-view'
 import { DateViews } from './date-views'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Page } from '../../contracts/primitives'
 import type { EntitySchema, Query, RecordRow, TimelineZoom, View, ViewResult } from '../../domains/records/contracts'
 import { RECORD_SCHEMA_ENTITY_ID, RECORD_VIEW_ENTITY_ID } from '../../domains/records/contracts'
@@ -62,7 +62,7 @@ function SavedViewResult({ view, schema, findOpen, onFindOpenChange }: { view: V
   const [cursor, setCursor] = useState<string | undefined>()
   const live = useLiveRecords<ViewResult>(`/api/v1/views/${view.id}/query`, { limit: 100, ...(cursor ? { cursor } : {}) }, `/api/v1/views/${view.id}/presence`, () => setCursor(undefined), revision)
   const result = live.resource.state === 'ready' ? live.resource.data : null
-  const records = result ? history.reconcile(result.records.items) : []
+  const records = useMemo(() => result ? history.reconcile(result.records.items) : [], [history, result])
   const find = <FindInView open={findOpen} onOpenChange={onFindOpenChange} schema={schema} viewId={view.id} query={{ limit: 100, fields:[...new Set([...view.fields,...view.groupBy,...Object.values(view.layout)])] }} fields={view.fields} onMatch={value => { setMatch(value); if (value) setCursor(value.cursor) }} />
   const summary = result ? (result.view.summaries?.length || result.view.groupBy.length) ? <SavedSummaryBar schema={result.schema} view={result.view} revision={revision} /> : null : null
   if (!result) return <ViewFormatting rules={[]}>{find}{summary}<LiveRecordsStatus {...live} /><ResourceState resource={live.resource} operation="saved view" retry={live.refresh}>{() => null}</ResourceState></ViewFormatting>

@@ -1,5 +1,5 @@
 import {useViewColor} from './view-formatting'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useMemo } from 'react'
 import { useGridHistory } from './grid-history'
 import { useTableGridTools } from './table-tools'
 import type { EntitySchema, Field, RecordRow } from '../../domains/records/contracts'
@@ -11,7 +11,7 @@ import type { ViewMatch } from './find-in-view'
 
 export function RecordsGrid({ schema, rows, visible, groupBy, selection, onSelection, match, onCreate }: { schema: EntitySchema; rows: RecordRow[]; visible: string[]; groupBy?: string | string[]; selection: RecordRow[]; onSelection(rows: RecordRow[]): void; match?: ViewMatch | null; onCreate?: () => void }) {
   const history = useGridHistory()
-  rows = history.reconcile(rows)
+  rows = useMemo(() => history.reconcile(rows), [history, rows])
   const color=useViewColor(schema.fields)
   const tableId = useId(), fields = visible.flatMap(id => schema.fields.find(field => field.id === id) ?? [])
   const groupIds = typeof groupBy === 'string' ? [groupBy] : groupBy ?? []
