@@ -12,7 +12,7 @@ import {importAuthority,reserveNewBaseImportAuthority,authoritySize} from '../sr
 import {previewBaseImport} from '../src/domains/records/base-transfer/plan.ts'
 import {createBaseImportService} from '../src/domains/records/base-transfer/service.server.ts'
 import {readIncomingRelations} from '../src/domains/records/incoming.server.ts'
-for(const name of ['crm-example','project-tracker','edges'])for(const format of ['csv','api'])contract('RECORDS-005 RECORDS-001',`actual D1 ${name} ${format} matches independent handwritten schemas, records, links and reports`,async()=>{
+async function fixtureImportCase(name,format){
  const fixture=await prepareFixture(name,format),directory=await mkdtemp(join(tmpdir(),'cradle-fixture-')),storage=await openImportD1(directory,true)
  try{
   const h=await harness({...storage,close:()=>{}}),r=await h.runtime(),service=createBaseImportService(storage.db,r.policy,r.registry,r.manual,previewBaseImport),p=fixture.preview,ack={fingerprint:p.fingerprint,acceptLoss:true},review=await service.review(h.ctx,p,ack),job=await service.adopt(h.ctx,review.reviewId,{...ack,physicalFingerprint:review.physicalFingerprint}),live=await h.runtime(),restart=createBaseImportService(storage.db,live.policy,live.registry,live.manual,()=>{throw new Error('Resume cannot require parser')})
@@ -33,4 +33,10 @@ for(const name of ['crm-example','project-tracker','edges'])for(const format of 
   let undone=await restart.undo(h.ctx,job.id);while(undone.state!=='undone')undone=await restart.resume(h.ctx,job.id);const final=await restart.status(h.ctx,job.id);assert.equal(final.progress.appliedRecords,0);assert.equal(final.reconciliation.ok,true);for(const descriptor of live.registry.list(p.identities.appId)){assert.equal((await storage.db.prepare(`SELECT COUNT(*) n FROM \"${descriptor.table.tableId}\"`).first()).n,0);for(const field of descriptor.fields.values())if(field.join)assert.equal((await storage.db.prepare(`SELECT COUNT(*) n FROM \"${field.join.table.tableId}\"`).first()).n,0)}
   const originals=await restart.originals(h.ctx,job.id);for(const artifact of fixture.source.bundle.artifacts)assert.equal(originals.find(o=>o.name===artifact.name).original.base64,artifact.original.base64)
  }finally{await storage.close();await rm(directory,{recursive:true,force:true})}
+}
+
+contract('RECORDS-005 RECORDS-001','actual D1 fixture matrix matches independent handwritten schemas, records, links and reports',async()=>{
+ for(const name of ['crm-example','project-tracker','edges'])for(const format of ['csv','api']){
+  try{await fixtureImportCase(name,format)}catch(error){throw new Error(`RECORDS-005 RECORDS-001 actual D1 ${name} ${format}: ${error.message}`,{cause:error})}
+ }
 })
