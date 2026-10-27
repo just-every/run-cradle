@@ -12302,7 +12302,7 @@
       "executable": false
     },
     "tests/helpers/notification-delivery-matrix.mjs": {
-      "sha256": "e3e3a800e1a45de7cc223514bbc4b38f604d3d6a53ff943e9a9aa446ec194f14",
+      "sha256": "04b91c2c72c6282813f114c4f204fafebc86df3f551f76f28b63793cd89693bc",
       "executable": false
     },
     "tests/helpers/notification-email-policy.mjs": {
