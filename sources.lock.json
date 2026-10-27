@@ -13018,7 +13018,7 @@
       "executable": false
     },
     "tests/records-manual-release.mjs": {
-      "sha256": "ce8e35b589cf15f66360b78fce642ffb8732affb73f8116a47a5f63ef1d503d4",
+      "sha256": "71582ae06b53786a12d80c0689ff916110f8ca85a73643a2f9c20e71cb65ea1f",
       "executable": false
     },
     "tests/records-manual-roundtrip.mjs": {
