@@ -40,7 +40,7 @@ export async function templateUpdateHarness() {
   }
  }
  const update = async () => {
-  const sql = await readFile(new URL('../migrations/updates/9076_launch_typed_fields.sql', import.meta.url), 'utf8')
+  const sql = await readFile(new URL('../migrations/updates/9079_launch_typed_fields.sql', import.meta.url), 'utf8')
   await h.db.exec(sql.replace(/^--.*$/gm, '').replaceAll('\n', ' '))
  }
  return { ...h, get db() { return h.db }, rawRequest: h.request, read, request, command, schemas, storedSchemas, rows, authority, replaceSchema, installMainEraSchemas, update, restart: h.restart, close: h.close }
