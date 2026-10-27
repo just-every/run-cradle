@@ -313,9 +313,9 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   if(muted)retained.push({kind:'progress',ids:[notice.id]})
   return notice
  }
- const saveExport=async person=>{
+ const saveExport=async(person,bases=[LAUNCH_APP_ID])=>{
   const id=createUlid(),at=new Date(),localRule=`daily ${at.toISOString().slice(11,16)}`
-  await request(person.session,'warehouse.save',{id,name:`synthetic-cradle-${width+1000}`,bases:[LAUNCH_APP_ID],mode:'full',format:'csv',destination:edge.destination,access:edge.access,localRule,timezone:'UTC',version:0})
+  await request(person.session,'warehouse.save',{id,name:`synthetic-cradle-${width+1000}`,bases,mode:'full',format:'csv',destination:edge.destination,access:edge.access,localRule,timezone:'UTC',version:0})
   const saved=(await json(person,'/api/v1/warehouse-exports')).exports.find(e=>e.id===id);assert.ok(saved);assert.equal(saved.version,1)
   return id
  }
@@ -377,7 +377,27 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  // Restart an actual claimed execution at its emitted after-claim boundary.
  // The inspector locates application code; it neither replaces that code nor
  // supplies a production hook. Only the fixture's own workerd PID is stopped.
- const interruptedExport=async(retainedId,boundary='SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key',condition)=>{
+ const stopExport=async(id,invocation,release,onStopped=()=>{})=>{
+   const processes=execFileSync('ps',['-axo','pid,ppid,stat,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const [pid,ppid,stat,...name]=line.trim().split(/\s+/);return {pid:Number(pid),ppid:Number(ppid),stat,name:name.join(' ')}})
+   const owned=new Set([process.pid]);let changed=true
+   while(changed){changed=false;for(const child of processes)if(owned.has(child.ppid)&&!owned.has(child.pid)){owned.add(child.pid);changed=true}}
+   // An earlier stopped workerd that is not yet reaped has exited; it is not a candidate.
+   const workers=processes.filter(child=>owned.has(child.pid)&&!child.stat.startsWith('Z')&&/workerd$/.test(child.name))
+   assert.equal(workers.length,1,`NOTIFY-009 this fixture owns exactly one workerd to interrupt: ${JSON.stringify(workers)}`)
+   console.log(`NOTIFY-009 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
+   process.kill(workers[0].pid,'SIGKILL');onStopped()
+   await invocation
+   release()
+   await h.restart()
+   const claim=await h.db.prepare('SELECT running_id,running_started_at,running_slot,version,last_slot FROM warehouse_exports WHERE id=?').bind(id).first()
+   assert.ok(claim.running_id,'NOTIFY-009 a runtime interruption retains the real export claim')
+   assert.equal(claim.last_slot,null,'NOTIFY-009 the interrupted execution has not committed')
+   const eventId=`warehouse-export:${id}:${claim.version}:${claim.running_slot}:failed`
+   const attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(eventId).first()
+   assert.equal(attempt.token,claim.running_id,'NOTIFY-009 the retained attempt belongs to the interrupted execution')
+   return {id,eventId,claim}
+ }
+ const interruptedExport=async(retainedId,boundary='SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key')=>{
   const id=retainedId??await saveExport(starter),inspector=new URL(await h.runtime.getInspectorURL())
   const state=async()=>({export:await h.db.prepare('SELECT state,running_id,running_failures,running_stalls,running_stopped_slot,last_slot FROM warehouse_exports WHERE id=?').bind(id).first(),objects:(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(id).first()).n})
   const saved=await state(),matches=[],pauses=[],resolutions=[]
@@ -386,7 +406,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   assert.ok(target,'NOTIFY-009 the owned emitted Worker exposes its inspector target')
   const socket=new WebSocket(target.webSocketDebuggerUrl),pending=new Map(),scripts=[]
   const breakpoints=new Set(),bindings=new Map()
-  let serial=0,hit,contextId,stopped=false
+  let serial=0,hit,stopped=false
   const paused=new Promise(resolve=>hit=resolve)
   await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})})
   const command=(method,params={})=>new Promise((resolve,reject)=>{const requestId=++serial;pending.set(requestId,{resolve,reject});socket.send(JSON.stringify({id:requestId,method,params}))})
@@ -412,42 +432,22 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
     const binding=JSON.stringify([script.url,location.lineNumber,location.columnNumber])
     // The module URL binds current and later parsed instances of this boundary.
     if(!bindings.has(binding)){
-     const resolved=await command('Debugger.setBreakpointByUrl',{url:script.url,lineNumber:location.lineNumber,columnNumber:location.columnNumber,...condition?{condition}:{}})
+     const resolved=await command('Debugger.setBreakpointByUrl',{url:script.url,lineNumber:location.lineNumber,columnNumber:location.columnNumber})
      assert.ok(resolved.locations.length,'NOTIFY-009 the interruption boundary resolves in the emitted module')
      bindings.set(binding,resolved);breakpoints.add(resolved.breakpointId)
     }
-    contextId??=script.executionContextId
     match.locations=bindings.get(binding).locations
    }
    assert.ok(breakpoints.size,'NOTIFY-009 the after-claim boundary is present in the emitted Worker')
-   const before=await state(),counterBefore=await command('Runtime.evaluate',{expression:'globalThis.__retainedObjects',contextId,returnByValue:true})
+   const before=await state()
    const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
    // An execution that ends before its boundary is a failure with its outcome,
    // never a wait for a pause that cannot come.
    const ended=await Promise.race([paused.then(()=>null),invocation])
    if(ended){
-    const counter=await command('Runtime.evaluate',{expression:'globalThis.__retainedObjects',contextId,returnByValue:true}),conditionResult=condition?await command('Runtime.evaluate',{expression:condition,contextId,returnByValue:true}):undefined
-    assert.fail(`NOTIFY-009 the breakpoint did not pause before the scheduled execution ended: ${JSON.stringify({outcome:ended.result?.outcome??String(ended.error),targets:targets.map(({id,title,url})=>({id,title,url})),matches,saved,before,counterBefore,counter,conditionResult,pauses,resolutions,after:await state()})}`)
+    assert.fail(`NOTIFY-009 the breakpoint did not pause before the scheduled execution ended: ${JSON.stringify({outcome:ended.result?.outcome??String(ended.error),targets:targets.map(({id,title,url})=>({id,title,url})),matches,saved,before,pauses,resolutions,after:await state()})}`)
    }
-   if(condition)console.log(`NOTIFY-009 ${width}: progress breakpoint paused ${JSON.stringify({matches,saved,before,counterBefore,counter:await command('Runtime.evaluate',{expression:'globalThis.__retainedObjects',contextId,returnByValue:true}),pauses,resolutions})}`)
-   const processes=execFileSync('ps',['-axo','pid,ppid,stat,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const [pid,ppid,stat,...name]=line.trim().split(/\s+/);return {pid:Number(pid),ppid:Number(ppid),stat,name:name.join(' ')}})
-   const owned=new Set([process.pid]);let changed=true
-   while(changed){changed=false;for(const child of processes)if(owned.has(child.ppid)&&!owned.has(child.pid)){owned.add(child.pid);changed=true}}
-   // An earlier stopped workerd that is not yet reaped has exited; it is not a candidate.
-   const workers=processes.filter(child=>owned.has(child.pid)&&!child.stat.startsWith('Z')&&/workerd$/.test(child.name))
-   assert.equal(workers.length,1,`NOTIFY-009 this fixture owns exactly one workerd to interrupt: ${JSON.stringify(workers)}`)
-   console.log(`NOTIFY-009 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
-   process.kill(workers[0].pid,'SIGKILL');stopped=true
-   await invocation
-   socket.close()
-   await h.restart()
-   const claim=await h.db.prepare('SELECT running_id,running_started_at,running_slot,version,last_slot FROM warehouse_exports WHERE id=?').bind(id).first()
-   assert.ok(claim.running_id,'NOTIFY-009 a runtime interruption retains the real export claim')
-   assert.equal(claim.last_slot,null,'NOTIFY-009 the interrupted execution has not committed')
-   const eventId=`warehouse-export:${id}:${claim.version}:${claim.running_slot}:failed`
-   const attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(eventId).first()
-   assert.equal(attempt.token,claim.running_id,'NOTIFY-009 the retained attempt belongs to the interrupted execution')
-   return {id,eventId,claim}
+   return await stopExport(id,invocation,()=>socket.close(),()=>{stopped=true})
   }finally{
    // A failure before the stop resumes the paused Worker, so the runtime closes and
    // the failure is reported instead of holding the shard until its cap.
@@ -540,10 +540,28 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  // it extends recovery, but never past four unsuccessful executions in total.
  {
   await prefs(starter,[],true)
-  const mail=(await h.mailMessages()).length,boundary='INSERT INTO warehouse_objects(object_key,export_id,run_id,created_at,destination_json,sealed_json,metadata_json,dispatch_state) VALUES(?,?,?,?,?,?,?,?)',second='(globalThis.__retainedObjects=(globalThis.__retainedObjects||0)+1)===2'
-  const run=await interruptedExport(undefined,boundary,second),at=Date.now(),retainedObjects=async()=>(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(run.id).first()).n,counts=[await retainedObjects()]
+  const appId=createUlid(),tables=Array.from({length:4},(_,index)=>{const id=createUlid(),field=createUlid();return {id,label:`Recovery table ${index+1}`,primaryFieldId:field,fields:[{id:field,label:'Name',type:'text',required:true,unique:false}]}})
+  const preview=await json(owner,'/api/v1/records/schema-preview',{appId,name:'Synthetic recovery export',tables})
+  await request(owner.session,'release.adopt',{kind:'manual_schema',previewId:preview.id})
+  await json(owner,`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:starter.id,role:'owner',destructive:false,version:0})
+  const advancingExport=async retainedId=>{
+   const id=retainedId??await saveExport(starter,[LAUNCH_APP_ID,appId])
+   const before=(await h.db.prepare('SELECT object_key FROM warehouse_objects WHERE export_id=?').bind(id).all()).results
+   const paths=new Set(before.map(row=>`/${edge.destination.bucket}/${edge.destination.prefix}/${row.object_key}`)),initial=paths.size
+   const held=edge.holdNextPut(path=>{const key=decodeURIComponent(path);if(!key.includes('/'+id+'/')||paths.has(key))return false;paths.add(key);return paths.size-initial===2})
+   const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
+   try{
+    const ended=await Promise.race([held.reached.then(()=>null),invocation])
+    assert.equal(ended,null,'NOTIFY-009 the scheduled execution reaches its retained-object boundary')
+    const count=(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(id).first()).n
+    assert.equal(count,initial+2,'NOTIFY-009 the real execution retains two new objects before its worker process is stopped')
+    console.log(`NOTIFY-009 ${width}: provider edge held with retained objects ${initial} then ${count}`)
+    return await stopExport(id,invocation,held.release)
+   }finally{held.release()}
+  }
+  const mail=(await h.mailMessages()).length,run=await advancingExport(),at=Date.now(),retainedObjects=async()=>(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(run.id).first()).n,counts=[await retainedObjects()]
   for(let n=1;n<4;n++){
-   await aged(run.id);await interruptedExport(run.id,boundary,second);counts.push(await retainedObjects())
+   await aged(run.id);await advancingExport(run.id);counts.push(await retainedObjects())
    assert.deepEqual(await rows(run.id),[],'NOTIFY-009 an advancing run is not reported before its total bound')
   }
   assert.ok(counts.every((count,index)=>count>(counts[index-1]??0)),'NOTIFY-009 each interrupted execution added retained objects')
