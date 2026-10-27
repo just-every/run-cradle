@@ -53,8 +53,10 @@ export function createChannelsComposition(platform: Platform, foundation: Server
       const row=await db.prepare(`SELECT ${title?.column?identifier(title.column):'NULL'} AS title FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${scope.rowPredicate.sql})`)
        .bind(ref.subjectId,...scope.rowPredicate.values).first<{title:unknown}>()
       if(!row)return false
-      const value=title?.field.type==='select'?title.field.options?.find(option=>option.id===row.title)?.label:row.title
-      return {title:typeof value==='string'&&value.trim()?value.trim():null}
+      // Only words name a record here: a select by its option label, never a stored id
+      // (Launch's retained Readiness requests title is its milestone_id text column).
+      const value=title?.field.type==='select'?title.field.options?.find(option=>option.id===row.title)?.label:['text','email','phone','url','date'].includes(title?.field.type??'')?row.title:null
+      return {title:typeof value==='string'&&value.trim()&&!/^[0-9A-HJKMNP-TV-Z]{26}$/.test(value.trim())?value.trim():null}
     }catch{return false}
   }
   const services = registerChannelCommands(foundation.commands, dependencies,access)
