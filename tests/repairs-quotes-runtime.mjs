@@ -17,7 +17,9 @@ async function setup(){
  const prepare=async command=>{const registry=h.r.createCommandRegistry({commit:async(_ctx,plan)=>({plan}),replay:async()=>null});h.r.registerRepairCommands(registry,h.d,['repair.record-quote']);return (await registry.get('repair.record-quote').execute(h.ctx,command)).plan}
  return {...h,opened,source,review,quote,prepare,record:command=>h.registry.get('repair.record-quote').execute(h.ctx,command)}
 }
-test('quote capture rejects nonhuman, revoked action, stale scope, wrong totals and expired terms',async()=>{
+test("repair quote capture guard table refuses invalid terms and prepared source or case changes atomically",async()=>{
+ const cases=[
+  {name:"quote capture rejects nonhuman, revoked action, stale scope, wrong totals and expired terms",run:async()=>{
  const h=await setup()
  try{
   const command=await h.quote()
@@ -29,8 +31,8 @@ test('quote capture rejects nonhuman, revoked action, stale scope, wrong totals 
   await assert.rejects(h.record(command),{code:'forbidden'})
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM repair_quotes').first()).n,0)
  }finally{await h.close()}
-})
-test('source correction and paused case reject prepared quote admission atomically',async()=>{
+}},
+  {name:"source correction and paused case reject prepared quote admission atomically",run:async()=>{
  const h=await setup()
  try{
   let command=await h.quote(),plan=await h.prepare(command)
@@ -43,7 +45,13 @@ test('source correction and paused case reject prepared quote admission atomical
   await assert.rejects(h.record(command),{code:'invalid_transition'})
   assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM repair_quotes').first()).n,0)
  }finally{await h.close()}
+}}
+ ]
+ for(const {name,run} of cases){
+  try{await run()}catch(error){throw new Error(name+': '+error.message,{cause:error})}
+ }
 })
+
 
 test('review explains incomparable or changed evidence without ranking; hidden quote/source fields deny read and replay',async()=>{
  const h=await setup()

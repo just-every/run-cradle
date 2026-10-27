@@ -46,8 +46,9 @@ async function withInstallation(owner, run, overrides = {}, providerStatus = 202
   }
 }
 
-for (const [label, owner] of [['absent', undefined], ['empty', ''], ['whitespace', '   ']]) {
-  test(`AUTH-BASE-001: emitted production rejects ${label} OWNER_EMAIL despite complete legacy mail configuration`, () => withInstallation(owner, async ({ db, request, deliveries }) => {
+test('AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration', async () => {
+ for (const [label, owner] of [['absent', undefined], ['empty', ''], ['whitespace', '   ']]) {
+  try { await withInstallation(owner, async ({ db, request, deliveries }) => {
     const health=await request('/health')
     assert.equal(health.status,503)
     assert.ok((await health.json()).missing.includes('OWNER_EMAIL'))
@@ -67,8 +68,11 @@ for (const [label, owner] of [['absent', undefined], ['empty', ''], ['whitespace
       assert.equal((await db.prepare(`SELECT count(*) AS n FROM ${table}`).first()).n, 0, table)
     }
     assert.equal(deliveries.length, 0)
-  }))
-}
+  }) } catch (error) {
+    throw new Error(`AUTH-BASE-001 ${label} OWNER_EMAIL: ${error.message}`, {cause:error})
+  }
+ }
+})
 
 test('AUTH-BASE-001: emitted production admits one-use owner links and refuses legacy links and cookies', () => withInstallation(ownerEmail, async ({ db, request, deliveries }) => {
   const attempts = await Promise.all(Array.from({ length: 2 }, () => request('/auth/bootstrap', { token: secret, displayName: 'Owner' })))

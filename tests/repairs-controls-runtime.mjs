@@ -12,7 +12,9 @@ async function setup(){
  const controlCommand=(value,reason='Explicit synthetic manual control')=>h.envelope({caseId:value.id,caseVersion:value.version,reason},[],{controlEpoch:value.controlEpoch})
  return {...h,controls,reads,http,value,controlCommand}
 }
-test('control stale versions, nonhuman access, SQL rollback, membership races and field-restricted replay remain denied',async()=>{
+test("repair manual control guard table refuses stale, machine and changed-mandate actions atomically",async()=>{
+ const cases=[
+  {name:"control stale versions, nonhuman access, SQL rollback, membership races and field-restricted replay remain denied",run:async()=>{
  const h=await setup()
  try{
   const command=await h.controlCommand(h.value.case),plan=await h.controls.prepare(h.ctx,'case.pause',command)
@@ -30,9 +32,8 @@ test('control stale versions, nonhuman access, SQL rollback, membership races an
   await h.auth.setRules(h.auth.rules.map(rule=>rule.entityId===h.r.REPAIR_ENTITIES.workOrders?{...rule,readableFields:rule.readableFields.filter(id=>id!==h.r.repairFieldId('workOrders','scope_description'))}:rule))
   await assert.rejects(h.registry.get('case.pause').execute(h.ctx,command),{code:'forbidden'})
  }finally{await h.close()}
-})
-
-test('stopping blocks retained queued wakes; changed mandates and machine authority cannot use manual resume',async()=>{
+}},
+  {name:"stopping blocks retained queued wakes; changed mandates and machine authority cannot use manual resume",run:async()=>{
  const h=await setup()
  try{
   const now=h.ctx.now,id=h.r.createUlid(),wake={id,appId:h.r.REPAIRS_APP_ID,caseId:h.value.case.id,version:1,createdAt:now,updatedAt:now,reason:'Synthetic prior queued work',state:'queued',leaseOwner:null,leaseUntil:null,epoch:0,modelRequestId:h.r.createUlid(),actionCommandId:h.r.createUlid(),checkpoint:'refresh',planId:null,runId:null,nextWakeAt:now,failure:null}
@@ -44,7 +45,14 @@ test('stopping blocks retained queued wakes; changed mandates and machine author
   await assert.rejects(h.registry.get('case.resume').execute(h.ctx,await h.controlCommand(paused)),{code:'version_conflict'})
   assert.equal((await h.operations.getCase(h.ctx,h.value.case.id)).state,'paused')
  }finally{await h.close()}
+}}
+ ]
+ for(const {name,run} of cases){
+  try{await run()}catch(error){throw new Error(name+': '+error.message,{cause:error})}
+ }
 })
+
+
 
 
 test('moved asset/store identity blocks fresh picker and assignment; an admission-time move also rolls back',async()=>{
