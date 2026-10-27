@@ -116,6 +116,30 @@ test('[RECORDS-001 FIELD-001 VIEW-004] a populated Launch upgrade preserves reco
   const emptyOption = fields[launchFieldIds.campaign.status].options.find(option => option.retainedValue === '')
   assert.ok(emptyOption && emptyOption.label.trim().length > 0, 'An empty historical choice has a visible option label and keeps its exact stored value')
   assert.equal(records.find(record => record.id === emptyChoiceCampaign.id).fields[launchFieldIds.campaign.status].value, emptyOption.id, 'An empty stored value decodes to its option identity instead of a blank cell')
+  const status = fields[launchFieldIds.campaign.status], onTrack = status.options.find(option => option.label === 'On track')
+  const ids = rows => rows.map(row => row.id).sort()
+  const filtered = async filter => ids((await h.read(entityPath('campaign') + '/query', { filter })).items)
+  const condition = (fieldId, op, value) => ({ kind: 'condition', fieldId, op, value })
+  const expectedStatus = beforeRows.campaign.filter(row => row.status === 'On track').map(row => row.id).sort()
+  assert.deepEqual(await filtered(condition(status.id, 'in', [onTrack.id])), expectedStatus, 'Choice IDs filter the retained stored text')
+  assert.deepEqual(await filtered(condition(status.id, 'in', ['On track'])), expectedStatus, 'Historical saved choice text keeps matching the same records')
+  for (const option of status.options) assert.deepEqual(await filtered(condition(status.id, 'eq', option.id)), beforeRows.campaign.filter(row => row.status === (option.retainedValue ?? option.label)).map(row => row.id).sort(), 'Retained choices, including empty and stray values, bind without changing storage')
+  assert.deepEqual(await filtered(condition(launchFieldIds.campaign.health, 'before', '0.70')), beforeRows.campaign.filter(row => row.health < 70).map(row => row.id).sort(), 'Fractional health filters bind stored hundredths')
+  const budget = beforeRows.campaign[0].budget_minor
+  assert.deepEqual(await filtered(condition(launchFieldIds.campaign.budgetMinor, 'eq', { minor: String(budget), currency: 'USD', scale: 2 })), beforeRows.campaign.filter(row => row.budget_minor === budget).map(row => row.id).sort(), 'Fixed-currency money filters bind minor units')
+  const invalid = await h.request(entityPath('campaign') + '/query', { filter: condition(status.id, 'eq', createUlid()) }, 400)
+  assert.equal(invalid.error.code, 'validation', 'An option without a stored mapping is refused rather than returning no matches')
+  for (const kind of ['deliverable', 'milestone']) {
+   const rows = beforeRows[kind], parent = rows[0]?.campaign_id
+   if (!parent) continue
+   const lifecycle = kind === 'deliverable' ? 'state' : 'status', field = (await h.read(entityPath(kind))).fields.find(field => field.id === launchFieldIds[kind][lifecycle]), label = rows[0][lifecycle]
+   const result = await h.read(entityPath(kind) + '/query', { filter: { kind: 'all', conditions: [condition(launchFieldIds[kind].campaignId, 'eq', { appId: LAUNCH_APP_ID, entityId: launchEntities.campaign, recordId: parent }), condition(field.id, 'eq', label)] } })
+   assert.deepEqual(ids(result.items), rows.filter(row => row.campaign_id === parent && row[lifecycle] === label).map(row => row.id).sort(), 'A relation filter and historical choice text also work in evaluated queries')
+  }
+  const csv = await h.read('/api/v1/records/export-csv', { appId: LAUNCH_APP_ID, entityId: launchEntities.campaign, query: { fields: [launchFieldIds.campaign.code, launchFieldIds.campaign.name, status.id] } })
+  const { parseCsv } = await import('../src/domains/portability/csv.ts')
+  const exported = parseCsv(new TextEncoder().encode(csv.csv))
+  for (const row of beforeRows.campaign) assert.equal(exported.rows.find(value => value[0] === row.code)?.[2], status.options.find(option => (option.retainedValue ?? option.label) === row.status).label, 'Campaign CSV exports the same choice label shown by the renderer')
   const decisions = (await h.read(entityPath('decision') + '/query', {})).items
   for (const stored of beforeRows.decision) {
    const record = decisions.find(row => row.id === stored.id)

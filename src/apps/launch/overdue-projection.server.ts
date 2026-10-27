@@ -2,7 +2,7 @@ import type { RecordRow } from '../../domains/records/contracts'
 import { trustedPredicate } from '../../domains/admission/sql.server'
 import type { SqlPredicate } from '../../domains/admission/ports'
 import { LAUNCH_APP_ID, launchEntities } from './contracts'
-import { launchFieldIds } from './descriptors.server'
+import { launchFieldIds, launchDescriptors } from './descriptors.server'
 import { localDate } from './milestones.server'
 
 type Kind = 'deliverable' | 'milestone'
@@ -30,7 +30,14 @@ export async function projectLaunchOverdue(db: D1Database, kind: Kind, rows: rea
   const names = overdueFieldNames(kind), cells = names.map(name => row.fields[launchFieldIds[kind][name]!])
   if (cells.some(cell => cell?.state !== 'value')) return []
   const values = Object.fromEntries(names.map((name, index) => { const cell = cells[index]; return [name, cell?.state === 'value' ? cell.value : null] }))
-  return typeof values.campaignId === 'string' ? [{ id: row.id, values, campaignId: values.campaignId }] : []
+  const campaignId = typeof values.campaignId === 'string' ? values.campaignId
+   : values.campaignId && typeof values.campaignId === 'object' && 'recordId' in values.campaignId ? values.campaignId.recordId : null
+  const lifecycle = kind === 'deliverable' ? 'state' : 'status'
+  const field = launchDescriptors.find(descriptor => descriptor.schema.id === launchEntities[kind])!.fields.get(launchFieldIds[kind][lifecycle]!)!
+  const choice = values[lifecycle]
+  // Legacy readers still supply stored text; records readers supply option IDs.
+  if (typeof choice === 'string' && field.selectValues && Object.hasOwn(field.selectValues, choice)) values[lifecycle] = field.selectValues[choice]
+  return typeof campaignId === 'string' ? [{ id: row.id, values, campaignId }] : []
  })
  const flags = new Map<string, boolean>(), guards: SqlPredicate[] = []
  if (!candidates.length) return { flags, guards }
