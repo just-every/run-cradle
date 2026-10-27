@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {createServer} from 'node:net'
+import {execFileSync} from 'node:child_process'
 import {mkdir} from 'node:fs/promises'
 import path from 'node:path'
 import {chromium} from '@playwright/test'
@@ -23,7 +24,7 @@ const paths={
 // Literal public progress wording, never read back from the notice under test.
 const progressText={
  import:{completed:{title:'Import completed',body:'The import you started has finished. Open Settings to review it.'},failed:{title:'Import needs attention',body:'The import you started did not finish. Open Settings to review it.'}},
- export:{completed:{title:'Export completed',body:'The export you started has finished. Open Settings to review it.'},failed:{title:'Export needs attention',body:'The export you started did not finish. Open Settings to review it.'}},
+ export:{completed:{title:'Export completed',body:'The export you started has finished. Open Settings to review it.'},failed:{title:'Export needs attention',body:'The export you started did not finish. Open Settings to review it.'},stopped:{title:'Export needs attention',body:'Automatic recovery of the export you started stopped after repeated unsuccessful attempts. It tries again at its next scheduled time.'}},
 }
 const titles={outage:'An operational outage needs attention','decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
 export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
@@ -42,7 +43,7 @@ export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
  const setPrefs=async(session,mutedKinds)=>{const p=await preferences(session);await request(session,'preferences.update',{version:p.version,preferences:{timezone:'UTC',mutedKinds,digestEnabled:true,progressEnabled:true}})}
  await request(h.ownerSession,'settings.update',{version:original.version,changes:{timezone:'UTC',quietHoursStart:'00:00',quietHoursEnd:'00:00'}})
  await setPrefs(other.session,[])
- const worker=await h.runtime.getWorker(),tick=async at=>{const result=await worker.scheduled({cron:'* * * * *',scheduledTime:at});assert.equal(result.outcome,'ok',JSON.stringify(result));return result}
+ const tick=async at=>{const result=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at});assert.equal(result.outcome,'ok',JSON.stringify(result));return result}
  const row=async(table,id)=>h.db.prepare(`SELECT id,version FROM ${table} WHERE id=?`).bind(id).first()
  const digestBefore=await h.db.prepare("SELECT recipients_json FROM channel_digest_settings WHERE id='digest'").first()
  const digestAutomation=await h.db.prepare("SELECT id,enabled FROM automations WHERE shipped_key='weekly-digest'").first()
@@ -372,6 +373,139 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
  await removeExport(starter,owed)
  await prefs(starter,[],true)
  console.log(`NOTIFY-009 ${width}: committed export owed its notice through an unavailable notification principal; one notice after recovery`)
+
+ // Restart an actual claimed execution at its emitted after-claim boundary.
+ // The inspector locates application code; it neither replaces that code nor
+ // supplies a production hook. Only the fixture's own workerd PID is stopped.
+ const interruptedExport=async(retainedId,boundary='SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key',condition)=>{
+  const id=retainedId??await saveExport(starter),inspector=new URL(await h.runtime.getInspectorURL())
+  inspector.protocol='http:';inspector.pathname='/json'
+  const targets=await(await fetch(inspector)).json(),target=targets.find(t=>String(t.id).startsWith('core:user:'))
+  assert.ok(target,'NOTIFY-009 the owned emitted Worker exposes its inspector target')
+  const socket=new WebSocket(target.webSocketDebuggerUrl),pending=new Map(),scripts=[]
+  let serial=0,hit,breakpoint
+  const paused=new Promise(resolve=>hit=resolve)
+  await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})})
+  const command=(method,params={})=>new Promise((resolve,reject)=>{const requestId=++serial;pending.set(requestId,{resolve,reject});socket.send(JSON.stringify({id:requestId,method,params}))})
+  socket.addEventListener('message',event=>{
+   const message=JSON.parse(event.data)
+   if(message.id&&pending.has(message.id)){const waiter=pending.get(message.id);pending.delete(message.id);message.error?waiter.reject(new Error(message.error.message)):waiter.resolve(message.result)}
+   if(message.method==='Debugger.scriptParsed')scripts.push(message.params)
+   if(message.method==='Debugger.paused'&&message.params.hitBreakpoints?.includes(breakpoint))hit()
+  })
+  try{
+   await command('Debugger.enable')
+   const needle=boundary
+   for(const script of scripts){
+    const {scriptSource}=await command('Debugger.getScriptSource',{scriptId:script.scriptId}),offset=scriptSource.indexOf(needle)
+    if(offset<0)continue
+    assert.equal(scriptSource.indexOf(needle,offset+1),-1,'NOTIFY-009 the emitted after-claim boundary is unambiguous')
+    const before=scriptSource.slice(0,offset),location={scriptId:script.scriptId,lineNumber:before.split('\n').length-1,columnNumber:offset-before.lastIndexOf('\n')-1}
+    breakpoint=(await command('Debugger.setBreakpoint',{location,...condition?{condition}:{}})).breakpointId
+    break
+   }
+   assert.ok(breakpoint,'NOTIFY-009 the after-claim boundary is present in the emitted Worker')
+   const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
+   await paused
+   const processes=execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const [pid,ppid,...name]=line.trim().split(/\s+/);return {pid:Number(pid),ppid:Number(ppid),name:name.join(' ')}})
+   const owned=new Set([process.pid]);let changed=true
+   while(changed){changed=false;for(const child of processes)if(owned.has(child.ppid)&&!owned.has(child.pid)){owned.add(child.pid);changed=true}}
+   const workers=processes.filter(child=>owned.has(child.pid)&&/workerd$/.test(child.name))
+   assert.equal(workers.length,1,'NOTIFY-009 this fixture owns exactly one workerd to interrupt')
+   console.log(`NOTIFY-009 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
+   process.kill(workers[0].pid,'SIGKILL')
+   await invocation
+   socket.close()
+   await h.restart()
+   const claim=await h.db.prepare('SELECT running_id,running_started_at,running_slot,version,last_slot FROM warehouse_exports WHERE id=?').bind(id).first()
+   assert.ok(claim.running_id,'NOTIFY-009 a runtime interruption retains the real export claim')
+   assert.equal(claim.last_slot,null,'NOTIFY-009 the interrupted execution has not committed')
+   const eventId=`warehouse-export:${id}:${claim.version}:${claim.running_slot}:failed`
+   const attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(eventId).first()
+   assert.equal(attempt.token,claim.running_id,'NOTIFY-009 the retained attempt belongs to the interrupted execution')
+   return {id,eventId,claim}
+  }finally{socket.close()}
+ }
+ // Repeated interrupted resumptions follow the finite recovery policy: no report
+ // while recovery continues, exactly one needs-attention outcome once it stops,
+ // the resumable claim kept, and the next scheduled time reporting its own outcome.
+ const aged=id=>h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),id).run()
+ const recoveryState=id=>h.db.prepare('SELECT running_id,running_started_at,running_failures,running_stopped_slot,last_slot FROM warehouse_exports WHERE id=?').bind(id).first()
+ for(const muted of [false,true]){
+  await prefs(starter,muted?['progress']:[],true)
+  const mail=(await h.mailMessages()).length,run=await interruptedExport(),at=Date.now()
+  // The synthetic crash clock ages each lease; the real scheduled door resumes.
+  await aged(run.id);await interruptedExport(run.id)
+  await tick(at+60000)
+  assert.deepEqual(await rows(run.id),[],'NOTIFY-009 automatic recovery continues within its finite policy without a report')
+  // Past the stopped execution's lease on the scheduled clock: recovery stops here.
+  await aged(run.id);await tick(at+420000)
+  const stopped=await check(run.id,starter,muted,mail,['export','stopped'])
+  const kept=await recoveryState(run.id)
+  assert.equal(kept.running_id,run.claim.running_id,'NOTIFY-009 stopping automatic recovery keeps the resumable claim')
+  assert.ok(kept.running_stopped_slot,'NOTIFY-009 the stop is durable')
+  for(const offset of [480000,3600000,23*3600000]){
+   await tick(at+offset)
+   assert.deepEqual(await rows(run.id),[stopped],'NOTIFY-009 a stopped recovery is reported exactly once')
+  }
+  assert.equal((await h.mailMessages()).slice(mail).length,muted?0:1,'NOTIFY-009 a stopped recovery sends its starter at most one mail, none when muted')
+  // The stated next step: the export tries again at its next scheduled time. The
+  // starter has read the report, so the later outcome is its own row (NOTIFY-006).
+  assert.equal((await h.request(starter.session,`/api/notifications/${stopped.id}/read`,{method:'POST',body:'{}'})).status,204)
+  const nextMail=(await h.mailMessages()).length
+  await aged(run.id)
+  const retired=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+86400000+60000})
+  assert.equal(retired.outcome,'exception','NOTIFY-009 the next scheduled time retires the stale retained transfer under the records-changed rule')
+  await tick(at+86400000+120000)
+  const outcomes=await rows(run.id),later=outcomes.find(n=>n.id!==stopped.id)
+  assert.deepEqual(outcomes.map(n=>n.title).sort(),[progressText.export.completed.title,progressText.export.stopped.title].sort(),'NOTIFY-009 the next scheduled time reports exactly one completion and no second failure')
+  assert.deepEqual({to:later.operator_id,title:later.title,body:later.body,state:later.state},{to:starter.id,...progressText.export.completed,state:muted?'muted':'accepted'})
+  const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(starter.id).first()).email,completedMail=(await h.mailMessages()).slice(nextMail)
+  assert.deepEqual(completedMail.filter(m=>later.group_id&&m.custom_args?.rer_delivery_id===later.group_id).map(m=>({to:m.personalizations.flatMap(p=>p.to.map(r=>r.email)),subject:m.subject})),muted?[]:[{to:[email],subject:progressText.export.completed.title}],'NOTIFY-009 the later completion mails exactly its starter per preference')
+  assert.equal(completedMail.length,muted?0:1)
+  assert.equal((await recoveryState(run.id)).running_id,null)
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(run.id).first()).n,0,'NOTIFY-009 the later completion leaves no debt')
+  assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%'").bind(run.id).first()).n,0,'NOTIFY-009 the later completion leaves no attempt')
+  await removeExport(starter,run.id)
+ }
+ // An execution that adds retained objects before it stops made useful progress:
+ // it extends recovery, but never past four unsuccessful executions in total.
+ {
+  await prefs(starter,[],true)
+  const mail=(await h.mailMessages()).length,boundary='INSERT INTO warehouse_objects(object_key,export_id,run_id,created_at,destination_json,sealed_json,metadata_json,dispatch_state) VALUES(?,?,?,?,?,?,?,?)',second='(globalThis.__retainedObjects=(globalThis.__retainedObjects||0)+1)===2'
+  const run=await interruptedExport(undefined,boundary,second),at=Date.now(),retainedObjects=async()=>(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(run.id).first()).n,counts=[await retainedObjects()]
+  for(let n=1;n<4;n++){
+   await aged(run.id);await interruptedExport(run.id,boundary,second);counts.push(await retainedObjects())
+   assert.deepEqual(await rows(run.id),[],'NOTIFY-009 an advancing run is not reported before its total bound')
+  }
+  assert.ok(counts.every((count,index)=>count>(counts[index-1]??0)),'NOTIFY-009 each interrupted execution added retained objects')
+  await aged(run.id);await tick(at+420000)
+  await check(run.id,starter,false,mail,['export','stopped'])
+  assert.equal((await recoveryState(run.id)).running_id,run.claim.running_id)
+  await aged(run.id)
+  assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+86400000+60000})).outcome,'exception')
+  await tick(at+86400000+120000)
+  await removeExport(starter,run.id)
+ }
+ // A live worker held at the provider edge inside its lease is never counted.
+ for(const muted of [false,true]){
+  await prefs(starter,muted?['progress']:[],true)
+  const mail=(await h.mailMessages()).length,id=await saveExport(starter),at=Date.now(),held=edge.holdNextPut()
+  const slow=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at})
+  await held.reached
+  const live=await recoveryState(id);assert.ok(live.running_id)
+  for(const offset of [60000,120000,180000])await tick(at+offset)
+  assert.deepEqual(await recoveryState(id),live,'NOTIFY-009 a live slow worker is never counted or re-claimed')
+  assert.deepEqual(await rows(id),[],'NOTIFY-009 a live slow worker is never reported as failed')
+  held.release()
+  assert.equal((await slow).outcome,'ok')
+  await tick(at+240000)
+  await check(id,starter,muted,mail,['export','completed'])
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,0)
+  await removeExport(starter,id)
+ }
+ await prefs(starter,[],true)
+ console.log(`NOTIFY-009 ${width}: repeated interrupted resumptions stop automatic recovery with one report and a kept claim; the next scheduled time completes once; a live slow worker is never counted`)
 
  // Completion describes the current job only: removal or a saved new version
  // must retire an unpublished old completion without creating mail.

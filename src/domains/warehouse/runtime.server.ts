@@ -38,20 +38,45 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    ]}),
   ])
  }
+ // Automatic recovery of an interrupted run is finite (NOTIFY-009). When a later
+ // execution finds the run's lease expired, the execution that held it ended
+ // without completing. It is counted durably before anything else happens, fenced
+ // by the run's claim token and lease start, which the count also moves so a
+ // stale worker can no longer commit, clean up or settle. An execution that added
+ // retained run objects made useful progress and does not use the allowance of two
+ // unproductive executions; progress never resets that count, and the fourth
+ // unsuccessful execution ends recovery whatever its progress. A stopped run keeps
+ // its claim and retained objects, reports its write-ahead failure once, and is
+ // attempted once at each later scheduled slot.
+ const stallLimit=2,failureLimit=4,retained='(SELECT count(*) FROM warehouse_objects o WHERE o.export_id=warehouse_exports.id AND o.run_id=warehouse_exports.running_id)',stall=`(CASE WHEN ${retained}>running_objects THEN 0 ELSE 1 END)`
+ function recovery(row:ExportRow,slot:string,startedAt:string){
+  const fence="WHERE id=? AND version=? AND state='active' AND running_id=? AND running_started_at IS ?",values=[row.id,row.version,row.running_id,row.running_started_at]
+  if(row.running_stopped_slot)return [db.prepare(`UPDATE warehouse_exports SET running_started_at=?,running_stopped_slot=? ${fence} AND running_stopped_slot IS NOT NULL RETURNING 'resumed' AS step`).bind(startedAt,slot,...values)]
+  const counted=`running_started_at=?,running_failures=running_failures+1,running_stalls=running_stalls+${stall},running_objects=${retained}`
+  return [
+   db.prepare(`UPDATE warehouse_exports SET ${counted},running_stopped_slot=? ${fence} AND running_stopped_slot IS NULL AND (running_stalls+${stall}>=? OR running_failures+1>=?) RETURNING 'stopped' AS step`).bind(startedAt,slot,...values,stallLimit,failureLimit),
+   db.prepare(`UPDATE warehouse_exports SET ${counted} ${fence} AND running_stopped_slot IS NULL RETURNING 'resumed' AS step`).bind(startedAt,...values),
+  ]
+ }
  async function run(row:ExportRow,slot:string){
   const actor=await owner(row.owner_id);if(!actor){await pause(row);return}
-  const destination=destinationSchema.parse(JSON.parse(row.destination_json)),store=await warehouseStore(env,bucket,row.id,destination,row.sealed_json)
   const now=Date.now(),resuming=!!row.running_id
   // The original invocation's internal credential has expired before a stale
   // lease is reclaimed. The same run/file/job identities survive a restart.
-  if(resuming&&row.running_started_at&&Date.parse(row.running_started_at)+300000>now)return
-  const runId=row.running_id??createUlid(),startedAt=new Date(now).toISOString(),at=row.running_at??clock().toISOString(),runSlot=row.running_slot??slot,revision=row.running_revision??await services.reader.revision(),credential=createUlid(),expiresAt=new Date(now+300000).toISOString()
-  const claim=resuming
-   ?db.prepare("UPDATE warehouse_exports SET running_started_at=? WHERE id=? AND version=? AND state='active' AND running_id=? AND running_started_at IS ? RETURNING id").bind(startedAt,row.id,row.version,runId,row.running_started_at)
-   :db.prepare("UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,startedAt,at,runSlot,revision,row.id,row.version,slot)
+  if(resuming&&(row.running_stopped_slot===slot||row.running_started_at&&Date.parse(row.running_started_at)+300000>now))return
+  const runId=row.running_id??createUlid(),startedAt=new Date(now).toISOString(),runSlot=row.running_slot??slot
   const failedProgress:OwedProgress={subjectType:'warehouse-export',subjectId:row.id,starterId:row.owner_id,eventId:`warehouse-export:${row.id}:${row.version}:${runSlot}:failed`,outcome:'failed'}
-  const claimed=await db.batch([claim,...await progressAttemptStatements(db,failedProgress,runId,expiresAt,{id:row.id,startedAt})])
-  if(!claimed[0].results.length)return
+  if(resuming){
+   const step=(await db.batch(recovery(row,slot,startedAt))).flatMap(result=>result.results as {step:string}[])[0]?.step
+   if(!step)return
+   if(step==='stopped'){await deliverOwedProgress(db,'schedule',failedProgress.eventId,clock());return}
+  }
+  // A resume that fails here was already counted above.
+  const destination=destinationSchema.parse(JSON.parse(row.destination_json)),store=await warehouseStore(env,bucket,row.id,destination,row.sealed_json)
+  const at=row.running_at??clock().toISOString(),revision=row.running_revision??await services.reader.revision(),credential=createUlid(),expiresAt=new Date(now+300000).toISOString()
+  const claim=resuming?[]:[db.prepare("UPDATE warehouse_exports SET running_id=?,running_started_at=?,running_at=?,running_slot=?,running_revision=? WHERE id=? AND version=? AND state='active' AND running_id IS NULL AND (last_slot IS NULL OR last_slot<>?) RETURNING id").bind(runId,startedAt,at,runSlot,revision,row.id,row.version,slot)]
+  const claimed=await db.batch([...claim,...await progressAttemptStatements(db,failedProgress,runId,expiresAt,{id:row.id,startedAt})])
+  if(!resuming&&!claimed[0].results.length)return
   const ctx:RequestContext={requestId:runId,now:startedAt,ingress:'schedule',principal:{id:actor.id,kind:'human',humanId:actor.human_id,sessionId:null,credentialId:credential,issuedAt:startedAt,expiresAt,authenticationEpoch:actor.authentication_epoch}}
   let reservation:string|undefined,committed=false,failure:{error:unknown}|undefined
   const progress=(outcome:OwedProgress['outcome']):OwedProgress=>({subjectType:'warehouse-export',subjectId:row.id,starterId:row.owner_id,eventId:`warehouse-export:${row.id}:${row.version}:${runSlot}:${outcome}`,outcome})
@@ -125,7 +150,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    unique.push(trustedPredicate("(SELECT COALESCE(MAX(rowid),0) FROM command_admissions WHERE state='committed')=?",[revision]))
    await db.batch([
     ...unique.map((guard,index)=>db.prepare(`INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,?,CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`).bind(nonce,index,...guard.values)),
-    db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),runSlot,startedAt,row.id,runId),
+    db.prepare("UPDATE warehouse_exports SET watermark_json=?,last_slot=?,running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL,running_failures=0,running_stalls=0,running_objects=0,running_stopped_slot=NULL,updated_at=? WHERE id=? AND running_id=?").bind(JSON.stringify(after),runSlot,startedAt,row.id,runId),
     ...bases.map(appId=>db.prepare('INSERT INTO operation_audit(id,actor_id,app_id,action,feature,created_at) VALUES(?,?,?,?,?,?)').bind(createUlid(),actor.id,appId,'warehouse.export','Warehouse exports',startedAt)),
     // The completion notice is owed in the same commit as the watermark.
     await owedProgressStatement(db,progress('completed')),
@@ -135,14 +160,15 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    ])
    committed=true
   }catch(error){failure={error};throw error}finally{try{
-   if(!committed)for(const key of keys){await store.delete(key);if(await store.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
+   // Only the execution that still holds this lease retires the run's objects.
+   if(!committed&&await db.prepare('SELECT 1 FROM warehouse_exports WHERE id=? AND running_id=? AND running_started_at=?').bind(row.id,runId,startedAt).first())for(const key of keys){await store.delete(key);if(await store.head(key))throw new Error('Failed bucket export cleanup is unconfirmed.');await db.prepare('DELETE FROM warehouse_objects WHERE object_key=?').bind(key).run()}
    await db.prepare('DELETE FROM authority_credentials WHERE id=?').bind(credential).run()
    if(reservation)await finishFileWrite(db,reservation)
    if(resuming)await db.prepare('DELETE FROM lifecycle_file_writes WHERE object_key=? AND started_at<=?').bind('warehouse:'+row.id,startedAt).run()
-   await db.prepare('UPDATE warehouse_exports SET running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL WHERE id=? AND running_id=?').bind(row.id,runId).run()
+   await db.prepare('UPDATE warehouse_exports SET running_id=NULL,running_started_at=NULL,running_at=NULL,running_slot=NULL,running_revision=NULL,running_failures=0,running_stalls=0,running_objects=0,running_stopped_slot=NULL WHERE id=? AND running_id=? AND running_started_at=?').bind(row.id,runId,startedAt).run()
   }finally{
    const owed=progress(committed?'completed':'failed')
-   if(!committed)try{await settleProgressAttempt(db,failedProgress.eventId,runId,true)}catch(journal){
+   if(!committed)try{await settleProgressAttempt(db,failedProgress.eventId,runId,true,{id:row.id,startedAt})}catch(journal){
     if(!failure)throw journal
     if(failure.error instanceof Error)Object.defineProperty(failure.error,'cause',{value:journal,configurable:true})
    }

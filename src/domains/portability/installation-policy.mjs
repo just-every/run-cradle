@@ -58,7 +58,7 @@ export const portabilityPolicy = {
   if(table==='record_change_subscriptions'){row.state='inactive';row.sealed_json=null;row.delivery_state='restore_hold';}
   if(table==='record_sheet_schedules'){row.state='paused';row.running_id=null;row.last_slot=null;row.last_started_at=null;}
   if(table==='warehouse_objects'){if('sealed_json'in row)row.sealed_json=null;if('transfer_json'in row)row.transfer_json='{}';}
-  if(table==='warehouse_exports'){for(const key of ['running_started_at','running_at','running_slot','running_revision'])if(key in row)row[key]=null;if('sealed_json'in row)row.sealed_json=null;if(row.destination_json&&JSON.parse(row.destination_json).kind!=='r2'&&row.state==='removed')row.state='paused';if(row.state!=='removed')row.state='paused';row.running_id=null;row.watermark_json='{}';row.last_slot=null;}
+  if(table==='warehouse_exports'){for(const key of ['running_started_at','running_at','running_slot','running_revision','running_stopped_slot'])if(key in row)row[key]=null;for(const key of ['running_failures','running_stalls','running_objects'])if(key in row)row[key]=0;if('sealed_json'in row)row.sealed_json=null;if(row.destination_json&&JSON.parse(row.destination_json).kind!=='r2'&&row.state==='removed')row.state='paused';if(row.state!=='removed')row.state='paused';row.running_id=null;row.watermark_json='{}';row.last_slot=null;}
   if(table==='operators')row.active=0;
   if(table==='authority_principals'){if(row.kind!=='system'&&row.state!=='erased')row.state='removed';row.initial_owner=0;}
   if(table==='authority_memberships'){
