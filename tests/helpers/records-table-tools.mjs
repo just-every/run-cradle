@@ -16,6 +16,7 @@ export async function closeTablePanel(page, name, action = control => control.cl
 export async function displayAction(page, name, action = control => control.click()) {
  for(const panel of ['Sort and group','Visible columns','Summary','Keyboard shortcuts','Table tools']) await closeTablePanel(page,panel,action)
  if (name === 'Form') return tableAction(page, 'Forms', action)
+ await page.locator('.cr-view-bar').waitFor()
  const bar = page.getByRole('navigation', { name: 'Record views', exact: true })
  if (await bar.isVisible()) return action(bar.getByRole('link', { name, exact: true }))
  await action(page.locator('.cr-view-bar__opener'))
