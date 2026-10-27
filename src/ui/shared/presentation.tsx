@@ -16,11 +16,17 @@ const noTimestampSubscription = () => () => {}
 export const useLocalTime = () => useSyncExternalStore(noTimestampSubscription, () => true, () => false)
 /** The viewer's own zone at an instant, as Intl names it for their locale ("AEST", "GMT+10", "UTC"), never an IANA id. */
 export const zoneName = (date: Date) => new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(date).find(part => part.type === 'timeZoneName')!.value
+const timestampStyle = { dateStyle: 'medium', timeStyle: 'short' } as const
+/** The app's one date style with the zone joined to the time by no-break spaces, so a narrow cell wraps before the time. */
+function zonedText(date: Date) {
+  const parts = new Intl.DateTimeFormat(undefined, timestampStyle).formatToParts(date)
+  return `${parts.map((part, index) => part.type === 'literal' && !part.value.trim() && [parts[index - 1]?.type, parts[index + 1]?.type].includes('dayPeriod') ? '\u00a0' : part.value).join('')}\u00a0${zoneName(date)}`
+}
 export function Timestamp({ value, zone = false }: { value: string | null; zone?: boolean }) {
   // First document/client render uses identical UTC bytes; localize after hydration.
   const client = useLocalTime()
-  // Each value names its own zone (daylight saving can split one column); the no-break space keeps it beside the time.
-  return value ? <time dateTime={value}>{client ? `${new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}${zone ? `\u00a0${zoneName(new Date(value))}` : ''}` : new Date(value).toISOString()}</time> : <span>Not recorded</span>
+  // Each value names its own zone: with daylight saving, one column can hold two.
+  return value ? <time dateTime={value}>{client ? zone ? zonedText(new Date(value)) : new Date(value).toLocaleString(undefined, timestampStyle) : new Date(value).toISOString()}</time> : <span>Not recorded</span>
 }
 const stateTone = { loading: '', signed_out: 'cr-tag--access', forbidden: 'cr-tag--access', not_found: 'cr-tag--warn', failed: 'cr-tag--error' } as const
 export function ResourceState<T>({ resource, operation, retry, children }: { resource: Resource<T>; operation: string; retry: () => void; children: (data: T) => ReactNode }) {
