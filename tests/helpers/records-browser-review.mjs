@@ -37,7 +37,7 @@ async function templateChoices(page,j,origin){
  await page.waitForURL(url=>url.pathname.startsWith(new URL(href,origin).pathname+'/'))
  const menu=await baseMenu(page,j.action),selected=menu.getByRole('link',{name:existing.name,exact:true})
  await selected.waitFor();assert.equal(await selected.getAttribute('aria-current'),'page')
- await j.action(menu.getByRole('button',{name:'Close',exact:true}));await page.getByRole('navigation',{name:'Record types',exact:true}).waitFor()
+ await j.action(menu.getByRole('button',{name:'Edit fields',exact:true}));const fields=page.getByRole('dialog',{name:'Edit fields',exact:true});await fields.getByLabel('Field name',{exact:true}).waitFor();await page.waitForLoadState('networkidle');assert.equal(await fields.getByLabel('Field name',{exact:true}).isEditable(),true);assert.equal(await fields.locator('.cr-state[aria-busy=false]').count(),0);await j.capture('launch-edit-fields');await j.action(fields.getByRole('button',{name:'Close',exact:true}));await page.getByRole('navigation',{name:'Record types',exact:true}).waitFor()
  assert.deepEqual((await readApps()).map(app=>app.id),before.map(app=>app.id),'Using or cancelling a template must preserve the existing bases')
  await page.goto(origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
 }
