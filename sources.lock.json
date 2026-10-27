@@ -12518,7 +12518,7 @@
       "executable": false
     },
     "tests/helpers/records-forms-journey.mjs": {
-      "sha256": "52b8a67fd194e35e50b339aa15f9ffa4e86cce455f964dc785e1ce867b7b4e0e",
+      "sha256": "e99e3a3be11a1cb1fe1a2ce5a624a2e2dbfd379f89ef623b92a73b44c1ed0abc",
       "executable": false
     },
     "tests/helpers/records-gallery-journey.mjs": {
