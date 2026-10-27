@@ -50,8 +50,23 @@ export async function verifyOverdueClauses(h) {
 
   const csv = async (kind, fields, session = h.ownerSession) => {
    const ids = h.r.launchFieldIds[kind]
-   const body = await call('/api/v1/records/export-csv', { method: 'POST', body: JSON.stringify({ appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: campaign.id }, sort: [{ fieldId: ids.title, direction: 'asc' }] } }) }, session)
+   const body = await call('/api/v1/records/export-csv', { method: 'POST', body: JSON.stringify({ appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities.campaign, recordId: campaign.id } }, sort: [{ fieldId: ids.title, direction: 'asc' }] } }) }, session)
    const parsed = parseCsv(new TextEncoder().encode(body.data.csv))
+   const input = { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities.campaign, recordId: campaign.id } }, sort: [{ fieldId: ids.title, direction: 'asc' }] } }
+   const streamed = await h.request(session, '/api/v1/records/export-csv', { method: 'POST', headers: { accept: 'text/csv' }, body: JSON.stringify(input) })
+   assert.equal(streamed.status, 200)
+   assert.deepEqual(parseCsv(new Uint8Array(await streamed.arrayBuffer())), parsed, 'Streamed CSV preserves labels, column order and overdue markers')
+   if (fields.includes('state') || fields.includes('status')) {
+    const { readWorkbook } = await import('../../src/domains/records/workbooks/read.ts')
+    const workbook = (await call('/api/v1/records/export-xlsx', { method: 'POST', body: JSON.stringify(input) }, session)).data
+    const download = await h.request(session, '/api/v1/records/export-xlsx', { method: 'POST', headers: { accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }, body: JSON.stringify(input) })
+    assert.equal(download.status, 200)
+    for (const bytes of [Buffer.from(workbook.content, 'base64'), new Uint8Array(await download.arrayBuffer())]) {
+     const sheet = readWorkbook(bytes, 'overdue.xlsx')[0]
+     assert.deepEqual(sheet.headers, parsed.headers, 'Workbook keeps exactly the selected columns')
+     assert.deepEqual(sheet.rows.map(row => row.slice(0, 2).map(cell => cell.value)), parsed.rows.map(row => row.slice(0, 2)), 'Both workbook paths keep lifecycle labels and overdue markers')
+    }
+   }
    const schema = h.r.launchDescriptors.find(item => item.schema.id === h.r.launchEntities[kind]).schema
    assert.deepEqual(parsed.headers, fields.map(field => schema.fields.find(item => item.id === ids[field]).label), 'CSV retains exactly the selected columns in displayed order')
    return parsed

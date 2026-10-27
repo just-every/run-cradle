@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, createUlid, initializeLegacyAuthority, prepareLaunchSetup } from './helpers/launch-authority-runtime.mjs'
 import { adoptFixtureOperators } from './helpers/base-fixture-auth.mjs'
 
-test('[APP-SCOPE-001 OPS-001] a paused legacy initializer cannot recreate a concurrently deleted membership', async () => {
+async function legacyInitializationReplay() {
  const h = await launchAuthorityRuntime()
  let release, pending
  try {
@@ -34,10 +34,10 @@ test('[APP-SCOPE-001 OPS-001] a paused legacy initializer cannot recreate a conc
   assert.equal((await h.request(await h.signIn(id), '/api/campaigns')).status, 403)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM authority_grants').first()).n, 0)
  } finally { release?.(); await pending; await h.close() }
-})
+}
 
 
-test('[APP-SCOPE-001] replaying an already prepared first-owner batch cannot restore a deleted membership', async () => {
+async function firstOwnerInitializationReplay() {
  const h = await launchAuthorityRuntime()
  try {
   await h.db.batch([
@@ -52,4 +52,16 @@ test('[APP-SCOPE-001] replaying an already prepared first-owner batch cannot res
   await h.db.batch(statements)
   assert.equal(await h.db.prepare('SELECT * FROM authority_memberships WHERE principal_id=? AND app_id=?').bind(h.owner, LAUNCH_APP_ID).first(), null)
  } finally { await h.close() }
+}
+
+
+test('[APP-SCOPE-001 OPS-001] setup replay preserves deleted memberships for legacy and first-owner mappings', async () => {
+ for (const [point, replay] of [
+  ['APP-SCOPE-001 OPS-001 paused legacy initializer and ordinary replay', legacyInitializationReplay],
+  ['APP-SCOPE-001 already prepared first-owner batch', firstOwnerInitializationReplay],
+ ]) {
+  try { await replay() } catch (error) {
+   throw new Error(`${point}: ${error.message}`, {cause: error})
+  }
+ }
 })

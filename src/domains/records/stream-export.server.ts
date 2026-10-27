@@ -42,7 +42,7 @@ export function createStreamExport(db:D1Database,services:ReturnType<typeof crea
      if(field.type==='relation'||field.type==='computed'&&field.resultElementType==='relation')return labels.display(field,cell.value)
      if(d.legacy&&field.type==='multi_select'){if(!Array.isArray(cell.value)||cell.value.some(value=>typeof value!=='string'))throw new AdmissionError('validation','Legacy multi-select values must be text labels.');return displayCsvLabels(cell.value as string[])}
      if(d.schema.physicalRevision.startsWith('manual_'))return displayCsvValue(field,cell.value)
-     const value=formatWorkspaceCell(field,cell.value,context,()=>field.type==='select'?String(cell.value??''):displayCsvValue(field,cell.value));return field.id===markerId&&overdue?.flags.get(row.id)?`${value} (Overdue)`:value
+     const value=formatWorkspaceCell(field,cell.value,context,()=>displayCsvValue(field,cell.value));return field.id===markerId&&overdue?.flags.get(row.id)?`${value} (Overdue)`:value
     }));rows.push({row,display})}
     await assertGuards(db,guards)
     if(await reader.revision()!==revision)throw new AdmissionError('version_conflict','Records changed during export. Start the download again.')
