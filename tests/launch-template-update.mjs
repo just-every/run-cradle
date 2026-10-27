@@ -47,7 +47,7 @@ export async function templateUpdateHarness() {
 }
 
 async function assertBoard(h, schema, records) {
- const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ?? '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] })
+ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, headless: true, args: ['--no-sandbox'] })
  try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   await context.addCookies([{ name: h.ownerSession.cookie.split('=')[0], value: h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=') + 1), url: h.origin }])
