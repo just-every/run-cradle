@@ -74,7 +74,8 @@
     "test:oidc": "CRADLE_OIDC_EMITTED=1 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/auth-oidc.mjs",
     "deployment:spec": "node scripts/sync-managed-setup.mjs",
     "check:deployment-spec": "node scripts/sync-managed-setup.mjs --check",
-    "test:calendar": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/ui-records-calendar.mjs"
+    "test:calendar": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/ui-records-calendar.mjs",
+    "test:launch:notifications": "node tests/ui-launch-notifications.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

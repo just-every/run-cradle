@@ -31,6 +31,16 @@ export async function verifyNotificationDeliveryFailures({h,page,capture,actor,s
  }finally{setNotificationMailStatus(202)}
  const unknown=cases.find(c=>c.state==='unknown'),before=(await h.mailMessages()).length,at=Date.now()
  for(const minute of [1,5,15,30,60]){await tick(at+minute*60000);assert.equal((await h.mailMessages()).length,before,'NOTIFY-003 Unknown submission is never automatically resent');assert.equal((await row('channel_deliveries',unknown.delivery.id)).state,'unknown')}
+ // A distinct future Monday exercises the real digest window regardless of
+ // wall-clock time. Earlier matrix dates must not deduplicate this regression.
+ const boundarySettings=await settings(),monday=new Date(at+56*86400000)
+ monday.setUTCDate(monday.getUTCDate()+(8-monday.getUTCDay())%7);monday.setUTCHours(9,5,0,0)
+ await request(h.ownerSession,'settings.update',{version:boundarySettings.version,changes:{timezone:'UTC'}})
+ try{
+  assert.equal((await tick(+monday)).outcome,'ok','NOTIFY-003 the Monday boundary tick completes')
+  assert.equal((await h.mailMessages()).length,before,'NOTIFY-003 Unknown is never resent and prior journey digests cannot contaminate the unfiltered baseline')
+  assert.equal((await row('channel_deliveries',unknown.delivery.id)).state,'unknown')
+ }finally{const current=await settings();await request(h.ownerSession,'settings.update',{version:current.version,changes:{timezone:boundarySettings.timezone}})}
  const refused=await h.request(h.ownerSession,'/api/v1/commands/delivery.retry',{method:'POST',body:JSON.stringify({commandId:createUlid(),expected:[],input:{deliveryId:unknown.delivery.id,version:(await row('channel_deliveries',unknown.delivery.id)).version}})})
  assert.equal(refused.status,409);assert.equal((await refused.json()).error.code,'invalid_transition');assert.equal((await h.mailMessages()).length,before,'NOTIFY-003 manual retry cannot resend Unknown')
  const failure=await command('automation.save',{definition:{name:`Delivery run link ${width}`,enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[{command:'request-ai-analysis',input:{campaignId:c.id}}]}})

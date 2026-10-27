@@ -2,22 +2,16 @@ import { recordLaunchConsole, verifyDisabledAiReadout, assertNoUnexpectedLaunchC
 import { modalKeyboardOrder } from './helpers/accessibility-modal-keyboard.mjs'
 import { contract } from './contract.mjs'
 import assert from 'node:assert/strict'
-import {randomBytes} from 'node:crypto'
-import {recordCalendarProvider} from './helpers/record-calendar-provider.mjs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium, expect } from '@playwright/test'
-import AxeBuilder from '@axe-core/playwright'
-import { launchAuthorityRuntime, createUlid, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
+import { LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { settledRow } from './helpers/launch-settled-row.mjs'
 import { decisionHydration } from './helpers/launch-decision-hydration.mjs'
 import { verifyWorkspaceScreens } from './helpers/launch-workspace-screens.mjs'
 import { verifyAutomationMonitorScreens } from './helpers/launch-automation-monitor-screens.mjs'
 import { verifyGridViewScreens } from './helpers/launch-grid-view-screens.mjs'
 import { verifyPortfolioScreens } from './helpers/launch-portfolio-screens.mjs'
-import { verifyNotificationEventScreens } from './helpers/notification-event-screens.mjs'
-import { verifyNotificationPreferencesScreens } from './helpers/notification-preferences-screens.mjs'
-import { verifyInboxScreens } from './helpers/launch-inbox-screens.mjs'
 import { verifyMilestoneScreens } from './helpers/launch-milestone-screens.mjs'
 import { verifyConcurrencyScreens } from './helpers/launch-concurrency-screens.mjs'
 import { verifyCurrentLensScreens } from './helpers/launch-current-lens-screens.mjs'
@@ -25,20 +19,14 @@ import { verifyCommentScreens } from './helpers/launch-comment-screens.mjs'
 import { verifyDecisionLensScreens } from './helpers/launch-decision-lens-screens.mjs'
 import { verifySettingsMemberErasure } from './helpers/settings-members-accessibility.mjs'
 import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
-import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, auditAccessibility, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
-contract('VIEW-004', '[NOTIFY-001] [NOTIFY-002] [NOTIFY-003] [NOTIFY-006] [NOTIFY-007] [OPS-006] [OPS-003] [CAMP-006] [NOTIFY-005] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
+import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
+import {launchWalkthroughRuntime} from './helpers/launch-walkthrough-runtime.mjs'
+import {launchWalkthroughCapture} from './helpers/launch-walkthrough-capture.mjs'
+contract('VIEW-004', '[OPS-006] [OPS-003] [CAMP-006] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
-let notificationMailStatus=202
-const setNotificationMailStatus=status=>{notificationMailStatus=status}
-const outageProvider=recordCalendarProvider()
-const h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}, {providerFetch:request=>outageProvider.fetch(request),installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})
-h.notificationOutageProvider=outageProvider
+const {h,command,workspaceName,close}=await launchWalkthroughRuntime()
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006','CAMP-007']}
 let browser
-const command=async(action,input,expected=[])=>{
- const response=await h.request(h.ownerSession,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})})
- assert.equal(response.status,200,await response.clone().text());return (await response.json())
-}
 const readInspectorPresentation=async(page)=>page.locator('.portfolio-inspector').evaluate((inspector)=>{
  const surface=getComputedStyle(inspector)
  const channels=surface.backgroundColor.match(/[\d.]+/g)?.map(Number)??[]
@@ -79,12 +67,6 @@ const readInspectorPresentation=async(page)=>page.locator('.portfolio-inspector'
 })
 try {
  await mkdir(output,{recursive:true})
- const criticalAutomation=await h.db.prepare("SELECT id,version FROM automations WHERE shipped_key='critical-risk'").first()
- await command('automation.disable',{id:criticalAutomation.id},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.automation,recordId:criticalAutomation.id},version:criticalAutomation.version}])
- assert.equal((await h.db.prepare('SELECT enabled FROM automations WHERE id=?').bind(criticalAutomation.id).first()).enabled,0,'Manual escalation walkthrough disables only the shipped critical-risk automation through its command')
- await h.db.prepare('UPDATE operators SET name=? WHERE id=?').bind('Mira Example',h.owner).run()
- await h.db.batch([h.db.prepare('UPDATE workspace_settings SET timezone=?').bind('Australia/Brisbane'),h.db.prepare('UPDATE workspace SET timezone=?').bind('Australia/Brisbane')])
- const workspaceName=(await h.db.prepare('SELECT name FROM workspace WHERE id=?').bind('workspace').first()).name
  browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]})
  for(const width of accessibilityWidths) {
   // Each viewport starts with an empty campaign fixture, including after the added clause journeys.
@@ -97,27 +79,7 @@ try {
   recordLaunchConsole(page,receipt,viewport.width)
   page.on('request',request=>{if(new URL(request.url()).origin!==h.origin)receipt.external.push(new URL(request.url()).origin)})
   await context.addCookies([{name: h.ownerSession.cookie.split('=')[0], value: h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
-  const capture=async(name,{operatorName='Mira Example',...options}={})=>{
-   await page.waitForLoadState('networkidle');await page.evaluate(()=>window.scrollTo(0,0))
-   if(!accessibilityCaptureOnly)assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} page overflow`)
-   let evidence,violations
-   if(accessibilityEvidence){
-    evidence=await auditAccessibility(page,{screen:name,width:viewport.width,output,...options})
-    violations=[...evidence.axe.wcag22aa,...evidence.axe.targetSize].filter(v=>['serious','critical'].includes(v.impact))
-    if(!accessibilityCaptureOnly){
-     assert.deepEqual(violations.map(v=>v.id),[],`${name} WCAG 2.2 AA and target-size serious/critical accessibility`)
-     assert.equal(evidence.layout.pageOverflow,false,`${name} page overflow`)
-    }
-   }else{
-    violations=(await new AxeBuilder({page}).analyze()).violations.filter(v=>['serious','critical'].includes(v.impact))
-    if(violations.length){await writeFile(path.join(output,`axe-failure-${name}-${viewport.width}.json`),stringifySafeEvidence(violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))));await page.screenshot({path:path.join(output,`failed-${name}-${viewport.width}.png`),fullPage:true})}
-    assert.deepEqual(violations.map(v=>v.id),[],`${name} accessibility`)
-   }
-   if(viewport.width===1440){const footer=page.locator('.operator-rail .operator-rail-footer');assert.ok(await footer.evaluate(el=>{const box=el.getBoundingClientRect();return box.top>=0&&box.bottom<=innerHeight&&box.height>0}),'Full operator row visible');assert.equal(await footer.locator('strong').innerText(),operatorName);assert.equal(await footer.locator('small').innerText(),workspaceName,'Workspace identity visible')}
-   const file=accessibilityEvidence?`a11y-${name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-${viewport.width}.png`:`${name}-${viewport.width}.png`
-   if(!accessibilityEvidence)await page.screenshot({path:path.join(output,file),fullPage:true})
-   receipt.screens.push({file,viewport,overflow:false,seriousCritical:0,...(evidence?{wcagViolationCount:evidence.axe.wcag22aa.length,targetSizeViolationCount:evidence.axe.targetSize.length,smallTargetCount:evidence.layout.targetsBelow24.length,controls:evidence.layout.controls.length,tabOrderComplete:evidence.keyboard?.missing?.length===0,tabbableCount:evidence.keyboard?.tabbableCount??null}: {})})
-  }
+  const capture=launchWalkthroughCapture({page,receipt,viewport,output,workspaceName})
   await verifyGridViewScreens({h,page,command,capture})
   await verifyPortfolioScreens({h,page,command,capture})
   await page.goto(`${h.origin}/app/campaigns`)
@@ -245,9 +207,6 @@ try {
   receipt.memberErasure ??= []
   receipt.memberErasure.push(await verifySettingsMemberErasure({ runtime: h, page, width: viewport.width, action, capture }))
   await h.db.prepare('DELETE FROM campaigns WHERE id=?').bind(campaign.id).run()
-  await verifyNotificationPreferencesScreens({h,page,command,capture})
-  await verifyNotificationEventScreens({h,page,command,capture,setNotificationMailStatus})
-  await verifyInboxScreens({h,page,command,capture})
   await verifyWorkspaceScreens({h,page,command,capture})
   await verifyMilestoneScreens({h,page,command,capture})
   await verifyDecisionLensScreens({h,page,command,capture})
@@ -258,7 +217,7 @@ try {
   await context.close()
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])
-} finally {if(browser)await browser.close();await h.close();await writeFile(path.join(output,'receipt.json'),stringifySafeEvidence(receipt))}
+} finally {if(browser)await browser.close();await close();await writeFile(path.join(output,'receipt.json'),stringifySafeEvidence(receipt))}
 console.log(`Launch walkthrough passed ${receipt.screens.length} real-runtime screens`)
 
 })

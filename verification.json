@@ -161,6 +161,14 @@
       ]
     },
     {
+      "name": "launch-notifications",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "pnpm test:launch:notifications"
+      ]
+    },
+    {
       "name": "launch-recut",
       "browser": true,
       "hosted": false,
@@ -277,6 +285,14 @@
       "hosted": false,
       "commands": [
         "node --test --test-concurrency=1 tests/rer-retained-archive.mjs"
+      ]
+    },
+    {
+      "name": "retained-integrations",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node --test --test-concurrency=1 tests/rer-integrations-archive.mjs"
       ]
     }
   ],
