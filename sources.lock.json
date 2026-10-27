@@ -2986,7 +2986,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "1470b92e8295af079ed83d5e363df8339feeaff930204dc97f88da751b9e0e37",
+      "sha256": "9aff2261b26996618841754ee3045042af148673a923da89bf737aedbe4862a9",
       "executable": false
     },
     "CLAUDE.md": {
@@ -5170,7 +5170,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "ffdbee5d2317106585dfb834a1734ec09aeee9ab580eb4ac961cb179c20d008b",
+      "sha256": "a5692326d757fabfcd987cb4bf198c9fd21b089fd1ee3a6b00451338dbcbcab4",
       "executable": false
     },
     "packaging.json": {
@@ -5858,7 +5858,7 @@
       "executable": false
     },
     "src/apps/launch/overdue-projection.server.ts": {
-      "sha256": "e9e8b88367bf5f9f49843da350e3f52606206e0eeb73c4ca6d47a0e6644d9e37",
+      "sha256": "3f791fef937c002f99b374e74298cad7f4451f409c1efecda9d3dbbd5770bcbd",
       "executable": false
     },
     "src/apps/launch/owners.server.ts": {
@@ -12214,7 +12214,7 @@
       "executable": false
     },
     "tests/helpers/launch-overdue-clauses.mjs": {
-      "sha256": "066d12d5e641032d80f045efb6b59fe5d3c23665c79d91346208bd028c75b7e6",
+      "sha256": "f16bf5ade9c6d89075b50e400d1c9e263959355ee6af862c84b36af4014db717",
       "executable": false
     },
     "tests/helpers/launch-portfolio-screens.mjs": {
@@ -12922,7 +12922,7 @@
       "executable": false
     },
     "tests/launch-search-authority.mjs": {
-      "sha256": "edda29ded77223ceb690ec995d36591cb08322ce3874171e06d3124ef409ed66",
+      "sha256": "f98973bacf15604e1e6a2c2950540bbd1b16999700d095040d951cc1f57fbabd",
       "executable": false
     },
     "tests/launch-setup-race.mjs": {
@@ -12934,7 +12934,7 @@
       "executable": false
     },
     "tests/launch-template-update.mjs": {
-      "sha256": "98457cdfb44abde291ee68a6203cb1df7b2d72734578ab97e6f1135de7da87af",
+      "sha256": "5e672c6200a648d96f109a2c28d9324e41240d6289a84e5821b3b05c0c1e4bdc",
       "executable": false
     },
     "tests/launch-write-authority.mjs": {
@@ -15342,7 +15342,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "392fede0d651eb0e5d57d0d070548abf538fac09805b7b791da424fb102dd3ab",
+      "sha256": "f5d8f0264c2ce60cdc6441c97aa7f287eb15e7d3a6580e38644aa976e40fcadf",
       "executable": false
     },
     "vite.config.ts": {

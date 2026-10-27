@@ -48,11 +48,11 @@ export async function verifyOverdueClauses(h) {
   const spanning=milestones.find(row=>row.title.endsWith('range-today'))
   assert.equal(home.find(row=>row.id===spanning.id)?.overdue,false,'Home uses a range end and the workspace date')
 
-  const csv = async (kind, fields, session = h.ownerSession) => {
+  const csv = async (kind, fields, session = h.ownerSession, filterByCampaign = true) => {
    const ids = h.r.launchFieldIds[kind]
-   const body = await call('/api/v1/records/export-csv', { method: 'POST', body: JSON.stringify({ appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities.campaign, recordId: campaign.id } }, sort: [{ fieldId: ids.title, direction: 'asc' }] } }) }, session)
+   const input = { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), ...(filterByCampaign ? { filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities.campaign, recordId: campaign.id } } } : {}), sort: [{ fieldId: ids.title, direction: 'asc' }] } }
+   const body = await call('/api/v1/records/export-csv', { method: 'POST', body: JSON.stringify(input) }, session)
    const parsed = parseCsv(new TextEncoder().encode(body.data.csv))
-   const input = { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities[kind], query: { fields: fields.map(field => ids[field]), filter: { kind: 'condition', fieldId: ids.campaignId, op: 'eq', value: { appId: h.r.LAUNCH_APP_ID, entityId: h.r.launchEntities.campaign, recordId: campaign.id } }, sort: [{ fieldId: ids.title, direction: 'asc' }] } }
    const streamed = await h.request(session, '/api/v1/records/export-csv', { method: 'POST', headers: { accept: 'text/csv' }, body: JSON.stringify(input) })
    assert.equal(streamed.status, 200)
    assert.deepEqual(parseCsv(new Uint8Array(await streamed.arrayBuffer())), parsed, 'Streamed CSV preserves labels, column order and overdue markers')
@@ -100,7 +100,7 @@ export async function verifyOverdueClauses(h) {
   assertFlags(preview.items, milestones, 'Saved milestone lens preview')
 
   // A hidden date or lifecycle value must not be disclosed through its derived flag.
-  for (const hidden of [{ deliverable: 'dueDate', milestone: 'endDate' }, { deliverable: 'state', milestone: 'status' }]) {
+  for (const hidden of [{ deliverable: 'dueDate', milestone: 'endDate' }, { deliverable: 'state', milestone: 'status' }, { deliverable: 'campaignId', milestone: 'campaignId' }]) {
    const person = await h.addPerson({ change: rules => rules.map(rule => {
     const kind = ['deliverable', 'milestone'].find(kind => rule.entityId === h.r.launchEntities[kind])
     return kind ? { ...rule, readableFields: rule.readableFields.filter(id => id !== h.r.launchFieldIds[kind][hidden[kind]]) } : rule
@@ -113,7 +113,7 @@ export async function verifyOverdueClauses(h) {
    }
    for (const kind of ['deliverable', 'milestone']) {
     const fields = ['title', hidden[kind] === 'state' || hidden[kind] === 'status' ? kind === 'deliverable' ? 'dueDate' : 'startDate' : kind === 'deliverable' ? 'state' : 'status']
-    const exported = await csv(kind, fields, person.session)
+    const exported = await csv(kind, fields, person.session, hidden[kind] !== 'campaignId')
     assert.ok(exported.rows.every(row => row.every(value => !value.includes('(Overdue)'))), 'Masked dates/states cannot leak through CSV annotations')
    }
   }

@@ -46,6 +46,51 @@ export async function templateUpdateHarness() {
  return { ...h, get db() { return h.db }, rawRequest: h.request, read, request, command, schemas, storedSchemas, rows, authority, replaceSchema, installMainEraSchemas, update, restart: h.restart, close: h.close }
 }
 
+/** Exercise the Records API boundary with values admitted by Launch commands.
+ * Retained tables remain read-only through Records; query predicates round-trip
+ * the exact values returned by a single-record GET, rather than a local codec. */
+async function assertTypedApiRoundTrips(h) {
+ const campaign = await h.command('launch.campaign.create', { fields: {
+  code: 'TYPED-API', name: 'Typed API round trips', ownerId: h.owner,
+  startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Retained API semantics',
+  statusSummary: 'Ready', phase: 'Planning', status: 'On track', health: 49,
+  budgetMinor: 4823456, spendMinor: 12345, tags: [], customFields: {},
+ } })
+ const storedMilliseconds = Date.parse('2026-11-04T14:15:00.123Z')
+ const decision = await h.command('launch.decision.create', { fields: {
+  campaignId: campaign.id, riskId: null, supersedesId: null,
+  title: 'Typed API decision', requesterId: h.owner, assigneeId: h.owner,
+  priority: 'High', dueAt: new Date(storedMilliseconds).toISOString(),
+  recommendation: 'Read and filter the same instant', impact: 'API compatibility',
+ } })
+ const storedCampaign = await h.db.prepare('SELECT health,status,owner_id,budget_minor FROM campaigns WHERE id=?').bind(campaign.id).first()
+ assert.deepEqual(storedCampaign, { health: 49, status: 'On track', owner_id: h.owner, budget_minor: 4823456 }, 'The product command supplies the known retained values')
+ const storedDecision = await h.db.prepare('SELECT campaign_id,due_at FROM decisions WHERE id=?').bind(decision.id).first()
+ assert.equal(storedDecision.campaign_id, campaign.id)
+ assert.equal(storedDecision.due_at, storedMilliseconds, 'Launch stores the supplied instant as integer milliseconds')
+ assert.ok(Number.isInteger(storedDecision.due_at))
+ const campaignRecord = (await h.read(entityPath('campaign') + '/records/' + campaign.id)).record
+ const decisionRecord = (await h.read(entityPath('decision') + '/records/' + decision.id)).record
+ const schema = await h.read(entityPath('campaign'))
+ const status = schema.fields.find(field => field.id === launchFieldIds.campaign.status).options.find(option => option.label === storedCampaign.status)
+ assert.ok(status, 'The schema supplies the label for the select identity')
+ const cases = [
+  ['percent', 'campaign', campaignRecord, launchFieldIds.campaign.health, '0.49'],
+  ['single select', 'campaign', campaignRecord, launchFieldIds.campaign.status, status.id],
+  ['relation', 'decision', decisionRecord, launchFieldIds.decision.campaignId, { appId: LAUNCH_APP_ID, entityId: launchEntities.campaign, recordId: campaign.id }],
+  ['person', 'campaign', campaignRecord, launchFieldIds.campaign.ownerId, h.owner],
+  ['money', 'campaign', campaignRecord, launchFieldIds.campaign.budgetMinor, { minor: '4823456', currency: 'USD', scale: 2 }],
+  ['Due at', 'decision', decisionRecord, launchFieldIds.decision.dueAt, new Date(storedDecision.due_at).toISOString()],
+ ]
+ for (const [type, kind, record, fieldId, expected] of cases) {
+  assert.deepEqual(record.fields[fieldId], { state: 'value', value: expected }, `${type}: the single-record GET returns the typed API value`)
+  const value = record.fields[fieldId].value
+  const result = await h.read(entityPath(kind) + '/query', { filter: { kind: 'condition', fieldId, op: 'eq', value } })
+  assert.ok(result.items.some(row => row.id === record.id), `${type}: filtering with the GET value returns the same row id`)
+  assert.equal(record.allowedActions.find(action => action.action === 'record.patch')?.enabled, false, 'The typed API boundary does not open retained writes')
+ }
+}
+
 async function assertBoard(h, schema, records) {
  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, headless: true, args: ['--no-sandbox'] })
  try {
@@ -170,7 +215,7 @@ test('[RECORDS-001 FIELD-001 VIEW-004] a populated Launch upgrade preserves reco
  } finally { await h.close() }
 })
 
-test('[RECORDS-001 FIELD-001] fresh Launch metadata matches a populated upgraded install and rejects unrelated source drift or retained values on native schemas', async () => {
+test('[RECORDS-001 FIELD-001 API-USER-002] fresh Launch metadata matches an upgrade, typed API values round-trip through query, and unrelated drift is refused', async () => {
  const h = await templateUpdateHarness()
  try {
   const fresh = await h.schemas()
@@ -179,6 +224,7 @@ test('[RECORDS-001 FIELD-001] fresh Launch metadata matches a populated upgraded
   await h.update()
   await h.restart()
   assert.deepEqual(await h.schemas(), fresh, 'Fresh and upgraded entities expose the same typed schema through every entity API')
+  await assertTypedApiRoundTrips(h)
 
   const rows = await h.storedSchemas(), original = rows.find(row => row.id === launchEntities.campaign), drift = JSON.parse(original.schema_json)
   drift.fields.find(field => field.id === launchFieldIds.campaign.name).required = false
