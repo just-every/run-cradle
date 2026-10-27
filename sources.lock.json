@@ -12274,7 +12274,7 @@
       "executable": false
     },
     "tests/helpers/local-signin-copy.mjs": {
-      "sha256": "3fe9884af34e15f06089e2281a353e5bf78489423834b9785e4189ef6ac50bf4",
+      "sha256": "f656ea12bd0adc6c50353f676a3bbb4d8f3c02a1cfc98c279573eb62deec603c",
       "executable": false
     },
     "tests/helpers/local-signin-expired.mjs": {
