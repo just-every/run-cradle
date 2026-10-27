@@ -579,7 +579,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   const old=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at})
   let replacementHold,replacement
   try{
-   await oldHold.reached
+   assert.equal(await Promise.race([oldHold.reached.then(()=>null),old]),null,'NOTIFY-009 original execution reaches the provider before re-claim')
    const original=await recoveryState(id);assert.ok(original.running_id)
    await aged(id)
    replacementHold=edge.holdNextPut()
