@@ -8,10 +8,10 @@ The primary journey: move in an existing operations app, review its typed record
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 62 | 143 | 43 | 248 |
+| Core | 62 | 140 | 46 | 248 |
 | Agent surface | 0 | 0 | 9 | 9 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 62 | 143 | 52 | 257 |
+| Full target | 62 | 140 | 55 | 257 |
 
 Judged from the code and tests at commit `d7dc8100256a244030024bb616a746d7f0ade6d0` (27 October 2026). Field proof register: 15 rows; 0 passed, 0 failed, 15 not run.
 
@@ -1732,7 +1732,7 @@ Core · target · **partial** · From CALC-001
 
 #### CALC-006 — Formula result formatting
 
-Core · target · **partial** · From CALC-001
+Core · target · **missing** · From CALC-001
 
 **Requirement.** The author formats the result by its type, as Airtable's formatting tab does: a number with set decimal places and thousands separators; currency (USD by default, any ISO 4217 code) with set places; percent with set places; duration as h:mm, h:mm:ss or h:mm:ss.S; a date in US (10/17/2026), ISO, European or friendly form, with or without a 12- or 24-hour time, in a viewer-local or fixed zone (FIELD-001). The format applies wherever the value is shown: views, interfaces, forms, record pages, print layouts, emails (AUTO-USER-010) and CSV export. Stored values stay raw: REST and JSON export return the raw value, and REST returns the formatted text when asked for it (the string-format request documented in docs/contract/capability-mechanisms.md).
 
@@ -1743,7 +1743,7 @@ Core · target · **partial** · From CALC-001
 4. Changing the format changes no stored value.
 
 **Evidence.** `tests/records-manual-roundtrip.mjs`, `tests/helpers/records-calculation-journey.mjs`, `src/domains/records/formula-parser.ts`, `src/ui/records/schema/formula-editor.tsx`, `docs/contract/CALC-001/`
-**Gap.** The owner authors a bounded Airtable-style subset with field/function suggestions, inferred result types, positioned errors and labeled before/after previews on current records. Arithmetic, comparison, logical, text and day-based date functions run through API/CSV/native JSON exits. Full Airtable function coverage/reference captures and result formatting remain absent. Creator additive schema authority is available under PERM-009; formula-specific creator acceptance remains unproven.
+**Gap.** Result formatting is wholly absent. The cited formula journeys show authoring and bounded evaluation through API, CSV and native exits, but no configured formula-result display or export formatting journey.
 
 #### CALC-002 — Lookups across links
 
@@ -2544,7 +2544,7 @@ Core · target · **partial** · From AUTO-USER-010 · Cites BASE-MAIL-001, BASE
 
 #### AUTO-USER-012 — Automation email attachments
 
-Core · target · **partial** · From AUTO-USER-010 · Cites BASE-MAIL-001, BASE-ROLE-001, BASE-INPUT-003
+Core · target · **missing** · From AUTO-USER-010 · Cites BASE-MAIL-001, BASE-ROLE-001, BASE-INPUT-003
 
 **Requirement.** The action can attach files from the trigger record's attachment fields (all, or a named field), files from earlier steps, and a REPORT-002 page layout rendered as a PDF for the record (a quote, a packing slip, a work order). Attachments up to 25 MB per message in total (*Policy* default, never above the provider's limit) are attached; larger files are sent as expiring links (7 days by default, revocable), and the run records which.
 
@@ -2554,11 +2554,11 @@ Core · target · **partial** · From AUTO-USER-010 · Cites BASE-MAIL-001, BASE
 3. A 30 MB attachment becomes a revocable expiring link, initially seven days, and run history records which files were linked.
 
 **Evidence.** `src/domains/automations/effects.server.ts`, `src/domains/automations/contracts.ts`, `tests/user-automations.mjs`
-**Gap.** the email action sends through the installation's Base mail sender (`MAIL_FROM`) to one operator chosen by ID, with a static subject and text, rechecking that operator's authority just before dispatch, and records an uncertain answer without resending (src/domains/automations/effects.server.ts:55; src/domains/automations/contracts.ts:7; tests/user-automations.mjs). Field and static addresses, CC and BCC, the From name, Reply-to, inserted values, Markdown, attachments, the caps, the domain policy, suppression and unsubscribe are absent. The test-run acceptance point moved from AUTO-USER-005 is unproven: arbitrary recipients are absent.
+**Gap.** Record and report mail attachments, private attachment delivery and the declared attachment bounds are absent. The cited earlier email journeys send static plain mail to an operator.
 
 #### AUTO-USER-013 — Suppression and promotional email
 
-Core · target · **partial** · From AUTO-USER-010 · Cites BASE-MAIL-001, BASE-ROLE-001
+Core · target · **missing** · From AUTO-USER-010 · Cites BASE-MAIL-001, BASE-ROLE-001
 
 **Requirement.** A hard bounce or spam complaint reported by the provider puts the address on the installation's suppression list. Later sends skip it and the run records the skip; the owner can see and clear the list. An action the author marks as promotional carries an unsubscribe link and the installation's postal address, as CAN-SPAM requires; an unsubscribed address receives no further promotional sends from that base.
 
@@ -2568,7 +2568,7 @@ Core · target · **partial** · From AUTO-USER-010 · Cites BASE-MAIL-001, BASE
 3. An action marked promotional includes its unsubscribe link and the installation postal address; an unsubscribed address receives no more promotional messages from that base.
 
 **Evidence.** `src/domains/automations/effects.server.ts`, `src/domains/automations/contracts.ts`, `tests/user-automations.mjs`
-**Gap.** the email action sends through the installation's Base mail sender (`MAIL_FROM`) to one operator chosen by ID, with a static subject and text, rechecking that operator's authority just before dispatch, and records an uncertain answer without resending (src/domains/automations/effects.server.ts:55; src/domains/automations/contracts.ts:7; tests/user-automations.mjs). Field and static addresses, CC and BCC, the From name, Reply-to, inserted values, Markdown, attachments, the caps, the domain policy, suppression and unsubscribe are absent. The test-run acceptance point moved from AUTO-USER-005 is unproven: arbitrary recipients are absent.
+**Gap.** Suppression, unsubscribe and promotional-mail controls are absent. The cited earlier operator email journeys do not provide these recipient controls.
 
 ### API, webhooks and integrations — target
 
