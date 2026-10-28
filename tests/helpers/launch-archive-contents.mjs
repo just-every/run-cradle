@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
-import {createUlid} from '../../src/core/shared/ids.ts'
-import {LAUNCH_APP_ID,launchEntities} from '../../src/apps/launch/contracts.ts'
+import './typescript-loader.mjs'
+const {createUlid}=await import('../../src/core/shared/ids.ts')
+const {LAUNCH_APP_ID,launchEntities}=await import('../../src/apps/launch/contracts.ts')
 
 /** Populate the archive's Launch inventory, using admitted writes and a retained AI fixture. */
 export async function launchArchiveContents(h,headers){

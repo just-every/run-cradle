@@ -12169,6 +12169,10 @@
       "sha256": "4aa2f2580ccb399044821a78af343712790d7479d6d8819ca0aff4e2ac20168d",
       "executable": false
     },
+    "tests/helpers/launch-archive-contents.mjs": {
+      "sha256": "825cf39b10645d0c0d84026b2589c3ddc9f86f8717edf37b37d7726eef95c51f",
+      "executable": false
+    },
     "tests/helpers/launch-authority-runtime.mjs": {
       "sha256": "34b7ab0d4cdb43de953f3cc83b35f04de820d6524bf188e7d266c4c708918419",
       "executable": false
