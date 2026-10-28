@@ -10,12 +10,12 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 
 export async function listBrowserJourney(){
  const output=path.resolve('.private/records-list');await mkdir(output,{recursive:true})
- let h,browser,capturedCreate
+ let h,browser,capturedCreate,f
  try{
-  h=await recordsBrowserRuntime(0);console.log('List journey: native runtime ready');const call=listHttp(h),f=await listFixture(call);console.log('List journey: five linked tables and saved views ready')
-  await listPolicy(h,f)
+  h=await recordsBrowserRuntime(0);console.log('List journey: native runtime ready');const call=listHttp(h)
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   for(const width of recordsBrowserWidths()){
+   f=await listFixture(call);await listPolicy(h,f);console.log(`List journey ${width}: five linked tables and saved views ready`)
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage()
    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
    const row=(id,level)=>page.locator(`[data-list-record-id="${id}"][data-list-level="${level}"]`)
