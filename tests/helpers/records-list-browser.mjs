@@ -20,6 +20,8 @@ export async function listBrowserJourney(){
    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
    const row=(id,level)=>page.locator(`[data-list-record-id="${id}"][data-list-level="${level}"]`)
    async function snap(name){
+    await page.evaluate(()=>scrollTo(0,0))
+    if(name==='parent-link-hierarchy')await page.locator('.cr-list-scroll').evaluateAll(elements=>elements.forEach(element=>{element.scrollLeft=0}))
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'The list screen stays within the viewport')
     const small=await page.locator('.cr-record-list, .cr-list-settings').evaluateAll(roots=>roots.flatMap(root=>[...root.querySelectorAll('*')].filter(el=>el.getClientRects().length&&[...el.childNodes].some(node=>node.nodeType===3&&node.textContent.trim())&&parseFloat(getComputedStyle(el).fontSize)<13).map(el=>el.tagName+': '+getComputedStyle(el).fontSize)))
     assert.deepEqual(small,[],'List controls and values remain readable')
@@ -87,6 +89,7 @@ export async function listBrowserJourney(){
      assert.deepEqual((await read(f.taskB.id)).fields[f.tables[1].self.id].value,f.taskA.ref)
      await row(f.taskB.id,1).waitFor();await command(()=>row(f.taskB.id,1).getByRole('button',{name:'Outdent Beta task',exact:true}).click())
     }
+    await row(f.taskB.id,0).waitFor()
     await snap('parent-link-hierarchy');console.log(`List journey ${width}: edits, child creation, settings and parent moves passed`)
    }catch(error){await page.screenshot({path:path.join(output,`${width}-failure.png`),fullPage:true});throw error}finally{await context.close()}
   }

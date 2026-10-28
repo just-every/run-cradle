@@ -42,7 +42,7 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close()}
 })
-contract(['PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
+contract(['PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','VIEW-017','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
  await listBrowserJourney()
  await fieldBrowser()
  await recordTrashBrowser()
