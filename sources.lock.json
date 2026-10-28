@@ -12754,7 +12754,7 @@
       "executable": false
     },
     "tests/helpers/records-list-browser.mjs": {
-      "sha256": "0fb92b0c8965fb4d8c64a68bbdc270f8aaef1b9d67f096669fa135da7cf2253b",
+      "sha256": "c1a474ce1a9f2662cc84695f308cb72e17bc7e9979baa333e72a9d33b9e299d8",
       "executable": false
     },
     "tests/helpers/records-list-fixture.mjs": {

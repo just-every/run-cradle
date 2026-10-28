@@ -19,12 +19,19 @@ export async function listBrowserJourney(){
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage()
    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
    const row=(id,level)=>page.locator(`[data-list-record-id="${id}"][data-list-level="${level}"]`)
-   async function snap(name){await page.screenshot({path:path.join(output,`${width}-${name}.png`),fullPage:true})}
+   async function snap(name){
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'The list screen stays within the viewport')
+    const small=await page.locator('.cr-record-list, .cr-list-settings').evaluateAll(roots=>roots.flatMap(root=>[...root.querySelectorAll('*')].filter(el=>el.getClientRects().length&&[...el.childNodes].some(node=>node.nodeType===3&&node.textContent.trim())&&parseFloat(getComputedStyle(el).fontSize)<13).map(el=>el.tagName+': '+getComputedStyle(el).fontSize)))
+    assert.deepEqual(small,[],'List controls and values remain readable')
+    await page.screenshot({path:path.join(output,`${width}-${name}.png`),fullPage:true})}
    async function command(action,name='record.patch',status=200){const pending=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/'+name));await action();const response=await pending;assert.equal(response.status(),status,await response.text());return (await response.json()).data}
    const read=async(id,index=1)=>(await call(`/api/v1/apps/${f.appId}/entities/${f.tables[index].id}/records/${id}`)).record
    try{
     await page.goto(`${h.origin}/app/records/${f.appId}/${f.tables[0].id}`);await displayAction(page,f.view.name)
-    await row(f.project.id,0).waitFor();await row(f.project.id,0).getByRole('button',{name:'Expand Harbour renewal',exact:true}).click()
+    await row(f.project.id,0).waitFor()
+    const expand= row(f.project.id,0).getByRole('button',{name:'Expand Harbour renewal',exact:true})
+    await page.keyboard.press('Tab');await expand.focus();await page.getByRole('tooltip',{name:'Expand Harbour renewal',exact:true}).waitFor();await page.keyboard.press('Escape')
+    await expand.click()
     await row(f.taskA.id,1).waitFor();await row(f.taskB.id,1).waitFor()
     assert.equal(await page.locator('[data-list-level="1"]').count(),2)
     assert.equal(await row(f.project.id,0).getByLabel('2 matching children',{exact:true}).innerText(),'2')
@@ -39,11 +46,13 @@ export async function listBrowserJourney(){
     const task=row(f.taskA.id,1)
     await task.getByRole('button',{name:'Edit Notes for Alpha task',exact:true}).click()
     await task.getByLabel('Notes',{exact:true}).fill(`Survey confirmed ${width}`)
+    await snap('inline-edit')
     await command(()=>task.getByRole('button',{name:'Save cell',exact:true}).click())
     assert.equal((await read(f.taskA.id)).fields[f.tables[1].note.id].value,`Survey confirmed ${width}`)
     await row(f.project.id,0).getByRole('button',{name:'Add child to Harbour renewal',exact:true}).click()
     const form=page.locator('form').filter({has:page.getByRole('heading',{name:'New child in Tasks',exact:true})})
     await form.getByLabel('Title',{exact:true}).fill(`New survey ${width}`)
+    await snap('new-linked-child')
     const created=await command(()=>form.getByRole('button',{name:'Save child',exact:true}).click(),'record.create')
     const child=created.value;assert.deepEqual(child.fields[f.tables[1].parent.id].value,f.project.ref)
     assert.equal((await read(child.id)).fields[f.tables[1].title.id].value,`New survey ${width}`)
@@ -54,6 +63,7 @@ export async function listBrowserJourney(){
     const level2=page.getByRole('group',{name:'Level 2',exact:true})
     await level2.getByText('Visible fields · 2',{exact:true}).click()
     await level2.getByLabel('Notes',{exact:true}).uncheck()
+    await snap('per-level-settings')
     await command(()=>page.locator('form').filter({has:page.getByRole('heading',{name:'Edit this view',exact:true})}).getByRole('button',{name:'Save view',exact:true}).click(),'view.save')
     await displayAction(page,f.view.name);await row(f.taskA.id,1).waitFor()
     assert.equal(await row(f.taskA.id,1).getByRole('button',{name:'Edit Notes for Alpha task',exact:true}).count(),0)
