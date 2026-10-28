@@ -12717,6 +12717,10 @@
       "sha256": "72501f10973a65516fbb91488aaa7409bb234da1c15ab8fd53095c5c33aea957",
       "executable": false
     },
+    "tests/helpers/repair-authority-migrations.mjs": {
+      "sha256": "3228ae85f745d3fd3a04c5dfbde56cef4624671dbd38705dcce4a9faa0c96c78",
+      "executable": false
+    },
     "tests/helpers/rer-archive-integrity.mjs": {
       "sha256": "ff62d34bc933d08e0b83c27c5f3f2669d6a056ce2698e206f2417df94d53308c",
       "executable": false
@@ -13238,7 +13242,7 @@
       "executable": false
     },
     "tests/repairs-harness.mjs": {
-      "sha256": "e32f3974773739058c60d3e848734d3d664bac2e9b6da4be4dd6f9e8f4a19f73",
+      "sha256": "c14408b40401b37e7af85b577ca3b8c953603060c25a9a35c512cb19a2eada8d",
       "executable": false
     },
     "tests/repairs-outcome-http.mjs": {
