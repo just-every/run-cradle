@@ -20,7 +20,7 @@ export async function issueUserCredential(db:D1Database,ordinary:PolicyPort,admi
    if(input.permissions==='write'){
     const grants=createGrantService(db,policy)
     const spec={delegate:{id:principalId,kind:kind==='automation'?'agent':'connector'},appId:input.appId,
-     actions:actions.filter(a=>a!=='record.read'),scope:[{entityId:input.entityId}],allowedTransitions:[],
+     actions:actions.filter(a=>a!=='record.read'),scope:[...new Set([...(kind==='automation'&&input.automationPatch===false?[]:[input.entityId]),...(input.automationCreateEntityIds??[])])].map(entityId=>({entityId})),allowedTransitions:[],
      perAction:[],perActionQuantity:0,period:{startsAt,endsAt:input.expiresAt,ceiling:[],modelCalls:0,wallSeconds:0,quantity:0},
      providerScopes:[],startsAt,expiresAt:input.expiresAt,decisionRules:[]}
     const prepared=await grants.prepare(ctx,await delegationCommandId(commandId,'grant-prepare'),spec)

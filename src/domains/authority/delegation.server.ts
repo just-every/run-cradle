@@ -1,30 +1,32 @@
 import type { Principal, RequestContext } from './ports'
-import { trustedPredicate } from '../admission/sql.server'
+import { and, trustedPredicate } from '../admission/sql.server'
 import { AuthorityError } from './errors'
 
-/** Issuer policy/role decreases fence the delegated read or write in its own SQL. */
+/** Issuer policy or role decreases fence the delegated read or write in its own SQL. */
 export function delegationGuard(principalId: string) {
+ const grant=and(
+  trustedPredicate('g.id=d.grant_id'),trustedPredicate('g.delegate_id=d.principal_id'),trustedPredicate('g.issuer_id=d.issuer_id'),
+  trustedPredicate('g.app_id=d.app_id'),trustedPredicate("g.state='active'"),trustedPredicate('g.revoked_at IS NULL'),trustedPredicate('g.restore_hold=0'),
+  trustedPredicate("g.starts_at<=unixepoch('subsec')*1000"),trustedPredicate("g.expires_at>unixepoch('subsec')*1000"),
+  trustedPredicate("julianday(json_extract(g.spec_json,'$.period.startsAt'))<=julianday('now')"),
+  trustedPredicate("julianday(json_extract(g.spec_json,'$.period.endsAt'))>julianday('now')"),
+  trustedPredicate('p.authentication_epoch=g.issuer_epoch'),trustedPredicate("delegate.state='active'"),trustedPredicate('delegate.authentication_epoch=g.delegate_epoch'))
+ const current=and(
+  trustedPredicate('d.principal_id=?',[principalId]),trustedPredicate('d.revoked_at IS NULL'),trustedPredicate("p.state='active'"),
+  trustedPredicate('p.authentication_epoch=d.issuer_epoch'),trustedPredicate("m.state='active'"),
+  trustedPredicate('m.version=d.issuer_membership_version'),trustedPredicate('policy.id=d.issuer_policy_id'),
+  trustedPredicate('policy.version=d.issuer_policy_version'),trustedPredicate("o.status='active'"),trustedPredicate("o.role='owner'"),
+  trustedPredicate('o.version=d.base_operator_version'),
+  trustedPredicate(`d.grant_id IS NULL OR EXISTS(SELECT 1 FROM authority_grants g
+    JOIN authority_principals delegate ON delegate.id=g.delegate_id WHERE ${grant.sql})`,grant.values),
+  trustedPredicate('d.automation_id IS NULL OR EXISTS(SELECT 1 FROM automations automation WHERE automation.id=d.automation_id AND automation.enabled=1)'))
  return trustedPredicate(`EXISTS(SELECT 1 FROM authority_delegations d
   JOIN authority_principals p ON p.id=d.issuer_id
   JOIN authority_memberships m ON m.principal_id=p.id AND m.app_id=d.app_id
   JOIN authority_policies policy ON policy.id=m.policy_id AND policy.app_id=m.app_id
   JOIN oa_operators o ON o.id=d.base_operator_id
   JOIN cradle_base_operators projection ON projection.base_id=o.id AND projection.principal_id=p.id
-  WHERE d.principal_id=? AND d.revoked_at IS NULL AND p.state='active'
-   AND p.authentication_epoch=d.issuer_epoch AND m.state='active'
-   AND m.version=d.issuer_membership_version AND policy.id=d.issuer_policy_id
-   AND policy.version=d.issuer_policy_version AND o.status='active' AND o.role='owner'
-   AND o.version=d.base_operator_version
-   AND (d.grant_id IS NULL OR EXISTS(SELECT 1 FROM authority_grants g
-    JOIN authority_principals delegate ON delegate.id=g.delegate_id
-    WHERE g.id=d.grant_id AND g.delegate_id=d.principal_id AND g.issuer_id=d.issuer_id
-     AND g.app_id=d.app_id AND g.state='active' AND g.revoked_at IS NULL AND g.restore_hold=0
-     AND g.starts_at<=unixepoch('subsec')*1000 AND g.expires_at>unixepoch('subsec')*1000
-     AND julianday(json_extract(g.spec_json,'$.period.startsAt'))<=julianday('now')
-     AND julianday(json_extract(g.spec_json,'$.period.endsAt'))>julianday('now')
-     AND p.authentication_epoch=g.issuer_epoch AND delegate.state='active'
-     AND delegate.authentication_epoch=g.delegate_epoch))
-   AND (d.automation_id IS NULL OR EXISTS(SELECT 1 FROM automations automation WHERE automation.id=d.automation_id AND automation.enabled=1)))`, [principalId])
+  WHERE ${current.sql})`,current.values)
 }
 
 export async function delegatedPrincipal(db: D1Database, principal: Principal): Promise<Principal> {

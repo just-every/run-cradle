@@ -27,6 +27,7 @@ export function FileUpload({ appId, subject, fieldId, label, purpose = 'source',
       try {
         const response = await sessionFetch(prepared.uploadUrl, { method: prepared.method, headers: prepared.headers, body: file })
         if (!response.ok) throw new Error(`Upload returned ${response.status}.`)
+        await response.arrayBuffer()
       } catch { /* A missing response is resolved by the actual file status below. */ }
       setState('checking')
       const { data: stored } = await readApi<FileObject>(`/api/v1/files/${prepared.file.id}`)

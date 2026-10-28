@@ -1,3 +1,4 @@
+import {authorizeTemplateAction,type AutomationTemplates} from './template-action.server'
 import {smsPhoneField} from '../records/phone'
 import {automationConfigurationAudit} from './configuration-audit'
 import {validateAutomationTrigger,automationTriggerConfig} from './trigger-configuration.server'
@@ -17,17 +18,22 @@ import { ensureRecordAutomationTriggers } from './capture.server'
 import { recordAutomationDefinition,type RecordAutomationDefinition } from './contracts'
 import * as tables from './storage.server'
 
-export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyPort,admission:AdmissionPort,descriptors:DescriptorRegistry,appOrigin:string,slack?:Pick<ReturnType<typeof import('../slack-app/service.server').createSlackApp>,'validate'>) {
+export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyPort,admission:AdmissionPort,descriptors:DescriptorRegistry,appOrigin:string,slack?:Pick<ReturnType<typeof import('../slack-app/service.server').createSlackApp>,'validate'>,templates?:AutomationTemplates) {
  return {
   async save(ctx:RequestContext,input:{commandId:string;id?:string;version?:number;expiresAt:string;definition:RecordAutomationDefinition}) {
    const definition=recordAutomationDefinition.parse(input.definition),{appId,entityId}=definition
-   const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),permissions=allActions.some(a=>a.kind==='update'||a.kind==='slack-app')?'write' as const:'read' as const
+   const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),automationPatch=allActions.some(a=>a.kind==='update'||a.kind==='slack-app'),permissions=automationPatch||allActions.some(a=>a.kind==='apply_record_template')?'write' as const:'read' as const
    const own=await userDelegationPolicy(db,policy,ctx,{appId,entityId,name:definition.name,permissions,expiresAt:input.expiresAt})
    await validateAutomationTrigger(db,definition,descriptor,own.scope,ctx.now)
-   const guards=[...own.guards]
+   const guards=[...own.guards],automationCreateEntityIds=new Set<string>(),automationReadEntityIds=new Set<string>()
    const filters=[...allActions.flatMap(action=>action.when?[action.when]:[]),...(definition.steps??[]).flatMap(step=>step.kind==='condition'?[step.when]:step.kind==='branch'?step.paths.map(path=>path.when):step.kind==='repeat'?[step.find]:[])]
    if(filters.flatMap(filter=>filterFields(filter)).some(field=>!own.scope.readableFieldIds.includes(field)))throw new AuthorityError('forbidden','Conditions and finds require readable fields.')
    for(const action of allActions){
+    if(action.kind==='apply_record_template'){
+     if(!templates)throw new AuthorityError('unconfigured','Record templates are unavailable.',503)
+     const checked=await authorizeTemplateAction({templates,policy,descriptors},ctx,appId,action)
+     guards.push(...checked.guards);for(const entityId of checked.entityIds)automationCreateEntityIds.add(entityId);for(const entityId of checked.readEntityIds)automationReadEntityIds.add(entityId)
+    }
     if(action.kind==='update'){
      const field=descriptor.schema.fields.find(f=>f.id===action.fieldId)
      if(!field||field.readOnly||field.type==='computed'||!own.scope.writableFieldIds.includes(field.id))throw new AuthorityError('forbidden','Select a writable field in your current scope.')
@@ -61,7 +67,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
    if(old&&old.version!==input.version)throw new AuthorityError('version_conflict','Refresh the automation before saving.',409)
    if(old)guards.push(trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND version=?)',[id,old.version]))
    const credential=await issueUserCredential(db,policy,admission,appOrigin,ctx,input.commandId,
-    {appId,entityId,name:definition.name,permissions,expiresAt:input.expiresAt},'automation')
+    {appId,entityId,name:definition.name,permissions,expiresAt:input.expiresAt,automationPatch,automationCreateEntityIds:[...automationCreateEntityIds],automationReadEntityIds:[...automationReadEntityIds]},'automation')
    // Capture is installed before this definition can become enabled.
    await ensureRecordAutomationTriggers(db,descriptors,[{app_id:appId,entity_id:entityId}])
    const now=Date.parse(ctx.now),version=(old?.version??0)+1,definitionVersion=(old?.definition_version??0)+1
