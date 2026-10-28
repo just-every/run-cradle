@@ -27,7 +27,7 @@ export async function verifyExpiredSession({context,page,viewport,origin,evidenc
  // This GET uses the existing real HttpOnly checkout gate and receives a new
  // native cookie through the same owner action offered by the dev badge.
  await page.goto(origin+'/auth/dev/enter?as=owner');await page.waitForURL(origin+'/app')
- await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
+ await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
  const recovered=await context.request.get(origin+'/api/session');assert.equal(recovered.status(),200)
  assert.equal((await recovered.json()).operator.id,owner,'Recovery returns to the persisted owner')
  const replay=await fetch(origin+'/auth/session',{headers:{cookie}})

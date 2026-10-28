@@ -83,7 +83,7 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
   const addedLens = await request(`${origin}/api/lenses`, { method: 'POST', headers: { cookie, 'content-type': 'application/json', origin, 'x-csrf-token': csrfToken }, body: JSON.stringify({ name: 'Migration catalog addition', description: 'SSR count freshness control', recordType: 'Risk', conditions: [], sort: { field: 'severity', direction: 'desc' }, fields: ['title', 'severity'], display: 'Cards' }) })
   assert.equal(addedLens.status, 201)
   await addedLens.arrayBuffer()
-  const fresh = [['/app','Migration campaign current'],['/app/overview','Migration campaign current'],['/app/campaigns','Migration campaign current'],[`/app/campaigns/${ids.campaign}`,'Migration campaign current'],['/app/lenses/risks','Migration risk current'],[`/app/risks/${ids.risk}`,'Migration risk current'],['/app/lenses/timeline','Migration milestone current'],[`/app/milestones/${ids.milestone}`,'Migration milestone current'],[`/app/lenses/${ids.lens}/edit`,'Migration lens current'],['/app/decisions','Migration decision current'],[`/app/decisions/${ids.decision}`,'Migration decision current'],['/app/automations','Migration automation current'],['/app/notifications','Migration notification current'],['/app/settings','Migration workspace current'],['/app/settings/workspace','Migration workspace current'],['/app/lenses/new',`${lenses.lenses.length + 1} saved lenses available`]]
+  const fresh = [['/app','Migration workspace current'],['/app/overview','Migration campaign current'],['/app/campaigns','Migration campaign current'],[`/app/campaigns/${ids.campaign}`,'Migration campaign current'],['/app/lenses/risks','Migration risk current'],[`/app/risks/${ids.risk}`,'Migration risk current'],['/app/lenses/timeline','Migration milestone current'],[`/app/milestones/${ids.milestone}`,'Migration milestone current'],[`/app/lenses/${ids.lens}/edit`,'Migration lens current'],['/app/decisions','Migration decision current'],[`/app/decisions/${ids.decision}`,'Migration decision current'],['/app/automations','Migration automation current'],['/app/notifications','Migration notification current'],['/app/settings','Migration workspace current'],['/app/settings/workspace','Migration workspace current'],['/app/lenses/new',`${lenses.lenses.length + 1} saved lenses available`]]
   for (const [document, marker] of fresh) assert.ok(bodyContent(await (await get(document)).text()).includes(marker), `${document} must SSR ${marker}`)
   for (const document of ['/','/signin']) {
     const publicHtml = await (await get(document, '')).text()
@@ -110,11 +110,10 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
     await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click(); await page.waitForURL('**/app');await page.waitForLoadState('networkidle')
     await navigateFromSignInToApp(page); await page.waitForURL('**/app')
     assert.equal(await page.evaluate(()=>performance.timeOrigin),time);assert.equal(navigations,1)
-    await page.getByText('Live campaigns',{exact:true}).waitFor(); await page.waitForLoadState('networkidle')
+    await page.getByRole('region',{name:'Your bases',exact:true}).waitFor(); await page.waitForLoadState('networkidle')
     const appTime=await page.evaluate(()=>performance.timeOrigin);const appDocuments=navigations
-    if(viewport.width<600) await page.getByRole('button',{name:'Open navigation'}).click()
-    await page.getByText('Launch views', { exact: true }).filter({ visible: true }).first().click()
-    await page.getByRole('link',{name:'Overview',exact:true}).filter({visible:true}).first().click();await page.waitForURL('**/app/overview');await page.getByText('Portfolio Overview',{exact:true}).first().waitFor()
+    if(viewport.width<600) await page.getByRole('button',{name:'Open navigation',exact:true}).click()
+    await page.getByRole('navigation',{name:'Operator navigation',exact:true}).filter({visible:true}).getByRole('link',{name:'Records',exact:true}).click();await page.waitForURL('**/app/records');await page.getByRole('navigation',{name:'Application records',exact:true}).waitFor()
     assert.equal(await page.evaluate(()=>performance.timeOrigin),appTime);assert.equal(navigations,appDocuments)
     assert.ok(time>0)
     for (const document of documents) { await page.goto(`${origin}${document}`); await page.waitForLoadState('networkidle'); assert.ok(!(await page.locator('body').innerText()).includes('Could not load this page'), document) }

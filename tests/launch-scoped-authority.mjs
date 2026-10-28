@@ -124,7 +124,7 @@ test('[BASE-ACCESS-004 RECORDS-001] every retained launch transport enforces cur
         const response = await h.request(person.session, route), html = await response.text()
         assert.ok(!html.includes(first.name), `SSR must not contain ${first.name}: ${route}`)
         assert.ok(!html.includes(risk.signal), `SSR must not contain risk evidence: ${route}`)
-        if (route === '/app') { assert.equal(response.status,200); assert.match(html,/Open records/); assert.match(html,/outside your access/) }
+        if (route === '/app') { assert.equal(response.status,200); assert.match(html,/href="\/app\/records"/,'Home keeps record discovery available while the portfolio read is forbidden') }
         else assert.ok(response.status >= 400, `${route}: ${response.status}`)
       }
       const mutation = await h.request(person.session, `/api/campaigns/${first.id}`, { method: 'PATCH', body: JSON.stringify({ version: first.version, name: 'Unauthorized edit' }) })

@@ -1,6 +1,7 @@
 export type CurrentSession = {
   editorOwner?: boolean
   editorConfigured?: boolean
+  proposalReviewer?: boolean
   launchInUse?: boolean
   operator: {
     email: string

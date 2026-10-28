@@ -12,7 +12,7 @@ import {findBrowserJourney} from './helpers/records-find-journey.mjs'
 import {liveBrowserJourney} from './helpers/records-live-journey.mjs'
 import {contract} from './contract.mjs'
 import {relationFixture,relationReview} from './helpers/records-browser-relations.mjs'
-import {homeReview, builderReview, gridReview, gridEdgeReview} from './helpers/records-browser-review.mjs'
+import {homeBases,homeReview, builderReview, gridReview, gridEdgeReview} from './helpers/records-browser-review.mjs'
 import {additionalViews} from './helpers/records-browser-additional-views.mjs'
 import {retainedLaunch} from './helpers/records-browser-retained.mjs'
 import {exerciseCsv} from './helpers/records-browser-csv.mjs'
@@ -62,7 +62,7 @@ try{
   await j.table('Contacts');await j.record({Contact:'Alex',Email:'alex@example.test','Company link':{link:'Acme 北, "Co"'}});await j.capture('contacts')
   await j.table('Deals');await j.record({Deal:'First deal',Value:'0','Close date':'2027-01-15',Approved:false,Stage:{select:'New'},'Company link':{link:'Acme 北, "Co"'}});await j.record({Deal:'Second deal',Value:'125.25',Stage:{select:'Qualified'}});await j.record({Deal:'Third deal',Value:'200',Stage:{select:'New'}});await gridReview(page,j)
   await page.keyboard.press('Control+f');const quickFind=page.getByLabel('Find in visible fields',{exact:true});await quickFind.fill('Third');await quickFind.press('Enter');await page.getByRole('status').filter({hasText:/^1 of 1 matching cells$/}).waitFor();assert.match(await page.locator('.cr-grid-match').innerText(),/Third deal/);await quickFind.fill('');await j.action(page.getByRole('button',{name:'Close find',exact:true}));await j.capture('deals')
-  const views=await exerciseViews(page,j);views.additional=await additionalViews(page,j,h.origin,result.appId);await exerciseSchemaEdit(page,j,h.origin,result.appId);const csv=await exerciseCsv(page,j,h.origin,width);const templates=await exerciseTemplates(page,j,h.origin,width);await gridEdgeReview(page,j,h.origin,width);await boardBrowserJourney(page,j,h,width);await verifyRetained();await page.goto(h.origin+'/app');await page.getByText('Launch readiness template',{exact:true}).waitFor();await j.capture('populated-home')
+  const views=await exerciseViews(page,j);views.additional=await additionalViews(page,j,h.origin,result.appId);await exerciseSchemaEdit(page,j,h.origin,result.appId);const csv=await exerciseCsv(page,j,h.origin,width);const templates=await exerciseTemplates(page,j,h.origin,width);await gridEdgeReview(page,j,h.origin,width);await boardBrowserJourney(page,j,h,width);await verifyRetained();await page.goto(h.origin+'/app');await homeBases(page,h.origin);await j.capture('populated-home')
   await findBrowserJourney(page,j,h)
   await liveBrowserJourney(page,j,h,browser,width,output)
   receipts.push({views,templates,csv,width,baseId:result.appId,companyId:company.id,pageErrors:j.errors,checkpoints:j.checkpoints})

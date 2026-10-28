@@ -1,5 +1,7 @@
 import { useDocumentSession } from '../../document-context'
-import { OperatorNavigation, LaunchNavigation, UtilityNavigation } from './operator-navigation'
+import { readApi } from '../../../../ui/shared/api'
+import type { ConstructionReadiness } from '../../../../domains/construction/contracts'
+import { OperatorNavigation, UtilityNavigation } from './operator-navigation'
 import type { Item } from './operator-navigation'
 import { OperatorIcon } from './operator-icon'
 import { OwnerMenu } from './owner-menu'
@@ -35,34 +37,49 @@ type OperatorShellProps = PropsWithChildren<{
 const records: Item[] = [
   { label: 'Home', href: '/app', icon: 'home' },
   { label: 'Records', href: '/app/records', icon: 'grid' },
-  { label: 'App studio', href: '/app/operations/studio', icon: 'studio' },
   { label: 'Automations', href: '/app/automations', icon: 'automation' },
 ]
-const launch: Item[] = [
-  { label: 'Overview', href: '/app/overview', icon: 'overview' },
-  { label: 'Campaigns', href: '/app/campaigns', icon: 'grid' },
-  { label: 'Risks', href: '/app/lenses/risks', icon: 'risk' },
-  { label: 'Timeline', href: '/app/lenses/timeline', icon: 'timeline' },
-  { label: 'New lens', href: '/app/lenses/new', icon: 'lens' },
-  { label: 'Decisions', href: '/app/decisions', icon: 'decision' },
-]
+const studio: Item = { label: 'App studio', href: '/app/operations/studio', icon: 'studio' }
 const utilities: Item[] = [
   { label: 'Search', href: '/app/search', icon: 'lens' },
   { label: 'Notifications', href: '/app/notifications', icon: 'bell' },
   { label: 'Settings', href: '/app/settings', icon: 'settings' },
 ]
 
+// Keep one readiness read per signed-in document, shared by Home and both rails.
+// Nothing is offered during the read or after a failed answer; server rendering
+// never shares a person's readiness with another document.
+const studioReads = new WeakMap<Document, Map<string, Promise<boolean>>>()
+export function useAppStudioReady() {
+  const principal = useDocumentSession()?.operator.id ?? ''
+  const [answer, setAnswer] = useState<{ principal: string; ready: boolean } | null>(null)
+  useEffect(() => {
+    let active = true
+    let reads = studioReads.get(document)
+    if (!reads) studioReads.set(document, reads = new Map())
+    let pending = reads.get(principal)
+    if (!pending) {
+      pending = readApi<ConstructionReadiness>('/api/v1/construction/readiness')
+        .then(({ data }) => data?.ready === true).catch(() => false)
+      reads.set(principal, pending)
+    }
+    pending.then(ready => { if (active) setAnswer({ principal, ready }) })
+    return () => { active = false }
+  }, [principal])
+  return answer?.principal === principal && answer.ready
+}
+
 const OperatorRail = ({
   currentPath,
   identity,
   onNavigate,
+  appStudioReady,
 }: {
   currentPath: string;
   identity: OperatorShellIdentity;
   onNavigate?: () => void;
+  appStudioReady: boolean;
 }) => {
- const session = useDocumentSession() as (ReturnType<typeof useDocumentSession> & { launchInUse?: boolean })
- const showLaunch = /^\/app\/(campaigns|launch|overview|milestones|risks|decisions|lenses)/.test(currentPath) || session?.launchInUse === true
  return (
   <div className="operator-rail-content">
     <Link
@@ -73,12 +90,11 @@ const OperatorRail = ({
     >
       <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
     </Link>
-    <OperatorNavigation items={records}
+    <OperatorNavigation items={appStudioReady ? [...records, studio] : records}
       currentPath={currentPath}
       unreadNotifications={identity.unreadNotifications}
       onNavigate={onNavigate}
     />
-    {showLaunch && <LaunchNavigation items={launch} currentPath={currentPath} onNavigate={onNavigate} />}
     <UtilityNavigation items={utilities} currentPath={currentPath} unreadNotifications={identity.unreadNotifications} onNavigate={onNavigate} />
     <OwnerMenu owner={identity} />
   </div>
@@ -93,6 +109,7 @@ export const OperatorShell = ({
   description,
   actions,
 }: OperatorShellProps) => {
+  const appStudioReady = useAppStudioReady();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -114,7 +131,7 @@ export const OperatorShell = ({
         <a className="operator-skip" href="#main-content">Skip to content</a>
       </nav>
       <aside className="operator-rail">
-        <OperatorRail currentPath={currentPath} identity={identity} />
+        <OperatorRail currentPath={currentPath} identity={identity} appStudioReady={appStudioReady} />
       </aside>
       <header className="operator-mobile-header">
         <Tooltip label="Open navigation"><button
@@ -173,6 +190,7 @@ export const OperatorShell = ({
         <OperatorRail
           currentPath={currentPath}
           identity={identity}
+          appStudioReady={appStudioReady}
           onNavigate={() => setDrawerOpen(false)}
         />
       </dialog>

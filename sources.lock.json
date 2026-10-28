@@ -6834,15 +6834,15 @@
       "executable": false
     },
     "src/core/app/ui/operator/operator-navigation.tsx": {
-      "sha256": "7be52e3746b0d1a50d314f8c254ea250de5c4dda52af9c38db4eab3f8652463c",
+      "sha256": "0f681cc3fa9d900f856a7fab0d5e4f95469c3ce2a95beb66c5e51d830f8af806",
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.css": {
-      "sha256": "abcdc1af3a8a48300a3f8e5414dead816a7287b2e1095e163e9d8b0ec3d581ca",
+      "sha256": "79564289e669a616bfe9a63013e77fada1dedb6582cf9e9b5d5a25946f3af110",
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.tsx": {
-      "sha256": "7a17f820ddd597352b0bce48f2894102052c8982c97def3f96e844af368f6872",
+      "sha256": "7b159a9e8c821f18aeccf17fb45ccf2b2d545951320eaa115b995dea24223e67",
       "executable": false
     },
     "src/core/app/ui/operator/owner-menu.tsx": {
@@ -7182,11 +7182,11 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.css": {
-      "sha256": "1166163570ae6bdfa2b058790c8e9f49ad8b8fe0d77e80b5fb3026a9ac95632f",
+      "sha256": "cd793687655164e5bf3c70cbddfe24a4f0879779ae4c3a254f31e21288cf8aab",
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.tsx": {
-      "sha256": "b8ab6bba07dba1c65dfcf03d3eaf2e05347c368e3f89ba79da8a964f04efaffe",
+      "sha256": "ce7963095ec79eb11c5b5c60c907dc6e8f6a594d0962d2cc0b8c644d9c5a302c",
       "executable": false
     },
     "src/core/features/portfolio/ui/index.tsx": {
@@ -7289,12 +7289,16 @@
       "sha256": "c76e93a994125a34406f09ee1f8a694b4d1b4a6a429fc6e5f1f4845ab7ee79ea",
       "executable": false
     },
+    "src/core/features/session/proposal-reviewer.server.ts": {
+      "sha256": "9553e69783b920b0720f5078d2891b2a6a67a92806b12dec650352ac5de7dcc2",
+      "executable": false
+    },
     "src/core/features/session/routes.ts": {
       "sha256": "662a6f56f3f13559c9ce4f1db1c7f03a96ec17f4ab72710e6e27f231fbd23dda",
       "executable": false
     },
     "src/core/features/session/service.ts": {
-      "sha256": "98b23fc93b7b13f6e9b26009da3c3ed38211befdf83c0abe811f344aaca4cffd",
+      "sha256": "846d67b2cde641c196ea002ed48f6bdca729a24a1d253cdffd3680b20c9e4554",
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.css": {
@@ -7470,7 +7474,7 @@
       "executable": false
     },
     "src/core/shared/session.ts": {
-      "sha256": "19fda47b43385064eefb6727da96bf70ea51d8a08c819f2cb03f7ae3db5506ff",
+      "sha256": "4eca45ed4101bab7c9c54af8cb056af76a4fe8ec7c1b9106d6e09815191a2bef",
       "executable": false
     },
     "src/core/shared/workspace-money-input.ts": {
@@ -9730,7 +9734,7 @@
       "executable": false
     },
     "src/domains/records/metadata.server.ts": {
-      "sha256": "0d96ace054779d3b4b590b0b0770e2aac0e66d91fca6c83520970989f47d503d",
+      "sha256": "80ce72bde6350d081fd21380addab66646fa7f07b4eb3ae8c25502f1281a10d5",
       "executable": false
     },
     "src/domains/records/migration.server.ts": {
@@ -10846,7 +10850,7 @@
       "executable": false
     },
     "src/ui/records/proposals/agent-proposals.tsx": {
-      "sha256": "f27878595b22a87b688e17040b6196a23dfc3e4695553a7a44f2e97460c1ebf3",
+      "sha256": "d8a31f95c0ffe8e9e04e40baa709c7f0ce97f43a8664dc76d3d22176b9ca3644",
       "executable": false
     },
     "src/ui/records/proposals/proposal-review.tsx": {
@@ -11350,7 +11354,7 @@
       "executable": false
     },
     "src/ui/shared/api.ts": {
-      "sha256": "eb888e5cbf41b3dd69540c70cc0a4a998a03c86512b4aa0ef080d6a915a7a00e",
+      "sha256": "bc9fcf4d5e6e39cad811f4961ef28a4d85ad65f9bcd649b7407e9045e9cd3feb",
       "executable": false
     },
     "src/ui/shared/command.ts": {
@@ -11738,7 +11742,7 @@
       "executable": false
     },
     "tests/foundation-shell.mjs": {
-      "sha256": "9b9a618a87b7d67a9c9a468896796c591d949f0ca2f82edfd1e90343fbfcba73",
+      "sha256": "3e61b07a2327abb3088abbb44cca4f0b9288c5d2cff038cc604c8ff8fa20aba7",
       "executable": false
     },
     "tests/helpers/accessibility-axe.mjs": {
@@ -12318,7 +12322,7 @@
       "executable": false
     },
     "tests/helpers/local-signin-expired.mjs": {
-      "sha256": "cc42f905d7545e3dba1e53ae9c8aedf17b7c9661c687b7063097369a3e4cc547",
+      "sha256": "0c1721225aa452d9920ffb4cf2349438ca4e98d7df16f68dbc72bad0e542dbaa",
       "executable": false
     },
     "tests/helpers/local-signin-recovery.mjs": {
@@ -12394,7 +12398,7 @@
       "executable": false
     },
     "tests/helpers/public-app-navigation.mjs": {
-      "sha256": "16c7aea86bdb9eaae7f06eb1e541f90a50c63f3285b9d2f9924ca1110177cae2",
+      "sha256": "04388c6b5351c037bc1c333568a588cc5a9136b5bb99708401f64aaa885130fe",
       "executable": false
     },
     "tests/helpers/queue-consumers.mjs": {
@@ -12494,7 +12498,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-review.mjs": {
-      "sha256": "58b5d460482fd99678aa601ad68928845e63a354da82bb27a9d2b8893cbef5e9",
+      "sha256": "8d497067648c023d0e39796768bf97ef3d4b008d770ccda4347c1fd104b63b3c",
       "executable": false
     },
     "tests/helpers/records-browser-runtime.mjs": {
@@ -12898,7 +12902,7 @@
       "executable": false
     },
     "tests/installed-home.mjs": {
-      "sha256": "ca04515fe3847915cb8873a4caedc4c053bb68756e00bfc8d0552f7be3e9f647",
+      "sha256": "b2f93a12c885a100ade9d0e0e748ab4875fc96524e80d4324ef69958e5fb0748",
       "executable": false
     },
     "tests/intelligence-fixture.mjs": {
@@ -12910,7 +12914,7 @@
       "executable": false
     },
     "tests/launch-authority-browser.mjs": {
-      "sha256": "e556817293a68a1a516121ff009ee412386eba20aee750d68eea16655d143459",
+      "sha256": "39dc1f493b2e889d70f6ceda93fd150af06d709d8b759457219ff939e45190c3",
       "executable": false
     },
     "tests/launch-installed-ai-failures.mjs": {
@@ -12938,7 +12942,7 @@
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
-      "sha256": "9bdc29428d02bd1f0eeaf3e6d47798c92332203309c0b7e8dc692c5826295631",
+      "sha256": "9abf46cad4583cd8db9c728e8d771eac14190946fe3d39598626ed9def418d26",
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
@@ -12950,7 +12954,7 @@
       "executable": false
     },
     "tests/launch-production-composition.mjs": {
-      "sha256": "9fc9f20cdd97610cb8931efcb47d8b0844f53675fdeaa6984b28c3b3c843f127",
+      "sha256": "54b5a0773a8b2b8dd1ce0f390b7930e58fe00fb428e708e20ec280b9f902abfc",
       "executable": false
     },
     "tests/launch-runtime-entry.ts": {
@@ -12958,7 +12962,7 @@
       "executable": false
     },
     "tests/launch-scoped-authority.mjs": {
-      "sha256": "1c1017008c04fc9fd4fdba1dd6979ba5b8e63b184a878e3b33c56c1d6ae22f88",
+      "sha256": "a50bcc4be49f33b82c74c0b3ff97a2627219d1fd30c96b9869c7238437cbbf83",
       "executable": false
     },
     "tests/launch-search-authority.mjs": {
@@ -13002,7 +13006,7 @@
       "executable": false
     },
     "tests/migration-browser.mjs": {
-      "sha256": "ddd487d46caf88355d18d15ae10d37af60522140c89c3cd3bd54be9a3416a372",
+      "sha256": "6489a6b9505cbe301b800c6fc6b61be2d02ea2d93faab61ba41bd1cbad311dad",
       "executable": false
     },
     "tests/migration-events.mjs": {
@@ -13246,11 +13250,11 @@
       "executable": false
     },
     "tests/start-resources.mjs": {
-      "sha256": "e98866b22674702c7003369aabc55e09056790d15a7fbff6a577fa0c7ffb8960",
+      "sha256": "b90c0ed55e370815d4244af9212aa51fba0b3a3c470645f349e15972f33d33f9",
       "executable": false
     },
     "tests/start-runtime.mjs": {
-      "sha256": "d66f64dcd245c6924d26057c749c415881616db592ef0e8e676cf96a2e6c90d5",
+      "sha256": "56d5740fca3dcf203b7daae09266857bf0214daf2612c9ba4ed4c0653da8e383",
       "executable": false
     },
     "tests/ui-admission-editor.mjs": {
@@ -13274,7 +13278,7 @@
       "executable": false
     },
     "tests/ui-cradle-browser.mjs": {
-      "sha256": "e1825b7d875c65927e4171ac9ae455968b35899dbd1c71f173e82e84dbf9650e",
+      "sha256": "503ca249b27b9c136ec7208e4a66a0098f37ed75c79e9de168a9d049508177b1",
       "executable": false
     },
     "tests/ui-execution-resolution-browser.mjs": {
@@ -13294,11 +13298,11 @@
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
-      "sha256": "534f145aed192f02c47244131e849cd9dd255b24bae1c828087a952b8fd1150f",
+      "sha256": "1847bbef1da69a631c0c291f07a762defef9d4efbfb1361d9c97b8a4af653b21",
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "807f0bdd9c192aca0665652386ad610569d569df87d8f3f1730319ee741001ef",
+      "sha256": "07844d4aa4bcafd95293a6e6b7a2f839394ab65f3135e4ba4fac46ae6d36cfbf",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

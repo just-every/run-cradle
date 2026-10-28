@@ -9,6 +9,8 @@ import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './accessibility-evidence.mjs'
 import {retainedLaunch} from './records-browser-retained.mjs'
+import {LAUNCH_APP_ID,launchEntities} from '../../src/apps/launch/contracts.ts'
+import {campaignLifecycle} from '../../src/apps/launch/lifecycle.ts'
 
 async function chooserHidden(page){
  assert.equal(await page.getByRole('navigation',{name:'Application records',exact:true}).count(),0)
@@ -43,6 +45,20 @@ async function templateChoices(page,j,origin){
  assert.deepEqual((await readApps()).map(app=>app.id),before.map(app=>app.id),'Using or cancelling a template must preserve the existing bases')
  await page.goto(origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
 }
+export async function homeBases(page,origin){
+ const response=await page.request.get(origin+'/api/v1/apps');assert.equal(response.status(),200)
+ const apps=(await response.json()).data.items,bases=page.getByRole('region',{name:'Your bases',exact:true})
+ await bases.waitFor()
+ for(const base of apps){const link=bases.getByRole('link',{name:base.name,exact:true});await link.waitFor();assert.equal(await link.getAttribute('href'),base.entryUrl)}
+ assert.equal(await bases.getByRole('listitem').count(),apps.length,'Home lists every authorized base once')
+ await page.getByRole('region',{name:'Recent activity',exact:true}).waitFor()
+ return apps
+}
+async function openRecords(page,j){
+ let link=page.getByRole('navigation',{name:'Operator navigation',exact:true}).getByRole('link',{name:'Records',exact:true}).filter({visible:true})
+ if(!await link.count()){await j.action(page.getByRole('button',{name:'Open navigation',exact:true}));link=page.getByRole('dialog',{name:'Navigation',exact:true}).getByRole('link',{name:'Records',exact:true})}
+ await j.action(link)
+}
 export async function homeReview(output){
  let h,browser
  const receipts=[]
@@ -51,19 +67,69 @@ export async function homeReview(output){
   for(const width of recordsBrowserWidths(accessibilityWidths)){
    h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0))
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
-   await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');await page.getByRole('heading',{name:'Your business, organised your way.',exact:true}).waitFor();assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
-   assert.doesNotMatch(await page.locator('main').innerText(),/NO RECORDS|Start with your first base|Launch readiness|campaign activity|milestones|decisions/i)
-   assert.equal(await page.locator('.cr-home-records .cr-eyebrow').evaluate(e=>getComputedStyle(e).color),'rgb(63, 107, 54)')
-   await j.capture('fresh-home');await j.action(page.getByRole('link',{name:'Open records',exact:true}));await page.getByRole('button',{name:/^Base ▾/}).waitFor()
+   await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');const initialBases=await homeBases(page,h.origin);assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
+   const membership=await h.db.prepare('SELECT principal_id,state FROM authority_memberships WHERE app_id=?').bind(LAUNCH_APP_ID).first();assert.ok(membership)
+   await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE principal_id=? AND app_id=?").bind(membership.principal_id,LAUNCH_APP_ID).run()
+   try{
+    await page.goto(h.origin+'/app');assert.deepEqual(await homeBases(page,h.origin),[],'Removing the only base membership leaves real discovery empty')
+    const empty=page.getByRole('region',{name:'Your bases',exact:true}),create=empty.getByRole('button',{name:'New base',exact:true})
+    await create.waitFor();assert.equal(await empty.locator('a,button').count(),1,'The empty base list has one way to start');await j.capture('empty-home')
+    await j.action(create);await page.getByLabel('Base name',{exact:true}).waitFor();await j.capture('empty-home-builder');await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await create.waitFor()
+    assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0,'Cancelling a new base leaves the empty installation intact')
+   }finally{
+    await h.db.prepare('UPDATE authority_memberships SET state=?,version=version+1 WHERE principal_id=? AND app_id=?').bind(membership.state,membership.principal_id,LAUNCH_APP_ID).run()
+   }
+   await page.goto(h.origin+'/app');assert.deepEqual((await homeBases(page,h.origin)).map(base=>base.id),initialBases.map(base=>base.id),'Restoring membership restores the original authorized bases')
+   assert.equal(await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:'App studio',exact:true}).count(),0,'App studio is not mixed into the base list')
+   await j.capture('fresh-home');await openRecords(page,j);await page.getByRole('button',{name:/^Base ▾/}).waitFor()
    assert.equal(await page.getByRole('heading',{name:'Choose an application',exact:true}).count(),0);await baseAction(page,'New base',j.action);await templateChoices(page,j,h.origin)
    await baseAction(page,'New base',j.action);await chooserHidden(page);await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await page.getByRole('button',{name:/^Base ▾/}).waitFor();await j.capture('base-actions')
    await baseAction(page,'New base',j.action);await page.getByLabel('Base name',{exact:true}).fill(`Home records ${width}`);await page.getByLabel('Table name',{exact:true}).fill('Notes');await page.getByLabel('Field name',{exact:true}).fill('Note')
    const base=await j.adopt(),record=await j.record({Note:`Existing record ${width}`})
-   await page.goto(h.origin+'/app');await page.getByRole('heading',{name:'Your business, organised your way.',exact:true}).waitFor();assert.doesNotMatch(await page.locator('main').innerText(),/NO RECORDS|Start with your first base|Launch readiness|campaign activity|milestones|decisions/i);await j.capture('records-only-home')
-   await j.action(page.getByRole('link',{name:'Open records',exact:true}));await chooseBase(page,`Home records ${width}`,j.action);await j.table('Notes');await page.getByRole('link',{name:`Existing record ${width}`,exact:true}).waitFor()
+   await page.goto(h.origin+'/app');const native=(await homeBases(page,h.origin)).find(app=>app.id===base.appId);assert.ok(native);assert.equal(native.tableCount,1);assert.equal(native.recordCount,1);assert.equal(native.latestChange.name,`Existing record ${width}`)
+   const entitiesReply=await page.request.get(`${h.origin}/api/v1/apps/${base.appId}/entities`);assert.equal(entitiesReply.status(),200);const entity=(await entitiesReply.json()).data.items.find(entity=>entity.id===record.ref.entityId);assert.ok(entity,'The created record identifies its own table')
+   const csrfReply=await page.request.get(h.origin+'/auth/csrf');assert.equal(csrfReply.status(),200);const {csrfToken}=await csrfReply.json()
+   const queryReply=await page.request.post(`${h.origin}/api/v1/apps/${base.appId}/entities/${entity.id}/query`,{headers:{origin:h.origin,'x-csrf-token':csrfToken},data:{}});assert.equal(queryReply.status(),200)
+   const visible=(await queryReply.json()).data;assert.equal(native.recordCount,visible.total.value,'Discovery counts exactly the records available through the current query door');assert.equal(native.latestChange.id,visible.items[0].id);assert.equal(native.latestChange.href,`/app/records/${base.appId}/${entity.id}/${visible.items[0].id}`)
+   await page.getByRole('region',{name:'Recent activity',exact:true}).getByText(native.latestChange.name,{exact:true}).waitFor();await j.capture('records-only-home')
+   await j.action(page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}));await j.table('Notes');await page.getByRole('link',{name:`Existing record ${width}`,exact:true}).waitFor()
    await entryCases(page,j,h,browser,base.appId,width,output)
-   const verifyLaunch=await retainedLaunch(page,j,h,width);await verifyLaunch();await page.goto(h.origin+'/app');await page.getByText('Launch readiness template',{exact:true}).waitFor();assert.equal(await page.locator('.portfolio-metric-grid .portfolio-metric').count(),4);assert.equal(await page.getByRole('link',{name:'Open records',exact:true}).count(),1);await j.capture('records-and-launch-home')
-   receipts.push({width,baseId:base.appId,recordId:record.id,checkpoints:j.checkpoints});await context.close();await h.close();h=null
+   const verifyLaunch=await retainedLaunch(page,j,h,width);await verifyLaunch();await page.goto(h.origin+'/app');const current=await homeBases(page,h.origin);assert.ok(current.some(app=>app.id===base.appId));assert.ok(current.some(app=>app.name==='Launch readiness'));assert.equal(await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}).getAttribute('href'),base.entryUrl??`/app/records/${base.appId}`);await j.capture('records-and-launch-home')
+   if(width===1440){
+    const sessionReply=await page.request.get(h.origin+'/api/session');assert.equal(sessionReply.status(),200);const owner=(await sessionReply.json()).operator.id
+    const command=async(action,input,expected=[])=>{
+     const response=await page.request.post(h.origin+'/api/v1/commands/'+action,{headers:{origin:h.origin,'x-csrf-token':csrfToken},data:{commandId:createUlid(),input,expected}})
+     const reply=await response.json();assert.equal(response.status(),200,JSON.stringify(reply));assert.equal(reply.data.state,'committed',JSON.stringify(reply));return reply.data.value
+    }
+    const campaigns=[]
+    for(let index=0;index<11;index++)campaigns.push(await command('launch.campaign.create',{fields:{code:`HOME-MERGE-${width}-${index}`,name:`Home activity campaign ${index+1}`,ownerId:owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Before activity merge review',statusSummary:'Current',phase:campaignLifecycle.phases[0],status:campaignLifecycle.statuses[0],health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}}))
+    // Creates emit a fact per field. One-field edits produce eleven distinct
+    // recent events, so the portfolio read includes more changes than Home shows.
+    const writes=[]
+    for(const [index,campaign]of campaigns.entries()){
+     const changed=await command('launch.campaign.patch',{id:campaign.id,changes:{objective:`Reviewed activity merge ${index+1}`}},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:campaign.id},version:campaign.version}])
+     writes.push({name:campaign.name,occurredAt:changed.updatedAt})
+     if(index===5){
+      const title=`Merged native change ${width}`,changed=await command('record.patch',{ref:visible.items[0].ref,changes:{[entity.fields[0].id]:title}},[{ref:visible.items[0].ref,version:visible.items[0].version}])
+      writes.push({name:title,occurredAt:changed.updatedAt})
+     }
+    }
+    await page.goto(h.origin+'/app');await homeBases(page,h.origin);await page.waitForLoadState('networkidle')
+    const shown=await page.getByRole('region',{name:'Recent activity',exact:true}).getByRole('listitem').evaluateAll(rows=>rows.map(row=>({name:row.querySelector('strong')?.textContent,occurredAt:row.querySelector('time')?.getAttribute('datetime')})))
+    assert.deepEqual(shown,writes.slice(-10).reverse(),'Home merges native and launch changes by recency and shows only the newest ten')
+    await j.capture('home-newest-ten')
+    // A multi-field action can fill the portfolio's raw-fact window. Home still
+    // shows ten distinct changes instead of collapsing the window to one row.
+    const target=campaigns[0],currentReply=await page.request.get(`${h.origin}/api/campaigns/${target.id}`);assert.equal(currentReply.status(),200);const currentCampaign=(await currentReply.json()).campaign
+    const changedName=`Home multi-field campaign ${width}`,changed=await command('launch.campaign.patch',{id:target.id,changes:{code:`HOME-MULTI-${width}`,name:changedName,startDate:'2026-02-01',launchDate:'2028-01-01',objective:'Reviewed together',statusSummary:'Ready for review',phase:campaignLifecycle.phases[1],status:campaignLifecycle.statuses[1],health:60,budgetMinor:100,spendMinor:50,tags:['Review']}},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:target.id},version:currentCampaign.version}])
+    await page.goto(h.origin+'/app');await homeBases(page,h.origin);await page.waitForLoadState('networkidle')
+    const changes=await page.getByRole('region',{name:'Recent activity',exact:true}).getByRole('listitem').evaluateAll(rows=>rows.map(row=>({name:row.querySelector('strong')?.textContent,detail:row.querySelector('.cr-home-meta')?.textContent,occurredAt:row.querySelector('time')?.getAttribute('datetime')})))
+    assert.equal(changes.length,10,'Home keeps the newest ten field changes from a multi-field action')
+    assert.ok(changes.every(row=>row.name===changedName&&row.occurredAt===changed.updatedAt),'Every shown change belongs to the newest committed update')
+    assert.equal(new Set(changes.map(row=>row.detail)).size,10,'Each quiet line identifies a different field change')
+    await j.capture('home-multi-field-changes')
+   }
+   receipts.push({width,baseId:base.appId,recordId:record.id,emptyHomeExercised:true,homeSummaryMatchesQuery:true,newestTenMergeExercised:width===1440,checkpoints:j.checkpoints});await context.close();await h.close();h=null
   }
   return receipts
  }finally{await browser?.close();await h?.close()}

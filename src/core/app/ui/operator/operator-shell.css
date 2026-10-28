@@ -15,8 +15,6 @@ html:has(style[data-rer-label="Demo"]) .operator-brand .operator-brand-lockup { 
 .operator-nav-link:hover, .operator-utilities a:hover { background: #ffffff0e; }
 .operator-nav-link[aria-current="page"], .operator-utilities a[aria-current="page"] { background: #ffffff12; color: var(--lime); }
 .operator-nav-label { min-width: 0; overflow-wrap: anywhere; }
-.operator-work-views { margin-top: 20px; padding-top: 12px; border-top: 1px solid #ffffff1f; font-size: 13px; }
-.operator-work-views summary { min-height: 44px; padding: 12px; cursor: pointer; }
 .operator-utilities { display: grid; gap: 4px; margin-top: auto; padding-top: 12px; border-top: 1px solid #ffffff1f; }
 .operator-utilities a { color: var(--rail-ink); }
 .operator-utilities a > span[aria-label] { margin-left: auto; padding: 1px 8px; border-radius: var(--r-pill); background: var(--lime); color: var(--ink-deep); font-size: var(--text-meta); font-weight: 600; }
@@ -58,6 +56,8 @@ html:has(style[data-rer-label="Demo"]) .operator-brand .operator-brand-lockup { 
   .operator-main { margin-left: 0; padding-top: 64px; }
   .operator-content { padding: 0 16px 40px; }
   .operator-mobile-header { position: fixed; inset: 0 0 auto; z-index: 22; display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 16px; background: var(--rail); color: var(--rail-ink); }
+  .operator-mobile-brand { min-height: 44px; }
+  .operator-nav-link, .operator-utilities a { min-height: 44px; }
   .operator-mobile-brand .operator-brand-lockup { font-size: 20px; }
   .operator-menu-button, .operator-mobile-bell { display: grid; width: 44px; height: 44px; place-content: center; gap: 4px; border: 1px solid #ffffff30; border-radius: 12px; background: transparent; color: inherit; text-decoration: none; }
   .operator-menu-button span { display: block; width: 16px; height: 2px; border-radius: 1px; background: var(--rail-ink); }

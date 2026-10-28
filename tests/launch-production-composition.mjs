@@ -28,7 +28,7 @@ test('[AUTH-BASE-001 BASE-ACCESS-003 OPS-001] production requires Base configura
   const signin = await request('/signin'); assert.equal(signin.status, 200); assert.doesNotMatch(await signin.text(), /Continue with local development identity/)
   const capabilities = await request('/auth/capabilities'); assert.equal(capabilities.status, 200, await capabilities.clone().text()); assert.deepEqual(await capabilities.json(), { localDevelopmentSignIn: false, magicLink: { status: 'configured' } })
   const signedOut = await request('/app'); assert.equal(signedOut.status, 303); assert.match(signedOut.headers.get('location'), /\/signin/)
-  const signedIn = await request('/app', { headers: { cookie: owner.cookie } }); assert.equal(signedIn.status, 200, await signedIn.clone().text()); assert.match(await signedIn.text(), /Open records/)
+  const signedIn = await request('/app', { headers: { cookie: owner.cookie } }); assert.equal(signedIn.status, 200, await signedIn.clone().text()); assert.match(await signedIn.text(), /href="\/app\/records"/, 'The signed-in Home links to daily record work')
   assert.equal((await request('/api/campaigns', { headers: { cookie: owner.cookie } })).status, 200)
   assert.equal((await post('/auth/local-sign-in', {})).status, 404)
   assert.equal((await h.dispatch('https://hostile.example.test/auth/capabilities')).status, 404)

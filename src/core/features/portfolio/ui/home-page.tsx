@@ -1,162 +1,90 @@
 import { Link } from '@tanstack/react-router'
-import "./home-page.css";
-import { CradleArt } from "../../../../ui/shared/cradle-art";
-import { ResourceBoundary } from "../../../app/ui/operator";
+import { useState } from 'react'
+import type { Page } from '../../../../contracts/primitives'
+import { LAUNCH_APP_ID } from '../../../../apps/launch/contracts'
+import { useResource } from '../../../../ui/shared/api'
+import { SchemaBuilderPanel, newBase, type BuilderTarget } from '../../../../ui/records/schema/schema-builder'
+import { ResourceBoundary } from '../../../app/ui/operator'
+import { useAppStudioReady } from '../../../app/ui/operator/operator-shell'
+import { activityActions, activityFieldLabel } from './activity-presentation'
+import { decodePortfolio, useApiResource } from './portfolio-api'
+import { formatDateTime } from './portfolio-format'
+import { PortfolioPageShell, useOperatorSession } from './portfolio-page-shell'
+import './home-page.css'
 
-import { decodePortfolio, useApiResource } from "./portfolio-api";
-import {
-  CampaignMiniList,
-  MetricCard,
-  MilestoneList,
-  SectionCard,
-  ActivityList,
-} from "./portfolio-presentation";
-import { PortfolioPageShell, useOperatorSession } from "./portfolio-page-shell";
+type BaseChange = { id: string; name: string; occurredAt: string; href: string }
+type BaseSummary = {
+  id: string; name: string; entryUrl: string; tableCount: number; recordCount: number;
+  latestChange: BaseChange | null;
+}
+type HomeActivity = { id: string; name: string; detail: string; occurredAt: string; href?: string }
 
-const SessionFailure = ({
-  state,
-  error,
-  retry,
-}: {
-  state: "loading" | "signed-out" | "not-found" | "failed" | "forbidden";
-  error?: string;
-  retry: () => void;
-}) => (
-  <ResourceBoundary
-    state={state}
-    operation="operator session"
-    error={error}
-    onRetry={retry}
-  />
-);
+export const HomePage = () => {
+  const session = useOperatorSession()
+  const portfolio = useApiResource('/api/portfolio', decodePortfolio)
+  const bases = useResource<Page<BaseSummary>>('/api/v1/apps', { refreshMs: 30000 })
+  const appStudioReady = useAppStudioReady()
+  const [builder, setBuilder] = useState<BuilderTarget | null>(null)
 
-const HomeContent = () => {
-  const session = useOperatorSession();
-  const portfolio = useApiResource("/api/portfolio", decodePortfolio);
+  if (session.resource.state !== 'ready') return <ResourceBoundary state={session.resource.state} operation="operator session" error="Your session could not be loaded. Try again." onRetry={session.retry} />
+  const evaluatedAt = bases.resource.state === 'ready' ? bases.resource.data.evaluatedAt : ''
+  const workspace = session.resource.data.workspace
+  const launch = portfolio.resource.state === 'ready' ? portfolio.resource.data : null
+  const activity: HomeActivity[] = [
+    ...activityActions(launch?.recentActivity ?? []).flatMap(action => action.facts.map(entry => ({
+      id: entry.id,
+      name: entry.subjectTitle || action.description,
+      detail: [entry.actor?.name, entry.fieldName ? `${changeFieldLabel(entry.fieldName)} changed` : entry.subjectTitle ? action.description.replace(` “${entry.subjectTitle}”`, '') : ''].filter(Boolean).join(' · '),
+      occurredAt: entry.occurredAt,
+    }))),
+    ...(bases.resource.state === 'ready' ? bases.resource.data.items.flatMap(base => base.latestChange ? [{
+      ...base.latestChange, id: `${base.id}:${base.latestChange.id}`, detail: base.name,
+    }] : []) : []),
+  ].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt) || b.id.localeCompare(a.id)).slice(0, 10)
 
-  if (session.resource.state !== "ready")
-    return (
-      <SessionFailure
-        state={session.resource.state}
-        error={session.resource.error?.message}
-        retry={session.retry}
-      />
-    );
-  const workspace = session.resource.data.workspace;
-  if (portfolio.resource.state !== "ready")
-    return (
-      <PortfolioPageShell
-        currentPath="/app"
-        title="Home"
-        session={session.resource.data}
-      >
-        {portfolio.resource.state !== "forbidden" && <RecordsIntro />}
-        <ResourceBoundary
-          state={portfolio.resource.state}
-          operation="workspace home"
-          error={portfolio.resource.error?.message}
-          onRetry={portfolio.retry}
-          actions={portfolio.resource.state === "forbidden" ? <a className="cr-button" href="/app/records">Open records</a> : undefined}
-        />
-      </PortfolioPageShell>
-    );
+  return <PortfolioPageShell currentPath="/app" title="Home" session={session.resource.data}
+    actions={appStudioReady ? <Link className="cr-button cr-button--quiet" to="/app/operations/studio">App studio</Link> : undefined}>
+    <div className="cr-home">
+      <section className="cr-home-section" aria-labelledby="home-bases-title">
+        <header><h2 id="home-bases-title">Your bases</h2>{!builder && (bases.resource.state !== 'ready' || bases.resource.data.items.length > 0) && <Link className="cr-home-action" to="/app/records" search={{ import: 'base', job: undefined, receipt: undefined }}>Import a base</Link>}</header>
+        {builder ? <SchemaBuilderPanel target={builder} onTarget={setBuilder} onClose={() => setBuilder(null)} /> :
+          bases.resource.state !== 'ready' ? <ResourceBoundary state={bases.resource.state === 'signed_out' ? 'signed-out' : bases.resource.state === 'not_found' ? 'not-found' : bases.resource.state} operation="your bases" error="Your bases could not be loaded. Try again." onRetry={bases.refresh} /> : bases.resource.data.items.length ?
+            <ul className="cr-home-bases">{bases.resource.data.items.map(base => <li key={base.id}>
+              <Link className="cr-home-row" to={base.entryUrl} aria-label={base.name} aria-describedby={`base-summary-${base.id}`}>
+                <strong>{base.name}</strong>
+                <span id={`base-summary-${base.id}`} className="cr-home-meta">{base.id === LAUNCH_APP_ID && launch ? <>{quantity(launch.metrics.liveCampaigns, 'live campaign')} · <span className={launch.metrics.needsAttention ? 'cr-home-attention' : undefined}>{launch.metrics.needsAttention} need attention</span></> :
+                  <>{quantity(base.tableCount, 'table')} · {quantity(base.recordCount, 'record')}{base.latestChange ? ` · changed ${changedAge(base.latestChange.occurredAt, evaluatedAt)}` : ''}</>}
+                </span>
+              </Link>
+            </li>)}</ul> :
+            <div className="cr-home-empty"><p>No bases yet.</p><button className="cr-button" onClick={() => setBuilder(newBase())}>New base</button></div>}
+      </section>
+      <section className="cr-home-section" aria-labelledby="home-activity-title">
+        <header><h2 id="home-activity-title">Recent activity</h2></header>
+        {portfolio.resource.state !== 'ready' && portfolio.resource.state !== 'forbidden' && <ResourceBoundary state={portfolio.resource.state} operation="launch activity" error="Recent activity could not be loaded. Try again." onRetry={portfolio.retry} />}
+        {activity.length ? <ol className="cr-home-activity">{activity.map(entry => <li key={entry.id}>
+          {entry.href ? <Link className="cr-home-row" to={entry.href} aria-label={entry.name} aria-describedby={`activity-detail-${entry.id}`}><strong>{entry.name}</strong><ActivityLine entry={entry} timezone={workspace.timezone} /></Link> :
+            <div className="cr-home-row"><strong>{entry.name}</strong><ActivityLine entry={entry} timezone={workspace.timezone} /></div>}
+        </li>)}</ol> : portfolio.resource.state !== 'loading' && <p className="cr-home-empty">No recent activity.</p>}
+      </section>
+    </div>
+  </PortfolioPageShell>
+}
 
-  const { metrics, attention, upcomingMilestones, recentActivity } =
-    portfolio.resource.data;
-  const empty =
-    metrics.liveCampaigns === 0 &&
-    attention.length === 0 &&
-    upcomingMilestones.length === 0 &&
-    recentActivity.length === 0;
-
-  return (
-    <PortfolioPageShell
-      currentPath="/app"
-      title="Home"
-      session={session.resource.data}
-    >
-      <RecordsIntro />
-      {!empty && (
-        <div className="portfolio-page portfolio-home">
-          <section className="portfolio-home-intro">
-            <p>Launch readiness template</p>
-            <h2>Keep the launch work that needs attention in reach.</h2>
-            <span>Current counts and activity from {workspace.name}.</span>
-          </section>
-          <section
-            className="portfolio-metric-grid"
-            aria-label="Portfolio metrics"
-          >
-            <MetricCard label="Live campaigns" value={metrics.liveCampaigns} />
-            <MetricCard
-              label="Needs attention"
-              value={metrics.needsAttention}
-            />
-            <MetricCard label="Open decisions" value={metrics.openDecisions} />
-            <MetricCard
-              label="Portfolio health"
-              value={
-                metrics.portfolioHealth === null
-                  ? "No data"
-                  : `${metrics.portfolioHealth}%`
-              }
-              note={
-                metrics.staleHealthCount
-                  ? `${metrics.staleHealthCount} stale`
-                  : "Current"
-              }
-            />
-          </section>
-          <section className="portfolio-home-grid">
-            <SectionCard
-              title="Needs attention"
-              action={<Link to="/app/campaigns">Open campaign grid</Link>}
-            >
-              {attention.length ? (
-                <CampaignMiniList
-                  campaigns={attention}
-                  currency={workspace.currency}
-                  description={(campaign) =>
-                    `${campaign.riskRating} risk · ${campaign.unresolvedDecisionCount} unresolved decisions`
-                  }
-                />
-              ) : (
-                <p className="portfolio-empty-copy">
-                  No active campaign needs attention.
-                </p>
-              )}
-            </SectionCard>
-            <SectionCard
-              title="Upcoming milestones"
-              action={<Link to="/app/lenses/timeline">Open timeline</Link>}
-            >
-              {upcomingMilestones.length ? (
-                <MilestoneList milestones={upcomingMilestones} />
-              ) : (
-                <p className="portfolio-empty-copy">No upcoming milestones.</p>
-              )}
-            </SectionCard>
-          </section>
-          <SectionCard
-            title="Recent activity"
-            action={<Link to="/app/campaigns">Campaign grid</Link>}
-          >
-            {recentActivity.length ? (
-              <ActivityList timezone={workspace.timezone} activity={recentActivity} />
-            ) : (
-              <p className="portfolio-empty-copy">
-                No activity has been recorded.
-              </p>
-            )}
-          </SectionCard>
-        </div>
-      )}
-    </PortfolioPageShell>
-  );
-};
-
-export const HomePage = () => <HomeContent />;
-
-function RecordsIntro() {
-  return <section className="cr-page cr-home-records"><div className="cr-card cr-welcome"><div className="cr-welcome-copy"><p className="cr-eyebrow">Records builder</p><h2>Your business, organised your way.</h2><p>Start from a template or build your own tables and fields in Records. Then add your records, connect them and choose a view.</p><div className="cr-actions"><a className="cr-button" href="/app/records">Open records</a><a className="cr-button cr-button--quiet" href="/app/records/?import=base">Import a base</a></div><p className="cr-welcome-hint">Choose Create base to build your own, or browse the editable templates.</p></div><div className="cr-welcome-art"><CradleArt variant="welcome" /></div></div></section>
+function ActivityLine({ entry, timezone }: { entry: HomeActivity; timezone: string }) {
+  return <span className="cr-home-meta" id={`activity-detail-${entry.id}`}>{entry.detail && `${entry.detail} · `}<time dateTime={entry.occurredAt}>{formatDateTime(entry.occurredAt, timezone)}</time></span>
+}
+function changeFieldLabel(field: string) {
+  const labels: Record<string, string> = { id: 'Record', budget_minor: 'Budget', spend_minor: 'Spend', health: 'Reported health', health_updated_at: 'Health report time', health_set_by_id: 'Health reporter', supersedes_id: 'Previous decision' }
+  if (/^[0-9A-HJKMNP-TV-Z]{26}$/i.test(field)) return 'Custom field'
+  const label = labels[field] ?? activityFieldLabel(field)
+  return label.charAt(0) + label.slice(1).toLowerCase()
+}
+function quantity(value: number, name: string) { return `${value.toLocaleString('en-US')} ${name}${value === 1 ? '' : 's'}` }
+function changedAge(value: string, evaluatedAt: string) {
+  const minutes = Math.max(0, Math.floor((Date.parse(evaluatedAt) - Date.parse(value)) / 60000))
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} min ago`
+  if (minutes < 1440) return `${Math.floor(minutes / 60)} h ago`
+  return `${Math.floor(minutes / 1440)} d ago`
 }

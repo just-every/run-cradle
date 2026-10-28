@@ -105,7 +105,7 @@ const get = (url, session = cookie) => request(`${origin}${url}`, { redirect: 'm
     await page.waitForURL('**/app')
     await navigateFromSignInToApp(page)
     await page.waitForURL('**/app')
-    await page.getByText('Live campaigns', { exact: true }).waitFor()
+    await page.getByRole('region', { name: 'Your bases', exact: true }).waitFor()
     assert.equal(await page.evaluate(() => performance.timeOrigin), timeOrigin)
     for (const family of Object.keys(families)) {
       const response = await page.goto(`${origin}${documentPath(family, 'not-a-record')}`)
