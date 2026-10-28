@@ -12510,7 +12510,7 @@
       "executable": false
     },
     "tests/helpers/record-template-automation.mjs": {
-      "sha256": "6c943fdcf428093604257359d8f5280cabc4ed8989fd74ffcac23a34f74dd862",
+      "sha256": "bbfd70c6ed2bedf126c70667ab618ca672cfccb408708af5b2e98b2c6064ecc1",
       "executable": false
     },
     "tests/helpers/record-template-browser.mjs": {

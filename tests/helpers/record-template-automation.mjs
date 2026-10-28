@@ -56,6 +56,7 @@ async function linkedTemplateAutomation(h,childCount){
   assert.deepEqual(copiedParent.fields[supplierFieldId].value,supplier.ref,'The automation retains the preset supplier link')
   const copiedChildren=children.filter(row=>row.fields[parentFieldId].value.recordId===copiedParent.id)
   assert.equal(copiedChildren.length,childCount)
+  assert.deepEqual(copiedChildren.map(child=>child.fields[childName].value).sort(),template.children.map(child=>child.values[childName]).sort(),'Every created child retains its template preset')
   for(const child of copiedChildren)assert.deepEqual(child.fields[parentFieldId].value,copiedParent.ref)
   assert.deepEqual(copiedChild.fields[parentFieldId].value,copiedParent.ref)
   const childCommand=(await h.db.prepare('SELECT command_id FROM record_automation_events WHERE record_id=?').bind(copiedChild.id).first()).command_id
