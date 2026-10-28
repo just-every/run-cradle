@@ -10702,7 +10702,7 @@
       "executable": false
     },
     "src/ui/records/base-menu.tsx": {
-      "sha256": "de2b27720f787cb8f28a018c6a0077199bc2a55efa7a9f4c80f1ba5664f16d06",
+      "sha256": "fb8ac1a64a3d98f9a488b9f4e2f4a5c374147ae12310fbad7922639ef7ca56ae",
       "executable": false
     },
     "src/ui/records/board-card.tsx": {
@@ -10934,7 +10934,7 @@
       "executable": false
     },
     "src/ui/records/records-page.tsx": {
-      "sha256": "0cee5384602093d783e19069291d0bae6099e722460e8a5cd0a9778e914bd6c7",
+      "sha256": "c1e4f405fc9694b1f4c43931d3b38ba869b9534933ff85ea96245ecafdb1ab95",
       "executable": false
     },
     "src/ui/records/records.css": {
@@ -11222,7 +11222,7 @@
       "executable": false
     },
     "src/ui/settings/access-panel.tsx": {
-      "sha256": "8152943853379ac836cb96eb6d9b3979a1691998c22d5374e5cd4c2eb53e7e46",
+      "sha256": "ad2fe888a1da6cca07db457e7d9cc3e1bb524676fb00f64ad1ccacd2f8b8df91",
       "executable": false
     },
     "src/ui/settings/admin-audit-panel.tsx": {
@@ -12498,7 +12498,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-review.mjs": {
-      "sha256": "8d497067648c023d0e39796768bf97ef3d4b008d770ccda4347c1fd104b63b3c",
+      "sha256": "1a16e5e38c8b6e293acd43594fda8960bc051ce2eadb8ee8e42f3cd9bf436661",
       "executable": false
     },
     "tests/helpers/records-browser-runtime.mjs": {
@@ -13254,7 +13254,7 @@
       "executable": false
     },
     "tests/start-runtime.mjs": {
-      "sha256": "56d5740fca3dcf203b7daae09266857bf0214daf2612c9ba4ed4c0653da8e383",
+      "sha256": "7be65279bb880cead3b5928e839e62d4fc1a296912c9b689ec87bb52fe93d608",
       "executable": false
     },
     "tests/ui-admission-editor.mjs": {
