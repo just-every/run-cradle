@@ -15,7 +15,7 @@ import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {newField} from '../src/ui/records/schema/templates.ts'
 
-contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIEW-015','record calendars, boards, private covers and saved view presentation at desktop and phone widths',async()=>{
+contract('INTEG-004 INTEG-008] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIEW-015','record calendars, boards, private covers and saved view presentation at desktop and phone widths',async()=>{
  const group=process.env.CRADLE_RECORDS_CALENDAR_GROUP??'all'
  assert.ok(['all','sync','views'].includes(group),'Choose a declared calendar verification group')
  if(group!=='views'){await recordCalendarJourney();await recordCalendarJourney({providerKind:'outlook'})}

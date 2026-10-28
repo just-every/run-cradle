@@ -112,3 +112,11 @@ The old source record states:
 
 The receipts describe the historical judgment. A rewrite carries status only where the cited journeys cover its resulting parts, and a fresh candidate still needs exact-SHA verification.
 
+
+### RL-14 — Customer and vendor test mail stays with the email action
+
+Date: 22 October 2026. Ruler: ct. Governs: AUTO-USER-005 and AUTO-USER-010.
+
+The customer/vendor test-mail redirect stays an acceptance point of the email action. Test delivery goes only to the builder and discloses its intended customer/vendor recipients; it does not claim delivery to those recipients. Recipient resolution remains AUTO-USER-011.
+
+The source record states: “the customer/vendor redirect was moved verbatim into AUTO-USER-010 as an acceptance point (ct, 22 October)”. The rewrite preserves that outcome in AUTO-USER-010 point 6 and does not promote either clause.
