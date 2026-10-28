@@ -204,3 +204,19 @@ try {
 }
 
 })
+
+test('[PERM-005] emailed guests see one base, isolated navigation and search, cannot invite and use no licenses', async()=>{
+ const {userAutomationRuntime}=await import('./helpers/user-automation-runtime.mjs')
+ const {guestAccessJourney,finishGuestAccess}=await import('./helpers/guest-access-journey.mjs')
+ const {guestAccessBrowser}=await import('./helpers/guest-access-browser.mjs')
+ const output=process.env.CRADLE_GUEST_OUTPUT??path.join(tmpdir(),'cradle-guest-access')
+ await mkdir(output,{recursive:true})
+ const h=await userAutomationRuntime(0)
+ let browser
+ try{
+  const world=await guestAccessJourney(h)
+  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  await guestAccessBrowser(browser,h,world,output)
+  await finishGuestAccess(h,world)
+ }finally{await browser?.close();await h.close()}
+})

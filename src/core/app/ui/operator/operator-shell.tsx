@@ -51,9 +51,12 @@ const utilities: Item[] = [
 // never shares a person's readiness with another document.
 const studioReads = new WeakMap<Document, Map<string, Promise<boolean>>>()
 export function useAppStudioReady() {
-  const principal = useDocumentSession()?.operator.id ?? ''
+  const session = useDocumentSession()
+  const principal = session?.operator.id ?? ''
+  const guest = Boolean(session?.guest)
   const [answer, setAnswer] = useState<{ principal: string; ready: boolean } | null>(null)
   useEffect(() => {
+    if(guest)return
     let active = true
     let reads = studioReads.get(document)
     if (!reads) studioReads.set(document, reads = new Map())
@@ -65,8 +68,8 @@ export function useAppStudioReady() {
     }
     pending.then(ready => { if (active) setAnswer({ principal, ready }) })
     return () => { active = false }
-  }, [principal])
-  return answer?.principal === principal && answer.ready
+  }, [principal,guest])
+  return !guest && answer?.principal === principal && answer.ready
 }
 
 const OperatorRail = ({
@@ -80,6 +83,7 @@ const OperatorRail = ({
   onNavigate?: () => void;
   appStudioReady: boolean;
 }) => {
+ const guest=useDocumentSession()?.guest
  return (
   <div className="operator-rail-content">
     <Link
@@ -90,12 +94,12 @@ const OperatorRail = ({
     >
       <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
     </Link>
-    <OperatorNavigation items={appStudioReady ? [...records, studio] : records}
+    <OperatorNavigation items={guest ? records.filter(item=>item.label==='Records') : appStudioReady ? [...records, studio] : records}
       currentPath={currentPath}
       unreadNotifications={identity.unreadNotifications}
       onNavigate={onNavigate}
     />
-    <UtilityNavigation items={utilities} currentPath={currentPath} unreadNotifications={identity.unreadNotifications} onNavigate={onNavigate} />
+    <UtilityNavigation items={guest ? utilities.filter(item=>item.label==='Search') : utilities} currentPath={currentPath} unreadNotifications={identity.unreadNotifications} onNavigate={onNavigate} />
     <OwnerMenu owner={identity} />
   </div>
 );
@@ -110,6 +114,7 @@ export const OperatorShell = ({
   actions,
 }: OperatorShellProps) => {
   const appStudioReady = useAppStudioReady();
+  const guest=useDocumentSession()?.guest;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -148,7 +153,7 @@ export const OperatorShell = ({
         <Link className="operator-mobile-brand" to="/app">
           <BrandLockup runtimeLabel className="operator-brand-lockup" name="Cradle" variant="dark" />
         </Link>
-        <Tooltip label={identity.unreadNotifications ? `${identity.unreadNotifications} unread notifications` : "No unread notifications"}><Link
+        {!guest && <Tooltip label={identity.unreadNotifications ? `${identity.unreadNotifications} unread notifications` : "No unread notifications"}><Link
           className="operator-mobile-bell"
           to="/app/notifications"
         >
@@ -160,7 +165,7 @@ export const OperatorShell = ({
                 : identity.unreadNotifications}
             </b>
           ) : null}
-        </Link></Tooltip>
+        </Link></Tooltip>}
       </header>
       <main id="main-content" tabIndex={-1} className="operator-main">
         {title || actions ? (

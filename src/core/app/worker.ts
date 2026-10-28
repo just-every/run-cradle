@@ -1,3 +1,4 @@
+import {guestBoundary} from '../../domains/authority/guest-boundary.server'
 import {companyResponse,isCompanyRequest} from '../../domains/company-identity/http.server'
 import {localRuntimeBindings} from '../platform/local-auth.server'
 import {firstRunResponse} from '../features/setup/server'
@@ -63,6 +64,10 @@ export default {
     const missing = configurationFaults(bindings).filter(fault=>!(['/signin','/auth/request'].includes(path)&&fault.startsWith('MAIL_')))
     if (path !== '/health' && missing.length) return Response.json({ error: { code: 'unconfigured', message: 'Required installation configuration is missing or invalid.', missing } }, { status: 503 })
     const platform = createPlatform(bindings)
+    if(path.startsWith('/api/')||path.startsWith('/app')||path.startsWith('/auth/')||path.startsWith('/_serverFn/')){
+      const guestResponse=await guestBoundary(request,platform)
+      if(guestResponse)return guestResponse
+    }
     if (isHonoRequest(path)) return (await currentApplication(bindings)).fetch(request, bindings, executionContext)
     if (path === '/setup' || path === '/app' || path.startsWith('/app/')) {
       const firstRun = await firstRunResponse(request, platform)
