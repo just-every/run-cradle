@@ -9237,6 +9237,10 @@
       "sha256": "ce5969a8af56b6fa779874ff4fae677c14f59fba323b9bc8039bce52916e53d2",
       "executable": false
     },
+    "src/domains/records/base-transfer/list-portable.ts": {
+      "sha256": "3941eab7bf525de514f8cc55f0e4db0ed023148c00cd684705796253e3beea7d",
+      "executable": false
+    },
     "src/domains/records/base-transfer/lookup-proof.ts": {
       "sha256": "59ae76b0fe0db7154e0fd9b78e7275612f5d8e0bb7352e19dbb272b659f9197c",
       "executable": false
@@ -9651,6 +9655,14 @@
     },
     "src/domains/records/linked-calculation.server.ts": {
       "sha256": "5e3fb93f3e3a08e1ce24ab49b47c731eb2a2273e3fc6285d00f08241721ee85c",
+      "executable": false
+    },
+    "src/domains/records/list-schema.ts": {
+      "sha256": "02d9148d950fbcce78ffdb3a9b77002b798b47449c551a952e5e6ab8bbf98703",
+      "executable": false
+    },
+    "src/domains/records/list-validation.server.ts": {
+      "sha256": "5f90d337bf43222e54c510363bd989f8d7d712c092f5f7b4f774740312a1552e",
       "executable": false
     },
     "src/domains/records/loader.server.ts": {
@@ -10971,6 +10983,30 @@
     },
     "src/ui/records/record-label.ts": {
       "sha256": "09c39801b04a8f4880b340e4313386de3b09125226e2d66f0579ddc8d5b343c5",
+      "executable": false
+    },
+    "src/ui/records/record-list-branch.tsx": {
+      "sha256": "a450a2570cff4e8e2d4f9e4a57832b7833c554224c33778f57eacc4e6be2f8a8",
+      "executable": false
+    },
+    "src/ui/records/record-list-data.tsx": {
+      "sha256": "d8d30f14646a04eafb251b93c71121aec005f3642a7c781aa6935d9e8427a397",
+      "executable": false
+    },
+    "src/ui/records/record-list-editors.tsx": {
+      "sha256": "03cb7d887df781d34e80d0f059b5b4f4a34f64a16d1c5e0ab8a996a540484e9e",
+      "executable": false
+    },
+    "src/ui/records/record-list-settings.tsx": {
+      "sha256": "a505916ef6597e9aab7c83453557081436149ff13d8a17b092ec9a4b778c5920",
+      "executable": false
+    },
+    "src/ui/records/record-list.css": {
+      "sha256": "5e88883694b28825da31f15d4f927b7275e73b0767fa69e99528ec729e911ac5",
+      "executable": false
+    },
+    "src/ui/records/record-list.tsx": {
+      "sha256": "407c42f4c3b8082251e5434bbcd7e3e9c71ce2930d178ccf51e087bb1e99835d",
       "executable": false
     },
     "src/ui/records/record-person.css": {
@@ -12715,6 +12751,14 @@
     },
     "tests/helpers/records-import-report.mjs": {
       "sha256": "b82dcdc7db2548520e6c98beb37ba012fb4537ef2a9aab89ebb335c3f2faea23",
+      "executable": false
+    },
+    "tests/helpers/records-list-browser.mjs": {
+      "sha256": "0fb92b0c8965fb4d8c64a68bbdc270f8aaef1b9d67f096669fa135da7cf2253b",
+      "executable": false
+    },
+    "tests/helpers/records-list-fixture.mjs": {
+      "sha256": "11ba1955320599d2af6c1dcddfa669fffd808721ba583e51cd81fba3c22ecf84",
       "executable": false
     },
     "tests/helpers/records-live-fixture.mjs": {
