@@ -1,3 +1,4 @@
+import { listLevelFields } from '../list-schema'
 import type {EntitySchema,Form,View} from '../contracts'
 import type {EntityDescriptor} from '../descriptors.server'
 import type {ViewSnapshot} from './view-removal.server'
@@ -89,6 +90,16 @@ export async function schemaDependents(db:D1Database,prior:EntityDescriptor[],sc
   if(!change.after||affected.length)add(change,'view',snapshot.id,view.name,[!change.after?'View belongs to the deleted table':`Uses ${describe(change,affected)}`])
   if(!change.after)refuse(change,`Saved view ${view.name} still belongs to this table. Delete the view before deleting the table.`)
   else if(refs.sensitive.some(id=>change.converted.has(id)))refuse(change,`Saved view ${view.name} uses converted fields in a filter, layout, summary or formatting rule. Edit those type-sensitive settings before conversion.`)
+ }
+ for(const snapshot of snapshots.views){
+  const view=JSON.parse(snapshot.definition_json) as View
+  for(const level of view.listLevels??[]){
+   const change=changes.get(identity(view.appId,level.entityId));if(!change)continue
+   const affected=listLevelFields(level).filter(id=>change.removed.has(id)||change.converted.has(id))
+   if(!change.after||affected.length)add(change,'view',snapshot.id,view.name,[!change.after?'List level uses the deleted table':`List level uses ${describe(change,affected)}`])
+   if(!change.after)refuse(change,`Saved list view ${view.name} still uses this table. Edit or delete the view before deleting the table.`)
+   else if([...conditionFields(level.filter),...(level.parentFieldId?[level.parentFieldId]:[])].some(id=>change.removed.has(id)||change.converted.has(id)))refuse(change,`Saved list view ${view.name} uses changed fields in a parent link or filter. Edit those settings before changing the field.`)
+  }
  }
  for(const snapshot of snapshots.forms){
   const form=JSON.parse(snapshot.definition_json) as Form,change=changes.get(identity(form.appId,form.entityId));if(!change)continue

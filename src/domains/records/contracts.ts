@@ -106,7 +106,15 @@ export type TimelineBaseline = {
     endFieldId?: Id;
     records: { recordId: Id; start: string | null; end?: string | null }[];
 };
+export type ListLevel = {
+    entityId: string;
+    parentFieldId?: string;
+    fields: string[];
+    filter?: Filter;
+    sort: Sort[];
+};
 export type View = Versioned & {
+    listLevels?: ListLevel[];
     timelineZoom?: TimelineZoom;
     timelineBaseline?: TimelineBaseline;
     locked?: boolean;
@@ -116,7 +124,7 @@ export type View = Versioned & {
     appId: Id;
     entityId: Id;
     name: string;
-    display: 'grid' | 'cards' | 'board' | 'calendar' | 'timeline' | 'agenda';
+    display: 'grid' | 'cards' | 'board' | 'calendar' | 'timeline' | 'agenda' | 'list';
     fields: Id[];
     filter: Filter;
     sort: Sort[];
