@@ -33,7 +33,11 @@
           "deploy-site.json",
           "public/brand/band.svg",
           "tests/installed-home.mjs",
-          "base-copies.json"
+          "base-copies.json",
+          "vendor/base/modules/agent-door",
+          "vendor/base/modules/business-settings",
+          "vendor/base/foundation/runtime/theme-frame.ts",
+          "vendor/base/foundation/runtime/icon-head.ts"
         ]
       }
     },
