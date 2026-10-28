@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { campaignLifecycle } from '../../apps/launch/lifecycle'
 import { LAUNCH_APP_ID, launchEntities } from '../../apps/launch/contracts'
 import { useCommand, useResource } from '../shared/api'
-import { CommandFeedback } from '../shared/presentation'
+import { CommandFeedback, Timestamp } from '../shared/presentation'
 import { LaunchOwnerPicker } from './owner-picker'
 
 export type BulkTarget = { id: string; version: number }
@@ -36,7 +36,7 @@ export function BulkCampaigns({ selected, onClear, onChanged }: { selected: Bulk
     {field && (field.type === 'select' || field.type === 'boolean' ? <label className="cr-field">Value<select value={value} onChange={event => setValue(event.target.value)}><option value="">Clear the value</option>{(field.type === 'boolean' ? ['true', 'false'] : field.options).map(option => <option key={option}>{option}</option>)}</select></label> : <label className="cr-field">Value{field.type === 'multi_select' ? ' (separate with |)' : ''}<input type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : field.type === 'url' ? 'url' : 'text'} value={value} onChange={event => setValue(event.target.value)} /></label>)}</>}
    <button className="cr-button" disabled={!ready || busy}>{kind === 'archive' ? `Archive ${selected.length}` : `Apply to ${selected.length}`}</button>
   </form>}
-  {last && <div className="cr-notice cr-notice--committed launch-bulk-done" role="status"><span>Changed {last.count} campaigns. You can undo this once until {new Date(last.undoExpiresAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}.</span><button type="button" className="cr-button cr-button--quiet" disabled={busy} onClick={() => void undo.submit('/api/v1/commands/launch.bulk.undo', { bulkId: last.bulkId }, [])}>Undo bulk change</button></div>}
+  {last && <div className="cr-notice cr-notice--committed launch-bulk-done" role="status"><span>Changed {last.count} campaigns. You can undo this once until <Timestamp value={last.undoExpiresAt} />.</span><button type="button" className="cr-button cr-button--quiet" disabled={busy} onClick={() => void undo.submit('/api/v1/commands/launch.bulk.undo', { bulkId: last.bulkId }, [])}>Undo bulk change</button></div>}
   {apply.result.state === 'failed' && <CommandFeedback {...apply} />}
   {undo.result.state === 'committed' ? <p className="cr-notice cr-notice--committed" role="status">Restored {undo.result.value.restored} campaigns to their earlier values.</p> : <CommandFeedback {...undo} />}
  </section>

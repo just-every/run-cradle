@@ -5782,7 +5782,7 @@
       "executable": false
     },
     "src/apps/launch/automation-runtime.server.ts": {
-      "sha256": "5af0b5fc8e226af5eceae103a2afc3f74d52d8b2a740841b841517d5dd26a5b7",
+      "sha256": "c237677bfd17a1db3ca8cbe392d1733bd4fd380e04e3dbe2638fff2fc902b0d4",
       "executable": false
     },
     "src/apps/launch/automations.server.ts": {
@@ -6378,7 +6378,7 @@
       "executable": false
     },
     "src/core/app/document-context.tsx": {
-      "sha256": "748938297b209a7b2590df3eb4df5cca47bd86a60800c8b3544fad6b455863ba",
+      "sha256": "dff7b58ad14d10f2398eede09e325f1ae064f5c52d77f4ec6e28503cfeae32d2",
       "executable": false
     },
     "src/core/app/document-data.tsx": {
@@ -6890,7 +6890,7 @@
       "executable": false
     },
     "src/core/features/automations/service.ts": {
-      "sha256": "cbbe893cbbd5a83e5fd5ed44c9703d2817e66446505f748e1d538b4770b7a8b7",
+      "sha256": "978da960518ad57feb323108d0dcf523eb37f091a27fece9ec3a08044203eca6",
       "executable": false
     },
     "src/core/features/automations/ui/automation-monitor-page.tsx": {
@@ -10554,7 +10554,7 @@
       "executable": false
     },
     "src/ui/launch/bulk-campaigns.tsx": {
-      "sha256": "62457968b2de0be020765165cbab568a8fc9c54fd5df2017433bea713d3286b9",
+      "sha256": "e17d4d6477432d3ceff48f56c1d5e3cbab4925c6ba5a0ebd1c221a194d41a7f6",
       "executable": false
     },
     "src/ui/launch/campaign-actions.tsx": {
@@ -11398,7 +11398,7 @@
       "executable": false
     },
     "src/ui/shared/presentation.tsx": {
-      "sha256": "2189fb08dd377c2feee9bef39cc38b90c4f69b8de9112c5f848a65779b8ec0cf",
+      "sha256": "c892bb9945d4702e11f0491b9f219f8f2cbfe174bbaabac6431e4c90df3183ed",
       "executable": false
     },
     "src/ui/shared/ribbon-valley.tsx": {
@@ -12158,7 +12158,7 @@
       "executable": false
     },
     "tests/helpers/installation-archive.mjs": {
-      "sha256": "257527a10ef190d854a45dc811834698e9d014c77bb11afc5f1bb43621f64473",
+      "sha256": "fc323babfebd087db391f4711a55d2a3b9c1519f5015c8797ec5ad7a0ceef90a",
       "executable": false
     },
     "tests/helpers/installer-owned-processes.mjs": {
@@ -12314,7 +12314,7 @@
       "executable": false
     },
     "tests/helpers/launch-workspace-screens.mjs": {
-      "sha256": "db7b75cbc7603595fb6c565f532a8c3200166c18b56a430430b43ff6b092f1f9",
+      "sha256": "eb532610ee4882c182727a6f386e52ea6d57f37af3d13a65d0bc168fde3779fa",
       "executable": false
     },
     "tests/helpers/launch-write-context.mjs": {
@@ -12930,7 +12930,7 @@
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {
-      "sha256": "ceb6fb6bcdc1a2ee8b3eabeb5751bc7ece2c135c77e4ef4d93361ab28e48e87d",
+      "sha256": "922ba54384dde076bb1db0d64b9d4e86671d8505a9146e9320d6c35a7cc50af2",
       "executable": false
     },
     "tests/http-smoke.mjs": {
@@ -12938,7 +12938,7 @@
       "executable": false
     },
     "tests/installed-home.mjs": {
-      "sha256": "b2f93a12c885a100ade9d0e0e748ab4875fc96524e80d4324ef69958e5fb0748",
+      "sha256": "e3e15b190cff607fb3085de932d5ea242af5093bc7626628252ff2e57f719ee8",
       "executable": false
     },
     "tests/intelligence-fixture.mjs": {

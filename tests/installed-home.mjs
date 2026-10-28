@@ -4,7 +4,7 @@ import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 import { workspaceOperations } from './helpers/workspace-operations.mjs'
 
-contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001 OPS-003 OPS-006', '[OPS-006] [OPS-003] The installed Lobby recognizes the owner claim, validates workspace setup, preserves money on relabel and moves workspace schedules', async () => {
+contract('DATA-001 HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001 OPS-003 OPS-006', '[DATA-001] [OPS-006] [OPS-003] The installed Lobby recognizes the owner claim, validates workspace setup, preserves money on relabel and moves workspace schedules', async () => {
   const h = await launchBaseAuthorityRuntime()
   try {
     const state = async () => {

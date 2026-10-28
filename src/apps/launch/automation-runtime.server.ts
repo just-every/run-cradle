@@ -52,7 +52,8 @@ export function createLegacyAutomationRuntime(context:LaunchContext,admission:Ad
   for(const d of definitions.results){const config=JSON.parse(String(d.trigger_config_json));let due=false,key=date
    if(d.shipped_key==='launch-readiness')due=hour===Number(config.hour??8)&&minute<15
    else if(d.shipped_key==='weekly-digest')due=parts.weekday==='Mon'&&hour===9&&minute<15
-   else{const scheduled=dueSchedule(Date.parse(ctx.now),String(config.timezone??settings.timezone),String(config.localRule));due=scheduled!==null;if(scheduled)key=scheduled}
+   // OPS-003: future Launch occurrences follow the workspace; retained run snapshots stay unchanged.
+   else{const scheduled=dueSchedule(Date.parse(ctx.now),settings.timezone,String(config.localRule));due=scheduled!==null;if(scheduled)key=scheduled}
    if(due&&['launch-readiness','weekly-digest'].includes(String(d.shipped_key))&&await context.db.prepare('SELECT 1 FROM automation_runs WHERE automation_id=? AND trigger_key=? LIMIT 1').bind(d.id,`schedule:${key}`).first())continue
    if(due)runs.push(await trigger(ctx,d,`schedule:${key}`,[]))
   }return runs

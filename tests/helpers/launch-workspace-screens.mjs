@@ -3,6 +3,9 @@ import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtim
 
 export async function verifyWorkspaceScreens({h,page,command,capture}){
  const width=page.viewportSize().width,created=[]
+ const browserZone=await page.evaluate(()=>Intl.DateTimeFormat().resolvedOptions().timeZone)
+ const emulation=await page.context().newCDPSession(page)
+ await emulation.send('Emulation.setTimezoneOverride',{timezoneId:'America/Los_Angeles'})
  const read=async path=>{const response=await h.request(h.ownerSession,path);assert.equal(response.status,200);return response.json()}
  const original=(await read('/api/settings')).settings.workspace
  const saveWorkspace=async(currency,timezone)=>{
@@ -80,6 +83,20 @@ export async function verifyWorkspaceScreens({h,page,command,capture}){
    await page.getByText(expected,{exact:false}).first().waitFor()
    await capture(`clause-timezone-deadline-${zone==='Europe/London'?'london':'brisbane'}`)
    assert.deepEqual(await h.db.prepare('SELECT * FROM decisions WHERE id=?').bind(decision.id).first(),storedDecision,'OPS-003 timezone redisplay leaves UTC bytes unchanged')
+   await page.goto(`${h.origin}/app/automations`)
+   await page.getByRole('heading',{name:'Launch automations',exact:true}).waitFor()
+   const timestamp=page.locator('time[datetime]').first()
+   await timestamp.waitFor()
+   await page.waitForFunction(({zone})=>{
+    const time=document.querySelector('time[datetime]')
+    return time?.textContent===new Intl.DateTimeFormat(undefined,{timeZone:zone,dateStyle:'medium',timeStyle:'short'}).format(new Date(time.getAttribute('datetime')))
+   },{zone})
+   const shown=await timestamp.evaluate((time,zone)=>({value:time.getAttribute('datetime'),text:time.textContent,expected:new Intl.DateTimeFormat(undefined,{timeZone:zone,dateStyle:'medium',timeStyle:'short'}).format(new Date(time.getAttribute('datetime'))),browser:new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(new Date(time.getAttribute('datetime'))),browserZone:Intl.DateTimeFormat().resolvedOptions().timeZone}),zone)
+   assert.equal(shown.browserZone,'America/Los_Angeles')
+   assert.equal(shown.text,shown.expected,'OPS-003 shared Timestamp uses the workspace timezone')
+   assert.notEqual(shown.text,shown.browser,'OPS-003 shared Timestamp is independent of the browser timezone')
+   assert.ok(shown.value.endsWith('Z'),'The displayed instant retains its UTC datetime attribute')
+   await capture(`clause-timezone-shared-${zone==='Europe/London'?'london':'brisbane'}`)
   }
  }catch(error){
   console.log('Workspace journey failed at',new URL(page.url()).pathname)
@@ -87,6 +104,8 @@ export async function verifyWorkspaceScreens({h,page,command,capture}){
   await page.screenshot({path:`${process.env.CRADLE_LAUNCH_EVIDENCE??'../ui-proof'}/failed-workspace-${width}.png`,fullPage:true})
   throw error
  }finally{
+  await emulation.send('Emulation.setTimezoneOverride',{timezoneId:browserZone})
+  await emulation.detach()
   const current=(await read('/api/v1/settings')).data
   const restored=await h.request(h.ownerSession,'/api/v1/commands/settings.update',{method:'POST',body:JSON.stringify({commandId:createUlid(),expected:[],input:{version:current.version,changes:{currency:original.currency,timezone:original.timezone}}})})
   assert.equal(restored.status,200,await restored.clone().text())

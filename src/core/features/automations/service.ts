@@ -1,3 +1,4 @@
+import { queryOne } from '../shared/repository'
 import { describeSchedule } from '../../../apps/launch/schedule'
 import { launchCollection } from '../../../apps/launch/paging'
 import { instantSchema } from '../../../domains/records/validators'
@@ -16,7 +17,8 @@ export const createAutomationService = (platform: Platform) => {
     async monitor(windowEnd?: string) {
       const to = windowEnd === undefined ? Date.now() : Date.parse(instantSchema.parse(windowEnd))
       const from = to - successWindowDays * 24 * 60 * 60 * 1000
-      const [definitions, latest, finished] = await Promise.all([repository.list(), repository.latestRuns(), repository.finished(from, to)])
+      const [definitions, latest, finished, workspace] = await Promise.all([repository.list(), repository.latestRuns(), repository.finished(from, to), queryOne<{timezone:string}>(platform.database, 'SELECT timezone FROM workspace_settings LIMIT 1')])
+      if (!workspace) throw new Error('Workspace timezone is required for automation schedules.')
 
       const automations = definitions.map((definition) => {
         const counts = finished.find((row) => row.automationId === definition.id)
@@ -25,7 +27,7 @@ export const createAutomationService = (platform: Platform) => {
         const events=[triggerConfig.event,...(Array.isArray(triggerConfig.events)?triggerConfig.events:[])].filter(Boolean)
         const trigger = definition.triggerType === 'event'
           ? events.length?events.map(event=>String(event).replace(/\.v1$/,'').replaceAll('.', ' ')).join(' or '):'Choose a product event before enabling'
-          : triggerConfig.localRule?describeSchedule(String(triggerConfig.localRule),String(triggerConfig.timezone??'workspace time'))
+          : triggerConfig.localRule?describeSchedule(String(triggerConfig.localRule),workspace.timezone)
           : triggerConfig.weekday!==undefined
             ? `Every ${typeof triggerConfig.weekday==='number'?['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][triggerConfig.weekday]:String(triggerConfig.weekday)} at ${String(triggerConfig.hour).padStart(2,'0')}:00 workspace time`
             : `Every day at ${String(triggerConfig.hour).padStart(2,'0')}:00 workspace time${triggerConfig.leadDays?`, ${String(triggerConfig.leadDays)} days before launch`:''}`
