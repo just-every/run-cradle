@@ -55,11 +55,11 @@ export function createRecordTemplates(db:D1Database,deps:TemplateDependencies,at
   const id=createUlid(),template:RecordTemplate={id,version:1,appId:ref.appId,entityId:ref.entityId,name,sourceRef:ref,values:source.values,children,createdAt:ctx.now,updatedAt:ctx.now},action='record.template-save',hash=await canonicalHash({action,input:command.input,expected:command.expected,controlEpoch:command.controlEpoch??null}),permit=await deps.policy.authorize(ctx,{appId:ref.appId,action:'record.create',targetEntityId:ref.entityId,expected:[],cost:[],inputHash:hash,commandId:command.commandId})
   return {commandId:command.commandId,appId:ref.appId,action,canonicalInputHash:hash,permit:{...permit,action},guards,mutations:[{kind:'insert' as const,table:templates,row:{id,app_id:ref.appId,entity_id:ref.entityId,owner_id:ctx.principal.id,name,definition_json:canonical(template),version:1,created_at:ctx.now,updated_at:ctx.now}}],audit:[{action,subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:template,accessSubjects:[{ref,fieldIds:Object.keys(template.values)},...children.map(child=>({ref:child.sourceRef,fieldIds:Object.keys(child.values)}))]}
  }
- async function apply(ctx:RequestContext,command:CommandInput<ApplyTemplateInput>,allowedFieldIds?:ReadonlySet<string>){
+ async function apply(ctx:RequestContext,command:CommandInput<ApplyTemplateInput>,allowedFieldIds?:ReadonlySet<string>,identity?:{action:string;command:CommandInput<unknown>}){
   const {appId,entityId,templateId,values={}}=command.input,{template,guards}=await definition(ctx,appId,entityId,templateId),version=command.expected.find(e=>e.ref.appId===appId&&e.ref.entityId===RECORD_TEMPLATE_ENTITY_ID&&e.ref.recordId===templateId)
   if(version&&version.version!==template.version)throw new AdmissionError('version_conflict','Record template changed.')
   const presets=allowedFieldIds?Object.fromEntries(Object.entries(template.values).filter(([id])=>allowedFieldIds.has(id))):template.values
-  return create(ctx,command,'record.apply-template',appId,[{entityId,values:{...presets,...values},sourceRef:template.sourceRef},...template.children],guards)
+  return create(ctx,identity?.command??command,identity?.action??'record.apply-template',appId,[{entityId,values:{...presets,...values},sourceRef:template.sourceRef},...template.children],guards)
  }
  return {list,definition,duplicate,save,apply}
 }

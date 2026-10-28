@@ -1,3 +1,4 @@
+import { templateButtonSaveInput,templateButtonRunInput } from './templates/buttons.server';
 import { describeRecordConflict } from './conflict.server';
 import { z } from 'zod';
 import type { CommandRegistry } from '../../core/registry/commands';
@@ -23,6 +24,7 @@ export type RecordActionDependencies = {
     writer: ReturnType<typeof createRecordWriter>;
     metadata: ReturnType<typeof createRecordMetadata>;
     bulk: ReturnType<typeof createBulkService>;
+    templateButtons?:ReturnType<typeof import('./templates/buttons.server').createTemplateButtons>;
     templates?: ReturnType<typeof import('./templates/service.server').createRecordTemplates>;
 
 };
@@ -50,6 +52,7 @@ export function registerRecordActions(registry: CommandRegistry, deps: RecordAct
         authorityAction?:string;
         authorization?: Pick<AuthorizationRequest, 'expected' | 'fieldIds' | 'targetEntityId' | 'proposedRows'>;
     }): Promise<AdmissionPlan<T>> { const hash = await canonicalHash({ action, input: command.input, expected: command.expected, controlEpoch: command.controlEpoch ?? null }), permit = await policy.authorize(ctx, { appId, action:change.authorityAction??action, expected: command.expected, cost: [], inputHash: hash, commandId: command.commandId, ...change.authorization }); return { commandId: command.commandId, action, appId, canonicalInputHash: hash, permit:{...permit,action}, guards: change.guards, mutations: change.mutations, audit: change.audit ?? [], events: [], outbox: [], committedResult: value, changed: change.changed }; }
+    if(deps.templateButtons){register('record.template-button-save',templateButtonSaveInput,deps.templateButtons.save);register('record.template-button-run',templateButtonRunInput,deps.templateButtons.run);}
     if(deps.templates){
       const duplicate=z.object({ref:refSchema,includeLinks:z.boolean().default(false),includeAttachments:z.boolean().default(false)}).strict();
       register('record.duplicate',duplicate,deps.templates.duplicate);

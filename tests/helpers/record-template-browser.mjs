@@ -1,3 +1,4 @@
+import {recordTemplateButtonsBrowser} from './record-template-buttons.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {newField} from '../../src/ui/records/schema/templates.ts'
@@ -77,5 +78,6 @@ export async function recordTemplateBrowser(page,j,h,width){
  assert.equal(await page.getByLabel('Order *',{exact:true}).inputValue(),source.fields[title.id].value)
  const formName=`synthetic-cradle-${width+8}`;await page.getByLabel('Order *',{exact:true}).fill(formName);await j.capture('record-template-form-edit')
  const formRow=await j.command(page.getByRole('button',{name:'Submit',exact:true}),'form.submit');await assertApplied(formRow,formName);await j.capture('record-template-form-submitted')
- return {duplicates,templateId:template.id,gridRecordId:gridRow.id,formRecordId:formRow.id,childRecordsCreated:2}
+ const buttons=await recordTemplateButtonsBrowser(page,j,h,width,{appId,parentId,source,template})
+ return {buttons,duplicates,templateId:template.id,gridRecordId:gridRow.id,formRecordId:formRow.id,childRecordsCreated:2}
 }

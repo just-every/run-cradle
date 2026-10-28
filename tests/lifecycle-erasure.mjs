@@ -36,7 +36,11 @@ import {launchAuthorityRuntime,LAUNCH_APP_ID,launchEntities} from './helpers/lau
 contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installation transfer creates its checkpoint atomically',async()=>{
  const h=await fixture()
  try{
-  const {draft}=await h.create(),appId=draft.appId;await h.assign(appId)
+  const {draft,r}=await h.create(),appId=draft.appId;await h.assign(appId)
+  const table=r.registry.get(appId,draft.tables[0].id).schema,sourceCommand={commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:table.id},version:table.version}],input:{appId,entityId:table.id,values:{[table.fields[0].id]:h.person}}}
+  const source=(await r.commands.get('record.create').execute(h.ctx,sourceCommand)).result.value
+  const template=(await r.commands.get('record.template-save').execute(h.ctx,{commandId:createUlid(),expected:[...sourceCommand.expected,{ref:source.ref,version:source.version}],input:{ref:source.ref,name:'synthetic-cradle-4307',includeLinks:false,includeAttachments:false,includeChildren:false}})).result.value
+  assert.equal((await r.services.templates.list(h.ctx,appId,table.id)).length,1)
   await h.db.prepare("INSERT INTO channel_progress_owed(event_id,subject_type,subject_id,starter_id,outcome,created_at) VALUES(?,'warehouse-export',?,?,'completed',?)").bind('synthetic-cradle-4201','synthetic-cradle-4202',h.person,new Date().toISOString()).run()
   const owed=()=>h.sql.prepare('SELECT count(*) n FROM channel_progress_owed WHERE starter_id=?').get(h.person).n
   assert.equal(owed(),1)
@@ -46,6 +50,8 @@ contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installa
   const version=h.sql.prepare('SELECT version FROM authority_principals WHERE id=?').get(h.person).version,response=await h.send('erase',{appId},version)
   const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));assert.equal(body.data.value.confirmed,true)
   assert.equal(body.data.value.erasureState,'complete')
+  assert.equal(h.sql.prepare('SELECT count(*) n FROM record_templates WHERE id=?').get(template.id).n,0,'Erasure retires templates containing the erased person reference')
+  await assert.rejects(r.commands.get('record.apply-template').execute(h.ctx,{commandId:createUlid(),expected:sourceCommand.expected,input:{appId,entityId:table.id,templateId:template.id}}),{code:'not_found'})
   const progressPlace=body.data.value.plan.places.find(place=>place.store==='channel_progress_owed')
   assert.ok(progressPlace,'Confirmed erasure inventories owed progress starter references')
   assert.equal(progressPlace.action,'delete');assert.equal(progressPlace.rows,1)

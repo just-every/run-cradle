@@ -6,7 +6,7 @@ import type { TemplateDependencies } from './snapshot.server'
 import { createUlid } from '../../../core/shared/ids'
 import { canonicalHash } from '../../admission/canonical'
 import { AdmissionError } from '../../admission/errors'
-import { RECORD_SCHEMA_ENTITY_ID } from '../contracts'
+import { RECORD_SCHEMA_ENTITY_ID, RECORD_FORM_ENTITY_ID } from '../contracts'
 import { and,eq,exists,trustedPredicate } from '../../admission/sql.server'
 import { referenceValue } from '../store-references'
 
@@ -19,7 +19,7 @@ export function templateCreatePlanner(db:D1Database,deps:TemplateDependencies,at
   const pending=rows.map(row=>({appId,entityId:row.entityId,recordId:createUlid()})),prepared=[],permits=[],copies:PreparedAttachmentCopy[]=[]
   try{
    for(const expected of command.expected){
-    if([RECORD_SCHEMA_ENTITY_ID,'00000000000000000000000004'].includes(expected.ref.entityId))continue
+    if([RECORD_SCHEMA_ENTITY_ID,RECORD_FORM_ENTITY_ID,'00000000000000000000000004'].includes(expected.ref.entityId))continue
     const d=deps.descriptors.get(expected.ref.appId,expected.ref.entityId),scope=await deps.policy.scope(ctx,{...expected.ref,purpose:'read'}),record=await deps.reader.record(ctx,scope,expected.ref)
     if(record.version!==expected.version||['deleted','archived'].includes(record.lifecycle))throw new AdmissionError('version_conflict','An expected record changed.')
     guards.push(...scope.currentAuthorityGuards,exists(d.table,and(scope.rowPredicate,eq(d.table,d.idColumn,expected.ref.recordId),eq(d.table,d.versionColumn,expected.version))))
