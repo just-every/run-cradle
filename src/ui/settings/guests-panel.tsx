@@ -14,7 +14,7 @@ export function GuestsPanel(){
   <ResourceState resource={bases.resource} operation="available bases" retry={bases.refresh}>{page=><form className="cr-form" onSubmit={event=>{event.preventDefault();void command.submit('/api/v1/guests/invite',{appId,name,email},[]).then(()=>guests.refresh())}}>
    <label className="cr-field">Guest name<input required maxLength={120} value={name} onChange={event=>setName(event.target.value)}/></label>
    <label className="cr-field">Guest email<input type="email" required value={email} onChange={event=>setEmail(event.target.value)}/></label>
-   <label className="cr-field">Shared base<select required value={appId} onChange={event=>setAppId(event.target.value)}><option value="">Choose a base</option>{page.items.map(base=><option key={base.id} value={base.id}>{base.name}</option>)}</select></label>
+   <label className="cr-field">Shared base<select aria-label="Shared base" required value={appId} onChange={event=>setAppId(event.target.value)}><option value="">Choose a base</option>{page.items.map(base=><option key={base.id} value={base.id}>{base.name}</option>)}</select></label>
    <button className="cr-button" disabled={!appId||!['idle','failed','committed'].includes(command.result.state)}>Invite guest</button><CommandFeedback {...command}/>
   </form>}</ResourceState>
   <div className="cr-stack">{data.items.map(guest=><GuestAccess key={guest.id} guest={guest} onChanged={guests.refresh}/>)}</div>

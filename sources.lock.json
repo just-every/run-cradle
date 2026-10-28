@@ -7682,7 +7682,7 @@
       "executable": false
     },
     "src/domains/authority/members.server.ts": {
-      "sha256": "f262085fd079581bf9b215ac79f1397e94ed80b6a863398325dd85b87588e6b6",
+      "sha256": "efeb65c4e2a4467c3c7f3654755a1bebe34a271743d9cf55d9dbfae488355525",
       "executable": false
     },
     "src/domains/authority/operator-removal.server.ts": {
@@ -11282,7 +11282,7 @@
       "executable": false
     },
     "src/ui/settings/guests-panel.tsx": {
-      "sha256": "93cacdbb55bc291675a90b4603078d47eeb386e76a8a761aa2c7f5c42ad20aff",
+      "sha256": "b8a7e6962eb4cd71a1e01741686d9bb2db654c1d8a842d2d7668f9475508f730",
       "executable": false
     },
     "src/ui/settings/imports-panel.tsx": {
