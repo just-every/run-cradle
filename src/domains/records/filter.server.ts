@@ -1,11 +1,31 @@
 import type { Filter } from './contracts';
-import type { EntityDescriptor } from './descriptors.server';
+import type { EntityDescriptor, FieldStorage } from './descriptors.server';
 import type { PolicyScope } from '../authority/ports';
 import type { SqlPredicate, SqlScalar } from '../admission/ports';
 import { and, or, trustedPredicate, identifier } from '../admission/sql.server';
-import { validateCell } from './validators';
-import { sortKey } from './exact';
-import type { Money, Ref } from '../../contracts/primitives';
+import { encode } from './codec.server';
+import { AdmissionError } from '../admission/errors';
+import type { CellValue } from '../../contracts/primitives';
+/** Old saved filters name retained choices by their stored text; new filters use IDs. */
+function retainedFilterValue(storage: FieldStorage, input: unknown): CellValue {
+    if (!storage.selectValues || input === null) return input as CellValue;
+    const id = typeof input === 'string' && Object.hasOwn(storage.selectValues, input)
+        ? input : Object.entries(storage.selectValues).find(([, value]) => value === input)?.[0];
+    if (id === undefined || !storage.field.options?.some(option => option.id === id))
+        throw new AdmissionError('validation', `${storage.field.label}: select option has no stored value.`);
+    return id;
+}
+/** Evaluated queries compare decoded cells, so keep their choice operands canonical too. */
+export function normalizeRetainedFilter(d: EntityDescriptor, filter?: Filter, depth = 0): Filter | undefined {
+    if (depth > 64) throw new Error('Filter depth exceeds 64');
+    if (!filter) return;
+    if (filter.kind !== 'condition') return { ...filter, conditions: filter.conditions.map(f => normalizeRetainedFilter(d, f, depth + 1)!) };
+    const storage = d.fields.get(filter.fieldId);
+    if (!storage?.selectValues || ['empty', 'not_empty'].includes(filter.op)) return filter;
+    return { ...filter, value: filter.op === 'in' && Array.isArray(filter.value)
+        ? filter.value.map(value => retainedFilterValue(storage, value)) as CellValue
+        : retainedFilterValue(storage, filter.value) };
+}
 export function filterFields(filter?: Filter, depth = 0): string[] { if (depth > 64)
     throw new Error('Filter depth exceeds 64'); if (!filter)
     return []; return filter.kind === 'condition' ? [filter.fieldId] : filter.conditions.flatMap(f => filterFields(f, depth + 1)); }
@@ -27,7 +47,14 @@ export function compileFilter(d: EntityDescriptor, scope: PolicyScope, filter?: 
     function bound(input: unknown): {
         v: SqlScalar;
         guard: SqlPredicate;
-    } { const v = validateCell({ ...storage!.field, required: false }, input); const amount = storage!.field.type === 'money' ? (v as Money)?.minor : v; const scalar = storage!.sortColumn && v !== null ? sortKey(String(amount)) : storage!.field.type === 'relation' ? (v as Ref)?.recordId : typeof v === 'boolean' ? (v ? 1 : 0) : v as SqlScalar; const guard = storage!.currencyColumn && v !== null ? and(trustedPredicate(`${identifier(storage!.currencyColumn)}=?`, [(v as Money).currency]), trustedPredicate(`${identifier(storage!.scaleColumn!)}=?`, [(v as Money).scale])) : trustedPredicate('1'); return { v: scalar, guard }; }
+    } {
+        const encoded = encode({ ...storage!, field: { ...storage!.field, required: false } }, retainedFilterValue(storage!, input));
+        const scalar = encoded[storage!.sortColumn ?? storage!.column]!;
+        const guard = storage!.currencyColumn && scalar !== null
+            ? and(trustedPredicate(`${identifier(storage!.currencyColumn)}=?`, [encoded[storage!.currencyColumn]!]), trustedPredicate(`${identifier(storage!.scaleColumn!)}=?`, [encoded[storage!.scaleColumn!]!]))
+            : trustedPredicate('1');
+        return { v: scalar, guard };
+    }
     if (filter.op === 'in') {
         if (!Array.isArray(filter.value) || filter.value.length > 200)
             throw new Error('in needs bounded values');

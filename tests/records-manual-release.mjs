@@ -120,6 +120,20 @@ test('RECORDS-001 RECORDS-004 CSV preserves punctuation, multiline Unicode, empt
   const p2=await live.csv.preview(h.ctx,input);assert.equal(p2.unchanged,205);assert.equal(p2.creates,0)
   const roundtrip=await live.csv.exportCsv(h.ctx,{appId:target.appId,entityId:d.id,query:{fields:[d.fields[1].id,d.fields[0].id,d.fields[3].id,d.fields[2].id],sort:[{fieldId:d.fields[0].id,direction:'desc'}]}});assert.equal(roundtrip.csv,exported.csv)
  }finally{h.close()}
+ {
+ const h=await harness();try{
+  const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
+  await assert.rejects(r.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:'Company\n"unclosed',mapping:[{column:'Company',fieldId:schema.fields[0].id}],mergeFieldId:schema.fields[0].id}),e=>e.code==='validation'&&/Unterminated/.test(e.message));assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM record_csv_previews').first()).n,0)
+ }finally{h.close()}
+ }
+ {
+ const h=await harness();try{
+  const key=newField('Key'),choice=newField('Choice','select');choice.options=['\\N','\\prefix','comma, "北"\nline'].map(label=>({id:createUlid(),label}));choice.options.push({id:createUlid(),label:choice.options[0].id});const draft={appId:createUlid(),name:'Escapes',tables:[{id:createUlid(),label:'Choices',fields:[key,choice]}]}, {r}=await h.create(draft),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
+  for(let n=0;n<choice.options.length;n++)await add(h,r,schema,{[key.id]:String(n),[choice.id]:choice.options[n].id})
+  await add(h,r,schema,{[key.id]:'null',[choice.id]:null})
+  const csv=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query:{sort:[{fieldId:key.id,direction:'asc'}]}}),preview=await r.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:csv.csv,mapping:[{column:'Key',fieldId:key.id},{column:'Choice',fieldId:choice.id}],mergeFieldId:key.id});assert.equal(preview.unchanged,5);assert.equal(preview.updates,0);const {parseCsv}=await import('../src/domains/portability/csv.ts'),rows=parseCsv(new TextEncoder().encode(csv.csv)).rows;assert.deepEqual(rows.map(row=>row[1]),[...choice.options.map(option=>option.label),''])
+ }finally{h.close()}
+ }
 })
 test("RECORDS-001 RECORDS-002 schema preview permission refusal table preserves restricted rows, fields and shared memberships",async()=>{
  const cases=[
@@ -165,12 +179,6 @@ test('RECORDS-001 select lookup preserves human option metadata and rejects mism
   const edit=await r.manual.read(h.ctx,draft.appId);edit.tables[1].fields.find(f=>f.id===lookup.id).options=[];const refused=await r.manual.preview(h.ctx,edit);assert.ok(refused.impacts.some(impact=>impact.refusals?.length));await assert.rejects(r.manual.adopt(h.ctx,createUlid(),refused.id),{code:'validation'});assert.equal((await r.services.reader.record(h.ctx,scope,linked.ref)).fields[lookup.id].value,status.options[0].id)
  }finally{h.close()}
 })
-test('RECORDS-001 malformed CSV returns validation and leaves no preview or records',async()=>{
- const h=await harness();try{
-  const {draft,r}=await h.create(),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
-  await assert.rejects(r.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:'Company\n"unclosed',mapping:[{column:'Company',fieldId:schema.fields[0].id}],mergeFieldId:schema.fields[0].id}),e=>e.code==='validation'&&/Unterminated/.test(e.message));assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM record_csv_previews').first()).n,0)
- }finally{h.close()}
-})
 test('RECORDS-001 RECORDS-003 RECORDS-004 grouped numeric sorting is canonical across query pages and CSV order',async()=>{
  const h=await harness();try{
   const key=newField('Key'),amount=newField('Amount','number'),group=newField('Group','boolean'),draft={appId:createUlid(),name:'Grouped',tables:[{id:createUlid(),label:'Rows',fields:[key,amount,group]}]}, {r}=await h.create(draft),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
@@ -180,13 +188,5 @@ test('RECORDS-001 RECORDS-003 RECORDS-004 grouped numeric sorting is canonical a
   const expected=[...Array(205)].map((_,n)=>n).sort((a,b)=>(a%2)-(b%2)||b-a).map(String);assert.deepEqual(names,expected)
   const {parseCsv}=await import('../src/domains/portability/csv.ts'),csv=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query});assert.deepEqual(parseCsv(new TextEncoder().encode(csv.csv)).rows.map(row=>row[0]),names)
   assert.match(csv.filename,/Rows.*\d{4}-\d{2}-\d{2}/)
- }finally{h.close()}
-})
-test('RECORDS-001 RECORDS-004 CSV preserves literal select labels and imports blank nullable choices without updates',async()=>{
- const h=await harness();try{
-  const key=newField('Key'),choice=newField('Choice','select');choice.options=['\\N','\\prefix','comma, "北"\nline'].map(label=>({id:createUlid(),label}));choice.options.push({id:createUlid(),label:choice.options[0].id});const draft={appId:createUlid(),name:'Escapes',tables:[{id:createUlid(),label:'Choices',fields:[key,choice]}]}, {r}=await h.create(draft),schema=r.registry.get(draft.appId,draft.tables[0].id).schema
-  for(let n=0;n<choice.options.length;n++)await add(h,r,schema,{[key.id]:String(n),[choice.id]:choice.options[n].id})
-  await add(h,r,schema,{[key.id]:'null',[choice.id]:null})
-  const csv=await r.csv.exportCsv(h.ctx,{appId:draft.appId,entityId:schema.id,query:{sort:[{fieldId:key.id,direction:'asc'}]}}),preview=await r.csv.preview(h.ctx,{appId:draft.appId,entityId:schema.id,csv:csv.csv,mapping:[{column:'Key',fieldId:key.id},{column:'Choice',fieldId:choice.id}],mergeFieldId:key.id});assert.equal(preview.unchanged,5);assert.equal(preview.updates,0);const {parseCsv}=await import('../src/domains/portability/csv.ts'),rows=parseCsv(new TextEncoder().encode(csv.csv)).rows;assert.deepEqual(rows.map(row=>row[1]),[...choice.options.map(option=>option.label),''])
  }finally{h.close()}
 })
