@@ -33,6 +33,6 @@ export function BaseMenu({ apps, appId, manual, onCreate, onEdit }: { apps: Base
       {canManage && count > 0 && <button type="button" onClick={() => show('reviews')}>Review changes ({count})</button>}
       {manual && <button type="button" onClick={() => show('export')}>Export base</button>}
     </ViewSheet>
-    <ViewSheet wide title={panel === 'people' ? 'People' : panel === 'reviews' ? 'Review changes' : panel === 'fields' ? 'Edit fields' : 'Export base'} open={panel !== null} onClose={() => setPanel(null)} anchor={anchor}>{appId && (panel === 'people' ? appId === LAUNCH_APP_ID ? <AccessPanel /> : <BaseCollaborators appId={appId} /> : panel === 'reviews' ? <BaseSchemaReviews appId={appId} /> : panel === 'fields' ? <CustomFieldsPanel /> : <ExportBasePanel appId={appId} id="cr-export-base" />)}</ViewSheet>
+    <ViewSheet wide title={panel === 'people' ? 'People' : panel === 'reviews' ? 'Review changes' : panel === 'fields' ? 'Edit fields' : 'Export base'} open={panel !== null} onClose={() => setPanel(null)} anchor={anchor}>{appId && (panel === 'people' ? appId === LAUNCH_APP_ID ? <AccessPanel appId={appId} /> : <BaseCollaborators appId={appId} /> : panel === 'reviews' ? <BaseSchemaReviews appId={appId} /> : panel === 'fields' ? <CustomFieldsPanel /> : <ExportBasePanel appId={appId} id="cr-export-base" />)}</ViewSheet>
   </div>
 }

@@ -9,11 +9,13 @@ import type { Page } from '../../contracts/primitives'
 import type { AuthorityCapabilities, Grant, Member } from '../../domains/authority/contracts'
 import { useResource, type Resource } from '../shared/api'
 import { Empty, money, ResourceState, Timestamp } from '../shared/presentation'
-export function AccessPanel() {
+// Settings chooses an application; a base's own menu passes its base, whose people show at once.
+export function AccessPanel({ appId: baseId }: { appId?: string }) {
   const applicationId = useId()
   const apps = useResource<Page<{ id: string; name: string }>>('/api/v1/apps')
-  const [appId, setAppId] = useState('')
-  return <ResourceState resource={apps.resource} operation="applications" retry={apps.refresh}>{page => <><div className="cr-field"><label htmlFor={applicationId}>Application</label><select id={applicationId} value={appId} onChange={event => setAppId(event.target.value)}><option value="">Choose an application</option>{page.items.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}</select></div>{appId && <AppAccess key={appId} appId={appId} />}</>}</ResourceState>
+  const [chosen, setChosen] = useState('')
+  const appId = baseId ?? chosen
+  return <ResourceState resource={apps.resource} operation={baseId ? 'bases' : 'applications'} retry={apps.refresh}>{page => <>{baseId ? <dl className="cr-field"><dt>Base</dt><dd style={{ margin: 0, fontWeight: 400 }}>{page.items.find(app => app.id === baseId)?.name}</dd></dl> : <div className="cr-field"><label htmlFor={applicationId}>Application</label><select id={applicationId} value={chosen} onChange={event => setChosen(event.target.value)}><option value="">Choose an application</option>{page.items.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}</select></div>}{appId && <AppAccess key={appId} appId={appId} />}</>}</ResourceState>
 }
 function AppAccess({ appId }: { appId: string }) {
   const [inviteOpen, setInviteOpen] = useState(false)
