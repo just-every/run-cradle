@@ -6,7 +6,8 @@ import { authority, authorize, finalGuard, finalAuthority, readonlyChecks, prepa
 import { requireText } from '../../../vendor/base/modules/import-kit/src/provenance/identity.ts';
 import { targetErasure } from '../../../vendor/base/modules/import-kit/src/d1/erasure.ts';
 import { headerAbsence, retirementScope, retirementWrites, scopeGuards } from '../../../vendor/base/modules/import-kit/src/d1/retirement-scope.ts';
-import { tallyBefore, tallyJournal, tallyStores } from '../../../vendor/base/modules/import-kit/src/d1/retirement-tally.ts';
+import { tallyJournal, tallyStores } from '../../../vendor/base/modules/import-kit/src/d1/retirement-tally.ts';
+import { tallyBefore } from './import-erasure-tally.server';
 import { fieldRedactions } from '../../../vendor/base/modules/import-kit/src/d1/field-redaction.ts';
 
 /** Erase a person from import custody and journal it, in one D1 batch with the

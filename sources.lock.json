@@ -8821,6 +8821,10 @@
       "sha256": "2d1e5464b40b9785fb309b06c5f159e99a6debedf5b555222f8632b5339673c5",
       "executable": false
     },
+    "src/domains/lifecycle/import-erasure-tally.server.ts": {
+      "sha256": "3adf72262210d672cd3d138f79bd7a5245a28e43d4a4a5a8b8d4fba073bdf8e5",
+      "executable": false
+    },
     "src/domains/lifecycle/import-history.server.ts": {
       "sha256": "e445b76ddaa0dd7efab972a9715f9a7c96f24aef029038c83b64060e3005d87d",
       "executable": false
@@ -8838,7 +8842,7 @@
       "executable": false
     },
     "src/domains/lifecycle/import-retirement.server.ts": {
-      "sha256": "0ff7a3ac63e32ce01355d78686ba5a047b3a2a862a678c8c538c9c3b8de5b839",
+      "sha256": "2bae860ea0b87d554dc4ca39198c7a999f7601707d608fb519727d2990fc8d81",
       "executable": false
     },
     "src/domains/lifecycle/inspection-budget.server.ts": {
