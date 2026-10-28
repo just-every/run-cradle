@@ -89,7 +89,8 @@ export function RecordList({ schema, levels, onLevelsChange, viewKey }: { schema
       if (parent) expansion.expand(listPath(parent))
     }
   }
-  const rootRows = (data[0] ?? []).filter(row => !levels[0]?.parentFieldId || listParent(row, levels[0].parentFieldId) === null)
+  const rootVersions = new Set(records.roots?.map(row => `${row.id}:${row.version}`))
+  const rootRows = (data[0] ?? []).filter(row => !levels[0]?.parentFieldId || rootVersions.has(`${row.id}:${row.version}`))
   const roots: ListNode[] = rootRows.map(row => ({ row, level: 0, path: [listRecordKey(row.ref)] }))
   const errorMessage = tables.error ?? configurationError ?? records.error
   const uniqueSchemas = tables.schemas?.filter(table => levels.some(level => level.entityId === table.id)) ?? []

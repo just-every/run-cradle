@@ -15,7 +15,10 @@ export async function listBrowserJourney(){
   h=await recordsBrowserRuntime(0);console.log('List journey: native runtime ready');const call=listHttp(h)
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   for(const width of recordsBrowserWidths()){
-   f=await listFixture(call);await listPolicy(h,f);console.log(`List journey ${width}: five linked tables and saved views ready`)
+   f=await listFixture(call)
+   const hiddenChild=await f.create(1,'Task 01',f.other,'1',{[f.tables[1].self.id]:f.hidden.ref})
+   const hiddenDescendant=await f.create(1,'Task 02',f.other,'1',{[f.tables[1].self.id]:hiddenChild.ref})
+   await listPolicy(h,f);console.log(`List journey ${width}: five linked tables and saved views ready`)
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage()
    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
    const row=(id,level)=>page.locator(`[data-list-record-id="${id}"][data-list-level="${level}"]`)
@@ -91,6 +94,30 @@ export async function listBrowserJourney(){
     }
     await row(f.taskB.id,0).waitFor()
     await snap('parent-link-hierarchy');console.log(`List journey ${width}: edits, child creation, settings and parent moves passed`)
+    // A readable child of a hidden same-table parent is not a root. Its own
+    // readable descendants must stay outside the outline and its root count.
+    assert.equal((await read(hiddenChild.id)).fields[f.tables[1].self.id].value,null)
+    assert.deepEqual((await read(hiddenDescendant.id)).fields[f.tables[1].self.id].value,hiddenChild.ref)
+    const roots=[f.taskA,f.taskB,f.filtered,child]
+    assert.deepEqual((await page.locator('[data-list-level="0"]').evaluateAll(rows=>rows.map(row=>row.dataset.listRecordId))).sort(),roots.map(record=>record.id).sort())
+    assert.match(await page.locator('.cr-list-root > .cr-list-branch > .cr-list-branch__heading').innerText(),new RegExp(`${roots.length} records`))
+    for(const record of roots){const toggle=row(record.id,0).locator('button[aria-expanded]');if(await toggle.getAttribute('aria-expanded')==='false')await toggle.click()}
+    for(const record of [f.hidden,hiddenChild,hiddenDescendant])assert.equal(await page.locator(`[data-list-record-id="${record.id}"]`).count(),0,'Hidden ancestors exclude the entire branch')
+    await snap('hidden-parent-outline');console.log(`List journey ${width}: hidden same-table ancestor and root count passed`)
+    // The saved child selection can project to no display fields. Keep the
+    // permitted parent, child rows and hierarchy without substituting fields.
+    const notesView=await f.save('Task notes only',f.tables[0].id,[f.view.listLevels[0],{...f.view.listLevels[1],fields:[f.tables[1].note.id]}])
+    await listPolicy(h,f,{hideField:true})
+    await page.goto(`${h.origin}/app/records/${f.appId}/${f.tables[0].id}`);await displayAction(page,notesView.name)
+    await row(f.project.id,0).waitFor()
+    for(const field of [f.tables[0].title,f.tables[0].note])assert.equal(await row(f.project.id,0).locator(`[data-list-field-id="${field.id}"]`).count(),1)
+    await row(f.project.id,0).getByRole('button',{name:'Expand Harbour renewal',exact:true}).click()
+    await row(f.taskA.id,1).waitFor();await row(f.taskB.id,1).waitFor()
+    assert.equal(await page.locator('[data-list-level="1"]').count(),3)
+    assert.equal(await row(f.taskA.id,1).locator('[data-list-field-id]').count(),0,'Denied display fields are omitted without adding unselected fields')
+    assert.equal(await page.locator('.cr-record-list [role="alert"]').count(),0)
+    assert.equal(await page.locator(`[data-list-record-id="${f.hidden.id}"]`).count(),0)
+    await snap('hidden-child-field-outline');console.log(`List journey ${width}: empty projected child fields preserve permitted levels`)
    }catch(error){await page.screenshot({path:path.join(output,`${width}-failure.png`),fullPage:true});throw error}finally{await context.close()}
   }
   // Captured commands and query reads recheck current policy, without changing the data.

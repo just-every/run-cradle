@@ -10990,7 +10990,7 @@
       "executable": false
     },
     "src/ui/records/record-list-data.tsx": {
-      "sha256": "d8d30f14646a04eafb251b93c71121aec005f3642a7c781aa6935d9e8427a397",
+      "sha256": "4bdb1a2748791077c2f071f3e130b69c46d37be627f5d597435af370a07156fc",
       "executable": false
     },
     "src/ui/records/record-list-editors.tsx": {
@@ -11006,7 +11006,7 @@
       "executable": false
     },
     "src/ui/records/record-list.tsx": {
-      "sha256": "407c42f4c3b8082251e5434bbcd7e3e9c71ce2930d178ccf51e087bb1e99835d",
+      "sha256": "9d981400ae60f4a078c41e27f95cfb08b3b13734b66192434577ec4ecc12968b",
       "executable": false
     },
     "src/ui/records/record-person.css": {
@@ -12754,7 +12754,7 @@
       "executable": false
     },
     "tests/helpers/records-list-browser.mjs": {
-      "sha256": "265412c13ef2c1241557c20d30e94f246617f616c2ecdb0a58867493483f6d50",
+      "sha256": "c008d3764c72c5dc230e32098be78085c253f875b5447a962d66954369828e3f",
       "executable": false
     },
     "tests/helpers/records-list-fixture.mjs": {
