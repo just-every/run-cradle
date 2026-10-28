@@ -1,3 +1,4 @@
+import {GuestsPanel} from '../../../../ui/settings/guests-panel'
 import {EmailDeliveryStatus} from '../../../../ui/settings/email-delivery-status'
 import {SlackAppPanel} from '../../../../ui/settings/slack-app-panel'
 import {SmsPanel} from '../../../../ui/settings/sms-panel'
@@ -73,6 +74,7 @@ export const SettingsPage = () => {
         <LazySettingsPanel title="Imports"><ImportsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Sample data"><SampleDataPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Admin audit log"><AdminAuditPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Guests"><GuestsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="People and authority"><AccessPanel /></LazySettingsPanel>
         <details className="cr-detail" onToggle={event => setConnectionsOpen(event.currentTarget.open)}><summary>Connections</summary>{connectionsOpen && <ConnectionPanel />}</details>
       </div>

@@ -1,3 +1,4 @@
+import {guestScope} from '../../../domains/authority/guests.server'
 import {isEditorOwner,editorConfiguration} from '../editor/server'
 import { launchInUse } from './launch-use.server'
 import { isProposalReviewer } from './proposal-reviewer.server'
@@ -15,9 +16,11 @@ export const createSessionReader = (platform: Platform) => {
     if(!authenticated)return undefined
     const current=await platform.database.$client.prepare(`SELECT o.id AS operatorId,o.name,o.email,w.id AS workspaceId,w.name AS workspaceName,w.timezone,w.currency,(SELECT COUNT(*) FROM notifications n LEFT JOIN notification_reads nr ON nr.notification_id=n.id AND nr.operator_id=o.id WHERE n.operator_id=o.id AND nr.id IS NULL) AS unreadNotifications FROM operators o JOIN workspace w ON w.id='workspace' WHERE o.id=? AND o.active=1`).bind(authenticated.principal.humanId).first<{operatorId:string;name:string;email:string;workspaceId:string;workspaceName:string;timezone:string;currency:string;unreadNotifications:number}>()
     if(!current)return undefined
+    const guest=await guestScope(platform.database.$client,authenticated.principal.id)
     const editorConfig=editorConfiguration(platform.bindings)
     const proposalReviewer=await isProposalReviewer(platform.database.$client,authenticated.principal)
     const session: Omit<CurrentSession, 'launchInUse'> = {operator:{id:current.operatorId,name:current.name,email:current.email,initials:toInitials(current.name)},workspace:{id:current.workspaceId,name:current.workspaceName,timezone:current.timezone,currency:current.currency},unreadNotifications:current.unreadNotifications,editorOwner:editorConfig?await isEditorOwner(request,platform.bindings):false,editorConfigured:Boolean(editorConfig),...(proposalReviewer?{proposalReviewer:true}:{})}
+    if(guest){session.guest=guest;session.workspace={...session.workspace,name:'Shared base'};session.unreadNotifications=0;session.editorOwner=false;session.editorConfigured=false;delete session.proposalReviewer}
     return {session, principal: authenticated.principal}
   }
   // Document admission needs current credentials, not a successful Launch read.

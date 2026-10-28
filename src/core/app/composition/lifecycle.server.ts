@@ -1,3 +1,4 @@
+import {guestRoutes} from './guests.server'
 import {eraseWarehouseObject} from '../../../domains/warehouse/destination.server'
 import {errorResponse} from '../../registry/errors.server'
 import {launchCommandSchema} from '../../../apps/launch/contracts'
@@ -46,6 +47,7 @@ export function createLifecycleComposition(platform:Platform,foundation:ServerFo
   prepare:async(ctx,value)=>{const subject=value.expected.find(e=>e.ref.recordId===value.input.memberId);if(!subject)throw new AuthorityError('validation','The current member version is required.',400);return transfer(ctx,value.commandId,subject.ref.appId,value.input.memberId,subject.version)},
  })
  const http=new Hono()
+ http.route('',guestRoutes(platform,foundation))
  http.onError((error,c)=>errorResponse(error,createUlid(),c.req.method+' '+c.req.path))
  http.post('/api/v1/commands/member.erase',async c=>{
   const request=c.req.raw,ctx=await foundation.authenticate(request,'http',createUlid())
