@@ -44,7 +44,7 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
             throw new AdmissionError('forbidden', 'The connection is not yours or is no longer connected');
         return [guard];
     }
-    async function references(ctx: RequestContext, d: EntityDescriptor, values: Record<string, CellValue>, recordId: string,verified?:ReadonlyMap<string,readonly SqlPredicate[]>): Promise<SqlPredicate[]> { const guards: SqlPredicate[] = []; for (const [id, value] of Object.entries(values)) {
+    async function references(ctx: RequestContext, d: EntityDescriptor, values: Record<string, CellValue>, recordId: string,verified?:ReadonlyMap<string,readonly SqlPredicate[]>,pending?:readonly Ref[]): Promise<SqlPredicate[]> { const guards: SqlPredicate[] = []; for (const [id, value] of Object.entries(values)) {
         const f = d.fields.get(id)!.field;
         if (f.type === 'attachment' && value !== null) {
             if (!attachments && (value as AttachmentMember[]).some(member => 'fileId' in member))
@@ -58,6 +58,9 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         if (f.type !== 'relation' || value === null)
             continue;
         for (const ref of Array.isArray(value) ? value as Ref[] : [value as Ref]) {
+            // Only the server's atomic create planner supplies these identities. Every
+            // pending row still receives its own create permit and insert row check.
+            if (pending?.some(item => item.appId === ref.appId && item.entityId === ref.entityId && item.recordId === ref.recordId)) continue;
             const target = registry.get(ref.appId, ref.entityId), scope = await policy.scope(ctx, { appId: ref.appId, entityId: ref.entityId, purpose: 'read' });
             if (!await reader.raw(ctx, scope, ref))
                 throw new AdmissionError('validation', 'Referenced record is unavailable');
@@ -119,9 +122,9 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         mutations.push(...dependent.mutations);
         return { guards, mutations, next, audit: [{ action: 'record.patch', subject: request.ref, changes: Object.keys(request.changes).map(fieldId => ({ fieldId, before: before.fields[fieldId] ?? { state: 'redacted', reason: 'policy' }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
     }
-    async function prepareCreate(ctx: RequestContext, scope: PolicyScope, values: Record<string, CellValue>, id = createUlid()): Promise<PreparedRecordChange> {
+    async function prepareCreate(ctx: RequestContext, scope: PolicyScope, values: Record<string, CellValue>, id = createUlid(), batch?:{pending:readonly Ref[];verified?:ReadonlyMap<string,readonly SqlPredicate[]>}): Promise<PreparedRecordChange> {
         const d = registry.get(scope.appId, scope.entityId);
-        values = { ...Object.fromEntries(d.schema.fields.filter(field => field.defaultValue !== undefined && !Object.hasOwn(values,field.id)).map(field => [field.id,structuredClone(field.defaultValue!)])), ...values };
+        values = { ...Object.fromEntries(d.schema.fields.filter(field => field.defaultValue !== undefined && scope.writableFieldIds.includes(field.id) && !field.readOnly && !Object.hasOwn(values,field.id)).map(field => [field.id,structuredClone(field.defaultValue!)])), ...values };
         writable(scope, values);
         values=normalizeValues(d,values);
         assertRecordValidation(d.schema, values);
@@ -130,7 +133,13 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         for (const [fieldId, s] of d.fields)
             if (s.join)
                 next.fields[fieldId] = scope.readableFieldIds.includes(fieldId) ? { state: 'value', value: values[fieldId] ?? null } : { state: 'redacted', reason: 'policy' };
-        return { guards: [...await recordCapacityGuard(db,d),...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id), ...await uniqueValidationGuards(db,d,values,row,id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true)], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
+        for (const [fieldId,value] of Object.entries(values)) {
+            const field=d.fields.get(fieldId)!.field;
+            if(field.type!=='relation'||!batch?.pending.length||!scope.readableFieldIds.includes(fieldId)||!scope.discoverableRelations.includes(fieldId))continue;
+            const members=value===null?[]:Array.isArray(value)?value as Ref[]:[value as Ref];
+            if(members.some(ref=>batch.pending.some(p=>p.appId===ref.appId&&p.entityId===ref.entityId&&p.recordId===ref.recordId)))next.fields[fieldId]={state:'value',value};
+        }
+        return { guards: [...await recordCapacityGuard(db,d),...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id,batch?.verified,batch?.pending), ...await uniqueValidationGuards(db,d,values,row,id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true)], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
     }
     async function prepareTransition(ctx: RequestContext, scope: PolicyScope, ref: Ref, expectedVersion: number, action: string): Promise<PreparedRecordChange> { const d = registry.get(ref.appId, ref.entityId), raw = await reader.raw(ctx, scope, ref); if (!raw)
         throw new AdmissionError('not_found', 'Record not found'); const transition = d.schema.lifecycle.transitions.find(t => t.action === action && t.from.includes(String(raw[d.lifecycleColumn]))); if (!transition)

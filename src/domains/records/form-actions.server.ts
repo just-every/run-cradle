@@ -9,9 +9,9 @@ import {RECORD_FORM_ENTITY_ID,RECORD_SCHEMA_ENTITY_ID} from './contracts';
 import {idSchema,refSchema,cellValueSchema,validateCell} from './validators';
 import {canonicalHash} from '../admission/canonical';
 import {AdmissionError} from '../admission/errors';
-const inputSchema=z.object({appId:idSchema,entityId:idSchema,formId:idSchema,values:z.record(idSchema,cellValueSchema)}).strict();
+const inputSchema=z.object({appId:idSchema,entityId:idSchema,formId:idSchema,values:z.record(idSchema,cellValueSchema),templateId:idSchema.optional()}).strict();
 const envelope=z.object({commandId:idSchema,input:inputSchema,expected:z.array(z.object({ref:refSchema,version:z.number().int().positive()}).strict()),controlEpoch:z.number().int().nonnegative().optional()}).strict();
-export function registerRecordFormActions(registry:CommandRegistry,deps:{metadata:ReturnType<typeof createRecordMetadata>;policy:PolicyPort;prepareCreate:FormCreatePreparer;customMappings?:readonly FormActionMapping[]}){
+export function registerRecordFormActions(registry:CommandRegistry,deps:{metadata:ReturnType<typeof createRecordMetadata>;policy:PolicyPort;prepareCreate:FormCreatePreparer;customMappings?:readonly FormActionMapping[];templates?:ReturnType<typeof import('./templates/service.server').createRecordTemplates>}){
  for(const mapping of deps.customMappings??[])deps.metadata.registerFormAction(mapping);
  registry.register({action:'form.submit',description:'Submit the current authorized fields of a saved form',input:envelope,inputSchema:z.toJSONSchema(envelope) as Json,visible:async()=>true,replayIdentity:async(_ctx,command)=>({appId:command.input.appId,canonicalInputHash:await canonicalHash({action:'form.submit',input:command.input,expected:command.expected,controlEpoch:command.controlEpoch??null})}),async prepare(ctx,command){
   const {form,guard}=await deps.metadata.formGuard(ctx,command.input.formId);
@@ -23,9 +23,11 @@ export function registerRecordFormActions(registry:CommandRegistry,deps:{metadat
   for(const field of visible){const value=command.input.values[field.fieldId];if(field.required&&(value===undefined||value===null||value===''||Array.isArray(value)&&!value.length))throw new AdmissionError('validation',`${field.label} is required.`);if(value!==undefined)validateCell(form.schema.fields.find(f=>f.id===field.fieldId)!,value);}
   const expected=command.expected.filter(e=>e.ref.entityId!==RECORD_FORM_ENTITY_ID),base={commandId:command.commandId,expected,controlEpoch:command.controlEpoch};
   const mapping=deps.metadata.formAction(form);let target;
-  if(mapping){const input=mapping.input.parse(mapping.map({form,values:command.input.values,expected}));target=await mapping.prepare(ctx,{...base,input});}
+  if(command.input.templateId){if(mapping||!deps.templates||form.submitAction!=='record.create')throw new AdmissionError('validation','Templates require an ordinary record form.');target=await deps.templates.apply(ctx,{...base,input:{appId:form.appId,entityId:form.entityId,templateId:command.input.templateId,values:command.input.values}},visibleIds);}
+  else if(mapping){const input=mapping.input.parse(mapping.map({form,values:command.input.values,expected}));target=await mapping.prepare(ctx,{...base,input});}
   else target=await deps.prepareCreate(ctx,{...base,input:{appId:form.appId,entityId:form.entityId,values:command.input.values}});
-  if(target.commandId!==command.commandId||target.appId!==form.appId||target.action!==form.submitAction||target.permit.action!==form.submitAction)throw new AdmissionError('internal','Source form mapping returned a different command identity');
+  const targetAction=command.input.templateId?'record.apply-template':form.submitAction;
+  if(target.commandId!==command.commandId||target.appId!==form.appId||target.action!==targetAction||target.permit.action!==targetAction)throw new AdmissionError('internal','Source form mapping returned a different command identity');
   const hash=await canonicalHash({action:'form.submit',input:command.input,expected:command.expected,controlEpoch:command.controlEpoch??null}),permit=await deps.policy.authorize(ctx,{appId:form.appId,targetEntityId:form.entityId,action:'form.submit',fieldIds:Object.keys(command.input.values),expected,cost:[],inputHash:hash,commandId:command.commandId});
   return {...target,action:'form.submit',canonicalInputHash:hash,permit,guards:[guard,...target.guards,...target.permit.guards],mutations:[...target.mutations,...target.permit.reservationMutations]};
  }});

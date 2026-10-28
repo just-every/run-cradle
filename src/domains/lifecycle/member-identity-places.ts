@@ -53,6 +53,7 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('record_views','owner_id=?','record views they own'),
  {...byId('owner_id=? AND deleted_at IS NOT NULL','their trashed views','delete'),table:'record_views'},
  place('record_forms','owner_id=?','record forms they own'),
+ {...byId(`owner_id=? OR ${refs('definition_json')}`,'record templates they authored or that reference them','delete'),table:'record_templates'},
  {...byId('owner_id=? AND deleted_at IS NOT NULL','their trashed forms','delete'),table:'record_forms'},
  place('record_previews','actor_id=?','record previews they made'),
  place('record_undo','actor_id=?','record undo they made'),

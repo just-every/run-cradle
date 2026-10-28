@@ -45,7 +45,7 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const changeSubscriptions=createChangeSubscriptions(platform.bindings,foundation.policy,foundation.admission,records.services,platform.auth.configuration.sessionSecret)
  const changeDelivery=changeSubscriptionDelivery(platform.bindings,changeSubscriptions,platform.auth.configuration.appOrigin,clock)
  const purgeRecords=recordTrashPurge(platform.bindings.DB,foundation.descriptors,foundation.admission,clock),purgeMetadata=metadataTrashPurge(platform.bindings.DB,foundation.admission,clock)
- const automations=createAutomationsComposition(platform,foundation,records.services.reader,clock,slackApp)
+ const automations=createAutomationsComposition(platform,foundation,records.services,clock,slackApp)
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)

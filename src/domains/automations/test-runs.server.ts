@@ -1,3 +1,4 @@
+import type {AutomationTemplates} from './template-action.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {ServerFoundation} from '../../core/app/foundation.server'
 import type {createRecordServices} from '../records/service.server'
@@ -17,7 +18,7 @@ const tests=registerTable('record_automation_tests',['id','automation_id','owner
 type Stored={id:string;automation_id:string;owner_id:string;app_id:string;entity_id:string;record_id:string;definition_version:number;record_version:number;mode:string;state:string;created_at:string;result_json:string;confirmation_hash:string}
 /** Claim before the one permitted mail call. Neither retries, scheduler nor restore
  * may turn a test row into another effect. Interrupted dispatch stays unknown. */
-export function createAutomationTests(env:PlatformBindings,foundation:ServerFoundation,reader:ReturnType<typeof createRecordServices>['reader'],destinations:ReturnType<typeof createAutomationDestinations>,effects:ReturnType<typeof createAutomationEffects>){
+export function createAutomationTests(env:PlatformBindings,foundation:ServerFoundation,reader:ReturnType<typeof createRecordServices>['reader'],destinations:ReturnType<typeof createAutomationDestinations>,effects:ReturnType<typeof createAutomationEffects>,templates:AutomationTemplates){
  const db=env.DB,{policy,admission,descriptors,entities}=foundation
  return {async run(ctx:RequestContext,input:{id:string;commandId:string;recordId:string;event:'created'|'updated';live?:{previewId:string;effects:ConfirmationEffect[]}}){
   const binding=await db.prepare('SELECT b.*,a.definition_version,v.definition_json FROM record_automation_bindings b JOIN automations a ON a.id=b.automation_id JOIN record_automation_versions v ON v.automation_id=a.id AND v.definition_version=a.definition_version WHERE b.automation_id=?').bind(input.id).first<{app_id:string;entity_id:string;owner_id:string;definition_version:number;definition_json:string}>()
@@ -31,10 +32,10 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   const replay=await admission.replay(ctx,id,'automation.test',ref.appId,hash)
   async function replayResult(){const prior=await db.prepare('SELECT result_json,definition_version FROM record_automation_tests WHERE id=? AND owner_id=?').bind(id,ctx.principal.id).first<{result_json:string;definition_version:number}>();if(!prior)throw new AuthorityError('not_found','Test run is unavailable.',404);if(prior.definition_version!==binding!.definition_version)throw new AuthorityError('version_conflict','The automation definition changed. Start a new test command; this test will not resend.',409);await reader.assertScope(ctx,scope);return narrow(prior.result_json)}
   if(replay)return replayResult()
-  const preview=await automationTestPreview({db,entities,descriptors,destinations},ctx,scope,id,definition,record,input.event)
+  const preview=await automationTestPreview({db,entities,descriptors,destinations,policy,templates},ctx,scope,id,definition,record,input.event)
   const confirmationHash=await canonicalHash({automationId:input.id,definitionVersion:binding.definition_version,recordId:record.id,recordVersion:record.version,event:input.event,effects:preview.confirmationEffects})
   if(input.live){const prior=await db.prepare('SELECT * FROM record_automation_tests WHERE id=? AND owner_id=? AND mode=\'dry\'').bind(input.live.previewId,ctx.principal.id).first<Stored>();if(!prior||prior.state!=='Complete'||prior.confirmation_hash!==confirmationHash||canonical(input.live.effects)!==canonical(preview.confirmationEffects))throw new AuthorityError('version_conflict','Preview the current record and confirm every named effect and destination before a live test.',409)}
-  const guard=and(own.guard,...scope.currentAuthorityGuards,trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND definition_version=?)',[input.id,binding.definition_version]))
+  const guard=and(own.guard,...scope.currentAuthorityGuards,...preview.guards,trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND definition_version=?)',[input.id,binding.definition_version]))
   let version=record.version
   const descriptor=descriptors.get(ref.appId,ref.entityId),recordGuard=trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(descriptor.table.tableId)} WHERE ${identifier(descriptor.idColumn)}=? AND ${identifier(descriptor.versionColumn)}=? AND (${scope.rowPredicate.sql}))`,[record.id,record.version,...scope.rowPredicate.values])
   async function authorize(){await reader.assertScope(ctx,scope);if((await reader.record(ctx,scope,ref)).version!==version)throw new AuthorityError('version_conflict','The chosen record changed during this test.',409);if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())throw new AuthorityError('forbidden','The author’s authority or automation changed before the test effect.')}
