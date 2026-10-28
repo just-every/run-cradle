@@ -12934,7 +12934,7 @@
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {
-      "sha256": "3360faf503ecf335257749db641a334807d42c5652665288c96645b734bf67f5",
+      "sha256": "776ff8a931a1181d89df8b2fc006c0ccea66b556c5455211425b1f6908523af8",
       "executable": false
     },
     "tests/http-smoke.mjs": {

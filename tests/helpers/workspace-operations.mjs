@@ -1,5 +1,6 @@
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
+import {ownerScheduleOperations} from './workspace-owner-schedules.mjs'
 const {createUlid}=await import('../../src/core/shared/ids.ts')
 const {LAUNCH_APP_ID,launchEntities}=await import('../../src/apps/launch/contracts.ts')
 const {parseCsv}=await import('../../src/domains/portability/csv.ts')
@@ -16,8 +17,7 @@ export async function workspaceOperations(h,cookie){
   assert.deepEqual((await read('/api/settings')).settings.workspace,initial.workspace,'Rejected settings must not change the workspace')
  }
  const owner=(await h.db.prepare('SELECT id FROM operators WHERE active=1 ORDER BY created_at LIMIT 1').first()).id
- // Keep owner-authored schedule ticks inside the real Base session's seven-day lifetime.
- const monday=new Date();monday.setUTCHours(0,0,0,0);while(monday.getUTCDay()!==1)monday.setUTCDate(monday.getUTCDate()+1)
+ const monday=new Date(Date.now()+14*86400000);monday.setUTCHours(0,0,0,0);while(monday.getUTCDay()!==1)monday.setUTCDate(monday.getUTCDate()+1)
  const day=monday.toISOString().slice(0,10),previous=new Date(monday.getTime()-7*86400000).toISOString().slice(0,10)
  const campaigns=[]
  for(const [code,budgetMinor,spendMinor]of [['MONEY-A',123456,34567],['MONEY-B',98765,12000]])campaigns.push(await command('launch.campaign.create',{fields:{code,name:code,ownerId:owner,startDate:previous,launchDate:day,objective:'Workspace operations proof',statusSummary:'Ready',phase:'Planning',status:'On track',health:50,budgetMinor,spendMinor,tags:[],customFields:{}}}))
@@ -44,6 +44,7 @@ export async function workspaceOperations(h,cookie){
   assert.deepEqual(await stored(),original,'Currency relabel must preserve all stored amounts and UTC timestamps')
  }
  await change({timezone:'UTC',quietHoursStart:'00:00',quietHoursEnd:'00:00'})
+ await ownerScheduleOperations(h,{command,change,read,campaignId:campaigns[0].id})
  const automations=(await h.db.prepare("SELECT id,version,shipped_key FROM automations WHERE shipped_key IN ('launch-readiness','weekly-digest') ORDER BY shipped_key").all()).results
  const expected=row=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.automation,recordId:row.id},version:row.version}]
  const digest=automations.find(row=>row.shipped_key==='weekly-digest')
@@ -54,12 +55,6 @@ export async function workspaceOperations(h,cookie){
  await tick(previous+'T09:00:00.000Z')
  const sent=(await h.db.prepare("SELECT * FROM channel_deliveries WHERE state='accepted' ORDER BY id").all()).results
  assert.ok(sent.length,'The emitted schedule must send a digest before the workspace change')
- const ownerSchedules=[]
- for(const localRule of ['daily 08:00','weekly 1 08:00'])ownerSchedules.push(await command('launch.automation.save',{definition:{name:`Workspace schedule ${localRule}`,enabled:true,trigger:{kind:'schedule',localRule,timezone:'UTC'},actions:[{command:'add-activity',input:{campaignId:campaigns[0].id,message:'Owner-authored workspace schedule'}}]}}))
- const ownerRuns=async id=>(await h.db.prepare('SELECT * FROM automation_runs WHERE automation_id=? ORDER BY id').bind(id).all()).results
- const definitionsBefore=(await h.db.prepare('SELECT * FROM automations ORDER BY id').all()).results
- await tick(previous+'T08:00:00.000Z')
- for(const schedule of ownerSchedules)assert.equal((await ownerRuns(schedule.id)).length,1,'Owner schedule initially fires at 08:00 UTC')
  const runs=async()=> (await h.db.prepare('SELECT * FROM automation_runs ORDER BY id').all()).results
  const priorRuns=await runs(),mailCount=h.deliveries.length
  await tick(day+'T02:15:00.000Z')
@@ -78,19 +73,13 @@ export async function workspaceOperations(h,cookie){
  for(const row of existingRuns)assert.deepEqual((await runs()).find(current=>current.id===row.id),row,'Existing runs are not rescheduled')
  for(const row of queueBefore)assert.deepEqual(await h.db.prepare('SELECT * FROM admission_outbox WHERE id=?').bind(row.id).first(),row,'Already queued work is unchanged')
  assert.equal(h.deliveries.length,mailCount,'Changing a timezone sends no email')
- assert.deepEqual((await h.db.prepare('SELECT * FROM automations ORDER BY id').all()).results,definitionsBefore,'Workspace timezone edits leave saved definitions and their UTC timestamps byte-identical')
- const monitor=(await read('/api/automations')).automations
- for(const schedule of ownerSchedules)assert.ok(monitor.find(row=>row.id===schedule.id).trigger.includes('Asia/Kathmandu'),'Owner schedule monitor names its effective workspace timezone')
  await tick(day+'T02:15:00.000Z')
  const readiness=(await h.db.prepare("SELECT * FROM automation_runs WHERE automation_id=(SELECT id FROM automations WHERE shipped_key='launch-readiness') AND trigger_key=?").bind('schedule:'+day).all()).results
  assert.equal(readiness.length,1,'Readiness next fire moves to 08:00 in the new workspace timezone')
- for(const schedule of ownerSchedules){const shifted=await ownerRuns(schedule.id);assert.equal(shifted.length,2,'Owner-authored daily and weekly next fire moves to 08:00 in the new workspace timezone');assert.equal(shifted.filter(run=>run.trigger_key==='schedule:'+day).length,1)}
  const countDigest=async()=>Number((await h.db.prepare("SELECT count(*) n FROM channel_deliveries WHERE kind='weekly-digest'").first()).n)
  const oldDigests=await countDigest()
  await tick(day+'T03:14:59.000Z');assert.equal(await countDigest(),oldDigests)
  await tick(day+'T03:15:00.000Z');assert.equal(await countDigest(),oldDigests+1,'Digest next fire moves to Monday 09:00 in the new workspace timezone')
- await tick(day+'T08:00:00.000Z')
- for(const schedule of ownerSchedules)assert.equal((await ownerRuns(schedule.id)).length,2,'The old explicit-zone fire time creates no extra owner-authored run')
  await tick(day+'T09:00:00.000Z');assert.equal(await countDigest(),oldDigests+1,'The old workspace fire time creates no extra digest')
  assert.deepEqual((await h.db.prepare("SELECT * FROM channel_deliveries WHERE id IN ("+sent.map(()=>'?').join(',')+") ORDER BY id").bind(...sent.map(row=>row.id)).all()).results,sent)
  await change({currency:initial.workspace.currency,timezone:initial.workspace.timezone})
