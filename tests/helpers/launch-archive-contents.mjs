@@ -30,17 +30,17 @@ export async function launchArchiveContents(h,headers){
  await command('/api/v1/commands/comment.add',{subject:ref('campaign',current)[0].ref,body:'Archive the original launch context.',mentions:[]},ref('campaign',current))
 
  const originals=[]
- for(const [name,bytes]of [['launch.csv',Buffer.from('Code,Name\r\nMONEY-A,Imported café launch\r\n')],['launch-original.bin',Buffer.from([0,255,13,10,128,65])]]){
+ for(const [name,bytes]of [['launch.csv',Buffer.from('Code,Name\r\nMONEY-A,Imported café launch\r\n')],['unconfirmed.csv',Buffer.from('Code,Name\r\nMONEY-B,Pending launch\r\n')],['launch-original.bin',Buffer.from([0,255,13,10,128,65])]]){
   const staged=await command('/api/v1/commands/source.stage',{appId:LAUNCH_APP_ID,purpose:'import'})
   const upload=await command('/api/v1/commands/upload.begin',{appId:LAUNCH_APP_ID,subject:staged.subject,filename:name,mediaType:name.endsWith('.csv')?'text/csv':'application/octet-stream',bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')})
-  const response=await h.request(upload.uploadUrl,{method:upload.method,headers:{...headers,...upload.headers},body:bytes})
+  const response=await h.request(upload.uploadUrl,{method:upload.method,headers:{...headers,...upload.headers,origin:h.origin},body:bytes})
   assert.equal(response.status,200,await response.clone().text())
   const file=await h.db.prepare('SELECT * FROM evidence_files WHERE id=?').bind(upload.file.id).first()
   assert.equal(file.state,'available');originals.push({key:file.object_key,bytes})
   if(name.endsWith('.csv')){
    const preview=await command('/api/v1/launch/imports/preview',{kind:'campaign',fileId:file.id,mapping:[{column:'Code',field:'code'},{column:'Name',field:'name'}]})
    assert.equal(preview.errors.length,0)
-   await command('/api/v1/launch/imports/'+preview.id+'/commit',{token:preview.token})
+   if(name!=='unconfirmed.csv')await command('/api/v1/launch/imports/'+preview.id+'/commit',{token:preview.token})
   }
  }
  // Historical successful model output is data; no live-provider acceptance is claimed.

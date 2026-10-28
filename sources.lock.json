@@ -12170,7 +12170,7 @@
       "executable": false
     },
     "tests/helpers/launch-archive-contents.mjs": {
-      "sha256": "7f1711dbcb191887f969d87d24fd0920e4c2f0e8bd92507bb3dad203c237a318",
+      "sha256": "91a8eb4453728b57aaf51df3fecc881993ec10570b8eed1154d1955581b10f7b",
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
@@ -12935,6 +12935,10 @@
     },
     "tests/helpers/workspace-operations.mjs": {
       "sha256": "776ff8a931a1181d89df8b2fc006c0ccea66b556c5455211425b1f6908523af8",
+      "executable": false
+    },
+    "tests/helpers/workspace-owner-schedules.mjs": {
+      "sha256": "7c89a7c4d79b492c70df31ddcd02286ef4826eb79a057229f23be74bf56d4c48",
       "executable": false
     },
     "tests/http-smoke.mjs": {
