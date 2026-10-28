@@ -44,12 +44,12 @@ export async function listBrowserJourney(){
     await snap('five-level-outline');console.log(`List journey ${width}: five-level outline and policy counts passed`)
     await page.reload();await displayAction(page,f.view.name);await row(f.check.id,4).waitFor()
     const task=row(f.taskA.id,1)
-    await task.getByRole('button',{name:'Edit Notes for Alpha task',exact:true}).click()
+    await task.getByRole('button',{name:'Edit Notes',exact:true}).click()
     await task.getByLabel('Notes',{exact:true}).fill(`Survey confirmed ${width}`)
     await snap('inline-edit')
     await command(()=>task.getByRole('button',{name:'Save cell',exact:true}).click())
     assert.equal((await read(f.taskA.id)).fields[f.tables[1].note.id].value,`Survey confirmed ${width}`)
-    await row(f.project.id,0).getByRole('button',{name:'Add child to Harbour renewal',exact:true}).click()
+    await row(f.project.id,0).getByRole('button',{name:'Add child',exact:true}).click()
     const form=page.locator('form').filter({has:page.getByRole('heading',{name:'New child in Tasks',exact:true})})
     await form.getByLabel('Title',{exact:true}).fill(`New survey ${width}`)
     await snap('new-linked-child')
@@ -66,7 +66,7 @@ export async function listBrowserJourney(){
     await snap('per-level-settings')
     await command(()=>page.locator('form').filter({has:page.getByRole('heading',{name:'Edit this view',exact:true})}).getByRole('button',{name:'Save view',exact:true}).click(),'view.save')
     await displayAction(page,f.view.name);await row(f.taskA.id,1).waitFor()
-    assert.equal(await row(f.taskA.id,1).getByRole('button',{name:'Edit Notes for Alpha task',exact:true}).count(),0)
+    assert.equal(await row(f.taskA.id,1).getByRole('button',{name:'Edit Notes',exact:true}).count(),0)
     // Restore the level definition for the other width.
     const liveViews=await call(`/api/v1/apps/${f.appId}/views`),live=liveViews.items.find(view=>view.id===f.view.id)
     const {id:ignoredId,version:ignoredVersion,createdAt:ignoredCreatedAt,updatedAt:ignoredUpdatedAt,...definition}=live

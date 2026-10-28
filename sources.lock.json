@@ -10986,7 +10986,7 @@
       "executable": false
     },
     "src/ui/records/record-list-branch.tsx": {
-      "sha256": "a450a2570cff4e8e2d4f9e4a57832b7833c554224c33778f57eacc4e6be2f8a8",
+      "sha256": "99dd3919a699ed3838c4743014dd46c1206e56274e15e6e1a9a3cb4651bbec28",
       "executable": false
     },
     "src/ui/records/record-list-data.tsx": {
@@ -10998,11 +10998,11 @@
       "executable": false
     },
     "src/ui/records/record-list-settings.tsx": {
-      "sha256": "a505916ef6597e9aab7c83453557081436149ff13d8a17b092ec9a4b778c5920",
+      "sha256": "056bd1d31f09ed98a2cef267c84dc482d4352873b45c2898b010276d9f6bc6e4",
       "executable": false
     },
     "src/ui/records/record-list.css": {
-      "sha256": "5e88883694b28825da31f15d4f927b7275e73b0767fa69e99528ec729e911ac5",
+      "sha256": "62812ad0b1605d22cc29f1b53c4e37e85bdcfa245a30ae6de3bd12af76fd691a",
       "executable": false
     },
     "src/ui/records/record-list.tsx": {
@@ -12754,11 +12754,11 @@
       "executable": false
     },
     "tests/helpers/records-list-browser.mjs": {
-      "sha256": "f81ebb8907317a02c26f7bcd941551724cf60caa49462d1e2b22e292611b40a8",
+      "sha256": "d164d0567d19a79daa6d9d066727036795d61f6647a9fc392171b56ea646937e",
       "executable": false
     },
     "tests/helpers/records-list-fixture.mjs": {
-      "sha256": "11ba1955320599d2af6c1dcddfa669fffd808721ba583e51cd81fba3c22ecf84",
+      "sha256": "6edc08659ba9e3f49b28dc6bc6c774d184083ccfbec27d938ac80e360d1b07e5",
       "executable": false
     },
     "tests/helpers/records-live-fixture.mjs": {

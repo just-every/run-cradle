@@ -7,8 +7,8 @@ export async function listFixture(call){
  const tables=ids.map((id,index)=>{
   const title=newField(index===0?'Project':'Title'),note=newField('Notes'),rank=newField('Priority','number'),fields=[title,note,rank]
   let parent,self
-  if(index){parent=newField('Parent','relation');parent.relation={ownerAppId:appId,entityId:ids[index-1],cardinality:'one',onDelete:'unlink'};fields.push(parent)}
-  if(index===1){self=newField('Parent task','relation');self.relation={ownerAppId:appId,entityId:id,cardinality:'one',onDelete:'unlink'};fields.push(self)}
+  if(index){parent=newField('Parent','relation');parent.relation={ownerAppId:appId,entityId:ids[index-1],cardinality:'one',onDelete:'restrict'};fields.push(parent)}
+  if(index===1){self=newField('Parent task','relation');self.relation={ownerAppId:appId,entityId:id,cardinality:'one',onDelete:'restrict'};fields.push(self)}
   return {id,label:['Projects','Tasks','Subtasks','Steps','Checks'][index],primaryFieldId:title.id,fields,title,note,rank,parent,self}
  })
  const preview=await call('/api/v1/records/schema-preview',{appId,name:'Delivery outline',tables:tables.map(({title,note,rank,parent,self,...table})=>table)})
