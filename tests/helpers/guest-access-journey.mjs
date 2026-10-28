@@ -42,17 +42,17 @@ async function createRecord(h,base,label){
 }
 
 export async function guestAccessJourney(h){
- const requestAs=sessionRequests(h),id=createUlid().toLowerCase(),searchToken=synthetic(id)
- const other={appId:createUlid(),entityId:createUlid(),nameId:createUlid(),name:synthetic('other-'+id)}
- const draft={appId:other.appId,name:other.name,tables:[{id:other.entityId,label:synthetic('table-'+id),primaryFieldId:other.nameId,fields:[{id:other.nameId,label:synthetic('field-'+id),type:'text',required:true,unique:false}]}]}
+ const requestAs=sessionRequests(h),id=createUlid().toLowerCase(),searchToken='Briefing-'+id.slice(-6)
+ const other={appId:createUlid(),entityId:createUlid(),nameId:createUlid(),name:'Private supplier register'}
+ const draft={appId:other.appId,name:other.name,tables:[{id:other.entityId,label:'Supplier terms',primaryFieldId:other.nameId,fields:[{id:other.nameId,label:'Title',type:'text',required:true,unique:false}]}]}
  const preview=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:draft})).data
  const adopted=(await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}}})).data
  assert.equal(adopted.state,'committed')
  const sharedDraft=(await h.request(`/api/v1/records/bases/${h.appId}`)).data
- const shared=await createRecord(h,{appId:h.appId,entityId:h.entityId,nameId:h.nameId,name:sharedDraft.name},searchToken+'-shared')
- const unrelated=await createRecord(h,other,searchToken+'-other')
+ const shared=await createRecord(h,{appId:h.appId,entityId:h.entityId,nameId:h.nameId,name:sharedDraft.name},'Contractor '+searchToken)
+ const unrelated=await createRecord(h,other,'Private '+searchToken)
  const measuredBefore=await operatorMeasurement(h),mailBefore=(await h.mailMessages()).length
- const inviteBody={commandId:createUlid(),expected:[],input:{appId:shared.appId,name:synthetic('guest-'+id),email:emailFor(id)}}
+ const inviteBody={commandId:createUlid(),expected:[],input:{appId:shared.appId,name:'Riley Morgan',email:emailFor(id)}}
  const invited=(await h.request('/api/v1/guests/invite',{method:'POST',body:inviteBody})).data
  assert.equal(invited.state,'committed');assert.equal(invited.value.appId,shared.appId);assert.equal(invited.value.licenseCount,0)
  const delivered=(await h.mailMessages()).slice(mailBefore)

@@ -10934,7 +10934,7 @@
       "executable": false
     },
     "src/ui/records/record-table.tsx": {
-      "sha256": "917f8e1e184db7adc36ec64eeb1d2a4bd66d8f4fe22652c40dcb54bd9963d6c3",
+      "sha256": "b60fc623f9adccb347bcc57637b005a4cd4fb2303f3a161a207c7329d51d33f2",
       "executable": false
     },
     "src/ui/records/record-timeline.css": {
@@ -12142,11 +12142,11 @@
       "executable": false
     },
     "tests/helpers/guest-access-browser.mjs": {
-      "sha256": "15d13fd1608cd9feb970ce0ad7ade03bb2bec20cc997128e8542db2d8e01b096",
+      "sha256": "98504acba4ac66365fab70e9af4f7454902dba7137c2418e204c9d2ed7fb10e2",
       "executable": false
     },
     "tests/helpers/guest-access-journey.mjs": {
-      "sha256": "d0d154ea8daa9215b11f103e9dc56d3c102f2ca3f98ae2a664b93298d9f3c6e4",
+      "sha256": "2d53937715bce0c3f23e23cbece8eb794f5b405e21c3e28a1ea34285ef06e0a1",
       "executable": false
     },
     "tests/helpers/import-effects.mjs": {

@@ -33,6 +33,7 @@ export async function guestAccessBrowser(browser,h,world,output){
    await page.getByRole('heading',{name:world.shared.name,exact:true}).waitFor()
    await page.getByText(world.shared.recordName,{exact:true}).first().waitFor()
    assert.equal(await page.getByRole('button',{name:'New record',exact:true}).isDisabled(),true)
+   assert.equal(await page.getByRole('button',{name:'+ Add record',exact:true}).count(),0)
    if(width===390){
     const open=page.getByRole('button',{name:'Open navigation',exact:true})
     await open.focus();assert.equal(await page.getByRole('tooltip',{name:'Open navigation',exact:true}).isVisible(),true)
