@@ -9042,7 +9042,7 @@
       "executable": false
     },
     "src/domains/portability/installation-policy.mjs": {
-      "sha256": "a1675dc88c9d9098fd737218c302bea10b7745a925ef537015d0b50c85e1a04e",
+      "sha256": "3a8b58b966346a61c25697ff53e7063746548e7375d9e830ea8010ba65e2132e",
       "executable": false
     },
     "src/domains/portability/record-import.server.ts": {
@@ -12170,7 +12170,7 @@
       "executable": false
     },
     "tests/helpers/launch-archive-contents.mjs": {
-      "sha256": "825cf39b10645d0c0d84026b2589c3ddc9f86f8717edf37b37d7726eef95c51f",
+      "sha256": "7f1711dbcb191887f969d87d24fd0920e4c2f0e8bd92507bb3dad203c237a318",
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
@@ -12934,7 +12934,7 @@
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {
-      "sha256": "922ba54384dde076bb1db0d64b9d4e86671d8505a9146e9320d6c35a7cc50af2",
+      "sha256": "3360faf503ecf335257749db641a334807d42c5652665288c96645b734bf67f5",
       "executable": false
     },
     "tests/http-smoke.mjs": {

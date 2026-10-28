@@ -8,7 +8,8 @@ export const portabilityPolicy = {
   'record_presence',
   'sessions','authority_sessions','authority_magic_tokens','authority_credentials','authority_rate_limits',
   'cradle_base_operators','cradle_base_sessions','connection_credentials','connection_oauth_states','file_store_requests',
-  'runtime_transfer_credentials','admission_outbox','channel_progress_owed','channel_progress_attempts','portability_%',
+  'runtime_transfer_credentials','admission_outbox','channel_progress_owed','channel_progress_attempts',
+  'portability_jobs','portability_parts','portability_fences','portability_steps','portability_segments','portability_assertions',
   'authority_delegations','authority_schema_proposers','record_automation_destinations','record_automation_context','integration_tokens',
   'ik_stages','ik_d1_assertions','ik_d1_publication_fences','ik_d1_staging%',
   'ik_d1_native_staging%','ik_d1_preparation_receipts',
@@ -54,6 +55,11 @@ export const portabilityPolicy = {
   return true;
  },
  exportRow(table,row){
+  // Retain import history and its original files without transferring a live confirmation capability.
+  if(table==='portability_previews'){
+   const preview=JSON.parse(row.preview_json);preview.token=null;preview.expiresAt=row.created_at;
+   row.preview_json=JSON.stringify(preview);row.expires_at=row.created_at;
+  }
   if(table==='slack_app_actions'&&row.choice_state==='pending')row.choice_state='retired';
   if(table==='record_change_subscriptions'){row.state='inactive';row.sealed_json=null;row.delivery_state='restore_hold';}
   if(table==='record_sheet_schedules'){row.state='paused';row.running_id=null;row.last_slot=null;row.last_started_at=null;}

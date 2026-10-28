@@ -16,7 +16,8 @@ export async function workspaceOperations(h,cookie){
   assert.deepEqual((await read('/api/settings')).settings.workspace,initial.workspace,'Rejected settings must not change the workspace')
  }
  const owner=(await h.db.prepare('SELECT id FROM operators WHERE active=1 ORDER BY created_at LIMIT 1').first()).id
- const monday=new Date(Date.now()+14*86400000);monday.setUTCHours(0,0,0,0);while(monday.getUTCDay()!==1)monday.setUTCDate(monday.getUTCDate()+1)
+ // Keep owner-authored schedule ticks inside the real Base session's seven-day lifetime.
+ const monday=new Date();monday.setUTCHours(0,0,0,0);while(monday.getUTCDay()!==1)monday.setUTCDate(monday.getUTCDate()+1)
  const day=monday.toISOString().slice(0,10),previous=new Date(monday.getTime()-7*86400000).toISOString().slice(0,10)
  const campaigns=[]
  for(const [code,budgetMinor,spendMinor]of [['MONEY-A',123456,34567],['MONEY-B',98765,12000]])campaigns.push(await command('launch.campaign.create',{fields:{code,name:code,ownerId:owner,startDate:previous,launchDate:day,objective:'Workspace operations proof',statusSummary:'Ready',phase:'Planning',status:'On track',health:50,budgetMinor,spendMinor,tags:[],customFields:{}}}))

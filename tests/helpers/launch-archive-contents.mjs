@@ -58,6 +58,10 @@ export async function launchArchiveContents(h,headers){
    if(table==='operators')row.active=0
    if(table==='automations')row.enabled=0
    if(table==='automation_runs'&&['Queued','Running','Waiting'].includes(row.state))row.state='Cancelled'
+   if(table==='portability_previews'){
+    const preview=JSON.parse(row.preview_json);preview.token=null;preview.expiresAt=row.created_at;
+    row.preview_json=JSON.stringify(preview);row.expires_at=row.created_at
+   }
    return row
   }))
  }
