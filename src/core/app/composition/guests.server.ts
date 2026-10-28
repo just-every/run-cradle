@@ -13,7 +13,7 @@ export function guestRoutes(platform:Platform,foundation:ServerFoundation){
  router.get('/api/v1/guests',async c=>{
   const ctx=await foundation.authenticate(c.req.raw,'http',createUlid()),guards=and(...await guestOwnerGuards(db,ctx))
   const rows=await db.prepare(`SELECT p.id,o.name,o.email,p.state,p.version,g.app_id AS appId FROM authority_guests g JOIN authority_principals p ON p.id=g.principal_id JOIN operators o ON o.id=p.human_id WHERE p.state<>'erased' AND (${guards.sql}) ORDER BY g.created_at DESC,p.id`).bind(...guards.values).all()
-  return c.json({data:{items:rows.results.map(row=>({...row,licenseCount:0})),licenseCount:0}},200,{'cache-control':'no-store'})
+  return c.json({data:{items:rows.results.map(row=>({...row,licenseCount:0})),licenseCount:0},meta:{requestId:ctx.requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.requestId}},200,{'cache-control':'no-store'})
  })
  router.post('/api/v1/guests/invite',async c=>{
   const ctx=await foundation.authenticate(c.req.raw,'http',createUlid())
@@ -27,7 +27,7 @@ export function guestRoutes(platform:Platform,foundation:ServerFoundation){
     await db.prepare('UPDATE authority_guests SET invitation_delivered=1 WHERE principal_id=?').bind(receipt.result.value.id).run()
    }
   }
-  return c.json({data:receipt.result},200,{'cache-control':'no-store'})
+  return c.json({data:receipt.result,meta:{requestId:ctx.requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:receipt.consistencyToken}},200,{'cache-control':'no-store'})
  })
  return router
 }
