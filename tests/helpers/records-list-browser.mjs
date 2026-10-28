@@ -12,7 +12,7 @@ export async function listBrowserJourney(){
  const output=path.resolve('.private/records-list');await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await recordsBrowserRuntime(0);const call=listHttp(h),f=await listFixture(call)
+  h=await recordsBrowserRuntime(0);console.log('List journey: native runtime ready');const call=listHttp(h),f=await listFixture(call);console.log('List journey: five linked tables and saved views ready')
   await listPolicy(h,f)
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   for(const width of recordsBrowserWidths()){
@@ -41,7 +41,7 @@ export async function listBrowserJourney(){
     assert.equal(await row(f.taskA.id,1).getByText('Priority',{exact:true}).count(),0)
     for(const [record,level,label]of [[f.taskA,1,'Alpha task'],[f.sub,2,'Site survey'],[f.step,3,'Inspect foundations']])await row(record.id,level).getByRole('button',{name:`Expand ${label}`,exact:true}).click()
     await row(f.check.id,4).waitFor();assert.match(await row(f.check.id,4).innerText(),/Confirm dimensions/)
-    await snap('five-level-outline')
+    await snap('five-level-outline');console.log(`List journey ${width}: five-level outline and policy counts passed`)
     await page.reload();await displayAction(page,f.view.name);await row(f.check.id,4).waitFor()
     const task=row(f.taskA.id,1)
     await task.getByRole('button',{name:'Edit Notes for Alpha task',exact:true}).click()
@@ -83,8 +83,8 @@ export async function listBrowserJourney(){
      assert.deepEqual((await read(f.taskB.id)).fields[f.tables[1].self.id].value,f.taskA.ref)
      await row(f.taskB.id,1).waitFor();await command(()=>row(f.taskB.id,1).getByRole('button',{name:'Outdent Beta task',exact:true}).click())
     }
-    await snap('parent-link-hierarchy')
-   }catch(error){await snap('failure');throw error}finally{await context.close()}
+    await snap('parent-link-hierarchy');console.log(`List journey ${width}: edits, child creation, settings and parent moves passed`)
+   }catch(error){await page.screenshot({path:path.join(output,`${width}-failure.png`),fullPage:true});throw error}finally{await context.close()}
   }
   // Captured commands and query reads recheck current policy, without changing the data.
   await listPolicy(h,f,{readOnly:true,hideField:true})
