@@ -1,3 +1,4 @@
+import {nativeTallyBefore} from './import-tally.server'
 // Cradle owns atomic retirement across multiple imported bases.
 import { randomUUID } from 'node:crypto';
 import type { D1CustodyRetirement, D1ErasureJournalEntry, D1ImportContext, D1ImportPerson, D1Sql } from '../../../vendor/base/modules/import-kit/src/d1/types.ts';
@@ -6,7 +7,7 @@ import { authority, authorize, finalGuard, finalAuthority, readonlyChecks, prepa
 import { requireText } from '../../../vendor/base/modules/import-kit/src/provenance/identity.ts';
 import { targetErasure } from '../../../vendor/base/modules/import-kit/src/d1/erasure.ts';
 import { headerAbsence, retirementScope, retirementWrites, scopeGuards } from '../../../vendor/base/modules/import-kit/src/d1/retirement-scope.ts';
-import { tallyBefore, tallyJournal, tallyStores } from '../../../vendor/base/modules/import-kit/src/d1/retirement-tally.ts';
+import { tallyJournal, tallyStores } from '../../../vendor/base/modules/import-kit/src/d1/retirement-tally.ts';
 import { fieldRedactions } from '../../../vendor/base/modules/import-kit/src/d1/field-redaction.ts';
 
 /** Erase a person from import custody and journal it, in one D1 batch with the
@@ -72,7 +73,7 @@ async function prepareD1ImportCustodyRetirement(person: D1ImportPerson, nativeSt
   touched.streams = [...new Set([...scope.anchors, ...(await db.prepare('SELECT DISTINCT stream_id AS id FROM ik_d1_stream_pages WHERE job_id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(touched.jobs)).all<{ id: string }>()).results.map(row => row.id)])].sort();
   const stores = await tallyStores(db);
   const entry = { recordedAt, recordsErased: erasure.decisions.length, jobsRetired: scope.jobs.length, streamsRetired: scope.anchors.length };
-  const prefix = packGuards([authority(context, 'erase'), ...tallyBefore(stores, receiptId, touched), ...erasure.before, ...scopeGuards(scope)]);
+  const prefix = packGuards([authority(context, 'erase'), ...nativeTallyBefore(stores, receiptId, touched), ...erasure.before, ...scopeGuards(scope)]);
   const suffix = [...packGuards([...erasure.after, ...retirementWrites(scope, destination, receiptId, recordedAt), ...headerAbsence(destination, values),
     ...tallyJournal(stores, receiptId, touched, entry, fenced), authority(context, 'erase'), sql('DELETE FROM ik_d1_assertions')]), ...readonlyChecks(erasure.final), finalAuthority(context, 'erase')];
   if (prefix.length + nativeStatements.length + fence.length + suffix.length > remaining(context)) throw new D1RequestLimitError();
