@@ -18,7 +18,7 @@ export function TemplateButtons({ schema, record }: { schema: EntitySchema; reco
     ])
     if (created) setConfirming(null)
   }
-  return <div className="cr-stack" aria-label="Template buttons">
+  return <div className="cr-stack" role="group" aria-label="Template buttons">
     <ResourceState resource={buttons.resource} operation="template buttons" retry={buttons.refresh}>{items => <>
       {items.length > 0 && <div className="cr-actions">{items.map(button => <button type="button" key={button.id} className="cr-button cr-button--quiet" disabled={busy || !button.enabled} onClick={() => {
         command.reset()

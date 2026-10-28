@@ -18,7 +18,7 @@ export async function recordTemplateAutomationBrowser(page,j,h,width,{appId,pare
  const response=await save,body=await response.json();assert.equal(response.status(),201,JSON.stringify(body));assert.equal(body.data.result.value.enabled,false)
  await j.action(panel.getByRole('button',{name:`Edit ${name}`,exact:true}))
  const test=page.getByRole('region',{name:'Test automation',exact:true})
- await test.getByLabel('Test record',{exact:true}).selectOption(source.id)
+ await test.getByLabel(/^Test record/).selectOption(source.id)
  const pending=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/test'))
  await j.action(test.getByRole('button',{name:'Run test',exact:true}))
  const tested=await pending,result=await tested.json();assert.equal(tested.status(),200,JSON.stringify(result));assert.equal(result.data.state,'Complete');assert.equal(result.data.steps[0].output.childCount,template.children.length);assert.equal(result.data.steps[0].output.created,false)

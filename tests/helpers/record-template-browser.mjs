@@ -69,6 +69,8 @@ export async function recordTemplateBrowser(page,j,h,width){
  const template=await j.command(editor.getByRole('button',{name:'Save template',exact:true}),'record.template-save')
  assert.equal(template.children.length,1);assert.equal(template.children[0].values[line.id],`synthetic-cradle-${width+3}`);assert.deepEqual(template.values[vendor.id],supplier.ref)
  await j.capture('record-template-saved')
+ const listed=await call(`/api/v1/apps/${appId}/entities/${parentId}/templates`)
+ assert.ok(listed.some(item=>item.id===template.id),'The saved table template is discoverable through its ordinary list')
  const assertApplied=async(row,label)=>{
   assert.equal(row.fields[title.id].value,label);assert.deepEqual(row.fields[vendor.id].value,supplier.ref)
   const children=await call(`/api/v1/apps/${appId}/entities/${childId}/query`,{filter:{kind:'condition',fieldId:parent.id,op:'eq',value:row.ref}})

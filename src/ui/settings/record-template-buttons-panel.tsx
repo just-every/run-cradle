@@ -12,7 +12,7 @@ export function RecordTemplateButtonsPanel({ appId: suppliedAppId }: { appId?: s
   const [chosen, setChosen] = useState('')
   const appId = suppliedAppId ?? chosen
   return <section className="cr-stack" aria-label="Record template buttons"><p>Configure buttons that create records from a saved template.</p><ResourceState resource={apps.resource} operation="bases" retry={apps.refresh}>{page => <>
-    {!suppliedAppId && <label className="cr-field">Base<select value={chosen} onChange={event => setChosen(event.target.value)}><option value="">Choose a base</option>{page.items.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}</select></label>}
+    {!suppliedAppId && <label className="cr-field">Base<select aria-label="Base" value={chosen} onChange={event => setChosen(event.target.value)}><option value="">Choose a base</option>{page.items.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}</select></label>}
     {appId && <TablePicker key={appId} appId={appId} />}
   </>}</ResourceState></section>
 }
@@ -20,7 +20,7 @@ function TablePicker({ appId }: { appId: string }) {
   const tables = useResource<Page<EntitySchema>>(`/api/v1/apps/${appId}/entities?limit=200`)
   const [entityId, setEntityId] = useState('')
   return <ResourceState resource={tables.resource} operation="tables" retry={tables.refresh}>{page => <>
-    <label className="cr-field">Table<select value={entityId} onChange={event => setEntityId(event.target.value)}><option value="">Choose a table</option>{page.items.map(table => <option key={table.id} value={table.id}>{table.label}</option>)}</select></label>
+    <label className="cr-field">Table<select aria-label="Table" value={entityId} onChange={event => setEntityId(event.target.value)}><option value="">Choose a table</option>{page.items.map(table => <option key={table.id} value={table.id}>{table.label}</option>)}</select></label>
     {page.items.find(table => table.id === entityId) && <TableButtons key={entityId} schema={page.items.find(table => table.id === entityId)!} />}
   </>}</ResourceState>
 }
@@ -57,7 +57,7 @@ function ButtonEditor({ schema, templates, button, onCreated }: { schema: Entity
   }
   return <fieldset className="cr-card cr-stack" disabled={busy || reading} style={{ minWidth: 0, fontSize: 'max(13px, 1em)' }}><legend>{button ? 'Template button' : 'New template button'}</legend>
     <label className="cr-field">Button name<input value={name} maxLength={160} required onChange={event => setName(event.target.value)} onBlur={() => { if (name !== (button?.name ?? '')) void persist({ name, templateId, confirmation }) }} /></label>
-    <label className="cr-field">Record template<select value={templateId} required onChange={event => { setTemplateId(event.target.value); void persist({ name, templateId: event.target.value, confirmation }) }}><option value="">Choose a template</option>{templates.map(template => <option key={template.id} value={template.id}>{template.name}</option>)}</select></label>
+    <label className="cr-field">Record template<select aria-label="Record template" value={templateId} required onChange={event => { setTemplateId(event.target.value); void persist({ name, templateId: event.target.value, confirmation }) }}><option value="">Choose a template</option>{templates.map(template => <option key={template.id} value={template.id}>{template.name}</option>)}</select></label>
     <label className="cr-choice"><input type="checkbox" checked={confirmation} onChange={event => { setConfirmation(event.target.checked); void persist({ name, templateId, confirmation: event.target.checked }) }} />Ask for confirmation before creating records</label>
     {!button && command.result.state === 'idle' && <p className="cr-muted">Enter a name and choose a template. Changes save automatically.</p>}
     {readError && <p role="alert">{readError}</p>}<CommandFeedback {...command} />
