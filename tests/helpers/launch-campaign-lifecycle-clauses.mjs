@@ -1,3 +1,4 @@
+import {recordComment,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { mutationSnapshot } from './launch-write-context.mjs'
@@ -9,7 +10,7 @@ const shift = (date, count, field = 'date') => {
  assert.equal(new Date(parsed).toISOString().slice(0, 10), date, `${field}: invalid calendar date`)
  return new Date(parsed + count * 86400000).toISOString().slice(0, 10)
 }
-const rows = async (db, table, campaignId) => (await db.prepare(`SELECT * FROM ${table} WHERE campaign_id=? ORDER BY 1`).bind(campaignId).all()).results
+const rows = async (db, table, campaignId) => (await db.prepare(table==='evidence_comments'?`SELECT * FROM evidence_comments WHERE record_id=? ORDER BY id`:`SELECT * FROM ${table} WHERE campaign_id=? ORDER BY 1`).bind(campaignId).all()).results
 const json = async (h, path) => { const response = await h.request(h.ownerSession, path); assert.equal(response.status, 200, path); return response.json() }
 const children = ['deliverable', 'milestone', 'risk', 'decision']
 
@@ -44,7 +45,7 @@ async function fixture(h, reader) {
  let milestone = await makeMilestone('Lifecycleproof successor', '2026-09-20', null)
  milestone = await h.commit('milestone.set-predecessors', { id: milestone.id, predecessorIds: [predecessor.id] }, h.expected('milestone', milestone))
  const risk = await h.commit('risk.create', { fields: { campaignId: campaign.id, title: 'Lifecycleproof risk', ownerId: h.actor, severity: 'High', dueDate: null, signal: 'Observed evidence', mitigation: 'Investigate' } })
- const decision = await h.commit('decision.create', { fields: { campaignId: campaign.id, riskId: risk.id, supersedesId: null, title: 'Lifecycleproof decision', requesterId: h.actor, assigneeId: null, priority: 'High', dueAt: '2026-10-21T08:00:00.000Z', recommendation: 'Review', impact: 'Launch scope' } })
+ let decision = await h.commit('decision.create', { fields: { campaignId: campaign.id, riskId: risk.id, supersedesId: null, title: 'Lifecycleproof decision', requesterId: h.actor, assigneeId: null, priority: 'High', dueAt: '2026-10-21T08:00:00.000Z', recommendation: 'Review', impact: 'Launch scope' } })
  const person = await h.addPerson({ name: 'Lifecycle notification recipient' })
  const quiet = await h.db.prepare('SELECT quiet_hours_start,quiet_hours_end FROM workspace_settings LIMIT 1').first()
  const minute = value => Number(value.slice(0, 2)) * 60 + Number(value.slice(3))
@@ -57,9 +58,11 @@ async function fixture(h, reader) {
  assert.ok(zone, 'The fixture needs a recipient inside the configured quiet hours')
  const preference = await h.request(person.session, '/api/v1/commands/preferences.update', { method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), expected: [], input: { version: 0, preferences: { timezone: zone, mutedKinds: [], digestEnabled: null, progressEnabled: false } } }) })
  assert.equal(preference.status, 200, await preference.text())
- await h.commit('comment.create', { campaignId: campaign.id, body: 'Lifecycleproof private comment', mentions: [person.id] }, h.expected('campaign', campaign))
+ decision=await h.commit('decision.assign',{id:decision.id,assigneeId:person.id},h.expected('decision',decision))
+ const comment=await recordComment(h,'comment.add', { campaignId: campaign.id, body: 'Lifecycleproof private comment', mentions: [person.id] }, h.expected('campaign', campaign))
+ assert.deepEqual((await commentNotices(h.db,comment.id)).map(notice=>notice.operator_id),[person.id],'The shared mention is correlated through its event')
  assert.ok((await rows(h.db, 'channel_notifications', campaign.id)).length > 0, 'The source has an actual notification to exclude from its copies')
- assert.ok((await rows(h.db, 'channel_deliveries', campaign.id)).some(row => row.state === 'held'), 'A real comment notification email is held under NOTIFY-002')
+ assert.ok((await h.db.prepare('SELECT d.* FROM channel_deliveries d JOIN channel_events e ON e.notification_id=d.notification_id WHERE e.event_id=?').bind(comment.id).all()).results.some(row=>row.state==='held'), 'A real comment notification email is held under NOTIFY-002')
  return { campaign: await reader.get(h.ctx, 'campaign', campaign.id), custom, deliverable, undated, predecessor, milestone, risk, decision, person }
 }
 
@@ -94,7 +97,7 @@ async function duplication(h, reader, f) {
    }
   }
   assert.deepEqual((await reader.get(h.ctx, 'milestone', ids.get(f.milestone.id))).predecessorIds, [ids.get(f.predecessor.id)], 'Internal dependency endpoints point to the copied milestones')
-  assert.equal((await rows(h.db, 'comments', copy.id)).length, 0)
+  assert.equal((await rows(h.db, 'evidence_comments', copy.id)).length, 0)
   assert.equal((await rows(h.db, 'channel_notifications', copy.id)).length, 0)
   assert.equal((await h.db.prepare('SELECT id FROM launch_analyses WHERE subject_id=?').bind(copy.id).all()).results.length, 0)
   const copiedActivity = await rows(h.db, 'activity_entries', copy.id)
@@ -233,7 +236,8 @@ async function deletion(h, reader, campaign) {
  assert.deepEqual(await mutationSnapshot(h.db), before, 'Wrong confirmation changes nothing')
  const erased=await h.request(h.ownerSession,'/api/v1/commands/launch.campaign.delete',{method:'POST',body:JSON.stringify({commandId:h.r.createUlid(),expected:h.expected('campaign',campaign),input:{id:campaign.id,confirmationCode:campaign.code}})})
  const receipt=await erased.json();assert.equal(erased.status,200,JSON.stringify(receipt.error));assert.equal(receipt.data.value.deletedId,campaign.id);assert.equal(receipt.data.value.confirmed,true,'The public deletion door completes retained-file cleanup')
- for (const table of ['deliverables', 'milestones', 'risks', 'decisions', 'comments', 'activity_entries', 'campaign_tags', 'launch_custom_values']) assert.equal((await rows(h.db, table, campaign.id)).length, 0, `Deletion removes ${table}`)
+ for (const table of ['deliverables', 'milestones', 'risks', 'decisions', 'activity_entries', 'campaign_tags', 'launch_custom_values']) assert.equal((await rows(h.db, table, campaign.id)).length, 0, `Deletion removes ${table}`)
+ assert.equal((await h.db.prepare("SELECT COUNT(*) AS n FROM evidence_comments WHERE record_id=? AND (body IS NOT NULL OR mentions_json!='[]' OR deleted_at IS NULL)").bind(campaign.id).first()).n,0,'Deletion erases comment bodies and mentions, retaining only deleted thread markers')
  assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM milestone_dependencies WHERE milestone_id IN (SELECT value FROM json_each(?)) OR predecessor_id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(subjects), JSON.stringify(subjects)).first()).n, 0)
  assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM launch_analyses WHERE subject_id=?').bind(campaign.id).first()).n, 0)
  assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM portability_preview_rows WHERE record_id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(subjects)).first()).n, 0)

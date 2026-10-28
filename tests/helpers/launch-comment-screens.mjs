@@ -1,3 +1,4 @@
+import {commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 
 export async function verifyCommentScreens({h,page,command,capture}) {
@@ -11,22 +12,25 @@ export async function verifyCommentScreens({h,page,command,capture}) {
  await page.getByRole('heading',{name:campaign.name,exact:true}).waitFor()
  const activity=page.locator('details.portfolio-priority-history')
  if(await activity.getAttribute('open')===null)await activity.locator(':scope > summary').click()
- const thread=page.getByRole('region',{name:'Campaign comments',exact:true})
- await thread.getByLabel('Add a campaign comment',{exact:true}).fill(`Delivery is confirmed. <b>Plain text</b> @Current reviewer ${width} @Former reviewer ${width} @Erased reviewer ${width}`)
- await thread.getByLabel(`Current reviewer ${width}`,{exact:true}).check()
- assert.equal(await thread.getByLabel(`Former reviewer ${width}`,{exact:true}).count(),0)
+ const thread=page.getByRole('region',{name:'Record comments',exact:true})
+ await thread.getByLabel('Add a comment',{exact:true}).fill(`Delivery is confirmed. <b>Plain text</b> @Current reviewer ${width} @Former reviewer ${width} @Erased reviewer ${width}`)
+ await thread.getByText('@ Mention people',{exact:false}).click()
+ await thread.getByLabel(`@Current reviewer ${width}`,{exact:true}).check()
+ assert.equal(await thread.getByLabel(`@Former reviewer ${width}`,{exact:true}).count(),0)
  await thread.getByRole('button',{name:'Post comment',exact:true}).click()
  const comment=thread.getByRole('article').filter({hasText:'Delivery is confirmed.'})
  await comment.waitFor()
  assert.equal(await comment.locator('b').count(),0,'ACT-002 markup stays plain text')
  assert.equal(await comment.locator('a').count(),0,'ACT-004 removed/erased mentions stay plain text')
- const stored=await h.db.prepare('SELECT id FROM comments WHERE campaign_id=? AND deleted_at IS NULL').bind(campaign.id).first()
- const notices=(await h.db.prepare("SELECT operator_id FROM notifications WHERE subject_id=? AND kind='comment-mentioned'").bind(stored.id).all()).results
+ const stored=await h.db.prepare('SELECT id FROM evidence_comments WHERE record_id=? AND deleted_at IS NULL').bind(campaign.id).first()
+ const notices=await commentNotices(h.db,stored.id)
  assert.deepEqual(notices.map(item=>item.operator_id),[current.id])
  await capture('clause-comment-posted')
  await comment.getByRole('button',{name:'Delete comment',exact:true}).click()
- await thread.getByText('No comments yet.',{exact:true}).waitFor()
+ await thread.getByText('Comment deleted',{exact:true}).waitFor()
  if(await activity.getAttribute('open')===null)await activity.locator(':scope > summary').click()
+ const deletion=await h.db.prepare("SELECT actor_id FROM admission_audit WHERE action='comment.delete' AND personal_refs_json=?").bind(JSON.stringify([stored.id])).first()
+ assert.equal(deletion.actor_id,h.owner)
  await page.locator('.portfolio-activity-list').getByText(/deleted comment/).waitFor()
  await capture('clause-comment-deleted')
  await page.reload()

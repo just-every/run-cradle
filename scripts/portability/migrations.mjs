@@ -7,6 +7,7 @@ import {policy,schemaIdentity} from '@runeditrun/rer/modules/portability/catalog
 import {migrationReplay} from '@runeditrun/rer/modules/portability/migration-history';
 import {appliedMigrations} from '@runeditrun/rer/internal/modules/portability/bridge.mjs';
 import {migrationInventory} from '../migration-groups.mjs';
+import {retirementReplay} from './retired-comments.mjs';
 
 // Records bases are schema the owner builds at runtime, not migrations: each
 // base's physical table and its indexes and search tables are named r_<entity
@@ -22,7 +23,7 @@ const recordObject=name=>/^(?:r_[0-9a-hjkmnp-tv-z]{26}(?:_|$)|record_calendar_[0
  * here earlier). Any other object no migration makes still differs from the
  * replay, and Base refuses the restore.
  */
-export async function restoreMigrations(db,root,input){
+export async function restoreMigrations(db,root,input,{retiredComments=false}={}){
  const {unstable_splitSqlQuery:split}=createRequire(join(root,'package.json'))('wrangler');
  const files=new Map(migrationInventory().map(m=>[m.name,m.sql]));
  const names=await appliedMigrations(db)??[];
@@ -30,7 +31,7 @@ export async function restoreMigrations(db,root,input){
   const sql=files.get(name);
   if(sql===undefined)throw new PortabilityError('schema_mismatch:migration_history',409);
   // A Wrangler ledger records no hash; the file's own hash checks an archived ledger's claim.
-  return {name,statements:split(sql),sha256:createHash('sha256').update(sql).digest('hex')};
+  return {name,statements:retiredComments?retirementReplay(name,sql):split(sql),sha256:createHash('sha256').update(sql).digest('hex')};
  });
  const records=(await db.prepare('SELECT name,sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY rowid').all()).results.filter(o=>recordObject(o.name));
  const replay=migrationReplay(plan,input),config=policy(input);

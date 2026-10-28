@@ -63,14 +63,6 @@ export const activityEntries = sqliteTable('activity_entries', {
   message: text('message').notNull(),
 })
 
-export const comments = sqliteTable('comments', {
-  ...entityColumns(),
-  campaignId: text('campaign_id').notNull().references(() => campaigns.id, { onDelete: 'cascade' }),
-  authorId: text('author_id').notNull().references(() => operators.id),
-  body: text('body').notNull(),
-  deletedAt: timestamp('deleted_at'),
-})
-
 export const automations = sqliteTable('automations', {
   ...entityColumns(),
   name: text('name').notNull(),

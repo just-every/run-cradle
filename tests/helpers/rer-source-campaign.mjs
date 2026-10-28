@@ -29,7 +29,8 @@ export async function sourceCampaignDeletion(copy,origin,prior){
   const response=await send(),data=await response.json();assert.equal(response.status,200,'Public campaign delete: '+JSON.stringify(data.error??{}));assert.equal(data.data.value.confirmed,true)
  })
  await bindings(copy.source,async({DB,FILES})=>{
-  for(const table of ['campaigns','deliverables','milestones','risks','decisions','comments','activity_entries','campaign_tags','launch_custom_values'])assert.equal((await DB.prepare(`SELECT count(*) n FROM ${table} WHERE ${table==='campaigns'?'id':'campaign_id'}=?`).bind(fixture.id).first()).n,0,table+' deleted')
+  for(const table of ['campaigns','deliverables','milestones','risks','decisions','activity_entries','campaign_tags','launch_custom_values'])assert.equal((await DB.prepare(`SELECT count(*) n FROM ${table} WHERE ${table==='campaigns'?'id':'campaign_id'}=?`).bind(fixture.id).first()).n,0,table+' deleted')
+  assert.equal((await DB.prepare("SELECT count(*) n FROM evidence_comments WHERE record_id=? AND (body IS NOT NULL OR mentions_json!='[]' OR deleted_at IS NULL)").bind(fixture.id).first()).n,0,'Record comments are erased')
   assert.equal((await DB.prepare('SELECT count(*) n FROM portability_previews WHERE id=?').bind(fixture.preview).first()).n,0)
   assert.equal((await DB.prepare('SELECT count(*) n FROM portability_preview_rows WHERE preview_id=?').bind(fixture.preview).first()).n,0)
   assert.equal((await DB.prepare('SELECT count(*) n FROM launch_analyses WHERE subject_id=?').bind(fixture.id).first()).n,0)

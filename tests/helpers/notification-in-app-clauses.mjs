@@ -1,3 +1,4 @@
+import {recordAction,recordInput,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
 
@@ -10,21 +11,21 @@ export async function verifyNotificationInAppClauses({h,page,capture,actor,other
  }
  const settings=await(await h.request(h.ownerSession,'/api/v1/settings')).json(),original=settings.data
  await request(h.ownerSession,'settings.update',{version:original.version,changes:{timezone:'UTC'}})
- const command=(action,input,expected=[])=>request(actor.session,'launch.'+action,input,expected)
+ const command=(action,input,expected=[])=>request(actor.session,recordAction(action),recordInput(action,input,expected),expected)
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const row=(table,id)=>h.db.prepare(`SELECT * FROM ${table} WHERE id=?`).bind(id).first()
  const tick=async at=>(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at??Date.now()})
  const c=await command('campaign.create',{fields:{code:`synthetic-cradle-notify001-${width}`,name:'Named notification recipients',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-12-01',objective:'Prove each named event recipient',statusSummary:'Ready',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
  const notices=async(kind,subject)=>(await h.db.prepare('SELECT id,operator_id FROM notifications WHERE kind=? AND subject_id=?').bind(kind,subject).all()).results
  const check=async(kind,subject,ids)=>{
-  const actual=await notices(kind,subject)
+  const actual=kind==='comment-mentioned'?await commentNotices(h.db,subject):await notices(kind,subject)
   assert.deepEqual(actual.map(n=>n.operator_id).sort(),[...ids].sort(),`NOTIFY-001 ${kind}: exactly the named recipients and nobody else`)
   for(const id of ids){const session=id===h.owner?h.ownerSession:id===actor.id?actor.session:id===other.id?other.session:await h.signIn(id);const response=await h.request(session,'/api/notifications');assert.equal(response.status,200);const inbox=(await response.json()).notifications;assert.ok(inbox.some(n=>actual.some(a=>a.operator_id===id&&a.id===n.id)),`NOTIFY-001 ${kind}: retained in recipient public inbox`)}
   return actual
  }
  const d=await command('decision.create',{fields:{campaignId:c.id,riskId:null,supersedesId:null,title:'Assign to the target, not the requester or campaign owner',requesterId:actor.id,assigneeId:null,priority:'High',dueAt:'2099-01-01T12:00:00.000Z',recommendation:'Review',impact:'Recipient isolation'}})
  await command('decision.assign',{id:d.id,assigneeId:other.id},ref('decision',d));await check('decision-assigned',d.id,[other.id])
- const comment=await command('comment.create',{campaignId:c.id,body:'Mention only the target',mentions:[other.id]},ref('campaign',c));await check('comment-mentioned',comment.id,[other.id])
+ const comment=await command('comment.add',{campaignId:c.id,body:'Mention only the target',mentions:[other.id]},ref('campaign',c));await check('comment-mentioned',comment.id,[other.id])
  const risk=await command('risk.create',{fields:{campaignId:c.id,title:'Escalate to the campaign owner, not the risk owner',ownerId:other.id,severity:'Critical',dueDate:null,signal:'Synthetic risk',mitigation:'Review'}})
  await command('risk.escalate',{id:risk.id,reason:'Named campaign owner'},ref('risk',risk));const riskNotices=await check('critical-risk-escalated',risk.id,[h.owner])
  await page.goto(h.origin+'/app/notifications');await page.locator(`#notification-${riskNotices[0].id}`).waitFor();await capture('notify001-campaign-owner')

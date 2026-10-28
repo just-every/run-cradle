@@ -67,7 +67,7 @@ const readInspectorPresentation=async(page)=>page.locator('.portfolio-inspector'
 })
 try {
  await mkdir(output,{recursive:true})
- browser=await chromium.launch({headless:true,args:["--use-mock-keychain","--password-store=basic"]})
+ browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox',"--use-mock-keychain","--password-store=basic"]})
  for(const width of accessibilityWidths) {
   // Each viewport starts with an empty campaign fixture, including after the added clause journeys.
   await h.db.prepare('DELETE FROM campaigns').run()

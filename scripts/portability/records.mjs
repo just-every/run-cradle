@@ -4,6 +4,7 @@ import {PortabilityError} from '@runeditrun/rer/modules/portability';
 import {catalogue,policy} from '@runeditrun/rer/modules/portability/catalogue';
 import {platformTable} from '@runeditrun/rer/internal/modules/portability/bookkeeping.mjs';
 import {fileRecords} from '@runeditrun/rer/modules/portability/files';
+import {isRetiredComments} from './retired-comments.mjs';
 const quote=name=>'"'+name.replaceAll('"','""')+'"';
 const normalize=sql=>sql.replace(/;\s*$/,'').replace(/\s+/g,' ').trim();
 const refuse=code=>{throw new PortabilityError(code,409);};
@@ -43,10 +44,11 @@ export async function prepareRecordRestore(db,root,path,config){
  // Only product tables may require a schema compiled from archived records.
  const missing=manifest.tables.filter(t=>!platformTable(t.name)&&!cat.tables.some(old=>old.name===t.name));
  for(const table of missing){
+  if(isRetiredComments(table))continue;
   const plan=byName.get(table.name);
   if(!plan||!/^CREATE TABLE /.test(plan.sql)||normalize(plan.sql)!==normalize(table.sql))refuse('unsupported_record_schema');
  }
- const required=new Set(missing.map(t=>t.name)),creates=[];
+ const required=new Set(missing.filter(t=>!isRetiredComments(t)).map(t=>t.name)),creates=[];
  for(const plan of plans){
   // Compiler objects belong to one archived physical table, never arbitrary archive SQL.
   if(![...required].some(name=>plan.table===name||plan.name===name||plan.name.startsWith(name+'_')))continue;
@@ -55,7 +57,7 @@ export async function prepareRecordRestore(db,root,path,config){
   creates.push(plan);
  }
  if(creates.length)await db.batch(creates.map(plan=>db.prepare(plan.sql)));
- return async()=>{
+ const cleanup=async()=>{
   // Failed native restore leaves the pre-existing installation intact.
   if(!creates.length)return;
   for(const name of required)if(await db.prepare(`SELECT 1 FROM ${quote(name)} LIMIT 1`).first())return;
@@ -63,4 +65,6 @@ export async function prepareRecordRestore(db,root,path,config){
   for(const plan of creates.filter(plan=>/^CREATE TRIGGER /.test(plan.sql)).reverse())await db.prepare(`DROP TRIGGER IF EXISTS ${quote(plan.name)}`).run();
   for(const plan of drops)await db.prepare(`DROP TABLE IF EXISTS ${quote(plan.name)}`).run();
  };
+ cleanup.retiredComments=missing.some(isRetiredComments);
+ return cleanup;
 }

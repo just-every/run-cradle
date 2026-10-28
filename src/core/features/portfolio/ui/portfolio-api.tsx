@@ -343,10 +343,7 @@ export const decodeCampaignDetail: Decoder<CampaignDetailResponse> = (
     decisions: requiredArray(record, "campaign detail.decisions").map(
       decodeDecision,
     ),
-    comments: requiredArray(record, "campaign detail.comments").map(value => {
-      const comment = requiredRecord(value, "campaign comment");
-      return { id: requiredText(comment, "comment.id"), version: requiredNumber(comment, "comment.version"), body: requiredText(comment, "comment.body"), authorName: requiredText(comment, "comment.authorName") };
-    }),
+
     activity: requiredArray(record, "campaign detail.activity").map(
       decodeActivity,
     ),
@@ -447,7 +444,7 @@ export async function requestJson<T>(
   }
 }
 
-export function useApiResource<T>(url: string, decoder: Decoder<T>) {
+export function useApiResource<T>(url: string, decoder: Decoder<T>, options: { keepPreviousData?: boolean } = {}) {
   const session = useDocumentSession();
   const initial = useDocumentData();
   const [revision, setRevision] = useState(0);
@@ -459,10 +456,12 @@ export function useApiResource<T>(url: string, decoder: Decoder<T>) {
   const retry = useCallback(() => setRevision((value) => value + 1), []);
 
   const mounted = useRef(false);
+  const loadedUrl = useRef(url);
   useEffect(() => {
     if (!mounted.current) { mounted.current = true; if ((url === "/api/session" && session) || url in initial) return; }
     let active = true;
-    setResource({ state: "loading", data: null, error: null });
+    if (!options.keepPreviousData || loadedUrl.current !== url) setResource({ state: "loading", data: null, error: null });
+    loadedUrl.current = url;
     requestJson(url, decoder).then(
       (data) => {
         if (active) setResource({ state: "ready", data, error: null });
@@ -484,7 +483,7 @@ export function useApiResource<T>(url: string, decoder: Decoder<T>) {
     return () => {
       active = false;
     };
-  }, [url, decoder, revision]);
+  }, [url, decoder, revision, options.keepPreviousData]);
 
   return { resource, retry };
 }

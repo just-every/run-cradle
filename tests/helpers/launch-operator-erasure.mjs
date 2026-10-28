@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {recordThread} from './record-comment-command.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import { LAUNCH_APP_ID } from './launch-authority-runtime.mjs'
 
@@ -38,7 +39,7 @@ export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  const literals = [before.name, before.email]
  const baseId = (await h.db.prepare('SELECT base_id FROM cradle_base_operators WHERE principal_id=?').bind(leaver.id).first()).base_id
  const authored = {
-  comments: await count('SELECT COUNT(*) n FROM comments WHERE author_id=?', leaver.id),
+  comments: await count('SELECT COUNT(*) n FROM evidence_comments WHERE author_id=?', leaver.id),
   activity: await count('SELECT COUNT(*) n FROM activity_entries WHERE actor_id=?', leaver.id),
   outcomes: await count('SELECT COUNT(*) n FROM decisions WHERE outcome_by_id=?', leaver.id),
  }
@@ -81,15 +82,15 @@ export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  assert.equal(reads.risk.risk.owner.name, label)
  assert.equal(reads.milestone.milestone.owner.name, label)
  assert.deepEqual([reads.decided.decision.requester.name, reads.decided.decision.assignee.name], [label, label])
- const comment = reads.owned.comments.find(item => item.id === w.comment.id)
- assert.equal(comment.authorName, label); assert.equal(comment.body, 'Supplier call is booked for Tuesday.')
+ const comment = (await recordThread(h,doors.ref('campaign',w.owned)[0].ref,doors.admin)).items.find(item=>item.id===w.comment.id)
+ assert.equal(comment.authorLabel, label); assert.equal(comment.body, 'Supplier call is booked for Tuesday.')
  assert.ok(reads.owned.activity.filter(item => item.actor?.id === leaver.id).every(item => item.actor.name === label))
  assert.deepEqual(await copiesOf(h, literals), [], 'Their name and email appear nowhere else')
 
  // Their notifications and delivery records are deleted; what they authored stays under the label.
  for (const table of ['notifications', 'channel_deliveries', 'notification_reads', 'channel_preferences']) assert.equal(await count(`SELECT COUNT(*) n FROM ${table} WHERE operator_id=?`, leaver.id), 0, `${table} are deleted`)
  assert.deepEqual({
-  comments: await count('SELECT COUNT(*) n FROM comments WHERE author_id=?', leaver.id),
+  comments: await count('SELECT COUNT(*) n FROM evidence_comments WHERE author_id=?', leaver.id),
   activity: await count('SELECT COUNT(*) n FROM activity_entries WHERE actor_id=?', leaver.id),
   outcomes: await count("SELECT COUNT(*) n FROM decisions WHERE outcome_by_id=? AND state='Approved'", leaver.id),
  }, authored, 'Comments, activity entries and decision outcomes remain')
@@ -102,4 +103,46 @@ export async function verifyErasure(doors, w, { confirm, erasureProbe }) {
  assert.notEqual(restore.status, 200, `Re-activation is refused: ${await restore.clone().text()}`)
  assert.equal((await h.db.prepare('SELECT status FROM oa_operators WHERE id=?').bind(baseId).first()).status, 'inactive')
  assert.deepEqual([(await member(leaver.id)).state, (await h.request(leaver.session, '/api/v1/session')).status], ['erased', 401])
+
+ // OPS-005 retains the anonymous author's words until an owner/admin explicitly
+ // redacts the body. Record authority alone never makes a member an admin.
+ const subject=doors.ref('campaign',reads.owned.campaign)[0].ref,expected=doors.ref('campaign',reads.owned.campaign)
+ assert.equal(comment.canDelete,false,'Another person cannot delete the erased author’s comment')
+ const input={subject,id:comment.id,version:comment.version,reason:'Personal information removal requested'}
+ const memberThread=await recordThread(h,subject,w.stay.session)
+ assert.equal(memberThread.items.find(item=>item.id===comment.id).canRedact,false)
+ assert.equal((await command('comment.redact',input,expected,w.stay.session)).status,403,'A non-admin member is refused')
+ assert.equal((await command('comment.redact',{...input,reason:'  '},expected)).status,400,'A reason is required')
+ assert.equal((await command('comment.redact',{...input,version:comment.version+1},expected)).status,409,'A stale redaction changes nothing')
+ assert.equal(await count('SELECT count(*) n FROM evidence_comment_redactions WHERE comment_id=?',comment.id),0)
+ const redaction={commandId:createUlid(),expected,input},sendRedaction=()=>call('/api/v1/commands/comment.redact',{method:'POST',body:JSON.stringify(redaction)})
+ for(let i=0;i<2;i++){const result=await sendRedaction();assert.equal(result.status,200,JSON.stringify(result.body))}
+ const redacted=(await recordThread(h,subject,doors.admin)).items.find(item=>item.id===comment.id)
+ assert.deepEqual([redacted.id,redacted.authorLabel,redacted.createdAt],[comment.id,label,comment.createdAt],'Redaction preserves the place, author label and original time')
+ assert.deepEqual([redacted.body,redacted.redacted,redacted.version,redacted.canEdit,redacted.canDelete,redacted.canRedact],[null,true,comment.version+1,false,false,false])
+ const audit=(await h.db.prepare('SELECT * FROM evidence_comment_redactions WHERE comment_id=?').bind(comment.id).all()).results
+ assert.equal(audit.length,1,'Replaying a redaction records it once')
+ assert.deepEqual([audit[0].reason,audit[0].actor_id,audit[0].actor_kind,audit[0].app_id,audit[0].entity_id,audit[0].record_id],[input.reason,w.adminId,'human',subject.appId,subject.entityId,subject.recordId])
+ assert.ok(Number.isFinite(Date.parse(audit[0].created_at)))
+ assert.ok(!JSON.stringify(audit).includes(comment.body),'The audit never stores the old body')
+ const history=await call('/api/v1/history?'+new URLSearchParams(subject))
+ assert.equal(history.status,200);assert.ok(!JSON.stringify(history.body).includes(comment.body),'Record history contains no old body')
+ assert.equal(history.body.data.items.filter(item=>item.commandId===redaction.commandId).length,1)
+ const search=await recordThread(h,{...subject},doors.admin)
+ assert.ok(!JSON.stringify(search).includes(comment.body))
+ assert.deepEqual(await copiesOf(h,[comment.body]),[],'The body leaves every stored receipt and search index, including exported product rows')
+ // The ownership journey already left a separate active workspace admin. Their
+ // ordinary app policy permits redaction without making them the comment author.
+ const admin=await h.db.prepare("SELECT p.id FROM authority_principals p JOIN cradle_base_operators b ON b.principal_id=p.id JOIN oa_operators o ON o.id=b.base_id WHERE p.state='active' AND o.status='active' AND o.role='admin' ORDER BY p.id LIMIT 1").first()
+ assert.ok(admin,'The existing ownership journey provides a workspace admin')
+ const adminSession=await h.signIn(admin.id),adminBody='A second privacy request handled by an administrator'
+ const added=await command('comment.add',{subject,body:adminBody,mentions:[]},expected)
+ assert.equal(added.status,200,JSON.stringify(added.body))
+ const adminTarget=added.body.data.value,adminThread=await recordThread(h,subject,adminSession)
+ assert.equal(adminThread.items.find(item=>item.id===adminTarget.id).canRedact,true)
+ const adminRedaction=await command('comment.redact',{subject,id:adminTarget.id,version:adminTarget.version,reason:'Administrator handled the request'},expected,adminSession)
+ assert.equal(adminRedaction.status,200,JSON.stringify(adminRedaction.body))
+ const adminAudit=(await h.db.prepare('SELECT actor_id,reason,created_at FROM evidence_comment_redactions WHERE comment_id=?').bind(adminTarget.id).all()).results
+ assert.equal(adminAudit.length,1);assert.equal(adminAudit[0].actor_id,admin.id);assert.ok(adminAudit[0].reason&&Date.parse(adminAudit[0].created_at))
+ assert.deepEqual(await copiesOf(h,[adminBody]),[],'Admin redaction also removes the body from every stored receipt and search index')
 }

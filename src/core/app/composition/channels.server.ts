@@ -37,17 +37,26 @@ export function createChannelsComposition(platform: Platform, foundation: Server
     },
   })
   const dependencies = { db, policy: foundation.policy, configuration }
+  // A readable subject also carries its title as this reader may read it now, so a
+  // notice can name its record in words. Nothing read here is stored in the notice.
   const access: Parameters<typeof registerChannelCommands>[2] = async(ctx,ref)=>{
     if(!ref.subjectId||!ref.subjectType)return false
     try{
-      if(ref.subjectType==='automation-run'){const run=await db.prepare('SELECT automation_id FROM automation_runs WHERE id=?').bind(ref.subjectId).first<{automation_id:string}>();return !!run&&(await createRecordAutomationHistory(db,foundation.policy,foundation.descriptors).runs(ctx,run.automation_id)).some(row=>row.id===ref.subjectId)}
+      if(ref.subjectType==='automation-run'){const run=await db.prepare('SELECT automation_id FROM automation_runs WHERE id=?').bind(ref.subjectId).first<{automation_id:string}>();return !!run&&(await createRecordAutomationHistory(db,foundation.policy,foundation.descriptors).runs(ctx,run.automation_id)).some(row=>row.id===ref.subjectId)&&{title:null}}
       const scope=await foundation.policy.scope(ctx,{appId:ref.appId,entityId:ref.subjectType,purpose:'read'})
-      await foundation.descriptors.get(ref.appId,ref.subjectType)
+      const descriptor=await foundation.descriptors.get(ref.appId,ref.subjectType)
       const entity=foundation.entities.get(ref.appId,ref.subjectType)
       if(!entity)return false
       const {identifier}=await import('../../../domains/admission/sql.server')
-      return !!await db.prepare(`SELECT 1 FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${scope.rowPredicate.sql})`)
-       .bind(ref.subjectId,...scope.rowPredicate.values).first()
+      const titleId=descriptor.schema.primaryFieldId??descriptor.schema.fields.find(field=>field.type==='text')?.id
+      const title=titleId&&scope.readableFieldIds.includes(titleId)?descriptor.fields.get(titleId):undefined
+      const row=await db.prepare(`SELECT ${title?.column?identifier(title.column):'NULL'} AS title FROM ${identifier(entity.table)} WHERE ${identifier(entity.idColumn)}=? AND (${scope.rowPredicate.sql})`)
+       .bind(ref.subjectId,...scope.rowPredicate.values).first<{title:unknown}>()
+      if(!row)return false
+      // Only words name a record here: a select by its option label, never a stored id
+      // (Launch's retained Readiness requests title is its milestone_id text column).
+      const value=title?.field.type==='select'?title.field.options?.find(option=>option.id===row.title)?.label:['text','email','phone','url','date'].includes(title?.field.type??'')?row.title:null
+      return {title:typeof value==='string'&&value.trim()&&!/^[0-9A-HJKMNP-TV-Z]{26}$/.test(value.trim())?value.trim():null}
     }catch{return false}
   }
   const services = registerChannelCommands(foundation.commands, dependencies,access)

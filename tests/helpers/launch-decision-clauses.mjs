@@ -1,6 +1,7 @@
+import {recordComment,recordThread,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 
-const productTables = ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'comments', 'campaign_tags', 'launch_custom_values', 'notifications', 'channel_events', 'channel_notifications', 'channel_deliveries', 'activity_entries', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
+const productTables = ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'evidence_comments', 'campaign_tags', 'launch_custom_values', 'notifications', 'channel_events', 'channel_notifications', 'channel_deliveries', 'activity_entries', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
 async function snapshot(db, tables = productTables) {
  const rows = await db.batch(tables.map(table => db.prepare(`SELECT * FROM ${table} ORDER BY 1`)))
  return Object.fromEntries(tables.map((table, index) => [table, rows[index].results]))
@@ -161,17 +162,18 @@ async function assignmentsAndComments(h, reader, campaign) {
  await h.commit('decision.delete', { id: row.id }, h.expected('decision', row))
  assert.deepEqual(await reader.get(h.ctx, 'risk', risk.id), riskBefore, 'Creation, assignment, reassignment and deletion leave the linked risk unchanged')
 
- const unchangedTables = productTables.filter(table => !['comments', 'notifications', 'channel_events', 'channel_notifications', 'channel_deliveries', 'activity_entries', 'command_admissions', 'admission_audit'].includes(table))
+ const unchangedTables = productTables.filter(table => !['evidence_comments', 'notifications', 'channel_events', 'channel_notifications', 'channel_deliveries', 'activity_entries', 'command_admissions', 'admission_audit'].includes(table))
  const beforeComment = await snapshot(h.db, unchangedTables)
  const body = `Plain text <b>is not markup</b> @${first.id} and an unavailable colleague`
- const comment = await h.commit('comment.create', { campaignId: campaign.id, body, mentions: [first.id, h.r.createUlid()] }, h.expected('campaign', campaign))
+ const comment = await recordComment(h,'comment.add', { campaignId: campaign.id, body, mentions: [first.id] }, h.expected('campaign', campaign))
  assert.equal(comment.body, body)
  assert.deepEqual(await snapshot(h.db, unchangedTables), beforeComment, 'Commenting changes no business field and creates no automation event, run, AI request/call or outbox work')
- const detail = await readHttp(h, `/api/campaigns/${campaign.id}`)
- assert.ok(detail.comments.some(item => item.id === comment.id && item.body === body && item.authorId === h.actor))
- assert.ok(detail.activity.some(item => item.subjectId === comment.id && item.actor.id === h.actor))
- const mentions = (await h.db.prepare("SELECT operator_id FROM notifications WHERE subject_id=? AND kind='comment-mentioned'").bind(comment.id).all()).results
- assert.deepEqual(mentions.map(item => item.operator_id), [first.id], 'Only the named current operator is notified; a missing identity receives nothing')
+ const thread=await recordThread(h,h.expected('campaign',campaign)[0].ref)
+ assert.ok(thread.items.some(item=>item.id===comment.id&&item.body===body&&item.author.id===h.actor))
+ assert.ok(await h.db.prepare("SELECT 1 FROM admission_audit WHERE actor_id=? AND action='comment.add' AND personal_refs_json=?").bind(h.actor,JSON.stringify([comment.id])).first())
+ const detail=await readHttp(h,`/api/campaigns/${campaign.id}`);assert.ok(detail.activity.some(item=>item.subjectId===comment.id&&item.actor.id===h.actor))
+ const mentions = await commentNotices(h.db,comment.id)
+ assert.deepEqual(mentions.map(item => item.operator_id), [first.id], 'Only the selected current operator is notified')
 }
 
 export async function verifyDecisionClauses(h) {

@@ -1,3 +1,4 @@
+import {recordAction,recordInput,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
 
@@ -7,7 +8,7 @@ export async function verifyInboxScreens({h,page,command,capture}){
  const ref=row=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.campaign,recordId:row.id},version:row.version}]
  let campaign=await create('campaign.create',{fields:{code:`INBOX-${width}`,name:'Supplier readiness review',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Review the supplier evidence',statusSummary:'Waiting for review',phase:'Planning',status:'On track',health:60,budgetMinor:10000,spendMinor:2500,tags:[],customFields:{}}})
  const actorCommand=async(action,input,expected=[])=>{
-  const response=await h.request(other.session,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})})
+  const response=await h.request(other.session,`/api/v1/commands/${recordAction(action)}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input:recordInput(action,input,expected),expected})})
   assert.equal(response.status,200,await response.clone().text());return(await response.json()).data.value
  }
  const read=async(session=h.ownerSession)=>{const response=await h.request(session,'/api/notifications');assert.equal(response.status,200);return response.json()}
@@ -20,14 +21,16 @@ export async function verifyInboxScreens({h,page,command,capture}){
  assert.equal(automated.subject.href,`/app/campaigns/${campaign.id}`,'NOTIFY-005 automation notice opens its current campaign')
  const definition=await h.db.prepare('SELECT id,version FROM automations WHERE id=?').bind(automation.id).first()
  await create('automation.disable',{id:definition.id},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.automation,recordId:definition.id},version:definition.version}])
- const notices=[]
- for(const body of ['Supplier evidence is ready','Please review the latest delivery date']){
-  const comment=await actorCommand('comment.create',{campaignId:campaign.id,body,mentions:[h.owner]},ref(campaign))
-  notices.push({comment,notice:(await read()).notifications.find(item=>item.subject.id===comment.id)})
+ const notices=[],firstCampaign=campaign
+ for(const [index,body] of ['Supplier evidence is ready','Please review the latest delivery date'].entries()){
+  if(index===1)campaign=await create('campaign.create',{fields:{code:`INBOX-SECOND-${width}`,name:'Second supplier readiness review',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Review a second supplier',statusSummary:'Waiting',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+  const comment=await actorCommand('comment.add',{campaignId:campaign.id,body,mentions:[h.owner]},ref(campaign)),eventNotices=await commentNotices(h.db,comment.id)
+  notices.push({comment,notice:(await read()).notifications.find(item=>item.id===eventNotices.find(item=>item.operator_id===h.owner).id)})
  }
- const otherComment=await create('comment.create',{campaignId:campaign.id,body:'Please confirm the supplier evidence',mentions:[other.id]},ref(campaign))
+ const otherComment=await create('comment.add',{campaignId:campaign.id,body:'Please confirm the supplier evidence',mentions:[other.id]},ref(campaign))
+ const awaitedOtherNoticeId=(await commentNotices(h.db,otherComment.id)).find(item=>item.operator_id===other.id).id
  const otherBefore=await read(other.session)
- assert.ok(otherBefore.notifications.some(item=>item.subject.id===otherComment.id&&!item.readAt))
+ assert.ok(otherBefore.notifications.some(item=>item.id===(awaitedOtherNoticeId)&&!item.readAt))
  const inbox=await read(),ids=inbox.notifications.map(item=>item.id)
  assert.ok(ids.indexOf(notices[1].notice.id)<ids.indexOf(notices[0].notice.id),'NOTIFY-005 newest notification comes first')
  for(let index=1;index<inbox.notifications.length;index++){
@@ -52,13 +55,15 @@ export async function verifyInboxScreens({h,page,command,capture}){
  const marked=await markedResponse;assert.equal(marked.status(),204,await marked.text())
  assert.ok((await read()).notifications.find(item=>item.id===notices[0].notice.id).readAt,'NOTIFY-005 mark-one HTTP write commits')
  await page.getByText(`${inbox.unreadCount-2} unread ${inbox.unreadCount-2===1?'notification':'notifications'}.`,{exact:true}).waitFor()
- const deleted=await actorCommand('comment.create',{campaignId:campaign.id,body:'Withdrawn supplier note',mentions:[h.owner]},ref(campaign))
- const deletedNotice=(await read()).notifications.find(item=>item.subject.id===deleted.id)
+ const deleted=await actorCommand('comment.add',{campaignId:campaign.id,body:'Withdrawn supplier note',mentions:[h.owner]},ref(campaign))
+ const deletedNoticeId=(await commentNotices(h.db,deleted.id)).find(item=>item.operator_id===h.owner).id,deletedNotice=(await read()).notifications.find(item=>item.id===deletedNoticeId)
  await actorCommand('comment.delete',{id:deleted.id,version:deleted.version},ref(campaign))
  assert.equal((await read()).notifications.find(item=>item.id===deletedNotice.id).subject.available,false,'NOTIFY-005 deleted comment has no missing-record link')
+ await create('campaign.archive',{id:firstCampaign.id},ref(firstCampaign))
  await create('campaign.archive',{id:campaign.id},ref(campaign))
  const archived=await read()
  for(const {notice}of notices)assert.equal(archived.notifications.find(item=>item.id===notice.id).subject.available,false,'NOTIFY-005 archived subject is unavailable')
+ assert.equal(archived.notifications.find(item=>item.id===automated.id).subject.available,false,'NOTIFY-005 archived legacy automation subject is unavailable')
  await page.reload();await page.getByText('Related record is unavailable',{exact:false}).first().waitFor()
  await capture('clause-inbox-unavailable')
  const allReadResponse=page.waitForResponse(r=>r.url().endsWith('/notifications/read-all')&&r.request().method()==='POST')
@@ -85,10 +90,11 @@ export async function verifyInboxScreens({h,page,command,capture}){
  const targets=[]
  for(const person of [{id:h.owner,session:h.ownerSession},other]){
   const sender=person.id===h.owner?actorCommand:create
-  const comment=await sender('comment.create',{campaignId:erasing.id,body:'Erased confidential comment',mentions:[person.id]},ref(erasing))
+  const comment=await sender('comment.add',{campaignId:erasing.id,body:'Erased confidential comment',mentions:[person.id]},ref(erasing))
   const decision=await sender('decision.create',{fields:{campaignId:erasing.id,riskId:null,supersedesId:null,title:'Erased confidential decision',requesterId:person.id===h.owner?other.id:h.owner,assigneeId:null,priority:'High',dueAt:'2099-01-01T12:00:00.000Z',recommendation:'Erased recommendation',impact:'Erased impact'}})
   await sender('decision.assign',{id:decision.id,assigneeId:person.id},[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities.decision,recordId:decision.id},version:decision.version}])
-  const before=await read(person.session),notices=before.notifications.filter(n=>[comment.id,decision.id].includes(n.subject.id))
+  const eventNoticeId=(await commentNotices(h.db,comment.id)).find(item=>item.operator_id===person.id).id
+  const before=await read(person.session),notices=before.notifications.filter(n=>n.id===eventNoticeId||n.subject.id===decision.id)
   assert.equal(notices.length,2,'NOTIFY-005 two generated deleted-campaign notices per recipient')
   const mark=await h.request(person.session,`/api/notifications/${notices[0].id}/read`,{method:'POST'})
   assert.equal(mark.status,204)
@@ -147,7 +153,7 @@ export async function verifyInboxScreens({h,page,command,capture}){
  // A live nonurgent control proves this same provider path can send after
  // quiet hours, and positively observes preparation assigning a fresh group.
  const control=await actorCommand('campaign.create',{fields:{code:`synthetic-cradle-erasure-control-${width}`,name:'Live delivery control',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Verify pending delivery',statusSummary:'Live control',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
- await actorCommand('comment.create',{campaignId:control.id,body:'Live nonurgent delivery control',mentions:[h.owner]},ref(control))
+ await actorCommand('comment.add',{campaignId:control.id,body:'Live nonurgent delivery control',mentions:[h.owner]},ref(control))
  const controlPending=(await h.db.prepare("SELECT id,state,due_at,group_id FROM channel_deliveries WHERE campaign_id=?").bind(control.id).all()).results
  assert.equal(controlPending.length,1)
  assert.equal(controlPending[0].state,'held','NOTIFY-005 live control positively has pending nonurgent mail')

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {recordCalendarProvider} from './record-calendar-provider.mjs'
 import {warehouseNetworkEdge} from './warehouse-network-edge.mjs'
 import {launchAuthorityRuntime,createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
+import {recordAction,recordInput} from './record-comment-command.mjs'
 
 /** Each independently scheduled walkthrough owns an emitted Worker and provider
  * edges; its runtime never borrows another group's fixtures or delivery history. */
@@ -15,7 +16,7 @@ try{h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',G
 h.notificationOutageProvider=outageProvider
 h.notificationProgressProvider=progressProvider
 const command=async(action,input,expected=[])=>{
- const response=await h.request(h.ownerSession,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})})
+ const response=await h.request(h.ownerSession,`/api/v1/commands/${recordAction(action)}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input:recordInput(action,input,expected),expected})})
  assert.equal(response.status,200,await response.clone().text());return (await response.json())
 }
  try{

@@ -1,3 +1,4 @@
+import {recordComment,recordThread} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import { mutationSnapshot } from './launch-write-context.mjs'
 
@@ -46,14 +47,14 @@ export async function verifyCampaignClauses(h) {
  const milestone=await commit('milestone.create',{fields:{campaignId:campaign.id,title:'Review launch notes',ownerId:actor,type:'Review',status:'Not started',startDate:'2026-10-21',endDate:null,conflictReason:null}})
  const risk=await commit('risk.create',{fields:{campaignId:campaign.id,title:'Translation delay',ownerId:actor,severity:'High',dueDate:null,signal:'Review pending',mitigation:'Book a reviewer'}})
  const decision=await commit('decision.create',{fields:{campaignId:campaign.id,riskId:null,supersedesId:null,title:'Choose launch language',requesterId:actor,assigneeId:null,priority:'High',dueAt:'2026-10-21T12:00:00.000Z',recommendation:'English first',impact:'Release scope'}})
- await commit('comment.create',{campaignId:campaign.id,body:'Reviewer booked',mentions:[]},expected('campaign',campaign))
+ await recordComment(h,'comment.add',{campaignId:campaign.id,body:'Reviewer booked',mentions:[]},expected('campaign',campaign))
  const response=await h.request(h.ownerSession,`/api/campaigns/${campaign.id}`)
  assert.equal(response.status,200)
  const detail=await response.json()
  assert.equal(detail.campaign.code,campaign.code)
  assert.equal(detail.campaign.deliverableComplete,0);assert.equal(detail.campaign.deliverableTotal,1)
  assert.ok(JSON.stringify(detail).includes(milestone.id));assert.ok(JSON.stringify(detail).includes(risk.id));assert.ok(JSON.stringify(detail).includes(decision.id))
- assert.ok(JSON.stringify(detail).includes('Reviewer booked'));assert.ok(JSON.stringify(detail).includes(deliverable.id))
+ assert.ok(JSON.stringify(await recordThread(h,expected('campaign',campaign)[0].ref)).includes('Reviewer booked'));assert.ok(JSON.stringify(detail).includes(deliverable.id))
  const activities=await db.prepare('SELECT id FROM activity_entries WHERE campaign_id=?').bind(campaign.id).all()
  for(const activity of activities.results)assert.ok(JSON.stringify(detail).includes(activity.id),'Detail contains committed campaign activity')
  await commit('deliverable.delete',{id:deliverable.id},expected('deliverable',deliverable))

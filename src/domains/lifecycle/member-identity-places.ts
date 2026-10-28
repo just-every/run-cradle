@@ -20,7 +20,6 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  {...byId(`id ${base}`,'the Base sign-in identity','set'),table:'oa_operators',columns:['display_name','email'],set:(label,person)=>({display_name:label,email:`erased-${person.id}@invalid.invalid`})},
  {...byId('principal_id=? AND erased_at IS NULL','their private AI contexts','set'),table:'evidence_contexts',columns:['content','source_refs','record_refs'],appliedBy:'evidence/member-erasure.server.ts'},
  place('authority_policies','id IN (SELECT policy_id FROM authority_memberships WHERE principal_id=?) AND NOT EXISTS(SELECT 1 FROM authority_memberships m WHERE m.policy_id=authority_policies.id AND m.principal_id<>?)','access policies assigned only to them'),
- place('comments','author_id=?','comments they wrote'),
  place('activity_entries','actor_id=?','activity they performed'),
  place('decisions','requester_id=? OR assignee_id=? OR outcome_by_id=?','decisions they requested, were assigned or decided'),
  place('campaigns','owner_id=? OR health_set_by_id=?','campaigns they own or rated'),

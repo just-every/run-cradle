@@ -1,10 +1,11 @@
+import {recordAction,recordInput} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import {createUlid,LAUNCH_APP_ID,launchEntities} from './launch-authority-runtime.mjs'
 
 export async function verifyNotificationDeliveryFailures({h,page,capture,actor,setNotificationMailStatus}){
  const width=page.viewportSize().width
  const request=async(session,action,input,expected=[])=>{const r=await h.request(session,'/api/v1/commands/'+action,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})});assert.equal(r.status,200,`${action}: ${await r.clone().text()}`);const data=(await r.json()).data;assert.equal(data.state,'committed');return data.value}
- const command=(action,input,expected=[])=>request(actor.session,'launch.'+action,input,expected)
+ const command=(action,input,expected=[])=>request(actor.session,recordAction(action),recordInput(action,input,expected),expected)
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const row=(table,id)=>h.db.prepare(`SELECT * FROM ${table} WHERE id=?`).bind(id).first()
  const tick=async at=>(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at??Date.now()})
@@ -18,14 +19,15 @@ export async function verifyNotificationDeliveryFailures({h,page,capture,actor,s
  try{
   for(const [status,state]of [[400,'failed'],[502,'unknown']]){
    setNotificationMailStatus(status)
-   const comment=await command('comment.create',{campaignId:c.id,body:`synthetic-cradle-303 ${state} delivery`,mentions:[h.owner]},ref('campaign',c));await tick()
-   const deliveries=(await h.db.prepare('SELECT d.* FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE n.subject_id=?').bind(comment.id).all()).results
+   const comment=await command('comment.add',{campaignId:c.id,body:`synthetic-cradle-303 ${state} delivery`,mentions:[h.owner]},ref('campaign',c));await tick()
+   const deliveries=(await h.db.prepare('SELECT d.* FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE n.id IN (SELECT notification_id FROM channel_events WHERE event_id=?)').bind(comment.id).all()).results
    assert.equal(deliveries.length,1,'NOTIFY-003 one durable delivery linked to the notification')
    const delivery=deliveries[0];assert.equal(delivery.state,state);assert.equal(delivery.attempts,1);assert.equal(delivery.receipt_id,null)
    const inbox=(await(await h.request(h.ownerSession,'/api/notifications')).json()).notifications,notice=inbox.find(n=>n.id===delivery.notification_id)
    assert.ok(notice,'NOTIFY-003 the in-app notice stays available');assert.equal(notice.subject.available,true);assert.equal(notice.deliveryState,state,'NOTIFY-003 notification exposes its actual delivery outcome')
    const listed=(await(await h.request(h.ownerSession,'/api/v1/deliveries')).json()).data.items.find(d=>d.id===delivery.id);assert.equal(listed.notificationId,notice.id);assert.equal(listed.state,state)
    assert.equal((await h.mailMessages()).filter(m=>m.custom_args?.rer_delivery_id===delivery.group_id).length,1,'NOTIFY-003 one provider-edge submission for this exact delivery')
+   const marked=await h.request(h.ownerSession,`/api/notifications/${notice.id}/read`,{method:'POST'});assert.equal(marked.status,204)
    cases.push({state,delivery,notice})
   }
  }finally{setNotificationMailStatus(202)}
