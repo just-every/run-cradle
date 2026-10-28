@@ -12170,7 +12170,7 @@
       "executable": false
     },
     "tests/helpers/launch-archive-contents.mjs": {
-      "sha256": "3e9553977327a4421d535955b6c0c37da91e799c0d0e76c349a81928f89d4c4f",
+      "sha256": "c69dd06df6dd163a24a3415dad99db723cff4aa8854647dff96dc6455ac8f963",
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {

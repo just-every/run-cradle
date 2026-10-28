@@ -14,6 +14,10 @@ export async function launchArchiveContents(h,headers){
  const launch=(action,input,expected)=>command('/api/v1/commands/launch.'+action,input,expected)
  const ref=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
  const owner=(await h.db.prepare('SELECT id FROM operators WHERE active=1 LIMIT 1').first()).id
+ const settings=await(await h.request('/api/v1/settings',{headers})).json()
+ await command('/api/v1/commands/preferences.update',{version:settings.data.preferences.version,preferences:{timezone:'Asia/Tokyo',mutedKinds:['risk-escalated'],digestEnabled:true,progressEnabled:true}})
+ const digest=await h.db.prepare("SELECT version FROM channel_digest_settings WHERE id='digest'").first()
+ await command('/api/v1/commands/digest.update',{version:digest.version,recipientIds:[owner]})
  const campaign=await h.db.prepare('SELECT * FROM campaigns ORDER BY code LIMIT 1').first()
  const custom=await launch('custom-field.save',{field:{name:'Archive launch notes',type:'text'}})
  await launch('campaign.patch',{id:campaign.id,changes:{tags:['Release','Archive'],customFields:{[custom.id]:'Keep the café launch notes'}}},ref('campaign',campaign))
@@ -48,7 +52,7 @@ export async function launchArchiveContents(h,headers){
  await h.db.prepare("INSERT INTO launch_model_calls(id,created_at,updated_at,local_day,feature,model,state,input_tokens,output_tokens) VALUES(?,1,2,'2026-10-01','campaign-brief','synthetic-cradle-1','Succeeded',37,19)").bind(call).run()
  await h.db.prepare("INSERT INTO launch_analyses(id,created_at,updated_at,version,feature,subject_id,input_versions_json,model_call_id,content) VALUES(?,1,2,1,'campaign-brief',?,'[]',?,'Retained launch analysis')").bind(analysis,campaign.id,call).run()
 
- const tables=['workspace','workspace_settings','operators','campaigns','campaign_tags','launch_custom_fields','launch_custom_values','deliverables','milestones','milestone_dependencies','risks','decisions','lenses','evidence_comments','activity_entries','notifications','channel_deliveries','automations','automation_runs','portability_previews','portability_preview_rows','launch_analyses','launch_model_calls','evidence_files']
+ const tables=['workspace','workspace_settings','channel_preferences','channel_digest_settings','operators','campaigns','campaign_tags','launch_custom_fields','launch_custom_values','deliverables','milestones','milestone_dependencies','risks','decisions','lenses','evidence_comments','activity_entries','notifications','channel_deliveries','automations','automation_runs','portability_previews','portability_preview_rows','launch_analyses','launch_model_calls','evidence_files']
  const expected=new Map()
  for(const table of tables){
   const columns=(await h.db.prepare(`PRAGMA table_xinfo("${table}")`).all()).results.filter(column=>!column.hidden).map(column=>column.name)
@@ -56,6 +60,7 @@ export async function launchArchiveContents(h,headers){
   assert.ok(rows.length,'Archive fixture must populate '+table)
   expected.set(table,rows.map(row=>{
    if(table==='operators')row.active=0
+   if(table==='channel_digest_settings')row.enabled=0
    if(table==='automations')row.enabled=0
    if(table==='automation_runs'&&['Queued','Running','Waiting'].includes(row.state))row.state='Cancelled'
    if(table==='portability_previews'){
