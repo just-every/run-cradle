@@ -13,7 +13,7 @@ import { decode } from './codec.server';
 import { and, eq, identifier, trustedPredicate } from '../admission/sql.server';
 import { matchesFilter, compareRecords } from './evaluated-query';
 import { canonical } from '../admission/canonical';
-import { compileFilter, filterFields } from './filter.server';
+import { compileFilter, filterFields, normalizeRetainedFilter } from './filter.server';
 import { querySchema } from './validators';
 import { evaluateExpression, unavailable, validateExpressionGraph } from './formulas';
 import { createCursorCodec } from './cursor.server';
@@ -154,6 +154,7 @@ export function createRecordReader(db: D1Database, registry: DescriptorRegistry,
         for (const id of used)
             if (!scope.readableFieldIds.includes(id))
                 throw new AdmissionError('forbidden', 'Query references an unavailable field');
+        if (q.filter) q.filter = normalizeRetainedFilter(d, q.filter)!;
         const evaluated = used.some(id => { const f = d.fields.get(id); return !f || f.join || f.field.type === 'computed' || f.field.type === 'relation' || f.field.type === 'money' && (q.sort ?? []).some(s => s.fieldId === id); });
         const where = predicate(scope, d, evaluated ? { ...q, filter: undefined } : q), sort = (q.sort ?? []).map(s => { const f = d.fields.get(s.fieldId)!; if (evaluated)
             return `${identifier(d.idColumn)} ASC`; return `${identifier(f.sortColumn ?? f.column)} ${s.direction.toUpperCase()}`; });

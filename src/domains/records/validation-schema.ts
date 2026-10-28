@@ -11,6 +11,8 @@ export function validateFieldConfiguration(field: Field, parse: ParseCell) {
     for(const ids of [field.linkPicker.searchFieldIds,field.linkPicker.displayFieldIds])if(new Set(ids).size!==ids.length)throw new Error('Picker fields must not repeat.')
   }
   if (field.unique && (['multi_select','attachment','computed'].includes(field.type) || field.type === 'relation' && field.relation?.cardinality === 'many')) throw new Error('Uniqueness is available for scalar fields only.')
+  if (field.options && new Set(field.options.map(option => option.id)).size !== field.options.length) throw new Error('Choice identities must be unique.')
+  if (field.options?.some(option => option.retainedValue !== undefined) && field.type !== 'select') throw new Error('Retained values require a single-select field.')
   const limits = field.validation
   if (field.type === 'rating' && limits?.max !== undefined && !/^(?:[1-9]|10)$/.test(limits.max)) throw new Error('Rating maximum must be a whole number from 1 to 10.')
   if (field.type === 'computed' && (limits !== undefined || field.defaultValue !== undefined)) throw new Error('Calculated fields cannot declare validation or defaults.')
