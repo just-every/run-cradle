@@ -8842,7 +8842,11 @@
       "executable": false
     },
     "src/domains/lifecycle/import-retirement.server.ts": {
-      "sha256": "0ff7a3ac63e32ce01355d78686ba5a047b3a2a862a678c8c538c9c3b8de5b839",
+      "sha256": "a0c43714ffb02a01cb88bac11e38b8a9c04be201ab220086dc71373ccd7fd9b6",
+      "executable": false
+    },
+    "src/domains/lifecycle/import-tally.server.ts": {
+      "sha256": "685da024295bdae89e74e1b7a1ed337852c5c5ee99441110ca407d8404295b24",
       "executable": false
     },
     "src/domains/lifecycle/inspection-budget.server.ts": {
