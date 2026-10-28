@@ -26,10 +26,10 @@ export async function recordTemplateAutomation(h){
  const action={kind:'apply_record_template',entityId:parentId,templateId:template.id}
  const save=async(entityId,actions,extra={})=>(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-135 create order',appId,entityId,event:'created',enabled:true,actions,...extra}}})).data.result.value
  const disable=automation=>h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:automation.version}})
- const wait=async(automation,recordId)=>{
+ const wait=async(automation,recordId,commandId)=>{
   let run
   for(let attempt=0;attempt<30;attempt++){
-   await h.tick()
+   await h.tick(commandId)
    run=(await h.request(`/api/user-automations/${automation.id}/runs`)).data.runs.find(row=>row.recordId===recordId&&!row.testMode)
    if(run&&!['Queued','Running','Held'].includes(run.state))return run
    await new Promise(resolve=>setTimeout(resolve,100))
@@ -40,7 +40,7 @@ export async function recordTemplateAutomation(h){
  const automation=await save(triggerId,[action])
  try{
   const started=await create(triggerId,{[triggerName]:'synthetic-cradle-136 request'})
-  const run=await wait(automation,started.value.id)
+  const run=await wait(automation,started.value.id,started.commandId)
   assert.equal(run.state,'Complete',JSON.stringify(run))
   await h.tick(started.commandId);await h.tick(started.commandId)
   const parents=await query(parentId),children=await query(childId)
@@ -48,7 +48,8 @@ export async function recordTemplateAutomation(h){
   assert.equal(children.length,2,'Repeated queue delivery creates one child')
   const copiedParent=parents.find(row=>row.id!==parent.id),copiedChild=children.find(row=>row.ref.recordId!==template.children[0].sourceRef.recordId)
   assert.deepEqual(copiedChild.fields[parentFieldId].value,copiedParent.ref)
-  const childRun=await wait(watcher,copiedChild.id)
+  const childCommand=(await h.db.prepare('SELECT command_id FROM record_automation_events WHERE record_id=?').bind(copiedChild.id).first()).command_id
+  const childRun=await wait(watcher,copiedChild.id,childCommand)
   assert.equal(childRun.state,'Complete','Template child insertion fires the ordinary created-record automation')
   const step=await h.db.prepare('SELECT idempotency_key FROM launch_automation_actions WHERE run_id=?').bind(run.id).first()
   const facts=(await h.db.prepare("SELECT subject_json FROM admission_audit WHERE command_id=? AND action='record.create'").bind(step.idempotency_key).all()).results.map(row=>JSON.parse(row.subject_json))
@@ -69,7 +70,7 @@ export async function recordTemplateAutomation(h){
   const credential=await h.db.prepare('SELECT credential_id FROM record_automation_versions WHERE automation_id=? AND definition_version=?').bind(automation.id,automation.definitionVersion).first()
   await h.db.prepare('UPDATE authority_credentials SET revoked_at=? WHERE id=?').bind(Date.now(),credential.credential_id).run()
   const revoked=await create(triggerId,{[triggerName]:'synthetic-cradle-137 revoked'})
-  assert.equal((await wait(automation,revoked.value.id)).state,'Cancelled')
+  assert.equal((await wait(automation,revoked.value.id,revoked.commandId)).state,'Cancelled')
   assert.equal((await query(parentId)).length,3);assert.equal((await query(childId)).length,3)
  }finally{await disable(automation);await disable(watcher)}
  // A current child-table create denial refuses the approval before any effect.
@@ -80,4 +81,11 @@ export async function recordTemplateAutomation(h){
   await h.request('/api/user-automations',{method:'POST',status:403,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'synthetic-cradle-138 forbidden child',appId,entityId:triggerId,event:'created',enabled:true,actions:[action]}}})
   assert.equal((await query(parentId)).length,3);assert.equal((await query(childId)).length,3)
  }finally{await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()}
+ const duplicateWatcher=await save(parentId,[{kind:'update',fieldId:parentName,value:'synthetic-cradle-139 duplicate triggered'}])
+ try{
+  const duplicate=await command('record.duplicate',{ref:parent.ref,includeLinks:false,includeAttachments:false},[schemaExpected(parentId),{ref:parent.ref,version:parent.version}])
+  assert.equal((await wait(duplicateWatcher,duplicate.value.id,duplicate.commandId)).state,'Complete')
+  const copied=(await query(parentId)).find(row=>row.id===duplicate.value.id)
+  assert.equal(copied.fields[parentName].value,'synthetic-cradle-139 duplicate triggered','Duplication fires the ordinary new-record automation')
+ }finally{await disable(duplicateWatcher)}
 }

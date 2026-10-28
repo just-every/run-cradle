@@ -1,3 +1,4 @@
+import {assertGuards} from '../records/fence.server'
 import type {AutomationTemplates} from './template-action.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {ServerFoundation} from '../../core/app/foundation.server'
@@ -10,7 +11,7 @@ import {automationTestPreview,type ConfirmationEffect} from './test-preview.serv
 import {sendBuilderTestMail} from './test-mail.server'
 import {automationRecipient} from './recipients.server'
 import {ownerDelegationSnapshot} from '../authority/delegation.server'
-import {and,identifier,registerTable,trustedPredicate} from '../admission/sql.server'
+import {identifier,registerTable,trustedPredicate} from '../admission/sql.server'
 import {canonicalHash,canonical} from '../admission/canonical'
 import {AuthorityError} from '../authority/errors'
 import type {AutomationRun} from './run-store.server'
@@ -35,10 +36,10 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   const preview=await automationTestPreview({db,entities,descriptors,destinations,policy,templates},ctx,scope,id,definition,record,input.event)
   const confirmationHash=await canonicalHash({automationId:input.id,definitionVersion:binding.definition_version,recordId:record.id,recordVersion:record.version,event:input.event,effects:preview.confirmationEffects})
   if(input.live){const prior=await db.prepare('SELECT * FROM record_automation_tests WHERE id=? AND owner_id=? AND mode=\'dry\'').bind(input.live.previewId,ctx.principal.id).first<Stored>();if(!prior||prior.state!=='Complete'||prior.confirmation_hash!==confirmationHash||canonical(input.live.effects)!==canonical(preview.confirmationEffects))throw new AuthorityError('version_conflict','Preview the current record and confirm every named effect and destination before a live test.',409)}
-  const guard=and(own.guard,...scope.currentAuthorityGuards,...preview.guards,trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND definition_version=?)',[input.id,binding.definition_version]))
+  const guards=[own.guard,...scope.currentAuthorityGuards,...preview.guards,trustedPredicate('EXISTS(SELECT 1 FROM automations WHERE id=? AND definition_version=?)',[input.id,binding.definition_version])]
   let version=record.version
   const descriptor=descriptors.get(ref.appId,ref.entityId),recordGuard=trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(descriptor.table.tableId)} WHERE ${identifier(descriptor.idColumn)}=? AND ${identifier(descriptor.versionColumn)}=? AND (${scope.rowPredicate.sql}))`,[record.id,record.version,...scope.rowPredicate.values])
-  async function authorize(){await reader.assertScope(ctx,scope);if((await reader.record(ctx,scope,ref)).version!==version)throw new AuthorityError('version_conflict','The chosen record changed during this test.',409);if(!await db.prepare(`SELECT 1 WHERE ${guard.sql}`).bind(...guard.values).first())throw new AuthorityError('forbidden','The author’s authority or automation changed before the test effect.')}
+  async function authorize(){await reader.assertScope(ctx,scope);if((await reader.record(ctx,scope,ref)).version!==version)throw new AuthorityError('version_conflict','The chosen record changed during this test.',409);try{await assertGuards(db,guards)}catch(error){if(error instanceof Error&&'code'in error&&error.code==='version_conflict')throw new AuthorityError('forbidden','The author’s authority or automation changed before the test effect.');throw error}}
   await authorize()
   const result={id,mode,testMode:mode,definitionVersion:binding.definition_version,recordId:record.id,recordLabel:record.id,state:'Unknown',queuedAt:ctx.now,trigger:preview.trigger,steps:preview.steps,confirmationEffects:preview.confirmationEffects}
   // Receiver URLs may contain credentials. History stores destination IDs and
@@ -47,7 +48,7 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   function storedResult(){return JSON.stringify({...result,confirmationEffects:undefined,steps:result.steps.map(step=>step.kind==='webhook'||step.kind==='slack'?{...step,output:withoutReceiverUrls(step.output)}:step)})}
 
   const permit=await policy.authorize(ctx,{appId:ref.appId,targetEntityId:ref.entityId,action:'view.preview',expected:[],cost:[],inputHash:hash})
-  const claimed=await admission.commit(ctx,{commandId:id,action:'automation.test',appId:ref.appId,canonicalInputHash:hash,permit:{...permit,action:'automation.test'},guards:[guard,recordGuard],mutations:[{kind:'insert',table:tests,row:{id,automation_id:input.id,owner_id:ctx.principal.id,app_id:ref.appId,entity_id:ref.entityId,record_id:record.id,definition_version:binding.definition_version,record_version:record.version,mode,state:'Unknown',created_at:ctx.now,result_json:storedResult(),confirmation_hash:confirmationHash}}],audit:[{action:'automation.test',subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,mode}})
+  const claimed=await admission.commit(ctx,{commandId:id,action:'automation.test',appId:ref.appId,canonicalInputHash:hash,permit:{...permit,action:'automation.test'},guards:[...guards,recordGuard],mutations:[{kind:'insert',table:tests,row:{id,automation_id:input.id,owner_id:ctx.principal.id,app_id:ref.appId,entity_id:ref.entityId,record_id:record.id,definition_version:binding.definition_version,record_version:record.version,mode,state:'Unknown',created_at:ctx.now,result_json:storedResult(),confirmation_hash:confirmationHash}}],audit:[{action:'automation.test',subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,mode}})
   if(claimed.replay)return replayResult()
   const effectContext={...ctx,causeRunIds:[...(ctx.causeRunIds??[]),id]}
   const run:AutomationRun={id,automation_id:input.id,definition_version:binding.definition_version,subject_id:record.id,state:'Running',definition_json:JSON.stringify({definition,event:{ref,event:input.event,version:record.version}}),cause_run_ids_json:'[]',principal_id:ctx.principal.id,credential_id:null,app_id:ref.appId,entity_id:ref.entityId}

@@ -1,3 +1,4 @@
+import {recordTemplateAutomationBrowser} from './record-template-automation-browser.mjs'
 import {recordTemplateButtonsBrowser} from './record-template-buttons.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
@@ -26,6 +27,12 @@ export async function recordTemplateBrowser(page,j,h,width){
  const create=async(entityId,values)=>{const entity=await call(`/api/v1/apps/${appId}/entities/${entityId}`);return(await call('/api/v1/commands/record.create',envelope({appId,entityId,values},[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:entity.version}]))).value}
  const supplier=await create(vendorId,{[vendorName.id]:`synthetic-cradle-${width+1}`}),source=await create(parentId,{[title.id]:`synthetic-cradle-${width+2}`,[vendor.id]:supplier.ref})
  await create(childId,{[line.id]:`synthetic-cradle-${width+3}`,[parent.id]:source.ref})
+ // The attachment producer is the existing evidence upload door. Give this
+ // fixture's owner its explicit upload permissions, as the gallery journey does.
+ const owner=(await h.db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first()).owner_id
+ const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.app_id=? AND m.principal_id=?').bind(appId,owner).first()
+ const rules=JSON.parse(policy.rules_json).map(rule=>rule.entityId===parentId?{...rule,actions:[...new Set([...rule.actions,'upload.begin','upload.complete'])]}:rule)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
  const base=`/app/records/${appId}/${parentId}`,sourcePath=`${base}/${source.id}`
  await page.goto(h.origin+sourcePath);await j.action(page.getByRole('button',{name:'Edit record',exact:true}))
  const bytes=Buffer.from(`synthetic-cradle-${width+4}`)
@@ -79,5 +86,6 @@ export async function recordTemplateBrowser(page,j,h,width){
  const formName=`synthetic-cradle-${width+8}`;await page.getByLabel('Order *',{exact:true}).fill(formName);await j.capture('record-template-form-edit')
  const formRow=await j.command(page.getByRole('button',{name:'Submit',exact:true}),'form.submit');await assertApplied(formRow,formName);await j.capture('record-template-form-submitted')
  const buttons=await recordTemplateButtonsBrowser(page,j,h,width,{appId,parentId,source,template})
- return {buttons,duplicates,templateId:template.id,gridRecordId:gridRow.id,formRecordId:formRow.id,childRecordsCreated:2}
+ const automation=await recordTemplateAutomationBrowser(page,j,h,width,{appId,parentId,source,template})
+ return {automation,buttons,duplicates,templateId:template.id,gridRecordId:gridRow.id,formRecordId:formRow.id,childRecordsCreated:2}
 }

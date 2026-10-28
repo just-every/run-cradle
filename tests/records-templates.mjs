@@ -48,8 +48,9 @@ test('RECORDS-009 template children commit once with current permissions and fai
  try{
   const saved=await h.execute('record.template-save',h.command({ref:h.source.ref,name:'synthetic-cradle-7',includeLinks:true,includeAttachments:false,includeChildren:true})),template=saved.result.value
   assert.equal(template.children.length,1);assert.equal(template.children[0].values[h.item.id],'synthetic-cradle-5');assert.deepEqual(template.values[h.vendor.id],h.vendorRow.ref)
+  await h.changePolicy(rules=>rules.map(rule=>rule.entityId===h.parentId?{...rule,writableFields:rule.writableFields.filter(id=>id!==h.secret.id)}:rule))
   const expected=h.expected.slice(1),input=h.command({appId:h.appId,entityId:h.parentId,templateId:template.id,values:{[h.title.id]:'synthetic-cradle-8'}},expected),result=await h.execute('record.apply-template',input),parent=result.result.value
-  assert.equal(parent.fields[h.title.id].value,'synthetic-cradle-8');assert.deepEqual(parent.fields[h.vendor.id].value,h.vendorRow.ref)
+  assert.equal(parent.fields[h.secret.id].value,null);assert.equal(parent.fields[h.title.id].value,'synthetic-cradle-8');assert.deepEqual(parent.fields[h.vendor.id].value,h.vendorRow.ref)
   const scope=await h.r.policy.scope(h.ctx,{appId:h.appId,entityId:h.childId,purpose:'read'}),children=await h.r.services.reader.query(h.ctx,scope,{filter:{kind:'condition',fieldId:h.link.id,op:'eq',value:parent.ref}})
   assert.equal(children.items.length,1);assert.equal(children.items[0].fields[h.item.id].value,'synthetic-cradle-5');assert.deepEqual(children.items[0].fields[h.link.id].value,parent.ref)
   const audit=await h.db.prepare('SELECT action,subject_json,changes_json FROM admission_audit WHERE command_id=?').bind(input.commandId).all()
