@@ -1,3 +1,4 @@
+import {useDocumentSession} from '../../core/app/document-context'
 import { createContext, useContext, useEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react'
 import { Tooltip } from '../shared/tooltip'
 import { useGridHistory } from './grid-history'
@@ -14,6 +15,7 @@ export function TableToolsProvider({ children }: { children: ReactNode }) {
 export function useTableGridTools() { return useContext(GridToolsContext) }
 export type TableToolPanel = 'columns' | 'shortcuts' | 'summary' | null
 export function TableTools({ exports, onImport, onGallery, onForms, onFind, onPanel, onSave }: { exports: ReactNode; onImport(): void; onGallery?: () => void; onForms(): void; onFind(): void; onPanel(panel: TableToolPanel): void; onSave(): void }) {
+  const guest=Boolean(useDocumentSession()?.guest)
   const [open, setOpen] = useState(false), anchor = useRef<HTMLButtonElement>(null), history = useGridHistory(), grid = useTableGridTools()
   const [phone, setPhone] = useState(false)
   useEffect(() => { const media = matchMedia('(max-width: 600px)'), update = () => setPhone(media.matches); update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update) }, [])
@@ -21,14 +23,14 @@ export function TableTools({ exports, onImport, onGallery, onForms, onFind, onPa
   return <>
     <Tooltip label="Table tools"><button ref={anchor} type="button" className="cr-chip cr-table-tools__trigger" aria-label="Table tools" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>⋯</button></Tooltip>
     <ViewSheet title="Table tools" open={open} onClose={() => setOpen(false)} anchor={anchor}>
-      {exports}
-      <button type="button" onClick={action(onImport)}>Import CSV</button>
+      {!guest && exports}
+      {!guest && <button type="button" onClick={action(onImport)}>Import CSV</button>}
       {onGallery && <><h3>Display</h3><button type="button" onClick={action(onGallery)}>Gallery</button></>}
-      <button type="button" onClick={action(onForms)}>Forms</button>
+      {!guest && <button type="button" onClick={action(onForms)}>Forms</button>}
       <button type="button" onClick={action(onFind)}>Find</button>
       <button type="button" onClick={action(() => onPanel('summary'))}>Summary</button>
       <button type="button" onClick={action(() => onPanel('columns'))}>Visible columns</button>
-      <button type="button" onClick={action(onSave)}>Save view</button>
+      {!guest && <button type="button" onClick={action(onSave)}>Save view</button>}
       <button type="button" disabled={!history.canUndo} onClick={action(history.undo)}>Undo</button>
       <button type="button" disabled={!history.canRedo} onClick={action(history.redo)}>Redo</button>
       <button type="button" disabled={!grid?.canFill || history.busy} onClick={action(() => grid?.fill.current?.())}>Fill down</button>

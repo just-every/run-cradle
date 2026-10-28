@@ -2142,13 +2142,15 @@ Core · target · **partial**
 
 Core · target · **partial**
 
+**Requirement.** *Tier:* Core · *Cites:* BASE-ACCESS-001, BASE-ACCESS-002, BASE-ACCESS-004, BASE-DATA-003
+
 **Requirement.** An owner can invite a guest by email to one base or interface; guests see nothing else in the installation, cannot invite others and count against no license.
 
 **Acceptance.**
 1. Guest journey: one base visible, workspace navigation and search show nothing else.
 
-**Evidence.** `src/domains/authority/member-management.server.ts`
-**Gap.** per-app memberships exist (src/domains/authority/member-management.server.ts); guest invitation and isolation journey absent
+**Evidence.** `tests/launch-authority-browser.mjs` (emailed guests see one base, isolated navigation and search, cannot invite and use no licenses); `tests/helpers/guest-access-journey.mjs` (guestAccessJourney: native emailed invitation, single-base reads and search, invitation and write refusals, unchanged operator usage and zero guest licenses; finishGuestAccess: removal, erasure and captured-token replay refusal); `tests/helpers/guest-access-browser.mjs` (guestAccessBrowser: Settings invitation, navigation, base picker and positive and negative search at 1440 and 390); `tests/lifecycle-identity-security.mjs` (member erasure retires attributed OIDC custody, retains used grants and preserves accountant mappings)
+**Gap.** Product acceptance is asserted through the base alternative. DONE rider 6 remains blocked on Base contract-document tooling adoption: this held pin has no contract-docs generator or declared Lander-Regenerate command, so generated document synchronization cannot be checked.
 
 #### PERM-006 — Share links
 

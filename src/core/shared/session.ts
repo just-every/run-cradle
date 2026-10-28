@@ -1,4 +1,5 @@
 export type CurrentSession = {
+  guest?: { appId: string }
   editorOwner?: boolean
   editorConfigured?: boolean
   proposalReviewer?: boolean

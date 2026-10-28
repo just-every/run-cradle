@@ -1,3 +1,4 @@
+import {guestScope} from './guests.server'
 import {personalStorePermit} from './personal-stores.server'
 import {liveRecord} from '../records/trash/authority.server'
 import {ownerSheetsRead} from './sheets-read.server'
@@ -24,6 +25,8 @@ const readOnlyContexts=new WeakSet<RequestContext>()
 export const readOnlyContext=<T extends RequestContext>(ctx:T)=>{readOnlyContexts.add(ctx);return ctx}
 export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:DecisionAuthorityPort):PolicyPort=>{
   const load=async(ctx:RequestContext,appId:string)=>{
+    const guest=await guestScope(db,ctx.principal.id)
+    if(guest&&guest.appId!==appId)return denied()
     const row=await db.prepare(`SELECT p.id,p.version,p.rules_json,m.version AS membership_version FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active' AND p.app_id=m.app_id`).bind(ctx.principal.id,appId).first<{id:string;version:number;rules_json:string;membership_version:number}>()
     if(!row)return denied()
     const rules=policyRuleSchema.array().parse(JSON.parse(row.rules_json)) as Policy['rules']
@@ -79,6 +82,7 @@ export const createPolicyPort=(db:D1Database,registry:EntityRegistry,decisions?:
     return result
   }
   const authorize:PolicyPort['authorize']=async(ctx,request)=>{
+    if(await guestScope(db,ctx.principal.id))return denied('Guests have read access only.')
     // The binding was read from durable server-owned delegation state, never a request role.
     if(ctx.principal.delegationGrant&&!request.grantId)
       request={...request,grantId:ctx.principal.delegationGrant.id,grantVersion:ctx.principal.delegationGrant.version}

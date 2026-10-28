@@ -1,3 +1,4 @@
+import {guestScope} from './guests.server'
 import type { AuthorityPermit, PolicyPort, RequestContext } from './ports'
 import type { SqlPredicate } from '../admission/ports'
 import { and, trustedPredicate } from '../admission/sql.server'
@@ -16,6 +17,7 @@ export const operatorManagementV1:OperatorManagementPolicy=async()=>({allowed:tr
 export function createMemberManagementPolicy(db:D1Database,ordinary:PolicyPort,management=operatorManagementV1):PolicyPort {
  return {scope:ordinary.scope,async authorize(ctx,request){
   if(!actions.has(request.action))return ordinary.authorize(ctx,request)
+  if(await guestScope(db,ctx.principal.id))return denied('Guests cannot manage people or invitations.')
   if(ctx.principal.kind!=='human'||!ctx.principal.sessionId||!ctx.principal.baseSessionId)
    return denied('Collaborator management requires a current operator session.')
   const row=await db.prepare(`SELECT m.version AS membership_version,m.legacy,p.id AS policy_id,p.version AS policy_version,p.rules_json,
