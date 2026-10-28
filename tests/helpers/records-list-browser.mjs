@@ -10,7 +10,7 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 
 export async function listBrowserJourney(){
  const output=path.resolve('.private/records-list');await mkdir(output,{recursive:true})
- let h,browser
+ let h,browser,capturedCreate
  try{
   h=await recordsBrowserRuntime(0);console.log('List journey: native runtime ready');const call=listHttp(h),f=await listFixture(call);console.log('List journey: five linked tables and saved views ready')
   await listPolicy(h,f)
@@ -24,7 +24,7 @@ export async function listBrowserJourney(){
     const small=await page.locator('.cr-record-list, .cr-list-settings').evaluateAll(roots=>roots.flatMap(root=>[...root.querySelectorAll('*')].filter(el=>el.getClientRects().length&&[...el.childNodes].some(node=>node.nodeType===3&&node.textContent.trim())&&parseFloat(getComputedStyle(el).fontSize)<13).map(el=>el.tagName+': '+getComputedStyle(el).fontSize)))
     assert.deepEqual(small,[],'List controls and values remain readable')
     await page.screenshot({path:path.join(output,`${width}-${name}.png`),fullPage:true})}
-   async function command(action,name='record.patch',status=200){const pending=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/'+name));await action();const response=await pending;assert.equal(response.status(),status,await response.text());return (await response.json()).data}
+   async function command(action,name='record.patch',status=200){const pending=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/'+name));await action();const response=await pending;if(name==='record.create'&&status===200)capturedCreate=response.request().postDataJSON();assert.equal(response.status(),status,await response.text());return (await response.json()).data}
    const read=async(id,index=1)=>(await call(`/api/v1/apps/${f.appId}/entities/${f.tables[index].id}/records/${id}`)).record
    try{
     await page.goto(`${h.origin}/app/records/${f.appId}/${f.tables[0].id}`);await displayAction(page,f.view.name)
@@ -43,6 +43,10 @@ export async function listBrowserJourney(){
     await row(f.check.id,4).waitFor();assert.match(await row(f.check.id,4).innerText(),/Confirm dimensions/)
     await snap('five-level-outline');console.log(`List journey ${width}: five-level outline and policy counts passed`)
     await page.reload();await displayAction(page,f.view.name);await row(f.check.id,4).waitFor()
+    await row(f.taskA.id,1).getByRole('button',{name:'Collapse Alpha task',exact:true}).click()
+    await page.reload();await displayAction(page,f.view.name);await row(f.taskA.id,1).waitFor()
+    assert.equal(await page.locator(`[data-list-record-id="${f.check.id}"]`).count(),0,'Collapsed branches remain collapsed after reload')
+    await row(f.taskA.id,1).getByRole('button',{name:'Expand Alpha task',exact:true}).click();await row(f.check.id,4).waitFor()
     const task=row(f.taskA.id,1)
     await task.getByRole('button',{name:'Edit Notes',exact:true}).click()
     await task.getByLabel('Notes',{exact:true}).fill(`Survey confirmed ${width}`)
@@ -75,7 +79,7 @@ export async function listBrowserJourney(){
     await row(f.taskA.id,0).waitFor();await row(f.taskB.id,0).waitFor()
     await command(()=>row(f.taskB.id,0).getByRole('button',{name:'Indent Beta task',exact:true}).click())
     assert.deepEqual((await read(f.taskB.id)).fields[f.tables[1].self.id].value,f.taskA.ref)
-    await row(f.taskA.id,0).getByRole('button',{name:'Expand Alpha task',exact:true}).click();await row(f.taskB.id,1).waitFor()
+    await row(f.taskB.id,1).waitFor()
     await command(()=>row(f.taskB.id,1).getByRole('button',{name:'Outdent Beta task',exact:true}).click())
     assert.equal((await read(f.taskB.id)).fields[f.tables[1].self.id].value,null)
     if(width===1440){
@@ -91,8 +95,10 @@ export async function listBrowserJourney(){
   const task=(await call(`/api/v1/apps/${f.appId}/entities/${f.tables[1].id}/records/${f.taskA.id}`)).record
   const move={commandId:createUlid(),expected:[{ref:task.ref,version:task.version}],input:{ref:task.ref,changes:{[f.tables[1].self.id]:f.taskB.ref}}}
   await call('/api/v1/commands/record.patch',move,403)
+  await call('/api/v1/commands/record.create',capturedCreate,403)
   assert.equal((await call(`/api/v1/apps/${f.appId}/entities/${f.tables[1].id}/records/${f.taskA.id}`)).record.fields[f.tables[1].self.id].value,null)
-  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage()
+  for(const width of recordsBrowserWidths()){
+  const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage()
   try{
    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(`${h.origin}/app/records/${f.appId}/${f.tables[0].id}`);await displayAction(page,f.view.name)
    const project=page.locator(`[data-list-record-id="${f.project.id}"][data-list-level="0"]`)
@@ -101,8 +107,15 @@ export async function listBrowserJourney(){
    assert.equal(await readonly.getByRole('button',{name:/^Edit /}).count(),0);assert.equal(await readonly.getAttribute('draggable'),'false')
    assert.doesNotMatch(await readonly.innerText(),/Survey confirmed/)
    assert.doesNotMatch(await page.locator('.cr-record-list').innerText(),/Confidential task/)
-   await page.screenshot({path:path.join(output,'390-policy-restricted.png'),fullPage:true})
+   await page.screenshot({path:path.join(output,`${width}-policy-restricted.png`),fullPage:true})
   }finally{await context.close()}
+  }
+  const csrf=(await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json()).csrfToken
+  await h.db.prepare('UPDATE authority_sessions SET revoked_at=?').bind(Date.now()).run()
+  assert.equal((await fetch(h.origin+`/api/v1/views/${f.view.id}`,{headers:{cookie:h.cookie}})).status,401)
+  assert.equal((await fetch(h.origin+'/api/v1/commands/record.create',{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrf},body:JSON.stringify(capturedCreate)})).status,401)
   console.log(`List outline journey passed: five levels, settings, inline edit, atomic child, parent moves, remembered expansion and policy at ${recordsBrowserWidths().join(' and ')}`)
  }finally{await browser?.close();await h?.close()}
 }
+
+if (process.argv[1] === import.meta.filename) await listBrowserJourney()
