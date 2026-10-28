@@ -1,0 +1,267 @@
+name: Diagnose launch doors
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  TZ: UTC
+  CI: 'true'
+  WRANGLER_SEND_METRICS: 'false'
+  PLAYWRIGHT_SKIP_BROWSER_GC: '1'
+jobs:
+  diagnose:
+    name: launch-doors-${{ matrix.label }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: candidate
+            ref: b3ce93132cf23689778f296880b13f8f0c500560
+          - label: main
+            ref: 332c23614904c1665534cd6f2584cf1087286625
+    env:
+      DIAG_LABEL: ${{ matrix.label }}
+      DIAG_REF: ${{ matrix.ref }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ matrix.ref }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22.20.0'
+          package-manager-cache: false
+      - run: npm install --global pnpm@10.12.4
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ~/.local/share/pnpm/store
+            ~/.cache/ms-playwright
+          key: seed-ubuntu24-${{ runner.arch }}-browser-true-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+      - run: pnpm install --frozen-lockfile --ignore-workspace
+      - name: Cache fallback Chromium library archives
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ${{ runner.temp }}/rer-apt/archives
+          key: seed-ubuntu24-${{ runner.arch }}-chromium-apt-${{ hashFiles('pnpm-lock.yaml', 'scripts/install-chromium-deps.py') }}
+      - name: Install Chromium
+        run: |
+          set -euo pipefail
+          pnpm exec playwright install chromium
+          if ! pnpm exec node scripts/chromium-probe.mjs; then
+            sudo env "PATH=$PATH" "APT_ARCHIVES=$RUNNER_TEMP/rer-apt/archives" python3 scripts/install-chromium-deps.py
+            pnpm exec node scripts/chromium-probe.mjs
+          fi
+      - name: Build, types and managed specification
+        run: node scripts/verify-app.mjs build
+      - name: Prepare diagnostic observer outside the checkout
+        run: |
+          cat > "$RUNNER_TEMP/diag-observe.mjs" <<'DIAG_OBSERVER'
+          import {appendFileSync} from 'node:fs';
+          import {createRequire, syncBuiltinESMExports} from 'node:module';
+          import {channel} from 'node:diagnostics_channel';
+          import childProcess from 'node:child_process';
+          const target = process.env.DIAG_EVENTS;
+          const emit = (event, data = {}) => {
+            if (target) appendFileSync(target, JSON.stringify({at: Date.now(), pid: process.pid, event, ...data}) + '\n');
+          };
+          const route = raw => {
+            try { return new URL(raw, 'http://localhost').pathname; } catch { return '<invalid-url>'; }
+          };
+          const requests = new WeakMap();
+          channel('undici:request:create').subscribe(({request}) => {
+            requests.set(request, Date.now());
+            emit('request', {source: 'node', method: request.method, path: route(request.path)});
+          });
+          channel('undici:request:headers').subscribe(({request, response}) => {
+            emit('response', {source: 'node', method: request.method, path: route(request.path), status: response.statusCode, ms: Date.now() - requests.get(request)});
+          });
+          channel('undici:request:error').subscribe(({request, error}) => {
+            emit('request-failed', {source: 'node', method: request.method, path: route(request.path), code: error.code ?? error.name, ms: Date.now() - requests.get(request)});
+          });
+          channel('http.client.request.start').subscribe(({request}) => {
+            const start = Date.now(), data = {source: 'http', method: request.method, path: route(request.path)};
+            emit('request', data);
+            request.once('response', response => emit('response', {...data, status: response.statusCode, ms: Date.now() - start}));
+            request.once('error', error => emit('request-failed', {...data, code: error.code ?? error.name, ms: Date.now() - start}));
+          });
+          const spawn = childProcess.spawn;
+          childProcess.spawn = function(file, args, options) {
+            const child = spawn.call(this, file, args, options);
+            if (/(?:^|\/)workerd(?:$|\/)/.test(String(file)) && args?.includes('serve')) {
+              emit('workerd-start', {child: child.pid});
+              child.once('exit', (code, signal) => emit('workerd-exit', {child: child.pid, code, signal}));
+            }
+            return child;
+          };
+          syncBuiltinESMExports();
+          // Observe the same Playwright instance used by the journey. Never record headers,
+          // bodies, cookies, query strings, or arbitrary console messages.
+          if (/[/\\]tests[/\\]ui-launch-walkthrough\.mjs$/.test(process.argv[1] ?? '')) {
+            const require = createRequire(process.cwd() + '/package.json');
+            const {chromium} = require('@playwright/test');
+            const launch = chromium.launch.bind(chromium);
+            chromium.launch = async (...args) => {
+              const browser = await launch(...args);
+              const newContext = browser.newContext.bind(browser);
+              browser.newContext = async (...options) => {
+                const context = await newContext(...options);
+                context.on('page', page => {
+                  page.on('request', request => emit('request', {source: 'browser', method: request.method(), path: route(request.url())}));
+                  page.on('response', response => emit('response', {source: 'browser', path: route(response.url()), status: response.status()}));
+                  page.on('requestfailed', request => emit('request-failed', {source: 'browser', method: request.method(), path: route(request.url())}));
+                  page.on('crash', () => emit('browser-crash'));
+                  const screenshot = page.screenshot.bind(page);
+                  page.screenshot = async options => {
+                    const step = String(options?.path ?? '').split(/[/\\]/).pop();
+                    emit('step', {step});
+                    const result = await screenshot(options);
+                    emit('step-complete', {step});
+                    return result;
+                  };
+                });
+                return context;
+              };
+              return browser;
+            };
+          }
+          DIAG_OBSERVER
+          cat > "$RUNNER_TEMP/diag-attempt.py" <<'DIAG_ATTEMPT'
+          import collections
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import signal
+          import subprocess
+          import time
+
+          attempt = int(os.environ['ATTEMPT'])
+          directory = Path(os.environ['RUNNER_TEMP']) / 'launch-doors-diag' / os.environ['DIAG_LABEL'] / f'attempt-{attempt}'
+          directory.mkdir(parents=True, exist_ok=True)
+          events_path = directory / 'events.jsonl'
+          env = dict(os.environ, DIAG_EVENTS=str(events_path),
+                     NODE_OPTIONS='--import=' + str(Path(os.environ['RUNNER_TEMP']) / 'diag-observe.mjs'),
+                     CRADLE_LAUNCH_EVIDENCE=str(directory / 'screens'),
+                     CRADLE_AUTHORITY_EVIDENCE=str(directory / 'authority'))
+          started = time.monotonic()
+          timed_out = False
+          with (directory / 'shard.log').open('w') as log:
+              process = subprocess.Popen(['node', 'scripts/verify-ci.mjs', 'launch-doors'],
+                                         stdout=log, stderr=subprocess.STDOUT, env=env, start_new_session=True)
+              try:
+                  code = process.wait(timeout=720)
+              except subprocess.TimeoutExpired:
+                  timed_out = True
+                  os.killpg(process.pid, signal.SIGTERM)
+                  try:
+                      process.wait(timeout=15)
+                  except subprocess.TimeoutExpired:
+                      os.killpg(process.pid, signal.SIGKILL)
+                      process.wait()
+                  code = 124
+              finally:
+                  # Release only descendants of this attempt's process group, including
+                  # workerd/browser children left behind by a failed journey.
+                  try:
+                      os.killpg(process.pid, signal.SIGTERM)
+                  except ProcessLookupError:
+                      pass
+          elapsed = round(time.monotonic() - started, 3)
+          events = []
+          if events_path.exists():
+              for line in events_path.read_text().splitlines():
+                  try:
+                      events.append(json.loads(line))
+                  except json.JSONDecodeError:
+                      pass
+          log = (directory / 'shard.log').read_text(errors='replace')
+          requests = [event for event in events if event['event'] == 'request']
+          steps = [event.get('step') for event in events if event['event'] == 'step']
+          failures = [event for event in events if event['event'] == 'request-failed']
+          starts = [event for event in events if event['event'] == 'workerd-start']
+          starts_per_parent = collections.Counter(event['pid'] for event in starts)
+          # A replacement is a second serve process from the same Node parent.
+          # Include deliberate fixture restarts; retain starts/exits for interpretation.
+          restarts = sum(max(0, count - 1) for count in starts_per_parent.values())
+          stack = re.findall(r'(?:at .*|.*(?:Error|error:|not ok|timeout|socket hang up).*)', log)
+          samples = [event for event in events if event.get('path') == '/api/v1/launch/samples']
+          summary = {
+              'attempt': attempt, 'label': os.environ['DIAG_LABEL'], 'ref': os.environ['DIAG_REF'],
+              'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+              'result': 'pass' if code == 0 else 'fail', 'exit_code': code,
+              'wall_seconds': elapsed, 'timed_out': timed_out,
+              'failing_step': None if code == 0 else {'last_screen': steps[-1] if steps else None, 'diagnostic_tail': stack[-20:]},
+              'last_request': requests[-1] if requests else None,
+              'last_request_failure': failures[-1] if failures else None,
+              'workerd_starts': len(starts), 'workerd_restart_count': restarts,
+              'workerd_restart_definition': 'additional serve starts per Node parent; includes deliberate fixture restarts',
+              'samples_events': samples,
+          }
+          (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+          print('DIAG_ATTEMPT ' + json.dumps(summary), flush=True)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as report:
+              report.write(f"\n### {summary['label']} attempt {attempt}: {summary['result']}\n")
+              report.write(f"- ref: {summary['head']}\n- wall: {elapsed}s\n- exit: {code}\n- workerd restarts: {restarts}\n")
+              report.write("- last request: " + json.dumps(summary['last_request']) + "\n")
+          raise SystemExit(0 if code == 0 else 1)
+          DIAG_ATTEMPT
+      - name: Launch doors attempt 1
+        id: attempt_1
+        continue-on-error: true
+        env:
+          ATTEMPT: '1'
+        run: python3 "$RUNNER_TEMP/diag-attempt.py"
+      - name: Launch doors attempt 2
+        id: attempt_2
+        if: ${{ !cancelled() && (steps.attempt_1.outcome == 'success' || steps.attempt_1.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          ATTEMPT: '2'
+        run: python3 "$RUNNER_TEMP/diag-attempt.py"
+      - name: Launch doors attempt 3
+        id: attempt_3
+        if: ${{ !cancelled() && (steps.attempt_1.outcome == 'success' || steps.attempt_1.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          ATTEMPT: '3'
+        run: python3 "$RUNNER_TEMP/diag-attempt.py"
+      - name: Launch doors attempt 4
+        id: attempt_4
+        if: ${{ !cancelled() && (steps.attempt_1.outcome == 'success' || steps.attempt_1.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          ATTEMPT: '4'
+        run: python3 "$RUNNER_TEMP/diag-attempt.py"
+      - name: Launch doors attempt 5
+        id: attempt_5
+        if: ${{ !cancelled() && (steps.attempt_1.outcome == 'success' || steps.attempt_1.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          ATTEMPT: '5'
+        run: python3 "$RUNNER_TEMP/diag-attempt.py"
+      - name: Upload diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launch-doors-${{ matrix.label }}
+          path: ${{ runner.temp }}/launch-doors-diag/${{ matrix.label }}
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Require five recorded attempts
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'DIAG_REQUIRE'
+          import json
+          import os
+          from pathlib import Path
+          directory = Path(os.environ['RUNNER_TEMP']) / 'launch-doors-diag' / os.environ['DIAG_LABEL']
+          summaries = [json.loads(path.read_text()) for path in sorted(directory.glob('attempt-*/summary.json'))]
+          if len(summaries) != 5:
+              raise SystemExit(f'Setup or instrumentation failure: recorded {len(summaries)}/5 attempts')
+          failed = sum(item['result'] == 'fail' for item in summaries)
+          print(f"DIAG_TOTAL {os.environ['DIAG_LABEL']} failed={failed}/5")
+          DIAG_REQUIRE
