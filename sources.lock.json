@@ -3025,6 +3025,10 @@
       "sha256": "29bdfdb9912200aa312da9365cbe358a91bde52d11d7ace81f733d1d0c944368",
       "executable": false
     },
+    "docs/agent-door.md": {
+      "sha256": "dce81fa852faeb12391fdb3c1e7fbfcadd81ee6666218b5099c962955470f983",
+      "executable": false
+    },
     "docs/agent-proposals.md": {
       "sha256": "627f819909cdf2c7f923e0c6f87747c1958d48968a22dca9ed2f4c13c1882e18",
       "executable": false
@@ -4578,7 +4582,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "2dea2e760473ff5dc4a3c4a17fede61a7f06730d336b55da9c631027b3d3dbe2",
+      "sha256": "819c8a4219843484eacedbb574140fd958d717521d5029011d7342ab3b025fec",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
