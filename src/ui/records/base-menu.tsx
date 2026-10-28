@@ -16,7 +16,7 @@ export function BaseMenu({ apps, appId, manual, onCreate, onEdit }: { apps: Base
   const guest=Boolean(useDocumentSession()?.guest)
   const [open, setOpen] = useState(false), [panel, setPanel] = useState<'people' | 'reviews' | 'export' | 'fields' | null>(null)
   const anchor = useRef<HTMLButtonElement>(null)
-  const access = useResource<BaseAccess>(manual && appId ? `/api/v1/records/bases/${appId}/access` : null)
+  const access = useResource<BaseAccess>(manual && appId && !guest ? `/api/v1/records/bases/${appId}/access` : null)
   const canManage = access.resource.state === 'ready' && access.resource.data.canManage
   const canAdopt = access.resource.state === 'ready' && access.resource.data.canAdopt
   const reviews = useResource<{ items: unknown[] }>(canManage ? `/api/v1/records/bases/${appId}/reviews` : null, { refreshMs: 15000 })
