@@ -1,3 +1,4 @@
+import {displayAction,tableAction} from './records-table-tools.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {newField} from '../../src/ui/records/schema/templates.ts'
@@ -86,11 +87,11 @@ export async function boardBrowserJourney(page,j,h,width){
  const detail=page.locator(`[data-record-id="${f.row.id}"][data-field-id="${f.detail.id}"]`)
  await detail.dblclick();await page.getByLabel('Edit Detail',{exact:true}).fill('Edited in grid')
  await action(()=>page.getByRole('button',{name:'Save cell',exact:true}).click())
- await j.action(page.getByRole('navigation',{name:'Record display',exact:true}).getByRole('button',{name:'Board',exact:true}))
+ await displayAction(page,'Board',j.action)
  await inColumn(f.stage.options[0].id)
- await action(()=>toolbar().getByRole('button',{name:'Undo',exact:true}).click());assert.equal((await row()).fields[f.detail.id].value,'Before move')
+ await action(()=>tableAction(page,'Undo'));assert.equal((await row()).fields[f.detail.id].value,'Before move')
  await inColumn(f.stage.options[0].id)
- await action(()=>toolbar().getByRole('button',{name:'Redo',exact:true}).click());assert.equal((await row()).fields[f.detail.id].value,'Edited in grid')
+ await action(()=>tableAction(page,'Redo'));assert.equal((await row()).fields[f.detail.id].value,'Edited in grid')
  await inColumn(f.stage.options[0].id)
  await j.capture('board-before-move')
  if(width===1440){
@@ -103,16 +104,16 @@ export async function boardBrowserJourney(page,j,h,width){
  await board().focus();await action(()=>page.keyboard.press(`${modifier}+z`));await inColumn(f.stage.options[0].id)
  await board().focus();await action(()=>page.keyboard.press(`${modifier}+Shift+z`));await inColumn(f.stage.options[1].id)
  // Undo a board action from the grid toolbar, without leaving this table session.
- await j.action(page.getByRole('navigation',{name:'Record display',exact:true}).getByRole('button',{name:'Grid',exact:true}))
- await action(()=>page.locator('.cr-grid-actions').getByRole('button',{name:'Undo',exact:true}).click())
+ await displayAction(page,'Grid',j.action)
+ await action(()=>tableAction(page,'Undo'))
  assert.equal((await row()).fields[f.stage.id].value,f.stage.options[0].id)
- await j.action(page.getByRole('navigation',{name:'Saved views',exact:true}).getByRole('button',{name:f.view.name,exact:true}))
+ await displayAction(page,f.view.name,j.action)
  await inColumn(f.stage.options[0].id)
  assert.equal(await card().getByText('Stage',{exact:true}).count(),0,'A hidden grouping field stays hidden on the card')
  await card().getByRole('combobox',{name:'Move to Board card',exact:true}).selectOption(f.stage.options[1].id)
  await action(()=>j.action(card().getByRole('button',{name:'Move Board card',exact:true})))
  await page.getByRole('heading',{name:'No matching records',exact:true}).waitFor()
- await action(()=>toolbar().getByRole('button',{name:'Undo',exact:true}).click());await inColumn(f.stage.options[0].id)
+ await action(()=>tableAction(page,'Undo'));await inColumn(f.stage.options[0].id)
  await j.capture('board-saved-undo')
  // A second writer changes the loaded card. Its stale move must expose the conflict and preserve that write.
  const before=await row();await call('/api/v1/commands/record.patch',command(range(f,before,f.stage.options[1].id),expected([before])))
@@ -122,7 +123,7 @@ export async function boardBrowserJourney(page,j,h,width){
  assert.equal((await row()).fields[f.stage.id].value,f.stage.options[1].id)
  await j.capture('board-conflict')
  await denyBoardWrites(h.db,f)
- await page.goto(path);await j.action(page.getByRole('navigation',{name:'Record display',exact:true}).getByRole('button',{name:'Board',exact:true}))
+ await page.goto(path);await displayAction(page,'Board',j.action)
  await inColumn(f.stage.options[1].id)
  assert.equal(await card().getAttribute('draggable'),'false');assert.equal(await card().getByRole('combobox').count(),0)
  await j.capture('board-readonly')

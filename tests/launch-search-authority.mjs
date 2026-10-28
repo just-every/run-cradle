@@ -22,6 +22,16 @@ test('[VIEW-005 APP-SCOPE-001] global search covers authorized bases and recheck
     await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(restricted), scoped.policyId).run()
     const scopedHits = await read(scoped.session)
     assert.deepEqual(scopedHits, expected.filter(hit => hit.entityId !== launchEntities.campaign))
+    for (const hit of scopedHits.filter(hit => hit.entityId === launchEntities.milestone)) {
+      const response = await h.request(scoped.session, `/api/v1/apps/${hit.appId}/entities/${hit.entityId}/records/${hit.id}`)
+      assert.equal(response.status, 200)
+      assert.deepEqual((await response.json()).data.record.fields[launchFieldIds.milestone.campaignId], { state: 'value', value: null }, 'Keeping the child overdue flag never discloses its hidden parent link')
+    }
+    const maskedParent = await h.addPerson({ change: rules => rules.map(rule => rule.entityId === launchEntities.milestone ? { ...rule, readableFields: rule.readableFields.filter(id => id !== launchFieldIds.milestone.campaignId) } : rule) })
+    const maskedHits = await read(maskedParent.session)
+    assert.deepEqual(maskedHits.map(hit => hit.id), expected.map(hit => hit.id), 'A masked parent field does not hide the independently readable child search result')
+    for (const hit of maskedHits.filter(hit => hit.entityId === launchEntities.milestone)) assert.equal(Object.hasOwn(hit, 'overdue'), false, 'A masked source link cannot disclose an overdue projection')
+
     const hidden = await h.addPerson()
     assert.deepEqual(await read(hidden.session), expected)
     const masked = hidden.rules.map(rule => rule.entityId === launchEntities.risk ? { ...rule, readableFields: rule.readableFields.filter(id => id !== launchFieldIds.risk.title) } : rule)

@@ -1,3 +1,4 @@
+import {displayAction,tableAction,tableCommand} from './records-table-tools.mjs'
 import assert from 'node:assert/strict'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
@@ -43,7 +44,7 @@ export async function timelineBrowserJourney() {
       try {
         page.setDefaultTimeout(20000)
         await context.addCookies([{ name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=') + 1), url: h.origin }])
-        await page.goto(h.origin + '/app/records')
+        await page.goto(h.origin + '/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
         const f = await fixture(page, h, width), call = (url, input, status) => browserCall(page, url, input, status)
         const patch = () => page.waitForResponse(response => response.url().endsWith('/commands/record.patch') && response.request().method() === 'POST')
         const getRow = async key => (await call(`${f.base}/records/${f.rows[key].id}`)).record
@@ -54,7 +55,7 @@ export async function timelineBrowserJourney() {
           await page.waitForFunction(expected => JSON.stringify([...document.querySelectorAll('[data-timeline-row][data-critical="true"]')].map(node => node.getAttribute('data-timeline-row')).sort()) === JSON.stringify(expected), expected)
         }
         await page.goto(f.path)
-        await page.getByRole('button', { name: 'Save view', exact: true }).click()
+        await tableAction(page,'Save view')
         await page.getByLabel('Name', { exact: true }).fill('Delivery plan')
         await page.getByLabel('Display', { exact: true }).selectOption('timeline')
         await page.getByLabel('Date', { exact: true }).selectOption(f.start.id)
@@ -64,7 +65,7 @@ export async function timelineBrowserJourney() {
         await j.capture('timeline-view-editor')
         await j.command(page.locator('form').filter({ has: page.getByLabel('Name', { exact: true }) }).getByRole('button', { name: 'Save view', exact: true }), 'view.save')
         const getView = async () => (await call(`/api/v1/apps/${f.appId}/views`)).items.find(view => view.name === 'Delivery plan')
-        const open = async () => { await page.getByRole('navigation', { name: 'Saved views' }).getByRole('button', { name: 'Delivery plan', exact: true }).click(); await page.getByRole('status').filter({ hasText: '8 records in this timeline' }).waitFor() }
+        const open = async () => { await displayAction(page,'Delivery plan'); await page.getByRole('status').filter({ hasText: '8 records in this timeline' }).waitFor() }
         await open(); let view = await getView()
         const query = () => call(`/api/v1/views/${view.id}/query`, { limit: 200 })
         await critical(['A', 'B', 'D', 'F', 'G', 'H'])
@@ -72,12 +73,12 @@ export async function timelineBrowserJourney() {
         assert.equal(await page.locator('.cr-timeline-group').count(), 2)
         assert.match(await page.getByRole('status').filter({ hasText: '8 records in this timeline' }).textContent(), /Critical path duration: 13 days/)
         await j.capture('timeline-gantt')
-        await page.getByRole('button', {name:'Find in view',exact:true}).click()
+        await tableAction(page,'Find')
         const findInput=page.getByLabel('Find in visible fields',{exact:true})
         await findInput.fill('Design'); await findInput.press('Enter')
         await page.locator(`.cr-view-match[data-field-id="${f.team.id}"]`).waitFor()
         assert.match(await page.locator(`.cr-view-match[data-field-id="${f.team.id}"]`).innerText(), /Design/)
-        await page.getByRole('button', {name:'Find in view',exact:true}).click()
+        await page.getByRole('button',{name:'Close find',exact:true}).click()
         const widths = []
         for (const zoom of ['Day', 'Week', 'Month', 'Quarter', 'Year']) {
           const button = page.getByRole('group', { name: 'Timeline zoom', exact: true }).getByRole('button', { name: zoom, exact: true })
@@ -122,9 +123,9 @@ export async function timelineBrowserJourney() {
         await page.waitForFunction(id => document.querySelector(`[data-timeline-row="${id}"]`)?.getAttribute('data-conflict') === 'true', f.rows.D.id)
         await j.capture('timeline-moved-baseline-comparison')
         const history = page.getByRole('group', { name: 'Record editing', exact: true })
-        await j.command(history.getByRole('button', { name: 'Undo', exact: true }), 'record.patch')
+        await tableCommand(page,'Undo',j)
         assert.equal((await getRow('B')).fields[f.start.id].value, date(2))
-        await j.command(history.getByRole('button', { name: 'Redo', exact: true }), 'record.patch')
+        await tableCommand(page,'Redo',j)
         assert.equal((await getRow('B')).fields[f.start.id].value, date(3))
         // Preserve a draft's original version while another operator changes the same dates.
         await page.getByRole('button', { name: `Move record ${f.rows.B.id}`, exact: true }).click()
@@ -167,7 +168,7 @@ export async function timelineBrowserJourney() {
         await j.capture('timeline-readonly')
         for(const rule of rules)if(rule.entityId===f.entityId)rule.rows={kind:'condition',fieldId:f.title.id,op:'ne',value:titles.A}
         await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
-        await page.reload();await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Delivery plan',exact:true}).click();await page.getByRole('status').filter({hasText:'7 records in this timeline'}).waitFor()
+        await page.reload();await displayAction(page,'Delivery plan');await page.getByRole('status').filter({hasText:'7 records in this timeline'}).waitFor()
         const restricted=await query();assert.equal(restricted.records.items.length,7);assert.equal(restricted.view.timelineBaseline.records.length,7);assert.equal(JSON.stringify(restricted).includes(f.rows.A.id),false)
         assert.equal(await page.locator(`[data-timeline-row="${f.rows.A.id}"]`).count(),0)
         assert.equal(await page.locator('[data-timeline-row][data-critical="true"]').count(),0)
@@ -177,7 +178,7 @@ export async function timelineBrowserJourney() {
         const expected=[{ref:{appId:f.appId,entityId:schemaEntity,recordId:f.entityId},version:1}]
         await call('/api/v1/commands/view.save',liveCommand({view:{...point,timelineBaseline:originalBaseline}},expected),400)
         await call('/api/v1/commands/view.save',liveCommand({view:point},expected))
-        await page.reload();await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Arrival milestones',exact:true}).click();await page.getByRole('status').filter({hasText:'7 records in this timeline'}).waitFor()
+        await page.reload();await displayAction(page,'Arrival milestones');await page.getByRole('status').filter({hasText:'7 records in this timeline'}).waitFor()
         assert.equal(await page.locator('[data-timeline-bar]').count(),7)
         assert.equal(await page.locator('[data-timeline-bar]').evaluateAll(bars=>bars.every(bar=>bar.dataset.start===bar.dataset.end)),true)
         await j.capture('timeline-point-dates')

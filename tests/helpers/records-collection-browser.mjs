@@ -1,3 +1,4 @@
+import {baseAction} from './records-base-menu.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -21,7 +22,7 @@ export async function collectionLookupsBrowser(){
     page.setDefaultTimeout(15000)
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     await page.goto(`${h.origin}/app/records/${f.appId}/${f.accountsId}`)
-    await page.getByRole('button',{name:'Edit base schema',exact:true}).click()
+    await baseAction(page,'Edit fields')
     await page.getByRole('navigation',{name:'Schema tables'}).getByRole('button',{name:'Accounts',exact:true}).click()
     for(const [label,source,link]of [['Handling requirements','Handling','Orders'],['Ordered products','Products','Orders'],['Ordered product names','Product names','Orders'],['Latest handling','Handling','Latest order']]){
      await j.field(label,'computed',async editor=>{

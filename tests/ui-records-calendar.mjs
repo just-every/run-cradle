@@ -1,3 +1,4 @@
+import {displayAction,tableAction} from './helpers/records-table-tools.mjs'
 import {recordCalendarJourney} from './helpers/record-calendar-journey.mjs'
 import {timelineBrowserJourney} from './helpers/records-timeline-journey.mjs'
 import {viewSettingsJourney} from './helpers/records-view-settings-journey.mjs'
@@ -32,7 +33,7 @@ contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIE
    try{
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     async function call(url,input){return page.evaluate(async({url,input})=>{const csrf=await (await fetch('/auth/csrf')).json();const response=await fetch(url,{method:input===undefined?'GET':'POST',headers:{'content-type':'application/json','x-csrf-token':csrf.csrfToken},...(input===undefined?{}:{body:JSON.stringify(input)})});if(!response.ok)throw Error(`${response.status}: ${await response.text()}`);return (await response.json()).data},{url,input})}
-    await page.goto(h.origin+'/app/records')
+    await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
     const title=newField('Event'),start=newField('Starts','date'),end=newField('Ends','date'),appId=createUlid(),entityId=createUlid(),instantId=createUlid(),instantTitle=newField('Appointment'),instantStart=newField('Start time','instant'),instantEnd=newField('End time','instant')
     const preview=await call('/api/v1/records/schema-preview',{appId,name:`Operations calendar ${width}`,tables:[{id:entityId,label:'Visits',primaryFieldId:title.id,fields:[title,start,end]},{id:instantId,label:'Appointments',primaryFieldId:instantTitle.id,fields:[instantTitle,instantStart,instantEnd]}]})
     await call('/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}})
@@ -40,13 +41,13 @@ contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIE
     await page.goto(tablePath)
     const created=await j.record({Event:'Acme site visit',Starts:'2026-10-19',Ends:'2026-10-21'})
     // Author the saved calendar through the product rather than constructing its metadata.
-    await page.getByRole('button',{name:'Save view',exact:true}).click()
+    await tableAction(page,'Save view')
     await page.getByLabel('Name',{exact:true}).fill('Site schedule')
     await page.getByLabel('Display',{exact:true}).selectOption('calendar')
     await page.getByLabel('Date',{exact:true}).selectOption(start.id)
     await page.getByLabel('End date',{exact:true}).selectOption(end.id)
     await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
-    const open=async()=>{await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Site schedule',exact:true}).click();await page.getByRole('region',{name:'month calendar'}).waitFor();await page.getByRole('status').filter({hasText:'1 records in this period'}).waitFor()}
+    const open=async()=>{await displayAction(page,'Site schedule');await page.getByRole('region',{name:'month calendar'}).waitFor();await page.getByRole('status').filter({hasText:'1 records in this period'}).waitFor()}
     await open()
     assert.equal(await page.locator(`[data-calendar-record="${created.id}"]`).count(),3)
     await j.capture('calendar-month')
@@ -62,9 +63,9 @@ contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIE
     await page.locator(`[data-calendar-date="2026-10-23"] [data-calendar-record="${created.id}"]`).waitFor()
     await j.capture('calendar-moved')
     const editing=page.getByRole('group',{name:'Record editing',exact:true})
-    const undo=patch();await editing.getByRole('button',{name:'Undo',exact:true}).click();assert.equal((await undo).status(),200)
+    const undo=patch();await tableAction(page,'Undo');assert.equal((await undo).status(),200)
     assert.equal((await get()).fields[start.id].value,'2026-10-19');assert.equal((await get()).fields[end.id].value,'2026-10-21')
-    const redo=patch();await editing.getByRole('button',{name:'Redo',exact:true}).click();assert.equal((await redo).status(),200)
+    const redo=patch();await tableAction(page,'Redo');assert.equal((await redo).status(),200)
     assert.equal((await get()).fields[start.id].value,'2026-10-23');assert.equal((await get()).fields[end.id].value,'2026-10-25')
     await page.locator(`[data-calendar-date="2026-10-23"] [data-calendar-record="${created.id}"]`).waitFor()
     await page.locator(`[data-calendar-date="2026-10-23"] [data-calendar-record="${created.id}"]`).getByRole('link',{name:'Acme site visit',exact:true}).click()
@@ -98,7 +99,7 @@ contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIE
     await call('/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:instantId},version:instantSchema.version}],input:{appId,entityId:instantId,values:{[instantTitle.id]:'Following month inspection',[instantStart.id]:'2026-04-06T13:00:00.000Z',[instantEnd.id]:'2026-04-06T14:00:00.000Z'}}})
     await call('/api/v1/commands/view.save',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:instantId},version:instantSchema.version}],input:{view:{appId,entityId:instantId,name:'Appointments calendar',display:'calendar',fields:[instantTitle.id,instantStart.id,instantEnd.id],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:instantTitle.id,startFieldId:instantStart.id,endFieldId:instantEnd.id},visibility:'private',shipped:false}}})
     await page.goto(`${h.origin}/app/records/${appId}/${instantId}`)
-    await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Appointments calendar',exact:true}).click()
+    await displayAction(page,'Appointments calendar')
     await page.locator(`[data-calendar-date="2026-03-07"] [data-calendar-record="${appointment.id}"]`).waitFor()
     await page.getByRole('button',{name:`Move record ${appointment.id}`,exact:true}).click();await page.getByLabel('New start date',{exact:true}).fill('2026-03-09')
     const moved=patch();await page.getByRole('button',{name:'Move record',exact:true}).click();assert.equal((await moved).status(),200)

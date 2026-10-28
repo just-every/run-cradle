@@ -5,20 +5,26 @@ import { readApi } from '../shared/api'
 import { createFindReadableText } from './find-readable-text'
 
 export type ViewMatch = { recordId: string; fieldId: string; cursor?: string }
-export function FindInView({ schema, query, fields, viewId, onMatch }: { schema: EntitySchema; query: Query; fields: string[]; viewId?: string; onMatch(match: ViewMatch | null): void }) {
-  const [open, setOpen] = useState(false), [term, setTerm] = useState(''), [matches, setMatches] = useState<ViewMatch[]>([]), [index, setIndex] = useState(0), [state, setState] = useState('')
+export function FindInView({ schema, query, fields, viewId, onMatch, open: controlledOpen, onOpenChange }: { schema: EntitySchema; query: Query; fields: string[]; viewId?: string; onMatch(match: ViewMatch | null): void; open?: boolean; onOpenChange?(open: boolean): void }) {
+  const [localOpen, setLocalOpen] = useState(false), [term, setTerm] = useState(''), [matches, setMatches] = useState<ViewMatch[]>([]), [index, setIndex] = useState(0), [state, setState] = useState('')
+  const open = controlledOpen ?? localOpen
+  const setOpen = (value: boolean | ((current: boolean) => boolean)) => { const next = typeof value === 'function' ? value(open) : value; if (onOpenChange) onOpenChange(next); else setLocalOpen(next) }
+  useEffect(() => { if (open) input.current?.focus() }, [open])
   const input = useRef<HTMLInputElement>(null)
   const identity = JSON.stringify({ ...query, cursor: undefined, fields, viewId })
   const active = useRef<AbortController | null>(null)
+  const searched = useRef(false), repeat = useRef<(() => void) | null>(null)
+  repeat.current = open && term && searched.current ? () => { void search() } : null
   useEffect(() => {
     const key = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') { event.preventDefault(); setOpen(true); setTimeout(() => input.current?.focus(), 0) } }
-    const changed = () => { active.current?.abort(); setMatches([]); setState('Records changed. Search again.'); onMatch(null) }
+    const changed = () => { active.current?.abort(); setMatches([]); onMatch(null); if (repeat.current) repeat.current(); else setState('Records changed. Search again.') }
     window.addEventListener('records-changed', changed)
     window.addEventListener('records-live-changed', changed)
     window.addEventListener('keydown', key); return () => { window.removeEventListener('records-changed', changed); window.removeEventListener('records-live-changed', changed); window.removeEventListener('keydown', key); active.current?.abort() }
   }, [])
-  useEffect(() => { active.current?.abort(); setMatches([]); setState(''); onMatch(null) }, [identity])
+  useEffect(() => { active.current?.abort(); searched.current = false; setMatches([]); setState(''); onMatch(null) }, [identity])
   async function search() {
+    searched.current = true
     active.current?.abort(); const abort = new AbortController(); active.current = abort
     setState('Searching every page…'); setMatches([]); onMatch(null)
     const found: ViewMatch[] = [], readableText = createFindReadableText(abort.signal)
@@ -54,5 +60,5 @@ export function FindInView({ schema, query, fields, viewId, onMatch }: { schema:
     } catch (error) { if (!abort.signal.aborted) { setState(error instanceof Error ? error.message : 'Could not search this view.'); abort.abort() } }
   }
   function step(delta: number) { const next = (index + delta + matches.length) % matches.length; setIndex(next); onMatch(matches[next]!) }
-  return <div className="cr-grid-find"><button type="button" className="cr-button cr-button--quiet" onClick={() => { setOpen(value => !value); setTimeout(() => input.current?.focus(), 0) }}>Find in view</button>{open && <form className="cr-actions" onSubmit={event => { event.preventDefault(); if (matches.length) step(1); else if (term) void search() }}><label className="cr-field">Find in visible fields<input ref={input} value={term} onChange={event => { active.current?.abort(); setTerm(event.target.value); setMatches([]); setState(''); onMatch(null) }} onKeyDown={event => { if (event.key === 'Enter' && event.shiftKey && matches.length) { event.preventDefault(); step(-1) } }} /></label><button className="cr-button cr-button--quiet" disabled={!term}>Find</button><span role="status">{matches.length ? `${index + 1} of ${matches.length} matching cells` : state}</span>{matches.length > 0 && <><button type="button" className="cr-button cr-button--quiet" onClick={() => step(-1)}>Previous match</button><button type="button" className="cr-button cr-button--quiet" onClick={() => step(1)}>Next match</button></>}</form>}</div>
+  return <div className="cr-grid-find">{controlledOpen === undefined && <button type="button" className="cr-button cr-button--quiet" onClick={() => { setOpen(value => !value); setTimeout(() => input.current?.focus(), 0) }}>Find in view</button>}{open && <form className="cr-actions" onSubmit={event => { event.preventDefault(); if (matches.length) step(1); else if (term) void search() }}><label className="cr-field">Find in visible fields<input ref={input} value={term} onChange={event => { active.current?.abort(); searched.current = false; setTerm(event.target.value); setMatches([]); setState(''); onMatch(null) }} onKeyDown={event => { if (event.key === 'Enter' && event.shiftKey && matches.length) { event.preventDefault(); step(-1) } }} /></label><button className="cr-button cr-button--quiet" disabled={!term}>Find</button><button type="button" className="cr-button cr-button--quiet" onClick={() => setOpen(false)}>Close find</button><span role="status">{matches.length ? `${index + 1} of ${matches.length} matching cells` : state}</span>{matches.length > 0 && <><button type="button" className="cr-button cr-button--quiet" onClick={() => step(-1)}>Previous match</button><button type="button" className="cr-button cr-button--quiet" onClick={() => step(1)}>Next match</button></>}</form>}</div>
 }

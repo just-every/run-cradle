@@ -1,19 +1,20 @@
-/* Home: the Records builder welcome card with Cradle's artwork. */
-.cr-home-records { padding-top: 8px; padding-bottom: 16px; }
-.cr-welcome { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr); align-items: center; gap: 40px; max-width: 1280px; padding: 56px 48px; }
-.cr-welcome h2 { max-width: 15em; margin: 0 0 20px; font-size: 44px; line-height: 1.08; letter-spacing: -.025em; text-wrap: balance; }
-.cr-welcome-copy > p:not(.cr-eyebrow) { max-width: 46ch; margin: 0 0 28px; color: var(--ink); font-size: 18px; text-wrap: pretty; }
-.cr-welcome-copy > p.cr-welcome-hint { max-width: none; margin: 24px 0 0; color: var(--muted); font-size: 15px; }
-.cr-welcome-art svg { display: block; width: 100%; max-width: 600px; height: auto; margin-inline: auto; }
-
-@media (max-width: 1100px) {
-  .cr-welcome { grid-template-columns: 1fr; }
-  .cr-welcome-art { order: -1; max-width: 520px; }
-}
+/* Home is a quiet directory of bases and changes; template dashboards live in their base. */
+.cr-home { display: grid; gap: 24px; min-width: 0; }
+.cr-home-section { min-width: 0; padding: 24px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.cr-home-section > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; margin-bottom: 12px; }
+.cr-home-section h2 { margin: 0; color: var(--ink-deep); font: 500 28px/1.2 var(--font-display); letter-spacing: -.02em; }
+.cr-home-action { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-size: var(--text-small); font-weight: 600; text-underline-offset: 4px; }
+.cr-home-bases, .cr-home-activity { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.cr-home-row { display: grid; gap: 6px; min-height: 72px; padding: 14px 12px; border-radius: 12px; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+a.cr-home-row:hover, a.cr-home-row:focus-visible { background: var(--tile); }
+.cr-home-row strong { font-size: 16px; font-weight: 600; line-height: 1.4; }
+.cr-home-meta { color: var(--muted); font-size: var(--text-small); line-height: 1.5; }
+.cr-home-attention { color: var(--ink); font-weight: 500; }
+.cr-home-empty { margin: 0; padding: 12px; color: var(--muted); font-size: var(--text-small); line-height: 1.5; }
+.cr-home-empty p { margin: 0 0 16px; }
 @media (max-width: 760px) {
-  .cr-home-records { padding-top: 0; }
-  .cr-welcome { grid-template-columns: 1fr; gap: 16px; padding: 24px; }
-  .cr-welcome-copy > p:not(.cr-eyebrow) { font-size: 16px; }
-  .cr-welcome-art { order: -1; }
-  .cr-welcome h2 { font-size: 30px; }
+  .cr-home { gap: 16px; }
+  .cr-home-section { padding: 20px 16px; }
+  .cr-home-section h2 { font-size: 24px; }
+  .cr-home-row { padding-inline: 8px; }
 }

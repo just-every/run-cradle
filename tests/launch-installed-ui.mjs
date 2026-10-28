@@ -15,10 +15,18 @@ test('[AI-001/002/003 SET-002] existing campaign, risks, lens builder and settin
  }})
  try{
   const c=await campaign(h,'SCREEN'),snapshot=await h.db.prepare('SELECT * FROM campaigns WHERE id=?').bind(c.id).first(),lenses=(await h.db.prepare('SELECT count(*) n FROM lenses').first()).n
-  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--use-mock-keychain','--password-store=basic']})
+  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
   const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:1440,height:900}}),page=await context.newPage(),errors=[]
   page.on('pageerror',error=>errors.push(error.message))
   await context.addCookies([{name:h.owner.cookie.split('=')[0],value:h.owner.cookie.slice(h.owner.cookie.indexOf('=')+1),url:h.origin}])
+  await page.goto(h.origin+'/app')
+  const bases=page.getByRole('region',{name:'Your bases',exact:true}),apps=(await h.read('/api/v1/apps')).data.items,portfolio=await h.read('/api/portfolio')
+  for(const app of apps){const link=bases.getByRole('link',{name:app.name,exact:true});await expect(link).toHaveAttribute('href',app.entryUrl)}
+  const launch=apps.find(app=>app.name==='Launch readiness'),launchRow=bases.getByRole('listitem').filter({has:page.getByRole('link',{name:launch.name,exact:true})})
+  await expect(launchRow).toContainText(String(portfolio.metrics.liveCampaigns)+' live campaign')
+  const readiness=(await h.read('/api/v1/construction/readiness')).data
+  assert.equal(readiness.ready,false);assert.equal(await page.getByRole('link',{name:'App studio',exact:true}).count(),0)
+  await expect(page.getByRole('region',{name:'Recent activity',exact:true})).toBeVisible()
   await page.goto(h.origin+'/app/campaigns/'+c.id)
   await page.getByRole('button',{name:'Request campaign brief',exact:true}).click();await expect(page.getByRole('status').filter({hasText:/AI is disabled/})).toBeVisible();assert.equal(calls,0)
   await page.goto(h.origin+'/app/settings#ai');await page.getByRole('button',{name:'Enable AI',exact:true}).click();await expect(page.getByRole('button',{name:'Disable AI',exact:true})).toBeVisible()

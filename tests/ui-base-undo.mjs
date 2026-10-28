@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
 import {browserCookies} from './helpers/session-cookies.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
@@ -15,7 +16,7 @@ contract('RECORDS-002 RECORDS-005','real browser scalar edit, multi-batch undo i
  let runtime,browser
  try{
   runtime=await recordsImportBrowserRuntime(0);browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
-  for(const width of accessibilityWidths){
+  for(const width of recordsBrowserWidths(accessibilityWidths)){
    const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}}))
    try{
     await context.addCookies(browserCookies(runtime.cookie,runtime.origin));const page=await context.newPage(),journey=recordsJourney(page,runtime.origin,output,width,{allAxe:true}),observations=browserObservations(page,runtime.origin)

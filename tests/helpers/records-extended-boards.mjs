@@ -1,3 +1,4 @@
+import {displayAction,tableAction} from './records-table-tools.mjs'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
@@ -27,7 +28,7 @@ export async function extendedBoardJourney(){
    await j.command(page.getByRole('button',{name:'Save record',exact:true}),'record.patch')
    const storeBase=`/api/v1/apps/${f.appId}/entities/${REPAIR_ENTITIES.stores}`,storeSchema=await browserCall(page,storeBase)
    const store=(await browserCall(page,'/api/v1/commands/record.create',liveCommand({appId:f.appId,entityId:REPAIR_ENTITIES.stores,values:{[repairFieldId('stores','name')]:'East depot',[repairFieldId('stores','location')]:'Dallas',[repairFieldId('stores','contact_id')]:'00000000000000000000000981',[repairFieldId('stores','active')]:true}},[{ref:{appId:f.appId,entityId:'00000000000000000000000001',recordId:REPAIR_ENTITIES.stores},version:storeSchema.version}]))).value
-   await page.goto(table);await page.getByRole('navigation',{name:'Record display'}).getByRole('button',{name:'Board',exact:true}).click()
+   await page.goto(table);await displayAction(page,'Board')
    await page.getByLabel('Board columns',{exact:true}).selectOption(group)
    await page.getByRole('heading',{name:/West depot/}).first().waitFor()
    const board=page.getByRole('region',{name:/board; scroll for columns$/}),card=id=>board.locator(`article[data-record-id="${id}"]`)
@@ -45,10 +46,10 @@ export async function extendedBoardJourney(){
    assert.equal((await browserCall(page,base+'/records/'+f.ids[0])).record.fields[group].value.recordId,store.id)
    await card(f.ids[0]).scrollIntoViewIfNeeded()
    await j.capture('board-link-moved')
-   await page.getByRole('button',{name:'Save view',exact:true}).click();await page.getByLabel('Name',{exact:true}).fill('Equipment by depot');await page.getByLabel('Board cover',{exact:true}).selectOption(f.cover);await page.getByLabel('Image fit',{exact:true}).selectOption('contain')
+   await tableAction(page,'Save view');await page.getByLabel('Name',{exact:true}).fill('Equipment by depot');await page.getByLabel('Board cover',{exact:true}).selectOption(f.cover);await page.getByLabel('Image fit',{exact:true}).selectOption('contain')
    await j.capture('board-settings')
    await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
-   await page.getByRole('navigation',{name:'Saved views'}).getByRole('button',{name:'Equipment by depot',exact:true}).click()
+   await displayAction(page,'Equipment by depot')
    await page.waitForFunction(()=>Array.from(document.querySelectorAll('.cr-gallery-cover')).some(img=>img.complete&&img.naturalWidth>0))
    assert.equal(await board.locator('.cr-gallery-cover').first().evaluate(img=>getComputedStyle(img).objectFit),'contain')
    await j.capture('board-saved-fit')
@@ -64,7 +65,7 @@ export async function extendedBoardJourney(){
    const preview=await browserCall(page,'/api/v1/records/schema-preview',draft);await browserCall(page,'/api/v1/commands/release.adopt',liveCommand({kind:'manual_schema',previewId:preview.id}))
    const schema=await browserCall(page,`/api/v1/apps/${appId}/entities/${entityId}`)
    const task=(await browserCall(page,'/api/v1/commands/record.create',liveCommand({appId,entityId,values:{[title.id]:'Receive supplier delivery',[person.id]:null}},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}]))).value
-   await page.goto(`${h.origin}/app/records/${appId}/${entityId}`);await page.getByRole('navigation',{name:'Record display'}).getByRole('button',{name:'Board',exact:true}).click();await page.getByLabel('Board columns',{exact:true}).selectOption(person.id)
+   await page.goto(`${h.origin}/app/records/${appId}/${entityId}`);await displayAction(page,'Board');await page.getByLabel('Board columns',{exact:true}).selectOption(person.id)
    await board.getByRole('heading',{name:/Records Owner/}).waitFor();await card(task.id).getByRole('combobox').selectOption('00000000000000000000000981');await j.command(card(task.id).getByRole('button',{name:'Move Receive supplier delivery',exact:true}),'record.patch')
    await board.locator('[data-board-column="00000000000000000000000981"] article').waitFor()
    assert.equal((await browserCall(page,`/api/v1/apps/${appId}/entities/${entityId}/records/${task.id}`)).record.fields[person.id].value,'00000000000000000000000981')

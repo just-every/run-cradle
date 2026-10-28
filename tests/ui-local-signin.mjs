@@ -1,3 +1,4 @@
+import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import { mkdir, lstat, writeFile, rm, cp, mkdtemp } from 'node:fs/promises'
 import path from 'node:path'
@@ -105,12 +106,26 @@ async function freshViewport(viewport,evidence){
       assert.equal((await context.request.get(origin+'/auth/session')).status(),200,'The real dev owner session authenticates')
       assert.equal((await fetch(origin+'/auth/session')).status,401,'No ambient session escapes the browser')
       const deep=await context.request.get(origin+'/app/records',{maxRedirects:0});assert.equal(deep.status(),200,'Configured workspace details leave no setup gate')
-      await page.waitForURL(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
-      await page.getByRole('heading',{name:'Your business, organised your way.',exact:true}).waitFor()
+      await page.waitForURL(origin+'/app');await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
+      await page.getByRole('region',{name:'Recent activity',exact:true}).waitFor()
       await navigateClient('/setup');await page.waitForURL(origin+'/app')
-      await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
+      await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
+      await page.waitForLoadState('networkidle')
       const homeText=await page.locator('body').innerText()
-      assert.doesNotMatch(homeText,/This work is outside your access|loopback_required|Launch|Campaign|campaigns/)
+      assert.doesNotMatch(homeText,/This work is outside your access|loopback_required/)
+      const discovery=await context.request.get(origin+'/api/v1/apps');assert.equal(discovery.status(),200)
+      const bases=(await discovery.json()).data.items,baseRegion=page.getByRole('region',{name:'Your bases',exact:true})
+      const portfolioReply=await context.request.get(origin+'/api/portfolio'),portfolio=await portfolioReply.json(),{LAUNCH_APP_ID}=await import('../src/apps/launch/contracts.ts')
+      for(const base of bases){
+        const link=baseRegion.getByRole('link',{name:base.name,exact:true});await link.waitFor();assert.equal(await link.getAttribute('href'),base.entryUrl)
+        const summary=await link.evaluate(element=>(element.getAttribute('aria-describedby')??'').split(/\s+/).map(id=>document.getElementById(id)?.textContent??'').join(' '))
+        assert.ok(summary.trim(),'Each authorized base has its quiet summary')
+        const values=base.id===LAUNCH_APP_ID&&portfolioReply.status()===200?[portfolio.metrics.liveCampaigns,portfolio.metrics.needsAttention]:[base.tableCount,base.recordCount]
+        const shownCounts=Array.from(summary.matchAll(/\b\d[\d,]*\b/g),match=>Number(match[0].replaceAll(',',''))).slice(0,2)
+        assert.deepEqual(shownCounts,values,'Home summarizes the current authorized read')
+      }
+      assert.equal(await baseRegion.getByRole('listitem').count(),bases.length,'Home lists every authorized base once')
+      assert.equal(await page.getByRole('region',{name:'Portfolio metrics',exact:true}).count(),0,'Home leaves the template dashboard with its base')
       const homeResponse=await context.request.get(origin+'/app')
       assert.equal(homeResponse.status(),200)
       const homeHtml=await homeResponse.text()
@@ -131,18 +146,21 @@ async function freshViewport(viewport,evidence){
       if(accessibilityEvidence&&!accessibilityCaptureOnly&&viewport.width===768)receipt.navigationDrawer=await verifyNavigationDrawerWithKeyboard(page,{output:evidence,screen:'signin-navigation-drawer'})
       assert.equal((await context.request.get(origin+'/auth/session')).status(),200)
       await accessibilityAction(page,page.getByRole('link',{name:'Import a base',exact:true}));await page.getByRole('heading',{name:'Import a base',exact:true}).waitFor();await check('import-base')
-      await page.goto(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
-      await accessibilityAction(page,page.getByRole('link',{name:'Open records',exact:true}));await page.getByRole('heading',{name:'Records',exact:true}).waitFor();await check('records')
+      await page.goto(origin+'/app');await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
+      // Home is server-rendered before the drawer's client handler is attached.
+      // Finish the same bootstrap required by the other client controls below.
+      await page.waitForLoadState('networkidle');await page.waitForFunction(()=>typeof window.__TSR_ROUTER__?.navigate==='function')
+      if(viewport.width<=900)await accessibilityAction(page,page.getByRole('button',{name:'Open navigation',exact:true}));await accessibilityAction(page,page.getByRole('navigation',{name:'Operator navigation',exact:true}).getByRole('link',{name:'Records',exact:true}).filter({visible:true}));const recordBases=(await(await context.request.get(origin+'/api/v1/apps')).json()).data.items;if(recordBases.length)await page.getByRole('heading',{name:recordBases[0].name,exact:true}).waitFor();else await page.getByLabel('Base name',{exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'Choose an application',exact:true}).count(),0);await check('records')
       await verifyIdentityAndRecovery({browser,context,viewport,origin,evidence,accessibilityScreens})
       await verifyExpiredSession({context,page,viewport,origin,evidence,copy})
       // Sign out from the owner menu at the foot of the navigation (the drawer on a phone): the session ends,
       // /app no longer opens signed in and the Lobby offers sign-in again.
-      await page.goto(origin+'/app');await page.getByRole('link',{name:'Open records',exact:true}).waitFor()
+      await page.goto(origin+'/app');await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
       // The owner menu is a client control: let the document finish hydrating before driving it.
       await page.waitForLoadState('networkidle');await page.waitForFunction(()=>typeof window.__TSR_ROUTER__?.navigate==='function')
       // A second tab of the same browser still shows the app when the first signs out.
       const otherTab=await context.newPage();installKeyboardInteractions(otherTab);const otherObservations=browserObservations(otherTab,origin)
-      await otherTab.goto(origin+'/app');await otherTab.getByRole('link',{name:'Open records',exact:true}).waitFor()
+      await otherTab.goto(origin+'/app');await otherTab.getByRole('region',{name:'Your bases',exact:true}).waitFor()
       await otherTab.waitForLoadState('networkidle');await otherTab.waitForFunction(()=>typeof window.__TSR_ROUTER__?.navigate==='function')
       await page.bringToFront()
       if(viewport.width<=900)await page.getByRole('button',{name:'Open navigation',exact:true}).click()

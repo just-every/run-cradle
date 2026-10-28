@@ -1,24 +1,25 @@
-import type { Dispatch, SetStateAction } from 'react'
-import type { EntitySchema, Filter, Query } from '../../domains/records/contracts'
+import { useRef } from 'react'
+import type { EntitySchema, Filter } from '../../domains/records/contracts'
+import { Timestamp } from '../shared/presentation'
 import { UiIcon } from '../shared/ui-icon'
-import { FilterEditor } from './filter-editor'
+import { CellDisplay } from './record-fields'
+import { FilterEditor, filterWords } from './filter-editor'
+import { ViewSheet } from './view-sheet'
 
 export type RecordPanel = 'filter' | 'columns'
-const chevron = <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="m3 4.5 3 3 3-3" /></svg>
 export const panelToggleId = (panel: RecordPanel) => `cr-toggle-${panel}`
-
-/** The chip row above a table: filter, sort, group, direction, columns and saving a view. Selects stay native for keyboard and screen readers. */
-export function RecordToolbar({ schema, query, setQuery, filterDraft, setFilterDraft, onFilter, open, toggle, savingView, onSaveView }: { schema: EntitySchema; query: Query; setQuery: Dispatch<SetStateAction<Query>>; filterDraft: Filter; setFilterDraft: (filter: Filter) => void; onFilter: () => void; open: Set<RecordPanel>; toggle: (panel: RecordPanel) => void; savingView: boolean; onSaveView: () => void }) {
-  const panelToggle = (panel: RecordPanel) => ({ id: panelToggleId(panel), 'aria-expanded': open.has(panel), 'aria-controls': `cr-panel-${panel}`, onClick: () => toggle(panel), type: 'button' as const })
-  return <form className="cr-records-toolbar" onSubmit={event => { event.preventDefault(); onFilter() }}>
-    <div className="cr-chip-row">
-      <button className="cr-chip" {...panelToggle('filter')}><UiIcon name="funnel" />Filter records</button>
-      <span className="cr-chip cr-chip-select"><label htmlFor="record-sort">Sort</label><span aria-hidden="true">:</span><select id="record-sort" value={query.sort?.[0]?.fieldId ?? ''} onChange={e => setQuery(current => ({ ...current, cursor: undefined, sort: e.target.value ? [{ fieldId: e.target.value, direction: 'asc' }] : [] }))}><option value="">Record order</option>{schema.fields.map(field => <option value={field.id} key={field.id}>{field.label}</option>)}</select></span>
-      <span className="cr-chip cr-chip-select"><label htmlFor="record-group">Group</label><span aria-hidden="true">:</span><select id="record-group" value={query.groupBy?.[0] ?? ''} onChange={e => setQuery(current => ({ ...current, cursor: undefined, groupBy: e.target.value ? [e.target.value] : [] }))}><option value="">No grouping</option>{schema.fields.filter(f => ['select', 'boolean', 'text'].includes(f.type)).map(field => <option value={field.id} key={field.id}>{field.label}</option>)}</select></span>
-      <span className="cr-chip cr-chip-select"><label className="cr-sr-only" htmlFor="sort-direction">Direction</label><select id="sort-direction" value={query.sort?.[0]?.direction ?? 'asc'} onChange={event => setQuery(current => ({ ...current, cursor: undefined, sort: current.sort?.map(sort => ({ ...sort, direction: event.target.value as 'asc' | 'desc' })) }))}><option value="asc">Ascending</option><option value="desc">Descending</option></select></span>
-      <button className="cr-chip" {...panelToggle('columns')}>Visible columns{chevron}</button>
-      <button type="button" className="cr-chip" aria-expanded={savingView} onClick={onSaveView}>Save view</button>
-    </div>
-    {open.has('filter') && <div className="cr-records-panel" id="cr-panel-filter" role="group" aria-labelledby={panelToggleId('filter')}><FilterEditor schema={schema} filter={filterDraft} onChange={setFilterDraft} /><button className="cr-button cr-button--quiet">Apply filters</button></div>}
-  </form>
+export function RecordToolbar({ schema, filterDraft, setFilterDraft, onFilter, open, toggle }: { schema: EntitySchema; filterDraft: Filter; setFilterDraft(filter: Filter): void; onFilter(): void; open: Set<RecordPanel>; toggle(panel: RecordPanel): void }) {
+  const anchor = useRef<HTMLButtonElement>(null)
+  return <>
+    <button ref={anchor} className="cr-chip" id={panelToggleId('filter')} type="button" aria-haspopup="dialog" aria-expanded={open.has('filter')} onClick={() => toggle('filter')}><UiIcon name="funnel" />Filter</button>
+    <ViewSheet wide title="Filter" open={open.has('filter')} onClose={() => toggle('filter')} anchor={anchor}>
+      <form className="cr-stack" onSubmit={event => { event.preventDefault(); onFilter(); toggle('filter') }}><FilterEditor schema={schema} filter={filterDraft} onChange={setFilterDraft} /><button className="cr-button">Apply filters</button></form>
+    </ViewSheet>
+  </>
+}
+export function FilterChips({ schema, filter, onChange }: { schema: EntitySchema; filter?: Filter; onChange(filter: Filter): void }) {
+  if (!filter) return null
+  if (filter.kind !== 'condition') return <>{filter.conditions.map((condition, index) => <FilterChips key={index} schema={schema} filter={condition} onChange={next => onChange({ ...filter, conditions: next.kind !== 'condition' && !next.conditions.length ? filter.conditions.filter((_, i) => i !== index) : filter.conditions.map((item, i) => i === index ? next : item) })} />)}</>
+  const field = schema.fields.find(item => item.id === filter.fieldId)
+  return <span className="cr-filter-chip"><span>{field?.label} {filterWords[filter.op]} {!['empty', 'not_empty'].includes(filter.op) && (field?.type === 'instant' && typeof filter.value === 'string' ? <Timestamp value={filter.value} /> : <CellDisplay appId={schema.appId} field={field} cell={{ state: 'value', value: filter.value ?? null }} />)}</span><button type="button" onClick={() => onChange({ kind: 'all', conditions: [] })} aria-label={`Remove ${field?.label ?? 'field'} filter`}>Remove</button></span>
 }

@@ -17,7 +17,7 @@ const aggregates: { id: SummaryAggregate; label: string; numeric?: true }[] = [
 ]
 
 /** Session-local controls. Opening the panel does not read the whole query; Calculate does. */
-export function ViewSummary({ schema, query, fields, viewId, revision }: ViewSummaryInput & { revision?: number | string }) {
+export function ViewSummary({ schema, query, fields, viewId, revision, expanded }: ViewSummaryInput & { revision?: number | string; expanded?: boolean }) {
   const panelId = useId(), active = useRef<AbortController | null>(null)
   const [open, setOpen] = useState(false), [fieldId, setFieldId] = useState(''), [aggregate, setAggregate] = useState<SummaryAggregate>('count')
   const identity = JSON.stringify({ schema, query, fields, viewId, revision })
@@ -57,8 +57,8 @@ export function ViewSummary({ schema, query, fields, viewId, revision }: ViewSum
   }
   const result = current.status === 'ready' && field ? current.snapshot.aggregates[field.id]?.[aggregate] : null
   return <div className="cr-grid-find">
-    <button type="button" className="cr-button cr-button--quiet" aria-expanded={open} aria-controls={panelId} onClick={toggle}>Summary</button>
-    {open && <section id={panelId} className="cr-records-panel cr-stack" aria-label="Whole-query summary">
+    {expanded === undefined && <button type="button" className="cr-button cr-button--quiet" aria-expanded={open} aria-controls={panelId} onClick={toggle}>Summary</button>}
+    {(expanded ?? open) && <section id={panelId} className="cr-records-panel cr-stack" aria-label="Whole-query summary">
       <p>Summarise every matching record you can read, across all pages. Up to 500,000 matching records; counts and totals are streamed across every page.</p>
       {!visible.length ? <p className="cr-notice">No visible, readable fields are available.</p> : <>
         <form className="cr-stack" onSubmit={event => { event.preventDefault(); void calculate() }}>

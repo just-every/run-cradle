@@ -2,7 +2,7 @@ import type { RecordRow } from '../../domains/records/contracts'
 import { trustedPredicate } from '../../domains/admission/sql.server'
 import type { SqlPredicate } from '../../domains/admission/ports'
 import { LAUNCH_APP_ID, launchEntities } from './contracts'
-import { launchFieldIds } from './descriptors.server'
+import { launchFieldIds, launchDescriptors, launchTables } from './descriptors.server'
 import { localDate } from './milestones.server'
 
 type Kind = 'deliverable' | 'milestone'
@@ -23,16 +23,38 @@ export function launchOverdue(kind: Kind, values: Record<string, unknown>, today
  return active && (kind === 'deliverable' ? values.state === 'Open' : values.status !== 'Complete') && typeof date === 'string' && date < today
 }
 
-/** Inputs come only from the records reader's authorized cells. A hidden input
- * produces no boolean, so the derived marker cannot disclose a masked date/state. */
+/** Redacted source inputs produce no flag. A readable link to a hidden target is
+ * null in the public cell; the child keeps its existing overdue meaning without
+ * exposing that link or any parent field. */
 export async function projectLaunchOverdue(db: D1Database, kind: Kind, rows: readonly RecordRow[], now: string) {
- const candidates = rows.flatMap(row => {
+ const eligible = rows.flatMap(row => {
   const names = overdueFieldNames(kind), cells = names.map(name => row.fields[launchFieldIds[kind][name]!])
   if (cells.some(cell => cell?.state !== 'value')) return []
   const values = Object.fromEntries(names.map((name, index) => { const cell = cells[index]; return [name, cell?.state === 'value' ? cell.value : null] }))
-  return typeof values.campaignId === 'string' ? [{ id: row.id, values, campaignId: values.campaignId }] : []
+  const campaignId = typeof values.campaignId === 'string' ? values.campaignId
+   : values.campaignId && typeof values.campaignId === 'object' && 'recordId' in values.campaignId ? values.campaignId.recordId : null
+  const lifecycle = kind === 'deliverable' ? 'state' : 'status'
+  const field = launchDescriptors.find(descriptor => descriptor.schema.id === launchEntities[kind])!.fields.get(launchFieldIds[kind][lifecycle]!)!
+  const choice = values[lifecycle]
+  // Legacy readers still supply stored text; records readers supply option IDs.
+  if (typeof choice === 'string' && field.selectValues && Object.hasOwn(field.selectValues, choice)) values[lifecycle] = field.selectValues[choice]
+  return [{ id: row.id, version: row.version, values, campaignId }]
  })
  const flags = new Map<string, boolean>(), guards: SqlPredicate[] = []
+ // Only value/null links reach this path: a hidden source field or undiscoverable
+ // relation was redacted above. Batch the private keys for already-authorized
+ // children, and fence their versions without changing their public cells.
+ const hidden = eligible.filter(row => row.campaignId === null)
+ const recovered = hidden.length ? (await db.prepare(`SELECT id,version,campaign_id FROM ${launchTables[kind]} WHERE id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify(hidden.map(row => row.id))).all<{ id: string; version: number; campaign_id: string }>()).results : []
+ const parents = new Map(recovered.map(row => [row.id, row.campaign_id]))
+ for (const row of hidden) {
+  const campaignId = parents.get(row.id)
+  guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM ${launchTables[kind]} WHERE id=? AND version=? AND campaign_id IS ?)`, [row.id, row.version, campaignId ?? null]))
+ }
+ const candidates = eligible.flatMap(row => {
+  const campaignId = typeof row.campaignId === 'string' ? row.campaignId : parents.get(row.id)
+  return campaignId ? [{ ...row, campaignId }] : []
+ })
  if (!candidates.length) return { flags, guards }
  const settings = await db.prepare('SELECT id,version,timezone FROM workspace_settings LIMIT 1').first<{ id: string; version: number; timezone: string }>()
  if (!settings) throw new Error('Workspace timezone is required for overdue projection')

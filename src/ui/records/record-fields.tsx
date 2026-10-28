@@ -11,8 +11,10 @@ import { StoreChooser } from './store-chooser'
 import type { Cell, CellValue, Money, Page, Ref, StoreReference } from '../../contracts/primitives'
 import type { Field } from '../../domains/records/contracts'
 import type { Member } from '../../domains/authority/contracts'
-import { useResource } from '../shared/api'
-import { money } from '../shared/presentation'
+import { useEffect, useState } from 'react'
+import { readApi } from '../shared/api'
+import { money, Timestamp } from '../shared/presentation'
+import './record-person.css'
 import { decimal, format } from '../../domains/records/exact'
 
 const toneByMeaning: Record<string, ChipTone> = { high: 'coral', blocked: 'coral', critical: 'coral', lost: 'coral', medium: 'butter', 'in progress': 'butter', qualified: 'butter', low: 'mint', ready: 'mint', done: 'mint', won: 'mint', planning: 'lilac', new: 'lilac' }
@@ -42,12 +44,13 @@ export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undef
   if ((field?.type === 'person' || field?.type === 'computed' && field.resultType === 'person') && typeof value === 'string') return appId ? <PersonName appId={appId} id={value} /> : <span className="cr-error">Person lookup unavailable</span>
   if (typeof value === 'string' && (field?.type === 'phone' || field?.type === 'computed' && field.resultType === 'phone')) return <>{phoneText(value)}</>
   if (typeof value === 'string' && (field?.type === 'duration' || field?.type === 'computed' && field.resultType === 'duration')) return <>{durationText(value)}</>
+  if (typeof value === 'string' && (field?.type === 'instant' || field?.type === 'computed' && field.resultType === 'instant')) return <Timestamp value={value} />
   if (field?.type === 'computed' && typeof value === 'string') return <span className="cr-derived">{value}</span>
   if (typeof value === 'string' && field?.numberFormat === 'percent') return <>{percentText(value)}</>
   if (typeof value === 'string') return <>{value}</>
   if ('minor' in value) return <>{money(value as Money).replace('USD ', '$')}</>
   const values = Array.isArray(value) ? value : [value]
-  return <>{values.map((item, i) => <span key={i}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
+  return <>{values.map((item, i) => <span key={i} className={typeof item === 'object' && item !== null && 'recordId' in item ? 'cr-record-link' : undefined}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
 }
 export function FieldInput({ appId, entityId, subject, field, value, onChange, error, inputId }: { appId: string; entityId: string; subject?: Ref; inputId?: string; field: Field; value: CellValue; onChange: (value: CellValue) => void; error?: string }) {
   const id = inputId ?? `field-${field.id}`
@@ -65,10 +68,35 @@ export function FieldInput({ appId, entityId, subject, field, value, onChange, e
   return <div className="cr-field"><label htmlFor={id}>{field.label}{field.required ? ' *' : ''}{field.type === 'instant' ? ' (UTC)' : ''}</label>{input}{field.unique && <small>Each record must have a distinct value.</small>}{error && <p id={`${id}-error`} className="cr-error">{error}</p>}</div>
 }
 
+// A render batch shares the policy-checked people read rather than fetching once per cell.
+// Only in-flight work is shared: a later mount always rechecks current access.
+const peopleReads = new Map<string, Promise<Member[]>>()
+function readPeople(appId: string) {
+  let pending = peopleReads.get(appId)
+  if (!pending) {
+    pending = (async () => {
+      const members: Member[] = []
+      let cursor: string | null = null
+      do {
+        const { data }: { data: Page<Member> } = await readApi<Page<Member>>(`/api/v1/members?appId=${encodeURIComponent(appId)}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`)
+        members.push(...data.items)
+        cursor = data.nextCursor
+      } while (cursor)
+      return members
+    })().finally(() => peopleReads.delete(appId))
+    peopleReads.set(appId, pending)
+  }
+  return pending
+}
 function PersonName({ appId, id }: { appId: string; id: string }) {
-  const members = useResource<Page<Member>>(`/api/v1/members?appId=${encodeURIComponent(appId)}`)
-  if (members.resource.state === 'loading') return <span className="cr-muted">Loading person…</span>
-  if (members.resource.state !== 'ready') return <span className="cr-error">Person unavailable</span>
-  const member = members.resource.data.items.find(member => member.id === id)
-  return member ? <>{member.name}</> : <span className="cr-muted">Person restricted or removed</span>
+  const [state, setState] = useState<{ appId: string; members?: Member[]; failed?: boolean }>({ appId })
+  useEffect(() => {
+    let current = true
+    void readPeople(appId).then(members => { if (current) setState({ appId, members }) }, () => { if (current) setState({ appId, failed: true }) })
+    return () => { current = false }
+  }, [appId])
+  if (state.appId !== appId || !state.members && !state.failed) return <span className="cr-muted">Reading person…</span>
+  if (state.failed) return <span className="cr-error">Person unavailable</span>
+  const member = state.members?.find(member => member.id === id)
+  return member ? <span className="cr-record-person"><span className="cr-record-person__avatar" aria-hidden="true">{member.name.trim().split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase()}</span><span>{member.name}</span></span> : <span className="cr-muted">Person restricted or removed</span>
 }

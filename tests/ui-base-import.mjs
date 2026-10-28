@@ -1,3 +1,5 @@
+import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
+import {baseAction} from './helpers/records-base-menu.mjs'
 import {preHydrationImport,preHydrationSheets} from './helpers/base-import-hydration.mjs'
 import {companyWorkbookBrowser} from './helpers/company-workbook-browser.mjs'
 import {fileStoresBrowser,unresolvedStoresBrowser,resolvedStoresBrowser} from './helpers/file-stores-browser.mjs'
@@ -20,7 +22,7 @@ contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, gua
   try {
     runtime = await recordsImportBrowserRuntime(0)
     browser = await chromium.launch({ headless: true,args:['--use-mock-keychain','--password-store=basic'], ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) })
-    for (const width of accessibilityWidths) {
+    for (const width of recordsBrowserWidths(accessibilityWidths)) {
       const context = await browser.newContext(accessibilityContextOptions({ viewport: { width, height: width === 390 ? 844 : 900 } }))
       let page
       try {
@@ -37,7 +39,7 @@ contract('PERM-007 INTEG-003 FILE-002 RECORDS-005', 'CSV-set import preview, gua
         page.on('request', request => { if (new URL(request.url()).origin !== runtime.origin) externalRequests.push(request.url()) })
         page.on('response', async response => { if (/\/base-import\/jobs\/[^/]+\/resume$/.test(response.url()) && response.status() === 200) { const data = (await response.json()).data; batchCheckpoints.push(data.checkpoint) } })
         await page.goto(runtime.origin + '/app/records/')
-        await journey.action(page.getByRole('link', { name: 'Import a base', exact: true }))
+        await baseAction(page,'Import a base',journey.action)
         await journey.capture('import-upload')
         const initial = await uploadSet(page, 'crm-example', `Imported CRM ${width}`, { action: journey.action })
         await verifyPreviewLists(page, initial)

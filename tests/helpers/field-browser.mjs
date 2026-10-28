@@ -1,3 +1,4 @@
+import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,readFile,writeFile} from 'node:fs/promises'
 import {userInfo} from 'node:os'
@@ -29,7 +30,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     const owner=await screen(h,browser,width,h.cookie,output,'owner',checkpoints);contexts.push(owner.context)
     const creator=await screen(h,browser,width,fixture.creatorCookie,output,'creator',checkpoints);contexts.push(creator.context)
     const page=owner.page,tile=name=>page.getByRole('group',{name,exact:true}),table=name=>page.getByRole('navigation',{name:'Schema tables',exact:true}).getByRole('button',{name,exact:true})
-    async function edit(){await page.goto(fixture.url);await page.getByRole('button',{name:'Edit base schema',exact:true}).click();await table('Orders').click();await tile('Amount').waitFor()}
+    async function edit(){await page.goto(fixture.url);await baseAction(page,'Edit fields');await table('Orders').click();await tile('Amount').waitFor()}
     async function preview(active=page){
      const pending=active.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/schema-preview'))
      await active.getByRole('button',{name:'Preview schema changes',exact:true}).click()
@@ -121,7 +122,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     // A creator prepares the lossy conversion and both schema Trash objects;
     // the owner adopts that exact preview through BaseSchemaReviews.
     const cp=creator.page
-    await cp.goto(fixture.url);await cp.getByRole('button',{name:'Edit base schema',exact:true}).click()
+    await cp.goto(fixture.url);await baseAction(cp,'Edit fields')
     await cp.getByRole('navigation',{name:'Schema tables',exact:true}).getByRole('button',{name:'Orders',exact:true}).click()
     await cp.getByRole('group',{name:'Amount',exact:true}).getByLabel('Field type',{exact:true}).selectOption('number')
     await cp.getByRole('group',{name:'Memo',exact:true}).getByRole('button',{name:'Remove field',exact:true}).click()
@@ -138,7 +139,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await cp.getByLabel('I reviewed the data changes and owner access.',{exact:true}).check()
     assert.equal(await cp.getByRole('button',{name:'Adopt schema',exact:true}).isDisabled(),true)
     await creator.capture('creator-awaiting-owner',cp.getByRole('button',{name:'Adopt schema',exact:true}))
-    await page.goto(fixture.url);await page.getByRole('button',{name:'Review schema changes',exact:true}).click()
+    await page.goto(fixture.url);await baseAction(page,/^Review changes/)
     await page.getByRole('heading',{name:'Schema changes awaiting an owner',exact:true}).waitFor()
     const review=page.locator('article.cr-records-panel').filter({has:page.getByRole('heading',{name:fixture.name,exact:true})})
     await review.getByRole('region',{name:'Conversion of Amount',exact:true}).waitFor()

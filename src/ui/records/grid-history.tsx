@@ -4,15 +4,17 @@ import { useCommand } from '../shared/api'
 import { CommandFeedback } from '../shared/presentation'
 import { useTableHistorySession, type HistoryChange, type HistoryEntry } from './grid-history-session'
 export type HistoryResult = { rows: RecordRow[]; inverse: HistoryChange[] }
-type History = { clearFeedback(): void; accept(result: HistoryResult): void; busy: boolean; execute(rows: HistoryChange[], records: RecordRow[]): Promise<boolean>; undo(): void; redo(): void; canUndo: boolean; canRedo: boolean; feedback: ReactNode }
+type History = { clearFeedback(): void; accept(result: HistoryResult): void; busy: boolean; execute(rows: HistoryChange[], records: RecordRow[]): Promise<boolean>; undo(): void; redo(): void; canUndo: boolean; canRedo: boolean; feedback: ReactNode; reconcile(rows: RecordRow[]): RecordRow[] }
 const Context = createContext<History | null>(null)
 
 export function GridHistoryProvider({ schema, children }: { schema: EntitySchema; children: ReactNode }) {
   const command = useCommand<HistoryResult>(`grid:${schema.appId}:${schema.id}`)
   const store = useTableHistorySession(schema)
+  const acceptedRows = useRef(new Map<string, RecordRow>())
   const pending = useRef<'edit' | 'undo' | 'redo'>('edit'), handled = useRef('')
   const busy = !store.ready || !['idle', 'failed', 'committed', 'cancelled'].includes(command.result.state)
   function accept(result: HistoryResult, kind: 'edit' | 'undo' | 'redo' = 'edit') {
+    for (const row of result.rows) if ((acceptedRows.current.get(row.id)?.version ?? 0) < row.version) acceptedRows.current.set(row.id, row)
     const entry: HistoryEntry = {
       rows: result.inverse.map(change => {
         const row = result.rows.find(row => row.id === change.recordId)!
@@ -41,7 +43,14 @@ export function GridHistoryProvider({ schema, children }: { schema: EntitySchema
     const result = await command.submit('/api/v1/commands/record.patch', { appId: schema.appId, entityId: schema.id, rows: entry.rows }, entry.expected)
     return !!result
   }
-  const history: History = { clearFeedback: command.reset, accept, busy, canUndo: !!store.undo.length && !busy, canRedo: !!store.redo.length && !busy,
+  const history: History = { reconcile: rows => rows.map(row => {
+    const accepted = acceptedRows.current.get(row.id)
+    if (!accepted || accepted.version <= row.version) return row
+    // A committed edit is already authoritative while the background read
+    // catches up. Retain the new values and version, but never restore fields
+    // or actions that the incoming authority projection has made unavailable.
+    return { ...row, version: accepted.version, fields: Object.fromEntries(Object.entries(row.fields).map(([id, cell]) => [id, cell.state === 'value' ? accepted.fields[id] ?? cell : cell])) }
+  }), clearFeedback: command.reset, accept, busy, canUndo: !!store.undo.length && !busy, canRedo: !!store.redo.length && !busy,
     execute: (rows, records) => send({ rows, expected: records.filter(row => rows.some(item => item.recordId === row.id)).map(row => ({ ref: row.ref, version: row.version })) }, 'edit'),
     undo: () => { if (store.undo.length) void send(store.undo.at(-1)!, 'undo') }, redo: () => { if (store.redo.length) void send(store.redo.at(-1)!, 'redo') },
     feedback: <><CommandFeedback {...command} />{store.error && <div className="cr-notice" role="alert"><p>{store.error}</p><button type="button" className="cr-button cr-button--quiet" onClick={store.clear}>Clear undo history</button></div>}{command.result.state === 'failed' && command.result.error.detail.issues && <div className="cr-notice" role="alert"><ul>{command.result.error.detail.issues.map((issue, index) => <li key={index}>{issue.message}</li>)}</ul></div>}</> }

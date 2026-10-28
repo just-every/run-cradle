@@ -2,7 +2,7 @@
 .cr-records-page { min-width: 0; }
 .cr-records-page .cr-table td { overflow-wrap: break-word; word-break: normal; }
 .cr-records-page .cr-table td .cr-record-chip, .cr-records-page .cr-table td .cr-link { overflow-wrap: break-word; }
-.cr-display-tabs, .cr-saved-view-tabs { margin-bottom: 16px; }
+.cr-saved-view-tabs { margin-bottom: 16px; }
 .cr-records-page .cr-table td.cr-cell--nowrap { white-space: nowrap; }
 .cr-records-page .cr-table td > a { display: inline-flex; align-items: center; min-height: 28px; }
 .cr-base-import details > summary { min-height: 28px; }
@@ -10,10 +10,6 @@
 .cr-records-page .cr-table { min-width: 640px; }
 .cr-records-page .cr-page-header .cr-actions { justify-content: flex-end; }
 
-/* Base bar: base tabs on the left, quiet pills on the right. */
-.cr-base-bar { display: grid; gap: 16px; margin-bottom: 24px; }
-.cr-base-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
-.cr-base-actions { justify-content: flex-end; }
 .cr-export-base p { margin: 0 0 12px; color: var(--muted); }
 .cr-tabs-row { margin-bottom: 24px; }
 
@@ -21,7 +17,6 @@
 .cr-records-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .cr-records-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin-bottom: 24px; }
 .cr-records-card-head > .cr-actions { margin-left: auto; }
-.cr-records-card-head > h2 { margin-right: 4px; }
 .cr-records-toolbar { margin: 0 0 8px; }
 .cr-chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
 .cr-records-panel, .cr-records-card form.cr-card { margin: 16px 0 8px; padding: 20px; border: 0; border-radius: var(--r-tile); background: var(--tile); box-shadow: none; }
@@ -179,8 +174,6 @@
 .cr-editable-grid td:focus { outline: 2px solid #6854b5; outline-offset: -2px; }
 .cr-editable-grid .cr-grid-selected { background: #f0ecfb; }
 .cr-editable-grid .cr-grid-match { background: #ffed9c; box-shadow: inset 0 0 0 2px #9b6500; }
-.cr-column-width { display: block; width: 100%; height: 12px; margin-top: 5px; opacity: .35; }
-.cr-column-width:focus, .cr-column-width:hover { opacity: 1; }
 .cr-cell-editor input { min-width: 0; width: 100%; box-sizing: border-box; }
 .cr-cell-editor button { min-height: 28px; padding: 2px 6px; }
 @media (max-width: 760px) {
@@ -208,3 +201,21 @@
 /* View export formats share the existing wrapping action layout. */
 .cr-records-export { display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; }
 .cr-records-card-head > .cr-actions:has(.cr-records-export) { flex-wrap: wrap; }
+
+/* Table actions live in sheets; the table keeps its own horizontal frame. */
+.cr-records-card > .cr-table-controls { margin-bottom: 8px; }
+.cr-records-card > .cr-grid-find:has(> form) { padding: 0 0 12px; }
+.cr-records-card > .cr-grid-find:not(:has(> form)) { padding: 0; }
+.cr-presence-avatar { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--sage); color: var(--ink); font-weight: 600; }
+.cr-shortcuts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; margin: 0; }
+.cr-shortcuts dd { margin: 0; }
+.cr-editable-grid .cr-col-select { position: sticky; left: 0; z-index: 2; background: var(--card); }
+@media (max-width: 600px) {
+  .cr-editable-grid .cr-records-table :is(th, td):not(.cr-col-primary):not(.cr-col-select) { position: static !important; }
+  .cr-editable-grid .cr-records-table .cr-col-primary { position: sticky !important; left: 56px !important; z-index: 1; background: var(--card); }
+  .cr-editable-grid .cr-records-table td.cr-col-select { min-width: 56px; width: 56px; }
+  .cr-records-page:has(.cr-selection-bar), .cr-records-page:has(.cr-quiet-undo) { padding-bottom: 120px; }
+}
+
+@media (max-width: 600px) { .cr-records-page .cr-table td > a { min-height: 44px; } .cr-presence-avatar { min-width: 44px; height: 44px; } }
+.cr-presence-avatar__count { font-size: var(--text-meta); }

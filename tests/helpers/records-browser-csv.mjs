@@ -1,3 +1,5 @@
+import {displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
+import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {encodeCsv,parseCsv} from '../../src/domains/portability/csv.ts'
@@ -5,7 +7,7 @@ import {encodeCsv,parseCsv} from '../../src/domains/portability/csv.ts'
 export async function exerciseCsv(page,j,origin,width){
  async function build(name){
   await page.goto(origin+'/app/records')
-  await j.action(page.getByRole('button',{name:'Create base',exact:true}))
+  await baseAction(page,'New base',j.action)
   await page.getByLabel('Base name',{exact:true}).fill(`${name} ${width}`)
   await page.getByLabel('Table name',{exact:true}).fill('Rows')
   await page.getByLabel('Field name',{exact:true}).fill('Key')
@@ -13,7 +15,7 @@ export async function exerciseCsv(page,j,origin,width){
   return j.adopt()
  }
  async function importCsv(csv,expected,rejected=0){
-  await j.action(page.getByRole('button',{name:'Import CSV',exact:true}))
+  await tableAction(page,'Import CSV',j.action)
   await page.getByLabel('CSV or Excel file',{exact:true}).setInputFiles({name:'records.csv',mimeType:'text/csv',buffer:Buffer.from(csv)})
   await page.getByLabel(/^Match existing records by/).selectOption({label:'Key'})
   const pending=page.waitForResponse(response=>response.url().endsWith('/records/import-preview'))
@@ -42,20 +44,20 @@ export async function exerciseCsv(page,j,origin,width){
  const csv=encodeCsv(['Key','Text','Number','Checked'],Array.from({length:205},(_,index)=>[`row-${String(index).padStart(3,'0')}`,samples[index%samples.length],'0','false']))
  const source=await build('CSV source');await importCsv(csv,205)
  await j.action(page.getByRole('button',{name:'Next page',exact:true}));await page.waitForLoadState('networkidle');await j.capture('csv-paged-grid')
- await page.getByLabel('Sort',{exact:true}).selectOption({label:'Key'});await page.getByLabel('Direction',{exact:true}).selectOption('desc')
- await j.action(page.getByRole('button',{name:'Save view',exact:true}))
+ await sortAndGroup(page);await page.getByLabel('Sort',{exact:true}).selectOption({label:'Key'});await page.getByLabel('Direction',{exact:true}).selectOption('desc')
+ await tableAction(page,'Save view',j.action)
  const editor=page.locator('form.cr-card').filter({has:page.getByRole('heading',{name:'Save this work view'})})
  await editor.getByLabel('Name',{exact:true}).fill('All imported rows')
  const view=await j.command(editor.getByRole('button',{name:'Save view',exact:true}),'view.save')
- await page.reload();await j.action(page.getByRole('navigation',{name:'Saved views',exact:true}).getByRole('button',{name:view.name,exact:true}))
+ await page.reload();await displayAction(page,view.name,j.action)
  await page.getByRole('heading',{name:'All imported rows',exact:true}).waitFor()
  const section=page.locator('section.cr-section').filter({has:page.getByRole('heading',{name:'All imported rows',exact:true})})
- const pending=page.waitForEvent('download');await j.action(section.getByRole('button',{name:'Export CSV',exact:true}))
+ const pending=page.waitForEvent('download');await tableAction(page,'Export CSV',j.action)
  const file=await pending,exported=await readFile(await file.path(),'utf8'),parsed=parseCsv(new TextEncoder().encode(exported))
  assert.equal(parsed.rows.length,205);assert.equal(parsed.rows[0][0],'row-204');assert.equal(parsed.rows.at(-1)[0],'row-000')
  const target=await build('CSV destination');await importCsv(exported,205);await importCsv(exported,0)
- await page.getByLabel('Sort',{exact:true}).selectOption({label:'Key'});await page.getByLabel('Direction',{exact:true}).selectOption('desc')
- const pending2=page.waitForEvent('download');await j.action(page.getByRole('button',{name:'Export CSV',exact:true}))
+ await sortAndGroup(page);await page.getByLabel('Sort',{exact:true}).selectOption({label:'Key'});await page.getByLabel('Direction',{exact:true}).selectOption('desc')
+ const pending2=page.waitForEvent('download');await tableAction(page,'Export CSV',j.action)
  const roundtrip=await readFile(await(await pending2).path(),'utf8');assert.equal(roundtrip,exported);await j.capture('csv-roundtrip')
  const mixed=encodeCsv(['Key','Text','Number','Checked'],[
   ['row-000','Changed','12','true'],['row-001',samples[1],'0','false'],['New row','New','2','false'],

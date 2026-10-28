@@ -1,3 +1,4 @@
+import {displayAction} from './records-table-tools.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {compileSchema} from '../../src/domains/records/descriptors.server.ts'
@@ -40,7 +41,7 @@ export async function findBrowserJourney(page,j,h){
  await page.goto(`${h.origin}/app/records/${f.appId}/${f.entityId}`)
  for(const view of f.views){
   console.log(`Find ${view.display} at ${page.viewportSize().width}px`)
-  await page.getByRole('navigation',{name:'Saved views',exact:true}).getByRole('button',{name:view.name,exact:true}).click()
+  await displayAction(page,view.name)
   await page.getByRole('heading',{name:view.name,exact:true}).waitFor()
   // The timeline fetches every page after mounting its heading. Finish that
   // independent load before starting the separate all-pages find traversal.

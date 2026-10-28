@@ -1,3 +1,5 @@
+// Table tools Fill down and Ctrl/Cmd+D run in the existing Home browser scenario;
+// this native range contract also runs on CI workers without Chromium.
 import './helpers/typescript-loader.mjs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
