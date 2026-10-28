@@ -10,6 +10,11 @@ export type FieldStorage = {
     sortColumn?: string;
     currencyColumn?: string;
     scaleColumn?: string;
+    /** Source-owned retained storage adapters, absent on native bases. */
+    selectValues?: Readonly<Record<string, string>>;
+    fixedCurrency?: { currency: string; scale: number };
+    decimalScale?: number;
+    instantStorage?: 'milliseconds';
     join?: {
         table: TableHandle;
         valueColumn: string;
@@ -169,6 +174,10 @@ export function existingDescriptor(schema: EntitySchema, mapping: {
         orderColumn?: string;
         currencyColumn?: string;
         scaleColumn?: string;
+        selectValues?: Readonly<Record<string, string>>;
+        fixedCurrency?: { currency: string; scale: number };
+        decimalScale?: number;
+        instantStorage?: 'milliseconds';
     }>;
 }): EntityDescriptor {
     entitySchema.parse(schema);
@@ -178,7 +187,7 @@ export function existingDescriptor(schema: EntitySchema, mapping: {
         const storage = mapping.fields[field.id];
         if (!storage && field.type !== 'computed')
             throw new Error('Missing existing field mapping');
-        const mapped = { field, column: storage?.column ?? '', sortColumn: storage?.orderColumn, currencyColumn: storage?.currencyColumn, scaleColumn: storage?.scaleColumn };
+        const mapped = { field, column: storage?.column ?? '', sortColumn: storage?.orderColumn, currencyColumn: storage?.currencyColumn, scaleColumn: storage?.scaleColumn, selectValues: storage?.selectValues, fixedCurrency: storage?.fixedCurrency, decimalScale: storage?.decimalScale, instantStorage: storage?.instantStorage };
         fields.set(field.id, mapped);
         for (const col of [mapped.column, mapped.sortColumn, mapped.currencyColumn, mapped.scaleColumn])
             if (col)

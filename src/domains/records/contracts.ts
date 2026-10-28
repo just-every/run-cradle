@@ -61,6 +61,8 @@ export type Field = {
     options?: {
         id: Id;
         label: string;
+        /** Extra choice recovered from retained storage; never a native field configuration. */
+        retainedValue?: string;
     }[];
     relation?: {
         ownerAppId: Id;
@@ -69,7 +71,7 @@ export type Field = {
         onDelete: 'restrict' | 'unlink' | 'cascade';
     };
     linkPicker?: { searchFieldIds: Id[]; displayFieldIds: Id[]; viewId?: Id };
-    /** Display metadata only: a number shown and exported as a percentage; the stored value is unchanged. */
+    /** A number is a fraction (0.49 means 49%); storage adapters preserve their physical representation. */
     numberFormat?: 'percent';
     expression?: Expr;
     resultType?: Field['type'] | 'array';

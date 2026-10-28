@@ -149,7 +149,7 @@ async function exportFormatJourney(doors, world, format, destination, edge, mani
   const file=captured,metadata=parquetMetadata(file),headers=metadata.schema.slice(1).map(column=>column.name)
   const records=await parquetReadObjects({file})
   const parsed=await normalize({headers,rows:records.map(record=>headers.map(name=>record[name]===null?'':typeof record[name]==='boolean'?(record[name]?'Yes':'No'):String(record[name])))})
-  const numericName=destination==='bigquery'?parsed.columns.find(column=>column.fieldId===launchFieldIds.campaign.health)?.column:parsed.headers.find(name=>name==='Health'||name==='Reported health (%)')
+  const numericName=destination==='bigquery'?parsed.columns.find(column=>column.fieldId===launchFieldIds.campaign.health)?.column:parsed.headers.find(name=>name==='Health'||name==='Reported health')
   assert.ok(numericName,'The current readable numeric source field has a Parquet column')
   assert.equal(metadata.schema.find(column=>column.name===numericName)?.type,'DOUBLE','Numeric fields retain DOUBLE type in every destination’s Parquet files')
   return parsed
