@@ -12132,8 +12132,7 @@
       "file": "ACCEPTANCE.md",
       "line": 12,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -12145,8 +12144,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12160,8 +12158,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12175,8 +12172,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12190,8 +12186,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12205,8 +12200,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12220,8 +12214,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12235,8 +12228,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12251,8 +12243,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12266,8 +12257,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12281,8 +12271,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12296,8 +12285,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12311,8 +12299,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12326,8 +12313,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12335,8 +12321,7 @@
       "file": "ACCEPTANCE.md",
       "line": 30,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -12348,8 +12333,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12363,8 +12347,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12378,8 +12361,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12393,8 +12375,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12408,8 +12389,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12424,8 +12404,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12439,8 +12418,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12454,8 +12432,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12469,8 +12446,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12484,8 +12460,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12499,8 +12474,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12516,8 +12490,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12531,8 +12504,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12547,8 +12519,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12556,8 +12527,7 @@
       "file": "ACCEPTANCE.md",
       "line": 49,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -12569,8 +12539,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12584,8 +12553,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12599,8 +12567,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12614,8 +12581,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12629,8 +12595,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12644,8 +12609,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12659,8 +12623,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12674,8 +12637,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12689,8 +12651,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12704,8 +12665,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12719,8 +12679,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12734,8 +12693,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12749,8 +12707,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12758,8 +12715,7 @@
       "file": "ACCEPTANCE.md",
       "line": 67,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -12771,8 +12727,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12786,8 +12741,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12801,8 +12755,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12816,8 +12769,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12831,8 +12783,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12846,8 +12797,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12861,8 +12811,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12876,8 +12825,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12891,8 +12839,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12906,8 +12853,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12921,8 +12867,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12936,8 +12881,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12945,8 +12889,7 @@
       "file": "ACCEPTANCE.md",
       "line": 84,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -12958,8 +12901,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12973,8 +12915,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -12988,8 +12929,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13003,8 +12943,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13018,8 +12957,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13033,8 +12971,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13048,8 +12985,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13063,8 +12999,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13078,8 +13013,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13093,8 +13027,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13108,8 +13041,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13123,8 +13055,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13138,8 +13069,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13147,8 +13077,7 @@
       "file": "ACCEPTANCE.md",
       "line": 102,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13160,8 +13089,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13175,8 +13103,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13190,8 +13117,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13205,8 +13131,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13220,8 +13145,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13235,8 +13159,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13250,8 +13173,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13265,8 +13187,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13280,8 +13201,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13298,8 +13218,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13307,8 +13226,7 @@
       "file": "ACCEPTANCE.md",
       "line": 117,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13320,8 +13238,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13335,8 +13252,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13350,8 +13266,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13365,8 +13280,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13380,8 +13294,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13395,8 +13308,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13410,8 +13322,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13425,8 +13336,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13440,8 +13350,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13455,8 +13364,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13471,8 +13379,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13486,8 +13393,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13501,8 +13407,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13516,8 +13421,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13525,8 +13429,7 @@
       "file": "ACCEPTANCE.md",
       "line": 136,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13538,8 +13441,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13553,8 +13455,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13568,8 +13469,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13583,8 +13483,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13598,8 +13497,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13613,8 +13511,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13628,8 +13525,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13643,8 +13539,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13658,8 +13553,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13667,8 +13561,7 @@
       "file": "ACCEPTANCE.md",
       "line": 150,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13680,8 +13573,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13695,8 +13587,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13710,8 +13601,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13719,8 +13609,7 @@
       "file": "ACCEPTANCE.md",
       "line": 158,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13732,8 +13621,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13747,8 +13635,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13762,8 +13649,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13771,8 +13657,7 @@
       "file": "ACCEPTANCE.md",
       "line": 166,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13784,8 +13669,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13799,8 +13683,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13814,8 +13697,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13829,8 +13711,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13844,8 +13725,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13859,8 +13739,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13874,8 +13753,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13883,8 +13761,7 @@
       "file": "ACCEPTANCE.md",
       "line": 178,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13896,8 +13773,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13911,8 +13787,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13926,8 +13801,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13941,8 +13815,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13956,8 +13829,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -13965,15 +13837,13 @@
       "file": "ACCEPTANCE.md",
       "line": 188,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 190,
       "text": "| HOME-001 \u2014 Owner identity plate | Superseded | \u2014 |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -13985,8 +13855,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14000,8 +13869,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14015,8 +13883,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14024,8 +13891,7 @@
       "file": "ACCEPTANCE.md",
       "line": 197,
       "text": "| Clause | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -14037,8 +13903,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14052,8 +13917,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14067,8 +13931,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14082,8 +13945,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14097,8 +13959,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14112,8 +13973,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14127,8 +13987,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14142,8 +14001,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14157,8 +14015,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14172,8 +14029,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14187,8 +14043,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14202,8 +14057,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14217,8 +14071,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14232,8 +14085,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14247,8 +14099,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14262,8 +14113,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14277,8 +14127,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14292,8 +14141,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14307,8 +14155,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14322,8 +14169,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14337,8 +14183,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14352,8 +14197,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14367,8 +14211,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14382,8 +14225,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14397,8 +14239,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14412,8 +14253,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14427,8 +14267,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14442,8 +14281,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14457,8 +14295,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14472,8 +14309,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14487,8 +14323,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14502,8 +14337,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14517,8 +14351,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14532,8 +14365,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14547,8 +14379,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14562,8 +14393,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14577,8 +14407,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14592,8 +14421,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14607,8 +14435,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14622,8 +14449,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14637,8 +14463,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14652,8 +14477,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14667,8 +14491,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14682,8 +14505,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14697,8 +14519,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14712,8 +14533,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14727,8 +14547,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14742,8 +14561,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14757,8 +14575,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14772,8 +14589,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14787,8 +14603,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14802,8 +14617,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14817,8 +14631,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14832,8 +14645,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14847,8 +14659,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14862,8 +14673,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14877,8 +14687,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14892,8 +14701,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14907,8 +14715,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14922,8 +14729,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14937,8 +14743,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14952,8 +14757,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14967,8 +14771,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14982,8 +14785,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -14997,8 +14799,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15012,8 +14813,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15027,8 +14827,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15042,8 +14841,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15057,8 +14855,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15072,8 +14869,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15087,8 +14883,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15102,8 +14897,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15117,8 +14911,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15132,8 +14925,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15147,8 +14939,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15162,8 +14953,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15177,8 +14967,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15192,8 +14981,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15207,8 +14995,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15222,8 +15009,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15238,8 +15024,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15253,8 +15038,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15268,8 +15052,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15283,8 +15066,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15298,8 +15080,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15313,8 +15094,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15328,8 +15108,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15343,8 +15122,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15358,8 +15136,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15373,8 +15150,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15388,8 +15164,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15403,8 +15178,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15418,8 +15192,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15433,8 +15206,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15448,8 +15220,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15463,8 +15234,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15478,8 +15248,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15493,8 +15262,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15502,288 +15270,247 @@
       "file": "ACCEPTANCE.md",
       "line": 300,
       "text": "The records builder is the lead product. Launch readiness is an included template with every retained clause still binding; repairs are optional navigation and their full outcome remains separately gated. The October shell has one Home, grouped navigation, literal-localhost development access and a themed 404. See the [identity transition](docs/contract-transition.md#records-first-identity--6-october-2026).",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 302,
       "text": "Foundation acceptance requires frozen installation and default `pnpm verify` (records and launch journeys within the 200-test seed budget), preservation of the approved shell composition, mobile/desktop shell evidence, accepted Base operator-auth/mail/deploy adoption, and an exact disposable-install receipt with received magic-link owner sign-in and complete resource teardown. Readiness notification delivery remains a separate workflow gate. Docker authoring has a separate operational acceptance path. Local checks do not accept external providers, CI, bootstrap or deployment; HANDOVER.md records each separately.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 304,
       "text": "The wider records and workflow gates below remain obligations and are not satisfied merely by changing product identity.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 308,
       "text": "The foundation release adds an owner-built CRM without AI: Companies, Contacts",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 309,
       "text": "and Deals, typed fields, links and a lookup. Every schema change requires an",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 310,
       "text": "impact preview and guarded adoption; stale data, schema or authority rejects the",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 311,
       "text": "prepared change. Grid sorting, filtering and grouping, saved views, kanban and",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 312,
       "text": "forms have desktop and phone browser journeys with no page overflow and zero",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 313,
       "text": "serious or critical automated accessibility findings. Per-view CSV is checked",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 314,
       "text": "against a fresh table, including human select labels, linked records, computed",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 315,
       "text": "lookups and nullable values. Customer relationships, project tracker and launch",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 316,
       "text": "readiness are included templates.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 318,
       "text": "These repeatable acceptance checks run in `pnpm verify`. The original bounded",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 319,
       "text": "profile did not cover formula/rollup authoring, comments, bulk editing or record",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 320,
       "text": "history. Subsequent evidence now covers the bounded formula and rollup builders",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 321,
       "text": "(CALC-001/CALC-003), record comments (COLLAB-001), grid range editing (VIEW-008)",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 322,
       "text": "and history restoration (COLLAB-002), as detailed in the current clause rows",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 323,
       "text": "above. Rare field types, charts and attachment authoring/preview",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 324,
       "text": "journeys remain incomplete under FIELD-001, IFACE-003 and FILE-001.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 325,
       "text": "The broader requirements below remain binding. Hosted owner sign-in, resource teardown, CI",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 326,
       "text": "and publication inspection each require their own exact-candidate receipt.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 330,
       "text": "The manual repair intake slice has historical bounded local checks;",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 331,
       "text": "[manual repair scope](docs/launch-readiness-20261002.md) describes its boundary.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 332,
       "text": "Current-candidate verification remains required. It covers report",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 333,
       "text": "submission, authorized current identity, private photo evidence, device-only",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 334,
       "text": "offline draft and original-key reconciliation. It does not accept the entire",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 335,
       "text": "repair outcome, relational-records engine, operating loop or product release.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 336,
       "text": "The subsequent persisted case/mandate milestone is recorded in the same launch document; wider operation and provider stages remain incomplete. The planned wider gates below remain obligations; no owner hold is waived.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 340,
       "text": "**Historical baseline: 29 September 2026 \u2014 rendering migration candidate.** That implementation",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 341,
       "text": "uses TanStack Start documents and generated functions with explicit Hono HTTP",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 342,
       "text": "families in one emitted Worker. The 71 applied migration files are preserved.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 343,
       "text": "This is work package 0 only; retained later feature code is not accepted flagship",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 344,
       "text": "or UX completion. [Document rendering](docs/document-rendering.md) records the",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 345,
       "text": "ownership boundary, commands, local evidence and remaining limitations.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 348,
       "text": "The rows below distinguish measured local clauses from the remaining **Planned** work. Work package 0 has its separate historical migration receipt. No planned gate is evidence of current behavior,",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 349,
       "text": "test coverage, a working provider, customer outcome, deployment, or release.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 350,
       "text": "Current local evidence is reported separately in",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 351,
       "text": "[docs/current-state.md](docs/current-state.md). The current records-first contract, retained launch-template clauses and",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 352,
       "text": "baseline remain in force while this future contract is developed; see",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 353,
       "text": "[docs/contract-transition.md](docs/contract-transition.md).",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 355,
       "text": "| Gate | Status | Required evidence |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -15801,8 +15528,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15816,8 +15542,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15831,8 +15556,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15852,8 +15576,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15876,8 +15599,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15891,8 +15613,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15908,8 +15629,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15923,8 +15643,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15938,8 +15657,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15953,8 +15671,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15968,8 +15685,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15983,8 +15699,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -15998,8 +15713,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16013,8 +15727,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16037,8 +15750,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16071,8 +15783,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16086,8 +15797,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16113,8 +15823,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16128,8 +15837,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16143,8 +15851,7 @@
       ],
       "also": [
         {
-          "to": "docs",
-          "path": "docs/verify.md"
+          "to": "changelog"
         }
       ]
     },
@@ -16152,127 +15859,109 @@
       "file": "ACCEPTANCE.md",
       "line": 383,
       "text": "Passing one workflow or local app suite cannot waive another gate or narrow an",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 384,
       "text": "existing obligation. A claim of acceptance names the precise release identity,",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 385,
       "text": "environment, evidence and remaining external unknowns.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 389,
       "text": "RECORDS-005 and RECORDS-006 cover reviewed multi-table import and portable base exits. The 49 original fixture files remain synthetic documentation-shaped evidence, with no real-account export. Actual D1 checks pass the nine-origin JSON fresh/copy and complete reviewed CSV-return matrix: the three synthetic bases by CSV and recorded API paths, and the three templates with records. Every schema, record, ordered link and option property is compared, using a complete bijective identity map for copies. Standard JSON Schema validation, process-kill restart from the stored job, hostile-input and zero-write refusals, current-authority fences, reconciliation and conflict-preserving undo are covered.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 391,
       "text": "Desktop and phone browser journeys pass upload, mapping review, guarded adoption, progress/report, linked chips and lookup, JSON/CSV downloads, reviewed CSV return and undo, with no horizontal overflow, serious/critical axe findings, console errors or external requests. CSV correspondence accepts no choices on load. Explicit acceptance selects distinct duplicate-primary candidates and preserves typed nulls; raw resolved/unresolved/ambiguous accounting stays separate. The unchanged recorded API edge expectation retains all nine links, including the selected distinct Twin. Ordinary CSV without accepted correspondence still exposes its eight-resolved/one-ambiguous loss boundary. These flows are wired into `pnpm verify`.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 393,
       "text": "Base-level round trips do not prove whole-installation restoration. The Data lifecycle row now records its separately measured local archive and recovery clauses. Hosted, real-account, universal erasure, catalog publication and release acceptance remain pending. See [importing](docs/importing.md) and [leaving and returning](docs/leaving-cradle.md).",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 398,
       "text": "The full declared profile remains 250,000 records in one table, 500,000 in one base, 500 fields in one table and 50 tables in one base. Run `20261022T000520795495Z-heavy-slot-f105328a`, source `15b0403a762f32fccb4b03bb8c668efd9a1fc9bc`, refused the 500-field table with `D1_ERROR: too many columns` before measuring. [Raw failure](docs/contract/SCALE-001/full-profile-refused.json). Cloudflare D1\u2019s [100 physical columns per table](https://developers.cloudflare.com/d1/platform/limits/) conflicts with the current column-per-field storage layout. The compiler now refuses that layout explicitly before adoption. This is an open implementation gap, not a reduction of the 500-field obligation.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 400,
       "text": "The explicit `--diagnostic-80-fields` run `20261022T001607008860Z-heavy-slot-614b2457` measured source `dc97c8aeb589dafc55332faff51c8bc07234552f`: Apple M1 Max, 10 logical CPUs, 32 GiB RAM, macOS/Darwin 25.6.0 arm64, Node 22.20.0, emitted workerd with local D1. Actual population: 250,000 records in the main table, 500,000 records and 50 tables in the base, **80 fields, 86 physical columns** in the main table (six record columns, one title column, two amount columns, one stage column, 76 optional boolean columns left null; the formula is computed), 10,000 rollup links. Each workload ran 30 serial samples; grid pages contain 100 records. Seeding was additive SQL; every timed read/write used the authenticated owner HTTP doors. The entire response was consumed. [Raw diagnostic result](docs/contract/SCALE-001/diagnostic-80-fields.json).",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 402,
       "text": "| Workload | p50 ms | p95 ms | p99 ms | Error rate |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 404,
       "text": "| grid | 17.71 | 21.53 | 31.73 | 0% |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 405,
       "text": "| filter | 20.11 | 26.02 | 35.11 | 0% |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 406,
       "text": "| sort | 86.49 | 104.75 | 107.05 | 0% |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 407,
       "text": "| group | 271.68 | 277.02 | 279.35 | 0% |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 408,
       "text": "| formula | 17.53 | 22.43 | 31.68 | 0% |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 409,
       "text": "| rollup10000 | 160.24 | 175.79 | 190.35 | 0% |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 410,
       "text": "| write | 52.32 | 70.30 | 87.26 | 0% |",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 412,
       "text": "All seven diagnostic targets passed, including current formula read after a write and the exact 10,000-link rollup sum. Public HTTP refused record 250,001/table and 500,001/base (409), field 501 and table 51 (400), naming each limit, value and current count. Derived capacity counters survive populated upgrades by reconstruction and are omitted from portable archives (`tests/rer-data-roundtrip.mjs`).",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 414,
       "text": "**Gap (ct, 22 October 00:45Z):** the full profile at `15b0403a762f32fccb4b03bb8c668efd9a1fc9bc` was refused at CREATE TABLE (D1_ERROR: too many columns). At 6 columns plus 0-4 per field, D1's limit of 100 columns bars 500 fields until SCALE-002. The 80-field run is diagnostic only. Hosted: NOT RUN. Full-profile grid/filter/sort/group/write/formula/rollup timings remain NOT RUN. No real IdP, Google or hosted run was used. `Measured scale` is dispatch-only and outside push Verify; results do not constitute a hosted performance guarantee. SCALE-001 remains partial.",
-      "to": "docs",
-      "path": "docs/verify.md"
+      "to": "changelog"
     },
     {
       "file": "docs/CLAIMS.md",
