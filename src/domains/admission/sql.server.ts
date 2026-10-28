@@ -28,7 +28,13 @@ export function trustedPredicate(sql: string, values: readonly SqlScalar[] = [])
 }
 export function assertPredicate(p: SqlPredicate): void { if (!predicates.has(p))
     throw new Error('Untrusted SQL predicate'); }
-export function and(...items: readonly SqlPredicate[]): SqlPredicate { items.forEach(assertPredicate); return trustedPredicate(items.length ? items.map(p => `(${p.sql})`).join(' AND ') : '1', items.flatMap(p => [...p.values])); }
+/** Balance the SQL tree so each additional guard adds logarithmic depth. */
+function conjunction(items: readonly SqlPredicate[]): string {
+    if (items.length < 2) return items.length ? `(${items[0]!.sql})` : '1';
+    const middle = Math.floor(items.length / 2);
+    return `(${conjunction(items.slice(0, middle))} AND ${conjunction(items.slice(middle))})`;
+}
+export function and(...items: readonly SqlPredicate[]): SqlPredicate { items.forEach(assertPredicate); return trustedPredicate(conjunction(items), items.flatMap(p => [...p.values])); }
 export function or(...items: readonly SqlPredicate[]): SqlPredicate { items.forEach(assertPredicate); return trustedPredicate(items.length ? items.map(p => `(${p.sql})`).join(' OR ') : '0', items.flatMap(p => [...p.values])); }
 export function eq(table: TableHandle, name: string, value: SqlScalar): SqlPredicate { return trustedPredicate(`${column(table, name)} IS ?`, [value]); }
 export function exists(table: TableHandle, where: SqlPredicate): SqlPredicate { assertPredicate(where); assertTable(table); return trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(table.tableId)} WHERE ${where.sql})`, where.values); }
