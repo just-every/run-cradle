@@ -182,3 +182,10 @@ ships AGENTS.consumer.md as AGENTS.md, check the emitted guide against actual
 paths, commands and readiness. Preserve the author repository and owner forks.
 Commit, tag, publish and deploy only within session authority. Parked work remains
 parked until explicitly resumed.
+
+## Contract regeneration
+
+CONTRACT.md is the acceptance and status source. Regenerate its derived documents before locking source changes.
+
+Lander-Regenerate: node src/base/contract-docs.mjs write
+Lander-Regenerate: node scripts/edition-authoring/cli.mjs lock

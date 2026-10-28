@@ -45,9 +45,10 @@
       ]
     },
     "RECORDS-008": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "RECORDS-008"
+        "RECORDS-008",
+        "RECORDS-010"
       ]
     },
     "RECORDS-009": {
@@ -111,9 +112,10 @@
       ]
     },
     "CALC-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CALC-001"
+        "CALC-001",
+        "CALC-006"
       ]
     },
     "CALC-002": {
@@ -147,9 +149,11 @@
       ]
     },
     "FILE-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "FILE-002"
+        "FILE-002",
+        "FILE-005",
+        "FILE-006"
       ]
     },
     "FILE-003": {
@@ -159,9 +163,10 @@
       ]
     },
     "FILE-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "FILE-004"
+        "FILE-004",
+        "FILE-007"
       ]
     },
     "VIEW-008": {
@@ -447,9 +452,12 @@
       ]
     },
     "AUTO-USER-010": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "AUTO-USER-010"
+        "AUTO-USER-010",
+        "AUTO-USER-011",
+        "AUTO-USER-012",
+        "AUTO-USER-013"
       ]
     },
     "API-USER-001": {
@@ -513,9 +521,10 @@
       ]
     },
     "INTEG-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "INTEG-004"
+        "INTEG-004",
+        "INTEG-008"
       ]
     },
     "INTEG-005": {
@@ -1197,9 +1206,10 @@
       ]
     },
     "NOTIFY-009": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "NOTIFY-009"
+        "NOTIFY-009",
+        "NOTIFY-010"
       ]
     },
     "AI-001": {

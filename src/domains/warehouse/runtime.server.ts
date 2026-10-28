@@ -38,7 +38,7 @@ export function warehouseRuntime(db:D1Database,bucket:R2Bucket,foundation:Server
    ]}),
   ])
  }
- // Automatic recovery of an interrupted run is finite (NOTIFY-009). When a later
+ // Automatic recovery of an interrupted run is finite (NOTIFY-010). When a later
  // execution finds the run's lease expired, the execution that held it ended
  // without completing. It is counted durably before anything else happens, fenced
  // by the run's claim token and lease start, which the count also moves so a
