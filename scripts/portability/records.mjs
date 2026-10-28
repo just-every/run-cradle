@@ -66,5 +66,8 @@ export async function prepareRecordRestore(db,root,path,config){
   for(const plan of drops)await db.prepare(`DROP TABLE IF EXISTS ${quote(plan.name)}`).run();
  };
  cleanup.retiredComments=missing.some(isRetiredComments);
+ // Earlier released archives explicitly omitted import history. Keep their
+ // declared catalogue during restore; Base still verifies every carried row.
+ cleanup.retainedImportExclusions=['portability_previews','portability_preview_rows'].filter(name=>manifest.excludedTables.includes(name)&&!manifest.tables.some(table=>table.name===name));
  return cleanup;
 }

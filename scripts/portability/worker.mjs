@@ -52,7 +52,7 @@ async function run(direction,{root,path,journal}){
   if(direction==='export'&&await proxy.env.DB.prepare("SELECT 1 FROM lifecycle_erasures WHERE state='pending' LIMIT 1").first())throw new PortabilityError('erasure_pending',409);
   if(direction==='import')cleanup=await prepareRecordRestore(proxy.env.DB,root,path,portabilityPolicy);
   const db=cleanup?.retiredComments?retiredCommentsDatabase(proxy.env.DB):proxy.env.DB;
-  const config={...installationPortabilityPolicy(proxy.env.WAREHOUSE),derivedTables:await derivedSearch(proxy.env.DB)};
+  const config={...installationPortabilityPolicy(proxy.env.WAREHOUSE),excludeTables:[...portabilityPolicy.excludeTables,...(cleanup?.retainedImportExclusions??[])],derivedTables:await derivedSearch(proxy.env.DB)};
   const service=await createPortability({db,buckets:{FILES:installationBucket(proxy.env.DB,proxy.env.FILES),WAREHOUSE:proxy.env.WAREHOUSE},policy:config,migrations:()=>restoreMigrations(proxy.env.DB,root,config,{retiredComments:!!cleanup?.retiredComments})});
   const receipt=direction==='export'?await exportArchive(service,path,transient):await importWithCustody(service,db,path,journal);
   if(direction==='import')await rebuildSearch(proxy.env.DB,root);

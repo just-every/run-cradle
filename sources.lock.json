@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ba6006365f5f0f55d217d93aaa175c817d266a381aca97c16f303186c321a00f",
+      "sha256": "c1a4a40887c0086166625c1d68dec35e6a444414018a6b8bd76289e55edcb4ce",
       "executable": false
     },
     "DEMO.md": {
@@ -5610,7 +5610,7 @@
       "executable": false
     },
     "scripts/portability/records.mjs": {
-      "sha256": "9d57c18fd99ff34d59cb167b9a8d1183b050be7e7ecdf3ef29711b3b7637ad95",
+      "sha256": "7783518e06dfb5e7eee2b44dc3ff9e24310af01c6933706ede4f2f39a9edd213",
       "executable": false
     },
     "scripts/portability/retired-comments.mjs": {
@@ -5622,7 +5622,7 @@
       "executable": false
     },
     "scripts/portability/worker.mjs": {
-      "sha256": "181123ff911bed5c2a244940053970850fbcdf9cb88e5e0da7b4c7a91d08b728",
+      "sha256": "2ca772351aa676b5186ac0b036d8a98dd4baaeebc4a9bc2c92406247c845ea8f",
       "executable": false
     },
     "scripts/prove-company-workbooks.mjs": {
