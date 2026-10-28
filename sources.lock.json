@@ -7578,7 +7578,7 @@
       "executable": false
     },
     "src/domains/admission/sql.server.ts": {
-      "sha256": "e557bad67ef37f1faf4a1a8bc9238db881853e45c9e33eacc3fcd51af8903c93",
+      "sha256": "c644060429346850472a5dcac64e9df94621ba451839834e4b83c9602e5cefeb",
       "executable": false
     },
     "src/domains/admission/tables.server.ts": {
@@ -7626,7 +7626,7 @@
       "executable": false
     },
     "src/domains/authority/delegation.server.ts": {
-      "sha256": "c31b5fce1816ddb15271dba1016d2916c70ffcb2b161b0b79da06d1e29e51ba4",
+      "sha256": "0a9d00da298d8694219c81bd68291c45e78a17216f1d2977120a40927348a5c1",
       "executable": false
     },
     "src/domains/authority/dev-credentials.server.ts": {
@@ -10882,7 +10882,7 @@
       "executable": false
     },
     "src/ui/records/money-input.tsx": {
-      "sha256": "4e86d083badc186430aac8da0be599de120b76651d3ca9be83c8422a40a4cb65",
+      "sha256": "dc7e96192690e56a7e8d6f98409199c153fbaf5737dfe918a25020d57a88cee3",
       "executable": false
     },
     "src/ui/records/person-picker.tsx": {
@@ -12510,11 +12510,11 @@
       "executable": false
     },
     "tests/helpers/record-template-automation.mjs": {
-      "sha256": "02933e6c7d6c83a6f6dedd9d8dde1da3b5d7d5294d722762cfaea5dd12e65742",
+      "sha256": "6c943fdcf428093604257359d8f5280cabc4ed8989fd74ffcac23a34f74dd862",
       "executable": false
     },
     "tests/helpers/record-template-browser.mjs": {
-      "sha256": "e8b00f6b9c272c3fe92b57157cd701bce1a1e6a456cac4ad4c411877e0f3a7a6",
+      "sha256": "891ab815ff3fd8b56179e11ae05f82d6ab00f7306373f44538823331a0d81255",
       "executable": false
     },
     "tests/helpers/record-template-buttons.mjs": {
