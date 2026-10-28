@@ -67,6 +67,9 @@ export async function launchArchiveContents(h,headers){
  }
  return records=>{
   const items=records.filter(record=>record.kind==='part').flatMap(record=>record.items)
+  const authorities=items.filter(item=>item.kind==='row'&&item.table==='launch_automation_authorities')
+  assert.ok(authorities.length,'The archive includes the owner-authored automation history')
+  for(const item of authorities)assert.equal(Object.hasOwn(item.row,'principal_json'),false,'An archive never transfers authoring session authority')
   const normalized=rows=>rows.map(row=>JSON.stringify(Object.fromEntries(Object.entries(row).sort(([a],[b])=>a.localeCompare(b))))).sort()
   for(const [table,rows]of expected)assert.deepEqual(normalized(items.filter(item=>item.kind==='row'&&item.table===table).map(item=>item.row)),normalized(rows),'DATA-001 every retained cell: '+table)
   for(const file of originals){

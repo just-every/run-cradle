@@ -34,4 +34,7 @@ export async function installationArchive(h,owner){
   checkContents(records)
   await h.db.prepare('UPDATE authority_principals SET initial_owner=0 WHERE id=?').bind(owner.owner).run()
   assert.equal((await h.request(`/api/v1/archive-jobs/${id}/content`,{headers})).status,403)
+  assert.equal((await h.post('/api/v1/commands/export.start',input,headers)).status,403,'Revoked installation authority cannot capture another archive')
+  assert.equal((await h.post(`/api/v1/archive-jobs/${id}/advance`,{},headers)).status,403,'A captured archive job cannot bypass current owner authority')
+  assert.equal((await h.request(`/api/v1/archive-jobs/${id}`,{headers})).status,403,'Revoked installation authority cannot read a captured job')
 }

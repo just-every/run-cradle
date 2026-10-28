@@ -72,8 +72,7 @@ export const portabilityPolicy = {
    row.state='removed';
   }
   if(table==='authority_grants')row.restore_hold=1;
-  if(table==='launch_analysis_requests'){row.authority_json=null;if(['Queued','Running','Unknown'].includes(row.state)){row.state='Failed';row.error_code='forbidden';row.error_message='Restored analyses require a new operator request';}}
-  if(table==='launch_automation_authorities')row.principal_json=null;
+  if(table==='launch_analysis_requests'&&['Queued','Running','Unknown'].includes(row.state)){row.state='Failed';row.error_code='forbidden';row.error_message='Restored analyses require a new operator request';}
   if(table==='record_calendar_definitions'){row.enabled=0;row.actor_json='{}';}
   if(table==='record_calendar_changes')row.state='complete';
   if(table==='automations')row.enabled=0;
