@@ -1,3 +1,4 @@
+import {CSV_CREATE_ALL} from '../../domains/records/csv-mapping-contracts'
 import {SheetsSource,type SheetsCapture} from './sheets-source'
 import {encodeCsv} from '../../domains/portability/csv'
 import { useEffect, useState } from 'react'
@@ -51,19 +52,19 @@ export function ManualImport({ schema, onClose, onSaved }: {
   }
   return <section className="cr-card cr-stack">
     <header className="cr-page-header"><h2>Import {schema.label}</h2><button className="cr-button cr-button--quiet" disabled={busy || mappingBusy || committing} onClick={onClose}>Close import</button></header>
-    <p>Match records by a unique column, then review what will change. Valid rows can be imported while rejected rows wait for correction.</p>
+    <p>Choose how to import rows, then review what will change. Valid rows can be imported while rejected rows wait for correction.</p>
     {!preview ? <form className="cr-form" onSubmit={event => { event.preventDefault(); void prepare() }}>
       <fieldset disabled={busy || mappingBusy}><legend>Match columns</legend>
         <label className="cr-field">CSV or Excel file<input type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={event => { if (event.target.files?.[0]) void load(event.target.files[0]) }} /></label>
         <SheetsSource disabled={busy||mappingBusy} onLoad={source=>useSheet(source,source.sheets[0]!.name)} />
         {sheetSource&&<label className="cr-field">Google worksheet<select value={sheetName} onChange={event=>useSheet(sheetSource,event.target.value)}>{sheetSource.sheets.map(s=><option key={s.name}>{s.name}</option>)}</select></label>}
         {workbook&&<label className="cr-field">Worksheet<select value={workbook.sheet} onChange={event=>{const sheet=sheets.find(s=>s.name===event.target.value)!;setWorkbook({...workbook,sheet:sheet.name});setHeaders(sheet.headers);setMapping({});setMerge('')}}>{sheets.map(sheet=><option key={sheet.name}>{sheet.name}</option>)}</select></label>}
-        <ManualImportMappings schema={schema} headers={headers} mapping={mapping} merge={merge} disabled={busy} onBusyChange={setMappingBusy} onUse={(saved,mergeField)=>{setMapping(saved);setMerge(mergeField)}} />
+        <ManualImportMappings schema={schema} headers={headers} mapping={mapping} merge={merge} disabled={busy} onBusyChange={setMappingBusy} onUse={(saved,mergeField)=>{if(sheetSource&&mergeField===CSV_CREATE_ALL){setError('Create all rows is available for CSV and Excel files. Choose a matching field for Google Sheets.');return}setMapping(saved);setMerge(mergeField)}} />
         {headers.map(header => <label className="cr-field" key={header}>{header}<select value={mapping[header] ?? ''} onChange={event => setMapping({ ...mapping, [header]: event.target.value })}>
           <option value="">Skip column</option>{fields.map(field => <option key={field.id} value={field.id}>{field.label}</option>)}
         </select></label>)}
         <label className="cr-field">Match existing records by<select required value={merge} onChange={event => setMerge(event.target.value)}>
-          <option value="">Choose a unique column</option>{headers.includes('_record_id') && <option value="_record_id">Original record ID (recovery only)</option>}
+          <option value="">Choose how to import</option>{!sheetSource && <option value={CSV_CREATE_ALL}>Create all rows</option>}{headers.includes('_record_id') && <option value="_record_id">Original record ID (recovery only)</option>}
           {fields.filter(field => Object.values(mapping).includes(field.id) && ['text', 'number', 'date', 'select'].includes(field.type)).map(field => <option key={field.id} value={field.id}>{field.label}</option>)}
         </select></label>
       </fieldset>

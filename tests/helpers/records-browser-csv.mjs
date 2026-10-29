@@ -1,4 +1,5 @@
 import {displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
+import {writeWorkbook} from '../../src/domains/records/workbooks/write.ts'
 import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
@@ -14,10 +15,25 @@ export async function exerciseCsv(page,j,origin,width){
   await j.field('Text');await j.field('Number','number');await j.field('Checked','boolean')
   return j.adopt()
  }
- async function importCsv(csv,expected,rejected=0){
+ async function importCsv(csv,expected,rejected=0,{createAll=false,workbook=false}={}){
+  const parsed=workbook?parseCsv(new TextEncoder().encode(csv)):null
+  const file=workbook?{name:'create-only.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(writeWorkbook([{name:'Rows',headers:parsed.headers,rows:parsed.rows.map(row=>row.map(value=>({value,type:'text'})))}]))}:{name:'records.csv',mimeType:'text/csv',buffer:Buffer.from(csv)}
   await tableAction(page,'Import CSV',j.action)
-  await page.getByLabel('CSV or Excel file',{exact:true}).setInputFiles({name:'records.csv',mimeType:'text/csv',buffer:Buffer.from(csv)})
-  await page.getByLabel(/^Match existing records by/).selectOption({label:'Key'})
+  await page.getByLabel('CSV or Excel file',{exact:true}).setInputFiles(file)
+  const match=page.getByLabel(/^Match existing records by/)
+  assert.equal(await match.inputValue(),'');assert.equal(await page.getByRole('button',{name:'Preview import',exact:true}).isDisabled(),true)
+  await match.selectOption({label:createAll?'Create all rows':'Key'})
+  if(createAll){
+   const sourceName=workbook?'synthetic-cradle-workbook':'synthetic-cradle-csv'
+   await page.getByLabel('Source name',{exact:true}).fill(sourceName)
+   await j.action(page.getByRole('button',{name:'Save mapping',exact:true}));await page.getByRole('status').filter({hasText:`Saved ${sourceName}.`}).waitFor()
+   await j.action(page.getByRole('button',{name:'Close import',exact:true}));await tableAction(page,'Import CSV',j.action)
+   await page.getByLabel('CSV or Excel file',{exact:true}).setInputFiles(file)
+   await page.getByLabel(/^Match existing records by/).selectOption({label:'Key'})
+   await page.getByLabel('Use saved mapping',{exact:true}).selectOption({label:sourceName})
+   await page.getByRole('status').filter({hasText:`Using ${sourceName}.`}).waitFor()
+   assert.equal(await page.getByLabel(/^Match existing records by/).inputValue(),'_create_all','Saved mapping restores the deliberate create-only choice')
+  }
   const pending=page.waitForResponse(response=>response.url().endsWith('/records/import-preview'))
   await j.action(page.getByRole('button',{name:'Preview import',exact:true}))
   const response=await pending,body=await response.json()
@@ -25,19 +41,24 @@ export async function exerciseCsv(page,j,origin,width){
   await page.getByRole('heading',{name:'Review import',exact:true}).waitFor()
   const preview=page.getByRole('region',{name:'CSV import changes',exact:true}),text=await preview.innerText()
   assert.ok(text.includes(body.data.rows[0].label));assert.ok(!text.includes(body.data.rows[0].id))
-  if(rejected){
+  if(createAll){
+   assert.deepEqual([body.data.updates,body.data.unchanged],[0,0]);assert.ok(body.data.rows.every(row=>row.operation==='create'&&row.version===null&&Object.keys(row.before).length===0))
+   assert.equal(await preview.getByRole('cell',{name:/^(?:Change\s*)?Rejected$/}).count(),rejected)
+   assert.match(text,/Number:.*number/);assert.match(text,/Checked:.*true.*false/)
+  }else if(rejected){
    assert.deepEqual([body.data.updates,body.data.unchanged],[1,1])
    assert.equal(await preview.getByRole('cell',{name:/^(?:Change\s*)?Rejected$/}).count(),rejected)
    assert.match(text,/Number:.*number/);assert.match(text,/Checked:.*true.*false/)
    const invalidRow=preview.getByRole('row').filter({hasText:'Bad number'});assert.equal(await invalidRow.getByRole('listitem').count(),2,'One rejected row lists both invalid fields')
    assert.doesNotMatch(text,/invalid_format|invalid_type|Expected canonical/)
   }
-  await j.capture(rejected?'csv-mixed-preview':expected?'csv-preview':'csv-idempotent-preview')
+  await j.capture(createAll?(workbook?'workbook-create-only-preview':'csv-create-only-preview'):rejected?'csv-mixed-preview':expected?'csv-preview':'csv-idempotent-preview')
   await j.setChecked(page.getByLabel('Import these reviewed changes',{exact:true}),true)
   const result=await j.command(page.getByRole('button',{name:'Import records',exact:true}),'records.import-commit')
   await page.getByRole('button',{name:'New record',exact:true}).waitFor()
   const status=page.getByRole('status').filter({hasText:'Import complete:'});await status.waitFor()
   assert.match(await status.innerText(),new RegExp(expected+' created'));assert.match(await status.innerText(),new RegExp(rejected+' rejected'))
+  assert.deepEqual([result.creates,result.updates,result.unchanged,result.rejected],[expected,body.data.updates,body.data.unchanged,rejected])
   return result
  }
  const samples=['comma,here','a "quoted" phrase','line one\nline two','北 café','']
@@ -64,5 +85,15 @@ export async function exerciseCsv(page,j,origin,width){
   ['Bad number','','not-a-number','maybe'],['Bad checkbox','','1','maybe'],['Duplicate','','1','false'],['Duplicate','','2','false'],
  ])
  await importCsv(mixed,1,4);await j.capture('csv-mixed-imported')
+ const createOnly=encodeCsv(['Key','Text','Number','Checked'],[
+  ['row-000','Create first','41','true'],['row-000','Create second','42','false'],['','No merge value','43','false'],['Bad number','','invalid','maybe'],
+ ])
+ await importCsv(createOnly,3,1,{createAll:true});await importCsv(createOnly,3,1,{createAll:true,workbook:true})
+ const createdDownload=page.waitForEvent('download');await tableAction(page,'Export CSV',j.action)
+ const created=parseCsv(new TextEncoder().encode(await readFile(await(await createdDownload).path(),'utf8')))
+ assert.equal(created.rows.length,212)
+ assert.deepEqual(created.rows.filter(row=>row[0]==='row-000').map(row=>row.slice(1)).sort(),[['Changed','12','Yes'],['Create first','41','Yes'],['Create first','41','Yes'],['Create second','42','No'],['Create second','42','No']].sort())
+ assert.equal(created.rows.filter(row=>row[0]===''&&row[1]==='No merge value'&&row[2]==='43').length,2)
+ await j.capture('csv-create-only-imported')
  return {source:source.appId,destination:target.appId,rows:205,exactRoundtrip:true,idempotent:true,mixedRowsImported:true}
 }
