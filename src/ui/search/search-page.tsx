@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { OperatorFeaturePage } from '../../core/app/screens/operator-feature-page'
 import { sessionFetch } from '../shared/session-fetch'
 import { Empty } from '../shared/presentation'
 import type { SearchHit } from '../../core/features/search/service'
 
-export function SearchPage() {
-  const [input, setInput] = useState('')
-  const [query, setQuery] = useState('')
-  const [archived, setArchived] = useState(false)
+/** The address holds the search (`?q=…&archived=true`), so Back, reload and a shared link all return to the same results. */
+export function SearchPage({ query, archived }: { query: string; archived: boolean }) {
+  const navigate = useNavigate()
+  const [input, setInput] = useState(query)
+  useEffect(() => setInput(query), [query])
+  const find = (next: { q?: string; archived: boolean }, replace = false) => void navigate({ to: '/app/search', search: { q: next.q || undefined, archived: next.archived ? true : undefined }, replace })
   const [state, setState] = useState<{ kind: 'idle' | 'loading' } | { kind: 'ready'; hits: SearchHit[] } | { kind: 'failed'; message: string }>({ kind: 'idle' })
   useEffect(() => {
     if (!query.trim()) { setState({ kind: 'idle' }); return }
@@ -16,5 +19,5 @@ export function SearchPage() {
     return () => abort.abort()
   }, [query, archived])
 
-  return <OperatorFeaturePage currentPath="/app/search" title=""><div className="cr-page"><header className="cr-page-header"><h1>Find your work.</h1></header><form className="cr-toolbar" role="search" onSubmit={e => { e.preventDefault(); setQuery(input.trim()) }}><div className="cr-field"><label htmlFor="global-search">Search all bases</label><input id="global-search" type="search" value={input} onChange={e => setInput(e.target.value)} placeholder="A name, code or the beginning of a word…" /></div><button className="cr-button">Search</button><label className="cr-choice"><input type="checkbox" checked={archived} onChange={e => setArchived(e.target.checked)} />Include archived records</label></form><p className="cr-muted">Searches the records and fields you can read across all your bases. Up to 20 results per table. Comments are excluded.</p>{state.kind === 'idle' && <Empty title="Start with what you remember">Search a name, code or the beginning of a word.</Empty>}{state.kind === 'loading' && <p role="status">Searching current records…</p>}{state.kind === 'failed' && <p className="cr-notice" role="alert">{state.message}</p>}{state.kind === 'ready' && (state.hits.length === 0 ? <Empty title="No matching records">Try a different word or include archived records.</Empty> : <div className="cr-stack" aria-live="polite">{state.hits.map(hit => <article className="cr-card" key={`${hit.appId}:${hit.entityId}:${hit.id}`}><span className="cr-eyebrow">{hit.baseName} · {hit.recordType}</span><h3 style={{ marginTop: 8 }}><a href={hit.href}>{hit.name}</a></h3>{hit.overdue === true && <span className="cr-tag cr-tag--warn">Overdue</span>}</article>)}</div>)}</div></OperatorFeaturePage>
+  return <OperatorFeaturePage currentPath="/app/search" title=""><div className="cr-page"><header className="cr-page-header"><h1>Find your work.</h1></header><form className="cr-toolbar" role="search" onSubmit={e => { e.preventDefault(); find({ q: input.trim(), archived }) }}><div className="cr-field"><label htmlFor="global-search">Search all bases</label><input id="global-search" type="search" value={input} onChange={e => setInput(e.target.value)} placeholder="A name, code or the beginning of a word…" /></div><button className="cr-button">Search</button><label className="cr-choice"><input type="checkbox" checked={archived} onChange={e => find({ q: query, archived: e.target.checked }, true)} />Include archived records</label></form><p className="cr-muted">Searches the records and fields you can read across all your bases. Up to 20 results per table. Comments are excluded.</p>{state.kind === 'idle' && <Empty title="Start with what you remember">Search a name, code or the beginning of a word.</Empty>}{state.kind === 'loading' && <p role="status">Searching current records…</p>}{state.kind === 'failed' && <p className="cr-notice" role="alert">{state.message}</p>}{state.kind === 'ready' && (state.hits.length === 0 ? <Empty title="No matching records">Try a different word or include archived records.</Empty> : <div className="cr-stack" aria-live="polite">{state.hits.map(hit => <article className="cr-card" key={`${hit.appId}:${hit.entityId}:${hit.id}`}><span className="cr-eyebrow">{hit.baseName} · {hit.recordType}</span><h3 style={{ marginTop: 8 }}><a href={hit.href}>{hit.name}</a></h3>{hit.overdue === true && <span className="cr-tag cr-tag--warn">Overdue</span>}</article>)}</div>)}</div></OperatorFeaturePage>
 }
