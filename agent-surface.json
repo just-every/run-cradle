@@ -2,6 +2,13 @@
   "schema": "rer-agent-surface/1",
   "seed": "cradle",
   "specialist": "operations app steward",
+  "capabilities": [
+    "tools",
+    "policy",
+    "pause",
+    "audit",
+    "idempotency"
+  ],
   "tools": [
     {
       "name": "cradle.activity.read",

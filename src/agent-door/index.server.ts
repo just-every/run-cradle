@@ -38,6 +38,7 @@ export function createCradleAgentDoor(platform: Platform, runtime: Runtime) {
   const records = createCradleRecordTools(runtime, native), proposals = createCradleProposalTools(runtime, native)
   const launchReads = createCradleLaunchReadTools(runtime, native)
   const door = createAgentDoor({ seed: 'cradle', name: 'Cradle', specialist: CRADLE_SPECIALIST,
+    capabilities: ['tools', 'policy', 'pause', 'audit', 'idempotency'],
     db, origin, trust, people, tools: [...records.tools, ...launchReads.tools, ...proposals.tools], resources: [...records.resources, ...launchReads.resources, ...proposals.resources],
     localCredentials: local.localCredentials, currentScopes: local.currentScopes,
     notTools: [
