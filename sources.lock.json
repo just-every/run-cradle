@@ -12934,7 +12934,7 @@
       "executable": false
     },
     "tests/helpers/sms-browser.mjs": {
-      "sha256": "d55bf4506e671738ce35a8e061662c0ee1f6cd50c4d21d4b9c7151d62d63522c",
+      "sha256": "7bbf650c6c9753fcb8bd2a7ddf3cbee8150ca806e3df501019e63a72fe17e883",
       "executable": false
     },
     "tests/helpers/sms-journey.mjs": {

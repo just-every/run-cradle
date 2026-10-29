@@ -2,10 +2,18 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {accountSid,authToken,sendingNumber,smsRiderJourney} from './sms-journey.mjs'
 export async function smsBrowser(page,h,journey,width,edge){
- await page.goto(h.origin+'/app/settings')
- await page.waitForFunction(()=>window.__TSR_ROUTER__?.state.location.pathname==='/app/settings')
- await page.getByText('Twilio SMS',{exact:true}).first().click()
- const section=page.getByRole('region',{name:'Twilio SMS settings'})
+ async function settings(reload=false){
+  if(reload)await page.reload();else await page.goto(h.origin+'/app/settings')
+  // The router path exists before React attaches the lazy panel's toggle handler.
+  // WorkspaceChoice expands its options in an effect: wait for that hydrated
+  // Settings state before opening the disclosure, then for SMS's own read.
+  await page.getByLabel('Timezone',{exact:true}).locator('option').nth(1).waitFor({state:'attached'})
+  await page.getByText('Twilio SMS',{exact:true}).first().click()
+  const section=page.getByRole('region',{name:'Twilio SMS settings'})
+  await section.getByRole('status').waitFor()
+  return section
+ }
+ const section=await settings()
  await section.getByLabel('Twilio Account SID',{exact:true}).fill(accountSid)
  await section.getByLabel('Twilio Auth Token',{exact:true}).fill(authToken)
  await section.getByLabel('Sending number or Messaging Service',{exact:true}).fill(sendingNumber)
@@ -17,8 +25,7 @@ export async function smsBrowser(page,h,journey,width,edge){
  assert.equal(await section.getByRole('status').innerText(),'Connected · A2P 10DLC: Campaign: VERIFIED, Brand: APPROVED (VERIFIED)','Settings shows the provider-verified campaign and brand')
  await journey.capture('sms-settings-registered')
  edge.setRegistered(false)
- await page.reload()
- await page.getByText('Twilio SMS',{exact:true}).first().click()
+ await settings(true)
  await section.getByRole('status').filter({hasText:'No registered US A2P campaign found'}).waitFor()
  assert.equal(await section.getByRole('status').innerText(),'Connected · A2P 10DLC: No registered US A2P campaign found','Settings shows an unregistered sending number without claiming registration')
  await journey.capture('sms-settings-unregistered')
@@ -50,7 +57,7 @@ export async function smsBrowser(page,h,journey,width,edge){
  await run.getByText(`Twilio ${rider.refusal.code}: ${rider.refusal.message}`,{exact:true}).waitFor()
  assert.equal(await run.getByRole('button',{name:'Retry safe action'}).count(),0)
  await journey.capture('sms-registration-refusal')
- await page.goto(h.origin+'/app/settings');await page.getByText('Twilio SMS',{exact:true}).first().click()
+ await settings()
  const replies=page.getByRole('region',{name:'Unattributed SMS replies'})
  for(const reply of rider.replies)await replies.getByText(reply.body,{exact:true}).first().waitFor()
  assert.ok(!(await replies.innerText()).includes('+15550100107'))
