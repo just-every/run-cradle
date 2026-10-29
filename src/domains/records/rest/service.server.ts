@@ -8,9 +8,13 @@ import {canonical,canonicalHash} from '../../admission/canonical'
 import {assertCurrentScopeAuthority} from '../../authority/guards.server'
 import {delegationCommandId} from '../../authority/user-delegation.server'
 import {readBoundedJson} from '../../authority/http.server'
-import {idSchema,querySchema,validateCell} from '../validators'
-import {createInput,updateInput,deleteInput,batchInput,upsertInput} from './contracts'
+import {idSchema,validateCell} from '../validators'
+import {createInput,updateInput,deleteInput,batchInput,upsertInput,restQueryInput} from './contracts'
 import {recordOpenApi,restSchema} from './openapi'
+import {createRestComments} from './comments.server'
+import type {CommandRegistry} from '../../../core/registry/commands'
+import type {createCommentReader} from '../../evidence/comment-reader.server'
+import {createFormulaQuery} from './formula-query.server'
 
 type Services=ReturnType<typeof createRecordServices>
 /** A separate REST representation omits unreadable field identities as well as values. */
@@ -20,8 +24,10 @@ function project<T>(value:T,readable:readonly string[]):T{
  const item=value as Record<string,unknown>
  return Object.fromEntries(Object.entries(item).map(([key,child])=>[key,key==='fields'&&child&&typeof child==='object'&&!Array.isArray(child)?Object.fromEntries(Object.entries(child).filter(([id])=>readable.includes(id)).map(([id,cell])=>[id,project(cell,readable)])):key==='fieldIds'&&Array.isArray(child)?child.filter(id=>typeof id==='string'&&readable.includes(id)):project(child,readable)])) as T
 }
-export function createRecordRest(db:D1Database,services:Services,admission:AdmissionPort){
+export function createRecordRest(db:D1Database,services:Services,admission:AdmissionPort,evidence?:{comments:ReturnType<typeof createCommentReader>;commands:CommandRegistry},cursorSecret?:string){
  const {policy,reader,writer,descriptors,metadata}=services
+ const comments=evidence?createRestComments(services,evidence.comments,evidence.commands):undefined
+ const formulaQuery=cursorSecret?createFormulaQuery(db,services,cursorSecret):undefined
  return {async handle(ctx:RequestContext,request:Request):Promise<unknown>{
   const path=new URL(request.url).pathname,document=path.match(/^\/api\/v1\/apps\/([^/]+)\/openapi\.json$/)
   if(document&&request.method==='GET'){
@@ -30,13 +36,20 @@ export function createRecordRest(db:D1Database,services:Services,admission:Admis
    for(const schema of candidates){const scope=await policy.scope(ctx,{appId,entityId:schema.id,purpose:'read'});schemas.push({...schema,fields:schema.fields.filter(field=>scope.readableFieldIds.includes(field.id))});await assertCurrentScopeAuthority(db,ctx,scope)}
    return recordOpenApi(appId,schemas)
   }
+  const comment=path.match(/^\/api\/v1\/apps\/([^/]+)\/rest\/entities\/([^/]+)\/records\/([^/]+)\/comments(?:\/([^/]+))?$/)
+  if(comment){if(!comments)throw new AdmissionError('unconfigured','REST comments require the native comment services.');return comments(ctx,request,comment)}
   const match=path.match(/^\/api\/v1\/apps\/([^/]+)\/rest\/entities\/([^/]+)(?:\/(query|records|batch|upsert)(?:\/([^/]+))?)?$/)
   if(!match)throw new AdmissionError('not_found','Unknown REST records route')
   const appId=idSchema.parse(match[1]),entityId=idSchema.parse(match[2]),part=match[3],recordId=match[4]?idSchema.parse(match[4]):undefined
   const descriptor=descriptors.get(appId,entityId),scope=await policy.scope(ctx,{appId,entityId,purpose:'read'})
   const finish=async<T>(value:T)=>{await assertCurrentScopeAuthority(db,ctx,scope);return project(value,scope.readableFieldIds)}
   if(!part&&request.method==='GET')return finish(restSchema({...descriptor.schema,fields:descriptor.schema.fields.filter(field=>scope.readableFieldIds.includes(field.id)).map(field=>({...field,readOnly:field.readOnly||!scope.writableFieldIds.includes(field.id)}))}))
-  if(part==='query'&&request.method==='POST')return finish(await reader.query(ctx,scope,querySchema.parse(await readBoundedJson(request,65536))))
+  if(part==='query'&&request.method==='POST'){
+   const input=restQueryInput.parse(await readBoundedJson(request,65536))
+   if(input.formula===undefined)return finish(await reader.query(ctx,scope,input))
+   if(!formulaQuery)throw new AdmissionError('unconfigured','REST formula queries require a cursor signing secret.')
+   return finish(await formulaQuery(ctx,scope,input))
+  }
   if(part==='records'&&recordId&&request.method==='GET')return finish(await reader.record(ctx,scope,{appId,entityId,recordId}))
   const body=await readBoundedJson(request,1048576)
   let operation:'create'|'update'|'delete',commandId:string,schemaVersion:number|undefined,rows:({values:Record<string,CellValue>}|{recordId:string;version:number;changes:Record<string,CellValue>}|{recordId:string;version:number;confirmation:string})[],upsert=false

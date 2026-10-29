@@ -6366,7 +6366,7 @@
       "executable": false
     },
     "src/core/app/composition/records.server.ts": {
-      "sha256": "f2ca546bc2a06b66be283a062f3a1de2105bf31e7eb6666d581890af824a2490",
+      "sha256": "e3ce089b48c129d8b91b2042aee86f59f3aecfb84d613eae17ee04a4d9265dbb",
       "executable": false
     },
     "src/core/app/composition/repair-intake.server.ts": {
@@ -9817,16 +9817,28 @@
       "sha256": "a40bab984049c33f828d494d9a7d1fedb7873cfc2fb6b3a2680867a8b8e85d2f",
       "executable": false
     },
+    "src/domains/records/rest/comment-openapi.ts": {
+      "sha256": "f17ec4a3f1b83d19a41012d47db393735e31a79a50836cf86800d768e188606c",
+      "executable": false
+    },
+    "src/domains/records/rest/comments.server.ts": {
+      "sha256": "0764a320c199bc4864405c490a5844b07d0b7c115478d2c9cb9cd0eefa0848d2",
+      "executable": false
+    },
     "src/domains/records/rest/contracts.ts": {
-      "sha256": "e65ce98e49c31a0042f93b0fc13124a0f3d46f71c38f2b49ee217d074b6226cb",
+      "sha256": "4e6359d485926581bd752df7c8b495b652f28a6135b073cd49795f9c7f9c51e6",
+      "executable": false
+    },
+    "src/domains/records/rest/formula-query.server.ts": {
+      "sha256": "e41e781397c5ab3c551c5f0f13773b66e818c3b733bc27de2e85040b6e1d0e66",
       "executable": false
     },
     "src/domains/records/rest/openapi.ts": {
-      "sha256": "c8a54cc4a48adf83e4495f467b07b709d207dfbc88a76444ee7de60c41d9100a",
+      "sha256": "575cdf98666f42f6f84d662c999c3d68b5d5646f214ffd8662fbe7653865ebc6",
       "executable": false
     },
     "src/domains/records/rest/service.server.ts": {
-      "sha256": "baddf14271d1ee886ee6fc0655ddee4f5d98d637d782cb079811ec74b8ca56cf",
+      "sha256": "981bd7f363fd152e1159c042e190e645d6f8c7ce40fd37f80e266a5eb28594ea",
       "executable": false
     },
     "src/domains/records/routes.server.ts": {
@@ -12866,7 +12878,15 @@
       "executable": false
     },
     "tests/helpers/rest-api-journey.mjs": {
-      "sha256": "eb871e81cadded95b720a5038db349cdc2c6255e1757ce404e1c67c43d47831d",
+      "sha256": "3ea7c6be6b5f3b6b7fc936cd9d9ee2a28ab79a874c3c1fa8480e833d98ec4161",
+      "executable": false
+    },
+    "tests/helpers/rest-comments-journey.mjs": {
+      "sha256": "7c17e2035b95d881f1febdc2e98c6815c2ef4b99d104bfeaadc5c035d95f746f",
+      "executable": false
+    },
+    "tests/helpers/rest-formula-journey.mjs": {
+      "sha256": "5a870c4291f22f61a6d7776c824af8c7bf02ca2b0922d4a2fbc06fe6a6cee3ae",
       "executable": false
     },
     "tests/helpers/saml-provider.mjs": {

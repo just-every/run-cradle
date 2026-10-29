@@ -1,7 +1,8 @@
 import {z} from 'zod'
 import type {EntitySchema,Field} from '../contracts'
-import {querySchema,cellValueSchema,idSchema} from '../validators'
-import {createInput,updateInput,deleteInput,batchInput,upsertInput} from './contracts'
+import {cellValueSchema,idSchema} from '../validators'
+import {createInput,updateInput,deleteInput,batchInput,upsertInput,restQueryInput} from './contracts'
+import {restCommentPaths} from './comment-openapi'
 const json=(schema:z.ZodType)=>z.toJSONSchema(schema,{unrepresentable:'any'}) as Record<string,unknown>
 const object=(properties:Record<string,unknown>,required:string[]=[])=>({type:'object',properties,...(required.length?{required}:{}),additionalProperties:false})
 const array=(items:unknown)=>({type:'array',items})
@@ -39,11 +40,12 @@ export function recordOpenApi(appId:string,schemas:EntitySchema[]){
   const page=object({items:array(record),nextCursor:{type:['string','null']},total:object({kind:{enum:['exact','at_least']},value:{type:'integer'}}),evaluatedAt:{type:'string',format:'date-time'}},['items','nextCursor','total','evaluatedAt'])
   const operation=(name:string,input?:z.ZodType,recordId=false)=>({operationId:`${schema.id}_${name}`,'x-cradle-operation':name,'x-cradle-entityId':schema.id,security:[{apiKey:[]}],...(recordId?{parameters:[{name:'recordId',in:'path',required:true,schema:json(idSchema)}]}:{}),...(input?{requestBody:{required:true,content:{'application/json':{schema:requestSchema(input,values,schema.fields.filter(field=>field.required&&field.defaultValue===undefined&&!field.readOnly&&field.type!=='computed').map(field=>field.id),name==='create')}}}}:{}),responses:{'200':{description:'Current policy checked result. Mutations are atomic; receipt replay requires current subject visibility.',content:{'application/json':{schema:{type:'object',properties:{data:name==='get'?record:name==='query'?page:name==='schema'?{type:'object'}:receipt,meta:{type:'object'}},required:['data','meta']}}}},'400':{description:'Invalid request; no writes.'},'401':{description:'A current session or API key is required.'},'403':{description:'Current key scope or policy refuses the operation.'},'404':{description:'The route or record is unavailable.'},'409':{description:'Schema, record or authority changed; no writes.'}}})
   paths[base]={get:operation('schema')}
-  paths[base+'/query']={post:operation('query',querySchema)}
+  paths[base+'/query']={post:operation('query',restQueryInput)}
   paths[base+'/records']={post:operation('create',createInput)}
   paths[base+'/records/{recordId}']={get:operation('get',undefined,true),patch:operation('update',updateInput,true),delete:operation('delete',deleteInput,true)}
   paths[base+'/batch']={post:operation('batch',batchInput)}
   paths[base+'/upsert']={put:operation('upsert',upsertInput)}
+  Object.assign(paths,restCommentPaths(base,schema.id))
  }
  return {openapi:'3.1.0',info:{title:'Cradle records REST API',version:'1'},servers:[{url:'/'}],components:{securitySchemes:{apiKey:{type:'http',scheme:'bearer'}}},paths}
 }
