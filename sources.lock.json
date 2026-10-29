@@ -4574,7 +4574,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "d6e4ce4c4d02012043c047658a79f598e347363e7fa10cc518f97a120c708404",
+      "sha256": "2a36fc5b69a457480a898adc2fd7bd8ea0073414b089d6352afde0020b56d08e",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -10955,6 +10955,10 @@
     },
     "src/ui/records/interfaces/history.tsx": {
       "sha256": "32b29f6a5ec78b832fdf90ea95d88e7fbf08deab74a930ea141cc23bf33e390e",
+      "executable": false
+    },
+    "src/ui/records/interfaces/interfaces.css": {
+      "sha256": "1faa67ad1e16687ba60b20585e7c49b2db74da1f6a93cb6ae5fa0542b1f38a2a",
       "executable": false
     },
     "src/ui/records/interfaces/pages.tsx": {

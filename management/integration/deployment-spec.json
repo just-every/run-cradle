@@ -942,6 +942,12 @@
       "name": "9083_record_template_buttons.sql",
       "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
       "sql": "CREATE TABLE record_template_buttons (\n id TEXT PRIMARY KEY,\n app_id TEXT NOT NULL,\n entity_id TEXT NOT NULL,\n owner_id TEXT NOT NULL,\n template_id TEXT NOT NULL REFERENCES record_templates(id),\n name TEXT NOT NULL,\n confirmation INTEGER NOT NULL CHECK (confirmation IN (0,1)),\n version INTEGER NOT NULL CHECK (version > 0),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX record_template_buttons_table ON record_template_buttons(app_id,entity_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9084_record_interfaces.sql",
+      "sha256": "e9759eb1b0d1a9bec21d07d6482d539930886ad1544604cb35f30e02c5bcfb6b",
+      "sql": "CREATE TABLE record_interfaces (\n id TEXT PRIMARY KEY,\n app_id TEXT NOT NULL,\n author_id TEXT,\n version INTEGER NOT NULL CHECK (version > 0),\n definition_json TEXT NOT NULL,\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL,\n deleted_at INTEGER,\n expires_at INTEGER\n);\nCREATE INDEX record_interfaces_base ON record_interfaces(app_id,deleted_at,id);\nCREATE TABLE record_interface_versions (\n interface_id TEXT NOT NULL REFERENCES record_interfaces(id) ON DELETE CASCADE,\n version INTEGER NOT NULL CHECK (version > 0),\n author_id TEXT,\n definition_json TEXT NOT NULL,\n created_at TEXT NOT NULL,\n PRIMARY KEY(interface_id,version)\n);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
