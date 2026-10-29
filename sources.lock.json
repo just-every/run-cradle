@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9c51db2eb64edaaa4ec0b67e0df12be86fdf1eefe1fdd15401069d8e4a400afa",
+      "sha256": "2ad34b552d5bc0e94f82a854a776e4dde8bb1ee7a1b3bd87ac47b1758e797aac",
       "executable": false
     },
     "DEMO.md": {
@@ -11582,7 +11582,7 @@
       "executable": false
     },
     "tests/evidence-read-privacy.mjs": {
-      "sha256": "e186c4d7f8d292d5d7b22d8e8d9ffca544c741954073b24d4643b517e0c98a66",
+      "sha256": "0ee61bf88cf0a701822f22ab21f7b0d1feffca722bc433374408039c899f6144",
       "executable": false
     },
     "tests/evidence-runtime-entry.ts": {
@@ -12133,8 +12133,12 @@
       "sha256": "0da9e0f74752e8e3ab7c21f87e91eea50f583dee5e3bb73fdce7fe03d0b0038b",
       "executable": false
     },
+    "tests/helpers/evidence-comment-erasure.mjs": {
+      "sha256": "0e6c34733615b327c55d8b84850478d4a18a22e61885cd5ea98188b8b46907e5",
+      "executable": false
+    },
     "tests/helpers/evidence-comments-journey.mjs": {
-      "sha256": "c3e7e9ab3d79b7ecc2770d39e07fff2ae89cfb6d399d70732395d375f2d9fc6d",
+      "sha256": "59c3ac08ae99fd1c5fe134b074fd5085adcf21784f8c519cb297a151ea8323bc",
       "executable": false
     },
     "tests/helpers/execution-budget-edge.mjs": {
