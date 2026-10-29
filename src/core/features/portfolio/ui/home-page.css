@@ -4,6 +4,8 @@
 .cr-home-section > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; margin-bottom: 12px; }
 .cr-home-section h2 { margin: 0; color: var(--ink-deep); font: 500 28px/1.2 var(--font-display); letter-spacing: -.02em; }
 .cr-home-action { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-size: var(--text-small); font-weight: 600; text-underline-offset: 4px; }
+.cr-home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0 24px; }
+button.cr-home-action { padding: 0; border: 0; background: none; font-family: inherit; text-decoration: underline; cursor: pointer; }
 .cr-home-bases, .cr-home-activity { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .cr-home-row { display: grid; gap: 6px; min-height: 72px; padding: 14px 12px; border-radius: 12px; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
 a.cr-home-row:hover, a.cr-home-row:focus-visible { background: var(--tile); }

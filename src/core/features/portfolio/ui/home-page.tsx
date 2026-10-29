@@ -46,7 +46,7 @@ export const HomePage = () => {
     actions={appStudioReady ? <Link className="cr-button cr-button--quiet" to="/app/operations/studio">App studio</Link> : undefined}>
     <div className="cr-home">
       <section className="cr-home-section" aria-labelledby="home-bases-title">
-        <header><h2 id="home-bases-title">Your bases</h2>{!builder && (bases.resource.state !== 'ready' || bases.resource.data.items.length > 0) && <Link className="cr-home-action" to="/app/records" search={{ import: 'base', job: undefined, receipt: undefined }}>Import a base</Link>}</header>
+        <header><h2 id="home-bases-title">Your bases</h2>{!builder && (bases.resource.state !== 'ready' || bases.resource.data.items.length > 0) && <div className="cr-home-actions">{bases.resource.state === 'ready' && <button type="button" className="cr-home-action" onClick={() => setBuilder(newBase())}>New base</button>}<Link className="cr-home-action" to="/app/records" search={{ import: 'base', job: undefined, receipt: undefined }}>Import a base</Link></div>}</header>
         {builder ? <SchemaBuilderPanel target={builder} onTarget={setBuilder} onClose={() => setBuilder(null)} /> :
           bases.resource.state !== 'ready' ? <ResourceBoundary state={bases.resource.state === 'signed_out' ? 'signed-out' : bases.resource.state === 'not_found' ? 'not-found' : bases.resource.state} operation="your bases" error="Your bases could not be loaded. Try again." onRetry={bases.refresh} /> : bases.resource.data.items.length ?
             <ul className="cr-home-bases">{bases.resource.data.items.map(base => <li key={base.id}>
