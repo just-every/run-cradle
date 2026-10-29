@@ -63,15 +63,70 @@ export async function automationControlJourney(h,receiverCalls,setReceiver){
   await disable(narrow)
  }finally{setReceiver(200);await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(ownerPolicy.rules_json,ownerPolicy.id).run()}
  // Public creates populate the over-limit find; no application or writer is mocked.
- for(let index=0;index<1001;index++)await h.create(`synthetic-cradle-110 limit-item ${index}`)
+ const limitItems=[]
+ for(let index=0;index<1001;index++)limitItems.push((await h.create(`synthetic-cradle-110 limit-item ${index}`)).record)
  const limited=await save([{kind:'action',action:update('must not write')},{kind:'repeat',find:contains('110 limit-item'),actions:[update('over limit')]}],'synthetic-cradle-111 repeat limit')
  const limitTrigger=await h.create('synthetic-cradle-111 start'),limitRun=await wait(limited,limitTrigger.record.id)
  assert.equal(limitRun.state,'Failed');assert.ok(limitRun.cause.includes('1001'));assert.equal((await read(limitTrigger.record.id)).fields[h.statusId].value,null,'An oversized repeat refuses before even the preceding action writes')
  const found=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/query`,{method:'POST',body:{filter:{kind:'all',conditions:[contains('110 limit-item'),eq(h.statusId,'over limit')]},limit:1}})).data
  assert.equal(found.total.value,0);await disable(limited)
- const thousand=await save([{kind:'repeat',find:{kind:'all',conditions:[contains('110 limit-item'),{kind:'condition',fieldId:h.nameId,op:'ne',value:'synthetic-cradle-110 limit-item 1000'}]},actions:[{...update('must stay skipped'),when:eq(h.nameId,'never')}]}],'synthetic-cradle-112 exact limit')
- const thousandTrigger=await h.create('synthetic-cradle-112 start'),thousandRun=await wait(thousand,thousandTrigger.record.id)
- assert.equal(thousandRun.state,'Complete');assert.equal(thousandRun.items.length,1000);assert.equal(new Set(thousandRun.items.map(item=>item.recordId)).size,1000);assert.ok(thousandRun.items.every(item=>item.state==='Skipped'))
+ const thousand=await save([{kind:'repeat',find:{kind:'all',conditions:[contains('110 limit-item'),{kind:'condition',fieldId:h.nameId,op:'ne',value:'synthetic-cradle-110 limit-item 1000'}]},actions:[update('exact limit complete')]}],'synthetic-cradle-112 exact limit')
+ const thousandTrigger=await h.create('synthetic-cradle-112 start'),started=performance.now(),workBudgetMs=180000,maxDeliveries=100
+ let deliveries=0,thousandRun
+ const deliver=async()=>{
+  assert.ok(deliveries++<maxDeliveries&&performance.now()-started<workBudgetMs,'The 1,000-write repeat stays within its finite delivery and elapsed-work budget')
+  await tick()
+  const logicalRuns=(await runs(thousand)).filter(run=>run.state!=='Suppressed')
+  assert.equal(logicalRuns.length,1,'All repeat deliveries retain one logical run')
+  thousandRun=logicalRuns[0];assert.equal(thousandRun.recordId,thousandTrigger.record.id)
+ }
+ do{await deliver()}while(!thousandRun.actions.some(action=>action.state==='Complete')&&['Queued','Running'].includes(thousandRun.state))
+ assert.equal(thousandRun.state,'Running')
+ const completedBeforeRestart=thousandRun.items.filter(item=>item.state==='Complete').map(item=>item.recordId)
+ assert.ok(completedBeforeRestart.length>0&&completedBeforeRestart.length<1000,'Restart follows observed committed progress with unfinished items')
+ const logicalRunId=thousandRun.id
+ await h.restart()
+ do{await deliver()}while(['Queued','Running'].includes(thousandRun.state))
+ assert.equal(thousandRun.id,logicalRunId);assert.equal(thousandRun.state,'Complete')
+ assert.equal(thousandRun.items.length,1000);assert.equal(thousandRun.actions.length,1000)
+ assert.deepEqual(thousandRun.items.map(item=>item.recordId).sort(),limitItems.slice(0,1000).map(item=>item.id).sort())
+ for(const item of thousandRun.items){assert.equal(item.state,'Complete');assert.equal(item.actions.length,1);assert.equal(item.actions[0].state,'Complete')}
+ const effects=async()=>(await h.db.prepare(`SELECT a.idempotency_key,a.result_json,c.state,c.action,
+  json_extract(j.subject_json,'$.recordId') AS record_id,count(j.id) AS audit_count
+  FROM launch_automation_actions a JOIN command_admissions c ON c.command_id=a.idempotency_key
+  LEFT JOIN admission_audit j ON j.command_id=c.command_id
+  WHERE a.run_id=? GROUP BY a.idempotency_key ORDER BY a.idempotency_key`).bind(logicalRunId).all()).results
+ const committed=await effects()
+ assert.equal(committed.length,1000);assert.equal(new Set(committed.map(effect=>effect.idempotency_key)).size,1000)
+ assert.deepEqual(committed.map(effect=>effect.record_id).sort(),limitItems.slice(0,1000).map(item=>item.id).sort())
+ for(const effect of committed){assert.equal(effect.state,'committed');assert.equal(effect.action,'record.patch');assert.equal(effect.audit_count,1);assert.equal(JSON.parse(effect.result_json).commandId,effect.idempotency_key)}
+ const readbacks=async()=>{
+  const observed=[],byId=new Map();let cursor
+  for(let page=0;page<Math.ceil(limitItems.length/100);page++){
+   const result=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/query`,{method:'POST',body:{filter:contains('110 limit-item'),limit:100,...(cursor?{cursor}:{})}})).data
+   for(const record of result.items){assert.ok(!byId.has(record.id),'Public readback pages never duplicate an item');byId.set(record.id,record)}
+   cursor=result.nextCursor
+   if(!cursor)break
+  }
+  assert.ok(!cursor,'Every public readback page fits the finite page budget');assert.equal(byId.size,limitItems.length)
+  for(const original of limitItems){
+   const record=byId.get(original.id),selected=original.id!==limitItems[1000].id
+   assert.ok(record,'Every original item appears in public record readback')
+   assert.equal(record.fields[h.statusId].value,selected?'exact limit complete':null,'Every selected record changes and the excluded control stays untouched')
+   assert.equal(record.version,original.version+(selected?1:0),'Each selected record increments exactly once')
+   observed.push({id:record.id,version:record.version,value:record.fields[h.statusId].value})
+  }
+  return observed
+ }
+ const records=await readbacks(),elapsedWorkMs=Math.round(performance.now()-started)
+ assert.ok(elapsedWorkMs<workBudgetMs,'Completion and all public readbacks fit the elapsed-work budget')
+ // Redeliver the original event as well as scheduled continuation after restart.
+ await h.restart()
+ for(let repeat=0;repeat<3;repeat++){await h.tick(thousandTrigger.commandId);await tick()}
+ assert.deepEqual(await runs(thousand),[thousandRun],'Repeated deliveries preserve the completed run and every item result')
+ assert.deepEqual(await effects(),committed,'Repeated deliveries add no committed effect identity or audit')
+ assert.deepEqual(await readbacks(),records,'Repeated deliveries add no record versions or values')
+ console.log('AUTOMATION_REPEAT_PROOF '+JSON.stringify({items:1000,logicalRuns:1,completedBeforeRestart:completedBeforeRestart.length,deliveries,maxDeliveries,elapsedWorkMs,workBudgetMs,committedEffects:committed.length,repeatedDeliveries:3}))
  await disable(thousand)
  return {branching,repeating,partial,unknown}
 }
