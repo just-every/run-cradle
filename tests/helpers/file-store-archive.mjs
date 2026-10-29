@@ -14,14 +14,17 @@ import {fileStoresProvider} from './file-stores-provider.mjs'
 import {fileStoreBindings} from './file-stores-journey.mjs'
 import {warehouseNetworkEdge} from './warehouse-network-edge.mjs'
 import {addWarehouseArchiveState,assertWarehouseArchive} from './warehouse-archive.mjs'
+import {populateAutomationTestHistory,assertAutomationTestArchive} from './automation-test-history.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 /** The archive's store reference and retained copy are both authored through the product doors. */
 export async function fileStoreArchive(directory){
  const provider=fileStoresProvider(),calendarProvider=recordCalendarProvider(),warehouseEdge=await warehouseNetworkEdge()
- let h
+ let h,testMailStatus=202
+ const testMail=[]
  try{
   h=await userAutomationRuntime(0,{outbound:async request=>{
    const url=new URL(request.url)
+   if(url.hostname==='automation-test-mail.example.test'){testMail.push(await request.json());return new Response(null,{status:testMailStatus})}
    if(url.hostname==='relay.egress.example.com')return warehouseEdge.outbound(request)
    if(url.pathname.startsWith('/calendar/'))return calendarProvider.fetch(request)
    if(url.hostname==='oauth2.googleapis.com'&&url.pathname==='/token'&&(await request.clone().text()).includes('synthetic-cradle-code-calendar-archive'))return calendarProvider.fetch(request)
@@ -50,8 +53,11 @@ export async function fileStoreArchive(directory){
   assert.equal(values[0],copy.fileId);assert.equal(JSON.parse(values[1]).itemId,members[1].reference.itemId)
   const calendar=await addRecordCalendarArchiveState(h,calendarProvider,calendarDateId,record.ref.recordId)
   const warehouse=await addWarehouseArchiveState(h,warehouseEdge);calendar.warehouse=warehouse
+  await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined,MAIL_API_KEY:'synthetic-cradle-5105',MAIL_RELAY_URL:'https://automation-test-mail.example.test/send'})
+  calendar.testHistory=await populateAutomationTestHistory(h,testMail,status=>{testMailStatus=status})
   const warehouseBucket=await h.runtime.getR2Bucket('WAREHOUSE'),bucket=await h.runtime.getR2Bucket('FILES'),service=await createPortability({db:h.db,buckets:{FILES:installationBucket(h.db,bucket),WAREHOUSE:warehouseBucket},policy:{...installationPortabilityPolicy(warehouseBucket),derivedTables:await derivedSearch(h.db)}})
   await exportArchive(service,directory+'/file-stores.rer',transient)
+  await assertAutomationTestArchive(directory+'/file-stores.rer',calendar.testHistory)
   await assertWarehouseArchive(directory+'/file-stores.rer',warehouse)
   return {calendar,connectionId,fileId:copy.fileId,...file,table,recordId:record.ref.recordId,values,bytes:provider.payload('google-drive',0),uploadedKey,uploadedFileId:upload.file.id,uploadedBytes}
  }catch(error){await warehouseEdge.close();throw error}finally{await h?.close()}

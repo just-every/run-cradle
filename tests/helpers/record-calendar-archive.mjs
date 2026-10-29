@@ -7,6 +7,7 @@ import {emittedMailRuntime} from './emitted-mail-runtime.mjs'
 import {fixtureMessages} from './fixture-mail.mjs'
 import {restoredWarehouseArchive,restoredWarehouseFailure} from './warehouse-archive.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
+import {restoredAutomationTestHistory} from './automation-test-history.mjs'
 const bindings=()=>({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64')})
 async function drain(runtime,db){const worker=await runtime.getWorker();for(let pass=0;pass<4;pass++){const rows=(await db.prepare("SELECT id FROM admission_outbox WHERE state='pending' AND action IN ('connection.operation','execution.dispatch','execution.reconcile') AND not_before<=? ORDER BY created_at,id").bind(new Date().toISOString()).all()).results;if(!rows.length)return;for(const row of rows)assert.equal((await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.outbox.v1',outboxId:row.id}}])).outcome,'ok')}}
 /** Add calendar custody to the same public-door FILE fixture before its single archive export. */
@@ -30,10 +31,12 @@ export async function restoredRecordCalendar(root,fixture){
   const db=await f.runtime.getD1Database('DB'),before=provider.writes.length
   const original=await db.prepare('SELECT enabled,actor_json FROM record_calendar_definitions WHERE id=?').bind(definitionId).first();assert.deepEqual(original,{enabled:0,actor_json:'{}'})
   assert.equal((await db.prepare('SELECT count(*) n FROM connection_credentials').first()).n,0);assert.equal((await db.prepare('SELECT count(*) n FROM authority_credentials').first()).n,0)
+  await restoredAutomationTestHistory(f.runtime,db,undefined,fixture.testHistory,()=>fixtureMessages(f.origin))
   const boot=await fetch(f.origin+'/auth/bootstrap',{method:'POST',redirect:'manual',headers:{origin:f.origin,'content-type':'application/json'},body:JSON.stringify({token:setup,displayName:'Synthetic restored calendar owner',returnTo:'/app'})});assert.equal(boot.status,303)
   const cookie=boot.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ');await completeFirstRun(f.origin,cookie)
   const home=await fetch(f.origin+'/app',{headers:{cookie}});assert.equal(home.status,200);await home.arrayBuffer()
   const request=async(route,body,status=200)=>{const csrf=(await(await fetch(f.origin+'/auth/csrf',{headers:{cookie}})).json()).csrfToken,response=await fetch(f.origin+route,{method:body===undefined?'GET':'POST',redirect:'manual',headers:{cookie,origin:f.origin,'content-type':'application/json','x-csrf-token':csrf},...(body===undefined?{}:{body:JSON.stringify(body)})}),value=await response.json().catch(()=>null);assert.equal(response.status,status,route.split('?')[0]+': '+(value?.error?.code??'unexpected response'));return value?.data}
+  await restoredAutomationTestHistory(f.runtime,db,request,fixture.testHistory,()=>fixtureMessages(f.origin))
   await restoredWarehouseArchive(f.runtime,db,request,fixture.warehouse,()=>fixtureMessages(f.origin))
   const listPath=`/api/v1/record-calendar-sync?appId=${definition.appId}&entityId=${definition.entityId}`,list=await request(listPath),restored=list.definitions.find(d=>d.id===definitionId),syncPath=`/api/v1/record-calendar-sync/${definitionId}/records/${recordId}`
   assert.ok(restored);assert.equal(restored.state,'stopped');assert.equal(restored.canManage,true);assert.equal(list.connections.find(c=>c.id===definition.connectionId).state,'unconfigured')
