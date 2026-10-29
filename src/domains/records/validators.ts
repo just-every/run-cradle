@@ -28,7 +28,7 @@ export const entitySchema: z.ZodType<EntitySchema> = z.object({ validationRules:
     refineTableRules(schema,ctx);
     for(const field of schema.fields) if(field.options?.some(option=>option.retainedValue!==undefined) && (schema.physicalRevision!=='launch-retained-v1' || field.type!=='select')) ctx.addIssue({code:'custom',message:'Retained option values require a retained single-select schema'});
 });
-export const querySchema: z.ZodType<Query> = z.object({ cursor: z.string().max(20000).optional(), limit: z.number().int().min(1).max(200).optional(), consistencyToken: idSchema.optional(), filter: filterSchema.optional(), sort: z.array(z.object({ fieldId: idSchema, direction: z.enum(['asc', 'desc']) }).strict()).max(10).optional(), groupBy: z.array(idSchema).max(5).optional(), fields: z.array(idSchema).max(500).optional(), includeArchived: z.boolean().optional() }).strict();
+export const querySchema: z.ZodType<Query> = z.object({ cursor: z.string().max(20000).optional(), limit: z.number().int().min(1).max(200).optional(), consistencyToken: idSchema.optional(), filter: filterSchema.optional(), sort: z.array(z.object({ fieldId: idSchema, direction: z.enum(['asc', 'desc']) }).strict()).max(10).optional(), groupBy: z.array(idSchema).max(5).optional(), fields: z.array(idSchema).max(500).optional(), includeArchived: z.boolean().optional(), includeGroups: z.boolean().optional() }).strict();
 function validateCellValue(field: Field, value: unknown): CellValue {
     if (value === null) {
         if (field.required)
