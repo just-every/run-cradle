@@ -18,26 +18,30 @@ import {errorResponse} from '../../src/core/registry/errors.server.ts'
 import {adoptFixtureOperators} from './base-fixture-auth.mjs'
 import {harness} from './records-manual-harness.mjs'
 
-/** Email/rating/duration share native admission at every existing write door. */
+/** Typed fields and exact percentage fractions share native admission at every existing write door. */
 export async function typedFieldJourney(){
  const h=await harness(),origin='https://records.test',auth=async()=>h.ctx
  const call=async(http,path,body,status=200,method='POST')=>{const response=await http.fetch(new Request(origin+path,{method,headers:{origin,'content-type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})})),wire=await response.json();assert.equal(response.status,status,JSON.stringify(wire));return status<400?wire.data:wire.error}
  try{
   const appId=createUlid(),entityId=createUlid(),linkedId=createUlid(),name=newField('Name'),linkedName=newField('Name'),link=newField('Contact','relation')
-  const examples=[{field:newField('Email','email'),valid:'synthetic-cradle-400@example.test',next:'synthetic-cradle-401@example.test',invalid:['bad','a@example.test\nBcc:someone@example.test','a@example.test,b@example.test']},{field:newField('Rating','rating'),valid:'5',next:'4',invalid:['0','6','1.5','-1']},{field:{...newField('Ten-star rating','rating'),validation:{max:'10'}},valid:'9',next:'10',invalid:['11','0','4.5']},{field:newField('Duration','duration'),valid:'3661',next:'7200',csv:'1:01:01',invalid:['-1','1.5','one hour']}]
+  const examples=[{field:newField('Email','email'),valid:'synthetic-cradle-400@example.test',next:'synthetic-cradle-401@example.test',invalid:['bad','a@example.test\nBcc:someone@example.test','a@example.test,b@example.test']},{field:newField('Rating','rating'),valid:'5',next:'4',invalid:['0','6','1.5','-1']},{field:{...newField('Ten-star rating','rating'),validation:{max:'10'}},valid:'9',next:'10',invalid:['11','0','4.5']},{field:newField('Duration','duration'),valid:'3661',next:'7200',csv:'1:01:01',invalid:['-1','1.5','one hour']},{field:{...newField('Rate','number'),numberFormat:'percent'},valid:'0.125',next:'-0.07500000000000000000000000000001',invalid:['12.5%','not-a-number','NaN','Infinity','1e-3','0.'+'1'.repeat(33)]}]
   Object.assign(link,{relation:{ownerAppId:appId,entityId,cardinality:'one',onDelete:'restrict'}})
   const lookups=examples.map(({field})=>({...newField('Contact '+field.label,'computed'),readOnly:true,resultType:field.type,expression:{kind:'rollup',aggregate:'lookup',relationFieldId:link.id,valueFieldId:field.id}}))
   const draft={appId,name:'synthetic-cradle-typed-fields',tables:[{id:entityId,label:'Contacts',primaryFieldId:name.id,fields:[name,...examples.map(e=>e.field)]},{id:linkedId,label:'Messages',primaryFieldId:linkedName.id,fields:[linkedName,link,...lookups]}]}
   let r=await h.runtime();const manual=manualSchemaHttp(r.manual,{},auth)
   for(const maximum of ['0','11','2.5']){const bad=structuredClone(draft);bad.tables[0].fields.find(f=>f.type==='rating').validation={max:maximum};const refused=await call(manual,'/api/v1/records/schema-preview',bad,400);assert.match(JSON.stringify(refused),/Rating.*maximum/)}
+  const wrongFormat=structuredClone(draft);wrongFormat.tables[0].fields.find(field=>field.label==='Rate').type='text'
+  const formatFailure=await call(manual,'/api/v1/records/schema-preview',wrongFormat,400);assert.match(JSON.stringify(formatFailure),/Rate: a percentage format needs a number field/)
   const preview=await call(manual,'/api/v1/records/schema-preview',draft)
   await call(manual,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}});r=await h.runtime()
   const schema=r.registry.get(appId,entityId).schema,rest=createRecordHttp({...r.services,rest:createRecordRest(h.db,r.services,r.admission),authenticate:auth}),route=`/api/v1/apps/${appId}/rest/entities/${entityId}/records`,validValues=Object.fromEntries(examples.map(e=>[e.field.id,e.valid]))
+  assert.equal(schema.fields.find(field=>field.label==='Rate').numberFormat,'percent')
   await call(rest,route,{commandId:createUlid(),schemaVersion:schema.version,values:{[name.id]:'Typed contact',...validValues}})
   let row=(await call(rest,`/api/v1/apps/${appId}/entities/${entityId}/query`,{})).items[0]
   for(const e of examples){assert.equal(row.fields[e.field.id].value,e.valid);for(const value of e.invalid){const failure=await call(rest,route,{commandId:createUlid(),schemaVersion:schema.version,values:{[name.id]:'Invalid',[e.field.id]:value}},400);assert.ok(failure.message.includes(e.field.label),failure.message)}}
   await call(rest,route+'/'+row.id,{commandId:createUlid(),version:row.version,changes:Object.fromEntries(examples.map(e=>[e.field.id,e.next]))},200,'PATCH')
   row=await call(rest,route+'/'+row.id,undefined,200,'GET');for(const e of examples)assert.equal(row.fields[e.field.id].value,e.next)
+  assert.equal((await call(rest,`/api/v1/apps/${appId}/entities/${entityId}/query`,{})).items.length,1,'Refused typed writes create no records')
   const commands=createCommandHttp({...r,authenticate:auth}),linkedSchema=r.registry.get(appId,linkedId).schema
   await call(commands,'/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:linkedId},version:linkedSchema.version}],input:{appId,entityId:linkedId,values:{[linkedName.id]:'Typed lookups',[link.id]:row.ref}}})
   const child=(await call(rest,`/api/v1/apps/${appId}/entities/${linkedId}/query`,{})).items[0];for(const [i,e]of examples.entries())assert.equal(child.fields[lookups[i].id].value,e.next)
@@ -60,6 +64,6 @@ export async function typedFieldJourney(){
   await createRecordAutomationRuntime({db:h.db,appOrigin:origin,policy:r.policy,descriptors:r.registry,effects}).tick(commandId)
   assert.equal((await h.db.prepare('SELECT state FROM automation_runs WHERE automation_id=?').bind(saved.result.value.id).first()).state,'Complete')
   const scope=await r.policy.scope(h.ctx,{appId,entityId,purpose:'read'}),updated=await r.services.reader.record(h.ctx,scope,row.ref);for(const e of examples)assert.equal(updated.fields[e.field.id].value,e.valid)
-  console.log('TYPED_FIELD_DOORS PASS email/rating/duration schema, REST, authenticated form, CSV, lookups and automation write admission')
+  console.log('TYPED_FIELD_DOORS PASS typed fields and exact percentage fractions: schema, REST, authenticated form, CSV, lookups and owner-approved automation write admission')
  }finally{h.close()}
 }

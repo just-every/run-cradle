@@ -4,7 +4,7 @@ import {manualSchemaHttp} from '../../src/domains/records/manual/http.server.ts'
 import {createCommandHttp} from '../../src/core/registry/http.ts'
 import {createRecordHttp} from '../../src/domains/records/routes.server.ts'
 import {recordsCsvHttp} from '../../src/domains/records/csv-http.server.ts'
-import {encodeCsv} from '../../src/domains/portability/csv.ts'
+import {encodeCsv,parseCsv} from '../../src/domains/portability/csv.ts'
 
 /** View display CSV and raw record-ID recovery use the same real preview/commit doors. */
 export async function fieldViewCsvJourney(h,{draft,call,auth,values}){
@@ -12,6 +12,8 @@ export async function fieldViewCsvJourney(h,{draft,call,auth,values}){
  let r=await h.runtime()
  const source=draft.tables[0],fields=source.fields,view={appId:draft.appId,entityId:source.id,name:'Portable fields',display:'grid',fields:fields.map(f=>f.id),filter:{kind:'all',conditions:[]},sort:[{fieldId:fields[0].id,direction:'asc'}],groupBy:[],layout:{titleFieldId:fields[0].id},visibility:'private',shipped:false}
  const saved=await call(createCommandHttp({...r,authenticate:auth}),'/api/v1/commands/view.save',{commandId:createUlid(),expected:[],input:{view}}),display=await call(recordsCsvHttp(r.csv,auth),'/api/v1/records/export-csv',{appId:draft.appId,entityId:source.id,viewId:saved.value.id,query:{}})
+ const exported= parseCsv(new TextEncoder().encode(display.csv)),rateColumn=exported.headers.indexOf('Rate')
+ assert.ok(rateColumn>=0);assert.deepEqual(exported.rows.map(row=>row[rateColumn]),['0.12500000000000000000000000000001','0'],'View CSV keeps raw fractions without display scaling')
  const identities=new Map([[draft.appId,createUlid()],[source.id,createUlid()],...fields.map(f=>[f.id,createUlid()]),...fields.flatMap(f=>(f.options??[]).map(o=>[o.id,createUlid()])),...source.validationRules.map(rule=>[rule.id,createUlid()])])
  const replace=value=>typeof value==='string'?identities.get(value)??value:Array.isArray(value)?value.map(replace):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([key,v])=>[key,replace(v)])):value
  const target=replace(draft),manual=manualSchemaHttp(r.manual,{},auth),schemaPreview=await call(manual,'/api/v1/records/schema-preview',target)

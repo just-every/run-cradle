@@ -22,7 +22,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
  let h,browser
  try{
   h=await userAutomationRuntime(0)
-  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic','--no-sandbox'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   console.log('FIELD_BROWSER_OWNED_PIDS '+JSON.stringify(ownedProcesses()))
   for(const width of recordsBrowserWidths()){
    const fixture=await fieldFixture(h,width),contexts=[],checkpoints=[]
@@ -40,12 +40,13 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await edit()
     await tile('Contact phone').getByLabel('Field type',{exact:true}).selectOption('phone')
     await owner.capture('phone-type-authoring',tile('Contact phone'))
-    for(const [label,type]of [['Email','email'],['Rating','rating'],['Duration','duration']]){
+    for(const [label,type]of [['Email','email'],['Rating','rating'],['Duration','duration'],['Rate','number']]){
      await page.getByRole('button',{name:'Add field',exact:true}).click()
      await tile('New field').getByLabel('Field name',{exact:true}).fill(label)
      await tile(label).getByLabel('Field type',{exact:true}).selectOption(type)
      if(type==='rating'){assert.equal(await tile(label).getByLabel('Rating maximum',{exact:true}).inputValue(),'5');await tile(label).getByLabel('Rating maximum',{exact:true}).fill('10')}
-     await owner.capture(type+'-type-authoring',tile(label))
+     if(label==='Rate'){await tile(label).getByLabel('Show as',{exact:true}).selectOption('percent');assert.equal(await tile(label).getByLabel('Show as',{exact:true}).inputValue(),'percent')}
+     await owner.capture(label==='Rate'?'percentage-type-authoring':type+'-type-authoring',tile(label))
     }
     const phonePreview=await preview(),phoneConversion=phonePreview.impacts.find(item=>item.entityId===fixture.orders).conversions.find(item=>item.fieldId===fixture.phone)
     assert.equal(phoneConversion.losses.length,0);assert.ok(phoneConversion.converted.some(item=>item.after==='+15551234567'))
@@ -72,15 +73,29 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
      await owner.capture(label.toLowerCase()+'-invalid',input)
      await input.fill(label==='Email'?'synthetic-cradle-402@example.test':label==='Rating'?'10':'1:01:01')
     }
+    const rateInput=page.getByLabel('Rate',{exact:true});await rateInput.fill('12.5%')
+    const invalidRate=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/record.create'))
+    await page.getByRole('button',{name:'Save record',exact:true}).click();assert.equal((await invalidRate).status(),400)
+    await page.getByText(/Rate:.*canonical finite decimal/).waitFor();await owner.capture('percentage-invalid',rateInput)
+    await rateInput.fill('0.125')
     const validPhone=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/record.create'))
     await page.getByRole('button',{name:'Save record',exact:true}).click()
     const validPhoneResponse=await validPhone;assert.equal(validPhoneResponse.status(),200)
-    const savedPhone=(await validPhoneResponse.json()).data.value;assert.equal(savedPhone.fields[fixture.phone].value,'+15551234588');const typedSchema=(await fixture.draft()).tables.find(table=>table.id===fixture.orders);for(const [label,value]of [['Email','synthetic-cradle-402@example.test'],['Rating','10'],['Duration','3661']])assert.equal(savedPhone.fields[typedSchema.fields.find(field=>field.label===label).id].value,value)
+    const savedPhone=(await validPhoneResponse.json()).data.value;assert.equal(savedPhone.fields[fixture.phone].value,'+15551234588');const typedSchema=(await fixture.draft()).tables.find(table=>table.id===fixture.orders);for(const [label,value]of [['Email','synthetic-cradle-402@example.test'],['Rating','10'],['Duration','3661'],['Rate','0.125']])assert.equal(savedPhone.fields[typedSchema.fields.find(field=>field.label===label).id].value,value)
     await page.getByRole('button',{name:'New record',exact:true}).waitFor()
     await page.getByText('(555) 123-4588',{exact:true}).first().waitFor()
     for(const text of ['synthetic-cradle-402@example.test','10','1:01:01'])await page.getByText(text,{exact:true}).first().waitFor()
     await owner.capture('typed-fields-valid-save',page.getByText('1:01:01',{exact:true}).first())
     await owner.capture('phone-valid-save',page.getByText('(555) 123-4588',{exact:true}).first())
+    await page.getByText('12.5%',{exact:true}).first().waitFor();await owner.capture('percentage-display',page.getByText('12.5%',{exact:true}).first())
+    const rateField=typedSchema.fields.find(field=>field.label==='Rate');assert.equal(rateField.type,'number');assert.equal(rateField.numberFormat,'percent')
+    await page.getByRole('link',{name:'Phone validation',exact:true}).click();await page.getByRole('button',{name:'Edit record',exact:true}).click()
+    assert.equal(await page.getByLabel('Rate',{exact:true}).inputValue(),'0.125','The editor reopens the raw fraction')
+    await page.getByLabel('Rate',{exact:true}).fill('-0.075')
+    const ratePatch=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/record.patch'))
+    await page.getByRole('button',{name:'Save record',exact:true}).click();const patched=await ratePatch;assert.equal(patched.status(),200);assert.equal((await patched.json()).data.value.fields[rateField.id].value,'-0.075')
+    await page.getByRole('button',{name:'Edit record',exact:true}).waitFor();await page.getByText('-7.5%',{exact:true}).waitFor();await owner.capture('percentage-edited-display',page.getByText('-7.5%',{exact:true}))
+    assert.equal((await h.request(`/api/v1/apps/${fixture.appId}/entities/${fixture.orders}/records/${savedPhone.id}`)).data.record.fields[rateField.id].value,'-0.075')
     await edit()
     await tile('Order').getByLabel('Field type',{exact:true}).selectOption('number')
     assert.equal(await tile('Order').getByLabel('Required',{exact:true}).isChecked(),true,'Changing stored type preserves the existing required constraint')
