@@ -12174,7 +12174,7 @@
       "executable": false
     },
     "tests/helpers/file-store-archive.mjs": {
-      "sha256": "14201e72ab7035bc635c0e39bda96d75631439ddcf33754835ff0c09de645446",
+      "sha256": "e15d1425e1b591498e15d1e8b9bb932671d69d9d92d15c91ce2af42f047a9170",
       "executable": false
     },
     "tests/helpers/file-stores-actors.mjs": {
@@ -12494,7 +12494,7 @@
       "executable": false
     },
     "tests/helpers/record-calendar-archive.mjs": {
-      "sha256": "11769ef9a768018297700c7d81e5ab88bc832ab8d1cb3a526227718d5aaa958c",
+      "sha256": "742467ae9dc51b25c71e2c3779d7f5054d3f63f6be70ce48d2f3016a9a28d8cd",
       "executable": false
     },
     "tests/helpers/record-calendar-author.mjs": {
@@ -12551,6 +12551,10 @@
     },
     "tests/helpers/record-template-buttons.mjs": {
       "sha256": "ee5684eebb81da5fdfb0a7b607463cd55268ee41d685752657a00d069a50c353",
+      "executable": false
+    },
+    "tests/helpers/record-trash-archive.mjs": {
+      "sha256": "b0a05704bc5eb4a2b8abd51d09890679541ed87e89ab795a54beadd20c1276d6",
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
@@ -13354,7 +13358,7 @@
       "executable": false
     },
     "tests/rer-integrations-archive.mjs": {
-      "sha256": "921f1fe3f085e5d3ff5293acb744734ffd49ed36c8e5bd83868f842096284515",
+      "sha256": "376f9bbb616c4c18c2e9c83d21779230878ee844ebc800c58f78a687f131aff6",
       "executable": false
     },
     "tests/rer-retained-archive.mjs": {

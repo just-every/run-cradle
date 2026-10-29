@@ -6,6 +6,7 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {emittedMailRuntime} from './emitted-mail-runtime.mjs'
 import {fixtureMessages} from './fixture-mail.mjs'
 import {restoredWarehouseArchive,restoredWarehouseFailure} from './warehouse-archive.mjs'
+import {restoredRecordTrash} from './record-trash-archive.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 const bindings=()=>({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64')})
 async function drain(runtime,db){const worker=await runtime.getWorker();for(let pass=0;pass<4;pass++){const rows=(await db.prepare("SELECT id FROM admission_outbox WHERE state='pending' AND action IN ('connection.operation','execution.dispatch','execution.reconcile') AND not_before<=? ORDER BY created_at,id").bind(new Date().toISOString()).all()).results;if(!rows.length)return;for(const row of rows)assert.equal((await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.outbox.v1',outboxId:row.id}}])).outcome,'ok')}}
@@ -34,6 +35,7 @@ export async function restoredRecordCalendar(root,fixture){
   const cookie=boot.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ');await completeFirstRun(f.origin,cookie)
   const home=await fetch(f.origin+'/app',{headers:{cookie}});assert.equal(home.status,200);await home.arrayBuffer()
   const request=async(route,body,status=200)=>{const csrf=(await(await fetch(f.origin+'/auth/csrf',{headers:{cookie}})).json()).csrfToken,response=await fetch(f.origin+route,{method:body===undefined?'GET':'POST',redirect:'manual',headers:{cookie,origin:f.origin,'content-type':'application/json','x-csrf-token':csrf},...(body===undefined?{}:{body:JSON.stringify(body)})}),value=await response.json().catch(()=>null);assert.equal(response.status,status,route.split('?')[0]+': '+(value?.error?.code??'unexpected response'));return value?.data}
+  await restoredRecordTrash(f.runtime,db,request,fixture.trash,f.origin)
   await restoredWarehouseArchive(f.runtime,db,request,fixture.warehouse,()=>fixtureMessages(f.origin))
   const listPath=`/api/v1/record-calendar-sync?appId=${definition.appId}&entityId=${definition.entityId}`,list=await request(listPath),restored=list.definitions.find(d=>d.id===definitionId),syncPath=`/api/v1/record-calendar-sync/${definitionId}/records/${recordId}`
   assert.ok(restored);assert.equal(restored.state,'stopped');assert.equal(restored.canManage,true);assert.equal(list.connections.find(c=>c.id===definition.connectionId).state,'unconfigured')
