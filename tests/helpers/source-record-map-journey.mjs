@@ -119,6 +119,12 @@ export async function sourceRecordMapJourney() {
  await refuseRecordMaps(h,job.id)
  await h.restart();await refuseRecordMaps(h,job.id)
  assert.equal((await downloadRecordMap(h,control.id,'json')).text,controlMap.text)
+ // Restored custody must be confirmed by the current owner before its map can be read.
+ await h.db.prepare('UPDATE ik_jobs SET cradle_restore_hold=1 WHERE id=?').bind(control.id).run()
+ await refuseRecordMaps(h,control.id)
+ assert.equal((await h.request(jobs+control.id+'/receipt.json')).data.sourceRecordMap.available,false)
+ await jobAction(h,control.id,'resume')
+ assert.equal((await downloadRecordMap(h,control.id,'json')).text,controlMap.text)
  const policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(control.destination).first()
  const narrowed=JSON.parse(policy.rules_json).map(rule=>rule.entityId===controlMap.value.records[0].entityId?{...rule,readableFields:[]}:rule)
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(narrowed),policy.id).run()
