@@ -45,6 +45,9 @@ export function createCradleAgentDoor(platform: Platform, runtime: Runtime) {
       { clauses: ['OWN-001'], reason: 'installation' },
       { clauses: ['RECORDS-005', 'RECORDS-006'], reason: 'import-door' },
       { clauses: ['WEBHOOK-USER-001'], reason: 'connector' },
+      { clauses: ['MOBILE-002', 'MOBILE-003'], reason: 'device' },
+      { clauses: ['MOBILE-001', 'HOME-002', 'HOME-003', 'DOCS-001'], reason: 'screen' },
+      { clauses: ['INTEG-007'], reason: 'connector' },
     ],
     prompts: [{ name: 'cradle-specialist', title: 'Work in Cradle', description: 'Inspect authorized records, Launch work, inbox and operations; prepare private views or inert schema proposals.',
       clauses: ['RECORDS-001', 'RECORDS-007'], messages: () => [{ role: 'assistant', content: { type: 'text', text:

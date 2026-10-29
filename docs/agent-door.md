@@ -79,7 +79,9 @@ multi-sponsor admission, mail edges, resource refresh, timed lifecycle, dual hos
 and owner-native administration are undeclared. Schema adoption, import commit,
 people/grants/keys/settings administration, snapshots, trash recovery and erasure
 retain their current human proof and native authority. No substitute queue,
-consent store or verification-only production route is added.
+consent store or verification-only production route is added. These latter
+families are reported as `unscoped` by Base 0.2.88: the subset field does not
+disable or prove them, and Cradle registers none of their native effects.
 
 Base retains pending arguments, outcomes, summaries, trace and audit without a
 client-scoped erasure contract. Native member/campaign erasure therefore refuses
@@ -103,7 +105,9 @@ No SQL, production test route or substituted auth adapter prepares fixtures.
 Registered tools make no outbound provider request, so no network edge is declared.
 
 Run `pnpm exec rer door clauses --write`, then `--check`, and the normal
-`pnpm exec rer verify`. The legacy contract currently lacks its standard
+`pnpm exec rer verify`. The existing `SEED_VERIFY_SHARD=runtime` entry selects
+Cradle’s runtime shard while retaining the hosted, hydration and complete
+declared-door conformance checks. The legacy contract currently lacks its standard
 Lander-Regenerate contract generator. The released clause command refuses;
 canonical BASE-AGENT rows and generated acceptance/status changes must wait for
 that source conversion. The omitted built-in event tool does not claim its
@@ -161,3 +165,12 @@ and reads in this core declaration, are:
 The file tool returns metadata, the history tool reads history, and the view
 write is limited to private definitions. None advertises file downloads, record
 restoration, public sharing, schema adoption or scheduled execution.
+
+## Operations on other doors
+
+The descriptor and runtime both identify installation (`OWN-001`), import
+(`RECORDS-005`, `RECORDS-006`), device (`MOBILE-002`, `MOBILE-003`), interactive
+screen (`MOBILE-001`, `HOME-002`, `HOME-003`, `DOCS-001`) and connector
+(`WEBHOOK-USER-001`, `INTEG-007`) work as not-tools. Device capture and push,
+public presentation, sign-in, installation and external connector setup retain
+their native doors; their presence grants no agent business capability.

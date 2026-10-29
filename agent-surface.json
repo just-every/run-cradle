@@ -384,6 +384,28 @@
         "WEBHOOK-USER-001"
       ],
       "reason": "connector"
+    },
+    {
+      "clauses": [
+        "MOBILE-002",
+        "MOBILE-003"
+      ],
+      "reason": "device"
+    },
+    {
+      "clauses": [
+        "MOBILE-001",
+        "HOME-002",
+        "HOME-003",
+        "DOCS-001"
+      ],
+      "reason": "screen"
+    },
+    {
+      "clauses": [
+        "INTEG-007"
+      ],
+      "reason": "connector"
     }
   ],
   "resources": [
