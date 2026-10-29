@@ -19,7 +19,7 @@ The file excludes operators, stored owner email, sessions, credentials, secrets,
 To come back:
 
 1. Save the original JSON bytes.
-2. Open **Records → Import a base**, select **Base JSON**, choose the file under **Cradle base JSON file**, and leave **Base name** blank to preserve its name. Press **Preview import**, review the native mapping, acknowledge the report, then use **Save review and inspect schema impact** and **Adopt schema and start import**.
+2. Open **Records → Base ▾ → Import a base**, select **Base JSON**, choose the file under **Cradle base JSON file**, and leave **Base name** blank to preserve its name. Press **Preview import**, review the native mapping, acknowledge the report, then use **Save review and inspect schema impact** and **Adopt schema and start import**.
 3. Apply/resume the durable job to completion and inspect the native reconciliation and report.
 4. Export the new base as JSON. On a fresh installation every portable ID is preserved. Canonical JSON comparison sorts object keys and excludes **only `envelope.capturedAt`**, the export capture instant; array order, all data and all portable identities remain compared. No installation identity is emitted.
 5. On the same installation, imported IDs already exist. The entire copy receives a bijective map of base/table/field/option/record/incoming/view/form IDs. Compare through that complete map, retaining every field and definition in the comparison. No collision is silently merged.
