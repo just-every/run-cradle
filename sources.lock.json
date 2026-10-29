@@ -12874,7 +12874,7 @@
       "executable": false
     },
     "tests/helpers/schema-purge-journey.mjs": {
-      "sha256": "6a95f5ce6f12ef1794531375da8e615a58896b349f66722284a5aa45026a6e60",
+      "sha256": "b8921165d0f530115f3e06f8e4c1811a3fb697833d162f61f906c1fbe8c2eaa5",
       "executable": false
     },
     "tests/helpers/session-controls.mjs": {
