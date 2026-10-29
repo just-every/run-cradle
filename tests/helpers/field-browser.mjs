@@ -10,6 +10,7 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
+import {percentageFormBrowser} from './records-percentage-form-browser.mjs'
 
 const schemaEntity='00000000000000000000000001'
 const text=(id,label,extra={})=>({id,label,type:'text',required:false,unique:false,...extra})
@@ -220,6 +221,7 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
     await owner.capture('linked-table-restored',linkedTrash)
     const linkedAfter=(await h.request(`/api/v1/apps/${fixture.appId}/entities/${fixture.orders}/records/${fixture.records[0]}`)).data.record.fields[fixture.link].value
     assert.deepEqual(linkedAfter,linkedBefore,'The Settings restore restores the original link identity and value')
+    await percentageFormBrowser(h,owner,fixture)
     await writeFile(path.join(output,`field-browser-${width}.json`),JSON.stringify({width,checkpoints},null,2))
    }catch(error){
     for(const [index,context]of contexts.entries())for(const page of context.pages())await page.screenshot({path:path.join(output,`field-failed-${index===0?'owner':'creator'}-${width}.png`),fullPage:true})

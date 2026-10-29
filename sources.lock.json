@@ -12158,7 +12158,7 @@
       "executable": false
     },
     "tests/helpers/field-browser.mjs": {
-      "sha256": "669d66feb10b2b633290c3c2746fdcbdb1f71d0750bbcc82eca5a714cc446b9c",
+      "sha256": "a852e23cd7745c948d151f8b817b7d632ff59ca1b4a5ec31020d1fb950023e75",
       "executable": false
     },
     "tests/helpers/field-conversion-journey.mjs": {
@@ -12743,6 +12743,10 @@
     },
     "tests/helpers/records-operations-templates.mjs": {
       "sha256": "9fc5c8c595fb2df5663f14068573a50fcae57bccd708c0a94cceefc438bb094c",
+      "executable": false
+    },
+    "tests/helpers/records-percentage-form-browser.mjs": {
+      "sha256": "c3b2c3cc25b3bbb41f118ca4b4cca9ec19cd5638462cc853f5ebc0bdb37d0334",
       "executable": false
     },
     "tests/helpers/records-phone-journey.mjs": {
