@@ -48,3 +48,82 @@ export async function automationFailureJourney(h,delivered,setReceiver,receiverC
  delivered.length=0;setReceiver(200)
  return {saved,failed,uncertain}
 }
+
+/** Leave admitted record events for the native cron to execute at its supplied
+ * clock. Every boundary has a new real failure, never a rewritten run timestamp. */
+export async function automationFailureCalendarJourney(h,delivered,setReceiver,receiverCalls){
+ const settings=(await h.request('/api/v1/settings')).data
+ const session=await fetch(h.origin+'/auth/session',{headers:{cookie:h.cookie}})
+ assert.equal(session.status,200);const recipient=(await session.json()).operator.email
+ const timezone=async zone=>{
+  const current=(await h.request('/api/v1/settings')).data
+  await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:current.version,changes:{timezone:zone}}}})
+ }
+ await timezone('America/New_York')
+ const destination=(await h.request('/api/user-automations/destinations',{method:'POST',status:201,body:{commandId:createUlid(),appId:h.appId,entityId:h.entityId,kind:'webhook',url:'https://receiver.example.com/calendar-failures'}})).data
+ const saved=(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+29*86400000).toISOString(),definition:{name:'synthetic-cradle-76 calendar failures',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'webhook',destinationId:destination.id}]}}})).data.result.value
+ const runs=()=>h.request(`/api/user-automations/${saved.id}/runs`).then(reply=>reply.data.runs)
+ const notices=()=>h.request('/api/v1/notifications').then(reply=>reply.data.items.filter(row=>row.subject.kind==='automation-run'&&row.subject.href.includes(saved.id)))
+ const mail=()=>delivered.filter(message=>message.subject==='Record automation failed'&&message.text.includes(saved.id))
+ // Expected counts are fixed independently of the product's calendar formatter.
+ // March 8 has 23 hours; November 1 has 25 hours in this workspace.
+ const boundaries=[
+  {at:'2026-03-08T04:45:00Z',count:1,label:'spring eve at 23:45'},
+  {at:'2026-03-08T05:00:00Z',count:2,label:'spring local midnight within the same UTC day'},
+  {at:'2026-03-08T06:45:00Z',count:2,label:'before the skipped hour'},
+  {at:'2026-03-08T07:00:00Z',count:2,label:'after the skipped hour at 03:00',restart:true},
+  {at:'2026-03-09T00:00:00Z',count:2,label:'UTC midnight is still the same local day'},
+  {at:'2026-03-09T04:00:00Z',count:3,label:'midnight after the 23-hour day'},
+  {at:'2026-11-01T03:45:00Z',count:4,label:'fall eve at 23:45'},
+  {at:'2026-11-01T04:00:00Z',count:5,label:'fall local midnight within the same UTC day'},
+  {at:'2026-11-01T05:30:00Z',count:5,label:'first 01:30'},
+  {at:'2026-11-01T06:30:00Z',count:5,label:'repeated 01:30 after restart',restart:true},
+  {at:'2026-11-02T00:00:00Z',count:5,label:'fall UTC midnight is still the same local day'},
+  {at:'2026-11-02T04:30:00Z',count:5,label:'24 hours after the first fall-day notice is still 23:30'},
+  {at:'2026-11-02T05:00:00Z',count:6,label:'midnight after the 25-hour day'},
+ ]
+ let previousCount=0,errorCode,previousCommand
+ const alertRuns=[]
+ setReceiver(400)
+ try{
+  for(const [index,boundary] of boundaries.entries()){
+   if(boundary.restart){
+    await h.restart();await h.tick(previousCommand)
+    assert.equal((await notices()).length,previousCount,`${boundary.label}: queue replay after restart keeps suppression`)
+    assert.equal(mail().length,previousCount,`${boundary.label}: queue replay after restart sends no mail`)
+   }
+   const created=await h.create(`synthetic-cradle-76 boundary ${index}`)
+   await h.scheduled(boundary.at)
+   const history=await runs(),run=history.find(row=>row.recordId===created.record.id)
+   assert.ok(run,`${boundary.label}: the admitted record has run history`)
+   assert.equal(run.state,'Failed',`${boundary.label}: a real failure reaches suppression`)
+   assert.equal(run.finishedAt,new Date(boundary.at).toISOString(),`${boundary.label}: the scheduled clock finishes the run`)
+   assert.equal(run.retryable,false)
+   errorCode??=run.errorCode
+   assert.ok(errorCode);assert.equal(run.errorCode,errorCode,'Every boundary exercises the same failure kind')
+   assert.equal(receiverCalls.filter(wire=>JSON.parse(wire.body).record.recordId===created.record.id).length,1,`${boundary.label}: one real transport attempt`)
+   assert.equal(history.length,index+1,`${boundary.label}: suppression keeps every failure`)
+   if(boundary.count>previousCount)alertRuns.push(run)
+   const inbox=await notices(),messages=mail()
+   assert.equal(inbox.length,boundary.count,`${boundary.label}: in-app count`)
+   assert.equal(messages.length,boundary.count,`${boundary.label}: email count`)
+   assert.deepEqual(inbox.map(row=>row.subject.href).sort(),alertRuns.map(row=>row.href).sort(),`${boundary.label}: alerts link only the first failure of each local day`)
+   for(const first of alertRuns){
+    const message=messages.find(message=>message.text.includes(first.href))
+    assert.ok(message,`${boundary.label}: email links the first failure`)
+    assert.equal(message.to,recipient,'Calendar changes preserve the enabling recipient')
+    assert.ok(message.text.includes(first.cause),'The failure cause remains visible')
+   }
+   previousCount=boundary.count;previousCommand=created.commandId
+  }
+  await h.restart();await h.tick(previousCommand);await h.scheduled(boundaries.at(-1).at)
+  assert.equal((await runs()).length,boundaries.length,'Restart without a new event creates no run')
+  assert.equal((await notices()).length,6,'Restart retains every local-day suppression claim')
+  assert.equal(mail().length,6,'Restart sends no duplicate failure mail')
+  console.log(`Failure calendar: ${boundaries.length} admitted failures, six local-day notices and mails; both DST transitions and restart replay passed`)
+ }finally{
+  await h.request(`/api/user-automations/${saved.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:saved.version}})
+  await timezone(settings.timezone)
+  delivered.length=0;setReceiver(200)
+ }
+}
