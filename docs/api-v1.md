@@ -17,7 +17,7 @@ uses the prefix `/api/v1/apps/{appId}/rest/entities/{entityId}`.
 
 | Method and suffix | Purpose |
 | --- | --- |
-| `GET /` | Read the table schema, without a trailing slash |
+| `GET /api/v1/apps/{appId}/rest/entities/{entityId}` | Read the table schema |
 | `POST /query` | Filter, sort and page records |
 | `GET /records/{recordId}` | Read one record |
 | `POST /records` | Create a record with `commandId`, `schemaVersion` and `values` |

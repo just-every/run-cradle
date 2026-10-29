@@ -23,7 +23,7 @@ export async function restAttachmentsJourney(h,{call,endpoint,validator,seen,key
    const path=item.path.replace('{recordId}',id).replace('{fileId}',file)
    const response=await fetch(h.origin+path,{dispatcher,method:item.method,headers:{...(secret?{authorization:`Bearer ${secret}`}:{cookie:h.cookie,origin:h.origin,'x-csrf-token':csrf}),'content-type':mediaType},...(body===undefined?{}:{body})})
    assert.equal(response.status,status,`${name} status`)
-   if(name==='attachment.download'&&status===200){assert.equal(response.headers.get('cache-control'),'private, no-store');return response.text()}
+   if(name==='attachment.download'&&status===200){assert.equal(response.headers.get('cache-control'),'private, no-store');assert.ok(item.operation.responses['200'].content[response.headers.get('content-type')],'The generated document describes the actual response media type');return response.text()}
    const result=await response.json()
    if(status===200){const valid=validator.compile(item.operation.responses['200'].content['application/json'].schema);assert.equal(valid(result),true,JSON.stringify(valid.errors))}
    return result
@@ -46,10 +46,24 @@ export async function restAttachmentsJourney(h,{call,endpoint,validator,seen,key
   try{
    const rules=JSON.parse(policy.rules_json).map(rule=>({...rule,readableFields:rule.readableFields.filter(id=>id!==attachmentId)}))
    await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
+   const narrowed=await h.request(`/api/v1/apps/${appId}/openapi.json`,{secret:read.secret})
+   assert.ok(!JSON.stringify(narrowed).includes(attachmentId),'A hidden attachment field is absent from the generated document')
+   assert.ok(!Object.keys(narrowed.paths).some(path=>path.includes('/attachments')),'No attachment operation is advertised without a readable attachment field')
    await raw('attachment.download',{secret:read.secret,status:404})
   }finally{await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()}
   await h.request(`/api/user-keys/${read.id}/revoke`,{method:'POST',body:{commandId:createUlid(),appId}})
   await raw('attachment.download',{secret:read.secret,status:401})
+  const ownerPolicy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id JOIN manual_record_bases b ON b.id=m.app_id AND b.owner_id=m.principal_id WHERE b.id=?').bind(appId).first()
+  const ownerRules=JSON.parse(ownerPolicy.rules_json),source=ownerRules.find(rule=>rule.entityId===entityId&&rule.effect==='allow')
+  const denial={...source,id:createUlid(),effect:'deny',purposes:[],actions:['upload.begin'],readableFields:[],writableFields:[attachmentId]}
+  const commandId=createUlid(),filesBefore=Number(await h.db.prepare('SELECT count(*) n FROM evidence_files WHERE app_id=?').bind(appId).first('n'))
+  try{
+   await h.db.prepare('UPDATE authority_policies SET rules_json=? WHERE id=?').bind(JSON.stringify([...ownerRules,denial]),ownerPolicy.id).run()
+   assert.equal((await h.request(`/api/v1/apps/${appId}/rest/entities/${entityId}/records/${record.id}`)).data.id,record.id,'An upload-only denial does not remove ordinary read access')
+   await call('attachment.begin',{id:record.id,body:{...input,commandId},secret:null,status:403})
+   assert.equal(Number(await h.db.prepare('SELECT count(*) n FROM evidence_files WHERE app_id=?').bind(appId).first('n')),filesBefore,'An explicit owner upload refusal creates no file')
+   assert.equal(await h.db.prepare('SELECT count(*) n FROM command_admissions WHERE command_id=?').bind(commandId).first('n'),0)
+  }finally{await h.db.prepare('UPDATE authority_policies SET rules_json=? WHERE id=?').bind(ownerPolicy.rules_json,ownerPolicy.id).run()}
   return linked
  }finally{await dispatcher.close()}
 }

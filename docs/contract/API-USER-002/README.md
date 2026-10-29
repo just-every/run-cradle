@@ -3,11 +3,10 @@
 Status: partial. The per-base document at
 `GET /api/v1/apps/{appId}/openapi.json` describes the live, readable tables in a
 record REST namespace: `/api/v1/apps/{appId}/rest/entities/{entityId}`. Each table
-has schema read, condition/sort/cursor query, record get/create/update/delete,
-batch create/update/delete, and unique-field upsert operations. The retained
-command, view, form, attachment and comment APIs keep their existing contracts;
-this document describes the new record namespace rather than inventing routes
-for unbuilt features. The document is standard OpenAPI JSON at the response root;
+has schema reads, filtered and sorted queries, versioned record mutations, atomic
+batches and unique-field upserts. Native comments and owner-session attachment
+uploads are also described. See [the API guide](../../api-v1.md) for inputs,
+authority boundaries, formula bounds and declared credential rate limits. The document is standard OpenAPI JSON at the response root;
 record operations use the existing data/meta envelope.
 
 Requests use the current API-key scopes, issuer delegation, row/field policy,
@@ -40,16 +39,17 @@ including the generated document, schema and record/query/write responses.
 Only readable fields may be submitted through this namespace; the retained
 command API's write-only-cell semantics are unchanged. Unavailable-cell field
 references are narrowed too. A final current-scope check fences every response.
-All new operations use the existing PERM-003 record read/create/update/delete
-policy actions and API-USER-001 owner key-issuance boundary; no role-matrix text
-or broader reader/author role is added.
+Record operations keep their PERM-003 actions and API-USER-001 owner issuance
+boundary. Comments invoke the native comment commands. Uploads require a current
+workspace owner session and the field write policy; record keys receive no
+implicit upload or comment write grant.
 
 Proof extends `tests/user-api-keys.mjs`'s existing `[API-USER-001]` registration
 with `[API-USER-002]`, through `tests/helpers/rest-api-journey.mjs`. It loads
 the generated document, obtains every operation's path and method from it, and
 validates successful request/response bodies against its JSON Schemas with the
 repository's existing Ajv 2020 implementation. On the emitted Worker, with a
-real scoped credential, it exercises all eight documented operations; sorted
+real scoped credential and native owner session, it exercises the documented operations; sorted
 pagination and condition filtering; 100 creates, 100 updates and 100 deletes;
 101-row refusal for each batch operation; create/update/delete whole-request
 refusal; policy narrowing; one admission and replay; unique-field upsert create
@@ -59,7 +59,7 @@ keeps the maintained replay policy: a second request with its command ID is
 refused as 403 and creates no second admission. Create and upsert replays return
 the original version and values while current read authority permits them. Native owner sign-in
 uses the existing synthetic mail edge. No real provider, consent or mail is used.
-No screen changes in this clause; browser proof is not applicable.
+Settings delete-key issuance uses the native Settings journey named in CONTRACT.md.
 
 Defaults ADOPTED: batches are all-or-nothing; delete is separately opted into;
 existing issuer/key/row/field policy and owner-only credential issuance govern
@@ -67,11 +67,11 @@ every operation; REST writes require readable fields; conservative refusal of
 unique-value swaps; deny receipt replay after the subject becomes unreadable
 in Trash. No migration or new credential lifetime is introduced.
 
-Gap: attachment upload and comments over this documented REST namespace;
-personal access tokens and API-USER-004 lifetime policy; formula predicates;
-per-key rate limits with 429 and Retry-After (the existing sign-in limiter is not
-a per-key REST limit); schema writes beyond RECORDS-007; Settings controls and
-labels for delete-key issuance; receipt replay for deleted/unreadable subjects under wider custody rules; the
-complete field/type, linked-delete,
-concurrent-upsert and capacity-race matrix, and hosted scale. Gap (SCALE-002):
-unproven above 100 physical columns.
+Gap: ct contract conversion and generated-document synchronization; personal
+tokens and API-USER-004 lifetime policy; scoped upload and comment-write
+delegation; formula predicates above 10000 condition-filtered candidates; schema
+proposal types beyond RECORDS-007; automatic linked unlink and cascade authoring;
+receipt replay for deleted or unreadable subjects under wider custody rules;
+hosted physical scale and SCALE-002 wide-table proof. Current replay refuses an
+unreadable subject. Capacity boundary-counter checks do not establish physical
+scale. Ordinary record keys still cannot upload files or write comments.

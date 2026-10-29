@@ -40,7 +40,7 @@ export async function restLinkedDeleteJourney(h){
  const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id JOIN authority_credentials c ON c.principal_id=m.principal_id WHERE c.id=? AND m.app_id=?').bind(deleting.id,appId).first()
  try{
   for(const restriction of ['row','field']){
-   const rules=JSON.parse(policy.rules_json).map(rule=>({...rule,...(restriction==='write'?{actions:rule.actions.filter(action=>action!=='record.patch')}:restriction==='row'?{rows:{kind:'condition',fieldId:nameId,op:'ne',value:'synthetic-cradle-606 protected child'}}:{readableFields:rule.readableFields.filter(id=>id!==field.id)})}))
+   const rules=JSON.parse(policy.rules_json).map(rule=>({...rule,...(restriction==='row'?{rows:{kind:'condition',fieldId:nameId,op:'ne',value:'synthetic-cradle-606 protected child'}}:{readableFields:rule.readableFields.filter(id=>id!==field.id)})}))
    await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
    await remove(parent,403)
    const current=(await h.request(`/api/v1/apps/${appId}/rest/entities/${entityId}/records/${child.id}`)).data

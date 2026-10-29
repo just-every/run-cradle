@@ -2,6 +2,7 @@ import type {PolicyPort,RequestContext} from '../../authority/ports'
 import type {EvidenceDependencies} from '../../evidence/ports'
 import type {createRecordServices} from '../service.server'
 import {ownerDelegationSnapshot} from '../../authority/delegation.server'
+import {policyRuleSchema} from '../../authority/validators'
 import {createFileService} from '../../evidence/files.server'
 import {EvidenceError} from '../../evidence/shared.server'
 import {uploadInput} from '../../evidence/validators'
@@ -16,6 +17,12 @@ export function createRestAttachments(deps:EvidenceDependencies,services:ReturnT
   if(!['upload.begin','upload.complete'].includes(request.action))return deps.policy.authorize(ctx,request)
   const owner=await ownerDelegationSnapshot(deps.db,ctx,request.appId)
   const permit=await deps.policy.authorize(ctx,{...request,action:'record.patch'})
+  const entities=new Set(request.expected.map(revision=>revision.ref.entityId))
+  const declared=policyRuleSchema.array().parse(JSON.parse(owner.row.rules_json)).some(rule=>entities.has(rule.entityId)&&rule.actions.includes(request.action))
+  if(declared){
+   const upload=await deps.policy.authorize(ctx,request)
+   return {...upload,guards:[...upload.guards,...permit.guards,owner.guard]}
+  }
   return {...permit,action:request.action,guards:[...permit.guards,owner.guard]}
  }}
  const files=createFileService({...deps,policy})

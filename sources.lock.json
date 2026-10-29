@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e6531c4b1a650c6024f7488869a9b560ef4b89cf4dd75a9e4092d829661074d5",
+      "sha256": "f22d54db5860f773754565c863cf185376682a1a4cca66d4ae4462fd3593500a",
       "executable": false
     },
     "DEMO.md": {
@@ -3026,7 +3026,7 @@
       "executable": false
     },
     "docs/api-v1.md": {
-      "sha256": "84fc8b3e979b2b462400ff77489b0341e37db138f7b1b3c30d9df849884b1345",
+      "sha256": "139f25340fc3b9607e77b64cda1efb3047a77282b617f0b5d93d76a1ebe7164d",
       "executable": false
     },
     "docs/architecture.md": {
@@ -3058,7 +3058,7 @@
       "executable": false
     },
     "docs/contract/API-USER-002/README.md": {
-      "sha256": "9fb29645905515bda28b3100bfa85a80db83f924fb779c9533d02b6aeb68cfe8",
+      "sha256": "f27915cd32fe0b850e3521ceed6e2ac1f7b0c451f337d94ddc153f7e37262a7c",
       "executable": false
     },
     "docs/contract/AUTO-USER-002/README.md": {
@@ -9818,11 +9818,11 @@
       "executable": false
     },
     "src/domains/records/rest/attachment-openapi.ts": {
-      "sha256": "8062c562d54504331dceb401f8f370e6e0e65f69bd5fa5cd04511499669ef185",
+      "sha256": "4efec0db5ae87174759677830fd9c9eb71a3cf23487d98687d2ff4bc4a67133a",
       "executable": false
     },
     "src/domains/records/rest/attachments.server.ts": {
-      "sha256": "03c5272aab432b1cb736afe5c2e426e7e92658ccbf25da96589d710c77420c0a",
+      "sha256": "cbe6f1de772f4a574475159956106d04e07e0604582961ec6c950ffc8ed1770a",
       "executable": false
     },
     "src/domains/records/rest/comment-openapi.ts": {
@@ -12894,7 +12894,7 @@
       "executable": false
     },
     "tests/helpers/rest-attachments-journey.mjs": {
-      "sha256": "6d6ea4920618a514290ae03f995bd55b3aa98363a639d27413dbc6d50b7d7ab4",
+      "sha256": "63a56d58d5a2ab4548ee7157bfd50d5e9cda55f90b9f5cedc50b8191b3815610",
       "executable": false
     },
     "tests/helpers/rest-comments-journey.mjs": {
@@ -12914,7 +12914,7 @@
       "executable": false
     },
     "tests/helpers/rest-linked-delete-journey.mjs": {
-      "sha256": "67b150cfd318a016682b673186423c37fe1659809e70897f6c7b7eca0115e9fa",
+      "sha256": "5f87e110c6efbb6033a12c1ce981e12114360f31352927ac47ed3998ade8c130",
       "executable": false
     },
     "tests/helpers/rest-rate-limit-journey.mjs": {
