@@ -7,8 +7,8 @@ const reads = new Set(['/2/files/download','/2/files/get_metadata', '/2/files/li
 /** Synthetic provider edge for the four stores. Records every request so a journey can prove nothing was written or shared. */
 export function fileStoresProvider() {
   const seen = [], writes = [],denied=new Set()
-  const changed = new Set()
-  const payload = (provider, index) => Buffer.alloc(files[index][2], `synthetic-cradle-${provider}-${index}-${changed.has(`${provider}:${index}`) ? 'changed' : 'original'}`)
+  const changed = new Map(),metadata=new Map()
+  const payload = (provider, index) => Buffer.alloc(files[index][2], `synthetic-cradle-${provider}-${index}-${changed.get(`${provider}:${index}`) ?? 'original'}`)
   const hash = (algorithm, data) => createHash(algorithm).update(data).digest()
   const hashes = (provider, index) => {
     const bytes=payload(provider,index), quickxor=Buffer.alloc(20)
@@ -17,15 +17,15 @@ export function fileStoresProvider() {
     return {sha256:hash('sha256',bytes).toString('hex'),sha1:hash('sha1',bytes).toString('hex'),md5:hash('md5',bytes).toString('hex'),quickxor:quickxor.toString('base64'),dropbox:hash('sha256',hash('sha256',bytes)).toString('hex')}
   }
   const indexOf = itemId => Number(/-(\d+)$/.exec(itemId)?.[1])
-  const drive = (f,i) => ({id:named('synthetic-cradle-drive',i),name:f[0],mimeType:f[1],size:String(f[2]),modifiedTime:'2026-10-20T01:02:03.000Z',webViewLink:`https://drive.google.com/file/d/${named('synthetic-cradle-drive',i)}/view`,thumbnailLink:'https://lh3.googleusercontent.com/synthetic-cradle=s220',sha256Checksum:hashes('google-drive',i).sha256,sha1Checksum:hashes('google-drive',i).sha1,md5Checksum:hashes('google-drive',i).md5,trashed:false})
+  const drive = (f,i) => ({id:named('synthetic-cradle-drive',i),name:f[0],mimeType:f[1],size:String(f[2]),modifiedTime:'2026-10-20T01:02:03.000Z',webViewLink:`https://drive.google.com/file/d/${named('synthetic-cradle-drive',i)}/view`,thumbnailLink:'https://lh3.googleusercontent.com/synthetic-cradle=s220',...metadata.get(`google-drive:${i}`),sha256Checksum:hashes('google-drive',i).sha256,sha1Checksum:hashes('google-drive',i).sha1,md5Checksum:hashes('google-drive',i).md5,trashed:false})
   const graph = (f,i) => ({id:named('synthetic-cradle-onedrive',i),name:f[0],size:f[2],lastModifiedDateTime:'2026-10-20T01:02:03Z',webUrl:`https://synthetic-cradle.sharepoint.com/${f[0]}`,file:{mimeType:f[1],hashes:{quickXorHash:hashes('onedrive',i).quickxor}},thumbnails:[{small:{url:'https://synthetic-cradle.files.1drv.com/small'}}]})
   const dropbox = (f,i) => ({'.tag':'file',id:named('id:synthetic-cradle-dropbox',i),name:f[0],path_display:`/Synthetic Cradle/${f[0]}`,size:f[2],server_modified:'2026-10-20T01:02:03Z',content_hash:hashes('dropbox',i).dropbox})
   const box = (f,i) => ({type:'file',id:named('synthetic-cradle-box',i),name:f[0],size:f[2],modified_at:'2026-10-20T01:02:03Z',sha1:hashes('box',i).sha1,item_status:'active'})
-  let thumbnailObserver
+  let thumbnailObserver,metadataObserver
   const image = async () => {await thumbnailObserver?.();return new Response(png, { headers: { 'content-type': 'image/png' } })}
   const named = (prefix, i) => `${prefix}-${i}`
   return {
-    seen, writes, png,payload,denied,changeDigest(provider,itemId){const i=indexOf(itemId);assert.ok(files[i]);changed.add(`${provider}:${i}`)},observeThumbnails(observer){thumbnailObserver=observer},
+    seen, writes, png,payload,denied,changeDigest(provider,itemId){const i=indexOf(itemId);assert.ok(files[i]);changed.set(`${provider}:${i}`,(changed.get(`${provider}:${i}`)??0)+1)},observeThumbnails(observer){thumbnailObserver=observer},observeMetadata(observer){metadataObserver=observer},changeMetadata(provider,itemId,value){metadata.set(`${provider}:${indexOf(itemId)}`,value)},
     async fetch(request) {
       const u = new URL(request.url); seen.push(`${request.method} ${u.origin}${u.pathname}`)
       const form = async () => new URLSearchParams(await request.clone().text())
@@ -47,10 +47,10 @@ export function fileStoresProvider() {
         return Response.json({ files: files.map(drive).filter(f => !match || f.name.includes(match)) })
       }
       if(u.hostname==='www.googleapis.com'&&u.searchParams.get('alt')==='media'){const i=indexOf(u.pathname);return new Response(payload('google-drive',i))}
-      if (u.hostname === 'www.googleapis.com' && u.pathname.startsWith('/drive/v3/files/')) {const i=indexOf(u.pathname);return files[i]?Response.json(drive(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
+      if (u.hostname === 'www.googleapis.com' && u.pathname.startsWith('/drive/v3/files/')) {await metadataObserver?.(u.pathname);const i=indexOf(u.pathname);return files[i]?Response.json(drive(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
       if (u.hostname === 'graph.microsoft.com') {
         if(u.pathname.endsWith('/content')){const i=indexOf(u.pathname.replace(/\/content$/,''));return new Response(null,{status:302,headers:{location:`https://synthetic-cradle.files.1drv.com/synthetic-cradle-content-${i}`}})}
-        if (/\/items\//.test(u.pathname)) {const i=indexOf(u.pathname);return files[i]?Response.json(graph(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
+        if (/\/items\//.test(u.pathname)) {await metadataObserver?.(u.pathname);const i=indexOf(u.pathname);return files[i]?Response.json(graph(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
         const match = /search\(q='([^']*)'\)/.exec(decodeURIComponent(u.pathname))?.[1]
         return Response.json({ value: [{ id: 'synthetic-cradle-folder', name: 'Folder', webUrl: 'https://synthetic-cradle.sharepoint.com/f', folder: {} }, ...files.map(graph).filter(f => !match || f.name.includes(match))] })
       }

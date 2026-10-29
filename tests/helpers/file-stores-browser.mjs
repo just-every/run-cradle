@@ -90,5 +90,25 @@ export async function resolvedStoresBrowser(page,h,width,output){
  h.fileStoresProvider.changeDigest('google-drive',changedItem.itemId)
  const changed=await check(changedItem,'Google Drive','changed');await changed.getByRole('button',{name:'Confirm changed file '+changedItem.name,exact:true}).waitFor();assert.equal(await changed.locator('.cr-store-thumb').count(),0);await j.capture('file-store-return-changed-review')
  const confirmed=page.waitForResponse(r=>r.url().endsWith('/file-stores/resolve')&&r.request().method()==='POST'),ready=page.waitForNavigation({waitUntil:'domcontentloaded'});await j.action(changed.getByRole('button',{name:'Confirm changed file '+changedItem.name,exact:true}));const result=await confirmed;if(result.status()!==200)assert.fail(await result.text());assert.equal(result.status(),200);await ready;await changed.getByText('Unresolved',{exact:true}).waitFor({state:'detached'});await j.capture('file-store-return-changed-confirmed')
+ // The same record door offers reviewed multi-selection without resolving unselected captures.
+ const currentDrive=await d.call('/api/v1/records/file-stores/browse',{...address,connectionId:driveId}),bulkItems=currentDrive.items,bulkSnapshot=structuredClone(fixture.snapshot)
+ bulkSnapshot.base.tables[0].records[0].values[fixture.filesId]=bulkItems.map(item=>portable(item,'google-drive',currentDrive.account))
+ const bulkReturn=await importStoreSnapshot(h,bulkSnapshot),bulkApp=bulkReturn.preview.identities.appId;await connect(bulkApp,'google-drive')
+ await page.goto(`${h.origin}/app/records/${bulkApp}`);await j.table('Files');await j.action(page.getByRole('link',{name:'synthetic-cradle-returned-files',exact:true}).first())
+ const selected=bulkItems.slice(0,2)
+ for(const item of selected){
+  h.fileStoresProvider.changeDigest('google-drive',item.itemId)
+  const cell=page.locator('.cr-store-reference').filter({hasText:item.name}),checked=page.waitForResponse(r=>r.url().endsWith('/file-stores/resolve')&&r.request().method()==='POST')
+  await j.action(cell.getByRole('button',{name:'Check my store',exact:true}));assert.equal((await checked).status(),200)
+  const checkbox=cell.getByRole('checkbox',{name:'Select changed file '+item.name,exact:true});await checkbox.waitFor();assert.equal(await checkbox.isChecked(),false);await j.setChecked(checkbox,true)
+ }
+ assert.equal(await page.locator('.cr-store-thumb').count(),0,'Review does not fetch thumbnails or bind any reference')
+ const confirmation=page.getByRole('group',{name:'Confirm selected changed files',exact:true});for(const item of selected)assert.ok((await confirmation.innerText()).includes(item.name))
+ await j.capture('file-store-bulk-changed-review')
+ const confirmedBulk=page.waitForResponse(r=>r.url().endsWith('/file-stores/resolve-bulk')&&r.request().method()==='POST'),bulkReady=page.waitForNavigation({waitUntil:'domcontentloaded'})
+ await j.action(confirmation.getByRole('button',{name:'Confirm 2 changed files',exact:true}));const bulkResponse=await confirmedBulk;if(bulkResponse.status()!==200)assert.fail(await bulkResponse.text());assert.equal(bulkResponse.status(),200);await bulkReady
+ for(const item of selected)assert.equal(await page.locator('.cr-store-reference').filter({hasText:item.name}).getByText('Unresolved',{exact:true}).count(),0)
+ await page.locator('.cr-store-reference').filter({hasText:bulkItems[2].name}).getByText('Unresolved',{exact:true}).waitFor()
+ await j.capture('file-store-bulk-changed-confirmed')
  assert.deepEqual(h.fileStoresProvider.writes,[])
 }
