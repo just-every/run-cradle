@@ -6,6 +6,7 @@ import { LinkedRecord } from './linked-record'
 import { MoneyInput } from './money-input'
 import { RelationshipPicker } from './relationship-picker'
 import { PersonPicker } from './person-picker'
+import {StoreResolutionGroup} from './store-reference-resolution'
 import { StoreReferenceView } from './store-reference-view'
 import { StoreChooser } from './store-chooser'
 import type { Cell, CellValue, Money, Page, Ref, StoreReference } from '../../contracts/primitives'
@@ -50,7 +51,7 @@ export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undef
   if (typeof value === 'string') return <>{value}</>
   if ('minor' in value) return <>{money(value as Money).replace('USD ', '$')}</>
   const values = Array.isArray(value) ? value : [value]
-  return <>{values.map((item, i) => <span key={i} className={typeof item === 'object' && item !== null && 'recordId' in item ? 'cr-record-link' : undefined}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
+  return <StoreResolutionGroup record={record}>{values.map((item, i) => <span key={i} className={typeof item === 'object' && item !== null && 'recordId' in item ? 'cr-record-link' : undefined}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</StoreResolutionGroup>
 }
 /** The viewer's wall-clock minutes for a datetime-local input; `new Date` reads that offset-free form back in the same zone. */
 function localInput(value: string) {
