@@ -4458,7 +4458,7 @@
       "executable": false
     },
     "docs/importing.md": {
-      "sha256": "2fa7dfa6aa624128e5ac2368e3546101963c1318e252c75a1343c338eeed4120",
+      "sha256": "030c2c317c28762594bb08dd31b3e60045ebc880430ff38cb6af1a06e26ff47c",
       "executable": false
     },
     "docs/install.md": {
@@ -9194,7 +9194,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/http.server.ts": {
-      "sha256": "5791221c5061a7a73ec0b757f3bf5d15305acc9f8379db60c23b41857258b704",
+      "sha256": "55108422983b2d55523d692d2289cf8320d099e51d87e3bbeefca45e4582b5a8",
       "executable": false
     },
     "src/domains/records/base-transfer/identity-validation.ts": {
@@ -9286,7 +9286,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/receipt.ts": {
-      "sha256": "dc1e519d9c4edd1c2e302586272ad17caa7fd04f0a8faef439d1697e849a708b",
+      "sha256": "163a58c525f414ff737df76cb0b7c86195bcf16598a51bd7d7798f60da936c2c",
       "executable": false
     },
     "src/domains/records/base-transfer/record-order.ts": {
@@ -9310,7 +9310,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/service.server.ts": {
-      "sha256": "2de0db053082729aa19096e5ee4833ab17938e8bc78a115c616061a5f5808428",
+      "sha256": "07c6b3a6414039fc24a4848d391321bbd71e4522181d9b529af5a12b05a677f1",
       "executable": false
     },
     "src/domains/records/base-transfer/source-api.ts": {
@@ -9331,6 +9331,10 @@
     },
     "src/domains/records/base-transfer/source-maps.ts": {
       "sha256": "ef2fe89cb6d6fe8229b08998f4034ad20d2616aa4f9c9caa1ede360a1db31a16",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/source-record-map.ts": {
+      "sha256": "af881bacd5527ca159a1bcad07a11a01f00701df2402d805daf6d78dc9a4d8f3",
       "executable": false
     },
     "src/domains/records/base-transfer/source.ts": {
@@ -10746,7 +10750,7 @@
       "executable": false
     },
     "src/ui/records/base-import/receipt.tsx": {
-      "sha256": "db95a0704f5b306157852ae5c181b57ce323e16f9271b5054ebe919d3ea0b908",
+      "sha256": "410e50ddfd85c19dceb18bde697e0f04e1e062a83cfe669d265fa9496ca743b2",
       "executable": false
     },
     "src/ui/records/base-import/schema-review.tsx": {
@@ -12941,6 +12945,14 @@
       "sha256": "a7779f5860b7c4f2747aa69add9a1c01152a7ca9a8459364cbb0adf719779c6a",
       "executable": false
     },
+    "tests/helpers/source-record-map-browser.mjs": {
+      "sha256": "812c228ae10f4fadfe0cc783ccf961bf4c7db38f638d411ff0823fe49986fd8a",
+      "executable": false
+    },
+    "tests/helpers/source-record-map-journey.mjs": {
+      "sha256": "021e96a7ab6f95df0d5aefe86cc8f93accfce53f622cbeff3ea689e595a25b73",
+      "executable": false
+    },
     "tests/helpers/sqlite-d1.mjs": {
       "sha256": "d4ad9aa33025d22b8130943ba6c3c66261fdc2bf4a65a11f373606dcfa97ed06",
       "executable": false
@@ -13234,7 +13246,7 @@
       "executable": false
     },
     "tests/records-import-receipt.mjs": {
-      "sha256": "c10e1d3de4065ba1ea61381d8f1229ed38f2777f1ec1fc5b83e21940820c491e",
+      "sha256": "d1b5b9c49b6ed82557d6d9a5c6fac31210f2873528995f2f92e1edb85f7ed5f0",
       "executable": false
     },
     "tests/records-import-undo-d1.mjs": {
@@ -13398,7 +13410,7 @@
       "executable": false
     },
     "tests/ui-base-import.mjs": {
-      "sha256": "6557b6b8cc491dd743f263f7cdacd09941af08d0e46a367b40e668a528a6c814",
+      "sha256": "9feadb07fe6f882226ded5b65bdea17b4a0e0089695b3c93cc91a76d7ffc9811",
       "executable": false
     },
     "tests/ui-base-undo.mjs": {
