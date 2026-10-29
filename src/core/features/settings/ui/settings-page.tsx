@@ -12,7 +12,6 @@ import { CustomFieldsPanel } from '../../../../ui/settings/custom-fields-panel'
 import { ImportsPanel } from '../../../../ui/settings/imports-panel'
 import { SampleDataPanel } from '../../../../ui/settings/sample-data-panel'
 import { PreferencesPanel } from '../../../../ui/settings/preferences-panel'
-import { UsagePanel } from '../../../../ui/settings/usage-panel'
 import { ConnectionPanel } from '../../../../ui/settings/connection-panel'
 import { ArchivePanel } from '../../../../ui/settings/archive-panel'
 import { WarehousePanel } from '../../../../ui/settings/warehouse-panel'
@@ -67,7 +66,6 @@ export const SettingsPage = () => {
       <div className="cr-card cr-settings-rows">
         <details className="cr-detail"><summary>Your notifications</summary><PreferencesPanel /></details>
         <details className="cr-detail" onToggle={event=>setKeysOpen(event.currentTarget.open)}><summary>API keys</summary>{keysOpen&&<ApiKeysPanel />}</details>
-        <details className="cr-detail"><summary>Usage and model availability</summary><UsagePanel /></details>
         <LazySettingsPanel title="Twilio SMS"><SmsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Chat app"><SlackAppPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Record template buttons"><RecordTemplateButtonsPanel /></LazySettingsPanel>
