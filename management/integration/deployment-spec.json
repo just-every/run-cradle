@@ -942,6 +942,18 @@
       "name": "9083_record_template_buttons.sql",
       "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
       "sql": "CREATE TABLE record_template_buttons (\n id TEXT PRIMARY KEY,\n app_id TEXT NOT NULL,\n entity_id TEXT NOT NULL,\n owner_id TEXT NOT NULL,\n template_id TEXT NOT NULL REFERENCES record_templates(id),\n name TEXT NOT NULL,\n confirmation INTEGER NOT NULL CHECK (confirmation IN (0,1)),\n version INTEGER NOT NULL CHECK (version > 0),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX record_template_buttons_table ON record_template_buttons(app_id,entity_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9084_record_watches.sql",
+      "sha256": "5fd62892ac9a4e87d8745d10f74e3627455aa4c9cbe54dcd11276b676ea512f6",
+      "sql": "CREATE TABLE record_watches (\n id TEXT PRIMARY KEY, operator_id TEXT NOT NULL, principal_id TEXT NOT NULL,\n app_id TEXT NOT NULL, entity_id TEXT NOT NULL, target_kind TEXT NOT NULL,\n target_id TEXT NOT NULL, source TEXT NOT NULL, enabled INTEGER NOT NULL,\n mode TEXT NOT NULL, channels_json TEXT NOT NULL, version INTEGER NOT NULL,\n created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,\n UNIQUE(operator_id,app_id,entity_id,target_kind,target_id,source)\n);\nCREATE INDEX record_watches_subject ON record_watches(app_id,entity_id,enabled);\nCREATE TABLE record_watch_events (\n id TEXT PRIMARY KEY, event_id TEXT NOT NULL, operator_id TEXT NOT NULL,\n app_id TEXT NOT NULL, entity_id TEXT NOT NULL, record_id TEXT NOT NULL,\n watch_id TEXT, assignment_field_id TEXT, actor_id TEXT, kind TEXT NOT NULL, mode TEXT NOT NULL, channels_json TEXT NOT NULL,\n title TEXT NOT NULL, body TEXT NOT NULL, required_fields_json TEXT NOT NULL, notification_id TEXT,\n created_at INTEGER NOT NULL, due_at INTEGER NOT NULL, completed_at INTEGER,\n UNIQUE(event_id,operator_id)\n);\nCREATE INDEX record_watch_events_due ON record_watch_events(completed_at,due_at);\nCREATE TABLE record_watch_chat_deliveries (\n id TEXT PRIMARY KEY, notification_id TEXT NOT NULL, operator_id TEXT NOT NULL,\n provider TEXT NOT NULL, state TEXT NOT NULL, created_at INTEGER NOT NULL,\n updated_at INTEGER NOT NULL, provider_receipt TEXT,\n UNIQUE(notification_id,provider)\n);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9085_record_import_notices.sql",
+      "sha256": "c2f1cc909d90cb911ed25ce8b3eec114938baa26bb5c6087eba57d7b1d8f4023",
+      "sql": "CREATE TABLE record_import_notice_receipts (record_id TEXT PRIMARY KEY, app_id TEXT NOT NULL, created_at TEXT NOT NULL);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

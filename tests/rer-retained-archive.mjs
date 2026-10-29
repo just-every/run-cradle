@@ -49,6 +49,11 @@ contract('BASE-DATA-001 RECORDS-006 SYNC-002','a backup made by the previous ver
   const native=await matchesArchive(target.source,join(target.source,'platform.rer'))
   assert.ok(!native.tables.some(t=>t.name==='rer_migrations'),'a native export never carries the Platform ledger')
   assert.deepEqual(await ledger(),reset,'restore keeps the destination migration history')
+  await bindings(target.source,async({DB})=>{
+   const watched=await DB.prepare("SELECT enabled FROM record_watches WHERE id='synthetic-cradle-150-watch'").first();assert.equal(watched.enabled,0,'Restore retains personal watch history with automatic watching paused');
+   const event=await DB.prepare("SELECT body,completed_at FROM record_watch_events WHERE id='synthetic-cradle-150-event'").first();assert.equal(event.body,'synthetic-cradle-150-retained-change');assert.notEqual(event.completed_at,null,'A captured daily event cannot be delivered again after restore');
+   const chats=(await DB.prepare("SELECT id,state FROM record_watch_chat_deliveries ORDER BY id").all()).results;assert.deepEqual(chats,[{id:'synthetic-cradle-150-queued',state:'cancelled'},{id:'synthetic-cradle-150-unknown',state:'unknown'}],'Queued chat is cancelled and uncertain provider acceptance is retained without replay');
+  })
  }finally{
   if(target){await target.log.close();await rm(target.root,{recursive:true,force:true})}
   await rm(directory,{recursive:true,force:true})

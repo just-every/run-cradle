@@ -1,3 +1,4 @@
+import {eraseWatchSubject} from '../records/watching/erasure.server';
 import {verifyEvidenceErasure} from './erasure-verification.server';
 import type { Ref } from '../../contracts/primitives';
 import type { RequestContext } from '../authority/ports';
@@ -26,6 +27,7 @@ export function createErasureService(deps:EvidenceDependencies,port:ErasurePort,
   const commentRows=(await db.prepare('SELECT id FROM evidence_comments WHERE app_id=? AND entity_id=? AND record_id=?').bind(subject.appId,subject.entityId,subject.recordId).all<{id:string}>()).results;for(const c of commentRows)mutations.push({kind:'update',table:comments,set:{body:null,mentions_json:'[]',deleted_at:ctx.now,updated_at:ctx.now},where:eq(comments,'id',c.id),expectedRows:1});
   const descendants=(await db.prepare(`WITH RECURSIVE d(id) AS (SELECT id FROM evidence_nodes WHERE kind='source' AND object_id IN (${sourceIds.map(()=>'?').join(',')||'NULL'}) UNION SELECT child_id FROM evidence_dependencies JOIN d ON parent_id=d.id) SELECT id FROM d`).bind(...sourceIds).all<{id:string}>()).results;for(const n of descendants)mutations.push({kind:'update',table:nodes,set:{erased_at:ctx.now,invalidated_at:ctx.now},where:eq(nodes,'id',n.id),expectedRows:1});const redacted=await port.redact(ctx,subject,[...sourceIds,...importRows.flatMap(r=>[r.id,r.file_id])]);const guards=Array.isArray(redacted)?[]:redacted.guards;mutations.push(...(Array.isArray(redacted)?redacted:redacted.mutations));if(!Array.isArray(redacted))for(const key of new Set(redacted.objectKeys))mutations.push(insert(objects,{id:createUlid(),erasure_id:id,object_key:key,deleted_at:null}));
 
+  const watchCopies=await eraseWatchSubject(db,ctx,subject);guards.push(...watchCopies.guards);mutations.push(...watchCopies.mutations);
   return {erasureJobId:id,guards,mutations};
  }
  async function request(ctx:RequestContext,input:{commandId:string;subject:Ref}){

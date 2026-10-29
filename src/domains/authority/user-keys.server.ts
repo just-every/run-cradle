@@ -13,32 +13,36 @@ const principals=registerTable('authority_principals',['id','authentication_epoc
 
 export function createUserKeyService(db:D1Database,ordinary:PolicyPort,admission:AdmissionPort,appOrigin:string) {
  return {
-  issue:(ctx:RequestContext,commandId:string,input:DelegationInput)=>issueUserCredential(db,ordinary,admission,appOrigin,ctx,commandId,input,'api-key'),
+  async issue(ctx:RequestContext,commandId:string,input:DelegationInput&{audience?:'api'|'mcp'}){
+   const {audience='api',...delegation}=input
+   const key=await issueUserCredential(db,ordinary,admission,appOrigin,ctx,commandId,delegation,'api-key',audience)
+   return {...key,endpoint:audience==='mcp'?`${appOrigin}/mcp`:`${appOrigin}/api/v1`}
+  },
 
   async list(ctx:RequestContext,appId:string) {
    const own=await ownerDelegationSnapshot(db,ctx,appId),guard=and(...principalGuards(ctx),own.guard)
    const rows=await db.prepare(`SELECT c.id,d.label AS name,d.created_at,c.expires_at,c.revoked_at,
-    d.revoked_at AS delegation_revoked,c.scopes_json,p.rules_json
+    d.revoked_at AS delegation_revoked,c.audience,c.scopes_json,p.rules_json
     FROM authority_delegations d JOIN authority_credentials c ON c.principal_id=d.principal_id
     JOIN authority_memberships m ON m.principal_id=d.principal_id AND m.app_id=d.app_id
     JOIN authority_policies p ON p.id=m.policy_id
     WHERE d.app_id=? AND d.issuer_id=? AND d.kind='api-key' AND (${guard.sql}) ORDER BY d.created_at DESC LIMIT 100`)
-    .bind(appId,ctx.principal.id,...guard.values).all<{id:string;name:string;created_at:number;expires_at:number;revoked_at:number|null;delegation_revoked:number|null;scopes_json:string;rules_json:string}>()
-   return rows.results.map(row=>({id:row.id,name:row.name,createdAt:new Date(row.created_at).toISOString(),expiresAt:new Date(row.expires_at).toISOString(),
+    .bind(appId,ctx.principal.id,...guard.values).all<{id:string;name:string;created_at:number;expires_at:number;revoked_at:number|null;delegation_revoked:number|null;audience:string;scopes_json:string;rules_json:string}>()
+   return rows.results.map(row=>({id:row.id,name:row.name,endpoint:row.audience,createdAt:new Date(row.created_at).toISOString(),expiresAt:new Date(row.expires_at).toISOString(),
     revokedAt:row.revoked_at===null&&row.delegation_revoked===null?null:new Date(row.revoked_at??row.delegation_revoked!).toISOString(),
     scopes:JSON.parse(row.scopes_json),entityIds:[...new Set((JSON.parse(row.rules_json) as {entityId:string}[]).map(rule=>rule.entityId))]}))
   },
   async rotate(ctx:RequestContext,commandId:string,appId:string,id:string){
-   const row=await db.prepare(`SELECT d.label,policy.rules_json,c.expires_at FROM authority_credentials c
+   const row=await db.prepare(`SELECT d.label,policy.rules_json,c.expires_at,c.audience FROM authority_credentials c
     JOIN authority_delegations d ON d.principal_id=c.principal_id
     JOIN authority_memberships m ON m.principal_id=d.principal_id AND m.app_id=d.app_id
     JOIN authority_policies policy ON policy.id=m.policy_id
     WHERE c.id=? AND d.app_id=? AND d.issuer_id=? AND d.kind='api-key' AND d.revoked_at IS NULL`)
-    .bind(id,appId,ctx.principal.id).first<{label:string;rules_json:string;expires_at:number}>()
+    .bind(id,appId,ctx.principal.id).first<{label:string;rules_json:string;expires_at:number;audience:string}>()
    if(!row)throw new AuthorityError('not_found','API key not found.',404)
    const entityId=(JSON.parse(row.rules_json) as {entityId:string}[])[0]!.entityId
    const own=await userDelegationPolicy(db,ordinary,ctx,{appId,entityId,name:row.label,permissions:'read',expiresAt:new Date(row.expires_at).toISOString()})
-   return {...await createMachineService(db,own.policy,admission).rotate(ctx,commandId,appId,id,'api-key'),name:row.label}
+   return {...await createMachineService(db,own.policy,admission).rotate(ctx,commandId,appId,id,'api-key'),name:row.label,endpoint:row.audience}
   },
   async revoke(ctx:RequestContext,commandId:string,appId:string,id:string) {
    const row=await db.prepare(`SELECT d.principal_id,p.authentication_epoch,p.version,policy.rules_json,c.expires_at

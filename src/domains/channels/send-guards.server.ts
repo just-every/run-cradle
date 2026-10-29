@@ -1,3 +1,4 @@
+import {watchChannelContent} from '../records/watching/content.server'
 import {watchNotificationGuards} from '../records/watching/delivery-authority.server'
 import type { RequestContext } from '../authority/ports'
 import { AdmissionError } from '../admission/errors'
@@ -25,7 +26,7 @@ export async function notificationSendGuards(db:D1Database,ctx:RequestContext,id
   const n=await db.prepare('SELECT n.id,n.title,n.body,n.subject_id,n.version,c.app_id,c.subject_type,c.event_kind,c.campaign_id FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id JOIN channel_notifications c ON c.notification_id=n.id WHERE d.id=? AND n.unavailable=0 AND n.operator_id=d.operator_id AND c.event_kind=d.kind').bind(id).first<{id:string;title:string;body:string;subject_id:string;version:number;event_kind:NotificationKind;campaign_id:string|null;app_id:string;subject_type:string}>()
   if(!n||!notificationKinds.includes(n.event_kind))return denied()
   // A record-thread mention keeps its own comment authority, with or without its Launch campaign.
-  const access=['field-assigned','record-watch'].includes(n.event_kind)?await watchNotificationGuards(db,entities,{...ctx,now:new Date(now).toISOString()},n.id,operatorId):n.event_kind==='comment-mentioned'&&/^[0-9A-HJKMNP-TV-Z]{26}$/.test(n.subject_type)
+  const access=['field-assigned','record-watch'].includes(n.event_kind)?await watchNotificationGuards(db,entities,{...ctx,now:new Date(now).toISOString()},n.id,operatorId,'email'):n.event_kind==='comment-mentioned'&&/^[0-9A-HJKMNP-TV-Z]{26}$/.test(n.subject_type)
    ?await commentRecipientGuards(db,entities,{...ctx,now:new Date(now).toISOString()},{notificationId:n.id,appId:n.app_id,entityId:n.subject_type,recordId:n.subject_id,operatorId})
    :await legacyRecipientGuards(db,{kind:n.event_kind,operatorId,campaignId:n.campaign_id,subjectType:n.subject_type,subjectId:n.subject_id,eventId:n.id},new Date(now).toISOString())
   if(!access)return denied()
@@ -36,7 +37,9 @@ export async function notificationSendGuards(db:D1Database,ctx:RequestContext,id
    if(projection.body!==n.body)return denied()
    guards.push(...projection.guards)
   }
-  bodies.push(`${n.title}\n${n.body}`)
+  const projected=['field-assigned','record-watch'].includes(n.event_kind)?await watchChannelContent(db,n.id,operatorId,'email'):null
+  if(['field-assigned','record-watch'].includes(n.event_kind)&&!projected)return denied()
+  bodies.push(`${projected?.title??n.title}\n${projected?.body??n.body}`)
  }
  if(input.text!==bodies.join('\n\n')||input.subject!==(bodies.length===1?bodies[0]!.split('\n')[0]!:'Your Cradle notifications'))return denied()
  for(const id of ids)guards.push(trustedPredicate(`EXISTS(SELECT 1 FROM channel_deliveries d JOIN notifications n ON n.id=d.notification_id WHERE d.id=? AND d.operator_id=? AND d.state IN ('held','queued','dispatching','unknown') AND d.due_at<=? AND n.unavailable=0 AND (d.kind<>'weekly-digest' OR (EXISTS(SELECT 1 FROM automations WHERE shipped_key='weekly-digest' AND enabled=1) AND NOT EXISTS(SELECT 1 FROM channel_preferences WHERE operator_id=d.operator_id AND digest_enabled=0))) AND (d.campaign_id IS NULL OR EXISTS(SELECT 1 FROM campaigns c WHERE c.id=d.campaign_id AND c.archived_at IS NULL)) AND NOT EXISTS(SELECT 1 FROM channel_preferences p,json_each(p.muted_json) m WHERE p.operator_id=d.operator_id AND m.value=d.kind))`,[id,operatorId,now]))

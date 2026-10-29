@@ -7,15 +7,15 @@ import { ResourceState, Empty, Timestamp } from '../shared/presentation'
 import {SubscriptionKeys} from './subscription-keys-panel'
 import { ProposerKeys } from './proposer-keys-panel'
 
-type Key={id:string;name:string;createdAt:string;expiresAt:string;revokedAt:string|null;entityIds:string[];scopes:{appId:string;actions:string[];purposes:string[]}[]}
-type Issued={id:string;secret:string;name:string;expiresAt:string}
+type Key={id:string;name:string;endpoint:string;createdAt:string;expiresAt:string;revokedAt:string|null;entityIds:string[];scopes:{appId:string;actions:string[];purposes:string[]}[]}
+type Issued={id:string;secret:string;name:string;expiresAt:string;endpoint:string}
 
 export function ApiKeysPanel() {
  const apps=useResource<Page<{id:string;name:string}>>('/api/v1/apps')
  const [appId,setAppId]=useState('')
  return <section className="cr-section"><h2>API keys</h2><p>Give a connected service access to one record type. Keys expire and can be revoked. Your current data policy also applies.</p>
   <ResourceState resource={apps.resource} operation="applications" retry={apps.refresh}>{page=><>
-   <label className="cr-field">Application<select value={appId} onChange={e=>setAppId(e.target.value)}><option value="">Choose an application</option>{page.items.map(app=><option key={app.id} value={app.id}>{app.name}</option>)}</select></label>
+   <label className="cr-field">Application<select aria-label="Application" value={appId} onChange={e=>setAppId(e.target.value)}><option value="">Choose an application</option>{page.items.map(app=><option key={app.id} value={app.id}>{app.name}</option>)}</select></label>
    {appId&&<><AppKeys key={appId} appId={appId}/><SubscriptionKeys key={appId+':subscriptions'} appId={appId}/></>}</>}</ResourceState><ProposerKeys/></section>
 }
 
@@ -23,11 +23,12 @@ function AppKeys({appId}:{appId:string}) {
  const keys=useResource<{keys:Key[]}>(`/api/user-keys?appId=${encodeURIComponent(appId)}`)
  const entities=useResource<Page<EntitySchema>>(`/api/v1/apps/${encodeURIComponent(appId)}/entities`)
  const [entityId,setEntityId]=useState(''),[name,setName]=useState(''),[permissions,setPermissions]=useState<'read'|'write'>('read')
+ const [audience,setAudience]=useState<'api'|'mcp'>('api')
  const [days,setDays]=useState(7),[issued,setIssued]=useState<Issued|null>(null),[error,setError]=useState<string|null>(null),[busy,setBusy]=useState(false)
  async function issue(event:FormEvent) {
   event.preventDefault();setError(null);setIssued(null);setBusy(true)
   try {
-   const response=await readApi<{key:Issued}>('/api/user-keys',{method:'POST',body:JSON.stringify({commandId:createUlid(),appId,entityId,name,permissions,expiresAt:new Date(Date.now()+days*86400000).toISOString()})})
+   const response=await readApi<{key:Issued}>('/api/user-keys',{method:'POST',body:JSON.stringify({commandId:createUlid(),appId,entityId,name,permissions,audience,expiresAt:new Date(Date.now()+days*86400000).toISOString()})})
    setIssued(response.data.key);setName('');keys.refresh()
   }catch(e){setError(e instanceof Error?e.message:'Could not issue the key.')}finally{setBusy(false)}
  }
@@ -42,15 +43,16 @@ function AppKeys({appId}:{appId:string}) {
   catch(e){setError(e instanceof Error?e.message:'Could not revoke the key.')}finally{setBusy(false)}
  }
  return <ResourceState resource={keys.resource} operation="API keys" retry={keys.refresh}>{data=><div className="cr-stack">
-  {issued&&<section className="cr-card" aria-label="New API key"><h3>Copy your key now</h3><p>This is the only time its value is shown. Keep it in your service's private settings.</p><label className="cr-field">API key<textarea aria-label="API key" readOnly value={issued.secret} rows={2} spellCheck={false}/></label><button className="cr-button cr-button--quiet" type="button" onClick={()=>setIssued(null)}>I saved this key</button></section>}
+  {issued&&<section className="cr-card" aria-label="New API key"><h3>Copy your key now</h3><p>This is the only time its value is shown. Keep it in your service's private settings.</p><label className="cr-field">Endpoint<input readOnly value={issued.endpoint}/></label><label className="cr-field">API key<textarea aria-label="API key" readOnly value={issued.secret} rows={2} spellCheck={false}/></label><button className="cr-button cr-button--quiet" type="button" onClick={()=>setIssued(null)}>I saved this key</button></section>}
   <ResourceState resource={entities.resource} operation="record types" retry={entities.refresh}>{page=><form className="cr-stack" onSubmit={issue}>
    <label className="cr-field">Key name<input required maxLength={100} value={name} onChange={e=>setName(e.target.value)} autoComplete="off"/></label>
-   <label className="cr-field">Record type<select required value={entityId} onChange={e=>setEntityId(e.target.value)}><option value="">Choose a record type</option>{page.items.map(entity=><option key={entity.id} value={entity.id}>{entity.label}</option>)}</select></label>
-   <label className="cr-field">Access<select value={permissions} onChange={e=>setPermissions(e.target.value as 'read'|'write')}><option value="read">Read records</option><option value="write">Read, create and update records</option></select></label>
-   <label className="cr-field">Expires in<select value={days} onChange={e=>setDays(Number(e.target.value))}>{[7,14,30].map(day=><option key={day} value={day}>{day} days</option>)}</select></label>
+   <label className="cr-field">Record type<select aria-label="Record type" required value={entityId} onChange={e=>setEntityId(e.target.value)}><option value="">Choose a record type</option>{page.items.map(entity=><option key={entity.id} value={entity.id}>{entity.label}</option>)}</select></label>
+   <label className="cr-field">Access<select aria-label="Access" value={permissions} onChange={e=>setPermissions(e.target.value as 'read'|'write')}><option value="read">Read records</option><option value="write">Read, create and update records</option></select></label>
+   <label className="cr-field">Use this key with<select aria-label="Use this key with" value={audience} onChange={e=>setAudience(e.target.value as 'api'|'mcp')}><option value="api">REST API</option><option value="mcp">MCP record tools</option></select></label>
+   <label className="cr-field">Expires in<select aria-label="Expires in" value={days} onChange={e=>setDays(Number(e.target.value))}>{[7,14,30].map(day=><option key={day} value={day}>{day} days</option>)}</select></label>
    <button className="cr-button" disabled={busy||!entityId}>{busy?'Working…':'Issue API key'}</button>
   </form>}</ResourceState>
   {error&&<p className="cr-error" role="alert">{error}</p>}
-  {data.keys.length?<div className="cr-stack">{data.keys.map(key=><article className="cr-card" key={key.id}><h3>{key.name}</h3><p>{key.revokedAt?'Revoked':Date.parse(key.expiresAt)<=Date.now()?'Expired':'Active'} · expires <Timestamp value={key.expiresAt}/></p><p>{key.scopes.flatMap(scope=>scope.actions).includes('record.patch')?'Read, create and update':'Read records'} · {key.entityIds.map(id=>entities.resource.state==='ready'?entities.resource.data.items.find(entity=>entity.id===id)?.label??'Record type unavailable':'Record type').join(', ')}</p>{!key.revokedAt&&Date.parse(key.expiresAt)>Date.now()&&<button className="cr-button cr-button--quiet" disabled={busy} type="button" onClick={()=>void rotate(key)}>Rotate {key.name}</button>}{!key.revokedAt&&<button className="cr-button cr-button--quiet" disabled={busy} type="button" onClick={()=>void revoke(key)}>Revoke {key.name}</button>}</article>)}</div>:<Empty title="No API keys">Only safe key metadata appears after issuance.</Empty>}
+  {data.keys.length?<div className="cr-stack">{data.keys.map(key=><article className="cr-card" key={key.id}><h3>{key.name}</h3><p>{key.endpoint.endsWith('/mcp')?'MCP record tools':'REST API'}</p><p>{key.revokedAt?'Revoked':Date.parse(key.expiresAt)<=Date.now()?'Expired':'Active'} · expires <Timestamp value={key.expiresAt}/></p><p>{key.scopes.flatMap(scope=>scope.actions).includes('record.patch')?'Read, create and update':'Read records'} · {key.entityIds.map(id=>entities.resource.state==='ready'?entities.resource.data.items.find(entity=>entity.id===id)?.label??'Record type unavailable':'Record type').join(', ')}</p>{!key.revokedAt&&Date.parse(key.expiresAt)>Date.now()&&<button className="cr-button cr-button--quiet" disabled={busy} type="button" onClick={()=>void rotate(key)}>Rotate {key.name}</button>}{!key.revokedAt&&<button className="cr-button cr-button--quiet" disabled={busy} type="button" onClick={()=>void revoke(key)}>Revoke {key.name}</button>}</article>)}</div>:<Empty title="No API keys">Only safe key metadata appears after issuance.</Empty>}
  </div>}</ResourceState>
 }

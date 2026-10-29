@@ -16,7 +16,7 @@ export function createUserKeysHttp(service:ReturnType<typeof createUserKeyServic
  router.post('/',async c=>{
   const ctx=await authenticate(c.req.raw)
   const input=z.object({commandId:idSchema,appId:idSchema,entityId:idSchema,
-   name:z.string().trim().min(1).max(100),permissions:z.enum(['read','write']),allowDelete:z.boolean().optional(),expiresAt:instantSchema}).strict()
+   name:z.string().trim().min(1).max(100),permissions:z.enum(['read','write']),audience:z.enum(['api','mcp']).optional(),allowDelete:z.boolean().optional(),expiresAt:instantSchema}).strict()
    .parse(await readBoundedJson(c.req.raw,16384))
   return c.json(reply(ctx,{key:await service.issue(ctx,input.commandId,input)}),201)
  })

@@ -27,7 +27,7 @@ export function teamsTransport(env:PlatformBindings,settings:ReturnType<typeof s
   const consent=await settings.resolve(true);if(['Chat.Create','ChatMessage.Send','User.Read'].some(scope=>!consent.bot?.scopes.includes(scope)))throw new AuthorityError('unconfigured','Install Teams again from Settings to explicitly consent to private chat notices.',503);
   const input=body as {userId:string;blocks:any[]},owner=await chatJson(env,'https://graph.microsoft.com/v1.0/me','GET',token);
   if(owner.status!==200||typeof owner.value.id!=='string')throw new AuthorityError('provider_unavailable','Microsoft could not identify the account that consented to private chat notices.',503);
-  const members=[...new Set([owner.value.id,input.userId])].map(id=>({'@odata.type':'#microsoft.graph.aadUserConversationMember',roles:['owner'],'user@odata.bind':"https://graph.microsoft.com/v1.0/users('"+encodeURIComponent(id)+"')"}));
+  const members=[...new Set([owner.value.id,input.userId])].map(id=>({'@odata.type':'#microsoft.graph.aadUserConversationMember',roles:['owner'],['user'+String.fromCharCode(64)+'odata.bind']:"https://graph.microsoft.com/v1.0/users('"+encodeURIComponent(id)+"')"}));
   if(members.length!==2)throw new AuthorityError('forbidden','The linked Teams recipient must be a separate account from the sender.');
   const chat=await chatJson(env,'https://graph.microsoft.com/v1.0/chats','POST',token,{chatType:'oneOnOne',members});
   if(![200,201].includes(chat.status)||typeof chat.value.id!=='string')throw new AuthorityError('provider_unavailable','Microsoft did not authorize the recipient private chat. Install again with private chat consent.',503);

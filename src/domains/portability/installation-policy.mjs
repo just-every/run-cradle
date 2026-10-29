@@ -41,6 +41,7 @@ export const portabilityPolicy = {
    execution_runs:"state IN ('queued','running','waiting','partial') OR lease_owner IS NOT NULL OR next_wake_at IS NOT NULL",
    execution_attempts:"state IN ('prepared','dispatching') OR next_check_at IS NOT NULL",
    provider_connections:"state<>'unconfigured' OR credential_ref IS NOT NULL OR consent_scopes_json<>'[]'",
+   record_watches:'enabled<>0',record_watch_events:'completed_at IS NULL',record_watch_chat_deliveries:"state='queued'",
    channel_deliveries:"state IN ('held','queued','dispatching')",channel_mail_authority:'active<>0',channel_digest_settings:'enabled<>0',
    ik_jobs:'cradle_restore_hold<>1 OR lease_token IS NOT NULL OR lease_expires IS NOT NULL',
    cradle_restore:'pending<>1 OR current_owner_id IS NOT NULL',
@@ -48,7 +49,7 @@ export const portabilityPolicy = {
    integration_deliveries:"state IN ('queued','sending') OR claim IS NOT NULL OR claim_until IS NOT NULL",
   };
   for(const [table,condition]of Object.entries(checks)){
-   const staged=tables[table];if(!staged){if(table==='record_change_subscriptions')continue;return false;}
+   const staged=tables[table];if(!staged){if(['record_change_subscriptions','record_watches','record_watch_events','record_watch_chat_deliveries'].includes(table))continue;return false;}
    if(await db.prepare('SELECT 1 FROM "'+staged.replaceAll('"','""')+'" WHERE '+condition+' LIMIT 1').first())return false;
   }
   return true;
@@ -94,6 +95,9 @@ export const portabilityPolicy = {
    if(['queued','running','waiting'].includes(row.state))row.state='failed';
    row.lease_owner=null;row.lease_expires_at=null;
   }
+  if(table==='record_watches')row.enabled=0;
+  if(table==='record_watch_events'&&row.completed_at===null)row.completed_at=row.due_at;
+  if(table==='record_watch_chat_deliveries'&&row.state==='queued')row.state='cancelled';
   if(table==='channel_deliveries'){
    if(['held','queued'].includes(row.state))row.state='cancelled';
    if(row.state==='dispatching')row.state='unknown';

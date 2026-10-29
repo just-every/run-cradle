@@ -24,7 +24,7 @@ export async function recordWatchFixture(network={}){
   await command('release.adopt',{kind:'manual_schema',previewId:preview.id})
   for(const id of [assignee,other])await call(`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:id,role:'editor',version:0})
   const schema=await call(`/api/v1/apps/${appId}/entities/${entityId}`)
-  const create=(values,cookie)=>command('record.create',{appId,entityId,values},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}],cookie)
+  const create=async(values,cookie)=>{const current=await call(`/api/v1/apps/${appId}/entities/${entityId}`,undefined,cookie);return command('record.create',{appId,entityId,values},[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:current.version}],cookie)}
   async function detail(recordId,cookie){return call(`/api/v1/apps/${appId}/entities/${entityId}/records/${recordId}`,undefined,cookie)}
   async function patch(record,changes,cookie){const current=(await detail(record.id,cookie)).record;return command('record.patch',{ref:current.ref,changes},[{ref:current.ref,version:current.version}],cookie)}
   async function comment(record,body,cookie){const current=(await detail(record.id,cookie)).record;return command('comment.add',{subject:current.ref,body,mentions:[]},[{ref:current.ref,version:current.version}],cookie)}

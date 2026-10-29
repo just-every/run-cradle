@@ -1,3 +1,4 @@
+import {guard} from '../../../vendor/base/modules/import-kit/src/d1/guards.ts';
 // Cradle owns atomic retirement across multiple imported bases.
 import { randomUUID } from 'node:crypto';
 import type { D1CustodyRetirement, D1ErasureJournalEntry, D1ImportContext, D1ImportPerson, D1Sql } from '../../../vendor/base/modules/import-kit/src/d1/types.ts';
@@ -39,7 +40,8 @@ export async function retireD1ImportCustody(person: D1ImportPerson, nativeStatem
   // Every scope is read without writes. All before-images precede any native or
   // custody change; one failure rolls back the admission and every destination.
   const prefix = all.flatMap(p => p.prefix), suffix = all.flatMap(p => p.suffix);
-  const statements = [...prefix, ...nativeStatements, ...prepared.fence, ...suffix, ...finalGuards.map(finalGuard), ...all.map(p => finalAuthority(p.context, 'erase'))];
+  // Pack the same post-write checks within D1 bounds as the native schema grows.
+  const statements = [...prefix, ...nativeStatements, ...prepared.fence, ...suffix, ...readonlyChecks(finalGuards.map(guard)), ...all.map(p => finalAuthority(p.context, 'erase'))];
   if (statements.length > Math.min(1000, ...all.map(p => remaining(p.context)))) throw new D1RequestLimitError();
   const db = input.storage.database;
   const results = await db.batch(statements.map(statement => prepare(db, statement)));

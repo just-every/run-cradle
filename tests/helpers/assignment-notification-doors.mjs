@@ -34,8 +34,8 @@ export async function assignmentNotificationDoors(h){
  const issued=await h.request('/api/user-keys',{commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'Scoped assignment operator',permissions:'write',expiresAt:new Date(Date.now()+86400000).toISOString()})
  assert.equal(issued.status,201,'The owner can issue the scoped write credential')
  const key=issued.data.key
- async function machine(path,body,expected=200){
-  const response=await fetch(h.origin+path,{method:'POST',headers:{authorization:'Bearer '+key.secret,'content-type':'application/json'},body:JSON.stringify(body)}),wire=await response.json()
+ async function machine(path,body,expected=200,secret=key.secret){
+  const response=await fetch(h.origin+path,{method:'POST',headers:{authorization:'Bearer '+secret,'content-type':'application/json'},body:JSON.stringify(body)}),wire=await response.json()
   assert.equal(response.status,expected,wire.error?.message??'Scoped machine request returned an unexpected status')
   return wire
  }
@@ -43,16 +43,6 @@ export async function assignmentNotificationDoors(h){
  await assigned(rest,'Scoped REST create')
  assert.equal((await machine(restPath,restBody)).data.result.value.rows[0].id,rest.id)
  await assigned(rest,'Scoped REST replay')
- const toolBody={jsonrpc:'2.0',id:1,method:['tools','call'].join('/'),params:{name:'record.create',arguments:{commandId:createUlid(),expected:[revision],input:{appId:h.appId,entityId:h.entityId,values:assignedValues('Assigned through the agent tool')}}}},toolResult=await machine('/mcp',toolBody),tool=JSON.parse(toolResult.result.content[0].text).result.value
- await assigned(tool,'Agent MCP tool')
- const replayedTool=await machine('/mcp',toolBody)
- assert.equal(JSON.parse(replayedTool.result.content[0].text).result.value.id,tool.id)
- await assigned(tool,'Agent MCP replay')
- await h.call(`/api/user-keys/${key.id}/revoke`,{commandId:createUlid(),appId:h.appId})
- const count=await h.db.prepare("SELECT count(*) n FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.operator_id=? AND c.app_id=? AND c.event_kind='field-assigned'").bind(h.assignee,h.appId).first('n')
- await machine(restPath,{...restBody,commandId:createUlid(),values:assignedValues('Revoked key cannot assign')},401)
- await machine('/mcp',{...toolBody,params:{...toolBody.params,arguments:{...toolBody.params.arguments,commandId:createUlid()}}},401)
- assert.equal(await h.db.prepare("SELECT count(*) n FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.operator_id=? AND c.app_id=? AND c.event_kind='field-assigned'").bind(h.assignee,h.appId).first('n'),count,'Revoked machine captures create no assignment or notice')
  const approval=await h.request('/api/user-automations',{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{name:'Assign newly created work',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'update',fieldId:h.person.id,value:h.assignee}]}})
  assert.equal(approval.status,201,approval.error?.message??'The owner can approve the assigning automation')
  const automation=approval.data.result.value,triggerId=createUlid()
@@ -69,5 +59,34 @@ export async function assignmentNotificationDoors(h){
   await assigned(trigger.value,'Approved automation')
   await tick();await assigned(trigger.value,'Approved automation replay')
  }finally{await h.call(`/api/user-automations/${automation.id}/disable`,{commandId:createUlid(),version:automation.version})}
+ const toolBody={jsonrpc:'2.0',id:1,method:['tools','call'].join('/'),params:{name:'record.create',arguments:{commandId:createUlid(),expected:[revision],input:{appId:h.appId,entityId:h.entityId,values:assignedValues('Assigned through the agent tool')}}}}
+ await machine('/mcp',toolBody,401)
+ const credentialCount=()=>h.db.prepare('SELECT count(*) n FROM authority_credentials c JOIN authority_delegations d ON d.principal_id=c.principal_id WHERE d.app_id=?').bind(h.appId).first('n'),beforeIssue=await credentialCount()
+ const deniedIssue=await h.request('/api/user-keys',{commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'Unapproved agent',permissions:'write',audience:'mcp',expiresAt:new Date(Date.now()+86400000).toISOString()},h.reader)
+ assert.equal(deniedIssue.status,403,'An editor cannot issue an agent credential')
+ assert.equal(await credentialCount(),beforeIssue,'Refused issuance creates no credential')
+ const mcpIssued=await h.request('/api/user-keys',{commandId:createUlid(),appId:h.appId,entityId:h.entityId,name:'Scoped assignment agent',permissions:'write',audience:'mcp',expiresAt:new Date(Date.now()+86400000).toISOString()})
+ assert.equal(mcpIssued.status,201,'The owner explicitly issues an MCP-only credential')
+ const mcpKey=mcpIssued.data.key
+ assert.equal(mcpKey.endpoint,h.origin+'/mcp')
+ await machine(restPath,{...restBody,commandId:createUlid()},401,mcpKey.secret)
+ const toolResult=await machine('/mcp',toolBody,200,mcpKey.secret),tool=JSON.parse(toolResult.result.content[0].text).result.value
+ await assigned(tool,'Agent MCP tool')
+ const replayedTool=await machine('/mcp',toolBody,200,mcpKey.secret)
+ assert.equal(JSON.parse(replayedTool.result.content[0].text).result.value.id,tool.id)
+ await assigned(tool,'Agent MCP replay')
+ const rotated=(await h.call(`/api/user-keys/${mcpKey.id}/rotate`,{commandId:createUlid(),appId:h.appId})).key
+ assert.equal(rotated.endpoint,mcpKey.endpoint,'Rotation retains the exact MCP audience')
+ assert.equal(rotated.expiresAt,mcpKey.expiresAt,'Rotation does not extend the permission lifetime')
+ await machine('/mcp',toolBody,401,mcpKey.secret)
+ await machine(restPath,{...restBody,commandId:createUlid()},401,rotated.secret)
+ const rotatedBody={...toolBody,id:2,params:{...toolBody.params,arguments:{...toolBody.params.arguments,commandId:createUlid(),input:{...toolBody.params.arguments.input,values:assignedValues('Assigned through a rotated agent key')}}}},rotatedResult=await machine('/mcp',rotatedBody,200,rotated.secret)
+ await assigned(JSON.parse(rotatedResult.result.content[0].text).result.value,'Rotated agent key')
+ await h.call(`/api/user-keys/${key.id}/revoke`,{commandId:createUlid(),appId:h.appId})
+ await h.call(`/api/user-keys/${rotated.id}/revoke`,{commandId:createUlid(),appId:h.appId})
+ const count=await h.db.prepare("SELECT count(*) n FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.operator_id=? AND c.app_id=? AND c.event_kind='field-assigned'").bind(h.assignee,h.appId).first('n')
+ await machine(restPath,{...restBody,commandId:createUlid(),values:assignedValues('Revoked key cannot assign')},401)
+ await machine('/mcp',rotatedBody,401,rotated.secret)
+ assert.equal(await h.db.prepare("SELECT count(*) n FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.operator_id=? AND c.app_id=? AND c.event_kind='field-assigned'").bind(h.assignee,h.appId).first('n'),count,'Revoked machine captures create no assignment or notice')
  return {doors:['saved form','configured interface button','scoped REST','agent MCP tool','approved automation']}
 }

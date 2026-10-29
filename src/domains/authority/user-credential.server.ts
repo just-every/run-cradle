@@ -9,7 +9,7 @@ import { digest } from './crypto.server'
 import { delegationGuard } from './delegation.server'
 const bindings=registerTable('authority_delegations',['principal_id','grant_id','revoked_at'])
 
-export async function issueUserCredential(db:D1Database,ordinary:PolicyPort,admission:AdmissionPort,appOrigin:string,ctx:RequestContext,commandId:string,input:DelegationInput,kind:'api-key'|'automation') {
+export async function issueUserCredential(db:D1Database,ordinary:PolicyPort,admission:AdmissionPort,appOrigin:string,ctx:RequestContext,commandId:string,input:DelegationInput,kind:'api-key'|'automation',audience:'api'|'mcp'='api') {
    const delegated=await provisionUserDelegate(db,ordinary,admission,ctx,commandId,input,kind)
    const {principalId,policy,actions}=delegated
    const bound=delegationGuard(principalId)
@@ -37,7 +37,7 @@ export async function issueUserCredential(db:D1Database,ordinary:PolicyPort,admi
      audit:[],events:[],outbox:[],committedResult:{principalId,grantId:grant.id}})
    }
    const service=createMachineService(db,policy,admission)
-   const credential={principalId,audience:`${appOrigin}/api/v1`,expiresAt:input.expiresAt,
+   const credential={principalId,audience:audience==='mcp'?`${appOrigin}/mcp`:`${appOrigin}/api/v1`,expiresAt:input.expiresAt,
     scopes:[{appId:input.appId,actions,purposes:kind==='automation'?['read','export']:['read']}]}
    if(kind==='automation'){
     const prior=await admission.replay<{id:string;expiresAt:string;audience:string}>(ctx,commandId,'credential.issue',input.appId,await digest(canonicalJson(credential)))
