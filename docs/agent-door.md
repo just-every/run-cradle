@@ -19,8 +19,14 @@ The release has no capability-declaration field; `agent-surface.json` declares
 only the integrated registry and its real native fixtures.
 
 Agents can inspect currently authorized bases, schemas, rows, record history,
-views, forms and AI usage. Private content is conservatively classified sensitive;
-view revision witnesses return only authorized identifiers and versions. Resource
+views, forms and AI usage. Private content is conservatively classified sensitive.
+The native Launch projection also exposes campaigns, decisions, activity and
+the sponsor's inbox, while native app operations expose authorized retained
+cases and mandates. Attachment inspection returns native metadata; its bytes
+keep their existing native content door. Native audit reads retain current
+field and source projection. Full Launch projections retain their ordinary
+all-Launch authority check; restricted sponsors use the masked records tools.
+View revision witnesses return only authorized identifiers and versions. Resource
 reads use those same native services, row predicates and field projections.
 Hidden and absent resources have the same refusal. Imported text is untrusted.
 
@@ -85,6 +91,9 @@ the conformance journey declares `spend: {none: true}`.
 Its disposable initializer proves raw setup-token refusal, the real signed
 owner claim, replay refusal and the resulting native session. Every phase
 prepares fresh data and proposing credentials through ordinary native HTTP doors.
+The supplemental native journey asserts one created view, same-key replay,
+changed-argument conflict, stale native revision, separate agent/sponsor attribution
+and local Pause against that same native persistence and audited tool helper.
 No SQL, production test route or substituted auth adapter prepares fixtures.
 Registered tools make no outbound provider request, so no network edge is declared.
 

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
+import prepareLaunchReads from './launch-read-fixtures.mjs'
 
 const alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 const encode = (value, length) => {
@@ -76,8 +77,10 @@ export default async function phaseFixtures({ phase, request, origin, cookie }) 
   const pending = await call('/api/v1/commands/schema.propose', command(proposalInput), { token: key.secret })
   assert.equal(pending.state, 'committed', 'The native pending proposal is retained without adoption')
   assert.equal(pending.value.state, 'pending', 'Withdrawal receives a fresh pending proposal each phase')
+  const launch = await prepareLaunchReads({ phase, request, origin, cookie, base: { id: baseId, tableId, recordId: created.value.id } })
   return {
     values: {
+      launch,
       base: {
         id: baseId, tableId, name: label, nameFieldId: title.id, numberFieldId: quantity.id,
         recordId: created.value.id, recordVersion: created.value.version, recordCount: records.items.length,
