@@ -30,9 +30,10 @@ export async function exerciseCsv(page,j,origin,width){
    await j.action(page.getByRole('button',{name:'Close import',exact:true}));await tableAction(page,'Import CSV',j.action)
    await page.getByLabel('CSV or Excel file',{exact:true}).setInputFiles(file)
    await page.getByLabel(/^Match existing records by/).selectOption({label:'Key'})
-   await page.getByLabel('Use saved mapping',{exact:true}).selectOption({label:sourceName})
+   await page.getByLabel(/^Use saved mapping/).selectOption({label:sourceName})
    await page.getByRole('status').filter({hasText:`Using ${sourceName}.`}).waitFor()
    assert.equal(await page.getByLabel(/^Match existing records by/).inputValue(),'_create_all','Saved mapping restores the deliberate create-only choice')
+   await j.capture(workbook?'workbook-create-only-mapping':'csv-create-only-mapping')
   }
   const pending=page.waitForResponse(response=>response.url().endsWith('/records/import-preview'))
   await j.action(page.getByRole('button',{name:'Preview import',exact:true}))

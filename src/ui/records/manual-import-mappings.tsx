@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { EntitySchema } from '../../domains/records/contracts'
+import { CSV_CREATE_ALL } from '../../domains/records/csv-mapping-contracts'
 import type { CsvMappingChoice, CsvSavedMapping } from '../../domains/records/csv-mapping-contracts'
 import { readApi } from '../shared/api'
 
@@ -24,7 +25,7 @@ export function ManualImportMappings({schema,headers,mapping,merge,onUse,onBusyC
   if(!choice)return
   if(!choice.available){setError(choice.problem??'Update this mapping to use the current fields.');return}
   working(true)
-  try{const {data}=await send<CsvSavedMapping>({action:'use',sourceName:choice.sourceName,headers});onUse(Object.fromEntries(data.mapping.map(item=>[item.column,item.fieldId])),data.mergeFieldId);setMessage(`Using ${data.sourceName}. Review the import before committing.`)}
+  try{const {data}=await send<CsvSavedMapping>({action:'use',sourceName:choice.sourceName,headers});onUse(Object.fromEntries(data.mapping.map(item=>[item.column,item.fieldId])),data.mergeFieldId);setMessage(`Using ${data.sourceName}. ${data.mergeFieldId===CSV_CREATE_ALL?'Create all rows. ':''}Review the import before committing.`)}
   catch(cause){setError(cause instanceof Error?cause.message:'Could not use this mapping.')}
   finally{working(false)}
  }

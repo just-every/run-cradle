@@ -9,6 +9,8 @@ export async function sheetsJourney(h,d,provider,identity,fields,mapping){
  const connectionId=await connectSheets(d,provider,identity)
  const capture=await d.call('/api/v1/records/sheets-source',{connectionId});assert.equal(capture.sheets.length,2);assert.equal(capture.sheets[0].rows[0][1].type,'number');assert.equal(capture.sheets[0].rows[0][3].value,true)
  const preview=await d.call('/api/v1/records/base-import/preview',d.form(Buffer.from(capture.content),capture.filename));assert.equal(preview.schemaDraft.tables.length,2);await d.adopt(Buffer.from(capture.content),capture.filename,preview)
+ await d.call('/api/v1/records/sheets-schedule',{...identity,connectionId,sheet:'Orders',mapping,mergeFieldId:'_create_all',enabled:true},400)
+ assert.equal((await h.db.prepare('SELECT COUNT(*) n FROM record_sheet_schedules').first()).n,0,'Create-only cannot silently enable recurring creates')
  const schedule=await d.call('/api/v1/records/sheets-schedule',{...identity,connectionId,sheet:'Orders',mapping,mergeFieldId:fields.Order.id,enabled:true});assert.equal(schedule.state,'active')
  const time=new Date();time.setUTCHours(time.getUTCHours()+1,0,0,0)
  const tick=async at=>(await h.runtime.getWorker()).scheduled({scheduledTime:at,cron:'* * * * *'})

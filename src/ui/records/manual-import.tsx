@@ -67,6 +67,7 @@ export function ManualImport({ schema, onClose, onSaved }: {
           <option value="">Choose how to import</option>{!sheetSource && <option value={CSV_CREATE_ALL}>Create all rows</option>}{headers.includes('_record_id') && <option value="_record_id">Original record ID (recovery only)</option>}
           {fields.filter(field => Object.values(mapping).includes(field.id) && ['text', 'number', 'date', 'select'].includes(field.type)).map(field => <option key={field.id} value={field.id}>{field.label}</option>)}
         </select></label>
+        {merge===CSV_CREATE_ALL && <p>Create a new record for every valid row, even when its primary value already exists.</p>}
       </fieldset>
       <button className="cr-button" disabled={(!csv&&!workbook) || !merge || busy || mappingBusy}>Preview import</button>
     </form> : <>
