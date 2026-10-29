@@ -9,7 +9,7 @@ export async function freshLocalCopy(){
  const root=await mkdtemp(path.join(tmpdir(),'cradle-rer-')),source=path.join(root,'source')
  await run('git',['clone','--quiet','--no-hardlinks',process.cwd(),source])
  await run('git',['config','user.name','Run Edit Run fleet'],{cwd:source})
- await run('git',['config','user.email','local-signin'],{cwd:source})
+ await run('git',['config','user.email','fleet@runeditrun.com'],{cwd:source})
  console.log('FIXTURE_HEAD '+JSON.stringify({installation:source,head:(await run('git',['rev-parse','HEAD'],{cwd:source})).stdout.trim()}))
  const log=await open(path.join(root,'journey.log'),'wx',0o600)
  // A fresh repository acquires its own operation; the verifier's token belongs

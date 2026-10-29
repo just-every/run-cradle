@@ -9,9 +9,11 @@ import {retainCleanup} from './cleanup.server'
 import {prepareExecutionErasure} from '../execution/erasure.server'
 import {LAUNCH_APP_ID,launchEntities} from '../../apps/launch/contracts'
 import {createUlid} from '../../core/shared/ids'
+import {requireAgentCustodyQuiescent} from './agent-custody.server'
 /** Launch canonical children cascade; cross-domain copies are explicit here. */
 export async function campaignErasure(db:D1Database,ctx:RequestContext,id:string){
  const change=effects(),label=`Anonymous campaign ${createUlid().slice(-8)}`,anonymousId=createUlid()
+ await requireAgentCustodyQuiescent(db,change)
  await requireQuiescentFiles(db,change)
  const rows=await db.prepare('SELECT id FROM campaigns WHERE id=? UNION SELECT id FROM deliverables WHERE campaign_id=? UNION SELECT id FROM milestones WHERE campaign_id=? UNION SELECT id FROM risks WHERE campaign_id=? UNION SELECT id FROM decisions WHERE campaign_id=?').bind(id,id,id,id,id).all<{id:string}>(),ids=JSON.stringify(rows.results.map(row=>row.id))
  const sources=(await db.prepare('SELECT id FROM evidence_sources WHERE app_id=? AND record_id IN (SELECT value FROM json_each(?))').bind(LAUNCH_APP_ID,ids).all<{id:string}>()).results.map(row=>row.id)

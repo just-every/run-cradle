@@ -35,7 +35,7 @@ export async function restoreMigrations(db,root,input,{retiredComments=false}={}
  });
  const records=(await db.prepare('SELECT name,sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY rowid').all()).results.filter(o=>recordObject(o.name));
  const replay=migrationReplay(plan,input),config=policy(input);
- return {...replay,async schemaAfter(chosen){
+ return {...replay,async schemaAfter(chosen,options){
   const scratch=new DatabaseSync(':memory:');
   const reader={prepare:sql=>{const query=scratch.prepare(sql);let values=[];return {bind(...args){values=args;return this;},async all(){return {results:query.all(...values)};}};}};
   const exists=name=>scratch.prepare('SELECT 1 FROM sqlite_master WHERE name=?').get(name);
@@ -43,7 +43,7 @@ export async function restoreMigrations(db,root,input,{retiredComments=false}={}
    for(const migration of plan.filter(m=>chosen.includes(m.name)))for(const sql of migration.statements)scratch.exec(sql);
    // A search table's shadow tables already exist once its virtual table is made.
    for(const object of records)if(!exists(object.name))scratch.exec(object.sql);
-   return await schemaIdentity(reader,config);
+   return await schemaIdentity(reader,config,options);
   }finally{scratch.close();}
  }};
 }

@@ -17,7 +17,8 @@ import { checkHealth, isHealthMessage } from '../platform/health'
 import start from '@tanstack/react-start/server-entry'
 import { createSessionReader } from '../features/session/service'
 import { createPlatform } from '../platform'
-import { currentApplication } from './application-cache.server'
+import { currentApplication, currentComposition } from './application-cache.server'
+import { isAgentDoorPath } from '../../agent-door/index.server'
 import { installedHomeResponse } from './installed-home.server'
 import { noTransformDocument } from './document-cache.server'
 import type { AppEnv } from './types'
@@ -36,6 +37,10 @@ export default {
       } catch { return Response.json({ error: { code: 'unconfigured', message: 'APP_ORIGIN is invalid.' } }, { status: 503 }) }
     }
     const path = url.pathname
+    if (isAgentDoorPath(path)) {
+      const response = await (await currentComposition(bindings)).runtime.agentDoor.handle(request)
+      if (response) return response
+    }
     if(path==='/api/editor/config')return request.method==='GET'?editorConfigResponse(request,bindings):new Response(null,{status:405,headers:{allow:'GET','cache-control':'no-store'}})
     const claim = await signedOwnerClaim(request,bindings)
     if (claim) return claim

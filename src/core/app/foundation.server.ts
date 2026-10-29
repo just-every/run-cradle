@@ -17,7 +17,6 @@ import type { SqlPredicate } from '../../domains/admission/ports'
 import { commandExecutionStatus } from '../../domains/execution/status.server'
 import { createCommandRegistry } from '../registry/commands'
 import { createCommandHttp } from '../registry/http'
-import { createMcpTransport } from '../registry/mcp'
 import type { RequestContext } from '../../domains/authority/ports'
 
 /** Domains supply their actual source-owned descriptors and restore fence.
@@ -48,6 +47,6 @@ export async function createServerFoundation(platform: Platform, inputs: {
   const commands=createCommandRegistry(admission)
   for(const command of createGrantCommands(db,policy))commands.register(command as import('../registry/commands').CommandDefinition<unknown,unknown>)
   const transport={commands,admission,authenticate}
-  return {descriptors,entities,policy,admission,inertAdmission,commands,authenticate,http:createCommandHttp(transport),mcp:createMcpTransport(transport)}
+  return {descriptors,entities,policy,admission,inertAdmission,commands,authenticate,http:createCommandHttp(transport)}
 }
 export type ServerFoundation=Awaited<ReturnType<typeof createServerFoundation>>

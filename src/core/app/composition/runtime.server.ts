@@ -26,8 +26,9 @@ import { createRepairIntakeComposition } from './repair-intake.server'
 import { createAutomationsComposition } from './automations.server'
 import { createLaunchImportComposition } from './launch-imports.server'
 import { ensureRecordAutomationTriggers } from '../../../domains/automations/capture.server'
+import { createCradleAgentDoor } from '../../../agent-door/index.server'
 /** Each request resolves admitted schema pointers and current authority anew. */
-export async function createRuntime(platform:Platform,clock=()=>new Date()){
+async function createNativeRuntime(platform:Platform,clock=()=>new Date()){
  const foundation=await createLaunchFoundation(platform)
  await ensureRecordCapacity(platform.bindings.DB,foundation.descriptors)
  const lifecycle=createLifecycleComposition(platform,foundation)
@@ -52,4 +53,9 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  const launchImports=createLaunchImportComposition(platform,foundation,records)
  return {calendarSync,trashPurge:async()=>{await purgeRecords();await purgeMetadata()},changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
-export type Runtime=Awaited<ReturnType<typeof createRuntime>>
+export type Runtime=Awaited<ReturnType<typeof createNativeRuntime>>
+export async function createRuntime(platform:Platform,clock=()=>new Date()) {
+ const runtime=await createNativeRuntime(platform,clock)
+ return {...runtime,agentDoor:createCradleAgentDoor(platform,runtime)}
+}
+export type ComposedRuntime=Awaited<ReturnType<typeof createRuntime>>
