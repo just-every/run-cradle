@@ -9518,7 +9518,11 @@
       "executable": false
     },
     "src/domains/records/csv-preview-rows.server.ts": {
-      "sha256": "8fb53e37b9d6127614730f2e4a035b0cf7bea82fab35b3d409b0be1296947343",
+      "sha256": "ace6f3fbb1cbdc579912aef2f4da43540ae8737eb48db3d1d2415fc160b25a88",
+      "executable": false
+    },
+    "src/domains/records/csv-preview-unique.ts": {
+      "sha256": "e824d89c930210fe7c9b9f7e4e5233066dd23c415ba2052a64aa7347d79b66fb",
       "executable": false
     },
     "src/domains/records/csv-typed-values.ts": {
@@ -12109,6 +12113,10 @@
       "sha256": "389cdb6e9ebf1cbf09dd0b22ce586dfe894c49c81e49bd828dd7615d16612f84",
       "executable": false
     },
+    "tests/helpers/csv-create-all-validation.mjs": {
+      "sha256": "225304c08fc457b477be2efd19bcb924aebdae96c9a409e5c1f9ee310623f0db",
+      "executable": false
+    },
     "tests/helpers/dev-gate.mjs": {
       "sha256": "93bc4b3b0e0b8c99ffe71b4fa2c17e801b9568d615938a4ef9a3044eee83f642",
       "executable": false
@@ -12582,7 +12590,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-csv.mjs": {
-      "sha256": "4d193588e133c40368763410ec2e9c00a53c91ff5c1e1abcd24b04e9f607b277",
+      "sha256": "9056cc2c5912a2c263577cca0e00b829c6e0a0342e4cf06a8dcb6568dd1d926e",
       "executable": false
     },
     "tests/helpers/records-browser-edit.mjs": {
@@ -13194,7 +13202,7 @@
       "executable": false
     },
     "tests/records-csv-fence.mjs": {
-      "sha256": "70a145f351cc303035253a446d0b4a9eaf93dad3f626cb9312c813838e4fed56",
+      "sha256": "2d234ee396f02ecac394e8f5b5975a35f05b392e24c362fda2ce33291289fe6e",
       "executable": false
     },
     "tests/records-grid-range.mjs": {

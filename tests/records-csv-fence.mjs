@@ -1,6 +1,7 @@
 import {baseStreamInterruption} from './helpers/base-stream-exits.mjs'
 import {readWorkbook} from '../src/domains/records/workbooks/read.ts'
 import {workbookJourney} from './helpers/workbook-journey.mjs'
+import {createAllValidation} from './helpers/csv-create-all-validation.mjs'
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {harness} from './helpers/records-manual-harness.mjs'
@@ -216,7 +217,7 @@ test('[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 CSV, workbook an
   const scope=await r.policy.scope(h.ctx,{appId:schema.appId,entityId:schema.id,purpose:'read'})
   assert.equal((await r.services.reader.query(h.ctx,scope,{})).items[0].fields[name.id].value,'Existing vendor')
   assert.equal((await r.manual.read(h.ctx,draft.appId)).name,draft.name)
-  await evaluatedPagingJourney(h);await recurringCsv(h);await createAllCsv(h);await csvFenceScenario(h)
+  await evaluatedPagingJourney(h);await recurringCsv(h);await createAllCsv(h);await createAllValidation(h);await csvFenceScenario(h)
  }finally{h.close()}
  await workbookJourney()
 })

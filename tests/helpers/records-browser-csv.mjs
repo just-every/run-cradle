@@ -6,13 +6,14 @@ import {readFile} from 'node:fs/promises'
 import {encodeCsv,parseCsv} from '../../src/domains/portability/csv.ts'
 
 export async function exerciseCsv(page,j,origin,width){
- async function build(name){
+ async function build(name,{uniqueCode=false}={}){
   await page.goto(origin+'/app/records')
   await baseAction(page,'New base',j.action)
   await page.getByLabel('Base name',{exact:true}).fill(`${name} ${width}`)
   await page.getByLabel('Table name',{exact:true}).fill('Rows')
   await page.getByLabel('Field name',{exact:true}).fill('Key')
   await j.field('Text');await j.field('Number','number');await j.field('Checked','boolean')
+  if(uniqueCode)await j.field('Code','text',editor=>j.setChecked(editor.getByLabel('Unique value',{exact:true}),true))
   return j.adopt()
  }
  async function importCsv(csv,expected,rejected=0,{createAll=false,workbook=false}={}){
@@ -96,5 +97,35 @@ export async function exerciseCsv(page,j,origin,width){
  assert.deepEqual(created.rows.filter(row=>row[0]==='row-000').map(row=>row.slice(1)).sort(),[['Changed','12','Yes'],['Create first','41','Yes'],['Create first','41','Yes'],['Create second','42','No'],['Create second','42','No']].sort())
  assert.equal(created.rows.filter(row=>row[0]===''&&row[1]==='No merge value'&&row[2]==='43').length,2)
  await j.capture('csv-create-only-imported')
+ // A populated table still enforces unique fields when matching is deliberately off.
+ await build('CSV create validation',{uniqueCode:true})
+ await j.record({Key:'Existing',Text:'Original',Code:'synthetic-cradle-original'})
+ const uniqueCsv=encodeCsv(['Key','Text','Number','Checked','Code'],[
+  ['Existing','First duplicate','1','false','synthetic-cradle-duplicate'],
+  ['Existing','Second duplicate','2','true','synthetic-cradle-duplicate'],
+  ['Existing','Stored conflict','3','false','synthetic-cradle-original'],
+  ['Existing','Accepted copy','4','true','synthetic-cradle-distinct'],
+ ])
+ await tableAction(page,'Import CSV',j.action)
+ await page.getByLabel('CSV or Excel file',{exact:true}).setInputFiles({name:'synthetic-cradle-validation.csv',mimeType:'text/csv',buffer:Buffer.from(uniqueCsv)})
+ await page.getByLabel(/^Match existing records by/).selectOption({label:'Create all rows'})
+ const uniquePending=page.waitForResponse(response=>response.url().endsWith('/records/import-preview'))
+ await j.action(page.getByRole('button',{name:'Preview import',exact:true}))
+ const uniqueResponse=await uniquePending,uniqueBody=await uniqueResponse.json(),uniquePreview=uniqueBody.data
+ assert.equal(uniqueResponse.status(),200,JSON.stringify(uniqueBody))
+ assert.deepEqual([uniquePreview.creates,uniquePreview.updates,uniquePreview.unchanged,uniquePreview.rejected],[1,0,0,3])
+ const uniqueRegion=page.getByRole('region',{name:'CSV import changes',exact:true})
+ assert.equal(await uniqueRegion.getByRole('cell',{name:/^(?:Change\s*)?Rejected$/}).count(),3)
+ assert.equal(await uniqueRegion.getByText(/Code unique:/).count(),3)
+ assert.match(await uniqueRegion.innerText(),/Accepted copy/)
+ await j.capture('csv-create-only-unique-preview')
+ await j.setChecked(page.getByLabel('Import these reviewed changes',{exact:true}),true)
+ const uniqueReceipt=await j.command(page.getByRole('button',{name:'Import records',exact:true}),'records.import-commit')
+ assert.deepEqual(uniqueReceipt,{id:uniquePreview.id,creates:1,updates:0,unchanged:0,rejected:3})
+ const uniqueDownload=page.waitForEvent('download');await tableAction(page,'Export CSV',j.action)
+ const uniqueRows=parseCsv(new TextEncoder().encode(await readFile(await(await uniqueDownload).path(),'utf8')))
+ assert.equal(uniqueRows.rows.length,2)
+ assert.deepEqual(uniqueRows.rows.map(row=>[row[0],row[1],row[4]]).sort(),[['Existing','Original','synthetic-cradle-original'],['Existing','Accepted copy','synthetic-cradle-distinct']].sort())
+ await j.capture('csv-create-only-unique-imported')
  return {source:source.appId,destination:target.appId,rows:205,exactRoundtrip:true,idempotent:true,mixedRowsImported:true}
 }
