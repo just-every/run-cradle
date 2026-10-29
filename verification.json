@@ -20,7 +20,8 @@
         "pnpm test:execution-resolution",
         "pnpm test:migration",
         "pnpm test:records",
-        "pnpm test:foundation"
+        "pnpm test:foundation",
+        "pnpm test:records:watching"
       ]
     },
     {

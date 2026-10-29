@@ -14,10 +14,11 @@ export function TableToolsProvider({ children }: { children: ReactNode }) {
 }
 export function useTableGridTools() { return useContext(GridToolsContext) }
 export type TableToolPanel = 'columns' | 'shortcuts' | 'summary' | null
-export function TableTools({ exports, onImport, onGallery, onForms, onFind, onPanel, onSave }: { exports: ReactNode; onImport(): void; onGallery?: () => void; onForms(): void; onFind(): void; onPanel(panel: TableToolPanel): void; onSave(): void }) {
+export function TableTools({ exports, onImport, onGallery, onForms, onFind, onPanel, onSave, settings }: { exports: ReactNode; settings?: ReactNode; onImport(): void; onGallery?: () => void; onForms(): void; onFind(): void; onPanel(panel: TableToolPanel): void; onSave(): void }) {
   const guest=Boolean(useDocumentSession()?.guest)
   const [open, setOpen] = useState(false), anchor = useRef<HTMLButtonElement>(null), history = useGridHistory(), grid = useTableGridTools()
   const [phone, setPhone] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   useEffect(() => { const media = matchMedia('(max-width: 600px)'), update = () => setPhone(media.matches); update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update) }, [])
   const action = (run: () => void) => () => { setOpen(false); run() }
   return <>
@@ -37,6 +38,7 @@ export function TableTools({ exports, onImport, onGallery, onForms, onFind, onPa
       <button type="button" disabled={phone} aria-pressed={phone || (grid?.frozen ?? true)} onClick={() => grid?.toggleFrozen()}>Freeze first column</button>
       <button type="button" onClick={action(() => grid?.resetWidths())}>Reset column widths</button>
       <button type="button" onClick={action(() => onPanel('shortcuts'))}>Keyboard shortcuts</button>
+      {settings && <details className="cr-detail" onToggle={event => setSettingsOpen(event.currentTarget.open)}><summary>Settings</summary>{settingsOpen && settings}</details>}
     </ViewSheet>
   </>
 }

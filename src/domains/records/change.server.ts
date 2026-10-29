@@ -1,6 +1,6 @@
 import {trashTable,trashLifetime} from './trash/storage.server'
 import {recordCapacityGuard} from './capacity.server'
-import type { RecordMutationEffects } from './effects.server';
+import type { RecordMutationEffects, RecordNoticeEffects } from './effects.server';
 import type { RecordAttachmentPort } from './attachments.server';
 import type { AttachmentMember, CellValue, Ref, Cell, StoreReference } from '../../contracts/primitives';
 import { referenceValue } from './store-references';
@@ -20,7 +20,7 @@ import { assertRecordValidation } from './validation-rules';
 import { storedValidationValues, uniqueValidationGuards } from './validation-values.server';
 export const schemaTable = registerTable('record_schemas', ['id', 'app_id', 'version', 'physical_revision', 'schema_json', 'created_at', 'updated_at']);
 export function schemaGuard(d: EntityDescriptor): SqlPredicate { return exists(schemaTable, and(eq(schemaTable, 'id', d.schema.id), eq(schemaTable, 'app_id', d.schema.appId), eq(schemaTable, 'version', d.schema.version), eq(schemaTable, 'physical_revision', d.schema.physicalRevision))); }
-export function createRecordWriter(db: D1Database, registry: DescriptorRegistry, policy: PolicyPort, reader: ReturnType<typeof createRecordReader>, attachments?: RecordAttachmentPort, effects?: RecordMutationEffects) {
+export function createRecordWriter(db: D1Database, registry: DescriptorRegistry, policy: PolicyPort, reader: ReturnType<typeof createRecordReader>, attachments?: RecordAttachmentPort, effects?: RecordMutationEffects, notices?: RecordNoticeEffects) {
     const deletionImpact = createDeleteImpact(db, registry, policy, reader);
     async function invariant(ctx: RequestContext, d: EntityDescriptor, operation: 'create' | 'patch' | 'transition' | 'delete' | 'undo', ref: Ref, expectedVersion: number, changes: Record<string, CellValue>, prior: Record<string, unknown> | null, nextLifecycle?: string): Promise<SqlPredicate[]> { const rules = d.writePolicy; if ((operation === 'create' && rules?.create === false) || (operation === 'patch' && rules?.patch === false) || (operation === 'delete' && rules?.delete === false) || (operation === 'undo' && (rules?.patch === false || rules?.transitions?.length === 0)))
         throw new AdmissionError('forbidden', 'This entity requires a typed domain action'); if (Object.keys(changes).some(id => rules?.protectedFieldIds?.includes(id) || d.fields.get(id)?.field.readOnly))
@@ -120,6 +120,10 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
         const dependent = await effects(ctx, { before: { ref: request.ref, version: request.expectedVersion }, after: operation === 'delete' ? null : { ref: request.ref, version: request.expectedVersion + 1 } });
         guards.push(...dependent.guards);
         mutations.push(...dependent.mutations);
+        if (notices) {
+            const notice = await notices(ctx, { before, after: operation === 'delete' ? null : next, row: row as Record<string, import('../admission/ports').SqlScalar> });
+            guards.push(...notice.guards); mutations.push(...notice.mutations);
+        }
         return { guards, mutations, next, audit: [{ action: 'record.patch', subject: request.ref, changes: Object.keys(request.changes).map(fieldId => ({ fieldId, before: before.fields[fieldId] ?? { state: 'redacted', reason: 'policy' }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
     }
     async function prepareCreate(ctx: RequestContext, scope: PolicyScope, values: Record<string, CellValue>, id = createUlid(), batch?:{pending:readonly Ref[];verified?:ReadonlyMap<string,readonly SqlPredicate[]>}): Promise<PreparedRecordChange> {
@@ -139,7 +143,8 @@ export function createRecordWriter(db: D1Database, registry: DescriptorRegistry,
             const members=value===null?[]:Array.isArray(value)?value as Ref[]:[value as Ref];
             if(members.some(ref=>batch.pending.some(p=>p.appId===ref.appId&&p.entityId===ref.entityId&&p.recordId===ref.recordId)))next.fields[fieldId]={state:'value',value};
         }
-        return { guards: [...await recordCapacityGuard(db,d),...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id,batch?.verified,batch?.pending), ...await uniqueValidationGuards(db,d,values,row,id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true)], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
+        const notice = notices ? await notices(ctx, { before: null, after: next, row: row as Record<string, import('../admission/ports').SqlScalar> }) : { guards: [], mutations: [] };
+        return { guards: [...notice.guards,...await recordCapacityGuard(db,d),...await invariant(ctx, d, 'create', next.ref, 0, values, null), schemaGuard(d), ...scope.currentAuthorityGuards, ...await references(ctx, d, values, id,batch?.verified,batch?.pending), ...await uniqueValidationGuards(db,d,values,row,id)], mutations: [{ kind: 'insert', table: d.table, row, check: scope.rowPredicate }, ...await joins(d, id, values, true), ...notice.mutations], next, audit: [{ action: 'record.create', subject: next.ref, changes: Object.keys(values).map(fieldId => ({ fieldId, before: { state: 'value', value: null }, after: next.fields[fieldId]! })), sourceIds: [], personalContentRefs: [] }] };
     }
     async function prepareTransition(ctx: RequestContext, scope: PolicyScope, ref: Ref, expectedVersion: number, action: string): Promise<PreparedRecordChange> { const d = registry.get(ref.appId, ref.entityId), raw = await reader.raw(ctx, scope, ref); if (!raw)
         throw new AdmissionError('not_found', 'Record not found'); const transition = d.schema.lifecycle.transitions.find(t => t.action === action && t.from.includes(String(raw[d.lifecycleColumn]))); if (!transition)

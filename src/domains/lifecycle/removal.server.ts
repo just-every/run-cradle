@@ -4,6 +4,10 @@ export const prepareLifecycleRemoval=(db:D1Database)=>async(ctx:{now:string},id:
   await removeRows(db,change,'connection_credentials','connection_id IN (SELECT id FROM provider_connections WHERE owner_id=?)',[id])
   await updateRows(db,change,'provider_connections',{state:'revoked',revoked_at:ctx.now,share_previews:0,updated_at:ctx.now},'owner_id=? AND revoked_at IS NULL',[id])
   await updateRows(db,change,'launch_readiness',{state:'Cancelled',updated_at:Date.parse(ctx.now)},"owner_id=? AND state='Outstanding'",[id])
+  if(await db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='record_watches'").first()){
+   await updateRows(db,change,'record_watches',{enabled:0,updated_at:Date.parse(ctx.now)},'principal_id=? OR operator_id=?',[id,id]);
+   await updateRows(db,change,'record_watch_chat_deliveries',{state:'cancelled',updated_at:Date.parse(ctx.now)},"operator_id=? AND state='queued'",[id]);
+  }
   await updateRows(db,change,'channel_deliveries',{state:'cancelled',updated_at:Date.parse(ctx.now)},"operator_id=? AND state IN ('held','queued','muted')",[id])
   await updateRows(db,change,'oa_sessions',{revoked_at:Date.parse(ctx.now)},'operator_id IN (SELECT base_id FROM cradle_base_operators WHERE principal_id=?) AND revoked_at IS NULL',[id])
   const base=await db.prepare('SELECT o.id,o.role,o.status,o.version FROM oa_operators o JOIN cradle_base_operators p ON p.base_id=o.id WHERE p.principal_id=?').bind(id).first<{id:string;role:string;status:string;version:number}>()

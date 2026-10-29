@@ -36,7 +36,7 @@ export function createChannelsComposition(platform: Platform, foundation: Server
       return { capabilities: [{id:'mail.sender.v1',state:mailConfigured?'ready' as const:'unconfigured' as const,checkedAt:null,missing:mailConfigured?[]:['installation mail provider, sender and API key'],reason:mailConfigured?'The installation mail sender is configured. Provider acceptance and delivery are recorded separately.':'Configure the installation mail sender.',supportedActions:['notification.email.send']},{id:'ai.provider.v1',state:aiMissing.length?'unconfigured' as const:'ready' as const,checkedAt:null,missing:aiMissing,reason:'Configuration permits enabling AI; measured results are recorded separately.',supportedActions:['launch.campaign-brief','launch.risk-readout','launch.lens-proposal']}], requiredSetup, limits: await measureChannelLimits(db, seed.limits) }
     },
   })
-  const dependencies = { db, policy: foundation.policy, configuration }
+  const dependencies = { db, policy: foundation.policy, configuration, entities:foundation.entities }
   // A readable subject also carries its title as this reader may read it now, so a
   // notice can name its record in words. Nothing read here is stored in the notice.
   const access: Parameters<typeof registerChannelCommands>[2] = async(ctx,ref)=>{

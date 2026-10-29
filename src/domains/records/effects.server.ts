@@ -8,3 +8,10 @@ export type RecordMutationEffects = (ctx: RequestContext, change: {
     guards: SqlPredicate[];
     mutations: SqlMutation[];
 }>;
+
+/** Notification facts share the record's atomic admission. */
+export type RecordNoticeEffects = (ctx: RequestContext, change: {
+    before: import('./contracts').RecordRow | null;
+    after: import('./contracts').RecordRow | null;
+    row: Record<string, import('../admission/ports').SqlScalar>;
+}) => Promise<{ guards: SqlPredicate[]; mutations: SqlMutation[] }>;

@@ -2,7 +2,7 @@ import type {PlatformBindings} from '../../core/platform/bindings'
 import type {slackSettings} from './settings.server'
 import {AuthorityError} from '../authority/errors'
 import {chatJson} from './relay.server'
-export const teamsScopes=['Team.ReadBasic.All','Channel.ReadBasic.All','ChannelMessage.Send']
+export const teamsScopes=['Team.ReadBasic.All','Channel.ReadBasic.All','ChannelMessage.Send','Chat.Create','ChatMessage.Send','User.Read']
 export const cardText=(text:string)=>text.replace(/[\\`*_{}\[\]()#+.!<>-]/g,'\\$&')
 export function teamsCard(blocks:any[]){return {$schema:'http://adaptivecards.io/schemas/adaptive-card.json',type:'AdaptiveCard',version:'1.4',body:blocks.filter(block=>block.type==='section').map(block=>({type:'TextBlock',wrap:true,text:block.text.type==='mrkdwn'?String(block.text.text).replace(/^<([^|]+)\|([^>]+)>$/,'[$2]($1)'):cardText(String(block.text.text))})),actions:blocks.flatMap(block=>block.elements??[]).filter(element=>element.type==='button').map(button=>({type:'Action.Submit',title:button.text.text,data:{action_id:button.action_id,value:button.value}}))}}
 /** Delegated Graph token: installation consent explicitly names these scopes.
@@ -22,6 +22,17 @@ export function teamsTransport(env:PlatformBindings,settings:ReturnType<typeof s
   async function pages(url:string){const result:any[]=[];const seen=new Set<string>();while(url){const parsed=new URL(url);if(parsed.origin!=='https://graph.microsoft.com'||!parsed.pathname.startsWith('/v1.0/')||seen.has(url))throw new AuthorityError('provider_unavailable','Microsoft channel pagination did not complete.',503);seen.add(url);const response=await chatJson(env,url,'GET',token);if(response.status!==200||!Array.isArray(response.value.value))throw new AuthorityError('provider_unavailable','Microsoft channels could not be read with the current consent.',503);result.push(...response.value.value);url=response.value['@odata.nextLink']??'';if(typeof url!=='string')throw new AuthorityError('provider_unavailable','Microsoft returned an invalid channel cursor.',503)}return result}
   for(const team of await pages('https://graph.microsoft.com/v1.0/me/joinedTeams')){if(typeof team.id!=='string'||typeof team.displayName!=='string')throw new AuthorityError('provider_unavailable','Microsoft returned an invalid team.',503);for(const channel of await pages('https://graph.microsoft.com/v1.0/teams/'+encodeURIComponent(team.id)+'/channels')){if(typeof channel.id!=='string'||typeof channel.displayName!=='string')throw new AuthorityError('provider_unavailable','Microsoft returned an invalid channel.',503);channels.push({id:team.id+'/'+channel.id,name:team.displayName+' · '+channel.displayName,is_member:true})}}
   return {status:200,value:{ok:true,channels,response_metadata:{next_cursor:''}}}
+ }
+ if(method==='chat.postDirectMessage'){
+  const consent=await settings.resolve(true);if(['Chat.Create','ChatMessage.Send','User.Read'].some(scope=>!consent.bot?.scopes.includes(scope)))throw new AuthorityError('unconfigured','Install Teams again from Settings to explicitly consent to private chat notices.',503);
+  const input=body as {userId:string;blocks:any[]},owner=await chatJson(env,'https://graph.microsoft.com/v1.0/me','GET',token);
+  if(owner.status!==200||typeof owner.value.id!=='string')throw new AuthorityError('provider_unavailable','Microsoft could not identify the account that consented to private chat notices.',503);
+  const members=[...new Set([owner.value.id,input.userId])].map(id=>({'@odata.type':'#microsoft.graph.aadUserConversationMember',roles:['owner'],'user@odata.bind':"https://graph.microsoft.com/v1.0/users('"+encodeURIComponent(id)+"')"}));
+  if(members.length!==2)throw new AuthorityError('forbidden','The linked Teams recipient must be a separate account from the sender.');
+  const chat=await chatJson(env,'https://graph.microsoft.com/v1.0/chats','POST',token,{chatType:'oneOnOne',members});
+  if(![200,201].includes(chat.status)||typeof chat.value.id!=='string')throw new AuthorityError('provider_unavailable','Microsoft did not authorize the recipient private chat. Install again with private chat consent.',503);
+  const card=teamsCard(input.blocks),result=await chatJson(env,'https://graph.microsoft.com/v1.0/chats/'+encodeURIComponent(chat.value.id)+'/messages','POST',token,{body:{contentType:'html',content:'<attachment id="cradle-card"></attachment>'},attachments:[{id:'cradle-card',contentType:'application/vnd.microsoft.card.adaptive',content:JSON.stringify(card)}]});
+  return {status:result.status===201?200:result.status,value:result.status===201&&typeof result.value.id==='string'?{ok:true,ts:result.value.id}:{ok:false,error:result.value.error?.code??'teams_delivery_unconfirmed'}};
  }
  if(method==='chat.postMessage'){
   const input=body as {channel:string;blocks:any[]},parts=input.channel.split('/')

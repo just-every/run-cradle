@@ -423,6 +423,9 @@
                     },
                     "numberFormat": {
                       "const": "percent"
+                    },
+                    "notifyOnAdd": {
+                      "type": "boolean"
                     }
                   },
                   "required": [

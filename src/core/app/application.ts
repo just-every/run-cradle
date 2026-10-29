@@ -105,6 +105,7 @@ export const createApplication = (platform: Platform, config: SeedConfig, runtim
   for (const path of ['/api/v1/calendar-feeds/*','/api/v1/views/:viewId/calendar-feed','/api/v1/views/:viewId/calendar-feed/:id']) app.all(path, context => records.calendarFeedHttp.fetch(context.req.raw))
   for(const path of ['/api/v1/apps/:appId/openapi.json','/api/v1/apps/:appId/rest/*'])app.all(path,context=>records.http.fetch(context.req.raw))
   for (const path of ['/api/v1/apps', '/api/v1/apps/:appId/forms', '/api/v1/apps/:appId/entities', '/api/v1/apps/:appId/entities/*', '/api/v1/apps/:appId/views', '/api/v1/views/*', '/api/v1/forms/*']) app.all(path, context => records.http.fetch(context.req.raw))
+  app.all('/api/v1/watches', context => records.watchHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/history', '/api/v1/comments', '/api/v1/comments/mentions']) app.all(path, context => records.historyHttp.fetch(context.req.raw))
   app.all('/api/v1/repairs/intake-context', context => repairIntake.http.fetch(context.req.raw))
   for (const path of ['/api/v1/repairs/:id/completion-review','/api/v1/repairs/:id/operations','/api/v1/repairs/:id','/api/v1/decisions','/api/v1/decisions/*']) app.all(path, context => repairIntake.outcomeHttp.fetch(context.req.raw))

@@ -1,3 +1,4 @@
+import type {createRecordWatches} from '../records/watching/service.server';
 import type {Ref} from '../../contracts/primitives';
 import type {RequestContext} from '../authority/ports';
 import type {EntityRegistry} from '../authority/scope.server';
@@ -20,7 +21,7 @@ async function launchCampaign(db:D1Database,subject:Ref){
 }
 
 /** Recipient identity is real operator data; read authority belongs to that recipient. */
-export function createCommentMentions(deps:Pick<EvidenceDependencies,'db'|'access'>,entities:EntityRegistry,appOrigin:string){
+export function createCommentMentions(deps:Pick<EvidenceDependencies,'db'|'access'>,entities:EntityRegistry,appOrigin:string,watching?:()=>ReturnType<typeof createRecordWatches>){
  const {db}=deps;
  const prepare:MentionPort['prepare']=async(ctx,subject,commentId,memberIds)=>{
   const effects:ChannelEffects={guards:[],mutations:[]},campaignId=await launchCampaign(db,subject);
@@ -31,6 +32,7 @@ export function createCommentMentions(deps:Pick<EvidenceDependencies,'db'|'acces
    const next=await integration.notification(ctx,{kind:'comment-mentioned',operatorId,campaignId,subjectId:subject.recordId,eventId:commentId,appId:subject.appId,subjectType:subject.entityId});
    effects.guards.push(...next.guards);effects.mutations.push(...next.mutations);
   }
+  if(watching){const notices=await watching().prepareComment(ctx,subject,commentId,memberIds);effects.guards.push(...notices.guards);effects.mutations.push(...notices.mutations);}
   return effects;
  };
  async function candidates(ctx:RequestContext,subject:Ref,q=''){

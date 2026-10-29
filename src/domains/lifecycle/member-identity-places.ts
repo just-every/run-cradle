@@ -50,6 +50,11 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  {...byId('owner_id=? OR principal_id=?','their subscriptions and sealed receiver signing secrets','delete'),table:'record_change_subscriptions'},
  // record_trash markers and held canonical values: records/trash/erasure.server.ts
 
+ {...byId('operator_id=? OR principal_id=?','their personal record watches','delete'),table:'record_watches'},
+ {...byId('operator_id=?','their private watch event history','delete'),table:'record_watch_events'},
+ place('record_watch_events','actor_id=?','watch notices of changes they made'),
+ {...byId('operator_id=?','their private chat notice deliveries','delete'),table:'record_watch_chat_deliveries'},
+ place('notifications','id IN (SELECT notification_id FROM record_watch_events WHERE actor_id=?)','watch notices naming an erased actor'),
  place('record_views','owner_id=?','record views they own'),
  {...byId('owner_id=? AND deleted_at IS NOT NULL','their trashed views','delete'),table:'record_views'},
  place('record_forms','owner_id=?','record forms they own'),

@@ -21,7 +21,7 @@ export function createChannelsIntegration(db:D1Database,project?:RecipientProjec
   if(project){const p=await project(ctx,input);effects.guards.push(...p.guards);text=p}
   else if(appId!=='00000000000000000000000700')throw new Error('Scoped notification recipient projection is required')
   else {const access=await legacyRecipientGuards(db,input,ctx.now);if(!access)return empty();effects.guards.push(...access)}
-  if(input.kind==='record-automation'&&input.title!==undefined&&input.body!==undefined)text={title:input.title,body:input.body}
+  if(['record-automation','field-assigned','record-watch'].includes(input.kind)&&input.title!==undefined&&input.body!==undefined)text={title:input.title,body:input.body}
   if(input.kind==='weekly-digest'){if(!input.body)throw new Error('Digest requires authorized portfolio projection');text={title:'Weekly portfolio digest',body:input.body}}
   if(input.kind==='progress'){
    if(!input.progressOutcome||!['base-import','warehouse-export'].includes(input.subjectType??''))throw new Error('Progress requires its job source and outcome')
@@ -41,7 +41,7 @@ export function createChannelsIntegration(db:D1Database,project?:RecipientProjec
   else {
    effects.guards.push(trustedPredicate(`NOT EXISTS(SELECT 1 FROM notifications n JOIN channel_notifications c ON c.notification_id=n.id WHERE n.operator_id=? AND n.subject_id=? AND c.app_id=? AND c.event_kind=? AND c.last_event_at>? AND n.unavailable=0 AND NOT EXISTS(SELECT 1 FROM notification_reads r WHERE r.notification_id=n.id AND r.operator_id=n.operator_id))`,[input.operatorId,input.subjectId,appId,input.kind,now-3600000]))
    effects.mutations.push({kind:'insert',table:t.notifications,row:{id,created_at:now,updated_at:now,version:1,operator_id:input.operatorId,kind:input.kind,subject_id:input.subjectId,title:text.title,body:text.body,unavailable:0}},{kind:'insert',table:t.metadata,row:{notification_id:id,app_id:appId,campaign_id:input.campaignId,subject_type:input.subjectType??input.kind.split('-')[0],event_kind:input.kind,last_event_at:now,failure:null}})
-   const muted=(JSON.parse(prefs?.muted_json??'[]') as string[]).includes(input.kind),due=deliveryTime(now,prefs?.timezone??settings.timezone,settings.quiet_hours_start,settings.quiet_hours_end,['decision-assigned','critical-risk-escalated','outage','weekly-digest'].includes(input.kind))
+   const muted=(JSON.parse(prefs?.muted_json??'[]') as string[]).includes(input.kind),due=deliveryTime(now,prefs?.timezone??settings.timezone,settings.quiet_hours_start,settings.quiet_hours_end,['decision-assigned','field-assigned','record-watch','critical-risk-escalated','outage','weekly-digest'].includes(input.kind))
    if(input.delivery!=='in-app')effects.mutations.push({kind:'insert',table:t.deliveries,row:{id:createUlid(now),notification_id:id,operator_id:input.operatorId,campaign_id:input.campaignId,kind:input.kind,state:muted?'muted':due>now?'held':'queued',due_at:due,created_at:now,updated_at:now,version:1,run_id:null,automation_run_id:input.runId??null,attempts:0}})
   }
   effects.mutations.push({kind:'insert',table:t.events,row:{event_id:input.eventId,operator_id:input.operatorId,notification_id:id}});return effects

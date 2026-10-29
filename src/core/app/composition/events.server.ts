@@ -24,6 +24,8 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     throw new ApiError('unconfigured', 'This durable action does not have a mounted worker handler.')
   }
   async function channels() {
+    await runtime.records.watches.scheduled(clock().getTime())
+    await runtime.records.watchChat.scheduled(clock().getTime())
     await runtime.channels.delivery.scheduled(clock().getTime())
     await runtime.providers.handlers.scheduled()
   }

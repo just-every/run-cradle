@@ -67,6 +67,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
     if(field.type==='computed'&&(!field.expression||!field.resultType))throw new AdmissionError('validation',`${field.label}: a calculation needs an expression and result type.`)
     if(field.type!=='relation'&&field.relation||field.type!=='computed'&&field.expression)throw new AdmissionError('validation','Only links declare relations and only lookups declare expressions.')
     const existing=old?.fields.get(field.id)?.field
+    if(field.type==='person'&&field.notifyOnAdd===undefined&&existing?.type!=='person')field.notifyOnAdd=true
     if(['select','multi_select'].includes(field.type)&&(!field.options?.length||new Set(field.options.map(o=>o.id)).size!==field.options.length||new Set(field.options.map(o=>o.label)).size!==field.options.length))throw new AdmissionError('validation','Select options must be unique and nonempty.')
    }
   }
@@ -90,6 +91,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    if(canonical(schema.incomingRelations??[])!==canonical(old?.schema.incomingRelations??[]))changes.push(`Incoming relationship sections: ${(schema.incomingRelations??[]).map(r=>r.label).join(', ')||'none'}`)
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(!before)changes.push(`Add ${field.label} (${field.type==='computed'?calculationKind(field):field.type})`);else if(before.label!==field.label)changes.push(`Rename ${before.label} to ${field.label}`)}
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before&&canonical(before.linkPicker??null)!==canonical(field.linkPicker??null))changes.push(`Update linked-record picker for ${field.label}`)}
+   for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before&&field.type==='person'&&(before.notifyOnAdd!==false)!==(field.notifyOnAdd!==false))changes.push(`Turn assignment notifications ${field.notifyOnAdd===false?'off':'on'} for ${field.label}`)}
    for(const conversion of conversionPlan.impacts[schema.id]??[])changes.push(`Convert ${conversion.label} from ${conversion.from} to ${conversion.to}: ${conversion.converted.length} converted, ${conversion.losses.length} lost values`)
    const removedFields=(old?.schema.fields??[]).filter(f=>removals[schema.id]!.includes(f.id)).map(f=>({id:f.id,label:f.label,populated:old!.fields.get(f.id)!.join?new Set((snapshot.rows[old!.fields.get(f.id)!.join!.table.tableId]??[]).map(row=>row.record_id)).size:rows.filter(row=>row[old!.fields.get(f.id)!.column]!==null&&row[old!.fields.get(f.id)!.column]!==undefined).length}))
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before?.type==='computed'&&canonical(before.expression??null)!==canonical(field.expression??null))changes.push(`Update calculation ${field.label}`)}

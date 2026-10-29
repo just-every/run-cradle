@@ -31,7 +31,7 @@ export async function slackAppNetworkEdge({provider='slack',sharedSecret}={}){
   assert.equal(req.method,'POST')
   const body=JSON.parse(raw.toString())
   if(url.pathname==='/api/chat.postMessage'){
-   assert.ok(channels.some(channel=>channel.id===body.channel));assert.equal(typeof body.text,'string');assert.ok(Array.isArray(body.blocks))
+   assert.ok(channels.some(channel=>channel.id===body.channel)||[fixture.ownerUserId,fixture.editorUserId].includes(body.channel));assert.equal(typeof body.text,'string');assert.ok(Array.isArray(body.blocks))
    assert.ok(body.blocks.length<=50)
    for(const block of body.blocks)if(block.type==='section')assert.ok(block.text.text.length>0&&block.text.text.length<=3000,'Slack sections respect the remote block budget')
    postRequests.push(body)

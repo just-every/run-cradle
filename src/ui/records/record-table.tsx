@@ -1,3 +1,4 @@
+import { WatchSettings } from './watch-settings'
 import { LAUNCH_APP_ID } from '../../apps/launch/contracts'
 import { ViewBar, type ViewPill } from './view-bar'
 import { ViewSheet } from './view-sheet'
@@ -81,7 +82,7 @@ function RecordTableContent({ schema, pills, heading }: { schema: EntitySchema; 
     {selection.length > 0 && <div className="cr-selection-bar"><button className="cr-button cr-button--quiet" onClick={() => setBulkOpen(true)}>Edit {selection.length} selected</button><button className="cr-button cr-button--quiet" onClick={() => setSelection([])}>Clear selection</button></div>}
     <div className="cr-table-controls">
       {!viewingSaved && display !== 'form' && <><RecordToolbar schema={schema} filterDraft={filterDraft} setFilterDraft={setFilterDraft} onFilter={() => { setSelection([]); setQuery(current => ({ ...current, cursor: undefined, filter: filterDraft })) }} open={open} toggle={toggle} /><SortAndGroup schema={schema} query={query} setQuery={setQuery} /></>}
-      <TableTools exports={<ExportCsv schema={schema} query={savedView ? {} : { ...query, fields: visible }} viewId={savedView?.id} />} onImport={() => { setImportSummary(null); setImporting(true) }} onGallery={schema.appId === LAUNCH_APP_ID ? () => { setSavedView(null); setDisplay('cards') } : undefined} onForms={() => { setSavedView(null); setDisplay('form') }} onFind={() => { if (display === 'form') setDisplay('grid'); setFindOpen(true) }} onPanel={panel => { if (panel === 'columns') workingCopy(); setToolPanel(panel) }} onSave={() => { workingCopy(); setSavingView(true) }} />
+      <TableTools settings={<><WatchSettings target={{appId:schema.appId,entityId:schema.id}} />{savedView && <WatchSettings target={{appId:schema.appId,entityId:schema.id,viewId:savedView.id}} />}</>} exports={<ExportCsv schema={schema} query={savedView ? {} : { ...query, fields: visible }} viewId={savedView?.id} />} onImport={() => { setImportSummary(null); setImporting(true) }} onGallery={schema.appId === LAUNCH_APP_ID ? () => { setSavedView(null); setDisplay('cards') } : undefined} onForms={() => { setSavedView(null); setDisplay('form') }} onFind={() => { if (display === 'form') setDisplay('grid'); setFindOpen(true) }} onPanel={panel => { if (panel === 'columns') workingCopy(); setToolPanel(panel) }} onSave={() => { workingCopy(); setSavingView(true) }} />
       {!viewingSaved && display !== 'form' && <LiveRecordsStatus {...live} />}<QuietUndo />
     </div>
     {history.feedback}

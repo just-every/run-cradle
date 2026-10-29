@@ -75,7 +75,8 @@
     "deployment:spec": "node scripts/sync-managed-setup.mjs",
     "check:deployment-spec": "node scripts/sync-managed-setup.mjs --check",
     "test:calendar": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/ui-records-calendar.mjs",
-    "test:launch:notifications": "node tests/ui-launch-notifications.mjs"
+    "test:launch:notifications": "node tests/ui-launch-notifications.mjs",
+    "test:records:watching": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-watching.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

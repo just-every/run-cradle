@@ -50,6 +50,7 @@ export type Expr = {
     limit?: number;
 };
 export type Field = {
+    notifyOnAdd?: boolean;
     validation?: { min?: string; max?: string; minLength?: number; maxLength?: number; pattern?: string };
     defaultValue?: CellValue;
     readOnly?: boolean;

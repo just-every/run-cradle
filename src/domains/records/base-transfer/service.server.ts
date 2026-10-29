@@ -35,7 +35,7 @@ import type { ImportJob, Reconciliation } from '../../../../vendor/base/modules/
 import {progressAttemptStatements,settleProgressAttempt,deliverOwedProgress} from '../../channels/progress-owed.server'
 
 export type PreviewBuilder=(source:PreparedSource,options:ImportOptions,identities:ImportIdentities)=>BasePreview|Promise<BasePreview>
-export function createBaseImportService(db:D1Database,policy:PolicyPort,registry:DescriptorRegistry,manual:ReturnType<typeof createManualSchemas>,buildPreview:PreviewBuilder){
+export function createBaseImportService(db:D1Database,policy:PolicyPort,registry:DescriptorRegistry,manual:ReturnType<typeof createManualSchemas>,buildPreview:PreviewBuilder,assignmentNotices?:(ctx:RequestContext,preview:BasePreview)=>Promise<void>){
  async function preview(source:PreparedSource,options:ImportOptions,identities:ImportIdentities){return buildPreview(source,options,identities)}
  async function uploadPreview(ctx:RequestContext,source:PreparedSource,options:ImportOptions,identities:ImportIdentities){try{assertSourceSize(source.bundle)}catch(error){importCapacityError(error)}const result=await buildPreview(source,options,identities);return preflightUpload(db,policy,registry,ctx,result)}
  async function review(ctx:RequestContext,input:BasePreview,ack:ReviewAcknowledgment){
@@ -141,7 +141,10 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   const before=await readD1ImportJob(id,c),starterId=before.principalId
   if(['undone','rolling_back','rolled_back','undoing'].includes(before.state))return resumeD1Import(id,c)
   const eventId=`base-import:${id}:failed`,token=crypto.randomUUID(),liveUntil=new Date(Date.now()+300000).toISOString()
-  const notify=(outcome:'completed'|'failed')=>deliverOwedProgress(db,ctx.ingress,`base-import:${id}:${outcome}`)
+  const notify=async(outcome:'completed'|'failed')=>{
+   await deliverOwedProgress(db,ctx.ingress,`base-import:${id}:${outcome}`)
+   if(outcome==='completed'&&assignmentNotices){const row=await db.prepare('SELECT r.id,r.principal_id FROM record_import_reviews r JOIN ik_jobs j ON j.operation_key=r.id AND j.destination=r.app_id WHERE j.id=? AND r.principal_id=j.principal_id').bind(id).first<{id:string;principal_id:string}>();if(row){const {detail}=await loadReview(db,row.id,row.principal_id);await assignmentNotices(ctx,detail)}}
+  }
   if(before.state==='completed'){const job=await resumeD1Import(id,c);await notify('completed');return job}
   // A failed write-ahead batch refuses the attempt before the kit applies work.
   await db.batch(await progressAttemptStatements(db,{subjectType:'base-import',subjectId:id,starterId,eventId,outcome:'failed'},token,liveUntil))

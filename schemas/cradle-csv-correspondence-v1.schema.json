@@ -275,6 +275,9 @@
                       }
                     }
                   ]
+                },
+                "notifyOnAdd": {
+                  "type": "boolean"
                 }
               },
               "required": [

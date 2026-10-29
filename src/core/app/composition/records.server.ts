@@ -1,3 +1,8 @@
+import {createWatchChatDelivery} from '../../../domains/records/watching/chat.server'
+import {createImportAssignmentNotices} from '../../../domains/records/field-import-notices.server'
+import {createRecordWatches} from '../../../domains/records/watching/service.server'
+import {createRecordWatchHttp} from '../../../domains/records/watching/http.server'
+import {createFieldNotices} from '../../../domains/records/field-notices.server'
 import {createRecordRest} from '../../../domains/records/rest/service.server'
 import {metadataTrash} from '../../../domains/records/trash/metadata.server'
 import {recordTrashService} from '../../../domains/records/trash/service.server'
@@ -65,14 +70,16 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
     prepareWrite:createEvidenceWriteAccess(db,policy,descriptors),
     egress:createModelEgress({db,policy,profile:modelConfiguration.profile}),
   }}
+  let watches:ReturnType<typeof createRecordWatches>
   const sources=createSourceService(deps)
-  const mentions=createCommentMentions(deps,entities,platform.auth.configuration.appOrigin),comments=createCommentService(deps,mentions,descriptors)
+  const mentions=createCommentMentions(deps,entities,platform.auth.configuration.appOrigin,()=>watches),comments=createCommentService(deps,mentions,descriptors)
   registerCommentCommands(foundation.commands,comments)
   const commentReader=createCommentReader(deps,descriptors,platform.auth.configuration.sessionSecret)
   const activeCases=createCaseReferenceReader({db,policy,descriptors,evidence:sources})
   const services=createRecordServices(db,descriptors,policy,platform.auth.configuration.sessionSecret,
     createEvidenceDetail(deps,activeCases),createEvidenceAttachmentPort(deps),
-    (ctx,change)=>prepareCanonicalInvalidation(db,ctx,change.before))
+    (ctx,change)=>prepareCanonicalInvalidation(db,ctx,change.before),createFieldNotices(db,descriptors,()=>watches))
+  watches=createRecordWatches({db,policy,admission,descriptors,entities,metadata:services.metadata,reader:services.reader,appOrigin:platform.auth.configuration.appOrigin})
   registerRecordActions(foundation.commands,services)
   registerRecordFormActions(foundation.commands,{metadata:services.metadata,policy,prepareCreate:createAuthorizedRecordCreatePreparer(services),templates:services.templates})
   const manual=createManualSchemas(db,policy,admission,descriptors)
@@ -81,7 +88,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
   const releaseCore=createReleaseCore(db,policy,admission,descriptors),proposalReview=createProposalReview(db,policy,admission,releaseCore)
   registerProposalTools(foundation.commands,createProposalAgent(db,policy,descriptors,releaseCore))
   const jsonIdentities=createJsonIdentityPreflight(db,descriptors)
-  const baseImport=createBaseImportService(db,policy,descriptors,importManual,(source,options,ids)=>source.format==='cradle-base-v1'?previewJsonImport(source,options,ids):previewBaseImport(source,options,ids))
+  const baseImport=createBaseImportService(db,policy,descriptors,importManual,(source,options,ids)=>source.format==='cradle-base-v1'?previewJsonImport(source,options,ids):previewBaseImport(source,options,ids),createImportAssignmentNotices(db,services,admission,createFieldNotices(db,descriptors,()=>watches)))
   const audit=createAuditReader(db,policy,(ctx,ref)=>deps.access.checkReference(ctx,ref,[],'read'),{
     cursorSecret:platform.auth.configuration.sessionSecret,
     projectCell:services.reader.projectCell,
@@ -99,7 +106,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
       return {subject,fieldIds}
     },
   })
-  return {trashHttp:recordTrashHttp(recordTrashService(db,services,admission),request=>foundation.authenticate(request,'http',createUlid()),metadataTrash(db,services,admission)),csv,calendarFeedHttp:calendarFeedHttp(createCalendarFeeds(db,services.metadata,policy,platform.auth.configuration.appOrigin),foundation.authenticate),deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.endsWith('.sheets.json')?prepareSheetsSource(artifacts[0]!):artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):artifacts.length===1&&/\.xls[xm]$/i.test(artifacts[0]!.filename)?prepareWorkbookSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(csv,foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
+  return {watches,watchChat:createWatchChatDelivery(platform.bindings,foundation,platform.auth.configuration.appOrigin),watchHttp:createRecordWatchHttp(watches,request=>foundation.authenticate(request,'http',createUlid())),trashHttp:recordTrashHttp(recordTrashService(db,services,admission),request=>foundation.authenticate(request,'http',createUlid()),metadataTrash(db,services,admission)),csv,calendarFeedHttp:calendarFeedHttp(createCalendarFeeds(db,services.metadata,policy,platform.auth.configuration.appOrigin),foundation.authenticate),deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.endsWith('.sheets.json')?prepareSheetsSource(artifacts[0]!):artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):artifacts.length===1&&/\.xls[xm]$/i.test(artifacts[0]!.filename)?prepareWorkbookSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(csv,foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
     http:createRecordHttp({...services,rest:createRecordRest(db,services,admission),authenticate:foundation.authenticate}),
     historyHttp:createEvidenceHistoryHttp({...deps,authenticate,audit,cursorSecret:platform.auth.configuration.sessionSecret,comments:commentReader,mentions}),
   }

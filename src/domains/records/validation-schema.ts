@@ -6,6 +6,7 @@ import { validationPattern } from './validation-pattern'
 
 type ParseCell = (field: Field, value: unknown) => CellValue
 export function validateFieldConfiguration(field: Field, parse: ParseCell) {
+  if (field.notifyOnAdd !== undefined && field.type !== 'person') throw new Error('Assignment notifications require a user field.')
   if(field.linkPicker){
     if(field.type!=='relation'||!field.relation)throw new Error('Picker settings require a linked-record field.')
     for(const ids of [field.linkPicker.searchFieldIds,field.linkPicker.displayFieldIds])if(new Set(ids).size!==ids.length)throw new Error('Picker fields must not repeat.')

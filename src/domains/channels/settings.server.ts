@@ -15,7 +15,7 @@ const settings=registerTable('workspace_settings',['id','version','updated_at','
 const workspace=registerTable('workspace',['id','version','updated_at','name','timezone','currency'])
 export const CHANNEL_APP='00000000000000000000000700'
 type SettingsRow={id:string;version:number;updated_at:number;workspace_name:string;timezone:string;currency:string;quiet_hours_start:string;quiet_hours_end:string;ai_enabled:number;ai_daily_ceiling:number}
-export type SettingsDependencies={db:D1Database;policy:PolicyPort;configuration(ctx:RequestContext):Promise<ConfigurationEvidence>}
+export type SettingsDependencies={entities?:import('../authority/scope.server').EntityRegistry;db:D1Database;policy:PolicyPort;configuration(ctx:RequestContext):Promise<ConfigurationEvidence>}
 export function createChannelSettings(d:SettingsDependencies){
  const actor=(ctx:RequestContext)=>{if(ctx.principal.kind!=='human'||!ctx.principal.humanId)throw new AdmissionError('forbidden','Personal settings require a current human session');return ctx.principal.humanId}
  const active=(id:string)=>trustedPredicate('EXISTS(SELECT 1 FROM operators WHERE id=? AND active=1)',[id])

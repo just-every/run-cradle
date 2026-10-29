@@ -24,8 +24,8 @@ import { createCsvLinkCandidates } from './csv-link-candidates.server'
 import { launchOverdueKind, overdueFieldIds, overdueMarkerField, projectLaunchOverdue } from '../../apps/launch/overdue-projection.server'
 import { launchFieldIds } from '../../apps/launch/descriptors.server'
 const stored=registerTable('record_csv_previews',['id','app_id','entity_id','owner_id','detail_json','expires_at','command_id'])
-export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024).optional(),workbook:z.object({filename:z.string().max(200),base64:z.string().max(14*1024*1024),sheet:z.string().max(120)}).strict().optional(),mapping:csvMappingSchema,mergeFieldId:csvMergeSchema}).strict()
-type Preview=CsvImportPreview & {guards:SqlPredicate[]}
+export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024).optional(),workbook:z.object({filename:z.string().max(200),base64:z.string().max(14*1024*1024),sheet:z.string().max(120)}).strict().optional(),mapping:csvMappingSchema,mergeFieldId:csvMergeSchema,notifications:z.boolean().optional()}).strict()
+type Preview=CsvImportPreview & {guards:SqlPredicate[];notifications?:boolean}
 export function createRecordsCsv(db:D1Database,services:ReturnType<typeof createRecordServices>,admission:AdmissionPort){
  const {reader,writer,policy,descriptors,metadata}=services
  async function exportCsv(ctx:RequestContext,input:unknown,snapshot?:{rows:import('./contracts').RecordRow[];headers?:string[];values?:string[][];fields?:import('./contracts').Field[]},format:'csv'|'xlsx'='csv'){
@@ -79,11 +79,11 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   const existing=[];let cursor:string|undefined
   do{const page=await reader.query(ctx,scope,{limit:200,cursor});existing.push(...page.items);cursor=page.nextCursor??undefined}while(cursor)
   const labelGuards:SqlPredicate[]=[],labels=createCsvLabels(services,ctx,labelGuards)
-  const {rows,errors,guards:rowGuards}=await previewCsvRows(ctx,request,csv,d,scope,existing,writer,labels)
+  const {rows,errors,guards:rowGuards}=await previewCsvRows({...ctx,recordNotifications:false},request,csv,d,scope,existing,writer,labels)
   const guards=[...scope.currentAuthorityGuards,...mappingCheck.guards,...labelGuards,rowGuard,...rowGuards]
   const permit=await policy.authorize(ctx,{appId:request.appId,targetEntityId:request.entityId,fieldIds:request.mapping.map(m=>m.fieldId),action:'import.preview',expected:[],cost:[],inputHash:await canonicalHash(request)})
   guards.push(...permit.guards);await assertGuards(db,guards)
-  const result:Preview={id:createUlid(),appId:request.appId,entityId:request.entityId,rows,errors,rejected:errors.length,guards,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString(),creates:rows.filter(r=>r.operation==='create').length,updates:rows.filter(r=>r.operation==='update').length,unchanged:rows.filter(r=>r.operation==='unchanged').length}
+  const result:Preview={notifications:request.notifications===true,id:createUlid(),appId:request.appId,entityId:request.entityId,rows,errors,rejected:errors.length,guards,expiresAt:new Date(Date.parse(ctx.now)+1800000).toISOString(),creates:rows.filter(r=>r.operation==='create').length,updates:rows.filter(r=>r.operation==='update').length,unchanged:rows.filter(r=>r.operation==='unchanged').length}
   await db.prepare('INSERT INTO record_csv_previews(id,app_id,entity_id,owner_id,detail_json,expires_at) VALUES(?,?,?,?,?,?)').bind(result.id,result.appId,result.entityId,ctx.principal.id,canonical(result),result.expiresAt).run()
   await assertGuards(db,guards)
   const {guards:_,...publicResult}=result;return publicResult
@@ -97,7 +97,7 @@ export function createRecordsCsv(db:D1Database,services:ReturnType<typeof create
   const scope=await policy.scope(ctx,{appId:p.appId,entityId:p.entityId,purpose:'read'}),guards=[...p.guards],mutations:SqlMutation[]=[],audit=[]
   for(const row of p.rows){
    if(row.operation==='unchanged')continue
-   const ref={appId:p.appId,entityId:p.entityId,recordId:row.id},change=row.version===null?await writer.prepareCreate(ctx,scope,row.values,row.id):await writer.prepareChange(ctx,scope,{ref,expectedVersion:row.version,changes:row.values})
+   const writeCtx={...ctx,recordNotifications:p.notifications===true},ref={appId:p.appId,entityId:p.entityId,recordId:row.id},change=row.version===null?await writer.prepareCreate(writeCtx,scope,row.values,row.id):await writer.prepareChange(writeCtx,scope,{ref,expectedVersion:row.version,changes:row.values})
    const insertion=change.mutations.find(m=>m.kind==='insert'&&m.table.tableId===descriptors.get(p.appId,p.entityId).table.tableId)
    const permit=await policy.authorize(ctx,{appId:p.appId,targetEntityId:p.entityId,action:row.version===null?'record.create':'record.patch',expected:row.version===null?[]:[{ref,version:row.version}],fieldIds:change.audit.flatMap(fact=>fact.changes.map(value=>value.fieldId)),proposedRows:insertion?.kind==='insert'?[{entityId:p.entityId,row:insertion.row}]:undefined,cost:[],inputHash:hash})
    guards.push(...change.guards,...permit.guards);mutations.push(...change.mutations);audit.push(...change.audit)

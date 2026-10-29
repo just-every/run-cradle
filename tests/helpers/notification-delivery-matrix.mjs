@@ -29,7 +29,7 @@ const progressText={
 }
 const titles={outage:'An operational outage needs attention','decision-assigned':'A decision was assigned to you','critical-risk-escalated':'A critical risk was escalated',readiness:'Launch readiness requested','comment-mentioned':'You were mentioned in a comment','automation-failed':'An automation failed','decision-overdue':'A decision is overdue','weekly-digest':'Weekly portfolio digest','record-automation':'Synthetic in-app-only notice'}
 export async function verifyNotificationDeliveryMatrix({h,actor,other,width}){
- assert.deepEqual(Object.keys(paths).sort(),[...notificationKinds].sort(),'NOTIFY-007 matrix accounts for exactly the production kind list')
+ assert.deepEqual([...Object.keys(paths),'field-assigned','record-watch'].sort(),[...notificationKinds].sort(),'NOTIFY-007 matrix accounts for exactly the production kind list')
  assert.deepEqual(Object.entries(paths).filter(([,path])=>path===null).map(([kind])=>kind).sort(),[...notificationKindsWithoutProducer].sort(),'NOTIFY-007 missing-producer paths match the Settings disclosure list')
  const request=async(session,action,input,expected=[])=>{
   const response=await h.request(session,`/api/v1/commands/${action}`,{method:'POST',body:JSON.stringify({commandId:createUlid(),input,expected})})

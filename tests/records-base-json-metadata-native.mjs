@@ -1,3 +1,4 @@
+import {assignmentFieldSettings} from './helpers/assignment-field-settings.mjs'
 import {jsonLimitCase} from './helpers/base-json-limits.mjs'
 import assert from 'node:assert/strict'
 import {mkdtemp,rm} from 'node:fs/promises'
@@ -28,5 +29,6 @@ contract('RECORDS-005 RECORDS-006','padded native JSON metadata refuses actual D
   const overBytes=jsonLimitCase('tableBytes',0),actualBytes=Buffer.byteLength(JSON.stringify(overBytes.base.tables[0]));await assert.rejects(async()=>upload(overBytes),new RegExp(`LIMIT tableBytes value 10485760 CURRENT ${actualBytes}`));assert.equal(writeAttempts,0)
   const input=whitespaceMetadataFixture(),preview=await upload(input,{name:''});assert.deepEqual(draftSchema.parse(preview.schemaDraft),preview.schemaDraft);assert.equal(preview.records.find(row=>row.rowKey===id(10)).fields[preview.identities.tables[id(2)].fields[id(3)]],' \tTwin\r\n ');assert.equal(preview.schemaDraft.tables[0].fields[0].options[0].label,' Current ');assert.equal(preview.schemaDraft.tables[0].incomingRelations[0].label,' Contacts ');assert.equal(preview.portableForms[0].title,' Create company ');assert.equal(writeAttempts,0);assert.equal(await databaseSnapshot(),before)
 
+  await assignmentFieldSettings(h)
  }finally{await runtime?.close();await rm(directory,{recursive:true,force:true})}
 })

@@ -16,6 +16,7 @@ export function ManualImport({ schema, onClose, onSaved }: {
   const [sheetSource,setSheetSource]=useState<SheetsCapture|null>(null),[sheetName,setSheetName]=useState(''),[scheduleMessage,setScheduleMessage]=useState('')
   function useSheet(source:SheetsCapture,name:string){const sheet=source.sheets.find(s=>s.name===name)!;setSheetSource(source);setSheetName(name);setWorkbook(null);setCsv(encodeCsv(sheet.headers,sheet.rows.map(row=>row.map(cell=>cell.value===null?'':String(cell.value)))));setHeaders(sheet.headers);setMapping({});setMerge('');setPreview(null)}
   async function schedule(enabled:boolean){setBusy(true);setError('');try{await readApi('/api/v1/records/sheets-schedule',{method:'POST',body:JSON.stringify({appId:schema.appId,entityId:schema.id,connectionId:sheetSource!.connectionId,sheet:sheetName,mapping:Object.entries(mapping).filter(([,id])=>id).map(([column,fieldId])=>({column,fieldId})),mergeFieldId:merge,enabled})});setScheduleMessage(enabled?'Hourly merge enabled. It pauses if owner rights, consent or mapping become unavailable.':'Hourly merge paused.')}catch(e){setError(e instanceof Error?e.message:'Schedule could not be saved.')}finally{setBusy(false)}}
+  const [notifications,setNotifications]=useState(false)
   const [csv, setCsv] = useState(''), [headers, setHeaders] = useState<string[]>([])
   const [mapping, setMapping] = useState<Record<string, string>>({}), [merge, setMerge] = useState('')
   const [preview, setPreview] = useState<CsvImportPreview | null>(null), [error, setError] = useState('')
@@ -44,7 +45,7 @@ export function ManualImport({ schema, onClose, onSaved }: {
     try {
       setPreview((await readApi<CsvImportPreview>('/api/v1/records/import-preview', { method: 'POST', body: JSON.stringify({
         appId: schema.appId, entityId: schema.id, ...(workbook?{workbook}:{csv}),
-        mapping: Object.entries(mapping).filter(([, id]) => id).map(([column, fieldId]) => ({ column, fieldId })), mergeFieldId: merge,
+        mapping: Object.entries(mapping).filter(([, id]) => id).map(([column, fieldId]) => ({ column, fieldId })), mergeFieldId: merge, notifications,
       }) })).data)
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Import preview failed.') }
     finally { setBusy(false) }
@@ -67,6 +68,7 @@ export function ManualImport({ schema, onClose, onSaved }: {
           {fields.filter(field => Object.values(mapping).includes(field.id) && ['text', 'number', 'date', 'select'].includes(field.type)).map(field => <option key={field.id} value={field.id}>{field.label}</option>)}
         </select></label>
       </fieldset>
+      {schema.fields.some(field=>field.type==='person'&&field.notifyOnAdd!==false)&&<label className="cr-choice"><input type="checkbox" checked={notifications} onChange={event=>setNotifications(event.target.checked)} />Send assignment notifications for this import</label>}
       <button className="cr-button" disabled={(!csv&&!workbook) || !merge || busy || mappingBusy}>Preview import</button>
     </form> : <>
       <h3>Review import</h3>{sheetSource&&<div className="cr-actions"><button type="button" className="cr-button" disabled={busy||committing||!confirmed} onClick={()=>void schedule(true)}>Enable hourly merge</button><button type="button" className="cr-button cr-button--quiet" disabled={busy||committing} onClick={()=>void schedule(false)}>Pause hourly merge</button></div>}{scheduleMessage&&<p role="status">{scheduleMessage}</p>}
