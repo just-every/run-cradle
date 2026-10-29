@@ -5642,7 +5642,7 @@
       "executable": false
     },
     "scripts/portability/retired-comments.mjs": {
-      "sha256": "8580fc6570610fe9a6fec473d82156915eabd18dfedf93c9e6b35f69b8c456f5",
+      "sha256": "3c44d231076c08a4982478e7cb25ec3d786617208e19a1db8806469f38ee516c",
       "executable": false
     },
     "scripts/portability/search.mjs": {

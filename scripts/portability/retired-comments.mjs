@@ -44,7 +44,7 @@ export function retiredCommentsDatabase(db){
      if(sql==='PRAGMA table_xinfo("comments")')return {...result,results:legacy.columns};
      if(sql==='PRAGMA foreign_key_list("comments")')return {...result,results:legacy.foreignKeys};
      if(sql==='PRAGMA table_list')extra=[{schema:'main',name:'comments',type:'table',ncol:legacy.columns.length,wr:0,strict:0}];
-     if(sql==="SELECT name,sql,type,tbl_name FROM sqlite_master WHERE sql IS NOT NULL ORDER BY name")extra=legacy.objects;
+     if(sql==="SELECT name,sql,type,tbl_name FROM sqlite_master WHERE sql IS NOT NULL AND substr(lower(name),1,7) <> 'sqlite_' AND substr(lower(name),1,4) <> '_cf_' ORDER BY name")extra=legacy.objects;
      if(sql==="SELECT name FROM sqlite_master WHERE type IN ('table','view')")extra=[{name:'comments'}];
      if(sql==="SELECT name,sql FROM sqlite_master WHERE type='table' AND sql IS NOT NULL ORDER BY name")extra=[legacy.table];
      return {...result,results:[...result.results,...extra]};
