@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import {displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
 import {waitForSavedViewSummary} from './records-summary-ready.mjs'
 import {compileSchema} from '../../src/domains/records/descriptors.server.ts'
@@ -32,13 +33,13 @@ export async function fixture(page,h){
 export async function viewSettingsJourney(){
  const output=path.resolve('.private/view-settings');await mkdir(output,{recursive:true})
  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
- try{for(const width of [1440,390]){
-  const h=await recordsBrowserRuntime(0),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+ try{for(const width of recordsBrowserWidths()){
+  const h=await recordsBrowserRuntime(0),context=await browser.newContext({viewport:{width,height:width<=390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
   let peerContext
   try{
    page.setDefaultTimeout(15000);await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app')
    const f=await fixture(page,h),base=`/api/v1/apps/${f.appId}/entities/${f.entityId}`
-   peerContext=await browser.newContext({viewport:{width,height:width===390?844:1000}});await peerContext.addCookies([{name:f.peerCookie.split('=')[0],value:f.peerCookie.slice(f.peerCookie.indexOf('=')+1),url:h.origin}]);const peer=await peerContext.newPage();await peer.goto(f.path)
+   peerContext=await browser.newContext({viewport:{width,height:width<=390?844:1000}});await peerContext.addCookies([{name:f.peerCookie.split('=')[0],value:f.peerCookie.slice(f.peerCookie.indexOf('=')+1),url:h.origin}]);const peer=await peerContext.newPage();await peer.goto(f.path)
    const privateView=(await browserCall(page,'/api/v1/commands/view.save',liveCommand({view:{appId:f.appId,entityId:f.entityId,name:'My receiving queue',display:'grid',fields:[f.title.id],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:f.title.id},visibility:'private',shipped:false}}))).value
    assert.ok(!(await browserCall(peer,`/api/v1/apps/${f.appId}/views`)).items.some(v=>v.id===privateView.id));await browserCall(peer,`/api/v1/views/${privateView.id}/query`,{},404)
    await page.goto(f.path);await sortAndGroup(page);await page.getByLabel('Group',{exact:true}).selectOption(f.stage.id)

@@ -1,4 +1,4 @@
-import { useId, useRef, type ReactNode } from 'react'
+import { useId, useRef, useState, useLayoutEffect, type ReactNode } from 'react'
 import type { EntitySchema, RecordRow, TimelineBaseline, View } from '../../domains/records/contracts'
 import { addDays } from './calendar-dates'
 import { CellDisplay } from './record-fields'
@@ -15,15 +15,28 @@ export function TimelineChart({ schema, view, schedule, baseline, axis, writable
 }) {
   const dragging = useRef<{ row: RecordRow; offset: number } | null>(null), marker = useId().replaceAll(':', '')
   const details = view.fields.filter(id => id !== view.layout.titleFieldId), rowHeight = 96 + details.length * 20
+  const chart = useRef<HTMLDivElement>(null), [labelHeights, setLabelHeights] = useState<Record<string, number>>({})
+  useLayoutEffect(() => {
+    const labels = [...(chart.current?.querySelectorAll<HTMLElement>('[data-timeline-label]') ?? [])]
+    const measure = () => {
+      const next = Object.fromEntries(labels.map(label => [label.dataset.timelineLabel!, Math.ceil(label.getBoundingClientRect().height) + 18]))
+      setLabelHeights(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next)
+    }
+    const observer = new ResizeObserver(measure)
+    labels.forEach(label => observer.observe(label))
+    measure()
+    return () => observer.disconnect()
+  }, [schedule.tasks, view.fields])
+  const taskHeight = (row: RecordRow) => Math.max(rowHeight, labelHeights[row.id] ?? 0)
   const lines = timelineLines(schedule.tasks, view.groupBy), positions = new Map<string, number>()
   const byId = new Map(schedule.tasks.map(task => [task.row.id, task]))
   let height = 0
-  for (const line of lines) { if (line.kind === 'task') positions.set(line.task.row.id, height + 34); height += line.kind === 'group' ? 44 : rowHeight }
+  for (const line of lines) { if (line.kind === 'task') positions.set(line.task.row.id, height + 34); height += line.kind === 'group' ? 44 : taskHeight(line.task.row) }
   const planned = new Map(baseline?.records.map(record => [record.recordId, record]))
   const title = (row: RecordRow) => <ViewMatchCell recordId={row.id} fieldId={view.layout.titleFieldId} match={match}><CellDisplay appId={schema.appId} field={schema.fields.find(field => field.id === view.layout.titleFieldId)} cell={row.fields[view.layout.titleFieldId]} /></ViewMatchCell>
   function drop(row: RecordRow, coordinate: number) { const start=byId.get(row.id)?.start; if(start===null||start===undefined)return; const days=Math.round((axis.at(coordinate)-start)/86400000); move(row,addDays(axis.civil(start),days)) }
   return <div className="cr-timeline-scroll" role="region" aria-label={`${view.name} timeline; scroll for dates`} tabIndex={0}>
-    <div className="cr-timeline-chart" style={{ width: `calc(var(--timeline-label) + ${axis.width}px)` }}>
+    <div ref={chart} className="cr-timeline-chart" style={{ width: `calc(var(--timeline-label) + ${axis.width}px)` }}>
       <div className="cr-timeline-head"><div className="cr-timeline-label">Record / planned dates</div><div className="cr-timeline-axis" style={{ width: axis.width }}>{axis.ticks.map(tick => <div key={tick.date} data-timeline-date={tick.date} style={{ left: tick.left, width: tick.width }}><time dateTime={tick.date}>{tick.label}</time></div>)}</div></div>
       <div className="cr-timeline-body" style={{ height }}>
         <svg className="cr-timeline-links" width={axis.width} height={height} role="img" aria-label="Time axis and dependency links">
@@ -48,8 +61,8 @@ export function TimelineChart({ schema, view, schedule, baseline, axis, writable
             const difference = (value: number) => `${Number((Math.abs(value) / 86400000).toPrecision(3))}d ${value > 0 ? 'later' : 'earlier'}`
             comparison = <span className="cr-timeline-comparison" data-timeline-variance={row.id}>{delta ? `Start ${difference(delta)}` : 'Start matches baseline'}{finish ? ` · Finish ${difference(finish)}` : ''}</span>
           }
-          return <div className="cr-timeline-row" style={{ height: rowHeight }} key={row.id} data-timeline-row={row.id} data-critical={critical} data-conflict={task.issues.includes('Starts before a predecessor ends')}>
-            <div className="cr-timeline-label"><a href={`/app/records/${schema.appId}/${schema.id}/${row.id}`}>{title(row)}</a><small>{range}</small>{critical && <small className="cr-timeline-critical-label">Critical path</small>}{task.issues.length > 0 && <small className="cr-timeline-issue" title={task.issues.join('. ')}>{task.issues.join(' · ')}</small>}{details.map(id => <small key={id}>{schema.fields.find(field => field.id === id)?.label}: <ViewMatchCell recordId={row.id} fieldId={id} match={match}><CellDisplay appId={schema.appId} field={schema.fields.find(field => field.id === id)} cell={row.fields[id]} /></ViewMatchCell></small>)}{writable(row) && <button type="button" className="cr-button cr-button--quiet" aria-label={`Move record ${row.id}`} disabled={busy} onClick={() => onDraft(row)}>Move date</button>}</div>
+          return <div className="cr-timeline-row" style={{ height: taskHeight(row) }} key={row.id} data-timeline-row={row.id} data-critical={critical} data-conflict={task.issues.includes('Starts before a predecessor ends')}>
+            <div className="cr-timeline-label"><div className="cr-timeline-label-content" data-timeline-label={row.id}><a href={`/app/records/${schema.appId}/${schema.id}/${row.id}`}>{title(row)}</a><small>{range}</small>{critical && <small className="cr-timeline-critical-label">Critical path</small>}{task.issues.length > 0 && <small className="cr-timeline-issue" title={task.issues.join('. ')}>{task.issues.join(' · ')}</small>}{details.map(id => <small className="cr-timeline-detail" key={id}>{schema.fields.find(field => field.id === id)?.label}: <ViewMatchCell recordId={row.id} fieldId={id} match={match}><CellDisplay appId={schema.appId} field={schema.fields.find(field => field.id === id)} cell={row.fields[id]} /></ViewMatchCell></small>)}{writable(row) && <button type="button" className="cr-button cr-button--quiet" aria-label={`Move record ${row.id}`} disabled={busy} onClick={() => onDraft(row)}>Move date</button>}</div></div>
             <div className="cr-timeline-track" style={{ width: axis.width }} onDragOver={event => { if (dragging.current && writable(dragging.current.row) && !busy) { event.preventDefault(); event.dataTransfer.dropEffect = 'move' } }} onDrop={event => {
               const source = dragging.current; dragging.current = null
               if (!source || event.dataTransfer.getData('application/x-cradle-timeline-record') !== source.row.id || !writable(source.row) || busy) return

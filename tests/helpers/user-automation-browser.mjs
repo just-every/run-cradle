@@ -36,7 +36,7 @@ export async function userAutomationBrowser(page,h,journey,width) {
  await panel.getByText(`synthetic-cradle-${width} · Packaging approval`,{exact:true}).waitFor()
  await journey.capture('user-automation-complete')
  await panel.getByRole('button',{name:`Edit ${name}`,exact:true}).click()
- await automationTestBrowser(page,h,width)
+ await automationTestBrowser(page,h,width,journey)
  await form.getByLabel('Notification title',{exact:true}).fill('Another approved notification')
  const edited=page.waitForResponse(response=>response.url().endsWith('/api/user-automations')&&response.request().method()==='POST')
  await form.getByRole('button',{name:'Save automation',exact:true}).click()

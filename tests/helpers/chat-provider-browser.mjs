@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
 import {slackAppBrowser} from './slack-app-browser.mjs'
 import {parallelChatRuntime,installChat} from './parallel-chat-journey.mjs'
@@ -8,8 +9,8 @@ export async function chatProviderBrowser(browser,output){
  const receipts=[],runtime=await parallelChatRuntime(),{h,edges}=runtime
  try{
   for(const edge of Object.values(edges))await installChat(h,edge)
-  for(const width of [1440,390]){
-   const context=await browser.newContext({viewport:{width,height:width===390?844:900}})
+  for(const width of recordsBrowserWidths()){
+   const context=await browser.newContext({viewport:{width,height:width<=390?844:900}})
    try{
     await context.addCookies(browserCookies(h.cookie,h.origin))
     const page=await context.newPage(),journey=recordsJourney(page,h.origin,output,width),consoleErrors=[]

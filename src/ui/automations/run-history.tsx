@@ -12,7 +12,7 @@ export function AutomationRunHistory({id}:{id:string}) {
   <ResourceState resource={runs.resource} operation="automation runs" retry={runs.refresh}>{data=>data.runs.length?
    <div className="cr-stack">{data.runs.map(run=><article id={`run-${run.id}`} key={run.id} className="cr-card"><p><strong>{run.testMode?`${run.testMode==='live'?'Live test':'Test'} · `:''}{run.state}</strong> · definition {run.definitionVersion} · <Timestamp value={run.queuedAt}/></p>
     <p className="cr-muted">{run.recordLabel}</p>{run.errorCode&&<p className="cr-error">{run.cause} ({run.errorCode})</p>}
-    {run.href&&<a href={run.href}>Link to this run</a>}
+    {run.href&&<a className="cr-link" href={run.href}>Link to this run</a>}
     {run.retryable&&<button className="cr-button" disabled={busy} onClick={async()=>{setBusy(true);setError(null);try{await readApi(`/api/user-automations/${id}/runs/${run.id}/retry`,{method:'POST',body:JSON.stringify({commandId:createUlid()})});runs.refresh()}catch(error){setError(error instanceof Error?error.message:'Retry could not be scheduled.')}finally{setBusy(false)}}}>Retry safe action</button>}
     {run.state==='Held'&&run.heldUntil&&<p>Email waits for quiet hours to end · <Timestamp value={run.heldUntil}/></p>}
     <ol>{run.actions.map(action=><li key={action.position}>Action {action.position+1}: {action.state}{action.smsStatus&&` · SMS ${action.smsStatus}`}{action.error_code&&` (${action.error_code})`}{action.smsError&&<p style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>Twilio {action.smsError.code}: {action.smsError.message}</p>}</li>)}</ol>

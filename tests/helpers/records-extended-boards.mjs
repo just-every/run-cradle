@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import {displayAction,tableAction} from './records-table-tools.mjs'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -16,8 +17,8 @@ import {newField} from '../../src/ui/records/schema/templates.ts'
 export async function extendedBoardJourney(){
  const output=path.resolve('.private/boards');await mkdir(output,{recursive:true})
  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
- try{for(const width of [1440,390]){
-  const h=await recordsBrowserRuntime(0),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+ try{for(const width of recordsBrowserWidths()){
+  const h=await recordsBrowserRuntime(0),context=await browser.newContext({viewport:{width,height:width<=390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
   try{
    page.setDefaultTimeout(15000)
    await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])

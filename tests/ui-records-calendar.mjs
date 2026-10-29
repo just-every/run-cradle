@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
 import {displayAction,tableAction} from './helpers/records-table-tools.mjs'
 import {recordCalendarJourney} from './helpers/record-calendar-journey.mjs'
 import {timelineBrowserJourney} from './helpers/records-timeline-journey.mjs'
@@ -28,8 +29,8 @@ contract('INTEG-004] [VIEW-012] [VIEW-009] [VIEW-010] [VIEW-011] [VIEW-013] [VIE
   h=await recordsBrowserRuntime(0)
   await h.db.prepare("UPDATE workspace_settings SET timezone='America/New_York'").run()
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
-  for(const width of [1440,390]){
-   const context=await browser.newContext({viewport:{width,height:width===390?844:1000},timezoneId:'Australia/Brisbane'}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+  for(const width of recordsBrowserWidths()){
+   const context=await browser.newContext({viewport:{width,height:width<=390?844:1000},timezoneId:'Australia/Brisbane'}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    try{
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     async function call(url,input){return page.evaluate(async({url,input})=>{const csrf=await (await fetch('/auth/csrf')).json();const response=await fetch(url,{method:input===undefined?'GET':'POST',headers:{'content-type':'application/json','x-csrf-token':csrf.csrfToken},...(input===undefined?{}:{body:JSON.stringify(input)})});if(!response.ok)throw Error(`${response.status}: ${await response.text()}`);return (await response.json()).data},{url,input})}

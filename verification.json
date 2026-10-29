@@ -65,10 +65,11 @@
     },
     {
       "name": "base",
-      "browser": false,
+      "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:base"
+        "pnpm test:base",
+        "CRADLE_RECORDS_BROWSER_WIDTH=320 pnpm test:records:browser"
       ]
     },
     {
@@ -138,10 +139,11 @@
     },
     {
       "name": "launch-effects",
-      "browser": false,
+      "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 17/17"
+        "node scripts/verify-suite.mjs test:launch 17/17",
+        "env CRADLE_RECORDS_BROWSER_WIDTH=320 CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
       ]
     },
     {
@@ -268,7 +270,7 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "env CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
+        "env CRADLE_RECORDS_BROWSER_WIDTH=1440,390 CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
       ]
     },
     {

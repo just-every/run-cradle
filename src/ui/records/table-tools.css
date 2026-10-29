@@ -20,7 +20,7 @@
 @media (pointer: coarse) { .cr-column-resize { display: none; } }
 @media (max-width: 600px) {
   .cr-editable-grid { scroll-padding-left: calc(56px + var(--cr-primary-width, 144px)); }
-  .cr-table-controls { flex-wrap: nowrap; gap: 6px; }
+  .cr-table-controls { flex-wrap: wrap; gap: 6px; }
   .cr-table-controls .cr-chip { padding-inline: 10px; }
   .cr-filter-chip button { min-height: 44px; }
   .cr-quiet-undo, .cr-selection-bar { position: fixed; z-index: 20; inset: auto 0 0; margin: 0; height: 56px; min-height: 56px; padding: 5px 20px; display: flex; align-items: center; gap: 12px; background: var(--card); border-top: 1px solid var(--line); border-radius: 0; }

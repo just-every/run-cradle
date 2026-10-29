@@ -13,7 +13,7 @@ export async function historyBrowserJourney(){
  let h,browser
  try{
   h=await recordsBrowserRuntime(0);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
-  for(const width of recordsBrowserWidths([1440,390,320])){
+  for(const width of recordsBrowserWidths([1440,390,320],{bothPhones:true})){
    const context=await browser.newContext({viewport:{width,height:width<=390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width,{measureTargets:width<=390})
    let peerContext
    try{

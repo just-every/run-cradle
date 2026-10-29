@@ -1,3 +1,4 @@
+import {recordCommentsBrowser} from './helpers/records-comment-browser.mjs'
 import {recordTemplateBrowser} from './helpers/record-template-browser.mjs'
 import {gridRangeBrowserJourney} from './helpers/records-grid-range-browser.mjs'
 import {baseAction} from './helpers/records-base-menu.mjs'
@@ -77,4 +78,5 @@ try{
 await collectionLookupsBrowser()
 await conditionalFormsJourney()
 await historyBrowserJourney()
+await recordCommentsBrowser()
 })

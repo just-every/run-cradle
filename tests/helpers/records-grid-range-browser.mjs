@@ -1,3 +1,6 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
+import {recordsJourney} from './records-browser-journey.mjs'
+import {mkdir} from 'node:fs/promises'
 import assert from 'node:assert/strict'
 import { chromium } from '@playwright/test'
 import { recordsBrowserRuntime } from './records-browser-runtime.mjs'
@@ -8,13 +11,16 @@ import { newField } from '../../src/ui/records/schema/templates.ts'
 
 /** The same range operation reaches its public menu and keyboard doors. */
 export async function gridRangeBrowserJourney() {
+  const output='.private/grid-range';await mkdir(output,{recursive:true})
   let runtime, browser
   try {
     runtime = await recordsBrowserRuntime()
     browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ['--no-sandbox'] })
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
+    for(const width of recordsBrowserWidths()){
+    const context = await browser.newContext({ viewport: { width, height: width<=390?844:900 } })
+    try{
     await context.addCookies([{ name: runtime.cookie.split('=')[0], value: runtime.cookie.slice(runtime.cookie.indexOf('=') + 1), url: runtime.origin }])
-    const page = await context.newPage()
+    const page = await context.newPage(), j=recordsJourney(page,runtime.origin,output,width)
     await page.goto(runtime.origin + '/app/records')
     await page.getByRole('button', { name: /^Base ▾/ }).waitFor()
     const appId = createUlid(), entityId = createUlid(), name = newField('Item'), value = newField('Quantity', 'number')
@@ -29,6 +35,7 @@ export async function gridRangeBrowserJourney() {
     await first.click(); await page.keyboard.press('Shift+ArrowDown')
     let pending = patch(); await tableAction(page, 'Fill down'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '2'])
+    await j.capture('grid-range-filled')
     pending = patch(); await tableAction(page, 'Undo'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '7'])
     // Do not wait for a background read: the admitted command's rows already
@@ -39,6 +46,8 @@ export async function gridRangeBrowserJourney() {
     pending = patch(); await tableAction(page, 'Undo'); assert.equal((await pending).status(), 200)
     pending = patch(); await tableAction(page, 'Redo'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '2'])
-    await context.close()
+    await j.capture('grid-range-redone')
+    }finally{await context.close()}
+    }
   } finally { await browser?.close(); await runtime?.close() }
 }

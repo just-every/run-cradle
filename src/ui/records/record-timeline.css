@@ -10,7 +10,7 @@
 .cr-timeline-axis > div { position: absolute; box-sizing: border-box; border-right: 1px solid var(--line); padding: .75rem .35rem; height: 44px; font-size: var(--text-meta); white-space: nowrap; overflow: hidden; }
 .cr-timeline-body { position: relative; }
 .cr-timeline-row { height: 96px; border-bottom: 1px solid var(--line); box-sizing: border-box; }
-.cr-timeline-row .cr-timeline-label > a { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr-timeline-label-content > a { display: flex; align-items: center; min-height: 24px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cr-timeline-label small { display: block; font-size: var(--text-meta); line-height: 1.3; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .cr-timeline-label .cr-button { min-height: 25px; padding: .15rem .35rem; margin-top: .2rem; font-size: var(--text-meta); }
 .cr-timeline-track { position: relative; flex-shrink: 0; }
@@ -34,3 +34,9 @@
 .cr-timeline-arrow--critical { fill: #826016; }
 .cr-timeline-arrow--conflict { fill: #b23d2a; }
 @media (max-width: 700px) { .cr-timeline-workspace { --timeline-label: 168px; } .cr-timeline-scroll { max-height: 70vh; } .cr-timeline-workspace .cr-actions { gap: .25rem; } .cr-timeline-workspace .cr-toolbar .cr-button { padding: .4rem .55rem; } }
+
+/* Labels grow with their linked values so their touch areas remain exposed. */
+.cr-timeline-label-content { display: grid; gap: 4px; min-width: 0; }
+.cr-timeline-label .cr-timeline-detail { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.cr-timeline-detail .cr-record-link { display: inline-flex; max-width: 100%; vertical-align: middle; }
+.cr-timeline-detail .cr-record-chip { white-space: normal; overflow-wrap: anywhere; }
