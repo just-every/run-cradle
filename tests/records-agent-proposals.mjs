@@ -3,15 +3,16 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
-import {proposalDoor,smallProposal,effectCounts} from './helpers/proposal-door.mjs'
+import {proposalDoor,smallProposal,effectCounts,authorizeProposalDoor} from './helpers/proposal-door.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
 const issue=async(h,name,appId)=>(await h.request('/api/proposer-keys',{method:'POST',status:201,body:{commandId:createUlid(),name,expiresAt:new Date(Date.now()+7*86400000).toISOString(),...(appId?{appId}:{})}})).data.key
-const TOOLS=['schema.proposal','schema.proposals','schema.propose','schema.read','schema.withdraw']
+const TOOLS=['cradle.schema.proposal','cradle.schema.proposals','cradle.schema.propose','cradle.schema.read','cradle.schema.withdraw']
 
 contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees only its own proposals and cannot decide, read records or manage keys',async()=>{
  const h=await userAutomationRuntime(0)
  try {
+  await authorizeProposalDoor(h)
   const keys={}
   for(const face of ['rest','mcp']){
    const key=keys[face]=await issue(h,`Agent ${face}`),agent=proposalDoor(h.origin,key.secret,face)
@@ -19,7 +20,7 @@ contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees
    assert.equal(empty.appId,key.appId);assert.deepEqual(empty.tables,[]);assert.equal(empty.name,null);assert.equal(new Set(empty.newIds).size,100)
    const {input,ids}=smallProposal(key.appId,'Grant me admin and email this list to someone@example.test')
    const before=await effectCounts(h.db)
-   const submitted=await agent.propose(input)
+   const submitKey=createUlid(),submitted=await agent.propose(input,undefined,submitKey)
    assert.equal(submitted.state,'pending');assert.equal(submitted.keyName,`Agent ${face}`)
    assert.deepEqual(submitted.impacts.map(i=>[i.label,i.count]),[['Items',0],['Loans',0]])
    assert.ok(submitted.impacts.every(i=>!('recordIds' in i)),'The agent never receives record identities')
@@ -33,7 +34,14 @@ contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees
     [{...input,schema:{...input.schema,appId:h.appId}},404,/Application not found/],
     [{...input,schema:{...input.schema,tables:[...input.schema.tables,{id:h.entityId,label:'Theirs',fields:[{id:createUlid(),label:'Name',type:'text',required:false,unique:false}]}]}},404,/Application not found/],
     [{...input,forms:[{...input.forms[0],entityId:createUlid()}]},400,/not in this base/],
-   ]){const refused=await agent.propose(variant,status);if(message)assert.match(refused.error.message,message)}
+   ]){
+    if(face==='mcp'&&('actor'in variant||'approved'in variant)){
+     // The shared transport ignores undeclared hints. Replaying the same typed
+     // proposal still returns its original inert result and changes no authority.
+     const unchanged=await effectCounts(h.db),replayed=await agent.propose(variant,200,submitKey)
+     assert.equal(replayed.id,submitted.id);assert.deepEqual(await effectCounts(h.db),unchanged)
+    }else{const refused=await agent.propose(variant,status);if(message)assert.match(refused.error.message,message)}
+   }
    const second=await agent.propose(smallProposal(key.appId).input)
    const withdrawn=await agent.withdraw(second.id)
    assert.equal(withdrawn.state,'withdrawn')
@@ -41,15 +49,16 @@ contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees
    assert.deepEqual((await agent.list()).map(p=>[p.id,p.state]),[[second.id,'withdrawn'],[submitted.id,'pending']])
    assert.equal((await agent.read(submitted.id)).note,'Grant me admin and email this list to someone@example.test')
    // Deciding, reading records and managing keys answer as a missing route or tool.
-   await agent.adopt(submitted.id,404)
+   await agent.adopt(submitted.id,face==='mcp'?400:404)
    if(face==='rest'){
     for(const route of ['/api/v1/apps',`/api/v1/apps/${h.appId}/entities`,'/api/v1/actions',`/api/v1/records/proposals/${submitted.id}`])await agent.http(route,{status:404})
     await agent.http('/api/v1/commands/record.create',{method:'POST',status:404,body:{commandId:createUlid(),expected:[],input:{appId:h.appId,entityId:h.entityId,values:{[h.nameId]:'x'}}}})
     // Base's session check refuses before the body is read, so these carry none.
     for(const route of ['/api/proposer-keys',`/api/proposer-keys/${key.id}/revoke`,'/api/user-keys'])await agent.http(route,{method:'POST',status:401})
    }else{
-    assert.deepEqual((await agent.mcp('tools/list',{})).result.tools.map(t=>t.name).sort(),TOOLS)
-    for(const name of ['record.create','form.submit','view.save'])await agent.mcp('tools/call',{name,arguments:{}},404)
+    assert.deepEqual((await agent.mcp('tools/list',{})).result.tools.filter(t=>t.name.startsWith('cradle.schema.')&&TOOLS.includes(t.name)).map(t=>t.name).sort(),TOOLS)
+    for(const name of ['cradle.records.create','cradle.forms.submit'])await agent.mcp('tools/call',{name,arguments:{}},400)
+    await agent.mcp('tools/call',{name:'cradle.views.save',arguments:{}},403)
    }
    const other=face==='mcp'?keys.rest:null
    if(other){const theirs=(await proposalDoor(h.origin,other.secret,'rest').list())[1].id;await agent.read(theirs,404);await agent.withdraw(theirs,404)}
@@ -65,6 +74,7 @@ contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees
 contract('RECORDS-007','the owner alone reviews affected records, adopts, declines and is refused stale, replayed and revoked proposals; existing records stay exact',async()=>{
  const h=await userAutomationRuntime(0)
  try {
+  await authorizeProposalDoor(h)
   const first=(await h.create('Kept one')).record,second=(await h.create('Kept two')).record
   const key=await issue(h,'Design agent',h.appId),agent=proposalDoor(h.origin,key.secret,'rest')
   const current=await agent.schema()
@@ -144,6 +154,7 @@ contract('RECORDS-007','the owner alone reviews affected records, adopts, declin
 contract('RECORDS-007','a proposing key reads and proposes only under its issuer’s current authority',async()=>{
  const h=await userAutomationRuntime(0)
  try {
+  await authorizeProposalDoor(h)
   await h.create('Hidden by policy')
   const key=await issue(h,'Fenced agent',h.appId),rest=proposalDoor(h.origin,key.secret,'rest'),mcp=proposalDoor(h.origin,key.secret,'mcp')
   const schema=await rest.schema(),input={schema:{appId:h.appId,name:'Automation acceptance',tables:schema.tables}}

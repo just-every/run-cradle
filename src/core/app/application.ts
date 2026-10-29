@@ -5,7 +5,7 @@ import { authorizeLaunchProjection } from '../../apps/launch/projection-authorit
 import { createLaunchOwnersRouter } from '../../apps/launch/owners.server'
 import { createLaunchSettingsRouter } from '../../apps/launch/settings-http.server'
 import { AdmissionError } from '../../domains/admission/errors'
-import type { Runtime } from './composition/runtime.server'
+import type { ComposedRuntime } from './composition/runtime.server'
 import { ApiError, errorResponse } from '../registry/errors.server'
 import { createUlid } from '../shared/ids'
 import { AuthorityError } from '../../domains/authority/errors'
@@ -34,9 +34,14 @@ import type { Platform } from '../platform'
 import type { SeedConfig } from '../shared/config'
 import type { AppEnv } from './types'
 
-export const createApplication = (platform: Platform, config: SeedConfig, runtime: Runtime) => {
+export const createApplication = (platform: Platform, config: SeedConfig, runtime: ComposedRuntime) => {
   const app = new Hono<AppEnv>()
   const {calendarSync,sheets,fileStores,foundation,providers,records,channels,repairIntake,automations,lifecycle,launch:launchRuntime,launchImports} = runtime
+  app.use('*', async (context, next) => {
+    const response = await runtime.agentDoor.handle(context.req.raw)
+    if (response) return response
+    await next()
+  })
 
   app.onError(async (error, context) => {
     if (error instanceof ApiError || error instanceof AdmissionError) return errorResponse(error, createUlid(), context.req.method + ' ' + context.req.path)
@@ -115,7 +120,6 @@ export const createApplication = (platform: Platform, config: SeedConfig, runtim
   const construction = createConstructionDoor({ db: platform.bindings.DB, policy: foundation.policy, admission: foundation.admission, installationAppId: INSTALLATION_AUTHORITY_APP, runner: !!(platform.bindings.CANDIDATE_RUNNER_URL && platform.bindings.CANDIDATE_RUNNER_TOKEN && platform.bindings.CANDIDATE_RUNNER_PUBLIC_KEY), authenticate: foundation.authenticate })
   for (const path of ['/api/v1/construction/readiness', '/api/v1/candidates/:id', '/api/v1/candidates/:id/adoption-review', '/api/v1/candidates/:id/preview', '/api/v1/evaluations/:id', '/api/v1/construction-jobs/:id', '/api/v1/commands/candidate.prepare', '/api/v1/commands/candidate.revise', '/api/v1/commands/candidate.build', '/api/v1/commands/candidate.evaluate', '/api/v1/commands/candidate.reject', '/api/v1/commands/source.intake.prepare']) app.all(path, context => construction.fetch(context.req.raw))
   for (const path of ['/api/notifications', '/api/notifications/*', '/api/settings', '/api/workspace', '/api/v1/notifications', '/api/v1/settings', '/api/v1/preferences', '/api/v1/deliveries']) app.all(path, context => channels.http.fetch(context.req.raw))
-  app.all('/mcp', context => foundation.mcp(context.req.raw))
   for(const path of ['/api/v1/guests','/api/v1/guests/invite','/api/v1/commands/member.erase','/api/v1/commands/launch.campaign.delete','/api/v1/commands/launch.samples.remove','/api/v1/erasures/:id']) app.all(path,context=>lifecycle.http.fetch(context.req.raw))
   const archives=installationArchiveHttp(platform,foundation)
   for(const path of ['/api/v1/commands/export.start','/api/v1/archive-jobs/*'])app.all(path,c=>archives.fetch(c.req.raw))

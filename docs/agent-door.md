@@ -1,110 +1,97 @@
-# Cradle agent support
+# Cradle company-agent door
 
-The supported native MCP interface remains Cradle's scoped proposal door
-(RECORDS-007). A proposing key can read its base's schema, prepare an inert
-proposal, list and read its own proposals, and withdraw one. It cannot adopt a
-proposal, operate records, change grants or credentials, or send to a provider.
-Native row, field, base and credential restrictions continue to apply.
+Cradle serves one shared Base agent door at `/mcp`, its canonical OAuth resource
+metadata, `/api/rer/agent-policy`, `/agents` and the Agents person/approval doors.
+It negotiates MCP `2026-07-28` and `2025-11-25`. March 2025 is refused. Native
+REST, session, Origin, CSRF, device and installation credentials keep their own
+purposes. The former proposal-only MCP dispatcher is removed.
 
-The shared Base agent door, Business settings and the door's theme/icon
-dependencies are recorded at
-`e1b4265eb0d839a67dae3c36a04f83fa48c9d480`, with additive migrations for their
-schemas. These source copies prepare the shared door; they do not enable a
-company-agent surface. The native proposal MCP dispatcher is still active.
-There is no new policy receiver, Agents page, tool or resource registry.
-Public pages and navigation retain their existing source pins.
+The installed CLI and recorded door runtime use rer 0.2.87, Base
+`62f07fe6ecfdeae1a90bf6e65a02abae288996b3`. Business settings and the door's
+private theme/icon dependencies use that same source revision. The public
+homepage, marketing and navigation copies retain their existing pins and bytes.
 
-Runtime source and the rer command are separate pins. The published project
-rer dependency is pinned to released 0.2.86. This command pin does not change
-the recorded runtime-source pin or enable the shared door. The corresponding
-released Base source is `f96363bf919ea3e7ed1837daba6894810a50e4a6`
-(`rer-v0.2.86`).
+## Synchronous capability set
 
-## Required continuation context
+This rollout covers tools, signed policy, pause, audit and idempotency. Current
+native principal authorization and owner-bound Business tokens apply throughout.
+The release has no capability-declaration field; `agent-surface.json` declares
+only the integrated registry and its real native fixtures.
 
-Cradle's durable execution runs, provider jobs, Launch analyses and automation
-definitions retain their originating native principal. Final provider admission
-must recheck that precise sponsor, agent, consent and operation against current
-native grants and company policy, including Pause and revocations.
+Agents can inspect currently authorized bases, schemas, rows, record history,
+views, forms and AI usage. Private content is conservatively classified sensitive;
+view revision witnesses return only authorized identifiers and versions. Resource
+reads use those same native services, row predicates and field projections.
+Hidden and absent resources have the same refusal. Imported text is untrusted.
 
-The selected Base API now supplies immutable `ToolContext.consent`, `scopes`,
-`clientId`, `operationId` and `idempotencyKey`. Its `AgentDoor.invoke` accepts
-the saved consent and operation identity at the trusted worker boundary, checks
-them against the retained admission, and rechecks current signed revocations
-before execution. A mismatched admission refuses with `operation_mismatch`;
-a revoked consent refuses with `consent_revoked`. Execution and refusal audit
-rows retain `consent` and `operation_id`. Each continuation tool has its own
-once-only claim. See the copied `ADOPTING.md` section "Durable invocation
-consent and operation identity".
+`cradle.views.save` creates or updates a private, unlocked, non-shipped view
+through native `view.save` admission. Existing views require their actual version;
+callers may also supply the door's `expected_revision`. It changes no records,
+grants, shared/public visibility or delivery. The server summarizes the exact
+native view and records its target. No provider cost or invented Undo is exposed.
 
-This closes the earlier source API limitation. It does not establish that
-Cradle's native queued provider path has adopted or proven that API.
+An existing proposing key retains its original base and issuer fences through
+`cradle.schema.read`, `.propose`, `.proposals`, `.proposal` and `.withdraw`.
+These tools call the same native services as the proposal REST face. They cannot
+adopt, read record values, administer keys or send to providers. Business tokens
+cannot impersonate a proposing key. The signed-in owner must answer company-agent
+policy before a local key acts. Discovery is the shared registry; possessing a
+key does not grant the scopes advertised there.
 
-## Verification boundary
+## Native identity and attribution
 
-The module's `runAgentDoorConformance` accepts an optional
-`invoke(name, args, who)` callback for trusted worker admission. At this source
-pin, the normal rer verifier does not pass that callback to the module harness.
-Its native journey receives HTTP requests, tool calls, mail and provider fixture
-controls, but no trusted invocation or queue/schedule driver. The disposable
-hosted runtime configures queue producers without native queue consumers.
-Consequently it cannot yet prove Cradle's required native queued continuation,
-revocation and operation-mismatch cases through normal `rer verify`.
+Business `owner_id` maps to the current native installation owner.
+Business team ids map through signed `bs_team` bindings and
+`cradle_base_operators` to `authority_principals.id`. Token email never selects a
+person. Current native account status and `AUTH_ALLOW_LIST` govern both native
+and agent admission. Unknown, inactive and excluded sponsors are refused.
+Business policy roles remain separate from native application roles: a local
+promotion does not create Business editor authority.
 
-The integration needs a supported verifier bridge to the seed's real worker
-boundary. An agent-callable test route, alternate consent store, fabricated
-human session or substituted queue would not prove that boundary. Shared door
-activation remains pending that proof and the native adapters, Business person
-bindings and custody integration. The source API's module tests are separate
-from Cradle's own production-path evidence.
+The door bridge enters the existing native policy engine with an internal
+admission capability; it creates no session or credential. Native transaction
+guards recheck the sponsor, original local credential, policy snapshot and
+revocation. Native command admission atomically retains `<agent> for <person>`,
+operation identity and named approvers in `cradle_agent_activity`; native record
+history exposes that attribution separately from its existing actor.
 
-Spend-cap enforcement remains a separate Base limit. These source copies do
-not add a spend guarantee or expose additional provider operations.
+## Undeclared families and limits
 
+Queued lifecycle is undeclared. Record writes can capture automations, calendar
+work and change deliveries; Launch writes can enqueue notifications and event
+work. Provider sends, AI/model work, retries, scheduled imports/exports, webhook
+and Slack deliveries, calendar synchronization and operational/repair execution
+remain on their existing native doors. Synchronous persistence alone does not
+establish a synchronous agent effect.
 
-## Synchronous adoption boundary
+Seed-emitted events beyond the built-in `cradle.events.list`, subscriptions,
+multi-sponsor admission, mail edges, resource refresh, timed lifecycle, dual host
+and owner-native administration are undeclared. Schema adoption, import commit,
+people/grants/keys/settings administration, snapshots, trash recovery and erasure
+retain their current human proof and native authority. No substitute queue,
+consent store or verification-only production route is added.
 
-The first shared-door rollout targets tools, policy, pause, audit and
-idempotency, with native principal authorization and owner-bound tokens required
-for every call. This capability set is a rollout target; this installation does
-not yet declare it or claim shared-door conformance. The five scoped proposal
-verbs above remain the only supported MCP surface.
+Base retains pending arguments, outcomes, summaries, trace and audit without a
+client-scoped erasure contract. Native member/campaign erasure therefore refuses
+while agent custody exists, before changing native data. This explicit custody
+exception remains closed; deleting a native record cannot erase or authorize
+replay of a retained door outcome. Spend caps are not enforced by this release;
+the conformance journey declares `spend: {none: true}`.
 
-Queued lifecycle, seed-emitted events beyond the built-in event reader,
-subscriptions, multiple sponsors, mail edges, resource refresh, timed lifecycle,
-dual host and owner-native administration are outside that first rollout.
-Provider sends, automation execution and retries, scheduled work, calendar and
-webhook delivery, warehouse jobs and Launch event-driven effects all reach native
-queues or schedules. A record write may also enqueue those effects; synchronous
-record persistence alone does not establish a synchronous agent operation.
-Do not register those paths merely to satisfy an unscoped conformance check.
+## Verification and contract boundary
 
-Native services require their real session, credential or proposer admission.
-A Business sponsor id is not a native session or a proposing key. The shared
-people adapter must resolve `authority_principals.id` through
-`cradle_base_operators`, and must re-read current native authority. The signed
-Business owner/team binding selects that native person; an email match cannot
-select or widen a binding. Business team roles and native application roles
-remain separate.
+`agent-surface.json` contains the exact tool/resource registry and its journey.
+Its disposable initializer proves raw setup-token refusal, the real signed
+owner claim, replay refusal and the resulting native session. Every phase
+prepares fresh data and proposing credentials through ordinary native HTTP doors.
+No SQL, production test route or substituted auth adapter prepares fixtures.
+Registered tools make no outbound provider request, so no network edge is declared.
 
-Before exposing client records, the integration must include retained door
-outcomes, pending approval arguments, summaries, trace, audit and events in the
-native custody and erasure boundary, including pending execution and replay.
-The existing native erasure path alone does not establish that coverage.
-
-## Authoring prerequisites
-
-Use the pinned CLI's `rer refresh-base --help`. Version 0.2.86 requires a full
-immutable commit in `--ref`, including when the intended release is named by a
-tag. An archive provides only one tree; refresh of these historical records
-requires prior source membership and Git history. Keep existing recorded copies
-and applied migration bytes intact when refresh refuses. Do not fabricate a
-history, change record ownership or edit copied runtime files to bypass it.
-Public pages and navigation keep their existing pins.
-
-Use `rer door clauses --write` followed by `rer door clauses --check` to adopt
-the canonical shared clauses once the seed's contract generator and standard
-contract shape are available. The current legacy contract has no declared
-`Lander-Regenerate` generator or `src/base/contract-docs.mjs`. A refusal is not
-permission to write generated acceptance views by hand or claim the shared
-clauses are satisfied.
+Run `pnpm exec rer door clauses --write`, then `--check`, and the normal
+`pnpm exec rer verify`. The legacy contract currently lacks its standard
+Lander-Regenerate contract generator. The released clause command refuses;
+canonical BASE-AGENT rows and generated acceptance/status changes must wait for
+that source conversion. The static verifier consequently reports the missing
+built-in event clause. This is a reported gap, not a passing conformance claim.
+Undeclared-family clauses must remain partial when their agent acceptance needs
+one of those families; existing native person-flow evidence is not agent evidence.

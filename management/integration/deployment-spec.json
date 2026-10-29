@@ -960,6 +960,12 @@
       "name": "9086_business_people.sql",
       "sha256": "51aa39622d866b987d71b6e37c9a8300e7f24c54a55611edaab669ed051b01cd",
       "sql": "ALTER TABLE bs_settings ADD COLUMN owner_id TEXT CHECK(owner_id IS NULL OR owner_id <> '');\nALTER TABLE bs_team ADD COLUMN business_id TEXT CHECK(business_id IS NULL OR business_id <> '');\nALTER TABLE bs_team ADD COLUMN business_role TEXT CHECK(business_role IS NULL OR business_role IN('admin','member'));\nCREATE UNIQUE INDEX bs_team_business_id ON bs_team(business_id) WHERE business_id IS NOT NULL;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9087_agent_native_attribution.sql",
+      "sha256": "34a5d3ebb38924120db1dd1fe1b4bba8000ac2aa0f47350b4ae0247b3d7ff38c",
+      "sql": "-- Native command custody preserves the preparer separately from its sponsor and approvers.\nCREATE TABLE cradle_agent_activity (\n command_id TEXT PRIMARY KEY REFERENCES command_admissions(command_id),\n agent_id TEXT NOT NULL, agent_name TEXT NOT NULL,\n sponsor_id TEXT NOT NULL, sponsor_name TEXT NOT NULL, label TEXT NOT NULL,\n operation_id TEXT NOT NULL, approvers_json TEXT NOT NULL, created_at TEXT NOT NULL\n);\nCREATE INDEX cradle_agent_activity_sponsor ON cradle_agent_activity(sponsor_id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

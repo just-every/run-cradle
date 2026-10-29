@@ -2,7 +2,7 @@ import { ensureRecordAutomationTriggers } from '../../domains/automations/captur
 import { localRuntimeBindings } from '../platform/local-auth.server'
 import type { PlatformBindings } from '../platform/bindings'
 import { createPlatform } from '../platform'
-import { createRuntime, type Runtime } from './composition/runtime.server'
+import { createRuntime, type ComposedRuntime } from './composition/runtime.server'
 import { createApplication, type AppType } from './application'
 import { getServerExtensionConfig } from './mount-server'
 
@@ -10,7 +10,7 @@ import { getServerExtensionConfig } from './mount-server'
  * isolate builds it once per set instead of once per request. Every request still
  * reads the admitted schema pointers, repairs record automation triggers, and
  * resolves its own authentication and authority inside the handlers. */
-type Composed = { app: AppType; runtime: Runtime }
+type Composed = { app: AppType; runtime: ComposedRuntime }
 const composed = new WeakMap<object, { bindings: PlatformBindings; schemas: string; application: Promise<Composed> }>()
 
 const admittedSchemas = async (db: D1Database) =>

@@ -14,6 +14,10 @@ export type AuditEntry = {
     actor: {
         id: string;
         kind: string;
+        label?: string;
+        agent?: { id: string; name: string };
+        for?: { id: string; name: string };
+        approvers?: { id: string; name: string }[];
     };
     action: string;
     subject: Ref | null;
@@ -38,6 +42,8 @@ type Row = {
     source_ids_json: string;
     personal_refs_json: string;
     created_at: string;
+    agent_id?: string; agent_name?: string; sponsor_id?: string; sponsor_name?: string;
+    agent_label?: string; approvers_json?: string;
 };
 export function createAuditReader(db: D1Database, policy: PolicyPort, discover: (ctx: RequestContext, ref: Ref) => Promise<void>, options: {
     cursorSecret: string;
@@ -51,7 +57,9 @@ export function createAuditReader(db: D1Database, policy: PolicyPort, discover: 
                 throw new Error('Invalid audit limit');
             await discover(ctx, ref);
             const scope = await policy.scope(ctx, { appId: ref.appId, entityId: ref.entityId, purpose: 'read' });
-            const rows = await db.prepare('SELECT * FROM admission_audit WHERE app_id=? AND subject_json=? ORDER BY created_at,id').bind(ref.appId, canonical(ref)).all<Row>();
+            const rows = await db.prepare(`SELECT a.*,g.agent_id,g.agent_name,g.sponsor_id,g.sponsor_name,g.label AS agent_label,g.approvers_json
+              FROM admission_audit a LEFT JOIN cradle_agent_activity g ON g.command_id=a.command_id
+              WHERE a.app_id=? AND a.subject_json=? ORDER BY a.created_at,a.id`).bind(ref.appId, canonical(ref)).all<Row>();
             const visible = rows.results.flatMap(row => { const changes = JSON.parse(row.changes_json) as AuditEntry['changes']; const projected = changes.filter(c => scope.readableFieldIds.includes(c.fieldId)); return changes.length && !projected.length ? [] : [{ row, changes: projected }]; });
             const revision = (await db.prepare('SELECT COALESCE(MAX(rowid),0) AS revision FROM command_admissions').first<{
                 revision: number;
@@ -64,7 +72,7 @@ export function createAuditReader(db: D1Database, policy: PolicyPort, discover: 
                     throw new AdmissionError('stale_cursor', 'Audit or access changed');
                 offset = parsed.offset;
             }
-            const items = await Promise.all(visible.slice(offset, offset + limit).map(async ({ row, changes }) => ({ id: row.id, commandId: row.command_id, actor: { id: row.actor_id, kind: row.actor_kind }, action: row.action, subject: ref, changes: await Promise.all(changes.map(async change => ({ fieldId: change.fieldId, before: await options.projectCell(ctx, scope, ref, change.fieldId, change.before), after: await options.projectCell(ctx, scope, ref, change.fieldId, change.after) }))), sourceIds: await options.projectSourceIds(ctx, JSON.parse(row.source_ids_json)), personalContentRefs: [], createdAt: row.created_at })));
+            const items = await Promise.all(visible.slice(offset, offset + limit).map(async ({ row, changes }) => ({ id: row.id, commandId: row.command_id, actor: { id: row.actor_id, kind: row.actor_kind, ...(row.agent_id ? {label:row.agent_label,agent:{id:row.agent_id,name:row.agent_name!},for:{id:row.sponsor_id!,name:row.sponsor_name!},approvers:JSON.parse(row.approvers_json!)} : {}) }, action: row.action, subject: ref, changes: await Promise.all(changes.map(async change => ({ fieldId: change.fieldId, before: await options.projectCell(ctx, scope, ref, change.fieldId, change.before), after: await options.projectCell(ctx, scope, ref, change.fieldId, change.after) }))), sourceIds: await options.projectSourceIds(ctx, JSON.parse(row.source_ids_json)), personalContentRefs: [], createdAt: row.created_at })));
             await assertCurrentScopeAuthority(db, ctx, scope);
             await discover(ctx, ref);
             return { items, nextCursor: offset + limit < visible.length ? await codec.encode({ binding, revision, offset: offset + limit }) : null, total: { kind: visible.length > 10000 ? 'at_least' : 'exact', value: Math.min(visible.length, 10000) }, evaluatedAt: new Date().toISOString() };
