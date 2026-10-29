@@ -12749,8 +12749,16 @@
       "sha256": "4cb2fe803654867d68aadab80fc0640f78c28b6892c23bfc523f1741eb8ed968",
       "executable": false
     },
+    "tests/helpers/records-picker-browser.mjs": {
+      "sha256": "aead974aba549714278c075aa4d42431d2453202c67adc9ebcdc21e2a96d5179",
+      "executable": false
+    },
+    "tests/helpers/records-picker-fixture.mjs": {
+      "sha256": "eb8b4ae6001755e36374fdfb52711f41535f28d0b0990d8252606e279a9431e7",
+      "executable": false
+    },
     "tests/helpers/records-picker-journey.mjs": {
-      "sha256": "e223a3563278d36670f8b778d51869b6aeb32bed5df3d2a7b4954aa418b6e154",
+      "sha256": "2a8b34453952af43d7a3c0213511ac896ad661aca27be4cb650541acca26ee0f",
       "executable": false
     },
     "tests/helpers/records-presence-journey.mjs": {
@@ -13194,7 +13202,7 @@
       "executable": false
     },
     "tests/records-csv-fence.mjs": {
-      "sha256": "5c7b105450e9ebe1de80a23d594a76766b725dda26ba3b5a3d0b0c92f63a8009",
+      "sha256": "0ff53b1015f6456993cfd196c4a56f9770c4f8f60efeec8ece6bfbe1f40890bc",
       "executable": false
     },
     "tests/records-grid-range.mjs": {
@@ -13426,7 +13434,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "1111d4bd57808a462a8538e5f3e677296d4ca5cc5a71f3b624e33162fd3d0e3e",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

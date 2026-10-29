@@ -49,3 +49,38 @@ export async function pickerJourney(h){
  await call(manual(),'/api/v1/commands/release.adopt',command({kind:'manual_schema',previewId:pending.id}),409)
  await call(manual(),'/api/v1/records/schema-preview',await r.manual.read(h.ctx,appId),400)
 }
+
+/** Exercise the bounded candidate HTTP door over independently seeded vendors,
+ * including access and shared-view changes while a page cursor is retained. */
+export async function pickerScaleJourney(h){
+ const {vendorPickerFixture,enumeratePicker,assertPickerPage,pickerCommand}=await import('./records-picker-fixture.mjs')
+ const origin='https://picker.example.test'
+ async function call(path,input,status=200){
+  const r=await h.runtime(),auth=async()=>h.ctx
+  const http=path.includes('/schema-preview')||path.includes('/records/bases/')||path.endsWith('/release.adopt')?manualSchemaHttp(r.manual,{},auth):path.endsWith('/link-candidates')?recordsCsvHttp(r.csv,auth):createCommandHttp({...r,authenticate:auth})
+  const response=await http.fetch(new Request(origin+path,{method:input===undefined?'GET':'POST',headers:{origin,'content-type':'application/json'},...(input===undefined?{}:{body:JSON.stringify(input)})})),body=await response.json()
+  assert.equal(response.status,status,JSON.stringify(body));return status===200?body.data:body.error
+ }
+ const f=await vendorPickerFixture({db:h.db,call,descriptors:async()=>(await h.runtime()).registry},'synthetic-cradle-vendor-picker')
+ await f.saveView();await f.configure();await f.populate();await f.restrict()
+ const enumeration=await enumeratePicker(f);assert.ok(enumeration.pages>50)
+ const distant=await f.candidates({search:'Distant city'});assertPickerPage(distant,f)
+ assert.deepEqual(distant.records.items.map(row=>row.id),[f.rows[4997].id],'City search reaches a match beyond the first fifty pages')
+ for(const search of ['Inactive city','Hidden city','synthetic-cradle-private-context'])assert.equal((await f.candidates({search})).records.items.length,0)
+ assert.deepEqual((await f.candidates({search:f.rows[4997].name})).records.items.map(row=>row.id),[f.rows[4997].id],'Primary text remains searchable')
+ const first=await f.candidates()
+ await f.saveView({kind:'all',conditions:[f.definition.filter,{kind:'condition',fieldId:f.city.id,op:'eq',value:'Distant city'}]})
+ assert.equal((await f.candidates({cursor:first.records.nextCursor},409)).code,'stale_cursor')
+ await enumeratePicker(f,{},[f.rows[4997]])
+ await f.saveView()
+ const beforePolicy=await f.candidates()
+ await f.restrict({hideCity:true,hideAnother:true})
+ assert.equal((await f.candidates({cursor:beforePolicy.records.nextCursor},409)).code,'stale_cursor')
+ await enumeratePicker(f,{},f.expected.filter(row=>row.index!==2),{hideCity:true})
+ assert.equal((await f.candidates({search:'Distant city'})).records.items.length,0,'Newly unreadable city values cannot be searched')
+ const schema=(await h.runtime()).registry.get(f.appId,f.orders).schema
+ const selected=(await call('/api/v1/commands/record.create',pickerCommand({appId:f.appId,entityId:f.orders,values:{[f.order.id]:'synthetic-cradle-selected-vendor',[f.link.id]:{appId:f.appId,entityId:f.vendors,recordId:f.rows[4997].id}}},[{ref:{appId:f.appId,entityId:f.schemaEntity,recordId:f.orders},version:schema.version}]))).value
+ assert.deepEqual(selected.fields[f.link.id].value,{appId:f.appId,entityId:f.vendors,recordId:f.rows[4997].id})
+ await f.restrict({hideSource:true});await f.candidates({},403)
+ console.log('FIELD_005_NATIVE '+JSON.stringify({fixture:5000,...enumeration,distantCity:true,liveView:true,policyNarrowing:true}))
+}

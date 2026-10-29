@@ -1,3 +1,4 @@
+import {pickerBrowserJourney} from './helpers/records-picker-browser.mjs'
 import {recordTemplateBrowser} from './helpers/record-template-browser.mjs'
 import {gridRangeBrowserJourney} from './helpers/records-grid-range-browser.mjs'
 import {baseAction} from './helpers/records-base-menu.mjs'
@@ -29,7 +30,7 @@ import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './helpers/accessibility-evidence.mjs'
 const output=path.resolve(process.env.CRADLE_RECORDS_OUTPUT??'.private/records-builder/browser');await mkdir(output,{recursive:true})
 contract(['RECORDS-001','BASE-PUBLIC-003'].join('] ['),'Home presents records and bases before launch work at desktop and phone widths',async()=>{await writeFile(path.join(output,'home-results.json'),JSON.stringify(await homeReview(output),null,2));await gridRangeBrowserJourney()})
-contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one relation heading, reachable links and policy restrictions',async()=>{
+contract(['RECORDS-002','RECORDS-003','FIELD-005'].join('] ['),'Record detail keeps one relation heading, reachable links and policy restrictions',async()=>{
  let h,browser
  try{
   h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const fixture=await relationFixture(h);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
@@ -40,6 +41,7 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
   }
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close()}
+ await pickerBrowserJourney()
 })
 contract(['CALC-001','PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
  await fieldBrowser()
