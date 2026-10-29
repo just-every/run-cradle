@@ -122,32 +122,39 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    await page.getByText('Restored 2 campaigns').waitFor()
    assert.deepEqual(await statuses(), before)
 
-   // Sample data: install, refuse removal once edited, remove an unedited installation.
+   // Sample data: install, remove an unedited installation, install again, refuse removal once edited.
    await b.visit('/app/settings')
    await b.openPanel('Sample data')
-   await page.getByRole('button', { name: 'Install sample data' }).click()
-   await page.getByText(/Installed \d+ sample records/).waitFor()
-   const edited = await h.db.prepare('SELECT c.id,c.name,c.version FROM campaigns c JOIN launch_sample_records s ON s.record_id=c.id JOIN sample_installations i ON i.id=s.installation_id ORDER BY i.created_at DESC,c.id LIMIT 1').first()
-   await b.command('launch.campaign.patch', { id: edited.id, changes: { statusSummary: 'Edited by an operator' } }, [b.campaignRef(edited)])
-   await page.locator('.launch-settings-item', { hasText: 'Sample data ·' }).first().getByRole('button', { name: 'Remove sample data' }).click()
-   await page.getByText(`campaign has current version ${edited.version+1}`,{exact:true}).waitFor()
-   await b.capture('sample-data-refused')
-   const samples = page.locator('.launch-settings-item', { hasText: 'Sample data ·' }), previousSamples = await samples.count()
-   const [installed] = await Promise.all([
-    page.waitForResponse(response => response.url().endsWith('/api/v1/commands/launch.samples.install') && response.request().method() === 'POST'),
-    page.getByRole('button', { name: 'Install sample data' }).click(),
-   ])
-   assert.equal((await installed.json()).data.state, 'committed', 'The new sample installation commits')
-   await expect(samples).toHaveCount(previousSamples + 1)
+   const samples = page.locator('.launch-settings-item', { hasText: 'Sample data ·' }), installButton = page.getByRole('button', { name: 'Install sample data' })
+   const installSamples = async () => {
+    const [installed] = await Promise.all([
+     page.waitForResponse(response => response.url().endsWith('/api/v1/commands/launch.samples.install') && response.request().method() === 'POST'),
+     installButton.click(),
+    ])
+    assert.equal((await installed.json()).data.state, 'committed', 'The sample installation commits')
+    await expect(samples).toHaveCount(1)
+    await expect(installButton).toHaveCount(0)
+   }
+   await installSamples()
    const installations = await h.db.prepare('SELECT COUNT(*) AS n FROM sample_installations').first('n')
    const [removed] = await Promise.all([
     page.waitForResponse(response => response.url().endsWith('/api/v1/commands/launch.samples.remove') && response.request().method() === 'POST'),
     samples.first().getByRole('button', { name: 'Remove sample data' }).click(),
    ])
    assert.equal((await removed.json()).data.state, 'committed', 'The unedited sample removal commits')
-   await expect(samples).toHaveCount(previousSamples)
+   await expect(samples).toHaveCount(0)
    assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM sample_installations').first('n'), installations - 1)
    await b.capture('sample-data-removed')
+   await installSamples()
+   const edited = await h.db.prepare('SELECT c.id,c.name,c.version FROM campaigns c JOIN launch_sample_records s ON s.record_id=c.id JOIN sample_installations i ON i.id=s.installation_id ORDER BY i.created_at DESC,c.id LIMIT 1').first()
+   await b.command('launch.campaign.patch', { id: edited.id, changes: { statusSummary: 'Edited by an operator' } }, [b.campaignRef(edited)])
+   await samples.first().getByRole('button', { name: 'Remove sample data' }).click()
+   await page.getByText(`campaign has current version ${edited.version+1}`,{exact:true}).waitFor()
+   await expect(installButton).toHaveCount(0)
+   await b.capture('sample-data-refused')
+   // The kept installation is retired so the phone pass starts without samples.
+   await h.db.prepare('DELETE FROM launch_sample_records').run()
+   await h.db.prepare('DELETE FROM sample_installations').run()
 
    // Ownership: hand over after a fresh email-link confirmation, move work, then leave.
    if (width === 1440) await h.db.prepare('UPDATE oa_sessions SET created_at=created_at-700000 WHERE id=?').bind(actor.session.baseId).run()

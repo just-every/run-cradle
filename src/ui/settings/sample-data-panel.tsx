@@ -11,8 +11,7 @@ export function SampleDataPanel() {
  const install = useCommand<{ installationId: string; recordIds: string[] }>('launch-samples-install')
  useEffect(() => { if (install.result.state === 'committed') { installed.refresh(); window.dispatchEvent(new Event('cradle-session-changed')) } }, [install.result.state])
  return <div className="cr-stack"><p>Sample data adds example campaigns with their deliverables, milestones, risks and decisions. Removing it deletes only the records it added, and is refused once any of them has been edited.</p>
-  <ResourceState resource={installed.resource} operation="sample data" retry={installed.refresh}>{page => page.items.length > 0 && <ul className="launch-settings-list">{page.items.map(item => <SampleRow key={item.id} item={item} onRemoved={installed.refresh} />)}</ul>}</ResourceState>
-  <div><button type="button" className="cr-button cr-button--quiet" disabled={['submitting', 'pending', 'unknown'].includes(install.result.state)} onClick={() => void install.submit('/api/v1/commands/launch.samples.install', {}, [])}>Install sample data</button></div>
+  <ResourceState resource={installed.resource} operation="sample data" retry={installed.refresh}>{page => page.items.length > 0 ? <ul className="launch-settings-list">{page.items.map(item => <SampleRow key={item.id} item={item} onRemoved={installed.refresh} />)}</ul> : <div><button type="button" className="cr-button cr-button--quiet" disabled={['submitting', 'pending', 'unknown'].includes(install.result.state)} onClick={() => void install.submit('/api/v1/commands/launch.samples.install', {}, [])}>Install sample data</button></div>}</ResourceState>
   {install.result.state === 'committed' ? <p className="cr-notice cr-notice--committed" role="status">Installed {install.result.value.recordIds.length} sample records.</p> : <CommandFeedback {...install} />}
  </div>
 }

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {createUlid} from '../../src/core/shared/ids.ts'
 
 const appId='00000000000000000000000700'
 const revision=(entityId,row)=>[{ref:{appId,entityId,recordId:row.id},version:row.version}]
@@ -50,6 +51,7 @@ export async function verifyConcurrencyScreens({h,page,command,capture,receipt})
  const installed=await submit(panel.getByRole('button',{name:'Install sample data',exact:true}),'launch.samples.install')
  assert.equal(installed.status,200,JSON.stringify(installed.body))
  await panel.getByText(/Installed \d+ sample records/).waitFor()
+ assert.equal(await panel.getByRole('button',{name:'Install sample data',exact:true}).count(),0,'Samples are not offered again while installed')
  const reviews=(await read('/api/v1/launch/samples')).data.items
  await page.waitForFunction(expected=>document.querySelectorAll('details .launch-settings-item').length>=expected,reviews.length)
  const reviewed=reviews.find(item=>item.id===installed.body.data.value.installationId)
@@ -62,10 +64,10 @@ export async function verifyConcurrencyScreens({h,page,command,capture,receipt})
  verifyConflictConsole(stale)
  await capture('clause-concurrency-samples-stale')
 
- const clean=await submit(panel.getByRole('button',{name:'Install sample data',exact:true}),'launch.samples.install')
- assert.equal(clean.status,200,JSON.stringify(clean.body))
- await panel.getByText(/Installed \d+ sample records/).waitFor()
- // Wait for the refreshed list to contain the new installation before selecting its first row.
+ // The installed samples are edited, so a second installation comes from the command and the open panel reads it afresh.
+ const clean=await h.request(h.ownerSession,'/api/v1/commands/launch.samples.install',{method:'POST',body:JSON.stringify({commandId:createUlid(),input:{},expected:[]})})
+ assert.equal(clean.status,200,await clean.clone().text())
+ await page.reload();await panel.locator('summary').click()
  const count=(await read('/api/v1/launch/samples')).data.items.length
  await page.waitForFunction(expected=>document.querySelectorAll('details .launch-settings-item').length>=expected,count)
  const removed=await submit(installations().first().getByRole('button',{name:'Remove sample data',exact:true}),'launch.samples.remove')
@@ -73,4 +75,7 @@ export async function verifyConcurrencyScreens({h,page,command,capture,receipt})
  assert.ok(removed.input.expected.length>0)
  await page.waitForFunction(expected=>document.querySelectorAll('details .launch-settings-item').length===expected,count-1)
  await capture('clause-concurrency-samples-removed')
+ // The edited installation is retired so the next viewport starts without samples.
+ await h.db.prepare('DELETE FROM launch_sample_records').run()
+ await h.db.prepare('DELETE FROM sample_installations').run()
 }
