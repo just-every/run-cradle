@@ -105,3 +105,52 @@ that source conversion. The static verifier consequently reports the missing
 built-in event clause. This is a reported gap, not a passing conformance claim.
 Undeclared-family clauses must remain partial when their agent acceptance needs
 one of those families; existing native person-flow evidence is not agent evidence.
+
+## Discoverable native jobs
+
+The door currently registers 25 tools. Policy still governs reads.
+`cradle:read` never grants native base, row or field access. A proposing key
+retains only its two original schema scopes.
+
+| Tool | Native effect | Scope |
+| --- | --- | --- |
+| `cradle.activity.read` | Read | `cradle:read` |
+| `cradle.audit.query` | Read | `cradle:read` |
+| `cradle.bases.list` | Read | `cradle:read` |
+| `cradle.campaigns.query` | Read | `cradle:read` |
+| `cradle.campaigns.read` | Read | `cradle:read` |
+| `cradle.decisions.read` | Read | `cradle:read` |
+| `cradle.events.list` | Read | `events:read` |
+| `cradle.files.read` | Read | `cradle:read` |
+| `cradle.forms.read` | Read | `cradle:read` |
+| `cradle.notifications.read` | Read | `cradle:read` |
+| `cradle.operations.observe` | Read | `cradle:read` |
+| `cradle.records.history` | Read | `cradle:read` |
+| `cradle.records.query` | Read | `cradle:read` |
+| `cradle.records.read` | Read | `cradle:read` |
+| `cradle.schema.inspect` | Read | `cradle:read` |
+| `cradle.schema.proposal` | Read | `schema:read` |
+| `cradle.schema.proposals` | Read | `schema:read` |
+| `cradle.schema.propose` | Inert proposal write | `schema:propose` |
+| `cradle.schema.read` | Read | `schema:read` |
+| `cradle.schema.withdraw` | Inert proposal write | `schema:propose` |
+| `cradle.usage.read` | Read | `cradle:read` |
+| `cradle.views.list` | Read | `cradle:read` |
+| `cradle.views.read` | Read | `cradle:read` |
+| `cradle.views.revisions` | Read | `cradle:read` |
+| `cradle.views.save` | Private view write | `cradle:write` |
+
+The eight resource templates are:
+
+- `cradle://bases/{base}`
+- `cradle://bases/{base}/schema`
+- `cradle://bases/{base}/tables/{table}/records/{record}`
+- `cradle://campaigns/{campaign}`
+- `cradle://decisions/{decision}`
+- `cradle://forms/{form}`
+- `cradle://proposals/{proposal}`
+- `cradle://views/{view}`
+
+The file tool returns metadata, the history tool reads history, and the view
+write is limited to private definitions. None advertises file downloads, record
+restoration, public sharing, schema adoption or scheduled execution.

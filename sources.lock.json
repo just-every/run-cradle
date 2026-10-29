@@ -2934,7 +2934,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "fd0a51f805e038a1ea6db9b95cee5d7ce3c6b68e0d5f19ae7a21915f19a208d8",
+      "sha256": "822f543bb50d8b9a3c6cfc78e33d01c053eaf04e086adb23659edac1dfe0f862",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -3030,7 +3030,7 @@
       "executable": false
     },
     "docs/agent-door.md": {
-      "sha256": "8b9fcfe3e20231ccf8237e72cedc44ad5698982a9bfc095153851caca0b93785",
+      "sha256": "e8dd165bcec0d09be8777b18a4ab67bc648c5a54bfd5d50c61ac36db55683285",
       "executable": false
     },
     "docs/agent-proposals.md": {
@@ -5786,7 +5786,7 @@
       "executable": false
     },
     "src/agent-door/launch-read.server.ts": {
-      "sha256": "8574d36adb2dcb789622ee20d83a21bf3c0ed633874db92865dd8797b3ed5afd",
+      "sha256": "8caa862506fb290a90c304cc4e1ed2018965e4b9d1b393448587afa059a9512e",
       "executable": false
     },
     "src/agent-door/local-credentials.server.ts": {

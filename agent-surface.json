@@ -124,8 +124,7 @@
       ],
       "clauses": [
         "FILE-001",
-        "FILE-002",
-        "FILE-006"
+        "FILE-002"
       ]
     },
     {
@@ -156,8 +155,7 @@
         "NOTIFY-005",
         "NOTIFY-006",
         "NOTIFY-008",
-        "NOTIFY-009",
-        "NOTIFY-010"
+        "NOTIFY-009"
       ]
     },
     {
@@ -169,16 +167,8 @@
         "sensitive"
       ],
       "clauses": [
-        "FLAGSHIP-002",
-        "FLAGSHIP-003",
-        "FLAGSHIP-004",
-        "FLAGSHIP-005",
-        "FLAGSHIP-006",
-        "FLAGSHIP-007",
-        "FLAGSHIP-008",
-        "FLAGSHIP-010",
-        "FLAGSHIP-011",
-        "FLAGSHIP-019"
+        "AGENT-004",
+        "AGENT-005"
       ]
     },
     {
