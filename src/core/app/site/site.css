@@ -42,6 +42,8 @@
   .site-header { height: 78px; }
   .site-header-row { margin: 0 20px; }
   .site-brand { font-size: 28px; }
+  /* The lockup keeps its place; 2px above and below make the link a 44px phone target. */
+  .site-header a.site-brand { padding-block: 2px; }
   .site-nav { gap: 10px; font-size: 15px; }
   .site-nav a { padding-inline: 2px; }
   .site-nav .site-signin { padding: 8px 16px; }
