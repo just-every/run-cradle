@@ -8,16 +8,18 @@ import type { createRecordServices } from './service.server'
 import { idSchema } from './validators'
 import { assertGuards } from './fence.server'
 import { schemaGuard } from './change.server'
+import { CSV_CREATE_ALL } from './csv-mapping-contracts'
 import type { CsvMappingChoice, CsvSavedMapping } from './csv-mapping-contracts'
 
 export const csvMappingSchema = z.array(z.object({column:z.string().min(1).max(100000),fieldId:idSchema}).strict()).min(1).max(80)
 export const csvMergeSchema = z.union([idSchema,z.literal('_record_id')])
+export const csvImportMergeSchema = z.union([csvMergeSchema,z.literal(CSV_CREATE_ALL)])
 const identity = {appId:idSchema,entityId:idSchema}
 const sourceName = z.string().trim().min(1).max(200)
 const requestSchema = z.discriminatedUnion('action',[
  z.object({...identity,action:z.literal('list')}).strict(),
  z.object({...identity,action:z.literal('use'),sourceName,headers:z.array(z.string()).min(1).max(200)}).strict(),
- z.object({...identity,action:z.literal('save'),sourceName,mapping:csvMappingSchema,mergeFieldId:csvMergeSchema,expectedVersion:z.number().int().positive().nullable()}).strict(),
+ z.object({...identity,action:z.literal('save'),sourceName,mapping:csvMappingSchema,mergeFieldId:csvImportMergeSchema,expectedVersion:z.number().int().positive().nullable()}).strict(),
 ])
 type Stored = {id:string;source_name:string;version:number;detail_json:string;created_at:string;updated_at:string}
 type Detail = Pick<CsvSavedMapping,'mapping'|'mergeFieldId'> & {fieldShapes:Record<string,string>}
@@ -39,7 +41,7 @@ export async function validateCsvMapping(services:ReturnType<typeof createRecord
  const merge=d.fields.get(mergeFieldId)?.field
  if(mergeFieldId==='_record_id'){
   if(headers&&!headers.includes('_record_id'))throw new AdmissionError('validation','The file needs its original _record_id column.')
- }else if(!merge||!['text','number','date','select'].includes(merge.type)||!mapping.some(m=>m.fieldId===mergeFieldId))throw new AdmissionError('validation','Choose a mapped scalar field to match existing records.')
+ }else if(mergeFieldId!==CSV_CREATE_ALL&&(!merge||!['text','number','date','select'].includes(merge.type)||!mapping.some(m=>m.fieldId===mergeFieldId)))throw new AdmissionError('validation','Choose a mapped scalar field to match existing records.')
  if(d.writePolicy?.create===false||d.writePolicy?.patch===false)throw new AdmissionError('forbidden','This table does not allow merge imports.')
  const inputHash=await canonicalHash({mapping,mergeFieldId})
  const permits=await Promise.all(['import.preview','record.create','record.patch'].map(action=>services.policy.authorize(ctx,{appId,targetEntityId:entityId,action,fieldIds:mapping.map(m=>m.fieldId),expected:[],cost:[],inputHash})))

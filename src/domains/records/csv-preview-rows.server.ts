@@ -13,6 +13,7 @@ import type { parseCsv } from '../portability/csv'
 import type { CsvImportRejection, CsvImportRow } from './csv-import-contracts'
 import { createCsvLabels, decodeDisplayCsvValue, displayCsvValue } from './csv-display.server'
 import { decodeCsvValue } from './csv-values'
+import { CSV_CREATE_ALL } from './csv-mapping-contracts'
 import { idSchema } from './validators'
 import { validateCsvCell } from './csv-validation'
 
@@ -21,6 +22,7 @@ export async function previewCsvRows(
   descriptor: EntityDescriptor, scope: PolicyScope, existing: RecordRow[],
   writer: ReturnType<typeof createRecordServices>['writer'], labels: ReturnType<typeof createCsvLabels>,
 ) {
+  const createAll = request.mergeFieldId === CSV_CREATE_ALL
   const byId = request.mergeFieldId === '_record_id'
   const mapped = request.mapping.map(mapping => {
     const field = descriptor.fields.get(mapping.fieldId)?.field
@@ -36,6 +38,7 @@ export async function previewCsvRows(
   const rows: CsvImportRow[] = [], errors: CsvImportRejection[] = [], guards: SqlPredicate[] = []
   const keys = csv.rows.map(cells => {
     try {
+      if (createAll) return {}
       const value = byId ? cells[csv.headers.indexOf('_record_id')]! : decodeDisplayCsvValue(merge!.field, cells[merge!.index]!)
       if (byId ? !idSchema.safeParse(value).success : value === null || value === '' || typeof value === 'string' && !value.trim())
         throw new AdmissionError('validation', 'The matching value must be nonempty and unique within the CSV.')

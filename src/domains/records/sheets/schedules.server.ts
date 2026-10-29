@@ -7,10 +7,11 @@ import type {RequestContext} from '../../authority/ports'
 import {ApiError} from '../../../core/registry/errors'
 import {dueSchedule} from '../../../apps/launch/schedule'
 import {csvPreviewInput,type createRecordsCsv} from '../csv.server'
+import {csvMergeSchema} from '../csv-mappings.server'
 import {idSchema} from '../validators'
 import {sheetCsv,type createSheetsImport} from './import.server'
 const table=registerTable('record_sheet_schedules',['id','owner_id','connection_id','app_id','entity_id','sheet','mapping_json','merge_field_id','state','version','last_slot','last_started_at','running_id','result_json','created_at'])
-const inputSchema=csvPreviewInput.pick({appId:true,entityId:true,mapping:true,mergeFieldId:true}).extend({connectionId:idSchema,sheet:z.string().min(1).max(200),enabled:z.boolean()}).strict()
+const inputSchema=csvPreviewInput.pick({appId:true,entityId:true,mapping:true,mergeFieldId:true}).extend({mergeFieldId:csvMergeSchema,connectionId:idSchema,sheet:z.string().min(1).max(200),enabled:z.boolean()}).strict()
 type Row={id:string;owner_id:string;connection_id:string;app_id:string;entity_id:string;sheet:string;mapping_json:string;merge_field_id:string;version:number;state:string}
 export function createSheetSchedules(db:D1Database,foundation:ServerFoundation,source:ReturnType<typeof createSheetsImport>,csv:ReturnType<typeof createRecordsCsv>,clock=()=>new Date()){
  async function configure(ctx:RequestContext,input:unknown){await source.owner(ctx);const data=inputSchema.parse(input),hash=await canonicalHash(data),permit=await foundation.policy.authorize(ctx,{appId:data.appId,targetEntityId:data.entityId,action:'import.commit',expected:[],cost:[],inputHash:hash})

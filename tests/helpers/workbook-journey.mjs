@@ -38,5 +38,23 @@ export async function workbookJourney(){const provider=sheetsProvider(),h=await 
   const returned=await d.call('/api/v1/records/base-import/preview',d.form(Buffer.from(rateExport.content,'base64'),'rates-return.xlsx'));assert.equal(returned.schemaDraft.tables[0].fields.find(f=>f.label==='Rate').numberFormat,'percent','The export returns as a percent field')
   const rateJson=await d.call('/api/v1/records/base-export',{appId:ratePreview.identities.appId,format:'json'});assert.equal(JSON.parse(rateJson.content).base.tables[0].fields.find(f=>f.label==='Rate').numberFormat,'percent')
   await sheetsJourney(h,d,provider,identity,fields,mapping)
+  // Explicit create-only uses the same workbook door on a populated table.
+  const fresh=await d.adopt(bytes,'synthetic-cradle-create-only.xlsx'),createIdentity={appId:fresh.preview.identities.appId,entityId:fresh.preview.schemaDraft.tables[0].id},createFields=Object.fromEntries(fresh.preview.schemaDraft.tables[0].fields.map(field=>[field.label,field])),createMapping=['Order','Amount','Due','Approved'].map(column=>({column,fieldId:createFields[column].id})),createQuery=()=>d.call(`/api/v1/apps/${createIdentity.appId}/entities/${createIdentity.entityId}/query`,{fields:createMapping.map(item=>item.fieldId),sort:[{fieldId:createFields.Order.id,direction:'asc'}]})
+  const createSheets=workbookSheets();createSheets[0].rows=[createSheets[0].rows[0],createSheets[0].rows[0].map((value,index)=>index===1?cell('71','number'):value),[cell('synthetic-cradle-invalid'),cell('invalid'),cell('2026-10-25','date'),cell(true),cell('North')]]
+  const createInput={...createIdentity,workbook:{filename:'create-only.xlsx',base64:Buffer.from(writeWorkbook(createSheets)).toString('base64'),sheet:'Orders'},mapping:createMapping,mergeFieldId:'_create_all'}
+  const originals=(await createQuery()).items
+  const saved=await d.call('/api/v1/records/import-mappings',{...createIdentity,action:'save',sourceName:'synthetic-cradle-workbook',mapping:createMapping,mergeFieldId:createInput.mergeFieldId,expectedVersion:null})
+  const used=await d.call('/api/v1/records/import-mappings',{...createIdentity,action:'use',sourceName:saved.sourceName,headers:createSheets[0].headers})
+  assert.equal(used.mergeFieldId,'_create_all');assert.deepEqual(used.mapping,createMapping)
+  const create=await d.call('/api/v1/records/import-preview',{...createInput,mergeFieldId:used.mergeFieldId,mapping:used.mapping})
+  assert.deepEqual([create.creates,create.updates,create.unchanged,create.rejected],[2,0,0,1]);assert.ok(create.rows.every(row=>row.operation==='create'&&row.version===null&&Object.keys(row.before).length===0))
+  const commandId=(await import('../../src/core/shared/ids.ts')).createUlid(),command={commandId,expected:[],input:{previewId:create.id}}
+  const receipt=await d.call('/api/v1/commands/records.import-commit',command)
+  assert.deepEqual(receipt.value,{id:create.id,creates:2,updates:0,unchanged:0,rejected:1})
+  assert.deepEqual(await d.call('/api/v1/commands/records.import-commit',command),receipt)
+  const created=(await createQuery()).items;assert.equal(created.length,originals.length+2)
+  for(const original of originals)assert.deepEqual(created.find(row=>row.id===original.id),original)
+  assert.deepEqual(created.filter(row=>!originals.some(original=>original.id===row.id)).map(row=>row.fields[createFields.Amount.id].value).sort(),['12.5','71'])
+
  }finally{await h.close()}
 }
