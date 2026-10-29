@@ -4,19 +4,28 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 /** The two faces of the proposal door, used the way an external agent would use them. */
 export function proposalDoor(origin,secret,face) {
  async function http(route,{method='GET',body,status=200}={}) {
-  const response=await fetch(origin+route,{method,redirect:'manual',headers:{authorization:`Bearer ${secret}`,...(body?{'content-type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})})
+  const response=await fetch(origin+route,{method,redirect:'manual',headers:{authorization:`Bearer ${secret}`,...(body?{'content-type':'application/json'}:{}),...(route==='/mcp'?{'MCP-Protocol-Version':'2025-11-25'}:{})},...(body?{body:JSON.stringify(body)}:{})})
   const value=await response.json().catch(()=>null)
   assert.equal(response.status,status,`${face} ${method} ${route}: ${value?.error?.code??'unexpected response'}`)
   return value
  }
  let sequence=0
  async function mcp(method,params,status=200) {
-  const value=await http('/mcp',{method:'POST',body:{jsonrpc:'2.0',id:++sequence,method,params},status})
+  const response=await fetch(origin+'/mcp',{method:'POST',headers:{authorization:`Bearer ${secret}`,'content-type':'application/json','MCP-Protocol-Version':'2025-11-25'},body:JSON.stringify({jsonrpc:'2.0',id:++sequence,method,params})})
+  const value=await response.json(),refusal=value.result?._meta?.['com.runeditrun/error']??value.error?.data
+  const code=refusal?.code??(value.error?.message==='Unknown tool'?'not_found':undefined)
+  if(status===200){assert.equal(response.status,200);assert.equal(value.error,undefined,`${method}: ${code??value.error?.message}`);assert.ok(!value.result?.isError,`${method}: ${code}`)}
+  else {
+   const expected={not_found:404,resource_unavailable:403,forbidden:403,grant_revoked:403,unauthenticated:401,signed_out:401,validation:400,invalid_arguments:400,invalid_transition:409,insufficient_scope:403}
+   assert.equal(response.status===200?expected[code]:response.status,status,`${method}: ${code??value.error?.message}`)
+   assert.ok(value.error||value.result?.isError,'A refused call cannot return a successful result')
+   return {error:{code,message:refusal?.message??code??value.error?.message}}
+  }
   return value
  }
  async function tool(name,args,status=200) {
   const value=await mcp('tools/call',{name,arguments:args},status)
-  return status===200?JSON.parse(value.result.content[0].text).result:value
+  return status===200?value.result.structuredContent:value
  }
  const command=(input,commandId=createUlid())=>({commandId,expected:[],input})
  return face==='rest'?{
@@ -29,12 +38,12 @@ export function proposalDoor(origin,secret,face) {
   adopt:(id,status)=>http('/api/v1/commands/release.adopt',{method:'POST',body:command({kind:'agent_proposal',proposalId:id}),status}),
  }:{
   face,http,mcp,
-  schema:(status)=>tool('schema.read',{},status),
-  propose:(input,status,commandId)=>tool('schema.propose',command(input,commandId),status).then(v=>status&&status!==200?v:v.value),
-  list:()=>tool('schema.proposals',{}).then(v=>v.items),
-  read:(id,status)=>tool('schema.proposal',{proposalId:id},status),
-  withdraw:(id,status)=>tool('schema.withdraw',command({proposalId:id}),status).then(v=>status&&status!==200?v:v.value),
-  adopt:(id,status)=>tool('release.adopt',command({kind:'agent_proposal',proposalId:id}),status),
+  schema:(status)=>tool('cradle.schema.read',{},status),
+  propose:(input,status,commandId)=>tool('cradle.schema.propose',{...input,idempotency_key:commandId??createUlid()},status),
+  list:()=>tool('cradle.schema.proposals',{}).then(v=>v.items),
+  read:(id,status)=>tool('cradle.schema.proposal',{proposalId:id},status),
+  withdraw:(id,status)=>tool('cradle.schema.withdraw',{proposalId:id,idempotency_key:createUlid()},status),
+  adopt:(id,status)=>tool('cradle.schema.adopt',{proposalId:id,idempotency_key:createUlid()},status),
  }
 }
 
@@ -55,4 +64,10 @@ export async function effectCounts(db) {
  const out={}
  for(const table of tables)out[table]=(await db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n
  return out
+}
+
+/** The owner explicitly answers the new door's policy before admitting their local key. */
+export async function authorizeProposalDoor(h) {
+ const response=await fetch(h.origin+'/agents/api/policy',{method:'PUT',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json'},body:JSON.stringify({document:{schema:'rer-agent-policy/1',catalogue:'rer-agent-classes/1',rules:[{id:'native-owner-policy',class:'*',do:'autonomous'}],spend:{none:true}}})})
+ assert.equal(response.status,200,'Native owner configures local company-agent policy')
 }

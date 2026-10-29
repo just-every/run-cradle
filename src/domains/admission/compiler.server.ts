@@ -10,6 +10,7 @@ import { resultSubjects } from './provenance';
 import { AdmissionError } from './errors';
 import { canonical } from './canonical';
 import { auditTable, eventTable, outboxTable } from './tables.server';
+import { nativeAgentActivity } from './agent-activity.server';
 export type Statement = {
     sql: string;
     values: SqlScalar[];
@@ -127,6 +128,7 @@ export function compileAdmission<T>(ctx: RequestContext, plan: AdmissionPlan<T>,
     } };
     appendAll(provenance.segments.map((subjects_json,segment_index)=>({kind:'insert' as const,table:provenanceTable,row:{command_id:plan.commandId,segment_index,subjects_json}})));
     appendAll([...plan.mutations, ...plan.permit.reservationMutations]);
+    appendAll(nativeAgentActivity(ctx, plan.commandId));
     appendAll(plan.audit.map(a => ({ kind: 'insert' as const, table: auditTable, row: { id: createUlid(), command_id: plan.commandId, actor_id: ctx.principal.id, actor_kind: ctx.principal.kind, app_id: a.appId ?? a.subject?.appId ?? plan.appId, action: a.action, subject_json: canonical(a.subject), changes_json: canonical(a.changes), source_ids_json: canonical(a.sourceIds), personal_refs_json: canonical(a.personalContentRefs), created_at: now } })));
     const eventIds: string[] = [];
     appendAll(plan.events.map(e => { const id = createUlid(); eventIds.push(id); return { kind: 'insert' as const, table: eventTable, row: { id, command_id: plan.commandId, app_id: plan.appId, name: e.name, version: e.version, subject_json: canonical(e.subject), payload_json: canonical(e.payload), cause_run_ids_json: canonical(e.causeRunIds), created_at: now } }; }));

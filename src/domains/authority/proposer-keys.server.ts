@@ -51,7 +51,7 @@ export function createProposerKeyService(db:D1Database,ordinary:PolicyPort,admis
    const receipt=await admission.commit(ctx,{...prepared,guards:own.guards,mutations:[...prepared.mutations,{kind:'insert',table:binding,row:{principal_id:principalId,issuer_id:ctx.principal.id,issuer_epoch:ctx.principal.authenticationEpoch,base_operator_id:own.operator.id,base_operator_version:own.operator.version,app_id:appId,label:input.name,created_at:now,revoked_at:null}}]})
    if(receipt.result.state!=='committed')throw new AuthorityError('version_conflict','Proposing key has not committed.',409)
    const key=await createMachineService(db,own.policy,admission).issue(ctx,commandId,{principalId:receipt.result.value.id,audience:proposalAudience(appOrigin),expiresAt:input.expiresAt,scopes:[{appId,actions:['schema.propose'],purposes:[]}]})
-   return {...key,name:input.name,appId,baseName:own.base?(await db.prepare('SELECT name FROM manual_record_bases WHERE id=?').bind(appId).first<{name:string}>())!.name:null,endpoint:`${appOrigin}/mcp`,api:`${appOrigin}/api/v1/proposals`}
+   return {...key,principalId,name:input.name,appId,baseName:own.base?(await db.prepare('SELECT name FROM manual_record_bases WHERE id=?').bind(appId).first<{name:string}>())!.name:null,endpoint:`${appOrigin}/mcp`,api:`${appOrigin}/api/v1/proposals`}
   },
   /** Safe metadata only: never a secret or digest. */
   async list(ctx:RequestContext){

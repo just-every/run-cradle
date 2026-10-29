@@ -16,6 +16,7 @@ import {classifyIdentityObjects} from './identity-objects.server'
 import {memberIdentityPlaces} from './member-identity-places'
 import {otherIdentities} from './other-identities.server'
 import {retainCleanup} from './cleanup.server'
+import {requireAgentCustodyQuiescent} from './agent-custody.server'
 
 export function memberLifecycle(db:D1Database,bucket:R2Bucket,registry:DescriptorRegistry):MemberLifecyclePort{
  return {
@@ -26,6 +27,7 @@ export function memberLifecycle(db:D1Database,bucket:R2Bucket,registry:Descripto
   const overlap=await db.prepare('SELECT 1 FROM operators WHERE id<>? AND (name=? OR email=?) LIMIT 1').bind(id,person.name,person.email).first()
   if(overlap)throw new AuthorityError('version_conflict','Another operator shares an identity literal; resolve the ambiguous copy before erasure.',409)
   const change=effects(),needles=[person.name,person.email].filter(Boolean),keys:string[]=[],keep=new Set(keepCopies)
+  await requireAgentCustodyQuiescent(db,change)
   if(needles.some(needle=>label.includes(needle)||`erased-${id}@invalid.invalid`.includes(needle)))throw new AuthorityError('version_conflict','Anonymous identity would retain an original literal; resolve the replacement-label conflict before erasure.',409)
   await requireQuiescentFiles(db,change)
   const others=await otherIdentities(db,id,needles)
