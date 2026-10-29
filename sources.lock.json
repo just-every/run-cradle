@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c11cb67a0a056a89d458fc070e0da8707c70da46146076a1708514a369522639",
+      "sha256": "aceb2471c5fef6e999c6a3f6cbd888db5174a1acfa8661b0d60ac024baa9385f",
       "executable": false
     },
     "DEMO.md": {
@@ -12566,7 +12566,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "7f4b26f33d9de7b88d5e2c44672d4aa4b9e801c9d73a5d99117573d05cf31ce9",
+      "sha256": "ae1ad0d1d7ed57cbe27e3fe0c6a09835a061161643428d4da3d8196eed0a3341",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
@@ -13414,7 +13414,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "bc7eb313f6942e9155b628ef7341b5c63256e811bf03fb6b3fce771fa3fbfd6c",
+      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
