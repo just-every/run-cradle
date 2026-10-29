@@ -9325,6 +9325,10 @@
       "sha256": "ef2fe89cb6d6fe8229b08998f4034ad20d2616aa4f9c9caa1ede360a1db31a16",
       "executable": false
     },
+    "src/domains/records/base-transfer/source-record-map.ts": {
+      "sha256": "af881bacd5527ca159a1bcad07a11a01f00701df2402d805daf6d78dc9a4d8f3",
+      "executable": false
+    },
     "src/domains/records/base-transfer/source.ts": {
       "sha256": "e30700289e37d3b6eeb4cba8e1542c3c3d3aa346d214a2a8ded1c8ff98e9cf94",
       "executable": false
@@ -12931,6 +12935,14 @@
     },
     "tests/helpers/snowflake-network-edge.mjs": {
       "sha256": "a7779f5860b7c4f2747aa69add9a1c01152a7ca9a8459364cbb0adf719779c6a",
+      "executable": false
+    },
+    "tests/helpers/source-record-map-browser.mjs": {
+      "sha256": "812c228ae10f4fadfe0cc783ccf961bf4c7db38f638d411ff0823fe49986fd8a",
+      "executable": false
+    },
+    "tests/helpers/source-record-map-journey.mjs": {
+      "sha256": "96de3ce9fe14236cd698d1d8a4a7ac1709867064a14e2474bf50cf873e65f098",
       "executable": false
     },
     "tests/helpers/sqlite-d1.mjs": {
