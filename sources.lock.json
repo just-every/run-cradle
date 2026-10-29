@@ -3453,7 +3453,7 @@
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "fe98d3417e88965f89a4473eb00ee785e3d66ede214518107a999d9f8d4a6f1c",
+      "sha256": "506648e7e2223e22e61ad8e240e93bffd691eb6a27f474907355c8e7beb96a7a",
       "executable": false
     },
     "authoring/README.md": {
@@ -5700,16 +5700,8 @@
       "sha256": "7ea19d4f958919f600bba4ebd423f708cbd9d981e36b2d4593bf9f44d7705733",
       "executable": false
     },
-    "migrations/updates/9081_agent_door.sql": {
-      "sha256": "016d8a98b964385f5c4a13447361c3c783910a76aaf4606b0e0081482bc819cc",
-      "executable": false
-    },
     "migrations/updates/9081_guests.sql": {
       "sha256": "745d90376a8a7fa0aab040538b5589f4660c8e15324b5860c7f6ee130567f9af",
-      "executable": false
-    },
-    "migrations/updates/9082_business_settings.sql": {
-      "sha256": "5a5be4f3951647d267621f0df9d0a27ea263c44af4b8f5e3e9bd1c5cd7efeafc",
       "executable": false
     },
     "migrations/updates/9082_record_templates.sql": {
@@ -5718,6 +5710,14 @@
     },
     "migrations/updates/9083_record_template_buttons.sql": {
       "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
+      "executable": false
+    },
+    "migrations/updates/9084_agent_door.sql": {
+      "sha256": "016d8a98b964385f5c4a13447361c3c783910a76aaf4606b0e0081482bc819cc",
+      "executable": false
+    },
+    "migrations/updates/9085_business_settings.sql": {
+      "sha256": "5a5be4f3951647d267621f0df9d0a27ea263c44af4b8f5e3e9bd1c5cd7efeafc",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -5785,7 +5785,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "f75d98d22a0e80f021882d1aac6c18293de3d00a0419ed3b0126e7776ce35439",
+      "sha256": "0ef5b942c76ec4c80e319ec240460b4e9026c01f2a906529486c32dcba329a64",
       "executable": false
     },
     "RELEASE.json": {
@@ -13993,7 +13993,7 @@
       "executable": false
     },
     "tsconfig.json": {
-      "sha256": "f6d06bec3d1ae5fe803dc89a312a50ccddc9769269f4000e11263464e3102deb",
+      "sha256": "27f2661f7d571054e6417f29fc9d552dcdbc69918f02de1aa8f60b7a592d4a69",
       "executable": false
     },
     "vendor/base/foundation/runtime/icon-head.ts": {
