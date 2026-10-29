@@ -1,3 +1,4 @@
+import { preservesSelectOptions } from '../option-additions'
 import type { CellValue, Money } from '../../../contracts/primitives'
 import type { EntitySchema, Field } from '../contracts'
 import type { EntityDescriptor } from '../descriptors.server'
@@ -61,7 +62,7 @@ export function planFieldConversions(prior:EntityDescriptor[],schemas:EntitySche
 }
 
 function physicalChange(before:Field,after:Field){
- return before.type!==after.type||canonical(before.relation??null)!==canonical(after.relation??null)||canonical(before.options??null)!==canonical(after.options??null)
+ return before.type!==after.type||canonical(before.relation??null)!==canonical(after.relation??null)||(!preservesSelectOptions(before,after)&&canonical(before.options??null)!==canonical(after.options??null))
 }
 function converter(before:Field,after:Field,prior:EntityDescriptor[],schemas:EntitySchema[],snapshots:Record<string,Record<string,unknown>[]>):Conversion {
  if(before.type==='attachment'||after.type==='attachment')throw new Error('Attachment conversion is refused: file custody and FILE-002 store references must be preserved by an attachment-specific migration.')

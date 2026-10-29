@@ -1,3 +1,4 @@
+import { preservesSelectOptions } from '../option-additions'
 import { prepareRoleSchemaUpdates } from './role-schema.server'
 import { createUlid } from '../../../core/shared/ids'
 import type { AdmissionPort, AuditFact, SqlPredicate, SqlMutation } from '../../admission/ports'
@@ -90,6 +91,10 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
    if(canonical(schema.incomingRelations??[])!==canonical(old?.schema.incomingRelations??[]))changes.push(`Incoming relationship sections: ${(schema.incomingRelations??[]).map(r=>r.label).join(', ')||'none'}`)
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(!before)changes.push(`Add ${field.label} (${field.type==='computed'?calculationKind(field):field.type})`);else if(before.label!==field.label)changes.push(`Rename ${before.label} to ${field.label}`)}
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before&&canonical(before.linkPicker??null)!==canonical(field.linkPicker??null))changes.push(`Update linked-record picker for ${field.label}`)}
+   for(const field of schema.fields){const before=old?.fields.get(field.id)?.field
+    if(before&&preservesSelectOptions(before,field)&&field.options!.length>before.options!.length)changes.push(`Add options to ${field.label}: ${field.options!.slice(before.options!.length).map(option=>option.label).join(', ')}. Existing option identities, labels and stored values stay unchanged.`)
+    if((before?.help??'')!==(field.help??''))changes.push(`Help for ${field.label}: ${JSON.stringify(before?.help??'')} → ${JSON.stringify(field.help??'')}. Stored values stay unchanged.`)
+   }
    for(const conversion of conversionPlan.impacts[schema.id]??[])changes.push(`Convert ${conversion.label} from ${conversion.from} to ${conversion.to}: ${conversion.converted.length} converted, ${conversion.losses.length} lost values`)
    const removedFields=(old?.schema.fields??[]).filter(f=>removals[schema.id]!.includes(f.id)).map(f=>({id:f.id,label:f.label,populated:old!.fields.get(f.id)!.join?new Set((snapshot.rows[old!.fields.get(f.id)!.join!.table.tableId]??[]).map(row=>row.record_id)).size:rows.filter(row=>row[old!.fields.get(f.id)!.column]!==null&&row[old!.fields.get(f.id)!.column]!==undefined).length}))
    for(const field of schema.fields){const before=old?.fields.get(field.id)?.field;if(before?.type==='computed'&&canonical(before.expression??null)!==canonical(field.expression??null))changes.push(`Update calculation ${field.label}`)}

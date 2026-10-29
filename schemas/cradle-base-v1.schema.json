@@ -423,6 +423,11 @@
                     },
                     "numberFormat": {
                       "const": "percent"
+                    },
+                    "help": {
+                      "type": "string",
+                      "maxLength": 2000,
+                      "pattern": "^[^\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]*$"
                     }
                   },
                   "required": [
