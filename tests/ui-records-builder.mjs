@@ -28,7 +28,7 @@ import {recordsBrowserRuntime} from './helpers/records-browser-runtime.mjs'
 import {recordsJourney} from './helpers/records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './helpers/accessibility-evidence.mjs'
 const output=path.resolve(process.env.CRADLE_RECORDS_OUTPUT??'.private/records-builder/browser');await mkdir(output,{recursive:true})
-contract(['RECORDS-001','BASE-PUBLIC-003'].join('] ['),'Home presents records and bases before launch work at desktop and phone widths',async()=>{await writeFile(path.join(output,'home-results.json'),JSON.stringify(await homeReview(output),null,2));await gridRangeBrowserJourney()})
+contract(['RECORDS-001','BASE-PUBLIC-003','VIEW-008','VIEW-015'].join('] ['),'Home presents records and bases before launch work with atomic range history at desktop and phone widths',async()=>{await writeFile(path.join(output,'home-results.json'),JSON.stringify(await homeReview(output),null,2));await gridRangeBrowserJourney()})
 contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one relation heading, reachable links and policy restrictions',async()=>{
  let h,browser
  try{

@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b132d573abca29dc2093362ce7dbc6ecc4c53466c288873e7e564516e762f29e",
+      "sha256": "520a17ee65bde5751ec23c26903d4f5e0ca95d3c0c5a69d1083811e125debc7d",
       "executable": false
     },
     "DEMO.md": {
@@ -12682,7 +12682,11 @@
       "executable": false
     },
     "tests/helpers/records-grid-range-browser.mjs": {
-      "sha256": "1469e48257d667e48049e027ccf2dec67c3088340b8a9a2a66a2338bd78ea7f3",
+      "sha256": "320b80610ea2d053d4a16b990425a7b675724c6973edb3224c208f67db7c5305",
+      "executable": false
+    },
+    "tests/helpers/records-grid-range-fixture.mjs": {
+      "sha256": "5ce9d4b75afd84e9662e150dd645e0cc14e8776e4a21ded0fb62e21d7f78484e",
       "executable": false
     },
     "tests/helpers/records-history-journey.mjs": {
@@ -13198,7 +13202,7 @@
       "executable": false
     },
     "tests/records-grid-range.mjs": {
-      "sha256": "29373d2eda0b137e042edcc380a75ba40eafb9cb6adafb9917f0601caf8d32ac",
+      "sha256": "21406ce51228cadabcd2db82e99ae50afa49ba5a9e3f6f25fddd09a540b7b288",
       "executable": false
     },
     "tests/records-import-content-native.mjs": {
@@ -13426,7 +13430,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "2923debc934fce62950da6ec6d960a10048c68409778a1f74e0c728915a2734e",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

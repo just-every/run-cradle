@@ -35,9 +35,18 @@ test('VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, 
     const payload = { appId, entityId: schema.id, rows: initial.map((row, index) => ({ recordId: row.id, changes: values(index) })) }
     const expected = rows => rows.map(row => ({ ref: row.ref, version: row.version }))
     async function patch(input, revisions, status = 200) {
-      const response = await http.fetch(new Request('https://records.example/api/v1/commands/record.patch', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ commandId: createUlid(), expected: revisions, input }) }))
+      const commandId = createUlid()
+      const response = await http.fetch(new Request('https://records.example/api/v1/commands/record.patch', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ commandId, expected: revisions, input }) }))
       const body = await response.json()
       assert.equal(response.status, status, JSON.stringify(body))
+      if (status === 200) {
+        assert.equal(body.data.commandId, commandId)
+        assert.equal(body.data.state, 'committed')
+        const admission = await h.db.prepare('SELECT actor_id,state,result_json FROM command_admissions WHERE command_id=?').bind(commandId).first()
+        assert.equal(admission.actor_id, h.ctx.principal.id)
+        assert.equal(admission.state, 'committed')
+        assert.deepEqual(JSON.parse(admission.result_json), body.data)
+      }
       return body
     }
     const invalid = structuredClone(payload)
@@ -56,8 +65,17 @@ test('VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, 
     assert.deepEqual(snapshot(await query()), snapshot(pasted.rows))
     const restored = (await patch({ appId, entityId: schema.id, rows: pasted.inverse }, expected(pasted.rows))).data.value
     assert.deepEqual((await query()).map(row => row.fields[fields[0].id].value).sort(), initial.map(row => row.fields[fields[0].id].value).sort())
+    for (const row of await query()) {
+      const before = initial.find(item => item.id === row.id)
+      assert.equal(row.version, 3)
+      for (const field of fields.slice(0, 5)) assert.deepEqual(row.fields[field.id], before.fields[field.id], `Undo restores ${field.label} for ${row.id}`)
+    }
     const redone = (await patch({ appId, entityId: schema.id, rows: restored.inverse }, expected(restored.rows))).data.value
     assert.equal(redone.rows.length, 50)
+    for (const row of await query()) {
+      assert.equal(row.version, 4)
+      for (const [id, value] of Object.entries(values(initial.findIndex(item => item.id === row.id)))) assert.deepEqual(row.fields[id], { state: 'value', value })
+    }
     const inverseWithCells=result=>result.inverse.map(change=>({...change,unchangedSince:result.rows.find(row=>row.id===change.recordId).version,ifValues:Object.fromEntries(Object.keys(change.changes).map(id=>[id,result.rows.find(row=>row.id===change.recordId).fields[id].value]))}))
     // An unrelated cell edit must survive a cell-scoped undo and redo.
     const target=redone.rows[1]
