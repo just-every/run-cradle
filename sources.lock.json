@@ -11302,7 +11302,7 @@
       "executable": false
     },
     "src/ui/settings/api-keys-panel.tsx": {
-      "sha256": "53a93b02ac95d44614178f547d6bd7b9605fa5168447a1b3f5215b6e832f3ec6",
+      "sha256": "f2d177c78778826b8d2f44f1b5bd202d7f47424a8aa959b0ddbc59ca0ad82ab3",
       "executable": false
     },
     "src/ui/settings/archive-panel.tsx": {
@@ -12970,7 +12970,7 @@
       "executable": false
     },
     "tests/helpers/user-key-delete-browser.mjs": {
-      "sha256": "ebad921e19891d56013f357c60b53db21ecd9ea032bfab95e62b0eac2e267c15",
+      "sha256": "ad2fb19f17bc6a9b92af6fd1e8f8a66ed58fb33b9c3b0032755f1a129a92f8fd",
       "executable": false
     },
     "tests/helpers/user-schedule-browser.mjs": {

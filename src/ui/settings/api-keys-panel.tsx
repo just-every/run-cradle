@@ -38,7 +38,7 @@ function AppKeys({appId}:{appId:string}) {
   event.preventDefault();setError(null);setIssued(null);setBusy(true)
   try {
    const response=await readApi<{key:Issued}>('/api/user-keys',{method:'POST',body:JSON.stringify({commandId:createUlid(),appId,entityId,name,permissions,allowDelete:permissions==='write'&&allowDelete,expiresAt:new Date(Date.now()+days*86400000).toISOString()})})
-   setIssued(response.data.key);setName('');keys.refresh()
+   setIssued(response.data.key);setName('');setAllowDelete(false);keys.refresh()
   }catch(e){setError(e instanceof Error?e.message:'Could not issue the key.')}finally{setBusy(false)}
  }
  async function rotate(key:Key) {

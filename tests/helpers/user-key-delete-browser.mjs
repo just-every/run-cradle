@@ -8,7 +8,7 @@ export async function userKeyDeleteBrowser(page,h,journey,width) {
  const panel=page.locator('section').filter({has:page.getByRole('heading',{name:'API keys',exact:true})}).last()
  await panel.getByLabel(/^Application/).selectOption(h.appId)
  await panel.getByLabel(/^Record type/).selectOption(h.entityId)
- const access=panel.getByLabel('Access',{exact:true}),deletion=panel.getByRole('checkbox',{name:'Allow record deletion',exact:true})
+ const access=panel.getByLabel(/^Access/),deletion=panel.getByRole('checkbox',{name:'Allow record deletion',exact:true})
  await deletion.waitFor()
  if(width===1440){assert.equal(await deletion.isChecked(),false);assert.equal(await deletion.isDisabled(),true)}
  await access.selectOption('write')
@@ -29,6 +29,7 @@ export async function userKeyDeleteBrowser(page,h,journey,width) {
   const key=(await response.json()).data.key
   await panel.getByRole('button',{name:'I saved this key',exact:true}).click()
   await card(label).waitFor()
+  if(width===1440)assert.equal(await deletion.isChecked(),false,'Each new key starts without delete opt-in')
   return key
  }
  const ordinary=await issue(name+' writer')
