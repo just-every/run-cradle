@@ -5226,7 +5226,7 @@
       "executable": false
     },
     "public/company-identity.css": {
-      "sha256": "4bed980ae9461c6f2b8f406cc1a970d515c37d148171a3c461dfda6e9d61a216",
+      "sha256": "b5641d57254e0bbb6df79954deb8946058eee721a111b27197b1a505d1e5f5a2",
       "executable": false
     },
     "public/favicon.ico": {
@@ -11130,7 +11130,7 @@
       "executable": false
     },
     "src/ui/records/store-chooser.tsx": {
-      "sha256": "28ef7a160572ad0bedeb47b17ebafe2b49808bd344b366d975c40909922658b3",
+      "sha256": "39e799c91f8d75eb6ddba8b37e924569d178b2694a47733c4a083550d0e4cb2e",
       "executable": false
     },
     "src/ui/records/store-connect.tsx": {
@@ -11150,7 +11150,7 @@
       "executable": false
     },
     "src/ui/records/store-settings.tsx": {
-      "sha256": "37dd3d96617a53b3d967fed2b8012b5d0e729b0d486d8751b316f23d8c6a3712",
+      "sha256": "6f5f0da6ab1788ab63c7b27a25309f10bc7d243cae2654242cebcba9368f8a8f",
       "executable": false
     },
     "src/ui/records/table-tools.css": {
@@ -11826,7 +11826,7 @@
       "executable": false
     },
     "tests/helpers/accessibility-axe.mjs": {
-      "sha256": "bb01772a22e4480bff00bc6718015431020307c3d077276606439f1064ff8a34",
+      "sha256": "cdb481e0fbc25334bacc9170e3c91599ea23af13a48c00cf42a9359d1f4a280c",
       "executable": false
     },
     "tests/helpers/accessibility-baseline.mjs": {

@@ -121,17 +121,30 @@ export async function measureAccessibilityLayout(page) {
       const imageText = [...element.querySelectorAll('img[alt],svg[aria-label],svg title,[aria-label]')].map(item => item.getAttribute('alt') || item.getAttribute('aria-label') || item.textContent || '').join(' ')
       return (label || labelledBy || associated || element.innerText || element.value || imageText || element.getAttribute('title') || '').trim().replace(/\s+/g, ' ').slice(0, 160)
     }
+    // The DOM stays fixed during this measurement. Cache paths and sibling
+    // positions so a large timeline does not enumerate its rows per target.
+    const paths = new WeakMap(), positions = new WeakMap(), indexedParents = new WeakSet()
     const selectorPath = element => {
-      const parts = []
-      for (let current = element; current && current !== document.documentElement; current = current.parentElement) {
-        let part = current.tagName.toLowerCase()
-        if (current.id) part += `#${current.id}`
-        if (typeof current.className === 'string' && current.className.trim()) part += `.${current.className.trim().replace(/\s+/g, '.')}`
-        const siblings = current.parentElement ? [...current.parentElement.children].filter(sibling => sibling.tagName === current.tagName) : []
-        if (siblings.length > 1) part += `:nth-of-type(${siblings.indexOf(current) + 1})`
-        parts.unshift(part)
+      if (!element || element === document.documentElement) return ''
+      if (paths.has(element)) return paths.get(element)
+      const parent = element.parentElement
+      if (parent && !indexedParents.has(parent)) {
+        const groups = new Map()
+        for (const child of parent.children) {
+          const group = groups.get(child.tagName) ?? []
+          group.push(child); groups.set(child.tagName, group)
+        }
+        for (const group of groups.values()) group.forEach((child, index) => positions.set(child, group.length > 1 ? index + 1 : 0))
+        indexedParents.add(parent)
       }
-      return parts.join(' > ')
+      let part = element.tagName.toLowerCase()
+      if (element.id) part += `#${element.id}`
+      if (typeof element.className === 'string' && element.className.trim()) part += `.${element.className.trim().replace(/\s+/g, '.')}`
+      const position = positions.get(element)
+      if (position) part += `:nth-of-type(${position})`
+      const prefix = selectorPath(parent), result = prefix ? `${prefix} > ${part}` : part
+      paths.set(element, result)
+      return result
     }
     const actions = [...new Set(document.querySelectorAll(selector))]
       .filter(element => visible(element) && (element.tabIndex >= 0 || element.matches(':disabled')))
