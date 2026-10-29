@@ -16,6 +16,8 @@ import { decodeCsvValue } from './csv-values'
 import { CSV_CREATE_ALL } from './csv-mapping-contracts'
 import { idSchema } from './validators'
 import { validateCsvCell } from './csv-validation'
+import { csvUniqueConflicts } from './csv-preview-unique'
+import type { PreparedRecordChange } from './ports'
 
 export async function previewCsvRows(
   ctx: RequestContext, request: z.infer<typeof csvPreviewInput>, csv: ReturnType<typeof parseCsv>,
@@ -36,6 +38,7 @@ export async function previewCsvRows(
     : descriptor.schema.fields.find(field => field.type === 'text')
   const primaryColumn = mapped.find(mapping => mapping.field.id === primary?.id)
   const rows: CsvImportRow[] = [], errors: CsvImportRejection[] = [], guards: SqlPredicate[] = []
+  const prepared: { record: CsvImportRow; change: PreparedRecordChange }[] = []
   const keys = csv.rows.map(cells => {
     try {
       if (createAll) return {}
@@ -103,11 +106,16 @@ export async function previewCsvRows(
         : await writer.prepareChange(ctx, scope, { ref: { appId: request.appId, entityId: request.entityId, recordId: record.id }, expectedVersion: record.version, changes: changed })
       guards.push(...change.guards)
       rows.push(record)
+      prepared.push({ record, change })
     } catch (error) {
       // Authority, stale snapshots, transport and configuration failures still fail the whole request.
       if (!(error instanceof AdmissionError) || error.code !== 'validation') throw error
       errors.push({ row, label, message: error.message })
     }
   }
-  return { rows, errors, guards }
+  const conflicts = csvUniqueConflicts(descriptor, prepared)
+  const refused = new Set(conflicts.map(error => error.row))
+  errors.push(...conflicts)
+  errors.sort((a, b) => a.row - b.row)
+  return { rows: rows.filter(record => !refused.has(record.row)), errors, guards }
 }
