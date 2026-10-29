@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c11cb67a0a056a89d458fc070e0da8707c70da46146076a1708514a369522639",
+      "sha256": "1af547f990ba1fad60a8b9e6502a0e22bfa96df0eb5998aa16ed7d95b1299d56",
       "executable": false
     },
     "DEMO.md": {
@@ -12038,7 +12038,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-deletes.mjs": {
-      "sha256": "f3dfc1ee068f2d5f7b68aff2ee58e61f7c2c549497d917ee03228e159f745bbc",
+      "sha256": "2881bc71018918be034af854e91ade06bc57898637624975bb94fdf190e1ef3e",
       "executable": false
     },
     "tests/helpers/change-subscriptions-erasure.mjs": {
