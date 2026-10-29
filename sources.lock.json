@@ -2938,7 +2938,7 @@
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "fe98d3417e88965f89a4473eb00ee785e3d66ede214518107a999d9f8d4a6f1c",
+      "sha256": "347569d22f1433389bf9cbc5324a312a65d87079a62176139ad0b17318d93234",
       "executable": false
     },
     "authoring/README.md": {
@@ -3026,7 +3026,7 @@
       "executable": false
     },
     "docs/agent-door.md": {
-      "sha256": "094f9f8942b4c36cd18513ab675c6e75fdb61d0b5e33f0474cfad1dc23a44d25",
+      "sha256": "e330e826c2bc2fe4d142b143108033aad16d2ee10e67716a1c358aece9366cba",
       "executable": false
     },
     "docs/agent-proposals.md": {
@@ -5218,7 +5218,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "b1e94dbfe36347f253be92fad4e15bc3bde567a379f6c9b5a9a0c847b46d3a55",
+      "sha256": "027a14e4b015ff7e929e694a23c5ee837b4c42fdaf6946a9de0c01161f0a0ea7",
       "executable": false
     },
     "packaging.json": {
@@ -5230,7 +5230,7 @@
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "fef26d5aae396882ef1e2a4b56750db90b7b25958b3e06074b1b9b579d438445",
+      "sha256": "4319990815bf7bf1062c05f1afe2c9c0cd713b08bc7d0d691bcb73d03e1fde92",
       "executable": false
     },
     "public/apple-touch-icon.png": {
