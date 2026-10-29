@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {adminAuditActions} from './admin-audit-actions.mjs'
 import {adminAuditMemberErasure} from './admin-audit-journey.mjs'
+import {auditActionLabel} from '../../src/ui/settings/audit-action-label.ts'
 
 export async function adminAuditBrowser(page,h,journey){
  await adminAuditActions(h)
@@ -16,14 +17,14 @@ export async function adminAuditBrowser(page,h,journey){
  await panel.getByLabel('Through',{exact:true}).fill('2099-01-01T00:00')
  await panel.getByRole('button',{name:'Apply filters',exact:true}).click()
  await panel.getByRole('link',{name:'Export JSON',exact:true}).waitFor()
- assert.ok(await panel.getByText('credential.issue',{exact:true}).count(),'The issued key is recorded')
- assert.ok(await panel.getByText('credential.revoke',{exact:true}).count(),'The revoked key is recorded')
- for(const action of ['api-key.rotate','webhook.rotate','automation.create','automation.edit','automation.enable','automation.renew','automation.destination.change','automation.disable','automation.destination.revoke'])assert.ok(await panel.getByText(action,{exact:true}).count(),action+' is visible in the filtered log')
+ assert.ok(await panel.getByText(auditActionLabel('credential.issue'),{exact:true}).count(),'The issued key is recorded')
+ assert.ok(await panel.getByText(auditActionLabel('credential.revoke'),{exact:true}).count(),'The revoked key is recorded')
+ for(const action of ['api-key.rotate','webhook.rotate','automation.create','automation.edit','automation.enable','automation.renew','automation.destination.change','automation.disable','automation.destination.revoke'])assert.ok(await panel.getByText(auditActionLabel(action),{exact:true}).count(),action+' is visible in the filtered log')
  assert.ok((await panel.getByRole('link',{name:'Export CSV',exact:true}).getAttribute('href')).includes(h.appId))
  await journey.capture('admin-audit-filtered')
  await panel.getByLabel('Base',{exact:true}).selectOption('')
  await panel.getByRole('button',{name:'Apply filters',exact:true}).click()
- for(const action of ['scim.issue','scim.rotate','scim.revoke'])await panel.getByText(action,{exact:true}).first().waitFor()
+ for(const action of ['scim.issue','scim.rotate','scim.revoke'])await panel.getByText(auditActionLabel(action),{exact:true}).first().waitFor()
  await journey.capture('admin-audit-company-keys')
  await panel.getByLabel('Base',{exact:true}).selectOption(h.appId)
  await panel.getByLabel('Person',{exact:true}).selectOption('')
@@ -33,7 +34,7 @@ export async function adminAuditBrowser(page,h,journey){
  assert.ok(index>=0,'The erased member event survives in the current filtered response')
  assert.equal(items[index].action,'record.create');assert.equal(items[index].person,'Erased or unavailable person');assert.equal(items[index].personId,null)
  const row=panel.getByRole('listitem').nth(index)
- await row.getByText('record.create',{exact:true}).waitFor()
+ await row.getByText(auditActionLabel('record.create'),{exact:true}).waitFor()
  await row.getByText('Erased or unavailable person',{exact:false}).waitFor()
  const text=await panel.innerText();assert.ok(!text.includes(erased.name)&&!text.includes(erased.email),'Former identity is absent from the rendered audit log')
  await journey.capture('admin-audit-erased-member')

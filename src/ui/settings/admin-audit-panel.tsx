@@ -1,6 +1,7 @@
 import {useState,type FormEvent} from 'react'
 import {useResource} from '../shared/api'
 import {ResourceState,Timestamp} from '../shared/presentation'
+import {auditActionLabel} from './audit-action-label'
 
 type Entry={id:string;eventId:string;action:string;personId:string|null;person:string;baseId:string|null;createdAt:string;keyIds?:string[]}
 type Audit={items:Entry[];people:{id:string;name:string}[];nextCursor:string|null}
@@ -21,7 +22,7 @@ export function AdminAuditPanel(){
   </form>
   <ResourceState resource={audit.resource} operation="admin audit log" retry={audit.refresh}>{data=><div className="cr-stack">
    <div className="cr-actions"><a className="cr-button cr-button--quiet" href={endpoint+'?'+query+'&format=csv'} download>Export CSV</a><a className="cr-button cr-button--quiet" href={endpoint+'?'+query+'&format=json'} download>Export JSON</a></div>
-   {data.items.length?<ul className="launch-settings-list">{data.items.map(row=><li key={row.id}><div className="launch-settings-summary"><strong>{row.action}</strong>{row.keyIds?.length===2&&<span>Retired key {row.keyIds[0]} · Replacement key {row.keyIds[1]}</span>}<span>{row.person}{row.baseId&&<> · {bases.resource.state==='ready'?bases.resource.data.items.find(app=>app.id===row.baseId)?.name??'Unavailable base':'Base'}</>} · <Timestamp value={row.createdAt}/></span></div></li>)}</ul>:<p>No recorded actions match these filters.</p>}
+   {data.items.length?<ul className="launch-settings-list">{data.items.map(row=><li key={row.id}><div className="launch-settings-summary"><strong>{auditActionLabel(row.action)}</strong>{row.keyIds?.length===2&&<span>Retired key {row.keyIds[0]} · Replacement key {row.keyIds[1]}</span>}<span>{row.person}{row.baseId&&<> · {bases.resource.state==='ready'?bases.resource.data.items.find(app=>app.id===row.baseId)?.name??'Unavailable base':'Base'}</>} · <Timestamp value={row.createdAt}/></span></div></li>)}</ul>:<p>No recorded actions match these filters.</p>}
    <div className="cr-actions">{cursor&&<button className="cr-button cr-button--quiet" onClick={()=>setCursor('')}>Newest entries</button>}{data.nextCursor&&<button className="cr-button cr-button--quiet" onClick={()=>setCursor(data.nextCursor!)}>Older entries</button>}</div>
   </div>}</ResourceState>
  </section>
