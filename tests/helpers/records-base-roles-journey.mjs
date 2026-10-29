@@ -10,6 +10,7 @@ import {recordsJourney} from './records-browser-journey.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {newField} from '../../src/ui/records/schema/templates.ts'
+import {creatorRollups} from './records-creator-rollups.mjs'
 export async function baseRolesJourney(){
  const output=path.resolve('.private/base-roles');await mkdir(output,{recursive:true})
  let h,browser
@@ -28,16 +29,21 @@ export async function baseRolesJourney(){
    const body=await response.json();return {status:response.status,data:body.data,error:body.error}
   }
   async function call(cookie,url,input){const response=await request(cookie,url,input);assert.equal(response.status,200,JSON.stringify(response));return response.data}
-  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic','--no-sandbox'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   for(const width of recordsBrowserWidths()){
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),creatorContext=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),creatorPage=await creatorContext.newPage(),j=recordsJourney(page,h.origin,output,width),cj=recordsJourney(creatorPage,h.origin,output,width)
    try{
     async function cookie(context,value){await context.addCookies([{name:value.split('=')[0],value:value.slice(value.indexOf('=')+1),url:h.origin}])}
     await cookie(context,h.cookie);await cookie(creatorContext,people.creator.cookie)
     const title=newField('Order'),notes=newField('Notes'),appId=createUlid(),entityId=createUlid(),base=`/api/v1/apps/${appId}/entities/${entityId}`,tablePath=`${h.origin}/app/records/${appId}/${entityId}`
-    const preview=await call(h.cookie,'/api/v1/records/schema-preview',{appId,name:`Purchasing ${width}`,tables:[{id:entityId,label:'Orders',primaryFieldId:title.id,fields:[title,notes]}]})
+    const linesId=createUlid(),lineName=newField('Line'),amount=newField('Amount','number'),included=newField('Included','boolean'),items=newField('Order lines','relation')
+    items.relation={ownerAppId:appId,entityId:linesId,cardinality:'many',onDelete:'restrict'}
+    const preview=await call(h.cookie,'/api/v1/records/schema-preview',{appId,name:`Purchasing ${width}`,tables:[{id:entityId,label:'Orders',primaryFieldId:title.id,fields:[title,notes,items]},{id:linesId,label:'Lines',primaryFieldId:lineName.id,fields:[lineName,amount,included]}]})
     await call(h.cookie,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}})
     await page.goto(tablePath);const original=await j.record({Order:'Grove Equipment replenishment',Notes:'Confirm dock appointment before dispatch'})
+    const lines=[]
+    for(const [label,value,active]of [['Dock handling','10',true],['Liftgate','20',false],['Pallet exchange','5',true]])lines.push((await call(h.cookie,'/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:linesId},version:1}],input:{appId,entityId:linesId,values:{[lineName.id]:label,[amount.id]:value,[included.id]:active}}})).value)
+    await call(h.cookie,'/api/v1/commands/record.patch',{commandId:createUlid(),expected:[{ref:original.ref,version:original.version}],input:{ref:original.ref,changes:{[items.id]:lines.map(line=>line.ref)}}})
     await baseAction(page,'People');await page.getByRole('heading',{name:'Base collaborators',exact:true}).waitFor()
     for(const [key,role]of [['creator','creator'],['editor','editor'],['reader','read-only'],['owner','owner']]){
      const form=page.getByRole('form',{name:`Role for ${people[key].name}`,exact:true});await form.getByLabel('Base role',{exact:true}).selectOption(role)
@@ -49,6 +55,7 @@ export async function baseRolesJourney(){
     await cj.field('PO number');await cj.adopt();await creatorPage.getByRole('columnheader',{name:/PO number/}).waitFor();await cj.capture('creator-adopted-field')
     const live=await call(people.editor.cookie,base);assert.ok(live.fields.some(field=>field.label==='PO number'))
     const ownership=await h.db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first();assert.equal(ownership.owner_id,'00000000000000000000000981')
+    const calculations=await creatorRollups({h,people,appId,entityId,linesId,original,lines,amount,included,page:creatorPage,j:cj,call,request})
     await baseAction(creatorPage,'Edit fields');await creatorPage.getByRole('group',{name:'Notes',exact:true}).getByRole('button',{name:'Remove field',exact:true}).click()
     const prepared=creatorPage.waitForResponse(response=>response.url().endsWith('/schema-preview')&&response.request().method()==='POST');await creatorPage.getByRole('button',{name:'Preview schema changes',exact:true}).click();const preparedResponse=await prepared;assert.equal(preparedResponse.status(),200);const destructive=(await preparedResponse.json()).data;assert.equal(destructive.requiresOwnerReview,true);await creatorPage.getByText(/Saved for a base owner to review/).waitFor();await cj.capture('creator-awaiting-owner')
     const adopt={commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:destructive.id}}
@@ -74,12 +81,25 @@ export async function baseRolesJourney(){
     const privateView=await call(people.reader.cookie,'/api/v1/commands/view.save',saveView('private'));assert.equal(privateView.state,'committed')
     assert.equal((await call(people.editor.cookie,`/api/v1/apps/${appId}/views`)).items.some(view=>view.id===privateView.value.id),false)
     // A retained creator preview loses adoption rights immediately on demotion.
-    const edit=await call(people.creator.cookie,`/api/v1/records/bases/${appId}`);edit.tables[0].fields.push(newField('Approval reference'));const retained=await call(people.creator.cookie,'/api/v1/records/schema-preview',edit)
+    await creatorPage.goto(tablePath);await baseAction(creatorPage,'Edit fields');await cj.field('Approval reference')
+    const retained=await calculations.prepare('Pending amount','Pending count')
+    const beforeRefusal=await call(people.editor.cookie,base),recordBefore=(await call(people.editor.cookie,base+'/records/'+original.id)).record,releasesBefore=await h.db.prepare('SELECT COUNT(*) AS count FROM manual_record_releases WHERE app_id=?').bind(appId).first()
     const members=await call(h.cookie,`/api/v1/records/bases/${appId}/collaborators`),creator=members.items.find(person=>person.id===people.creator.id)
     await call(h.cookie,`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:creator.id,role:'editor',destructive:false,version:creator.version})
-    assert.equal((await request(people.creator.cookie,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:retained.id}})).status,403)
+    await creatorPage.getByLabel('I reviewed the data changes and owner access.',{exact:true}).check()
+    const refusal=creatorPage.waitForResponse(response=>response.url().endsWith('/release.adopt')&&response.request().method()==='POST')
+    await creatorPage.getByRole('button',{name:'Adopt schema',exact:true}).click()
+    const refused=await refusal;assert.equal(refused.status(),403,await refused.text())
+    assert.equal(refused.request().postDataJSON().input.previewId,retained.id)
+    await creatorPage.getByRole('status').filter({hasText:/Your access changed/}).waitFor();await cj.capture('demoted-creator-calculation-refused')
+    assert.equal((await request(people.creator.cookie,'/api/v1/commands/release.adopt',refused.request().postDataJSON())).status,403)
+    assert.deepEqual(await call(people.editor.cookie,base),beforeRefusal)
+    assert.deepEqual((await call(people.editor.cookie,base+'/records/'+original.id)).record,recordBefore)
+    assert.deepEqual(await h.db.prepare('SELECT COUNT(*) AS count FROM manual_record_releases WHERE app_id=?').bind(appId).first(),releasesBefore)
+    assert.equal((await h.db.prepare('SELECT state FROM manual_record_previews WHERE id=?').bind(retained.id).first()).state,'prepared')
     assert.equal((await call(people.editor.cookie,base)).fields.some(field=>field.label==='Approval reference'),false)
     assert.equal((await call(people.editor.cookie,base+'/records/'+original.id)).record.fields[title.id].value,'Grove Equipment replenishment')
+    await calculations.values('40','3')
    }finally{await context.close();await creatorContext.close()}
   }
  }finally{await browser?.close();await h?.close()}

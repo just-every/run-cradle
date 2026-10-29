@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c11cb67a0a056a89d458fc070e0da8707c70da46146076a1708514a369522639",
+      "sha256": "db97263b7bc24a757a0c55f45010ce64bdce3d0d9fc5e4a3008810b1c90d23d0",
       "executable": false
     },
     "DEMO.md": {
@@ -12566,7 +12566,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "7f4b26f33d9de7b88d5e2c44672d4aa4b9e801c9d73a5d99117573d05cf31ce9",
+      "sha256": "e12d2f8dcf1e51164b4a48824f9056b19674778d1c60c0f2c689109f43cbf56f",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
@@ -12639,6 +12639,10 @@
     },
     "tests/helpers/records-collection-lookups.mjs": {
       "sha256": "c5dc262e86a7a81e66ce7eca7c6458cab9a4218d4d6f3894c45a911e86cfe55f",
+      "executable": false
+    },
+    "tests/helpers/records-creator-rollups.mjs": {
+      "sha256": "9cc85c8621a8880d067400546eb8fd6c8542e081970221fe138f53e434377de8",
       "executable": false
     },
     "tests/helpers/records-csv-fence-scenario.mjs": {
@@ -13414,7 +13418,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "bc7eb313f6942e9155b628ef7341b5c63256e811bf03fb6b3fce771fa3fbfd6c",
+      "sha256": "56fc45477e97269102a09efbc28c53eb2d4b147e3786495c4d5d90f9f810754f",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
