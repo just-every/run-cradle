@@ -1,3 +1,5 @@
+import {creatorSchemaJourney} from './helpers/records-creator-schema.mjs'
+import {creatorAuthorityJourney} from './helpers/records-creator-authority.mjs'
 import {creatorAdditiveJourney} from './helpers/records-creator-additive.mjs'
 import {typedFieldJourney} from './helpers/records-typed-field-journey.mjs'
 import {phoneJourney} from './helpers/records-phone-journey.mjs'
@@ -13,6 +15,8 @@ import {fieldTrashJourney} from './helpers/field-trash-journey.mjs'
 import {fieldRulesJourney} from './helpers/records-field-rules.mjs'
 test('[SNAP-002] PERM-009 RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules',async()=>{
  await creatorAdditiveJourney()
+ await creatorAuthorityJourney()
+ await creatorSchemaJourney()
  await recordTrashJourney()
  await fieldTrashJourney()
  await fieldRulesJourney()

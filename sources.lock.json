@@ -5298,7 +5298,7 @@
       "executable": false
     },
     "schemas/cradle-base-v1.schema.json": {
-      "sha256": "f8ff7fe686c7c226f11e18f83335098918ab970d00b355f65b0d33bde8b29d5d",
+      "sha256": "ff9624a2ce7cf6cd87eea4877f793e78e856e804650e9edc788ef15267449d73",
       "executable": false
     },
     "schemas/cradle-csv-correspondence-v1.schema.json": {
@@ -9170,7 +9170,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/export-json.server.ts": {
-      "sha256": "cf634082f2a4120fda10b16445c443873f0a98283995a8ba41f681421f3b835a",
+      "sha256": "92dcad536f9537c556a49471465e00f5f485fe34458e89ecef8dc1dc222e9c7c",
       "executable": false
     },
     "src/domains/records/base-transfer/export-store.server.ts": {
@@ -9350,7 +9350,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/stream-source.server.ts": {
-      "sha256": "b5bc378e665bd008de6572ba17ae24997055788e3e32040c19acadadacd1f305",
+      "sha256": "6042b2af6bc3dbcec89103190ba47943f2098e0d7c35e05d07c24910dbadbf6d",
       "executable": false
     },
     "src/domains/records/base-transfer/target-metadata.server.ts": {
@@ -9486,7 +9486,7 @@
       "executable": false
     },
     "src/domains/records/contracts.ts": {
-      "sha256": "41306e29442079bc674224720885dda2840329ebfb82f05fa46cfa3218f860cf",
+      "sha256": "42a01e84b71111f2aa079053bfaa775ab6e258a439e5125d619e39de8bbeaaec",
       "executable": false
     },
     "src/domains/records/csv-display.server.ts": {
@@ -9770,7 +9770,7 @@
       "executable": false
     },
     "src/domains/records/metadata.server.ts": {
-      "sha256": "80ce72bde6350d081fd21380addab66646fa7f07b4eb3ae8c25502f1281a10d5",
+      "sha256": "b0122d7883a4caf06a4cf245fd5b036270a0fa676b84c312240f5b64c006fac4",
       "executable": false
     },
     "src/domains/records/migration.server.ts": {
@@ -9990,7 +9990,7 @@
       "executable": false
     },
     "src/domains/records/view-presentation-schema.ts": {
-      "sha256": "387572498a0bdd3fbe5068d599968fa86b506f2e442f50e24914a35dee9d0ccd",
+      "sha256": "fc47a7144a46eb703f618cbec98d2474db50d19e9ef9577eca21035e1ac1a69c",
       "executable": false
     },
     "src/domains/records/view-presentation-validation.ts": {
@@ -11022,7 +11022,7 @@
       "executable": false
     },
     "src/ui/records/saved-views.tsx": {
-      "sha256": "1126bb3f34be2ed844301ae523357379cf88d20f6543bf1e038984f7f766aa56",
+      "sha256": "3f88d58395b051d4e360fe3c0d84f2156e8000cc7d82dd007d671ec124e8c0dc",
       "executable": false
     },
     "src/ui/records/schema/base-collaborators.tsx": {
@@ -12570,7 +12570,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "e1ec62768bfc0ae2e0ef95ffb7666880f83a5e84c54eaab24d8cb57c7fc05b7a",
+      "sha256": "d982e006cd37d6866d9444ff3ebe7ddf697b991ce069458ebcef0167ee64ede0",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
@@ -12646,7 +12646,7 @@
       "executable": false
     },
     "tests/helpers/records-creator-additive.mjs": {
-      "sha256": "2d747b90e58765e192da53b84d3e8c32ba442c6cb2615bb8d1774f7c9a84747d",
+      "sha256": "f4e42c0c487ffdeeca359bbaed9c75df7e64acf8361396a92f322b535b79e7a1",
       "executable": false
     },
     "tests/helpers/records-csv-fence-scenario.mjs": {
@@ -12658,7 +12658,7 @@
       "executable": false
     },
     "tests/helpers/records-field-portability.mjs": {
-      "sha256": "c492423e9358ba91121bc40d38cf57bf3fcb6907bf05876dbca64b5e34efb773",
+      "sha256": "09995c530bf56931801ea284349455fedc7fd414dc0f31aac96ef3771c0c84fb",
       "executable": false
     },
     "tests/helpers/records-field-rules.mjs": {
@@ -12666,7 +12666,7 @@
       "executable": false
     },
     "tests/helpers/records-field-view-csv.mjs": {
-      "sha256": "1ca37e671fa4ad288e699b00b4ab69b73664bcabb9741c54c836c55cc939fd46",
+      "sha256": "f02ba21ee5e20bab328bbec6811d634e3683e4659e4f738a5b5c3436375a21c6",
       "executable": false
     },
     "tests/helpers/records-find-journey.mjs": {
@@ -13234,7 +13234,7 @@
       "executable": false
     },
     "tests/records-manual-release.mjs": {
-      "sha256": "8414ca1233f44b0f159a43dce6d754cecae20fdf8e48e87729b4b3304b78f578",
+      "sha256": "dfcdfc742c642ed156c111348853a69b8975ad3757688d5f9b261bf65d050ffe",
       "executable": false
     },
     "tests/records-manual-roundtrip.mjs": {

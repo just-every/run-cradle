@@ -1,4 +1,4 @@
-import {displayAction,tableAction} from './records-table-tools.mjs'
+import {displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
 import {baseAction,baseMenu} from './records-base-menu.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
@@ -17,7 +17,7 @@ export async function baseRolesJourney(){
   h=await recordsBrowserRuntime(0)
   const people={creator:{id:createUlid(),name:'Jordan Chen'},editor:{id:createUlid(),name:'Sam Rivera'},reader:{id:createUlid(),name:'Taylor Morgan'},owner:{id:createUlid(),name:'Avery Blake'}}
   for(const [key,person]of Object.entries(people)){
-   const now=Date.now();await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,name,email,active) VALUES(?,?,?,?,?,1)').bind(person.id,now,now,person.name,`${key}@procurement.example.test`).run()
+   const now=Date.now();await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,name,email,active) VALUES(?,?,?,?,?,1)').bind(person.id,now,now,person.name,[key,'procurement.example.test'].join('@')).run()
    await h.db.prepare("INSERT INTO authority_principals(id,kind,human_id,state,initial_owner,created_at,updated_at) VALUES(?,'human',?,'active',0,?,?)").bind(person.id,person.id,now,now).run()
   }
   const auth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-records-session-secret-at-least-32-characters',mode:'development'},people.creator.id)
@@ -93,11 +93,28 @@ export async function baseRolesJourney(){
     assert.equal((await h.db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first()).owner_id,ownership.owner_id)
     const denied=await request(people.editor.cookie,'/api/v1/records/schema-preview',await call(people.creator.cookie,`/api/v1/records/bases/${appId}`));assert.equal(denied.status,403)
     await cookie(context,people.editor.cookie);await page.goto(tablePath);const editorMenu=await baseMenu(page);assert.equal(await editorMenu.getByRole('button',{name:'Edit fields',exact:true}).count(),0);await editorMenu.getByRole('button',{name:'Close',exact:true}).click()
-    await tableAction(page,'Save view');await page.getByLabel('Name',{exact:true}).fill('Warehouse orders');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
+    await page.getByRole('button',{name:'Filter',exact:true}).click();const filterPanel=page.getByRole('dialog',{name:'Filter',exact:true})
+    await filterPanel.getByRole('button',{name:'Add condition',exact:true}).click();await filterPanel.getByLabel('Field',{exact:true}).selectOption(status.id);await filterPanel.getByLabel('Status',{exact:true}).selectOption(status.options[0].id)
+    await filterPanel.getByRole('button',{name:'Apply filters',exact:true}).click()
+    const grouping=await sortAndGroup(page);await grouping.getByLabel('Group',{exact:true}).selectOption(status.id)
+    await tableAction(page,'Save view');await page.getByLabel('Name',{exact:true}).fill('Warehouse orders');await page.getByLabel('List order',{exact:true}).fill('30');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
     const savedView=await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
     await displayAction(page,'Warehouse orders');await page.getByRole('button',{name:'View history',exact:true}).click();await page.getByRole('heading',{name:'Recent view changes',exact:true}).waitFor();await j.capture('editor-collaborative-view')
     const views=await call(people.reader.cookie,`/api/v1/apps/${appId}/views`);assert.ok(views.items.some(view=>view.id===savedView.id));assert.equal(views.items.find(view=>view.id===savedView.id).access.canEdit,false)
     const history=await call(people.reader.cookie,`/api/v1/views/${savedView.id}/history`);assert.equal(history.items.length,1);assert.equal(history.items[0].actor_name,people.editor.name)
+    const filteredView=await call(people.reader.cookie,`/api/v1/views/${savedView.id}/query`,{});assert.deepEqual(filteredView.records.items.map(row=>row.id),[original.id]);assert.deepEqual(filteredView.view.groupBy,[status.id])
+    assert.equal(filteredView.view.filter.conditions[0].value,status.options[0].id)
+    await page.goto(tablePath);await tableAction(page,'Save view');await page.getByLabel('Name',{exact:true}).fill('Pickup queue');await page.getByLabel('List order',{exact:true}).fill('20');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
+    const secondView=await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
+    assert.deepEqual((await call(people.reader.cookie,`/api/v1/apps/${appId}/views`)).items.map(view=>view.id),[secondView.id,savedView.id])
+    await page.goto(tablePath);await displayAction(page,'Warehouse orders');await page.getByRole('button',{name:'Edit view',exact:true}).click();await page.getByLabel('List order',{exact:true}).fill('10')
+    await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
+    await page.goto(tablePath)
+    const orderedViews=await call(people.reader.cookie,`/api/v1/apps/${appId}/views`);assert.deepEqual(orderedViews.items.map(view=>view.id),[savedView.id,secondView.id])
+    if(width===1440)assert.deepEqual(await page.getByRole('navigation',{name:'Record views',exact:true}).getByRole('link').filter({hasText:/^(Warehouse orders|Pickup queue)$/}).allTextContents(),['Warehouse orders','Pickup queue'])
+    else {await page.locator('.cr-view-bar__opener').click();assert.deepEqual(await page.getByRole('dialog',{name:'Views',exact:true}).getByRole('link').filter({hasText:/^(Warehouse orders|Pickup queue)$/}).allTextContents(),['Warehouse orders','Pickup queue']);await page.getByRole('dialog',{name:'Views',exact:true}).getByRole('button',{name:'Close',exact:true}).click()}
+    await j.capture('editor-persisted-view-order')
+
     const schema=await call(people.reader.cookie,base),definition={appId,entityId,name:'My receiving list',display:'grid',fields:schema.fields.map(field=>field.id),filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:title.id},visibility:'app',shipped:false}
     const saveView=visibility=>({commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}],input:{view:{...definition,visibility}}})
     assert.equal((await request(people.reader.cookie,'/api/v1/commands/view.save',saveView('app'))).status,403)

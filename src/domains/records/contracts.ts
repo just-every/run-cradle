@@ -109,6 +109,7 @@ export type TimelineBaseline = {
     records: { recordId: Id; start: string | null; end?: string | null }[];
 };
 export type View = Versioned & {
+    position?: number;
     timelineZoom?: TimelineZoom;
     timelineBaseline?: TimelineBaseline;
     locked?: boolean;

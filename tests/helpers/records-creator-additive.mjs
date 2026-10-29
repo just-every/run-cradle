@@ -59,6 +59,18 @@ export async function creatorAdditiveJourney(){
   const created=await request(people.editor,'/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:live.version}],input:{appId,entityId,values:{[name.id]:'synthetic-cradle-2',[single.id]:select.options.at(-1).id,[multiple.id]:[multi.options[0].id,multi.options.at(-1).id]}}})
   assert.equal(created.value.fields[single.id].value,select.options.at(-1).id);assert.deepEqual(created.value.fields[multiple.id].value,[multi.options[0].id,multi.options.at(-1).id])
   const filtered=await request(people.editor,`/api/v1/views/${savedView.id}/query`,{});assert.deepEqual(filtered.records.items.map(record=>record.id),[original.id]);assert.equal(filtered.records.items[0].fields[single.id].value,single.options[0].id)
+  const viewDefinition=value=>{const {id,version,createdAt,updatedAt,access,...definition}=value;return definition}
+  const viewCommand=(value,changes)=>({commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000002',recordId:value.id},version:value.version}],input:{id:value.id,view:{...viewDefinition(value),...changes}}})
+  const peerView=(await request(people.editor,'/api/v1/commands/view.save',{commandId:createUlid(),expected:[],input:{view:{...viewDefinition(savedView),name:'synthetic-cradle-second',position:20}}})).value
+  const ordered=(await request(people.editor,'/api/v1/commands/view.save',viewCommand(savedView,{position:30}))).value
+  assert.deepEqual((await request(people.editor,`/api/v1/apps/${appId}/views`)).items.map(view=>view.id),[peerView.id,savedView.id])
+  await request(people.editor,'/api/v1/commands/view.save',viewCommand(ordered,{position:10}))
+  const orderedPage=await request(people.editor,`/api/v1/apps/${appId}/views?limit=1`)
+  assert.deepEqual(orderedPage.items.map(view=>view.id),[savedView.id]);assert.ok(orderedPage.nextCursor)
+  assert.deepEqual((await request(people.editor,`/api/v1/apps/${appId}/views?limit=1&cursor=${encodeURIComponent(orderedPage.nextCursor)}`)).items.map(view=>view.id),[peerView.id])
+  const viewHistory=await request(people.editor,`/api/v1/views/${savedView.id}/history`)
+  assert.equal(viewHistory.items.filter(item=>item.action==='view.save').length,3)
+  assert.deepEqual((await request(people.editor,`/api/v1/views/${savedView.id}`)).filter,savedView.filter)
   const auditResponse=await adminAuditResponse(new Request(`${origin}/api/v1/admin/audit?base=${appId}`,{headers:{host:new URL(origin).host,cookie:people.owner.cookie}}),h.db,{authenticate})
   assert.equal(auditResponse.status,200)
   const audits=(await auditResponse.json()).data.items.filter(item=>item.eventId===command.commandId)

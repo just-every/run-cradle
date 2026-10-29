@@ -10,7 +10,7 @@ import {encodeCsv} from '../../src/domains/portability/csv.ts'
 export async function fieldViewCsvJourney(h,{draft,call,auth,values}){
  await h.db.prepare("INSERT OR IGNORE INTO workspace(id,created_at,updated_at,name,timezone,currency,version) VALUES('workspace',1,1,'Portable fields','America/New_York','USD',1)").run()
  let r=await h.runtime()
- const source=draft.tables[0],fields=source.fields,view={appId:draft.appId,entityId:source.id,name:'Portable fields',display:'grid',fields:fields.map(f=>f.id),filter:{kind:'all',conditions:[]},sort:[{fieldId:fields[0].id,direction:'asc'}],groupBy:[],layout:{titleFieldId:fields[0].id},visibility:'private',shipped:false}
+ const source=draft.tables[0],fields=source.fields,view={appId:draft.appId,entityId:source.id,name:'Portable fields',position:37,display:'grid',fields:fields.map(f=>f.id),filter:{kind:'all',conditions:[]},sort:[{fieldId:fields[0].id,direction:'asc'}],groupBy:[],layout:{titleFieldId:fields[0].id},visibility:'private',shipped:false}
  const saved=await call(createCommandHttp({...r,authenticate:auth}),'/api/v1/commands/view.save',{commandId:createUlid(),expected:[],input:{view}}),display=await call(recordsCsvHttp(r.csv,auth),'/api/v1/records/export-csv',{appId:draft.appId,entityId:source.id,viewId:saved.value.id,query:{}})
  const identities=new Map([[draft.appId,createUlid()],[source.id,createUlid()],...fields.map(f=>[f.id,createUlid()]),...fields.flatMap(f=>(f.options??[]).map(o=>[o.id,createUlid()])),...source.validationRules.map(rule=>[rule.id,createUlid()])])
  const replace=value=>typeof value==='string'?identities.get(value)??value:Array.isArray(value)?value.map(replace):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([key,v])=>[key,replace(v)])):value

@@ -1,3 +1,4 @@
+import { compareViewOrder } from './view-order';
 import { baselineMetadata, captureTimelineBaseline, projectTimelineBaseline } from './timeline-baseline.server';
 import {timelineZoomSchema} from './timeline-schema';
 import { baseAccess, requireBaseAuthor } from './manual/base-access.server';
@@ -122,7 +123,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
             limit?: number;
             cursor?: string;
         }) { const limit = input.limit ?? 100; if (!Number.isInteger(limit) || limit < 1 || limit > 200)
-            throw new AdmissionError('validation', 'Page limit must be 1–200'); items.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0); const revision = await reader.revision(), binding = await cursorCodec.binding({ resource, actor: ctx.principal.id, epoch: ctx.principal.authenticationEpoch, items }); let offset = 0; if (input.cursor) {
+            throw new AdmissionError('validation', 'Page limit must be 1–200'); items.sort((a, b) => resource.includes('/views?') ? compareViewOrder(a,b) : a.id < b.id ? -1 : a.id > b.id ? 1 : 0); const revision = await reader.revision(), binding = await cursorCodec.binding({ resource, actor: ctx.principal.id, epoch: ctx.principal.authenticationEpoch, items }); let offset = 0; if (input.cursor) {
             const parsed = await cursorCodec.decode(input.cursor);
             if (parsed.binding !== binding || parsed.revision !== revision)
                 throw new AdmissionError('stale_cursor', 'Metadata or access changed');
@@ -173,7 +174,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         } return out; },
         async views(ctx: RequestContext, appId: string): Promise<View[]> { const rows = await db.prepare("SELECT id FROM record_views WHERE app_id=? AND (visibility='app' OR (visibility='private' AND owner_id=?)) ORDER BY id").bind(appId, ctx.principal.id).all<{
             id: string;
-        }>(); const out: View[] = []; for (const row of rows.results)try{out.push(await readView(ctx,row.id));}catch(error){if(!denied(error))throw error;} return out; },
+        }>(); const out: View[] = []; for (const row of rows.results)try{out.push(await readView(ctx,row.id));}catch(error){if(!denied(error))throw error;} return out.sort(compareViewOrder); },
         async deletedViews(ctx:RequestContext,appId:string){const rows=await db.prepare("SELECT * FROM record_views WHERE app_id=? AND visibility='deleted' AND owner_id=? ORDER BY id").bind(appId,ctx.principal.id).all<Stored>();const out:View[]=[];for(const row of rows.results){const view=JSON.parse(row.definition_json) as View;try{const current=await checkedView(ctx,vWithoutVersion(currentSchemaView(view,descriptors.get(view.appId,view.entityId).schema)));await policy.authorize(ctx,{appId,targetEntityId:view.entityId,action:'view.restore',expected:[],cost:[],inputHash:'0'.repeat(64)});out.push(baselineMetadata({...view,...current,version:row.version}));}catch(error){if(!denied(error))throw error;}}return out;},
         async prepareViewState(ctx: RequestContext, id: string, version: number, restore: boolean) { const row = await db.prepare('SELECT * FROM record_views WHERE id=?').bind(id).first<Stored>(); if (!row)
             throw new AdmissionError('not_found', 'View not found'); if(restore?row.visibility!=='deleted':row.visibility==='deleted')throw new AdmissionError('invalid_transition','View is not in the required state'); const storedView = JSON.parse(row.definition_json) as View, view={...storedView,...await checkedView(ctx, vWithoutVersion(currentSchemaView(storedView,descriptors.get(storedView.appId,storedView.entityId).schema)))}; if (view.shipped && !restore)
