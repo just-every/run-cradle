@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b132d573abca29dc2093362ce7dbc6ecc4c53466c288873e7e564516e762f29e",
+      "sha256": "ac6897172b6b67a01c2c48916d192dae25638bc448b6848c3737d609bec650d8",
       "executable": false
     },
     "DEMO.md": {
@@ -3062,7 +3062,7 @@
       "executable": false
     },
     "docs/contract/AUTO-USER-002/README.md": {
-      "sha256": "2aa91431d50ec8939d9e929411416c2d81a6ece688bc9e0c18d21402e6f4e076",
+      "sha256": "9ec4699d9b3bde64c3061339dbcb24e18882df1ab01ea4da0509a9a3737ba25d",
       "executable": false
     },
     "docs/contract/AUTO-USER-004/README.md": {
@@ -11930,7 +11930,7 @@
       "executable": false
     },
     "tests/helpers/automation-schedule-boundaries.mjs": {
-      "sha256": "e0af99d21cf77a3de189a1d0ac33435da66c8e6a0471fb6ef227122882e674c9",
+      "sha256": "bab4ccccc90292c8dcf8df57414754b5375f65cd2a23de503df9480e0ea6fd6d",
       "executable": false
     },
     "tests/helpers/automation-test-browser.mjs": {

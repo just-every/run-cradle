@@ -95,7 +95,7 @@ export async function automationScheduleBoundaries(h,{base,save,disable,runs,tic
  for(const fixture of cases){
   const name=`synthetic-cradle-149 ${fixture.name}`,anchor=(await h.create(name)).record
   const saved=await save({...base,name,actions:[{kind:'update',fieldId:h.statusId,value:name}],trigger:{kind:'schedule',recordId:anchor.id,startsAt:fixture.startsAt,schedule:fixture.schedule}})
-  const expectedKeys=[]
+  const expectedKeys=[],identities=new Map()
   const check=async at=>{
    const message=`${fixture.name} at ${at}`,history=await runs(saved)
    assert.equal(history.length,expectedKeys.length,message+': exact run count')
@@ -103,12 +103,18 @@ export async function automationScheduleBoundaries(h,{base,save,disable,runs,tic
    const record=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${anchor.id}`)).data.record
    assert.equal(record.fields[h.statusId].value,expectedKeys.length?name:null,message+': committed record value')
    assert.equal(record.version,anchor.version+expectedKeys.length,message+': one version per effect')
-   const effects=(await h.db.prepare(`SELECT r.trigger_key,a.idempotency_key,c.state,c.action
+   const effects=(await h.db.prepare(`SELECT r.id AS run_id,r.trigger_key,a.idempotency_key,c.state,c.action
     FROM automation_runs r JOIN launch_automation_actions a ON a.run_id=r.id
     LEFT JOIN command_admissions c ON c.command_id=a.idempotency_key WHERE r.automation_id=?`).bind(saved.id).all()).results
    assert.deepEqual(effects.map(effect=>effect.trigger_key).sort(),[...expectedKeys].sort(),message+': independently expected wall-clock slots')
    assert.equal(new Set(effects.map(effect=>effect.idempotency_key)).size,expectedKeys.length,message+': distinct committed effects')
-   for(const effect of effects){assert.equal(effect.state,'committed',message);assert.equal(effect.action,'record.patch',message)}
+   for(const effect of effects){
+    assert.equal(effect.state,'committed',message);assert.equal(effect.action,'record.patch',message)
+    assert.ok(history.some(run=>run.id===effect.run_id),message+': the public run owns the committed effect')
+    const identity={runId:effect.run_id,effectId:effect.idempotency_key}
+    if(identities.has(effect.trigger_key))assert.deepEqual(identity,identities.get(effect.trigger_key),message+': replay and restart retain identities')
+    else identities.set(effect.trigger_key,identity)
+   }
   }
   for(const [at,slot,restart]of fixture.steps){
    if(restart)await h.restart()

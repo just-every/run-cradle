@@ -44,6 +44,19 @@ restored. `tests/ui-user-automations.mjs` (`[AUTOMATIONS-USER-UI-001]`), through
 `tests/helpers/automation-trigger-browser.mjs`, covers the real saved schedule
 summary at 1440 and 390. Providers are faked only at the network edge.
 
+The same trigger journey invokes
+`tests/helpers/automation-schedule-boundaries.mjs` for nine workspace-calendar
+scenarios in New York. Independent UTC instants and expected local slots cover
+15-minute spring-forward coalescing, a skipped daily 02:30 slot, the repeated
+hour for minutes, hourly and daily rules, and monthly days 29, 30 and 31 across
+leap and non-leap February and April. A missing monthly date does not roll into
+the next month; a real leap-day slot runs at its stated local time. Each boundary
+checks public completed runs, the record value and one version increment per
+run, plus distinct committed patch receipts with the expected slot identities.
+Before-boundary controls, repeated delivery and Worker restarts leave no extra
+run or effect. The existing local-wall-clock and missed-slot semantics are
+unchanged; this adds proof rather than a new scheduling policy.
+
 Defaults ADOPTED: missed slots coalesce, never replay in a burst; minimum interval
 15 minutes; workspace time-zone calendar dates; explicit readable schedule
 record; one identity for a repeated local slot; skip nonexistent monthly days;
@@ -53,8 +66,9 @@ Gap: view enter/leave triggers (the current event capture has no retained
 before/after view-membership snapshot); form submitted and button pressed;
 inbound signed webhook and inbound email; definitions in base exports (the base
 transfer door does not carry automations, so no protected transfer path was
-changed); builder editing/testing of the additional triggers; the broader
-DST/nonexistent-day, write-only actor and field-type matrix; large backlogs and
-hosted limits; and widened write-grant or creator/base-owner authoring, which
+changed); builder editing/testing of the additional triggers; remaining
+schedule and date-offset calendar and zone cases; the write-only actor and
+field-type matrix; large backlogs and hosted limits; ct contract conversion and
+generated-document synchronization; and widened write-grant or creator/base-owner authoring, which
 remain under the existing authority and AUTO-USER-009 boundaries. New trigger
 restore-disabled proof is not claimed.
