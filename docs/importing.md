@@ -142,6 +142,21 @@ rollup definitions. Cradle base JSON also keeps its own saved views and forms,
 as described above. A successful records transfer is not a whole-business restore.
 The receipt's paper checklist does not save your marks.
 
+### Source record IDs
+
+For a completed recorded-API import whose native readback still matches the
+retained job, the receipt offers **Download ID map CSV** and **Download ID map
+JSON**. Each imported record has one entry with its original source table ID and
+record ID, and its adopted Cradle app, entity and record IDs. A source record ID
+is qualified by its table; rejected rows have no entry. The correspondence stays
+the same after a Worker restart.
+
+Each download checks current owner authority and retained custody again. Partial,
+undone, unreconciled or retired imports cannot download a successful map. CSV,
+workbook and Cradle base JSON imports do not offer this map. This does not add
+record lookup by source ID, people matching, original timestamps or comments, or
+establish a connection to a live source account.
+
 ### Skipped attachments
 
 For skipped attachment columns, **Download attachment list** gives one CSV row per
