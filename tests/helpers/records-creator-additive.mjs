@@ -34,6 +34,7 @@ export async function creatorAdditiveJourney(){
   const edit=()=>request(people.creator,`/api/v1/records/bases/${appId}`),base=`/api/v1/apps/${appId}/entities/${entityId}`
   const adopt=(preview,commandId=createUlid())=>({commandId,expected:[],input:{kind:'manual_schema',previewId:preview.id}})
   for(const role of ['creator','editor'])await request(people.owner,`/api/v1/records/bases/${appId}/collaborators`,{commandId:createUlid(),principalId:people[role].id,role,destructive:false,version:0})
+  const savedView=(await request(people.editor,'/api/v1/commands/view.save',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}],input:{view:{appId,entityId,name:'synthetic-cradle-filtered',display:'grid',fields:[name.id,single.id,multiple.id],filter:{kind:'condition',fieldId:single.id,op:'eq',value:single.options[0].id},sort:[],groupBy:[single.id],layout:{titleFieldId:name.id},visibility:'app',shipped:false}}})).value
   const before=await edit(),next=structuredClone(before),select=next.tables[0].fields.find(field=>field.id===single.id),multi=next.tables[0].fields.find(field=>field.id===multiple.id)
   select.options.push({id:createUlid(),label:'Backordered'});multi.options.push({id:createUlid(),label:'Priority'})
   const help='Use the supplier reference.\n<strong>Plain text only</strong> & no automatic changes.'
@@ -52,10 +53,12 @@ export async function creatorAdditiveJourney(){
   assert.deepEqual(live.fields.find(field=>field.id===single.id).options,select.options)
   assert.deepEqual(live.fields.find(field=>field.id===multiple.id).options,multi.options)
   assert.equal(live.fields.find(field=>field.id===name.id).help,help)
+  const retainedView=await request(people.editor,`/api/v1/views/${savedView.id}`);assert.equal(retainedView.id,savedView.id);assert.deepEqual(retainedView.filter,savedView.filter);assert.deepEqual(retainedView.groupBy,savedView.groupBy)
   const retained=(await request(people.editor,base+'/query',{})).items.find(row=>row.id===original.id)
   assert.equal(retained.version,original.version);assert.equal(retained.fields[single.id].value,single.options[0].id);assert.deepEqual(retained.fields[multiple.id].value,multiple.options.map(option=>option.id));assert.equal(retained.fields[name.id].value,'synthetic-cradle-1')
   const created=await request(people.editor,'/api/v1/commands/record.create',{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:live.version}],input:{appId,entityId,values:{[name.id]:'synthetic-cradle-2',[single.id]:select.options.at(-1).id,[multiple.id]:[multi.options[0].id,multi.options.at(-1).id]}}})
   assert.equal(created.value.fields[single.id].value,select.options.at(-1).id);assert.deepEqual(created.value.fields[multiple.id].value,[multi.options[0].id,multi.options.at(-1).id])
+  const filtered=await request(people.editor,`/api/v1/views/${savedView.id}/query`,{});assert.deepEqual(filtered.records.items.map(record=>record.id),[original.id]);assert.equal(filtered.records.items[0].fields[single.id].value,single.options[0].id)
   const auditResponse=await adminAuditResponse(new Request(`${origin}/api/v1/admin/audit?base=${appId}`,{headers:{host:new URL(origin).host,cookie:people.owner.cookie}}),h.db,{authenticate})
   assert.equal(auditResponse.status,200)
   const audits=(await auditResponse.json()).data.items.filter(item=>item.eventId===command.commandId)
