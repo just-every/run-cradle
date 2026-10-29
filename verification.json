@@ -36,7 +36,8 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:execution-resolution:browser"
+        "pnpm test:execution-resolution:browser",
+        "CRADLE_RECORDS_BROWSER_WIDTH=390 pnpm exec node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='Home presents records|Record detail keeps' tests/ui-records-builder.mjs"
       ]
     },
     {
@@ -68,8 +69,7 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "pnpm test:base",
-        "CRADLE_RECORDS_BROWSER_WIDTH=320 pnpm exec node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='Manual records' tests/ui-records-builder.mjs"
+        "pnpm test:base"
       ]
     },
     {
@@ -217,7 +217,7 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "CRADLE_RECORDS_BROWSER_WIDTH=390 pnpm test:records:browser"
+        "CRADLE_RECORDS_BROWSER_WIDTH=390 pnpm exec node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='Manual records' tests/ui-records-builder.mjs"
       ]
     },
     {
@@ -263,7 +263,8 @@
       "commands": [
         "pnpm test:contract",
         "pnpm source:check",
-        "pnpm check:deployment-spec"
+        "pnpm check:deployment-spec",
+        "CRADLE_RECORDS_BROWSER_WIDTH=320 pnpm exec node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='Manual records' tests/ui-records-builder.mjs"
       ]
     },
     {
