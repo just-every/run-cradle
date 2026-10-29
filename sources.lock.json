@@ -10886,7 +10886,7 @@
       "executable": false
     },
     "src/ui/records/manual-import-mappings.tsx": {
-      "sha256": "10b3ad30bc52bd1ef236bd8e4ad6709c303d93b8b99efcba6bbd64355078e075",
+      "sha256": "8bcf187a628fe0470d1300018d7e5995e15a2dfc0faefa13bb826382d0591153",
       "executable": false
     },
     "src/ui/records/manual-import-preview.tsx": {
@@ -10898,7 +10898,7 @@
       "executable": false
     },
     "src/ui/records/manual-import.tsx": {
-      "sha256": "915f37511f87df52a20af437440a0921b3a39e553f6b199873912c12dd3613fd",
+      "sha256": "bdf182ea7b3d6cc77cf13ce8ca3d541e4cfe53029b494d25b5abb1685b653da4",
       "executable": false
     },
     "src/ui/records/money-input.tsx": {
@@ -12582,7 +12582,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-csv.mjs": {
-      "sha256": "1b759dc1bd6c8aa8eabea86b404b67ad8de874335ed836972ffaca85d13dd0a0",
+      "sha256": "4d193588e133c40368763410ec2e9c00a53c91ff5c1e1abcd24b04e9f607b277",
       "executable": false
     },
     "tests/helpers/records-browser-edit.mjs": {
@@ -12894,7 +12894,7 @@
       "executable": false
     },
     "tests/helpers/sheets-journey.mjs": {
-      "sha256": "a7cb5f1cec5147c9c2c78c7966bd2b61bbf053a42eb4dfd8b58c13be856e616c",
+      "sha256": "09df9e88c04451b8fe53af7c32037dc14995104982605db7056c5708df22d605",
       "executable": false
     },
     "tests/helpers/sheets-provider.mjs": {
@@ -13194,7 +13194,7 @@
       "executable": false
     },
     "tests/records-csv-fence.mjs": {
-      "sha256": "45befdaccc557683e4a5c08951b0441ee349696a3d3fa76db93e1c8305be9388",
+      "sha256": "70a145f351cc303035253a446d0b4a9eaf93dad3f626cb9312c813838e4fed56",
       "executable": false
     },
     "tests/records-grid-range.mjs": {

@@ -180,6 +180,9 @@ async function createAllCsv(h){
  assert.equal((await call('import-mappings',{action:'list'})).mappings[0].available,false)
  assert.equal((await read()).length,4,'Schema refusal creates nothing')
  assert.equal((await h.db.prepare('SELECT version FROM record_csv_mappings WHERE id=?').bind(saved.id).first()).version,saved.version)
+ await h.db.prepare('UPDATE authority_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),h.session).run()
+ await assert.rejects(r.csv.commit(h.ctx,commandId,preview.id),/forbidden|revoked|session|authority/i,'A revoked session cannot replay a committed create import')
+ await h.db.prepare('UPDATE authority_sessions SET revoked_at=NULL WHERE id=?').bind(h.session).run()
 }
 
 /** More than one raw page, with repeated computed sort keys, through HTTP. */
