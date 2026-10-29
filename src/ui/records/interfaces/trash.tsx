@@ -1,11 +1,12 @@
 import {useRef,useState} from 'react'
+import {useNavigate} from '@tanstack/react-router'
 import type {InterfaceDefinition} from '../../../domains/records/interfaces/contracts'
 import {createUlid} from '../../../core/shared/ids'
 import {readApi,useResource} from '../../shared/api'
 import {ResourceState} from '../../shared/presentation'
 export function InterfaceDelete({definition}:{definition:InterfaceDefinition}){
- const [confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),command=useRef(createUlid())
- async function remove(){setBusy(true);setError('');try{await readApi(`/api/v1/interfaces/${definition.id}/delete`,{method:'POST',body:JSON.stringify({commandId:command.current,version:definition.version})});window.location.assign(`/app/records/${definition.appId}/interfaces`)}catch(error){setError((error as Error).message)}finally{setBusy(false)}}
+ const [confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),command=useRef(createUlid()),navigate=useNavigate()
+ async function remove(){setBusy(true);setError('');try{await readApi(`/api/v1/interfaces/${definition.id}/delete`,{method:'POST',body:JSON.stringify({commandId:command.current,version:definition.version})});void navigate({to:'/app/records/$appId/interfaces',params:{appId:definition.appId}})}catch(error){setError((error as Error).message)}finally{setBusy(false)}}
  return <section className="cr-stack"><h2>Interface Trash</h2><p>This interface leaves the published list and stays in Trash for 30 days. A current creator or base owner can restore it while its referenced views and forms remain available. Records are unchanged.</p><label className="cr-choice"><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/>I reviewed moving this interface to Trash.</label><button type="button" className="cr-button cr-button--quiet" disabled={!confirmed||busy} onClick={()=>void remove()}>Move interface to Trash</button>{error&&<p role="alert" className="cr-error">{error}</p>}</section>
 }
 export function InterfaceTrash({appId,onRestored}:{appId:string;onRestored():void}){

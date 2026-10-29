@@ -24,7 +24,7 @@ export async function creatorInterfaceScreens({h,page,creatorPage,j,cj,call,peop
   await entry.getByRole('button',{name:'Add component',exact:true}).click();await entry.getByLabel('Text',{exact:true}).fill(text)
  }
  await cj.capture('creator-interface-settings')
- async function publish(){const pending=creatorPage.waitForResponse(response=>response.url().endsWith('/interfaces/publish')&&response.request().method()==='POST');await settings.getByRole('button',{name:'Publish interface',exact:true}).click();const response=await pending,body=await response.json();assert.equal(response.status(),200,JSON.stringify(body));return body.data}
+ async function publish(){const pending=creatorPage.waitForResponse(response=>response.url().endsWith('/interfaces/publish')&&response.request().method()==='POST').then(async response=>{const body=await response.json();assert.equal(response.status(),200,JSON.stringify(body));return body.data});await settings.getByRole('button',{name:'Publish interface',exact:true}).click();return pending}
  let definition=await publish();assert.equal(definition.version,1)
  await creatorPage.getByRole('heading',{name:'Receiving desk',exact:true}).waitFor()
  const address=`${h.origin}/app/interfaces/${definition.id}`,api=`/api/v1/interfaces/${definition.id}`
@@ -41,7 +41,7 @@ export async function creatorInterfaceScreens({h,page,creatorPage,j,cj,call,peop
  settings=creatorPage.getByRole('form',{name:'Interface settings',exact:true})
  await settings.getByRole('navigation',{name:'Edit interface pages',exact:true}).getByRole('button',{name:'Instructions',exact:true}).click()
  await settings.getByLabel('Page title',{exact:true}).fill('Next steps');await settings.getByLabel('Text',{exact:true}).fill('Revised instructions for the receiving team.')
- definition=await publish();assert.equal(definition.version,2)
+ definition=await publish();assert.equal(definition.version,2);await creatorPage.getByText(/^Version 2 · Published /).waitFor()
  await cookie(context,people.editor.cookie);await page.goto(address);await page.getByRole('navigation',{name:'Interface pages',exact:true}).getByRole('button',{name:'Next steps',exact:true}).waitFor()
  assert.equal(await page.getByRole('navigation',{name:'Interface pages',exact:true}).getByRole('button',{name:'Instructions',exact:true}).count(),0)
  const detail=creatorPage.locator('details').filter({has:creatorPage.locator('summary').filter({hasText:/^Settings$/})})

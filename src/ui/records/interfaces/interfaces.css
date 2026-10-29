@@ -1,0 +1,4 @@
+.cr-interface-canvas, .cr-interface-section { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.cr-interface-component { min-width: 0; max-width: 100%; }
+.cr-interface-canvas .cr-tabs { flex-wrap: wrap; }
+.cr-interface-canvas .cr-tab { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }

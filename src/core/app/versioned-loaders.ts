@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { notFound } from '@tanstack/react-router'
 import { LAUNCH_APP_ID, launchEntities } from '../../apps/launch/contracts'
 const id='[0-9A-HJKMNP-TV-Z]{26}'
-const permitted=[new RegExp(`^/api/v1/forms/${id}$`),new RegExp(`^/api/v1/apps/${id}/entities/${id}/records/${id}$`),new RegExp(`^/api/v1/sources/${id}(?:/content)?(?:\\?version=[1-9][0-9]{0,15})?$`)]
+const permitted=[new RegExp(`^/api/v1/interfaces/${id}$`),new RegExp(`^/api/v1/forms/${id}$`),new RegExp(`^/api/v1/apps/${id}/entities/${id}/records/${id}$`),new RegExp(`^/api/v1/sources/${id}(?:/content)?(?:\\?version=[1-9][0-9]{0,15})?$`)]
 permitted.push(new RegExp(`^/api/v1/comments\\?appId=${id}&entityId=${id}&recordId=${id}&q=&limit=30$`))
 /** A separate, finite read surface; no arbitrary internal request forwarding. */
 export const loadVersionedDocumentData=createServerFn({method:'GET'}).validator((value:unknown)=>{
