@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "7364196199fd7e1accf540566bca0dded3c1aa89e58c014eb0ae7c012efb146a",
+      "sha256": "22ad598a5f2d0d22c0dd2483260c2cd53476061b337cc0d5187de42771a9eb0c",
       "executable": false
     },
     "DEMO.md": {
@@ -11006,7 +11006,7 @@
       "executable": false
     },
     "src/ui/records/records.css": {
-      "sha256": "2a97f03ce501bd88bb4d186e11f037b716d3914565352f0e4af5543c83ae00e0",
+      "sha256": "ba7033565ae5eb5962fd0f360f950f6c59f3107f3c0f3dbe7a8fa27470a0ba62",
       "executable": false
     },
     "src/ui/records/relationship-picker.tsx": {

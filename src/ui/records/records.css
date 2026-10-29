@@ -217,7 +217,7 @@
 .cr-presence-avatar { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--sage); color: var(--ink); font-weight: 600; }
 .cr-shortcuts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; margin: 0; }
 .cr-shortcuts dd { margin: 0; }
-.cr-editable-grid .cr-col-select { position: sticky; left: 0; z-index: 2; background: var(--card); }
+.cr-editable-grid .cr-col-select { position: sticky; left: 0; z-index: 2; width: 56px; min-width: 56px; padding-inline: 4px; background: var(--card); }
 @media (max-width: 600px) {
   .cr-editable-grid .cr-records-table :is(th, td):not(.cr-col-primary):not(.cr-col-select) { position: static !important; }
   .cr-editable-grid .cr-records-table .cr-col-primary { position: sticky !important; left: 56px !important; z-index: 1; background: var(--card); }
