@@ -227,3 +227,9 @@
 
 @media (max-width: 600px) { .cr-records-page .cr-table td > a { min-height: 44px; } .cr-presence-avatar { min-width: 44px; height: 44px; } }
 .cr-presence-avatar__count { font-size: var(--text-meta); }
+
+/* Keep the open formula disclosure clear of its first suggestion row. */
+.cr-formula-editor > details > summary { min-height: 28px; padding-block: 2px; }
+
+/* Stored labels and initial timestamp text stay inside narrow run cards. */
+.cr-automation-run { overflow-wrap: anywhere; }

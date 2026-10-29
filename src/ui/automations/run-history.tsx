@@ -10,7 +10,7 @@ export function AutomationRunHistory({id}:{id:string}) {
  return <section className="cr-stack"><div className="cr-toolbar"><h3>Run history</h3><button className="cr-button cr-button--quiet" onClick={runs.refresh}>Refresh runs</button></div>
   {error&&<p role="alert" className="cr-error">{error}</p>}
   <ResourceState resource={runs.resource} operation="automation runs" retry={runs.refresh}>{data=>data.runs.length?
-   <div className="cr-stack">{data.runs.map(run=><article id={`run-${run.id}`} key={run.id} className="cr-card"><p><strong>{run.testMode?`${run.testMode==='live'?'Live test':'Test'} · `:''}{run.state}</strong> · definition {run.definitionVersion} · <Timestamp value={run.queuedAt}/></p>
+   <div className="cr-stack">{data.runs.map(run=><article id={`run-${run.id}`} key={run.id} className="cr-card cr-automation-run"><p><strong>{run.testMode?`${run.testMode==='live'?'Live test':'Test'} · `:''}{run.state}</strong> · definition {run.definitionVersion} · <Timestamp value={run.queuedAt}/></p>
     <p className="cr-muted">{run.recordLabel}</p>{run.errorCode&&<p className="cr-error">{run.cause} ({run.errorCode})</p>}
     {run.href&&<a className="cr-link" href={run.href}>Link to this run</a>}
     {run.retryable&&<button className="cr-button" disabled={busy} onClick={async()=>{setBusy(true);setError(null);try{await readApi(`/api/user-automations/${id}/runs/${run.id}/retry`,{method:'POST',body:JSON.stringify({commandId:createUlid()})});runs.refresh()}catch(error){setError(error instanceof Error?error.message:'Retry could not be scheduled.')}finally{setBusy(false)}}}>Retry safe action</button>}

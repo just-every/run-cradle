@@ -10518,7 +10518,7 @@
       "executable": false
     },
     "src/ui/automations/run-history.tsx": {
-      "sha256": "7e0d84eaf99fe0d5eaaa61be31b7e88c63c23428159b17277c4710bf1765d9d7",
+      "sha256": "3cb915cbb5980b5ef2f0add3499420ba0c29a658a9a2d5e7df26450850fb55f0",
       "executable": false
     },
     "src/ui/automations/slack-app-action.tsx": {
@@ -11006,7 +11006,7 @@
       "executable": false
     },
     "src/ui/records/records.css": {
-      "sha256": "b4a44c2e486b9a58ce984de51d7a97d593a77a54cd5df93a94346e0990e7a9f5",
+      "sha256": "2a97f03ce501bd88bb4d186e11f037b716d3914565352f0e4af5543c83ae00e0",
       "executable": false
     },
     "src/ui/records/relationship-picker.tsx": {
@@ -11826,7 +11826,7 @@
       "executable": false
     },
     "tests/helpers/accessibility-axe.mjs": {
-      "sha256": "0c98a8f9775e63c5000dcf10f85d9df8a0d6a8c0965aa1adabbced6e8ee926c4",
+      "sha256": "bb01772a22e4480bff00bc6718015431020307c3d077276606439f1064ff8a34",
       "executable": false
     },
     "tests/helpers/accessibility-baseline.mjs": {
@@ -12643,6 +12643,10 @@
     },
     "tests/helpers/records-collection-lookups.mjs": {
       "sha256": "c5dc262e86a7a81e66ce7eca7c6458cab9a4218d4d6f3894c45a911e86cfe55f",
+      "executable": false
+    },
+    "tests/helpers/records-comment-browser.mjs": {
+      "sha256": "3098b9e17749e5094aad3abbc84da934e9af30aee0fe3eceda3f9958e6aa3a32",
       "executable": false
     },
     "tests/helpers/records-creator-additive.mjs": {
@@ -15510,7 +15514,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "5eecbd78f530d754415a9ef6da8228db148f9bde6ed2e1ccb80247094bdd51f2",
+      "sha256": "c16eeb0a7c76c80231e1271bf83314d4fbc32abe6829e823e52dcaeeeecb4ba4",
       "executable": false
     },
     "vite.config.ts": {

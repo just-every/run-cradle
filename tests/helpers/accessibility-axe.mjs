@@ -330,6 +330,7 @@ export async function measureAccessibilityLayout(page) {
       }
     })
     return {
+      ...(document.documentElement.scrollWidth>innerWidth?{pageOverflowElements:[...document.querySelectorAll('body *')].filter(visible).filter(element=>element.getBoundingClientRect().right>innerWidth).map(element=>({tag:element.tagName,className:typeof element.className==='string'?element.className:'',right:element.getBoundingClientRect().right,width:element.getBoundingClientRect().width,text:element.innerText?.slice(0,160)})).slice(0,80)}:{}),
       viewportWidth: innerWidth,
       pageWidth: document.documentElement.scrollWidth,
       pageOverflow: document.documentElement.scrollWidth > innerWidth,
