@@ -72,17 +72,22 @@ export async function assertAutomationTestArchive(path,fixture){
 /** Exercise the restored emitted event doors before and after fresh owner admission. */
 export async function restoredAutomationTestHistory(runtime,db,request,fixture,readMail){
  const before=await assertAutomationTestHistory(db,fixture,'fresh installation'),mailBefore=(await readMail()).length
+ const table=(await db.prepare('SELECT table_name FROM record_automation_triggers WHERE app_id=? AND entity_id=?').bind(fixture.appId,fixture.entityId).first()).table_name
+ const record=()=>db.prepare('SELECT * FROM "'+table.replaceAll('"','""')+'" WHERE id=?').bind(fixture.recordId).first()
+ const recordBefore=await record();assert.ok(recordBefore,'The live test chosen record was really restored')
  assert.equal((await db.prepare('SELECT enabled FROM automations WHERE id=?').bind(fixture.automationId).first()).enabled,0)
  assert.equal((await db.prepare('SELECT count(*) n FROM authority_credentials').first()).n,0)
  const worker=await runtime.getWorker()
  assert.equal((await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.records.automations.v1',commandId:fixture.unknownInput.commandId}}])).outcome,'ok')
  assert.equal((await worker.scheduled({cron:'* * * * *',scheduledTime:Date.now()})).outcome,'ok')
  assert.deepEqual(await assertAutomationTestHistory(db,fixture,'restored event replay'),before,'Restored event doors cannot mutate or replay test effects')
+ assert.deepEqual(await record(),recordBefore,'Restored event doors cannot apply a historical live update again')
  assert.equal((await readMail()).length,mailBefore,'Restored tests never send, including Unknown')
  if(request){
   await request(`/api/user-automations/${fixture.automationId}/test`,fixture.unknownInput,404)
   await request(`/api/user-automations/${fixture.automationId}/runs`,undefined,404)
   assert.deepEqual(await assertAutomationTestHistory(db,fixture,'fresh owner replay refusal'),before)
+  assert.deepEqual(await record(),recordBefore,'A refused former-author test cannot change the restored record')
   assert.equal((await readMail()).length,mailBefore,'A new owner cannot inherit the former author test authority')
  }
 }
