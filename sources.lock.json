@@ -2934,7 +2934,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "00a90177809480447439d5d736e14073088d65a8a089a7e86db37344765709d6",
+      "sha256": "5d0b0b274c1debf7db5c5843ad82f618ff3d63df657997f6702ecfbf9f9d11c0",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -3030,7 +3030,7 @@
       "executable": false
     },
     "docs/agent-door.md": {
-      "sha256": "3321ba849bab8404c8f3bf98ee30cdf74c7ecd546f994108687ca4cbe7aa7eaa",
+      "sha256": "a4d1b6567d94193f125d823a57892c295feaaca820821432f1665603ed849000",
       "executable": false
     },
     "docs/agent-proposals.md": {
@@ -5782,11 +5782,11 @@
       "executable": false
     },
     "src/agent-door/index.server.ts": {
-      "sha256": "204b5161833c35aee639b57db918f9b21f33281e08b751c8b14d6df0f69da480",
+      "sha256": "62ad4e1db854f0113bb0480f9979bfff6fb9f9025a09a184096f0e9ab1f3c53a",
       "executable": false
     },
     "src/agent-door/local-credentials.server.ts": {
-      "sha256": "217dc05079b007d75c94816e959890bc9e265ab59dd4f69fe9d0624365609976",
+      "sha256": "d21e2f2a2b100e1d37476820dc8417c8550243650c25590e3a24544592252219",
       "executable": false
     },
     "src/agent-door/people.server.ts": {
@@ -5794,7 +5794,7 @@
       "executable": false
     },
     "src/agent-door/proposals.server.ts": {
-      "sha256": "f5fa4b90ec2149ceb3084029553a2ebfc66c34316c739d30bae7df4908ce17ca",
+      "sha256": "579bf317f3fbda3bf2c0a67dabdf6440034fd450930bca25241cf1ca82abe8a2",
       "executable": false
     },
     "src/agent-door/records-schemas.ts": {
@@ -7590,7 +7590,7 @@
       "executable": false
     },
     "src/domains/admission/agent-activity.server.ts": {
-      "sha256": "9f60952d9afca8efe14f297e016e6aa345965dcae908b2976f961c1726cb2477",
+      "sha256": "d7e10b9ec1e524c61910c93272c90b482f7f4ea93c43360d4760387a1fbbd780",
       "executable": false
     },
     "src/domains/admission/audit.server.ts": {
@@ -9558,7 +9558,7 @@
       "executable": false
     },
     "src/domains/records/contracts.ts": {
-      "sha256": "97de4b5207393dbbd4130d5c525dbc08bc8f3ea046f4892bd975f65a460bb022",
+      "sha256": "8a4fca9ad2acc9d7d58fa3b4aaef177a0b12f99399bf57f1559e74ff8151ec5c",
       "executable": false
     },
     "src/domains/records/csv-display.server.ts": {
@@ -9842,7 +9842,7 @@
       "executable": false
     },
     "src/domains/records/metadata.server.ts": {
-      "sha256": "80ce72bde6350d081fd21380addab66646fa7f07b4eb3ae8c25502f1281a10d5",
+      "sha256": "591f5d6df385f7842d147d41c77a7654fc71d3e6e582f77dcc8d8318844a8fcb",
       "executable": false
     },
     "src/domains/records/migration.server.ts": {
@@ -11593,8 +11593,12 @@
       "sha256": "1a870f74cec7e64a5e3f0707175525c67baad63a908c798d6db32b24aebd0646",
       "executable": false
     },
+    "tests/agent-door/owner-name.mjs": {
+      "sha256": "bc9382925ce2688ad8754ed0f0e8833449588e7dbc7b3d35dad59168455df84b",
+      "executable": false
+    },
     "tests/agent-door/phase-fixtures.mjs": {
-      "sha256": "c6196dfca1d47e69c87bee2e0621aaf872d5dc5efd8e050fdffd6c261ba9b8cc",
+      "sha256": "4e0eb67cff7dd80764f2cd03b02b36a671aafdebf0792006822cd9e702cb7dcb",
       "executable": false
     },
     "tests/auth-base-only-runtime.mjs": {
@@ -12482,7 +12486,7 @@
       "executable": false
     },
     "tests/helpers/local-signin-copy.mjs": {
-      "sha256": "f656ea12bd0adc6c50353f676a3bbb4d8f3c02a1cfc98c279573eb62deec603c",
+      "sha256": "3fe9884af34e15f06089e2281a353e5bf78489423834b9785e4189ef6ac50bf4",
       "executable": false
     },
     "tests/helpers/local-signin-expired.mjs": {
@@ -13102,7 +13106,7 @@
       "executable": false
     },
     "tests/launch-authority-browser.mjs": {
-      "sha256": "021789788ecfd6e8463cd3e1684b41b73ec8e36a9982d3cfcfdeba2da9f22bd9",
+      "sha256": "e8b6ce20b7aef1e01a8ba417b471ae3d015245b4e4d1df9aac26bca880ad6dfc",
       "executable": false
     },
     "tests/launch-installed-ai-failures.mjs": {
@@ -13222,7 +13226,7 @@
       "executable": false
     },
     "tests/records-agent-proposals.mjs": {
-      "sha256": "86f1c887bc8b37644403e7704a23b57eff71aa26178b2b88439d7384eb4b7b8d",
+      "sha256": "369ca69f2001bd8ec7b57f083192f7628fdd634b54a7985edb28c6ee26861b69",
       "executable": false
     },
     "tests/records-base-edge-return.mjs": {

@@ -215,7 +215,7 @@ test('[PERM-005] emailed guests see one base, isolated navigation and search, ca
  let browser
  try{
   const world=await guestAccessJourney(h)
-  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
   await guestAccessBrowser(browser,h,world,output)
   await finishGuestAccess(h,world)
  }finally{await browser?.close();await h.close()}

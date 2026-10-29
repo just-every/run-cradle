@@ -10,7 +10,7 @@ import { createCradleProposalTools } from './proposals.server'
 import { createCradleRecordTools } from './records.server'
 import { authAllowList } from '../core/platform/allow-list.server'
 
-export const CRADLE_SPECIALIST = 'Cradle specialist'
+export const CRADLE_SPECIALIST = 'operations app steward'
 export const isAgentDoorPath = (path: string) => path === '/mcp' || path === '/agents' || path.startsWith('/agents/')
   || path === '/api/rer/agent-policy' || path === '/api/rer/business-settings'
   || path === '/.well-known/oauth-protected-resource' || path === '/.well-known/oauth-protected-resource/mcp'

@@ -86,6 +86,6 @@ export default async function phaseFixtures({ phase, request, origin, cookie }) 
       },
       proposal: { input: proposalInput, proposalId: pending.value.id, id: pending.value.id, appId: baseId },
     },
-    clients: { proposer: { token: key.secret, clientId: key.id, agent: { id: key.principalId, name: keyName, specialist: 'Cradle specialist' } } },
+    clients: { proposer: { token: key.secret, clientId: key.id, agent: { id: key.principalId, name: keyName, specialist: 'operations app steward' } } },
   }
 }

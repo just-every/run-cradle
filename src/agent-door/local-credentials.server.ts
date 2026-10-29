@@ -41,7 +41,11 @@ export function createCradleLocalCredentials(runtime: Runtime, origin: string) {
     if (identity.consent) return null
     if (!identity.clientId) return null
     const row = await credential(identity.clientId)
-    if (!row || row.principal_id !== identity.agent.id || row.issuer_id !== identity.person.id || row.label !== identity.agent.name)
+    // ResourceContext does not carry Business consent in this Base release.
+    // An unrelated signed Business client is not a native proposing credential.
+    // Revoked local callers already lose all scopes in currentScopes below.
+    if (!row) return null
+    if (row.principal_id !== identity.agent.id || row.issuer_id !== identity.person.id || row.label !== identity.agent.name)
       throw new ToolRefusal('unauthenticated', 'The proposing key or its sponsor is no longer current.')
     if (await isDevMinted(db, row.id)) {
       const admission = admittedDevelopment.get(row.id)
@@ -83,7 +87,7 @@ export function createCradleLocalCredentials(runtime: Runtime, origin: string) {
       }
       return {
         sponsor: { id: row.issuer_id },
-        agent: { id: row.principal_id, name: row.label, specialist: 'Cradle specialist' },
+        agent: { id: row.principal_id, name: row.label, specialist: 'operations app steward' },
         scopes: currentProposalScopes(row), clientId: row.id,
       }
     },

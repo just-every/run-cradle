@@ -1,6 +1,6 @@
 # Cradle company-agent door
 
-Cradle serves one shared Base agent door at `/mcp`, its canonical OAuth resource
+The operations app steward serves one shared Base agent door at `/mcp`, its canonical OAuth resource
 metadata, `/api/rer/agent-policy`, `/agents` and the Agents person/approval doors.
 It negotiates MCP `2026-07-28` and `2025-11-25`. March 2025 is refused. Native
 REST, session, Origin, CSRF, device and installation credentials keep their own
@@ -32,7 +32,8 @@ native view and records its target. No provider cost or invented Undo is exposed
 
 An existing proposing key retains its original base and issuer fences through
 `cradle.schema.read`, `.propose`, `.proposals`, `.proposal` and `.withdraw`.
-These tools call the same native services as the proposal REST face. They cannot
+These tools call the same native services as the proposal REST face. Proposal
+text and private schema content receive the same conservative sensitive class. They cannot
 adopt, read record values, administer keys or send to providers. Business tokens
 cannot impersonate a proposing key. The signed-in owner must answer company-agent
 policy before a local key acts. Discovery is the shared registry; possessing a

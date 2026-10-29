@@ -168,7 +168,7 @@ contract('RECORDS-007','a proposing key reads and proposes only under its issuer
   for(const [name,sql,status] of cases){
    const restore=await h.db.batch([h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(membership.policy_id),h.db.prepare('SELECT * FROM authority_memberships WHERE policy_id=?').bind(membership.policy_id),h.db.prepare('SELECT * FROM authority_principals WHERE id=(SELECT issuer_id FROM authority_schema_proposers WHERE app_id=?)').bind(h.appId)])
    await h.db.prepare(sql).run()
-   for(const door of [rest,mcp]){await door.schema(status);await door.propose(input,status)}
+   for(const door of [rest,mcp]){const refusal=door.face==='mcp'&&name==='issuer signed out everywhere'?401:status;await door.schema(refusal);await door.propose(input,refusal)}
    if(name==='field hidden from the issuer')for(const [door,route] of [[rest.schema(403),`/api/v1/records/bases/${h.appId}`],[rest.propose(input,403),null]]){const agentAnswer=(await door).error.message;const ownerAnswer=route?(await h.request(route,{status:403})).error.message:(await h.request('/api/v1/records/schema-preview',{method:'POST',status:403,body:input.schema})).error.message;assert.equal(agentAnswer,ownerAnswer,'The agent gets the refusal the owner gets for the same schema')}
    const [policy,member,issuer]=restore.map(r=>r.results[0])
    await h.db.batch([h.db.prepare('UPDATE authority_policies SET rules_json=?,version=? WHERE id=?').bind(policy.rules_json,policy.version,policy.id),h.db.prepare('UPDATE authority_memberships SET state=?,version=? WHERE policy_id=?').bind(member.state,member.version,policy.id),h.db.prepare('UPDATE authority_principals SET authentication_epoch=? WHERE id=?').bind(issuer.authentication_epoch,issuer.id)])

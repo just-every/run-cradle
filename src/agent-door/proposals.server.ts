@@ -46,7 +46,7 @@ async function commandId(ctx: ToolContext, action: string) {
   return encoded
 }
 const nativeError = (error: unknown): never => {
-  if (error instanceof ToolRefusal) throw error
+  if (error instanceof ToolRefusal) throw new ToolRefusal(error.code, error.message, { message: error.message, ...error.details })
   if (error instanceof Error && 'code' in error) throw new ToolRefusal(String(error.code), error.message, { message: error.message })
   if (error instanceof z.ZodError) throw new ToolRefusal('invalid_arguments', 'The proposal does not match its native schema.')
   throw error
@@ -63,8 +63,8 @@ export function createCradleProposalTools(runtime: Runtime, native: (ctx: ToolCo
     } catch (error) { return nativeError(error) }
   }
   const authorize = (ctx: ToolContext | ResourceContext) => query('schema.read', {}, ctx)
-  const standard = () => [{ class: 'standard' as const, facts: { measure: 1 } }]
-  const base = { scope: 'schema:read', classes: ['standard'] as ToolDefinition['classes'], clauses: ['RECORDS-007'], untrusted: true }
+  const standard = () => [{ class: 'standard' as const, facts: { measure: 1 } }, { class: 'sensitive' as const, facts: { measure: 1, kind: 'private-business-content' } }]
+  const base = { scope: 'schema:read', classes: ['standard', 'sensitive'] as ToolDefinition['classes'], clauses: ['RECORDS-007'], untrusted: true }
   const read = (action: string, title: string, inputSchema: JsonSchemaObject, outputSchema: JsonSchema): ToolDefinition => ({
     ...base, name: `cradle.${action}`, title, description: `Read the native proposing key's ${title.toLowerCase()}; current issuer and base authority are required.`,
     readOnly: true, inputSchema, outputSchema,
@@ -129,7 +129,7 @@ export function createCradleProposalTools(runtime: Runtime, native: (ctx: ToolCo
   ]
   const resources: ResourceDefinition[] = [{
     uriTemplate: 'cradle://proposals/{proposal}', name: 'Schema proposal', description: 'Only the exact proposing key can read its own proposal.',
-    scope: 'schema:read', classes: ['standard'], mimeType: 'application/json',
+    scope: 'schema:read', classes: ['standard', 'sensitive'], mimeType: 'application/json',
     classify: () => standard(),
     async read(uri, ctx) {
       const match = /^cradle:\/\/proposals\/([0-9A-HJKMNP-TV-Z]{26})$/.exec(uri)

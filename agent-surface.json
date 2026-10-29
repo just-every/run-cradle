@@ -1,7 +1,7 @@
 {
   "schema": "rer-agent-surface/1",
   "seed": "cradle",
-  "specialist": "Cradle specialist",
+  "specialist": "operations app steward",
   "tools": [
     {
       "name": "cradle.bases.list",
@@ -103,7 +103,8 @@
       "scope": "schema:read",
       "readOnly": true,
       "classes": [
-        "standard"
+        "standard",
+        "sensitive"
       ],
       "clauses": [
         "RECORDS-007"
@@ -114,7 +115,8 @@
       "scope": "schema:read",
       "readOnly": true,
       "classes": [
-        "standard"
+        "standard",
+        "sensitive"
       ],
       "clauses": [
         "RECORDS-007"
@@ -125,7 +127,8 @@
       "scope": "schema:propose",
       "readOnly": false,
       "classes": [
-        "standard"
+        "standard",
+        "sensitive"
       ],
       "clauses": [
         "RECORDS-007"
@@ -136,7 +139,8 @@
       "scope": "schema:read",
       "readOnly": true,
       "classes": [
-        "standard"
+        "standard",
+        "sensitive"
       ],
       "clauses": [
         "RECORDS-007"
@@ -147,7 +151,8 @@
       "scope": "schema:propose",
       "readOnly": false,
       "classes": [
-        "standard"
+        "standard",
+        "sensitive"
       ],
       "clauses": [
         "RECORDS-007"
@@ -516,6 +521,12 @@
       "expect": [
         {
           "class": "standard"
+        },
+        {
+          "class": "sensitive",
+          "facts": {
+            "kind": "private-business-content"
+          }
         }
       ],
       "client": "proposer"
@@ -530,6 +541,12 @@
       "expect": [
         {
           "class": "standard"
+        },
+        {
+          "class": "sensitive",
+          "facts": {
+            "kind": "private-business-content"
+          }
         }
       ],
       "client": "proposer",
@@ -547,6 +564,12 @@
       "expect": [
         {
           "class": "standard"
+        },
+        {
+          "class": "sensitive",
+          "facts": {
+            "kind": "private-business-content"
+          }
         }
       ],
       "client": "proposer"
@@ -563,6 +586,12 @@
       "expect": [
         {
           "class": "standard"
+        },
+        {
+          "class": "sensitive",
+          "facts": {
+            "kind": "private-business-content"
+          }
         }
       ],
       "client": "proposer",
@@ -586,6 +615,12 @@
       "expect": [
         {
           "class": "standard"
+        },
+        {
+          "class": "sensitive",
+          "facts": {
+            "kind": "private-business-content"
+          }
         }
       ],
       "client": "proposer",
@@ -609,7 +644,12 @@
   },
   "verification": {
     "owner": {
-      "initializer": "tests/agent-door/initialize-owner.mjs"
+      "initializer": "tests/agent-door/initialize-owner.mjs",
+      "bindings": {
+        "OWNER_NAME": {
+          "module": "tests/agent-door/owner-name.mjs"
+        }
+      }
     },
     "fixtures": {
       "module": "tests/agent-door/phase-fixtures.mjs"
