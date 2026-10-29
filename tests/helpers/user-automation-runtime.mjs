@@ -54,6 +54,10 @@ export async function userAutomationRuntime(port,network) {
    return worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,
     body:{kind:'cradle.records.automations.v1',commandId}}])
   }
-  return Object.assign(h,{close,request,appId,entityId,nameId,statusId,phoneId,phoneLookupId,entity,operator,create,patch,tick})
+  async function scheduled(at) {
+   const worker=await h.runtime.getWorker()
+   await worker.scheduled({scheduledTime:Date.parse(at),cron:'* * * * *'})
+  }
+  return Object.assign(h,{close,request,appId,entityId,nameId,statusId,phoneId,phoneLookupId,entity,operator,create,patch,tick,scheduled})
  }catch(error){await close();throw error}
 }

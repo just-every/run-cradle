@@ -3,7 +3,7 @@ import {recordTemplateAutomation} from './helpers/record-template-automation.mjs
 import {smsJourney} from './helpers/sms-journey.mjs'
 import {automationTriggerJourney} from './helpers/automation-trigger-journey.mjs'
 import {automationControlJourney} from './helpers/automation-control-journey.mjs'
-import {automationFailureJourney} from './helpers/automation-failure-journey.mjs'
+import {automationFailureJourney,automationFailureCalendarJourney} from './helpers/automation-failure-journey.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {contract} from './contract.mjs'
@@ -30,6 +30,7 @@ contract('AUTO-USER-001','[RECORDS-009] [AUTO-USER-003] [AUTO-USER-005] [AUTO-US
   await recordTemplateAutomation(h)
   await automationTestJourney(h,delivered,status=>{testMailStatus=status})
   await automationFailureJourney(h,delivered,status=>{receiverStatus=status},receiverCalls)
+  await automationFailureCalendarJourney(h,delivered,status=>{receiverStatus=status},receiverCalls)
   await automationControlJourney(h,receiverCalls,status=>{receiverStatus=status})
   await automationTriggerJourney(h)
   delivered.length=0
