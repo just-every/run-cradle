@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {baseHttpSession} from './base-http-session.mjs'
 import {randomBytes} from 'node:crypto'
 import {createUlid} from '../../src/core/shared/ids.ts'
+import {automationTestCustodyJourney} from './automation-test-custody-journey.mjs'
 export async function automationTestJourney(h,delivered,setMailStatus){
  await h.restart({CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64')})
  const person=createUlid(),email='synthetic-cradle-61@example.test'
@@ -57,4 +58,5 @@ export async function automationTestJourney(h,delivered,setMailStatus){
  assert.equal(replayed.state,'Unknown');assert.equal(delivered.length,beforeUncertain+1,'An uncertain mail acknowledgement never resends on replay')
  await h.request(`/api/user-automations/${automation.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:liveAutomation.version}})
  delivered.length=0
+ await automationTestCustodyJourney()
 }

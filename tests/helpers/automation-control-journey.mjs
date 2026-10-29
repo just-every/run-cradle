@@ -1,7 +1,11 @@
 import {baseHttpSession} from './base-http-session.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
+import {automationCalculationJourney} from './automation-calculation-journey.mjs'
+import {userAutomationRuntime} from './user-automation-runtime.mjs'
 export async function automationControlJourney(h,receiverCalls,setReceiver){
+ const calculations=await userAutomationRuntime(0)
+ try{await automationCalculationJourney(calculations)}finally{await calculations.close()}
  const base={appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[]},eq=(fieldId,value)=>({kind:'condition',fieldId,op:'eq',value}),contains=value=>({kind:'condition',fieldId:h.nameId,op:'contains',value}),update=value=>({kind:'update',fieldId:h.statusId,value})
  const save=async(steps,name='synthetic-cradle-101 control')=>(await h.request('/api/user-automations',{method:'POST',status:201,body:{commandId:createUlid(),expiresAt:new Date(Date.now()+86400000).toISOString(),definition:{...base,name,steps}}})).data.result.value
  const disable=saved=>h.request(`/api/user-automations/${saved.id}/disable`,{method:'POST',body:{commandId:createUlid(),version:saved.version}})

@@ -1,4 +1,4 @@
-import {assertGuards} from '../records/fence.server'
+import {assertGuards,guardQuery} from '../records/fence.server'
 import type {AutomationTemplates} from './template-action.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
 import type {ServerFoundation} from '../../core/app/foundation.server'
@@ -48,7 +48,8 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   function storedResult(){return JSON.stringify({...result,confirmationEffects:undefined,steps:result.steps.map(step=>step.kind==='webhook'||step.kind==='slack'?{...step,output:withoutReceiverUrls(step.output)}:step)})}
 
   const permit=await policy.authorize(ctx,{appId:ref.appId,targetEntityId:ref.entityId,action:'view.preview',expected:[],cost:[],inputHash:hash})
-  const claimed=await admission.commit(ctx,{commandId:id,action:'automation.test',appId:ref.appId,canonicalInputHash:hash,permit:{...permit,action:'automation.test'},guards:[...guards,recordGuard],mutations:[{kind:'insert',table:tests,row:{id,automation_id:input.id,owner_id:ctx.principal.id,app_id:ref.appId,entity_id:ref.entityId,record_id:record.id,definition_version:binding.definition_version,record_version:record.version,mode,state:'Unknown',created_at:ctx.now,result_json:storedResult(),confirmation_hash:confirmationHash}}],audit:[{action:'automation.test',subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,mode}})
+  const initialResult=storedResult()
+  const claimed=await admission.commit(ctx,{commandId:id,action:'automation.test',appId:ref.appId,canonicalInputHash:hash,permit:{...permit,action:'automation.test'},guards:[...guards,recordGuard],mutations:[{kind:'insert',table:tests,row:{id,automation_id:input.id,owner_id:ctx.principal.id,app_id:ref.appId,entity_id:ref.entityId,record_id:record.id,definition_version:binding.definition_version,record_version:record.version,mode,state:'Unknown',created_at:ctx.now,result_json:initialResult,confirmation_hash:confirmationHash}}],audit:[{action:'automation.test',subject:ref,changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:{id,mode}})
   if(claimed.replay)return replayResult()
   const effectContext={...ctx,causeRunIds:[...(ctx.causeRunIds??[]),id]}
   const run:AutomationRun={id,automation_id:input.id,definition_version:binding.definition_version,subject_id:record.id,state:'Running',definition_json:JSON.stringify({definition,event:{ref,event:input.event,version:record.version}}),cause_run_ids_json:'[]',principal_id:ctx.principal.id,credential_id:null,app_id:ref.appId,entity_id:ref.entityId}
@@ -68,7 +69,12 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
    if(['Unknown','Failed'].includes(step.state)){for(const later of result.steps.slice(step.position+1))if(later.state==='Preview')later.state='Skipped';break}
   }
   result.state=result.steps.some(step=>step.state==='Unknown')?'Unknown':result.steps.some(step=>step.state==='Failed')?'Failed':'Complete'
-  await db.prepare('UPDATE record_automation_tests SET state=?,result_json=? WHERE id=?').bind(result.state,storedResult(),id).run()
+  await authorize()
+  // Erasure may scrub this row while an external acknowledgement is in flight.
+  // Check both current authority and unchanged custody in the persistence statement.
+  const persistence=guardQuery([...guards,trustedPredicate(`EXISTS(SELECT 1 FROM ${identifier(descriptor.table.tableId)} WHERE ${identifier(descriptor.idColumn)}=? AND ${identifier(descriptor.versionColumn)}=? AND (${scope.rowPredicate.sql}))`,[record.id,version,...scope.rowPredicate.values])],5)
+  const persisted=await db.prepare(`UPDATE record_automation_tests SET state=?,result_json=? WHERE id=? AND owner_id=? AND result_json=? AND EXISTS(${persistence.sql})`).bind(result.state,storedResult(),id,ctx.principal.id,initialResult,...persistence.values).run()
+  if(persisted.meta.changes!==1)throw new AuthorityError('forbidden','Test history custody or authority changed before completion.')
   await authorize();return result
  }}
 }

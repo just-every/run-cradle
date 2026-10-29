@@ -38,10 +38,10 @@ export async function userAutomationRuntime(port,network) {
   const entity=entities.find(entity=>entity.id===entityId)
   assert.ok(entity)
   const operator=(await h.db.prepare("SELECT id FROM operators WHERE email='import-owner@example.test'").first()).id
-  async function create(name,secret,phone) {
+  async function create(name,secret,phone,values={}) {
    const commandId=createUlid(),result=(await request('/api/v1/commands/record.create',{method:'POST',secret,
     body:{commandId,expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:entity.version}],
-     input:{appId,entityId,values:{[nameId]:name,...(phone===undefined?{}:{[phoneId]:phone})}}}})).data
+     input:{appId,entityId,values:{[nameId]:name,...(phone===undefined?{}:{[phoneId]:phone}),...values}}}})).data
    assert.equal(result.state,'committed')
    return {commandId,record:result.value}
   }

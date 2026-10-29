@@ -28,7 +28,7 @@ export async function recordsImportBrowserRuntime(port=0,network={}) {
  let runtime,db,mail
  try {
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE emitted-runtime')
-  const fixture=await emittedMailRuntime(directory,port,environment,network.outbound)
+  const fixture=await emittedMailRuntime(directory,port,environment,network.outbound,{mailResponse:network.mailResponse})
   ;({runtime,mail,origin,port}=fixture);Object.assign(environment,fixture.bindings)
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE d1-binding')
   db=await runtime.getD1Database('DB')
