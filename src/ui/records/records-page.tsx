@@ -44,7 +44,7 @@ export function RecordsPage({ appId, entityId, importBase = false, importJobId, 
     const first = entities.resource.data.items.find(entity => entity.label !== 'Private source intake')
     // Replace the entry route inside this document. The entry page's reads have
     // settled, and shared reads never cancel on unmount, so the hop drops nothing.
-    if (first) void navigate({ to: '/app/records/$appId/$entityId', params: { appId: target.id, entityId: first.id }, replace: true })
+    if (first) void navigate({ to: '/app/records/$appId/$entityId', params: { appId: target.id, entityId: first.id }, search: { view: undefined }, replace: true })
   }, [appId, entityId, target?.id, apps.resource, entities.resource, importBase, builder, navigate])
   const base = apps.resource.state === 'ready' ? apps.resource.data.items.find(app => app.id === appId) : undefined
   const header = <div className="cr-base-heading"><h1>{base?.name ?? 'Records'}</h1><BaseMenu apps={apps.resource.state === 'ready' ? apps.resource.data.items : []} appId={base?.id} manual={entities.resource.state === 'ready' && entities.resource.data.items.some(entity => entity.physicalRevision.startsWith('manual_'))} onCreate={() => setBuilder(newBase())} onEdit={() => base && setBuilder({ kind: 'edit', appId: base.id })} /></div>
