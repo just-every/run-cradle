@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b132d573abca29dc2093362ce7dbc6ecc4c53466c288873e7e564516e762f29e",
+      "sha256": "7f848641f99b0f7bd3790fb4582bc88a064b0a87195ef54f4c0240ad9cddd9a8",
       "executable": false
     },
     "DEMO.md": {
@@ -12749,8 +12749,16 @@
       "sha256": "4cb2fe803654867d68aadab80fc0640f78c28b6892c23bfc523f1741eb8ed968",
       "executable": false
     },
+    "tests/helpers/records-picker-browser.mjs": {
+      "sha256": "efdee20abf91e6f70465d0ebb7465f477bdca248eafc811b8b0e091999f07b6f",
+      "executable": false
+    },
+    "tests/helpers/records-picker-fixture.mjs": {
+      "sha256": "2f548673b899b317301f116c9b2cb512333a07ce8136e79a21ce2bd72478c894",
+      "executable": false
+    },
     "tests/helpers/records-picker-journey.mjs": {
-      "sha256": "e223a3563278d36670f8b778d51869b6aeb32bed5df3d2a7b4954aa418b6e154",
+      "sha256": "c8dbf25bc131cc10d4eb9dea8ea5f51993a792ccb0792a69ee1464e1870a0065",
       "executable": false
     },
     "tests/helpers/records-presence-journey.mjs": {
@@ -13194,7 +13202,7 @@
       "executable": false
     },
     "tests/records-csv-fence.mjs": {
-      "sha256": "5c7b105450e9ebe1de80a23d594a76766b725dda26ba3b5a3d0b0c92f63a8009",
+      "sha256": "0ff53b1015f6456993cfd196c4a56f9770c4f8f60efeec8ece6bfbe1f40890bc",
       "executable": false
     },
     "tests/records-grid-range.mjs": {
@@ -13426,7 +13434,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "46526fc647f1fbd3da0584d135161cfc4913dbcbb5b0bde46e88015258f2e270",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
