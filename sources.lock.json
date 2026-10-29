@@ -12634,7 +12634,7 @@
       "executable": false
     },
     "tests/helpers/record-watch-browser.mjs": {
-      "sha256": "6a680b400df67ba484bae76a76961cd18857d81ed369351c597c08d70f48904e",
+      "sha256": "3b6bb1413cad1be178f4d94a86ab4a3ac69064482dbaef027717cf942a6c2b00",
       "executable": false
     },
     "tests/helpers/record-watch-delivery.mjs": {

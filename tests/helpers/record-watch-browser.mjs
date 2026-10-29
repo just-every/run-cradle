@@ -7,7 +7,7 @@ import {chromium} from '@playwright/test'
 
 /** The native Settings forms are exercised once; phone proof reuses their saved state. */
 export async function recordWatchBrowser(h,record){
- const output=path.resolve(process.env.CRADLE_WATCH_SCREENSHOTS??'.private/record-watch'),browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH??'/usr/bin/chromium',args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
+ const output=path.resolve(process.env.CRADLE_WATCH_SCREENSHOTS??'.private/record-watch'),browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
  await mkdir(output,{recursive:true})
  try{
   const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[]
