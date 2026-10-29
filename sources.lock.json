@@ -5626,7 +5626,7 @@
       "executable": false
     },
     "scripts/portability/migrations.mjs": {
-      "sha256": "7c918a5bf6592854c8c726998bdf0313fbfa3e288c99ac186903db9c0dc691ae",
+      "sha256": "b0844f7f3357b52ed44ca80368a63916aa54d901b2b002a5f66625d78062b635",
       "executable": false
     },
     "scripts/portability/policy.mjs": {
