@@ -1,3 +1,4 @@
+import {measureAccessibilityLayout} from './accessibility-axe.mjs'
 import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,readFile,writeFile} from 'node:fs/promises'
@@ -215,13 +216,14 @@ export async function fieldBrowser(outputDirectory=process.env.CRADLE_FIELD_OUTP
 }
 
 async function screen(h,browser,width,cookie,output,persona,checkpoints){
- const context=await browser.newContext({acceptDownloads:true,viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),errors=[]
+ const context=await browser.newContext({acceptDownloads:true,viewport:{width,height:width<=390?844:1000}}),page=await context.newPage(),errors=[]
  await context.addCookies([{name:cookie.split('=')[0],value:cookie.slice(cookie.indexOf('=')+1),url:h.origin}])
  page.setDefaultTimeout(20000);page.on('pageerror',error=>errors.push(error.message))
  async function capture(state,target){
   await page.waitForLoadState('networkidle');await target.scrollIntoViewIfNeeded()
   const artifact=path.join(output,`field-${state}-${width}.png`);await page.screenshot({path:artifact,fullPage:true})
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,state+': page overflow')
+  if(width<=390){const layout=await measureAccessibilityLayout(page);await writeFile(path.join(output,`field-${state}-${width}-layout.json`),JSON.stringify(layout,null,2));assert.equal(layout.viewportWidth,width,state+': actual phone viewport');assert.deepEqual(layout.targetsBelow24.map(control=>({name:control.name,selector:control.selectorPath,width:control.effectiveTargetWidth,height:control.effectiveTargetHeight})),[],state+': active 24x24px touch targets')}
   const report=await new AxeBuilder({page}).analyze(),violations=report.violations.filter(item=>['serious','critical'].includes(item.impact)).map(item=>({id:item.id,targets:item.nodes.map(node=>node.target)}))
   assert.deepEqual(violations,[],state+': serious/critical accessibility');assert.deepEqual(errors,[],state+': browser errors')
   checkpoints.push({state,persona,width,artifact:path.relative(process.cwd(),artifact),serious:0,critical:0,pageOverflow:false})

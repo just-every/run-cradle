@@ -17,7 +17,7 @@ export async function collectionLookupsBrowser(){
   const call=async(path,input,status=200)=>{const csrf=input===undefined?null:await(await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json();const response=await fetch(h.origin+path,{method:input===undefined?'GET':'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json',...(csrf?{'x-csrf-token':csrf.csrfToken}:{})},...(input===undefined?{}:{body:JSON.stringify(input)})}),body=await response.json();assert.equal(response.status,status,JSON.stringify(body));return status===200?body.data:body.error}
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   for(const width of recordsBrowserWidths()){
-   const f=await collectionLookupFixture(call),context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+   const f=await collectionLookupFixture(call),context=await browser.newContext({viewport:{width,height:width<=390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    try{
     page.setDefaultTimeout(15000)
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])

@@ -12158,7 +12158,7 @@
       "executable": false
     },
     "tests/helpers/field-browser.mjs": {
-      "sha256": "b25d74ab789fae140ef71ee56cc31689de55c7d79be041396267e2e454ac61d7",
+      "sha256": "81ecaf2a4ab14f3b8d759b8ab1c339058e9323707145da4b8fe14890bd350db4",
       "executable": false
     },
     "tests/helpers/field-conversion-journey.mjs": {
@@ -12554,7 +12554,7 @@
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
-      "sha256": "6fc7f671cd5c5367af3681af6718e23657c7b09e989d03a8f5839989e67dee04",
+      "sha256": "fcb9951a03a285753d47df0cdefc4ab5cafa59c956a254968ec18b153ff8a40d",
       "executable": false
     },
     "tests/helpers/record-trash-journey.mjs": {
@@ -12570,7 +12570,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "5ec3fed04f556e04eb911406664c991a6e4d553ded0103a53c54e2d0d117253a",
+      "sha256": "9efaab3dcf56d49e60757d3e6dd3e2250d747ab9ba42178eb21c1f84fa0d4a21",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
@@ -12594,7 +12594,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-journey.mjs": {
-      "sha256": "bbf3b59f69a7e88b89982574ff6df7a82541ddab66e1d1206617099f3289bf07",
+      "sha256": "8d665480ce1c94e94c8b23847109e4978220752bb112bfd86de3afc62783b50a",
       "executable": false
     },
     "tests/helpers/records-browser-relations.mjs": {
@@ -12606,7 +12606,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-review.mjs": {
-      "sha256": "1a16e5e38c8b6e293acd43594fda8960bc051ce2eadb8ee8e42f3cd9bf436661",
+      "sha256": "97a8a07c8dfce2f4003a395ddc3ce70fea3d6ccb6a8968c7828c43633095f4ed",
       "executable": false
     },
     "tests/helpers/records-browser-runtime.mjs": {
@@ -12626,7 +12626,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-widths.mjs": {
-      "sha256": "fb4551a337a4a9e77377e340ffdaf612a749b254354f634004e52c43794576e5",
+      "sha256": "2a92a1d92c7636d291e0b2a7cdf54d07ed80811342173a232eb484c8f82cc18c",
       "executable": false
     },
     "tests/helpers/records-calculation-journey.mjs": {
@@ -12638,7 +12638,7 @@
       "executable": false
     },
     "tests/helpers/records-collection-browser.mjs": {
-      "sha256": "05a80e95559ffd1aa99fd49a5c07e6fb370811310c430834cb92356b9eeebbed",
+      "sha256": "125410cb4cc21aa9cbe2993b502910de772973fa6848f224929c9ca5e66e830a",
       "executable": false
     },
     "tests/helpers/records-collection-lookups.mjs": {
@@ -12674,7 +12674,7 @@
       "executable": false
     },
     "tests/helpers/records-forms-journey.mjs": {
-      "sha256": "e99e3a3be11a1cb1fe1a2ce5a624a2e2dbfd379f89ef623b92a73b44c1ed0abc",
+      "sha256": "b938b7c4d7f2c272356fff27f229a95ef61ce0bf2f012a54636dae6516d2f39a",
       "executable": false
     },
     "tests/helpers/records-gallery-journey.mjs": {
@@ -13426,7 +13426,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "756d1c715d0af128c7b26b36c108515ce849db14906b080a1d319fda681e1a8c",
+      "sha256": "aebe825b795852dc083ddc86dd1ee928bd2481f9d73ebd86cd687b30abc53628",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

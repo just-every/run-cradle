@@ -7,7 +7,7 @@ import {measureAccessibilityLayout} from './accessibility-axe.mjs'
 import AxeBuilder from '@axe-core/playwright'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityEvidence, accessibilitySetChecked, auditAccessibility } from './accessibility-evidence.mjs'
 import { installKeyboardInteractions } from './accessibility-keyboard.mjs'
-export function recordsJourney(page,origin,output,width,{allAxe=false,measureTargets=false}={}){
+export function recordsJourney(page,origin,output,width,{allAxe=false,measureTargets=width<=390}={}){
  installKeyboardInteractions(page)
  const checkpoints=[],errors=[];let previews=0;page.on('pageerror',e=>errors.push(e.message))
  async function capture(name,{viewport=false}={}){

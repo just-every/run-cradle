@@ -34,8 +34,8 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
  try{
   h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const fixture=await relationFixture(h);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   const receipts=[]
-  for(const width of recordsBrowserWidths(accessibilityWidths)){
-   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+  for(const width of recordsBrowserWidths([...accessibilityWidths,320])){
+   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width<=390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    try{await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);receipts.push({width,...await relationReview(page,j,h,fixture),checkpoints:j.checkpoints})}finally{await context.close()}
   }
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
@@ -49,8 +49,8 @@ let h,browser,activePage
 try{
  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
  const receipts=[]
- for(const width of recordsBrowserWidths(accessibilityWidths)){
-  const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width);activePage=page
+ for(const width of recordsBrowserWidths([...accessibilityWidths,320])){
+  const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width<=390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width);activePage=page
   await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
   const verifyRetained=await retainedLaunch(page,j,h,width)
   await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()

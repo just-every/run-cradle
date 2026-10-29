@@ -1,3 +1,5 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
+import {measureAccessibilityLayout} from './accessibility-axe.mjs'
 import assert from 'node:assert/strict'
 import {fileURLToPath} from 'node:url'
 import {userInfo} from 'node:os'
@@ -10,23 +12,23 @@ import {userAutomationRuntime} from './user-automation-runtime.mjs'
 function ownedProcesses(){const rows=execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).trim().split('\n').slice(1).map(line=>{const m=line.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/);return m?{pid:Number(m[1]),parent:Number(m[2]),name:m[3]}:null}).filter(Boolean),owned=new Set([process.pid]);let more=true;while(more){more=false;for(const row of rows)if(owned.has(row.parent)&&!owned.has(row.pid)){owned.add(row.pid);more=true}}return rows.filter(row=>owned.has(row.pid)&&/workerd|chrome|node/.test(row.name))}
 export async function recordTrashBrowser(){
  assert.equal(process.env.HOME,userInfo().homedir,'Browser driver uses the execution host real HOME')
- const output='docs/contract/SNAP-002';await mkdir(output,{recursive:true})
+ const output=process.env.CRADLE_TRASH_OUTPUT??'.private/record-trash';await mkdir(output,{recursive:true})
  let h,browser
  try{
   h=await userAutomationRuntime(0);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   console.log('OWNED_PROCESSES '+JSON.stringify(ownedProcesses()))
-  for(const width of [1440,390]){
+  for(const width of recordsBrowserWidths()){
    const created=await h.create(`synthetic-cradle-${30+width} · Packaging labels`)
-   const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),errors=[]
+   const context=await browser.newContext({viewport:{width,height:width<=390?844:1000}}),page=await context.newPage(),errors=[]
    page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000)
    try{
-    async function capture(state,target,settle=true){if(settle)await page.waitForLoadState('networkidle');await target.scrollIntoViewIfNeeded();await page.screenshot({path:`${output}/trash-${state}-${width}.png`,fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[])}
+    async function capture(state,target,settle=true){if(width<=390){const layout=await measureAccessibilityLayout(page);assert.equal(layout.viewportWidth,width,state+': actual phone viewport');assert.deepEqual(layout.targetsBelow24.map(control=>({name:control.name,selector:control.selectorPath,width:control.effectiveTargetWidth,height:control.effectiveTargetHeight})),[],state+': active 24x24px touch targets')}if(settle)await page.waitForLoadState('networkidle');await target.scrollIntoViewIfNeeded();await page.screenshot({path:`${output}/trash-${state}-${width}.png`,fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[])}
     await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
     const recordPath=`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${created.record.id}`
     await page.goto(`${h.origin}/app/records/${h.appId}/${h.entityId}/${created.record.id}`)
     await page.getByRole('button',{name:'Edit record',exact:true}).waitFor()
     await capture('record',page.getByRole('button',{name:'Edit record',exact:true}))
-    if(width===390){
+    if(width<=390){
      const menu=page.getByRole('button',{name:'Open navigation',exact:true});await page.keyboard.press('Tab');await menu.focus();await page.getByRole('tooltip',{name:'Open navigation',exact:true}).waitFor({state:'visible'});await page.keyboard.press('Tab')
      await menu.click();const close=page.getByRole('button',{name:'Close navigation',exact:true});await page.keyboard.press('Tab');await close.focus();await page.getByRole('tooltip',{name:'Close navigation',exact:true}).waitFor({state:'visible'});assert.equal(await page.getByRole('dialog',{name:'Navigation',exact:true}).evaluate(node=>node.scrollWidth>node.clientWidth),false);await close.click()
      const bell=page.getByRole('link',{name:/unread notifications$/}).first();await page.keyboard.press('Tab');await bell.focus();await bell.getByRole('tooltip').waitFor({state:'visible'});await capture('tooltip',bell)
