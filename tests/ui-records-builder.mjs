@@ -74,7 +74,7 @@ try{
  const aiCounts={};for(const table of ['execution_model_calls','operation_model_tasks','operation_model_usage','construction_model_tasks','launch_analyses']){aiCounts[table]=(await h.db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n;assert.equal(aiCounts[table],0,`${table}: ordinary records must not call a model`)}
  await writeFile(path.join(output,'ai-counts.json'),JSON.stringify(aiCounts,null,2));
  await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2));console.log(JSON.stringify({passed:receipts,evidence:output}))
-}catch(error){if(activePage){await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:true});await writeFile(path.join(output,'failure.html'),await activePage.content())}throw error}finally{await browser?.close();await h?.close()}
+}catch(error){if(activePage){try{await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:false,timeout:5000});await writeFile(path.join(output,'failure.html'),await activePage.content())}catch{console.warn('Failure screenshot unavailable; retaining the original journey error.')}}throw error}finally{await browser?.close();await h?.close()}
 await collectionLookupsBrowser()
 await conditionalFormsJourney()
 await historyBrowserJourney()

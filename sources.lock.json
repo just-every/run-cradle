@@ -10738,7 +10738,7 @@
       "executable": false
     },
     "src/ui/records/base-import/receipt.tsx": {
-      "sha256": "db95a0704f5b306157852ae5c181b57ce323e16f9271b5054ebe919d3ea0b908",
+      "sha256": "0e96c12f3e0c471341eccbbc5c6f3a89b92323fff873299aa03a5ddbd9bbb9f2",
       "executable": false
     },
     "src/ui/records/base-import/schema-review.tsx": {
@@ -11006,7 +11006,7 @@
       "executable": false
     },
     "src/ui/records/records.css": {
-      "sha256": "ba7033565ae5eb5962fd0f360f950f6c59f3107f3c0f3dbe7a8fa27470a0ba62",
+      "sha256": "d8a6b8b8a4dd31a8387e7758cb1db4bcd414ee69701a3ae2fb244f10fee8ddef",
       "executable": false
     },
     "src/ui/records/relationship-picker.tsx": {
@@ -11146,7 +11146,7 @@
       "executable": false
     },
     "src/ui/records/store-reference-view.tsx": {
-      "sha256": "ae3e9906a0e213d817c0cd95d6226fba9b21b2c6a048f7a1b7ee5484225bfd10",
+      "sha256": "12871f51261c13fa0647263bf96ecf6c8acee6176ede3a5819c6416822aed7fa",
       "executable": false
     },
     "src/ui/records/store-settings.tsx": {
@@ -12574,7 +12574,7 @@
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
-      "sha256": "7b47b21feac8524979232147d32e60dc6e3ee55b1fc405f1938e100b74670143",
+      "sha256": "b9ef872411562b0795c528c63a46d402d98b170f20e71008aca6aece0804376c",
       "executable": false
     },
     "tests/helpers/records-browser-additional-views.mjs": {
@@ -13430,7 +13430,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "137a6cb8f25595cecbdf67dc7d06e38676d7b329504f0896f91200b9dc3ccdbc",
+      "sha256": "75c46d007c8dea3c5fa67ab2c86f471d7f3541063f51ef30f140ae0ed27d7ead",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
