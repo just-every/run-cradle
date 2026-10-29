@@ -15,27 +15,36 @@ const historyPath=item=>item.kind==='view'?`/api/v1/views/${item.id}/history`:`/
 export async function addRecordTrashArchiveState(h,liveRecord){
  const post=async(route,body)=>(await h.request(route,{method:'POST',body})).data
  const schema=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
+ const linkId=schema.fields.find(field=>field.type==='relation'&&field.relation.entityId===h.entityId).id
  const revision={ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:schema.version}
  const live=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${liveRecord}`)).data.record
  const items=[]
  for(const expired of [false,true]){
-  const label=expired?'expired':'retained',created=await h.create('synthetic-cradle-trash-'+label)
-  const record=(await h.patch(created.record,{[h.statusId]:'synthetic-cradle-retained-value',[h.phoneLinkId]:live.ref})).data.value
+  const label=expired?'expired':'retained',create=command({appId:h.appId,entityId:h.entityId,values:{[h.nameId]:'synthetic-cradle-trash-'+label}},[revision])
+  const created={commandId:create.commandId,record:(await post('/api/v1/commands/record.create',create)).value}
+  const record=(await h.patch(created.record,{[h.statusId]:'synthetic-cradle-retained-value',[linkId]:live.ref})).data.value
   assert.equal(record.fields[h.statusId].value,'synthetic-cradle-retained-value')
-  assert.deepEqual(record.fields[h.phoneLinkId].value,live.ref)
-  const view=(await post('/api/v1/commands/view.save',command({view:{appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-trash-view-'+label,display:'grid',fields:[h.nameId,h.statusId,h.phoneLinkId],filter:{kind:'all',conditions:[]},sort:[{fieldId:h.nameId,direction:'asc'}],groupBy:[],layout:{titleFieldId:h.nameId},visibility:'app',shipped:false}},[revision]))).value
+  assert.deepEqual(record.fields[linkId].value,live.ref)
+  const view=(await post('/api/v1/commands/view.save',command({view:{appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-trash-view-'+label,display:'grid',fields:[h.nameId,h.statusId,linkId],filter:{kind:'all',conditions:[]},sort:[{fieldId:h.nameId,direction:'asc'}],groupBy:[],layout:{titleFieldId:h.nameId},visibility:'app',shipped:false}},[revision]))).value
   const form=(await post('/api/v1/commands/form.save',command({form:{appId:h.appId,entityId:h.entityId,title:'synthetic-cradle-trash-form-'+label,fields:[{fieldId:h.nameId,label:'Name',help:'synthetic-cradle-retained-help',required:true},{fieldId:h.statusId,label:'Status',help:'',required:false}],submitAction:'record.create',authenticated:true}},[revision]))).value
   for(const [kind,value] of [['record',record],['view',view],['form',form]]){
    const item={kind,id:value.id,appId:h.appId,entityId:h.entityId,expired,createCommand:kind==='record'?created.commandId:null}
-   const visible=(await h.request(publicPath(item))).data
-   item.before=kind==='record'?recordFields(visible.record):definition(visible)
+   const read=async()=>{const data=(await h.request(publicPath(item))).data;return kind==='record'?data.record:data}
+   const drop=async current=>{
+    if(kind==='record')return post('/api/v1/commands/record.delete',command({ref:current.ref,confirmation:current.id},[{ref:current.ref,version:current.version}]))
+    if(kind==='view')return post('/api/v1/commands/view.delete',command({viewId:current.id},[{ref:{appId:h.appId,entityId:'00000000000000000000000002',recordId:current.id},version:current.version}]))
+    return (await post(`/api/v1/records/trash/forms/${current.id}/delete`,{commandId:createUlid(),appId:h.appId,version:current.version})).result
+   }
+   // Retain an earlier recovery in every object's nonempty public history.
+   assert.equal((await drop(await read())).state,'committed')
+   item.trash=(await h.request(`/api/v1/records/trash?appId=${h.appId}`)).data.items.find(row=>row.id===item.id)
+   assert.equal((await post('/api/v1/records/trash/restore',restoreBody(item))).result.state,'committed')
+   const visible=await read()
+   item.before=kind==='record'?recordFields(visible):definition(visible)
    item.history=(await h.request(historyPath(item))).data.items
-   assert.ok(item.history.length,'The pre-export history is populated for '+kind)
-   let removed
-   if(kind==='record')removed=await post('/api/v1/commands/record.delete',command({ref:record.ref,confirmation:record.id},[{ref:record.ref,version:record.version}]))
-   else if(kind==='view')removed=await post('/api/v1/commands/view.delete',command({viewId:view.id},[{ref:{appId:h.appId,entityId:'00000000000000000000000002',recordId:view.id},version:view.version}]))
-   else removed=await post(`/api/v1/records/trash/forms/${form.id}/delete`,{commandId:createUlid(),appId:h.appId,version:form.version})
-   assert.equal(removed.state,'committed')
+   assert.ok(item.history.some(row=>row.action===kind+'.delete'),'The pre-export history includes deletion for '+kind)
+   assert.ok(item.history.some(row=>row.action===kind+'.restore'),'The pre-export history includes restoration for '+kind)
+   assert.equal((await drop(visible)).state,'committed')
    await h.request(publicPath(item),{status:404})
    let trash=(await h.request(`/api/v1/records/trash?appId=${h.appId}`)).data.items.find(row=>row.id===item.id)
    assert.ok(trash?.restorable,'Native deletion is initially restorable')
@@ -57,7 +66,7 @@ export async function addRecordTrashArchiveState(h,liveRecord){
    items.push(item)
   }
  }
- return {appId:h.appId,entityId:h.entityId,items,live:recordFields(live),sourceCookie:h.cookie,sourceOwnerId:h.operator}
+ return {appId:h.appId,entityId:h.entityId,items,live:recordFields(live),sourceCookie:h.cookie,sourceOwnerId:(await h.db.prepare('SELECT current_owner_id FROM cradle_restore WHERE singleton=1').first()).current_owner_id}
 }
 
 /** Compare the archive to expectations captured before it existed. */
@@ -115,11 +124,12 @@ export async function restoredRecordTrash(runtime,db,request,fixture,origin){
   for(const previous of item.history)assert.deepEqual(history.find(row=>row.id===previous.id),previous,'Original history remains intact')
   const action=item.kind+'.restore'
   assert.ok(history.some(row=>row.action===item.kind+'.delete'),'Deletion remains in public history')
-  assert.equal(history.filter(row=>row.action===action).length,1,'The current restoration has one public history entry')
-  if(item.kind!=='view')assert.equal(history.find(row=>row.action===action).actor.id,owner,'Restoration uses current owner authority')
+  const priorRestores=item.history.filter(row=>row.action===action).length
+  assert.equal(history.filter(row=>row.action===action).length,priorRestores+1,'The current restoration has one new public history entry')
+  if(item.kind!=='view')assert.equal(history.find(row=>row.action===action&&!item.history.some(previous=>previous.id===row.id)).actor.id,owner,'Restoration uses current owner authority')
   // Replaying the capture cannot duplicate restoration or its audit.
-  await request('/api/v1/records/trash/restore',body,404)
-  assert.equal((await request(historyPath(item))).items.filter(row=>row.action===action).length,1)
+  await request('/api/v1/records/trash/restore',body,item.kind==='record'?404:409)
+  assert.equal((await request(historyPath(item))).items.filter(row=>row.action===action).length,priorRestores+1)
  }
  assert.deepEqual(recordFields((await request(`/api/v1/apps/${fixture.appId}/entities/${fixture.entityId}/records/${fixture.live.id}`)).record),fixture.live,'Live linked record is unchanged')
  const remaining=(await request(listPath)).items
