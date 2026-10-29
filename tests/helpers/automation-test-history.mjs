@@ -11,7 +11,7 @@ export async function populateAutomationTestHistory(h,mail,setMailStatus){
  const schema=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}`)).data
  const record=(await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:schema.version}],input:{appId:h.appId,entityId:h.entityId,values:{[h.nameId]:'synthetic-cradle-5101'}}}})).data.value
  const definition={name:'synthetic-cradle-5102',appId:h.appId,entityId:h.entityId,event:'created',enabled:false,actions:[
-  {kind:'update',fieldId:h.statusId,value:owner.name},
+  {kind:'update',fieldId:h.statusId,value:'synthetic-cradle-5106'},
   {kind:'notify',operatorId:h.operator,title:'synthetic-cradle-5103'},
   {kind:'email',operatorId:h.operator,subject:'synthetic-cradle-5104',text:owner.name+' '+owner.email},
  ]}
@@ -21,15 +21,15 @@ export async function populateAutomationTestHistory(h,mail,setMailStatus){
  const beforeMail=mail.length,dry=await test()
  assert.equal(dry.mode,'dry');assert.equal(dry.state,'Complete');assert.equal(dry.definitionVersion,first.definitionVersion)
  assert.deepEqual(dry.steps.map(step=>step.state),['Complete','Complete','Complete'])
- assert.deepEqual(dry.steps[0].output,{fieldId:h.statusId,before:null,after:owner.name})
+ assert.deepEqual(dry.steps[0].output,{fieldId:h.statusId,before:null,after:'synthetic-cradle-5106'})
  assert.equal(dry.steps[1].output.sent,false);assert.deepEqual(dry.steps[2].output.to,[owner.email])
  assert.equal(mail.length,beforeMail+1,'The populated dry history comes from one real builder-only send')
  assert.equal((await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${record.id}`)).data.record.fields[h.statusId].value,null,'Dry history has no update effect')
- const nextDefinition={...definition,actions:definition.actions.map(action=>action.kind==='update'?{...action,value:owner.name+' reviewed'}:action)}
+ const nextDefinition={...definition,actions:definition.actions.map(action=>action.kind==='update'?{...action,value:'synthetic-cradle-5107'}:action)}
  const second=await save(nextDefinition,first),preview=await test(),live=await test({live:{previewId:preview.id,effects:preview.confirmationEffects}})
  assert.notEqual(second.definitionVersion,first.definitionVersion);assert.equal(live.definitionVersion,second.definitionVersion)
  assert.equal(live.mode,'live');assert.equal(live.state,'Complete');assert.deepEqual(live.steps.map(step=>step.state),['Complete','Complete','Complete'])
- assert.equal((await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${record.id}`)).data.record.fields[h.statusId].value,owner.name+' reviewed')
+ assert.equal((await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${record.id}`)).data.record.fields[h.statusId].value,'synthetic-cradle-5107')
  const uncertainInput={commandId:createUlid(),recordId:record.id,event:'created'},beforeUnknown=mail.length
  setMailStatus(503)
  let unknown

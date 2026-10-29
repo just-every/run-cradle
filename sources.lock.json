@@ -5606,7 +5606,7 @@
       "executable": false
     },
     "scripts/portability/migrations.mjs": {
-      "sha256": "7c918a5bf6592854c8c726998bdf0313fbfa3e288c99ac186903db9c0dc691ae",
+      "sha256": "e5b4421791940c79e08a88d794b72bdbb3ee899c96155f8f9b4bc06cc80b9b17",
       "executable": false
     },
     "scripts/portability/policy.mjs": {
@@ -5618,7 +5618,7 @@
       "executable": false
     },
     "scripts/portability/records.mjs": {
-      "sha256": "9d57c18fd99ff34d59cb167b9a8d1183b050be7e7ecdf3ef29711b3b7637ad95",
+      "sha256": "1678903600eb62a0db602ce3e15950a11bbf54bd10a77c33376f41dbe6998200",
       "executable": false
     },
     "scripts/portability/retired-comments.mjs": {
@@ -7822,7 +7822,7 @@
       "executable": false
     },
     "src/domains/automations/capture.server.ts": {
-      "sha256": "3ac6c4fb7c684a4c757748080bd2e61dd85cd99d692a2ce38b67872c373514d2",
+      "sha256": "8b68c9a4e7c82e617565c57f8eeea6ec5e7241c372971827bdad8133023ef787",
       "executable": false
     },
     "src/domains/automations/configuration-audit.ts": {
@@ -8846,7 +8846,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "370a84699ab4c19ca78278dde9073642d1ca5d0090f9df968adcc2f89a5e073f",
+      "sha256": "1df60250139d201cf33ff9582c5d5f09fea5ae3eaf35d551653e540d549adf0d",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -9790,7 +9790,7 @@
       "executable": false
     },
     "src/domains/records/portable-schema.server.ts": {
-      "sha256": "0878087a1c2337639fff6c6e859fa6fdbda3f78fbda0a8cdd5d14a653990380e",
+      "sha256": "563a8e5fa49f52ec61ffd20602b84ca8e9010ea2b709150dc1a064543f812695",
       "executable": false
     },
     "src/domains/records/portable-store-references.ts": {
@@ -11933,8 +11933,12 @@
       "sha256": "2cc62ab987895a4241be9c75b75808b3521f0006523b94fb156edfe9156744c1",
       "executable": false
     },
+    "tests/helpers/automation-test-erasure.mjs": {
+      "sha256": "8eaada5d3038ca8c8cf8a3c0106595f504742f7fbb01191a28bd4466ba5a64ee",
+      "executable": false
+    },
     "tests/helpers/automation-test-history.mjs": {
-      "sha256": "5cfd0cd977fd58e48193da723e232cd548d6f59278578068c9037fde141028c5",
+      "sha256": "cf1019264d696ec8b0cd392eed1980b36c51d22874a7385654dcfc684cbbd4cb",
       "executable": false
     },
     "tests/helpers/automation-test-journey.mjs": {
@@ -13118,7 +13122,7 @@
       "executable": false
     },
     "tests/lifecycle-erasure.mjs": {
-      "sha256": "2c700e0b997c8b5578ba456655deee9c2f8a620a1bf7f7b2bf989ef814ae6151",
+      "sha256": "4542ce4ca91587fdcb12c1530e5294da77aa8bd9c02a7cb6d10c5bd5d3965d70",
       "executable": false
     },
     "tests/lifecycle-identity-security.mjs": {
