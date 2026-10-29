@@ -11,7 +11,7 @@ import {recordTrashJourney} from './helpers/record-trash-journey.mjs'
 import {fieldConversionJourney} from './helpers/field-conversion-journey.mjs'
 import {fieldTrashJourney} from './helpers/field-trash-journey.mjs'
 import {fieldRulesJourney} from './helpers/records-field-rules.mjs'
-test('[SNAP-002] PERM-009 RECORDS-001 RECORDS-002 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules',async()=>{
+test('[SNAP-002] PERM-009 RECORDS-001 RECORDS-002 FIELD-001 FIELD-003 manual preview, adoption and every record write door enforce typed fields and named rules',async()=>{
  await creatorAdditiveJourney()
  await recordTrashJourney()
  await fieldTrashJourney()
