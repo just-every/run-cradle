@@ -7326,7 +7326,7 @@
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.tsx": {
-      "sha256": "9c0b9c5da1fca7bccf8a84f10592a6b897196e047f38d255465011cffba47ac3",
+      "sha256": "4198b0e1aa18cce616052d3537a163825ccdd2a552e53202eb1274c144230be9",
       "executable": false
     },
     "src/core/features/setup/document.server.ts": {
@@ -11298,7 +11298,7 @@
       "executable": false
     },
     "src/ui/settings/admin-audit-panel.tsx": {
-      "sha256": "3fb5761e3f752bd1e87b5b057600303127e2bbebaf67b101a1cff9b386e95e4b",
+      "sha256": "43e93f92da1d25a26cd119896ae30a6d631ea31b8783591ecd09458c22a88352",
       "executable": false
     },
     "src/ui/settings/api-keys-panel.tsx": {
@@ -11307,6 +11307,10 @@
     },
     "src/ui/settings/archive-panel.tsx": {
       "sha256": "b809f044babf2fda8f7c3c232e487a1e6fba1eca95cf192c80663f4ebcf683fa",
+      "executable": false
+    },
+    "src/ui/settings/audit-action-label.ts": {
+      "sha256": "407b9babe403246a550c928891d537c6f1c47a147a09c314f2e3ac03b05426d0",
       "executable": false
     },
     "src/ui/settings/connect-gmail.tsx": {
@@ -11318,7 +11322,7 @@
       "executable": false
     },
     "src/ui/settings/connection-panel.tsx": {
-      "sha256": "0aa8b87d1151d766886adca9d9aeacad8ba2211c6a062dee99ba6e2b45a3b87f",
+      "sha256": "ed8f729e0e3d250a654d931f56e9edaa5cedb8f8e6f4a0f51579fc37e9588599",
       "executable": false
     },
     "src/ui/settings/custom-fields-panel.tsx": {
@@ -11354,7 +11358,7 @@
       "executable": false
     },
     "src/ui/settings/launch-ai-settings.tsx": {
-      "sha256": "70d891adb742deb8b960307e8bf839b12667595ffd675371b0366f91d139e829",
+      "sha256": "f7a5aa34acf154526a5c262da06b439062f89855f09db3dbedd127e1c6943fef",
       "executable": false
     },
     "src/ui/settings/lazy-settings-panel.tsx": {
@@ -11378,7 +11382,7 @@
       "executable": false
     },
     "src/ui/settings/readiness-settings.tsx": {
-      "sha256": "8c43be0c60212931d7e470effc6d3dc70cfb6ea0b736d5b7529d38fe4571aa13",
+      "sha256": "9b7e774f00322cc4f91ad67b5c8c89b7d0364fa290ba7de86cdfc9330546fb26",
       "executable": false
     },
     "src/ui/settings/record-template-buttons-panel.tsx": {
@@ -11390,7 +11394,7 @@
       "executable": false
     },
     "src/ui/settings/sample-data-panel.tsx": {
-      "sha256": "b781d0962a6f9d87a95d5bfe2ad1a0b96a19c04ac8bb267c87ca6ce64831a101",
+      "sha256": "ff8656cedd37e86ef5a08387d9161b88b9f4e60ab4e1094e78da7e9d881cef57",
       "executable": false
     },
     "src/ui/settings/slack-app-panel.tsx": {
@@ -11411,10 +11415,6 @@
     },
     "src/ui/settings/trash-panel.tsx": {
       "sha256": "be2d9baacf52bfd00f97c92b15eb73dea6e85f8c5844639eacf93c0b28f4e19b",
-      "executable": false
-    },
-    "src/ui/settings/usage-panel.tsx": {
-      "sha256": "61d1b5f57244c0a4872e4c1d82c413cf5de03eb33791f454c606490d9a680f8c",
       "executable": false
     },
     "src/ui/settings/warehouse-destination-fields.tsx": {
@@ -11886,7 +11886,7 @@
       "executable": false
     },
     "tests/helpers/admin-audit-browser.mjs": {
-      "sha256": "b315394e39bff2deb13e4fadd20c036027dc6a08e940a2cacb57d7388c65ebb3",
+      "sha256": "3950c7478db4f2f8e77e5cf737e64e8bb3baf50bd59f362ab194f019be483f81",
       "executable": false
     },
     "tests/helpers/admin-audit-journey.mjs": {
@@ -12270,7 +12270,7 @@
       "executable": false
     },
     "tests/helpers/launch-concurrency-screens.mjs": {
-      "sha256": "21565ba96f1a49fedcd509fd013837d0851f170afbfea7b77a1aaf06a4f97a1a",
+      "sha256": "64b3039c6e568bc1da58dc88b6e81cca89c3dedef197c9a2aad935f9ef4b91a9",
       "executable": false
     },
     "tests/helpers/launch-consistency-clauses.mjs": {
@@ -13414,7 +13414,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "e25b12f6c7e96983b6613c4df836d207c5a3073f04124837bbbf24ff129aa4a2",
+      "sha256": "6d72f12efd40b7017f38832f43a76112c0589da379f370a3daf98d3b507dab7f",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
