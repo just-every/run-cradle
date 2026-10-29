@@ -21,6 +21,7 @@ import { canonical } from '../admission/canonical';
 import { idSchema, filterSchema, querySchema } from './validators';
 import { createUlid } from '../../core/shared/ids';
 import { AdmissionError } from '../admission/errors';
+import { readNativeAgentAttribution } from '../admission/agent-activity.server';
 import { filterFields } from './filter.server';
 import { createRecordReader } from './query.server';
 import { currentSchemaView, currentSchemaForm } from './metadata-schema';
@@ -73,14 +74,26 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
     if (view.layout.dependencyFieldId) { const dependency = d.fields.get(view.layout.dependencyFieldId)?.field; if (dependency?.type !== 'relation' || dependency.relation?.ownerAppId !== view.appId || dependency.relation.entityId !== view.entityId) throw new AdmissionError('validation', 'Timeline dependencies require a linked-record field targeting this table'); }
     if (view.display === 'board' && !view.layout.boardFieldId)
         throw new AdmissionError('validation', 'Board needs a grouping field'); if (view.display === 'board') { const field = d.fields.get(view.layout.boardFieldId!)?.field; if (!field || !['select','person','relation'].includes(field.type) || field.type === 'relation' && field.relation?.cardinality !== 'one') throw new AdmissionError('validation', 'Board columns require a single select, person or single linked-record field'); } return view; }
-    async function readView(ctx: RequestContext, id: string): Promise<View> { const row = await db.prepare('SELECT * FROM record_views WHERE id=?').bind(id).first<Stored>(); if (!row || row.visibility === 'deleted' || row.visibility === 'private' && row.owner_id !== ctx.principal.id)
-        throw new AdmissionError('not_found', 'View not found'); const storedView = JSON.parse(row.definition_json) as View, v=currentSchemaView(storedView,descriptors.get(storedView.appId,storedView.entityId).schema); return {...v,...await checkedView(ctx, vWithoutVersion(v), true),...(v.timelineBaseline ? {timelineBaseline:{...v.timelineBaseline,records:[]}} : {}),access:await viewAccess(policy,ctx,v,row.owner_id!,'view.save',db).then(({canEdit,canLock})=>({canEdit,canLock}))}; }
+    async function readView(ctx: RequestContext, id: string): Promise<View> {
+        const row = await db.prepare('SELECT * FROM record_views WHERE id=?').bind(id).first<Stored>();
+        if (!row || row.visibility === 'deleted' || row.visibility === 'private' && row.owner_id !== ctx.principal.id)
+            throw new AdmissionError('not_found', 'View not found');
+        const storedView = JSON.parse(row.definition_json) as View;
+        const view = currentSchemaView(storedView, descriptors.get(storedView.appId, storedView.entityId).schema);
+        const definition = await checkedView(ctx, vWithoutVersion(view), true);
+        const { canEdit, canLock } = await viewAccess(policy, ctx, view, row.owner_id!, 'view.save', db);
+        const preparedBy = await readNativeAgentAttribution(db, { appId: view.appId, entityId: RECORD_VIEW_ENTITY_ID, recordId: view.id });
+        return { ...view, ...definition,
+            ...(view.timelineBaseline ? { timelineBaseline: { ...view.timelineBaseline, records: [] } } : {}),
+            access: { canEdit, canLock }, ...(preparedBy ? { preparedBy } : {}),
+        };
+    }
     function vWithoutVersion<T extends {
         id: string;
         version: number;
         createdAt: string;
         updatedAt: string;
-    }>(v: T) { const { id, version, createdAt, updatedAt, access: _access, timelineBaseline: _baseline, ...definition } = v as T & {access?:unknown;timelineBaseline?:unknown}; return definition; }
+    }>(v: T) { const { id, version, createdAt, updatedAt, access: _access, preparedBy: _preparedBy, timelineBaseline: _baseline, ...definition } = v as T & {access?:unknown;preparedBy?:unknown;timelineBaseline?:unknown}; return definition; }
     async function prepareView(ctx: RequestContext, definition: unknown, id?: string, version?: number, captureBaseline = false) { const input = await checkedView(ctx, definition), role=ctx.principal.kind==='human'&&ctx.principal.sessionId&&!ctx.principal.credentialId?await baseAccess(db,ctx,input.appId):null; if(role?.role&&input.visibility==='app'&&!['owner','creator','editor'].includes(role.role))throw new AdmissionError('forbidden','Commenters and read-only members may save personal views only.'); const old = id ? await readView(ctx, id) : null; let ownerId=ctx.principal.id,editGuards:SqlPredicate[]=[];if(old){const stored=await db.prepare('SELECT owner_id FROM record_views WHERE id=?').bind(old.id).first<{owner_id:string}>();ownerId=stored!.owner_id;const access=await viewAccess(policy,ctx,old,ownerId,'view.save',db);requireViewEdit(access,!!old.locked!==!!input.locked);editGuards=access.guards;}else if(input.locked){const access=await viewAccess(policy,ctx,{...input,id:createUlid(),version:1},ownerId,'view.save',db);requireViewEdit(access,true);editGuards=access.guards;} if (old && (old.appId !== input.appId || old.entityId !== input.entityId))
         throw new AdmissionError('validation', 'View ownership cannot change'); if (old?.shipped && !input.shipped)
         throw new AdmissionError('validation', 'Shipped identity cannot be removed'); if (old && old.version !== version)

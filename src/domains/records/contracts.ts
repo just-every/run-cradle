@@ -107,6 +107,7 @@ export type TimelineBaseline = {
     records: { recordId: Id; start: string | null; end?: string | null }[];
 };
 export type View = Versioned & {
+    preparedBy?: import('../admission/agent-activity.server').NativeAgentAttribution;
     timelineZoom?: TimelineZoom;
     timelineBaseline?: TimelineBaseline;
     locked?: boolean;

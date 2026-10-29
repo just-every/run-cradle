@@ -20,6 +20,7 @@ declare global {
       RER_DEV_KEY?: string
       RER_DEV_IDENTITY?: string
       AUTH_LOCAL?: string
+      AUTH_ALLOW_LIST?: string
       AUTH_ORIGIN?: string
       WORKSPACE_NAME?: string
       WORKSPACE_TIMEZONE?: string

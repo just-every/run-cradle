@@ -5,6 +5,7 @@ import type { PlatformBindings } from './bindings'
 import type { AuthConfig, OperatorAuth } from '../../../vendor/base/modules/operator-auth/index.mjs'
 import {hostedMailConfig,hostedMailConfigured} from './hosted-mail.server'
 import { ApiError } from '../registry/errors'
+import { authAllowList } from './allow-list.server'
 
 /** The AuthConfig Base's operator-auth and the local dev layer both read. */
 export function baseAuthConfig(env: PlatformBindings): AuthConfig {
@@ -13,6 +14,7 @@ export function baseAuthConfig(env: PlatformBindings): AuthConfig {
     local: localMailEnabled(env), branding: { productName: 'Cradle', signInPath: '/signin', theme: '/rer-theme.css' },
     origin: env.APP_ORIGIN ?? '', OWNER_EMAIL: env.OWNER_EMAIL,
     SESSION_SECRET: env.SESSION_SECRET ?? '', SETUP_TOKEN: env.SETUP_TOKEN,
+    allowList: authAllowList(env.AUTH_ALLOW_LIST),
     INSTALLATION_KEY: env.INSTALLATION_KEY, INSTALLATION_KEY_PREVIOUS: env.INSTALLATION_KEY_PREVIOUS,
     MAIL_FROM: env.MAIL_FROM, dependencies: true,
   }
