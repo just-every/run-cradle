@@ -12757,6 +12757,10 @@
       "sha256": "81f1c9a7a24b87b19e648faa91022ecd0e06ba64385f3275bea9f69c1978a3d8",
       "executable": false
     },
+    "tests/helpers/records-summary-ready.mjs": {
+      "sha256": "713e0ccbbbba8aa7502c857e5c761c7cf5d10d18df371e7ef37b2a22faac2ca5",
+      "executable": false
+    },
     "tests/helpers/records-table-tools.mjs": {
       "sha256": "b76a0b8aaab8862dc328297db4152fada65cd4df7f48a5498980be1b1a0c5759",
       "executable": false
@@ -12794,7 +12798,7 @@
       "executable": false
     },
     "tests/helpers/records-view-settings-journey.mjs": {
-      "sha256": "72501f10973a65516fbb91488aaa7409bb234da1c15ab8fd53095c5c33aea957",
+      "sha256": "62e6b8a34d1129ef5044f7ee65219f7cc3b3b89d1fa6d4ff7d6a14671e2a5efa",
       "executable": false
     },
     "tests/helpers/repair-authority-migrations.mjs": {
