@@ -6902,7 +6902,7 @@
       "executable": false
     },
     "src/core/features/automations/ui/automation-monitor-page.tsx": {
-      "sha256": "a7c9fb5e64885107747b795cce3a87f7d1a252841a7c1f7b751be4586c94a0d0",
+      "sha256": "8d3da45dcd4b056109433a25987b31e13a963924abec3736906312a713435dde",
       "executable": false
     },
     "src/core/features/campaigns/grid-query.ts": {
@@ -7202,11 +7202,11 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.css": {
-      "sha256": "cd793687655164e5bf3c70cbddfe24a4f0879779ae4c3a254f31e21288cf8aab",
+      "sha256": "1cce578e32a21bafd68ede3c5935d7ab68a6ae4a4a2ee53dde13418754473e72",
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.tsx": {
-      "sha256": "ce7963095ec79eb11c5b5c60c907dc6e8f6a594d0962d2cc0b8c644d9c5a302c",
+      "sha256": "13154692e1b05ea10beea193c45ce52b57b819860bf5bd1ab210deea1c5aec6d",
       "executable": false
     },
     "src/core/features/portfolio/ui/index.tsx": {
@@ -10406,7 +10406,7 @@
       "executable": false
     },
     "src/routes/app.records.$appId.$entityId.index.tsx": {
-      "sha256": "d2ca8f86512e4bf9f060ed9892fa840f5a305c96c7b7e7d6d12316cf9a74dbad",
+      "sha256": "9c28282d34dd0bc634fc25c46c1c61e56c7dbbd04d72f668c9ac79300fca8a82",
       "executable": false
     },
     "src/routes/app.records.$appId.index.tsx": {
@@ -10438,7 +10438,7 @@
       "executable": false
     },
     "src/routes/app.search.tsx": {
-      "sha256": "e1790006eda1c6a4214ba40bfc8da7455e343e4721d1c21cb6a72ef660e84762",
+      "sha256": "5683f39892270011674a9a5b4835baed4062d706e6c1fcf55b5349cae0fb9a81",
       "executable": false
     },
     "src/routes/app.settings.$section.tsx": {
@@ -10822,11 +10822,11 @@
       "executable": false
     },
     "src/ui/records/export-csv.tsx": {
-      "sha256": "8fc728d9bce81e977232ae0923efa022eabea7a23326bf75d6b475d075370219",
+      "sha256": "9343ee73cbbdc652acb8cd4b6354852b28125350929ff52a21dd75ab2c053dfe",
       "executable": false
     },
     "src/ui/records/filter-editor.tsx": {
-      "sha256": "b69de0e0ba586935897eb17fc62cb0ebb412a73ed3d16a7b3e08150c3e97c902",
+      "sha256": "c9d808b7fcf1b1fb63efa68cfa2bf4e88a47efb28f20344316302c6c1619076d",
       "executable": false
     },
     "src/ui/records/find-in-view.tsx": {
@@ -10982,7 +10982,7 @@
       "executable": false
     },
     "src/ui/records/record-table.tsx": {
-      "sha256": "b60fc623f9adccb347bcc57637b005a4cd4fb2303f3a161a207c7329d51d33f2",
+      "sha256": "258c56ab2d98cd6c8363e96626157262380c29e31bab53e121c570ea2de1656c",
       "executable": false
     },
     "src/ui/records/record-template-picker.tsx": {
@@ -11002,7 +11002,7 @@
       "executable": false
     },
     "src/ui/records/records-page.tsx": {
-      "sha256": "d1b3310ff8413e5cf3f062de45b42bf6df596842c3e3b5077af8ad420949f307",
+      "sha256": "ff226930802f385b80ae1c407cf388a8720b7d73debdafe2676d0cfa8f411d06",
       "executable": false
     },
     "src/ui/records/records.css": {
@@ -11154,7 +11154,7 @@
       "executable": false
     },
     "src/ui/records/table-tools.css": {
-      "sha256": "f095495862cfac65625af849a15ea85ea32dc4ba9c8a38e26a98dcbfc1152881",
+      "sha256": "8743f91b87a3153df6f2c45580dfdbdad9f29c1a36153751c1edbd63126557b2",
       "executable": false
     },
     "src/ui/records/table-tools.tsx": {
@@ -11194,7 +11194,7 @@
       "executable": false
     },
     "src/ui/records/view-bar.css": {
-      "sha256": "bd5a43330444fe0db2e7105a024a4870915028b95a73713eaaa131f7b598c05e",
+      "sha256": "38131af941d3bf4b0d77bf90c54390aa4be0430d849bab11522aef47052c3198",
       "executable": false
     },
     "src/ui/records/view-bar.tsx": {
@@ -11290,7 +11290,7 @@
       "executable": false
     },
     "src/ui/search/search-page.tsx": {
-      "sha256": "79f3f2f91f59c34eb45f45177a8d9ef6baf070fb061460185995b723490b604a",
+      "sha256": "4707cc0c1b4da44db69309799a244f7564937102fe104098cc6071b128554dba",
       "executable": false
     },
     "src/ui/settings/access-panel.tsx": {
@@ -11478,7 +11478,7 @@
       "executable": false
     },
     "src/ui/shared/styles/fields.css": {
-      "sha256": "a0c8354aa59a109a3ca281a33143a6e70700833835f3ba7217e252e1cbf21841",
+      "sha256": "aacdf5f644d7403c8989c140b5780d84de8891e19089f986c16a0ff79372d915",
       "executable": false
     },
     "src/ui/shared/styles/page.css": {
