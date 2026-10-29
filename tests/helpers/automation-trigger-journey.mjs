@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
+import {automationScheduleBoundaries} from './automation-schedule-boundaries.mjs'
 export async function automationTriggerJourney(h){
  const base={name:'synthetic-cradle-141 trigger',appId:h.appId,entityId:h.entityId,event:'created',enabled:true,actions:[{kind:'update',fieldId:h.statusId,value:'triggered'}]},expiresAt=new Date(Date.now()+29*86400000).toISOString()
  const csrfToken=(await (await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})).json()).csrfToken
@@ -38,6 +39,7 @@ export async function automationTriggerJourney(h){
   await tick(fixture.outage);assert.equal((await runs(saved)).length,3)
   await disable(saved)
  }
+ await automationScheduleBoundaries(h,{base,save,disable,runs,tick})
  const anchor=(await h.create('synthetic-cradle-145 minimum interval')).record
  for(const every of [0,14,20])await h.request('/api/user-automations',{method:'POST',status:400,body:{commandId:createUlid(),expiresAt,definition:{...base,trigger:{kind:'schedule',recordId:anchor.id,startsAt:'2026-10-23T13:17:00Z',schedule:{unit:'minutes',every}}}}})
  const dateId=createUlid(),draft=(await h.request(`/api/v1/records/bases/${h.appId}`)).data

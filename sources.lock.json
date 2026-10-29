@@ -11929,6 +11929,10 @@
       "sha256": "a41e6e0275602aaffe95b49d3266342892fab49eae13eff404ce947aa9744871",
       "executable": false
     },
+    "tests/helpers/automation-schedule-boundaries.mjs": {
+      "sha256": "e0af99d21cf77a3de189a1d0ac33435da66c8e6a0471fb6ef227122882e674c9",
+      "executable": false
+    },
     "tests/helpers/automation-test-browser.mjs": {
       "sha256": "2cc62ab987895a4241be9c75b75808b3521f0006523b94fb156edfe9156744c1",
       "executable": false
@@ -11942,7 +11946,7 @@
       "executable": false
     },
     "tests/helpers/automation-trigger-journey.mjs": {
-      "sha256": "b873ff6830865d62dfe02a1a5f370e1b19f1cb420fa2fdaf3bacd1ff989cc2ee",
+      "sha256": "ffc1ab05e125c1f407eadc54015b7e967471a960249d4442ba2b46535d6b44c3",
       "executable": false
     },
     "tests/helpers/available-machine.mjs": {
