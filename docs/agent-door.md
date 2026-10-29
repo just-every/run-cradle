@@ -91,9 +91,8 @@ the conformance journey declares `spend: {none: true}`.
 
 ## Verification and contract boundary
 
-`agent-surface.json` contains the native registry and its journey. Capability
-scoping excludes its built-in event entry and step, and its resource templates,
-from the effective public surface.
+`agent-surface.json` contains exactly the 24 exposed native tools and their
+mandatory journey steps, with no public resource templates or event step.
 Its disposable initializer proves raw setup-token refusal, the real signed
 owner claim, replay refusal and the resulting native session. Every phase
 prepares fresh data and proposing credentials through ordinary native HTTP doors.
@@ -115,8 +114,7 @@ one of those families; existing native person-flow evidence is not agent evidenc
 
 ## Discoverable native jobs
 
-The core door currently exposes 24 tools. The retained built-in event entry is
-excluded by the declaration. Policy still governs reads.
+The core door currently exposes 24 tools. Policy still governs reads.
 `cradle:read` never grants native base, row or field access. A proposing key
 retains only its two original schema scopes.
 

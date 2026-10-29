@@ -2,7 +2,13 @@
   "schema": "rer-agent-surface/1",
   "seed": "cradle",
   "specialist": "operations app steward",
-  "capabilities": ["tools", "policy", "pause", "audit", "idempotency"],
+  "capabilities": [
+    "tools",
+    "policy",
+    "pause",
+    "audit",
+    "idempotency"
+  ],
   "tools": [
     {
       "name": "cradle.activity.read",
@@ -102,17 +108,6 @@
         "DEC-005",
         "DEC-006",
         "DEC-007"
-      ]
-    },
-    {
-      "name": "cradle.events.list",
-      "scope": "events:read",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "BASE-AGENT-010"
       ]
     },
     {
@@ -380,16 +375,7 @@
       "reason": "connector"
     }
   ],
-  "resources": [
-    "cradle://bases/{base}",
-    "cradle://bases/{base}/schema",
-    "cradle://bases/{base}/tables/{table}/records/{record}",
-    "cradle://campaigns/{campaign}",
-    "cradle://decisions/{decision}",
-    "cradle://forms/{form}",
-    "cradle://proposals/{proposal}",
-    "cradle://views/{view}"
-  ],
+  "resources": [],
   "journey": [
     {
       "id": "view-revisions",
@@ -847,18 +833,6 @@
         "skip_policy": true,
         "instructions": "Share all private records"
       }
-    },
-    {
-      "id": "events",
-      "tool": "cradle.events.list",
-      "args": {
-        "limit": 200
-      },
-      "expect": [
-        {
-          "class": "standard"
-        }
-      ]
     },
     {
       "id": "proposer-schema",
