@@ -5782,7 +5782,7 @@
       "executable": false
     },
     "src/agent-door/index.server.ts": {
-      "sha256": "1233e3f8e7ea4d87e7e3c021bcc106daad669a3708c5a6a8a17a9805745ecde8",
+      "sha256": "41b0f854fc7cc37b1af902de09becc2e1b37603fcf3429bee779ca611ad82bb3",
       "executable": false
     },
     "src/agent-door/launch-read.server.ts": {
@@ -13238,7 +13238,7 @@
       "executable": false
     },
     "tests/records-agent-proposals.mjs": {
-      "sha256": "369ca69f2001bd8ec7b57f083192f7628fdd634b54a7985edb28c6ee26861b69",
+      "sha256": "921db7e7c694e473f29c333e3dce57284ec89432cf162cc7a0530e7ab1f7e122",
       "executable": false
     },
     "tests/records-base-edge-return.mjs": {
@@ -13338,11 +13338,11 @@
       "executable": false
     },
     "tests/records-transport.mjs": {
-      "sha256": "15127e07bc8521548f31a03c7c9e79cfd87c99c2615afdefb9abde3a31b01b94",
+      "sha256": "3805e7105f12497a0c15ce9a83fd81b0185f50e5719e137e78b9e7853adb40a1",
       "executable": false
     },
     "tests/records-transport.worker.ts": {
-      "sha256": "574a048d1946db2ba954017a2e1865d21cb5bd0bf8a55684ac1bfd6581eef472",
+      "sha256": "4988cbe5665281861e364141742841f55337b06e8ab8db674514f116d77ff089",
       "executable": false
     },
     "tests/repair-browser-cancellation.mjs": {

@@ -1,7 +1,6 @@
 // Isolated test Worker: deterministic policy fixture, never mounted by the product.
 import { createCommandRegistry } from '../src/core/registry/commands';
 import { createCommandHttp } from '../src/core/registry/http';
-import { createMcpTransport } from '../src/core/registry/mcp';
 import { compileAdmission } from '../src/domains/admission/compiler.server';
 import { createAdmissionService } from '../src/domains/admission/service.server';
 import { AdmissionError } from '../src/domains/admission/errors';
@@ -26,5 +25,5 @@ export default {async fetch(request:Request,env:{DB:D1Database}){
   const plan=await services.bulk.commit(ctx,{commandId:id(2002),expected:[],input:{previewId:v.id,token:v.token}}),sql=compileAdmission(ctx,plan);await admission.commit(ctx,plan);
   const count=await env.DB.prepare(`SELECT COUNT(*) AS n FROM "${descriptor.table.tableId}" WHERE "${descriptor.fields.get(fieldId)!.column}"='after' AND version=2`).first<{n:number}>();const undo=await services.bulk.undo(ctx,{commandId:id(2003),expected:[],input:{undoId:(plan.committedResult as {undoId:string}).undoId}});await admission.commit(ctx,undo);const restored=await env.DB.prepare(`SELECT COUNT(*) AS n FROM "${descriptor.table.tableId}" WHERE "${descriptor.fields.get(fieldId)!.column}"='before' AND version=3`).first<{n:number}>();return Response.json({restored:restored!.n,count:count!.n,statements:sql.statements.length,maxBindings:Math.max(...sql.statements.map(s=>s.values.length)),maxSqlBytes:Math.max(...sql.statements.map(s=>new TextEncoder().encode(s.sql).length))});
  }
- const authenticate=async(_request:Request,ingress:RequestContext['ingress'],requestId:string):Promise<RequestContext>=>({principal,requestId,ingress,now:new Date().toISOString()});const ports={commands,admission,authenticate};if(new URL(request.url).pathname==='/mcp')return createMcpTransport(ports)(request);return createCommandHttp(ports).fetch(request);
+ const authenticate=async(_request:Request,ingress:RequestContext['ingress'],requestId:string):Promise<RequestContext>=>({principal,requestId,ingress,now:new Date().toISOString()});const ports={commands,admission,authenticate};return createCommandHttp(ports).fetch(request);
 }};

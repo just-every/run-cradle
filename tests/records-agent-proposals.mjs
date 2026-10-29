@@ -58,6 +58,15 @@ contract('RECORDS-007','a proposing key designs through REST and MCP alike, sees
    }else{
     assert.deepEqual((await agent.mcp('tools/list',{})).result.tools.filter(t=>t.name.startsWith('cradle.schema.')&&TOOLS.includes(t.name)).map(t=>t.name).sort(),TOOLS)
     for(const name of ['cradle.records.create','cradle.forms.submit'])await agent.mcp('tools/call',{name,arguments:{}},400)
+    // The retired broad MCP dispatcher accepted record.patch envelopes. The
+    // shared core door excludes queued record writes, including legacy names;
+    // a real proposing key cannot recover that authority through another name.
+    const {record:protectedRecord}=await h.create('Native record stays unchanged')
+    const path=`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${protectedRecord.ref.recordId}`
+    const retained=(await h.request(path)).data
+    const patch={commandId:createUlid(),expected:[{ref:protectedRecord.ref,version:protectedRecord.version}],input:{ref:protectedRecord.ref,changes:{[h.nameId]:'Must never be committed'}}}
+    for(const name of ['record.patch','cradle.records.patch','cradle.records.write'])await agent.mcp('tools/call',{name,arguments:patch},400)
+    assert.deepEqual((await h.request(path)).data,retained,'Refused legacy and core MCP record writes retain the exact native record and revision')
     await agent.mcp('tools/call',{name:'cradle.views.save',arguments:{}},403)
    }
    const other=face==='mcp'?keys.rest:null
