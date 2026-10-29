@@ -11929,12 +11929,16 @@
       "sha256": "a41e6e0275602aaffe95b49d3266342892fab49eae13eff404ce947aa9744871",
       "executable": false
     },
+    "tests/helpers/automation-test-audit.mjs": {
+      "sha256": "a6af9f5c7229b0d81e1c50930b08712c27e4094b1dd1c6638b32ba000ec88b6c",
+      "executable": false
+    },
     "tests/helpers/automation-test-browser.mjs": {
       "sha256": "2cc62ab987895a4241be9c75b75808b3521f0006523b94fb156edfe9156744c1",
       "executable": false
     },
     "tests/helpers/automation-test-erasure.mjs": {
-      "sha256": "8eaada5d3038ca8c8cf8a3c0106595f504742f7fbb01191a28bd4466ba5a64ee",
+      "sha256": "830f2703542f5d79d03c5269efa98479dbdd9d4f36dda2389d2e43e808d63bc5",
       "executable": false
     },
     "tests/helpers/automation-test-history.mjs": {

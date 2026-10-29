@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {userAutomationRuntime} from './user-automation-runtime.mjs'
 import {baseHttpSession} from './base-http-session.mjs'
 import {populateAutomationTestHistory,assertAutomationTestHistory} from './automation-test-history.mjs'
+import {automationTestAudit} from './automation-test-audit.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
 /** Transfer ownership, then remove and erase a real test author through native commands. */
@@ -40,6 +41,8 @@ export async function automationTestErasure(){
   const control=await populateAutomationTestHistory({...h,request:async(route,{method='GET',body,status=200}={})=>({data:await current(route,method==='GET'?undefined:body,status)}),operator:successor.id},mail,status=>{mailStatus=status})
   const controlRows=await assertAutomationTestHistory(h.db,control,'unrelated successor history')
   const originalRows=await assertAutomationTestHistory(h.db,fixture,'before public erasure')
+  const auditBefore=await automationTestAudit(h,successorSession,fixture)
+  const controlAudit=await automationTestAudit(h,successorSession,control)
   const before=await member(current,fixture.ownerId)
   await current('/api/v1/commands/member.erase',{commandId:createUlid(),expected:expected(fixture.ownerId,before.version),input:{memberId:fixture.ownerId,reason:'synthetic-cradle-5110'}},409)
   assert.deepEqual(await assertAutomationTestHistory(h.db,fixture,'unsafe active-person erasure refusal'),originalRows,'Refused erasure changes no test history')
@@ -68,6 +71,10 @@ export async function automationTestErasure(){
    assert.deepEqual(value.actions.slice(0,2),original.actions.slice(0,2),'Non-personal definition actions survive')
   }
   assert.deepEqual(await assertAutomationTestHistory(h.db,control,'unrelated history after erasure'),controlRows,'Erasure leaves another author history byte-identical')
+  assert.deepEqual(await automationTestAudit(h,successorSession,fixture,true),auditBefore,'Erasure retains the same test audit events with anonymous attribution')
+  assert.deepEqual(await automationTestAudit(h,successorSession,control),controlAudit,'Another author retains their named test audit events')
+  const currentDefinition=await h.db.prepare('SELECT actions_json FROM automations WHERE id=?').bind(fixture.automationId).first()
+  assert.equal(JSON.parse(currentDefinition.actions_json)[2].text,row.name+' '+row.name,'The current definition scrubs the same attributed personal copies as saved versions')
   const mailBefore=mail.length,providerBefore=(await h.mailMessages()).length
   for(const path of [`/api/user-automations/${fixture.automationId}/test`,`/api/user-automations/${fixture.automationId}/runs`]){
    const response=await fetch(h.origin+path,{method:path.endsWith('/test')?'POST':'GET',headers:{cookie:ownerSession.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':ownerSession.csrfToken,connection:'close'},...(path.endsWith('/test')?{body:JSON.stringify(fixture.unknownInput)}:{})})
