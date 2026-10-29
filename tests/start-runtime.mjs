@@ -2,7 +2,7 @@ import {browserCookies,sessionCookieWithToken} from './helpers/session-cookies.m
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import { expiredToken, revokedToken, authoritySessionControlsSql } from './helpers/session-controls.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
-import { navigateFromSignInToApp } from './helpers/public-app-navigation.mjs'
+import { navigateFromSignInToApp, openSignInFromDocs } from './helpers/public-app-navigation.mjs'
 import assert from 'node:assert/strict'
 import http from 'node:http'
 import { spawn, spawnSync } from 'node:child_process'
@@ -107,7 +107,7 @@ contract('BASE-ACCESS-002 AUTH-BASE-001 HOME-003', 'Start documents, real genera
     // also starts private app loaders before the destination has settled.
     // The docs are a public router document; the Lobby at / is plain HTML.
     await page.goto(`${origin}/docs`); const time = await page.evaluate(()=>performance.timeOrigin)
-    await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click(); await page.waitForURL('**/app');await page.waitForLoadState('networkidle')
+    await openSignInFromDocs(page); await page.waitForURL('**/app');await page.waitForLoadState('networkidle')
     await navigateFromSignInToApp(page); await page.waitForURL('**/app')
     assert.equal(await page.evaluate(()=>performance.timeOrigin),time);assert.equal(navigations,1)
     await page.getByRole('region',{name:'Your bases',exact:true}).waitFor(); await page.waitForLoadState('networkidle')

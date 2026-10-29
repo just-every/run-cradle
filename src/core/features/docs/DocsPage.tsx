@@ -17,14 +17,14 @@ export function DocsPage(view: DocsView) {
 }
 
 /** A documentation page between the site's own header and footer: sidebar | page | contents. The page title is the document's one h1. The run site renders it without a router. */
-export function DocsLayout({ config, page, sections, repository, version }: DocsView & { config: SeedConfig }) {
+export function DocsLayout({ config, page, sections, repository, version, signedIn }: DocsView & { config: SeedConfig }) {
   useCurrentDocs(version)
   const order = sections.flatMap(section => section.pages.map(entry => ({ ...entry, section: section.title })))
   const index = order.findIndex(entry => entry.slug === page.slug)
   const current = order[index]!
   return <div className="docs-site">
     <a className="docs-skip" href="#docs-content">Skip to documentation</a>
-    <SiteHeader productName={config.productName} page="docs" />
+    <SiteHeader productName={config.productName} page="docs" signedIn={signedIn} />
     <div className="docs-shell">
       <DocsSidebar sections={sections} current={page.slug} />
       <main id="docs-content" tabIndex={-1} className="docs-main">
