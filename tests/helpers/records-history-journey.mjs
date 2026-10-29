@@ -1,4 +1,4 @@
-import {displayAction,tableAction,tableCommand} from './records-table-tools.mjs'
+import {displayAction,tableAction,tableCommand,tableTools} from './records-table-tools.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
 import {mkdir,writeFile} from 'node:fs/promises'
@@ -24,23 +24,37 @@ export async function historyBrowserJourney(){
     const query=async()=> (await browserCall(page,`/api/v1/apps/${f.appId}/entities/${f.entityId}/query`,{})).items
     const note=async id=>(await query()).find(row=>row.id===id).fields[f.notes.id].value
     const toolbar=()=>page.getByRole('group',{name:'Record editing',exact:true})
+    const detailNote=value=>page.locator('.cr-record-fields').getByText(value,{exact:true}).waitFor({state:'visible'})
+    const cardNote=(id,value)=>page.locator(`[data-calendar-record="${id}"]`).getByText(value,{exact:true}).waitFor({state:'visible'})
     await page.goto(f.path);await page.getByRole('link',{name:'PO-1042',exact:true}).click();await page.getByRole('button',{name:'Edit record',exact:true}).click()
     await page.getByLabel('Notes',{exact:true}).fill('Owner confirmed carrier');await j.capture('history-record-editor')
     await j.command(page.getByRole('button',{name:'Save record',exact:true}),'record.patch')
     await page.getByRole('button',{name:'Edit record',exact:true}).waitFor();await toolbar().getByRole('button',{name:'Undo',exact:true}).waitFor();await page.reload();await toolbar().getByRole('button',{name:'Undo',exact:true}).waitFor();await page.getByRole('link',{name:'← Back to records',exact:true}).focus()
     let response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await page.keyboard.press(`${process.platform==='darwin'?'Meta':'Control'}+z`);assert.equal((await response).status(),200)
-    assert.equal(await note(f.row.id),'Awaiting carrier');await j.capture('history-detail-undo')
+    assert.equal(await note(f.row.id),'Awaiting carrier');await detailNote('Awaiting carrier');await j.capture('history-detail-undo')
     await j.command(toolbar().getByRole('button',{name:'Redo',exact:true}),'record.patch');assert.equal(await note(f.row.id),'Owner confirmed carrier')
+    await detailNote('Owner confirmed carrier')
     await page.getByRole('link',{name:'← Back to records',exact:true}).click()
     for(const title of ['PO-1042','PO-1043'])await page.getByRole('checkbox',{name:`Select ${title}`,exact:true}).check()
     await page.getByRole('button',{name:'Edit 2 selected',exact:true}).click()
     const bulk=page.locator('section.cr-card').filter({has:page.getByRole('heading',{name:'Change 2 selected records',exact:true})})
     await bulk.getByLabel('Field to change',{exact:true}).selectOption(f.notes.id);await bulk.getByLabel('Notes',{exact:true}).fill('Warehouse handoff complete')
-    await j.command(bulk.getByRole('button',{name:'Preview changes',exact:true}),'record.bulk-preview');await j.capture('history-bulk-preview')
+    await j.command(bulk.getByRole('button',{name:'Preview changes',exact:true}),'record.bulk-preview')
+    await bulk.getByRole('region',{name:'Bulk change preview',exact:true}).waitFor({state:'visible'})
+    const previewRows=bulk.getByRole('region',{name:'Bulk change preview',exact:true}).getByRole('row')
+    assert.equal(await previewRows.count(),3)
+    assert.deepEqual(await previewRows.nth(1).getByRole('cell').allTextContents(),['1','Notes','Owner confirmed carrier','Warehouse handoff complete'])
+    assert.deepEqual(await previewRows.nth(2).getByRole('cell').allTextContents(),['2','Notes','Check labels','Warehouse handoff complete'])
+    await j.capture('history-bulk-preview')
     await j.command(bulk.getByRole('button',{name:'Confirm 2 changes',exact:true}),'record.bulk-commit');await bulk.getByRole('button',{name:'Close',exact:true}).click()
+    const tools=await tableTools(page,j.action)
+    assert.equal(await tools.getByRole('button',{name:'Undo',exact:true}).isEnabled(),true)
+    await j.capture('history-bulk-undo-tools')
     await tableCommand(page,'Undo',j)
     assert.equal(await note(f.row.id),'Owner confirmed carrier');assert.equal(await note(second.id),'Check labels');await j.capture('history-bulk-undo')
     await displayAction(page,'Dispatch calendar');await tableCommand(page,'Redo',j)
+    await page.getByLabel('Calendar date',{exact:true}).fill('2026-11-02')
+    await cardNote(f.row.id,'Warehouse handoff complete');await cardNote(second.id,'Warehouse handoff complete')
     assert.equal(await note(f.row.id),'Warehouse handoff complete');assert.equal(await note(second.id),'Warehouse handoff complete');await j.capture('history-calendar-redo')
     peerContext=await browser.newContext({viewport:{width,height:900}});await peerContext.addCookies([{name:f.peerCookie.split('=')[0],value:f.peerCookie.slice(f.peerCookie.indexOf('=')+1),url:h.origin}]);const peer=await peerContext.newPage();await peer.goto(f.path)
     async function peerEdit(changes){const row=(await browserCall(peer,`/api/v1/apps/${f.appId}/entities/${f.entityId}/records/${f.row.id}`)).record;await browserCall(peer,'/api/v1/commands/record.patch',liveCommand({ref:row.ref,changes},[{ref:row.ref,version:row.version}]))}
