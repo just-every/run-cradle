@@ -1,3 +1,4 @@
+import {preservesSelectOptions} from '../option-additions'
 import type {EntitySchema,Form,View} from '../contracts'
 import type {EntityDescriptor} from '../descriptors.server'
 import type {ViewSnapshot} from './view-removal.server'
@@ -22,7 +23,7 @@ export async function schemaDependents(db:D1Database,prior:EntityDescriptor[],sc
  for(const descriptor of prior){
   const before=descriptor.schema,after=schemas.find(schema=>schema.appId===before.appId&&schema.id===before.id)
   const removed=new Set(before.fields.filter(field=>!after?.fields.some(next=>next.id===field.id)).map(field=>field.id))
-  const converted=new Set(before.fields.filter(field=>{const next=after?.fields.find(next=>next.id===field.id);return next&&canonical(physicalField(field))!==canonical(physicalField(next))}).map(field=>field.id))
+  const converted=new Set(before.fields.filter(field=>{const next=after?.fields.find(next=>next.id===field.id);return next&&canonical(physicalField(field))!==canonical({...physicalField(next),...(preservesSelectOptions(field,next)?{options:field.options??null}:{})})}).map(field=>field.id))
   if(!after||removed.size||converted.size){changes.set(identity(before.appId,before.id),{before,after,removed,converted});byEntity[before.id]=[];refusals[before.id]=[]}
  }
  if(!changes.size)return {byEntity,guards:[],refusals}

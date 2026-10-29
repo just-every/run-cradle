@@ -1,3 +1,6 @@
+import type {AutomationTemplates} from './template-action.server'
+import {RECORD_SCHEMA_ENTITY_ID} from '../records/contracts'
+import {RECORD_TEMPLATE_ENTITY_ID} from '../records/templates/contracts'
 import {smsDispatch} from '../sms/dispatch.server'
 import type {createRecordReader} from '../records/query.server'
 import type {DescriptorRegistry} from '../records/descriptors.server'
@@ -23,12 +26,21 @@ import type { RecordAutomationAction } from './contracts'
 
 type Outcome={state:'Complete'|'Failed'|'Unknown';result:unknown;errorCode?:string}
 export function createAutomationEffects(deps:{env:PlatformBindings;entities:EntityRegistry;admission:AdmissionPort;
- slack?:ReturnType<typeof import('../slack-app/service.server').createSlackApp>;policy:PolicyPort;appOrigin:string;reader:ReturnType<typeof createRecordReader>;descriptors:DescriptorRegistry;commands:CommandRegistry;destinations:ReturnType<typeof createAutomationDestinations>}) {
+ templates:AutomationTemplates;slack?:ReturnType<typeof import('../slack-app/service.server').createSlackApp>;policy:PolicyPort;appOrigin:string;reader:ReturnType<typeof createRecordReader>;descriptors:DescriptorRegistry;commands:CommandRegistry;destinations:ReturnType<typeof createAutomationDestinations>}) {
  const db=deps.env.DB
  return {
   async execute(ctx:RequestContext,run:AutomationRun,step:AutomationActionRun,action:RecordAutomationAction,
    scope:PolicyScope,subjectGuard:SqlPredicate,recordVersion:number,authorize:()=>Promise<void>):Promise<Outcome> {
    const saved=runSnapshot(run),ref=saved.event.ref,commandId=step.idempotency_key
+   if(action.kind==='apply_record_template'){
+    const command=deps.commands.get('record.apply-template')
+    if(!command)throw new AuthorityError('unconfigured','Record templates are unavailable.',503)
+    const {template}=await deps.templates.definition(ctx,ref.appId,action.entityId,action.templateId)
+    const schema=deps.descriptors.get(ref.appId,action.entityId).schema
+    await authorize()
+    const receipt=await command.execute(ctx,{commandId,expected:[{ref:{appId:ref.appId,entityId:RECORD_SCHEMA_ENTITY_ID,recordId:action.entityId},version:schema.version},{ref:{appId:ref.appId,entityId:RECORD_TEMPLATE_ENTITY_ID,recordId:template.id},version:template.version},{ref,version:recordVersion}],input:{appId:ref.appId,entityId:action.entityId,templateId:action.templateId}})
+    return receipt.result.state==='committed'?{state:'Complete',result:{commandId}}:{state:'Unknown',result:{commandId},errorCode:'admission_unknown'}
+   }
    if(action.kind==='update') {
     const command=deps.commands.get('record.patch')
     if(!command)throw new AuthorityError('unconfigured','Record patch is unavailable.',503)
@@ -95,7 +107,7 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
   },
   async recover(run:AutomationRun,step:AutomationActionRun,action:RecordAutomationAction):Promise<Outcome|null> {
    if(!step.started_at||Date.now()-step.started_at<60000)return null
-   if(action.kind==='update'||action.kind==='notify') {
+   if(action.kind==='update'||action.kind==='notify'||action.kind==='apply_record_template') {
     const receipt=await db.prepare("SELECT 1 FROM command_admissions WHERE command_id=? AND state='committed'").bind(step.idempotency_key).first()
     return receipt?{state:'Complete',result:{commandId:step.idempotency_key,reconciled:true}}:
      {state:'Failed',result:{commandId:step.idempotency_key},errorCode:'interrupted_before_commit'}

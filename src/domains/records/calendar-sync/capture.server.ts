@@ -18,7 +18,7 @@ export function calendarCaptureSchema(d: ReturnType<DescriptorRegistry['get']>) 
  const stem='record_calendar_'+d.schema.id.toLowerCase(),app=literal(d.schema.appId),entity=literal(d.schema.id)
  return (['INSERT','UPDATE'] as const).map(operation=>{
   const name=stem+'_'+operation.toLowerCase(),sql=`CREATE TRIGGER ${identifier(name)} AFTER ${operation} ON ${identifier(d.table.tableId)}
-   WHEN EXISTS(SELECT 1 FROM record_automation_context c JOIN command_admissions a ON a.command_id=c.command_id WHERE c.singleton=1 AND c.app_id=${app} AND a.state='admitted' AND a.action IN ('record.create','record.patch','record.delete','record.restore','record.undo','record.bulk-commit'))
+   WHEN EXISTS(SELECT 1 FROM record_automation_context c JOIN command_admissions a ON a.command_id=c.command_id WHERE c.singleton=1 AND c.app_id=${app} AND a.state='admitted' AND a.action IN ('record.create','record.duplicate','record.apply-template','form.submit','record.patch','record.delete','record.restore','record.undo','record.bulk-commit'))
    AND EXISTS(SELECT 1 FROM record_schemas WHERE id=${entity} AND app_id=${app} AND version=${d.schema.version} AND physical_revision=${literal(d.schema.physicalRevision)})
    BEGIN INSERT OR IGNORE INTO record_calendar_changes(id,definition_id,record_id,command_id,state,created_at,updated_at)
     SELECT c.command_id||':'||definition.id||':'||definition.version||':'||NEW.${identifier(d.idColumn)},definition.id,NEW.${identifier(d.idColumn)},c.command_id,'pending',strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now')

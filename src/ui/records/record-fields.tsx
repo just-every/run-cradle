@@ -6,6 +6,7 @@ import { LinkedRecord } from './linked-record'
 import { MoneyInput } from './money-input'
 import { RelationshipPicker } from './relationship-picker'
 import { PersonPicker } from './person-picker'
+import {StoreResolutionGroup} from './store-reference-resolution'
 import { StoreReferenceView } from './store-reference-view'
 import { StoreChooser } from './store-chooser'
 import type { Cell, CellValue, Money, Page, Ref, StoreReference } from '../../contracts/primitives'
@@ -50,7 +51,7 @@ export function CellDisplay({ cell, field, appId, record }: { cell: Cell | undef
   if (typeof value === 'string') return <>{value}</>
   if ('minor' in value) return <>{money(value as Money).replace('USD ', '$')}</>
   const values = Array.isArray(value) ? value : [value]
-  return <>{values.map((item, i) => <span key={i} className={typeof item === 'object' && item !== null && 'recordId' in item ? 'cr-record-link' : undefined}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</>
+  return <StoreResolutionGroup record={record}>{values.map((item, i) => <span key={i} className={typeof item === 'object' && item !== null && 'recordId' in item ? 'cr-record-link' : undefined}>{i > 0 ? ', ' : ''}{typeof item === 'object' && item !== null && 'recordId' in item ? <LinkedRecord reference={item} /> : typeof item === 'object' && item !== null && 'reference' in item ? <StoreReferenceView reference={(item as { reference: StoreReference }).reference} record={record} /> : typeof item === 'object' && item !== null && 'fileId' in item ? <a href={`/api/v1/files/${item.fileId}/content`}>Open attachment</a> : <CellDisplay cell={{ state: 'value', value: item }} field={field} appId={appId} />}</span>)}</StoreResolutionGroup>
 }
 /** The viewer's wall-clock minutes for a datetime-local input; `new Date` reads that offset-free form back in the same zone. */
 function localInput(value: string) {
@@ -61,9 +62,9 @@ export function FieldInput({ appId, entityId, subject, field, value, onChange, e
   const id = inputId ?? `field-${field.id}`
   // Until hydration the zone is unknown, so an instant is edited and named in UTC, as the server rendered it.
   const local = useLocalTime()
-  const common = { id, required: field.required, 'aria-invalid': !!error, 'aria-describedby': error ? `${id}-error` : undefined }
+  const common = { id, required: field.required, 'aria-invalid': !!error, 'aria-describedby': [field.help?`${id}-help`:'',error?`${id}-error`:''].filter(Boolean).join(' ')||undefined }
   let input
-  if (field.type === 'boolean') input = <div className="cr-boolean"><input {...common} type="checkbox" required={false} aria-required={field.required} aria-describedby={`${id}-state${error ? ` ${id}-error` : ''}`} checked={value === true} onChange={e => onChange(e.target.checked)} /><span id={`${id}-state`}>{value === null ? 'Not set' : value ? 'Yes' : 'No'}</span>{!field.required && value !== null && <button type="button" className="cr-button cr-button--quiet" onClick={() => onChange(null)}>Clear {field.label}</button>}</div>
+  if (field.type === 'boolean') input = <div className="cr-boolean"><input {...common} type="checkbox" required={false} aria-required={field.required} aria-describedby={`${id}-state${field.help ? ` ${id}-help` : ''}${error ? ` ${id}-error` : ''}`} checked={value === true} onChange={e => onChange(e.target.checked)} /><span id={`${id}-state`}>{value === null ? 'Not set' : value ? 'Yes' : 'No'}</span>{!field.required && value !== null && <button type="button" className="cr-button cr-button--quiet" onClick={() => onChange(null)}>Clear {field.label}</button>}</div>
   else if (field.type === 'select' || field.type === 'multi_select') input = <select {...common} multiple={field.type === 'multi_select'} value={field.type === 'multi_select' ? Array.isArray(value) ? value as string[] : [] : typeof value === 'string' ? value : ''} onChange={e => onChange(field.type === 'multi_select' ? Array.from(e.target.selectedOptions, item => item.value) : e.target.value || null)}>{field.type === 'select' && <option value="">Choose…</option>}{field.options?.map(option => <option value={option.id} key={option.id}>{option.label}</option>)}</select>
   else if (field.type === 'money') input = <MoneyInput field={field} value={value} onChange={onChange} />
   else if (field.type === 'relation') input = <RelationshipPicker appId={appId} entityId={entityId} inputId={id} field={field} value={value} onChange={onChange} />
@@ -73,7 +74,7 @@ export function FieldInput({ appId, entityId, subject, field, value, onChange, e
   else if (field.type === 'text') input = <textarea {...common} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} />
   else if (field.type === 'instant') input = <input {...common} type="datetime-local" value={typeof value === 'string' ? local ? localInput(value) : value.slice(0, 16) : ''} onChange={e => onChange(e.target.value ? new Date(local ? e.target.value : `${e.target.value}Z`).toISOString() : null)} />
   else input = <input {...common} type={field.type === 'rating' ? 'number' : field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : field.type === 'date' ? 'date' : field.type === 'url' ? 'url' : 'text'} min={field.type === 'rating' ? '1' : undefined} max={field.type === 'rating' ? field.validation?.max??'5' : undefined} step={field.type === 'rating' ? '1' : undefined} inputMode={field.type === 'number' ? 'decimal' : undefined} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value || null)} />
-  return <div className="cr-field"><label htmlFor={id}>{field.label}{field.type === 'instant' ? ` · ${local ? zoneName(typeof value === 'string' ? new Date(value) : new Date()) : 'UTC'}` : ''}{field.required ? ' *' : ''}</label>{input}{field.unique && <small>Each record must have a distinct value.</small>}{error && <p id={`${id}-error`} className="cr-error">{error}</p>}</div>
+  return <div className="cr-field"><label htmlFor={id}>{field.label}{field.type === 'instant' ? ` · ${local ? zoneName(typeof value === 'string' ? new Date(value) : new Date()) : 'UTC'}` : ''}{field.required ? ' *' : ''}</label>{input}{field.help&&<p id={`${id}-help`} className="cr-muted">{field.help}</p>}{field.unique && <small>Each record must have a distinct value.</small>}{error && <p id={`${id}-error`} className="cr-error">{error}</p>}</div>
 }
 
 // A render batch shares the policy-checked people read rather than fetching once per cell.

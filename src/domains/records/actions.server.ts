@@ -1,3 +1,4 @@
+import { templateButtonSaveInput,templateButtonRunInput } from './templates/buttons.server';
 import { describeRecordConflict } from './conflict.server';
 import { z } from 'zod';
 import type { CommandRegistry } from '../../core/registry/commands';
@@ -23,6 +24,8 @@ export type RecordActionDependencies = {
     writer: ReturnType<typeof createRecordWriter>;
     metadata: ReturnType<typeof createRecordMetadata>;
     bulk: ReturnType<typeof createBulkService>;
+    templateButtons?:ReturnType<typeof import('./templates/buttons.server').createTemplateButtons>;
+    templates?: ReturnType<typeof import('./templates/service.server').createRecordTemplates>;
 
 };
 export function registerRecordActions(registry: CommandRegistry, deps: RecordActionDependencies) {
@@ -49,6 +52,13 @@ export function registerRecordActions(registry: CommandRegistry, deps: RecordAct
         authorityAction?:string;
         authorization?: Pick<AuthorizationRequest, 'expected' | 'fieldIds' | 'targetEntityId' | 'proposedRows'>;
     }): Promise<AdmissionPlan<T>> { const hash = await canonicalHash({ action, input: command.input, expected: command.expected, controlEpoch: command.controlEpoch ?? null }), permit = await policy.authorize(ctx, { appId, action:change.authorityAction??action, expected: command.expected, cost: [], inputHash: hash, commandId: command.commandId, ...change.authorization }); return { commandId: command.commandId, action, appId, canonicalInputHash: hash, permit:{...permit,action}, guards: change.guards, mutations: change.mutations, audit: change.audit ?? [], events: [], outbox: [], committedResult: value, changed: change.changed }; }
+    if(deps.templateButtons){register('record.template-button-save',templateButtonSaveInput,deps.templateButtons.save);register('record.template-button-run',templateButtonRunInput,deps.templateButtons.run);}
+    if(deps.templates){
+      const duplicate=z.object({ref:refSchema,includeLinks:z.boolean().default(false),includeAttachments:z.boolean().default(false)}).strict();
+      register('record.duplicate',duplicate,deps.templates.duplicate);
+      register('record.template-save',duplicate.extend({name:z.string().trim().min(1).max(200),includeChildren:z.boolean().default(false)}),deps.templates.save);
+      register('record.apply-template',z.object({appId:idSchema,entityId:idSchema,templateId:idSchema,values:z.record(idSchema,cellValueSchema).optional()}).strict(),deps.templates.apply);
+    }
     register('record.create', z.object({ appId: idSchema, entityId: idSchema, values: z.record(idSchema, cellValueSchema) }).strict(), createAuthorizedRecordCreatePreparer(deps));
     const rangePatch = createRangePatchPreparer(deps);
     register('record.patch', z.union([z.object({ ref: refSchema, changes: z.record(idSchema, cellValueSchema) }).strict(), rangePatchSchema]), async (ctx, c) => { if ('rows' in c.input) return rangePatch(ctx, { ...c, input: c.input }); const scope = await policy.scope(ctx, { appId: c.input.ref.appId, entityId: c.input.ref.entityId, purpose: 'read' }), p = await writer.prepareChange(ctx, scope, { ...c.input, expectedVersion: expected(c, c.input.ref) }); return plan(ctx, c, 'record.patch', c.input.ref.appId, p.next, { ...p, authorization: { expected: [{ref:c.input.ref,version:expected(c,c.input.ref)}], fieldIds:Object.keys(c.input.changes) }, changed: [{ ref: p.next.ref, version: p.next.version }] }); }, describeRecordConflict(deps));

@@ -1,3 +1,4 @@
+import {RecordTemplateButtonsPanel} from '../../../../ui/settings/record-template-buttons-panel'
 import {GuestsPanel} from '../../../../ui/settings/guests-panel'
 import {EmailDeliveryStatus} from '../../../../ui/settings/email-delivery-status'
 import {SlackAppPanel} from '../../../../ui/settings/slack-app-panel'
@@ -69,6 +70,7 @@ export const SettingsPage = () => {
         <details className="cr-detail"><summary>Usage and model availability</summary><UsagePanel /></details>
         <LazySettingsPanel title="Twilio SMS"><SmsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Chat app"><SlackAppPanel /></LazySettingsPanel>
+        <LazySettingsPanel title="Record template buttons"><RecordTemplateButtonsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Custom fields"><CustomFieldsPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Trash"><TrashPanel /></LazySettingsPanel>
         <LazySettingsPanel title="Imports"><ImportsPanel /></LazySettingsPanel>

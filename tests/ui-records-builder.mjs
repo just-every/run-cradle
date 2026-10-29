@@ -1,3 +1,4 @@
+import {recordTemplateBrowser} from './helpers/record-template-browser.mjs'
 import {gridRangeBrowserJourney} from './helpers/records-grid-range-browser.mjs'
 import {baseAction} from './helpers/records-base-menu.mjs'
 import {fieldBrowser} from './helpers/field-browser.mjs'
@@ -40,7 +41,7 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close()}
 })
-contract(['PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
+contract(['CALC-001','PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
  await fieldBrowser()
  await recordTrashBrowser()
  await baseRolesJourney()
@@ -63,9 +64,10 @@ try{
   await j.table('Deals');await j.record({Deal:'First deal',Value:'0','Close date':'2027-01-15',Approved:false,Stage:{select:'New'},'Company link':{link:'Acme 北, "Co"'}});await j.record({Deal:'Second deal',Value:'125.25',Stage:{select:'Qualified'}});await j.record({Deal:'Third deal',Value:'200',Stage:{select:'New'}});await gridReview(page,j)
   await page.keyboard.press('Control+f');const quickFind=page.getByLabel('Find in visible fields',{exact:true});await quickFind.fill('Third');await quickFind.press('Enter');await page.getByRole('status').filter({hasText:/^1 of 1 matching cells$/}).waitFor();assert.match(await page.locator('.cr-grid-match').innerText(),/Third deal/);await quickFind.fill('');await j.action(page.getByRole('button',{name:'Close find',exact:true}));await j.capture('deals')
   const views=await exerciseViews(page,j);views.additional=await additionalViews(page,j,h.origin,result.appId);await exerciseSchemaEdit(page,j,h.origin,result.appId);const csv=await exerciseCsv(page,j,h.origin,width);const templates=await exerciseTemplates(page,j,h.origin,width);await gridEdgeReview(page,j,h.origin,width);await boardBrowserJourney(page,j,h,width);await verifyRetained();await page.goto(h.origin+'/app');await homeBases(page,h.origin);await j.capture('populated-home')
+  const recordTemplates=await recordTemplateBrowser(page,j,h,width)
   await findBrowserJourney(page,j,h)
   await liveBrowserJourney(page,j,h,browser,width,output)
-  receipts.push({views,templates,csv,width,baseId:result.appId,companyId:company.id,pageErrors:j.errors,checkpoints:j.checkpoints})
+  receipts.push({views,templates,recordTemplates,csv,width,baseId:result.appId,companyId:company.id,pageErrors:j.errors,checkpoints:j.checkpoints})
   await context.close()
  }
  const aiCounts={};for(const table of ['execution_model_calls','operation_model_tasks','operation_model_usage','construction_model_tasks','launch_analyses']){aiCounts[table]=(await h.db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n;assert.equal(aiCounts[table],0,`${table}: ordinary records must not call a model`)}

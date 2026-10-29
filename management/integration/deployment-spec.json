@@ -930,6 +930,18 @@
       "name": "9081_guests.sql",
       "sha256": "745d90376a8a7fa0aab040538b5589f4660c8e15324b5860c7f6ee130567f9af",
       "sql": "-- Guest identity survives revocation and erasure so neither can grant wider access.\nCREATE TABLE authority_guests (\n principal_id TEXT PRIMARY KEY REFERENCES authority_principals(id),\n app_id TEXT NOT NULL,\n invitation_delivered INTEGER NOT NULL DEFAULT 0,\n created_at INTEGER NOT NULL\n);\nCREATE TRIGGER cradle_guest_membership_insert BEFORE INSERT ON authority_memberships\n WHEN EXISTS(SELECT 1 FROM authority_guests WHERE principal_id=NEW.principal_id AND app_id<>NEW.app_id)\n BEGIN SELECT RAISE(ABORT,'guest_scope'); END;\nCREATE TRIGGER cradle_guest_membership_update BEFORE UPDATE OF app_id,principal_id ON authority_memberships\n WHEN EXISTS(SELECT 1 FROM authority_guests WHERE principal_id=NEW.principal_id AND app_id<>NEW.app_id)\n BEGIN SELECT RAISE(ABORT,'guest_scope'); END;\nCREATE TRIGGER cradle_guest_native_role BEFORE UPDATE OF role ON oa_operators\n WHEN NEW.role<>'member' AND EXISTS(SELECT 1 FROM cradle_base_operators m JOIN authority_guests g ON g.principal_id=m.principal_id WHERE m.base_id=NEW.id)\n BEGIN SELECT RAISE(ABORT,'guest_role'); END;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9082_record_templates.sql",
+      "sha256": "f675fa8d4fb1a7118a445ebee472e59cf8ffaa274c94469aecde9de66abe22b8",
+      "sql": "CREATE TABLE record_templates (\n id TEXT PRIMARY KEY, app_id TEXT NOT NULL, entity_id TEXT NOT NULL,\n owner_id TEXT NOT NULL, name TEXT NOT NULL, definition_json TEXT NOT NULL,\n version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL\n);\nCREATE INDEX record_templates_table ON record_templates(app_id,entity_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9083_record_template_buttons.sql",
+      "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
+      "sql": "CREATE TABLE record_template_buttons (\n id TEXT PRIMARY KEY,\n app_id TEXT NOT NULL,\n entity_id TEXT NOT NULL,\n owner_id TEXT NOT NULL,\n template_id TEXT NOT NULL REFERENCES record_templates(id),\n name TEXT NOT NULL,\n confirmation INTEGER NOT NULL CHECK (confirmation IN (0,1)),\n version INTEGER NOT NULL CHECK (version > 0),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX record_template_buttons_table ON record_template_buttons(app_id,entity_id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

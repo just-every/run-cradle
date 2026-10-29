@@ -74,7 +74,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
     createEvidenceDetail(deps,activeCases),createEvidenceAttachmentPort(deps),
     (ctx,change)=>prepareCanonicalInvalidation(db,ctx,change.before))
   registerRecordActions(foundation.commands,services)
-  registerRecordFormActions(foundation.commands,{metadata:services.metadata,policy,prepareCreate:createAuthorizedRecordCreatePreparer(services)})
+  registerRecordFormActions(foundation.commands,{metadata:services.metadata,policy,prepareCreate:createAuthorizedRecordCreatePreparer(services),templates:services.templates})
   const manual=createManualSchemas(db,policy,admission,descriptors)
   const csv=createRecordsCsv(db,services,admission)
   const importManual=createManualSchemas(db,policy,foundation.inertAdmission,descriptors)
