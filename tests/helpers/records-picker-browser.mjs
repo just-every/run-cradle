@@ -23,7 +23,7 @@ export async function pickerBrowserJourney(){
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width),receipts=[]
    const table=entity=>`${h.origin}/app/records/${f.appId}/${entity}`,picker=page.locator('.cr-relationship-picker')
    page.setDefaultTimeout(20000)
-   const response=()=>page.waitForResponse(value=>value.request().method()==='POST'&&value.url().endsWith('/records/link-candidates'))
+   const response=()=>{const pending=page.waitForResponse(value=>value.request().method()==='POST'&&value.url().endsWith('/records/link-candidates'));void pending.catch(()=>{});return pending}
    async function loaded(pending,status=200,options={}){
     const received=await pending,body=await received.json();assert.equal(received.status(),status,JSON.stringify(body))
     if(status!==200){await picker.getByRole('alert').waitFor();assert.equal(await picker.getByRole('radio').count(),0,'A stale page shows no retained candidates');return body.error}
@@ -37,6 +37,7 @@ export async function pickerBrowserJourney(){
    async function enumerate(first,surface){
     const names=[];let result=first,pages=0
     for(;;){
+     assert.equal(result.records.total.value,f.expected.length,'Candidate totals exclude inactive and row-hidden vendors')
      names.push(...await picker.getByRole('radio').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('aria-label'))));pages++
      assert.ok(pages<=101,'The browser reaches the final bounded page')
      if(!result.records.nextCursor)break
@@ -47,7 +48,7 @@ export async function pickerBrowserJourney(){
    }
    async function search(value,options={}){
     const pending=page.waitForResponse(result=>result.request().method()==='POST'&&result.url().endsWith('/records/link-candidates')&&result.request().postDataJSON()?.search===value)
-    await picker.getByRole('searchbox',{name:'Search linked records',exact:true}).fill(value)
+    void pending.catch(()=>{});await picker.getByRole('searchbox').fill(value)
     return loaded(pending,200,options)
    }
    async function begin(control){const pending=response();await control.click();return loaded(pending)}
@@ -81,7 +82,9 @@ export async function pickerBrowserJourney(){
     await page.goto(table(f.orders));await enumerate(await begin(page.getByRole('button',{name:'New record',exact:true})),'grid creation')
     await selectDistant();await j.capture('picker-grid-city-choice');await page.getByLabel('Order',{exact:true}).fill(`synthetic-cradle-order-${width}`)
     const created=await j.command(page.getByRole('button',{name:'Save record',exact:true}),'record.create');await persisted(created)
-    await page.goto(table(f.orders)+'/'+created.id);await enumerate(await begin(page.getByRole('button',{name:'Edit record',exact:true})),'record editing')
+    const unlinked=(await call('/api/v1/commands/record.create',pickerCommand({appId:f.appId,entityId:f.orders,values:{[f.order.id]:`synthetic-cradle-edit-control-${width}`}},[{ref:{appId:f.appId,entityId:f.schemaEntity,recordId:f.orders},version:orderSchema.version}]))).value
+    assert.equal(unlinked.fields[f.link.id].value,null)
+    await page.goto(table(f.orders)+'/'+unlinked.id);await enumerate(await begin(page.getByRole('button',{name:'Edit record',exact:true})),'record editing')
     await firstPage();await f.saveView({kind:'all',conditions:[f.definition.filter,{kind:'condition',fieldId:f.city.id,op:'eq',value:'Distant city'}]})
     const staleView=response();await picker.getByRole('button',{name:'Next records',exact:true}).click();assert.equal((await loaded(staleView,409)).code,'stale_cursor')
     const current=await begin(picker.getByRole('button',{name:'Refresh picker',exact:true}));assert.deepEqual(current.records.items.map(row=>row.id),[f.rows[4997].id])

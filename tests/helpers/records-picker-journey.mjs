@@ -68,6 +68,11 @@ export async function pickerScaleJourney(h){
  assert.deepEqual(distant.records.items.map(row=>row.id),[f.rows[4997].id],'City search reaches a match beyond the first fifty pages')
  for(const search of ['Inactive city','Hidden city','synthetic-cradle-private-context'])assert.equal((await f.candidates({search})).records.items.length,0)
  assert.deepEqual((await f.candidates({search:f.rows[4997].name})).records.items.map(row=>row.id),[f.rows[4997].id],'Primary text remains searchable')
+ const beforeInactive=await f.candidates(),row=f.rows[4996],ref={appId:f.appId,entityId:f.vendors,recordId:row.id}
+ const inactive=(await call('/api/v1/commands/record.patch',pickerCommand({ref,changes:{[f.active.id]:false}},[{ref,version:1}]))).value
+ assert.equal((await f.candidates({cursor:beforeInactive.records.nextCursor},409)).code,'stale_cursor')
+ assert.equal((await f.candidates({search:row.name})).records.items.length,0,'A vendor marked inactive is no longer offered')
+ await call('/api/v1/commands/record.patch',pickerCommand({ref,changes:{[f.active.id]:true}},[{ref,version:inactive.version}]))
  const first=await f.candidates()
  await f.saveView({kind:'all',conditions:[f.definition.filter,{kind:'condition',fieldId:f.city.id,op:'eq',value:'Distant city'}]})
  assert.equal((await f.candidates({cursor:first.records.nextCursor},409)).code,'stale_cursor')

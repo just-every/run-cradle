@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b132d573abca29dc2093362ce7dbc6ecc4c53466c288873e7e564516e762f29e",
+      "sha256": "78a82fbcce5c8fe14d62b065fac9dedd7670118b5bbabf571c01702a0d0eafd8",
       "executable": false
     },
     "DEMO.md": {
@@ -12750,15 +12750,15 @@
       "executable": false
     },
     "tests/helpers/records-picker-browser.mjs": {
-      "sha256": "aead974aba549714278c075aa4d42431d2453202c67adc9ebcdc21e2a96d5179",
+      "sha256": "2639d98b839e49e23d42816506e8bfa573906b7dccb4ead21a4e315a64914813",
       "executable": false
     },
     "tests/helpers/records-picker-fixture.mjs": {
-      "sha256": "eb8b4ae6001755e36374fdfb52711f41535f28d0b0990d8252606e279a9431e7",
+      "sha256": "b542ddda19ee0fd5cd3b89ce2e6cacd463738b7a679eb9360ee401f77333c73c",
       "executable": false
     },
     "tests/helpers/records-picker-journey.mjs": {
-      "sha256": "2a8b34453952af43d7a3c0213511ac896ad661aca27be4cb650541acca26ee0f",
+      "sha256": "370dc70765ce947d6d4841772bd1848c96e9d3b59221bf2fdb0155b4bd8ae135",
       "executable": false
     },
     "tests/helpers/records-presence-journey.mjs": {

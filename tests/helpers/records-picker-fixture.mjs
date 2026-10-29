@@ -61,6 +61,7 @@ export async function enumeratePicker(f,input={},expected=f.expected,options={})
  const found=[],cursors=new Set();let cursor,pages=0
  do{
   const result=await f.candidates({...input,...(cursor?{cursor}:{})});assertPickerPage(result,f,options)
+  assert.equal(result.records.total.value,expected.length,'Totals count only current permitted matches')
   found.push(...result.records.items.map(row=>row.id));pages++
   cursor=result.records.nextCursor
   if(cursor){assert.ok(!cursors.has(cursor),'Each page advances');cursors.add(cursor)}
