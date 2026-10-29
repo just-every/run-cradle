@@ -6,8 +6,8 @@ It negotiates MCP `2026-07-28` and `2025-11-25`. March 2025 is refused. Native
 REST, session, Origin, CSRF, device and installation credentials keep their own
 purposes. The former proposal-only MCP dispatcher is removed.
 
-The installed CLI and recorded door runtime use rer 0.2.87, Base
-`62f07fe6ecfdeae1a90bf6e65a02abae288996b3`. Business settings and the door's
+The installed CLI and recorded door runtime use rer 0.2.88, Base
+`114ef7a61f080da053af783c5fbe06f625d692cc`. Business settings and the door's
 private theme/icon dependencies use that same source revision. The public
 homepage, marketing and navigation copies retain their existing pins and bytes.
 
@@ -15,8 +15,12 @@ homepage, marketing and navigation copies retain their existing pins and bytes.
 
 This rollout covers tools, signed policy, pause, audit and idempotency. Current
 native principal authorization and owner-bound Business tokens apply throughout.
-The release has no capability-declaration field; `agent-surface.json` declares
-only the integrated registry and its real native fixtures.
+`agent-surface.json` and the production door both declare exactly
+`tools`, `policy`, `pause`, `audit` and `idempotency`. The door withholds events,
+resources, prompts and subscriptions and returns typed
+`capability_not_declared` refusals. The eight native resource adapters remain
+internal visibility readers; public resource templates and resource links are
+not offered. Their read tools remain available under ordinary policy.
 
 Agents can inspect currently authorized bases, schemas, rows, record history,
 views, forms and AI usage. Private content is conservatively classified sensitive.
@@ -71,7 +75,7 @@ and Slack deliveries, calendar synchronization and operational/repair execution
 remain on their existing native doors. Synchronous persistence alone does not
 establish a synchronous agent effect.
 
-Seed-emitted events beyond the built-in `cradle.events.list`, subscriptions,
+Events, including the built-in `cradle.events.list`, resources, prompts, subscriptions,
 multi-sponsor admission, mail edges, resource refresh, timed lifecycle, dual host
 and owner-native administration are undeclared. Schema adoption, import commit,
 people/grants/keys/settings administration, snapshots, trash recovery and erasure
@@ -87,7 +91,9 @@ the conformance journey declares `spend: {none: true}`.
 
 ## Verification and contract boundary
 
-`agent-surface.json` contains the exact tool/resource registry and its journey.
+`agent-surface.json` contains the native registry and its journey. Capability
+scoping excludes its built-in event entry and step, and its resource templates,
+from the effective public surface.
 Its disposable initializer proves raw setup-token refusal, the real signed
 owner claim, replay refusal and the resulting native session. Every phase
 prepares fresh data and proposing credentials through ordinary native HTTP doors.
@@ -101,14 +107,16 @@ Run `pnpm exec rer door clauses --write`, then `--check`, and the normal
 `pnpm exec rer verify`. The legacy contract currently lacks its standard
 Lander-Regenerate contract generator. The released clause command refuses;
 canonical BASE-AGENT rows and generated acceptance/status changes must wait for
-that source conversion. The static verifier consequently reports the missing
-built-in event clause. This is a reported gap, not a passing conformance claim.
+that source conversion. The core declaration does not expose the built-in event
+tool, so it cannot claim event-clause coverage. The missing generator remains a
+separate contract-document gap; declaring a subset promotes no clause.
 Undeclared-family clauses must remain partial when their agent acceptance needs
 one of those families; existing native person-flow evidence is not agent evidence.
 
 ## Discoverable native jobs
 
-The door currently registers 25 tools. Policy still governs reads.
+The core door currently exposes 24 tools. The retained built-in event entry is
+excluded by the declaration. Policy still governs reads.
 `cradle:read` never grants native base, row or field access. A proposing key
 retains only its two original schema scopes.
 
@@ -120,7 +128,6 @@ retains only its two original schema scopes.
 | `cradle.campaigns.query` | Read | `cradle:read` |
 | `cradle.campaigns.read` | Read | `cradle:read` |
 | `cradle.decisions.read` | Read | `cradle:read` |
-| `cradle.events.list` | Read | `events:read` |
 | `cradle.files.read` | Read | `cradle:read` |
 | `cradle.forms.read` | Read | `cradle:read` |
 | `cradle.notifications.read` | Read | `cradle:read` |
@@ -140,7 +147,7 @@ retains only its two original schema scopes.
 | `cradle.views.revisions` | Read | `cradle:read` |
 | `cradle.views.save` | Private view write | `cradle:write` |
 
-The eight resource templates are:
+The eight internal resource templates, withheld from public discovery, are:
 
 - `cradle://bases/{base}`
 - `cradle://bases/{base}/schema`
