@@ -53,6 +53,8 @@ export const memberIdentityPlaces:IdentityPlace[]=[
  place('record_views','owner_id=?','record views they own'),
  {...byId('owner_id=? AND deleted_at IS NOT NULL','their trashed views','delete'),table:'record_views'},
  place('record_forms','owner_id=?','record forms they own'),
+ place('record_interfaces','author_id=?','interface layouts they authored'),
+ place('record_interface_versions','author_id=?','retained interface versions they authored'),
  {...byId(`owner_id=? OR template_id IN (SELECT id FROM record_templates WHERE owner_id=? OR ${refs('definition_json')})`,'template buttons attributed to the erased person','delete'),table:'record_template_buttons'},
  {...byId(`owner_id=? OR ${refs('definition_json')}`,'record templates they authored or that reference them','delete'),table:'record_templates'},
  {...byId('owner_id=? AND deleted_at IS NOT NULL','their trashed forms','delete'),table:'record_forms'},

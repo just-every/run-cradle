@@ -1,0 +1,61 @@
+import assert from 'node:assert/strict'
+import {baseAction} from './records-base-menu.mjs'
+
+/** Creator-authored layouts retain shared metadata and current member policy. */
+export async function creatorInterfaceScreens({h,page,creatorPage,j,cj,call,people,cookie,context,appId,entityId,base,tablePath,savedView,form}){
+ const schemaVersion=(await call(people.creator.cookie,base)).version
+ await creatorPage.goto(tablePath);await baseAction(creatorPage,'Interfaces')
+ await creatorPage.getByRole('heading',{name:'Interfaces',exact:true}).waitFor()
+ await creatorPage.locator('summary').filter({hasText:/^Settings$/}).click();await creatorPage.getByRole('button',{name:'Create interface',exact:true}).click()
+ let settings=creatorPage.getByRole('form',{name:'Interface settings',exact:true})
+ await settings.getByLabel('Interface name',{exact:true}).fill('Receiving desk')
+ for(const role of ['editor','read-only'])await settings.getByRole('checkbox',{name:role,exact:true}).check()
+ await settings.getByLabel('Page title',{exact:true}).fill('Orders')
+ let section=settings.getByRole('group',{name:'Section 1',exact:true})
+ await section.getByLabel('Section title',{exact:true}).fill('Receiving');await section.getByLabel('Tab name',{exact:true}).fill('Queue')
+ await section.getByRole('button',{name:'Add component',exact:true}).click()
+ await section.getByLabel('Component type',{exact:true}).selectOption('view');await section.getByLabel('Shared view',{exact:true}).selectOption(savedView.id)
+ await settings.getByRole('button',{name:'Add section',exact:true}).click();section=settings.getByRole('group',{name:'Section 2',exact:true})
+ await section.getByLabel('Section title',{exact:true}).fill('New delivery');await section.getByLabel('Tab name',{exact:true}).fill('Respond')
+ await section.getByRole('button',{name:'Add component',exact:true}).click();await section.getByLabel('Component type',{exact:true}).selectOption('form');await section.getByLabel('Saved form',{exact:true}).selectOption(form.id)
+ for(const [title,text]of [['Instructions','Check each delivery before acceptance.'],['Contacts','Contact the supplier through the existing order record.']]){
+  await settings.getByRole('button',{name:'Add page',exact:true}).click();await settings.getByLabel('Page title',{exact:true}).fill(title)
+  await settings.getByRole('button',{name:'Add section',exact:true}).click();const entry=settings.getByRole('group',{name:'Section 1',exact:true});await entry.getByLabel('Section title',{exact:true}).fill(title+' details')
+  await entry.getByRole('button',{name:'Add component',exact:true}).click();await entry.getByLabel('Text',{exact:true}).fill(text)
+ }
+ await cj.capture('creator-interface-settings')
+ async function publish(){const pending=creatorPage.waitForResponse(response=>response.url().endsWith('/interfaces/publish')&&response.request().method()==='POST');await settings.getByRole('button',{name:'Publish interface',exact:true}).click();const response=await pending,body=await response.json();assert.equal(response.status(),200,JSON.stringify(body));return body.data}
+ let definition=await publish();assert.equal(definition.version,1)
+ await creatorPage.getByRole('heading',{name:'Receiving desk',exact:true}).waitFor()
+ const address=`${h.origin}/app/interfaces/${definition.id}`,api=`/api/v1/interfaces/${definition.id}`
+ await cookie(context,people.editor.cookie);await page.goto(address);await page.getByRole('heading',{name:'Receiving desk',exact:true}).waitFor()
+ await page.getByText('Grove Equipment replenishment',{exact:true}).first().waitFor()
+ assert.equal(await page.locator('summary').filter({hasText:/^Settings$/}).count(),0)
+ assert.equal((await call(people.editor.cookie,api)).canEdit,false)
+ await j.capture('editor-interface-published')
+ await cookie(context,people.reader.cookie);await page.goto(address);await page.getByRole('navigation',{name:'Page tabs',exact:true}).getByRole('button',{name:'Respond',exact:true}).click()
+ await page.getByRole('heading',{name:'New delivery',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Submit',exact:true}).count(),0)
+ assert.equal((await call(people.reader.cookie,api)).pages[0].sections.find(section=>section.title==='New delivery').components.length,0)
+ await j.capture('reader-interface-current-policy')
+ await creatorPage.locator('summary').filter({hasText:/^Settings$/}).click();await creatorPage.getByRole('button',{name:'Edit interface',exact:true}).click()
+ settings=creatorPage.getByRole('form',{name:'Interface settings',exact:true})
+ await settings.getByRole('navigation',{name:'Edit interface pages',exact:true}).getByRole('button',{name:'Instructions',exact:true}).click()
+ await settings.getByLabel('Page title',{exact:true}).fill('Next steps');await settings.getByLabel('Text',{exact:true}).fill('Revised instructions for the receiving team.')
+ definition=await publish();assert.equal(definition.version,2)
+ await cookie(context,people.editor.cookie);await page.goto(address);await page.getByRole('navigation',{name:'Interface pages',exact:true}).getByRole('button',{name:'Next steps',exact:true}).waitFor()
+ assert.equal(await page.getByRole('navigation',{name:'Interface pages',exact:true}).getByRole('button',{name:'Instructions',exact:true}).count(),0)
+ const detail=creatorPage.locator('details').filter({has:creatorPage.locator('summary').filter({hasText:/^Settings$/})})
+ if(!await detail.evaluate(node=>node.open))await detail.locator('summary').click()
+ await detail.getByRole('button',{name:'Open version 1',exact:true}).click()
+ const history=detail.getByRole('heading',{name:'Published versions',exact:true}).locator('..')
+ await history.getByRole('navigation',{name:'Interface pages',exact:true}).getByRole('button',{name:'Instructions',exact:true}).waitFor()
+ await cj.capture('creator-interface-historical-layout')
+ const restoring=creatorPage.waitForResponse(response=>response.url().endsWith('/restore')&&response.request().method()==='POST')
+ await history.getByRole('button',{name:'Restore version 1',exact:true}).click();assert.equal((await restoring).status(),200)
+ await creatorPage.getByRole('navigation',{name:'Interface pages',exact:true}).getByRole('button',{name:'Instructions',exact:true}).waitFor()
+ const restored=await call(people.creator.cookie,api);assert.equal(restored.version,3);assert.equal(restored.pages[1].title,'Instructions')
+ assert.equal((await call(people.creator.cookie,base)).version,schemaVersion,'Interface publications do not adopt a schema')
+ await page.goto(address);await page.getByRole('navigation',{name:'Interface pages',exact:true}).getByRole('button',{name:'Instructions',exact:true}).click();await page.getByText('Check each delivery before acceptance.',{exact:true}).waitFor()
+ await j.capture('editor-interface-restored-version')
+ await cookie(context,people.editor.cookie)
+}

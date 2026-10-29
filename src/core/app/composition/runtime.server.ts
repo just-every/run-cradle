@@ -4,6 +4,7 @@ import {recordCalendarSyncHttp} from '../../../domains/records/calendar-sync/htt
 import {ensureCalendarCapture} from '../../../domains/records/calendar-sync/capture.server'
 import {createUlid} from '../../shared/ids'
 import {metadataTrashPurge} from '../../../domains/records/trash/metadata-purge.server'
+import {interfaceTrashPurge} from '../../../domains/records/interfaces/purge.server'
 import {recordTrashPurge} from '../../../domains/records/trash/purge.server'
 import {createChangeSubscriptions} from '../../../domains/change-subscriptions/service.server'
 import {changeSubscriptionDelivery} from '../../../domains/change-subscriptions/delivery.server'
@@ -44,12 +45,12 @@ export async function createRuntime(platform:Platform,clock=()=>new Date()){
  await ensureRecordAutomationTriggers(platform.bindings.DB,foundation.descriptors)
  const changeSubscriptions=createChangeSubscriptions(platform.bindings,foundation.policy,foundation.admission,records.services,platform.auth.configuration.sessionSecret)
  const changeDelivery=changeSubscriptionDelivery(platform.bindings,changeSubscriptions,platform.auth.configuration.appOrigin,clock)
- const purgeRecords=recordTrashPurge(platform.bindings.DB,foundation.descriptors,foundation.admission,clock),purgeMetadata=metadataTrashPurge(platform.bindings.DB,foundation.admission,clock)
+ const purgeRecords=recordTrashPurge(platform.bindings.DB,foundation.descriptors,foundation.admission,clock),purgeMetadata=metadataTrashPurge(platform.bindings.DB,foundation.admission,clock),purgeInterfaces=interfaceTrashPurge(platform.bindings.DB,foundation.admission,clock)
  const automations=createAutomationsComposition(platform,foundation,records.services,clock,slackApp)
  const channels=createChannelsComposition(platform,foundation,providers)
  const launch=createInstalledLaunch(platform,foundation,clock)
  const repairIntake=createRepairIntakeComposition(platform,foundation,records,providers)
  const launchImports=createLaunchImportComposition(platform,foundation,records)
- return {calendarSync,trashPurge:async()=>{await purgeRecords();await purgeMetadata()},changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
+ return {calendarSync,trashPurge:async()=>{await purgeRecords();await purgeMetadata();await purgeInterfaces()},changeSubscriptions,changeDelivery,foundation,sheets,fileStores,warehouse,providers,records,channels,repairIntake,automations,lifecycle,launch,launchImports}
 }
 export type Runtime=Awaited<ReturnType<typeof createRuntime>>

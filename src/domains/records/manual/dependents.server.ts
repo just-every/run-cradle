@@ -1,3 +1,4 @@
+import {interfaceComponents} from '../base-transfer/interface-portability'
 import {preservesSelectOptions} from '../option-additions'
 import type {EntitySchema,Form,View} from '../contracts'
 import type {EntityDescriptor} from '../descriptors.server'
@@ -106,6 +107,16 @@ export async function schemaDependents(db:D1Database,prior:EntityDescriptor[],sc
     validateFormLogic(candidate,structuredClone(change.after.fields))
     if(candidate.fields.some(item=>{const field=change.after!.fields.find(field=>field.id===item.fieldId);return field?.readOnly||field?.type==='computed'}))throw new Error('Form submissions require writable stored fields')
    }catch(error){refuse(change,`Saved form ${form.title}: ${error instanceof Error?error.message:'type-sensitive conditions cannot be checked'}`)}
+  }
+ }
+ for(const item of stored.interfaces){
+  const current=JSON.parse(item.definition) as import('../interfaces/contracts').InterfaceInput
+  for(const definition of [current,...item.history])for(const component of interfaceComponents(definition)){
+   const metadata=component.kind==='view'?snapshots.views.find(view=>view.id===component.viewId):component.kind==='form'?snapshots.forms.find(form=>form.id===component.formId):undefined
+   if(!metadata)continue
+   const native=JSON.parse(metadata.definition_json) as View|Form,change=changes.get(identity(native.appId,native.entityId));if(!change)continue
+   const refs=component.kind==='view'?viewReferences(native as View).all:formReferences(native as Form),affected=refs.filter(id=>change.removed.has(id)||change.converted.has(id))
+   if(!change.after||affected.length){add(change,'interface',item.id,current.name,[`Retained layout uses ${component.kind} ${'name'in native?native.name:native.title}`,!change.after?'Referenced table is removed':`Uses ${describe(change,affected)}`]);refuse(change,`Interface ${current.name} retains this ${component.kind} dependency. Move the interface to Trash before removing or converting its referenced fields or table.`)}
   }
  }
  for(const automation of stored.automations){const change=changes.get(identity(automation.appId,automation.entityId));if(!change)continue

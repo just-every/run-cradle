@@ -1,3 +1,4 @@
+import {createInterfaceImportTarget} from './interface-target.server'
 import type { D1Database,D1Sql,D1TargetAdapter } from '../../../../vendor/base/modules/import-kit/src/d1/types'
 import type { Json,TargetRow } from '../../../../vendor/base/modules/import-kit/src/types'
 import { canonicalJson } from '../../../../vendor/base/modules/import-kit/src/d1/index'
@@ -18,4 +19,7 @@ export function createMetadataImportTarget():D1TargetAdapter {
 
  return {read,matches,write,remove,list,matchesMany}
 }
-export function withMetadataTarget(native:D1TargetAdapter):D1TargetAdapter {const metadata=createMetadataImportTarget(),isMetadata=(kind:string)=>kind==='view'||kind==='form';return {read:(db,d,k,id)=>(isMetadata(k)?metadata:native).read(db,d,k,id),matches:(row,d,k,id)=>(isMetadata(k)?metadata:native).matches(row,d,k,id),write:row=>(isMetadata(row.targetKind)?metadata:native).write(row),remove:(d,k,id)=>(isMetadata(k)?metadata:native).remove(d,k,id),list:async(db,d)=>[...await native.list(db,d),...await metadata.list(db,d)],matchesMany:(rows,d)=>[...native.matchesMany!(rows.filter(r=>!isMetadata(r.targetKind)),d),...metadata.matchesMany!(rows.filter(r=>isMetadata(r.targetKind)),d)]}}
+export function withMetadataTarget(native:D1TargetAdapter):D1TargetAdapter {
+ const metadata=createMetadataImportTarget(),interfaces=createInterfaceImportTarget(),select=(kind:string)=>kind==='interface'?interfaces:kind==='view'||kind==='form'?metadata:native
+ return {read:(db,d,k,id)=>select(k).read(db,d,k,id),matches:(row,d,k,id)=>select(k).matches(row,d,k,id),write:row=>select(row.targetKind).write(row),remove:(d,k,id)=>select(k).remove(d,k,id),list:async(db,d)=>[...await native.list(db,d),...await metadata.list(db,d),...await interfaces.list(db,d)],matchesMany:(rows,d)=>[...native.matchesMany!(rows.filter(row=>select(row.targetKind)===native),d),...metadata.matchesMany!(rows.filter(row=>select(row.targetKind)===metadata),d),...interfaces.matchesMany!(rows.filter(row=>select(row.targetKind)===interfaces),d)]}
+}

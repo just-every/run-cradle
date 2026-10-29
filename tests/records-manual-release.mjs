@@ -1,3 +1,4 @@
+import {interfacesJourney} from './helpers/records-interfaces-journey.mjs'
 import {creatorSchemaJourney} from './helpers/records-creator-schema.mjs'
 import {creatorAuthorityJourney} from './helpers/records-creator-authority.mjs'
 import {creatorAdditiveJourney} from './helpers/records-creator-additive.mjs'
@@ -17,6 +18,7 @@ test('[SNAP-002] PERM-009 RECORDS-001 RECORDS-002 FIELD-003 manual preview, adop
  await creatorAdditiveJourney()
  await creatorAuthorityJourney()
  await creatorSchemaJourney()
+ await interfacesJourney()
  await recordTrashJourney()
  await fieldTrashJourney()
  await fieldRulesJourney()

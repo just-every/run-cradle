@@ -1,3 +1,4 @@
+import {detachedInterfaceReference} from '../manual/interface-dependents.server'
 import type {RequestContext,AuthorityPermit} from '../../authority/ports'
 import type {AdmissionPort} from '../../admission/ports'
 import type {createRecordServices} from '../service.server'
@@ -20,6 +21,7 @@ export function metadataTrash(db:D1Database,services:ReturnType<typeof createRec
   if(restore?!row.deleted_at:!!row.deleted_at)throw new AdmissionError('invalid_transition','The form is not in the required trash state.')
   if(restore&&row.expires_at!<=Date.parse(ctx.now))throw new AdmissionError('invalid_transition','The 30-day form restore window expired.')
   if(restore&&await db.prepare("SELECT 1 FROM record_forms WHERE app_id=? AND entity_id=? AND id<>? AND deleted_at IS NULL AND lower(json_extract(definition_json,'$.title'))=lower(?)").bind(row.app_id,row.entity_id,row.id,form.title).first())throw new AdmissionError('version_conflict','A newer form uses this title; restore would conflict.')
+  if(!restore)guards.push(await detachedInterfaceReference(db,row.app_id,'form',row.id))
   const action=restore?'form.restore':'form.delete',next={...form,version:row.version+1,updatedAt:ctx.now}
   return admission.commit(ctx,{commandId:input.commandId,action,appId:row.app_id,canonicalInputHash:await canonicalHash({...input,restore}),permit:{...permit,action},guards,mutations:[{kind:'update',table:formTable,set:{deleted_at:restore?null:Date.parse(ctx.now),expires_at:restore?null:Date.parse(ctx.now)+trashLifetime,definition_json:canonical(next),version:next.version,updated_at:ctx.now},where:trustedPredicate('id=? AND version=?',[row.id,row.version]),expectedRows:1}],audit:[{action,subject:{appId:row.app_id,entityId:RECORD_FORM_ENTITY_ID,recordId:row.id},changes:[],sourceIds:[],personalContentRefs:[]}],events:[],outbox:[],committedResult:restore?next:{deletedId:row.id}})
  }

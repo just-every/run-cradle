@@ -1,4 +1,6 @@
 import {createRecordRest} from '../../../domains/records/rest/service.server'
+import {createRecordInterfaces} from '../../../domains/records/interfaces/service.server'
+import {recordInterfacesHttp} from '../../../domains/records/interfaces/http.server'
 import {metadataTrash} from '../../../domains/records/trash/metadata.server'
 import {recordTrashService} from '../../../domains/records/trash/service.server'
 import {recordTrashHttp} from '../../../domains/records/trash/http.server'
@@ -76,6 +78,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
   registerRecordActions(foundation.commands,services)
   registerRecordFormActions(foundation.commands,{metadata:services.metadata,policy,prepareCreate:createAuthorizedRecordCreatePreparer(services),templates:services.templates})
   const manual=createManualSchemas(db,policy,admission,descriptors)
+  const interfaces=createRecordInterfaces(db,services.metadata,policy,admission)
   const csv=createRecordsCsv(db,services,admission)
   const importManual=createManualSchemas(db,policy,foundation.inertAdmission,descriptors)
   const releaseCore=createReleaseCore(db,policy,admission,descriptors),proposalReview=createProposalReview(db,policy,admission,releaseCore)
@@ -100,6 +103,7 @@ export function createRecordsComposition(platform: Platform, foundation: ServerF
     },
   })
   return {trashHttp:recordTrashHttp(recordTrashService(db,services,admission),request=>foundation.authenticate(request,'http',createUlid()),metadataTrash(db,services,admission)),csv,calendarFeedHttp:calendarFeedHttp(createCalendarFeeds(db,services.metadata,policy,platform.auth.configuration.appOrigin),foundation.authenticate),deps,sources,services,audit,modelConfiguration,evidenceHttp,baseExportHttp:baseExportHttp(createBaseExport(db,services),foundation.authenticate),baseImportHttp:baseImportHttp(baseImport,{prepare:artifacts=>artifacts.length===1&&artifacts[0]!.filename.endsWith('.sheets.json')?prepareSheetsSource(artifacts[0]!):artifacts.length===1&&artifacts[0]!.filename.toLowerCase().endsWith('.json')?prepareJsonSource(artifacts[0]!):artifacts.length===1&&/\.xls[xm]$/i.test(artifacts[0]!.filename)?prepareWorkbookSource(artifacts[0]!):prepareCsvSource(artifacts),identities:source=>source.format==='cradle-base-v1'?jsonIdentities.allocate(source):allocateImportIdentities(source),validateIdentities:(source,ids)=>source.format==='cradle-base-v1'?jsonIdentities.validate(source,ids):undefined},foundation.authenticate,createImportPreviewAuthentication(db,platform.auth.configuration)),csvHttp:recordsCsvHttp(csv,foundation.authenticate),manualHttp:manualSchemaHttp(manual,proposalReview,foundation.authenticate),proposalHttp:proposalHttp(foundation.commands,foundation.authenticate),
+    interfacesHttp:recordInterfacesHttp(interfaces,foundation.authenticate),
     http:createRecordHttp({...services,rest:createRecordRest(db,services,admission),authenticate:foundation.authenticate}),
     historyHttp:createEvidenceHistoryHttp({...deps,authenticate,audit,cursorSecret:platform.auth.configuration.sessionSecret,comments:commentReader,mentions}),
   }

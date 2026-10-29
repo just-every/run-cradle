@@ -28,6 +28,7 @@ import { Route as AppDecisionsIndexRouteImport } from './routes/app.decisions.in
 import { Route as AppDecisionsDecisionIdRouteImport } from './routes/app.decisions.$decisionId'
 import { Route as AppEvidenceSourceIdRouteImport } from './routes/app.evidence.$sourceId'
 import { Route as AppFormsFormIdRouteImport } from './routes/app.forms.$formId'
+import { Route as AppInterfacesInterfaceIdRouteImport } from './routes/app.interfaces.$interfaceId'
 import { Route as AppLensesLensIdRouteImport } from './routes/app.lenses.$lensId'
 import { Route as AppLensesNewRouteImport } from './routes/app.lenses.new'
 import { Route as AppLensesRisksRouteImport } from './routes/app.lenses.risks'
@@ -46,6 +47,7 @@ import { Route as AppLensesLensIdEditRouteImport } from './routes/app.lenses.$le
 import { Route as AppOperationsMandatesMandateIdRouteImport } from './routes/app.operations.mandates.$mandateId'
 import { Route as AppOperationsStudioCandidateIdRouteImport } from './routes/app.operations.studio.$candidateId'
 import { Route as AppRecordsAppIdIndexRouteImport } from './routes/app.records.$appId.index'
+import { Route as AppRecordsAppIdInterfacesRouteImport } from './routes/app.records.$appId.interfaces'
 import { Route as AppRepairsIntakesIntakeIdRouteImport } from './routes/app.repairs.intakes.$intakeId'
 import { Route as AppRecordsAppIdEntityIdIndexRouteImport } from './routes/app.records.$appId.$entityId.index'
 import { Route as AppRecordsAppIdEntityIdRecordIdRouteImport } from './routes/app.records.$appId.$entityId.$recordId'
@@ -145,6 +147,12 @@ const AppFormsFormIdRoute = AppFormsFormIdRouteImport.update({
   path: '/forms/$formId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInterfacesInterfaceIdRoute =
+  AppInterfacesInterfaceIdRouteImport.update({
+    id: '/interfaces/$interfaceId',
+    path: '/interfaces/$interfaceId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppLensesLensIdRoute = AppLensesLensIdRouteImport.update({
   id: '/lenses/$lensId',
   path: '/lenses/$lensId',
@@ -238,6 +246,12 @@ const AppRecordsAppIdIndexRoute = AppRecordsAppIdIndexRouteImport.update({
   path: '/records/$appId/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRecordsAppIdInterfacesRoute =
+  AppRecordsAppIdInterfacesRouteImport.update({
+    id: '/records/$appId/interfaces',
+    path: '/records/$appId/interfaces',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppRepairsIntakesIntakeIdRoute =
   AppRepairsIntakesIntakeIdRouteImport.update({
     id: '/repairs/intakes/$intakeId',
@@ -274,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/app/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
   '/app/evidence/$sourceId': typeof AppEvidenceSourceIdRoute
   '/app/forms/$formId': typeof AppFormsFormIdRoute
+  '/app/interfaces/$interfaceId': typeof AppInterfacesInterfaceIdRoute
   '/app/lenses/$lensId': typeof AppLensesLensIdRouteWithChildren
   '/app/lenses/new': typeof AppLensesNewRoute
   '/app/lenses/risks': typeof AppLensesRisksRoute
@@ -294,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/app/lenses/$lensId/edit': typeof AppLensesLensIdEditRoute
   '/app/operations/mandates/$mandateId': typeof AppOperationsMandatesMandateIdRoute
   '/app/operations/studio/$candidateId': typeof AppOperationsStudioCandidateIdRoute
+  '/app/records/$appId/interfaces': typeof AppRecordsAppIdInterfacesRoute
   '/app/repairs/intakes/$intakeId': typeof AppRepairsIntakesIntakeIdRoute
   '/app/records/$appId/': typeof AppRecordsAppIdIndexRoute
   '/app/records/$appId/$entityId/$recordId': typeof AppRecordsAppIdEntityIdRecordIdRoute
@@ -315,6 +331,7 @@ export interface FileRoutesByTo {
   '/app/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
   '/app/evidence/$sourceId': typeof AppEvidenceSourceIdRoute
   '/app/forms/$formId': typeof AppFormsFormIdRoute
+  '/app/interfaces/$interfaceId': typeof AppInterfacesInterfaceIdRoute
   '/app/lenses/$lensId': typeof AppLensesLensIdRouteWithChildren
   '/app/lenses/new': typeof AppLensesNewRoute
   '/app/lenses/risks': typeof AppLensesRisksRoute
@@ -335,6 +352,7 @@ export interface FileRoutesByTo {
   '/app/lenses/$lensId/edit': typeof AppLensesLensIdEditRoute
   '/app/operations/mandates/$mandateId': typeof AppOperationsMandatesMandateIdRoute
   '/app/operations/studio/$candidateId': typeof AppOperationsStudioCandidateIdRoute
+  '/app/records/$appId/interfaces': typeof AppRecordsAppIdInterfacesRoute
   '/app/repairs/intakes/$intakeId': typeof AppRepairsIntakesIntakeIdRoute
   '/app/records/$appId': typeof AppRecordsAppIdIndexRoute
   '/app/records/$appId/$entityId/$recordId': typeof AppRecordsAppIdEntityIdRecordIdRoute
@@ -358,6 +376,7 @@ export interface FileRoutesById {
   '/app/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
   '/app/evidence/$sourceId': typeof AppEvidenceSourceIdRoute
   '/app/forms/$formId': typeof AppFormsFormIdRoute
+  '/app/interfaces/$interfaceId': typeof AppInterfacesInterfaceIdRoute
   '/app/lenses/$lensId': typeof AppLensesLensIdRouteWithChildren
   '/app/lenses/new': typeof AppLensesNewRoute
   '/app/lenses/risks': typeof AppLensesRisksRoute
@@ -378,6 +397,7 @@ export interface FileRoutesById {
   '/app/lenses/$lensId/edit': typeof AppLensesLensIdEditRoute
   '/app/operations/mandates/$mandateId': typeof AppOperationsMandatesMandateIdRoute
   '/app/operations/studio/$candidateId': typeof AppOperationsStudioCandidateIdRoute
+  '/app/records/$appId/interfaces': typeof AppRecordsAppIdInterfacesRoute
   '/app/repairs/intakes/$intakeId': typeof AppRepairsIntakesIntakeIdRoute
   '/app/records/$appId/': typeof AppRecordsAppIdIndexRoute
   '/app/records/$appId/$entityId/$recordId': typeof AppRecordsAppIdEntityIdRecordIdRoute
@@ -402,6 +422,7 @@ export interface FileRouteTypes {
     | '/app/decisions/$decisionId'
     | '/app/evidence/$sourceId'
     | '/app/forms/$formId'
+    | '/app/interfaces/$interfaceId'
     | '/app/lenses/$lensId'
     | '/app/lenses/new'
     | '/app/lenses/risks'
@@ -422,6 +443,7 @@ export interface FileRouteTypes {
     | '/app/lenses/$lensId/edit'
     | '/app/operations/mandates/$mandateId'
     | '/app/operations/studio/$candidateId'
+    | '/app/records/$appId/interfaces'
     | '/app/repairs/intakes/$intakeId'
     | '/app/records/$appId/'
     | '/app/records/$appId/$entityId/$recordId'
@@ -443,6 +465,7 @@ export interface FileRouteTypes {
     | '/app/decisions/$decisionId'
     | '/app/evidence/$sourceId'
     | '/app/forms/$formId'
+    | '/app/interfaces/$interfaceId'
     | '/app/lenses/$lensId'
     | '/app/lenses/new'
     | '/app/lenses/risks'
@@ -463,6 +486,7 @@ export interface FileRouteTypes {
     | '/app/lenses/$lensId/edit'
     | '/app/operations/mandates/$mandateId'
     | '/app/operations/studio/$candidateId'
+    | '/app/records/$appId/interfaces'
     | '/app/repairs/intakes/$intakeId'
     | '/app/records/$appId'
     | '/app/records/$appId/$entityId/$recordId'
@@ -485,6 +509,7 @@ export interface FileRouteTypes {
     | '/app/decisions/$decisionId'
     | '/app/evidence/$sourceId'
     | '/app/forms/$formId'
+    | '/app/interfaces/$interfaceId'
     | '/app/lenses/$lensId'
     | '/app/lenses/new'
     | '/app/lenses/risks'
@@ -505,6 +530,7 @@ export interface FileRouteTypes {
     | '/app/lenses/$lensId/edit'
     | '/app/operations/mandates/$mandateId'
     | '/app/operations/studio/$candidateId'
+    | '/app/records/$appId/interfaces'
     | '/app/repairs/intakes/$intakeId'
     | '/app/records/$appId/'
     | '/app/records/$appId/$entityId/$recordId'
@@ -654,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFormsFormIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/interfaces/$interfaceId': {
+      id: '/app/interfaces/$interfaceId'
+      path: '/interfaces/$interfaceId'
+      fullPath: '/app/interfaces/$interfaceId'
+      preLoaderRoute: typeof AppInterfacesInterfaceIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/lenses/$lensId': {
       id: '/app/lenses/$lensId'
       path: '/lenses/$lensId'
@@ -780,6 +813,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRecordsAppIdIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/records/$appId/interfaces': {
+      id: '/app/records/$appId/interfaces'
+      path: '/records/$appId/interfaces'
+      fullPath: '/app/records/$appId/interfaces'
+      preLoaderRoute: typeof AppRecordsAppIdInterfacesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/repairs/intakes/$intakeId': {
       id: '/app/repairs/intakes/$intakeId'
       path: '/repairs/intakes/$intakeId'
@@ -839,6 +879,7 @@ interface AppRouteChildren {
   AppDecisionsDecisionIdRoute: typeof AppDecisionsDecisionIdRoute
   AppEvidenceSourceIdRoute: typeof AppEvidenceSourceIdRoute
   AppFormsFormIdRoute: typeof AppFormsFormIdRoute
+  AppInterfacesInterfaceIdRoute: typeof AppInterfacesInterfaceIdRoute
   AppLensesLensIdRoute: typeof AppLensesLensIdRouteWithChildren
   AppLensesNewRoute: typeof AppLensesNewRoute
   AppLensesRisksRoute: typeof AppLensesRisksRoute
@@ -857,6 +898,7 @@ interface AppRouteChildren {
   AppRepairsIndexRoute: typeof AppRepairsIndexRoute
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
   AppOperationsMandatesMandateIdRoute: typeof AppOperationsMandatesMandateIdRoute
+  AppRecordsAppIdInterfacesRoute: typeof AppRecordsAppIdInterfacesRoute
   AppRepairsIntakesIntakeIdRoute: typeof AppRepairsIntakesIntakeIdRoute
   AppRecordsAppIdIndexRoute: typeof AppRecordsAppIdIndexRoute
   AppRecordsAppIdEntityIdRecordIdRoute: typeof AppRecordsAppIdEntityIdRecordIdRoute
@@ -875,6 +917,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDecisionsDecisionIdRoute: AppDecisionsDecisionIdRoute,
   AppEvidenceSourceIdRoute: AppEvidenceSourceIdRoute,
   AppFormsFormIdRoute: AppFormsFormIdRoute,
+  AppInterfacesInterfaceIdRoute: AppInterfacesInterfaceIdRoute,
   AppLensesLensIdRoute: AppLensesLensIdRouteWithChildren,
   AppLensesNewRoute: AppLensesNewRoute,
   AppLensesRisksRoute: AppLensesRisksRoute,
@@ -893,6 +936,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRepairsIndexRoute: AppRepairsIndexRoute,
   AppSettingsIndexRoute: AppSettingsIndexRoute,
   AppOperationsMandatesMandateIdRoute: AppOperationsMandatesMandateIdRoute,
+  AppRecordsAppIdInterfacesRoute: AppRecordsAppIdInterfacesRoute,
   AppRepairsIntakesIntakeIdRoute: AppRepairsIntakesIntakeIdRoute,
   AppRecordsAppIdIndexRoute: AppRecordsAppIdIndexRoute,
   AppRecordsAppIdEntityIdRecordIdRoute: AppRecordsAppIdEntityIdRecordIdRoute,

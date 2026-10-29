@@ -1,3 +1,4 @@
+import {remapPortableInterface,interfaceAuthorityReset} from './interface-portability'
 import {returnStoreReferences} from '../portable-store-references'
 import { remapTimelineBaseline } from './timeline-portable'
 import { remapRuleCondition,remapFieldValue,remapValidationRules,personPortabilityNote } from './metadata-remap'
@@ -26,6 +27,8 @@ export function previewJsonImport(source:PreparedSource,options:ImportOptions,id
  const unresolved=preview.records.reduce((n,row)=>n+Object.values(row.fields).reduce<number>((sum,value)=>sum+(Array.isArray(value)?value.filter(member=>member&&typeof member==='object'&&'reference' in member).length:0),0),0);if(unresolved)preview.report.storeReferences={unresolved,resolved:0,unverified:0}
  preview.portableViews=base.views.map(view=>({...view,...(view.timelineBaseline?{timelineBaseline:remapTimelineBaseline(view.timelineBaseline,map)}:{}),id:map.get(view.id)!,tableId:map.get(view.tableId)!,fields:view.fields.map(id=>map.get(id)!),filter:remapFilter(view.filter,base.tables.find(t=>t.id===view.tableId)!,map),sort:view.sort.map(s=>({...s,fieldId:map.get(s.fieldId)!})),groupBy:view.groupBy.map(id=>map.get(id)!),...(view.summaries?{summaries:view.summaries.map(item=>({...item,fieldId:map.get(item.fieldId)!}))}:{}),...(view.formatting?{formatting:view.formatting.map(rule=>({...rule,...(rule.fieldId?{fieldId:map.get(rule.fieldId)!}:{}),filter:remapFilter(rule.filter,base.tables.find(t=>t.id===view.tableId)!,map)}))}:{}),layout:Object.fromEntries(Object.entries(view.layout).map(([key,id])=>[key,map.get(id)!]))})) as unknown as Json[]
  preview.portableForms=base.forms.map(form=>({...form,id:map.get(form.id)!,tableId:map.get(form.tableId)!,fields:form.fields.map(f=>({...f,fieldId:map.get(f.fieldId)!,...(f.showWhen?{showWhen:remapRuleCondition(f.showWhen,base.tables.find(t=>t.id===form.tableId)!.fields,map)}:{})}))})) as unknown as Json[]
+ preview.portableInterfaces=(base.interfaces??[]).map(item=>remapPortableInterface(item,ids)) as unknown as Json[]
+ if(preview.portableInterfaces.length)preview.report.diagnostics.push({code:'interface_authority_reset',message:interfaceAuthorityReset,tableKey:base.tables[0]!.id})
  preview.acknowledgmentRequired=false;preview.acknowledgments={loss:false,rejected:false,unresolved:false,ambiguous:false}
  const {fingerprint:_,...content}=preview;preview.fingerprint=canonicalHash(content);return preview
 }

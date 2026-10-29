@@ -1,3 +1,4 @@
+import {portableInterfaceParts} from './interface-portability'
 import { remapPortableLinkPicker } from './json-link-picker'
 import { remapFieldValue } from './metadata-remap'
 import { ImportInputError } from './input-error'
@@ -10,6 +11,7 @@ export function jsonIdentityMap(snapshot:PortableBase,ids:ImportIdentities):Map<
  const put=(source:string,target:string|undefined)=>{if(!target)throw new ImportInputError('JSON identity mapping must be complete and bijective');map.set(source,target)}
  for(const table of snapshot.base.tables){for(const rule of table.validationRules??[])put(rule.id,ids.validationRules?.[rule.id]);const identity=ids.tables[table.id];if(!identity)throw new ImportInputError('Missing JSON table identity');put(table.id,identity.entityId);for(const field of table.fields){put(field.id,identity.fields[field.id]);if((field.type==='select'||field.type==='multi_select'))for(const option of field.options!)put(option.id,identity.options[field.id]?.[option.label])}for(const record of table.records)put(record.id,identity.records[record.id]);for(const inverse of table.incomingRelations)put(inverse.id,ids.incomingRelations?.[inverse.id]!)}
  for(const view of snapshot.base.views)put(view.id,ids.views?.[view.id]!);for(const form of snapshot.base.forms)put(form.id,ids.forms?.[form.id]!)
+ for(const item of snapshot.base.interfaces??[]){put(item.id,ids.interfaces?.[item.id]);for(const id of portableInterfaceParts(item))put(id,ids.interfaceParts?.[id])}
  if([...map.values()].some(value=>!value||!/^[0-9A-HJKMNP-TV-Z]{26}$/.test(value))||new Set(map.values()).size!==map.size)throw new ImportInputError('JSON identity mapping must be complete and bijective')
  return map
 }

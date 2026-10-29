@@ -1,3 +1,4 @@
+import {interfaceErasureFixture} from './helpers/records-interface-erasure.mjs'
 import {createServerFoundation} from '../src/core/app/foundation.server.ts'
 import {createLifecycleComposition} from '../src/core/app/composition/lifecycle.server.ts'
 import {adminAuditResponse} from '../src/domains/admission/admin-audit.server.ts'
@@ -18,6 +19,7 @@ contract('BASE-DATA-003 BASE-ACCESS-002','member erasure retires attributed OIDC
   const member=await auth.signIn(h.person),baseId=h.sql.prepare('SELECT base_id FROM cradle_base_operators WHERE principal_id=?').get(h.person).base_id
   assert.notEqual(baseId,h.person,'Exercise the Base operator to product principal projection')
   const peer=h.sql.prepare('SELECT p.base_id,p.principal_id FROM cradle_base_operators p JOIN operators o ON o.id=p.principal_id WHERE o.email=?').get(control.email),other=await auth.signIn(peer.principal_id)
+  const interfaceCustody=await interfaceErasureFixture(h,{appId,auth,member,identity})
   const issuer='https://identity.example.test',otherIssuer='https://other-identity.example.test',subject='opaque-member-subject',now=Date.now()
   h.sql.prepare("INSERT INTO oa_identity_providers(provider_id,preset,status,issuer,client_id,jwks_uri,authorization_endpoint,token_endpoint,algorithms,token_auth_method,response_iss,linked_at) VALUES('auth','rer','linked',?,'cradle-client',?,?,?,'[\"RS256\"]','none',1,?)").run(issuer,issuer+'/jwks',issuer+'/authorize',issuer+'/token',now)
   h.sql.prepare('INSERT INTO oa_auth_settings(singleton,idp_sign_in,generation) VALUES(1,1,1) ON CONFLICT(singleton) DO UPDATE SET idp_sign_in=1,generation=1').run()
@@ -38,7 +40,7 @@ contract('BASE-DATA-003 BASE-ACCESS-002','member erasure retires attributed OIDC
   h.sql.prepare("INSERT INTO provider_connections(id,app_id,adapter_id,name,state,account_id,scopes_json,ownership_json,created_at,updated_at) VALUES(?,?,'xero','Accounts','connected','tenant-42','[]','[]',?,?)").run(connection,appId,h.ctx.now,h.ctx.now)
   h.sql.prepare('INSERT INTO repair_accounting_mappings(connection_id,version,mapping_json,actor_id,created_at,updated_at) VALUES(?,3,?,?,?,?)').run(connection,JSON.stringify(mapping),h.person,h.ctx.now,h.ctx.now)
   const mappingBefore=h.sql.prepare('SELECT * FROM repair_accounting_mappings WHERE connection_id=?').get(connection)
-  await verifyIdentityArchive(h,{issuer,subject,connection,mapping})
+  await verifyIdentityArchive(h,{issuer,subject,connection,mapping,interfaces:interfaceCustody})
   const peerRows=()=>[
    h.sql.prepare('SELECT * FROM oa_provider_sessions WHERE session_id=?').get(other.baseId),
    h.sql.prepare('SELECT * FROM oa_provider_session_pins WHERE session_id=?').get(other.baseId),
@@ -62,6 +64,7 @@ contract('BASE-DATA-003 BASE-ACCESS-002','member erasure retires attributed OIDC
   assert.equal((await h.send('remove',{appId},version())).status,200)
   const erased=await h.send('erase',{appId},version()),result=await erased.json()
   assert.equal(erased.status,200,JSON.stringify(result))
+  await interfaceCustody.assertErased()
   for(const table of ['oa_provider_sessions','oa_provider_session_pins'])assert.equal(h.sql.prepare('SELECT count(*) n FROM '+table+' WHERE session_id=?').get(member.baseId).n,0)
   assert.equal(h.sql.prepare('SELECT count(*) n FROM oa_external_identities WHERE operator_id=?').get(baseId).n,0)
   assert.equal(h.sql.prepare('SELECT count(*) n FROM oa_setup_links WHERE owner_id=?').get(baseId).n,0)

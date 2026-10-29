@@ -5,7 +5,7 @@ import {derivedSearch} from '../../scripts/portability/records.mjs'
 
 /** Exercise the maintained archive with populated credentials and protocol state.
  * Assert excluded values and dormant restoration, not a pinned table inventory. */
-export async function verifyIdentityArchive(h,{issuer,subject,connection,mapping}){
+export async function verifyIdentityArchive(h,{issuer,subject,connection,mapping,interfaces}){
  const key='fixture-only-private-dependency-key',code='fixture-only-consumed-dependency-code',transaction='fixture-only-encrypted-oidc-transaction'
  h.sql.prepare('INSERT INTO rer_dependency_keys(interface,private_key) VALUES(?,?)').run('oidc-provider@1',key)
  h.sql.prepare('INSERT INTO rer_dependency_codes(digest,created_at) VALUES(?,?)').run(code,Date.now())
@@ -17,6 +17,7 @@ export async function verifyIdentityArchive(h,{issuer,subject,connection,mapping
   const content=await new Response(await api.exports.download(id)).text()
   for(const secret of [key,code,transaction,subject,'member-provider-session','member-approval','used-member-grant'])assert.ok(!content.includes(secret),'Private identity and protocol custody must not leave in an installation archive: '+secret)
   const archive=content.trim().split('\n').map(JSON.parse),rows=archive.flatMap(part=>part.items??[])
+  if(interfaces){for(const id of [interfaces.interfaceId,interfaces.unrelatedId]){const current=rows.find(item=>item.table==='record_interfaces'&&item.row.id===id);assert.ok(current,'Installation archive retains the current interface layout');assert.equal(current.row.definition_json,h.sql.prepare('SELECT definition_json FROM record_interfaces WHERE id=?').get(id).definition_json);const history=rows.filter(item=>item.table==='record_interface_versions'&&item.row.interface_id===id).map(item=>item.row);assert.deepEqual(history,h.sql.prepare('SELECT * FROM record_interface_versions WHERE interface_id=? ORDER BY version').all(id).map(row=>({...row})))}}
   const link=rows.find(item=>item.table==='rer_dependency_link').row
   assert.equal(link.needs_relink,1,'Imported provider metadata must require a fresh owner link')
   assert.equal(h.sql.prepare("SELECT needs_relink FROM rer_dependency_link WHERE interface='oidc-provider@1'").get().needs_relink,0,'Export does not unlink the live provider')

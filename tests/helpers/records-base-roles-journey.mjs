@@ -1,3 +1,4 @@
+import {creatorRoleScreens} from './records-creator-screens.mjs'
 import {displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
 import {baseAction,baseMenu} from './records-base-menu.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
@@ -14,7 +15,7 @@ export async function baseRolesJourney(){
  const output=path.resolve('.private/base-roles');await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await recordsBrowserRuntime(0)
+  h=await recordsBrowserRuntime(0);console.log("CREATOR_ROLE_FIXTURE ready")
   const people={creator:{id:createUlid(),name:'Jordan Chen'},editor:{id:createUlid(),name:'Sam Rivera'},reader:{id:createUlid(),name:'Taylor Morgan'},owner:{id:createUlid(),name:'Avery Blake'}}
   for(const [key,person]of Object.entries(people)){
    const now=Date.now();await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,name,email,active) VALUES(?,?,?,?,?,1)').bind(person.id,now,now,person.name,[key,'procurement.example.test'].join('@')).run()
@@ -30,6 +31,7 @@ export async function baseRolesJourney(){
   async function call(cookie,url,input){const response=await request(cookie,url,input);assert.equal(response.status,200,JSON.stringify(response));return response.data}
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic',...(process.platform==='linux'?['--no-sandbox']:[])],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   for(const width of recordsBrowserWidths()){
+   console.log("CREATOR_ROLE_VIEWPORT",width)
    const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),creatorContext=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),creatorPage=await creatorContext.newPage(),j=recordsJourney(page,h.origin,output,width),cj=recordsJourney(creatorPage,h.origin,output,width)
    try{
     async function cookie(context,value){await context.addCookies([{name:value.split('=')[0],value:value.slice(value.indexOf('=')+1),url:h.origin}])}
@@ -107,14 +109,15 @@ export async function baseRolesJourney(){
     await page.goto(tablePath);await tableAction(page,'Save view');await page.getByLabel('Name',{exact:true}).fill('Pickup queue');await page.getByLabel('List order',{exact:true}).fill('20');await page.getByLabel('Who can use this view',{exact:true}).selectOption('app')
     const secondView=await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
     assert.deepEqual((await call(people.reader.cookie,`/api/v1/apps/${appId}/views`)).items.map(view=>view.id),[secondView.id,savedView.id])
-    await page.goto(tablePath);await displayAction(page,'Warehouse orders');await page.getByRole('button',{name:'Edit view',exact:true}).click();await page.getByLabel('List order',{exact:true}).fill('10')
+    await page.goto(tablePath);await displayAction(page,'Warehouse orders');await page.getByRole('button',{name:'Edit view',exact:true}).click();await page.getByLabel('List order',{exact:true}).fill('10');await j.capture('editor-view-order-editor')
     await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
     await page.goto(tablePath)
     const orderedViews=await call(people.reader.cookie,`/api/v1/apps/${appId}/views`);assert.deepEqual(orderedViews.items.map(view=>view.id),[savedView.id,secondView.id])
-    if(width===1440)assert.deepEqual(await page.getByRole('navigation',{name:'Record views',exact:true}).getByRole('link').filter({hasText:/^(Warehouse orders|Pickup queue)$/}).allTextContents(),['Warehouse orders','Pickup queue'])
-    else {await page.locator('.cr-view-bar__opener').click();assert.deepEqual(await page.getByRole('dialog',{name:'Views',exact:true}).getByRole('link').filter({hasText:/^(Warehouse orders|Pickup queue)$/}).allTextContents(),['Warehouse orders','Pickup queue']);await page.getByRole('dialog',{name:'Views',exact:true}).getByRole('button',{name:'Close',exact:true}).click()}
+    if(width===1440){const nav=page.getByRole('navigation',{name:'Record views',exact:true});await nav.getByRole('link',{name:'Warehouse orders',exact:true}).waitFor();await nav.getByRole('link',{name:'Pickup queue',exact:true}).waitFor();assert.deepEqual(await nav.getByRole('link').filter({hasText:/^(Warehouse orders|Pickup queue)$/}).allTextContents(),['Warehouse orders','Pickup queue'])}
+    else {await page.locator('.cr-view-bar__opener').click();await page.getByRole('dialog',{name:'Views',exact:true}).getByRole('link',{name:'Pickup queue',exact:true}).waitFor();assert.deepEqual(await page.getByRole('dialog',{name:'Views',exact:true}).getByRole('link').filter({hasText:/^(Warehouse orders|Pickup queue)$/}).allTextContents(),['Warehouse orders','Pickup queue']);await page.getByRole('dialog',{name:'Views',exact:true}).getByRole('button',{name:'Close',exact:true}).click()}
     await j.capture('editor-persisted-view-order')
 
+    await creatorRoleScreens({h,page,creatorPage,j,cj,call,request,people,cookie,context,appId,entityId,base,tablePath,savedView,title,status})
     const schema=await call(people.reader.cookie,base),definition={appId,entityId,name:'My receiving list',display:'grid',fields:schema.fields.map(field=>field.id),filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:title.id},visibility:'app',shipped:false}
     const saveView=visibility=>({commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}],input:{view:{...definition,visibility}}})
     assert.equal((await request(people.reader.cookie,'/api/v1/commands/view.save',saveView('app'))).status,403)
@@ -130,7 +133,7 @@ export async function baseRolesJourney(){
     assert.deepEqual(demotedSchema.fields.find(field=>field.id===status.id).options,choices)
     assert.equal(demotedSchema.fields.find(field=>field.id===title.id).help,help)
     assert.equal((await call(people.editor.cookie,base+'/records/'+original.id)).record.fields[title.id].value,'Grove Equipment replenishment')
-   }finally{await context.close();await creatorContext.close()}
+   }catch(error){console.error("CREATOR_ROLE_FAILURE",error.message);throw error}finally{await context.close();await creatorContext.close()}
   }
  }finally{await browser?.close();await h?.close()}
 }

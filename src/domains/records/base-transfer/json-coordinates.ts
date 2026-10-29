@@ -1,8 +1,10 @@
+import {portableInterfaceParts} from './interface-portability'
 import { ImportInputError } from './input-error'
 import { canonicalMetadataLabel,type PortableBase } from './json-format'
 import type { ImportIdentities,ImportOptions } from './contracts'
 const exact=(actual:object|undefined,expected:string[],path:string)=>{const keys=Object.keys(actual??{}),wanted=new Set(expected);if(keys.length!==wanted.size||keys.some(key=>!wanted.has(key)))throw new ImportInputError(`${path}: identity keys must cover exactly the source coordinates`)}
 export function validateJsonCoordinates(snapshot:PortableBase,ids:ImportIdentities):void {
+ exact(ids.interfaces,(snapshot.base.interfaces??[]).map(item=>item.id),'interfaces');exact(ids.interfaceParts,(snapshot.base.interfaces??[]).flatMap(portableInterfaceParts),'interfaceParts')
  exact(ids.tables,snapshot.base.tables.map(t=>t.id),'tables')
  for(const table of snapshot.base.tables){const identity=ids.tables[table.id];exact(identity.fields,table.fields.map(f=>f.id),table.label+' fields');exact(identity.records,table.records.map(r=>r.id),table.label+' records');exact(identity.options,table.fields.filter(f=>(f.type==='select'||f.type==='multi_select')).map(f=>f.id),table.label+' option fields');for(const field of table.fields)if((field.type==='select'||field.type==='multi_select'))exact(identity.options[field.id],field.options!.map(o=>o.label),field.label+' options')}
  exact(ids.validationRules,snapshot.base.tables.flatMap(t=>(t.validationRules??[]).map(r=>r.id)),'validationRules');exact(ids.views,snapshot.base.views.map(v=>v.id),'views');exact(ids.forms,snapshot.base.forms.map(v=>v.id),'forms');exact(ids.incomingRelations,snapshot.base.tables.flatMap(t=>t.incomingRelations.map(i=>i.id)),'incomingRelations')

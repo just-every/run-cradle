@@ -1,3 +1,4 @@
+import {exportInterfaces} from './export-interfaces.server'
 import {canonical} from '../../admission/canonical'
 import {validateCell} from '../validators'
 import {auditOperation} from '../../admission/operation-audit.server'
@@ -48,7 +49,8 @@ export async function prepareBaseStream(db:D1Database,services:ReturnType<typeof
    }else{const form=await metadata.readForm(ctx,entry.id);if(form.submitAction!=='record.create')throw new AdmissionError('validation','A source-mapped form cannot be exported as a portable base form.');forms.push({id:form.id,tableId:form.entityId,title:form.title,fields:structuredClone(form.fields),submitAction:'record.create',authenticated:true})}
   }
  }
- const snapshot:PortableBase={format:'cradle-base',version:1,envelope:{capturedAt:ctx.now},base:{id:appId,name:base.name,tables,views,forms}}
+ const exportedInterfaces=await exportInterfaces(db,metadata,ctx,appId);guards.push(...exportedInterfaces.guards)
+ const snapshot:PortableBase={format:'cradle-base',version:1,envelope:{capturedAt:ctx.now},base:{id:appId,name:base.name,tables,views,forms,...(exportedInterfaces.items.length?{interfaces:exportedInterfaces.items}:{})}}
  async function* rows(table:PortableTable):AsyncGenerator<PortableRecord>{
   let cursor:string|undefined
   do{

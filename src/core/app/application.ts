@@ -99,6 +99,7 @@ export const createApplication = (platform: Platform, config: SeedConfig, runtim
   app.route('/api/v1/records/trash',records.trashHttp)
   app.all('/api/v1/records/base-export', context => records.baseExportHttp.fetch(context.req.raw))
   app.all('/api/v1/records/base-import/*', context => records.baseImportHttp.fetch(context.req.raw))
+  for(const path of ['/api/v1/apps/:appId/interfaces','/api/v1/apps/:appId/interfaces/publish','/api/v1/interfaces/:id','/api/v1/interfaces/:id/*'])app.all(path,context=>records.interfacesHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/records/schema-preview','/api/v1/records/bases/:appId/access','/api/v1/records/bases/:appId/collaborators','/api/v1/records/bases/:appId/reviews','/api/v1/records/bases/:appId','/api/v1/records/releases/:releaseId/recovery','/api/v1/records/releases/:releaseId/recovery/*','/api/v1/commands/release.adopt','/api/v1/records/proposals','/api/v1/records/proposals/:id','/api/v1/records/proposals/:id/decline']) app.all(path, context => records.manualHttp.fetch(context.req.raw))
   for (const path of ['/api/v1/proposals','/api/v1/proposals/*']) app.all(path, context => records.proposalHttp.fetch(context.req.raw))
   for(const path of ['/api/v1/record-calendar-sync','/api/v1/record-calendar-sync/*']) app.all(path,context=>calendarSync.http.fetch(context.req.raw))

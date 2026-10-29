@@ -17,7 +17,7 @@ export async function* streamBaseJson(source:BaseStreamSource,includeRecords=tru
   yield encode(']}')
  }
  await source.check()
- yield encode('],"views":'+JSON.stringify(snapshot.base.views)+',"forms":'+JSON.stringify(snapshot.base.forms)+'}}\n')
+ yield encode('],"views":'+JSON.stringify(snapshot.base.views)+',"forms":'+JSON.stringify(snapshot.base.forms)+(snapshot.base.interfaces?.length?',"interfaces":'+JSON.stringify(snapshot.base.interfaces):'')+'}}\n')
 }
 export function streamBaseWorkbook(source:BaseStreamSource){
  return streamWorkbook(source.snapshot.base.tables.map(table=>({name:table.label,headers:source.headers(table),rows:(async function*(){const fields=source.fields(table);for await(const row of source.rows(table)){const display=await source.displayed(table,row);yield display.values.map((value,i)=>fields[i]?typedExportCell(fields[i]!,row.values[fields[i]!.id],value):{value,type:'text' as const})}await source.check()})()})))

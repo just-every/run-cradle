@@ -1,0 +1,8 @@
+import {createUlid} from '../../../core/shared/ids'
+import type {Form,View} from '../../../domains/records/contracts'
+import type {InterfaceInput} from '../../../domains/records/interfaces/contracts'
+import {ComponentEditor} from './component-editor'
+type Section=InterfaceInput['pages'][number]['sections'][number]
+export function SectionEditor({section,index,onChange,onRemove,views,forms}:{section:Section;index:number;onChange(value:Section):void;onRemove():void;views:View[];forms:Form[]}){
+ return <fieldset className="cr-card cr-form"><legend>Section {index+1}</legend><label className="cr-field">Section title<input required maxLength={120} value={section.title} onChange={event=>onChange({...section,title:event.target.value})}/></label><label className="cr-field">Tab name<input maxLength={80} value={section.tab} onChange={event=>onChange({...section,tab:event.target.value})}/></label><p>Leave the tab name empty to show this section on every tab.</p>{section.components.map((component,i)=><ComponentEditor key={component.id} component={component} index={i} views={views} forms={forms} onChange={next=>onChange({...section,components:section.components.map(item=>item.id===next.id?next:item)})} onRemove={()=>onChange({...section,components:section.components.filter(item=>item.id!==component.id)})}/>)}<div className="cr-actions"><button type="button" className="cr-button cr-button--quiet" disabled={section.components.length>=20} onClick={()=>onChange({...section,components:[...section.components,{id:createUlid(),kind:'text',text:''}]})}>Add component</button><button type="button" className="cr-button cr-button--quiet" onClick={onRemove}>Remove section {index+1}</button></div></fieldset>
+}

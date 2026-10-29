@@ -1,3 +1,4 @@
+import {validatePortableInterfaces} from './interface-portability'
 import {portableStoresSchema} from '../portable-store-references'
 import { validatePortableTimeline } from './timeline-portable'
 import {validateViewPresentation} from '../view-presentation-validation'
@@ -29,6 +30,7 @@ export function validatePortableBase(input:unknown):PortableBase {
  for(const table of base.tables){unique(table.id,'table');for(const rule of table.validationRules??[])unique(rule.id,'validation rule');for(const field of table.fields)unique(field.id,'field');for(const inverse of table.incomingRelations)unique(inverse.id,'incoming relation');for(const record of table.records)unique(record.id,'record')}
 
  for(const view of base.views)unique(view.id,'view');for(const form of base.forms)unique(form.id,'form')
+ validatePortableInterfaces(base,unique)
  const optionOwners=new Map<string,string>()
  for(const table of base.tables){
   jsonLimit('tableBytes',JSON_TABLE_LIMIT,encodedJsonBytes(table),table.label,'10 MiB')

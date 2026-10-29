@@ -33,6 +33,7 @@ export function BaseMenu({ apps, appId, manual, onCreate, onEdit }: { apps: Base
       {!guest && appId === LAUNCH_APP_ID && <button type="button" onClick={() => show('fields')}>Edit fields</button>}
       {!guest && (canManage || appId === LAUNCH_APP_ID) && <button type="button" onClick={() => show('people')}>People</button>}
       {canManage && count > 0 && <button type="button" onClick={() => show('reviews')}>Review changes ({count})</button>}
+      {manual && !guest && appId && <a href={`/app/records/${appId}/interfaces`}>Interfaces</a>}
       {manual && !guest && <button type="button" onClick={() => show('export')}>Export base</button>}
     </ViewSheet>
     <ViewSheet wide title={panel === 'people' ? 'People' : panel === 'reviews' ? 'Review changes' : panel === 'fields' ? 'Edit fields' : 'Export base'} open={panel !== null} onClose={() => setPanel(null)} anchor={anchor}>{appId && (panel === 'people' ? appId === LAUNCH_APP_ID ? <AccessPanel appId={appId} /> : <BaseCollaborators appId={appId} /> : panel === 'reviews' ? <BaseSchemaReviews appId={appId} /> : panel === 'fields' ? <CustomFieldsPanel /> : <ExportBasePanel appId={appId} id="cr-export-base" />)}</ViewSheet>

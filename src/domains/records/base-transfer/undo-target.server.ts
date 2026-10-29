@@ -2,6 +2,7 @@ import type { D1Database, D1TargetAdapter } from '../../../../vendor/base/module
 import type { D1UndoDependency, D1UndoEffect, D1UndoEntity, D1UndoSnapshot } from '../../../../vendor/base/modules/import-kit/src/d1/undo-types'
 import type { Json, TargetRow } from '../../../../vendor/base/modules/import-kit/src/types'
 import type { DescriptorRegistry, EntityDescriptor, FieldStorage } from '../descriptors.server'
+import {interfaceComponents} from './interface-portability'
 import { metadataUndoObservation } from './undo-metadata.server'
 import { incomingUndoRows, nativeUndoMarkerGuards } from './undo-guards.server'
 
@@ -34,7 +35,7 @@ export function nativePreservedUndo(registry:DescriptorRegistry,target:D1TargetA
   const observations=effects.map(effect=>{
    const expected=effect.expected,current=byTarget.get(key(expected.targetKind,expected.targetId))??null,[kind,entityId,fieldId]=expected.targetKind.split(':')
    if(byMarker.get(key(expected.targetKind,expected.targetId))!==expected.revision)throw new Error('IMPORT_NATIVE_ATTRIBUTION_CHANGED: native import revision changed')
-   if(kind==='view'||kind==='form')return metadataUndoObservation(registry,effect,current)
+   if(kind==='view'||kind==='form'||kind==='interface')return metadataUndoObservation(registry,effect,current)
    if(kind!=='record'&&kind!=='link')throw new Error('Unknown native undo effect')
    const d=registry.get(destination,entityId!),f=fieldId?d.fields.get(fieldId):undefined
    return {effectId:effect.provenance.id,current,entity:entity(d,expected.targetId,f),evidence:describe(d,expected.targetId,f)}
@@ -42,6 +43,15 @@ export function nativePreservedUndo(registry:DescriptorRegistry,target:D1TargetA
   const dependency=(required:D1UndoEffect|undefined,dependent:D1UndoEffect|undefined,cause:D1UndoEntity,evidence:Record<string,Json>,ordering:'dependent-first'|'retention-only'='dependent-first')=>{
    if(!required||required===dependent)return
    dependencies.push({requiredEffectId:required.provenance.id,...(dependent?{dependentEffectId:dependent.provenance.id}:{}),cause,evidence,...(ordering==='retention-only'?{order:false as const}:{})})
+  }
+  // A surviving interface keeps the metadata its retained versions reference.
+  for(const row of rows)if(row.targetKind==='interface'){
+   const captured=value(row) as unknown as {row:Record<string,Json>;versions:{definition_json:string}[]};if(captured.row.deleted_at!==null)continue
+   const layouts=[JSON.parse(String(captured.row.definition_json)),...captured.versions.map(version=>JSON.parse(version.definition_json))],dependent=byEffect.get(key('interface',row.targetId))
+   for(const layout of layouts)for(const component of interfaceComponents(layout))if(component.kind==='view'||component.kind==='form'){
+    const kind=component.kind,id=kind==='view'?component.viewId:component.formId
+    dependency(byEffect.get(key(kind,id)),dependent,{table:'00000000000000000000000004',recordId:row.targetId},{tableLabel:'Interfaces',recordPrimary:layout.name,rule:'interface-metadata',metadataKind:kind,targetId:id})
+   }
   }
   // Each native link cell is independent from its owning record. Even empty
   // imported cells reverse before that record; retained changed links protect it.
