@@ -10970,7 +10970,7 @@
       "executable": false
     },
     "src/ui/records/record-grid.tsx": {
-      "sha256": "cb75d2a2cab01802398b053634e63fb4aef605b07c782080063e014b0e810235",
+      "sha256": "d452d685f77ad4d50155d3b2708334032d87ae48ed4c0ad0d00ca93bc31e9bcf",
       "executable": false
     },
     "src/ui/records/record-label.ts": {
@@ -10994,7 +10994,7 @@
       "executable": false
     },
     "src/ui/records/record-timeline.tsx": {
-      "sha256": "4bcce78c710a8c6e166a1baf6c31f18b9c4c3f0541d49d6fa70dfb2e1688b253",
+      "sha256": "24ff2040ed3cbf93c9159db957a54afac51149f0bfcc7ee31a87e1bddf6d4e48",
       "executable": false
     },
     "src/ui/records/record-toolbar.tsx": {
@@ -11174,7 +11174,7 @@
       "executable": false
     },
     "src/ui/records/timeline-chart.tsx": {
-      "sha256": "5e1408879010fcbc8637dc34f758b9bf3fbbb4b726442bd6cf76f479e06c4731",
+      "sha256": "5f37ae7c4dae7261db815b148dfc25c36955f040747eeb5ed78363a521fc4743",
       "executable": false
     },
     "src/ui/records/timeline-data.ts": {

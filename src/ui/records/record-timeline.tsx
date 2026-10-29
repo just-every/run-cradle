@@ -36,11 +36,6 @@ export function RecordTimeline({ records, view, schema, timezone, match, revisio
       if (await history.execute([{ recordId: row.id, changes }], [row])) { setMoving(null); setRefresh(value => value + 1) }
     } catch (error) { setProblem((error as Error).message) }
   }
-  useEffect(() => {
-    if (!match || !data) return
-    const node = document.querySelector(`[data-timeline-row="${match.recordId}"]`)
-    node?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  }, [match?.recordId, data])
   const conflicts = schedule.tasks.filter(task => task.issues.includes('Starts before a predecessor ends')).length
   return <div className="cr-timeline-workspace">
     <div className="cr-toolbar"><div className="cr-actions" role="group" aria-label="Timeline zoom">{(['day', 'week', 'month', 'quarter', 'year'] as const).map(value => <button key={value} type="button" className="cr-button cr-button--quiet" aria-pressed={zoom === value} onClick={() => setZoom(value)}>{value.charAt(0).toUpperCase() + value.slice(1)}</button>)}</div><button type="button" className="cr-button cr-button--quiet" onClick={() => setRefresh(value => value + 1)}>Refresh timeline</button></div>

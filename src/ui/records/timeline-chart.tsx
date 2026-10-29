@@ -27,6 +27,9 @@ export function TimelineChart({ schema, view, schedule, baseline, axis, writable
     measure()
     return () => observer.disconnect()
   }, [schedule.tasks, view.fields])
+  useLayoutEffect(() => {
+    if (match) chart.current?.querySelector<HTMLElement>('.cr-view-match')?.scrollIntoView({ block: 'center', inline: 'center' })
+  }, [match, labelHeights])
   const taskHeight = (row: RecordRow) => Math.max(rowHeight, labelHeights[row.id] ?? 0)
   const lines = timelineLines(schedule.tasks, view.groupBy), positions = new Map<string, number>()
   const byId = new Map(schedule.tasks.map(task => [task.row.id, task]))
