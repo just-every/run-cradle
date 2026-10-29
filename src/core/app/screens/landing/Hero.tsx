@@ -4,7 +4,7 @@ import { HeroScreen } from './HeroScreen'
 import { HeroArt } from './hero/HeroArt'
 import { useHeroMotion } from './hero/motion/useHeroMotion'
 
-/** The approved hero: the headline, the owner's `landingMessage` from `src/ext/config.ts`, a plain line naming what Cradle replaces, Run Cradle and Try the demo buttons and a link to the docs, and ribbons of data streaming into one calm Projects screen, with cards floating on them that are drawn into it one by one, each bringing something into the screen as it lands. The art is inline SVG; its motion starts on the client from exactly the server's still and never hides anything before it does. */
+/** The approved hero: the headline, the owner's `landingMessage` from `src/ext/config.ts`, a plain line naming what Cradle is an open source alternative to, Run Cradle and Try the demo buttons and a link to the docs, and ribbons of data streaming into one calm Projects screen, with cards floating on them that are drawn into it one by one, each bringing something into the screen as it lands. The art is inline SVG; its motion starts on the client from exactly the server's still and never hides anything before it does. */
 export function Hero({ landingMessage }: { landingMessage: string }) {
   const root = useRef<HTMLElement>(null)
   const live = useHeroMotion(root)
@@ -13,7 +13,7 @@ export function Hero({ landingMessage }: { landingMessage: string }) {
     <div className="lp-hero-copy">
       <h1 id="hero-title">Everything comes together in one place.</h1>
       <p>{landingMessage}</p>
-      <p className="lp-alt">100% free, open source alternative to <strong>Airtable</strong> and <strong>Smartsheet</strong></p>
+      <p className="lp-alt">An open source alternative to <strong>Airtable</strong> and <strong>Smartsheet</strong></p>
       <div className="lp-actions">
         <a className="lp-open" href="/run">Run Cradle</a>
         <a className="lp-open" href="https://demo.run-cradle.com/">Try the demo</a>

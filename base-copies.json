@@ -714,6 +714,15 @@
       },
       "modes": {
         "src/base/run-site.ts": "100644"
+      },
+      "adapted": {
+        "src/base/run-site.ts": "11f94fec479228d71ba6d7dd6ea7796c0d42c544"
+      },
+      "acknowledged": {
+        "src/base/run-site.ts": {
+          "sha256": "81caee0e705fc16cf210a0bce2c8677a83b4be7c08f270673d68d8d1a74696ad",
+          "mode": "100644"
+        }
       }
     },
     {
