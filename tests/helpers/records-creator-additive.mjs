@@ -15,9 +15,13 @@ export async function creatorAdditiveJourney(){
   const name=newField('Order'),single=newField('Stage','select'),multiple=newField('Tags','multi_select')
   single.options=[{id:createUlid(),label:'Ready'},{id:createUlid(),label:'Shipped'}]
   multiple.options=[{id:createUlid(),label:'Stock'},{id:createUlid(),label:'Delivery'}]
-  const appId=createUlid(),entityId=createUlid(),draft={appId,name:'synthetic-cradle-creator',tables:[{id:entityId,label:'Orders',primaryFieldId:name.id,fields:[name,single,multiple]}]}
+  const appId=createUlid(),entityId=createUlid(),linkedId=createUlid(),linkedName=newField('Shipment'),order=newField('Order','relation'),lookup=newField('Order stage','computed')
+  order.relation={ownerAppId:appId,entityId,cardinality:'one',onDelete:'restrict'}
+  Object.assign(lookup,{readOnly:true,resultType:'select',options:structuredClone(single.options),expression:{kind:'rollup',aggregate:'lookup',relationFieldId:order.id,valueFieldId:single.id}})
+  const draft={appId,name:'synthetic-cradle-creator',tables:[{id:entityId,label:'Orders',primaryFieldId:name.id,fields:[name,single,multiple]},{id:linkedId,label:'Shipments',primaryFieldId:linkedName.id,fields:[linkedName,order,lookup]}]}
   let {r}=await h.create(draft)
   const schema=r.registry.get(appId,entityId).schema,original=await add(h,r,schema,{[name.id]:'synthetic-cradle-1',[single.id]:single.options[0].id,[multiple.id]:multiple.options.map(option=>option.id)})
+  const linked=await add(h,r,r.registry.get(appId,linkedId).schema,{[linkedName.id]:'synthetic-cradle-1',[order.id]:original.ref})
   const people={owner:{id:h.owner},creator:{id:createUlid()},editor:{id:createUlid()}},now=Date.now()
   for(const [role,person]of Object.entries(people))if(role!=='owner'){
    await h.db.prepare('INSERT INTO operators(id,name,email,active,created_at,updated_at,version) VALUES(?,?,?,1,?,?,1)').bind(person.id,`synthetic-cradle-${role}`,[`synthetic-cradle-${role}`,'example.test'].join('@'),now,now).run()
@@ -52,6 +56,8 @@ export async function creatorAdditiveJourney(){
   const live=await request(people.editor,base)
   assert.deepEqual(live.fields.find(field=>field.id===single.id).options,select.options)
   assert.deepEqual(live.fields.find(field=>field.id===multiple.id).options,multi.options)
+  const linkedBase=`/api/v1/apps/${appId}/entities/${linkedId}`,linkedSchema=await request(people.editor,linkedBase),linkedRow=(await request(people.editor,linkedBase+'/query',{})).items.find(row=>row.id===linked.id)
+  assert.deepEqual({options:linkedSchema.fields.find(field=>field.id===lookup.id).options,retained:linkedRow.fields[lookup.id]},{options:select.options,retained:{state:'value',value:single.options[0].id}},'Appending a choice refreshes the linked lookup without changing its existing value')
   assert.equal(live.fields.find(field=>field.id===name.id).help,help)
   const retainedView=await request(people.editor,`/api/v1/views/${savedView.id}`);assert.equal(retainedView.id,savedView.id);assert.deepEqual(retainedView.filter,savedView.filter);assert.deepEqual(retainedView.groupBy,savedView.groupBy)
   const retained=(await request(people.editor,base+'/query',{})).items.find(row=>row.id===original.id)

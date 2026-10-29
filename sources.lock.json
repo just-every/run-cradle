@@ -9738,7 +9738,7 @@
       "executable": false
     },
     "src/domains/records/manual/release.server.ts": {
-      "sha256": "b797ee6b58582d227b7ae142587d279ebd1206fadfb40d4f4b415816fad72b5e",
+      "sha256": "f1668d61c276a7ac99321e35426af4fdfca60e8a7f6a42d4690e8877a6f27f8e",
       "executable": false
     },
     "src/domains/records/manual/role-policy.ts": {
@@ -9778,7 +9778,7 @@
       "executable": false
     },
     "src/domains/records/option-additions.ts": {
-      "sha256": "7464ad426678ff276dfc3a405fefcafee9ff83ae9e6d40ac1cea492f50428e69",
+      "sha256": "667dced9d9ef00c61a03a6e030c51cb3edf6c72dd4a332412f11ea0ac84cb341",
       "executable": false
     },
     "src/domains/records/phone.ts": {
@@ -12646,7 +12646,7 @@
       "executable": false
     },
     "tests/helpers/records-creator-additive.mjs": {
-      "sha256": "2d747b90e58765e192da53b84d3e8c32ba442c6cb2615bb8d1774f7c9a84747d",
+      "sha256": "1c675fda7f84e2d314184cb22f0cace3f181dce0e582ba19996ffc1bf88a3fd9",
       "executable": false
     },
     "tests/helpers/records-csv-fence-scenario.mjs": {

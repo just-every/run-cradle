@@ -1,4 +1,4 @@
-import { preservesSelectOptions } from '../option-additions'
+import { preservesSelectOptions, refreshAppendedLookupOptions } from '../option-additions'
 import { prepareRoleSchemaUpdates } from './role-schema.server'
 import { createUlid } from '../../../core/shared/ids'
 import type { AdmissionPort, AuditFact, SqlPredicate, SqlMutation } from '../../admission/ports'
@@ -71,6 +71,7 @@ export function createReleaseCore(db:D1Database,policy:PolicyPort,admission:Admi
     if(['select','multi_select'].includes(field.type)&&(!field.options?.length||new Set(field.options.map(o=>o.id)).size!==field.options.length||new Set(field.options.map(o=>o.label)).size!==field.options.length))throw new AdmissionError('validation','Select options must be unique and nonempty.')
    }
   }
+  refreshAppendedLookupOptions(prior.map(descriptor=>descriptor.schema),schemas)
   const snapshot=await snapshotTables(db,prior),viewSnapshot=await snapshotViews(db,draft.appId)
   const conversionPlan=planFieldConversions(prior,schemas,snapshot.rows),dependents=await schemaDependents(db,prior,schemas,viewSnapshot)
   const overrides=structuredClone(conversionPlan.values)
