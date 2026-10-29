@@ -3026,7 +3026,7 @@
       "executable": false
     },
     "docs/api-v1.md": {
-      "sha256": "711fc56812681bb603453d32167317e0b7b7897214a0a8c54e5f2b448517133a",
+      "sha256": "84fc8b3e979b2b462400ff77489b0341e37db138f7b1b3c30d9df849884b1345",
       "executable": false
     },
     "docs/architecture.md": {
@@ -6366,7 +6366,7 @@
       "executable": false
     },
     "src/core/app/composition/records.server.ts": {
-      "sha256": "e3ce089b48c129d8b91b2042aee86f59f3aecfb84d613eae17ee04a4d9265dbb",
+      "sha256": "807bc1b13bd4329ec02f2b84e4953a07e40e99dade2054a4896d0a19a4107e18",
       "executable": false
     },
     "src/core/app/composition/repair-intake.server.ts": {
@@ -9817,8 +9817,16 @@
       "sha256": "a40bab984049c33f828d494d9a7d1fedb7873cfc2fb6b3a2680867a8b8e85d2f",
       "executable": false
     },
+    "src/domains/records/rest/attachment-openapi.ts": {
+      "sha256": "8062c562d54504331dceb401f8f370e6e0e65f69bd5fa5cd04511499669ef185",
+      "executable": false
+    },
+    "src/domains/records/rest/attachments.server.ts": {
+      "sha256": "03c5272aab432b1cb736afe5c2e426e7e92658ccbf25da96589d710c77420c0a",
+      "executable": false
+    },
     "src/domains/records/rest/comment-openapi.ts": {
-      "sha256": "f17ec4a3f1b83d19a41012d47db393735e31a79a50836cf86800d768e188606c",
+      "sha256": "49df72409569859a5dfdee86e77cf65cf422342403c6114d411828e0c8ec6bc9",
       "executable": false
     },
     "src/domains/records/rest/comments.server.ts": {
@@ -9834,15 +9842,19 @@
       "executable": false
     },
     "src/domains/records/rest/openapi.ts": {
-      "sha256": "575cdf98666f42f6f84d662c999c3d68b5d5646f214ffd8662fbe7653865ebc6",
+      "sha256": "0ea03d627a423784248128fdf816d817fd241ef72af614d6b2a4ff512813a2dd",
+      "executable": false
+    },
+    "src/domains/records/rest/rate-limit.server.ts": {
+      "sha256": "a17976b911c4ff3e6e38f99a9d78b4ccea624516797b92256eba1208a0c2e586",
       "executable": false
     },
     "src/domains/records/rest/service.server.ts": {
-      "sha256": "981bd7f363fd152e1159c042e190e645d6f8c7ce40fd37f80e266a5eb28594ea",
+      "sha256": "e06ab6d655a67d9ae3eb92f9a13b71f02f0bf3335a3835d1cca79b1dd6811962",
       "executable": false
     },
     "src/domains/records/routes.server.ts": {
-      "sha256": "f92d3382a6a3f7df4df31a82aa365197df306dcfc3377dcc6d89d29441c44e2f",
+      "sha256": "73cd5082c603f2303bedb2417b844971f09c086112411a91a77d295653cccb5a",
       "executable": false
     },
     "src/domains/records/schema.ts": {
@@ -12878,15 +12890,35 @@
       "executable": false
     },
     "tests/helpers/rest-api-journey.mjs": {
-      "sha256": "3ea7c6be6b5f3b6b7fc936cd9d9ee2a28ab79a874c3c1fa8480e833d98ec4161",
+      "sha256": "baf98d8695892264fdfad9007918a178bef475de4fd301232af8185493968b61",
+      "executable": false
+    },
+    "tests/helpers/rest-attachments-journey.mjs": {
+      "sha256": "6d6ea4920618a514290ae03f995bd55b3aa98363a639d27413dbc6d50b7d7ab4",
       "executable": false
     },
     "tests/helpers/rest-comments-journey.mjs": {
       "sha256": "7c17e2035b95d881f1febdc2e98c6815c2ef4b99d104bfeaadc5c035d95f746f",
       "executable": false
     },
+    "tests/helpers/rest-concurrency-journey.mjs": {
+      "sha256": "6becd7043cf572779aa46b1ea4e3870cdaf247eeb485b9dee11d7e81c44039bc",
+      "executable": false
+    },
+    "tests/helpers/rest-field-types-journey.mjs": {
+      "sha256": "1b919e7f876f8e279cf7e776d0849dd210367f5212f6f84d15eb5e5f3aa7a2e5",
+      "executable": false
+    },
     "tests/helpers/rest-formula-journey.mjs": {
       "sha256": "5a870c4291f22f61a6d7776c824af8c7bf02ca2b0922d4a2fbc06fe6a6cee3ae",
+      "executable": false
+    },
+    "tests/helpers/rest-linked-delete-journey.mjs": {
+      "sha256": "67b150cfd318a016682b673186423c37fe1659809e70897f6c7b7eca0115e9fa",
+      "executable": false
+    },
+    "tests/helpers/rest-rate-limit-journey.mjs": {
+      "sha256": "d8b0586928eabc6feda5627f34614a2220b369db3e0c0e19bd18e4937a0be3ed",
       "executable": false
     },
     "tests/helpers/saml-provider.mjs": {

@@ -1,10 +1,73 @@
 # Cradle API v1
 
 Use **Settings → API keys** while signed in as the installation owner. Select an
-application and record type, choose read or read/create/update access, and set a
+application and record type, choose read access or access to create and update, and set a
 7, 14 or 30 day expiry. Copy the key once into your service's private settings.
 Cradle stores its digest. The listing contains its scope, expiry and revocation
 state. Revoke it from the same panel. Keys do not sign into the browser.
+Writable keys can separately opt into record deletion. This option starts
+unchecked and is cleared when read access is selected. The retained listing
+shows the actions actually granted to each key.
+
+## Generated record API
+
+Fetch `GET /api/v1/apps/{appId}/openapi.json` for the live OpenAPI 3.1 document.
+It describes the currently readable fields and the operations below. Each table
+uses the prefix `/api/v1/apps/{appId}/rest/entities/{entityId}`.
+
+| Method and suffix | Purpose |
+| --- | --- |
+| `GET /` | Read the table schema, without a trailing slash |
+| `POST /query` | Filter, sort and page records |
+| `GET /records/{recordId}` | Read one record |
+| `POST /records` | Create a record with `commandId`, `schemaVersion` and `values` |
+| `PATCH /records/{recordId}` | Update with `commandId`, current `version` and `changes` |
+| `DELETE /records/{recordId}` | Move to Trash with `commandId`, current `version` and `confirmation` equal to the record ID |
+| `POST /batch` | Atomically create, update or delete up to 100 rows |
+| `PUT /upsert` | Create or update by a readable, writable scalar unique `mergeFieldId` |
+| `GET /records/{recordId}/comments` | Read or search the record's comments |
+| `POST /records/{recordId}/comments` | Add a comment with `commandId`, `recordVersion`, `body` and optional `mentions` |
+| `PATCH /records/{recordId}/comments/{commentId}` | Edit your comment with its current `version` and the add-comment fields |
+| `DELETE /records/{recordId}/comments/{commentId}` | Delete your comment with `commandId`, `recordVersion` and comment `version` |
+| `POST /records/{recordId}/attachments` | Begin a private upload for one writable attachment field |
+| `PUT /records/{recordId}/attachments/{fileId}/content` | Upload the exact declared bytes |
+| `GET /records/{recordId}/attachments/{fileId}/content` | Download verified bytes with current record and field visibility |
+
+Queries accept an optional `formula` string using the shipped formula language,
+for example `AND({Approved}, {Count} > 3)`. A condition `filter` can narrow it
+further. Formula queries scan at most 10,000 currently readable candidate records;
+larger queries are refused rather than returning an incomplete result. Hidden
+fields and unavailable formula dependencies are refused. The response includes
+only the selected readable fields, even when the formula needs other fields.
+Continue with the returned cursor and the same query. A changed query, data or
+authority requires a fresh first page.
+
+Each authenticated credential has a durable limit of 120 requests in a 60-second
+window shared across this namespace and its generated document. The document
+declares this limit in `x-cradle-rate-limit`. Excess requests return HTTP 429 and
+`Retry-After` in seconds before admitting any write. A different credential has
+its own window. Native browser sessions do not use this credential limit.
+
+Comment reads follow the record's current visibility. Comment writes use native
+comment permissions, and only the author can edit or delete. Ordinary record
+keys grant no comment write authority. Use a current native session for those
+writes, with the installation Origin and its CSRF token.
+
+Uploads currently require a workspace owner session, plus current read and write
+access to the chosen attachment field. Ordinary record keys cannot upload.
+Begin with `commandId`, `fieldId`, `filename`, `mediaType`, `bytes` and `sha256`.
+Send the bytes to the returned `uploadUrl` using its declared Content-Type and
+the same current owner session, Origin and CSRF token. The upload verifies its
+length, media signature and checksum before making content available. Then link
+`[{"fileId":"<returned ID>"}]` with an ordinary record update to that original
+field. Files cannot be reused as another record's attachment. Reads remain
+subject to current record and field visibility, including after key revocation.
+
+The existing proposal door remains the only way to propose schema changes;
+record keys cannot adopt schemas. Personal tokens and longer key lifetimes are
+not available through this API. Automatic linked-record cascade and unlink
+policies are not authored by the current manual builder. Its restricted links
+must be explicitly cleared before deleting a referenced record.
 
 ## Rotate a key
 

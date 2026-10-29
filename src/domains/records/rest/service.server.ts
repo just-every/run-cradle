@@ -15,6 +15,9 @@ import {createRestComments} from './comments.server'
 import type {CommandRegistry} from '../../../core/registry/commands'
 import type {createCommentReader} from '../../evidence/comment-reader.server'
 import {createFormulaQuery} from './formula-query.server'
+import {createRestRateLimit} from './rate-limit.server'
+import {createRestAttachments} from './attachments.server'
+import type {EvidenceDependencies} from '../../evidence/ports'
 
 type Services=ReturnType<typeof createRecordServices>
 /** A separate REST representation omits unreadable field identities as well as values. */
@@ -24,11 +27,14 @@ function project<T>(value:T,readable:readonly string[]):T{
  const item=value as Record<string,unknown>
  return Object.fromEntries(Object.entries(item).map(([key,child])=>[key,key==='fields'&&child&&typeof child==='object'&&!Array.isArray(child)?Object.fromEntries(Object.entries(child).filter(([id])=>readable.includes(id)).map(([id,cell])=>[id,project(cell,readable)])):key==='fieldIds'&&Array.isArray(child)?child.filter(id=>typeof id==='string'&&readable.includes(id)):project(child,readable)])) as T
 }
-export function createRecordRest(db:D1Database,services:Services,admission:AdmissionPort,evidence?:{comments:ReturnType<typeof createCommentReader>;commands:CommandRegistry},cursorSecret?:string){
+export function createRecordRest(db:D1Database,services:Services,admission:AdmissionPort,evidence?:{comments:ReturnType<typeof createCommentReader>;commands:CommandRegistry;deps:EvidenceDependencies},cursorSecret?:string){
  const {policy,reader,writer,descriptors,metadata}=services
  const comments=evidence?createRestComments(services,evidence.comments,evidence.commands):undefined
  const formulaQuery=cursorSecret?createFormulaQuery(db,services,cursorSecret):undefined
+ const rateLimit=createRestRateLimit(db)
+ const attachments=evidence?createRestAttachments(evidence.deps,services):undefined
  return {async handle(ctx:RequestContext,request:Request):Promise<unknown>{
+  await rateLimit(ctx)
   const path=new URL(request.url).pathname,document=path.match(/^\/api\/v1\/apps\/([^/]+)\/openapi\.json$/)
   if(document&&request.method==='GET'){
    const appId=idSchema.parse(document[1]),candidates=await metadata.entities(ctx,appId),schemas=[] as typeof candidates
@@ -38,6 +44,8 @@ export function createRecordRest(db:D1Database,services:Services,admission:Admis
   }
   const comment=path.match(/^\/api\/v1\/apps\/([^/]+)\/rest\/entities\/([^/]+)\/records\/([^/]+)\/comments(?:\/([^/]+))?$/)
   if(comment){if(!comments)throw new AdmissionError('unconfigured','REST comments require the native comment services.');return comments(ctx,request,comment)}
+  const attachment=path.match(/^\/api\/v1\/apps\/([^/]+)\/rest\/entities\/([^/]+)\/records\/([^/]+)\/attachments(?:\/([^/]+)\/content)?$/)
+  if(attachment){if(!attachments)throw new AdmissionError('unconfigured','REST attachments require the native file services.');return attachments(ctx,request,attachment)}
   const match=path.match(/^\/api\/v1\/apps\/([^/]+)\/rest\/entities\/([^/]+)(?:\/(query|records|batch|upsert)(?:\/([^/]+))?)?$/)
   if(!match)throw new AdmissionError('not_found','Unknown REST records route')
   const appId=idSchema.parse(match[1]),entityId=idSchema.parse(match[2]),part=match[3],recordId=match[4]?idSchema.parse(match[4]):undefined
@@ -71,6 +79,8 @@ export function createRecordRest(db:D1Database,services:Services,admission:Admis
   const prior=await admission.replay(ctx,commandId,action,appId,hash);if(prior)return finish(prior)
   if(schemaVersion!==undefined&&schemaVersion!==descriptor.schema.version)throw new AdmissionError('schema_conflict','Current schema version required')
   const ids=rows.flatMap(row=>'recordId'in row?[row.recordId]:[]);if(new Set(ids).size!==ids.length)throw new AdmissionError('validation','A batch names each record once')
+  // Check destructive authority before inspecting incoming dependencies.
+  if(operation==='delete')await policy.authorize(ctx,{appId,action:'record.delete',expected:rows.flatMap(row=>'recordId'in row?[{ref:{appId,entityId,recordId:row.recordId},version:row.version}]:[]),targetEntityId:entityId,fieldIds:[],cost:[],inputHash:hash,commandId})
   for(const row of rows){const values='values'in row?row.values:'changes'in row?row.changes:{};if(Object.keys(values).some(id=>!scope.readableFieldIds.includes(id)))throw new AdmissionError('forbidden','REST writes require readable fields')}
   // The writer preflights each row against stored data. Also reject duplicate proposed
   // unique values within this request, before a transaction is assembled.

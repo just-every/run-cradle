@@ -7,6 +7,7 @@ import type { createRecordReader } from './query.server';
 import type { createRecordMetadata } from './metadata.server';
 import { idSchema, querySchema } from './validators';
 import { AdmissionError } from '../admission/errors';
+import {RestRateLimitError} from './rest/rate-limit.server';
 export function createRecordHttp(ports: {
     authenticate(request: Request, ingress: RequestContext['ingress'], requestId: string): Promise<RequestContext>;
     templateButtons?:ReturnType<typeof import('./templates/buttons.server').createTemplateButtons>;
@@ -28,6 +29,7 @@ export function createRecordHttp(ports: {
             if(ports.rest && (/^\/api\/v1\/apps\/[^/]+\/openapi\.json$/.test(path)||/^\/api\/v1\/apps\/[^/]+\/rest\//.test(path))){
                 if(!['GET','HEAD','OPTIONS'].includes(request.method)&&request.headers.has('cookie')&&request.headers.get('origin')!==url.origin)throw new AdmissionError('forbidden','A same-origin request is required');
                 const data=await ports.rest.handle(ctx,request);
+                if(data instanceof Response)return data;
                 if(path.endsWith('/openapi.json'))return c.json(data as ReturnType<typeof import('./rest/openapi').recordOpenApi>,{headers:{'cache-control':'no-store'}});
                 return c.json({data,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},{headers:{'cache-control':'no-store'}});
             }
@@ -96,7 +98,9 @@ export function createRecordHttp(ports: {
             return c.json({ data, meta: { requestId, apiVersion: 'cradle.api.v1', evaluatedAt: new Date().toISOString(), consistencyToken: ctx.consistencyToken ?? '' } }, { headers: { 'cache-control': 'no-store' } });
         }
         catch (error) {
-            return errorResponse(error, requestId, operation);
+            const response=errorResponse(error, requestId, operation);
+            if(error instanceof RestRateLimitError)response.headers.set('Retry-After',String(error.retryAfter));
+            return response;
         }
     });
     return app;

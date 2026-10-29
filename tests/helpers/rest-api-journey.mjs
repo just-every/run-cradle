@@ -4,12 +4,18 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {restCommentsJourney} from './rest-comments-journey.mjs'
 import {restFormulaJourney} from './rest-formula-journey.mjs'
+import {restRateLimitJourney} from './rest-rate-limit-journey.mjs'
+import {restAttachmentsJourney} from './rest-attachments-journey.mjs'
+import {restConcurrencyJourney} from './rest-concurrency-journey.mjs'
+import {restLinkedDeleteJourney} from './rest-linked-delete-journey.mjs'
+import {restFieldTypesJourney} from './rest-field-types-journey.mjs'
 export async function recordsRestJourney(h){
- const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),flagId=createUlid(),hiddenId=createUlid()
+ const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),flagId=createUlid(),hiddenId=createUlid(),attachmentId=createUlid()
  const draft={appId,name:'synthetic-cradle-201 REST',tables:[{id:entityId,label:'REST items',primaryFieldId:nameId,fields:[
   {id:nameId,label:'Name',type:'text',required:true,unique:true},
   {id:flagId,label:'Approved',type:'boolean',required:false,unique:false},
   {id:hiddenId,label:'Private note',type:'text',required:false,unique:false},
+  {id:attachmentId,label:'Files',type:'attachment',required:false,unique:false},
  ]}]}
  const preview=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:draft})).data
  await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:preview.id}}})
@@ -24,20 +30,21 @@ export async function recordsRestJourney(h){
  const operations=Object.entries(document.paths).flatMap(([path,methods])=>Object.entries(methods).map(([method,operation])=>({path,method:method.toUpperCase(),operation})))
  const endpoint=name=>{const item=operations.find(item=>item.operation['x-cradle-operation']===name&&item.operation['x-cradle-entityId']===entityId);assert.ok(item,`OpenAPI supplies ${name}`);return item}
  const validator=new Ajv2020({allErrors:true});addFormats(validator)
- const seen=new Set(),call=async(name,{id,commentId,query,body,status=200,secret=writable.secret}={})=>{
+ const seen=new Set(),call=async(name,{id,commentId,fileId,query,body,status=200,secret=writable.secret}={})=>{
   const item=endpoint(name);seen.add(name)
   const input=item.operation.requestBody?.content['application/json'].schema
   if(status===200&&input){const valid=validator.compile(input);assert.equal(valid(body),true,JSON.stringify(valid.errors))}
-  const response=await h.request(item.path.replace('{recordId}',id??'').replace('{commentId}',commentId??'')+(query?'?'+new URLSearchParams(query):''),{method:item.method,secret,status,body})
+  const response=await h.request(item.path.replace('{recordId}',id??'').replace('{commentId}',commentId??'').replace('{fileId}',fileId??'')+(query?'?'+new URLSearchParams(query):''),{method:item.method,secret,status,body})
   if(status===200){const valid=validator.compile(item.operation.responses['200'].content['application/json'].schema);assert.equal(valid(response),true,JSON.stringify(valid.errors))}
   return response.data
  }
- const readSchema=await call('schema');assert.deepEqual(readSchema.fields.map(field=>field.id),[nameId,flagId,hiddenId])
+ const readSchema=await call('schema');assert.deepEqual(readSchema.fields.map(field=>field.id),[nameId,flagId,hiddenId,attachmentId])
  const created=await call('create',{body:{commandId:createUlid(),schemaVersion:schema.version,values:{[nameId]:'synthetic-cradle-204 first',[hiddenId]:'synthetic-cradle-205 private value'}}})
  assert.equal(created.result.state,'committed');let record=created.result.value.rows[0]
  assert.equal((await call('get',{id:record.id})).fields[hiddenId].value,'synthetic-cradle-205 private value')
  const updated=await call('update',{id:record.id,body:{commandId:createUlid(),version:record.version,changes:{[flagId]:true}}});record=updated.result.value.rows[0];assert.equal(record.fields[flagId].value,true)
  await restCommentsJourney(h,{call,key,appId,entityId,record,nameId})
+ record=await restAttachmentsJourney(h,{call,endpoint,validator,seen,key,appId,entityId,record,attachmentId,nameId})
  await call('create',{body:{commandId:createUlid(),schemaVersion:schema.version,values:{[nameId]:'synthetic-cradle-204 excluded',[flagId]:false}}})
  const query={limit:2,filter:{kind:'condition',fieldId:flagId,op:'eq',value:true},sort:[{fieldId:nameId,direction:'asc'}]}
  assert.deepEqual((await call('query',{body:query})).items.map(row=>row.id),[record.id])
@@ -112,5 +119,9 @@ export async function recordsRestJourney(h){
  }finally{await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(owner.rules_json,owner.id).run()}
  assert.deepEqual([...seen].sort(),operations.map(item=>item.operation['x-cradle-operation']).sort(),'The contract test drives every documented endpoint')
  await restFormulaJourney(h)
+ await restRateLimitJourney(h)
+ await restConcurrencyJourney(h)
+ await restLinkedDeleteJourney(h)
+ await restFieldTypesJourney(h)
  return {appId,entityId,operations:seen.size,created:100,updated:100,deleted:100}
 }
