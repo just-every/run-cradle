@@ -5,7 +5,7 @@ import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
 import path from 'node:path'
-import {chromium} from '@playwright/test'
+import {chromium,expect} from '@playwright/test'
 import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 import {createFixtureAuth} from './base-fixture-auth.mjs'
@@ -51,11 +51,11 @@ export async function baseRolesJourney(){
     await cj.field('Restock quantity','formula',async field=>{
      const input=field.getByLabel('Formula for Restock quantity',{exact:true})
      await field.getByText('Fields and functions',{exact:true}).click();await input.fill('I')
-     await field.getByLabel('Function suggestions',{exact:true}).getByRole('button',{name:'IF',exact:true}).click();assert.equal(await input.inputValue(),'IF(')
-     await field.getByRole('button',{name:'{Units}',exact:true}).click();assert.equal(await input.inputValue(),'IF({Units}')
-     await input.fill('IF({Units} > 0,');assert.equal(await input.getAttribute('aria-invalid'),'true');assert.match(await field.getByRole('alert').innerText(),/Restock quantity:.*position 16/)
+     await field.getByLabel('Function suggestions',{exact:true}).getByRole('button',{name:'IF',exact:true}).click();await expect(input).toBeFocused();assert.equal(await input.inputValue(),'IF(')
+     await field.getByRole('button',{name:'{Units}',exact:true}).click();await expect(input).toBeFocused();assert.equal(await input.inputValue(),'IF({Units}')
+     await input.fill('IF({Units} > 0,');await field.getByRole('alert').filter({hasText:/Restock quantity:.*position 16/}).waitFor();assert.equal(await input.getAttribute('aria-invalid'),'true');assert.match(await field.getByRole('alert').innerText(),/Restock quantity:.*position 16/)
      await cj.capture('creator-formula-error')
-     await input.fill('IF({Units} > 0, {Units} * 2, 0)');assert.equal(await input.getAttribute('aria-invalid'),'false');await field.getByText('Result type: number',{exact:true}).waitFor()
+     await input.fill('IF({Units} > 0, {Units} * 2, 0)');await field.getByText('Result type: number',{exact:true}).waitFor();assert.equal(await input.getAttribute('aria-invalid'),'false')
     })
     await cj.capture('creator-formula-editor')
     const formulaPreview=creatorPage.waitForResponse(response=>response.url().endsWith('/schema-preview')&&response.request().method()==='POST')

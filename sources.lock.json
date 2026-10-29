@@ -12570,7 +12570,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "63b8a0ddfe6cf1c84ea12af7905570efd89fe3ba3a9c85d097db2ab6af47cce5",
+      "sha256": "5ec3fed04f556e04eb911406664c991a6e4d553ded0103a53c54e2d0d117253a",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
