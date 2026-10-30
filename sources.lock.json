@@ -9718,7 +9718,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-agent.server.ts": {
-      "sha256": "f44d2f8c3d78091c267052343b08dcd9dd8c1871593097123aed430e444dc96d",
+      "sha256": "809d5ebb78525319e814e125028332b69c0e85a02e01f0df4d351a6f1a750d4c",
       "executable": false
     },
     "src/domains/records/manual/proposal-commands.server.ts": {
@@ -12502,7 +12502,7 @@
       "executable": false
     },
     "tests/helpers/proposal-calculation-journey.mjs": {
-      "sha256": "a49e58c664d35a02dd26ba8586f410ffb9fd67998ddfb3ceb66dfbb912d6ecb9",
+      "sha256": "ebb29bfe9150f6e3310eaf817c6456bd8069949409605da12b430c3c464dd6ad",
       "executable": false
     },
     "tests/helpers/proposal-door.mjs": {

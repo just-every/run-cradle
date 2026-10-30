@@ -7,6 +7,7 @@ import { trustedPredicate } from '../../admission/sql.server'
 import { principalGuards } from '../../authority/guards.server'
 import { issuerView } from '../../authority/proposer.server'
 import type { DescriptorRegistry } from '../descriptors.server'
+import type { RuleCondition, ValidationRule } from '../contracts'
 import { assertGuards } from '../fence.server'
 import type { SchemaDraft } from './contracts'
 import { proposals, createProposalStore, proposalCommitment, type StoredProposal } from './proposal-store.server'
@@ -14,6 +15,18 @@ import { checkProposedMetadata } from './proposal-metadata.server'
 import type { createReleaseCore, StoredPreview } from './release.server'
 import type { AgentProposal, ProposalInput } from './proposal-contracts'
 const PROPOSAL_LIFETIME=7*86400000,PENDING_LIMIT=20
+
+/** Rule operands may name private records, even when the issuer can read them. */
+function agentRules(rules:ValidationRule[]){
+ const projected=structuredClone(rules)
+ function redact(condition:RuleCondition){
+  if(condition.kind!=='condition'){condition.conditions.forEach(redact);return}
+  const values=Array.isArray(condition.value)?condition.value:[condition.value]
+  if(values.some(value=>value!==null&&typeof value==='object'&&'recordId'in value))delete condition.value
+ }
+ for(const rule of projected){redact(rule.when);redact(rule.require)}
+ return projected
+}
 
 /** What a proposing key does: read its base's schema, propose, and follow or withdraw its own proposals. */
 export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:DescriptorRegistry,core:ReturnType<typeof createReleaseCore>){
@@ -32,7 +45,7 @@ export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:Des
   const views=(await db.prepare("SELECT id,entity_id,definition_json FROM record_views WHERE app_id=? AND visibility='app' ORDER BY id").bind(appId).all<{id:string;entity_id:string;definition_json:string}>()).results.map(row=>{const v=JSON.parse(row.definition_json) as {name:string;display:string};return {id:row.id,entityId:row.entity_id,name:v.name,display:v.display}})
   const forms=(await db.prepare('SELECT id,entity_id,definition_json FROM record_forms WHERE app_id=? ORDER BY id').bind(appId).all<{id:string;entity_id:string;definition_json:string}>()).results.map(row=>({id:row.id,entityId:row.entity_id,title:(JSON.parse(row.definition_json) as {title:string}).title}))
   await assertGuards(db,guards)
-  return {appId,name:base?.name??null,tables:descriptors.map(d=>({id:d.schema.id,label:d.schema.label,...(d.schema.primaryFieldId?{primaryFieldId:d.schema.primaryFieldId}:{}),...(d.schema.incomingRelations?{incomingRelations:d.schema.incomingRelations}:{}),...(d.schema.validationRules?{validationRules:structuredClone(d.schema.validationRules)}:{}),fields:structuredClone(d.schema.fields)})) as SchemaDraft['tables'],views,forms,newIds:Array.from({length:100},()=>createUlid())}
+  return {appId,name:base?.name??null,tables:descriptors.map(d=>({id:d.schema.id,label:d.schema.label,...(d.schema.primaryFieldId?{primaryFieldId:d.schema.primaryFieldId}:{}),...(d.schema.incomingRelations?{incomingRelations:d.schema.incomingRelations}:{}),...(d.schema.validationRules?{validationRules:agentRules(d.schema.validationRules)}:{}),fields:structuredClone(d.schema.fields)})) as SchemaDraft['tables'],views,forms,newIds:Array.from({length:100},()=>createUlid())}
  }
  async function propose(ctx:RequestContext,commandId:string,input:ProposalInput):Promise<AdmissionPlan<AgentProposal>>{
   const {appId,issuerId}=proposerOf(ctx),hash=await canonicalHash({action:'schema.propose',input})

@@ -143,4 +143,20 @@ export async function proposalCalculationJourney(h){
  assert.equal(deletion.impacts.find(impact=>impact.entityId===groupId).deletedTable,true)
  assert.deepEqual(deletion.impacts.flatMap(impact=>impact.refusals??[]),[])
  assert.deepEqual(deletion.calculations,[],'Unrelated retained calculations do not change when their removed dependents leave the candidate')
+ // Schema reads must not disclose a rule's private linked-record operands.
+ const ownerDraft=(await h.request(`/api/v1/records/bases/${appId}`)).data
+ const linkedRule={id:createUlid(),name:'Linked group name',message:'A linked measure requires a group name.',when:{kind:'all',conditions:[{kind:'condition',fieldId:links.id,op:'eq',value:[rows[1].ref]}]},require:{kind:'any',conditions:[{kind:'condition',fieldId:links.id,op:'ne',value:[rows[2].ref]},{kind:'condition',fieldId:groupName.id,op:'not_empty'}]}}
+ ownerDraft.tables.find(table=>table.id===groupId).validationRules=[linkedRule]
+ await ownerSchema(ownerDraft)
+ const {value:privateWhen,...publicWhen}=linkedRule.when.conditions[0],{value:privateRequire,...publicRequire}=linkedRule.require.conditions[0]
+ const publicRule={...linkedRule,when:{...linkedRule.when,conditions:[publicWhen]},require:{...linkedRule.require,conditions:[publicRequire,linkedRule.require.conditions[1]]}}
+ for(const face of ['rest','mcp']){
+  const door=proposalDoor(h.origin,key.secret,face),visible=await door.schema()
+  assert.deepEqual(visible.tables.find(table=>table.id===entityId).validationRules,[retainedRule],`${face}: scalar rule operands remain intact`)
+  assert.deepEqual(visible.tables.find(table=>table.id===groupId).validationRules,[publicRule],`${face}: nested when and require operands omit private record references`)
+  for(const row of [...rows,...groups])assert.ok(!JSON.stringify(visible).includes(row.id),`${face}: schema contains no record identity`)
+  await door.http(`/api/v1/apps/${appId}/entities/${entityId}/records/${rows[1].id}`,{status:404})
+ }
+ const unchangedOwner=(await h.request(`/api/v1/records/bases/${appId}`)).data
+ assert.deepEqual(unchangedOwner.tables.find(table=>table.id===groupId).validationRules,[linkedRule],'Agent projection leaves owner rule operands intact')
 }
