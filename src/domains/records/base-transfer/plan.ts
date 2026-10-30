@@ -1,3 +1,4 @@
+import {numericLookupValues} from './workbook-lookup-values'
 import { restoreCsvMetadata } from './csv-schema-metadata'
 import { accountCorrespondenceNulls } from './correspondence-accounting'
 import { ImportInputError } from './input-error'
@@ -133,10 +134,10 @@ export function previewBaseImport(input:PreparedSource,options:ImportOptions,ide
   }
  }
  const accepted=records.filter(r=>!rejected.has(canonicalRow(r.tableKey,r.rowKey)))
- const workbookFormulas=recognizeWorkbookFormulas(workingSource,options,ids,fields,accepted)
  const lookupResults=recognizeLookups(workingSource,options,ids,fields,accepted,relations)
  report.lookups=lookupResults
  for(const lookup of lookupResults){const column=report.tables.find(t=>t.tableKey===lookup.tableKey)!.columns.find(c=>c.columnKey===lookup.columnKey)!;(column as ColumnPreview).lookupCandidates=lookup.candidates;if(lookup.candidates.some(candidate=>candidate.matchesAllRows)){if(!column.validTypes.includes('computed'))column.validTypes.push('computed')}else column.validTypes=column.validTypes.filter(type=>type!=='computed');if(lookup.ambiguity){report.diagnostics.push(lookup.ambiguity);column.reasons.push(lookup.ambiguity.message)}if(lookup.firstMismatch){report.diagnostics.push(lookup.firstMismatch);column.reasons.push(lookup.firstMismatch.message)}else if(lookup.recognized)column.reasons.push('Lookup recognized: every exported row exactly equals recomputation through its actual ONE link; exported display is not written as a computed value.')}
+ const workbookFormulas=recognizeWorkbookFormulas(workingSource,options,ids,fields,accepted,numericLookupValues(ids,fields,accepted,relations))
  for(const formula of inferred.workbookLookups){
   const proof=lookupResults.find(l=>l.tableKey===formula.tableKey&&l.columnKey===formula.columnKey),candidate=proof?.candidates.find(c=>c.relationColumnKey===formula.lookup?.relationColumnKey&&c.valueColumnKey===formula.lookup?.valueColumnKey&&c.targetTableKey===formula.lookup?.targetTableKey)
   if(!formula.reason){

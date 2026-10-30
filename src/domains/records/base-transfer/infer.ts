@@ -44,19 +44,21 @@ export function inferCsvStructure(source:PreparedSource,options:ImportOptions):{
  for(const table of tables)for(const column of table.columns){
   const override=options.tables?.[table.key]?.columns?.[column.key]??{},primary=options.tables?.[table.key]?.primaryColumnKey??table.primaryColumnKey??table.columns[0].key
   if(['xlsx','google-sheets'].includes(source.format)&&table.rows.some(row=>row.formulas?.[column.key]))continue
-  if(column.key===primary||column.sourceType||column.relationTableKey||column.lookup||override.skip||override.type&&override.type!=='relation')continue
+  const numericKeys=['xlsx','google-sheets'].includes(source.format)&&column.sourceType==='number'&&new Set(table.rows.map(row=>rawText(row.values[column.key]))).size<table.rows.length
+  if(column.key===primary||column.sourceType&&!numericKeys||column.relationTableKey||column.lookup||override.skip||override.type&&override.type!=='relation')continue
   let references:string[]
   try{references=[...new Set(table.rows.flatMap(row=>parseLinkCell(rawText(row.values[column.key]))))]}catch{continue}
   if(!references.length)continue
   const candidates=tables.filter(target=>{
    const labels=primaryIndexes.get(target.key)!
-   return references.every(ref=>labels.has(ref))
+   return (!numericKeys||target.rows.every(row=>!!row.numericOrigins?.[options.tables?.[target.key]?.primaryColumnKey??target.primaryColumnKey??target.columns[0].key]))&&references.every(ref=>labels.has(ref))
   })
   if(override.relationTableKey!==undefined)column.relationTableKey=override.relationTableKey
   else if(candidates.length===1){column.relationTableKey=candidates[0].key;diagnostics.push({code:'LINK_INFERRED',tableKey:table.key,columnKey:column.key,message:`All ${references.length} references exactly match primary values of ${candidates[0].label}; proposed target may be overridden.`})}
   else if(candidates.length>1)diagnostics.push({code:'LINK_TARGET_AMBIGUOUS',tableKey:table.key,columnKey:column.key,message:`${references.length} references match ${candidates.length} candidate tables (${candidates.map(c=>c.label).join(', ')}); choose a link target.`})
  }
  const workbookLookups=proposeWorkbookLookups(source,tables,options)
+ for(const formula of workbookLookups)if(!formula.reason&&formula.lookup){for(let i=diagnostics.length-1;i>=0;i--)if(diagnostics[i].code.startsWith('LINK_')&&diagnostics[i].tableKey===formula.tableKey&&diagnostics[i].columnKey===formula.lookup.relationColumnKey)diagnostics.splice(i,1);diagnostics.push({code:'WORKBOOK_LOOKUP_LINK_PROPOSED',tableKey:formula.tableKey,columnKey:formula.lookup.relationColumnKey,message:'Source lookup coordinates propose an exact ONE link to the imported worksheet; review every cached result before preserving the lookup.'})}
  // Candidate lookup identity comes from actual proposed/overridden relation, never a column label alone.
  for(const table of tables)for(const link of table.columns){
   const override=options.tables?.[table.key]?.columns?.[link.key]??{}

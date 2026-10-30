@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "1ebeabb45dedc595f34892614c157c9c06902a37a96614466ed3c503d9010314",
+      "sha256": "ec5e0d78dd3ba9f8c35e28b161353879c6e781f943653384b7e3e0ed83143d59",
       "executable": false
     },
     "DEMO.md": {
@@ -9194,7 +9194,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/infer.ts": {
-      "sha256": "eb9995ec3266b78452f7784a4fbff5a44b357f860930ba7c1bf041f229d17f4f",
+      "sha256": "3d481c37478577c17ccc48536a28eaa5647feb05d6501d3af367b701c248a51f",
       "executable": false
     },
     "src/domains/records/base-transfer/input-error.ts": {
@@ -9238,7 +9238,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/lookup-proof.ts": {
-      "sha256": "59ae76b0fe0db7154e0fd9b78e7275612f5d8e0bb7352e19dbb272b659f9197c",
+      "sha256": "7f09810c76afdb4cf4d8e4dc5ba49f2b823ae88181fb6aebb5baab75baeae13a",
       "executable": false
     },
     "src/domains/records/base-transfer/lookup.ts": {
@@ -9274,7 +9274,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/plan.ts": {
-      "sha256": "1f7ac85cb701fda9b5d84f4c7375d9395400f112739def971d3945b1542f33ef",
+      "sha256": "2b203bf06024802b2346e4d4d760698693480b9a9303c0eb770fe9e9ec897d3a",
       "executable": false
     },
     "src/domains/records/base-transfer/receipt.ts": {
@@ -9398,7 +9398,15 @@
       "executable": false
     },
     "src/domains/records/base-transfer/workbook-formulas.ts": {
-      "sha256": "f5b860e101176c3e9de01b7b99866450cd1652e6b57c57efce49a25cc26c4c73",
+      "sha256": "09c367b1e9f306120c32a1f676fd244438522eb2ca6098de3b1d2786b20a2819",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/workbook-lookup-parser.ts": {
+      "sha256": "40bb8f56c82b1a90cc561e3dc85c5579ec175433959761cff0fef90c8cb7b838",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/workbook-lookups.ts": {
+      "sha256": "c9e129eb323c4288f19c2ff433cf166b7aa2e53be1fe587c57064cc749ed1579",
       "executable": false
     },
     "src/domains/records/bulk.server.ts": {
@@ -13019,6 +13027,14 @@
     },
     "tests/helpers/workbook-journey.mjs": {
       "sha256": "3864ca254c333eb850974bf8af7997584322568ea2f554ab0492958c7300a861",
+      "executable": false
+    },
+    "tests/helpers/workbook-lookup-browser.mjs": {
+      "sha256": "40c2c2a2f036440824aaa2fb3c5f447c80bc0086b0b7d5e8c2fb23592086fb53",
+      "executable": false
+    },
+    "tests/helpers/workbook-lookup-journey.mjs": {
+      "sha256": "95d205b3d2643ecfa131f47c253d5821aaa6c15787aed598e576cf91404b1e59",
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
-import {lookupSheets,formulaWorkbook} from './workbook-fixtures.mjs'
+import {lookupSheets,formulaWorkbook,cell} from './workbook-fixtures.mjs'
 import {workbookDoors} from './workbook-http.mjs'
 import {connectSheets} from './sheets-journey.mjs'
 
@@ -14,7 +14,7 @@ export async function workbookLookupJourney(h,d,provider){
  assert.deepEqual(['V price','X city'].map(label=>[decision(label).recognized,decision(label).matchedRows,decision(label).rowsRead]),[[true,3,3],[true,3,3]])
  assert.equal(decision('Bad cache').recognized,false);assert.equal(decision('Bad cache').matchedRows,2);assert.match(decision('Bad cache').reason,/mismatch/i)
  assert.equal(decision('Approximate').recognized,false);assert.match(decision('Approximate').reason,/exact|approximate/i)
- assert.equal(field(table,'Extended').type,'number','Arithmetic depending on a converted link lookup stays a truthful cache until that formula family is supported')
+ assert.equal(field(table,'Extended').type,'computed','Same-row arithmetic can depend on an independently proven numeric lookup')
  assert.deepEqual(decision('V price').sourceFormulas.map(f=>f.coordinate),['D2','D3','D4'])
  assert.ok(preview.records.filter(r=>r.tableKey==='sheet-1').every(r=>!Object.hasOwn(r.fields,price.id)&&!Object.hasOwn(r.fields,city.id)))
  assert.equal(preview.source.bundle.artifacts[0].sha256,createHash('sha256').update(bytes).digest('hex'))
@@ -23,17 +23,33 @@ export async function workbookLookupJourney(h,d,provider){
   assert.equal(proof.recognized,false);assert.match(proof.reason,reason)
   assert.notEqual(field(refused.schemaDraft.tables[0],'V price').type,'computed')
  }
+ const repeated=[{name:'Repeated numeric keys',headers:['Row','Vendor number'],rows:[[cell('synthetic-cradle-n1'),cell('1','number')],[cell('synthetic-cradle-n2'),cell('2','number')],[cell('synthetic-cradle-n3'),cell('1','number')]]},{name:'Numeric vendors',headers:['Key','City'],rows:[[cell('1','number'),cell('Brisbane')],[cell('2','number'),cell('Perth')]]}]
+ const numericBytes=formulaWorkbook(repeated),numeric=await d.call('/api/v1/records/base-import/preview',d.form(numericBytes,'numeric.xlsx')),numericLink=field(numeric.schemaDraft.tables[0],'Vendor number')
+ assert.equal(numericLink.type,'relation');assert.equal(numericLink.relation.cardinality,'one')
+ assert.deepEqual(numeric.links.map(l=>l.targetRecordIds),[['row-1'],['row-2'],['row-1']].map(keys=>keys.map(key=>numeric.identities.tables['sheet-2'].records[key])))
+ await d.adopt(numericBytes,'numeric.xlsx',numeric)
+ // A formula's source sheet coordinates settle equal-value candidate tables, independently of labels.
+ const equal=lookupSheets();equal.push({...equal[1],name:'Other catalog'})
+ const specific=await d.call('/api/v1/records/base-import/preview',d.form(formulaWorkbook(equal),'equal-catalogs.xlsx'))
+ assert.equal(field(specific.schemaDraft.tables[0],'Vendor').relation.entityId,specific.schemaDraft.tables[1].id)
+ assert.equal(specific.report.workbookFormulas.find(f=>f.columnKey==='column-4').recognized,true)
+ for(const [formula,reason]of [[row=>`XLOOKUP(B${row},'Vendor catalog'!$A$2:$A$4,'Vendor catalog'!$C$2:$C$4,"missing")`,/replacement/],[row=>`XLOOKUP(B${row},'Vendor catalog'!$A$2:$A$4,'Vendor catalog'!$C$2:$C$4,,0,-1)`,/forward/],[row=>`VLOOKUP(B${row},'Missing sheet'!$A$2:$C$4,2,FALSE)`,/outside/]]){
+  const input=lookupSheets();input[0].rows.forEach((row,i)=>{row[3].formula=formula(i+2)})
+  const refused=await d.call('/api/v1/records/base-import/preview',d.form(formulaWorkbook(input),'unsupported.xlsx')),proof=refused.report.workbookFormulas.find(f=>f.columnKey==='column-4')
+  assert.equal(proof.recognized,false);assert.match(proof.reason,reason);assert.notEqual(field(refused.schemaDraft.tables[0],'V price').type,'computed')
+ }
  const scalar=await d.call('/api/v1/records/base-import/preview',d.form(bytes,filename,{...preview,options:{...preview.options,tables:{'sheet-1':{columns:{'column-2':{type:'text'}}}}}}))
  assert.equal(field(scalar.schemaDraft.tables[0],'Vendor').type,'text');assert.equal(field(scalar.schemaDraft.tables[0],'V price').type,'number');assert.equal(scalar.report.workbookFormulas.find(f=>f.columnKey==='column-4').recognized,false)
  const before=await h.mailMessages(),{job,status}=await d.adopt(bytes,filename,preview);assert.equal(status.reconciliation.ok,true);assert.deepEqual(await h.mailMessages(),before)
  const query=async(doors,base,t)=>(await doors.call(`/api/v1/apps/${base.identities.appId}/entities/${t.id}/query`,{fields:t.fields.map(f=>f.id),sort:[{fieldId:t.fields[0].id,direction:'asc'}]})).items
+ assert.deepEqual((await query(d,preview,table)).map(r=>r.fields[link.id].value),['row-1','row-2','row-1'].map(key=>({appId:preview.identities.appId,entityId:vendors.id,recordId:preview.identities.tables['sheet-2'].records[key]})),'Repeated keys retain the exact native target identities')
  assert.deepEqual((await query(d,preview,table)).map(r=>[r.fields[price.id].value,r.fields[city.id].value]),[['12.5','Brisbane'],['7.25','Perth'],['12.5','Brisbane']],'Every adopted lookup equals independently specified source results, including the repeated vendor')
  const receiptPath=`/api/v1/records/base-import/jobs/${job.id}/receipt.json`,receipt=await d.call(receiptPath)
- assert.deepEqual(receipt.workbookFormulas.filter(f=>f.recognized).map(f=>f.column),['V price','X city'])
+ assert.deepEqual(receipt.workbookFormulas.filter(f=>f.recognized).map(f=>f.column),['Extended','V price','X city'])
  await h.restart();d=await workbookDoors(h);assert.deepEqual((await d.call(receiptPath)).workbookFormulas,receipt.workbookFormulas)
  const vendor=(await query(d,preview,vendors))[0]
  await d.command('record.patch',{ref:vendor.ref,changes:{[field(vendors,'Price').id]:'15',[field(vendors,'City').id]:'Sydney'}},[{ref:vendor.ref,version:vendor.version}])
- assert.deepEqual((await query(d,preview,table)).map(r=>[r.fields[price.id].value,r.fields[city.id].value,r.fields[field(table,'Bad cache').id].value]),[['15','Sydney','12.5'],['7.25','Perth','99'],['15','Sydney','12.5']],'Next read recomputes both lookup families for every linked row, and leaves refused caches unchanged')
+ assert.deepEqual((await query(d,preview,table)).map(r=>[r.fields[price.id].value,r.fields[city.id].value,r.fields[field(table,'Bad cache').id].value,r.fields[field(table,'Extended').id].value]),[['15','Sydney','12.5','30'],['7.25','Perth','99','21.75'],['15','Sydney','12.5','60']],'Next read recomputes both lookup families for every linked row, and leaves refused caches unchanged')
  // Capture actual formula metadata through the consented read-only provider door.
  const google=lookupSheets();google[0].headers.push('Local arithmetic');google[0].rows.forEach((row,i)=>row.push({type:'number',value:['4','6','8'][i],formula:`C${i+2}*2`,coordinate:`I${i+2}`}))
  provider.setWorkbook(google)

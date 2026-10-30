@@ -23,13 +23,13 @@ export function proposeWorkbookLookups(source:PreparedSource,tables:SourceTable[
    const mapping=result.lookup!,link=table.columns.find(c=>c.key===mapping.relationColumnKey)!,target=tables.find(t=>t.key===mapping.targetTableKey)!,key=primary(target),override=options.tables?.[table.key]?.columns?.[link.key]
    if(override?.skip||override?.type&&override.type!=='relation'||override?.relationTableKey&&override.relationTableKey!==target.key||override?.cardinality==='many')throw new Error('Lookup key must map to the selected ONE link')
    if(table.rows.some(row=>row.formulas?.[link.key]))throw new Error('A calculated lookup key cannot become a stored link')
-   const seen=new Set<string>()
+   const seen=new Set<string>(),byKey=new Map(target.rows.map(row=>[rawText(row.values[key]),row]))
    for(const row of target.rows){const value=rawText(row.values[key]),folded=value.toLowerCase();if(!value||seen.has(folded))throw new Error('Lookup target keys must be nonempty and unique, including letter case');seen.add(folded)}
    for(const row of table.rows){
-    const raw=rawText(row.values[link.key]),refs=parseLinkCell(raw),matches=target.rows.filter(t=>rawText(t.values[key])===raw)
-    if(refs.length!==1||refs[0]!==raw||matches.length!==1)throw new Error('Every lookup key must match exactly one complete target key')
+    const raw=rawText(row.values[link.key]),refs=parseLinkCell(raw),matched=byKey.get(raw)
+    if(refs.length!==1||refs[0]!==raw||!matched)throw new Error('Every lookup key must match exactly one complete target key')
     if(/^=?(?:_xlfn\.)?VLOOKUP/i.test(row.formulas![column.key].expression.trim())&&/[*?~]/.test(raw))throw new Error('VLOOKUP wildcard keys are not preserved')
-    const a=row.values[link.key],b=matches[0].values[key],aNumeric=!!row.numericOrigins?.[link.key],bNumeric=!!matches[0].numericOrigins?.[key]
+    const a=row.values[link.key],b=matched!.values[key],aNumeric=!!row.numericOrigins?.[link.key],bNumeric=!!matched!.numericOrigins?.[key]
     if(typeof a!==typeof b||aNumeric!==bNumeric)throw new Error('Lookup key types must agree with the target keys')
    }
    link.relationTableKey=target.key

@@ -9,7 +9,8 @@ export function storedLookupTarget(source:PreparedSource,options:ImportOptions,i
  const relation=relations.find(r=>r.table.key===table.key&&r.column.key===mapping.relationColumnKey&&!r.inverseOf&&fields.get(table.key)?.some(f=>f.id===identities.tables[table.key].fields[r.column.key]&&f.type==='relation'))
  const target=source.tables.find(t=>t.key===relation?.targetTableKey),targetColumn=target?.columns.find(c=>c.key===mapping.valueColumnKey),targetField=targetColumn&&target&&fields.get(target.key)?.find(f=>f.id===identities.tables[target.key].fields[targetColumn.key])
  const targetOverride=targetColumn&&target&&options.tables?.[target.key]?.columns?.[targetColumn.key],targetIsLookup=!!(targetOverride?.lookup??targetColumn?.lookup)&&!(targetOverride?.type&&targetOverride.type!=='computed')
- const supported=!!relation&&relation.cardinality==='one'&&!!targetField&&!targetIsLookup&&!['relation','computed','attachment','person','multi_select'].includes(targetField.type)
+ const workbookTargetFormula=['xlsx','google-sheets'].includes(source.format)&&!!targetColumn&&!!target?.rows.some(row=>row.formulas?.[targetColumn.key])
+ const supported=!workbookTargetFormula&&!!relation&&relation.cardinality==='one'&&!!targetField&&!targetIsLookup&&!['relation','computed','attachment','person','multi_select'].includes(targetField.type)
  return {relation,target,targetField,supported}
 }
 /** Every row contributes to matchedRows; the first mismatch is retained without stopping later validation. */

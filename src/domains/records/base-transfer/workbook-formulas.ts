@@ -7,7 +7,7 @@ import {exactApiNumber} from './numeric-lexeme'
 import {workbookExpression,workbookDependencies} from './workbook-formula-parser'
 
 /** Prove every cache against native arithmetic before any computed field is offered. */
-export function recognizeWorkbookFormulas(source:PreparedSource,options:ImportOptions,ids:ImportIdentities,fields:Map<string,Field[]>,records:PlannedRecord[]):WorkbookFormula[]{
+export function recognizeWorkbookFormulas(source:PreparedSource,options:ImportOptions,ids:ImportIdentities,fields:Map<string,Field[]>,records:PlannedRecord[],lookupValues:Map<string,Map<string,string>>):WorkbookFormula[]{
  if(!['xlsx','google-sheets'].includes(source.format))return []
  const results:WorkbookFormula[]=[]
  for(const table of source.tables){
@@ -47,7 +47,7 @@ export function recognizeWorkbookFormulas(source:PreparedSource,options:ImportOp
      if(candidates.has(dependency)){
       prove(dependency)
       if(!candidates.get(dependency)!.recognized)throw new Error('A referenced formula column could not be preserved')
-     }else if(nativeFields.find(f=>f.id===dependency)?.type!=='number')throw new Error('Formula inputs must map to native number fields')
+     }else if(nativeFields.find(f=>f.id===dependency)?.type!=='number'&&!lookupValues.has(JSON.stringify([table.key,dependency])))throw new Error('Formula inputs must map to native number fields')
     }
     function evaluate(expr:Expr,rowKey:string,depth=1):string {
      if(depth>64)throw new Error('Formula dependency depth exceeds 64')
@@ -55,7 +55,7 @@ export function recognizeWorkbookFormulas(source:PreparedSource,options:ImportOp
      if(expr.kind==='field'){
       const dependency=candidates.get(expr.fieldId)
       if(dependency)return evaluate(dependency.expression!,rowKey,depth+1)
-      const value=byRow.get(rowKey)?.fields[expr.fieldId]
+      const value=byRow.get(rowKey)?.fields[expr.fieldId]??lookupValues.get(JSON.stringify([table.key,expr.fieldId]))?.get(rowKey)
       if(typeof value!=='string')throw new Error('A numeric input or accepted source row is unavailable')
       return value
      }

@@ -33,9 +33,9 @@ export async function workbookLookupBrowser(page,j,h,d,width){
   assert.match(await refused.innerText(),/first mismatch/);assert.notEqual(await page.getByLabel('Type for Approximate',{exact:true}).inputValue(),'computed')
   await j.capture(`workbook-${source}-lookup-review`)
   const job=await submitImport(page,{action:j.action,setChecked:j.setChecked,onReview:()=>j.capture(`workbook-${source}-lookup-adoption`)})
-  await j.action(page.getByRole('link',{name:'Open move-in receipt',exact:true}));await page.getByRole('heading',{name:'Move-in receipt',exact:true}).waitFor()
+  await j.action(page.getByRole('link',{name:'Open move-in receipt',exact:true}));await page.getByRole('heading',{name:'Move-in receipt',exact:true}).waitFor();await page.getByRole('heading',{name:'Workbook formulas',exact:true}).first().waitFor()
   const receipt=await d.call(`/api/v1/records/base-import/jobs/${job.id}/receipt.json`)
-  assert.deepEqual(receipt.workbookFormulas.filter(f=>f.recognized).map(f=>f.column),['V price','X city'])
+  assert.deepEqual(receipt.workbookFormulas.filter(f=>f.recognized).map(f=>f.column),['Extended','V price','X city'])
   assert.match(await page.locator('main').innerText(),/Vendor catalog/);assert.match(await page.locator('main').innerText(),/first mismatch/)
   await j.capture(`workbook-${source}-lookup-receipt`)
   // Edit the adopted target through the real record editor; the repeated source key follows it.
@@ -48,7 +48,7 @@ export async function workbookLookupBrowser(page,j,h,d,width){
   await page.goto(`${h.origin}/app/records/${preview.identities.appId}/${orders.id}/${preview.identities.tables['sheet-1'].records['row-3']}`)
   await page.getByRole('button',{name:'Edit record',exact:true}).waitFor()
   const displayed=label=>page.locator('dl.cr-record-fields .cr-field').filter({has:page.locator('dt').getByText(label,{exact:true})}).locator('dd')
-  assert.equal((await displayed('V price').innerText()).trim(),'15');assert.equal((await displayed('X city').innerText()).trim(),'Sydney');assert.equal((await displayed('Bad cache').innerText()).trim(),'12.5')
+  assert.equal((await displayed('V price').innerText()).trim(),'15');assert.equal((await displayed('X city').innerText()).trim(),'Sydney');assert.equal((await displayed('Bad cache').innerText()).trim(),'12.5');assert.equal((await displayed('Extended').innerText()).trim(),'60')
   await j.capture(`workbook-${source}-lookup-recomputed`)
  }
  h.sheetsProvider.setWorkbook(null)
