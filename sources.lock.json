@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "700f4bf445b218d1781ead27092ac9027f069ade9f494be8c6a7652411e316a0",
+      "sha256": "8e3eee993268ffd5cc5bf68a58a76d74374f2e58b0db67f0b5cf3bacdb648327",
       "executable": false
     },
     "DEMO.md": {
@@ -9402,7 +9402,7 @@
       "executable": false
     },
     "src/domains/records/calculation-schema.ts": {
-      "sha256": "960bc5688fc485e1b41383caa59e8ecf18072f5bdda5720d7064bbd741c435f7",
+      "sha256": "1fd362d600c0c6a0a0166707923a4ddfe5df41575d705c505726674a82384e8c",
       "executable": false
     },
     "src/domains/records/calculation-visibility.server.ts": {
@@ -9558,7 +9558,7 @@
       "executable": false
     },
     "src/domains/records/exact.ts": {
-      "sha256": "7bf6659ee58ed14cc59af3ca7a51d4e69a142ba6305407c9bb11521a7e6940b4",
+      "sha256": "4df4193195c69959b0b3a070569162adea281819a462f8da73869c115eaf7cdb",
       "executable": false
     },
     "src/domains/records/fence.server.ts": {
@@ -9610,7 +9610,7 @@
       "executable": false
     },
     "src/domains/records/formula-functions.ts": {
-      "sha256": "c09b05ce0956f6082932c900b13d1f1fa7ac74a43b7f5e7353db1322e7b622bd",
+      "sha256": "a172267da72b74ae612c1b41be07a35f0227be0f9d0be16ee65bb999ca69616c",
       "executable": false
     },
     "src/domains/records/formula-parser.ts": {
@@ -9630,7 +9630,7 @@
       "executable": false
     },
     "src/domains/records/formulas.ts": {
-      "sha256": "75a413225caeddcd430338cb8a5a6893ad0fb10593266b1cc0955233e6cf3fd6",
+      "sha256": "9bad7ce64bf58814ef157442a15d4fc6d1990afe05cc9c2149668ac76db8dfb7",
       "executable": false
     },
     "src/domains/records/history-conflicts.server.ts": {
@@ -11058,7 +11058,7 @@
       "executable": false
     },
     "src/ui/records/schema/formula-editor.tsx": {
-      "sha256": "182d51c3edff208d1d3111ab77d7b89a25a93861d6d1facb2fac1761cf02c0fd",
+      "sha256": "c6f0c8cdcbb6221b60b646fa996b655a02cb51fe11d30792f63b2b325c5cad34",
       "executable": false
     },
     "src/ui/records/schema/impact-review.tsx": {
@@ -12561,6 +12561,10 @@
       "sha256": "2ae0796474d7a46a82bfa2cb3bc7d9ede5aec675e7f7bd0e15cbda414f55d4c7",
       "executable": false
     },
+    "tests/helpers/records-absolute-journey.mjs": {
+      "sha256": "71bdbb36113d875c5f3f3001b86ed1ae6df3202235e6c932cd87a50291129b39",
+      "executable": false
+    },
     "tests/helpers/records-api-decimal-source.mjs": {
       "sha256": "e67f3a61ea00cd0509b408645d399be55914282c991457ba3335e46de0b2f651",
       "executable": false
@@ -12570,7 +12574,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "5ec3fed04f556e04eb911406664c991a6e4d553ded0103a53c54e2d0d117253a",
+      "sha256": "f710287c30bcc61b4b9022d50d10e62a1327561be382f5c6794fe38aabf98d35",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {
@@ -12630,7 +12634,7 @@
       "executable": false
     },
     "tests/helpers/records-calculation-journey.mjs": {
-      "sha256": "f75843ddca7c2d4368ab49a111a40e58880df833e6a45a46d926f2dd152531be",
+      "sha256": "493b7a304dd33556ecad202b3e02ede02a8b8a7f56c774b49c408b36e8ad2f4c",
       "executable": false
     },
     "tests/helpers/records-calendar-feed.mjs": {
@@ -13242,7 +13246,7 @@
       "executable": false
     },
     "tests/records-manual-roundtrip.mjs": {
-      "sha256": "4eb4a5afecdfcb75a91b4c1830c6ec983570737b0c84df24b22783323ed06340",
+      "sha256": "5e37f4c9fe445a42d5391a81f7b725958fd366d8dee34337296d5cfe299c910f",
       "executable": false
     },
     "tests/records-runtime-entry.ts": {
@@ -13426,7 +13430,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "5260f4131516c50a148498f05300d09b7cdbdd99fd6af15f5349e11be6e147a1",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

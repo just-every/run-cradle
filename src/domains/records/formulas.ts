@@ -4,7 +4,7 @@ import type { Cell, CellValue } from '../../contracts/primitives';
 import type { EntitySchema, Expr, Field, Filter, Sort } from './contracts';
 import { validateFunction } from './formula-functions';
 import { validateCalculationTypes } from './calculation-schema';
-import { compare, normalize } from './exact';
+import { absolute, compare, normalize } from './exact';
 const value = (v: CellValue): Cell => ({ state: 'value', value: v });
 export const unavailable = (code: Extract<Cell, {
     state: 'unavailable';
@@ -75,6 +75,10 @@ export async function evaluateExpression(expr: Expr, ctx: FormulaContext, depth 
         }>).value);
         if (['add', 'subtract', 'multiply', 'divide'].includes(expr.fn))
             return value(arithmetic(expr.fn, args));
+        if (expr.fn === 'abs') {
+            if (typeof args[0] !== 'string') throw new Error('ABS expects a numeric operand');
+            return value(absolute(args[0]));
+        }
         if (expr.fn === 'concat') {
             if (args.some(v => v !== null && !['string','boolean'].includes(typeof v)))
                 throw new Error('CONCATENATE expects scalar values');

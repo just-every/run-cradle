@@ -4,6 +4,7 @@ export const formulaFunctions = {
   subtract: { name: 'SUBTRACT', min: 2, max: 2, result: 'number' },
   multiply: { name: 'MULTIPLY', min: 2, max: 2, result: 'number' },
   divide: { name: 'DIVIDE', min: 2, max: 2, result: 'number' },
+  abs: { name: 'ABS', min: 1, max: 1, result: 'number' },
   concat: { name: 'CONCATENATE', min: 1, max: 100, result: 'text' },
   coalesce: { name: 'COALESCE', min: 1, max: 100, result: 'argument' },
   eq: { name: 'EQUAL', min: 2, max: 2, result: 'boolean' },

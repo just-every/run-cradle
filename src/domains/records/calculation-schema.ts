@@ -43,6 +43,7 @@ export function expressionType(expr: Expr, table: CalculationTable, tables: read
   validateFunction(expr.fn, expr.args.length)
   const types = expr.args.map(arg => expressionType(arg, table, tables, depth + 1,cache,path))
   const definition = functionDefinition(expr.fn)
+  if (expr.fn === 'abs' && types[0] !== 'number') throw new Error('ABS expects a numeric operand')
   if(['add','subtract'].includes(expr.fn)&&types.every(type=>type==='money'))return 'money'
   if (definition.result === 'argument' || definition.result === 'branch') {
     const choices = definition.result === 'branch' ? types.slice(1) : types

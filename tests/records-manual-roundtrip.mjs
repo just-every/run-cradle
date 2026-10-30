@@ -71,7 +71,7 @@ test('RECORDS-001 RECORDS-004 fresh table CSV restores nullable select labels, r
  }finally{h.close()}
 })
 
-test('IFACE-006 VIEW-014 VIEW-009 VIEW-015 FIELD-001 CALC-001 CALC-002 CALC-003 CALC-004 RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and board survive field removal and export current view CSV, base JSON and all-table CSV through HTTP',async()=>{
+test('IFACE-006 VIEW-014 VIEW-009 VIEW-015 FIELD-001 CALC-001 CALC-002 CALC-003 CALC-004 CALC-005 RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and board survive field removal and export current view CSV, base JSON and all-table CSV through HTTP',async()=>{
  const h=await harness();try{
   const {draft,r}=await h.create(),company=r.registry.get(draft.appId,draft.tables[0].id).schema,schema=r.registry.get(draft.appId,draft.tables[2].id).schema,[key,amount,group,due,won,link]=schema.fields
   const northgate=await add(h,r,company,{[company.fields[0].id]:'Northgate'})

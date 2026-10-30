@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {absoluteJourney} from './records-absolute-journey.mjs'
 import {add} from './records-manual-harness.mjs'
 import {applyPreview} from './base-exit-runtime.mjs'
 import {assertPortableJsonSchema} from './json-schema-assert.mjs'
@@ -17,6 +18,7 @@ import {parseCsv} from '../../src/domains/portability/csv.ts'
 
 /** One existing public-door journey grows calculation coverage without another test registration. */
 export async function calculationJourney(h){
+ await absoluteJourney(h)
  const origin='https://calculations.example.test',auth=async()=>h.ctx
  async function call(http,path,input,status=200){const response=await http.fetch(new Request(origin+path,{method:input===undefined?'GET':'POST',headers:{origin,'content-type':'application/json'},...(input===undefined?{}:{body:JSON.stringify(input)})})),body=await response.json();assert.equal(response.status,status,JSON.stringify(body));return status===200?body.data:body.error}
  const name=newField('Name'),amount=newField('Amount','number'),open=newField('Open','boolean'),due=newField('Due','date'),projectName=newField('Project'),items=newField('Items','relation'),appId=createUlid(),taskId=createUlid(),projectId=createUlid()

@@ -13,6 +13,7 @@ export function decimal(value: string): Exact {
 export function format(value: Exact): string { const negative = value.units < 0n; let s = (negative ? -value.units : value.units).toString().padStart(value.scale + 1, '0'); if (value.scale)
     s = s.slice(0, -value.scale) + '.' + s.slice(-value.scale); s = s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s; return (negative && s !== '0' ? '-' : '') + s; }
 export function normalize(value: string): string { return format(decimal(value)); }
+export function absolute(value: string): string { const x = decimal(value); return format({ units: x.units < 0n ? -x.units : x.units, scale: x.scale }); }
 export function compare(a: string, b: string): number { const x = decimal(a), y = decimal(b), scale = Math.max(x.scale, y.scale), left = x.units * 10n ** BigInt(scale - x.scale), right = y.units * 10n ** BigInt(scale - y.scale); return left < right ? -1 : left > right ? 1 : 0; }
 export function add(a: string, b: string): string { const x = decimal(a), y = decimal(b), scale = Math.max(x.scale, y.scale); return format({ units: x.units * 10n ** BigInt(scale - x.scale) + y.units * 10n ** BigInt(scale - y.scale), scale }); }
 export function multiply(a: string, b: string): string { const x = decimal(a), y = decimal(b); const out = format({ units: x.units * y.units, scale: x.scale + y.scale }); decimal(out); return out; }
