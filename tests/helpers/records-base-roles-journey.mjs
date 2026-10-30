@@ -103,6 +103,22 @@ export async function baseRolesJourney(){
     assert.equal(await creatorPage.getByLabel('Formula for Absolute units',{exact:true}).inputValue(),'ABS({Units})')
     await cj.capture('absolute-editable-return')
     await creatorPage.getByRole('button',{name:'Cancel schema changes',exact:true}).click();await creatorPage.getByRole('button',{name:'New record',exact:true}).waitFor()
+    // Editing the saved function must change live calculations after reviewed adoption.
+    await baseAction(creatorPage,'Edit fields');await creatorPage.getByLabel('Formula for Absolute units',{exact:true}).fill('ABS({Units} - 10)')
+    const editing=creatorPage.waitForResponse(response=>response.url().endsWith('/schema-preview')&&response.request().method()==='POST')
+    await creatorPage.getByRole('button',{name:'Preview schema changes',exact:true}).click();const editingResponse=await editing;assert.equal(editingResponse.status(),200);const edited=(await editingResponse.json()).data
+    const editedAbsolute=edited.calculations.find(field=>field.fieldId===absolute.fieldId)
+    assert.equal(edited.requiresOwnerReview,false);assert.equal(editedAbsolute.samples[0].recordId,original.id)
+    assert.deepEqual(editedAbsolute.samples[0].before,{state:'value',value:'7'});assert.deepEqual(editedAbsolute.samples[0].after,{state:'value',value:'3'})
+    await expect(creatorPage.locator('.cr-calculation-review article').filter({has:creatorPage.getByRole('heading',{name:'Orders · Absolute units',exact:true})}).getByRole('row',{name:'Grove Equipment replenishment 7 3',exact:true})).toBeVisible()
+    await cj.capture('absolute-edited-preview');await creatorPage.getByLabel('I reviewed the data changes and owner access.',{exact:true}).check()
+    await cj.command(creatorPage.getByRole('button',{name:'Adopt schema',exact:true}),'release.adopt')
+    await creatorPage.getByRole('link',{name:`Open Purchasing ${width}`,exact:true}).click();await creatorPage.getByRole('button',{name:'New record',exact:true}).waitFor()
+    assert.deepEqual((await call(people.creator.cookie,base+'/records/'+original.id)).record.fields[absolute.fieldId],{state:'value',value:'3'})
+    await creatorPage.getByRole('link',{name:'Grove Equipment replenishment',exact:true}).first().click()
+    await expect(creatorPage.locator('dl').getByText('3',{exact:true})).toBeVisible();await cj.capture('absolute-edited-result')
+    await creatorPage.goto(tablePath);await baseAction(creatorPage,'Edit fields');assert.equal(await creatorPage.getByLabel('Formula for Absolute units',{exact:true}).inputValue(),'ABS(({Units} - 10))')
+    await creatorPage.getByRole('button',{name:'Cancel schema changes',exact:true}).click();await creatorPage.getByRole('button',{name:'New record',exact:true}).waitFor()
 
     const live=await call(people.editor.cookie,base);assert.ok(live.fields.some(field=>field.label==='PO number'))
     const help='Use the supplier reference <strong>exactly</strong>.'

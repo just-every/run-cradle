@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9b106ec55c8887c71ef16756b2bb4cd90d0321d60ff700fec2d8445d75e315ec",
+      "sha256": "1562ce8a909af8ac7e924adfe7b9d6f65f02643cde8ef0dd590cd8665b45c0de",
       "executable": false
     },
     "DEMO.md": {
@@ -12570,7 +12570,7 @@
       "executable": false
     },
     "tests/helpers/records-absolute-journey.mjs": {
-      "sha256": "71bdbb36113d875c5f3f3001b86ed1ae6df3202235e6c932cd87a50291129b39",
+      "sha256": "58db5d853bff130850e8847c097f37f76c0ade9e1114d59617bcb3c219a0a052",
       "executable": false
     },
     "tests/helpers/records-api-decimal-source.mjs": {
@@ -12582,7 +12582,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "e78c76fef644835ea65e139acf03c63fba3f8d437c54f8047bd5665eb84896a9",
+      "sha256": "37aa34fb6767cd36f074a135cca9fcd8f6e30c2b34bf91fc91d290155cabaa36",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {

@@ -57,6 +57,16 @@ export async function absoluteJourney(h){
  await call(createCommandHttp({...copy.r,authenticate:auth}),'/api/v1/commands/record.patch',{commandId:createUlid(),expected:[{ref:returned.ref,version:returned.version}],input:{ref:returned.ref,changes:{[map.get(operand.id)]:'-0.03125'}}})
  const reread=await call(createRecordHttp({...copy.r.services,authenticate:auth}),`/api/v1/apps/${ids.appId}/entities/${map.get(entityId)}/query`,{})
  assert.deepEqual(reread.items.find(row=>row.id===returned.id).fields[map.get(absolute.id)],{state:'value',value:'0.03125'})
+ // Review and adopt an edit to the returned formula, then export its current result.
+ const revised=await copy.r.manual.read(h.ctx,ids.appId);revised.formulaSources={[map.get(absolute.id)]:'ABS({Operand} + 1)'}
+ const copyManual=manualSchemaHttp(copy.r.manual,{},auth),revision=await call(copyManual,'/api/v1/records/schema-preview',revised)
+ const revisedSample=revision.calculations.find(field=>field.fieldId===map.get(absolute.id)).samples.find(sample=>sample.recordId===returned.id)
+ assert.deepEqual(revisedSample.before,{state:'value',value:'0.03125'});assert.deepEqual(revisedSample.after,{state:'value',value:'0.96875'})
+ await call(copyManual,'/api/v1/commands/release.adopt',{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:revision.id}})
+ const revisedRuntime=await h.runtime(),revisedRows=await call(createRecordHttp({...revisedRuntime.services,authenticate:auth}),`/api/v1/apps/${ids.appId}/entities/${map.get(entityId)}/query`,{})
+ assert.deepEqual(revisedRows.items.find(row=>row.id===returned.id).fields[map.get(absolute.id)],{state:'value',value:'0.96875'})
+ const revisedCsv=await call(recordsCsvHttp(revisedRuntime.csv,auth),'/api/v1/records/export-csv',{appId:ids.appId,entityId:map.get(entityId),query:{fields:[map.get(label.id),map.get(absolute.id)],filter:{kind:'condition',fieldId:map.get(label.id),op:'eq',value:'Negative'}}})
+ assert.deepEqual(parseCsv(new TextEncoder().encode(revisedCsv.csv)).rows,[['Negative','0.96875']])
  const policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(appId).first(),rules=JSON.parse(policy.rules_json)
  for(const rule of rules)if(rule.entityId===entityId)rule.readableFields=rule.readableFields.filter(id=>id!==operand.id)
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run();r=await h.runtime()
