@@ -2,9 +2,9 @@ import assert from 'node:assert/strict'
 import {readdir} from 'node:fs/promises'
 import {join} from 'node:path'
 import {bindings,visibleData} from './rer-data-fixture.mjs'
-/** Recreate the preceding populated schema, then use the shipped additive migration door. */
+/** Recreate the preceding populated schema, then replay its creation and dependent audit migration. */
 export async function companyUpgrade(copy){
- const upgrades=(await readdir(join(copy.source,'migrations/updates'))).filter(name=>/^904[123]_/.test(name)),before=await visibleData(copy.source)
+ const upgrades=(await readdir(join(copy.source,'migrations/updates'))).filter(name=>/^904[123]_/.test(name)||name==='9071_rotation_audit_keys.sql'),before=await visibleData(copy.source)
  const previous=await bindings(copy.source,async({DB})=>{
   for(const {name}of (await DB.prepare("SELECT name FROM sqlite_master WHERE type='trigger' AND (name LIKE '%_capacity_insert' OR name LIKE '%_capacity_delete')").all()).results)await DB.prepare('DROP TRIGGER "'+name.replaceAll('"','""')+'"').run()
   for(const table of ['record_capacity','record_sheet_schedules','record_sheet_snapshots','company_identity_audit','company_saml_assertions','company_saml_requests','company_scim_users','company_scim_credentials','company_identity_config'])await DB.prepare('DROP TABLE '+table).run()

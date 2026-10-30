@@ -30,14 +30,16 @@ async function importWithCustody(service,db,path,journal){
     // Base removes this job's staged copies, parts and owned files on abort,
     // but retains the manifest. A refused CLI archive must retain no content,
     // including personal filenames or object metadata in that manifest.
-    const result=await db.prepare(`DELETE FROM rer_portability_jobs WHERE id=? AND actor=? AND kind='import' AND phase='aborted'
+    // D1 includes the cascaded import-lease deletion in its change count.
+    // Acknowledge the exact owned job instead of counting dependent rows.
+    const removed=await db.prepare(`DELETE FROM rer_portability_jobs WHERE id=? AND actor=? AND kind='import' AND phase='aborted'
      AND NOT EXISTS(SELECT 1 FROM rer_portability_state WHERE import_job=?)
      AND NOT EXISTS(SELECT 1 FROM rer_portability_owned WHERE job=?)
      AND NOT EXISTS(SELECT 1 FROM rer_portability_parts WHERE job=?)
      AND NOT EXISTS(SELECT 1 FROM rer_portability_segments WHERE job=?)
      AND NOT EXISTS(SELECT 1 FROM sqlite_master s JOIN json_each(rer_portability_jobs.metadata,'$.copies') c
-      ON s.name=c.value OR s.name=c.value||'_meta' WHERE s.type='table')`).bind(row.id,actor,row.id,row.id,row.id,row.id).run();
-    if(result.meta.changes!==1)throw new PortabilityError('import_cleanup_failed');
+      ON s.name=c.value OR s.name=c.value||'_meta' WHERE s.type='table') RETURNING id`).bind(row.id,actor,row.id,row.id,row.id,row.id).first();
+    if(removed?.id!==row.id)throw new PortabilityError('import_cleanup_failed');
    }
  }}
 }

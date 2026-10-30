@@ -5638,7 +5638,7 @@
       "executable": false
     },
     "scripts/portability/migrations.mjs": {
-      "sha256": "7c918a5bf6592854c8c726998bdf0313fbfa3e288c99ac186903db9c0dc691ae",
+      "sha256": "e5b4421791940c79e08a88d794b72bdbb3ee899c96155f8f9b4bc06cc80b9b17",
       "executable": false
     },
     "scripts/portability/policy.mjs": {
@@ -5650,7 +5650,7 @@
       "executable": false
     },
     "scripts/portability/records.mjs": {
-      "sha256": "9d57c18fd99ff34d59cb167b9a8d1183b050be7e7ecdf3ef29711b3b7637ad95",
+      "sha256": "0436a3982e4e364c624d9cfee0b6f418fcb27e5a2cd5f2d55bace91ba260cab7",
       "executable": false
     },
     "scripts/portability/retired-comments.mjs": {
@@ -5662,7 +5662,7 @@
       "executable": false
     },
     "scripts/portability/worker.mjs": {
-      "sha256": "181123ff911bed5c2a244940053970850fbcdf9cb88e5e0da7b4c7a91d08b728",
+      "sha256": "c109dd4e55e1850f60228aafce8b19d850ca3c4a745ab15bf2d26fd8e9f07d07",
       "executable": false
     },
     "scripts/prove-company-workbooks.mjs": {
@@ -7866,7 +7866,7 @@
       "executable": false
     },
     "src/domains/automations/capture.server.ts": {
-      "sha256": "3ac6c4fb7c684a4c757748080bd2e61dd85cd99d692a2ce38b67872c373514d2",
+      "sha256": "c33db29a2c13a3b0822efa85f32f4fb43fa9ee3f49c9ffd1553ee3d4adb74afe",
       "executable": false
     },
     "src/domains/automations/configuration-audit.ts": {
@@ -9838,7 +9838,7 @@
       "executable": false
     },
     "src/domains/records/portable-schema.server.ts": {
-      "sha256": "0878087a1c2337639fff6c6e859fa6fdbda3f78fbda0a8cdd5d14a653990380e",
+      "sha256": "a88449558fe08ff9ba35f1563493210d351f85064a1dc7dd829f87f579fd058f",
       "executable": false
     },
     "src/domains/records/portable-store-references.ts": {
@@ -12138,7 +12138,7 @@
       "executable": false
     },
     "tests/helpers/company-upgrade.mjs": {
-      "sha256": "dafea3516d8e058d895557e8b5e2bb6b162430cb08f15a86162f4dc8a9d04a30",
+      "sha256": "38e4adb809688eac67094e9d6185293a23cefc5b44737f3a2a31437ffc8e9734",
       "executable": false
     },
     "tests/helpers/company-workbook-browser.mjs": {
@@ -12894,7 +12894,7 @@
       "executable": false
     },
     "tests/helpers/rer-retention-clock.mjs": {
-      "sha256": "db73e8c23be9ecc24270b2f68fe8e5c3adf3bc4ed8e48be9bb83b7e980d5bfc4",
+      "sha256": "bd2fb56c70e213538c39d548de3b4e7778b7b9e2d828aaa9e8920724b85aa3c3",
       "executable": false
     },
     "tests/helpers/rer-retention.mjs": {

@@ -24,6 +24,15 @@ function trigger(descriptor:EntityDescriptor,operation:'INSERT'|'UPDATE',name:st
   END`
 }
 
+/** Restore compiles the same capture triggers as admitted live schema changes. */
+export function recordAutomationCaptureSchema(descriptor:EntityDescriptor) {
+ const stem='record_auto_'+descriptor.schema.id.toLowerCase()
+ return (['INSERT','UPDATE'] as const).map(operation=>{
+  const name=stem+'_'+(operation==='INSERT'?'created':'updated')
+  return {name,sql:trigger(descriptor,operation,name),table:descriptor.table.tableId}
+ })
+}
+
 /** The live schema check prevents an old request from replacing a new table's triggers. */
 export async function ensureRecordAutomationTriggers(db:D1Database,descriptors:DescriptorRegistry,additional:readonly {app_id:string;entity_id:string}[]=[]) {
  const bindings=await db.prepare(`SELECT DISTINCT app_id,entity_id FROM record_automation_bindings`).all<{app_id:string;entity_id:string}>()
