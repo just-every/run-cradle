@@ -1,6 +1,6 @@
 # Importing a base
 
-Open **Records → Import a base**. Import creates a new base; it does not merge
+Open **Records → Base ▾ → Import a base**. Import creates a new base; it does not merge
 into an existing one. You choose files, review the proposed tables and fields,
 review the schema changes, then adopt and run the import. No AI provider or live
 connection to your source account is needed.
