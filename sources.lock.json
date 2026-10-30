@@ -13238,7 +13238,7 @@
       "executable": false
     },
     "tests/records-manual-release.mjs": {
-      "sha256": "8414ca1233f44b0f159a43dce6d754cecae20fdf8e48e87729b4b3304b78f578",
+      "sha256": "c75b6fa8d9063148bb3154c7cf037b41b62cf13938002c957477c2194e049537",
       "executable": false
     },
     "tests/records-manual-roundtrip.mjs": {
@@ -13426,7 +13426,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "575705be4b1cde4a2cb3440d08f4565edcb13e087fb6a1b2e1355173541e13c3",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
