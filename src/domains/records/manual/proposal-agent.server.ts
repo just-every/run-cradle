@@ -71,7 +71,7 @@ export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:Des
 /** One plain line: what the owner would get by adopting. */
 export function summarize(d:StoredProposal){
  const tables=d.schemas.filter(s=>!d.prior.some(p=>p.id===s.id)),added=d.schemas.flatMap(s=>{const old=d.prior.find(p=>p.id===s.id);return s.fields.filter(f=>!old?.fields.some(o=>o.id===f.id))})
- const removed=Object.values(d.removals).flat().length,plural=(n:number,word:string)=>`${n} ${word}${n===1?'':'s'}`
- const parts=[tables.length?`${plural(tables.length,'new table')} (${tables.map(t=>t.label).join(', ')})`:'',added.length?`${plural(added.length,'new field')}`:'',removed?`${plural(removed,'removed field')}`:'',d.views.length?plural(d.views.length,'view'):'',d.forms.length?plural(d.forms.length,'form'):''].filter(Boolean)
+ const removed=Object.values(d.removals).flat().length,calculations=(d.calculations??[]).filter(calculation=>d.prior.find(schema=>schema.id===calculation.entityId)?.fields.some(field=>field.id===calculation.fieldId)).length,plural=(n:number,word:string)=>`${n} ${word}${n===1?'':'s'}`
+ const parts=[tables.length?`${plural(tables.length,'new table')} (${tables.map(t=>t.label).join(', ')})`:'',added.length?`${plural(added.length,'new field')}`:'',removed?`${plural(removed,'removed field')}`:'',calculations?plural(calculations,'updated calculation'):'',d.views.length?plural(d.views.length,'view'):'',d.forms.length?plural(d.forms.length,'form'):''].filter(Boolean)
  return `${d.name}: ${parts.join(', ')||'renames only'}`
 }

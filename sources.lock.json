@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "700f4bf445b218d1781ead27092ac9027f069ade9f494be8c6a7652411e316a0",
+      "sha256": "4bfe598e8608f73d898ea710f5aee5936911471be4e17c1e280926bee9806fe9",
       "executable": false
     },
     "DEMO.md": {
@@ -9706,7 +9706,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-agent.server.ts": {
-      "sha256": "fcc935b7e3608435b5d6190ea765132d049b02e200289d78803eba19f41f9fc6",
+      "sha256": "fc3a1fd29d6d2be5ecbafe1ed8860aa12e421a67913e6639ea35a4127b4d610f",
       "executable": false
     },
     "src/domains/records/manual/proposal-commands.server.ts": {
@@ -12481,6 +12481,14 @@
       "sha256": "e9c049a0986fee26819e381fec838050f1fa058a4a0cb6819e1fd81c1ba50fb2",
       "executable": false
     },
+    "tests/helpers/proposal-calculation-browser.mjs": {
+      "sha256": "9ce830e1fa1ccf10e4f500fa250bb46437d29d401ee08c5e2b903d28b07de4a8",
+      "executable": false
+    },
+    "tests/helpers/proposal-calculation-journey.mjs": {
+      "sha256": "c069af118536d9c3422b314f42d9e60848311ef19b84efd52d146ae5c096a544",
+      "executable": false
+    },
     "tests/helpers/proposal-door.mjs": {
       "sha256": "4b98808d43dd2caec1545d42003ff830e33337e0ea5fa9d85ac768fb9e3e3c3f",
       "executable": false
@@ -12874,7 +12882,7 @@
       "executable": false
     },
     "tests/helpers/schema-purge-journey.mjs": {
-      "sha256": "6a95f5ce6f12ef1794531375da8e615a58896b349f66722284a5aa45026a6e60",
+      "sha256": "b8921165d0f530115f3e06f8e4c1811a3fb697833d162f61f906c1fbe8c2eaa5",
       "executable": false
     },
     "tests/helpers/session-controls.mjs": {
