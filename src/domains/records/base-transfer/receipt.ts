@@ -11,7 +11,7 @@ export const NOT_CARRIED=[
  {id:'history',statement:'Cradle\'s importer does not carry source comments or record history.'},
  {id:'attachments',statement:'Cradle\'s importer does not carry attachment bytes. Skipped attachment cells are listed in the manifest with their source text.'},
  {id:'buttons',statement:'Cradle\'s importer does not carry button actions.'},
- {id:'formulas',statement:'Cradle\'s importer does not carry formula or rollup definitions; their exported values import as plain text or numbers.'},
+ {id:'formulas',statement:'Only reviewed Excel and Google Sheets same-row arithmetic and exact VLOOKUP or XLOOKUP through native links, with every cached result verified, become native formulas. Other formula and rollup definitions are not carried; their exported values stay in the chosen scalar type or original source.'},
 ] as const
 /** What each exit keeps, drawn from RECORDS-006, importing.md and installation-archives.md. */
 export const EXITS=[
@@ -48,6 +48,7 @@ export function buildReceipt(input:ReceiptInput){
   job:{id:status.job.id,state:stateOf(status.job.state),jobState:status.job.state,stateAsOf:input.generatedAt,reviewedAt:input.reviewedAt,baseName:input.baseName,appId:status.job.destination},
   source:{kind:source.format,statement:'The source was a file set the owner supplied to Cradle. This receipt makes no claim about any live source account.',files:input.files},
   tables,
+  workbookFormulas:(report.workbookFormulas??[]).map(formula=>({...formula,table:report.tables.find(t=>t.tableKey===formula.tableKey)!.label,column:report.tables.find(t=>t.tableKey===formula.tableKey)!.columns.find(c=>c.columnKey===formula.columnKey)!.label})),
   storeReferences:records.flatMap(row=>Object.entries(row.fields).flatMap(([fieldId,value])=>Array.isArray(value)?value.filter(isStoreReferenceMember).map(member=>({tableKey:row.tableKey,rowKey:row.rowKey,fieldId,state:'unresolved' as const,...member.reference.portable})):[])),
   ...(status.progress?{progress:status.progress}:{}),
   reconciliation:{ok:status.reconciliation.ok,missing:status.reconciliation.missing.length,duplicate:status.reconciliation.duplicate.length,extra:status.reconciliation.extra.length,mismatched:status.reconciliation.mismatched.length},

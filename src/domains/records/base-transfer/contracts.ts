@@ -1,6 +1,6 @@
 import type { SourceKind } from './source-kinds'
 import type { CsvCorrespondence,CorrespondenceReview } from './correspondence-format'
-import type { Field } from '../contracts'
+import type { Field, Expr } from '../contracts'
 import type { SchemaDraft, ManualPreview } from '../manual/contracts'
 import type { SourceBundle, SourceLocation, ImportJob, Reconciliation, Json } from '../../../../vendor/base/modules/import-kit/src/types'
 import type { D1UndoDisposition } from '../../../../vendor/base/modules/import-kit/src/d1/undo-types'
@@ -10,7 +10,9 @@ export type SourceColumn = { validation?: Field['validation']; typedNulls?: bool
 /** Original JSON number tokens, keyed by mapped column; survives job/preview serialization. */
 export type NumericOrigin = { lexeme: string; pointer: string }
 export type NumericToken = NumericOrigin & { path: (string | number)[] }
-export type SourceRow = { key: string; values: Record<string, Json>; numericOrigins?: Record<string, NumericOrigin>; numericTokens?: Record<string, NumericToken[]>; location: SourceLocation }
+export type SourceFormula = { expression: string; coordinate: string; kind?: string }
+export type WorkbookFormula = { tableKey: string; columnKey: string; recognized: boolean; matchesAllRows?: boolean; lookup?: {relationColumnKey:string;valueColumnKey:string;targetTableKey:string}; expression?: Expr; nativeFormula?: string; sourceFormulas: (SourceFormula & { rowKey: string })[]; matchedRows: number; rowsRead: number; reason?: string }
+export type SourceRow = { formulas?: Record<string, SourceFormula>; key: string; values: Record<string, Json>; numericOrigins?: Record<string, NumericOrigin>; numericTokens?: Record<string, NumericToken[]>; location: SourceLocation }
 export type SourceTable = { primaryColumnKey?: string; key: string; label: string; columns: SourceColumn[]; rows: SourceRow[] }
 export type PreparedSource = { csvCorrespondence?: CsvCorrespondence; portableBase?: Json; format: 'csv-set' | 'api' | 'cradle-base-v1' | 'xlsx' | 'google-sheets'; namespace: string; bundle: SourceBundle; tables: SourceTable[] }
 export type ColumnOverride = { sourceKind?: SourceKind; sourceChoices?: string[]; lookup?: { relationColumnKey: string; valueColumnKey: string }; type?: Field['type']; label?: string; options?: string[]; dateConvention?: 'iso' | 'day-first' | 'month-first'; relationTableKey?: string; cardinality?: 'one' | 'many'; onDelete?: 'restrict'; reciprocal?: { tableKey: string; columnKey: string }; derivedFrom?: { tableKey: string; columnKey: string }; skip?: boolean }
@@ -24,7 +26,7 @@ export type LinkAccounting = { selected?: number; materialized?: number; columnK
 export type TableAccounting = { tableKey: string; label: string; primaryColumnKey: string; rowsRead: number; created: number; rejected: number; columns: ColumnAccounting[]; links: LinkAccounting[] }
 export type PublicUndoDisposition = Omit<D1UndoDisposition,'protectedBy'> & { protectedBy: (D1UndoDisposition['protectedBy'][number] | { redacted:true; message:string })[] }
 export type ImportReversalReport = { policy: 'strict' | 'preserve-conflicts'; state: ImportJob['state']; terminal: boolean; cursor: number; fence: number; processed: number; total: number; reversed: number; retained: number; remaining: number; conflicts: PublicUndoDisposition[]; dispositions: PublicUndoDisposition[]; schemaRetained: true; originalUploadsRetained: true }
-export type ImportReport = { storeReferences?: {unresolved:number;resolved:number;unverified:number};version: 1; tables: TableAccounting[]; diagnostics: ImportDiagnostic[]; lookups: { tableKey: string; columnKey: string; recognized: boolean; firstMismatch?: ImportDiagnostic; candidates?: LookupCandidate[]; relationColumnKey?: string; valueColumnKey?: string; targetTableKey?: string; ambiguity?: ImportDiagnostic }[]; schemaRetainedAfterUndo: true; undo?: ImportReversalReport; reciprocalRelations?: { tableKey: string; columnKey: string; canonicalTableKey: string; canonicalColumnKey: string; inverseId: string; label: string }[] }
+export type ImportReport = { workbookFormulas?: WorkbookFormula[]; storeReferences?: {unresolved:number;resolved:number;unverified:number};version: 1; tables: TableAccounting[]; diagnostics: ImportDiagnostic[]; lookups: { tableKey: string; columnKey: string; recognized: boolean; firstMismatch?: ImportDiagnostic; candidates?: LookupCandidate[]; relationColumnKey?: string; valueColumnKey?: string; targetTableKey?: string; ambiguity?: ImportDiagnostic }[]; schemaRetainedAfterUndo: true; undo?: ImportReversalReport; reciprocalRelations?: { tableKey: string; columnKey: string; canonicalTableKey: string; canonicalColumnKey: string; inverseId: string; label: string }[] }
 /** Rows precede link effects in the immutable plan so cycles have no FK ordering dependency. */
 export type PlannedRecord = { tableKey: string; rowKey: string; entityId: string; recordId: string; fields: Record<string, Json>; location: SourceLocation }
 export type PlannedLink = { tableKey: string; rowKey: string; entityId: string; recordId: string; fieldId: string; targetEntityId: string; targetRecordIds: string[]; cardinality: 'one' | 'many'; location: SourceLocation }
