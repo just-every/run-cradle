@@ -12102,7 +12102,7 @@
       "executable": false
     },
     "tests/helpers/company-workbook-browser.mjs": {
-      "sha256": "dbebf6f7450a18c33c85e7c01c47f9d65b429754d3ec6a08b5c790f5fa93a9f7",
+      "sha256": "95f4cbd78e122b27ec3afa36e767aa8444749663c50f02277296e5792a3dacba",
       "executable": false
     },
     "tests/helpers/company-workbook-runtime.mjs": {
@@ -13010,7 +13010,7 @@
       "executable": false
     },
     "tests/helpers/workbook-fixtures.mjs": {
-      "sha256": "e72386c60c138f9aa64e315a1568e07e894e37d2a4849eb2df2935bb682306ea",
+      "sha256": "35a7aab2c7e4fbb2a88c55b0768725c223446bbed6f119b7477c941f20aea9ff",
       "executable": false
     },
     "tests/helpers/workbook-http.mjs": {
@@ -13018,7 +13018,7 @@
       "executable": false
     },
     "tests/helpers/workbook-journey.mjs": {
-      "sha256": "937fcebfbd26e90ca791c225dbe5f8d9e88dbaa6b72b938e573af2d6d8fa6d6c",
+      "sha256": "f7415cca9c2b353cee758ae0753b21767c111771f7d401278fc31075d07cff57",
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {

@@ -5,7 +5,7 @@ export const cell=(value,type=typeof value==='boolean'?'boolean':'text')=>({valu
 export const workbookSheets=()=>[{name:'Orders',headers:['Order','Amount','Due','Approved','Company'],rows:[[cell('synthetic-cradle-1'),cell('12.5','number'),cell('2026-10-22','date'),cell(true),cell('North')],[cell('synthetic-cradle-2'),cell('20','number'),cell('2026-10-23T12:30:00.000Z','instant'),cell(false),cell('North')]]},{name:'Companies',headers:['Company','City'],rows:[[cell('North'),cell('Brisbane')]]}]
 export const workbook=()=>writeWorkbook(workbookSheets())
 /** Fixed cached results are authored independently of the importer's evaluator. */
-export function arithmeticWorkbook(){
+export function arithmeticWorkbook({crossRow=false}={}){
  const sheets=[{name:'Orders',headers:['Order','Quantity','Unit price','Total','Mismatch','Mixed','External','Cycle one','Cycle two'],rows:[
   ['synthetic-cradle-formula-1','2','12.5','25','25','25','10','4','3'],
   ['synthetic-cradle-formula-2','3','7.25','21.75','21.75','10.25','10','4','3'],
@@ -17,7 +17,7 @@ export function arithmeticWorkbook(){
  ]}]
  const files=unzipWorkbook(writeWorkbook(sheets),'arithmetic.xlsx')
  const add=(sheet,formulas)=>{const name=`xl/worksheets/sheet${sheet}.xml`;let xml=new TextDecoder().decode(files.get(name));for(const [coordinate,expression]of formulas)xml=xml.replace(new RegExp(`(<c r="${coordinate}"[^>]*>)`),`$1<f>${expression}</f>`);files.set(name,Buffer.from(xml))}
- add(1,[2,3,4,5].flatMap(row=>[[`D${row}`,`B${row}*C${row}`],[`E${row}`,`B${row}*C${row}`],[`F${row}`,row===2?`B${row}*C${row}`:`B${row}+C${row}`],[`G${row}`,`Packages!B${row}`],[`H${row}`,`I${row}+1`],[`I${row}`,`H${row}-1`]]))
+ add(1,[2,3,4,5].flatMap(row=>[[`D${row}`,row===2&&crossRow?'B3*C2':`B${row}*C${row}`],[`E${row}`,`B${row}*C${row}`],[`F${row}`,row===2?`B${row}*C${row}`:`B${row}+C${row}`],[`G${row}`,`Packages!B${row}`],[`H${row}`,`I${row}+1`],[`I${row}`,`H${row}-1`]]))
  add(2,[["D2","(B2+C2)/2"],["D3","(B3+C3)/2"]])
  return zipFiles([...files].map(([name,bytes])=>({name,bytes})),true)
 }

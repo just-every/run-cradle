@@ -39,7 +39,7 @@ async function workbookArithmeticBrowser(page,j,h,d,width){
  await j.capture('workbook-formula-review')
  const job=await submitImport(page,{action:j.action,setChecked:j.setChecked,onReview:()=>j.capture('workbook-formula-adoption')})
  await j.action(page.getByRole('link',{name:'Open move-in receipt',exact:true}));await page.getByRole('heading',{name:'Move-in receipt',exact:true}).waitFor()
- const receipt=await d.call(`/api/v1/records/base-import/jobs/${job.id}/receipt.json`)
+ const receipt=await d.call(`/api/v1/records/base-import/jobs/${job.id}/receipt.json`);await page.getByRole('heading',{name:'Workbook formulas',exact:true}).first().waitFor()
  for(const label of ['Total','Mismatch']){const source=preview.source.tables[0].columns.find(item=>item.label===label),decision=receipt.workbookFormulas.find(item=>item.tableKey==='sheet-1'&&item.columnKey===source.key);assert.ok((await page.locator('main').innerText()).includes(decision.reason??decision.nativeFormula),`Receipt shows ${label} formula decision`)}
  await j.capture('workbook-formula-receipt')
  const table=preview.schemaDraft.tables.find(item=>item.label==='Orders'),total=table.fields.find(item=>item.label==='Total'),mismatch=table.fields.find(item=>item.label==='Mismatch'),recordId=preview.identities.tables['sheet-1'].records['row-1'],recordPath=`/app/records/${preview.identities.appId}/${table.id}/${recordId}`
