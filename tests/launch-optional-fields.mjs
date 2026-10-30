@@ -57,7 +57,7 @@ try {
     await page.waitForLoadState('networkidle')
     assert.equal(await page.getByText('Could not load this page', { exact: true }).count(), 0)
     if (!accessibilityCaptureOnly) assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
-    assert.equal(await page.locator('.operator-shell').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(243, 243, 238)')
+    assert.equal(await page.locator('.operator-main').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)')
     await page.evaluate(() => window.scrollTo(0, 0))
     let file = `${label}-${state}-${width}.jpg`
     if (accessibilityEvidence) {

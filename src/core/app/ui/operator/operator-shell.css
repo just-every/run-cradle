@@ -1,5 +1,5 @@
-/* The Cradle shell: a deep forest rail whose current item is a soft highlight, and paper for the work. */
-.operator-shell { min-height: 100dvh; background: var(--background); color: var(--foreground); }
+/* The Cradle shell: a deep forest rail whose current item is a soft highlight, and a pure white column for the work. */
+.operator-shell { --column: #fff; min-height: 100dvh; background: var(--column); color: var(--foreground); }
 /* Focus shows in lime on the forest surfaces, where the ink ring would vanish. */
 .operator-rail, .operator-mobile-header, .operator-drawer { --focus: var(--lime); }
 .operator-rail { position: fixed; inset: 0 auto 0 0; z-index: 20; display: flex; width: 220px; overflow-y: auto; background: var(--rail); color: var(--rail-ink); }
@@ -34,7 +34,7 @@ html:has(style[data-rer-label="Demo"]) .operator-brand .operator-brand-lockup { 
 .operator-account-copy strong, .operator-account-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .operator-account-copy strong { font-size: 14px; font-weight: 600; }
 .operator-account-copy small { color: var(--rail-muted); font-size: var(--text-meta); }
-.operator-main { min-width: 0; margin-left: 220px; }
+.operator-main { min-width: 0; margin-left: 220px; background: var(--column); }
 
 /* One content column: the page title and every card share the shell's gutters, capped on very wide screens. */
 .operator-page-header, .operator-content { max-width: 1580px; margin-inline: auto; }

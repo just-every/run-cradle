@@ -49,7 +49,7 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
         await page.locator('.operator-shell').waitFor()
         await page.waitForLoadState('networkidle')
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${route} overflows at ${width}`)
-        assert.equal(await page.locator('.operator-shell').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(243, 243, 238)', `${route} October surface`)
+        assert.equal(await page.locator('.operator-main').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(255, 255, 255)', `${route} white main column`)
         const heading = page.locator('.operator-main h1').first()
         if (await heading.count()) assert.match(await heading.evaluate(el => getComputedStyle(el).fontFamily), /Lexend/, `${route} October type`)
         if (route === '/app') {

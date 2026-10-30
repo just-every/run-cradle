@@ -6858,7 +6858,7 @@
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.css": {
-      "sha256": "79564289e669a616bfe9a63013e77fada1dedb6582cf9e9b5d5a25946f3af110",
+      "sha256": "accd27e65565c4182aa0e65d4135c5d01f587cf15cb328b4eff2ac923591fdf5",
       "executable": false
     },
     "src/core/app/ui/operator/operator-shell.tsx": {
@@ -11834,7 +11834,7 @@
       "executable": false
     },
     "tests/foundation-shell.mjs": {
-      "sha256": "3e61b07a2327abb3088abbb44cca4f0b9288c5d2cff038cc604c8ff8fa20aba7",
+      "sha256": "a43a76a5f0406a900f240b63fc4cc107bff3eb92a69f18c3581b181080fa6188",
       "executable": false
     },
     "tests/helpers/accessibility-axe.mjs": {
@@ -13094,7 +13094,7 @@
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
-      "sha256": "d9d87211e6c437006cc38d1977919c40b7f7f3c8ff71c22d772972d68ab23752",
+      "sha256": "ae4acb3c744da6a0755645aaa578e7184137fd4c1f0841a9f64cdc0d53f4c99f",
       "executable": false
     },
     "tests/launch-production-composition.mjs": {
