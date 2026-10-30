@@ -24,8 +24,8 @@ export async function automationTestPreview(deps:{templates:AutomationTemplates;
    if(action.kind==='create'){
     const checked=await authorizeCreateAction(deps,ctx,definition.appId,definition.entityId,action)
     guards.push(...checked.guards)
-    step.output={appId:definition.appId,entityId:definition.entityId,values:checked.values,created:false}
-    confirmationEffects.push({position,kind:'create',destination:definition.entityId})
+    step.output={appId:definition.appId,entityId:checked.entityId,values:checked.values,created:false,...(checked.entityId!==definition.entityId?{entityLabel:checked.entityLabel,fields:checked.fields}:{})}
+    confirmationEffects.push({position,kind:'create',destination:checked.entityId})
    }else if(action.kind==='apply_record_template'){
     const checked=await authorizeTemplateAction(deps,ctx,definition.appId,action)
     guards.push(...checked.guards)

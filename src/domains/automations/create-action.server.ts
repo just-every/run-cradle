@@ -10,7 +10,7 @@ import {canonicalHash} from '../admission/canonical'
 
 type CreateAction=Extract<RecordAutomationAction,{kind:'create'}>
 
-/** Literal creation is restricted to the triggering table and native scalar cells. */
+/** Creation accepts native scalar cells in the explicitly approved table. */
 export function createActionValues(descriptor:EntityDescriptor,scope:PolicyScope,action:CreateAction){
  if(descriptor.writePolicy?.create===false)throw new AuthorityError('forbidden','This table requires a typed domain action.')
  const defaults=Object.fromEntries(descriptor.schema.fields.filter(field=>field.defaultValue!==undefined&&scope.writableFieldIds.includes(field.id)&&!field.readOnly&&!Object.hasOwn(action.values,field.id)).map(field=>[field.id,field.defaultValue!]))
@@ -27,7 +27,7 @@ export function createActionValues(descriptor:EntityDescriptor,scope:PolicyScope
 
 /** Save and dry testing check the current human's explicit create authority. */
 export async function authorizeCreateAction(deps:{policy:PolicyPort;descriptors:DescriptorRegistry},ctx:RequestContext,appId:string,entityId:string,action:CreateAction){
- const descriptor=deps.descriptors.get(appId,entityId),scope=await deps.policy.scope(ctx,{appId,entityId,purpose:'read'}),values=createActionValues(descriptor,scope,action)
- const permit=await deps.policy.authorize(ctx,{appId,targetEntityId:entityId,action:'record.create',fieldIds:Object.keys(values),expected:[],cost:[],inputHash:await canonicalHash({appId,entityId,action,schemaVersion:descriptor.schema.version})})
- return {values,guards:[schemaGuard(descriptor),...scope.currentAuthorityGuards,...permit.guards]}
+ const targetEntityId=action.entityId??entityId,descriptor=deps.descriptors.get(appId,targetEntityId),scope=await deps.policy.scope(ctx,{appId,entityId:targetEntityId,purpose:'read'}),values=createActionValues(descriptor,scope,action)
+ const permit=await deps.policy.authorize(ctx,{appId,targetEntityId,action:'record.create',fieldIds:Object.keys(values),expected:[],cost:[],inputHash:await canonicalHash({appId,entityId,action,schemaVersion:descriptor.schema.version})})
+ return {values,entityId:targetEntityId,entityLabel:descriptor.schema.label,fields:descriptor.schema.fields.filter(field=>Object.hasOwn(values,field.id)).map(({id,label})=>({id,label})),guards:[schemaGuard(descriptor),...scope.currentAuthorityGuards,...permit.guards]}
 }

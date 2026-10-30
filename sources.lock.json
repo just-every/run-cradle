@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5049162db23365819257366a07b1cac0db0d96dd1cadb6333ec39e0bc2a58701",
+      "sha256": "78ca593cc178107cb93163bd787ee34f509fd39a6bc3b611cd53a6efec675537",
       "executable": false
     },
     "DEMO.md": {
@@ -3074,19 +3074,19 @@
       "executable": false
     },
     "docs/contract/AUTO-USER-005/test-panel-1440.png": {
-      "sha256": "66ec6db3d1f4cc0ea73605498497cf237fbd625247846e20670591c1a997f880",
+      "sha256": "e1c5eb1ba68f2eb6f2e85366811ec31058d1c9a72953fd69578449206eb90107",
       "executable": false
     },
     "docs/contract/AUTO-USER-005/test-panel-390.png": {
-      "sha256": "35f8f166be32bfe93c3c25d3627eae561153cf8e3c35c5bc3dc1d55cb172fef3",
+      "sha256": "04b872214a8b74bc81f8d24c7b466e27895d81b3eb7a5725f2ddc3bb539f6cfe",
       "executable": false
     },
     "docs/contract/AUTO-USER-005/test-panel-results-1440.png": {
-      "sha256": "7e8e90ea3334cd827c2d70d9e750faca52395619902d4bac8c8ed96b7f35fa06",
+      "sha256": "3718d5e55dc6896b1b5c7f8b2ff83c6785f2bc0a75b6c82016adcffa80ec82a6",
       "executable": false
     },
     "docs/contract/AUTO-USER-005/test-panel-results-390.png": {
-      "sha256": "8baf4aad23a2e0edfa2c252ba4c345006ceeea383e06674b97ebe0c840f21ebb",
+      "sha256": "284f506e875fd461adf2f68d91b21e56af9332a5ee3746dc5fe8f28fbb878aeb",
       "executable": false
     },
     "docs/contract/AUTO-USER-006/README.md": {
@@ -7830,11 +7830,11 @@
       "executable": false
     },
     "src/domains/automations/configuration.server.ts": {
-      "sha256": "4ae161d2a8a1d8610a600913149f29c3d2a42761aaf2d24e34c8987443cbeeae",
+      "sha256": "9e71b5236ed58aef2a1d2b8dffb51011125d012911ac6fa2846e26061f9002bd",
       "executable": false
     },
     "src/domains/automations/contracts.ts": {
-      "sha256": "5828f2c67318dc17172d04c1663ddc5ebad8ae1514628b0ca3ea812c1493fbb6",
+      "sha256": "71aa3afc1a7fe3dc4ee59e6a8904a6a22aed03830c20b94990848903993e311b",
       "executable": false
     },
     "src/domains/automations/control-contracts.ts": {
@@ -7854,7 +7854,7 @@
       "executable": false
     },
     "src/domains/automations/create-action.server.ts": {
-      "sha256": "9eafbaca3713d6b9e8e15f72d87eaf3a2851043a924f5335e33337412f6c82bd",
+      "sha256": "379d7f49eccc727edf8bf1df3fcbedd6ccfebfbd0205c1d5e4083d2afc8542ba",
       "executable": false
     },
     "src/domains/automations/destinations.server.ts": {
@@ -7862,7 +7862,7 @@
       "executable": false
     },
     "src/domains/automations/effects.server.ts": {
-      "sha256": "de220bb8665c2524489c8efe2bef903721873ee752b819b94c3edc5e12658bf7",
+      "sha256": "eb2fb82defd88429b770152819705589239d461c3a35d487f66b5ebdd818c818",
       "executable": false
     },
     "src/domains/automations/email-timing.server.ts": {
@@ -7926,11 +7926,11 @@
       "executable": false
     },
     "src/domains/automations/test-preview.server.ts": {
-      "sha256": "eeacd5ae1dafe30ee2672d9ab12b5abc3a8934e009d3ba1af006dd80305cc073",
+      "sha256": "b89789ad55c026e8b939c630e4e1c6b4a1d1e8696808bced5fb5bb8a9ab4c42b",
       "executable": false
     },
     "src/domains/automations/test-runs.server.ts": {
-      "sha256": "cb25baa90c0a4cfab1c4a76437ec872e11a276d0e041f30c3087e290c3b890ea",
+      "sha256": "864b1922eaaea7336d1d7ae683cc521fbd239cdafe1f78e5cdeee76de2fa3888",
       "executable": false
     },
     "src/domains/automations/trigger-configuration.server.ts": {
@@ -10538,7 +10538,7 @@
       "executable": false
     },
     "src/ui/automations/test-step.tsx": {
-      "sha256": "23eea09c7c4cfcda243d54444d5fddbf0f4b6a4fdb111d387c5d3e000d3721eb",
+      "sha256": "e92725cf23c47e1f3a0198309e7eb33a5566c5835802ce73b2a2fffd9863ce38",
       "executable": false
     },
     "src/ui/automations/user-automations-panel.tsx": {
@@ -11918,11 +11918,15 @@
       "executable": false
     },
     "tests/helpers/automation-create-browser.mjs": {
-      "sha256": "673d9e7fe37fe837e442cb6d371ceb5e4c615648ee8d7a694d046f6583ee805e",
+      "sha256": "078b78618b1fe355a4293f243b03b9d6d239a0ea9c389b4450671efd8faa30c7",
       "executable": false
     },
     "tests/helpers/automation-create-journey.mjs": {
       "sha256": "868f56269b67efbbba0e7c9db995088e4bee837f2b3ab6d42697e687551566b6",
+      "executable": false
+    },
+    "tests/helpers/automation-create-target-journey.mjs": {
+      "sha256": "095d28e22b0ddb3ec651a4d67952ff0cf781834685d8970a3878f732907b24e0",
       "executable": false
     },
     "tests/helpers/automation-failure-browser.mjs": {
@@ -13470,7 +13474,7 @@
       "executable": false
     },
     "tests/user-automations.mjs": {
-      "sha256": "80159ee77c6dc7ba15c452e1a8709bce5e67ae1bd8ff3aaa544631b9f6fb08a6",
+      "sha256": "1d66377412f1f12e968245b08833cf5907b3724ad2a7ebfefb6791335c2be4dc",
       "executable": false
     },
     "tests/user-webhooks.mjs": {

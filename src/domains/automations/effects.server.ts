@@ -37,10 +37,11 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
    if(action.kind==='create'){
     const command=deps.commands.get('record.create')
     if(!command)throw new AuthorityError('unconfigured','Record creation is unavailable.',503)
-    const descriptor=deps.descriptors.get(ref.appId,ref.entityId),schema=descriptor.schema
-    createActionValues(descriptor,scope,action)
+    const entityId=action.entityId??ref.entityId,descriptor=deps.descriptors.get(ref.appId,entityId),schema=descriptor.schema
+    const targetScope=entityId===ref.entityId?scope:await deps.policy.scope(ctx,{appId:ref.appId,entityId,purpose:'read'})
+    createActionValues(descriptor,targetScope,action)
     await authorize()
-    const receipt=await command.execute(ctx,{commandId,expected:[{ref:{appId:ref.appId,entityId:RECORD_SCHEMA_ENTITY_ID,recordId:schema.id},version:schema.version}],input:{appId:ref.appId,entityId:ref.entityId,values:action.values}})
+    const receipt=await command.execute(ctx,{commandId,expected:[{ref:{appId:ref.appId,entityId:RECORD_SCHEMA_ENTITY_ID,recordId:schema.id},version:schema.version}],input:{appId:ref.appId,entityId,values:action.values}})
     return receipt.result.state==='committed'?{state:'Complete',result:{commandId,recordId:(receipt.result.value as RecordRow).id}}:{state:'Unknown',result:{commandId},errorCode:'admission_unknown'}
    }
    if(action.kind==='apply_record_template'){

@@ -9,7 +9,7 @@ export const recordAutomationAction=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('sms'),fieldId:idSchema,text:z.string().trim().min(1).max(4000),when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('email'),operatorId:idSchema,subject:z.string().trim().min(1).max(200),text:z.string().trim().min(1).max(4000),when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('apply_record_template'),entityId:idSchema,templateId:idSchema,when:filterSchema.optional()}).strict(),
- z.object({kind:z.literal('create'),values:z.record(idSchema,z.union([z.string().max(100000),z.boolean(),z.null()])),when:filterSchema.optional()}).strict(),
+ z.object({kind:z.literal('create'),entityId:idSchema.optional(),values:z.record(idSchema,z.union([z.string().max(100000),z.boolean(),z.null()])),when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('update'),fieldId:idSchema,value:cellValueSchema,when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('webhook'),destinationId:idSchema,when:filterSchema.optional()}).strict(),
  z.object({kind:z.literal('slack-app'),provider:z.enum(['slack','nook','teams']).optional(),channelId:z.string().regex(/^[A-Za-z0-9_.:@/-]{1,400}$/),text:z.string().trim().min(1).max(12000),fieldId:idSchema,approveValue:cellValueSchema,rejectValue:cellValueSchema,when:filterSchema.optional()}).strict(),

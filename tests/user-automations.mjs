@@ -1,3 +1,4 @@
+import {automationCreateTargetJourney} from './helpers/automation-create-target-journey.mjs'
 import {automationCreateJourney} from './helpers/automation-create-journey.mjs'
 import {recordTemplateButtons} from './helpers/record-template-buttons.mjs'
 import {recordTemplateAutomation} from './helpers/record-template-automation.mjs'
@@ -69,5 +70,6 @@ contract('AUTO-USER-001','[RECORDS-009] [AUTO-USER-003] [AUTO-USER-005] [AUTO-US
   let revoked=[]
   for(let attempt=0;attempt<40;attempt++){revoked=(await h.request(`/api/user-automations/${loop.id}/runs`)).data.runs;if(!revoked.some(run=>['Queued','Running'].includes(run.state)))break;await new Promise(resolve=>setTimeout(resolve,250))}
   assert.ok(revoked.some(run=>run.state==='Cancelled'))
+  await automationCreateTargetJourney(h)
  }finally{await h.close()}
 })

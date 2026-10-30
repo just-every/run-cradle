@@ -32,7 +32,7 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
    for(const action of allActions){
     if(action.kind==='create'){
      const checked=await authorizeCreateAction({policy,descriptors},ctx,appId,entityId,action)
-     guards.push(...checked.guards);automationCreateEntityIds.add(entityId)
+     guards.push(...checked.guards);automationCreateEntityIds.add(action.entityId??entityId)
     }
     if(action.kind==='apply_record_template'){
      if(!templates)throw new AuthorityError('unconfigured','Record templates are unavailable.',503)

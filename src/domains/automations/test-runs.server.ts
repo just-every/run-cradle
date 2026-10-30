@@ -1,3 +1,4 @@
+import {authorizeCreateAction} from './create-action.server'
 import {assertGuards} from '../records/fence.server'
 import type {AutomationTemplates} from './template-action.server'
 import type {PlatformBindings} from '../../core/platform/bindings'
@@ -28,6 +29,9 @@ export function createAutomationTests(env:PlatformBindings,foundation:ServerFoun
   if(definition.trigger||definition.steps||definition.actions.some(action=>action.when))throw new AuthorityError('unconfigured','The builder test panel does not yet support these saved triggers or control steps. Use run history for enabled control definitions.',503)
   if(definition.actions.some(action=>['email','webhook','slack','sms','slack-app'].includes(action.kind)))await policy.scope(ctx,{appId:ref.appId,entityId:ref.entityId,purpose:'export'})
   if(definition.actions.some(action=>action.kind==='update'&&(!scope.writableFieldIds.includes(action.fieldId)||!scope.readableFieldIds.includes(action.fieldId))))throw new AuthorityError('forbidden','A test requires current read and write authority for each update field.')
+  // Retained create previews include target values and labels. Recheck their
+  // current authority before either returning a replay or admitting a new test.
+  for(const action of definition.actions)if(action.kind==='create')await authorizeCreateAction({policy,descriptors},ctx,binding.app_id,binding.entity_id,action)
   const narrow=(value:string)=>{const result=JSON.parse(value);for(const step of result.steps??[])if(step.input?.values)step.input.values=Object.fromEntries(Object.entries(step.input.values).filter(([id])=>scope.readableFieldIds.includes(id)));return result}
   const id=input.commandId,mode=input.live?'live':'dry',hash=await canonicalHash(input)
   const replay=await admission.replay(ctx,id,'automation.test',ref.appId,hash)
