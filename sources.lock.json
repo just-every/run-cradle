@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "3492858e891d5c3409e8b3255d515513c0ddfe7f64836b5e1bc862b4e810a1ce",
+      "sha256": "9154467e05302aa708627e633b082cd0cd7a9e5c1c4aab388bda5b84667817ee",
       "executable": false
     },
     "DEMO.md": {
@@ -4574,7 +4574,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "d6e4ce4c4d02012043c047658a79f598e347363e7fa10cc518f97a120c708404",
+      "sha256": "5556dc5573cb02f7c7f5b507a57c92a00b287ff7af7f3068c23fbde470b1cff7",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5191,6 +5191,10 @@
     },
     "migrations/updates/9083_record_template_buttons.sql": {
       "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
+      "executable": false
+    },
+    "migrations/updates/9084_record_update_buttons.sql": {
+      "sha256": "09d8a89d07d94d97cde25d9a96beda460d96dbfbb7eeb791903de127ee4073fa",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -7630,7 +7634,7 @@
       "executable": false
     },
     "src/domains/authority/context.server.ts": {
-      "sha256": "c3cb7475fe6f769f7f5d0c31f19af0a7a5fead1639b92ec480c4537081edb9f2",
+      "sha256": "3dd92245cbfb853739ff8936d41dfa066cb37b404517532e1322cba9bdf51c4f",
       "executable": false
     },
     "src/domains/authority/contracts.ts": {
@@ -8854,7 +8858,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "370a84699ab4c19ca78278dde9073642d1ca5d0090f9df968adcc2f89a5e073f",
+      "sha256": "4af4407f11f34e59e3c1a916e22571fe7f126dbbf6e047923925d5b48c9c9886",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -9090,7 +9094,7 @@
       "executable": false
     },
     "src/domains/records/actions.server.ts": {
-      "sha256": "c0fcaaae7f44efcaa688d224836adb25e0b1209b0d20ec54ecd16cc8fe516a03",
+      "sha256": "de664ceb2f4caa04e2dda105c46fa318319cbfad4d1ebf9159a965338626fbae",
       "executable": false
     },
     "src/domains/records/attachments.server.ts": {
@@ -9403,6 +9407,18 @@
     },
     "src/domains/records/bulk.server.ts": {
       "sha256": "2f9ba0242c57e9bbe1772826c0cae7e746cae8da97978a6cb5e2d0e66840026d",
+      "executable": false
+    },
+    "src/domains/records/buttons/fields.ts": {
+      "sha256": "a976cf4ab04d31e7261db327cf22bba56ca8c8914477bbab040d04ff9a0ae796",
+      "executable": false
+    },
+    "src/domains/records/buttons/patch.server.ts": {
+      "sha256": "ab6afee5657c417ed9223a022059a2c4d08c9720a6266cb430dfe1971ed0aebd",
+      "executable": false
+    },
+    "src/domains/records/buttons/update.server.ts": {
+      "sha256": "bfe37ffc0056477117fb9f36110ac18e63d2f817f731d40b6a40a274ebd957eb",
       "executable": false
     },
     "src/domains/records/calculation-bounds.ts": {
@@ -9838,7 +9854,7 @@
       "executable": false
     },
     "src/domains/records/routes.server.ts": {
-      "sha256": "f92d3382a6a3f7df4df31a82aa365197df306dcfc3377dcc6d89d29441c44e2f",
+      "sha256": "d6d31d3f21228bd7e3d25fdbb4c0bbda2a99099e4dc7d5889047ecc1622b30c9",
       "executable": false
     },
     "src/domains/records/schema.ts": {
@@ -9850,7 +9866,7 @@
       "executable": false
     },
     "src/domains/records/service.server.ts": {
-      "sha256": "e75441dbd1742030c2c10f4bd8cafdc75fe6f7ff435a88c7d023b89be86731c2",
+      "sha256": "b4a74b41895fdf86bd0b3047c3ac2c1d4ea1a212c7af8fda10d032bbd5ba0b76",
       "executable": false
     },
     "src/domains/records/sheets/capture.server.ts": {
@@ -9886,7 +9902,7 @@
       "executable": false
     },
     "src/domains/records/templates/buttons.server.ts": {
-      "sha256": "62545e94dc792fa871ec84a204a66337827ca3773d5f865df024955d18f3d955",
+      "sha256": "2bebfe0f202f349143bd6b7a264b57af3f8980c0eaff1c4f68e3dbce673be5f6",
       "executable": false
     },
     "src/domains/records/templates/contracts.ts": {
@@ -10954,7 +10970,7 @@
       "executable": false
     },
     "src/ui/records/record-detail-page.tsx": {
-      "sha256": "a89582cb53741454ecde55979a7bc9a8c573502ba6f44a2c2352ecbf7c139a09",
+      "sha256": "28c195e83e7e6dbedfda04168cbe160f470d48027fccc4d9e2e93a2376918e15",
       "executable": false
     },
     "src/ui/records/record-editor.tsx": {
@@ -11170,7 +11186,7 @@
       "executable": false
     },
     "src/ui/records/template-buttons.tsx": {
-      "sha256": "f140dcd9bc3e7faf72279174d089052ae06c879eca75b2a52095edd1fbf6678c",
+      "sha256": "e6816ecdd8534306633008f2593c902afa856b41e506fc7b5fb6ffe377a00b2c",
       "executable": false
     },
     "src/ui/records/timeline-axis.ts": {
@@ -11390,7 +11406,11 @@
       "executable": false
     },
     "src/ui/settings/record-template-buttons-panel.tsx": {
-      "sha256": "8933b96b3422ea6aa8e1a7bd3ebe96635e5ec838d28db31de4573b42160e3a90",
+      "sha256": "babb35df4d1695daa43fc28165f85ceae6992ea58fba2c1e66ad914fd7e4d262",
+      "executable": false
+    },
+    "src/ui/settings/record-update-button-editor.tsx": {
+      "sha256": "efdda0b7e8a142538c2949998e9a23862aa0a77ff8b83b3afcd367e4d7311eba",
       "executable": false
     },
     "src/ui/settings/revoke-grant.tsx": {
@@ -12182,7 +12202,7 @@
       "executable": false
     },
     "tests/helpers/file-store-archive.mjs": {
-      "sha256": "14201e72ab7035bc635c0e39bda96d75631439ddcf33754835ff0c09de645446",
+      "sha256": "7790ee7d9d8ce637c3e67d8bca03c415f64c83c9423e01fe33491ee22228e0c5",
       "executable": false
     },
     "tests/helpers/file-stores-actors.mjs": {
@@ -12502,7 +12522,7 @@
       "executable": false
     },
     "tests/helpers/record-calendar-archive.mjs": {
-      "sha256": "11769ef9a768018297700c7d81e5ab88bc832ab8d1cb3a526227718d5aaa958c",
+      "sha256": "8203ce6950db1775fa15e69c1ce76985f108a4d250cd1ce652ff9af14bfbdeae",
       "executable": false
     },
     "tests/helpers/record-calendar-author.mjs": {
@@ -12554,11 +12574,11 @@
       "executable": false
     },
     "tests/helpers/record-template-browser.mjs": {
-      "sha256": "891ab815ff3fd8b56179e11ae05f82d6ab00f7306373f44538823331a0d81255",
+      "sha256": "76681dc7916172e3480e756f4dd2358097b7998183ef1270ce427dad29bbed7c",
       "executable": false
     },
     "tests/helpers/record-template-buttons.mjs": {
-      "sha256": "ee5684eebb81da5fdfb0a7b607463cd55268ee41d685752657a00d069a50c353",
+      "sha256": "333d0002e90c7ed9f08640bb98a95e0cf8424679167266d220c9bb14f45a05d9",
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
@@ -12567,6 +12587,22 @@
     },
     "tests/helpers/record-trash-journey.mjs": {
       "sha256": "2ae0796474d7a46a82bfa2cb3bc7d9ede5aec675e7f7bd0e15cbda414f55d4c7",
+      "executable": false
+    },
+    "tests/helpers/record-update-button-authorship.mjs": {
+      "sha256": "e131eee86cacc17323c00e5e10991b4bd8a2f90ea7ff3c1e6e50a708410096fb",
+      "executable": false
+    },
+    "tests/helpers/record-update-buttons-archive.mjs": {
+      "sha256": "c4e5959fd015011ae682c1477225019111b653f53ed2759335f40429b5084465",
+      "executable": false
+    },
+    "tests/helpers/record-update-buttons-browser.mjs": {
+      "sha256": "dee646e88a6a046d0b33cff3b62c251ef75a0a42a4ee9698bcedb60cfeae7dfb",
+      "executable": false
+    },
+    "tests/helpers/record-update-buttons.mjs": {
+      "sha256": "369215aa1886dbcb4e8bce912d4972f96f5ce1ae30aa0eafe1f9b09792ac1f92",
       "executable": false
     },
     "tests/helpers/records-api-decimal-source.mjs": {
@@ -13122,7 +13158,7 @@
       "executable": false
     },
     "tests/lifecycle-erasure.mjs": {
-      "sha256": "2c700e0b997c8b5578ba456655deee9c2f8a620a1bf7f7b2bf989ef814ae6151",
+      "sha256": "e756560d145915111ef2373e9e530178201c90cadcb238923bd5e2700d21b12b",
       "executable": false
     },
     "tests/lifecycle-identity-security.mjs": {

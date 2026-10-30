@@ -942,6 +942,12 @@
       "name": "9083_record_template_buttons.sql",
       "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
       "sql": "CREATE TABLE record_template_buttons (\n id TEXT PRIMARY KEY,\n app_id TEXT NOT NULL,\n entity_id TEXT NOT NULL,\n owner_id TEXT NOT NULL,\n template_id TEXT NOT NULL REFERENCES record_templates(id),\n name TEXT NOT NULL,\n confirmation INTEGER NOT NULL CHECK (confirmation IN (0,1)),\n version INTEGER NOT NULL CHECK (version > 0),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX record_template_buttons_table ON record_template_buttons(app_id,entity_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9084_record_update_buttons.sql",
+      "sha256": "09d8a89d07d94d97cde25d9a96beda460d96dbfbb7eeb791903de127ee4073fa",
+      "sql": "CREATE TABLE record_update_buttons (\n id TEXT PRIMARY KEY,\n app_id TEXT NOT NULL,\n entity_id TEXT NOT NULL,\n owner_id TEXT NOT NULL,\n field_id TEXT NOT NULL,\n value_json TEXT NOT NULL CHECK (json_valid(value_json)),\n name TEXT NOT NULL,\n confirmation INTEGER NOT NULL CHECK (confirmation IN (0,1)),\n version INTEGER NOT NULL CHECK (version > 0),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX record_update_buttons_table ON record_update_buttons(app_id,entity_id);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

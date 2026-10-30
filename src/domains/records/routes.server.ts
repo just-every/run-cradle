@@ -34,7 +34,7 @@ export function createRecordHttp(ports: {
             let data: unknown;
             const pageInput = { limit: url.searchParams.has('limit') ? Number(url.searchParams.get('limit')) : undefined, cursor: url.searchParams.get('cursor') ?? undefined };
             const buttons=path.match(/^\/api\/v1\/apps\/([^/]+)\/entities\/([^/]+)\/template-buttons$/);
-            if(buttons&&request.method==='GET'&&ports.templateButtons){const data=await ports.templateButtons.list(ctx,idSchema.parse(buttons[1]),idSchema.parse(buttons[2]));return c.json({data,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},{headers:{'cache-control':'no-store'}})}
+            if(buttons&&request.method==='GET'&&ports.templateButtons){const data=await ports.templateButtons.list(ctx,idSchema.parse(buttons[1]),idSchema.parse(buttons[2]),url.searchParams.has('recordId')?idSchema.parse(url.searchParams.get('recordId')):undefined);return c.json({data,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},{headers:{'cache-control':'no-store'}})}
             const templates=path.match(/^\/api\/v1\/apps\/([^/]+)\/entities\/([^/]+)\/templates$/);
             if(templates&&request.method==='GET'&&ports.templates){const data=await ports.templates.list(ctx,idSchema.parse(templates[1]),idSchema.parse(templates[2]));return c.json({data,meta:{requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:ctx.consistencyToken??''}},{headers:{'cache-control':'no-store'}})}
             const impact = path.match(/^\/api\/v1\/apps\/([^/]+)\/entities\/([^/]+)\/records\/([^/]+)\/delete-impact$/);

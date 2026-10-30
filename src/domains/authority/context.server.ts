@@ -1,3 +1,4 @@
+import { requireBaseAuthor } from '../records/manual/base-access.server'
 import { createProductAuth } from './product-auth.server'
 import { resolveMachinePrincipal } from './machine.server'
 import { createUlid } from '../../core/shared/ids'
@@ -30,6 +31,14 @@ export const createReplayAccess=(db:D1Database,policy:PolicyPort,registry:Entity
  if(ctx.principal.proposer){if(command.appId!==ctx.principal.proposer.appId||!['schema.propose','schema.withdraw'].includes(command.action))throw new AuthorityError('not_found','Command not found.',404);return}
  const membership=await db.prepare(`SELECT p.version FROM authority_memberships m JOIN authority_policies p ON p.id=m.policy_id WHERE m.principal_id=? AND m.app_id=? AND m.state='active'`).bind(ctx.principal.id,command.appId).first<{version:number}>()
  if(!membership||!command.provenance)throw new AuthorityError('not_found','Command is not visible under current policy.',404)
+ const savedButton=command.result&&typeof command.result==='object'&&'value'in command.result?command.result.value:null
+ if(command.action==='record.template-button-save'&&savedButton&&typeof savedButton==='object'&&'kind'in savedButton&&savedButton.kind==='update-field'){
+  const result=savedButton as unknown as {id:string;appId:string;entityId:string;fieldId:string;version:number};
+  if(!await db.prepare('SELECT 1 FROM record_update_buttons WHERE id=? AND app_id=? AND entity_id=? AND version=?').bind(result.id,result.appId,result.entityId,result.version).first())throw new AuthorityError('not_found','The button configuration is no longer current.',404)
+  if(!await requireBaseAuthor(db,ctx,result.appId))throw new AuthorityError('forbidden','Current base authorship is required.',403)
+  const scope=await policy.scope(ctx,{appId:result.appId,entityId:result.entityId,purpose:'read'})
+  if(!scope.readableFieldIds.includes(result.fieldId)||!scope.writableFieldIds.includes(result.fieldId))throw new AuthorityError('forbidden','The configured field is unavailable.',403)
+ }
  if(command.action==='member.invite')await authorizeInvitationReplay(db,ctx,command.appId,command.result)
  const check=createReferenceAccess(db,policy,registry)
  for(const subject of command.provenance.subjects)await check(ctx,subject.ref,subject.fieldIds,'read')
