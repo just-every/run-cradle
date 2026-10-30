@@ -13,7 +13,7 @@ const [{fileStoresJourney,fileStoreBindings},{userAutomationRuntime},{STAGING_EN
  import('./helpers/evidence-comments-journey.mjs'),
 ])
 
-contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
+contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private sources, files and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
  const h=await userAutomationRuntime(0)
  try{
   await evidenceCommentsJourney(h)
