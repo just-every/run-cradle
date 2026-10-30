@@ -673,6 +673,7 @@
       "text/plain"
     ],
     "requestBodyBytes": 1048576,
+    "attachmentUploadBytes": 104857600,
     "publicRequestsPerIpPerMinute": {
       "/": 120,
       "/health": 120,

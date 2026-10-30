@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "3492858e891d5c3409e8b3255d515513c0ddfe7f64836b5e1bc862b4e810a1ce",
+      "sha256": "2a559a6be01c9eeff4a27201705aacb9cabaf2d54dd1b82e670afc597ab8f75c",
       "executable": false
     },
     "DEMO.md": {
@@ -5682,7 +5682,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "dae931cc1df7ff16539ec84522ef52fbdfe23d12642d6e6ec7bd91e0aa96d87f",
+      "sha256": "e5a32fcd0902652cf21406101705efe5ec4fcd2bd57fd957f9a4139cc21c4331",
       "executable": false
     },
     "src/adapters/calendar.server.ts": {
@@ -8389,8 +8389,12 @@
       "sha256": "78d0d22621d5b0f23bbadce0afa4297f39e027f94ee333fd5a6e1f99c25c9287",
       "executable": false
     },
+    "src/domains/evidence/file-bytes.server.ts": {
+      "sha256": "aa902b6a0f11262f13c2160748093c64f19f00896e000d4ab6495620ac5e2e58",
+      "executable": false
+    },
     "src/domains/evidence/files.server.ts": {
-      "sha256": "ce69bb113af433139e727399c9b87762b5a65fd749530da4438f57ad29f4e953",
+      "sha256": "ea7c12122d24d0fb6ff6ec021e2b60ea18b107f8d24fc24819ca411d67044ea0",
       "executable": false
     },
     "src/domains/evidence/guards.server.ts": {
@@ -8465,8 +8469,12 @@
       "sha256": "73b18d495e044064840187663e4c4d741805bc06fe2938701e63f8154b7f3f68",
       "executable": false
     },
+    "src/domains/evidence/upload-limits.ts": {
+      "sha256": "992925d83c27bc80d84a355ca79e2dc43a206eb1ce470e5f69057e2266b568ae",
+      "executable": false
+    },
     "src/domains/evidence/validators.ts": {
-      "sha256": "8c4c184d0791f41150241bd232ea2dd83d4d6af10078eb0528bd25a0dab084d5",
+      "sha256": "3f7c881959c937618bc772955b564807cbccd96fd1b935943f057eb8ab3ecb54",
       "executable": false
     },
     "src/domains/evidence/write-access.server.ts": {
@@ -9674,7 +9682,7 @@
       "executable": false
     },
     "src/domains/records/manual/authority.server.ts": {
-      "sha256": "32a73b707970aec428db4c7ea5957f1af0ff5cb9435c7c76b60663bb20006909",
+      "sha256": "38baf30e75af03af59f377dca54ef1e8590da7bec696c3c1f47aa594ad456a18",
       "executable": false
     },
     "src/domains/records/manual/base-access.server.ts": {
@@ -10570,7 +10578,7 @@
       "executable": false
     },
     "src/ui/evidence/file-upload.tsx": {
-      "sha256": "bac02f67a7b151f66a086c706fff295fc0faa28ef985ef5608515e10c062d009",
+      "sha256": "2fe51769b03543592c21631cb6ac98bc3fe5eba49c888df344a372d0ab5d8aa0",
       "executable": false
     },
     "src/ui/evidence/history-restore.tsx": {
@@ -11594,7 +11602,7 @@
       "executable": false
     },
     "tests/evidence-read-privacy.mjs": {
-      "sha256": "0ee61bf88cf0a701822f22ab21f7b0d1feffca722bc433374408039c899f6144",
+      "sha256": "cdf6f954386a84680a050cd2f7e3b1dae72e896a1eb9c5d08bb93495534334d4",
       "executable": false
     },
     "tests/evidence-runtime-entry.ts": {
@@ -12213,6 +12221,10 @@
       "sha256": "84d9ec20b9f76208deec8bb18d7c1f5011979998c33eab65c7c0cc2972e7c9fb",
       "executable": false
     },
+    "tests/helpers/file-upload-journey.mjs": {
+      "sha256": "aaffd61f7ca3c8381ef034c64eb3ec3af9e3296f0a75522a221a0651ad16596b",
+      "executable": false
+    },
     "tests/helpers/fixture-mail.mjs": {
       "sha256": "d78b54d2c137b123978ba938ec5fb8d18f2523925025d2bdc32de1fdca7ffebb",
       "executable": false
@@ -12562,7 +12574,7 @@
       "executable": false
     },
     "tests/helpers/record-template-browser.mjs": {
-      "sha256": "891ab815ff3fd8b56179e11ae05f82d6ab00f7306373f44538823331a0d81255",
+      "sha256": "0cc3237df9804f97f26754859daaf7da37f48bd5c1810d6b0c55887ddff3098d",
       "executable": false
     },
     "tests/helpers/record-template-buttons.mjs": {
@@ -13450,7 +13462,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "bab0a5e4d4771fcf7b2027e939c37ecf80f96827b1f57a4bd6eb0d5b5b56bc84",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
