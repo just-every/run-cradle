@@ -13,7 +13,7 @@ export async function automationCreateBrowser(page,h,journey,width,output){
  await records.getByRole('heading',{name,exact:true}).waitFor()
  await records.getByRole('button',{name:`Edit ${name}`,exact:true}).click()
  const panel=page.getByRole('region',{name:'Test automation',exact:true})
- await panel.getByLabel('Test record',{exact:true}).selectOption(anchor.id)
+ await panel.getByRole('combobox').first().selectOption(anchor.id)
  const testResponse=page.waitForResponse(response=>response.url().endsWith(`/api/user-automations/${saved.id}/test`)&&response.request().method()==='POST')
  await panel.getByRole('button',{name:'Run test',exact:true}).click()
  const response=await testResponse;assert.equal(response.status(),200,await response.text())

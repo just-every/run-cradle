@@ -11918,7 +11918,7 @@
       "executable": false
     },
     "tests/helpers/automation-create-browser.mjs": {
-      "sha256": "1e6fdc9d6bcc0b51e3baba21cc0e8512db89502ecdce2d8f7f5b5f3cfa81904c",
+      "sha256": "673d9e7fe37fe837e442cb6d371ceb5e4c615648ee8d7a694d046f6583ee805e",
       "executable": false
     },
     "tests/helpers/automation-create-journey.mjs": {
