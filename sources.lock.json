@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "3492858e891d5c3409e8b3255d515513c0ddfe7f64836b5e1bc862b4e810a1ce",
+      "sha256": "f3fec6a8918d03ed9311eac915b0f1598b83379a2520bd8c9f464dbfb0232997",
       "executable": false
     },
     "DEMO.md": {
@@ -9686,11 +9686,11 @@
       "executable": false
     },
     "src/domains/records/manual/calculation-preview.server.ts": {
-      "sha256": "7f4cfbb0bf043302de48b9eaf98cabfeb817a3f0f13b76967ec497919f3bfb38",
+      "sha256": "6f0d1f45311f1196f234847915b78b09d7d3a04c603a2970e68ffeee6ffabc89",
       "executable": false
     },
     "src/domains/records/manual/contracts.ts": {
-      "sha256": "c70a1db891b3d7047fd7144788c0b8e230f6a857960615e6936816a3500e64da",
+      "sha256": "6f482013580b22394970d88544fc219048c943578299def75ba788ea41b12f94",
       "executable": false
     },
     "src/domains/records/manual/conversions.server.ts": {
@@ -9714,7 +9714,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-agent.server.ts": {
-      "sha256": "fbe4e284bdf081524cebc65b93f1092f637d0dbc798a3294c19591d8e6d4c9a3",
+      "sha256": "f44d2f8c3d78091c267052343b08dcd9dd8c1871593097123aed430e444dc96d",
       "executable": false
     },
     "src/domains/records/manual/proposal-commands.server.ts": {
@@ -9722,7 +9722,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-contracts.ts": {
-      "sha256": "316f9d926034ab7b3be1104ed6384eb63bb2ae27ee7b3994466448d76328f156",
+      "sha256": "7330d0ae14773592c0d00f48fa6437aa3f30857ff31da034f0bb2274ad494738",
       "executable": false
     },
     "src/domains/records/manual/proposal-http.server.ts": {
@@ -9734,11 +9734,11 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-review.server.ts": {
-      "sha256": "179410e3fed9349e68c076dd911152f2d07deb44e16386ef00296aa6a22fc16c",
+      "sha256": "13e946dfb4c80b8d0568c2037d1fd4ca65518cae28c36c39149091fc08d45d06",
       "executable": false
     },
     "src/domains/records/manual/proposal-store.server.ts": {
-      "sha256": "3b2064233e68ee9724e9af8b33d1175c7ba32bfa2c488e4217e57c9d9589bd54",
+      "sha256": "506b7505a280754daa115367d2e51a16f67c5bf454371520d67f88c763db4fe3",
       "executable": false
     },
     "src/domains/records/manual/recovery.server.ts": {
@@ -9746,7 +9746,7 @@
       "executable": false
     },
     "src/domains/records/manual/release.server.ts": {
-      "sha256": "f1668d61c276a7ac99321e35426af4fdfca60e8a7f6a42d4690e8877a6f27f8e",
+      "sha256": "deb6316808bbdf949d04a27f04a5a5c0bf7bb67d83a6566549dff66c244d2d46",
       "executable": false
     },
     "src/domains/records/manual/role-policy.ts": {
@@ -10922,7 +10922,7 @@
       "executable": false
     },
     "src/ui/records/proposals/proposal-review.tsx": {
-      "sha256": "c2b5dfab1d5fa6b9033ef8b7c8483d45e8a645bbe017616af7efa607eb18db61",
+      "sha256": "9e22ec2959c2ffa4504ff72377cdeda2499b09eb371c756befabd22683d43922",
       "executable": false
     },
     "src/ui/records/record-board.css": {
@@ -11042,11 +11042,11 @@
       "executable": false
     },
     "src/ui/records/schema/calculation-review.css": {
-      "sha256": "de905dfc83597994a1b4ba718ae4c357767442f74441fda58c7aa48976b183e9",
+      "sha256": "fda6a923aba8ea64bb619a908e460c1c75f8583d8ceeb18853f4ee8973d51b5b",
       "executable": false
     },
     "src/ui/records/schema/calculation-review.tsx": {
-      "sha256": "d22633fda55b47a1fe012383e601af424003565dcad85d0d75181d4c57df126b",
+      "sha256": "206bb7a9460aed640bb94dc5729c4ffde09369cb3c33d94e169c45227371875d",
       "executable": false
     },
     "src/ui/records/schema/computed-editor.tsx": {
@@ -13162,7 +13162,7 @@
       "executable": false
     },
     "tests/records-agent-proposals.mjs": {
-      "sha256": "d39d94d0f9baac763080813167be10f70255ce8827fcdb9e9f92ae9bb7285b68",
+      "sha256": "443a514d481db673440d731c0185fa69b0c9e201c3d26224fc480d3c74f3f7bd",
       "executable": false
     },
     "tests/records-base-edge-return.mjs": {
@@ -13434,7 +13434,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "fc8cbd1f3501f763cf4be548854733def7858225a8d290025e34869812ba194f",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

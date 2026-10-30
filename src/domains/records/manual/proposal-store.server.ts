@@ -8,7 +8,9 @@ import type { AgentImpact, AgentProposal, OwnerProposal, ProposalState, Proposal
 
 export const proposals=registerTable('record_schema_proposals',['id','app_id','proposer_id','credential_id','issuer_id','state','summary','detail_json','preview_hash','note','release_id','decided_by','created_at','expires_at','decided_at'])
 /** A stored proposal: its preview, what it adds, and the fences that make it current. */
-export type StoredProposal=StoredPreview & {views:ProposedView[];forms:ProposedForm[];note:string;metadata:string[];freshness:SqlPredicate[]}
+export type StoredProposal=StoredPreview & {calculationReportVersion?:1;views:ProposedView[];forms:ProposedForm[];note:string;metadata:string[];freshness:SqlPredicate[]}
+/** Old retained proposals keep their original hash; new reports are part of the reviewed commitment. */
+export const proposalCommitment=(d:StoredProposal)=>({schemas:d.schemas,impacts:d.impacts,metadata:d.metadata,views:d.views,forms:d.forms,note:d.note,...(d.calculationReportVersion===1?{calculations:d.calculations??[]}: {})})
 export type ProposalRow={id:string;app_id:string;proposer_id:string;credential_id:string;issuer_id:string;state:'pending'|'adopted'|'declined'|'withdrawn';summary:string;detail_json:string;preview_hash:string;note:string|null;release_id:string|null;created_at:string;expires_at:string;key_name:string|null;base_name:string|null;key_current:number}
 const select=`SELECT p.*,b.label AS key_name,base.name AS base_name,
  CASE WHEN b.revoked_at IS NULL AND c.revoked_at IS NULL AND c.expires_at>unixepoch('subsec')*1000 THEN 1 ELSE 0 END AS key_current
@@ -32,7 +34,7 @@ export function createProposalStore(db:D1Database){
   summary,
   async list(where:'issuer_id'|'proposer_id',id:string,now:string){const rows=(await db.prepare(`${select} WHERE p.${where}=? ORDER BY p.created_at DESC,p.id DESC LIMIT 50`).bind(id).all<ProposalRow>()).results;return Promise.all(rows.map(row=>summary(row,now)))},
   async row(where:'issuer_id'|'proposer_id',id:string,proposalId:string){const row=await db.prepare(`${select} WHERE p.id=? AND p.${where}=?`).bind(proposalId,id).first<ProposalRow>();if(!row)throw new AdmissionError('not_found','Proposal not found.');return row},
-  async owner(row:ProposalRow,now:string):Promise<OwnerProposal>{const d=parseStored(row);return {...await summary(row,now),previewHash:row.preview_hash,schemas:d.schemas,impacts:d.impacts,metadata:d.metadata,views:d.views,forms:d.forms,access:d.access,recovery:d.recovery}},
+  async owner(row:ProposalRow,now:string):Promise<OwnerProposal>{const d=parseStored(row);return {...await summary(row,now),previewHash:row.preview_hash,schemas:d.schemas,calculations:d.calculations??[],impacts:d.impacts,metadata:d.metadata,views:d.views,forms:d.forms,access:d.access,recovery:d.recovery}},
   /** The agent sees counts and labels it proposed, never record identities or values. */
   async agent(row:ProposalRow,now:string):Promise<AgentProposal>{const d=parseStored(row);return {...await summary(row,now),previewHash:row.preview_hash,impacts:d.impacts.map(agentImpact),metadata:d.metadata,views:d.views,forms:d.forms,access:d.access}},
  }

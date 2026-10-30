@@ -8,5 +8,6 @@ export const draftSchema = z.object({ appId: idSchema, name: z.string().trim().m
 export type SchemaDraft = z.infer<typeof draftSchema>
 export type RuleViolationImpact = { ruleId:string; ruleName:string; message:string; recordIds:string[]; count:number }
 export type SchemaImpact = { entityId: string; label: string; changes: string[]; recordIds: string[]; count: number; removedFields: { id: string; label: string; populated: number }[]; deletedTable?:boolean; conversions?:ConversionImpact[]; dependencies?:{kind:string;id:string;name:string;details:string[]}[]; refusals?:string[]; validationViolations?:RuleViolationImpact[]; violatingRecordIds?:string[]; violatingRecordCount?:number }
-export type CalculationPreview = { entityId: string; fieldId: string; label: string; resultType: string; totalRecords: number; samples: { recordId: string; recordLabel: string; before: Cell | null; after: Cell }[] }
+export type CalculationChange = { recordId: string; recordLabel: string; before: Cell | null; after: Cell }
+export type CalculationPreview = { entityId: string; fieldId: string; label: string; resultType: string; totalRecords: number; samples: CalculationChange[]; changes?: CalculationChange[]; incompleteReason?: string }
 export type ManualPreview = { requiresOwnerReview?:boolean; authorId?:string; id: string; appId: string; name: string; schemas: EntitySchema[]; calculations?: CalculationPreview[]; impacts: SchemaImpact[]; expiresAt: string; recovery: string; access: string; kind: 'manual_schema'; parentReleaseId: string | null }

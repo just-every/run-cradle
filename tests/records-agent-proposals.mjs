@@ -5,6 +5,7 @@ import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
 import {proposalDoor,smallProposal,effectCounts} from './helpers/proposal-door.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
+import {proposalCalculationJourney} from './helpers/proposal-calculation-journey.mjs'
 
 const issue=async(h,name,appId)=>(await h.request('/api/proposer-keys',{method:'POST',status:201,body:{commandId:createUlid(),name,expiresAt:new Date(Date.now()+7*86400000).toISOString(),...(appId?{appId}:{})}})).data.key
 const TOOLS=['schema.proposal','schema.proposals','schema.propose','schema.read','schema.withdraw']
@@ -138,6 +139,7 @@ contract('RECORDS-007','the owner alone reviews affected records, adopts, declin
   const expiring=await issue(h,'Short key',h.appId)
   await h.db.prepare('UPDATE authority_credentials SET expires_at=? WHERE id=?').bind(Date.now()-1,expiring.id).run()
   await proposalDoor(h.origin,expiring.secret,'mcp').schema(401)
+  await proposalCalculationJourney(h)
  }finally{await h.close()}
 })
 
