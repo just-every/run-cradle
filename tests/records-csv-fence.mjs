@@ -125,6 +125,63 @@ async function recurringCsv(h){
  assert.ok(await h.db.prepare('SELECT id FROM record_csv_previews WHERE id=?').bind(preview.id).first())
 }
 
+/** Deliberate zero-key imports retain the ordinary native validation and fences. */
+async function createAllCsv(h){
+ const key=newField('Key'),amount=newField('Amount','number'),note=newField('Note')
+ const draft={appId:createUlid(),name:'synthetic-cradle-create-only',tables:[{id:createUlid(),label:'Rows',fields:[key,amount,note]}]}
+ let {r}=await h.create(draft)
+ const identity={appId:draft.appId,entityId:draft.tables[0].id},headers=['Key','Amount','Note'],mapping=[key,amount,note].map(f=>({column:f.label,fieldId:f.id})),sourceName='synthetic-cradle-create-only'
+ const origin='https://csv.example.test'
+ async function call(path,input,status=200){
+  const response=await recordsCsvHttp(r.csv,async()=>h.ctx).fetch(new Request(origin+'/api/v1/records/'+path,{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({...identity,...input})})),body=await response.json()
+  assert.equal(response.status,status,JSON.stringify(body));return body.data??body.error
+ }
+ const read=async()=>{const scope=await r.policy.scope(h.ctx,{...identity,purpose:'read'});return (await r.services.reader.query(h.ctx,scope,{})).items}
+ const seed=await call('import-preview',{csv:encodeCsv(headers,[['synthetic-cradle-1','5','Original']]),mapping,mergeFieldId:key.id})
+ await r.csv.commit(h.ctx,createUlid(),seed.id)
+ const original=(await read())[0]
+ const input={csv:encodeCsv(headers,[['synthetic-cradle-1','6','First copy'],['synthetic-cradle-1','7','Second copy'],['','8','No matching key'],['synthetic-cradle-2','invalid','Refused']]),mapping,mergeFieldId:'_create_all'}
+ for(const invalid of [undefined,null,'',[],createUlid(),'invalid']){
+  await call('import-preview',{...input,mergeFieldId:invalid},400)
+  await call('import-mappings',{action:'save',sourceName,mapping,mergeFieldId:invalid,expectedVersion:null},400)
+ }
+ assert.deepEqual(await read(),[original],'Missing or invalid merge choices cannot write')
+ const saved=await call('import-mappings',{action:'save',sourceName,mapping,mergeFieldId:input.mergeFieldId,expectedVersion:null})
+ r=await h.runtime()
+ const used=await call('import-mappings',{action:'use',sourceName,headers})
+ assert.equal(used.mergeFieldId,'_create_all');assert.deepEqual(used.mapping,mapping)
+ const preview=await call('import-preview',{...input,mapping:used.mapping,mergeFieldId:used.mergeFieldId})
+ assert.deepEqual([preview.creates,preview.updates,preview.unchanged,preview.rejected],[3,0,0,1])
+ assert.ok(preview.rows.every(row=>row.operation==='create'&&row.version===null&&Object.keys(row.before).length===0&&row.id!==original.id))
+ assert.deepEqual(preview.rows.map(row=>row.values[amount.id]),['6','7','8']);assert.match(preview.errors[0].message,/number/i)
+ const commandId=createUlid(),receipt=await r.csv.commit(h.ctx,commandId,preview.id)
+ assert.equal(receipt.result.state,'committed');assert.deepEqual(receipt.result.value,{id:preview.id,creates:3,updates:0,unchanged:0,rejected:1})
+ r=await h.runtime()
+ const replay=await r.csv.commit(h.ctx,commandId,preview.id);assert.equal(replay.replay,true);assert.deepEqual(replay.result,receipt.result,'A replay returns the original receipt')
+ await assert.rejects(r.csv.commit(h.ctx,createUlid(),preview.id))
+ const records=await read();assert.equal(records.length,4);assert.deepEqual(records.find(row=>row.id===original.id),original)
+ assert.deepEqual(records.filter(row=>row.id!==original.id).map(row=>[row.fields[key.id].value,row.fields[amount.id].value,row.fields[note.id].value]).sort((a,b)=>Number(a[1])-Number(b[1])),[['synthetic-cradle-1','6','First copy'],['synthetic-cradle-1','7','Second copy'],['','8','No matching key']])
+ assert.deepEqual(records.filter(row=>row.id!==original.id).map(row=>row.id).sort(),preview.rows.map(row=>row.id).sort(),'Only reviewed creates are committed')
+ const legacy=await call('import-preview',{...input,csv:encodeCsv(headers,[['synthetic-cradle-1','9','Ambiguous']]),mergeFieldId:key.id})
+ assert.deepEqual([legacy.creates,legacy.updates,legacy.rejected],[0,0,1],'Legacy matching refuses ambiguous primary values')
+ const stalePolicy=await call('import-preview',input),policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=?').bind(identity.appId).first(),rules=JSON.parse(policy.rules_json)
+ for(const rule of rules)if(rule.entityId===identity.entityId)rule.writableFields=rule.writableFields.filter(id=>id!==note.id)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
+ r=await h.runtime()
+ await assert.rejects(r.csv.commit(h.ctx,createUlid(),stalePolicy.id),/stale|forbidden|unavailable/i)
+ await call('import-preview',input,403);await call('import-mappings',{action:'use',sourceName,headers},403)
+ assert.equal((await call('import-mappings',{action:'list'})).mappings[0].available,false)
+ assert.deepEqual(await read(),records,'Policy refusal creates nothing')
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run();r=await h.runtime()
+ const staleSchema=await call('import-preview',input),current=r.registry.get(identity.appId,identity.entityId).schema
+ r=await migrateFixture(h,r,{...current,fields:current.fields.map(field=>field.id===note.id?{...field,required:true}:field),version:current.version+1,physicalRevision:'manual_'+createUlid()})
+ await assert.rejects(r.csv.commit(h.ctx,createUlid(),staleSchema.id),/stale|schema/i)
+ await call('import-mappings',{action:'use',sourceName,headers},409)
+ assert.equal((await call('import-mappings',{action:'list'})).mappings[0].available,false)
+ assert.equal((await read()).length,4,'Schema refusal creates nothing')
+ assert.equal((await h.db.prepare('SELECT version FROM record_csv_mappings WHERE id=?').bind(saved.id).first()).version,saved.version)
+}
+
 /** More than one raw page, with repeated computed sort keys, through HTTP. */
 async function evaluatedPagingJourney(h){
  const name=newField('Name'),amount=newField('Amount','number'),computed={...newField('Calculated amount','computed'),readOnly:true,resultType:'number',expression:{kind:'field',fieldId:amount.id}},appId=createUlid(),entityId=createUlid()
@@ -156,7 +213,7 @@ test('[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 CSV, workbook an
   const scope=await r.policy.scope(h.ctx,{appId:schema.appId,entityId:schema.id,purpose:'read'})
   assert.equal((await r.services.reader.query(h.ctx,scope,{})).items[0].fields[name.id].value,'Existing vendor')
   assert.equal((await r.manual.read(h.ctx,draft.appId)).name,draft.name)
-  await evaluatedPagingJourney(h);await recurringCsv(h);await csvFenceScenario(h)
+  await evaluatedPagingJourney(h);await recurringCsv(h);await createAllCsv(h);await csvFenceScenario(h)
  }finally{h.close()}
  await workbookJourney()
 })

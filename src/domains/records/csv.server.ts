@@ -19,12 +19,12 @@ export { decodeCsvValue, encodeCsvValue } from './csv-values'
 import { previewCsvRows } from './csv-preview-rows.server'
 import type { CsvImportPreview } from './csv-import-contracts'
 import { assertGuards } from './fence.server'
-import { createCsvMappings, validateCsvMapping, csvMappingSchema, csvMergeSchema } from './csv-mappings.server'
+import { createCsvMappings, validateCsvMapping, csvMappingSchema, csvImportMergeSchema } from './csv-mappings.server'
 import { createCsvLinkCandidates } from './csv-link-candidates.server'
 import { launchOverdueKind, overdueFieldIds, overdueMarkerField, projectLaunchOverdue } from '../../apps/launch/overdue-projection.server'
 import { launchFieldIds } from '../../apps/launch/descriptors.server'
 const stored=registerTable('record_csv_previews',['id','app_id','entity_id','owner_id','detail_json','expires_at','command_id'])
-export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024).optional(),workbook:z.object({filename:z.string().max(200),base64:z.string().max(14*1024*1024),sheet:z.string().max(120)}).strict().optional(),mapping:csvMappingSchema,mergeFieldId:csvMergeSchema}).strict()
+export const csvPreviewInput=z.object({appId:idSchema,entityId:idSchema,csv:z.string().max(10*1024*1024).optional(),workbook:z.object({filename:z.string().max(200),base64:z.string().max(14*1024*1024),sheet:z.string().max(120)}).strict().optional(),mapping:csvMappingSchema,mergeFieldId:csvImportMergeSchema}).strict()
 type Preview=CsvImportPreview & {guards:SqlPredicate[]}
 export function createRecordsCsv(db:D1Database,services:ReturnType<typeof createRecordServices>,admission:AdmissionPort){
  const {reader,writer,policy,descriptors,metadata}=services
