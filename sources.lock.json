@@ -12230,7 +12230,7 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "34b7ab0d4cdb43de953f3cc83b35f04de820d6524bf188e7d266c4c708918419",
+      "sha256": "a87e593ed71df7f92843647d6e35645e090f74ffb2195bd6c57517757605456c",
       "executable": false
     },
     "tests/helpers/launch-automation-definitions.mjs": {
@@ -13410,7 +13410,7 @@
       "executable": false
     },
     "tests/ui-launch-notifications.mjs": {
-      "sha256": "3282316af242660c48d3266440ff580fdfd8b2d2a95552e864375be4afdadb67",
+      "sha256": "ede2ad216a6258e264681c830a32dc43bf178cc2eaebe18e5b19b5608354d566",
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {

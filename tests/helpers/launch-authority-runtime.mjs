@@ -1,6 +1,5 @@
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
-import { createServer } from 'node:net'
 import { request as httpsRequest } from 'node:https'
 import { request as httpRequest } from 'node:http'
 import { mkdtemp, rm, mkdir, writeFile, readdir } from 'node:fs/promises'
@@ -22,9 +21,7 @@ const { initializeLegacyAuthority } = await import('../../src/domains/authority/
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
 export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch,mailResponse} = {}) {
-  const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
-  const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
-  assert.equal(available,true,'Authority test listener must be unoccupied')
+  let port = 0, origin = 'http://127.0.0.1'
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-authority-'))
   let runtime, mail, logs = ''
   const close = async () => {
@@ -33,7 +30,6 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     await rm(directory, { recursive: true, force: true })
   }
   try {
-    if(!overrides.MAIL_PROVIDER||overrides.MAIL_PROVIDER==='development')mail=await createFixtureMail(port,providerFetch,mailResponse)
     migrateFixture(directory)
     const owner = await installLegacyFixture(directory, { installedLaunchDefinitions, installationOwner })
     const configuration = { appOrigin: origin, sessionSecret: 'synthetic-launch-authority-test-signing-key', mode: 'development' }
@@ -59,9 +55,21 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
       result.workers[0].dev.outboundService={type:'fetcher',handler:captureMail?mail.fetch:providerFetch??rejectNetwork}
       return result
     }
-    let runtimeOptions = optionsFor()
+    // Bind before deriving the origin or creating the port-keyed mail capture.
+    // No requests run during this initial configuration. A probe followed by
+    // close (including a caller's port hint) cannot reserve a listener for us.
+    let runtimeOptions = optionsFor({AUTH_LOCAL:'false'})
     const reconfigure = async (changes, https) => { runtimeOptions = optionsFor(changes, https); await runtime.setOptions(runtimeOptions) }
     runtime = new Miniflare(runtimeOptions)
+    const listener = await runtime.ready
+    port = Number(listener.port)
+    origin = listener.origin
+    configuration.appOrigin = origin
+    bindings.APP_ORIGIN = overrides.APP_ORIGIN ?? origin
+    if(!overrides.MAIL_PROVIDER||overrides.MAIL_PROVIDER==='development')mail=await createFixtureMail(port,providerFetch,mailResponse)
+    // Miniflare retains the bound listener across setOptions; pin its assigned
+    // port for reloads so credentials, browser cookies and captures share it.
+    await reconfigure({})
     logs += `Emitted Worker listening at ${await runtime.ready}\n`
     let db = await runtime.getD1Database('DB')
     // Send real HTTP/TLS to our listener with the canonical Host. Miniflare's

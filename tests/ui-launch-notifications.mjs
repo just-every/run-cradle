@@ -11,13 +11,12 @@ contract('NOTIFY-001 NOTIFY-002 NOTIFY-003 NOTIFY-005 NOTIFY-006 NOTIFY-007 NOTI
  const output=path.resolve(process.env.CRADLE_LAUNCH_NOTIFICATIONS_EVIDENCE ?? '../evidence/de-launch-notifications')
  await mkdir(output,{recursive:true})
  // Each width already owns fresh Workers, databases, browsers and provider
- // histories. Separate processes also isolate the handover's temporary port
- // environment and the recovery journey's owned-workerd interruption.
- const results=await Promise.allSettled(accessibilityWidths.map((width,index)=>new Promise((resolve,reject)=>{
+ // histories. Separate processes also isolate provider edges and the recovery
+ // journey's owned-workerd interruption. Each Worker binds an OS-assigned port.
+ const results=await Promise.allSettled(accessibilityWidths.map(width=>new Promise((resolve,reject)=>{
   const started=performance.now()
   const child=spawn(process.execPath,[fileURLToPath(new URL('./helpers/launch-notifications-width.mjs',import.meta.url)),String(width),output],{
    stdio:'inherit',
-   env:{...process.env,CRADLE_AUTHORITY_PORT:String(41879+index)},
   })
   child.once('error',reject)
   child.once('close',(code,signal)=>{
