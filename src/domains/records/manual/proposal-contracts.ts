@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { idSchema } from '../validators'
-import { draftSchema, type RuleViolationImpact, type SchemaImpact } from './contracts'
+import { draftSchema, type CalculationPreview, type RuleViolationImpact, type SchemaImpact } from './contracts'
 import type { EntitySchema } from '../contracts'
 
 const sort = z.object({ fieldId: idSchema, direction: z.enum(['asc', 'desc']) }).strict()
@@ -17,5 +17,5 @@ export type ProposalState = 'pending' | 'adopted' | 'declined' | 'stale' | 'with
 /** The impact an agent receives: labels and counts only, never record identities or values. */
 export type AgentImpact = Pick<SchemaImpact, 'entityId' | 'label' | 'changes' | 'count' | 'removedFields' | 'violatingRecordCount'> & { validationViolations?: Omit<RuleViolationImpact, 'recordIds'>[] }
 export type ProposalSummary = { id: string; appId: string; baseName: string; keyName: string; createdAt: string; expiresAt: string; summary: string; state: ProposalState; keyCurrent: boolean; note: string; declineNote: string | null; releaseId: string | null }
-export type OwnerProposal = ProposalSummary & { previewHash: string; schemas: EntitySchema[]; impacts: SchemaImpact[]; metadata: string[]; views: ProposedView[]; forms: ProposedForm[]; access: string; recovery: string }
+export type OwnerProposal = ProposalSummary & { previewHash: string; schemas: EntitySchema[]; calculations: CalculationPreview[]; impacts: SchemaImpact[]; metadata: string[]; views: ProposedView[]; forms: ProposedForm[]; access: string; recovery: string }
 export type AgentProposal = ProposalSummary & { previewHash: string; impacts: AgentImpact[]; metadata: string[]; views: ProposedView[]; forms: ProposedForm[]; access: string }

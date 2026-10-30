@@ -9,7 +9,7 @@ import { issuerView } from '../../authority/proposer.server'
 import type { DescriptorRegistry } from '../descriptors.server'
 import { assertGuards } from '../fence.server'
 import type { SchemaDraft } from './contracts'
-import { proposals, createProposalStore, type StoredProposal } from './proposal-store.server'
+import { proposals, createProposalStore, proposalCommitment, type StoredProposal } from './proposal-store.server'
 import { checkProposedMetadata } from './proposal-metadata.server'
 import type { createReleaseCore, StoredPreview } from './release.server'
 import type { AgentProposal, ProposalInput } from './proposal-contracts'
@@ -32,7 +32,7 @@ export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:Des
   const views=(await db.prepare("SELECT id,entity_id,definition_json FROM record_views WHERE app_id=? AND visibility='app' ORDER BY id").bind(appId).all<{id:string;entity_id:string;definition_json:string}>()).results.map(row=>{const v=JSON.parse(row.definition_json) as {name:string;display:string};return {id:row.id,entityId:row.entity_id,name:v.name,display:v.display}})
   const forms=(await db.prepare('SELECT id,entity_id,definition_json FROM record_forms WHERE app_id=? ORDER BY id').bind(appId).all<{id:string;entity_id:string;definition_json:string}>()).results.map(row=>({id:row.id,entityId:row.entity_id,title:(JSON.parse(row.definition_json) as {title:string}).title}))
   await assertGuards(db,guards)
-  return {appId,name:base?.name??null,tables:descriptors.map(d=>({id:d.schema.id,label:d.schema.label,...(d.schema.primaryFieldId?{primaryFieldId:d.schema.primaryFieldId}:{}),...(d.schema.incomingRelations?{incomingRelations:d.schema.incomingRelations}:{}),fields:structuredClone(d.schema.fields)})) as SchemaDraft['tables'],views,forms,newIds:Array.from({length:100},()=>createUlid())}
+  return {appId,name:base?.name??null,tables:descriptors.map(d=>({id:d.schema.id,label:d.schema.label,...(d.schema.primaryFieldId?{primaryFieldId:d.schema.primaryFieldId}:{}),...(d.schema.incomingRelations?{incomingRelations:d.schema.incomingRelations}:{}),...(d.schema.validationRules?{validationRules:structuredClone(d.schema.validationRules)}:{}),fields:structuredClone(d.schema.fields)})) as SchemaDraft['tables'],views,forms,newIds:Array.from({length:100},()=>createUlid())}
  }
  async function propose(ctx:RequestContext,commandId:string,input:ProposalInput):Promise<AdmissionPlan<AgentProposal>>{
   const {appId,issuerId}=proposerOf(ctx),hash=await canonicalHash({action:'schema.propose',input})
@@ -45,8 +45,8 @@ export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:Des
   const authentication=new Set([...principalGuards(ctx),...principalGuards(view)].map(g=>canonical({sql:g.sql,values:g.values})))
   const detail:StoredPreview=await core.buildPreview(input.schema,id,{permit:{...permit,guards:[...permit.guards,guard]},reader:view,ownerId:issuerId,expiresAt:new Date(Date.parse(ctx.now)+PROPOSAL_LIFETIME).toISOString()})
   const metadata=checkProposedMetadata(detail.schemas,input.views,input.forms)
-  const stored:StoredProposal={...detail,views:input.views,forms:input.forms,note:input.note,metadata,freshness:detail.guards.filter(g=>!authentication.has(canonical({sql:g.sql,values:g.values})))}
-  const previewHash=await canonicalHash({schemas:stored.schemas,impacts:stored.impacts,metadata,views:input.views,forms:input.forms,note:input.note})
+  const stored:StoredProposal={...detail,calculationReportVersion:1,views:input.views,forms:input.forms,note:input.note,metadata,freshness:detail.guards.filter(g=>!authentication.has(canonical({sql:g.sql,values:g.values})))}
+  const previewHash=await canonicalHash(proposalCommitment(stored))
   const row={id,app_id:appId,proposer_id:ctx.principal.id,credential_id:ctx.principal.credentialId!,issuer_id:issuerId,state:'pending',summary:summarize(stored),detail_json:canonical(stored),preview_hash:previewHash,note:null,release_id:null,decided_by:null,created_at:ctx.now,expires_at:stored.expiresAt,decided_at:null}
   const key=await db.prepare('SELECT label FROM authority_schema_proposers WHERE principal_id=?').bind(ctx.principal.id).first<{label:string}>()
   const committedResult=await store.agent({...row,state:'pending',key_name:key?.label??null,base_name:base?.name??null,key_current:1},ctx.now)
@@ -71,7 +71,7 @@ export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:Des
 /** One plain line: what the owner would get by adopting. */
 export function summarize(d:StoredProposal){
  const tables=d.schemas.filter(s=>!d.prior.some(p=>p.id===s.id)),added=d.schemas.flatMap(s=>{const old=d.prior.find(p=>p.id===s.id);return s.fields.filter(f=>!old?.fields.some(o=>o.id===f.id))})
- const removed=Object.values(d.removals).flat().length,plural=(n:number,word:string)=>`${n} ${word}${n===1?'':'s'}`
- const parts=[tables.length?`${plural(tables.length,'new table')} (${tables.map(t=>t.label).join(', ')})`:'',added.length?`${plural(added.length,'new field')}`:'',removed?`${plural(removed,'removed field')}`:'',d.views.length?plural(d.views.length,'view'):'',d.forms.length?plural(d.forms.length,'form'):''].filter(Boolean)
+ const removed=Object.values(d.removals).flat().length,calculations=(d.calculations??[]).filter(calculation=>d.prior.find(schema=>schema.id===calculation.entityId)?.fields.some(field=>field.id===calculation.fieldId)).length,plural=(n:number,word:string)=>`${n} ${word}${n===1?'':'s'}`
+ const parts=[tables.length?`${plural(tables.length,'new table')} (${tables.map(t=>t.label).join(', ')})`:'',added.length?`${plural(added.length,'new field')}`:'',removed?`${plural(removed,'removed field')}`:'',calculations?plural(calculations,'updated calculation'):'',d.views.length?plural(d.views.length,'view'):'',d.forms.length?plural(d.forms.length,'form'):''].filter(Boolean)
  return `${d.name}: ${parts.join(', ')||'renames only'}`
 }

@@ -4,3 +4,5 @@
 @media (max-width: 760px) {
   .cr-calculation-review .cr-table th, .cr-calculation-review .cr-table td { padding: 12px 8px; }
 }
+.cr-calculation-record-id { display: block; font-size: 13px; font-weight: normal; overflow-wrap: anywhere; }
+.cr-calculation-review .cr-actions { flex-wrap: wrap; }
