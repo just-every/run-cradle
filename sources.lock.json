@@ -12574,7 +12574,7 @@
       "executable": false
     },
     "tests/helpers/records-base-roles-journey.mjs": {
-      "sha256": "f710287c30bcc61b4b9022d50d10e62a1327561be382f5c6794fe38aabf98d35",
+      "sha256": "e78c76fef644835ea65e139acf03c63fba3f8d437c54f8047bd5665eb84896a9",
       "executable": false
     },
     "tests/helpers/records-board-journey.mjs": {

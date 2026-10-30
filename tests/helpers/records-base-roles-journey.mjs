@@ -63,7 +63,11 @@ export async function baseRolesJourney(){
      await field.getByLabel('Function suggestions',{exact:true}).getByRole('button',{name:'ABS',exact:true}).click();await expect(input).toBeFocused();assert.equal(await input.inputValue(),'ABS(')
      await field.getByRole('button',{name:'{Units}',exact:true}).click();await input.press('End');await input.type(')')
      assert.equal(await input.inputValue(),'ABS({Units})');await field.getByText('Result type: number',{exact:true}).waitFor()
+     await input.fill('ABS({Order})');await field.getByRole('alert').filter({hasText:'ABS expects a numeric operand'}).waitFor();assert.equal(await input.getAttribute('aria-invalid'),'true')
+     await input.fill('ABS({Units})');await field.getByText('Result type: number',{exact:true}).waitFor()
+
     })
+    await cj.field('Unavailable units','formula',async field=>field.getByLabel('Formula for Unavailable units',{exact:true}).fill('ABS(1 / 0)'))
     await cj.capture('creator-formula-editor')
     const formulaPreview=creatorPage.waitForResponse(response=>response.url().endsWith('/schema-preview')&&response.request().method()==='POST')
     await creatorPage.getByRole('button',{name:'Preview schema changes',exact:true}).click();const formulaResponse=await formulaPreview;assert.equal(formulaResponse.status(),200,await formulaResponse.text());const formula=(await formulaResponse.json()).data
@@ -73,6 +77,8 @@ export async function baseRolesJourney(){
     const absolute=formula.calculations.find(field=>field.label==='Absolute units');assert.equal(absolute.resultType,'number');assert.deepEqual(absolute.samples[0].after,{state:'value',value:'7'})
     const absoluteReview=creatorPage.locator('.cr-calculation-review article').filter({has:creatorPage.getByRole('heading',{name:'Orders · Absolute units',exact:true})})
     assert.deepEqual(await absoluteReview.locator('tbody td').allTextContents(),['New calculation','7'])
+    const unavailableReview=creatorPage.locator('.cr-calculation-review article').filter({has:creatorPage.getByRole('heading',{name:'Orders · Unavailable units',exact:true})})
+    await expect(unavailableReview.getByText('Unavailable · Division by zero',{exact:true})).toBeVisible()
     const calculationReview=creatorPage.locator('.cr-calculation-review article').filter({has:creatorPage.getByRole('heading',{name:'Orders · Restock quantity',exact:true})})
     await calculationReview.getByRole('row').filter({hasText:'Grove Equipment replenishment'}).waitFor();assert.deepEqual(await calculationReview.locator('tbody td').allTextContents(),['New calculation','14'])
     assert.equal((await call(people.editor.cookie,base)).fields.some(field=>field.id===calculation.fieldId),false)
@@ -88,6 +94,7 @@ export async function baseRolesJourney(){
     await creatorPage.getByRole('button',{name:'Edit record',exact:true}).click();await creatorPage.getByLabel('Units',{exact:true}).fill('-0.125')
     await cj.command(creatorPage.getByRole('button',{name:'Save record',exact:true}),'record.patch')
     await expect(creatorPage.locator('dl').getByText('0.125',{exact:true})).toBeVisible()
+    await expect(creatorPage.locator('dl').getByText('Unavailable · Division by zero',{exact:true})).toBeVisible()
     assert.deepEqual((await call(people.creator.cookie,base+'/records/'+original.id)).record.fields[absolute.fieldId],{state:'value',value:'0.125'})
     await cj.capture('absolute-next-read')
     await creatorPage.getByRole('button',{name:'Edit record',exact:true}).click();await creatorPage.getByLabel('Units',{exact:true}).fill('7')
