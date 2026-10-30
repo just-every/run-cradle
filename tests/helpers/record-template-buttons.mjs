@@ -1,6 +1,8 @@
+import { recordUpdateButtonsBrowser } from './record-update-buttons-browser.mjs'
 import assert from 'node:assert/strict'
 import { createUlid } from '../../src/core/shared/ids.ts'
 import { RECORD_SCHEMA_ENTITY_ID } from '../../src/domains/records/contracts.ts'
+import { recordUpdateButtons } from './record-update-buttons.mjs'
 
 /** Public HTTP journey; durable policy edits supply the actual authority failures. */
 export async function recordTemplateButtons(h) {
@@ -71,11 +73,12 @@ export async function recordTemplateButtons(h) {
     await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json, policy.id).run()
   }
   assert.deepEqual(await counts(), [3, 3])
-  return { appId, entityId: parentId, childId, source, template, button: updated, createdRecordId: result.value.id, recordsCreated: 2 }
+  const scalarUpdate = await recordUpdateButtons(h)
+  return { scalarUpdate, appId, entityId: parentId, childId, source, template, button: updated, createdRecordId: result.value.id, recordsCreated: 2 }
 }
 
 /** Reuses the existing template browser fixture, at each caller-selected width. */
-export async function recordTemplateButtonsBrowser(page, j, h, width, { appId, parentId, source, template }) {
+export async function recordTemplateButtonsBrowser(page, j, h, width, { appId, parentId, source, template, status }) {
   const call = async (path, input) => {
     const csrf = input === undefined ? null : await (await page.request.get(h.origin + '/auth/csrf')).json()
     const response = await page.request.fetch(h.origin + path, { method: input === undefined ? 'GET' : 'POST', headers: { origin: h.origin, ...(csrf ? { 'x-csrf-token': csrf.csrfToken } : {}) }, ...(input === undefined ? {} : { data: input }) })
@@ -159,5 +162,6 @@ export async function recordTemplateButtonsBrowser(page, j, h, width, { appId, p
   } finally {
     await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json, policy.id).run()
   }
-  return { buttonId: button.id, createdRecordIds: [created.id, direct.id], childRecordsCreated: template.children.length * 2 }
+  const update = await recordUpdateButtonsBrowser(page, j, h, width, { appId, parentId, source, status })
+  return { update, buttonId: button.id, createdRecordIds: [created.id, direct.id], childRecordsCreated: template.children.length * 2 }
 }

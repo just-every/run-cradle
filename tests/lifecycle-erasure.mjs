@@ -42,6 +42,9 @@ contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installa
   const template=(await r.commands.get('record.template-save').execute(h.ctx,{commandId:createUlid(),expected:[...sourceCommand.expected,{ref:source.ref,version:source.version}],input:{ref:source.ref,name:'synthetic-cradle-4307',includeLinks:false,includeAttachments:false,includeChildren:false}})).result.value
   assert.equal((await r.services.templates.list(h.ctx,appId,table.id)).length,1)
   const button=(await r.commands.get('record.template-button-save').execute(h.ctx,{commandId:createUlid(),expected:sourceCommand.expected,input:{appId,entityId:table.id,templateId:template.id,name:'synthetic-cradle-4308',confirmation:true}})).result.value
+  const updateEnvelope={commandId:createUlid(),expected:sourceCommand.expected,input:{kind:'update-field',appId,entityId:table.id,fieldId:table.fields[0].id,value:h.person,name:'synthetic-cradle-4309',confirmation:true}}
+  const updateButton=(await r.commands.get('record.template-button-save').execute(h.ctx,updateEnvelope)).result.value
+  const controlButton=(await r.commands.get('record.template-button-save').execute(h.ctx,{...updateEnvelope,commandId:createUlid(),input:{...updateEnvelope.input,value:'synthetic-cradle-4310',name:'synthetic-cradle-4311'}})).result.value
   await h.db.prepare("INSERT INTO channel_progress_owed(event_id,subject_type,subject_id,starter_id,outcome,created_at) VALUES(?,'warehouse-export',?,?,'completed',?)").bind('synthetic-cradle-4201','synthetic-cradle-4202',h.person,new Date().toISOString()).run()
   const owed=()=>h.sql.prepare('SELECT count(*) n FROM channel_progress_owed WHERE starter_id=?').get(h.person).n
   assert.equal(owed(),1)
@@ -53,6 +56,10 @@ contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installa
   assert.equal(body.data.value.erasureState,'complete')
   assert.equal(h.sql.prepare('SELECT count(*) n FROM record_template_buttons WHERE id=?').get(button.id).n,0,'Erasure retires configured buttons before deleting their templates')
   assert.equal(h.sql.prepare('SELECT count(*) n FROM record_templates WHERE id=?').get(template.id).n,0,'Erasure retires templates containing the erased person reference')
+  assert.equal(h.sql.prepare('SELECT count(*) n FROM record_update_buttons WHERE id=?').get(updateButton.id).n,0,'Erasure retires configured scalar values referencing the erased person')
+  assert.equal(h.sql.prepare('SELECT count(*) n FROM record_update_buttons WHERE id=?').get(controlButton.id).n,1,'Erasure preserves unrelated configured actions')
+  await assert.rejects(r.commands.get('record.template-button-save').execute(h.ctx,updateEnvelope),{code:'not_found'})
+  await assert.rejects(r.commands.get('record.template-button-run').execute(h.ctx,{commandId:createUlid(),expected:[...sourceCommand.expected,{ref:source.ref,version:source.version}],input:{appId,entityId:table.id,buttonId:updateButton.id,buttonVersion:updateButton.version,ref:source.ref,confirmed:true}}),{code:'not_found'})
   await assert.rejects(r.commands.get('record.apply-template').execute(h.ctx,{commandId:createUlid(),expected:sourceCommand.expected,input:{appId,entityId:table.id,templateId:template.id}}),{code:'not_found'})
   const progressPlace=body.data.value.plan.places.find(place=>place.store==='channel_progress_owed')
   assert.ok(progressPlace,'Confirmed erasure inventories owed progress starter references')

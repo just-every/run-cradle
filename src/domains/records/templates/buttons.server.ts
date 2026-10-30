@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { buttonRunInput, updateButtonSaveInput, createUpdateButtons, type UpdateButton } from '../buttons/update.server'
 import type { CommandInput } from '../../../contracts/primitives'
 import type { RequestContext } from '../../authority/ports'
 import type { AdmissionPlan, SqlPredicate } from '../../admission/ports'
@@ -13,21 +14,20 @@ import { requireBaseAuthor } from '../manual/base-access.server'
 import { assertGuards } from '../fence.server'
 import { RECORD_SCHEMA_ENTITY_ID } from '../contracts'
 
-export const templateButtonSaveInput = z.object({
+const createButtonSaveInput = z.object({
   appId: idSchema, entityId: idSchema, templateId: idSchema,
   name: z.string().trim().min(1).max(160), confirmation: z.boolean(), id: idSchema.optional(),
 }).strict()
-export const templateButtonRunInput = z.object({
-  appId: idSchema, entityId: idSchema, buttonId: idSchema,
-  confirmed: z.boolean(), ref: refSchema,
-}).strict()
+export const templateButtonSaveInput = z.union([createButtonSaveInput, updateButtonSaveInput])
+export const templateButtonRunInput = buttonRunInput
 export type TemplateButtonSaveInput = z.infer<typeof templateButtonSaveInput>
 export type TemplateButtonRunInput = z.infer<typeof templateButtonRunInput>
-export type RecordTemplateButton = {
+export type RecordTemplateButton = UpdateButton | {
+  kind?: 'create-template'
   id: string; appId: string; entityId: string; templateId: string
   name: string; confirmation: boolean; version: number; enabled: boolean
 }
-type Services = Pick<TemplateDependencies,'policy'|'descriptors'|'reader'> & {templates:ReturnType<typeof createRecordTemplates>}
+type Services = TemplateDependencies & {templates:ReturnType<typeof createRecordTemplates>}
 type Stored = { id: string; app_id: string; entity_id: string; template_id: string; name: string; confirmation: number; version: number }
 const buttons = registerTable('record_template_buttons', ['id', 'app_id', 'entity_id', 'template_id', 'owner_id', 'name', 'confirmation', 'version', 'created_at', 'updated_at'])
 const unavailable = (error: unknown) => error instanceof Error && 'code' in error && ['forbidden', 'not_found', 'grant_revoked', 'grant_expired', 'schema_conflict', 'version_conflict', 'signed_out'].includes(String(error.code))
@@ -36,6 +36,7 @@ const identity = (action: string, command: CommandInput<unknown>) => canonicalHa
 
 /** Configured buttons use the ordinary template creation planner and atomic admission. */
 export function createTemplateButtons(db: D1Database, services: Services) {
+  const updates = createUpdateButtons(db, services)
   async function configured(appId: string, entityId: string, id: string) {
     const row = await db.prepare('SELECT id,app_id,entity_id,template_id,name,confirmation,version FROM record_template_buttons WHERE id=? AND app_id=? AND entity_id=?').bind(id, appId, entityId).first<Stored>()
     if (!row) throw new AdmissionError('not_found', 'The template button is unavailable in this table.')
@@ -45,7 +46,7 @@ export function createTemplateButtons(db: D1Database, services: Services) {
     const schema = services.descriptors.get(appId, entityId).schema
     if (!command.expected.some(item => item.ref.appId === appId && item.ref.entityId === RECORD_SCHEMA_ENTITY_ID && item.ref.recordId === entityId && item.version === schema.version)) throw new AdmissionError('schema_conflict', 'Current table schema version is required.')
   }
-  async function list(ctx: RequestContext, appId: string, entityId: string): Promise<RecordTemplateButton[]> {
+  async function list(ctx: RequestContext, appId: string, entityId: string, recordId?: string): Promise<RecordTemplateButton[]> {
     const scope = await services.policy.scope(ctx, { appId, entityId, purpose: 'read' })
     await assertGuards(db, scope.currentAuthorityGuards)
     const rows = await db.prepare('SELECT id,app_id,entity_id,template_id,name,confirmation,version FROM record_template_buttons WHERE app_id=? AND entity_id=? ORDER BY name,id').bind(appId, entityId).all<Stored>()
@@ -76,10 +77,11 @@ export function createTemplateButtons(db: D1Database, services: Services) {
       } catch (error) { if (!unavailable(error)) throw error }
       result.push(project(row, enabled))
     }
-    return result
+    return [...result, ...await updates.list(ctx, appId, entityId, recordId)]
   }
   async function save(ctx: RequestContext, command: CommandInput<TemplateButtonSaveInput>): Promise<AdmissionPlan<RecordTemplateButton>> {
-    const input = templateButtonSaveInput.parse(command.input), { appId, entityId, templateId, name, confirmation } = input
+    if ('kind' in command.input && command.input.kind === 'update-field') return updates.save(ctx, { ...command, input: command.input })
+    const input = createButtonSaveInput.parse(command.input), { appId, entityId, templateId, name, confirmation } = input
     const author = await requireBaseAuthor(db, ctx, appId)
     if (!author) throw new AdmissionError('forbidden', 'Only a base owner or creator can configure template buttons.')
     schemaExpected(command, appId, entityId)
@@ -100,6 +102,8 @@ export function createTemplateButtons(db: D1Database, services: Services) {
     }
   }
   async function run(ctx: RequestContext, command: CommandInput<TemplateButtonRunInput>) {
+    const updated = await updates.run(ctx, command)
+    if (updated) return updated
     const { appId, entityId, buttonId, confirmed, ref } = templateButtonRunInput.parse(command.input)
     if (ref.appId !== appId || ref.entityId !== entityId) throw new AdmissionError('validation', 'The triggering record must belong to the button table.')
     const button = await configured(appId, entityId, buttonId)

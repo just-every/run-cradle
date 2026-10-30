@@ -15,6 +15,7 @@ import {fileStoreBindings} from './file-stores-journey.mjs'
 import {warehouseNetworkEdge} from './warehouse-network-edge.mjs'
 import {addWarehouseArchiveState,assertWarehouseArchive} from './warehouse-archive.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
+import {addUpdateButtonArchiveState} from './record-update-buttons-archive.mjs'
 /** The archive's store reference and retained copy are both authored through the product doors. */
 export async function fileStoreArchive(directory){
  const provider=fileStoresProvider(),calendarProvider=recordCalendarProvider(),warehouseEdge=await warehouseNetworkEdge()
@@ -50,6 +51,7 @@ export async function fileStoreArchive(directory){
   assert.equal(values[0],copy.fileId);assert.equal(JSON.parse(values[1]).itemId,members[1].reference.itemId)
   const calendar=await addRecordCalendarArchiveState(h,calendarProvider,calendarDateId,record.ref.recordId)
   const warehouse=await addWarehouseArchiveState(h,warehouseEdge);calendar.warehouse=warehouse
+  calendar.updateButton=await addUpdateButtonArchiveState(h,record.ref.recordId)
   const warehouseBucket=await h.runtime.getR2Bucket('WAREHOUSE'),bucket=await h.runtime.getR2Bucket('FILES'),service=await createPortability({db:h.db,buckets:{FILES:installationBucket(h.db,bucket),WAREHOUSE:warehouseBucket},policy:{...installationPortabilityPolicy(warehouseBucket),derivedTables:await derivedSearch(h.db)}})
   await exportArchive(service,directory+'/file-stores.rer',transient)
   await assertWarehouseArchive(directory+'/file-stores.rer',warehouse)

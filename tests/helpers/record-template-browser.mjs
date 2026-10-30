@@ -18,15 +18,16 @@ export async function recordTemplateBrowser(page,j,h,width){
  }
  const appId=createUlid(),parentId=createUlid(),vendorId=createUlid(),childId=createUlid()
  const title=newField('Order'),vendorName=newField('Supplier'),vendor=newField('Supplier link','relation'),files=newField('Order files','attachment'),line=newField('Line item'),parent=newField('Order link','relation')
- const amount=newField('Amount','money')
+ const amount=newField('Amount','money'),status=newField('Status','select')
+ status.options=[{id:createUlid(),label:'Queued'},{id:createUlid(),label:'Reviewed'}]
  title.required=true;line.required=true
  vendor.relation={ownerAppId:appId,entityId:vendorId,cardinality:'one',onDelete:'restrict'}
  parent.relation={ownerAppId:appId,entityId:parentId,cardinality:'one',onDelete:'restrict'}
- const preview=await call('/api/v1/records/schema-preview',{appId,name:`synthetic-cradle-${width} · Purchasing`,tables:[{id:vendorId,label:'Suppliers',primaryFieldId:vendorName.id,fields:[vendorName]},{id:parentId,label:'Orders',primaryFieldId:title.id,fields:[title,amount,vendor,files],incomingRelations:[{id:createUlid(),label:'Line items',sourceEntityId:childId,sourceFieldId:parent.id}]},{id:childId,label:'Line items',primaryFieldId:line.id,fields:[line,parent]}]})
+ const preview=await call('/api/v1/records/schema-preview',{appId,name:`synthetic-cradle-${width} · Purchasing`,tables:[{id:vendorId,label:'Suppliers',primaryFieldId:vendorName.id,fields:[vendorName]},{id:parentId,label:'Orders',primaryFieldId:title.id,fields:[title,amount,vendor,files,status],incomingRelations:[{id:createUlid(),label:'Line items',sourceEntityId:childId,sourceFieldId:parent.id}]},{id:childId,label:'Line items',primaryFieldId:line.id,fields:[line,parent]}]})
  await call('/api/v1/commands/release.adopt',envelope({kind:'manual_schema',previewId:preview.id}))
  const schema=await call(`/api/v1/apps/${appId}/entities/${parentId}`),revision={ref:{appId,entityId:schemaEntity,recordId:parentId},version:schema.version}
  const create=async(entityId,values)=>{const entity=await call(`/api/v1/apps/${appId}/entities/${entityId}`);return(await call('/api/v1/commands/record.create',envelope({appId,entityId,values},[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:entity.version}]))).value}
- const supplier=await create(vendorId,{[vendorName.id]:`synthetic-cradle-${width+1}`}),source=await create(parentId,{[title.id]:`synthetic-cradle-${width+2}`,[vendor.id]:supplier.ref,[amount.id]:{minor:'100115',currency:'USD',scale:2}})
+ const supplier=await create(vendorId,{[vendorName.id]:`synthetic-cradle-${width+1}`}),source=await create(parentId,{[title.id]:`synthetic-cradle-${width+2}`,[vendor.id]:supplier.ref,[amount.id]:{minor:'100115',currency:'USD',scale:2},[status.id]:status.options[0].id})
  await create(childId,{[line.id]:`synthetic-cradle-${width+3}`,[parent.id]:source.ref})
  // The attachment producer is the existing evidence upload door. Give this
  // fixture's owner its explicit upload permissions, as the gallery journey does.
@@ -87,12 +88,12 @@ export async function recordTemplateBrowser(page,j,h,width){
  const savedGrid=(await call(`/api/v1/apps/${appId}/entities/${parentId}/records/${gridRow.id}`)).record
  assert.deepEqual(displayedAmount,savedGrid.fields[amount.id].value,'The template amount and currency shown at Save equal the saved money')
  await page.getByRole('button',{name:'New record',exact:true}).waitFor();await j.capture('record-template-grid-created')
- const form=(await call('/api/v1/commands/form.save',envelope({form:{appId,entityId:parentId,title:`synthetic-cradle-${width+7}`,fields:[title,amount,vendor,files].map(field=>({fieldId:field.id,label:field.label,help:'',required:field.required})),submitAction:'record.create',authenticated:true}},[revision]))).value
+ const form=(await call('/api/v1/commands/form.save',envelope({form:{appId,entityId:parentId,title:`synthetic-cradle-${width+7}`,fields:[title,amount,vendor,files,status].map(field=>({fieldId:field.id,label:field.label,help:'',required:field.required})),submitAction:'record.create',authenticated:true}},[revision]))).value
  await page.goto(`${h.origin}/app/forms/${form.id}`);await page.getByLabel('Record template',{exact:true}).selectOption({label:templateName})
  assert.equal(await page.getByLabel('Order *',{exact:true}).inputValue(),source.fields[title.id].value)
  const formName=`synthetic-cradle-${width+8}`;await page.getByLabel('Order *',{exact:true}).fill(formName);await j.capture('record-template-form-edit')
  const formRow=await j.command(page.getByRole('button',{name:'Submit',exact:true}),'form.submit');await assertApplied(formRow,formName);await j.capture('record-template-form-submitted')
- const buttons=await recordTemplateButtonsBrowser(page,j,h,width,{appId,parentId,source,template})
+ const buttons=await recordTemplateButtonsBrowser(page,j,h,width,{appId,parentId,source,template,status})
  const automation=await recordTemplateAutomationBrowser(page,j,h,width,{appId,parentId,source,template})
  return {automation,buttons,duplicates,templateId:template.id,gridRecordId:gridRow.id,formRecordId:formRow.id,childRecordsCreated:2}
 }
