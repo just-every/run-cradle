@@ -4458,7 +4458,7 @@
       "executable": false
     },
     "docs/importing.md": {
-      "sha256": "957f6453372fdb65f6f35b8cd7d06561997a2bbb8a58f256a78a97a4a3a57895",
+      "sha256": "ddb0c6bdd7a4ac08613bfd8f88a639a7f916c93671064661cc6971c92ea5d67f",
       "executable": false
     },
     "docs/install.md": {
@@ -9238,7 +9238,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/lookup-proof.ts": {
-      "sha256": "7f09810c76afdb4cf4d8e4dc5ba49f2b823ae88181fb6aebb5baab75baeae13a",
+      "sha256": "32a2be2b446edaaa0ae3aa84c4d345a841d109015644abb57388a682e0c375a3",
       "executable": false
     },
     "src/domains/records/base-transfer/lookup.ts": {
@@ -9405,8 +9405,12 @@
       "sha256": "40bb8f56c82b1a90cc561e3dc85c5579ec175433959761cff0fef90c8cb7b838",
       "executable": false
     },
+    "src/domains/records/base-transfer/workbook-lookup-values.ts": {
+      "sha256": "716cf8240a32d2e08fccf1ec37e6da2504ab01bd292692616706fbb06dc941ce",
+      "executable": false
+    },
     "src/domains/records/base-transfer/workbook-lookups.ts": {
-      "sha256": "c9e129eb323c4288f19c2ff433cf166b7aa2e53be1fe587c57064cc749ed1579",
+      "sha256": "889502deac9e4c55fafb03a6e1c97426d57e02c57207bf24d86cd63fca0422b3",
       "executable": false
     },
     "src/domains/records/bulk.server.ts": {
@@ -13018,7 +13022,7 @@
       "executable": false
     },
     "tests/helpers/workbook-fixtures.mjs": {
-      "sha256": "4a03811589003dd56a9fc1aafb98a9e58bc2a76eae8b1ea739126062184515f8",
+      "sha256": "9f0d69ed6efe0ab634088904f58da68c003621dd1bf60b7f3cc309938ffb061f",
       "executable": false
     },
     "tests/helpers/workbook-http.mjs": {
@@ -13034,7 +13038,7 @@
       "executable": false
     },
     "tests/helpers/workbook-lookup-journey.mjs": {
-      "sha256": "95d205b3d2643ecfa131f47c253d5821aaa6c15787aed598e576cf91404b1e59",
+      "sha256": "a025930b575780cb81d1bdb1c6c236a31e3f4267852b50c5dbd1ad578139acc6",
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {

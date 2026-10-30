@@ -32,10 +32,19 @@ export function proposeWorkbookLookups(source:PreparedSource,tables:SourceTable[
     const a=row.values[link.key],b=matched!.values[key],aNumeric=!!row.numericOrigins?.[link.key],bNumeric=!!matched!.numericOrigins?.[key]
     if(typeof a!==typeof b||aNumeric!==bNumeric)throw new Error('Lookup key types must agree with the target keys')
    }
-   link.relationTableKey=target.key
-   // Reuse the native all-row lookup proof after current mapping and row validation.
-   if(!options.tables?.[table.key]?.columns?.[column.key]?.lookup)column.lookup={relationColumnKey:link.key,valueColumnKey:mapping.valueColumnKey}
   }catch(error){result.reason=error instanceof Error?error.message:'Unsupported workbook lookup'}
+ }
+ // A single source key cannot silently become links to two worksheets with equal cached values.
+ const proposals=results.filter(r=>!r.reason)
+ for(const result of proposals){
+  const mapping=result.lookup!,competing=proposals.some(r=>r.tableKey===result.tableKey&&r.lookup?.relationColumnKey===mapping.relationColumnKey&&r.lookup.targetTableKey!==mapping.targetTableKey)
+  if(competing)result.reason='One source key refers to several target worksheets; choose a link target for this key'
+ }
+ for(const result of results.filter(r=>!r.reason)){
+  const mapping=result.lookup!,table=tables.find(t=>t.key===result.tableKey)!,link=table.columns.find(c=>c.key===mapping.relationColumnKey)!,column=table.columns.find(c=>c.key===result.columnKey)!
+  link.relationTableKey=mapping.targetTableKey
+  // Reuse the native all-row lookup proof after current mapping and row validation.
+  if(!options.tables?.[table.key]?.columns?.[column.key]?.lookup)column.lookup={relationColumnKey:link.key,valueColumnKey:mapping.valueColumnKey}
  }
  return results
 }

@@ -33,6 +33,12 @@ export async function workbookLookupJourney(h,d,provider){
  const specific=await d.call('/api/v1/records/base-import/preview',d.form(formulaWorkbook(equal),'equal-catalogs.xlsx'))
  assert.equal(field(specific.schemaDraft.tables[0],'Vendor').relation.entityId,specific.schemaDraft.tables[1].id)
  assert.equal(specific.report.workbookFormulas.find(f=>f.columnKey==='column-4').recognized,true)
+ const conflicting=lookupSheets();conflicting.push({...conflicting[1],name:'Other catalog'});conflicting[0].rows.forEach(row=>{row[4].formula=row[4].formula.replaceAll('Vendor catalog','Other catalog')})
+ const conflictBytes=formulaWorkbook(conflicting),conflict=await d.call('/api/v1/records/base-import/preview',d.form(conflictBytes,'conflicting-sheets.xlsx'))
+ for(const key of ['column-4','column-5']){const proof=conflict.report.workbookFormulas.find(f=>f.columnKey===key);assert.equal(proof.recognized,false);assert.match(proof.reason,/several target worksheets/);assert.notEqual(conflict.schemaDraft.tables[0].fields.find(f=>f.id===conflict.identities.tables['sheet-1'].fields[key]).type,'computed')}
+ const chosen=await d.call('/api/v1/records/base-import/preview',d.form(conflictBytes,'conflicting-sheets.xlsx',{...conflict,options:{...conflict.options,tables:{'sheet-1':{columns:{'column-2':{type:'relation',relationTableKey:'sheet-2',cardinality:'one'}}}}}}))
+ assert.equal(chosen.report.workbookFormulas.find(f=>f.columnKey==='column-4').recognized,true);assert.equal(chosen.report.workbookFormulas.find(f=>f.columnKey==='column-5').recognized,false,'An explicit link target preserves only its own source formula, never an equal-valued different worksheet')
+
  for(const [formula,reason]of [[row=>`XLOOKUP(B${row},'Vendor catalog'!$A$2:$A$4,'Vendor catalog'!$C$2:$C$4,"missing")`,/replacement/],[row=>`XLOOKUP(B${row},'Vendor catalog'!$A$2:$A$4,'Vendor catalog'!$C$2:$C$4,,0,-1)`,/forward/],[row=>`VLOOKUP(B${row},'Missing sheet'!$A$2:$C$4,2,FALSE)`,/outside/]]){
   const input=lookupSheets();input[0].rows.forEach((row,i)=>{row[3].formula=formula(i+2)})
   const refused=await d.call('/api/v1/records/base-import/preview',d.form(formulaWorkbook(input),'unsupported.xlsx')),proof=refused.report.workbookFormulas.find(f=>f.columnKey==='column-4')

@@ -26,8 +26,8 @@ export function invalidWorkbooks(){const base=workbook(),parts=unzipWorkbook(bas
 
 /** These cached values are independent source expectations, including a deliberately wrong cache. */
 export function lookupSheets({duplicate=false,partial=false,mixed=false}={}){
- const vendors=[['synthetic-cradle-v1','12.5','Brisbane'],['synthetic-cradle-v2','7.25','Perth'],[duplicate?'synthetic-cradle-v1':'synthetic-cradle-v3','0','Darwin']]
- const rows=[['synthetic-cradle-order-1','synthetic-cradle-v1','2','12.5','Brisbane','12.5','12.5','25'],['synthetic-cradle-order-2','synthetic-cradle-v2','3','7.25','Perth','99','7.25','21.75'],['synthetic-cradle-order-3','synthetic-cradle-v1','4','12.5','Brisbane','12.5','12.5','50']]
+ const vendors=[['synthetic-cradle-v1','12.50','Brisbane'],['synthetic-cradle-v2','7.25','Perth'],[duplicate?'synthetic-cradle-v1':'synthetic-cradle-v3','0','Darwin']]
+ const rows=[['synthetic-cradle-order-1','synthetic-cradle-v1','2','12.500','Brisbane','12.5','12.5','25'],['synthetic-cradle-order-2','synthetic-cradle-v2','3','7.25','Perth','99','7.25','21.75'],['synthetic-cradle-order-3','synthetic-cradle-v1','4','12.5','Brisbane','12.5','12.5','50']]
  return [{name:'Purchases',headers:['Purchase','Vendor','Quantity','V price','X city','Bad cache','Approximate','Extended'],rows:rows.map((row,i)=>row.map((value,j)=>{
   const r=i+2,formulas={3:`VLOOKUP(B${r},'Vendor catalog'!$A$2:$C$${partial?3:4},2,FALSE)`,4:`XLOOKUP(B${r},'Vendor catalog'!$A$2:$A$4,'Vendor catalog'!$C$2:$C$4)`,5:`VLOOKUP(B${r},'Vendor catalog'!$A$2:$C$4,2,FALSE)`,6:`VLOOKUP(B${r},'Vendor catalog'!$A$2:$C$4,2,TRUE)`,7:`C${r}*D${r}`},formula=j===3&&mixed&&i===2?`C${r}+1`:formulas[j]
   return {...cell(value,[2,3,5,6,7].includes(j)?'number':'text'),...(formula?{formula,coordinate:String.fromCharCode(65+j)+r}:{})}

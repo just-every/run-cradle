@@ -5,20 +5,38 @@ into an existing one. You choose files, review the proposed tables and fields,
 review the schema changes, then adopt and run the import. No AI provider or live
 connection to your source account is needed.
 
-## Excel arithmetic formulas
+## Workbook formulas and links
 
-For an XLSX workbook, review can preserve a uniform numeric formula column
-using same-row references, parentheses and addition, subtraction,
-multiplication or division. The proposal names the mapped native fields and
-compares every source row's cached result with native arithmetic before offering
-a formula field. After adoption, input edits recompute it on the next read.
-You can instead choose Number or Text to retain the cached values.
+For an Excel workbook or a Google Sheets snapshot, review can preserve uniform
+numeric formulas using same-row references, parentheses and addition,
+subtraction, multiplication or division. The proposal names the mapped native
+fields and compares every source row's cached result with native arithmetic
+before offering a formula field. After adoption, input edits recompute it on the
+next read. You can instead choose Number or Text to retain cached values.
+
+Exact forward VLOOKUP and XLOOKUP formulas can propose a One linked record field
+and a native lookup. The source formula identifies the target worksheet; its
+search range must cover the complete imported primary column, without the
+header. Target keys must be nonempty and unique, including letter case, and
+every source key must match exactly. Every cached lookup result is checked
+against its native target value. Arithmetic can also use a verified numeric
+lookup, so changing the linked price updates each linked row's total. Repeated
+text and numeric key columns can propose links without a lookup formula too.
+
+VLOOKUP requires FALSE or 0 for exact matching. XLOOKUP supports its default
+exact forward search, including explicit 0 match mode and 1 search mode; a
+missing-value replacement is unsupported. Approximate, wildcard and reverse
+searches, partial ranges, formula-valued targets and unreviewed target primary
+columns keep their cached values. Choose the appropriate primary column during
+review when the workbook uses another search key.
 
 Review and the move-in receipt explain each refused formula. Mixed definitions,
-cycles, unsupported references, nonnumeric inputs and mismatched cached results
-keep their cached values in the chosen field type. The original workbook,
-including cell coordinates and definitions, remains in source custody. Other
-formula families and Google Sheets formula preservation are not implemented.
+cycles, unsupported references, nonnumeric arithmetic inputs and mismatched
+cached results keep their cached values in the chosen field type. Original
+workbook bytes or the read-only Google snapshot, including formula coordinates
+and definitions, remain in source custody. Other formula families and broader
+reference, date and error semantics remain unsupported. Error cells and missing
+cached formula results must be corrected in the source before importing.
 
 ## Choose your files
 

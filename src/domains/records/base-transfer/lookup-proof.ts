@@ -22,7 +22,7 @@ export function proveLookup(source:PreparedSource,table:SourceTable,column:Sourc
   if(!target.supported||cell?.error||refs.length>1||ref&&!ref.materializable)derived=null
   else if(ref){const value=recordsByKey.get(JSON.stringify([target.target!.key,ref.targetRowKey]))?.fields[target.targetField!.id];derived=target.targetField!.type==='select'?target.targetField!.options?.find(o=>o.id===value)?.label??'':value??''}
   const raw=row.values[column.key]??'';let exported=source.format==='api'&&Array.isArray(raw)?raw.length===0?'':raw.length===1?raw[0]:raw:raw
-  const tokens=row.numericTokens?.[column.key],numeric=tokens?.find(token=>token.path.length===0||Array.isArray(raw)&&raw.length===1&&token.path.length===1&&token.path[0]===0)
+  const tokens=row.numericTokens?.[column.key],numeric=tokens?.find(token=>token.path.length===0||Array.isArray(raw)&&raw.length===1&&token.path.length===1&&token.path[0]===0)??row.numericOrigins?.[column.key]
   if(numeric&&target.targetField?.type==='number'){try{exported=exactApiNumber(numeric.lexeme)}catch{derived=null}}
   if(derived!==null&&rawText(exported)===rawText(derived as never))matchedRows++
   else if(!firstMismatch)firstMismatch={code:'LOOKUP_MISMATCH',tableKey:table.key,rowKey:row.key,columnKey:column.key,location:row.location,raw,...(target.target?{targetTableKey:target.target.key}:{}),message:`Lookup retained as TEXT: exported ${canonical(raw)}, derived ${canonical(derived)}; first mismatch at ${row.location.artifact} LINE ${row.location.row??row.location.page??1}${target.supported?'':'; lookup needs an actual ONE link and a stored scalar target'}`}
