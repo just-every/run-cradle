@@ -4,7 +4,7 @@ import {csvDownloadEntries} from './base-csv-download.mjs'
 import assert from 'node:assert/strict'
 import {recordsImportBrowserRuntime} from './records-import-browser-runtime.mjs'
 import {workbookDoors} from './workbook-http.mjs'
-import {workbook,workbookSheets,cell,ooxmlFixture,invalidWorkbooks,arithmeticWorkbook} from './workbook-fixtures.mjs'
+import {workbook,workbookSheets,cell,ooxmlFixture,invalidWorkbooks,arithmeticWorkbook,formulaWorkbook} from './workbook-fixtures.mjs'
 import {writeWorkbook} from '../../src/domains/records/workbooks/write.ts'
 import {readWorkbook} from '../../src/domains/records/workbooks/read.ts'
 import {sheetsProvider} from './sheets-provider.mjs'
@@ -59,6 +59,16 @@ async function workbookArithmeticJourney(h,d){
   const refusal=byLabel(label);assert.equal(refusal.recognized,false,label);assert.match(refusal.reason,reason,label);assert.equal(field(orders,label).type,'number',`${label} keeps its cached literal instead of inventing a native formula`)
  }
  assert.equal(byLabel('Mismatch').matchedRows,3,'A mismatched final row prevents adoption after earlier rows matched')
+ // A mismatch beyond the displayed samples must still prevent formula adoption.
+ const beyondSamples=formulaWorkbook([{name:'Every cached row',headers:['Name','Quantity','Unit price','Total'],rows:[
+  ['synthetic-cradle-all-1','1','2','2'],['synthetic-cradle-all-2','2','3','6'],
+  ['synthetic-cradle-all-3','3','4','12'],['synthetic-cradle-all-4','4','5','20'],
+  ['synthetic-cradle-all-5','5','6','30'],['synthetic-cradle-all-6','6','7','42'],
+  ['synthetic-cradle-all-7','7','8','57'],
+ ].map((row,index)=>row.map((value,column)=>({...cell(value,column?'number':'text'),...(column===3?{formula:`B${index+2}*C${index+2}`,coordinate:`D${index+2}`}:{})})))}])
+ const late=await d.call('/api/v1/records/base-import/preview',d.form(beyondSamples,'all-rows.xlsx')),lateProof=late.report.workbookFormulas[0]
+ assert.deepEqual([lateProof.recognized,lateProof.matchedRows,lateProof.rowsRead],[false,6,7]);assert.match(lateProof.reason,/D8: cached result 57 differs from native result 56/)
+ assert.equal(late.schemaDraft.tables[0].fields.find(item=>item.label==='Total').type,'number','No formula is offered from an apparently matching sample')
  assert.deepEqual(preview.records.filter(row=>row.entityId===orders.id).map(row=>row.fields[field(orders,'Mismatch').id]),['25','21.75','0','99'])
  assert.ok(preview.records.every(row=>!Object.hasOwn(row.fields,total.id)&&!Object.hasOwn(row.fields,shipping.id)),'Adopted computed cells never persist the source cached literal')
  const sourceArtifact=preview.source.bundle.artifacts[0];assert.equal(sourceArtifact.sha256,createHash('sha256').update(bytes).digest('hex'));assert.deepEqual(Buffer.from(sourceArtifact.original.base64,'base64'),Buffer.from(bytes),'Exact original workbook remains in source custody')
@@ -86,4 +96,21 @@ async function workbookArithmeticJourney(h,d){
  await restarted.command('record.patch',{ref:current.ref,changes:{[quantity.id]:'5'}},[{ref:current.ref,version:current.version}])
  const next=(await restarted.call(`/api/v1/apps/${preview.identities.appId}/entities/${orders.id}/query`,{fields:orders.fields.map(item=>item.id),sort:[{fieldId:orders.fields[0].id,direction:'asc'}]})).items
  assert.equal(next[0].fields[total.id].value,'62.5','The next read recomputes from the edited input instead of retaining 25');assert.equal(next[0].fields[field(orders,'Mismatch').id].value,'25','A refused formula remains its reviewed literal after an input edit')
+ // Reversal uses the same native effect custody for imported formula inputs.
+ const mailBeforeUndo=await h.mailMessages(),jobPath=`/api/v1/records/base-import/jobs/${job.id}`
+ await restarted.call(jobPath+'/undo',{})
+ let undone
+ for(let i=0;i<20;i++){undone=await restarted.call(jobPath+'/resume',{});if(undone.state==='undone')break}
+ assert.equal(undone.state,'undone')
+ const terminal=await restarted.call(jobPath)
+ assert.deepEqual([terminal.reversal.reversed,terminal.reversal.retained,terminal.reversal.remaining],[5,1,0],'Undo removes unchanged imported rows and keeps the edited input record')
+ assert.equal(terminal.reversal.conflicts.length,1)
+ const retained=(await restarted.call(`/api/v1/apps/${preview.identities.appId}/entities/${orders.id}/query`,{fields:orders.fields.map(item=>item.id)})).items
+ assert.equal(retained.length,1);assert.equal(retained[0].id,current.id);assert.equal(retained[0].fields[quantity.id].value,'5');assert.equal(retained[0].fields[total.id].value,'62.5')
+ assert.equal((await restarted.call(`/api/v1/apps/${preview.identities.appId}/entities/${packages.id}/query`,{fields:packages.fields.map(item=>item.id)})).items.length,0)
+ const undoneReceipt=await restarted.call(receiptPath)
+ assert.equal(undoneReceipt.job.state,'undone');assert.deepEqual(undoneReceipt.workbookFormulas,receipt.workbookFormulas);assert.deepEqual(undoneReceipt.source.files,receipt.source.files,'Undo retains original workbook custody and its formula decisions')
+ await restarted.call(jobPath+'/undo',{});await restarted.call(jobPath+'/resume',{})
+ assert.deepEqual((await restarted.call(receiptPath)).undo,undoneReceipt.undo,'Repeated undo does not reverse the retained edit')
+ assert.deepEqual(await h.mailMessages(),mailBeforeUndo,'Formula reversal and replay send no imported-row mail')
 }
