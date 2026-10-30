@@ -12602,7 +12602,7 @@
       "executable": false
     },
     "tests/helpers/record-update-buttons.mjs": {
-      "sha256": "369215aa1886dbcb4e8bce912d4972f96f5ce1ae30aa0eafe1f9b09792ac1f92",
+      "sha256": "bb71b2d3787e87e358e8dfb164a3825e5f41295e5adace148509cef77c3d3549",
       "executable": false
     },
     "tests/helpers/records-api-decimal-source.mjs": {

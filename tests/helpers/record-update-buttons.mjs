@@ -98,6 +98,7 @@ export async function recordUpdateButtons(h) {
     await unchanged(source, () => command('record.template-button-run', input(), expected(source), 403, createUlid(), credential.secret))
     await command('record.template-button-save', config, [schemaExpected()], 403, createUlid(), credential.secret)
     await h.request(`/api/user-keys/${credential.id}/revoke`, { method: 'POST', body: { commandId: createUlid(), appId } })
+    await unchanged(source, () => command('record.template-button-run', input(), expected(source), 401, createUlid(), credential.secret))
     const policy = await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.app_id=? AND m.principal_id=?').bind(appId, h.operator).first()
     const original = JSON.parse(policy.rules_json)
     try {
@@ -122,6 +123,9 @@ export async function recordUpdateButtons(h) {
     draft.tables[0].fields.push({ id: createUlid(), label: 'Review note', type: 'text', required: false, unique: false })
     schema = await adopt(draft)
     await unchanged(source, () => command('record.template-button-run', input(), [oldSchema, { ref: source.ref, version: source.version }], 409))
+    const currentConfiguration = (await list(source)).find(row => row.id === button.id)
+    await command('record.template-button-save', { ...config, id: button.id, buttonVersion: button.version }, [oldSchema], 409)
+    assert.deepEqual((await list(source)).find(row => row.id === button.id), currentConfiguration, 'Stale schema authoring preserves the complete current configuration')
     button = (await command('record.template-button-save', { ...config, id: button.id, buttonVersion: button.version, confirmation: false, value: queued }, [schemaExpected()])).value
     source = (await command('record.template-button-run', { ...input(), confirmed: false }, expected(source))).value
     assert.equal(source.fields[statusId].value, queued, 'An update configured without confirmation executes directly')
