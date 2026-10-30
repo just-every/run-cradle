@@ -14,7 +14,7 @@ import {accessibilityContextOptions,accessibilityWidths} from './accessibility-e
  const [widthArgument,outputArgument]=process.argv.slice(2)
  const assignedWidth=Number(widthArgument),output=path.resolve(outputArgument)
  assert.ok(accessibilityWidths.includes(assignedWidth),'Notification worker requires a declared viewport')
- const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],viewports:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['NOTIFY-001','NOTIFY-002','NOTIFY-003','NOTIFY-005','NOTIFY-006','NOTIFY-007','NOTIFY-009','CAMP-006']}
+ const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],viewports:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['NOTIFY-001','NOTIFY-002','NOTIFY-003','NOTIFY-005','NOTIFY-006','NOTIFY-007','NOTIFY-009','NOTIFY-010','CAMP-006']}
  let browser
  try{
   await mkdir(output,{recursive:true})

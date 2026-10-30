@@ -85,6 +85,34 @@
     {
       "source": "docs/installation.md",
       "reason": "Maintainer installation notes naming every private setting; the site's Install page covers the owner's steps"
+    },
+    {
+      "source": "docs/verify.md",
+      "reason": "Retained verification procedures and historical acceptance receipts"
+    },
+    {
+      "source": "docs/CLAIMS.md",
+      "reason": "Generated homepage claim reconciliation for contract review"
+    },
+    {
+      "source": "docs/contract/DONE-AUDIT.md",
+      "reason": "Clause-by-clause carried-done journey audit"
+    },
+    {
+      "source": "docs/contract/product-mechanisms.md",
+      "reason": "Detailed product transport and custody mechanisms"
+    },
+    {
+      "source": "docs/contract/capability-mechanisms.md",
+      "reason": "Portable reference, formula and calendar formats"
+    },
+    {
+      "source": "docs/contract/launch-mechanisms.md",
+      "reason": "Included-application policy and transport details"
+    },
+    {
+      "source": "RULINGS.md",
+      "reason": "Dated scope rulings for contract interpretation"
     }
   ]
 }

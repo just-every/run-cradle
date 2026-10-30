@@ -16,7 +16,7 @@ import { accessibilityTabAway } from './helpers/accessibility-input.mjs'
 import { accessibilityContextOptions, accessibilityWidths } from './helpers/accessibility-evidence.mjs'
 import { uploadSet, overrideType, chooseTarget, chooseMissingTarget, chooseLookup, submitImport, downloadStatus, verifyPreviewLists } from './helpers/base-import-browser.mjs'
 const output = path.resolve(process.env.CRADLE_IMPORT_OUTPUT ?? process.env.TMPDIR ?? '.private/base-import-browser')
-contract('PERM-007 INTEG-003 FILE-002 FILE-004 RECORDS-005 MIGRATE-005', 'CSV-set import preview, guarded adoption, stored resume and undo on desktop and phone', async () => {
+contract('PERM-007 INTEG-003 FILE-002 FILE-004 FILE-007 RECORDS-005 MIGRATE-005', 'CSV-set import preview, guarded adoption, stored resume and undo on desktop and phone', async () => {
   await mkdir(output, { recursive: true })
   let runtime, browser
   const receipts = []

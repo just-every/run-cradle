@@ -7,7 +7,7 @@ import {contract} from './contract.mjs'
 import {stringifySafeEvidence} from './helpers/accessibility-redaction.mjs'
 import {accessibilityWidths} from './helpers/accessibility-evidence.mjs'
 
-contract('NOTIFY-001 NOTIFY-002 NOTIFY-003 NOTIFY-005 NOTIFY-006 NOTIFY-007 NOTIFY-009 CAMP-006','notification preferences, real delivery events and inbox retention and erasure at desktop and phone',async()=>{
+contract('NOTIFY-001 NOTIFY-002 NOTIFY-003 NOTIFY-005 NOTIFY-006 NOTIFY-007 NOTIFY-009 NOTIFY-010 CAMP-006','notification preferences, real delivery events and inbox retention and erasure at desktop and phone',async()=>{
  const output=path.resolve(process.env.CRADLE_LAUNCH_NOTIFICATIONS_EVIDENCE ?? '../evidence/de-launch-notifications')
  await mkdir(output,{recursive:true})
  // Each width already owns fresh Workers, databases, browsers and provider

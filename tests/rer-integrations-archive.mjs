@@ -11,14 +11,14 @@ import {place,matchesArchive} from './helpers/archive-correspondence.mjs'
 const {fileStoreArchive}=await import('./helpers/file-store-archive.mjs')
 const {restoredRecordCalendar}=await import('./helpers/record-calendar-archive.mjs')
 
-contract('BASE-DATA-001 RECORDS-006 FILE-002 INTEG-004 SYNC-002','file references, copied bytes, calendar and warehouse custody restore through rer import without restored provider authority, and owner reset erases file bytes',async()=>{
+contract('BASE-DATA-001 RECORDS-006 FILE-002 FILE-004 FILE-005 FILE-007 INTEG-004 INTEG-008 SYNC-002','file references, copied bytes, calendar and warehouse custody restore through rer import without restored provider authority, and owner reset erases file bytes',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'cradle-integrations-archive-'))
  let target,stores
  try{
   target=await freshLocalCopy()
   await target.command(['run','db:migrate:local'])
   stores=await fileStoreArchive(directory)
-  // FILE-002: restore real reference/copy cells, while every store credential stays revoked.
+  // FILE-002, FILE-004, FILE-005, FILE-007: restore real reference/copy cells, while every store credential stays revoked.
   await place(join(directory,'file-stores.rer'),join(target.source,'file-stores.rer'))
   await target.rer(['import','--input','file-stores.rer','--yes','--non-interactive'])
   await matchesArchive(target.source,join(target.source,'file-stores.rer'))
