@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { recordUpdateButtonAuthorship } from './record-update-button-authorship.mjs'
 import { createUlid } from '../../src/core/shared/ids.ts'
 import { RECORD_SCHEMA_ENTITY_ID } from '../../src/domains/records/contracts.ts'
 
@@ -38,6 +39,8 @@ export async function recordUpdateButtons(h) {
   assert.equal((await list(source)).find(row => row.id === button.id).enabled, true)
   assert.deepEqual((await list(source)).find(row => row.id === button.id).value, reviewed)
   await unchanged(source, () => command('record.template-button-run', { ...input(), confirmed: false }, expected(source), 400))
+  const withoutConfirmation = { ...input() }; delete withoutConfirmation.confirmed
+  await unchanged(source, () => command('record.template-button-run', withoutConfirmation, expected(source), 400))
   const withoutButtonVersion = { ...input() }; delete withoutButtonVersion.buttonVersion
   await unchanged(source, () => command('record.template-button-run', withoutButtonVersion, expected(source), 409))
   await unchanged(source, () => command('record.template-button-run', input(), [schemaExpected()], 400))
@@ -122,6 +125,8 @@ export async function recordUpdateButtons(h) {
     button = (await command('record.template-button-save', { ...config, id: button.id, buttonVersion: button.version, confirmation: false, value: queued }, [schemaExpected()])).value
     source = (await command('record.template-button-run', { ...input(), confirmed: false }, expected(source))).value
     assert.equal(source.fields[statusId].value, queued, 'An update configured without confirmation executes directly')
+    const authored = await recordUpdateButtonAuthorship(h, { appId, entityId, config: { ...config, value: reviewed }, button, record: source, expected: expected(source) })
+    button = authored.button; source = authored.record
     const unsafeAfter = await read(unsafe.id)
     assert.equal(unsafeAfter.version, unsafe.version)
     for (const [id, cell] of Object.entries(unsafe.fields)) assert.deepEqual(unsafeAfter.fields[id], cell)

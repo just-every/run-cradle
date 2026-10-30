@@ -7,11 +7,12 @@ import './site.css'
 
 export type SitePage = 'home' | 'docs'
 
-/** The header of every public page, `/` and `/docs` alike: the lockup (a link home everywhere but home), Docs, Contract (the run site only; an installation does not serve it), Source and, on an installed instance, the Sign in pill. */
-export function SiteHeader({ productName, page }: { productName: string; page: SitePage }) {
+/** The header of every public page, `/` and `/docs` alike: the lockup (a link home everywhere but home), Docs, Contract (the run site only; an installation does not serve it), Source and, on an installed instance, the Sign in pill, or Open workspace for a visitor with an open session. */
+export function SiteHeader({ productName, page, signedIn = false }: { productName: string; page: SitePage; signedIn?: boolean }) {
   const site = useSiteVariant() === 'site'
   const lockup = <BrandLockup name={productName} variant="paper" />
-  return <HydrationUnit><header className="site-header">
+  const session = !site && signedIn
+  return <HydrationUnit><header className={session ? 'site-header site-header--session' : 'site-header'}>
     <div className="site-header-row">
       {page === 'home'
         ? <div className="site-brand">{lockup}</div>
@@ -22,7 +23,7 @@ export function SiteHeader({ productName, page }: { productName: string; page: S
           : <Link to="/docs" aria-current={page === 'docs' ? 'page' : undefined}>Docs</Link>}
         {site && <a href="/contract">Contract</a>}
         <a href={sourceUrl}>Source</a>
-        {!site && <Link className="site-signin" to="/signin">Sign in</Link>}
+        {!site && (session ? <Link className="site-signin" to="/app">Open workspace</Link> : <Link className="site-signin" to="/signin">Sign in</Link>)}
       </nav>
     </div>
   </header></HydrationUnit>
