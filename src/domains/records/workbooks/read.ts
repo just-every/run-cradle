@@ -1,6 +1,6 @@
 import {unzipWorkbook,bound,reject} from './zip'
 import {xml,elements,children,spreadsheet,relationships,officeRelationships,numberFormat,isPercentFormat,excelDate} from './xml'
-export type WorkbookCell={value:string|boolean|null;type:'text'|'number'|'date'|'instant'|'boolean';formula?:string;percent?:true}
+export type WorkbookCell={value:string|boolean|null;type:'text'|'number'|'date'|'instant'|'boolean';formula?:string;coordinate?:string;formulaKind?:string;percent?:true}
 export type WorkbookSheet={name:string;headers:string[];rows:WorkbookCell[][]}
 export function readWorkbook(bytes:Uint8Array,filename:string):WorkbookSheet[]{
  const files=unzipWorkbook(bytes,filename),types=xml(files.get('[Content_Types].xml'),'[Content_Types].xml')
@@ -33,7 +33,8 @@ export function readWorkbook(bytes:Uint8Array,filename:string):WorkbookSheet[]{
     else if(type==='e')reject('Workbook contains an Excel error cell. Recalculate and correct it before importing.')
     else if(value!==''){if(!/^-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value))reject('Invalid workbook number.');const kind=numberFormat(formatId,formats.get(formatId));result={value:kind==='number'?value:excelDate(value,kind,date1904),type:kind,...(isPercentFormat(formatId,formats.get(formatId))?{percent:true as const}:{})}}
     else if(formula!==undefined)reject('Formula cell has no cached value. Recalculate and save the workbook in Excel first.')
-    cells[column-1]={...result,...(formula!==undefined?{formula}:{})}
+    const formulaKind=children(cell,'f')[0]?.getAttribute('t')
+    cells[column-1]={...result,...(formula!==undefined?{formula,coordinate:cell.getAttribute('r')!,...(formulaKind&&formulaKind!=='normal'?{formulaKind}:{})}:{})}
    }
    grid[rowNumber-1]=cells
   }

@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "3492858e891d5c3409e8b3255d515513c0ddfe7f64836b5e1bc862b4e810a1ce",
+      "sha256": "b3288af466c978b37b642f990612b3ac0aedf02815d0322bd896f3fb238acf23",
       "executable": false
     },
     "DEMO.md": {
@@ -4458,7 +4458,7 @@
       "executable": false
     },
     "docs/importing.md": {
-      "sha256": "2fa7dfa6aa624128e5ac2368e3546101963c1318e252c75a1343c338eeed4120",
+      "sha256": "1e6a7aad6979975ad9092631e2b48334f3c9b88dfcfd6f828fa7944ac17c87b3",
       "executable": false
     },
     "docs/install.md": {
@@ -5714,7 +5714,7 @@
       "executable": false
     },
     "src/adapters/google-sheets.server.ts": {
-      "sha256": "4642695b6ec57795a0d4710a2e08d85c9b876ef97bf67f2f238e64765ef2ee6b",
+      "sha256": "b455d1cb6c820e101c64e4256ae4687576e3f29a04a265ea97a817d5f6083659",
       "executable": false
     },
     "src/adapters/mime.server.ts": {
@@ -9098,7 +9098,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/accounting.ts": {
-      "sha256": "1adaf9d6b2e1eef8b1add2357c114d9f25ae669931c19242ad11c81e0f167f61",
+      "sha256": "fab0fba755eb80472a5c06ecc524f49a815bcb47503c555cb7b83c22df57eae4",
       "executable": false
     },
     "src/domains/records/base-transfer/attachment-manifest.ts": {
@@ -9122,7 +9122,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/contracts.ts": {
-      "sha256": "37f5d062a131e32d1a827ebd82a5705c06f507404083b9e1834f33f1d3d0085a",
+      "sha256": "e1286c3471702c6526769e59f3311d7d1b0ce9288cd135a939a2224a0e790d74",
       "executable": false
     },
     "src/domains/records/base-transfer/convert-choices.ts": {
@@ -9202,7 +9202,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/infer.ts": {
-      "sha256": "923c7d96df2bcdaa3604662c468f587fd4ef5160ae02250ea0bc049768aea2b7",
+      "sha256": "3d481c37478577c17ccc48536a28eaa5647feb05d6501d3af367b701c248a51f",
       "executable": false
     },
     "src/domains/records/base-transfer/input-error.ts": {
@@ -9246,7 +9246,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/lookup-proof.ts": {
-      "sha256": "59ae76b0fe0db7154e0fd9b78e7275612f5d8e0bb7352e19dbb272b659f9197c",
+      "sha256": "32a2be2b446edaaa0ae3aa84c4d345a841d109015644abb57388a682e0c375a3",
       "executable": false
     },
     "src/domains/records/base-transfer/lookup.ts": {
@@ -9282,11 +9282,11 @@
       "executable": false
     },
     "src/domains/records/base-transfer/plan.ts": {
-      "sha256": "6b09a16602ebf43e1d2bb68a0615777bd86eac18e3dc5d7805f7fe9a288730ba",
+      "sha256": "2b203bf06024802b2346e4d4d760698693480b9a9303c0eb770fe9e9ec897d3a",
       "executable": false
     },
     "src/domains/records/base-transfer/receipt.ts": {
-      "sha256": "dc1e519d9c4edd1c2e302586272ad17caa7fd04f0a8faef439d1697e849a708b",
+      "sha256": "7d572be9877510bca875dfbcda1f99e8bb545bc69b22d81644ea83d9038a9937",
       "executable": false
     },
     "src/domains/records/base-transfer/record-order.ts": {
@@ -9294,7 +9294,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/report.ts": {
-      "sha256": "e1c3b9e66ec2b43110d7fde76c45324224855621269941e37b8248fa3f7eddaf",
+      "sha256": "adbf2017ee164daa4489c303f900bba824a31db3e603942a1a3d155cd0efabc8",
       "executable": false
     },
     "src/domains/records/base-transfer/restored-job.server.ts": {
@@ -9399,6 +9399,26 @@
     },
     "src/domains/records/base-transfer/upload-plan.server.ts": {
       "sha256": "36e9c60e68e06d68918fcb6c5be1a2a12d55fbc0d116fd3c4116a161e044f223",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/workbook-formula-parser.ts": {
+      "sha256": "6f31f922b37aebcacd0bf678f1e20645b5f653d1cb1f9206229a4c308561f011",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/workbook-formulas.ts": {
+      "sha256": "09c367b1e9f306120c32a1f676fd244438522eb2ca6098de3b1d2786b20a2819",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/workbook-lookup-parser.ts": {
+      "sha256": "40bb8f56c82b1a90cc561e3dc85c5579ec175433959761cff0fef90c8cb7b838",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/workbook-lookup-values.ts": {
+      "sha256": "716cf8240a32d2e08fccf1ec37e6da2504ab01bd292692616706fbb06dc941ce",
+      "executable": false
+    },
+    "src/domains/records/base-transfer/workbook-lookups.ts": {
+      "sha256": "889502deac9e4c55fafb03a6e1c97426d57e02c57207bf24d86cd63fca0422b3",
       "executable": false
     },
     "src/domains/records/bulk.server.ts": {
@@ -9870,7 +9890,7 @@
       "executable": false
     },
     "src/domains/records/sheets/source.ts": {
-      "sha256": "ae8c4067ad1e433c4058ffe49356c5e740db22b9e26fe9b65687f12c53de7968",
+      "sha256": "db9f3d9f3343fa45ac96bde7335c946d8a9b59a6cb13a047b07be2f0eb61a5d1",
       "executable": false
     },
     "src/domains/records/store-reference-links.ts": {
@@ -10014,11 +10034,11 @@
       "executable": false
     },
     "src/domains/records/workbooks/read.ts": {
-      "sha256": "c799a796f2a28e70ed4cb073e6dd111a5e7aa07afc496577edcb05bac7ba4f85",
+      "sha256": "307e3a86e6856b4ea883e10115dbf1748c9ae4e357fb4fa858710b043d5f6580",
       "executable": false
     },
     "src/domains/records/workbooks/source.ts": {
-      "sha256": "dcea918ee6f2440684aad7b576a242f53f63c514b43fc77e84c195dba3a81fd0",
+      "sha256": "9ecbb267088e4b63f40b9d6428b535d8cdc9ed6a5bfedd8b3414aa1e51b3ce16",
       "executable": false
     },
     "src/domains/records/workbooks/stream-zip.ts": {
@@ -10686,7 +10706,7 @@
       "executable": false
     },
     "src/ui/records/base-import/column-editor.tsx": {
-      "sha256": "f64bf1187bc0bc70a6aa32d91c6cf1d2b5d83733cc1d2d074c4092280b6d6a8b",
+      "sha256": "abd8f1401c5e9c2bf570c2163988f78150299e5910e6cccdbb440ef2c24d95f8",
       "executable": false
     },
     "src/ui/records/base-import/column-samples.tsx": {
@@ -10746,7 +10766,7 @@
       "executable": false
     },
     "src/ui/records/base-import/receipt.tsx": {
-      "sha256": "db95a0704f5b306157852ae5c181b57ce323e16f9271b5054ebe919d3ea0b908",
+      "sha256": "d6acc5d6507aa3c727f430ed2c1ae7c857d19343f63e91cf42e2835c15a4ae2d",
       "executable": false
     },
     "src/ui/records/base-import/schema-review.tsx": {
@@ -12102,7 +12122,7 @@
       "executable": false
     },
     "tests/helpers/company-workbook-browser.mjs": {
-      "sha256": "27cfc6abf1e0090b714dcf50787359f0264f0e78272d002256334368ecd8422d",
+      "sha256": "1234fe7fb86a0a9c07139d74572d6030a102cce87d01a52f0ffb78dc7c1f633b",
       "executable": false
     },
     "tests/helpers/company-workbook-runtime.mjs": {
@@ -12906,7 +12926,7 @@
       "executable": false
     },
     "tests/helpers/sheets-provider.mjs": {
-      "sha256": "824654d6b47c9eb95414e9ec4d6584d82147f7cc35f7061cfbe7228bf8444dcd",
+      "sha256": "5889de6bf947783b4640c8120935d9e78282153078d1733eebd5c87ae905d46c",
       "executable": false
     },
     "tests/helpers/sign-in-forward-journey.mjs": {
@@ -13010,7 +13030,7 @@
       "executable": false
     },
     "tests/helpers/workbook-fixtures.mjs": {
-      "sha256": "e5183e99ad418b9a4457f27be4cae11f3d3dc9998964b2f5ede79770727bd78a",
+      "sha256": "9f0d69ed6efe0ab634088904f58da68c003621dd1bf60b7f3cc309938ffb061f",
       "executable": false
     },
     "tests/helpers/workbook-http.mjs": {
@@ -13018,7 +13038,15 @@
       "executable": false
     },
     "tests/helpers/workbook-journey.mjs": {
-      "sha256": "665b005d192d2c0d58c278bc6efeb51bf27a8120251d9d4b84bbfd8778bf0044",
+      "sha256": "3864ca254c333eb850974bf8af7997584322568ea2f554ab0492958c7300a861",
+      "executable": false
+    },
+    "tests/helpers/workbook-lookup-browser.mjs": {
+      "sha256": "40c2c2a2f036440824aaa2fb3c5f447c80bc0086b0b7d5e8c2fb23592086fb53",
+      "executable": false
+    },
+    "tests/helpers/workbook-lookup-journey.mjs": {
+      "sha256": "a025930b575780cb81d1bdb1c6c236a31e3f4267852b50c5dbd1ad578139acc6",
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {
