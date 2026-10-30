@@ -62,7 +62,9 @@ export async function proposalCalculationBrowser(){
      const wanted=source.flatMap((row,index)=>values[index][0]===values[index][1]?[]:[{id:row.record.id,label:row.label,before:values[index][0],after:values[index][1]}]).sort((a,b)=>a.id.localeCompare(b.id))
      assert.deepEqual(observed,wanted,'Every page names exactly the changed native record cells')
      const downloading=page.waitForEvent('download');await article.getByRole('button',{name:'Download all changed cells',exact:true}).click()
-     const download=JSON.parse(await readFile(await(await downloading).path(),'utf8'));assert.equal(download.fieldId,field.id);assert.deepEqual(download.changes,report.changes)
+     const download=JSON.parse(await readFile(await(await downloading).path(),'utf8'))
+     assert.equal(download.appId,appId);assert.equal(download.entityId,report.entityId);assert.equal(download.entityLabel,title.split(': ')[0]);assert.equal(download.fieldId,field.id);assert.equal(download.fieldLabel,field.label)
+     assert.equal(download.totalRecords,source.length);assert.equal(download.changedCellCount,wanted.length);assert.deepEqual(download.changes,report.changes)
      for(const cell of report.changes){const record=(await h.request(`/api/v1/apps/${appId}/entities/${report.entityId}/records/${cell.recordId}`)).data.record;assert.deepEqual(record.fields[field.id],cell.before)}
      await article.getByRole('button',{name:'Previous changed cells',exact:true}).click()
      observedCounts.push({field:field.label,changed:observed.length,pages:2,downloaded:download.changes.length})

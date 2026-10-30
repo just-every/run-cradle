@@ -14,8 +14,8 @@ function CalculationReport({calculation,schema}:{calculation:CalculationPreview;
  const complete=calculation.changes!==undefined,cells=calculation.changes??calculation.samples,pageSize=20
  const pages=Math.max(1,Math.ceil(cells.length/pageSize)),current=Math.min(page,pages-1),visible=cells.slice(current*pageSize,(current+1)*pageSize)
  function download(){
-  const blob=new Blob([JSON.stringify({entityId:schema.id,fieldId:field.id,totalRecords:calculation.totalRecords,changes:calculation.changes},null,2)],{type:'application/json'})
-  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='calculation-changes.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
+  const blob=new Blob([JSON.stringify({appId:schema.appId,entityId:schema.id,entityLabel:schema.label,fieldId:field.id,fieldLabel:field.label,resultType:calculation.resultType,totalRecords:calculation.totalRecords,changedCellCount:cells.length,changes:calculation.changes},null,2)],{type:'application/json'})
+  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`calculation-changes-${schema.id}-${field.id}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
  }
  return <article className="cr-tile" aria-label={`${schema.label}: ${calculation.label}`}>
   <h4>{schema.label} · {calculation.label}</h4>

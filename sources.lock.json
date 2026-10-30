@@ -11050,7 +11050,7 @@
       "executable": false
     },
     "src/ui/records/schema/calculation-review.tsx": {
-      "sha256": "206bb7a9460aed640bb94dc5729c4ffde09369cb3c33d94e169c45227371875d",
+      "sha256": "715a6328ffdf204bfb541f362e1237c78630b79aa3189a780d7ac683e7089126",
       "executable": false
     },
     "src/ui/records/schema/computed-editor.tsx": {
@@ -12495,6 +12495,14 @@
     },
     "tests/helpers/production-bindings.mjs": {
       "sha256": "e9c049a0986fee26819e381fec838050f1fa058a4a0cb6819e1fd81c1ba50fb2",
+      "executable": false
+    },
+    "tests/helpers/proposal-calculation-browser.mjs": {
+      "sha256": "44a08afd635c123a1ffff6f28d722e9e33b764b12b43b0e897272563b247e44b",
+      "executable": false
+    },
+    "tests/helpers/proposal-calculation-journey.mjs": {
+      "sha256": "a49e58c664d35a02dd26ba8586f410ffb9fd67998ddfb3ceb66dfbb912d6ecb9",
       "executable": false
     },
     "tests/helpers/proposal-door.mjs": {
