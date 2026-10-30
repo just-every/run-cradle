@@ -51,7 +51,10 @@ export async function addRecordTrashArchiveState(h,liveRecord){
    item.history=(await h.request(historyPath(item))).data.items
    assert.ok(item.history.some(row=>row.action===kind+'.delete'),'The pre-export history includes deletion for '+kind)
    assert.ok(item.history.some(row=>row.action===kind+'.restore'),'The pre-export history includes restoration for '+kind)
-   assert.equal((await drop(visible)).state,'committed')
+   const deleted=await drop(visible)
+   assert.equal(deleted.state,'committed')
+   item.deletion=await h.db.prepare('SELECT * FROM admission_audit WHERE command_id=? AND action=?').bind(deleted.commandId,kind+'.delete').first()
+   assert.ok(item.deletion,'The final native deletion has its own retained audit identity')
    await h.request(publicPath(item),{status:404})
    let trash=(await h.request(`/api/v1/records/trash?appId=${h.appId}`)).data.items.find(row=>row.id===item.id)
    assert.ok(trash?.restorable,'Native deletion is initially restorable')
@@ -84,6 +87,7 @@ export async function assertRecordTrashArchive(path,fixture){
   const actual=rows.find(row=>row.table===held.table&&(row.row.id??row.row.record_id)===item.id)
   assert.deepEqual(actual?.row,held.row,'Archive preserves original custody and canonical content for '+item.kind)
  }
+ for(const item of fixture.items)assert.deepEqual(rows.find(row=>row.table==='admission_audit'&&row.row.id===item.deletion.id)?.row,item.deletion,'Archive retains the final native deletion history')
  for(const table of ['sessions','authority_sessions','authority_credentials','connection_credentials','admission_outbox'])assert.equal(rows.filter(row=>row.table===table).length,0,'Source authority and dispatch are not archived')
 }
 
@@ -138,15 +142,24 @@ export async function restoredRecordTrash(runtime,db,request,fixture,origin){
   assert.deepEqual(item.kind==='record'?recordFields(visible.record):definition(visible),item.before,'The fresh owner restores the retained values or definition')
   const history=(await request(historyPath(item))).items
   for(const previous of item.history)assert.deepEqual(history.find(row=>row.id===previous.id),previous,'Original history remains intact')
+  const deletion=history.find(row=>row.id===item.deletion.id)
+  assert.ok(deletion,'The final pre-export deletion is visible in restored history')
+  assert.equal(deletion.action,item.kind+'.delete')
+  assert.equal(item.kind==='view'?deletion.actor_id:deletion.actor.id,item.deletion.actor_id)
+  assert.equal(item.kind==='view'?deletion.created_at:deletion.createdAt,item.deletion.created_at)
+  if(item.kind!=='view')assert.equal(deletion.commandId,item.deletion.command_id)
   const action=item.kind+'.restore'
   assert.ok(history.some(row=>row.action===item.kind+'.delete'),'Deletion remains in public history')
   const priorRestores=item.history.filter(row=>row.action===action).length
   assert.equal(history.filter(row=>row.action===action).length,priorRestores+1,'The current restoration has one new public history entry')
   if(item.kind!=='view')assert.equal(history.find(row=>row.action===action&&!item.history.some(previous=>previous.id===row.id)).actor.id,owner,'Restoration uses current owner authority')
+  else assert.equal(history.find(row=>row.action===action&&!item.history.some(previous=>previous.id===row.id)).actor_id,owner,'Saved-view restoration uses current owner authority')
   // Replaying the capture cannot duplicate restoration or its audit.
   await request('/api/v1/records/trash/restore',body,item.kind==='record'?404:409)
   assert.equal((await request(historyPath(item))).items.filter(row=>row.action===action).length,priorRestores+1)
-  assert.deepEqual(await request(publicPath(item)),visible,'Restore replay changes no restored content or version')
+  assert.deepEqual((await request(historyPath(item))).items,history,'Restore replay leaves all public history unchanged')
+  const replayed=await request(publicPath(item))
+  assert.deepEqual(item.kind==='record'?replayed.record:replayed,item.kind==='record'?visible.record:visible,'Restore replay changes no restored content or version')
  }
  assert.deepEqual(recordFields((await request(`/api/v1/apps/${fixture.appId}/entities/${fixture.entityId}/records/${fixture.live.id}`)).record),fixture.live,'Live linked record is unchanged')
  const remaining=(await request(listPath)).items
@@ -162,5 +175,5 @@ export async function restoredRecordTrash(runtime,db,request,fixture,origin){
  assert.equal((await db.prepare('SELECT count(*) n FROM command_admissions').first()).n,admissions,'A source delivery admits no restored command')
  assert.equal((await db.prepare("SELECT count(*) n FROM admission_outbox WHERE state='pending'").first()).n,0,'A source delivery revives no dispatch')
  await unchangedControls()
- console.log('TRASH_ARCHIVE_RESTORE '+JSON.stringify({kinds:['record','view','form'],retained:3,expired:3,sourceSessions:'refused',currentAuthority:'checked',dispatch:'none'}))
+ console.log('TRASH_ARCHIVE_RESTORE '+JSON.stringify({kinds:['record','view','form'],retained:3,expired:3,liveControls:3,sourceSessions:'refused',currentAuthority:'checked',replay:'unchanged',dispatch:'none'}))
 }

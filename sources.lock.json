@@ -12554,7 +12554,7 @@
       "executable": false
     },
     "tests/helpers/record-trash-archive.mjs": {
-      "sha256": "ab93f891a49390e2ab1798b7441ffefb16f3493190afe11710702ec687eb4d07",
+      "sha256": "a9d4cdef7645f276e5c6a2f9294c585f55e81b8cb03ca45d4538694b12aaf170",
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
