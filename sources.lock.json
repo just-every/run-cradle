@@ -11918,7 +11918,7 @@
       "executable": false
     },
     "tests/helpers/automation-failure-journey.mjs": {
-      "sha256": "7f3325cfe19ae49f03bf3520ecc000ec360e6f4370ba928bd9ce36ac49515068",
+      "sha256": "e3f52549dd08d6f37a1f5427ab13edf94d443e342161a4f8c8ab731e8f6004a8",
       "executable": false
     },
     "tests/helpers/automation-network-edge.mjs": {
@@ -12962,7 +12962,7 @@
       "executable": false
     },
     "tests/helpers/user-automation-runtime.mjs": {
-      "sha256": "e474f148c486b851ee4ad14d6ce4944485e5b2e689221cbcc67dbf9cb8a44aa6",
+      "sha256": "64f72b80e052c96875f5844567269762d98337eb1a7085e32fd1340b2db94ad5",
       "executable": false
     },
     "tests/helpers/user-key-browser.mjs": {
@@ -13458,7 +13458,7 @@
       "executable": false
     },
     "tests/user-automations.mjs": {
-      "sha256": "094fd15cfbce1e7a97db814e6648430a8041bec4726f04b3f6f7c5ce6c685116",
+      "sha256": "85cc27df320d26fefebf979b89309c32e26d5922595fa7d1784ce653a6b99a24",
       "executable": false
     },
     "tests/user-webhooks.mjs": {
