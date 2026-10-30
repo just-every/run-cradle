@@ -11,7 +11,8 @@ export async function proposalCalculationJourney(h){
  links.relation={ownerAppId:appId,entityId,cardinality:'many',onDelete:'restrict'}
  Object.assign(lookup,{readOnly:true,resultType:'array',resultElementType:'number',expression:{kind:'rollup',aggregate:'lookup',relationFieldId:links.id,valueFieldId:double.id}})
  sum.expression={kind:'rollup',aggregate:'sum',relationFieldId:links.id,valueFieldId:double.id}
- const draft={appId,name:'Calculation impact review',tables:[{id:entityId,label:'Measures',primaryFieldId:name.id,fields:[name,amount,double,threshold,transitive,stable,recovered]},{id:groupId,label:'Groups',primaryFieldId:groupName.id,fields:[groupName,links,lookup,sum]}],formulaSources:{[double.id]:'{Amount} * 2',[threshold.id]:'IF({Amount} > 10, {Amount}, 0)',[transitive.id]:'{Double} + 5',[stable.id]:'{Amount}',[recovered.id]:'IF({Amount} = 0, 1 / 0, {Amount})'}}
+ const retainedRule={id:createUlid(),name:'Extreme adjustment',message:'Extreme adjustments require approval.',when:{kind:'condition',fieldId:amount.id,op:'lt',value:'-200'},require:{kind:'condition',fieldId:name.id,op:'eq',value:'Approved'}}
+ const draft={appId,name:'Calculation impact review',tables:[{id:entityId,label:'Measures',primaryFieldId:name.id,validationRules:[retainedRule],fields:[name,amount,double,threshold,transitive,stable,recovered]},{id:groupId,label:'Groups',primaryFieldId:groupName.id,fields:[groupName,links,lookup,sum]}],formulaSources:{[double.id]:'{Amount} * 2',[threshold.id]:'IF({Amount} > 10, {Amount}, 0)',[transitive.id]:'{Double} + 5',[stable.id]:'{Amount}',[recovered.id]:'IF({Amount} = 0, 1 / 0, {Amount})'}}
  const command=input=>({commandId:createUlid(),expected:[],input}),adopt=proposalId=>command({kind:'agent_proposal',proposalId})
  async function ownerSchema(input){const preview=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:input})).data;return (await h.request('/api/v1/commands/release.adopt',{method:'POST',body:command({kind:'manual_schema',previewId:preview.id})})).data}
  await ownerSchema(draft)
@@ -66,6 +67,7 @@ export async function proposalCalculationJourney(h){
  const reports=[]
  for(const face of ['rest','mcp']){
   const agent=proposalDoor(h.origin,key.secret,face),current=await agent.schema(),input={schema:{appId,name:draft.name,tables:current.tables,formulaSources:{[double.id]:'{Amount} * 3',[threshold.id]:'IF({Amount} > 10, {Amount} + 1, 0)',[recovered.id]:'{Amount}'}}}
+  assert.deepEqual(current.tables.find(table=>table.id===entityId).validationRules,[retainedRule],`${face}: formula editing retains the current validation rules`)
   const submitted=await agent.propose(input)
   for(const seen of [submitted,await agent.read(submitted.id),...(await agent.list()).filter(item=>item.id===submitted.id)]){
    assert.ok(!('calculations'in seen),`${face}: calculation values are owner-only`)
@@ -93,6 +95,12 @@ export async function proposalCalculationJourney(h){
  assert.deepEqual(retained.calculations,reports[0].report.calculations)
  assert.equal((await h.request('/api/v1/commands/release.adopt',{method:'POST',body:adopt(retained.id)})).data.state,'committed')
  const after=await query(),groupsAfter=await query(groupId);assertReadback(after,'after');assertGroups(groupsAfter,'after')
+ assert.deepEqual((await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data.validationRules,[retainedRule])
+ const guarded=after.find(record=>record.id===rows[1].id)
+ const invalid=await h.request('/api/v1/commands/record.patch',{method:'POST',status:400,body:{commandId:createUlid(),expected:[{ref:guarded.ref,version:guarded.version}],input:{ref:guarded.ref,changes:{[amount.id]:'-201'}}}})
+ assert.match(invalid.error.message,/Extreme adjustment/)
+ assert.deepEqual(await query(),after,'Adopting a formula proposal preserves rule enforcement')
+
  for(const calculation of retained.calculations)for(const change of calculation.changes)assert.deepEqual(change.after,[...after,...groupsAfter].find(record=>record.id===change.recordId).fields[calculation.fieldId])
  const agent=proposalDoor(h.origin,key.secret,'rest')
  for(const cause of ['data','linked data','schema','authority']){

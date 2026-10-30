@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d2afaf0c8c61c3080f1a8c717edb0567403e54ba21c9299b146c4e578c608294",
+      "sha256": "f3fec6a8918d03ed9311eac915b0f1598b83379a2520bd8c9f464dbfb0232997",
       "executable": false
     },
     "DEMO.md": {
@@ -9686,7 +9686,7 @@
       "executable": false
     },
     "src/domains/records/manual/calculation-preview.server.ts": {
-      "sha256": "1519725b5c5f11dab40a6022d5a4122be82a33f8aa590611a6436403dca9005d",
+      "sha256": "bf23f5fe6221ce128cedf55c388c7bfaa628178de55a8e85afda1b395a6a8e10",
       "executable": false
     },
     "src/domains/records/manual/contracts.ts": {
@@ -9714,7 +9714,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-agent.server.ts": {
-      "sha256": "fc3a1fd29d6d2be5ecbafe1ed8860aa12e421a67913e6639ea35a4127b4d610f",
+      "sha256": "f44d2f8c3d78091c267052343b08dcd9dd8c1871593097123aed430e444dc96d",
       "executable": false
     },
     "src/domains/records/manual/proposal-commands.server.ts": {
@@ -12494,7 +12494,7 @@
       "executable": false
     },
     "tests/helpers/proposal-calculation-journey.mjs": {
-      "sha256": "98dd4374c0fd54d7dfddc942df4aa3d5316a33f6846bf94117f2433cd012767d",
+      "sha256": "dc4d5f297a19d6acdbdf97b291c08354699cce54d1dde75f6bd206caa651907a",
       "executable": false
     },
     "tests/helpers/proposal-door.mjs": {
