@@ -48,7 +48,7 @@ export async function rangeFixture(owner, runtime, width) {
     }
     return rows
   }
-  return { appId, entityId, base, fields, ids, before, after, text: clipboard.join('\n'), operator, cookie: session.cookie, role, read, values, path: `${runtime.origin}/app/records/${appId}/${entityId}` }
+  return { appId, entityId, base, fields, ids, before, after, text: clipboard.join('\n'), operator, cookie: session.cookie, sessionId: session.baseId, role, read, values, path: `${runtime.origin}/app/records/${appId}/${entityId}` }
 }
 
 export async function rangeReceipt(runtime, response, fixture, actor) {

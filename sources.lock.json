@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a29f6d4810a8c77a0d7d3d9c0c7ab3bab9dc1f6b17fd57fa53edd3f83f0fdd3d",
+      "sha256": "4239ac495b5771011d9377066837d268e54f84b3a614cba8d9ce7809797bfdb2",
       "executable": false
     },
     "DEMO.md": {
@@ -12682,11 +12682,15 @@
       "executable": false
     },
     "tests/helpers/records-grid-range-browser.mjs": {
-      "sha256": "0af9febaaf41fc113a6aeb9bd7a10961709227c258950362b28035bb1285bee2",
+      "sha256": "33d7ff1229e4aa81a5a5c1e26e322db6a3d12dbe4176226cd3ad289898a9fde6",
       "executable": false
     },
     "tests/helpers/records-grid-range-fixture.mjs": {
-      "sha256": "5ce9d4b75afd84e9662e150dd645e0cc14e8776e4a21ded0fb62e21d7f78484e",
+      "sha256": "e8a86bb4b8f9929fee3cad01c693b83b7499bb0c5ce5ec56f864160c160f92d5",
+      "executable": false
+    },
+    "tests/helpers/records-history-automation-browser.mjs": {
+      "sha256": "fcc74abe97db2e2ee051f5e874abc8993b1c574a8d890690e0ab4f1ca5a4c846",
       "executable": false
     },
     "tests/helpers/records-history-journey.mjs": {

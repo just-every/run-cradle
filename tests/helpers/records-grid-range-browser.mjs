@@ -9,6 +9,7 @@ import { recordsBrowserWidths } from './records-browser-widths.mjs'
 import { recordsJourney } from './records-browser-journey.mjs'
 import { rangeFixture, rangeReceipt } from './records-grid-range-fixture.mjs'
 import { historyRetentionBrowser } from './records-history-retention-browser.mjs'
+import { rangeAutomationBrowser } from './records-history-automation-browser.mjs'
 import { createUlid } from '../../src/core/shared/ids.ts'
 import { newField } from '../../src/ui/records/schema/templates.ts'
 
@@ -75,6 +76,7 @@ async function rangePasteBrowserJourney(runtime, browser, width, output) {
     await owner.goto(runtime.origin + '/app/records')
     await owner.getByRole('button', { name: /^Base ▾/ }).waitFor()
     const fixture = await rangeFixture(owner, runtime, width)
+    const automation = await rangeAutomationBrowser(owner, runtime, fixture)
     await cookie(context, fixture.cookie)
     await page.goto(fixture.path)
     await page.locator('td[data-grid-row="49"][data-grid-column="4"]').waitFor({ state: 'attached' })
@@ -89,16 +91,20 @@ async function rangePasteBrowserJourney(runtime, browser, width, output) {
     await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+v`)
     commands.push(await rangeReceipt(runtime, await pending, fixture, fixture.operator))
     await fixture.values(fixture.after, 2)
+    await automation.observe(commands.at(-1).commandId)
     await journey.capture('range-pasted')
     pending = patch(); await tableAction(page, 'Undo')
     commands.push(await rangeReceipt(runtime, await pending, fixture, fixture.operator))
     await fixture.values(fixture.before, 3)
+    await automation.observe(commands.at(-1).commandId)
     await journey.capture('range-undone')
     // A reload must keep the one-step redo, its typed values and its revisions.
     await page.reload(); await first.waitFor(); await first.focus()
     pending = patch(); await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+Shift+z`)
-    commands.push(await rangeReceipt(runtime, await pending, fixture, fixture.operator))
+    const redoResponse = await pending, retainedRedo = redoResponse.request().postDataJSON()
+    commands.push(await rangeReceipt(runtime, redoResponse, fixture, fixture.operator))
     await fixture.values(fixture.after, 4)
+    await automation.observe(commands.at(-1).commandId)
     await journey.capture('range-redone')
     assert.deepEqual(observed, commands.map(command => command.commandId), 'Paste, undo and redo each submit exactly one admitted range')
     const target = fixture.ids[24], quantity = fixture.fields[1]
@@ -129,10 +135,22 @@ async function rangePasteBrowserJourney(runtime, browser, width, output) {
     for (const id of observed.slice(3)) {
       assert.equal(await runtime.db.prepare('SELECT command_id FROM command_admissions WHERE command_id=?').bind(id).first(), null)
       assert.equal((await runtime.db.prepare('SELECT COUNT(*) AS n FROM admission_audit WHERE command_id=?').bind(id).first()).n, 0)
+      assert.equal((await runtime.db.prepare('SELECT COUNT(*) AS n FROM record_automation_events WHERE command_id=?').bind(id).first()).n, 0)
     }
     assert.equal(observed.length, 5, 'Neither refusal silently retries the range')
+    // Receipt replay acknowledges an existing write; it never performs it again.
+    const replay = await browserCall(page, '/api/v1/commands/record.patch', retainedRedo)
+    assert.equal(replay.commandId, retainedRedo.commandId)
+    assert.deepEqual(await fixture.read(), beforeRefusal, 'Replaying an admitted redo makes no write')
     await journey.capture('range-demoted')
-    return { width, records: 50, cells: 250, commands, conflict: { row: 25, field: quantity.label, currentValue: '9876.5', status: 409 }, demoted: 403, checkpoints: journey.checkpoints }
+    const revoked = await owner.evaluate(async sessionId => {
+      const csrf = (await (await fetch('/auth/csrf')).json()).csrfToken
+      return (await fetch('/auth/session/revoke', { method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify({ sessionId }) })).status
+    }, fixture.sessionId)
+    assert.equal(revoked, 204)
+    await browserCall(page, '/api/v1/commands/record.patch', retainedRedo, 401)
+    assert.deepEqual(await fixture.read(), beforeRefusal, 'A revoked native session cannot replay a retained write')
+    return { width, records: 50, cells: 250, commands, automation: await automation.finish(), conflict: { row: 25, field: quantity.label, currentValue: '9876.5', status: 409 }, demoted: 403, revoked: 401, checkpoints: journey.checkpoints }
   } catch (error) {
     await page.screenshot({ path: path.join(output, `failure-${width}.png`), fullPage: true })
     throw error
