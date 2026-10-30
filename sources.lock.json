@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f839c480060a636930ead4ba7c9036d9d3815f8ef2f1caf1b3fc10ba9bccf138",
+      "sha256": "fb1cb7d73c4b9e73500aa4b4a3b80f7e203647b08332b6fcee4e3fbd3d6da111",
       "executable": false
     },
     "DEMO.md": {
@@ -8390,7 +8390,7 @@
       "executable": false
     },
     "src/domains/evidence/files.server.ts": {
-      "sha256": "74d28f423eaca569e93a928c52bc45b11dda440416c62ceac0da513a585b0a5b",
+      "sha256": "119e7d28e0f55011ece9bb3047a14143547e16999cd2ea5db9eefcfa7cd64ed8",
       "executable": false
     },
     "src/domains/evidence/guards.server.ts": {
@@ -12129,8 +12129,12 @@
       "sha256": "93bc4b3b0e0b8c99ffe71b4fa2c17e801b9568d615938a4ef9a3044eee83f642",
       "executable": false
     },
+    "tests/helpers/direct-upload-erasure.mjs": {
+      "sha256": "c63d295658d0fbd1badf305465c55495a8fdfe15f1f7a6e3ad28e7f8dd5e7e97",
+      "executable": false
+    },
     "tests/helpers/direct-upload-journey.mjs": {
-      "sha256": "169a068fe694c2315b528acc486c1d728c3ae22a86fde151ee8a7389feff370e",
+      "sha256": "66619ad331e6bc7d17590ffa6ead66510f728125be10c7cf5f412776a825c9ee",
       "executable": false
     },
     "tests/helpers/emitted-mail-runtime.mjs": {

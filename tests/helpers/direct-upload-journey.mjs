@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
+import {directUploadErasure} from './direct-upload-erasure.mjs'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
 // The adopted schema and native owner policy are the only source of upload authority.
@@ -21,7 +22,8 @@ export async function directUploadJourney(h){
  const begin=async(bytes,sha256)=>(await post('upload.begin',input(bytes,sha256))).data.value
  const put=async(upload,body,status)=>{const response=await fetch(h.origin+upload.uploadUrl,{method:'PUT',headers,body,duplex:'half'});const result=await response.json();assert.equal(response.status,status,JSON.stringify(result));return result}
  const download=async(upload,status=200)=>{const response=await fetch(h.origin+upload.uploadUrl,{headers:{cookie:h.cookie}});assert.equal(response.status,status);return response}
- const upload=await begin(limit,expectedHash)
+ const retained=command(input(limit,expectedHash))
+ const upload=(await h.request('/api/v1/commands/upload.begin',{method:'POST',body:retained})).data.value
  assert.equal(upload.maximumBytes,limit)
  await put(upload,stream(limit),200)
  const returned=await download(upload),readHash=createHash('sha256');let received=0
@@ -49,15 +51,29 @@ export async function directUploadJourney(h){
  const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.app_id=? AND m.principal_id=?').bind(appId,h.operator).first(),rules=JSON.parse(policy.rules_json)
  const setRules=async value=>h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(value),policy.id).run()
  for(const restriction of ['row','read','write','action']){
-  await setRules(rules.map(rule=>rule.entityId!==entityId?rule:restriction==='row'?{...rule,rows:{kind:'condition',fieldId:title,op:'eq',value:'synthetic-cradle-9599'}}:restriction==='read'?{...rule,readableFields:rule.readableFields.filter(id=>id!==attachment)}:restriction==='write'?{...rule,writableFields:rule.writableFields.filter(id=>id!==attachment)}:{...rule,actions:rule.actions.filter(action=>!action.startsWith('upload.'))}))
+  await setRules(rules)
+  const pending=await begin(32,digest(Buffer.alloc(32,'x')))
+  let finish;const gate=new Promise(resolve=>finish=resolve),body=new ReadableStream({async start(controller){controller.enqueue(Buffer.alloc(16,'x'));await gate;controller.enqueue(Buffer.alloc(16,'x'));controller.close()}})
+  const writing=fetch(h.origin+pending.uploadUrl,{method:'PUT',headers,body,duplex:'half'})
+  try{
+   let reserved=false
+   for(let n=0;n<100;n++){if(await h.db.prepare('SELECT 1 FROM lifecycle_file_writes w JOIN evidence_files f ON f.object_key=w.object_key WHERE f.id=?').bind(pending.file.id).first()){reserved=true;break}await new Promise(resolve=>setTimeout(resolve,20))}
+   assert.ok(reserved,'The pending body holds its durable reservation')
+   await setRules(rules.map(rule=>rule.entityId!==entityId?rule:restriction==='row'?{...rule,rows:{kind:'condition',fieldId:title,op:'eq',value:'synthetic-cradle-9599'}}:restriction==='read'?{...rule,readableFields:rule.readableFields.filter(id=>id!==attachment)}:restriction==='write'?{...rule,writableFields:rule.writableFields.filter(id=>id!==attachment)}:{...rule,actions:rule.actions.filter(action=>!action.startsWith('upload.'))}))
+  }finally{finish()}
+  const publication=await writing;assert.ok([403,404].includes(publication.status),restriction+': authority lost during transfer refuses publication');await publication.arrayBuffer()
+  const rejected=await h.db.prepare('SELECT object_key,state FROM evidence_files WHERE id=?').bind(pending.file.id).first()
+  assert.equal(rejected.state,'rejected');assert.equal(await bucket.head(rejected.object_key),null,'Revoked pending bytes are removed')
   const response=await fetch(h.origin+'/api/v1/commands/upload.begin',{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(command(input(32,digest(Buffer.alloc(32,'x')))))})
   assert.ok([403,404].includes(response.status),restriction+': current authority refuses a new upload');await response.arrayBuffer()
   if(['row','read'].includes(restriction))await download(upload,404)
  }
  await setRules(rules)
  await download(upload).then(response=>response.body.cancel())
+ await directUploadErasure(h,{begin,headers})
  await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE app_id=? AND principal_id=?").bind(appId,h.operator).run()
  await download(upload,404)
+ await h.request('/api/v1/commands/upload.begin',{method:'POST',body:retained,status:403})
  console.log('PROBE FILE-001 direct boundary: adopted owner API -> 104857600 bytes returned with equal SHA-256')
  console.log('PROBE FILE-001 oversize: declaration and overflowing stream -> limit named; no available metadata or orphan object')
  console.log('PROBE FILE-001 authority: row, readable field, writable field, upload action and removed membership -> refused; checksum and interrupted bodies -> rejected and cleaned')
