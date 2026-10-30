@@ -9,7 +9,7 @@ import { issuerView } from '../../authority/proposer.server'
 import type { DescriptorRegistry } from '../descriptors.server'
 import { assertGuards } from '../fence.server'
 import type { SchemaDraft } from './contracts'
-import { proposals, createProposalStore, type StoredProposal } from './proposal-store.server'
+import { proposals, createProposalStore, proposalCommitment, type StoredProposal } from './proposal-store.server'
 import { checkProposedMetadata } from './proposal-metadata.server'
 import type { createReleaseCore, StoredPreview } from './release.server'
 import type { AgentProposal, ProposalInput } from './proposal-contracts'
@@ -45,8 +45,8 @@ export function createProposalAgent(db:D1Database,policy:PolicyPort,registry:Des
   const authentication=new Set([...principalGuards(ctx),...principalGuards(view)].map(g=>canonical({sql:g.sql,values:g.values})))
   const detail:StoredPreview=await core.buildPreview(input.schema,id,{permit:{...permit,guards:[...permit.guards,guard]},reader:view,ownerId:issuerId,expiresAt:new Date(Date.parse(ctx.now)+PROPOSAL_LIFETIME).toISOString()})
   const metadata=checkProposedMetadata(detail.schemas,input.views,input.forms)
-  const stored:StoredProposal={...detail,views:input.views,forms:input.forms,note:input.note,metadata,freshness:detail.guards.filter(g=>!authentication.has(canonical({sql:g.sql,values:g.values})))}
-  const previewHash=await canonicalHash({schemas:stored.schemas,impacts:stored.impacts,metadata,views:input.views,forms:input.forms,note:input.note})
+  const stored:StoredProposal={...detail,calculationReportVersion:1,views:input.views,forms:input.forms,note:input.note,metadata,freshness:detail.guards.filter(g=>!authentication.has(canonical({sql:g.sql,values:g.values})))}
+  const previewHash=await canonicalHash(proposalCommitment(stored))
   const row={id,app_id:appId,proposer_id:ctx.principal.id,credential_id:ctx.principal.credentialId!,issuer_id:issuerId,state:'pending',summary:summarize(stored),detail_json:canonical(stored),preview_hash:previewHash,note:null,release_id:null,decided_by:null,created_at:ctx.now,expires_at:stored.expiresAt,decided_at:null}
   const key=await db.prepare('SELECT label FROM authority_schema_proposers WHERE principal_id=?').bind(ctx.principal.id).first<{label:string}>()
   const committedResult=await store.agent({...row,state:'pending',key_name:key?.label??null,base_name:base?.name??null,key_current:1},ctx.now)

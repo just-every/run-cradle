@@ -9678,11 +9678,11 @@
       "executable": false
     },
     "src/domains/records/manual/calculation-preview.server.ts": {
-      "sha256": "7f4cfbb0bf043302de48b9eaf98cabfeb817a3f0f13b76967ec497919f3bfb38",
+      "sha256": "062837f812e593266d68c55aaa73b268911060d7b5d009bac4c3fed455e050f2",
       "executable": false
     },
     "src/domains/records/manual/contracts.ts": {
-      "sha256": "c70a1db891b3d7047fd7144788c0b8e230f6a857960615e6936816a3500e64da",
+      "sha256": "eeb6f486c1c18634a7e53174e5e18c977f732b23ab4d16e34195ca24b6899b74",
       "executable": false
     },
     "src/domains/records/manual/conversions.server.ts": {
@@ -9706,7 +9706,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-agent.server.ts": {
-      "sha256": "fbe4e284bdf081524cebc65b93f1092f637d0dbc798a3294c19591d8e6d4c9a3",
+      "sha256": "fcc935b7e3608435b5d6190ea765132d049b02e200289d78803eba19f41f9fc6",
       "executable": false
     },
     "src/domains/records/manual/proposal-commands.server.ts": {
@@ -9714,7 +9714,7 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-contracts.ts": {
-      "sha256": "316f9d926034ab7b3be1104ed6384eb63bb2ae27ee7b3994466448d76328f156",
+      "sha256": "7330d0ae14773592c0d00f48fa6437aa3f30857ff31da034f0bb2274ad494738",
       "executable": false
     },
     "src/domains/records/manual/proposal-http.server.ts": {
@@ -9726,11 +9726,11 @@
       "executable": false
     },
     "src/domains/records/manual/proposal-review.server.ts": {
-      "sha256": "179410e3fed9349e68c076dd911152f2d07deb44e16386ef00296aa6a22fc16c",
+      "sha256": "13e946dfb4c80b8d0568c2037d1fd4ca65518cae28c36c39149091fc08d45d06",
       "executable": false
     },
     "src/domains/records/manual/proposal-store.server.ts": {
-      "sha256": "3b2064233e68ee9724e9af8b33d1175c7ba32bfa2c488e4217e57c9d9589bd54",
+      "sha256": "506b7505a280754daa115367d2e51a16f67c5bf454371520d67f88c763db4fe3",
       "executable": false
     },
     "src/domains/records/manual/recovery.server.ts": {
@@ -10914,7 +10914,7 @@
       "executable": false
     },
     "src/ui/records/proposals/proposal-review.tsx": {
-      "sha256": "c2b5dfab1d5fa6b9033ef8b7c8483d45e8a645bbe017616af7efa607eb18db61",
+      "sha256": "9e22ec2959c2ffa4504ff72377cdeda2499b09eb371c756befabd22683d43922",
       "executable": false
     },
     "src/ui/records/record-board.css": {
@@ -11034,11 +11034,11 @@
       "executable": false
     },
     "src/ui/records/schema/calculation-review.css": {
-      "sha256": "de905dfc83597994a1b4ba718ae4c357767442f74441fda58c7aa48976b183e9",
+      "sha256": "fda6a923aba8ea64bb619a908e460c1c75f8583d8ceeb18853f4ee8973d51b5b",
       "executable": false
     },
     "src/ui/records/schema/calculation-review.tsx": {
-      "sha256": "d22633fda55b47a1fe012383e601af424003565dcad85d0d75181d4c57df126b",
+      "sha256": "ac637d35ce9a2df4af59d541fda2c441dbba3a369d4bf5b5fc6123c428925f6b",
       "executable": false
     },
     "src/ui/records/schema/computed-editor.tsx": {
@@ -13154,7 +13154,7 @@
       "executable": false
     },
     "tests/records-agent-proposals.mjs": {
-      "sha256": "d39d94d0f9baac763080813167be10f70255ce8827fcdb9e9f92ae9bb7285b68",
+      "sha256": "443a514d481db673440d731c0185fa69b0c9e201c3d26224fc480d3c74f3f7bd",
       "executable": false
     },
     "tests/records-base-edge-return.mjs": {
@@ -13426,7 +13426,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "7cfab5a83e6b59fbcf3e7b4aa245d37321bd4e0eea8c98c24911512aeee2751e",
+      "sha256": "fc8cbd1f3501f763cf4be548854733def7858225a8d290025e34869812ba194f",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

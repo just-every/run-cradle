@@ -4,6 +4,7 @@ import type { OwnerProposal } from '../../../domains/records/manual/proposal-con
 import { readApi, useCommand, useResource } from '../../shared/api'
 import { CommandFeedback, ResourceState, Timestamp } from '../../shared/presentation'
 import { SchemaImpactReview } from '../schema/impact-review'
+import { CalculationReview } from '../schema/calculation-review'
 /** The existing schema-impact screen for one proposal, labelled with the key that proposed it. */
 export function ProposalReview({id,onClose}:{id:string;onClose:()=>void}){
  const proposal=useResource<OwnerProposal>(`/api/v1/records/proposals/${id}`)
@@ -24,6 +25,7 @@ function Decision({proposal,onClose}:{proposal:OwnerProposal;onClose:()=>void}){
   {proposal.state==='adopted'&&<p>You adopted this proposal.</p>}
   {proposal.state==='withdrawn'&&<p>The agent withdrew this proposal.</p>}
   <SchemaImpactReview appId={proposal.appId} impacts={proposal.impacts} schemas={proposal.schemas} access={proposal.access} recovery={proposal.recovery} />
+  <CalculationReview calculations={proposal.calculations} schemas={proposal.schemas} />
   {proposal.metadata.length>0&&<><h3>Views and forms</h3><ul>{proposal.metadata.map(line=><li key={line}>{line}</li>)}</ul></>}
   {open&&<><label className="cr-choice"><input type="checkbox" checked={confirm} onChange={e=>setConfirm(e.target.checked)} />I reviewed the data changes and owner access.</label>
    <div className="cr-actions"><button type="button" className="cr-button" disabled={!confirm||!['idle','failed'].includes(command.result.state)} onClick={()=>void command.submit('/api/v1/commands/release.adopt',{kind:'agent_proposal',proposalId:proposal.id},[])}>Adopt schema</button></div>

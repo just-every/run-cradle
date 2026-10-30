@@ -6,7 +6,7 @@ import { and, trustedPredicate } from '../../admission/sql.server'
 import { createUlid } from '../../../core/shared/ids'
 import { proposerGuard } from '../../authority/proposer.server'
 import { manualAuthority, manualOwnerGuards } from './authority.server'
-import { proposals, createProposalStore, parseStored } from './proposal-store.server'
+import { proposals, createProposalStore, parseStored, proposalCommitment } from './proposal-store.server'
 import { metadataMutations } from './proposal-metadata.server'
 import type { createReleaseCore } from './release.server'
 
@@ -21,7 +21,18 @@ export function createProposalReview(db:D1Database,policy:PolicyPort,admission:A
  const keyGuard=(row:{proposer_id:string;credential_id:string})=>[proposerGuard(row.proposer_id),trustedPredicate("EXISTS(SELECT 1 FROM authority_credentials WHERE id=? AND principal_id=? AND revoked_at IS NULL AND expires_at>unixepoch('subsec')*1000)",[row.credential_id,row.proposer_id])]
  return {
   async list(ctx:RequestContext){await owner(ctx);return {items:await store.list('issuer_id',ctx.principal.id,ctx.now)}},
-  async detail(ctx:RequestContext,id:string){await owner(ctx);return store.owner(await store.row('issuer_id',ctx.principal.id,id),ctx.now)},
+  async detail(ctx:RequestContext,id:string){
+   await owner(ctx)
+   const row=await store.row('issuer_id',ctx.principal.id,id),detail=parseStored(row),guards=manualOwnerGuards(ctx)
+   // Retained report values require current authority, even when its snapshot is stale.
+   for(const schema of detail.prior){
+    const scope=await policy.scope(ctx,{appId:schema.appId,entityId:schema.id,purpose:'read'})
+    if(!scope.unrestrictedRows||schema.fields.some(field=>!scope.readableFieldIds.includes(field.id)))throw new AdmissionError('forbidden','Reviewing retained calculations requires full current table access.')
+    guards.push(...scope.currentAuthorityGuards)
+   }
+   await core.assertGuards(guards)
+   return store.owner(row,ctx.now)
+  },
   async decline(ctx:RequestContext,commandId:string,id:string,note:string){
    await owner(ctx)
    const row=await store.row('issuer_id',ctx.principal.id,id),hash=await canonicalHash({kind:'agent_proposal_decline',id,note})
@@ -40,7 +51,7 @@ export function createProposalReview(db:D1Database,policy:PolicyPort,admission:A
    const key=keyGuard(row),current=and(...key)
    if(!await db.prepare(`SELECT 1 WHERE ${current.sql}`).bind(...current.values).first())throw new AdmissionError('version_conflict','This proposal came from a key that is revoked or expired, so it cannot be adopted. Ask the agent to propose again with a current key.')
    const permit=await manualAuthority(db,policy,ctx,row.app_id,hash)
-   if(await canonicalHash({schemas:detail.schemas,impacts:detail.impacts,metadata:detail.metadata,views:detail.views,forms:detail.forms,note:detail.note})!==row.preview_hash)throw new AdmissionError('internal','The stored proposal does not match its preview.')
+   if(await canonicalHash(proposalCommitment(detail))!==row.preview_hash)throw new AdmissionError('internal','The stored proposal does not match its preview.')
    const guards=[...detail.guards,...key]
    await core.assertGuards([...permit.guards,...guards])
    const releaseId=createUlid()
