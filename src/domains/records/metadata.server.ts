@@ -100,7 +100,7 @@ export function createRecordMetadata(db: D1Database, descriptors: DescriptorRegi
         // The view's visible field list remains unchanged for its CSV export.
         const fields = [...new Set([...(input.fields ?? view.fields), ...groupBy, ...Object.values(view.layout)])];
         const query = querySchema.parse({ ...input, fields, sort: input.sort ?? view.sort, filter: input.filter ? { kind: 'all', conditions: [view.filter, input.filter] } : view.filter, groupBy });
-        const records = await reader.query(ctx, scope, query), groups = await reader.groups(ctx, scope, query);
+        const records = await reader.query(ctx, scope, query), groups = input.includeGroups === false ? [] : await reader.groups(ctx, scope, query);
         const workspace = await db.prepare('SELECT timezone FROM workspace_settings LIMIT 1').first<{timezone:string}>();
         if (!workspace && view.display === 'calendar') throw new AdmissionError('unconfigured', 'Workspace timezone is required.');
         const projectedView = {...view};

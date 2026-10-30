@@ -8,6 +8,7 @@ import { tableAction } from './records-table-tools.mjs'
 import { recordsBrowserWidths } from './records-browser-widths.mjs'
 import { recordsJourney } from './records-browser-journey.mjs'
 import { rangeFixture, rangeReceipt } from './records-grid-range-fixture.mjs'
+import { historyRetentionBrowser } from './records-history-retention-browser.mjs'
 import { createUlid } from '../../src/core/shared/ids.ts'
 import { newField } from '../../src/ui/records/schema/templates.ts'
 
@@ -21,15 +22,15 @@ export async function gridRangeBrowserJourney() {
     browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ['--no-sandbox', '--use-mock-keychain', '--password-store=basic'] })
     const results = []
     for (const width of recordsBrowserWidths()) {
-      await fillBrowserJourney(runtime, browser, width)
-      results.push(await rangePasteBrowserJourney(runtime, browser, width, output))
+      const retention = await fillBrowserJourney(runtime, browser, width, output)
+      results.push({ ...await rangePasteBrowserJourney(runtime, browser, width, output), retention })
     }
     await writeFile(path.join(output, 'results.json'), JSON.stringify(results, null, 2))
     console.log(JSON.stringify({ rangeHistory: results }))
   } finally { await browser?.close(); await runtime?.close() }
 }
 
-async function fillBrowserJourney(runtime, browser, width) {
+async function fillBrowserJourney(runtime, browser, width, output) {
     const context = await browser.newContext({ viewport: { width, height: 900 } })
     try {
     await context.addCookies([{ name: runtime.cookie.split('=')[0], value: runtime.cookie.slice(runtime.cookie.indexOf('=') + 1), url: runtime.origin }])
@@ -58,6 +59,7 @@ async function fillBrowserJourney(runtime, browser, width) {
     pending = patch(); await tableAction(page, 'Undo'); assert.equal((await pending).status(), 200)
     pending = patch(); await tableAction(page, 'Redo'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '2'])
+    return await historyRetentionBrowser(page, runtime, { base, field: value, title: name, width, journey: recordsJourney(page, runtime.origin, output, width) })
     } finally { await context.close() }
 }
 
