@@ -7,8 +7,8 @@ import { sourceChoiceUsage } from './source-choice-usage'
 export function completeColumnAccounting(source:PreparedSource,options:ImportOptions,identities:ImportIdentities,fields:Map<string,Field[]>,records:PlannedRecord[],report:ImportReport) {
  for(const table of source.tables)for(const column of table.columns){
   const accounting=report.tables.find(t=>t.tableKey===table.key)!.columns.find(c=>c.columnKey===column.key)!
-  const override=options.tables?.[table.key]?.columns?.[column.key]??{},kind=override.sourceKind??column.sourceType
-  if(kind){accounting.sourceKind=kind;accounting.sourceKindOrigin=override.sourceKind?'owner':'recorded'}
+  const override=options.tables?.[table.key]?.columns?.[column.key]??{},workbookFormula=report.workbookFormulas?.some(f=>f.tableKey===table.key&&f.columnKey===column.key),kind=workbookFormula?'formula':override.sourceKind??column.sourceType
+  if(kind){accounting.sourceKind=kind;accounting.sourceKindOrigin=!workbookFormula&&override.sourceKind?'owner':'recorded'}
   if(override.sourceChoices){
    accounting.sourceOptions=[...override.sourceChoices]
    const used=new Set(table.rows.flatMap(row=>Array.isArray(row.values[column.key])?(row.values[column.key] as unknown[]).map(String):kind==='multipleSelects'?sourceChoiceUsage(rawText(row.values[column.key]),override.sourceChoices!):[rawText(row.values[column.key])]))
@@ -26,7 +26,7 @@ export function completeColumnAccounting(source:PreparedSource,options:ImportOpt
   }).length
   const acceptedRows=new Set(records.filter(record=>record.tableKey===table.key).map(record=>record.rowKey))
   accounting.keptText=field?.type==='text'?table.rows.filter(row=>acceptedRows.has(row.key)&&nonempty(row.values[column.key])).length:0
-  accounting.notRecreated=['formula','rollup'].includes(kind??'')||accounting.chosenType==='skipped'&&(column.relationTableKey!==undefined||options.tables?.[table.key]?.columns?.[column.key]?.type==='relation')?accounting.nonempty??0:0
+  accounting.notRecreated=field?.type!=='computed'&&['formula','rollup'].includes(kind??'')||accounting.chosenType==='skipped'&&(column.relationTableKey!==undefined||options.tables?.[table.key]?.columns?.[column.key]?.type==='relation')?accounting.nonempty??0:0
   accounting.recomputed=field?.type==='computed'?acceptedRows.size:0
   if(accounting.keptText&&['dateTime','createdTime','lastModifiedTime','multipleSelects'].includes(kind??''))accounting.reasons.push(`${accounting.keptText} values kept as text.`)
   if(accounting.notRecreated)accounting.reasons.push(`${accounting.notRecreated} source values have behavior not recreated.`)

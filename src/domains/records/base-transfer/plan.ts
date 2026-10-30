@@ -15,6 +15,7 @@ import { convertCell } from './convert'
 import { columnChoices,selectOptionLabels } from './convert-choices'
 import { resolveLinks,canonicalRow,canonicalizeReciprocal } from './links'
 import { recognizeLookups } from './lookup'
+import { recognizeWorkbookFormulas } from './workbook-formulas'
 import { acknowledgmentFlags,type DetailedPreview,type ColumnPreview } from './report'
 import { SOURCE_LIMITS } from './parse'
 import { validateImportIdentities } from './identity-validation'
@@ -132,6 +133,14 @@ export function previewBaseImport(input:PreparedSource,options:ImportOptions,ide
   }
  }
  const accepted=records.filter(r=>!rejected.has(canonicalRow(r.tableKey,r.rowKey)))
+ const workbookFormulas=recognizeWorkbookFormulas(workingSource,options,ids,fields,accepted)
+ if(workbookFormulas.length)report.workbookFormulas=workbookFormulas
+ for(const formula of workbookFormulas){
+  const column=report.tables.find(t=>t.tableKey===formula.tableKey)!.columns.find(c=>c.columnKey===formula.columnKey)!
+  if(formula.matchesAllRows){column.proposedType='computed';if(!column.validTypes.includes('computed'))column.validTypes.push('computed')}
+  column.reasons.push(formula.recognized?`Workbook formula proposed: ${formula.nativeFormula}; ${formula.matchedRows} of ${formula.rowsRead} cached results match. Recomputes after input edits.`:`Workbook formula not preserved: ${formula.reason}. Cached values retained in the chosen field type, or only in source if skipped.`)
+  report.diagnostics.push({code:formula.recognized?'WORKBOOK_FORMULA_PROPOSED':'WORKBOOK_FORMULA_REFUSED',tableKey:formula.tableKey,columnKey:formula.columnKey,message:column.reasons[column.reasons.length-1]})
+ }
  const lookupResults=recognizeLookups(workingSource,options,ids,fields,accepted,relations)
  report.lookups=lookupResults
  for(const lookup of lookupResults){const column=report.tables.find(t=>t.tableKey===lookup.tableKey)!.columns.find(c=>c.columnKey===lookup.columnKey)!;(column as ColumnPreview).lookupCandidates=lookup.candidates;if(lookup.candidates.some(candidate=>candidate.matchesAllRows)){if(!column.validTypes.includes('computed'))column.validTypes.push('computed')}else column.validTypes=column.validTypes.filter(type=>type!=='computed');if(lookup.ambiguity){report.diagnostics.push(lookup.ambiguity);column.reasons.push(lookup.ambiguity.message)}if(lookup.firstMismatch){report.diagnostics.push(lookup.firstMismatch);column.reasons.push(lookup.firstMismatch.message)}else if(lookup.recognized)column.reasons.push('Lookup recognized: every exported row exactly equals recomputation through its actual ONE link; exported display is not written as a computed value.')}

@@ -2,7 +2,8 @@ import {tableAction,tableTools} from './records-table-tools.mjs'
 import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
-import {workbook,workbookSheets,cell} from './workbook-fixtures.mjs'
+import {workbook,workbookSheets,cell,arithmeticWorkbook} from './workbook-fixtures.mjs'
+import {submitImport} from './base-import-browser.mjs'
 import {workbookDoors} from './workbook-http.mjs'
 import {readWorkbook} from '../../src/domains/records/workbooks/read.ts'
 import {writeWorkbook} from '../../src/domains/records/workbooks/write.ts'
@@ -20,5 +21,32 @@ export async function companyWorkbookBrowser(page,j,h,width){
   const connectionId=await connectSheets(d,h.sheetsProvider,{appId:adopted.identities.appId});await page.goto(`${h.origin}/app/records/${adopted.identities.appId}/${orders.id}`);await tableAction(page,'Import CSV');await page.getByLabel(/^Google Sheets connection/).selectOption(connectionId);await page.getByRole('button',{name:'Read Google Sheets',exact:true}).click();await page.getByLabel(/^Google worksheet/).waitFor()
   for(const label of ['Order','Amount','Due','Approved'])await page.getByLabel(new RegExp('^'+label+'Skip')).selectOption(orders.fields.find(f=>f.label===label).id)
   await page.getByLabel(/^Match existing records by/).selectOption({label:'Order'});await page.getByRole('button',{name:'Preview import',exact:true}).click();await page.getByRole('heading',{name:'Review import',exact:true}).waitFor();await page.getByLabel('Import these reviewed changes',{exact:true}).check();await page.getByRole('button',{name:'Enable hourly merge',exact:true}).click();await page.getByRole('status').filter({hasText:'Hourly merge enabled'}).waitFor();await j.capture('sheets-schedule-enabled');await page.getByRole('button',{name:'Pause hourly merge',exact:true}).click();await page.getByRole('status').filter({hasText:'Hourly merge paused'}).waitFor();await j.capture('sheets-schedule-paused')
+  await workbookArithmeticBrowser(page,j,h,d,width)
  }catch(error){await page.screenshot({path:j.companyOutput('failed-state'),fullPage:true});throw error}
+}
+
+/** Use the actual review, schema adoption, receipt and record editor screens. */
+async function workbookArithmeticBrowser(page,j,h,d,width){
+ await page.goto(h.origin+'/app/records/?import=base');await page.getByLabel('Excel workbook (.xlsx)',{exact:true}).check();await page.getByLabel('Base name',{exact:true}).fill(`synthetic-cradle-formulas-${width}`)
+ const bytes=arithmeticWorkbook();await page.getByLabel('Excel workbook',{exact:true}).setInputFiles({name:'arithmetic.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(bytes)})
+ const pending=page.waitForResponse(response=>response.url().endsWith('/base-import/preview')&&response.request().method()==='POST');await j.action(page.getByRole('button',{name:'Preview import',exact:true}));const response=await pending,body=await response.json();assert.equal(response.status(),200,JSON.stringify(body));const preview=body.data
+ assert.equal(await page.getByLabel('Type for Total',{exact:true}).inputValue(),'computed');assert.equal(await page.getByLabel('Type for Shipping',{exact:true}).inputValue(),'computed')
+ for(const label of ['Total','Mismatch','Mixed','External','Cycle one','Cycle two']){
+  const column=page.locator('fieldset.cr-import-column').filter({has:page.getByLabel(`Type for ${label}`,{exact:true})});await j.action(column.getByText('Samples and conversion details',{exact:true}))
+  const source=preview.source.tables[0].columns.find(item=>item.label===label),decision=preview.report.workbookFormulas.find(item=>item.tableKey==='sheet-1'&&item.columnKey===source.key)
+  if(!decision.recognized){assert.equal(await page.getByLabel(`Type for ${label}`,{exact:true}).inputValue(),'number');assert.ok((await column.innerText()).includes(decision.reason),`Review explains ${label} refusal`)}else assert.match(await column.innerText(),/4 of 4|4.*cached|cached.*4/i,'Review reports complete cached-result comparison')
+ }
+ await j.capture('workbook-formula-review')
+ const job=await submitImport(page,{action:j.action,setChecked:j.setChecked,onReview:()=>j.capture('workbook-formula-adoption')})
+ await j.action(page.getByRole('link',{name:'Open move-in receipt',exact:true}));await page.getByRole('heading',{name:'Move-in receipt',exact:true}).waitFor()
+ const receipt=await d.call(`/api/v1/records/base-import/jobs/${job.id}/receipt.json`)
+ for(const label of ['Total','Mismatch']){const source=preview.source.tables[0].columns.find(item=>item.label===label),decision=receipt.workbookFormulas.find(item=>item.tableKey==='sheet-1'&&item.columnKey===source.key);assert.ok((await page.locator('main').innerText()).includes(decision.reason??decision.nativeFormula),`Receipt shows ${label} formula decision`)}
+ await j.capture('workbook-formula-receipt')
+ const table=preview.schemaDraft.tables.find(item=>item.label==='Orders'),total=table.fields.find(item=>item.label==='Total'),mismatch=table.fields.find(item=>item.label==='Mismatch'),recordId=preview.identities.tables['sheet-1'].records['row-1'],recordPath=`/app/records/${preview.identities.appId}/${table.id}/${recordId}`
+ await page.goto(h.origin+recordPath);await page.getByRole('button',{name:'Edit record',exact:true}).waitFor();const displayed=label=>page.locator('dl.cr-record-fields .cr-field').filter({has:page.locator('dt').getByText(label,{exact:true})}).locator('dd')
+ assert.equal((await displayed('Total').innerText()).trim(),'25');await j.action(page.getByRole('button',{name:'Edit record',exact:true}));assert.equal(await page.getByLabel('Total',{exact:true}).count(),0,'Preserved formula is not an editable cached literal');await page.getByLabel('Quantity',{exact:true}).fill('5')
+ await j.command(page.getByRole('button',{name:'Save record',exact:true}),'record.patch');await page.getByRole('button',{name:'Edit record',exact:true}).waitFor();await page.reload();await page.getByRole('button',{name:'Edit record',exact:true}).waitFor()
+ assert.equal((await displayed('Total').innerText()).trim(),'62.5');assert.equal((await displayed('Mismatch').innerText()).trim(),'25')
+ const rows=(await d.call(`/api/v1/apps/${preview.identities.appId}/entities/${table.id}/query`,{fields:[total.id,mismatch.id]})).items;assert.equal(rows.find(item=>item.id===recordId).fields[total.id].value,'62.5')
+ await j.capture('workbook-formula-recomputed')
 }

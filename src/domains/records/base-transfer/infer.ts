@@ -63,6 +63,7 @@ export function inferCsvStructure(source:PreparedSource,options:ImportOptions):{
   for(const column of table.columns){
    const columnOverride=options.tables?.[table.key]?.columns?.[column.key]
    if(columnOverride?.skip||columnOverride?.type&&columnOverride.type!=='computed')continue
+   if(source.format==='xlsx'&&table.rows.some(row=>row.formulas?.[column.key]))continue
    if(column.key===link.key||column.key===(options.tables?.[table.key]?.primaryColumnKey??table.primaryColumnKey??table.columns[0].key)||column.relationTableKey||column.lookup)continue
    const candidates=target.columns.filter(targetColumn=>table.rows.every(row=>{
     let refs:string[];try{refs=parseLinkCell(rawText(row.values[link.key]))}catch{return false}

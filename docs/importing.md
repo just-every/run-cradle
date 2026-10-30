@@ -5,6 +5,21 @@ into an existing one. You choose files, review the proposed tables and fields,
 review the schema changes, then adopt and run the import. No AI provider or live
 connection to your source account is needed.
 
+## Excel arithmetic formulas
+
+For an XLSX workbook, review can preserve a uniform numeric formula column
+using same-row references, parentheses and addition, subtraction,
+multiplication or division. The proposal names the mapped native fields and
+compares every source row's cached result with native arithmetic before offering
+a formula field. After adoption, input edits recompute it on the next read.
+You can instead choose Number or Text to retain the cached values.
+
+Review and the move-in receipt explain each refused formula. Mixed definitions,
+cycles, unsupported references, nonnumeric inputs and mismatched cached results
+keep their cached values in the chosen field type. The original workbook,
+including cell coordinates and definitions, remains in source custody. Other
+formula families and Google Sheets formula preservation are not implemented.
+
 ## Choose your files
 
 Upload **1–20 CSV files together**, one per table, so links can resolve across the
