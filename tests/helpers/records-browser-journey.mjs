@@ -2,16 +2,20 @@ import {displayAction} from './records-table-tools.mjs'
 import {impactReview} from './records-browser-review.mjs'
 import assert from 'node:assert/strict'
 import path from 'node:path'
+import {writeFile} from 'node:fs/promises'
+import {measureAccessibilityLayout} from './accessibility-axe.mjs'
 import AxeBuilder from '@axe-core/playwright'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityEvidence, accessibilitySetChecked, auditAccessibility } from './accessibility-evidence.mjs'
 import { installKeyboardInteractions } from './accessibility-keyboard.mjs'
-export function recordsJourney(page,origin,output,width,{allAxe=false}={}){
+export function recordsJourney(page,origin,output,width,{allAxe=false,measureTargets=false}={}){
  installKeyboardInteractions(page)
  const checkpoints=[],errors=[];let previews=0;page.on('pageerror',e=>errors.push(e.message))
  async function capture(name,{viewport=false}={}){
   await page.waitForLoadState('networkidle')
   await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'))
   if(!viewport)await page.evaluate(()=>scrollTo(0,0))
+  const measuredLayout=measureTargets?await measureAccessibilityLayout(page):undefined
+  if(measuredLayout)await writeFile(path.join(output,`${name}-${width}-layout.json`),JSON.stringify(measuredLayout,null,2))
   if(!accessibilityCaptureOnly)assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name}: page overflow`)
 
   let report,layout,evidence
@@ -28,11 +32,18 @@ export function recordsJourney(page,origin,output,width,{allAxe=false}={}){
    assert.deepEqual(report.violations.filter(v=>allAxe||['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[],`${name}: accessibility`)
   }
 
+  layout??=measuredLayout
+  if(measureTargets){
+   assert.equal(layout.viewportWidth,width,`${name}: actual viewport width`)
+   assert.ok(layout.controls.some(control=>!control.inactive&&control.targetAreas.some(area=>area.pointerTarget)),`${name}: populated active touch targets`)
+   assert.deepEqual(layout.targetsBelow24.map(control=>({name:control.name,selector:control.selectorPath,width:control.effectiveTargetWidth,height:control.effectiveTargetHeight,areas:control.targetAreas})),[],`${name} ${width}: every active touch target needs a measured 24x24px hit region`)
+  }
   assert.deepEqual(errors,[],`${name}: page errors`)
   assert.equal(await page.locator('.cr-state[aria-busy="false"]').count(),0,`${name}: failed resource`)
   if(!accessibilityEvidence)await page.screenshot({path:path.join(output,`${name}-${width}.png`),fullPage:!viewport})
   checkpoints.push({
    name,width,serious:0,critical:0,pageOverflow:layout?.pageOverflow??false,
+   ...(measureTargets?{viewportWidth:layout.viewportWidth,pageWidth:layout.pageWidth,smallTargetCount:layout.targetsBelow24.length,touchTargets:layout.controls.filter(control=>!control.inactive&&control.targetAreas.some(area=>area.pointerTarget)).map(control=>({name:control.name,width:control.effectiveTargetWidth,height:control.effectiveTargetHeight,hitAreaSquare24:control.targetMeets24px}))}:{}),
    ...(evidence?{
     wcagViolationCount:evidence.axe.wcag22aa.length,
     targetSizeViolationCount:evidence.axe.targetSize.length,

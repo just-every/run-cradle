@@ -1,7 +1,7 @@
 import {displayAction,tableAction,tableCommand} from './records-table-tools.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
-import {mkdir} from 'node:fs/promises'
+import {mkdir,writeFile} from 'node:fs/promises'
 import {chromium} from '@playwright/test'
 import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
@@ -9,12 +9,12 @@ import {browserCall,liveCommand,liveFixture} from './records-live-fixture.mjs'
 
 /** VIEW-015: editor and bulk actions share a session stack across record and view navigation. */
 export async function historyBrowserJourney(){
- const output='.private/record-history';await mkdir(output,{recursive:true})
+ const output=process.env.CRADLE_HISTORY_OUTPUT??'.private/record-history';await mkdir(output,{recursive:true})
  let h,browser
  try{
-  h=await recordsBrowserRuntime(0);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
-  for(const width of recordsBrowserWidths()){
-   const context=await browser.newContext({viewport:{width,height:width===390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+  h=await recordsBrowserRuntime(0);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  for(const width of recordsBrowserWidths([1440,390,320])){
+   const context=await browser.newContext({viewport:{width,height:width<=390?844:1000}}),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width,{measureTargets:width<=390})
    let peerContext
    try{
     page.setDefaultTimeout(15000)
@@ -47,15 +47,17 @@ export async function historyBrowserJourney(){
     await peerEdit({[f.due.id]:'2026-11-03'})
     await displayAction(page,'Dispatch cards');await tableCommand(page,'Undo',j)
     assert.equal(await note(f.row.id),'Owner confirmed carrier');assert.equal((await query()).find(row=>row.id===f.row.id).fields[f.due.id].value,'2026-11-03');await j.capture('history-unrelated-edit-preserved')
-    await peerEdit({[f.notes.id]:'Avery booking update'})
+    await peerEdit({[f.notes.id]:'Avery booking update'});const beforeConflict=await query()
     response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Redo');const refused=await response;assert.equal(refused.status(),409);const failure=(await refused.json()).error
-    assert.equal(failure.issues.length,1);assert.equal(failure.issues[0].fieldId,f.notes.id);assert.equal(await note(second.id),'Check labels');await j.capture('history-cell-conflict')
-    await peerEdit({[f.notes.id]:'Owner confirmed carrier'})
-    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Redo');const changedBack=await response;assert.equal(changedBack.status(),409);assert.equal((await changedBack.json()).error.issues[0].fieldId,f.notes.id);assert.equal(await note(second.id),'Check labels');await page.getByRole('article').filter({has:page.getByRole('heading',{name:'PO-1042',exact:true})}).getByText('Owner confirmed carrier',{exact:true}).waitFor();await j.capture('history-changed-back-conflict')
+    assert.equal(failure.issues.length,1);assert.equal(failure.issues[0].fieldId,f.notes.id);assert.equal(await note(second.id),'Check labels');assert.deepEqual(await query(),beforeConflict);await page.getByRole('alert').filter({hasText:'Notes'}).filter({hasText:'Avery booking update'}).waitFor();await j.capture('history-cell-conflict')
+    await peerEdit({[f.notes.id]:'Owner confirmed carrier'});const beforeChangedBack=await query()
+    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Redo');const changedBack=await response;assert.equal(changedBack.status(),409);assert.equal((await changedBack.json()).error.issues[0].fieldId,f.notes.id);assert.equal(await note(second.id),'Check labels');assert.deepEqual(await query(),beforeChangedBack);await page.getByRole('alert').filter({hasText:'Notes'}).filter({hasText:'Owner confirmed carrier'}).waitFor();await page.getByRole('article').filter({has:page.getByRole('heading',{name:'PO-1042',exact:true})}).getByText('Owner confirmed carrier',{exact:true}).waitFor();await j.capture('history-changed-back-conflict')
     const policy=await h.db.prepare('SELECT id,rules_json FROM authority_policies WHERE app_id=? AND id<>?').bind(f.appId,f.policyId).first(),rules=JSON.parse(policy.rules_json)
     for(const rule of rules)if(rule.entityId===f.entityId)rule.writableFields=[]
     await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
-    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Undo');assert.equal((await response).status(),403);assert.equal(await note(f.row.id),'Owner confirmed carrier');await j.capture('history-authority-refused')
+    const beforeRefusal=await query()
+    response=page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith('/commands/record.patch'));await tableAction(page,'Undo');assert.equal((await response).status(),403);assert.equal(await note(f.row.id),'Owner confirmed carrier');assert.deepEqual(await query(),beforeRefusal);await page.getByRole('status').filter({hasText:'Your access changed.'}).waitFor();await j.capture('history-authority-refused')
+    await writeFile(`${output}/results-${width}.json`,JSON.stringify({width,checkpoints:j.checkpoints},null,2))
    }catch(error){await page.screenshot({path:`${output}/failure-${width}.png`,fullPage:true});throw error}finally{await peerContext?.close();await context.close()}
   }
  }finally{await browser?.close();await h?.close()}
