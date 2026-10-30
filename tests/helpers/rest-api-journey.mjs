@@ -15,7 +15,9 @@ export async function recordsRestJourney(h){
  const issue={appId,entityId,expiresAt:new Date(Date.now()+86400000).toISOString()}
  const key=async options=>(await h.request('/api/user-keys',{method:'POST',status:201,body:{...issue,commandId:createUlid(),name:'synthetic-cradle-202 REST key',permissions:'write',...options}})).data.key
  const writable=await key(),deleting=await key({allowDelete:true})
+ const issuedIds=(await h.request('/api/user-keys?appId='+appId)).data.keys.map(key=>key.id)
  await h.request('/api/user-keys',{method:'POST',status:400,body:{...issue,commandId:createUlid(),name:'synthetic-cradle-203 invalid delete scope',permissions:'read',allowDelete:true}})
+ assert.deepEqual((await h.request('/api/user-keys?appId='+appId)).data.keys.map(key=>key.id),issuedIds,'Read-only delete issuance creates no credential')
  const document=await h.request(`/api/v1/apps/${appId}/openapi.json`,{secret:writable.secret})
  const operations=Object.entries(document.paths).flatMap(([path,methods])=>Object.entries(methods).map(([method,operation])=>({path,method:method.toUpperCase(),operation})))
  const endpoint=name=>{const item=operations.find(item=>item.operation['x-cradle-operation']===name&&item.operation['x-cradle-entityId']===entityId);assert.ok(item,`OpenAPI supplies ${name}`);return item}

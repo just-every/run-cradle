@@ -31,7 +31,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
   h=await userAutomationRuntime(0,{bindings:slackEdge.bindings,outbound:async request=>{assert.equal(request.url,slackEdge.bindings.EGRESS_RELAY_URL);const wire=await request.clone().json();if(new URL(wire.url).hostname==='slack.com')return slackEdge.outbound(request);if(['api.twilio.com','messaging.twilio.com'].includes(new URL(wire.url).hostname))return smsEdge.outbound(request);return wire.url.endsWith('/unknown')?new Response(null,{status:503}):Response.json({status:wire.url.endsWith('/safe')?429:400,headers:{},body:''})}})
   slackEdge.setOrigin(h.origin)
   assert.equal(process.env.HOME,userInfo().homedir)
-  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
   console.log('OWNED_BROWSER_PIDS '+execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).split('\n').filter(line=>line.trim().split(/\s+/)[1]===String(process.pid)).join(' | '))
   for(const width of [1440,390]) {
    const context=await browser.newContext({viewport:{width,height:width===390?844:900}})

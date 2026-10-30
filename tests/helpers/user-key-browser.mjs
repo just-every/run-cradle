@@ -1,8 +1,10 @@
+import {userKeyDeleteBrowser} from './user-key-delete-browser.mjs'
 import {adminAuditBrowser} from './admin-audit-browser.mjs'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 
 export async function userKeyBrowser(page,h,journey,width) {
+ await userKeyDeleteBrowser(page,h,journey,width)
  await page.goto(h.origin+'/app/settings/')
  await page.waitForLoadState('networkidle')
  await page.locator('summary').filter({hasText:/^API keys$/}).click()
