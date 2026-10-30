@@ -1,6 +1,7 @@
 import {recordTemplateAutomationBrowser} from './record-template-automation-browser.mjs'
 import {recordTemplateButtonsBrowser} from './record-template-buttons.mjs'
 import assert from 'node:assert/strict'
+import {createHash} from 'node:crypto'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {newField} from '../../src/ui/records/schema/templates.ts'
 
@@ -28,19 +29,24 @@ export async function recordTemplateBrowser(page,j,h,width){
  const create=async(entityId,values)=>{const entity=await call(`/api/v1/apps/${appId}/entities/${entityId}`);return(await call('/api/v1/commands/record.create',envelope({appId,entityId,values},[{ref:{appId,entityId:schemaEntity,recordId:entityId},version:entity.version}]))).value}
  const supplier=await create(vendorId,{[vendorName.id]:`synthetic-cradle-${width+1}`}),source=await create(parentId,{[title.id]:`synthetic-cradle-${width+2}`,[vendor.id]:supplier.ref,[amount.id]:{minor:'100115',currency:'USD',scale:2}})
  await create(childId,{[line.id]:`synthetic-cradle-${width+3}`,[parent.id]:source.ref})
- // The attachment producer is the existing evidence upload door. Give this
- // fixture's owner its explicit upload permissions, as the gallery journey does.
- const owner=(await h.db.prepare('SELECT owner_id FROM manual_record_bases WHERE id=?').bind(appId).first()).owner_id
- const policy=await h.db.prepare('SELECT p.id,p.rules_json FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.app_id=? AND m.principal_id=?').bind(appId,owner).first()
- const rules=JSON.parse(policy.rules_json).map(rule=>rule.entityId===parentId?{...rule,actions:[...new Set([...rule.actions,'upload.begin','upload.complete'])]}:rule)
- await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
  const base=`/app/records/${appId}/${parentId}`,sourcePath=`${base}/${source.id}`
  await page.goto(h.origin+sourcePath);await j.action(page.getByRole('button',{name:'Edit record',exact:true}))
  const bytes=Buffer.from(`synthetic-cradle-${width+4}`)
+ const fileInput=page.getByLabel('Add Order files',{exact:true})
+ const initiated=[];const track=request=>{if(request.url().endsWith('/commands/upload.begin'))initiated.push(request.url())};page.on('request',track)
+ await fileInput.evaluate(input=>{const transfer=new DataTransfer();transfer.items.add(new File([new ArrayBuffer(100*1024*1024+1)],'synthetic-cradle-9510.txt',{type:'text/plain'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}))})
+ await j.action(page.getByRole('button',{name:'Upload file',exact:true}))
+ await page.getByRole('alert').filter({hasText:/100 MB.*104,857,600 bytes/}).waitFor()
+ assert.equal(initiated.length,0,'The browser refuses an oversized file before upload initiation')
+ page.off('request',track)
+ await j.capture('record-attachment-upload')
  await page.getByLabel('Add Order files',{exact:true}).setInputFiles({name:`synthetic-cradle-${width+4}.txt`,mimeType:'text/plain',buffer:bytes})
  await j.action(page.getByRole('button',{name:'Upload file',exact:true}));await page.getByRole('button',{name:'File verified',exact:true}).waitFor()
  const attached=await j.command(page.getByRole('button',{name:'Save record',exact:true}),'record.patch')
  assert.equal(attached.fields[files.id].value.length,1)
+ const uploaded=await page.request.get(`${h.origin}/api/v1/files/${attached.fields[files.id].value[0].fileId}/content`)
+ assert.equal(uploaded.status(),200);assert.equal(createHash('sha256').update(await uploaded.body()).digest('hex'),createHash('sha256').update(bytes).digest('hex'))
+ await j.capture('record-attachment-uploaded')
  await page.getByRole('button',{name:'Edit record',exact:true}).waitFor()
  await j.action(page.locator('summary').filter({hasText:/^Record actions$/}))
  const duplicates=[]

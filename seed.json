@@ -689,7 +689,8 @@
     "timelineRecords": 10000,
     "timelineAxisIntervals": 1500,
     "warehouseTransferBytes": 1048576,
-    "warehouseBigQueryFileBytes": 900000
+    "warehouseBigQueryFileBytes": 900000,
+    "attachmentUploadBytes": 104857600
   },
   "accessibility": {
     "level": "WCAG 2.2 AA",
