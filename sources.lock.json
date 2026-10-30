@@ -5714,7 +5714,7 @@
       "executable": false
     },
     "src/adapters/google-sheets.server.ts": {
-      "sha256": "4642695b6ec57795a0d4710a2e08d85c9b876ef97bf67f2f238e64765ef2ee6b",
+      "sha256": "b455d1cb6c820e101c64e4256ae4687576e3f29a04a265ea97a817d5f6083659",
       "executable": false
     },
     "src/adapters/mime.server.ts": {
@@ -9114,7 +9114,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/contracts.ts": {
-      "sha256": "6a1d470ec470a91fa0f4b4fda6d6ce7c73e83e94c8170e3ae78b18e41c210933",
+      "sha256": "e1286c3471702c6526769e59f3311d7d1b0ce9288cd135a939a2224a0e790d74",
       "executable": false
     },
     "src/domains/records/base-transfer/convert-choices.ts": {
@@ -9194,7 +9194,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/infer.ts": {
-      "sha256": "efadfef368b21878c01c1a79d6d0675411648568f8f348ed206d8abbc511e47d",
+      "sha256": "eb9995ec3266b78452f7784a4fbff5a44b357f860930ba7c1bf041f229d17f4f",
       "executable": false
     },
     "src/domains/records/base-transfer/input-error.ts": {
@@ -9274,11 +9274,11 @@
       "executable": false
     },
     "src/domains/records/base-transfer/plan.ts": {
-      "sha256": "58666dfdcbacc4ab3a02c6249c75e1df11f75d05cecf6aa0dd9264852ed113e3",
+      "sha256": "1f7ac85cb701fda9b5d84f4c7375d9395400f112739def971d3945b1542f33ef",
       "executable": false
     },
     "src/domains/records/base-transfer/receipt.ts": {
-      "sha256": "719d0aea419e9200277025fed3a9ec8daceff7af5b6fbc5af86b96966d64c266",
+      "sha256": "7d572be9877510bca875dfbcda1f99e8bb545bc69b22d81644ea83d9038a9937",
       "executable": false
     },
     "src/domains/records/base-transfer/record-order.ts": {
@@ -9398,7 +9398,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/workbook-formulas.ts": {
-      "sha256": "9d005abebcc5653dbd643747b3bd2372e5e958a181841459124066d4581b3013",
+      "sha256": "f5b860e101176c3e9de01b7b99866450cd1652e6b57c57efce49a25cc26c4c73",
       "executable": false
     },
     "src/domains/records/bulk.server.ts": {
@@ -9870,7 +9870,7 @@
       "executable": false
     },
     "src/domains/records/sheets/source.ts": {
-      "sha256": "ae8c4067ad1e433c4058ffe49356c5e740db22b9e26fe9b65687f12c53de7968",
+      "sha256": "db9f3d9f3343fa45ac96bde7335c946d8a9b59a6cb13a047b07be2f0eb61a5d1",
       "executable": false
     },
     "src/domains/records/store-reference-links.ts": {
@@ -10018,7 +10018,7 @@
       "executable": false
     },
     "src/domains/records/workbooks/source.ts": {
-      "sha256": "abffcc841ae671e13d06c6797e57bbe3dcd1fa25119f5d7c8fb864d1adb5e52a",
+      "sha256": "9ecbb267088e4b63f40b9d6428b535d8cdc9ed6a5bfedd8b3414aa1e51b3ce16",
       "executable": false
     },
     "src/domains/records/workbooks/stream-zip.ts": {
@@ -12102,7 +12102,7 @@
       "executable": false
     },
     "tests/helpers/company-workbook-browser.mjs": {
-      "sha256": "95f4cbd78e122b27ec3afa36e767aa8444749663c50f02277296e5792a3dacba",
+      "sha256": "1234fe7fb86a0a9c07139d74572d6030a102cce87d01a52f0ffb78dc7c1f633b",
       "executable": false
     },
     "tests/helpers/company-workbook-runtime.mjs": {
@@ -12906,7 +12906,7 @@
       "executable": false
     },
     "tests/helpers/sheets-provider.mjs": {
-      "sha256": "824654d6b47c9eb95414e9ec4d6584d82147f7cc35f7061cfbe7228bf8444dcd",
+      "sha256": "5889de6bf947783b4640c8120935d9e78282153078d1733eebd5c87ae905d46c",
       "executable": false
     },
     "tests/helpers/sign-in-forward-journey.mjs": {
@@ -13010,7 +13010,7 @@
       "executable": false
     },
     "tests/helpers/workbook-fixtures.mjs": {
-      "sha256": "35a7aab2c7e4fbb2a88c55b0768725c223446bbed6f119b7477c941f20aea9ff",
+      "sha256": "4a03811589003dd56a9fc1aafb98a9e58bc2a76eae8b1ea739126062184515f8",
       "executable": false
     },
     "tests/helpers/workbook-http.mjs": {
@@ -13018,7 +13018,7 @@
       "executable": false
     },
     "tests/helpers/workbook-journey.mjs": {
-      "sha256": "f7415cca9c2b353cee758ae0753b21767c111771f7d401278fc31075d07cff57",
+      "sha256": "3864ca254c333eb850974bf8af7997584322568ea2f554ab0492958c7300a861",
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {

@@ -11,7 +11,7 @@ export const NOT_CARRIED=[
  {id:'history',statement:'Cradle\'s importer does not carry source comments or record history.'},
  {id:'attachments',statement:'Cradle\'s importer does not carry attachment bytes. Skipped attachment cells are listed in the manifest with their source text.'},
  {id:'buttons',statement:'Cradle\'s importer does not carry button actions.'},
- {id:'formulas',statement:'Only reviewed XLSX same-row arithmetic with every cached result verified becomes native formulas. Other formula and rollup definitions are not carried; their exported values stay in the chosen scalar type or original source.'},
+ {id:'formulas',statement:'Only reviewed Excel and Google Sheets same-row arithmetic and exact VLOOKUP or XLOOKUP through native links, with every cached result verified, become native formulas. Other formula and rollup definitions are not carried; their exported values stay in the chosen scalar type or original source.'},
 ] as const
 /** What each exit keeps, drawn from RECORDS-006, importing.md and installation-archives.md. */
 export const EXITS=[

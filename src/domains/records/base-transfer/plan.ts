@@ -134,6 +134,20 @@ export function previewBaseImport(input:PreparedSource,options:ImportOptions,ide
  }
  const accepted=records.filter(r=>!rejected.has(canonicalRow(r.tableKey,r.rowKey)))
  const workbookFormulas=recognizeWorkbookFormulas(workingSource,options,ids,fields,accepted)
+ const lookupResults=recognizeLookups(workingSource,options,ids,fields,accepted,relations)
+ report.lookups=lookupResults
+ for(const lookup of lookupResults){const column=report.tables.find(t=>t.tableKey===lookup.tableKey)!.columns.find(c=>c.columnKey===lookup.columnKey)!;(column as ColumnPreview).lookupCandidates=lookup.candidates;if(lookup.candidates.some(candidate=>candidate.matchesAllRows)){if(!column.validTypes.includes('computed'))column.validTypes.push('computed')}else column.validTypes=column.validTypes.filter(type=>type!=='computed');if(lookup.ambiguity){report.diagnostics.push(lookup.ambiguity);column.reasons.push(lookup.ambiguity.message)}if(lookup.firstMismatch){report.diagnostics.push(lookup.firstMismatch);column.reasons.push(lookup.firstMismatch.message)}else if(lookup.recognized)column.reasons.push('Lookup recognized: every exported row exactly equals recomputation through its actual ONE link; exported display is not written as a computed value.')}
+ for(const formula of inferred.workbookLookups){
+  const proof=lookupResults.find(l=>l.tableKey===formula.tableKey&&l.columnKey===formula.columnKey),candidate=proof?.candidates.find(c=>c.relationColumnKey===formula.lookup?.relationColumnKey&&c.valueColumnKey===formula.lookup?.valueColumnKey&&c.targetTableKey===formula.lookup?.targetTableKey)
+  if(!formula.reason){
+   formula.matchedRows=candidate?.matchedRows??0;formula.matchesAllRows=candidate?.matchesAllRows??false
+   formula.recognized=!!proof?.recognized&&!!formula.matchesAllRows&&proof.relationColumnKey===formula.lookup?.relationColumnKey&&proof.valueColumnKey===formula.lookup?.valueColumnKey
+   const table=fields.get(formula.tableKey),field=table?.find(f=>f.id===ids.tables[formula.tableKey].fields[formula.columnKey])
+   if(formula.recognized){formula.expression=field!.expression;const target=workingSource.tables.find(t=>t.key===formula.lookup!.targetTableKey)!;formula.nativeFormula=`Lookup ${table!.find(f=>f.id===ids.tables[formula.tableKey].fields[formula.lookup!.relationColumnKey])!.label} → ${target.label} · ${target.columns.find(c=>c.key===formula.lookup!.valueColumnKey)!.label}`}
+   else formula.reason=proof?.firstMismatch?.message??'Owner mapping does not preserve the verified lookup formula'
+  }
+  workbookFormulas.push(formula)
+ }
  if(workbookFormulas.length)report.workbookFormulas=workbookFormulas
  for(const formula of workbookFormulas){
   const column=report.tables.find(t=>t.tableKey===formula.tableKey)!.columns.find(c=>c.columnKey===formula.columnKey)!
@@ -141,9 +155,6 @@ export function previewBaseImport(input:PreparedSource,options:ImportOptions,ide
   column.reasons.push(formula.recognized?`Workbook formula proposed: ${formula.nativeFormula}; ${formula.matchedRows} of ${formula.rowsRead} cached results match. Recomputes after input edits.`:`Workbook formula not preserved: ${formula.reason}. Cached values retained in the chosen field type, or only in source if skipped.`)
   report.diagnostics.push({code:formula.recognized?'WORKBOOK_FORMULA_PROPOSED':'WORKBOOK_FORMULA_REFUSED',tableKey:formula.tableKey,columnKey:formula.columnKey,message:column.reasons[column.reasons.length-1]})
  }
- const lookupResults=recognizeLookups(workingSource,options,ids,fields,accepted,relations)
- report.lookups=lookupResults
- for(const lookup of lookupResults){const column=report.tables.find(t=>t.tableKey===lookup.tableKey)!.columns.find(c=>c.columnKey===lookup.columnKey)!;(column as ColumnPreview).lookupCandidates=lookup.candidates;if(lookup.candidates.some(candidate=>candidate.matchesAllRows)){if(!column.validTypes.includes('computed'))column.validTypes.push('computed')}else column.validTypes=column.validTypes.filter(type=>type!=='computed');if(lookup.ambiguity){report.diagnostics.push(lookup.ambiguity);column.reasons.push(lookup.ambiguity.message)}if(lookup.firstMismatch){report.diagnostics.push(lookup.firstMismatch);column.reasons.push(lookup.firstMismatch.message)}else if(lookup.recognized)column.reasons.push('Lookup recognized: every exported row exactly equals recomputation through its actual ONE link; exported display is not written as a computed value.')}
  for(const accounting of report.tables){accounting.created=accepted.filter(r=>r.tableKey===accounting.tableKey).length;accounting.rejected=accounting.rowsRead-accounting.created;for(const c of accounting.columns){const field=fields.get(accounting.tableKey)?.find(f=>f.id===ids.tables[accounting.tableKey].fields[c.columnKey]);if(field)c.chosenType=field.type}}
  report.reciprocalRelations=inverseViews.map(view=>({...view,inverseId:ids.tables[view.tableKey].fields[view.columnKey],label:report.tables.find(t=>t.tableKey===view.tableKey)!.columns.find(c=>c.columnKey===view.columnKey)!.label}))
  const schemaDraft={appId:ids.appId,name:options.name,tables:report.tables.map(t=>({id:ids.tables[t.tableKey].entityId,label:t.label,primaryFieldId:ids.tables[t.tableKey].fields[t.primaryColumnKey],fields:fields.get(t.tableKey)!,incomingRelations:inverseViews.filter(v=>v.tableKey===t.tableKey).map(v=>({id:ids.tables[v.tableKey].fields[v.columnKey],label:report.tables.find(t=>t.tableKey===v.tableKey)!.columns.find(c=>c.columnKey===v.columnKey)!.label,sourceEntityId:ids.tables[v.canonicalTableKey].entityId,sourceFieldId:ids.tables[v.canonicalTableKey].fields[v.canonicalColumnKey]}))}))}

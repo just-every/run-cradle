@@ -1,5 +1,6 @@
 import type {Expr,Field} from '../contracts'
 import type {PreparedSource,ImportOptions,ImportIdentities,PlannedRecord,WorkbookFormula} from './contracts'
+import {isWorkbookLookup} from './workbook-lookup-parser'
 import {arithmetic} from '../formula-values'
 import {formulaText} from '../formula-text'
 import {exactApiNumber} from './numeric-lexeme'
@@ -7,14 +8,14 @@ import {workbookExpression,workbookDependencies} from './workbook-formula-parser
 
 /** Prove every cache against native arithmetic before any computed field is offered. */
 export function recognizeWorkbookFormulas(source:PreparedSource,options:ImportOptions,ids:ImportIdentities,fields:Map<string,Field[]>,records:PlannedRecord[]):WorkbookFormula[]{
- if(source.format!=='xlsx')return []
+ if(!['xlsx','google-sheets'].includes(source.format))return []
  const results:WorkbookFormula[]=[]
  for(const table of source.tables){
   const nativeFields=fields.get(table.key)!,identity=ids.tables[table.key]
   const candidates=new Map<string,WorkbookFormula>(),byRow=new Map(records.filter(r=>r.tableKey===table.key).map(r=>[r.rowKey,r]))
   for(const column of table.columns){
    const sourceFormulas=table.rows.flatMap(row=>row.formulas?.[column.key]?[{rowKey:row.key,...row.formulas[column.key]}]:[])
-   if(!sourceFormulas.length)continue
+   if(!sourceFormulas.length||sourceFormulas.some(isWorkbookLookup))continue
    const result:WorkbookFormula={tableKey:table.key,columnKey:column.key,recognized:false,sourceFormulas,matchedRows:0,rowsRead:table.rows.length}
    candidates.set(identity.fields[column.key],result);results.push(result)
    try{

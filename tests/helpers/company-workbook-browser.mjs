@@ -1,3 +1,4 @@
+import {workbookLookupBrowser} from './workbook-lookup-browser.mjs'
 import {tableAction,tableTools} from './records-table-tools.mjs'
 import {baseAction} from './records-base-menu.mjs'
 import assert from 'node:assert/strict'
@@ -22,6 +23,7 @@ export async function companyWorkbookBrowser(page,j,h,width){
   for(const label of ['Order','Amount','Due','Approved'])await page.getByLabel(new RegExp('^'+label+'Skip')).selectOption(orders.fields.find(f=>f.label===label).id)
   await page.getByLabel(/^Match existing records by/).selectOption({label:'Order'});await page.getByRole('button',{name:'Preview import',exact:true}).click();await page.getByRole('heading',{name:'Review import',exact:true}).waitFor();await page.getByLabel('Import these reviewed changes',{exact:true}).check();await page.getByRole('button',{name:'Enable hourly merge',exact:true}).click();await page.getByRole('status').filter({hasText:'Hourly merge enabled'}).waitFor();await j.capture('sheets-schedule-enabled');await page.getByRole('button',{name:'Pause hourly merge',exact:true}).click();await page.getByRole('status').filter({hasText:'Hourly merge paused'}).waitFor();await j.capture('sheets-schedule-paused')
   await workbookArithmeticBrowser(page,j,h,d,width)
+  await workbookLookupBrowser(page,j,h,d,width)
  }catch(error){await page.screenshot({path:j.companyOutput('failed-state'),fullPage:true});throw error}
 }
 

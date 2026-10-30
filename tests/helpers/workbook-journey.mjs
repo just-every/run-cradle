@@ -1,3 +1,4 @@
+import {workbookLookupJourney} from './workbook-lookup-journey.mjs'
 import {createHash} from 'node:crypto'
 import {csvDownloadEntries} from './base-csv-download.mjs'
 import assert from 'node:assert/strict'
@@ -39,6 +40,7 @@ export async function workbookJourney(){const provider=sheetsProvider(),h=await 
   const rateJson=await d.call('/api/v1/records/base-export',{appId:ratePreview.identities.appId,format:'json'});assert.equal(JSON.parse(rateJson.content).base.tables[0].fields.find(f=>f.label==='Rate').numberFormat,'percent')
   await sheetsJourney(h,d,provider,identity,fields,mapping)
   await workbookArithmeticJourney(h,d)
+  await workbookLookupJourney(h,await workbookDoors(h),provider)
  }finally{await h.close()}
 }
 
