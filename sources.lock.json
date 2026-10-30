@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "700f4bf445b218d1781ead27092ac9027f069ade9f494be8c6a7652411e316a0",
+      "sha256": "d4c5347c2efd2e8bd498321ff6002c041549d8a39f3fee0f7e5af163a4860f5e",
       "executable": false
     },
     "DEMO.md": {
@@ -12757,6 +12757,18 @@
       "sha256": "81f1c9a7a24b87b19e648faa91022ecd0e06ba64385f3275bea9f69c1978a3d8",
       "executable": false
     },
+    "tests/helpers/records-rules-browser.mjs": {
+      "sha256": "b931311cbe8e9046109a7a454ef583446a8d7d0ba8d7e50a99e0d8d7fbb1e9fd",
+      "executable": false
+    },
+    "tests/helpers/records-rules-fixture.mjs": {
+      "sha256": "63f858c4207dbf3cda8d421be47d136d0dca01ea6a0041eed2a4cfa8dc3da38b",
+      "executable": false
+    },
+    "tests/helpers/records-rules-native.mjs": {
+      "sha256": "2b3e1bda78d2f485be046e88af531a0361cc46b04d0dac98846df1006186caf2",
+      "executable": false
+    },
     "tests/helpers/records-summary-ready.mjs": {
       "sha256": "713e0ccbbbba8aa7502c857e5c761c7cf5d10d18df371e7ef37b2a22faac2ca5",
       "executable": false
@@ -13426,7 +13438,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "fc85a7b384b13e644af9df7bb682e7d00018c1d93848e920c7167f85029cd6a6",
+      "sha256": "adaba85ab870944df5161f269b83c198fbbe63b8480f89cc3a3b3dbb02be3d4d",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

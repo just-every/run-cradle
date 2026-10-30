@@ -1,3 +1,4 @@
+import {recordsRulesBrowser} from './helpers/records-rules-browser.mjs'
 import {recordTemplateBrowser} from './helpers/record-template-browser.mjs'
 import {gridRangeBrowserJourney} from './helpers/records-grid-range-browser.mjs'
 import {baseAction} from './helpers/records-base-menu.mjs'
@@ -79,4 +80,3 @@ await collectionLookupsBrowser()
 await conditionalFormsJourney()
 await historyBrowserJourney()
 })
-import {recordsRulesBrowser} from './helpers/records-rules-browser.mjs'

@@ -82,7 +82,7 @@ export async function recordsRulesBrowser(outputDirectory=process.env.CRADLE_RUL
      const unchanged=await f.snapshot(),pending=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/'+action))
      await button.click();const response=await pending;assert.equal(response.status(),400)
      const wire=await response.json();assert.ok(wire.error.message.includes(rule.name+': '+rule.message),JSON.stringify(wire))
-     await page.getByRole('alert').filter({hasText:rule.name+': '+rule.message}).waitFor()
+     await page.getByRole('status').filter({hasText:rule.name+': '+rule.message}).waitFor()
      assert.deepEqual(await f.snapshot(),unchanged,'The rendered refusal leaves all public records unchanged')
     }
     await page.getByLabel('Ship date',{exact:true}).fill('')
