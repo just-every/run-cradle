@@ -3274,11 +3274,11 @@
       "executable": false
     },
     "docs/contract/COVERAGE.json": {
-      "sha256": "405e0d92f3b999a6ac24d13ac309753d15f18927372a12668f24b664c52d6e3a",
+      "sha256": "10c3a7e9a4716db9c39b78c5a49eadc3510eae66dddfa58ab861b56ed1fb6f1f",
       "executable": false
     },
     "docs/contract/DONE-AUDIT.md": {
-      "sha256": "f3f52ef5c2f1e7e75f8471078a3110f49ac8686604eb468bcf8becc21e109b61",
+      "sha256": "b1e7ec104658b10b81ce3a6f62518953be10a69659e0f2e9cffa6a65e9054f19",
       "executable": false
     },
     "docs/contract/FIELD-001/saved-typed-values-1440.png": {
@@ -3462,7 +3462,7 @@
       "executable": false
     },
     "docs/contract/ID-MAP.json": {
-      "sha256": "e6f9323f5ecb520b9847d49f36ecf9e58b34d83529c63338922d80959dd8da80",
+      "sha256": "31811c14c3ece1aed9be01aae89cefa434e2a7796c2271cd5cdcaaddc3a5ccd7",
       "executable": false
     },
     "docs/contract/IFACE-006/template-assets-schema-1440.png": {
@@ -11630,7 +11630,7 @@
       "executable": false
     },
     "tests/evidence-read-privacy.mjs": {
-      "sha256": "ed6ebb76a4f808b9e0c4d8d406d11af7b095a3ece112b2ef4975219dc3a2f171",
+      "sha256": "794122a6bb3761c00ff5b6062e01f9bca12323d325e566f3359a4b4a2b8fcd76",
       "executable": false
     },
     "tests/evidence-runtime-entry.ts": {
@@ -12181,8 +12181,12 @@
       "sha256": "0da9e0f74752e8e3ab7c21f87e91eea50f583dee5e3bb73fdce7fe03d0b0038b",
       "executable": false
     },
+    "tests/helpers/evidence-comment-erasure.mjs": {
+      "sha256": "0e6c34733615b327c55d8b84850478d4a18a22e61885cd5ea98188b8b46907e5",
+      "executable": false
+    },
     "tests/helpers/evidence-comments-journey.mjs": {
-      "sha256": "c3e7e9ab3d79b7ecc2770d39e07fff2ae89cfb6d399d70732395d375f2d9fc6d",
+      "sha256": "59c3ac08ae99fd1c5fe134b074fd5085adcf21784f8c519cb297a151ea8323bc",
       "executable": false
     },
     "tests/helpers/execution-budget-edge.mjs": {

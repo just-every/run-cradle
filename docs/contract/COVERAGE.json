@@ -2,7 +2,7 @@
   "schema": 1,
   "seed": "contract-md-cradle",
   "old": {
-    "commit": "f07e1382e9757eb121ebfe53137fa1eec3f6739e",
+    "commit": "c6f3ef0fa6886eb6f14b6170a8e943cf9f011c32",
     "files": [
       "CONTRACT.md",
       "ACCEPTANCE.md",
