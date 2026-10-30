@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b3288af466c978b37b642f990612b3ac0aedf02815d0322bd896f3fb238acf23",
+      "sha256": "751deab8f6be151628f5317c705bba2a04082ac6c4150d3ee816f178a1d97685",
       "executable": false
     },
     "DEMO.md": {
@@ -13038,7 +13038,7 @@
       "executable": false
     },
     "tests/helpers/workbook-journey.mjs": {
-      "sha256": "3864ca254c333eb850974bf8af7997584322568ea2f554ab0492958c7300a861",
+      "sha256": "f531c646dbb913a19e543c540c26ffb6f25b4690a47b5e0a1d323940f1b42658",
       "executable": false
     },
     "tests/helpers/workbook-lookup-browser.mjs": {
