@@ -24,6 +24,15 @@ function trigger(descriptor:EntityDescriptor,operation:'INSERT'|'UPDATE',name:st
   END`
 }
 
+/** Compile owner-authored record capture with the same schema used by live admission. */
+export function automationCaptureSchema(descriptor:EntityDescriptor){
+ const stem='record_auto_'+descriptor.schema.id.toLowerCase()
+ return (['INSERT','UPDATE'] as const).map(operation=>{
+  const name=stem+(operation==='INSERT'?'_created':'_updated')
+  return {name,table:descriptor.table.tableId,sql:trigger(descriptor,operation,name)}
+ })
+}
+
 /** The live schema check prevents an old request from replacing a new table's triggers. */
 export async function ensureRecordAutomationTriggers(db:D1Database,descriptors:DescriptorRegistry,additional:readonly {app_id:string;entity_id:string}[]=[]) {
  const bindings=await db.prepare(`SELECT DISTINCT app_id,entity_id FROM record_automation_bindings`).all<{app_id:string;entity_id:string}>()

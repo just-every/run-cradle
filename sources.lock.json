@@ -5606,7 +5606,7 @@
       "executable": false
     },
     "scripts/portability/migrations.mjs": {
-      "sha256": "7c918a5bf6592854c8c726998bdf0313fbfa3e288c99ac186903db9c0dc691ae",
+      "sha256": "e5b4421791940c79e08a88d794b72bdbb3ee899c96155f8f9b4bc06cc80b9b17",
       "executable": false
     },
     "scripts/portability/policy.mjs": {
@@ -5618,7 +5618,7 @@
       "executable": false
     },
     "scripts/portability/records.mjs": {
-      "sha256": "9d57c18fd99ff34d59cb167b9a8d1183b050be7e7ecdf3ef29711b3b7637ad95",
+      "sha256": "1678903600eb62a0db602ce3e15950a11bbf54bd10a77c33376f41dbe6998200",
       "executable": false
     },
     "scripts/portability/retired-comments.mjs": {
@@ -7822,7 +7822,7 @@
       "executable": false
     },
     "src/domains/automations/capture.server.ts": {
-      "sha256": "3ac6c4fb7c684a4c757748080bd2e61dd85cd99d692a2ce38b67872c373514d2",
+      "sha256": "8b68c9a4e7c82e617565c57f8eeea6ec5e7241c372971827bdad8133023ef787",
       "executable": false
     },
     "src/domains/automations/configuration-audit.ts": {
@@ -8846,7 +8846,7 @@
       "executable": false
     },
     "src/domains/lifecycle/member-identity-places.ts": {
-      "sha256": "370a84699ab4c19ca78278dde9073642d1ca5d0090f9df968adcc2f89a5e073f",
+      "sha256": "1df60250139d201cf33ff9582c5d5f09fea5ae3eaf35d551653e540d549adf0d",
       "executable": false
     },
     "src/domains/lifecycle/members.server.ts": {
@@ -9790,7 +9790,7 @@
       "executable": false
     },
     "src/domains/records/portable-schema.server.ts": {
-      "sha256": "0878087a1c2337639fff6c6e859fa6fdbda3f78fbda0a8cdd5d14a653990380e",
+      "sha256": "563a8e5fa49f52ec61ffd20602b84ca8e9010ea2b709150dc1a064543f812695",
       "executable": false
     },
     "src/domains/records/portable-store-references.ts": {
@@ -11933,6 +11933,14 @@
       "sha256": "2cc62ab987895a4241be9c75b75808b3521f0006523b94fb156edfe9156744c1",
       "executable": false
     },
+    "tests/helpers/automation-test-erasure.mjs": {
+      "sha256": "8eaada5d3038ca8c8cf8a3c0106595f504742f7fbb01191a28bd4466ba5a64ee",
+      "executable": false
+    },
+    "tests/helpers/automation-test-history.mjs": {
+      "sha256": "eec102609d3f04b123a0d474bd07da89bc6508a30632275c50f994405b791a15",
+      "executable": false
+    },
     "tests/helpers/automation-test-journey.mjs": {
       "sha256": "aed5fea758c71097ce9ee9125cc73e966c7998876bf3d8061cb266961fdca320",
       "executable": false
@@ -12174,7 +12182,7 @@
       "executable": false
     },
     "tests/helpers/file-store-archive.mjs": {
-      "sha256": "14201e72ab7035bc635c0e39bda96d75631439ddcf33754835ff0c09de645446",
+      "sha256": "1a083a6205c247a9cfc676f8085ef1dc891c0500e98727f7e3649252bb6aac3a",
       "executable": false
     },
     "tests/helpers/file-stores-actors.mjs": {
@@ -12494,7 +12502,7 @@
       "executable": false
     },
     "tests/helpers/record-calendar-archive.mjs": {
-      "sha256": "11769ef9a768018297700c7d81e5ab88bc832ab8d1cb3a526227718d5aaa958c",
+      "sha256": "62584b27a1ea02ffd6510acf00176094615bb9e8ccc376bbbc8c06c40b253d6b",
       "executable": false
     },
     "tests/helpers/record-calendar-author.mjs": {
@@ -13114,7 +13122,7 @@
       "executable": false
     },
     "tests/lifecycle-erasure.mjs": {
-      "sha256": "2c700e0b997c8b5578ba456655deee9c2f8a620a1bf7f7b2bf989ef814ae6151",
+      "sha256": "4542ce4ca91587fdcb12c1530e5294da77aa8bd9c02a7cb6d10c5bd5d3965d70",
       "executable": false
     },
     "tests/lifecycle-identity-security.mjs": {
@@ -13354,7 +13362,7 @@
       "executable": false
     },
     "tests/rer-integrations-archive.mjs": {
-      "sha256": "921f1fe3f085e5d3ff5293acb744734ffd49ed36c8e5bd83868f842096284515",
+      "sha256": "e79f95eef5f65282b54d3891d6e31cebfda1ee9564018072292354b1f151c8c2",
       "executable": false
     },
     "tests/rer-retained-archive.mjs": {

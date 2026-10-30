@@ -1,4 +1,5 @@
 import {peerImport,custodyMatches} from './helpers/erasure-custody.mjs'
+import {automationTestErasure} from './helpers/automation-test-erasure.mjs'
 import {checkpointParity} from './helpers/erasure-checkpoint.mjs'
 import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -33,7 +34,7 @@ import {trustedPredicate} from '../src/domains/admission/sql.server.ts'
 import {createUlid} from '../src/core/shared/ids.ts'
 import {launchAuthorityRuntime,LAUNCH_APP_ID,launchEntities} from './helpers/launch-authority-runtime.mjs'
 
-contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installation transfer creates its checkpoint atomically',async()=>{
+contract('BASE-DATA-001 BASE-DATA-003 AUTO-USER-005','public erasure before the first installation transfer creates its checkpoint atomically',async()=>{
  const h=await fixture()
  try{
   const {draft,r}=await h.create(),appId=draft.appId;await h.assign(appId)
@@ -64,6 +65,7 @@ contract('BASE-DATA-001 BASE-DATA-003','public erasure before the first installa
   assert.deepEqual(await custodyMatches(h,[identity.name,identity.email]),{matches:0,stores:[]})
  }finally{h.close()}
  await verifyLiveImportStarterErasure()
+ await automationTestErasure()
 })
 
 contract('BASE-DATA-001 BASE-DATA-003 RECORDS-005','public person erasure decodes compressed files, retires custody atomically, preserves controls and fences old archives',async()=>{

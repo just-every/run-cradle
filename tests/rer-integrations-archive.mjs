@@ -11,7 +11,7 @@ import {place,matchesArchive} from './helpers/archive-correspondence.mjs'
 const {fileStoreArchive}=await import('./helpers/file-store-archive.mjs')
 const {restoredRecordCalendar}=await import('./helpers/record-calendar-archive.mjs')
 
-contract('BASE-DATA-001 RECORDS-006 FILE-002 INTEG-004 SYNC-002','file references, copied bytes, calendar and warehouse custody restore through rer import without restored provider authority, and owner reset erases file bytes',async()=>{
+contract('BASE-DATA-001 RECORDS-006 FILE-002 INTEG-004 SYNC-002 AUTO-USER-005','file references, copied bytes, calendar, warehouse and populated test history restore through rer import without restored provider authority, and owner reset erases file bytes',async()=>{
  const directory=await mkdtemp(join(tmpdir(),'cradle-integrations-archive-'))
  let target,stores
  try{
