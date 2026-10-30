@@ -1,3 +1,4 @@
+import {sharedWorkbookFormulas} from './shared-formulas'
 import {unzipWorkbook,bound,reject} from './zip'
 import {xml,elements,children,spreadsheet,relationships,officeRelationships,numberFormat,isPercentFormat,excelDate} from './xml'
 export type WorkbookCell={value:string|boolean|null;type:'text'|'number'|'date'|'instant'|'boolean';formula?:string;coordinate?:string;formulaKind?:string;percent?:true}
@@ -18,12 +19,12 @@ export function readWorkbook(bytes:Uint8Array,filename:string):WorkbookSheet[]{
  return sheets.map(sheet=>{
   const name=sheet.getAttribute('name')??'';if(!name||names.has(name))reject('Worksheet names must be nonempty and unique.');names.add(name)
   const path=parts.get(sheet.getAttributeNS(officeRelationships,'id')??'');if(!path)reject('Worksheet relationship is missing.')
-  const document=xml(files.get(path),path),rows=elements(document,'row');bound('rows',rows.length-1)
+  const document=xml(files.get(path),path),rows=elements(document,'row'),shared=sharedWorkbookFormulas(document);bound('rows',rows.length-1)
   const grid:WorkbookCell[][]=[];let previous=0
   for(const row of rows){const rowNumber=Number(row.getAttribute('r'));if(!Number.isInteger(rowNumber)||rowNumber<=previous)reject('Worksheet rows must have increasing row numbers.');bound('rows',rowNumber-1);previous=rowNumber
    const cells:WorkbookCell[]=[]
    for(const cell of children(row,'c')){const address=cell.getAttribute('r')?.match(/^([A-Z]+)([1-9]\d*)$/);if(!address||Number(address[2])!==rowNumber)reject('Worksheet cell address is invalid.');let column=0;for(const letter of address[1]!)column=column*26+letter.charCodeAt(0)-64;bound('columns',column);if(cells[column-1])reject('Duplicate worksheet cell.')
-    const type=cell.getAttribute('t'),value=children(cell,'v')[0]?.textContent??'',formula=children(cell,'f')[0]?.textContent??undefined,style=Number(cell.getAttribute('s')??0),formatId=Number(xfs[style]?.getAttribute('numFmtId')??0)
+    const type=cell.getAttribute('t'),value=children(cell,'v')[0]?.textContent??'',formula=shared.get(cell.getAttribute('r')!)??children(cell,'f')[0]?.textContent??undefined,style=Number(cell.getAttribute('s')??0),formatId=Number(xfs[style]?.getAttribute('numFmtId')??0)
     let result:WorkbookCell={value:null,type:'text'}
     if(type==='s'){if(!/^\d+$/.test(value)||strings[Number(value)]===undefined)reject('Invalid shared-string reference.');result={value:strings[Number(value)]!,type:'text'}}
     else if(type==='inlineStr')result={value:elements(cell,'t').map(t=>t.textContent??'').join(''),type:'text'}
@@ -33,7 +34,7 @@ export function readWorkbook(bytes:Uint8Array,filename:string):WorkbookSheet[]{
     else if(type==='e')reject('Workbook contains an Excel error cell. Recalculate and correct it before importing.')
     else if(value!==''){if(!/^-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value))reject('Invalid workbook number.');const kind=numberFormat(formatId,formats.get(formatId));result={value:kind==='number'?value:excelDate(value,kind,date1904),type:kind,...(isPercentFormat(formatId,formats.get(formatId))?{percent:true as const}:{})}}
     else if(formula!==undefined)reject('Formula cell has no cached value. Recalculate and save the workbook in Excel first.')
-    const formulaKind=children(cell,'f')[0]?.getAttribute('t')
+    const formulaKind=shared.has(cell.getAttribute('r')!)?undefined:children(cell,'f')[0]?.getAttribute('t')
     cells[column-1]={...result,...(formula!==undefined?{formula,coordinate:cell.getAttribute('r')!,...(formulaKind&&formulaKind!=='normal'?{formulaKind}:{})}:{})}
    }
    grid[rowNumber-1]=cells

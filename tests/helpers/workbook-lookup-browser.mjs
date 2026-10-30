@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {lookupSheets,formulaWorkbook} from './workbook-fixtures.mjs'
+import {lookupSheets,sharedLookupSheets,formulaWorkbook} from './workbook-fixtures.mjs'
 import {submitImport} from './base-import-browser.mjs'
 import {connectSheets} from './sheets-journey.mjs'
 
@@ -9,7 +9,7 @@ export async function workbookLookupBrowser(page,j,h,d,width){
   await page.goto(h.origin+'/app/records/?import=base')
   if(source==='xlsx'){
    await page.getByLabel('Excel workbook (.xlsx)',{exact:true}).check()
-   await page.getByLabel('Excel workbook',{exact:true}).setInputFiles({name:'lookups.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(formulaWorkbook(lookupSheets()))})
+   await page.getByLabel('Excel workbook',{exact:true}).setInputFiles({name:'lookups.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(formulaWorkbook(sharedLookupSheets()))})
   }else{
    h.sheetsProvider.setWorkbook(lookupSheets())
    const connectionId=await connectSheets(d,h.sheetsProvider,{appId:h.workbookLookupBase})
@@ -22,7 +22,10 @@ export async function workbookLookupBrowser(page,j,h,d,width){
   const pending=page.waitForResponse(r=>r.url().endsWith('/base-import/preview')&&r.request().method()==='POST')
   await j.action(page.getByRole('button',{name:'Preview import',exact:true}));const response=await pending,body=await response.json();assert.equal(response.status(),200,JSON.stringify(body));const preview=body.data
   const tables=preview.schemaDraft.tables,orders=tables[0],vendors=tables[1],field=(table,label)=>table.fields.find(f=>f.label===label)
-  if(source==='xlsx')h.workbookLookupBase=preview.identities.appId
+  if(source==='xlsx'){
+   h.workbookLookupBase=preview.identities.appId
+   for(const label of ['Priority','Estimate (h)','Qty'])assert.equal(await page.getByLabel(`Type for ${label}`,{exact:true}).inputValue(),'number','Ordinary numeric fields stay Number in review')
+  }
   assert.equal(await page.getByLabel('Type for Vendor',{exact:true}).inputValue(),'relation')
   for(const label of ['V price','X city']){
    assert.equal(await page.getByLabel(`Type for ${label}`,{exact:true}).inputValue(),'computed')
@@ -35,6 +38,13 @@ export async function workbookLookupBrowser(page,j,h,d,width){
   const job=await submitImport(page,{action:j.action,setChecked:j.setChecked,onReview:()=>j.capture(`workbook-${source}-lookup-adoption`)})
   await j.action(page.getByRole('link',{name:'Open move-in receipt',exact:true}));await page.getByRole('heading',{name:'Move-in receipt',exact:true}).waitFor();await page.getByRole('heading',{name:'Workbook formulas',exact:true}).first().waitFor()
   const receipt=await d.call(`/api/v1/records/base-import/jobs/${job.id}/receipt.json`)
+  if(source==='xlsx'){
+   const tasks=tables.find(t=>t.label==='Tasks'),restock=tables.find(t=>t.label==='Restock log')
+   for(const [table,labels,expected]of [[tasks,['Priority','Estimate (h)'],[['1','1'],['2','2'],['3','4'],['1','8'],['2','1'],['3','2'],['1','4'],['2','8']]],[restock,['Qty'],[['5'],['10'],['6'],['5']]]]){
+    const rows=(await d.call(`/api/v1/apps/${preview.identities.appId}/entities/${table.id}/query`,{fields:table.fields.map(f=>f.id),sort:[{fieldId:table.fields[0].id,direction:'asc'}]})).items
+    assert.deepEqual(rows.map(row=>labels.map(label=>row.fields[field(table,label).id].value)),expected,'Reviewed numeric values survive adoption without becoming record references')
+   }
+  }
   assert.deepEqual(receipt.workbookFormulas.filter(f=>f.recognized).map(f=>f.column),['Extended','V price','X city'])
   assert.match(await page.locator('main').innerText(),/Vendor catalog/);assert.match(await page.locator('main').innerText(),/first mismatch/)
   await j.capture(`workbook-${source}-lookup-receipt`)

@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
-import {lookupSheets,formulaWorkbook,cell} from './workbook-fixtures.mjs'
+import {lookupSheets,sharedLookupSheets,numericControlSheets,formulaWorkbook,cell} from './workbook-fixtures.mjs'
 import {workbookDoors} from './workbook-http.mjs'
 import {connectSheets} from './sheets-journey.mjs'
 
 export async function workbookLookupJourney(h,d,provider){
- const bytes=formulaWorkbook(lookupSheets()),filename='lookups.xlsx',preview=await d.call('/api/v1/records/base-import/preview',d.form(bytes,filename))
+ const self=await d.call('/api/v1/records/base-import/preview',d.form(formulaWorkbook(numericControlSheets().slice(0,1)),'tasks.xlsx'))
+ assert.deepEqual(self.schemaDraft.tables[0].fields.map(f=>f.type),['number','number','number'],'Row numbers never make their own Priority and Estimate columns into self links')
+ const bytes=formulaWorkbook(sharedLookupSheets()),filename='lookups.xlsx',preview=await d.call('/api/v1/records/base-import/preview',d.form(bytes,filename))
  const table=preview.schemaDraft.tables[0],vendors=preview.schemaDraft.tables[1],field=(t,label)=>t.fields.find(f=>f.label===label),link=field(table,'Vendor'),price=field(table,'V price'),city=field(table,'X city')
+ for(const [tableName,labels]of [['Tasks',['Priority','Estimate (h)']],['Restock log',['Qty']]]){
+  const numericTable=preview.schemaDraft.tables.find(t=>t.label===tableName)
+  for(const label of labels)assert.equal(field(numericTable,label).type,'number',`${tableName} ${label} is a numeric measure, not a relation inferred from overlapping values`)
+ }
  assert.equal(link.type,'relation');assert.equal(link.relation.entityId,vendors.id);assert.equal(link.relation.cardinality,'one')
  assert.deepEqual(price.expression,{kind:'rollup',relationFieldId:link.id,valueFieldId:field(vendors,'Price').id,aggregate:'lookup'})
  assert.equal(city.type,'computed');assert.equal(city.resultType,'text')
@@ -15,7 +21,16 @@ export async function workbookLookupJourney(h,d,provider){
  assert.equal(decision('Bad cache').recognized,false);assert.equal(decision('Bad cache').matchedRows,2);assert.match(decision('Bad cache').reason,/mismatch/i)
  assert.equal(decision('Approximate').recognized,false);assert.match(decision('Approximate').reason,/exact|approximate/i)
  assert.equal(field(table,'Extended').type,'computed','Same-row arithmetic can depend on an independently proven numeric lookup')
- assert.deepEqual(decision('V price').sourceFormulas.map(f=>f.coordinate),['D2','D3','D4'])
+ assert.deepEqual(decision('V price').sourceFormulas.map(f=>[f.coordinate,f.expression]),[2,3,4].map(row=>[`D${row}`,`VLOOKUP(B${row},'Vendor catalog'!$A$2:$C$4,2,FALSE)`]),'Shared members resolve relative key rows while absolute target ranges stay fixed')
+ assert.deepEqual(decision('X city').sourceFormulas.map(f=>f.expression),[2,3,4].map(row=>`XLOOKUP(B${row},'Vendor catalog'!$A$2:$A$4,'Vendor catalog'!$C$2:$C$4)`))
+ for(const mode of ['missing-master','outside-group','second-master']){
+  const invalid=sharedLookupSheets()
+  if(mode==='missing-master')invalid[0].rows[0][3].formula=''
+  if(mode==='outside-group')invalid[0].rows[0][3].sharedRange='D2:D3'
+  if(mode==='second-master')invalid[0].rows[1][3].formula="VLOOKUP(B3,'Vendor catalog'!$A$2:$C$4,2,FALSE)"
+  const refused=await d.call('/api/v1/records/base-import/preview',d.form(formulaWorkbook(invalid),'invalid-shared.xlsx'))
+  assert.notEqual(field(refused.schemaDraft.tables[0],'V price').type,'computed','An unresolved or conflicting shared group never becomes a native lookup')
+ }
  assert.ok(preview.records.filter(r=>r.tableKey==='sheet-1').every(r=>!Object.hasOwn(r.fields,price.id)&&!Object.hasOwn(r.fields,city.id)))
  assert.equal(preview.source.bundle.artifacts[0].sha256,createHash('sha256').update(bytes).digest('hex'))
  for(const [variant,reason]of [[{duplicate:true},/unique/i],[{partial:true},/every imported data row/i],[{mixed:true},/unsupported|mixed/i]]){
@@ -50,12 +65,19 @@ export async function workbookLookupJourney(h,d,provider){
  const query=async(doors,base,t)=>(await doors.call(`/api/v1/apps/${base.identities.appId}/entities/${t.id}/query`,{fields:t.fields.map(f=>f.id),sort:[{fieldId:t.fields[0].id,direction:'asc'}]})).items
  assert.deepEqual((await query(d,preview,table)).map(r=>r.fields[link.id].value),['row-1','row-2','row-1'].map(key=>({appId:preview.identities.appId,entityId:vendors.id,recordId:preview.identities.tables['sheet-2'].records[key]})),'Repeated keys retain the exact native target identities')
  assert.deepEqual((await query(d,preview,table)).map(r=>[r.fields[price.id].value,r.fields[city.id].value]),[['12.5','Brisbane'],['7.25','Perth'],['12.5','Brisbane']],'Every adopted lookup equals independently specified source results, including the repeated vendor')
+ for(const [tableName,labels,expected]of [
+  ['Tasks',['Priority','Estimate (h)'],[['1','1'],['2','2'],['3','4'],['1','8'],['2','1'],['3','2'],['1','4'],['2','8']]],
+  ['Restock log',['Qty'],[['5'],['10'],['6'],['5']]],
+ ]){const numericTable=preview.schemaDraft.tables.find(t=>t.label===tableName);assert.deepEqual((await query(d,preview,numericTable)).map(r=>labels.map(label=>r.fields[field(numericTable,label).id].value)),expected,'Adoption preserves ordinary numeric values, independently of key ranges')}
+ console.log('PROBE MIGRATE-004 numeric-types: workbook preview and adoption -> Priority, Estimate (h) and Qty remain Number with every source value equal')
+ console.log('PROBE MIGRATE-004 shared-formulas: shared VLOOKUP and XLOOKUP review and adoption -> all three cached rows match native lookups')
  const receiptPath=`/api/v1/records/base-import/jobs/${job.id}/receipt.json`,receipt=await d.call(receiptPath)
  assert.deepEqual(receipt.workbookFormulas.filter(f=>f.recognized).map(f=>f.column),['Extended','V price','X city'])
  await h.restart();d=await workbookDoors(h);assert.deepEqual((await d.call(receiptPath)).workbookFormulas,receipt.workbookFormulas)
  const vendor=(await query(d,preview,vendors))[0]
  await d.command('record.patch',{ref:vendor.ref,changes:{[field(vendors,'Price').id]:'15',[field(vendors,'City').id]:'Sydney'}},[{ref:vendor.ref,version:vendor.version}])
  assert.deepEqual((await query(d,preview,table)).map(r=>[r.fields[price.id].value,r.fields[city.id].value,r.fields[field(table,'Bad cache').id].value,r.fields[field(table,'Extended').id].value]),[['15','Sydney','12.5','30'],['7.25','Perth','99','21.75'],['15','Sydney','12.5','60']],'Next read recomputes both lookup families for every linked row, and leaves refused caches unchanged')
+ console.log('PROBE MIGRATE-004 shared-recompute: target Price and City patch -> repeated source rows read 15, Sydney and Extended 60 after restart')
  // Capture actual formula metadata through the consented read-only provider door.
  const google=lookupSheets();google[0].headers.push('Local arithmetic');google[0].rows.forEach((row,i)=>row.push({type:'number',value:['4','6','8'][i],formula:`C${i+2}*2`,coordinate:`I${i+2}`}))
  provider.setWorkbook(google)

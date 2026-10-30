@@ -9202,7 +9202,7 @@
       "executable": false
     },
     "src/domains/records/base-transfer/infer.ts": {
-      "sha256": "3d481c37478577c17ccc48536a28eaa5647feb05d6501d3af367b701c248a51f",
+      "sha256": "e8b8be3af490ac287689d83ae09abec635c70a876ade24085f644e5ce8cbdb7d",
       "executable": false
     },
     "src/domains/records/base-transfer/input-error.ts": {
@@ -10034,7 +10034,11 @@
       "executable": false
     },
     "src/domains/records/workbooks/read.ts": {
-      "sha256": "307e3a86e6856b4ea883e10115dbf1748c9ae4e357fb4fa858710b043d5f6580",
+      "sha256": "1dd05a0e0a53e72a3cf5afd5967adad60ba4ead75ddb0aa0aecf3da22de733ab",
+      "executable": false
+    },
+    "src/domains/records/workbooks/shared-formulas.ts": {
+      "sha256": "3a92641c5628c4faa90bd8806f2290e9a3a4811a3b53f2e02733aa86eb5625d0",
       "executable": false
     },
     "src/domains/records/workbooks/source.ts": {
@@ -13030,7 +13034,7 @@
       "executable": false
     },
     "tests/helpers/workbook-fixtures.mjs": {
-      "sha256": "9f0d69ed6efe0ab634088904f58da68c003621dd1bf60b7f3cc309938ffb061f",
+      "sha256": "3dde6590de206e1b72241e622bf766f709e408f1ff52cdb42947d7c3ab56edc6",
       "executable": false
     },
     "tests/helpers/workbook-http.mjs": {
@@ -13042,11 +13046,11 @@
       "executable": false
     },
     "tests/helpers/workbook-lookup-browser.mjs": {
-      "sha256": "40c2c2a2f036440824aaa2fb3c5f447c80bc0086b0b7d5e8c2fb23592086fb53",
+      "sha256": "9894143c956aa992c5aab0458b2c5719ea15ef7f88682ae36a2abc7ea9667369",
       "executable": false
     },
     "tests/helpers/workbook-lookup-journey.mjs": {
-      "sha256": "a025930b575780cb81d1bdb1c6c236a31e3f4267852b50c5dbd1ad578139acc6",
+      "sha256": "8137e78a54828174d16c38ebccd7616279e71aca87350668bdca161a72e1c2ab",
       "executable": false
     },
     "tests/helpers/workspace-operations.mjs": {

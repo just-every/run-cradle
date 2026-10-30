@@ -37,8 +37,25 @@ export function formulaWorkbook(sheets){
  const files=unzipWorkbook(writeWorkbook(sheets),'lookups.xlsx'),escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
  for(const [index,sheet]of sheets.entries()){
   const name=`xl/worksheets/sheet${index+1}.xml`;let xml=new TextDecoder().decode(files.get(name))
-  for(const row of sheet.rows)for(const cell of row)if(cell.formula){const type=cell.type==='number'?'':' t="str"';xml=xml.replace(new RegExp(`<c r="${cell.coordinate}"[^>]*>.*?</c>`),`<c r="${cell.coordinate}"${type}><f>${escape(cell.formula)}</f><v>${escape(cell.value)}</v></c>`)}
+  for(const row of sheet.rows)for(const cell of row)if(cell.formula!==undefined){const type=cell.type==='number'?'':' t="str"';xml=xml.replace(new RegExp(`<c r="${cell.coordinate}"[^>]*>.*?</c>`),`<c r="${cell.coordinate}"${type}><f${cell.formulaKind?` t="${cell.formulaKind}" si="${cell.sharedIndex}"${cell.sharedRange?` ref="${cell.sharedRange}"`:''}`:''}>${escape(cell.formula)}</f><v>${escape(cell.value)}</v></c>`)}
   files.set(name,Buffer.from(xml))
  }
  return zipFiles([...files].map(([name,bytes])=>({name,bytes})),true)
+}
+
+/** Excel stores filled-down formulas as one master plus empty shared members. */
+export function sharedLookupSheets(){
+ const sheets=lookupSheets()
+ for(const [index,letter]of [[3,'D'],[4,'E'],[5,'F'],[6,'G'],[7,'H']])sheets[0].rows.forEach((row,i)=>{
+  Object.assign(row[index],{formula:i?'':row[index].formula,formulaKind:'shared',sharedIndex:String(index),...(i?{}:{sharedRange:`${letter}2:${letter}4`})})
+ })
+ return [...sheets,...numericControlSheets()]
+}
+export function numericControlSheets(){
+ return [{name:'Tasks',headers:['#','Priority','Estimate (h)'],rows:[
+  ['1','1','1'],['2','2','2'],['3','3','4'],['4','1','8'],
+  ['5','2','1'],['6','3','2'],['7','1','4'],['8','2','8'],
+ ].map(row=>row.map(value=>cell(value,'number')))},{name:'Items',headers:['Item #','Item'],rows:Array.from({length:12},(_,i)=>[cell(String(i+1),'number'),cell(`synthetic-cradle-item-${i+1}`)])},{name:'Restock log',headers:['Entry','Qty'],rows:[
+  [cell('synthetic-cradle-restock-1'),cell('5','number')],[cell('synthetic-cradle-restock-2'),cell('10','number')],[cell('synthetic-cradle-restock-3'),cell('6','number')],[cell('synthetic-cradle-restock-4'),cell('5','number')],
+ ]}]
 }

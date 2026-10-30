@@ -36,6 +36,12 @@ export function chosenType(table:SourceTable,column:SourceColumn,override:Column
 
 import type { PreparedSource,ImportOptions,ImportDiagnostic,WorkbookFormula } from './contracts'
 import { parseLinkCell } from './parse'
+// Repeated numbers overlap ordinary measures. Require a named key domain as well.
+const keyWords=(label:string)=>label.toLowerCase().split(/[^a-z0-9]+/).map(word=>word.replace(/ies$/,'y').replace(/s$/,'')).filter(word=>word.length>1&&!['key','id','number','numeric','no'].includes(word))
+function numericTargetNamed(column:SourceColumn,target:SourceTable,primary:string):boolean{
+ const words=keyWords(column.label),targetWords=[...keyWords(target.label),...keyWords(target.columns.find(c=>c.key===primary)!.label)]
+ return words.some(word=>targetWords.includes(word))
+}
 /** CSV evidence proposes links only when one imported target matches every reference exactly. */
 export function inferCsvStructure(source:PreparedSource,options:ImportOptions):{source:PreparedSource;diagnostics:ImportDiagnostic[];workbookLookups:WorkbookFormula[]} {
  const tables=source.tables.map(t=>({...t,columns:t.columns.map(c=>({...c,...(options.tables?.[t.key]?.columns?.[c.key]?.lookup?{lookup:options.tables[t.key].columns![c.key].lookup}:{})}))})),diagnostics:ImportDiagnostic[]=[]
@@ -51,7 +57,8 @@ export function inferCsvStructure(source:PreparedSource,options:ImportOptions):{
   if(!references.length)continue
   const candidates=tables.filter(target=>{
    const labels=primaryIndexes.get(target.key)!
-   return (!numericKeys||target.rows.every(row=>!!row.numericOrigins?.[options.tables?.[target.key]?.primaryColumnKey??target.primaryColumnKey??target.columns[0].key]))&&references.every(ref=>labels.has(ref))
+   const targetPrimary=options.tables?.[target.key]?.primaryColumnKey??target.primaryColumnKey??target.columns[0].key
+   return (!numericKeys||target.key!==table.key&&numericTargetNamed(column,target,targetPrimary)&&target.rows.every(row=>!!row.numericOrigins?.[targetPrimary]))&&references.every(ref=>labels.has(ref))
   })
   if(override.relationTableKey!==undefined)column.relationTableKey=override.relationTableKey
   else if(candidates.length===1){column.relationTableKey=candidates[0].key;diagnostics.push({code:'LINK_INFERRED',tableKey:table.key,columnKey:column.key,message:`All ${references.length} references exactly match primary values of ${candidates[0].label}; proposed target may be overridden.`})}
