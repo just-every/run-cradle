@@ -6782,7 +6782,7 @@
       "executable": false
     },
     "src/core/app/site/site.css": {
-      "sha256": "197dd80f0962ed1885fabcbf02dc5e8bee27a7d3876abd114624e773818e2e2a",
+      "sha256": "4a2c5f90cd05e38dff82eb9f7bd291ad815956240b5868be62969a80b9710ac2",
       "executable": false
     },
     "src/core/app/site/SiteFooter.tsx": {
@@ -6790,7 +6790,7 @@
       "executable": false
     },
     "src/core/app/site/SiteHeader.tsx": {
-      "sha256": "ef10cffe9c0c7ae674edcd5e30f20f26460c403cc0c7002433d73ab393f47cb7",
+      "sha256": "708dd49bc1df7959bcde4c0cd918f6e368163ac908496b4cd64126bc25b613e4",
       "executable": false
     },
     "src/core/app/site/source.ts": {
