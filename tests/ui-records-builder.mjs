@@ -43,6 +43,7 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
 })
 contract(['CALC-001','PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
  await fieldBrowser()
+ await recordsRulesBrowser()
  await recordTrashBrowser()
  await baseRolesJourney()
 let h,browser,activePage
@@ -78,3 +79,4 @@ await collectionLookupsBrowser()
 await conditionalFormsJourney()
 await historyBrowserJourney()
 })
+import {recordsRulesBrowser} from './helpers/records-rules-browser.mjs'
