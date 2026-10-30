@@ -10844,11 +10844,18 @@
       "file": "CONTRACT.md",
       "line": 1076,
       "cell": "gap",
-      "text": "All named product doors are implemented and locally proven. DONE-RIDERS row 6 remains: ct’s contract-standard conversion and generated acceptance documents are pending. This seed has no contract-docs command; the shared writer refuses the legacy clause shape at RECORDS-001. No acceptance text was changed.",
+      "text": "All named product doors are implemented and locally proven.",
       "to": "gap",
       "ids": [
         "RECORDS-009"
       ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 1076,
+      "cell": "gap",
+      "text": "DONE-RIDERS row 6 remains: ct’s contract-standard conversion and generated acceptance documents are pending. This seed has no contract-docs command; the shared writer refuses the legacy clause shape at RECORDS-001. No acceptance text was changed.",
+      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
@@ -10921,12 +10928,19 @@
       "file": "CONTRACT.md",
       "line": 1086,
       "cell": "gap",
-      "text": "The installation owner and a non-installation-owner creator author the bounded Airtable-style subset with field and function suggestions, inferred result types, positioned syntax errors and labeled real-record previews. The creator independently adopts an additive formula and reads the expected result; demotion refuses the retained formula preview without changing live schema or record values. Arithmetic, comparison, logical, text and day-based date functions run through API, CSV and native JSON exits. Remaining: full CALC-005 function coverage and Airtable semantics, real-Airtable reference captures, and contract-specified result formatting across views, interfaces, forms, record pages, print, email, CSV and REST, including raw versus formatted values, precision, currency, percent, duration and viewer-local or fixed-zone dates. Ct contract conversion and generated-document synchronization remain release prerequisites; this held pin has no contract-docs generator or declared Lander-Regenerate command.",
+      "text": "The installation owner and a non-installation-owner creator author the bounded Airtable-style subset with field and function suggestions, inferred result types, positioned syntax errors and labeled real-record previews. The creator independently adopts an additive formula and reads the expected result; demotion refuses the retained formula preview without changing live schema or record values. Arithmetic, comparison, logical, text and day-based date functions run through API, CSV and native JSON exits. Remaining: full CALC-005 function coverage and Airtable semantics, real-Airtable reference captures, and contract-specified result formatting across views, interfaces, forms, record pages, print, email, CSV and REST, including raw versus formatted values, precision, currency, percent, duration and viewer-local or fixed-zone dates.",
       "to": "gap",
       "ids": [
         "CALC-001",
         "CALC-006"
       ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 1086,
+      "cell": "gap",
+      "text": "Ct contract conversion and generated-document synchronization remain release prerequisites; this held pin has no contract-docs generator or declared Lander-Regenerate command.",
+      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
@@ -10994,7 +11008,25 @@
       "file": "CONTRACT.md",
       "line": 1094,
       "cell": "gap",
-      "text": "Base JSON, CSV-set and workbook export portable store references without connection bindings, credentials, preview URLs or bytes; canonical unresolved returns and copies preserve those objects, show their metadata without thumbnails and list them on the move-in receipt. Own matching-account metadata checks resolve equal digests, mark null digests unverified, and require audited explicit confirmation for changed content; current row/field authority, anonymous attacher export and uploaded-byte refusal are proven. Evidence: `tests/records-base-exits.mjs` (existing launch roundtrip), `tests/evidence-read-privacy.mjs`, `tests/ui-base-import.mjs`, `tests/helpers/store-reference-exits.mjs`, `tests/helpers/store-reference-resolution.mjs`, `docs/contract/FILE-004/`. Bulk changed-content confirmation reviews multiple selected references, rechecks every observed digest and current row, field and own matching-account connection authority, commits atomically, audits each accepted change and refreshes portable metadata without provider writes. Evidence: `tests/helpers/store-reference-resolution.mjs` (storeReferenceResolution: multi-selection, stale-digest, foreign-account, reader, row, field, connection and current-policy refusals, per-reference audit and portable metadata); `tests/helpers/file-stores-browser.mjs` (resolvedStoresBrowser: explicit selected-file review and confirmation at 1440 and 390). Gap: automatic import-preview lookup, null-account resolution (including current Dropbox, Box and Chest captures) and cross-algorithm equality remain unbuilt or unproven. Contract conversion and generated-document synchronization remain release prerequisites. Older references without captured digest metadata or attachment instant require reattachment; uploaded bytes stay FILE-003. Full erasure and archive restoration remain FILE-002 gaps. No real provider call or consent; real consents NOT RUN.",
+      "text": "Base JSON, CSV-set and workbook export portable store references without connection bindings, credentials, preview URLs or bytes; canonical unresolved returns and copies preserve those objects, show their metadata without thumbnails and list them on the move-in receipt. Own matching-account metadata checks resolve equal digests, mark null digests unverified, and require audited explicit confirmation for changed content; current row/field authority, anonymous attacher export and uploaded-byte refusal are proven. Evidence: `tests/records-base-exits.mjs` (existing launch roundtrip), `tests/evidence-read-privacy.mjs`, `tests/ui-base-import.mjs`, `tests/helpers/store-reference-exits.mjs`, `tests/helpers/store-reference-resolution.mjs`, `docs/contract/FILE-004/`. Bulk changed-content confirmation reviews multiple selected references, rechecks every observed digest and current row, field and own matching-account connection authority, commits atomically, audits each accepted change and refreshes portable metadata without provider writes. Evidence: `tests/helpers/store-reference-resolution.mjs` (storeReferenceResolution: multi-selection, stale-digest, foreign-account, reader, row, field, connection and current-policy refusals, per-reference audit and portable metadata); `tests/helpers/file-stores-browser.mjs` (resolvedStoresBrowser: explicit selected-file review and confirmation at 1440 and 390). Gap: automatic import-preview lookup, null-account resolution (including current Dropbox, Box and Chest captures) and cross-algorithm equality remain unbuilt or unproven.",
+      "to": "gap",
+      "ids": [
+        "FILE-004",
+        "FILE-007"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 1094,
+      "cell": "gap",
+      "text": "Contract conversion and generated-document synchronization remain release prerequisites.",
+      "to": "changelog"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 1094,
+      "cell": "gap",
+      "text": "Older references without captured digest metadata or attachment instant require reattachment; uploaded bytes stay FILE-003. Full erasure and archive restoration remain FILE-002 gaps. No real provider call or consent; real consents NOT RUN.",
       "to": "gap",
       "ids": [
         "FILE-004",
@@ -11224,11 +11256,18 @@
       "file": "CONTRACT.md",
       "line": 1128,
       "cell": "gap",
-      "text": "Explicit base owner, creator, editor, commenter and read-only roles use current policy and version fences. Creators adopt supported additive schemas; field deletion is retained for base-owner review unless the creator has named destructive authority. Adoption preserves base ownership, extends full-base member policies and keeps restricted fields restricted. Editors save collaborative views; commenters and read-only members save personal views only. View saves/deletes/restores are audited with current-policy history. Proven at 1440/390 through native sessions, REST refusal, recovery export and demotion. Creators now append select options without changing existing option identities, labels or stored values and author bounded plain-text field help. Both changes show current-record impacts before independent adoption, preserve audit and native JSON return, and refuse editors or demoted creators. Option removal and relabeling remain outside additive adoption. Remaining: persisted view ordering, violating-rule adoption and IFACE-001 interface authoring; creator form and lock acceptance and delegated-destructive journeys remain unproven. FIELD-003 still refuses adoption with existing violations; owner review, destructive-change, dependent-custody and recovery obligations remain unchanged. Release prerequisite: ct’s contract conversion and generated-document synchronization remain pending.",
+      "text": "Explicit base owner, creator, editor, commenter and read-only roles use current policy and version fences. Creators adopt supported additive schemas; field deletion is retained for base-owner review unless the creator has named destructive authority. Adoption preserves base ownership, extends full-base member policies and keeps restricted fields restricted. Editors save collaborative views; commenters and read-only members save personal views only. View saves/deletes/restores are audited with current-policy history. Proven at 1440/390 through native sessions, REST refusal, recovery export and demotion. Creators now append select options without changing existing option identities, labels or stored values and author bounded plain-text field help. Both changes show current-record impacts before independent adoption, preserve audit and native JSON return, and refuse editors or demoted creators. Option removal and relabeling remain outside additive adoption. Remaining: persisted view ordering, violating-rule adoption and IFACE-001 interface authoring; creator form and lock acceptance and delegated-destructive journeys remain unproven. FIELD-003 still refuses adoption with existing violations; owner review, destructive-change, dependent-custody and recovery obligations remain unchanged.",
       "to": "gap",
       "ids": [
         "PERM-009"
       ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 1128,
+      "cell": "gap",
+      "text": "Release prerequisite: ct’s contract conversion and generated-document synchronization remain pending.",
+      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
@@ -11399,11 +11438,18 @@
       "file": "CONTRACT.md",
       "line": 1148,
       "cell": "gap",
-      "text": "API-key subscription create/list/refresh/delete, sealed once-only secrets, audit-ordered signed cursor windows, current-policy narrowing, id-only deletes, the identical cause-free range marker, narrowed restores and separate 30-day cursor/seven-day subscription expiry are exercised through the emitted Worker. A least-watermark-first bounded sweep reaches 202 public subscriptions while earlier ones keep changing; listing remains bounded to 200. An uncertain acknowledgement stays visibly failed and is never resent: cursor fetch recovers each change once in order, and later changes still ping. A definite HTTP 429 retries the same signed id and immutable body. Base/table/view synchronization and an unavailable view's generic final page and ended/authority_lost safe listing are proven. Reviewed table deletion is also covered: HTTP reads and emitted queue wakes terminate subscriptions from current scoped keys, clear sealed secrets and return an empty cause-free final range with no further delivery; populated cursors replay identically and listings remain safe. The 9045 audit-sequence and 9047 deleted-view populated upgrades preserve historical facts, unique ordered sequences, cursor replay and the full 30-day restore window. Person erasure removes an identity-only held record's retained audit identity and values, issuer subscriptions and sealed secrets; whole feed pages, cursor-window rows and integration envelopes are checked. A subscriber learns only activity or uncertainty in its subscribed range, never a resync cause, record identity or prior readability. HMAC-SHA256 integrations.webhook.v1 and its five-minute replay window are unchanged. No real provider call or consent was used. Gap: The complete write-door/base-table-view matrix remains unproven for workbook/Sheets merges and MCP interoperability. A public base/table/view matrix covers create/patch/delete/Trash restore, bulk/undo, range/inverse, authenticated forms, CSV create/update and automation updates under current row/field narrowing. Reviewed base-import application/reversal bypasses admission_audit under RECORDS-005's existing effects suppression; typed Launch/repair/lifecycle audit actions are outside the feed projection; restore queue wakes and restored incoming-link audit coverage remain open. Archive restore and broader person/record-erasure journeys remain unproven. The contract conversion owned by ct and generated-document synchronization remain release prerequisites.",
+      "text": "API-key subscription create/list/refresh/delete, sealed once-only secrets, audit-ordered signed cursor windows, current-policy narrowing, id-only deletes, the identical cause-free range marker, narrowed restores and separate 30-day cursor/seven-day subscription expiry are exercised through the emitted Worker. A least-watermark-first bounded sweep reaches 202 public subscriptions while earlier ones keep changing; listing remains bounded to 200. An uncertain acknowledgement stays visibly failed and is never resent: cursor fetch recovers each change once in order, and later changes still ping. A definite HTTP 429 retries the same signed id and immutable body. Base/table/view synchronization and an unavailable view's generic final page and ended/authority_lost safe listing are proven. Reviewed table deletion is also covered: HTTP reads and emitted queue wakes terminate subscriptions from current scoped keys, clear sealed secrets and return an empty cause-free final range with no further delivery; populated cursors replay identically and listings remain safe. The 9045 audit-sequence and 9047 deleted-view populated upgrades preserve historical facts, unique ordered sequences, cursor replay and the full 30-day restore window. Person erasure removes an identity-only held record's retained audit identity and values, issuer subscriptions and sealed secrets; whole feed pages, cursor-window rows and integration envelopes are checked. A subscriber learns only activity or uncertainty in its subscribed range, never a resync cause, record identity or prior readability. HMAC-SHA256 integrations.webhook.v1 and its five-minute replay window are unchanged. No real provider call or consent was used. Gap: The complete write-door/base-table-view matrix remains unproven for workbook/Sheets merges and MCP interoperability. A public base/table/view matrix covers create/patch/delete/Trash restore, bulk/undo, range/inverse, authenticated forms, CSV create/update and automation updates under current row/field narrowing. Reviewed base-import application/reversal bypasses admission_audit under RECORDS-005's existing effects suppression; typed Launch/repair/lifecycle audit actions are outside the feed projection; restore queue wakes and restored incoming-link audit coverage remain open. Archive restore and broader person/record-erasure journeys remain unproven.",
       "to": "gap",
       "ids": [
         "WEBHOOK-USER-002"
       ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 1148,
+      "cell": "gap",
+      "text": "The contract conversion owned by ct and generated-document synchronization remain release prerequisites.",
+      "to": "changelog"
     },
     {
       "file": "CONTRACT.md",
