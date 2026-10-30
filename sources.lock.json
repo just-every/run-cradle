@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a7c00452dbfad35b02bc6c646a759f7fc87e64369354b8fd1ef3f776c716e5d3",
+      "sha256": "116ef8a6d5d09ffa3a100609c892c535f222abd29c5970ddeba36116d5f3cefc",
       "executable": false
     },
     "DEMO.md": {
@@ -9486,7 +9486,7 @@
       "executable": false
     },
     "src/domains/records/contracts.ts": {
-      "sha256": "41306e29442079bc674224720885dda2840329ebfb82f05fa46cfa3218f860cf",
+      "sha256": "d0304df03372abe72f4103625be14b6ce6176018be20cde5f6e77cbf4dd3f8e5",
       "executable": false
     },
     "src/domains/records/csv-display.server.ts": {
@@ -9770,7 +9770,7 @@
       "executable": false
     },
     "src/domains/records/metadata.server.ts": {
-      "sha256": "80ce72bde6350d081fd21380addab66646fa7f07b4eb3ae8c25502f1281a10d5",
+      "sha256": "7339a9259c33a9918074d082fbce10df652c7b75355d0fae51940631ddf73aaf",
       "executable": false
     },
     "src/domains/records/migration.server.ts": {
@@ -9982,7 +9982,7 @@
       "executable": false
     },
     "src/domains/records/validators.ts": {
-      "sha256": "e5924c95b743287ee6bd80f1737bd31c97394c941f3604fc1ccb4aa66fb99a5f",
+      "sha256": "bdd14bd3de1b880238057e94fa110dcf8f8473b2e23d86c4a0f0da3824b3a7ea",
       "executable": false
     },
     "src/domains/records/view-access.server.ts": {
@@ -11018,7 +11018,7 @@
       "executable": false
     },
     "src/ui/records/saved-summary-bar.tsx": {
-      "sha256": "7e97ebccb578aad65c04e8da16046e95c022c5f54ef08b360b20f7a1a5baef07",
+      "sha256": "1939cdb188d96b7cfd6457a1a2a45173409b04249d635797e84a20385aa6495b",
       "executable": false
     },
     "src/ui/records/saved-views.tsx": {
@@ -11230,7 +11230,7 @@
       "executable": false
     },
     "src/ui/records/view-summary-query.ts": {
-      "sha256": "a20cd2a96f8d3565b3c4a2aec013e42bbef1a91688b51e5a272fbb2026c7b129",
+      "sha256": "bb166e3214b5b7d5c4b2a46e8912d8dd1c7570c0ca359ebdc956548fb8587b4a",
       "executable": false
     },
     "src/ui/records/view-summary-values.ts": {
@@ -12042,7 +12042,7 @@
       "executable": false
     },
     "tests/helpers/change-subscriptions-deletes.mjs": {
-      "sha256": "f3dfc1ee068f2d5f7b68aff2ee58e61f7c2c549497d917ee03228e159f745bbc",
+      "sha256": "2881bc71018918be034af854e91ade06bc57898637624975bb94fdf190e1ef3e",
       "executable": false
     },
     "tests/helpers/change-subscriptions-erasure.mjs": {
@@ -12554,7 +12554,7 @@
       "executable": false
     },
     "tests/helpers/record-trash-archive.mjs": {
-      "sha256": "cafc46862d5e5766f876c0d5d58be1513d9fa32fc04695f49b2b82ae900d1ebe",
+      "sha256": "ab93f891a49390e2ab1798b7441ffefb16f3493190afe11710702ec687eb4d07",
       "executable": false
     },
     "tests/helpers/record-trash-browser.mjs": {
@@ -12802,7 +12802,7 @@
       "executable": false
     },
     "tests/helpers/records-view-settings-journey.mjs": {
-      "sha256": "62e6b8a34d1129ef5044f7ee65219f7cc3b3b89d1fa6d4ff7d6a14671e2a5efa",
+      "sha256": "2dfee7626869add866576cbeedd131862986bc023e5c62674ef3f5602b24ab61",
       "executable": false
     },
     "tests/helpers/repair-authority-migrations.mjs": {

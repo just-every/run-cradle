@@ -18,6 +18,13 @@ export async function addRecordTrashArchiveState(h,liveRecord){
  const linkId=schema.fields.find(field=>field.type==='relation'&&field.relation.entityId===h.entityId).id
  const revision={ref:{appId:h.appId,entityId:'00000000000000000000000001',recordId:h.entityId},version:schema.version}
  const live=(await h.request(`/api/v1/apps/${h.appId}/entities/${h.entityId}/records/${liveRecord}`)).data.record
+ const liveView=(await post('/api/v1/commands/view.save',command({view:{appId:h.appId,entityId:h.entityId,name:'synthetic-cradle-trash-live-view',display:'grid',fields:[h.nameId,h.statusId,linkId],filter:{kind:'all',conditions:[]},sort:[],groupBy:[],layout:{titleFieldId:h.nameId},visibility:'app',shipped:false}},[revision]))).value
+ const liveForm=(await post('/api/v1/commands/form.save',command({form:{appId:h.appId,entityId:h.entityId,title:'synthetic-cradle-trash-live-form',fields:[{fieldId:h.nameId,label:'Name',help:'synthetic-cradle-live-help',required:true}],submitAction:'record.create',authenticated:true}},[revision]))).value
+ const controls=[]
+ for(const [kind,value] of [['view',liveView],['form',liveForm]]){
+  const item={kind,id:value.id,appId:h.appId,entityId:h.entityId}
+  controls.push({...item,before:(await h.request(publicPath(item))).data,history:(await h.request(historyPath(item))).data.items})
+ }
  const items=[]
  for(const expired of [false,true]){
   const label=expired?'expired':'retained',create=command({appId:h.appId,entityId:h.entityId,values:{[h.nameId]:'synthetic-cradle-trash-'+label}},[revision])
@@ -66,7 +73,7 @@ export async function addRecordTrashArchiveState(h,liveRecord){
    items.push(item)
   }
  }
- return {appId:h.appId,entityId:h.entityId,items,live:recordFields(live),sourceCookie:h.cookie,sourceOwnerId:(await h.db.prepare('SELECT current_owner_id FROM cradle_restore WHERE singleton=1').first()).current_owner_id}
+ return {appId:h.appId,entityId:h.entityId,items,controls,live:recordFields(live),sourceCookie:h.cookie,sourceOwnerId:(await h.db.prepare('SELECT current_owner_id FROM cradle_restore WHERE singleton=1').first()).current_owner_id}
 }
 
 /** Compare the archive to expectations captured before it existed. */
@@ -83,6 +90,13 @@ export async function assertRecordTrashArchive(path,fixture){
 /** Actual rer import has completed, then the fresh native owner uses public doors. */
 export async function restoredRecordTrash(runtime,db,request,fixture,origin){
  const listPath=`/api/v1/records/trash?appId=${fixture.appId}`
+ const unchangedControls=async()=>{
+  for(const item of fixture.controls){
+   assert.deepEqual(await request(publicPath(item)),item.before,'Live metadata retains its definition and version')
+   assert.deepEqual((await request(historyPath(item))).items,item.history,'Live metadata gains no deletion or restore history')
+  }
+ }
+ await unchangedControls()
  const listed=await request(listPath)
  assert.equal(listed.items.length,fixture.items.length,'All populated Trash kinds survive import')
  for(const item of fixture.items){
@@ -106,6 +120,7 @@ export async function restoredRecordTrash(runtime,db,request,fixture,origin){
   await request('/api/v1/records/trash/restore',restoreBody(item),403)
   const row=await db.prepare(`SELECT * FROM ${item.custody.table} WHERE ${item.kind==='record'?'record_id':'id'}=?`).bind(item.id).first()
   assert.deepEqual(row,item.custody.row,'Refusal changes no retained state')
+   if(item.canonical)assert.deepEqual(await db.prepare(`SELECT * FROM "${item.canonical.table}" WHERE id=?`).bind(item.id).first(),item.canonical.row,'Lost authority cannot change retained canonical values')
  }
  assert.equal((await db.prepare('SELECT count(*) n FROM command_admissions').first()).n,before,'Refused restores admit no command')
  await db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()
@@ -114,6 +129,7 @@ export async function restoredRecordTrash(runtime,db,request,fixture,origin){
   if(item.expired){
    await request('/api/v1/records/trash/restore',body,409)
    assert.deepEqual(await db.prepare(`SELECT * FROM ${item.custody.table} WHERE ${item.kind==='record'?'record_id':'id'}=?`).bind(item.id).first(),item.custody.row,'Expired refusal preserves custody')
+   if(item.canonical)assert.deepEqual(await db.prepare(`SELECT * FROM "${item.canonical.table}" WHERE id=?`).bind(item.id).first(),item.canonical.row,'Expired refusal leaves canonical values unchanged')
    await request(publicPath(item),undefined,404)
    continue
   }
@@ -130,6 +146,7 @@ export async function restoredRecordTrash(runtime,db,request,fixture,origin){
   // Replaying the capture cannot duplicate restoration or its audit.
   await request('/api/v1/records/trash/restore',body,item.kind==='record'?404:409)
   assert.equal((await request(historyPath(item))).items.filter(row=>row.action===action).length,priorRestores+1)
+  assert.deepEqual(await request(publicPath(item)),visible,'Restore replay changes no restored content or version')
  }
  assert.deepEqual(recordFields((await request(`/api/v1/apps/${fixture.appId}/entities/${fixture.entityId}/records/${fixture.live.id}`)).record),fixture.live,'Live linked record is unchanged')
  const remaining=(await request(listPath)).items
@@ -137,7 +154,13 @@ export async function restoredRecordTrash(runtime,db,request,fixture,origin){
  assert.ok(remaining.every(row=>!row.restorable))
  assert.equal((await db.prepare("SELECT count(*) n FROM admission_outbox WHERE state='pending'").first()).n,0,'Restore adds no automatic dispatch')
  const worker=await runtime.getWorker(),record=fixture.items.find(item=>item.kind==='record'&&!item.expired)
+ const admissions=(await db.prepare('SELECT count(*) n FROM command_admissions').first()).n
+ const history=(await request(historyPath(record))).items
  assert.equal((await worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.records.automations.v1',commandId:record.createCommand}}])).outcome,'ok')
  assert.deepEqual(recordFields((await request(publicPath(record))).record),record.before,'A captured source delivery cannot change restored data')
+ assert.deepEqual((await request(historyPath(record))).items,history,'A source delivery adds no restored history')
+ assert.equal((await db.prepare('SELECT count(*) n FROM command_admissions').first()).n,admissions,'A source delivery admits no restored command')
+ assert.equal((await db.prepare("SELECT count(*) n FROM admission_outbox WHERE state='pending'").first()).n,0,'A source delivery revives no dispatch')
+ await unchangedControls()
  console.log('TRASH_ARCHIVE_RESTORE '+JSON.stringify({kinds:['record','view','form'],retained:3,expired:3,sourceSessions:'refused',currentAuthority:'checked',dispatch:'none'}))
 }
