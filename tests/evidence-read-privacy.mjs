@@ -67,7 +67,7 @@ contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and au
  }finally{await h.close()}
 })
 
-contract('FILE-002 FILE-005 FILE-006 COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store',async()=>{
+contract('FILE-002 FILE-004 FILE-005 FILE-006 FILE-007 COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store',async()=>{
  const provider=fileStoresProvider(),h=await userAutomationRuntime(0,{outbound:request=>provider.fetch(request),bindings:fileStoreBindings}),observations={}
  try{
   const relationId=createUlid(),visible=(await h.create('Visible history')).record,hidden=(await h.create('Hidden history')).record

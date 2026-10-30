@@ -39,7 +39,7 @@
     "test:launch:doors": "node tests/ui-launch-operator-doors.mjs",
     "test:foundation": "node --test --test-concurrency=1 tests/foundation-shell.mjs",
     "test:base": "node --test --test-concurrency=1 tests/base-installation.mjs tests/auth-base-only-runtime.mjs",
-    "test:records:release": "node --import ./tests/helpers/typescript-loader.mjs --test tests/records-manual-release.mjs tests/records-manual-roundtrip.mjs tests/records-csv-fence.mjs tests/records-grid-range.mjs",
+    "test:records:release": "node --import ./tests/helpers/typescript-loader.mjs --test tests/records-manual-release.mjs tests/records-manual-roundtrip.mjs tests/records-csv-fence.mjs tests/records-grid-range.mjs tests/records-templates.mjs",
     "test:records:browser": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-records-builder.mjs",
     "test:local": "node --test --test-concurrency=1 tests/installed-home.mjs tests/public-document-runtime.mjs tests/local-auth-runtime.mjs && node tests/ui-local-signin.mjs",
     "test:launch:walkthrough": "node tests/ui-launch-walkthrough.mjs",

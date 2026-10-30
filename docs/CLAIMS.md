@@ -8,7 +8,7 @@ A claim is done when every clause behind it is done, missing when every one is m
 | --- | --- | --- | --- |
 | 1 | Everything comes together in one place. | `RECORDS-001` done; `RECORDS-003` done | done |
 | 2 | Your records, views and business applications in one private workspace. | `RECORDS-001` done; `RECORDS-003` done; `APP-SCOPE-001` done | done |
-| 3 | 100% free, open source alternative to Airtable and Smartsheet. | `OWN-001` partial | partial |
+| 3 | An open source alternative to Airtable and Smartsheet. | `OWN-001` partial | partial |
 | 4 | Give every field a type, then link records across tables and look values up through the link. Start from a template or a blank table. | `RECORDS-002` partial; `CALC-002` done; `IFACE-006` done | partial |
 | 5 | Grid, board and form read the same records. Filter, group and sort them, then save a view so it is one click away. | `RECORDS-003` done; `VIEW-009` done | done |
 | 6 | Before a schema change applies, Cradle shows the fields it touches, the records it affects and any values it would remove. Removed values get a recovery export. | `RECORDS-002` partial; `FIELD-002` done | partial |

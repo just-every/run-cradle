@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 import { chromium } from '@playwright/test'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
-import { navigateFromSignInToApp } from './helpers/public-app-navigation.mjs'
+import { navigateFromSignInToApp, openSignInFromDocs } from './helpers/public-app-navigation.mjs'
 import { accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilityWidths, auditAccessibility } from './helpers/accessibility-evidence.mjs'
 import { installKeyboardInteractions } from './helpers/accessibility-keyboard.mjs'
 
@@ -113,7 +113,7 @@ try {
     // Replay a real generated client request with a currently valid repair-only session.
     page.on('request',request=>{if(request.url().includes('/_serverFn/')&&new URL(request.url()).searchParams.has('payload'))receipt.generatedRequests.push({url:request.url(),headers:request.headers()})})
     await page.goto(`${h.origin}/docs`)
-    await page.getByRole('banner').getByRole('link',{name:'Sign in',exact:true}).click()
+    await openSignInFromDocs(page)
     await navigateFromSignInToApp(page)
     await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
     const wire=receipt.generatedRequests.find(request=>new URL(request.url).searchParams.get('payload').includes('/api/portfolio'))

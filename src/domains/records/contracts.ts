@@ -27,6 +27,7 @@ export type Query = PageQuery & {
     groupBy?: Id[];
     fields?: Id[];
     includeArchived?: boolean;
+    includeGroups?: boolean;
 };
 export type Expr = {
     kind: 'field';
@@ -50,6 +51,8 @@ export type Expr = {
     limit?: number;
 };
 export type Field = {
+    /** Author guidance displayed as plain text, never rendered as markup. */
+    help?: string;
     validation?: { min?: string; max?: string; minLength?: number; maxLength?: number; pattern?: string };
     defaultValue?: CellValue;
     readOnly?: boolean;

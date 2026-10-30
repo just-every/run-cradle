@@ -60,6 +60,14 @@
 .cr-form-actions { justify-content: flex-end; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
 .cr-actions--end { justify-content: flex-end; }
 
+.cr-record-template-picker { min-width: 0; margin-bottom: 24px; }
+.cr-record-template-picker .cr-field { max-width: 480px; }
+.cr-record-template-picker > p { margin-top: 8px; font-size: 14px; }
+.cr-record-copy-actions { margin-bottom: 16px; }
+.cr-record-copy-editor { max-width: 640px; }
+.cr-record-copy-editor h2 { font-size: 20px; }
+.cr-record-copy-options legend { margin-bottom: 12px; font-size: 15px; font-weight: 600; }
+
 /* Schema builder and its review. */
 .cr-card-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 24px; margin-bottom: 24px; }
 .cr-card-head > div { min-width: 0; }

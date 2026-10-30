@@ -1,3 +1,5 @@
+import {recordTemplateButtons} from './helpers/record-template-buttons.mjs'
+import {recordTemplateAutomation} from './helpers/record-template-automation.mjs'
 import {smsJourney} from './helpers/sms-journey.mjs'
 import {automationTriggerJourney} from './helpers/automation-trigger-journey.mjs'
 import {automationControlJourney} from './helpers/automation-control-journey.mjs'
@@ -10,7 +12,7 @@ import {automationTestJourney} from './helpers/automation-test-journey.mjs'
 import {automationQuietHours} from './helpers/automation-quiet-hours.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
-contract('AUTO-USER-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] [AUTO-USER-002] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
+contract('AUTO-USER-001','[RECORDS-009] [AUTO-USER-003] [AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] [AUTO-USER-002] real admitted record triggers run notify/email/update once, retain history, and stop disabled or revoked work',async()=>{
  await smsJourney()
  const relay='https://mail.rer.example.test/api/managed-mail/send',delivered=[],receiverCalls=[];let testMailStatus=202,receiverStatus=200
  const h=await userAutomationRuntime(0,{outbound:async request=>{
@@ -24,6 +26,8 @@ contract('AUTO-USER-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-004] [AUTO-
   await h.restart({MAIL_PROVIDER:'rer',MAIL_PROVIDER_API_KEY:undefined,MAIL_API_KEY:'synthetic-record-relay-key',MAIL_RELAY_URL:relay,EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-71-relay-secret-0000000000'})
   const settings=(await h.request('/api/v1/settings')).data
   await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}}}})
+  await recordTemplateButtons(h)
+  await recordTemplateAutomation(h)
   await automationTestJourney(h,delivered,status=>{testMailStatus=status})
   await automationFailureJourney(h,delivered,status=>{receiverStatus=status},receiverCalls)
   await automationControlJourney(h,receiverCalls,status=>{receiverStatus=status})

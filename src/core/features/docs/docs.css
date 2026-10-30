@@ -178,6 +178,8 @@
   .docs-site .docs-prose > p:first-child { font-size: 19px; }
   .docs-site .docs-pager { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .docs-site .docs-pager-card--next { grid-column: 1; }
+  /* A 44px phone target whose extra height borrows the margins around it, so the page does not grow. */
+  .docs-site .docs-source a { display: inline-flex; align-items: center; min-height: 44px; margin-block: -12px; }
   .docs-site .docs-callout { padding: 16px 18px 16px 56px; }
   .docs-site .docs-prose pre { padding: 6px 16px 16px; }
   .docs-site .docs-code-bar { padding: 10px 16px 0; }

@@ -1,4 +1,5 @@
 import {displayAction,sortAndGroup,tableAction} from './records-table-tools.mjs'
+import {waitForSavedViewSummary} from './records-summary-ready.mjs'
 import {compileSchema} from '../../src/domains/records/descriptors.server.ts'
 import './typescript-loader.mjs'
 import assert from 'node:assert/strict'
@@ -51,7 +52,13 @@ export async function viewSettingsJourney(){
    await j.command(page.locator('form').filter({has:page.getByLabel('Name',{exact:true})}).getByRole('button',{name:'Save view',exact:true}),'view.save')
    const get=async()=> (await browserCall(page,`/api/v1/apps/${f.appId}/views`)).items.find(v=>v.name==='Dispatch exceptions')
    let view=await get();assert.equal(view.summaries.length,2);assert.equal(view.formatting.length,2)
-   const open=async(target,name='Dispatch exceptions')=>{await target.goto(f.path);await displayAction(target,name);await target.getByRole('region',{name:'Saved view summaries',exact:true}).locator('dd').first().waitFor()}
+   const grouped=await browserCall(page,`/api/v1/views/${view.id}/query`,{limit:2})
+   const pageOnly=await browserCall(page,`/api/v1/views/${view.id}/query`,{limit:2,includeGroups:false})
+   assert.deepEqual(grouped.groups.map(group=>group.count).sort(),[1,2],'Ordinary view reads still include whole-query group counts')
+   assert.deepEqual(pageOnly.groups,[],'A summary page can omit redundant whole-query group counts')
+   assert.deepEqual(pageOnly.records.items,grouped.records.items,'Omitting group totals preserves the same scoped records and values')
+   assert.deepEqual(pageOnly.records.total,grouped.records.total)
+   const open=async(target,name='Dispatch exceptions')=>{await target.goto(f.path);await waitForSavedViewSummary(target,()=>displayAction(target,name))}
    await open(page);const summary=page.getByRole('region',{name:'Saved view summaries',exact:true});assert.deepEqual(await summary.locator('dd').allTextContents(),['6','1']);assert.deepEqual((await summary.getByRole('list',{name:'Group counts'}).locator('li').allTextContents()).sort(),['Ready · 2','Shipped · 1'])
    const shipped=page.locator(`tr[data-view-color="coral"]`);assert.equal(await shipped.count(),1);assert.equal(await shipped.locator(`td[data-field-id="${f.units.id}"][data-view-color="lilac"]`).count(),1)
    await j.capture('view-summary-colours')
