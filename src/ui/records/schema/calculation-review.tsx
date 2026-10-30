@@ -19,7 +19,7 @@ function CalculationReport({calculation,schema}:{calculation:CalculationPreview;
  }
  return <article className="cr-tile" aria-label={`${schema.label}: ${calculation.label}`}>
   <h4>{schema.label} · {calculation.label}</h4>
-  <p className="cr-muted">Result type: {calculation.resultType}. {complete?`${cells.length} changed cells across ${calculation.totalRecords} current records. Every record was compared; unchanged cells are excluded.`:`Sample only: ${cells.length} of ${calculation.totalRecords} current records shown. A complete change report is not available for linked or transitive calculations.`} Adoption requires the reviewed data, schema and authority to remain unchanged.</p>
+  <p className="cr-muted">Result type: {calculation.resultType}. {complete?`${cells.length} changed cells across ${calculation.totalRecords} current records. Every record was compared; unchanged cells are excluded.`:`Sample only: ${cells.length} of ${calculation.totalRecords} current records shown. ${calculation.incompleteReason??'This retained preview predates complete linked and transitive change reports. Preview again to compare every current record.'}`} Adoption requires the reviewed data, schema and authority to remain unchanged.</p>
   {complete&&<div className="cr-actions"><button type="button" className="cr-button cr-button--quiet" onClick={download}>Download all changed cells</button></div>}
   {!cells.length?<p>{complete?'No calculated cells change.':'No current records to preview.'}</p>:<>
    <table className="cr-table"><thead><tr><th scope="col">Record</th><th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody>{visible.map(sample=><tr key={sample.recordId} data-record-id={sample.recordId}>

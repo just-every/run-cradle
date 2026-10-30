@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4bfe598e8608f73d898ea710f5aee5936911471be4e17c1e280926bee9806fe9",
+      "sha256": "f2862af22bbd641ee61a673dc9fa89f820bd93810aca33159a286e66525d969d",
       "executable": false
     },
     "DEMO.md": {
@@ -9678,11 +9678,11 @@
       "executable": false
     },
     "src/domains/records/manual/calculation-preview.server.ts": {
-      "sha256": "062837f812e593266d68c55aaa73b268911060d7b5d009bac4c3fed455e050f2",
+      "sha256": "1519725b5c5f11dab40a6022d5a4122be82a33f8aa590611a6436403dca9005d",
       "executable": false
     },
     "src/domains/records/manual/contracts.ts": {
-      "sha256": "eeb6f486c1c18634a7e53174e5e18c977f732b23ab4d16e34195ca24b6899b74",
+      "sha256": "6f482013580b22394970d88544fc219048c943578299def75ba788ea41b12f94",
       "executable": false
     },
     "src/domains/records/manual/conversions.server.ts": {
@@ -9738,7 +9738,7 @@
       "executable": false
     },
     "src/domains/records/manual/release.server.ts": {
-      "sha256": "f1668d61c276a7ac99321e35426af4fdfca60e8a7f6a42d4690e8877a6f27f8e",
+      "sha256": "deb6316808bbdf949d04a27f04a5a5c0bf7bb67d83a6566549dff66c244d2d46",
       "executable": false
     },
     "src/domains/records/manual/role-policy.ts": {
@@ -11038,7 +11038,7 @@
       "executable": false
     },
     "src/ui/records/schema/calculation-review.tsx": {
-      "sha256": "ac637d35ce9a2df4af59d541fda2c441dbba3a369d4bf5b5fc6123c428925f6b",
+      "sha256": "206bb7a9460aed640bb94dc5729c4ffde09369cb3c33d94e169c45227371875d",
       "executable": false
     },
     "src/ui/records/schema/computed-editor.tsx": {
@@ -12482,11 +12482,11 @@
       "executable": false
     },
     "tests/helpers/proposal-calculation-browser.mjs": {
-      "sha256": "9ce830e1fa1ccf10e4f500fa250bb46437d29d401ee08c5e2b903d28b07de4a8",
+      "sha256": "1c2c3bb336a17d583efd35abfbf90ac6f484637c6ebc773dbc46d2d370578d5c",
       "executable": false
     },
     "tests/helpers/proposal-calculation-journey.mjs": {
-      "sha256": "c069af118536d9c3422b314f42d9e60848311ef19b84efd52d146ae5c096a544",
+      "sha256": "98dd4374c0fd54d7dfddc942df4aa3d5316a33f6846bf94117f2433cd012767d",
       "executable": false
     },
     "tests/helpers/proposal-door.mjs": {
