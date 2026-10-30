@@ -18,6 +18,7 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
   if(kind==='notify')onChange({kind,operatorId:'',title:'A record changed'})
   else if(kind==='email')onChange({kind,operatorId:'',subject:'A record changed',text:''})
   else if(kind==='sms')onChange({kind,fieldId:'',text:''})
+  else if(kind==='create')return
   else if(kind==='apply_record_template')onChange({kind,entityId:entity.id,templateId:''})
   else if(kind==='update')onChange({kind,fieldId:writable[0]?.id??'',value:null})
   else if(kind==='slack-app')onChange({kind,channelId:'',text:'A record needs approval',fieldId:writable[0]?.id??'',approveValue:null,rejectValue:null})
@@ -41,7 +42,7 @@ export function AutomationActionEditor({action,onChange,entity,appId,recipients}
  }
  return <div className="cr-stack">
   <label className="cr-field">Action<select aria-label="Action" value={action.kind} onChange={event=>select(event.target.value as RecordAutomationAction['kind'])}>
-   <option value="notify">Notify a member</option><option value="email">Email a member</option><option value="sms">Send SMS</option><option value="update">Update a field</option><option value="apply_record_template">Apply a record template</option><option value="webhook">Signed webhook</option><option value="slack">Slack message</option><option value="slack-app">Chat app approval</option></select></label>
+   {action.kind==='create'&&<option value="create" disabled>Create record · saved values</option>}<option value="notify">Notify a member</option><option value="email">Email a member</option><option value="sms">Send SMS</option><option value="update">Update a field</option><option value="apply_record_template">Apply a record template</option><option value="webhook">Signed webhook</option><option value="slack">Slack message</option><option value="slack-app">Chat app approval</option></select></label>
   {(action.kind==='notify'||action.kind==='email')&&<label className="cr-field">Recipient<select required value={action.operatorId} onChange={event=>onChange({...action,operatorId:event.target.value})}>
    <option value="">Choose a member</option>{recipients.map(recipient=><option key={recipient.id} value={recipient.id}>{recipient.displayName}</option>)}</select></label>}
   {action.kind==='notify'&&<label className="cr-field">Notification title<input required maxLength={200} value={action.title} onChange={event=>onChange({...action,title:event.target.value})}/></label>}

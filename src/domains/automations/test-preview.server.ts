@@ -1,3 +1,4 @@
+import {authorizeCreateAction} from './create-action.server'
 import {authorizeTemplateAction,type AutomationTemplates} from './template-action.server'
 import type {PolicyPort} from '../authority/ports'
 import type {SqlPredicate} from '../admission/ports'
@@ -20,7 +21,12 @@ export async function automationTestPreview(deps:{templates:AutomationTemplates;
  for(let position=0;position<definition.actions.length;position++){
   const action=definition.actions[position],stepId=await delegationCommandId(id,String(position)),step:TestStep={position,id:stepId,kind:action.kind,input:{action,recordId:record.id,values:structuredClone(values)},output:null,state:matches?'Preview':'Skipped'}
   if(matches)try{
-   if(action.kind==='apply_record_template'){
+   if(action.kind==='create'){
+    const checked=await authorizeCreateAction(deps,ctx,definition.appId,definition.entityId,action)
+    guards.push(...checked.guards)
+    step.output={appId:definition.appId,entityId:definition.entityId,values:checked.values,created:false}
+    confirmationEffects.push({position,kind:'create',destination:definition.entityId})
+   }else if(action.kind==='apply_record_template'){
     const checked=await authorizeTemplateAction(deps,ctx,definition.appId,action)
     guards.push(...checked.guards)
     step.output={templateId:checked.template.id,name:checked.template.name,version:checked.template.version,parentEntityId:action.entityId,childCount:checked.template.children.length,created:false}

@@ -1,3 +1,4 @@
+import {authorizeCreateAction} from './create-action.server'
 import {authorizeTemplateAction,type AutomationTemplates} from './template-action.server'
 import {smsPhoneField} from '../records/phone'
 import {automationConfigurationAudit} from './configuration-audit'
@@ -22,13 +23,17 @@ export function createRecordAutomationConfiguration(db:D1Database,policy:PolicyP
  return {
   async save(ctx:RequestContext,input:{commandId:string;id?:string;version?:number;expiresAt:string;definition:RecordAutomationDefinition}) {
    const definition=recordAutomationDefinition.parse(input.definition),{appId,entityId}=definition
-   const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),automationPatch=allActions.some(a=>a.kind==='update'||a.kind==='slack-app'),permissions=automationPatch||allActions.some(a=>a.kind==='apply_record_template')?'write' as const:'read' as const
+   const allActions=automationDefinitionActions(definition),descriptor=descriptors.get(appId,entityId),automationPatch=allActions.some(a=>a.kind==='update'||a.kind==='slack-app'),permissions=automationPatch||allActions.some(a=>a.kind==='apply_record_template'||a.kind==='create')?'write' as const:'read' as const
    const own=await userDelegationPolicy(db,policy,ctx,{appId,entityId,name:definition.name,permissions,expiresAt:input.expiresAt})
    await validateAutomationTrigger(db,definition,descriptor,own.scope,ctx.now)
    const guards=[...own.guards],automationCreateEntityIds=new Set<string>(),automationReadEntityIds=new Set<string>()
    const filters=[...allActions.flatMap(action=>action.when?[action.when]:[]),...(definition.steps??[]).flatMap(step=>step.kind==='condition'?[step.when]:step.kind==='branch'?step.paths.map(path=>path.when):step.kind==='repeat'?[step.find]:[])]
    if(filters.flatMap(filter=>filterFields(filter)).some(field=>!own.scope.readableFieldIds.includes(field)))throw new AuthorityError('forbidden','Conditions and finds require readable fields.')
    for(const action of allActions){
+    if(action.kind==='create'){
+     const checked=await authorizeCreateAction({policy,descriptors},ctx,appId,entityId,action)
+     guards.push(...checked.guards);automationCreateEntityIds.add(entityId)
+    }
     if(action.kind==='apply_record_template'){
      if(!templates)throw new AuthorityError('unconfigured','Record templates are unavailable.',503)
      const checked=await authorizeTemplateAction({templates,policy,descriptors},ctx,appId,action)

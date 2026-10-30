@@ -45,7 +45,7 @@ export async function userDelegationPolicy(db:D1Database,ordinary:PolicyPort,ctx
 export async function provisionUserDelegate(db:D1Database,ordinary:PolicyPort,admission:AdmissionPort,ctx:RequestContext,
  commandId:string,input:DelegationInput,kind:'api-key'|'automation') {
  if(input.allowDelete&&(kind!=='api-key'||input.permissions!=='write'))throw new AuthorityError('validation','Delete access requires an explicit writable API key.',400)
- if((input.automationCreateEntityIds?.length||input.automationReadEntityIds?.length)&&(kind!=='automation'||input.permissions!=='write'))throw new AuthorityError('validation','Template creation scopes require a writable automation.',400)
+ if((input.automationCreateEntityIds?.length||input.automationReadEntityIds?.length)&&(kind!=='automation'||input.permissions!=='write'))throw new AuthorityError('validation','Record creation scopes require a writable automation.',400)
  const createEntities=new Set(input.automationCreateEntityIds??[]),entities=new Set([input.entityId,...createEntities,...(input.automationReadEntityIds??[])])
  const expiry=Date.parse(input.expiresAt),now=Date.parse(ctx.now)
  if(!Number.isFinite(expiry)||expiry<=now||expiry>now+2592000000)

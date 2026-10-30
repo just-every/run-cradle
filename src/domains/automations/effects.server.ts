@@ -1,3 +1,5 @@
+import {createActionValues} from './create-action.server'
+import type {RecordRow} from '../records/contracts'
 import type {AutomationTemplates} from './template-action.server'
 import {RECORD_SCHEMA_ENTITY_ID} from '../records/contracts'
 import {RECORD_TEMPLATE_ENTITY_ID} from '../records/templates/contracts'
@@ -32,6 +34,15 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
   async execute(ctx:RequestContext,run:AutomationRun,step:AutomationActionRun,action:RecordAutomationAction,
    scope:PolicyScope,subjectGuard:SqlPredicate,recordVersion:number,authorize:()=>Promise<void>):Promise<Outcome> {
    const saved=runSnapshot(run),ref=saved.event.ref,commandId=step.idempotency_key
+   if(action.kind==='create'){
+    const command=deps.commands.get('record.create')
+    if(!command)throw new AuthorityError('unconfigured','Record creation is unavailable.',503)
+    const descriptor=deps.descriptors.get(ref.appId,ref.entityId),schema=descriptor.schema
+    createActionValues(descriptor,scope,action)
+    await authorize()
+    const receipt=await command.execute(ctx,{commandId,expected:[{ref:{appId:ref.appId,entityId:RECORD_SCHEMA_ENTITY_ID,recordId:schema.id},version:schema.version}],input:{appId:ref.appId,entityId:ref.entityId,values:action.values}})
+    return receipt.result.state==='committed'?{state:'Complete',result:{commandId,recordId:(receipt.result.value as RecordRow).id}}:{state:'Unknown',result:{commandId},errorCode:'admission_unknown'}
+   }
    if(action.kind==='apply_record_template'){
     const command=deps.commands.get('record.apply-template')
     if(!command)throw new AuthorityError('unconfigured','Record templates are unavailable.',503)
@@ -107,6 +118,10 @@ export function createAutomationEffects(deps:{env:PlatformBindings;entities:Enti
   },
   async recover(run:AutomationRun,step:AutomationActionRun,action:RecordAutomationAction):Promise<Outcome|null> {
    if(!step.started_at||Date.now()-step.started_at<60000)return null
+   if(action.kind==='create'){
+    const receipt=await db.prepare("SELECT result_json FROM command_admissions WHERE command_id=? AND action='record.create' AND state='committed'").bind(step.idempotency_key).first<{result_json:string}>()
+    return receipt?{state:'Complete',result:{commandId:step.idempotency_key,recordId:JSON.parse(receipt.result_json).value?.id??null,reconciled:true}}:{state:'Failed',result:{commandId:step.idempotency_key},errorCode:'interrupted_before_commit'}
+   }
    if(action.kind==='update'||action.kind==='notify'||action.kind==='apply_record_template') {
     const receipt=await db.prepare("SELECT 1 FROM command_admissions WHERE command_id=? AND state='committed'").bind(step.idempotency_key).first()
     return receipt?{state:'Complete',result:{commandId:step.idempotency_key,reconciled:true}}:

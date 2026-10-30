@@ -1,3 +1,4 @@
+import {automationCreateJourney} from './helpers/automation-create-journey.mjs'
 import {recordTemplateButtons} from './helpers/record-template-buttons.mjs'
 import {recordTemplateAutomation} from './helpers/record-template-automation.mjs'
 import {smsJourney} from './helpers/sms-journey.mjs'
@@ -28,6 +29,7 @@ contract('AUTO-USER-001','[RECORDS-009] [AUTO-USER-003] [AUTO-USER-005] [AUTO-US
   await h.request('/api/v1/commands/settings.update',{method:'POST',body:{commandId:createUlid(),expected:[],input:{version:settings.version,changes:{quietHoursStart:'00:00',quietHoursEnd:'00:00'}}}})
   await recordTemplateButtons(h)
   await recordTemplateAutomation(h)
+  await automationCreateJourney(h)
   await automationTestJourney(h,delivered,status=>{testMailStatus=status})
   await automationFailureJourney(h,delivered,status=>{receiverStatus=status},receiverCalls)
   await automationControlJourney(h,receiverCalls,status=>{receiverStatus=status})

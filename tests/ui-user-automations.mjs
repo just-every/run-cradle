@@ -1,3 +1,4 @@
+import {automationCreateBrowser} from './helpers/automation-create-browser.mjs'
 import {browserFailureDiagnostic} from './helpers/browser-failure-diagnostic.mjs'
 import {chatProviderBrowser} from './helpers/chat-provider-browser.mjs'
 import {slackAppBrowser} from './helpers/slack-app-browser.mjs'
@@ -31,7 +32,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
   h=await userAutomationRuntime(0,{bindings:slackEdge.bindings,outbound:async request=>{assert.equal(request.url,slackEdge.bindings.EGRESS_RELAY_URL);const wire=await request.clone().json();if(new URL(wire.url).hostname==='slack.com')return slackEdge.outbound(request);if(['api.twilio.com','messaging.twilio.com'].includes(new URL(wire.url).hostname))return smsEdge.outbound(request);return wire.url.endsWith('/unknown')?new Response(null,{status:503}):Response.json({status:wire.url.endsWith('/safe')?429:400,headers:{},body:''})}})
   slackEdge.setOrigin(h.origin)
   assert.equal(process.env.HOME,userInfo().homedir)
-  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
+  browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--use-mock-keychain','--password-store=basic',...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?['--no-sandbox']:[])]})
   console.log('OWNED_BROWSER_PIDS '+execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).split('\n').filter(line=>line.trim().split(/\s+/)[1]===String(process.pid)).join(' | '))
   for(const width of [1440,390]) {
    const context=await browser.newContext({viewport:{width,height:width===390?844:900}})
@@ -44,6 +45,7 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
     await smsBrowser(page,h,journey,width,smsEdge)
     await userKeyBrowser(page,h,journey,width).catch(async error=>{await browserFailureDiagnostic(page,output,`user-key-failure-${width}`);throw error})
     await userAutomationBrowser(page,h,journey,width)
+    await automationCreateBrowser(page,h,journey,width,output)
     await automationFailureBrowser(page,h,journey,width,output)
     await automationControlBrowser(page,h,journey,width,output)
     await automationTriggerBrowser(page,h,journey,width,output)
