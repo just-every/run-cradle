@@ -12942,7 +12942,7 @@
       "executable": false
     },
     "tests/helpers/source-record-map-journey.mjs": {
-      "sha256": "96de3ce9fe14236cd698d1d8a4a7ac1709867064a14e2474bf50cf873e65f098",
+      "sha256": "9e59b80d3c66869fd179e59a0ba4c03dec9227ffa7333c06b29697d9df933d9d",
       "executable": false
     },
     "tests/helpers/sqlite-d1.mjs": {

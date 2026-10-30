@@ -107,6 +107,13 @@ export async function sourceRecordMapJourney() {
  // A second completed control remains readable after reversal and erasure of the first custody.
  const controlFixture=await sourceRecordMapFixture(),control=await adopt(h,await reviewRecordedSource(h,controlFixture.preview))
  await finish(h,control.id,'resume','completed');const controlMap=await downloadRecordMap(h,control.id,'json')
+ // Keep a second personal import completed: erasure must fence a map that was
+ // readable, independently of the already tested reversal-state refusal.
+ const retiredFixture=await sourceRecordMapFixture(email),retired=await adopt(h,await reviewRecordedSource(h,retiredFixture.preview))
+ await finish(h,retired.id,'resume','completed')
+ const retiredMap=await downloadRecordMap(h,retired.id,'json')
+ await assertRecordMap(h,retired,retiredFixture,retiredMap.value.records)
+ assert.equal((await h.request(jobs+retired.id+'/receipt.json')).data.sourceRecordMap.available,true)
  await finish(h,job.id,'undo','undone');await refuseRecordMaps(h,job.id)
  await h.request(`/api/v1/records/bases/${h.appId}/collaborators`,{method:'POST',body:{commandId:createUlid(),principalId:person,role:'editor',version:0}})
  const version=async()=>(await h.db.prepare('SELECT version FROM authority_principals WHERE id=?').bind(person).first()).version
@@ -116,8 +123,15 @@ export async function sourceRecordMapJourney() {
   if(verb==='erase')assert.equal(result.data.value.confirmed,true)
  }
  assert.ok(await h.db.prepare("SELECT 1 FROM ik_d1_retirements WHERE id=? AND kind='job'").bind(job.id).first(),'The public erasure retired the source custody')
+ assert.ok(await h.db.prepare("SELECT 1 FROM ik_d1_retirements WHERE id=? AND kind='job'").bind(retired.id).first(),'The public erasure also retired completed source custody')
  await refuseRecordMaps(h,job.id)
+ await refuseRecordMaps(h,retired.id)
+ const retiredReceipt=await h.request(jobs+retired.id+'/receipt.json',{status:409})
+ assert.equal(retiredReceipt.data,undefined,'Retired custody cannot advertise an available map')
+ await h.request(jobs+retired.id+'/resume',{method:'POST',body:{},status:409})
  await h.restart();await refuseRecordMaps(h,job.id)
+ await refuseRecordMaps(h,retired.id)
+ assert.equal((await h.request(jobs+retired.id+'/receipt.json',{status:409})).data,undefined)
  assert.equal((await downloadRecordMap(h,control.id,'json')).text,controlMap.text)
  // Restored custody must be confirmed by the current owner before its map can be read.
  await h.db.prepare('UPDATE ik_jobs SET cradle_restore_hold=1 WHERE id=?').bind(control.id).run()
