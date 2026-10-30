@@ -7,6 +7,7 @@ import './base-menu.css'
 import { ViewSummary } from './view-summary'
 import { GridHistoryProvider, useGridHistory } from './grid-history'
 import { FindInView, type ViewMatch } from './find-in-view'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Page } from '../../contracts/primitives'
 import type { EntitySchema, Filter, Query, RecordRow, View } from '../../domains/records/contracts'
@@ -44,7 +45,10 @@ function RecordTableContent({ schema, pills, heading }: { schema: EntitySchema; 
   const [savingView, setSavingView] = useState(false)
   const [availableViews, setAvailableViews] = useState<View[]>([])
   const [savedView, setSavedView] = useState<View | null>(null)
-  const [display, setDisplay] = useState<'grid' | 'board' | 'cards' | 'form'>('grid')
+  // The open view lives in the address (`?view=board|gallery|forms`, none for the grid), so reload, a new tab and Back from a record return to it.
+  const navigate = useNavigate(), { view } = useSearch({ strict: false }) as { view?: 'board' | 'gallery' | 'forms' }
+  const display: 'grid' | 'board' | 'cards' | 'form' = view === 'board' ? 'board' : view === 'gallery' ? 'cards' : view === 'forms' ? 'form' : 'grid'
+  const setDisplay = (next: typeof display) => { if (next !== display) void navigate({ search: ((previous: Record<string, unknown>) => ({ ...previous, view: next === 'board' ? 'board' : next === 'cards' ? 'gallery' : next === 'form' ? 'forms' : undefined })) as never }) }
   const [boardFieldId, setBoardFieldId] = useState(schema.fields.find(field => field.type === 'select' && field.label === 'Status')?.id ?? schema.fields.find(field => field.type === 'select')?.id ?? schema.fields.find(field => field.type === 'person')?.id ?? schema.fields.find(field => field.type === 'relation' && field.relation?.cardinality === 'one')?.id ?? '')
   const [selection, setSelection] = useState<RecordRow[]>([])
   const [bulkOpen, setBulkOpen] = useState(false)
@@ -71,7 +75,7 @@ function RecordTableContent({ schema, pills, heading }: { schema: EntitySchema; 
     setSavedView(null); setSelection([])
   }
   const savedPills: ViewPill[] = availableViews.map(view => ({ label: view.name, href: `/app/records/${schema.appId}/${schema.id}`, current: savedView?.id === view.id, group: 'saved' }))
-  const viewPills = [...pills, ...(['grid', 'board', ...(schema.appId === LAUNCH_APP_ID ? [] : ['cards'])] as const).map(mode => ({ label: mode === 'cards' ? 'Gallery' : mode === 'board' ? 'Board' : 'Grid', href: `/app/records/${schema.appId}/${schema.id}`, current: !viewingSaved && display === mode, group: 'displays' })), ...savedPills]
+  const viewPills = [...pills, ...(['grid', 'board', ...(schema.appId === LAUNCH_APP_ID ? [] : ['cards'])] as const).map(mode => ({ label: mode === 'cards' ? 'Gallery' : mode === 'board' ? 'Board' : 'Grid', href: `/app/records/${schema.appId}/${schema.id}${mode === 'board' ? '?view=board' : mode === 'cards' ? '?view=gallery' : ''}`, current: !viewingSaved && display === mode, group: 'displays' })), ...savedPills]
   const viewBar = <ViewBar pills={viewPills} currentLabel={!viewingSaved && display === 'cards' && schema.appId === LAUNCH_APP_ID ? 'Gallery' : !viewingSaved && display === 'form' ? 'Forms' : undefined} onSelect={pill => { if (pill.group === 'tables') { window.location.assign(pill.href); return }; if (pill.group === 'saved') { setSavedView(availableViews[savedPills.indexOf(pill)] ?? null); setSelection([]); setSavingView(false); return }; setSavedView(null); setDisplay(pill.label === 'Board' ? 'board' : pill.label === 'Gallery' ? 'cards' : 'grid'); setSelection([]); setSavingView(false) }} />
   const canCreate = schema.fields.some(field => !field.readOnly && field.type !== 'computed')
   const title = <header className="cr-page-header cr-base-heading-row">{heading}<Tooltip label="New record"><button type="button" className="cr-button cr-base-heading-row__new" disabled={creating || importing || !canCreate} onClick={() => setCreating(true)}><span className="cr-base-heading-row__label">New record</span><span className="cr-base-heading-row__symbol" aria-hidden="true">+</span></button></Tooltip></header>

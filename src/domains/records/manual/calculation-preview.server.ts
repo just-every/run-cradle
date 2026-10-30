@@ -14,7 +14,7 @@ export async function previewCalculations(db: D1Database, policy: PolicyPort, re
     return prior && fields.length ? [{ schema, prior, fields }] : []
   })
   if (!tables.length) return []
-  const overlays: EntityDescriptor[] = registry.list().map(prior => {
+  const overlays: EntityDescriptor[] = registry.list().filter(prior => prior.schema.appId !== schemas[0]?.appId || schemas.some(schema => schema.id === prior.schema.id)).map(prior => {
     const schema = schemas.find(s => s.appId === prior.schema.appId && s.id === prior.schema.id)
     if (!schema) return prior
     return { ...prior, schema, fields: new Map(schema.fields.map(field => [field.id, { ...(prior.fields.get(field.id) ?? { column: '' }), field }])) }

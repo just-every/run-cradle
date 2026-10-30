@@ -136,4 +136,11 @@ export async function proposalCalculationJourney(h){
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(rules),policy.id).run()
  await h.request(`/api/v1/records/proposals/${privateProposal.id}`,{status:403})
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(policy.rules_json,policy.id).run()
+ // Removing a source calculation together with its dependent table is valid;
+ // retained unrelated formulas must not evaluate the removed table's old graph.
+ const latest=await agent.schema(),reduced={appId,name:draft.name,tables:latest.tables.filter(table=>table.id!==groupId).map(table=>({...table,fields:table.fields.filter(field=>![double.id,transitive.id].includes(field.id))}))}
+ const deletion=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:reduced})).data
+ assert.equal(deletion.impacts.find(impact=>impact.entityId===groupId).deletedTable,true)
+ assert.deepEqual(deletion.impacts.flatMap(impact=>impact.refusals??[]),[])
+ assert.deepEqual(deletion.calculations,[],'Unrelated retained calculations do not change when their removed dependents leave the candidate')
 }
