@@ -7,6 +7,7 @@ import {unbase64} from '../../src/adapters/crypto.server.ts'
 // One change-feed synchronization matrix, through the emitted Worker's HTTP/queue doors.
 export async function changeSubscriptionDeletes(h,edge){
  const root='/api/v1/change-subscriptions',worker=await h.runtime.getWorker(),failures=[]
+ let rangeMarker
  const tick=()=>worker.queue('cradle-work',[{id:createUlid(),timestamp:Date.now(),attempts:1,body:{kind:'cradle.changes.v1',commandId:createUlid()}}])
  const remove=record=>h.request('/api/v1/commands/record.delete',{method:'POST',body:{commandId:createUlid(),expected:[{ref:record.ref,version:record.version}],input:{ref:record.ref,confirmation:record.id}}})
  async function policy(key,edit){
@@ -67,6 +68,7 @@ export async function changeSubscriptionDeletes(h,edge){
    await h.patch(current,{[h.nameId]:laterName,[h.statusId]:'synthetic-cradle-65'});await tick();await tick()
    if(scope!=='restricted')assert.deepEqual((await fetchPage(deletion.data.cursor)).data,restored,'Captured later window also replays identically under current policy')
    const later=(await fetchPage(restored.cursor)).data
+   rangeMarker=later.resyncRequired
    assert.equal(later.resyncRequired.code,'resync_required','Current field-policy narrowing uses the same cause-free range marker')
    assert.deepEqual(later.items.map(i=>[i.kind,i.recordId]),[['update',record.id]],'Next cursor contains only later changes, once')
    const allPings=edge.received.filter(r=>r.path===path)
@@ -97,5 +99,79 @@ export async function changeSubscriptionDeletes(h,edge){
    await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
   }catch(error){console.error('CHANGE_MATRIX_FAILURE '+scope+': '+error.stack);failures.push(error)}
  }
+ try{await tableScopeTermination(h,edge,tick,rangeMarker)}catch(error){console.error('CHANGE_TABLE_TERMINATION_FAILURE '+error.stack);failures.push(error)}
  if(failures.length)throw new AggregateError(failures,'Change-feed delete/restore synchronization matrix failed')
+}
+
+async function tableScopeTermination(h,edge,tick,rangeMarker){
+ const root='/api/v1/change-subscriptions',appId=createUlid(),entityId=createUlid(),nameId=createUlid(),valueId=createUlid(),otherId=createUlid(),otherName=createUlid()
+ const field=(id,label)=>({id,label,type:'text',required:false,unique:false})
+ const draft={appId,name:'synthetic-cradle-660',tables:[
+  {id:entityId,label:'Items',primaryFieldId:nameId,fields:[field(nameId,'Name'),field(valueId,'Value')]},
+  {id:otherId,label:'Retained table',primaryFieldId:otherName,fields:[field(otherName,'Name')]},
+ ]}
+ async function adopt(schema){
+  const review=(await h.request('/api/v1/records/schema-preview',{method:'POST',body:schema})).data
+  await h.request('/api/v1/commands/release.adopt',{method:'POST',body:{commandId:createUlid(),expected:[],input:{kind:'manual_schema',previewId:review.id}}})
+  return review
+ }
+ await adopt(draft)
+ const key=(await h.request('/api/user-keys',{method:'POST',status:201,body:{commandId:createUlid(),appId,entityId,name:'synthetic-cradle-661',permissions:'read',expiresAt:new Date(Date.now()+20*86400000).toISOString()}})).data.key
+ const subscriptions=[]
+ for(const door of ['http','queue']){
+  const path='/changes-deleted-table-'+door,subscription=(await h.request(root,{method:'POST',secret:key.secret,status:201,body:{commandId:createUlid(),appId,entityId,url:edge.receiverOrigin+path}})).data
+  subscriptions.push({...subscription,door,path})
+ }
+ const fetchPage=(subscription,cursor=subscription.cursor,limit=1)=>h.request(`${root}/${subscription.id}/changes?cursor=${encodeURIComponent(cursor)}&limit=${limit}`,{secret:key.secret}).then(result=>result.data)
+ const list=()=>h.request(root+'?appId='+appId,{secret:key.secret}).then(result=>result.data)
+ const schema=(await h.request(`/api/v1/apps/${appId}/entities/${entityId}`)).data
+ const record=(await h.request('/api/v1/commands/record.create',{method:'POST',body:{commandId:createUlid(),expected:[{ref:{appId,entityId:'00000000000000000000000001',recordId:entityId},version:schema.version}],input:{appId,entityId,values:{[nameId]:'synthetic-cradle-662',[valueId]:'synthetic-cradle-663'}}}})).data.value
+ await tick();await tick()
+ for(const subscription of subscriptions){
+  const readable=await fetchPage(subscription,subscription.cursor,200)
+  assert.deepEqual(readable.items.map(item=>[item.kind,item.recordId]),[['create',record.id]])
+  assert.ok(JSON.stringify(readable).includes('synthetic-cradle-663'),'The current scoped key reads populated retained changes before table deletion')
+  subscription.readable=readable
+  const pings=edge.received.filter(ping=>ping.path===subscription.path)
+  assert.equal(pings.length,1,'A live table delivers one signed ping')
+  await verifyWebhook({body:new TextEncoder().encode(pings[0].body),headers:pings[0].headers,key:unbase64(subscription.signingKey),tenant:appId,destinationId:subscription.id})
+ }
+ // Leave an undelivered change behind the watermark before reviewed deletion.
+ await h.patch(record,{[valueId]:'synthetic-cradle-664'})
+ const removed=await adopt({...draft,tables:draft.tables.filter(table=>table.id!==entityId)})
+ assert.equal(removed.impacts.find(impact=>impact.entityId===entityId).deletedTable,true)
+ await h.request(`/api/v1/apps/${appId}/entities/${entityId}`,{status:404})
+ const [httpFirst,queueFirst]=subscriptions
+ httpFirst.final=await fetchPage(httpFirst)
+ await tick();await tick()
+ // The queue must retire the subscription itself, before HTTP can mask a miss.
+ assert.deepEqual(await h.db.prepare('SELECT state,delivery_state,sealed_json FROM record_change_subscriptions WHERE id=?').bind(queueFirst.id).first(),{state:'ended',delivery_state:'authority_lost',sealed_json:null})
+ for(const subscription of [httpFirst,queueFirst]){
+  const listed=(await list()).find(row=>row.id===subscription.id)
+  assert.equal(listed.state,'ended');assert.equal(listed.deliveryState,'authority_lost')
+ }
+ // A fresh subscription after deletion is refused, even though the key is current.
+ await h.request(root,{method:'POST',secret:key.secret,status:403,body:{commandId:createUlid(),appId,entityId,url:edge.receiverOrigin+'/changes-deleted-table-new'}})
+ for(const subscription of subscriptions){
+  const final=subscription.final??await fetchPage(subscription)
+  assert.deepEqual(Object.keys(final).sort(),['cursor','hasMore','items','resyncRequired','through'])
+  assert.deepEqual(final.items,[]);assert.equal(final.hasMore,false)
+  assert.deepEqual(Object.keys(final.resyncRequired).sort(),['code','from','message','through'])
+  assert.equal(final.resyncRequired.code,'resync_required');assert.equal(final.resyncRequired.from,subscription.cursor);assert.equal(final.resyncRequired.through,final.cursor)
+  assert.equal(final.resyncRequired.message,rangeMarker.message,'Table termination and policy narrowing use the identical cause-free marker')
+  assert.deepEqual(await fetchPage(subscription),final,'Replaying the populated captured cursor yields the same empty final range')
+  assert.deepEqual((await fetchPage(subscription,subscription.readable.cursor)).items,[],'A retained continuation cannot expose the undelivered patch')
+  const listed=(await list()).find(row=>row.id===subscription.id)
+  assert.equal(listed.state,'ended');assert.equal(listed.deliveryState,'authority_lost')
+  assert.deepEqual(Object.keys(listed).sort(),['appId','createdAt','deliveryState','entityId','expiresAt','id','state','viewId'])
+  for(const response of [final,listed])for(const forbidden of [record.id,nameId,valueId,'synthetic-cradle-662','synthetic-cradle-663','synthetic-cradle-664','recordId','rowCount',subscription.signingKey])assert.ok(!JSON.stringify(response).includes(forbidden),'Final pages and safe listings retain no record identity, value or secret')
+  await h.request(`${root}/${subscription.id}/refresh`,{method:'POST',secret:key.secret,status:403,body:{commandId:createUlid()}})
+ }
+ await tick();await tick()
+ for(const subscription of subscriptions){
+  assert.equal(edge.received.filter(ping=>ping.path===subscription.path).length,1,'Retained changes and repeated queue wakes never deliver after table deletion')
+  await h.request(`${root}/${subscription.id}`,{method:'DELETE',secret:key.secret,body:{commandId:createUlid()}})
+ }
+ assert.deepEqual(await list(),[],'The still-current scoped key can remove ended subscriptions')
+ console.log('CHANGE_DELETED_SCOPE table PASS HTTP, emitted queue, generic final range, safe listing and stopped delivery')
 }
