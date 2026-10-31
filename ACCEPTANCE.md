@@ -1074,8 +1074,8 @@ Core · published · **partial**
 2. A rolled-back mutation dispatches nothing.
 3. A disabled automation runs on neither events nor schedules and records no run.
 
-**Evidence.** `tests/launch-installed-runtime.mjs`
-**Gap.** Missing a cited disabled-schedule journey showing no scheduled run is recorded; the cited runtime journey exercises disabled event work and a rejected mutation, not a disabled schedule.
+**Evidence.** `tests/launch-installed-runtime.mjs` — "[AUTO-002/003/004/011] emitted queue escalates committed Critical risk within ten seconds; replay, rollback and disable make no duplicate effects"; `tests/launch-installed-schedules.mjs` — "emitted scheduled handler supplies readiness, weekly digest and overdue decision effects" (public disabled save, due tick and repeat, enabled positive control, disable and later due tick; public Monitor and history, campaign activity and read-only D1)
+**Gap.** Recorded main judgment: Missing a cited disabled-schedule journey showing no scheduled run is recorded; the cited runtime journey exercises disabled event work and a rejected mutation, not a disabled schedule. Supplemental disabled-schedule assertions are now cited above; independent whole-clause judgment remains outstanding. Status remains partial.
 
 #### AUTO-003 — One run per trigger
 
