@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "31f349fc569b44a4757f2c830b9bf6088ebf785691b44408a4302d74e7023ba0",
+      "sha256": "802db9ecb3ed66c9ebf3834d58dbc74c1156ade00e7ee5a24434e0b55f2c5d17",
       "executable": false
     },
     "DEMO.md": {
@@ -13122,7 +13122,7 @@
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
-      "sha256": "6fdf43eb5036d5f52446ed51a49ce9c2f4c50e4c16bcc9ac9d25d3db82182f6c",
+      "sha256": "f93073b97402e013ddfe87846a7c11c2f48f75cc4c84e9e4b4119dbd7ba682da",
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
