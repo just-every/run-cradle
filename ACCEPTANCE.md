@@ -2005,7 +2005,7 @@ Core · target · **partial**
 3. After a second browser changes one pasted cell, undo reports that cell's conflict and applies nothing.
 4. A demoted operator's undo is refused.
 
-**Evidence.** `tests/records-grid-range.mjs`, `tests/helpers/records-history-journey.mjs`, `tests/helpers/records-board-journey.mjs`, `tests/ui-records-calendar.mjs`, `src/ui/records/grid-history.tsx`, `src/domains/records/history-conflicts.server.ts`
+**Evidence.** `tests/ui-records-builder.mjs` (Home presents records and bases before launch work with atomic range history at desktop and phone widths) through `tests/helpers/records-grid-range-browser.mjs` (gridRangeBrowserJourney: native 50 by 5 clipboard paste, one-step undo, exact typed redo after reload, second-operator conflict and demoted undo at 1440 and 390); `tests/records-grid-range.mjs` (VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, stale-safe and policy checked); `tests/helpers/records-history-journey.mjs`, `tests/helpers/records-board-journey.mjs`, `tests/ui-records-calendar.mjs`, `src/ui/records/grid-history.tsx`, `src/domains/records/history-conflicts.server.ts`
 **Gap.** Creation/deletion remain outside the stack; deletion is refused pending evidence erasure/recovery support. Undo requires readable prior cells and browser session storage.
 
 #### VIEW-016 — Find in view
