@@ -14,6 +14,10 @@ async function read(h, route, session = h.ownerSession) {
  assert.equal(response.status, 200, route)
  return response.json()
 }
+async function command(h, session, action, input, expected = []) {
+ const response = await h.request(session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input, expected }) })
+ return { status: response.status, body: await response.json() }
+}
 async function preview(h, input, expectedIds) {
  const started = performance.now()
  const response = await h.request(h.ownerSession, '/api/lenses/preview', { method: 'POST', body: JSON.stringify(input) })
@@ -166,6 +170,35 @@ async function lifecycle(h, fixtures) {
  assert.equal((await h.request(person.session, `/api/lenses/${saved.id}?view=results`)).status,404)
 }
 
+async function publicDeletion(h, fixtures) {
+ const person = await h.addPerson({ name: 'Lens deletion operator' })
+ const input = definition({ conditions: [{ field: 'code', operator: 'contains', value: fixtures.prefix }, { field: 'phase', operator: 'equals', value: 'Planning' }] })
+ const records = [fixtures.a, fixtures.b, fixtures.c]
+ const beforeRecords = await Promise.all(records.map(async row => (await read(h, `/api/campaigns/${row.id}`, person.session)).campaign))
+ const before = await snapshot(h.db, businessTables)
+ const created = await command(h, person.session, 'lens.save', { definition: input })
+ assert.equal(created.status, 200, JSON.stringify(created.body))
+ const saved = created.body.data.value
+ assert.deepEqual(canonical(saved), input)
+ await currentResults(h, saved, [fixtures.a.id, fixtures.c.id], person.session)
+ // The excluded control is an active, readable campaign, excluded only by the saved condition.
+ assert.equal(beforeRecords[1].phase, 'Build')
+ const grid = await read(h, '/api/campaigns?limit=200', person.session)
+ const beforeGrid = records.map(row => grid.items.find(item => item.id === row.id))
+ assert.ok(beforeGrid.every(Boolean), 'Both displayed campaigns and the condition-excluded campaign exist in the public grid')
+ const current = (await read(h, `/api/lenses/${saved.id}`, person.session)).lens
+ const deleted = await command(h, person.session, 'lens.delete', { id: current.id }, h.expected('lens', current))
+ assert.equal(deleted.status, 200, JSON.stringify(deleted.body))
+ assert.deepEqual(deleted.body.data.value, { deletedId: saved.id })
+ assert.equal((await read(h, '/api/lenses', person.session)).items.some(row => row.id === saved.id), false)
+ for (const suffix of ['', '?view=results']) assert.equal((await h.request(person.session, `/api/lenses/${saved.id}${suffix}`)).status, 404)
+ const afterRecords = await Promise.all(records.map(async row => (await read(h, `/api/campaigns/${row.id}`, person.session)).campaign))
+ assert.deepEqual(afterRecords, beforeRecords, 'Public lens deletion preserves the displayed and condition-excluded records, including versions and archive state')
+ const afterGrid = await read(h, '/api/campaigns?limit=200', person.session)
+ assert.deepEqual(records.map(row => afterGrid.items.find(item => item.id === row.id)), beforeGrid)
+ assert.deepEqual(await snapshot(h.db, businessTables), before, 'Public save and deletion preserve every business table, including queued business effects')
+}
+
 async function shipped(h) {
  const expected = {
   risks: { recordType: 'Risk', conditions: [{ field: 'severity', operator: 'one of', value: ['High', 'Critical'] }, { field: 'state', operator: 'not equals', value: 'Resolved' }, { field: 'campaignLaunchDate', operator: 'within the next N days', value: '30' }], sort: { field: 'severity', direction: 'desc' }, fields: ['severity', 'state', 'owner', 'dueDate', 'signal', 'mitigation', 'campaign'], display: 'Cards' },
@@ -177,6 +210,15 @@ async function shipped(h) {
   const shippedDefinition = { ...canonical(original), ...required }
   const before = await snapshot(h.db, businessTables)
   await assert.rejects(h.prepare('lens.delete', { id: original.id }, h.expected('lens', original)), error => error.code === 'validation')
+  const current = (await read(h, `/api/lenses/${original.id}`)).lens
+  const beforeRefusal = await snapshot(h.db)
+  const refused = await command(h, h.ownerSession, 'lens.delete', { id: current.id }, h.expected('lens', current))
+  assert.equal(refused.status, 400, JSON.stringify(refused.body))
+  assert.equal(refused.body.error.code, 'validation')
+  assert.match(refused.body.error.message, /shipped lens cannot be deleted/i)
+  assert.deepEqual((await read(h, `/api/lenses/${current.id}`)).lens, current)
+  assert.deepEqual((await read(h, '/api/lenses')).items.find(lens => lens.id === current.id), original)
+  assert.deepEqual(await snapshot(h.db), beforeRefusal, 'Public shipped-lens refusal preserves definitions, business records, admissions and queued effects')
   const duplicate = await h.commit('lens.save', { definition: { ...canonical(original), name: original.name + ' operator copy' } })
   assert.equal((await read(h, `/api/lenses/${duplicate.id}`)).lens.shippedKey, null)
   assert.equal((await read(h, `/api/lenses/${original.id}`)).lens.version, original.version)
@@ -206,6 +248,7 @@ export async function verifyLensClauses(h) {
  const tagged = await h.commit('campaign.patch', { id: a.id, changes: { customFields: { [custom.id]: 'north' }, tags: ['Supplier'] } }, h.expected('campaign', a))
  const fixtures = { a: tagged, b, c, prefix, today, custom }
  await conditions(h, fixtures)
+ await publicDeletion(h, fixtures)
  await lifecycle(h, fixtures)
  await shipped(h)
 }
