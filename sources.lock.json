@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "eb951ee1fd37355c7c6f987ef170ccb98d154599d152bd44fd05e8b8daa59eff",
+      "sha256": "c640f7ddffcd0d9a7fad897da740c22289305ce89f4d0ac5a58b90db20df7706",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "03bb36ab0c820a1141967e2fcabf28b7c65c3f8e3f0709df2b8fb86601862f81",
+      "sha256": "fed60e3e5b77bcd466efcc2873c8933cd382e3c6b922d7d5f323a23b374aa95b",
       "executable": false
     },
     "DEMO.md": {
@@ -12370,7 +12370,7 @@
       "executable": false
     },
     "tests/helpers/launch-lens-clauses.mjs": {
-      "sha256": "0d898340bab6f31d2fc54b7e506165b2b99114a9952061c841bbd202de79a320",
+      "sha256": "6c8485f725670ef8b5b9c71d0d94d9518a485123865854ecf12a499490952ce8",
       "executable": false
     },
     "tests/helpers/launch-milestone-clauses.mjs": {
