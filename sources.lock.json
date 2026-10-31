@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f57b8f17ee3d3b4041267c8927afa900c62212563eae177c0e0773842c8c8291",
+      "sha256": "5e06f33188c10a5e270b5d77eb65a7068cbb5dce60c0802d02e42a226be30d68",
       "executable": false
     },
     "DEMO.md": {
@@ -12286,7 +12286,7 @@
       "executable": false
     },
     "tests/helpers/launch-automation-definitions.mjs": {
-      "sha256": "f5ff72dd87b6595f59324d756f0a81812b806962eda220b35abf884616e2e0d5",
+      "sha256": "15180294b06442f8f950aa6fb5f0541da22838a83837308e66ab0046282b00fb",
       "executable": false
     },
     "tests/helpers/launch-automation-monitor-screens.mjs": {
@@ -13106,7 +13106,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "d4ce35d21d3cf57a3a4c1dd2bf42660e34400ad96483cace58af3cd7da0306ef",
+      "sha256": "e1ca12c03a9b4c4f7eead22d99d5f5a44a200efb8fb6eab567ecfdf4efee0ad9",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
