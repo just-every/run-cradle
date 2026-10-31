@@ -12342,7 +12342,7 @@
       "executable": false
     },
     "tests/helpers/launch-decision-lens-screens.mjs": {
-      "sha256": "16badd7de47d90dcf345a984fcf6746d4d376d9018d350d05f5c327c742d18c5",
+      "sha256": "a9b7f77c7ab0419223ad806fddfca80719ed573de546755fdc15edb9c5b1d6b5",
       "executable": false
     },
     "tests/helpers/launch-disabled-ai-console.mjs": {
@@ -12366,7 +12366,7 @@
       "executable": false
     },
     "tests/helpers/launch-lens-clauses.mjs": {
-      "sha256": "e832e4f7892953ab0a43ac6065fba0033cfe769019c7c1fe4bcad52146d520fa",
+      "sha256": "f98a58cc23200e04a3713d8ea1bb8f9b484a012355c0a159dbd02a7068ab5891",
       "executable": false
     },
     "tests/helpers/launch-milestone-clauses.mjs": {
