@@ -14,7 +14,7 @@ import { warehouseExportJourney } from './helpers/warehouse-export-journey.mjs'
 const analysis = clauseAnalysisFixture()
 const warehouseEdge=await warehouseNetworkEdge()
 let h
-try{h=await launchAuthorityRuntime({...analysis.configuration,...warehouseEdge.bindings}, { installedLaunchDefinitions: true, installationOwner: true, providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?warehouseEdge.outbound(request):analysis.providerFetch(request) })}catch(error){await warehouseEdge.close();throw error}
+try{h=await launchAuthorityRuntime({...analysis.configuration,...warehouseEdge.bindings}, { installedLaunchDefinitions: true, installationOwner: true, testClock: true, providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?warehouseEdge.outbound(request):analysis.providerFetch(request) })}catch(error){await warehouseEdge.close();throw error}
 after(async()=>{await h.close();await warehouseEdge.close()})
 const envelope = (input, expected = []) => JSON.stringify({ commandId: createUlid(), expected, input })
 async function call(route, init = {}, session = h.ownerSession) {
@@ -84,6 +84,47 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
  // Deliverable rows merge by campaign code and title; an unknown campaign is a row error.
  const deliverables = (await preview('deliverable', await upload('tasks.csv', 'Campaign,Title,Owner\r\nIMP-NEW,Brief agency,' + owner.email + '\r\nNOPE-1,Orphan,' + owner.email + '\r\n'), { Campaign: 'campaignCode', Title: 'title', Owner: 'ownerId' })).body.data.value
  assert.deepEqual([deliverables.creates, deliverables.errors.map(error => error.message)], [1, ['Referenced campaign must already exist']])
+
+ // Independently advance authenticated HTTP time across the preview's lifetime.
+ const issuedAt = Date.now() + 60_000, expiresAt = issuedAt + 30 * 60_000
+ h.setNow(issuedAt)
+ try {
+  const timed = []
+  for (const suffix of ['BEFORE', 'EXACT', 'AFTER']) {
+   const code = `IMP-EXP-${suffix}`, name = `Expiry control ${suffix}`
+   const response = await preview('campaign', await upload(`expiry-${suffix}.csv`, `Code,Name,Owner,Start,Launch,Health\r\n${code},${name},${h.owner},2026-11-01,2026-12-01,80\r\n`), mapping)
+   assert.equal(response.status, 200, JSON.stringify(response.body))
+   assert.equal(response.body.meta.evaluatedAt, new Date(issuedAt).toISOString(), 'The authenticated context uses the independently chosen issuance time')
+   const value = response.body.data.value
+   assert.deepEqual([value.state, value.creates, value.updates, value.errors], ['valid', 1, 0, []])
+   assert.equal(value.expiresAt, new Date(expiresAt).toISOString(), 'The token expires exactly thirty minutes after issuance')
+   timed.push({ ...value, code, name })
+  }
+  const [control, exact, after] = timed
+  h.setNow(expiresAt - 1)
+  const accepted = await call(`/api/v1/launch/imports/${control.id}/commit`, { method: 'POST', body: envelope({ token: control.token }) })
+  assert.equal(accepted.status, 200, JSON.stringify(accepted.body))
+  assert.equal(accepted.body.meta.evaluatedAt, new Date(expiresAt - 1).toISOString())
+  assert.deepEqual(accepted.body.data.value, { id: control.id, rows: 1 })
+  const saved = await h.db.prepare('SELECT id,name FROM campaigns WHERE code=?').bind(control.code).first()
+  assert.equal(saved.name, control.name, 'An equivalent valid import commits just before expiry')
+  assert.equal(await h.db.prepare("SELECT COUNT(*) AS n FROM activity_entries WHERE campaign_id=? AND type='import.committed'").bind(saved.id).first('n'), 1)
+
+  const snapshot = async () => {
+   const tables = ['campaigns', 'deliverables', 'milestones', 'activity_entries', 'portability_previews', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox', 'execution_runs', 'execution_attempts']
+   const stored = {}
+   for (const table of tables) stored[table] = (await h.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results
+   return { ...stored, imports: (await call('/api/v1/launch/imports')).body.data.items, providerCalls: warehouseEdge.calls.length }
+  }
+  const beforeExpiryRefusals = await snapshot()
+  for (const [candidate, now] of [[exact, expiresAt], [after, expiresAt + 1]]) {
+   h.setNow(now)
+   const refused = await call(`/api/v1/launch/imports/${candidate.id}/commit`, { method: 'POST', body: envelope({ token: candidate.token }) })
+   assert.deepEqual([refused.status, refused.body.error.code, refused.body.error.message], [409, 'version_conflict', 'Preview expired; make a new preview'], 'Otherwise-valid confirmation is refused specifically for expiry')
+   assert.deepEqual(await snapshot(), beforeExpiryRefusals, 'Expiry changes no records, activity, committed imports, audit, events, queued work or provider effects')
+   assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM campaigns WHERE code=?').bind(candidate.code).first('n'), 0)
+  }
+ } finally { h.setNow(undefined) }
 })
 
 test('[SET-003] sample data installs and removes in one action, and removal is refused naming edited records', async () => {
