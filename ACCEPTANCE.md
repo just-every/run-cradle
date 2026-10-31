@@ -663,7 +663,7 @@ Core · published · **partial**
 3. Month scale renders one column per calendar month and Quarter scale one per quarter in the workspace timezone; switching scale changes only the columns, never the milestone set.
 4. Every item links to its campaign detail and to its milestone detail.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`; `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone"; `tests/helpers/launch-milestone-screens.mjs` — "verifyMilestoneScreens" proves acceptance 1 through the shipped timeline HTTP result and unsorted visible Month and Quarter identities at 1440 and 390, including tied dates across campaign codes, range start ordering and archived exclusion; the walkthrough retains acceptance 2–4 date shapes, calendar axes, scale-switch membership and detail links.
 **Gap.** Missing a public shipped-timeline journey that reads date-ascending and campaign-code-tiebreak ordering on its populated result. Cited `tests/ui-launch-walkthrough.mjs` checks timeline item sets after sorting the extracted links; `tests/launch-write-effects.mjs` checks ordering through an internal preview, while calendar shapes, axes, stable scale-switch membership and links have public proof.
 
 #### MILE-003 — Dependencies
