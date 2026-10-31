@@ -933,7 +933,7 @@ Core · published · **partial** · Cites BASE-ACCESS-002
 1. Saving a lens makes it available to every operator and records who saved it and when.
 2. Sharing produces a URL to the saved lens
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-lens-clauses.mjs`; signed-out reads refuse); `tests/helpers/launch-decision-lens-screens.mjs`
 **Gap.** Missing a public save/share journey reading saver identity and time from the saved result; those fields are asserted only with internal record readers. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser saves/opens a shared lens; native HTTP allows another operator and refuses signed-out reads.
 
 #### LENS-004 — Edit and delete
