@@ -230,6 +230,66 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    assert.ok(visible);assert.equal(visible.runCount30Days,1);assert.equal(visible.lastRunStatus,'Succeeded')
    await command('launch.automation.disable',{id:saved.id},expected('automation',saved))
   }
+  // AUTO-002: consecutive fixed scheduler hours stay inside the native owner's current authority.
+  {
+   const fixture={name:'Disabled campaign note',rule:'hourly',at:localDate+'T11:00:00.000Z',after:localDate+'T11:05:00.000Z',message:'Enabled schedule control activity'}
+   const saved=await command('launch.automation.save',{definition:{name:fixture.name,enabled:false,
+    trigger:{kind:'schedule',localRule:fixture.rule,timezone:'Asia/Kathmandu'},actions:[{command:'add-activity',input:{campaignId:campaign.id,message:fixture.message}}]}})
+   const read=async route=>{const response=await fetch(h.origin+route,{headers:{cookie:h.cookie}});assert.equal(response.status,200);return response.json()}
+   const monitor=async at=>{
+    const visible=(await read('/api/automations?windowEnd='+encodeURIComponent(at))).automations.find(item=>item.id===saved.id)
+    assert.ok(visible,'Saved schedule must appear in Monitor');return visible
+   }
+   const observe=async at=>({
+    // Read every state, not only successful runs: a canceled or suppressed run still violates disabled dispatch.
+    runs:(await h.db.prepare('SELECT id,state,definition_version,trigger_key FROM automation_runs WHERE automation_id=? ORDER BY id').bind(saved.id).all()).results,
+    actions:(await h.db.prepare('SELECT id,state FROM launch_automation_actions WHERE run_id IN (SELECT id FROM automation_runs WHERE automation_id=?) ORDER BY id').bind(saved.id).all()).results,
+    effects:(await h.db.prepare('SELECT id,message,automation_run_id FROM activity_entries WHERE automation_run_id IN (SELECT id FROM automation_runs WHERE automation_id=?) OR (campaign_id=? AND message=?) ORDER BY id').bind(saved.id,campaign.id,fixture.message).all()).results,
+    history:(await read('/api/automations/'+saved.id+'/runs')).runs,
+    visibleEffects:(await read('/api/campaigns/'+campaign.id)).activity.filter(item=>item.description===fixture.message),
+    visible:await monitor(at),
+   })
+   const assertEmpty=async at=>{
+    const state=await observe(at)
+    assert.deepEqual(state.runs,[],'Disabled schedule must record no run in any state')
+    assert.deepEqual(state.actions,[],'Disabled schedule must record no action')
+    assert.deepEqual(state.effects,[],'Disabled schedule must commit no activity effect')
+    assert.deepEqual(state.history,[],'Disabled schedule must have empty public run history')
+    assert.deepEqual(state.visibleEffects,[],'Disabled schedule must add no visible campaign activity')
+    assert.equal(state.visible.enabled,false);assert.equal(state.visible.runCount30Days,0)
+    assert.equal(state.visible.lastRunStatus,null);assert.equal(state.visible.lastRunAt,null)
+   }
+   await assertEmpty(fixture.at)
+   await tick(fixture.at);await assertEmpty(fixture.at)
+   await tick(fixture.at);await assertEmpty(fixture.at)
+   t.diagnostic(`PROBE AUTO-002 acceptance-3 ${fixture.rule}: saved disabled, due tick and repeat -> zero runs, actions and effects in D1 and public Monitor`)
+   const enabled=await command('launch.automation.enable',{id:saved.id},expected('automation',saved))
+   const later=(at,occurrences)=>new Date(Date.parse(at)+occurrences*3600000).toISOString()
+   const at=later(fixture.at,1),after=later(fixture.after,1)
+   const notDue=new Date(Date.parse(at)-1000).toISOString()
+   await tick(notDue);assert.equal((await observe(notDue)).effects.length,0)
+   await tick(after)
+   const first=await observe(after)
+   assert.equal(first.effects.length,1,'Enabled schedule must fire at its next due hour')
+   assert.equal(first.effects[0].message,fixture.message)
+   assert.equal(first.runs.length,1);assert.equal(first.runs[0].state,'Succeeded')
+   assert.equal(first.runs[0].definition_version,enabled.definitionVersion)
+   assert.equal(first.runs[0].trigger_key,'schedule:'+at.slice(0,13))
+   assert.equal(first.actions.length,1);assert.equal(first.actions[0].state,'Complete')
+   assert.equal(first.effects[0].automation_run_id,first.runs[0].id)
+   assert.equal(first.history.length,1);assert.equal(first.history[0].id,first.runs[0].id)
+   assert.equal(first.visibleEffects.length,1)
+   assert.equal(first.visible.enabled,true);assert.equal(first.visible.runCount30Days,1);assert.equal(first.visible.lastRunStatus,'Succeeded')
+   await tick(after);assert.deepEqual(await observe(after),first,'Repeated cron must preserve one effect per schedule occurrence')
+   t.diagnostic(`PROBE AUTO-002 acceptance-3 ${fixture.rule}: enable and next due tick -> one Succeeded run, Complete action and visible activity; repeated tick unchanged`)
+   await command('launch.automation.disable',{id:saved.id},expected('automation',enabled))
+   const disabledAt=later(fixture.after,2),disabled=await observe(disabledAt)
+   assert.equal(disabled.visible.enabled,false)
+   await tick(disabledAt);assert.deepEqual(await observe(disabledAt),disabled,'Disabling after success must add no run, action or effect at the next due occurrence')
+   await tick(disabledAt);assert.deepEqual(await observe(disabledAt),disabled,'Repeated disabled occurrence must preserve all retained history and effects')
+   t.diagnostic(`PROBE AUTO-002 acceptance-3 ${fixture.rule}: disable and later due tick twice -> retained single run, action and effect unchanged`)
+
+  }
   const invalid=await fetch(h.origin+'/api/v1/commands/launch.automation.save',{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({commandId:createUlid(),expected:[],input:{definition:{name:'Missing trigger',enabled:true,actions:[{command:'add-activity',input:{campaignId:campaign.id,message:'Must never run'}}]}}})})
   assert.equal(invalid.status,400,'An enabled automation without a trigger must be rejected before saving')
   assert.equal(outbound,0,'The scheduled sentinel must remain offline')
