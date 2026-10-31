@@ -692,8 +692,8 @@ Core · published · **partial**
 2. Within 15 minutes of 08:00 each day in the workspace timezone the shipped readiness automation creates exactly one Outstanding request for every milestone of type Launch that is not Complete, whose campaign is non-archived, and whose date falls within the next 5 days, and that has no Outstanding request.
 3. A repeated evaluation creates no duplicate.
 
-**Evidence.** `tests/launch-installed-schedules.mjs`
-**Gap.** Missing a readiness journey in the cited schedule file where the addressed owner acknowledges the outstanding request and the resulting state is read; no acknowledgment runs there. Cited `tests/launch-installed-schedules.mjs` show: Emitted cron creates and deduplicates scheduled owner readiness and observes timing/window exclusion and mail.
+**Evidence.** `tests/launch-installed-schedules.mjs` — "MILE-004 AUTO-011: configured local readiness schedule creates one request and mail": emitted cron, addressed in-app notification, public Outstanding record, refusal without changes for another active Launch operator, addressed-owner acknowledgment with its returned time, public Acknowledged record and unchanged command replay; retained configured timing, lead-window exclusion, duplicate evaluation and provider delivery assertions.
+**Gap.** The addressed-owner acknowledgment gap is closed. Whole-clause default five-day eligibility and schedule-window proof, independent judgment and landing remain outstanding; this configured-schedule journey does not establish the complete timing and eligibility matrix. Contract conversion and generated-document tooling are present; the lander must synchronize the generated views.
 
 #### MILE-005 — Readiness rescheduling
 
