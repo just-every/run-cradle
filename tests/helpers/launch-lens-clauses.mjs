@@ -117,19 +117,21 @@ async function lifecycle(h, fixtures) {
  }
  for (const [recordType, display, field] of [['Campaign', 'Cards', 'code'], ['Risk', 'Timeline', 'title'], ['Milestone', 'Grid', 'title'], ['Decision', 'Agenda', 'title']]) await invalid(h, definition({ recordType, display, sort: { field, direction: 'asc' }, fields: [field] }))
  const input = definition({ conditions: [{ field: 'code', operator: 'contains', value: fixtures.prefix }, { field: 'phase', operator: 'equals', value: 'Planning' }] })
+ const saver = await h.addPerson({ name: 'Lens author' })
+ assert.notEqual(saver.id, h.owner)
  const saveStartedAt = Date.now()
- const saveResponse = await h.request(h.ownerSession, '/api/lenses', { method: 'POST', body: JSON.stringify(input) })
+ const saveResponse = await h.request(saver.session, '/api/lenses', { method: 'POST', body: JSON.stringify(input) })
  assert.equal(saveResponse.status, 201)
  const saveFinishedAt = Date.now()
  let saved = (await saveResponse.json()).lens
- const attribution = (await read(h, `/api/lenses/${saved.id}`)).lens
- assert.equal(attribution.createdById, h.owner, 'HTTP readback names the independently known saving operator')
+ const attribution = (await read(h, `/api/lenses/${saved.id}`, saver.session)).lens
+ assert.equal(attribution.createdById, saver.id, 'HTTP readback names the independently known saving operator')
  assert.ok(Number.isFinite(attribution.createdAt) && attribution.createdAt >= saveStartedAt && attribution.createdAt <= saveFinishedAt, 'HTTP creation time falls within the observed save interval')
  const person = await h.addPerson({ name: 'Shared lens colleague' })
- assert.notEqual(person.id, h.owner)
+ assert.notEqual(person.id, saver.id)
  const shared = (await read(h, `/api/lenses/${saved.id}`, person.session)).lens
  assert.deepEqual(canonical(shared), input)
- assert.equal(shared.createdById, h.owner, 'Another operator sees the saver rather than themselves')
+ assert.equal(shared.createdById, saver.id, 'Another operator sees the saver rather than themselves')
  assert.equal(shared.createdAt, attribution.createdAt, 'Every operator reads the same saved creation time')
  assert.ok((await read(h, '/api/lenses', person.session)).items.some(row => row.id === saved.id))
  const document = await h.request(person.session, saved.shareUrl)
