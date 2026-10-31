@@ -947,8 +947,8 @@ Core · published · **partial**
 2. Neither changes, archives, or deletes any record the lens displays or hides.
 3. A shipped lens cannot be deleted.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public delete journey observing unchanged displayed and hidden business records and a shipped-lens deletion refusal with no effect. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Native HTTP edits a lens while observing unchanged business tables; browser cleanup deletes a lens.
+**Evidence.** `tests/launch-write-effects.mjs` (existing LENS-004 registration) via `tests/helpers/launch-lens-clauses.mjs`: publicDeletion saves and deletes through native commands as a non-owner operator, observes public absence and independently compares matching and condition-excluded campaigns and business snapshots; shipped publicly attempts deletion of both installed lenses with freshly read versions and proves validation refusal preserves definitions, business records, admissions and queued effects; retained lifecycle public-edit isolation and `tests/ui-launch-walkthrough.mjs` browser deletion assertions
+**Gap.** Supplemental public-deletion proof is cited; independent whole-clause judgment and ct's contract conversion and generated-document synchronization release prerequisites remain unclaimed.
 
 #### LENS-005 — Current results
 
