@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import { writeContext, mutationSnapshot } from './launch-write-context.mjs'
 
 const day = (date, offset) => new Date(Date.parse(`${date}T12:00:00Z`) + offset * 86400000).toISOString().slice(0, 10)
@@ -167,23 +168,27 @@ async function shippedLens(h, reader) {
  assert.ok(!(await read()).some(row => row.id === high.id), 'A committed resolution immediately removes the risk from the lens')
 }
 
+// Native HTTP doors shared by the public risk journeys.
+async function publicRead(h, route, session = h.ownerSession) {
+ const response = await h.request(session, route), body = await response.json()
+ assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+ return body
+}
+
+async function publicCommand(h, session, action, input, expected = [], status = 200) {
+ const commandId = h.r.createUlid(), started = Date.now()
+ const response = await h.request(session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected }) })
+ const finished = Date.now(), body = await response.json()
+ assert.equal(response.status, status, `${action}: ${JSON.stringify(body)}`)
+ if (status === 200) assert.equal(body.data.state, 'committed')
+ return { commandId, started, finished, body, value: body.data?.value }
+}
+
 async function publicLifecycle(h, campaign) {
  const resolver = await h.addPerson({ name: 'Risk resolver' }), reopener = await h.addPerson({ name: 'Risk reopener' })
  assert.notEqual(resolver.id, h.actor)
  assert.notEqual(reopener.id, resolver.id)
- const read = async (route, session = h.ownerSession) => {
-  const response = await h.request(session, route), body = await response.json()
-  assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
-  return body
- }
- const command = async (session, action, input, expected = [], status = 200) => {
-  const commandId = h.r.createUlid(), started = Date.now()
-  const response = await h.request(session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected }) })
-  const finished = Date.now(), body = await response.json()
-  assert.equal(response.status, status, `${action}: ${JSON.stringify(body)}`)
-  if (status === 200) assert.equal(body.data.state, 'committed')
-  return { commandId, started, finished, body, value: body.data?.value }
- }
+ const read = (route, session) => publicRead(h, route, session), command = (...args) => publicCommand(h, ...args)
  const within = (instant, receipt) => {
   assert.ok(Number.isFinite(Date.parse(instant)) && Date.parse(instant) >= receipt.started && Date.parse(instant) <= receipt.finished, 'Recorded time lies within independent request bounds')
  }
@@ -258,6 +263,91 @@ async function publicLifecycle(h, campaign) {
  assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), beforeDeniedRead, 'Refused metadata reads change nothing')
 }
 
+// Native commands reach Watching, Escalated and In progress; the installed example
+// supplies Needs decision, which no command sets. Each is open in every public
+// projection, resolves with a note and reopens to Watching; Resolved is not open.
+async function publicOpenStates(h) {
+ const read = (route, session) => publicRead(h, route, session), command = (...args) => publicCommand(h, ...args)
+ const quiet = () => mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ const lens = async () => {
+  const items = []; let cursor = null
+  do {
+   const page = await read(`/api/risks/lens${cursor === null ? '' : `?cursor=${encodeURIComponent(cursor)}`}`)
+   items.push(...page.items); cursor = page.nextCursor ?? null
+  } while (cursor !== null)
+  return new Map(items.map(row => [row.id, row.state]))
+ }
+ const projections = async id => {
+  const { risk } = await read(`/api/risks/${id}`), detail = await read(`/api/campaigns/${risk.campaign.id}`)
+  return { risk, rating: detail.campaign.riskRating, open: detail.risks.map(row => [row.id, row.state]) }
+ }
+ // A launch date already passed keeps each High risk inside the shipped lens window on any clock.
+ const create = async code => {
+  const campaign = (await command(h.ownerSession, 'campaign.create', { fields: { code, name: `${code} launch`, ownerId: h.actor, startDate: '2026-01-05', launchDate: '2026-02-02', objective: 'Prove the open risk states', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} } })).value
+  return (await command(h.ownerSession, 'risk.create', { fields: fields(h, campaign, { title: `${code} evidence` }) })).value
+ }
+ const watching = await create('OPEN-WATCHING'), escalated = await create('OPEN-ESCALATED'), progressing = await create('OPEN-PROGRESS')
+ await command(h.ownerSession, 'risk.escalate', { id: escalated.id, reason: 'Supplier evidence needs attention' }, h.expected('risk', escalated))
+ const awaiting = (await command(h.ownerSession, 'risk.escalate', { id: progressing.id, reason: 'Supplier evidence needs a decision' }, h.expected('risk', progressing))).value.risk
+ const decision = (await command(h.ownerSession, 'decision.create', { fields: { campaignId: awaiting.campaignId, riskId: awaiting.id, supersedesId: null, title: 'Approve the evidence plan', requesterId: h.actor, assigneeId: null, priority: 'High', dueAt: new Date(Date.now() + 86400000).toISOString(), recommendation: 'Proceed with the evidence plan', impact: 'Launch readiness' } })).value
+ await command(h.ownerSession, 'decision.outcome', { id: decision.id, outcome: 'Approved', rationale: '' }, h.expected('decision', decision))
+ const retained = JSON.parse(await readFile(new URL('../../sample-data/cradle.json', import.meta.url), 'utf8')).risks.filter(row => row.state === 'Needs decision')
+ assert.equal(retained.length, 1, 'The installed example independently supplies one risk awaiting a decision')
+ const matrix = [['Watching', watching.id], ['In progress', progressing.id], ['Needs decision', retained[0].id], ['Escalated', escalated.id]]
+ const limited = await h.addPerson({ name: 'Risk editor without state', change: rules => rules.map(rule => rule.entityId === h.r.launchEntities.risk ? { ...rule, writableFields: rule.writableFields.filter(id => id !== h.r.launchFieldIds.risk.state) } : rule) })
+
+ let listed = await lens()
+ const opened = await quiet()
+ for (const [state, id] of matrix) {
+  const { risk, rating, open } = await projections(id)
+  assert.equal(risk.state, state)
+  for (const field of ['resolutionNote', 'resolvedAt', 'resolvedById']) assert.equal(risk[field], null)
+  assert.deepEqual(open, [[id, state]], `${state} is listed as an open risk of its campaign`)
+  assert.equal(rating, 'High', `${state} counts toward the campaign risk rating`)
+  assert.equal(listed.get(id), state, `${state} stays in the shipped open-risk lens`)
+  assert.equal((await command(h.ownerSession, 'risk.reopen', { id }, h.expected('risk', risk), 400)).body.error.code, 'validation', `An open ${state} risk cannot reopen`)
+ }
+ // Only the lifecycle commands change state: record edits and an operator without state authority cannot resolve.
+ for (const changes of [{ state: 'Resolved' }, { resolutionNote: 'Edited outcome' }]) {
+  assert.equal((await command(h.ownerSession, 'risk.patch', { id: watching.id, changes }, h.expected('risk', watching), 400)).body.error.code, 'validation')
+ }
+ assert.equal((await command(limited.session, 'risk.resolve', { id: watching.id, resolutionNote: 'Closed without authority' }, h.expected('risk', watching), 403)).body.error.code, 'forbidden')
+ assert.deepEqual(await quiet(), opened, 'Refused reopening, record edits and unauthorized resolution change nothing')
+
+ for (const [state, id] of matrix) {
+  const { risk } = await read(`/api/risks/${id}`)
+  assert.equal((await command(h.ownerSession, 'risk.resolve', { id, resolutionNote: `Closed from ${state}` }, h.expected('risk', risk))).value.state, 'Resolved', `${state} resolves with a note`)
+ }
+ listed = await lens()
+ const closed = await quiet()
+ for (const [state, id] of matrix) {
+  const { risk, rating, open } = await projections(id)
+  assert.equal(risk.state, 'Resolved')
+  assert.equal(risk.resolutionNote, `Closed from ${state}`)
+  assert.equal(risk.resolvedById, h.actor)
+  assert.deepEqual(open, [], `A risk resolved from ${state} is no longer open on its campaign`)
+  assert.equal(rating, 'None', `A risk resolved from ${state} no longer counts toward the rating`)
+  assert.equal(listed.has(id), false, `A risk resolved from ${state} leaves the open-risk lens`)
+  assert.equal((await command(h.ownerSession, 'risk.resolve', { id, resolutionNote: 'Closed again' }, h.expected('risk', risk), 400)).body.error.code, 'validation')
+ }
+ const resolvedWatching = (await read(`/api/risks/${watching.id}`)).risk
+ assert.equal((await command(limited.session, 'risk.reopen', { id: watching.id }, h.expected('risk', resolvedWatching), 403)).body.error.code, 'forbidden')
+ assert.deepEqual(await quiet(), closed, 'A resolved risk refuses another resolution and unauthorized reopening without change')
+
+ for (const [state, id] of matrix) {
+  const { risk } = await read(`/api/risks/${id}`)
+  assert.equal((await command(h.ownerSession, 'risk.reopen', { id }, h.expected('risk', risk))).value.state, 'Watching', `A risk resolved from ${state} reopens to Watching`)
+ }
+ listed = await lens()
+ for (const [state, id] of matrix) {
+  const { risk, rating, open } = await projections(id)
+  assert.equal(risk.state, 'Watching')
+  assert.deepEqual(open, [[id, 'Watching']], `A risk reopened after ${state} is open again`)
+  assert.equal(rating, 'High')
+  assert.equal(listed.get(id), 'Watching')
+ }
+}
+
 export async function verifyRiskClauses(h) {
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const campaign = await h.campaign('RISK-LIFECYCLE'), other = await h.campaign('RISK-ISOLATION')
@@ -268,4 +358,5 @@ export async function verifyRiskClauses(h) {
  await ratings(h, reader, campaign)
  await shippedLens(h, reader)
  await publicLifecycle(h, campaign)
+ await publicOpenStates(h)
 }
