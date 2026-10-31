@@ -167,6 +167,97 @@ async function shippedLens(h, reader) {
  assert.ok(!(await read()).some(row => row.id === high.id), 'A committed resolution immediately removes the risk from the lens')
 }
 
+async function publicLifecycle(h, campaign) {
+ const resolver = await h.addPerson({ name: 'Risk resolver' }), reopener = await h.addPerson({ name: 'Risk reopener' })
+ assert.notEqual(resolver.id, h.actor)
+ assert.notEqual(reopener.id, resolver.id)
+ const read = async (route, session = h.ownerSession) => {
+  const response = await h.request(session, route), body = await response.json()
+  assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+  return body
+ }
+ const command = async (session, action, input, expected = [], status = 200) => {
+  const commandId = h.r.createUlid(), started = Date.now()
+  const response = await h.request(session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected }) })
+  const finished = Date.now(), body = await response.json()
+  assert.equal(response.status, status, `${action}: ${JSON.stringify(body)}`)
+  if (status === 200) assert.equal(body.data.state, 'committed')
+  return { commandId, started, finished, body, value: body.data?.value }
+ }
+ const within = (instant, receipt) => {
+  assert.ok(Number.isFinite(Date.parse(instant)) && Date.parse(instant) >= receipt.started && Date.parse(instant) <= receipt.finished, 'Recorded time lies within independent request bounds')
+ }
+ const created = await command(h.ownerSession, 'risk.create', { fields: fields(h, campaign, { title: 'Public lifecycle evidence' }) })
+ const riskId = created.value.id
+ const risk = async () => (await read(`/api/risks/${riskId}`)).risk
+ const activity = async () => (await read(`/api/campaigns/${campaign.id}`)).activity
+ const before = await risk(), historyBefore = await activity()
+ assert.equal(before.state, 'Watching')
+ for (const field of ['resolutionNote', 'resolvedAt', 'resolvedById']) assert.equal(before[field], null)
+ const unchanged = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ const refused = await command(resolver.session, 'risk.resolve', { id: riskId, resolutionNote: ' \n\t ' }, h.expected('risk', before), 400)
+ assert.equal(refused.body.error.code, 'validation')
+ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), unchanged, 'Blank resolution commits no data, activity, audit, event or receipt')
+ assert.deepEqual(await risk(), before, 'A refused resolution preserves the public risk including its version')
+ assert.deepEqual(await activity(), historyBefore, 'A refused resolution preserves public campaign activity')
+
+ const note = 'Supplier evidence independently verified'
+ const resolved = await command(resolver.session, 'risk.resolve', { id: riskId, resolutionNote: note }, h.expected('risk', before))
+ const resolution = await risk()
+ for (const row of [resolution, resolved.value]) {
+  assert.equal(row.state, 'Resolved')
+  assert.equal(row.resolutionNote, note)
+  assert.equal(row.resolvedById, resolver.id, 'The resolver is the known acting operator, rather than the risk owner')
+  within(row.resolvedAt, resolved)
+ }
+ assert.equal(resolution.version, before.version + 1)
+ assert.equal(resolution.resolvedAt, resolved.value.resolvedAt)
+ const retained = (await read(`/api/v1/commands/${resolved.commandId}`, resolver.session)).data
+ assert.equal(retained.state, 'committed')
+ assert.deepEqual(retained.result, resolved.value, 'The public command status retains the committed resolution')
+ const transition = (entries, receipt, actor, field, previousValue, nextValue) => {
+  const matches = entries.filter(entry => entry.actionId === receipt.commandId && entry.subjectId === riskId && entry.fieldName === field)
+  assert.equal(matches.length, 1, `One public ${field} transition belongs to the committed command`)
+  const entry = matches[0]
+  assert.equal(entry.actor?.id, actor.id)
+  assert.equal(entry.actor?.name, actor.name)
+  assert.equal(entry.previousValue, previousValue)
+  assert.equal(entry.nextValue, nextValue)
+  within(entry.occurredAt, receipt)
+ }
+ const resolvedActivity = await activity()
+ transition(resolvedActivity, resolved, { id: resolver.id, name: 'Risk resolver' }, 'state', 'Watching', 'Resolved')
+ transition(resolvedActivity, resolved, { id: resolver.id, name: 'Risk resolver' }, 'resolution_note', null, note)
+
+ const reopened = await command(reopener.session, 'risk.reopen', { id: riskId }, h.expected('risk', resolution))
+ const watching = await risk()
+ for (const row of [watching, reopened.value]) {
+  assert.equal(row.state, 'Watching')
+  assert.equal(row.resolutionNote, null)
+  assert.equal(row.resolvedAt, null)
+  assert.equal(row.resolvedById, null)
+ }
+ assert.equal(watching.version, resolution.version + 1)
+ const reopening = (await read(`/api/v1/commands/${reopened.commandId}`, reopener.session)).data
+ assert.equal(reopening.state, 'committed')
+ assert.deepEqual(reopening.result, reopened.value)
+ const reopenedActivity = await activity()
+ const priorIds = new Set(resolvedActivity.map(entry => entry.id))
+ assert.deepEqual(reopenedActivity.filter(entry => priorIds.has(entry.id)), resolvedActivity, 'Reopening preserves every previous public activity entry')
+ transition(reopenedActivity, reopened, { id: reopener.id, name: 'Risk reopener' }, 'state', 'Resolved', 'Watching')
+ transition(reopenedActivity, reopened, { id: reopener.id, name: 'Risk reopener' }, 'resolution_note', note, null)
+ const narrowed = resolver.rules.map(rule => rule.entityId === h.r.launchEntities.risk ? { ...rule, readableFields: rule.readableFields.filter(id => id !== h.r.launchFieldIds.risk.state) } : rule)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(narrowed), resolver.policyId).run()
+ const beforeDeniedRead = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ for (const route of [`/api/v1/commands/${resolved.commandId}`, `/api/risks/${riskId}`]) {
+  const response = await h.request(resolver.session, route), body = await response.json()
+  assert.equal(response.status, 403, 'Current read authority still fences risk metadata and retained resolution receipts')
+  assert.equal(Object.hasOwn(body, 'data'), false)
+  assert.equal(Object.hasOwn(body, 'risk'), false)
+ }
+ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), beforeDeniedRead, 'Refused metadata reads change nothing')
+}
+
 export async function verifyRiskClauses(h) {
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const campaign = await h.campaign('RISK-LIFECYCLE'), other = await h.campaign('RISK-ISOLATION')
@@ -176,4 +267,5 @@ export async function verifyRiskClauses(h) {
  await lifecycle(h, reader, campaign)
  await ratings(h, reader, campaign)
  await shippedLens(h, reader)
+ await publicLifecycle(h, campaign)
 }
