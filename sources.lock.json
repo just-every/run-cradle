@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f57b8f17ee3d3b4041267c8927afa900c62212563eae177c0e0773842c8c8291",
+      "sha256": "6a546d15bc747faf0a7e04e9521864ec68e319fa8ae4b0a0083218d0d68c720c",
       "executable": false
     },
     "DEMO.md": {
@@ -7666,7 +7666,7 @@
       "executable": false
     },
     "src/domains/authority/context.server.ts": {
-      "sha256": "c3cb7475fe6f769f7f5d0c31f19af0a7a5fead1639b92ec480c4537081edb9f2",
+      "sha256": "8afa8610424502705677ed6259d7883a3d0f01eaba4a7a0488eff8778adcc1cc",
       "executable": false
     },
     "src/domains/authority/contracts.ts": {
@@ -12398,7 +12398,7 @@
       "executable": false
     },
     "tests/helpers/launch-risk-clauses.mjs": {
-      "sha256": "5328a823dc10dcc27c0d3834674e9cfd5d72dbfe67ba78f0904207d69bd5234f",
+      "sha256": "1a0d897461acbe85e55d195d3ed826b646cbf750e9a8286e2601169b0904a6e2",
       "executable": false
     },
     "tests/helpers/launch-run-history.mjs": {
@@ -13170,7 +13170,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "10466cb52f4aad8dfe052309bcec40918cb111c9ca538f4ce96da46853669830",
+      "sha256": "e9368c19db5e77f603de327793a6b6453cabae68c4ff8417ee72e267db3e4a46",
       "executable": false
     },
     "tests/launch-write-service.mjs": {

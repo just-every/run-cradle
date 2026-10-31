@@ -32,6 +32,12 @@ export const createReplayAccess=(db:D1Database,policy:PolicyPort,registry:Entity
  if(!membership||!command.provenance)throw new AuthorityError('not_found','Command is not visible under current policy.',404)
  if(command.action==='member.invite')await authorizeInvitationReplay(db,ctx,command.appId,command.result)
  const check=createReferenceAccess(db,policy,registry)
- for(const subject of command.provenance.subjects)await check(ctx,subject.ref,subject.fieldIds,'read')
+ for(const subject of command.provenance.subjects){
+  // Legacy audit facts use the entity identity for an unmodelled change. Such
+  // facts require every current field, rather than a nonexistent field grant.
+  const entity=registry.get(subject.ref.appId,subject.ref.entityId)
+  const fields=subject.fieldIds.flatMap(id=>id===subject.ref.entityId&&entity?entity.fields.map(field=>field.id):[id])
+  await check(ctx,subject.ref,fields,'read')
+ }
  if(command.provenance.grantId){const grant=await db.prepare(`SELECT 1 FROM authority_grants WHERE id=? AND delegate_id=? AND state='active' AND restore_hold=0 AND version=? AND expires_at>?`).bind(command.provenance.grantId,ctx.principal.id,command.provenance.grantVersion,Date.parse(ctx.now)).first();if(!grant)await policy.authorize(ctx,{appId:command.appId,action:'execution.read',expected:[],cost:[],inputHash:''})}
 }})

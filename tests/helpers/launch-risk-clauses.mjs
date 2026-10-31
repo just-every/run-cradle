@@ -258,6 +258,114 @@ async function publicLifecycle(h, campaign) {
  assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), beforeDeniedRead, 'Refused metadata reads change nothing')
 }
 
+async function publicEscalation(h, campaign) {
+ const actor = await h.addPerson({ name: 'Risk escalation operator' }), owner = await h.addPerson({ name: 'Risk evidence owner' })
+ const escalations = []
+ assert.notEqual(actor.id, campaign.ownerId)
+ assert.notEqual(actor.id, owner.id)
+ const read = async (route, session = actor.session) => {
+  const response = await h.request(session, route), body = await response.json()
+  assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+  return body
+ }
+ const command = async (action, input, expected = []) => {
+  const commandId = h.r.createUlid(), started = Date.now()
+  const response = await h.request(actor.session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected }) })
+  const finished = Date.now(), body = await response.json()
+  assert.equal(response.status, 200, `${action}: ${JSON.stringify(body)}`)
+  assert.equal(body.data.state, 'committed')
+  return { commandId, started, finished, value: body.data.value }
+ }
+ const within = (instant, receipt) => {
+  assert.ok(Number.isFinite(Date.parse(instant)) && Date.parse(instant) >= receipt.started && Date.parse(instant) <= receipt.finished, 'Escalation time lies within independent request bounds')
+ }
+ const decisions = async riskId => (await read('/api/decisions')).items.filter(row => row.risk?.id === riskId)
+ for (const existing of [false, true]) {
+  const created = await command('risk.create', { fields: fields(h, campaign, { title: existing ? 'Critical evidence with prior review' : 'Critical evidence needing review', ownerId: owner.id, severity: 'Critical' }) })
+  const before = (await read(`/api/risks/${created.value.id}`)).risk
+  assert.equal(before.state, 'Watching')
+  assert.equal(before.owner.id, owner.id)
+  let prior = null
+  if (existing) {
+   const decision = await command('decision.create', { fields: { campaignId: campaign.id, riskId: before.id, supersedesId: null, title: 'Independent supplier review', requesterId: owner.id, assigneeId: campaign.ownerId, priority: 'High', dueAt: '2099-01-01T12:00:00.000Z', recommendation: 'Retain the independent review', impact: 'Supplier readiness' } })
+   await command('decision.request-change', { id: decision.value.id, rationale: 'Awaiting supplier evidence' }, h.expected('decision', decision.value))
+   prior = (await read(`/api/decisions/${decision.value.id}`)).decision
+   assert.equal(prior.state, 'In review')
+   assert.equal(prior.priority, 'High')
+   assert.equal(prior.risk.id, before.id)
+   assert.equal(prior.campaign.id, campaign.id)
+  }
+  const listedBefore = await decisions(before.id)
+  assert.deepEqual(listedBefore.map(row => row.id), prior ? [prior.id] : [], 'The unresolved-decision control is publicly present before escalation')
+  const activityBefore = (await read(`/api/campaigns/${campaign.id}`)).activity
+  const reason = existing ? 'Supplier evidence needs the existing reviewer' : 'Supplier evidence requires a Critical review'
+  const escalation = await command('risk.escalate', { id: before.id, reason }, h.expected('risk', before))
+  escalations.push(escalation)
+  const risk = (await read(`/api/risks/${before.id}`)).risk
+  const retained = (await read(`/api/v1/commands/${escalation.commandId}`)).data
+  assert.equal(retained.state, 'committed')
+  assert.deepEqual(retained.result, escalation.value, 'The public command status retains the committed escalation and policy result')
+  assert.equal(risk.id, before.id)
+  assert.equal(risk.state, 'Escalated')
+  assert.equal(risk.version, before.version + 1)
+  assert.deepEqual(risk.owner, before.owner)
+  for (const row of [escalation.value.risk, retained.result.risk]) {
+   assert.equal(row.id, before.id)
+   assert.equal(row.state, 'Escalated')
+   assert.equal(row.version, before.version + 1)
+   assert.equal(row.escalatedById, actor.id, 'Attribution names the known operator distinct from both owners')
+   assert.equal(row.escalationReason, reason)
+   within(row.escalatedAt, escalation)
+   assert.equal(row.escalatedAt, escalation.value.risk.escalatedAt)
+  }
+  const activity = (await read(`/api/campaigns/${campaign.id}`)).activity
+  const priorIds = new Set(activityBefore.map(entry => entry.id))
+  assert.deepEqual(activity.filter(entry => priorIds.has(entry.id)), activityBefore, 'Escalation preserves prior public activity')
+  for (const [field, previousValue, nextValue] of [['state', 'Watching', 'Escalated'], ['escalation_reason', null, reason]]) {
+   const entries = activity.filter(entry => entry.actionId === escalation.commandId && entry.subjectId === before.id && entry.fieldName === field)
+   assert.equal(entries.length, 1, `The committed escalation has one public ${field} activity entry`)
+   assert.equal(entries[0].actor?.id, actor.id)
+   assert.equal(entries[0].actor?.name, 'Risk escalation operator')
+   assert.equal(entries[0].previousValue, previousValue)
+   assert.equal(entries[0].nextValue, nextValue)
+   assert.equal(entries[0].occurredAt, escalation.value.risk.escalatedAt)
+  }
+  const listedAfter = await decisions(before.id)
+  if (prior) {
+   assert.equal(escalation.value.decision, null, 'The escalation returns no new decision when an unresolved decision is already linked')
+   assert.deepEqual(listedAfter, listedBefore, 'No new decision is listed and the original identity, priority, state and link are unchanged')
+   assert.deepEqual((await read(`/api/decisions/${prior.id}`)).decision, prior, 'The complete original public decision remains unchanged')
+  } else {
+   const decision = escalation.value.decision
+   assert.ok(decision, 'Critical escalation returns its newly created decision in the committed response')
+   assert.equal(listedAfter.length, 1)
+   assert.equal(listedAfter[0].id, decision.id)
+   assert.equal(decision.riskId, before.id)
+   assert.equal(decision.campaignId, campaign.id)
+   assert.equal(decision.priority, 'Critical')
+   assert.equal(decision.state, 'Awaiting approval')
+   for (const row of [listedAfter[0], (await read(`/api/decisions/${decision.id}`)).decision]) {
+    assert.equal(row.risk.id, before.id)
+    assert.equal(row.campaign.id, campaign.id)
+    assert.equal(row.priority, 'Critical')
+    assert.equal(row.state, 'Awaiting approval')
+   }
+  }
+  const inbox = (await read('/api/notifications', h.ownerSession)).notifications
+  assert.equal(inbox.filter(notice => notice.kind === 'critical-risk-escalated' && notice.subject.id === before.id && notice.subject.available).length, 1, 'The campaign owner reads the Critical escalation notice through the public inbox')
+  console.log(`PROBE RISK-003 ${existing ? '3 existing decision' : '1 and 2 attribution'}: native escalation, retained command, risk, activity and owner inbox -> attributed Escalated risk; ${prior ? 'original In review High decision unchanged, no new decision' : 'one linked unresolved Critical decision'}`)
+ }
+ const narrowed = actor.rules.map(rule => rule.entityId === h.r.launchEntities.risk ? { ...rule, readableFields: rule.readableFields.filter(id => id !== h.r.launchFieldIds.risk.signal) } : rule)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(narrowed), actor.policyId).run()
+ const unchanged = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ for (const receipt of escalations) {
+  const response = await h.request(actor.session, `/api/v1/commands/${receipt.commandId}`)
+  assert.equal(response.status, 403, 'A retained escalation still requires current read authority for every risk field')
+  assert.equal(Object.hasOwn(await response.json(), 'data'), false, 'A narrowed reader gets no retained escalation content')
+ }
+ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), unchanged, 'Refused escalation receipt reads change nothing')
+}
+
 export async function verifyRiskClauses(h) {
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const campaign = await h.campaign('RISK-LIFECYCLE'), other = await h.campaign('RISK-ISOLATION')
@@ -268,4 +376,5 @@ export async function verifyRiskClauses(h) {
  await ratings(h, reader, campaign)
  await shippedLens(h, reader)
  await publicLifecycle(h, campaign)
+ await publicEscalation(h, campaign)
 }
