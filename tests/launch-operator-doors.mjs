@@ -56,7 +56,7 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
  assert.equal(await h.db.prepare("SELECT COUNT(*) AS n FROM campaigns WHERE code='IMP-NEW'").first('n'), 0)
 
  // One invalid row blocks the whole file.
- const invalid = await preview('campaign', await upload('invalid.csv', 'Code,Name,Owner\r\nCMP-261,Fine,\r\nIMP-BAD,Bad,nobody@example.invalid\r\n'), { Code: 'code', Name: 'name', Owner: 'ownerId' })
+ const invalid = await preview('campaign', await upload('invalid.csv', 'Code,Name,Owner\r\nCMP-261,Fine,\r\nIMP-BAD,Bad,synthetic-cradle-1\r\n'), { Code: 'code', Name: 'name', Owner: 'ownerId' })
  assert.equal(invalid.body.data.value.state, 'invalid')
  assert.match(invalid.body.data.value.errors[0].message, /does not identify one current operator/)
  assert.equal((await call(`/api/v1/launch/imports/${invalid.body.data.value.id}/commit`, { method: 'POST', body: envelope({ token: invalid.body.data.value.token }) })).status, 400)
@@ -84,6 +84,84 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
  // Deliverable rows merge by campaign code and title; an unknown campaign is a row error.
  const deliverables = (await preview('deliverable', await upload('tasks.csv', 'Campaign,Title,Owner\r\nIMP-NEW,Brief agency,' + owner.email + '\r\nNOPE-1,Orphan,' + owner.email + '\r\n'), { Campaign: 'campaignCode', Title: 'title', Owner: 'ownerId' })).body.data.value
  assert.deepEqual([deliverables.creates, deliverables.errors.map(error => error.message)], [1, ['Referenced campaign must already exist']])
+
+ // Author a real select definition and populated records through the public commands.
+ const definition = await command('launch.custom-field.save', { field: { name: 'Import market', type: 'select', options: ['North', 'South'] } })
+ assert.equal(definition.status, 200, JSON.stringify(definition.body))
+ const fieldId = definition.body.data.value.id
+ const readCampaign = async id => {
+  const read = await call(`/api/campaigns/${id}`)
+  assert.equal(read.status, 200, JSON.stringify(read.body))
+  return read.body
+ }
+ const stored = []
+ for (const [index, market] of ['North', 'South'].entries()) {
+  const created = await command('launch.campaign.create', { fields: {
+   code: `synthetic-cradle-${index + 1}`, name: `Stored campaign ${index + 1}`, ownerId: h.owner,
+   startDate: '2026-11-01', launchDate: '2026-12-01', objective: `Stored objective ${index + 1}`,
+   statusSummary: `Stored summary ${index + 1}`, phase: 'Build', status: 'Watch', health: 67,
+   budgetMinor: 12345, spendMinor: 6789, tags: ['Retained'], customFields: { [fieldId]: market },
+  } })
+  assert.equal(created.status, 200, JSON.stringify(created.body))
+  const captured = await readCampaign(created.body.data.value.id)
+  assert.equal(captured.campaign.objective, `Stored objective ${index + 1}`)
+  assert.equal(captured.customFields.find(field => field.id === fieldId).value, market)
+  stored.push(captured)
+ }
+ const codes = stored.map(row => row.campaign.code)
+ const refusedImport = async (filename, csv, mapping, errors) => {
+  const before = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
+  const response = await preview('campaign', await upload(filename, csv), mapping)
+  assert.equal(response.status, 200, JSON.stringify(response.body))
+  const invalid = response.body.data.value
+  assert.equal(invalid.state, 'invalid')
+  assert.deepEqual(invalid.errors, errors, 'Invalid rows name their physical CSV row')
+  const rows = await call(`/api/v1/launch/imports/${invalid.id}/rows`)
+  assert.equal(rows.status, 200, JSON.stringify(rows.body))
+  assert.deepEqual(rows.body.data.errors, errors)
+  const refused = await call(`/api/v1/launch/imports/${invalid.id}/commit`, { method: 'POST', body: envelope({ token: invalid.token }) })
+  assert.equal(refused.status, 400, JSON.stringify(refused.body))
+  assert.match(refused.body.error.message, /Every row must be valid/)
+  for (const row of before) assert.deepEqual(await readCampaign(row.campaign.id), row, 'Refused confirmation preserves every affected campaign, its select values and activity')
+ }
+
+ // A duplicate key invalidates the entire file, including its otherwise valid updates.
+ await refusedImport('duplicate-keys.csv', `Code,Name\r\n${codes[0]},First proposed update\r\n${codes[1]},Second proposed update\r\n ${codes[0].toUpperCase()} ,Duplicate proposed update\r\n`,
+  { Code: 'code', Name: 'name' }, [{ row: 4, message: 'Duplicate merge key' }])
+
+ // The select is publicly authored; one unknown option also fences the valid sibling row.
+ await refusedImport('unknown-option.csv', `Code,Name,Market\r\n${codes[0]},Valid proposed update,South\r\n${codes[1]},Invalid proposed update,Unknown\r\n`,
+  { Code: 'code', Name: 'name', Market: `custom:${fieldId}` }, [{ row: 3, message: 'Unknown custom field option' }])
+
+ // Both empty and whitespace-only cells preserve populated values during real updates.
+ const retained = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
+ const headers = ['Code', 'Name', 'Owner', 'Start', 'Launch', 'Objective', 'Summary', 'Phase', 'Status', 'Health', 'Budget', 'Spend', 'Tags', 'Market']
+ const blanks = headers.join(',') + '\r\n' + ['', ' \t '].map((blank, index) =>
+  [codes[index], `Merged campaign ${index + 1}`, ...Array(12).fill(blank)].join(',')).join('\r\n') + '\r\n'
+ const blankPreview = await preview('campaign', await upload('preserve-blanks.csv', blanks), {
+  Code: 'code', Name: 'name', Owner: 'ownerId', Start: 'startDate', Launch: 'launchDate', Objective: 'objective',
+  Summary: 'statusSummary', Phase: 'phase', Status: 'status', Health: 'health', Budget: 'budgetMinor',
+  Spend: 'spendMinor', Tags: 'tags', Market: `custom:${fieldId}`,
+ })
+ assert.equal(blankPreview.status, 200, JSON.stringify(blankPreview.body))
+ const blankResult = blankPreview.body.data.value
+ assert.deepEqual([blankResult.state, blankResult.creates, blankResult.updates, blankResult.unchanged, blankResult.errors], ['valid', 0, 2, 0, []])
+ const blankRows = await call(`/api/v1/launch/imports/${blankResult.id}/rows`)
+ assert.equal(blankRows.status, 200, JSON.stringify(blankRows.body))
+ assert.deepEqual(blankRows.body.data.rows.map(row => ({ row: row.row, changes: row.changes })), retained.map((row, index) => ({
+  row: index + 2, changes: [{ field: 'name', before: row.campaign.name, after: `Merged campaign ${index + 1}` }],
+ })), 'The preview lists only the separate real change, never a blank overwrite')
+ const merged = await call(`/api/v1/launch/imports/${blankResult.id}/commit`, { method: 'POST', body: envelope({ token: blankResult.token }) })
+ assert.equal(merged.status, 200, JSON.stringify(merged.body))
+ assert.deepEqual(merged.body.data.value, { id: blankResult.id, rows: 2 })
+ for (const [index, before] of retained.entries()) {
+  const after = await readCampaign(before.campaign.id)
+  assert.equal(after.campaign.name, `Merged campaign ${index + 1}`, 'The successful merge applies its real change')
+  assert.equal(after.campaign.version, before.campaign.version + 1)
+  for (const field of ['code', 'owner', 'startDate', 'launchDate', 'objective', 'summary', 'phase', 'status', 'health', 'healthSetAt', 'healthSetBy', 'budgetMinor', 'spendMinor', 'tags'])
+   assert.deepEqual(after.campaign[field], before.campaign[field], `${field} survives ${index === 0 ? 'empty' : 'whitespace-only'} incoming cells`)
+  assert.deepEqual(after.customFields, before.customFields, 'Blank select cells retain the independently captured stored options')
+ }
 })
 
 test('[SET-003] sample data installs and removes in one action, and removal is refused naming edited records', async () => {
