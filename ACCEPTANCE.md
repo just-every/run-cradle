@@ -1427,7 +1427,7 @@ Core · published · **partial**
 2. A merge key repeated inside the file, and a reference to an owner or select value that does not exist, are row errors.
 3. A value that is empty or only whitespace never overwrites a stored value.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
+**Evidence.** `tests/launch-operator-doors.mjs`; a repeated key, an unknown owner, an unknown custom select option and an unknown phase or status are row-numbered errors that refuse confirmation and leave every public campaign readback unchanged; `tests/helpers/launch-import-merge.mjs`; a repeated key, an unknown owner, an unknown milestone type and a campaign outside the workspace are row-numbered errors that refuse confirmation and change nothing; empty and whitespace-only cells keep stored owners, due dates, types, statuses, dates and conflict reasons.
 **Gap.** Missing a cited merge-key journey that tries duplicate file keys and invalid select values and reads a stored value after a whitespace-only incoming value; the cited journey covers campaign matching, a deliverable preview and unknown owner/campaign errors only.
 
 #### IMPORT-003 — Commit
