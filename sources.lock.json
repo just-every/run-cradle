@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "31f349fc569b44a4757f2c830b9bf6088ebf785691b44408a4302d74e7023ba0",
+      "sha256": "f42eb7422acd65eb1d3f10ab4adf0c61b4c6c18480481891d5c805fd9c273d31",
       "executable": false
     },
     "DEMO.md": {
@@ -12366,7 +12366,7 @@
       "executable": false
     },
     "tests/helpers/launch-lens-clauses.mjs": {
-      "sha256": "f98a58cc23200e04a3713d8ea1bb8f9b484a012355c0a159dbd02a7068ab5891",
+      "sha256": "0d898340bab6f31d2fc54b7e506165b2b99114a9952061c841bbd202de79a320",
       "executable": false
     },
     "tests/helpers/launch-milestone-clauses.mjs": {
