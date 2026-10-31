@@ -37,6 +37,21 @@ export async function verifyConsistencyClauses(h) {
  const openDetail=await campaignDetail(),open=currentDeliverable(openDetail)
  assert.equal(open.state,'Open');assert.equal(open.completedAt,null);assert.equal(open.completedById,null)
  assert.equal(openDetail.campaign.deliverableComplete,0)
+ const atomicRefusal=async(action,before)=>{
+  const row=currentDeliverable(before)
+  // Fail the history insert after the record update in the real admission batch.
+  // The public read must still show the entire previous committed state.
+  await h.db.prepare(`CREATE TRIGGER synthetic_cradle_transition_failure BEFORE INSERT ON activity_entries WHEN NEW.subject_id='${deliverable.id}' AND NEW.field_name='state' BEGIN SELECT RAISE(ABORT,'synthetic-cradle-transition-failure'); END`).run()
+  try {
+   const response=await h.request(operator.session,`/api/v1/commands/launch.deliverable.${action}`,{method:'POST',body:JSON.stringify({commandId:h.r.createUlid(),input:{id:deliverable.id},expected:h.expected('deliverable',row)})})
+   assert.equal(response.status,500,'A failed activity insert refuses the whole transition')
+  } finally {await h.db.prepare('DROP TRIGGER synthetic_cradle_transition_failure').run()}
+  const after=await campaignDetail()
+  assert.deepEqual(currentDeliverable(after),row,'Failed history persistence rolls back state, version and completion attribution')
+  assert.equal(after.campaign.deliverableComplete,before.campaign.deliverableComplete,'Failed history persistence leaves the derived completion count unchanged')
+  assert.deepEqual(after.activity,before.activity,'A refused transition adds no partial campaign activity')
+ }
+ await atomicRefusal('complete',openDetail)
  const completeId=h.r.createUlid(),completeStarted=Date.now()
  const completedResponse=await write('deliverable.complete',{id:deliverable.id},h.expected('deliverable',open),operator.session,completeId)
  const completeFinished=Date.now(),completedDetail=await campaignDetail(),completed=currentDeliverable(completedDetail)
@@ -58,6 +73,7 @@ export async function verifyConsistencyClauses(h) {
  const beforeReopen=await campaignDetail(),persisted=currentDeliverable(beforeReopen)
  assert.deepEqual(persisted,completed,'Independent reads after other committed work retain completion attribution')
  assert.equal(beforeReopen.campaign.deliverableComplete,1)
+ await atomicRefusal('reopen',beforeReopen)
  const reopenId=h.r.createUlid(),reopenStarted=Date.now()
  const reopenedResponse=await write('deliverable.reopen',{id:deliverable.id},h.expected('deliverable',persisted),operator.session,reopenId)
  const reopenFinished=Date.now(),reopenedDetail=await campaignDetail(),reopened=currentDeliverable(reopenedDetail)
