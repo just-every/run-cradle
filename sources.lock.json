@@ -12398,7 +12398,7 @@
       "executable": false
     },
     "tests/helpers/launch-risk-clauses.mjs": {
-      "sha256": "5328a823dc10dcc27c0d3834674e9cfd5d72dbfe67ba78f0904207d69bd5234f",
+      "sha256": "443661256e7bf51bb21bbe9dc5c7719e0002d1351b2f19de43fa0c030b582645",
       "executable": false
     },
     "tests/helpers/launch-run-history.mjs": {
