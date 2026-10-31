@@ -98,24 +98,44 @@ async function lifecycle(h, reader, campaign) {
 }
 
 async function ratings(h, reader, campaign) {
+ const read = async route => {
+  const response = await h.request(h.ownerSession, route)
+  assert.equal(response.status, 200, await response.clone().text())
+  return response.json()
+ }
+ const write = async (action, input, revisions = []) => {
+  const response = await h.request(h.ownerSession, `/api/v1/commands/launch.${action}`, {
+   method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input, expected: revisions }),
+  })
+  assert.equal(response.status, 200, await response.clone().text())
+  const { data } = await response.json()
+  assert.equal(data.state, 'committed')
+  return data.value
+ }
  const rating = async expected => {
   assert.equal((await reader.get(h.ctx, 'campaign', campaign.id)).riskRating, expected)
   const page = await reader.list(h.ctx, 'campaign', { includeArchived: true, limit: 200 })
   assert.equal(page.items.find(row => row.id === campaign.id)?.riskRating, expected, 'Campaign collections carry the same derived rating')
+  assert.equal((await read(`/api/campaigns/${campaign.id}`)).campaign.riskRating, expected, 'Public campaign detail has the authored maximum')
+  assert.equal((await read('/api/campaigns?limit=200')).items.find(row => row.id === campaign.id)?.riskRating, expected, 'Public grid has the authored maximum')
  }
  await rating('None')
  const risks = []
- for (const severity of ['Low', 'Medium', 'High', 'Critical']) {
-  risks.push(await h.commit('risk.create', { fields: fields(h, campaign, { severity, title: `${severity} rating evidence` }) }))
-  await rating(severity)
+ for (const [severity, expected] of [['Low', 'Low'], ['Medium', 'Medium'], ['High', 'High'], ['Critical', 'Critical']]) {
+  risks.push(await write('risk.create', { fields: fields(h, campaign, { severity, title: `${severity} rating evidence` }) }))
+  await rating(expected)
  }
- for (let i = risks.length - 1; i >= 0; i--) {
-  await h.commit('risk.resolve', { id: risks[i].id, resolutionNote: 'Addressed' }, h.expected('risk', risks[i]))
-  await rating(i ? risks[i - 1].severity : 'None')
+ // Lowering the highest risk must reveal another risk, not its new severity.
+ risks[3] = await write('risk.patch', { id: risks[3].id, changes: { severity: 'Medium' } }, h.expected('risk', risks[3]))
+ await rating('High')
+ // Literal expectations include tied maxima; none is derived from returned risks.
+ for (const [index, expected] of [[2, 'Medium'], [1, 'Medium'], [3, 'Low'], [0, 'None']]) {
+  risks[index] = await write('risk.resolve', { id: risks[index].id, resolutionNote: 'Addressed' }, h.expected('risk', risks[index]))
+  await rating(expected)
  }
- const reopened = await h.commit('risk.reopen', { id: risks[0].id }, h.expected('risk', await reader.get(h.ctx, 'risk', risks[0].id)))
+ const reopened = await write('risk.reopen', { id: risks[0].id }, h.expected('risk', await reader.get(h.ctx, 'risk', risks[0].id)))
  await rating('Low')
- await h.commit('risk.patch', { id: reopened.id, changes: { severity: 'High' } }, h.expected('risk', reopened))
+ await write('risk.patch', { id: reopened.id, changes: { severity: 'High' } }, h.expected('risk', reopened))
  await rating('High')
 }
 

@@ -11,7 +11,7 @@ import { decisionHydration } from './helpers/launch-decision-hydration.mjs'
 import { verifyWorkspaceScreens } from './helpers/launch-workspace-screens.mjs'
 import { verifyAutomationMonitorScreens } from './helpers/launch-automation-monitor-screens.mjs'
 import { verifyGridViewScreens } from './helpers/launch-grid-view-screens.mjs'
-import { verifyPortfolioScreens } from './helpers/launch-portfolio-screens.mjs'
+import { verifyPortfolioScreens, verifyCampaignRatingScreens } from './helpers/launch-portfolio-screens.mjs'
 import { verifyMilestoneScreens } from './helpers/launch-milestone-screens.mjs'
 import { verifyConcurrencyScreens } from './helpers/launch-concurrency-screens.mjs'
 import { verifyCurrentLensScreens } from './helpers/launch-current-lens-screens.mjs'
@@ -82,6 +82,7 @@ try {
   const capture=launchWalkthroughCapture({page,receipt,viewport,output,workspaceName})
   await verifyGridViewScreens({h,page,command,capture})
   await verifyPortfolioScreens({h,page,command,capture})
+  await verifyCampaignRatingScreens({h,page,command,capture,receipt})
   await page.goto(`${h.origin}/app/campaigns`)
   await page.getByRole('heading',{name:'No campaigns yet',exact:true}).waitFor()
   await capture('campaign-grid-before')
