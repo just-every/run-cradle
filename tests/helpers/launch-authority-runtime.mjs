@@ -14,6 +14,7 @@ import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 import { migrateFixture } from './migrate-fixture.mjs'
 import { queueConsumerOptions } from './queue-consumers.mjs'
+import { testClockSource } from './base-emitted-runtime.mjs'
 const { createUlid } = await import('../../src/core/shared/ids.ts')
 const { LAUNCH_APP_ID, launchEntities } = await import('../../src/apps/launch/contracts.ts')
 const { launchFieldIds } = await import('../../src/apps/launch/descriptors.server.ts')
@@ -21,12 +22,12 @@ const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.
 const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
-export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch,mailResponse} = {}) {
+export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch,mailResponse,testClock=false} = {}) {
   const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
   const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
   assert.equal(available,true,'Authority test listener must be unoccupied')
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-authority-'))
-  let runtime, mail, logs = ''
+  let runtime, mail, testNow, logs = ''
   const close = async () => {
     try { if (runtime) await runtime.dispose() } finally { await mail?.close() }
     if (process.env.CRADLE_AUTHORITY_EVIDENCE) { await mkdir(process.env.CRADLE_AUTHORITY_EVIDENCE, { recursive: true }); await writeFile(path.join(process.env.CRADLE_AUTHORITY_EVIDENCE, 'worker.log'), logs) }
@@ -43,6 +44,15 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     const modulesRoot = path.dirname(main)
     const { modulesRules, ...options } = workerOptions
     const modules = [main, ...(await readdir(modulesRoot, { recursive: true })).filter(file => /\.m?js$/.test(file)).map(file => path.join(modulesRoot, file)).filter(file => file !== main)].map(file => ({ type: 'ESModule', path: file }))
+    if (testClock) modules.unshift({ type: 'ESModule', path: path.join(modulesRoot, '__launch_test_clock__.mjs'), contents: `
+      import actual, { InstallationCoordinator } from './${path.basename(main)}';
+      export { InstallationCoordinator };
+      ${testClockSource}
+      export default { ...actual, fetch(request,env,context) {
+        const now = request.headers.get('x-cradle-test-now');
+        return withTestClock(now === null ? undefined : Number(now),()=>actual.fetch(request,env,context));
+      } };
+    ` })
     const bindings = { ...options.bindings, AUTH_LOCAL: 'true', OWNER_EMAIL:'maya@northstar.example', MAIL_PROVIDER:'development', MAIL_FROM:'auth@localhost.test', SESSION_SECRET: configuration.sessionSecret, APP_ORIGIN: origin, ...overrides }
     const optionsFor = (changes = {}, https = overrides.APP_ORIGIN?.startsWith('https:') ?? false) => {
       const current = { ...bindings, ...changes }
@@ -76,7 +86,11 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     assert.equal((await dispatch(new URL('/health',bindings.APP_ORIGIN).href)).status, 200, logs)
     let fixtureAuth=await createFixtureAuth(db,configuration,owner)
     const signIn = id => fixtureAuth.signIn(id)
-    const request = (session, route, init = {}) => fetch(`${origin}${route}`, { ...init, headers: { cookie: session.cookie, origin, 'x-csrf-token': session.csrf, ...(init.body ? { 'content-type': 'application/json' } : {}), ...init.headers } })
+    const request = (session, route, init = {}) => fetch(`${origin}${route}`, { ...init, headers: { cookie: session.cookie, origin, 'x-csrf-token': session.csrf, ...(init.body ? { 'content-type': 'application/json' } : {}), ...init.headers, ...(testNow === undefined ? {} : { 'x-cradle-test-now': String(testNow) }) } })
+    const setNow = value => {
+      if (!testClock || value !== undefined && !Number.isFinite(value)) throw new Error('Enable the fixture clock and supply a finite timestamp')
+      testNow = value
+    }
     const ownerSession = await signIn(owner)
     await completeFirstRun(origin,ownerSession.cookie,dispatch)
     const policy = await db.prepare('SELECT p.* FROM authority_policies p JOIN authority_memberships m ON m.policy_id=p.id WHERE m.principal_id=? AND m.app_id=?').bind(owner, LAUNCH_APP_ID).first()
@@ -94,6 +108,6 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     }
     const mailMessages=()=>{if(!mail)throw new Error('Mail capture is not configured for this explicit provider fixture');return fixtureMessages(origin)}
     const restart=async()=>{await runtime.dispose();runtime=new Miniflare(runtimeOptions);await runtime.ready;db=await runtime.getD1Database('DB');fixtureAuth=await createFixtureAuth(db,configuration,owner)}
-    return { mailMessages, get db(){return db}, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, get runtime(){return runtime}, reconfigure, restart, dispatch }
+    return { mailMessages, get db(){return db}, configuration, owner, ownerSession, policy, directory, origin, request, signIn, addPerson, close, get runtime(){return runtime}, reconfigure, restart, dispatch, setNow }
   } catch (error) { await close(); throw error }
 }
