@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "682c62192183d108192bac503e927a68c029f7640158edd0bf2d0f826a77f740",
+      "sha256": "93e9b832bcc36b20b8e5068a097efcb04fdb73f34137a2505dc7c47357cf7992",
       "executable": false
     },
     "DEMO.md": {
@@ -12374,7 +12374,7 @@
       "executable": false
     },
     "tests/helpers/launch-milestone-screens.mjs": {
-      "sha256": "9a8da5f1abd98bb0185933ca52d2b1990833c255d4f209f348dbdfddadaa6fa0",
+      "sha256": "0faa6af5640db55dc100f9e812653736f1b26c6d3b63c8cc67207ae2d5fc858a",
       "executable": false
     },
     "tests/helpers/launch-notifications-width.mjs": {
@@ -13482,7 +13482,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "4b75253734030028612107046338564ce418fbe72efc900a853de021e7a8e6d9",
+      "sha256": "aa8aa1685a8f8218bdf672582a8028df2104368040e56c36b622e3f3761f2f5e",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
