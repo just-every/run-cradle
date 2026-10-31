@@ -8,6 +8,8 @@ const repo=path.resolve(process.env.CRADLE_REPO??process.cwd())
 const fromRepo=file=>import(pathToFileURL(path.join(repo,file)).href)
 const {recordsImportBrowserRuntime}=await fromRepo('tests/helpers/records-import-browser-runtime.mjs')
 const {createUlid}=await fromRepo('src/core/shared/ids.ts')
+const {completeFirstRun}=await fromRepo('tests/helpers/complete-first-run.mjs')
+const {launchFieldIds}=await fromRepo('src/apps/launch/descriptors.server.ts')
 const {LAUNCH_APP_ID,launchEntities}=await fromRepo('src/apps/launch/contracts.ts')
 // The held-out Monday is always ahead of the wall clock, so its scheduled ticks are never stale.
 const addDays=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000).toISOString().slice(0,10)
@@ -25,16 +27,23 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   const csrfResponse=await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})
   assert.equal(csrfResponse.status,200)
   const {csrfToken}=await csrfResponse.json()
-  async function command(action,input,expected=[]){
-   const response=await fetch(h.origin+'/api/v1/commands/'+action,{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({commandId:createUlid(),expected,input})})
+  const ownerSession={cookie:h.cookie,csrfToken}
+  async function sendCommand(action,input,session=ownerSession,status=200){
+   const response=await fetch(h.origin+'/api/v1/commands/'+action,{method:'POST',headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken},body:JSON.stringify(input)})
    const result=await response.json()
-   assert.equal(response.status,200,`${action} fixture failed: ${JSON.stringify(result)}`)
+   assert.equal(response.status,status,`${action} fixture failed: ${JSON.stringify(result)}`)
+   if(status!==200)return result.error
    assert.equal(result.data.state,'committed',`${action} fixture did not commit`)
    return result.data.value
   }
+  const command=(action,input,expected=[])=>sendCommand(action,{commandId:createUlid(),expected,input})
+  async function read(route,session=ownerSession,body){
+   const response=await fetch(h.origin+route,{headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken},...(body?{method:'POST',body:JSON.stringify(body)}:{})})
+   assert.equal(response.status,200,await response.clone().text())
+   return(await response.json()).data
+  }
   const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
-  const owner=(await h.db.prepare("SELECT id FROM operators WHERE email='import-owner@example.test'").first()).id
-  const address=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner).first()).email.trim().toLowerCase()
+  const {member}=await read('/api/v1/session'),owner=member.id,address=member.email.trim().toLowerCase()
   const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first()),readinessBefore=await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()
   await command('settings.update',{version:settings.version,changes:{readinessVersion:readinessBefore.version,timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
   const readiness=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='launch-readiness'").first()
@@ -80,6 +89,63 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessVersion:(await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()).version,readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
    await tick(addDays(monday,1)+'T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
    await assertAccepted('readiness')
+   const readinessRoute=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.readiness}`
+   const schema=await read(readinessRoute),stateId=launchFieldIds.readiness.state
+   const state=label=>{const option=schema.fields.find(field=>field.id===stateId).options.find(option=>option.label===label);assert.ok(option);return {state:'value',value:option.id}}
+   const requests=(await read(readinessRoute+'/query',ownerSession,{filter:{kind:'condition',fieldId:launchFieldIds.readiness.milestoneId,op:'eq',value:{appId:LAUNCH_APP_ID,entityId:launchEntities.milestone,recordId:milestone.id}},limit:20})).items
+   assert.equal(requests.length,1,'The scheduled request is visible through the record query')
+   const requestRoute=readinessRoute+'/records/'+requests[0].id
+   const outstanding=(await read(requestRoute)).record
+   assert.deepEqual(outstanding.fields[stateId],state('Outstanding'))
+   assert.deepEqual(outstanding.fields[launchFieldIds.readiness.ownerId],{state:'value',value:owner})
+   assert.deepEqual(outstanding.fields[launchFieldIds.readiness.milestoneId],{state:'value',value:{appId:LAUNCH_APP_ID,entityId:launchEntities.milestone,recordId:milestone.id}})
+   const notices=async session=>(await read('/api/v1/notifications',session)).items.filter(item=>item.kind==='readiness'&&item.subject.id===milestone.id)
+   const addressed=await notices(ownerSession)
+   assert.equal(addressed.length,1,'The addressed owner sees one in-app readiness notification')
+   assert.equal(addressed[0].subject.available,true)
+   assert.ok(addressed[0].subject.href.includes(milestone.id))
+
+   // Give another real operator the inviter's current Launch policy, through public doors.
+   const policies=await read('/api/v1/authority/invite-policies?appId='+LAUNCH_APP_ID)
+   const policy=policies.find(item=>item.actions.includes('launch.readiness.acknowledge'))
+   assert.ok(policy,'The second operator receives ordinary readiness command authority')
+   const name='synthetic-cradle-6401',email=[name,'example.test'].join('@')
+   const invited=await command('member.invite',{name,email,scopes:[{appId:LAUNCH_APP_ID,policyId:policy.id,legacy:false}]})
+   const invitation=await fetch(h.origin+'/auth/invite',{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({email,displayName:name,role:'member'})})
+   assert.equal(invitation.status,202,await invitation.clone().text())
+   const message=(await h.mailMessages()).findLast(message=>message.personalizations.some(group=>group.to.some(recipient=>recipient.email===email)))
+   assert.ok(message,'The provider edge captures the native invitation')
+   const link=new URL(message.content.find(part=>part.type==='text/plain').value.match(/https?:\/\/[^\s]+/)[0])
+   const confirmed=await fetch(h.origin+'/auth/confirm',{method:'POST',redirect:'manual',headers:{origin:h.origin,'content-type':'application/json'},body:JSON.stringify({token:link.searchParams.get('token')})})
+   assert.equal(confirmed.status,303)
+   const cookie=confirmed.headers.getSetCookie().map(value=>value.split(';')[0]).join('; ')
+   await completeFirstRun(h.origin,cookie)
+   const otherCsrf=await fetch(h.origin+'/auth/csrf',{headers:{cookie}});assert.equal(otherCsrf.status,200)
+   const other={cookie,csrfToken:(await otherCsrf.json()).csrfToken}
+   const otherMember=(await read('/api/v1/session',other)).member
+   assert.equal(otherMember.id,invited.id);assert.equal(otherMember.state,'active');assert.notEqual(otherMember.id,owner)
+   const milestoneRoute=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.milestone}/records/${milestone.id}`
+   const currentMilestone=(await read(milestoneRoute,other)).record
+   await sendCommand('launch.milestone.patch',{commandId:createUlid(),expected:expected('milestone',currentMilestone),input:{id:milestone.id,changes:{title:'Scheduled launch reviewed by another operator'}}},other)
+   assert.equal((await read(milestoneRoute,other)).record.fields[launchFieldIds.milestone.title].value,'Scheduled launch reviewed by another operator')
+   assert.deepEqual(await notices(other),[],'Readiness notification is addressed only to its owner')
+   const acknowledgment={commandId:createUlid(),expected:expected('readiness',outstanding),input:{requestId:outstanding.id}}
+   const refused=await sendCommand('launch.readiness.acknowledge',{...acknowledgment,commandId:createUlid()},other,400)
+   assert.match(refused.message,/Only the addressed milestone owner/)
+   assert.deepEqual((await read(requestRoute)).record,outstanding,'Another authorized operator cannot change the outstanding request')
+   assert.deepEqual(await notices(ownerSession),addressed,'Refused acknowledgment preserves the addressed notification')
+   const beforeAcknowledgment=Date.now()
+   const acknowledged=await sendCommand('launch.readiness.acknowledge',acknowledgment)
+   assert.equal(acknowledged.requestId,outstanding.id);assert.equal(acknowledged.state,'Acknowledged')
+   assert.ok(Number.isFinite(Date.parse(acknowledged.acknowledgedAt)))
+   assert.ok(Date.parse(acknowledged.acknowledgedAt)>=beforeAcknowledgment&&Date.parse(acknowledged.acknowledgedAt)<=Date.now(),'Acknowledgment returns the time of the owner command')
+   const after=(await read(requestRoute)).record
+   assert.deepEqual(after.fields[stateId],state('Acknowledged'));assert.equal(after.version,outstanding.version+1)
+   assert.equal(after.updatedAt,acknowledged.acknowledgedAt)
+   assert.deepEqual(await sendCommand('launch.readiness.acknowledge',acknowledgment),acknowledged,'Replay returns the original acknowledgment time')
+   assert.deepEqual((await read(requestRoute)).record,after,'Replaying the command makes no second transition')
+   assert.deepEqual(await notices(ownerSession),addressed,'Acknowledgment replay creates no additional notification')
+   st.diagnostic(JSON.stringify({probe:'MILE-004 acknowledgment',requestId:outstanding.id,refused:refused.code,before:'Outstanding',after:'Acknowledged',version:after.version,acknowledgedAt:acknowledged.acknowledgedAt,replay:'unchanged'}))
   })
   await t.test('NOTIFY-004: enabled Monday digest creates one notification/delivery and mail',async st=>{
    const automation=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='weekly-digest'").first()
