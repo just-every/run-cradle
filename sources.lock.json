@@ -12374,7 +12374,7 @@
       "executable": false
     },
     "tests/helpers/launch-milestone-screens.mjs": {
-      "sha256": "9a8da5f1abd98bb0185933ca52d2b1990833c255d4f209f348dbdfddadaa6fa0",
+      "sha256": "e013d4fbbb86c34329008934f1c7ec64c63a2b8622a810304da57a0f4cbb674d",
       "executable": false
     },
     "tests/helpers/launch-notifications-width.mjs": {
