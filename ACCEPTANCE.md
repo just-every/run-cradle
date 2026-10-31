@@ -747,8 +747,8 @@ Core · published · **partial**
 2. Resolving it requires a resolution note of at least one non-whitespace character and records the operator and the time.
 3. Reopening a resolved risk returns it to Watching and keeps the previous resolution in activity.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public risk lifecycle journey that reads resolution actor/time/note, reopens to Watching and reads the retained previous resolution in activity. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Browser/public command resolves a risk and observes campaign rating cleared; internal handlers check nonblank note, attribution and reopen history.
+**Evidence.** `tests/launch-write-effects.mjs` ("prior full policy covers conservative effects and campaign record clauses") through `tests/helpers/launch-risk-clauses.mjs` (publicLifecycle: native blank-note refusal with unchanged public state, known resolver and bounded resolution time, committed command status, current-version reopen to Watching with cleared resolution metadata, retained previous note and attributed public activity); `tests/ui-launch-walkthrough.mjs` (Launch walkthrough E10–E17 at desktop and phone: public resolution and cleared campaign rating); retained internal lifecycle assertions in `tests/helpers/launch-risk-clauses.mjs`
+**Gap.** Missing the complete public four-open-state matrix and independent whole-clause judgment. The resolution and reopening journey now reads persisted state, note, operator and time through the public risk detail and command-status doors and correlates both transitions with public campaign activity. Status remains partial.
 
 #### RISK-003 — Escalation
 
