@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict'
+import { expect } from '@playwright/test'
+import { LAUNCH_APP_ID, launchEntities } from './launch-authority-runtime.mjs'
 
 // CAMP-006: invoked by the existing walkthrough with an empty campaign fixture.
 export async function verifyPortfolioScreens({h,page,command,capture}) {
@@ -91,4 +93,76 @@ export async function verifyPortfolioScreens({h,page,command,capture}) {
   }
  }
  assert.deepEqual((await read()).metrics,empty,'CAMP-006 fixture cleanup restores the empty portfolio')
+}
+
+// CAMP-012: reuse the walkthrough registration and its real command transport.
+export async function verifyCampaignRatingScreens({h,page,command,capture,receipt}) {
+ const width=page.viewportSize().width
+ const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
+ const write=async(action,input,revisions=[])=>{
+  const envelope=await command(action,input,revisions)
+  assert.equal(envelope.data.state,'committed',`CAMP-012 ${action} commits`)
+  return envelope.data.value
+ }
+ const read=async route=>{
+  const response=await h.request(h.ownerSession,route)
+  assert.equal(response.status,200,await response.clone().text())
+  return response.json()
+ }
+ const campaign=await write('campaign.create',{fields:{code:`RATING-${width}`,name:'Multi-risk launch',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2026-12-01',objective:'Review independent risk maxima',statusSummary:'Current evidence',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+ const show=async(rating,step,proof=false)=>{
+  const detail=(await read(`/api/campaigns/${campaign.id}`)).campaign
+  const grid=(await read('/api/campaigns?limit=200')).items.find(row=>row.id===campaign.id)
+  assert.equal(detail.riskRating,rating,`${step} public detail`)
+  assert.equal(grid?.riskRating,rating,`${step} public grid`)
+  await page.goto(`${h.origin}/app/campaigns/${campaign.id}`)
+  await expect(page.locator('.portfolio-detail-hero .portfolio-pill')).toHaveText(rating==='None'?['On track']:['On track',`${rating} risk`])
+  if(proof)await capture(`campaign-rating-${step}-detail`)
+  await page.goto(`${h.origin}/app/campaigns`)
+  await page.getByRole('heading',{name:'Campaign Grid',exact:true}).waitFor()
+  await page.locator('.portfolio-campaign-table:visible, .portfolio-campaign-cards:visible').waitFor()
+  const table=page.locator('.portfolio-campaign-table').filter({visible:true})
+  const row=(await table.count())
+   ?table.locator('tbody tr').filter({has:page.locator(`a[href="/app/campaigns/${campaign.id}"]`)})
+   :page.locator('.portfolio-campaign-cards > li').filter({has:page.locator(`a[href="/app/campaigns/${campaign.id}"]`)})
+  await expect(row).toBeVisible()
+  if(await table.count()){
+   const column=(await table.locator('thead th').allTextContents()).indexOf('Risk')
+   assert.ok(column>=0,'Grid includes the risk column')
+   await expect(row.locator('th,td').nth(column)).toHaveText(rating)
+  }else{
+   await expect(row.getByText(rating,{exact:true})).toBeVisible()
+  }
+  if(proof)await capture(`campaign-rating-${step}-grid`)
+  await row.getByRole('button',{name:/^Inspect/}).click()
+  const inspector=page.locator('.portfolio-inspector')
+  await expect(inspector.getByRole('heading',{name:campaign.name,exact:true})).toBeVisible()
+  const status=inspector.locator('.portfolio-inspector-status')
+  await expect(status.getByText(rating==='None'?'None':`${rating} risk`,{exact:true})).toBeVisible()
+  if(width===390)await page.locator('dialog.portfolio-inspector:modal').waitFor()
+  if(proof)await capture(`campaign-rating-${step}-inspector`)
+  await inspector.getByRole('button',{name:'Close campaign inspector',exact:true}).click()
+  receipt.campaignRatings??=[]
+  receipt.campaignRatings.push({width,step,expected:rating,detail:detail.riskRating,grid:grid.riskRating,presentation:await table.count()?'grid':'card',inspector:rating})
+ }
+ try{
+  await show('None','empty')
+  const risks=[]
+  for(const [severity,rating] of [['Low','Low'],['Medium','Medium'],['High','High'],['Critical','Critical']]){
+   risks.push(await write('risk.create',{fields:{campaignId:campaign.id,title:`${severity} launch evidence`,ownerId:h.owner,severity,dueDate:null,signal:'Current supplier evidence',mitigation:'Review the evidence'}}))
+   await show(rating,`created-${severity.toLowerCase()}`,severity==='Critical')
+  }
+  risks[3]=await write('risk.patch',{id:risks[3].id,changes:{severity:'Medium'}},expected('risk',risks[3]))
+  await show('High','highest-lowered')
+  for(const [index,rating,step] of [[2,'Medium','high-resolved'],[1,'Medium','medium-tie-resolved'],[3,'Low','lowered-critical-resolved'],[0,'None','all-resolved']]){
+   risks[index]=await write('risk.resolve',{id:risks[index].id,resolutionNote:'Evidence addressed'},expected('risk',risks[index]))
+   await show(rating,step,step==='all-resolved')
+  }
+  const reopened=await write('risk.reopen',{id:risks[0].id},expected('risk',risks[0]))
+  await show('Low','reopened',true)
+  await write('risk.patch',{id:reopened.id,changes:{severity:'High'}},expected('risk',reopened))
+  await show('High','reopened-raised')
+ }finally{
+  await write('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},expected('campaign',campaign))
+ }
 }
