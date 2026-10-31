@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "6698f5e766aa96c1266c3cf5d2d529f8124883017de1a033fb9a044ebb63fd83",
+      "sha256": "63a91feb22d422f0cffd357f93bfd6d8f2d67a0a9109a87c2423f309e1eb7d5c",
       "executable": false
     },
     "DEMO.md": {
@@ -6950,7 +6950,7 @@
       "executable": false
     },
     "src/core/features/campaigns/repository.ts": {
-      "sha256": "0a899e617b2d2a1321cee664f394967d22873b29e255a4121fabc56b268bb024",
+      "sha256": "6dcb9771332ba5d5387e97b95b7e5e30b51c42456c93015d563e3a6030d37d60",
       "executable": false
     },
     "src/core/features/campaigns/routes.ts": {
@@ -12326,7 +12326,7 @@
       "executable": false
     },
     "tests/helpers/launch-consistency-clauses.mjs": {
-      "sha256": "5a377f0d7c5130eb1be60896568522dcea0e9a89fe01771164515115f14f6719",
+      "sha256": "408b77c43afa456e719dd99730c968e893ad2ea44437aafbc650d884f41c876a",
       "executable": false
     },
     "tests/helpers/launch-current-lens-screens.mjs": {
@@ -13170,7 +13170,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "10466cb52f4aad8dfe052309bcec40918cb111c9ca538f4ce96da46853669830",
+      "sha256": "eecf96741ae59d4138d060b7b883ec3790b4a00febeef416e712ac84306676af",
       "executable": false
     },
     "tests/launch-write-service.mjs": {

@@ -97,7 +97,7 @@ test('[RECORDS-001] zero writable fields and explicit deny rules cannot obtain v
  } finally { await h.close() }
 })
 
-test('[RECORDS-001 DEC-001 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-002 ACT-004 VIEW-003 VIEW-006 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision/lens clauses', async () => {
+test('[RECORDS-001 DELIV-002 DEC-001 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-002 ACT-004 VIEW-003 VIEW-006 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision and lens clauses', async () => {
  const h = await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
  try {
   const owner = await writeContext(h,h.ownerSession,createUlid()), policyBefore = await h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(h.policy.id).first()
