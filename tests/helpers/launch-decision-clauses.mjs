@@ -1,5 +1,6 @@
 import {recordComment,recordThread,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
+import { verifyPublicDecisionApproval } from './launch-decision-approval.mjs'
 
 const productTables = ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'evidence_comments', 'campaign_tags', 'launch_custom_values', 'notifications', 'channel_events', 'channel_notifications', 'channel_deliveries', 'activity_entries', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
 async function snapshot(db, tables = productTables) {
@@ -181,5 +182,6 @@ export async function verifyDecisionClauses(h) {
  const campaign = await h.campaign('DECISION-CLAUSES'), other = await h.campaign('DECISION-OTHER')
  await records(h, reader, campaign, other)
  await outcomes(h, reader, campaign)
+ await verifyPublicDecisionApproval(h, campaign, changes => fields(h, campaign, changes))
  await assignmentsAndComments(h, reader, campaign)
 }
