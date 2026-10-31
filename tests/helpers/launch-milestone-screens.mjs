@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 
-// MILE-002/MILE-006: a late-quarter start must still use calendar quarters,
+// MILE-002 and MILE-006: a late-quarter start must still use calendar quarters,
 // and the same actual records and overdue labels survive both responsive views.
 export async function verifyMilestoneScreens({h,page,command,capture}) {
  const expected=(kind,row)=>[{ref:{appId:'00000000000000000000000700',entityId:kind==='campaign'?'00000000000000000000000701':'00000000000000000000000703',recordId:row.id},version:row.version}]
@@ -9,23 +9,43 @@ export async function verifyMilestoneScreens({h,page,command,capture}) {
   return result.data.value
  }
  const width=page.viewportSize().width
- const campaign=await create('campaign.create',{fields:{code:`MILE-SCREEN-${width}`,name:'Winter release readiness',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-12',objective:'Prepare a reliable winter release',statusSummary:'Reviewing release evidence',phase:'Planning',status:'On track',health:75,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
- const milestone=async(title,startDate,endDate=null)=>create('milestone.create',{fields:{campaignId:campaign.id,title,ownerId:h.owner,type:'Review',status:'Not started',startDate,endDate,conflictReason:null}})
- const point=await milestone('November packaging approval','2026-11-12')
+ const makeCampaign=(suffix,name)=>create('campaign.create',{fields:{code:`MILE-SCREEN-${suffix}-${width}`,name,ownerId:h.owner,startDate:'2026-01-01',launchDate:'2027-01-12',objective:'Prepare a reliable winter release',statusSummary:'Reviewing release evidence',phase:'Planning',status:'On track',health:75,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+ const campaign=await makeCampaign('Z','Winter release readiness')
+ const earlierCampaign=await makeCampaign('A','Packaging readiness')
+ let archivedCampaign=await makeCampaign('0','Archived readiness')
+ const milestone=async(title,startDate,endDate=null,parent=campaign)=>create('milestone.create',{fields:{campaignId:parent.id,title,ownerId:h.owner,type:'Review',status:'Not started',startDate,endDate,conflictReason:null}})
+ // Insert late dates first, including the later campaign code on the tied day.
+ // The long range belongs first by its start, although its end follows the points.
  const range=await milestone('Cross-quarter release review','2026-12-29','2027-01-05')
+ const point=await milestone('November packaging approval','2026-11-12')
+ const tiedPoint=await milestone('Earlier campaign approval','2026-11-12',null,earlierCampaign)
+ const longRange=await milestone('Long release preparation','2026-11-05','2027-01-05')
+ await milestone('Archived checkpoint','2026-11-01',null,archivedCampaign)
+ archivedCampaign=await create('campaign.archive',{id:archivedCampaign.id},expected('campaign',archivedCampaign))
+ const expectedOrder=[longRange.id,tiedPoint.id,point.id,range.id]
+ const response=await h.request(h.ownerSession,'/api/milestones/timeline')
+ assert.equal(response.status,200,await response.clone().text())
+ const timeline=await response.json()
+ const httpOrder=timeline.milestones.map(item=>item.id)
+ assert.deepEqual(httpOrder,expectedOrder,'Shipped timeline orders by start date then campaign code and excludes archived campaigns')
  await page.goto(`${h.origin}/app/lenses/timeline`);await page.locator('#timeline-title').waitFor()
- const links=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(items=>[...new Set(items.map(item=>item.getAttribute('href')))].sort())
+ // Desktop has a title link and a calendar mark per item; keep the first visible
+ // occurrence in DOM order. Phone cards have one link. Never sort the observation.
+ const links=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(items=>[...new Set(items.map(item=>item.getAttribute('href')))])
+ const expectedLinks=expectedOrder.map(id=>`/app/milestones/${id}`)
  const month=await links()
- assert.deepEqual(month,[`/app/milestones/${point.id}`,`/app/milestones/${range.id}`].sort())
- assert.equal(await page.locator(`a[href="/app/campaigns/${campaign.id}"]`).filter({visible:true}).count(),2)
+ assert.deepEqual(month,expectedLinks,'Month displays the independently authored timeline order')
+ for(const [parent,count] of [[campaign,3],[earlierCampaign,1]])assert.equal(await page.locator(`a[href="/app/campaigns/${parent.id}"]`).filter({visible:true}).count(),count)
+ assert.equal(await page.locator(`a[href="/app/campaigns/${archivedCampaign.id}"]`).filter({visible:true}).count(),0)
  await page.getByRole('button',{name:'Quarter',exact:true}).click()
- assert.deepEqual(await links(),month)
+ const quarter=await links()
+ assert.deepEqual(quarter,expectedLinks,'Quarter preserves timeline order and membership')
  if(width===1440){
   assert.deepEqual(await page.locator('small[aria-label^="Dates in"]').filter({visible:true}).evaluateAll(items=>items.map(item=>item.getAttribute('aria-label'))),['Dates in Q4 2026','Dates in Q1 2027'])
  }
  await capture('clause-timeline-calendar-quarters')
  await page.getByRole('button',{name:'Month',exact:true}).click()
- assert.deepEqual(await links(),month)
+ assert.deepEqual(await links(),expectedLinks,'Returning to Month preserves timeline order and membership')
  if(width===1440)assert.deepEqual(await page.locator('small[aria-label^="Dates in"]').filter({visible:true}).evaluateAll(items=>items.map(item=>item.getAttribute('aria-label'))),['Dates in Nov 2026','Dates in Dec 2026','Dates in Jan 2027'])
  await capture('clause-timeline-calendar-months')
  // Once the axis check is isolated, add actual overdue and inclusive-today
@@ -59,4 +79,6 @@ export async function verifyMilestoneScreens({h,page,command,capture}) {
  assert.equal(await page.getByText('Complete · Overdue',{exact:true}).count(),0)
  await capture('clause-milestone-complete')
  await create('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},expected('campaign',campaign))
+ for(const parent of [earlierCampaign,archivedCampaign])await create('campaign.delete',{id:parent.id,confirmationCode:parent.code},expected('campaign',parent))
+ return {width,expectedOrder,httpOrder,month,quarter}
 }

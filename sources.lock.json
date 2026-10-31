@@ -12374,7 +12374,7 @@
       "executable": false
     },
     "tests/helpers/launch-milestone-screens.mjs": {
-      "sha256": "483d642a2d039e895e1e9ab8cff9bacc9604e345510f97a4f3f15ba8bb2ffa36",
+      "sha256": "09f2282fe6f8f54411fa651e8480943b2165017d8a9c4eb18fc7db81dc0d545b",
       "executable": false
     },
     "tests/helpers/launch-notifications-width.mjs": {
@@ -13482,7 +13482,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "e0a44fabb6fc1dafca0efcf1b59b0d72b5cf237fff66a6e2fa080249627d7d71",
+      "sha256": "4b75253734030028612107046338564ce418fbe72efc900a853de021e7a8e6d9",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
