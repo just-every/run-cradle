@@ -8,6 +8,7 @@ import { clauseAnalysisFixture } from './helpers/launch-clause-analysis.mjs'
 import { lifecycleDoors, seedLeaver, verifyRemoval } from './helpers/launch-operator-lifecycle.mjs'
 import { verifyErasure } from './helpers/launch-operator-erasure.mjs'
 import { warehouseExportJourney } from './helpers/warehouse-export-journey.mjs'
+import { childImportMergeJourney } from './helpers/launch-import-merge.mjs'
 
 // High-stakes launch doors through the emitted Worker: data import, sample removal,
 // ownership handover and paging. Each request uses the app's own routes and session.
@@ -133,6 +134,10 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
  await refusedImport('unknown-option.csv', `Code,Name,Market\r\n${codes[0]},Valid proposed update,South\r\n${codes[1]},Invalid proposed update,Unknown\r\n`,
   { Code: 'code', Name: 'name', Market: `custom:${fieldId}` }, [{ row: 3, message: 'Unknown custom field option' }])
 
+ // Built-in phase and status selects refuse an option they do not have in the same way.
+ await refusedImport('unknown-phase.csv', `Code,Phase,Status\r\n${codes[0]},Launched,\r\n${codes[1]},,Green\r\n`,
+  { Code: 'code', Phase: 'phase', Status: 'status' }, [2, 3].map(row => ({ row, message: 'Invalid campaign dates, phase or status' })))
+
  // Both empty and whitespace-only cells preserve populated values during real updates.
  const retained = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
  const headers = ['Code', 'Name', 'Owner', 'Start', 'Launch', 'Objective', 'Summary', 'Phase', 'Status', 'Health', 'Budget', 'Spend', 'Tags', 'Market']
@@ -162,6 +167,12 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
    assert.deepEqual(after.campaign[field], before.campaign[field], `${field} survives ${index === 0 ? 'empty' : 'whitespace-only'} incoming cells`)
   assert.deepEqual(after.customFields, before.customFields, 'Blank select cells retain the independently captured stored options')
  }
+})
+
+test('[IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells', async () => {
+ const people = (await h.db.prepare('SELECT id,name FROM operators WHERE active=1 AND id<>? ORDER BY name LIMIT 3').bind(h.owner).all()).results
+ assert.equal(people.length, 3, 'Three current colleagues besides the owner')
+ await childImportMergeJourney({ owner: h.owner, people, call, command, envelope, upload, preview })
 })
 
 test('[SET-003] sample data installs and removes in one action, and removal is refused naming edited records', async () => {
