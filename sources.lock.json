@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "292c47571f13d2a1ac592ab9978f0df2fb87490fe9e2b81dd636c1fedeb17e26",
+      "sha256": "d3026f42822a7af6d1ba85407b692b6a4a6140210edd567353d8e19cc63b7cd2",
       "executable": false
     },
     "DEMO.md": {
@@ -5854,7 +5854,7 @@
       "executable": false
     },
     "src/apps/launch/domain.server.ts": {
-      "sha256": "f599ee9949b083adf54ab7d91895d2790e576cf8b82a3e80ea0c0d2f9e80ce57",
+      "sha256": "8a2f8d989d46b7683981831f85180dae49807d53e2bda591132b6c0575943bae",
       "executable": false
     },
     "src/apps/launch/duplicate.server.ts": {
@@ -7290,7 +7290,7 @@
       "executable": false
     },
     "src/core/features/risks/repository.ts": {
-      "sha256": "dffadd92a4976853b9efd979fd53bf56b1a63fa93d27f4f8fee714849d9f7a57",
+      "sha256": "026639d96a2a5ba3ad6c214d5d6acf5e21b43e36e5884f3d47a63fd6f1fbfc97",
       "executable": false
     },
     "src/core/features/risks/routes.ts": {
@@ -12398,7 +12398,7 @@
       "executable": false
     },
     "tests/helpers/launch-risk-clauses.mjs": {
-      "sha256": "e5af70cc05d12c833f83cd049e97fef7bc501e88f26742475a4b312340a44a44",
+      "sha256": "5328a823dc10dcc27c0d3834674e9cfd5d72dbfe67ba78f0904207d69bd5234f",
       "executable": false
     },
     "tests/helpers/launch-run-history.mjs": {
