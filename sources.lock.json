@@ -12342,7 +12342,7 @@
       "executable": false
     },
     "tests/helpers/launch-decision-lens-screens.mjs": {
-      "sha256": "a9b7f77c7ab0419223ad806fddfca80719ed573de546755fdc15edb9c5b1d6b5",
+      "sha256": "d93920f5e41289695b9c55c994611b33c24ee3ee36d6845517c7669a159c8b0e",
       "executable": false
     },
     "tests/helpers/launch-disabled-ai-console.mjs": {
