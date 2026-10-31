@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "8b336e483bbbdaa0db05044773811ea8a85d041d1e69c1af70bf37ef90e2e2f6",
+      "sha256": "9bdbc6d8e92670c889a12f56eac83e9fff14d33309d5aa6978f61e35eca1fd8a",
       "executable": false
     },
     "DEMO.md": {
@@ -12398,7 +12398,7 @@
       "executable": false
     },
     "tests/helpers/launch-risk-clauses.mjs": {
-      "sha256": "5328a823dc10dcc27c0d3834674e9cfd5d72dbfe67ba78f0904207d69bd5234f",
+      "sha256": "443661256e7bf51bb21bbe9dc5c7719e0002d1351b2f19de43fa0c030b582645",
       "executable": false
     },
     "tests/helpers/launch-run-history.mjs": {
