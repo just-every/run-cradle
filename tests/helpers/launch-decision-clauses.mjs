@@ -165,6 +165,10 @@ async function publicFinality(h, campaign) {
   const activityBefore = (await readHttp(h, `/api/campaigns/${campaign.id}`)).activity
   assert.ok(activityBefore.some(entry => entry.subjectId === terminal.id), 'The terminal decision has real activity to preserve')
   const effectsBefore = await snapshot(h.db)
+  const persisted = effectsBefore.decisions.find(row => row.id === terminal.id)
+  assert.equal(persisted.outcome_by_id, h.actor, 'The recorded outcome retains its operator')
+  assert.equal(persisted.outcome_at, Date.parse(recorded.outcomeAt), 'The recorded outcome retains its time')
+  assert.equal(persisted.risk_id, risk.id)
   const response = await h.request(h.ownerSession, '/api/v1/commands/launch.decision.outcome', { method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input: { id: terminal.id, outcome: outcome === 'Approved' ? 'Rejected' : 'Approved', rationale: 'Attempt to replace the recorded outcome' }, expected: h.expected('decision', terminal) }) })
   assert.equal(response.status, 400, await response.clone().text())
   const failure = (await response.json()).error
