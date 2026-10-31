@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f42eb7422acd65eb1d3f10ab4adf0c61b4c6c18480481891d5c805fd9c273d31",
+      "sha256": "5b5959575fc54dae977c4798654ec1cc230331562543e532500f3fd30fc9f97b",
       "executable": false
     },
     "DEMO.md": {
@@ -12342,7 +12342,7 @@
       "executable": false
     },
     "tests/helpers/launch-decision-lens-screens.mjs": {
-      "sha256": "d93920f5e41289695b9c55c994611b33c24ee3ee36d6845517c7669a159c8b0e",
+      "sha256": "7841d3342326779f9cc48dc9a2d951072de0f64a2981ec93bae10fed14b34d73",
       "executable": false
     },
     "tests/helpers/launch-disabled-ai-console.mjs": {
