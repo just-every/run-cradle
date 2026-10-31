@@ -29,9 +29,9 @@ export async function verifyMilestoneScreens({h,page,command,capture}) {
  const httpOrder=timeline.milestones.map(item=>item.id)
  assert.deepEqual(httpOrder,expectedOrder,'Shipped timeline orders by start date then campaign code and excludes archived campaigns')
  await page.goto(`${h.origin}/app/lenses/timeline`);await page.locator('#timeline-title').waitFor()
- // Desktop has a title link and a calendar mark per item; keep the first visible
- // occurrence in DOM order. Phone cards have one link. Never sort the observation.
- const links=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(items=>[...new Set(items.map(item=>item.getAttribute('href')))])
+ // Read each visible title link, excluding desktop calendar marks. Both layouts
+ // must present exactly one title per record in the authored order, without sorting.
+ const links=()=>page.locator('a.cr-link[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(items=>items.map(item=>item.getAttribute('href')))
  const expectedLinks=expectedOrder.map(id=>`/app/milestones/${id}`)
  const month=await links()
  assert.deepEqual(month,expectedLinks,'Month displays the independently authored timeline order')
