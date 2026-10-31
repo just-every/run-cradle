@@ -73,6 +73,21 @@ export async function fileUploadJourney(h){
  }
  await setRules(rules)
  assert.equal((await put(waiting,Buffer.from('abc'))).status,200,'Restored current authority permits the retained upload')
+ const inFlight=(await begin(3,createHash('sha256').update('abc').digest('hex'))).data.value
+ let finish,narrowed
+ const remaining=new Promise(resolve=>finish=resolve)
+ const pending=put(inFlight,new ReadableStream({async start(controller){controller.enqueue(Buffer.from('a'));await remaining;controller.enqueue(Buffer.from('bc'));controller.close()}}))
+ try{
+  const row=await stored(inFlight);let reserved=false
+  for(let attempt=0;attempt<100;attempt++){
+   if(await count('SELECT count(*) n FROM lifecycle_file_writes WHERE object_key=?',row.object_key)===1){reserved=true;break}
+   await new Promise(resolve=>setTimeout(resolve,100))
+  }
+  assert.equal(reserved,true,'The ordinary streamed upload reserves its private write before the body finishes')
+  await setRules(rules.map(rule=>rule.entityId===entityId?{...rule,writableFields:rule.writableFields.filter(id=>id!==fileId)}:rule))
+ }finally{finish();narrowed=await pending;await setRules(rules)}
+ assert.equal(narrowed.status,403,'Losing attachment write authority during the body prevents publication')
+ await noBytes(inFlight)
  await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE app_id=? AND principal_id=?").bind(appId,h.operator).run()
  await h.request(upload.uploadUrl,{status:404})
  const replay=await fetch(h.origin+waiting.uploadUrl,{method:'PUT',headers:{cookie:h.cookie,origin:h.origin,'x-csrf-token':csrf,'content-type':'text/plain'},body:'abc'})
@@ -81,4 +96,5 @@ export async function fileUploadJourney(h){
  console.log('PROBE FILE-001 oversized-initiation: limit plus one -> 400, named limit, no custody')
  console.log('PROBE FILE-001 overflowing-body: limit plus one and declaration plus one -> 413, named limit, no R2 bytes')
  console.log('PROBE FILE-001 current-authority: row, readable field, writable field, action and removed membership -> retained and new writes refused')
+ console.log('PROBE FILE-001 streamed-authority-loss: field write permission removed during a reserved PUT -> 403, no R2 bytes or erasure reservation')
 }
