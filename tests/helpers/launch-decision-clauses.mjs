@@ -140,6 +140,50 @@ async function finality(h, reader, campaign, terminal) {
  assert.deepEqual(queuedReplacement.supersedes, replacementDetail.supersedes)
 }
 
+async function publicFinality(h, campaign) {
+ const command = async (action, input, expected = []) => {
+  const response = await h.request(h.ownerSession, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input, expected }) })
+  assert.equal(response.status, 200, await response.clone().text())
+  return (await response.json()).data.value
+ }
+ for (const outcome of ['Approved', 'Rejected', 'Cancelled']) {
+  const risk = await command('risk.create', { fields: { campaignId: campaign.id, title: `${outcome} finality risk`, ownerId: h.actor, severity: 'High', dueDate: null, signal: 'Review evidence', mitigation: 'Operator review' } })
+  await command('risk.escalate', { id: risk.id, reason: 'Review before recording an outcome' }, h.expected('risk', risk))
+  const initial = await command('decision.create', { fields: fields(h, campaign, { riskId: risk.id, assigneeId: h.actor, title: `${outcome} finality decision` }) })
+  const current = (await readHttp(h, `/api/decisions/${initial.id}`)).decision
+  const recorded = await command('decision.outcome', { id: current.id, outcome, rationale: 'Recorded after operator review' }, h.expected('decision', current))
+  // Read the committed version through the public detail door. A stale request
+  // would prove optimistic concurrency rather than terminal-state finality.
+  const before = await readHttp(h, `/api/decisions/${initial.id}`)
+  const terminal = before.decision
+  assert.equal(terminal.state, outcome)
+  assert.equal(terminal.version, current.version + 1)
+  assert.equal(recorded.outcomeById, h.actor)
+  assert.ok(Number.isFinite(Date.parse(recorded.outcomeAt)))
+  const riskBefore = await readHttp(h, `/api/risks/${risk.id}`)
+  assert.equal(riskBefore.risk.state, outcome === 'Approved' ? 'In progress' : 'Escalated')
+  const activityBefore = (await readHttp(h, `/api/campaigns/${campaign.id}`)).activity
+  assert.ok(activityBefore.some(entry => entry.subjectId === terminal.id), 'The terminal decision has real activity to preserve')
+  const effectsBefore = await snapshot(h.db)
+  const response = await h.request(h.ownerSession, '/api/v1/commands/launch.decision.outcome', { method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input: { id: terminal.id, outcome: outcome === 'Approved' ? 'Rejected' : 'Approved', rationale: 'Attempt to replace the recorded outcome' }, expected: h.expected('decision', terminal) }) })
+  assert.equal(response.status, 400, await response.clone().text())
+  const failure = (await response.json()).error
+  assert.equal(failure.code, 'validation', 'The current-version request reaches the terminal-state refusal')
+  assert.match(failure.message, new RegExp('terminal decision.*superseding decision', 'i'))
+  assert.deepEqual(await snapshot(h.db), effectsBefore, `${outcome} refusal preserves decisions, risks, activity, audit and queued effects`)
+  assert.deepEqual(await readHttp(h, `/api/decisions/${terminal.id}`), before, `${outcome} refusal preserves the public outcome and version`)
+  assert.deepEqual(await readHttp(h, `/api/risks/${risk.id}`), riskBefore)
+  assert.deepEqual((await readHttp(h, `/api/campaigns/${campaign.id}`)).activity, activityBefore)
+  const replacement = await command('decision.supersede', { id: terminal.id, fields: fields(h, campaign, { title: `New review after ${outcome}` }) }, h.expected('decision', terminal))
+  const priorDetail = (await readHttp(h, `/api/decisions/${terminal.id}`)).decision
+  const replacementDetail = (await readHttp(h, `/api/decisions/${replacement.id}`)).decision
+  assert.equal(replacementDetail.state, 'Awaiting approval')
+  assert.deepEqual(priorDetail.supersededBy, [{ id: replacement.id, title: replacement.title }])
+  assert.deepEqual(replacementDetail.supersedes, { id: terminal.id, title: terminal.title })
+  assert.deepEqual({ ...priorDetail, supersededBy: terminal.supersededBy }, terminal, 'Superseding adds the reciprocal link without rewriting the recorded outcome')
+ }
+}
+
 async function assignmentsAndComments(h, reader, campaign) {
  const first = await h.addPerson({ name: 'Decision reviewer' }), second = await h.addPerson({ name: 'Second decision reviewer' })
  const risk = await h.commit('risk.create', { fields: { campaignId: campaign.id, title: 'Assignment isolation risk', ownerId: h.actor, severity: 'High', dueDate: null, signal: '', mitigation: '' } })
@@ -181,5 +225,6 @@ export async function verifyDecisionClauses(h) {
  const campaign = await h.campaign('DECISION-CLAUSES'), other = await h.campaign('DECISION-OTHER')
  await records(h, reader, campaign, other)
  await outcomes(h, reader, campaign)
+ await publicFinality(h, campaign)
  await assignmentsAndComments(h, reader, campaign)
 }
