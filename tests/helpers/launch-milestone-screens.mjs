@@ -33,19 +33,24 @@ export async function verifyMilestoneScreens({h,page,command,capture}) {
  // must present exactly one title per record in the authored order, without sorting.
  const links=()=>page.locator('a.cr-link[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(items=>items.map(item=>item.getAttribute('href')))
  const expectedLinks=expectedOrder.map(id=>`/app/milestones/${id}`)
+ const destinations=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(items=>[...new Set(items.map(item=>item.getAttribute('href')))].sort())
+ const expectedDestinations=[...expectedLinks].sort()
  const month=await links()
  assert.deepEqual(month,expectedLinks,'Month displays the independently authored timeline order')
+ assert.deepEqual(await destinations(),expectedDestinations,'Month milestone links have exactly the expected destinations')
  for(const [parent,count] of [[campaign,3],[earlierCampaign,1]])assert.equal(await page.locator(`a[href="/app/campaigns/${parent.id}"]`).filter({visible:true}).count(),count)
  assert.equal(await page.locator(`a[href="/app/campaigns/${archivedCampaign.id}"]`).filter({visible:true}).count(),0)
  await page.getByRole('button',{name:'Quarter',exact:true}).click()
  const quarter=await links()
  assert.deepEqual(quarter,expectedLinks,'Quarter preserves timeline order and membership')
+ assert.deepEqual(await destinations(),expectedDestinations,'Quarter milestone links have exactly the expected destinations')
  if(width===1440){
   assert.deepEqual(await page.locator('small[aria-label^="Dates in"]').filter({visible:true}).evaluateAll(items=>items.map(item=>item.getAttribute('aria-label'))),['Dates in Q4 2026','Dates in Q1 2027'])
  }
  await capture('clause-timeline-calendar-quarters')
  await page.getByRole('button',{name:'Month',exact:true}).click()
  assert.deepEqual(await links(),expectedLinks,'Returning to Month preserves timeline order and membership')
+ assert.deepEqual(await destinations(),expectedDestinations,'Returning to Month milestone links have exactly the expected destinations')
  if(width===1440)assert.deepEqual(await page.locator('small[aria-label^="Dates in"]').filter({visible:true}).evaluateAll(items=>items.map(item=>item.getAttribute('aria-label'))),['Dates in Nov 2026','Dates in Dec 2026','Dates in Jan 2027'])
  await capture('clause-timeline-calendar-months')
  // Once the axis check is isolated, add actual overdue and inclusive-today
