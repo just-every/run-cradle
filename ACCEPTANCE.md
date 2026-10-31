@@ -8,10 +8,10 @@ The primary journey: move in an existing operations app, review its typed record
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 62 | 140 | 46 | 248 |
+| Core | 63 | 139 | 46 | 248 |
 | Agent surface | 0 | 0 | 9 | 9 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 62 | 140 | 55 | 257 |
+| Full target | 63 | 139 | 55 | 257 |
 
 Judged from the code and tests at commit `d7dc8100256a244030024bb616a746d7f0ade6d0` (27 October 2026). Field proof register: 15 rows; 0 passed, 0 failed, 15 not run.
 
@@ -938,7 +938,7 @@ Core · published · **partial** · Cites BASE-ACCESS-002
 
 #### LENS-004 — Edit and delete
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** Lens editing and deletion affect definitions rather than their underlying records.
 
@@ -947,8 +947,8 @@ Core · published · **partial**
 2. Neither changes, archives, or deletes any record the lens displays or hides.
 3. A shipped lens cannot be deleted.
 
-**Evidence.** `tests/launch-write-effects.mjs` (existing LENS-004 registration) via `tests/helpers/launch-lens-clauses.mjs`: publicDeletion saves and deletes through native commands as a non-owner operator, observes public absence and independently compares matching and condition-excluded campaigns and business snapshots; shipped publicly attempts deletion of both installed lenses with freshly read versions and proves validation refusal preserves definitions, business records, admissions and queued effects; retained lifecycle public-edit isolation and `tests/ui-launch-walkthrough.mjs` browser deletion assertions
-**Gap.** Supplemental public-deletion proof is cited; independent whole-clause judgment and ct's contract conversion and generated-document synchronization release prerequisites remain unclaimed.
+**Evidence.** `tests/launch-write-effects.mjs` — existing LENS-004 registration through `tests/helpers/launch-lens-clauses.mjs` — "verifyLensClauses": "lifecycle" edits a saved definition through HTTP as another operator and compares every business table; "publicDeletion" saves and deletes through native commands as a non-owner operator, observes public absence and independently compares matching and condition-excluded campaigns and business snapshots; "shipped" attempts deletion of both installed lenses with freshly read versions and proves validation refusal preserves definitions, business records, admissions and queued effects. `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone" through "verifyDecisionLensScreens" and "verifyCurrentLensScreens" retains browser save, open and deletion cleanup.
+**Gap.** None.
 
 #### LENS-005 — Current results
 
