@@ -56,6 +56,13 @@ export async function verifyDecisionLensScreens({h,page,command,capture}) {
  const colleague=await h.addPerson({name:'Lens browser colleague'})
  assert.notEqual(colleague.id,h.owner)
  assert.notEqual(colleague.id,saver.id)
+ const listResponse=await h.request(colleague.session,'/api/lenses')
+ assert.equal(listResponse.status,200)
+ const listed=(await listResponse.json()).items.find(item=>item.id===id)
+ assert.ok(listed,'Another operator discovers the browser-saved lens in their collection')
+ assert.equal(listed.name,`Supplier review ${width}`)
+ assert.equal(listed.createdById,saver.id,'The shared collection names the independently known saver')
+ assert.equal(listed.createdAt,lens.createdAt,'Collection and direct reads retain the same saved time')
  const sharedResponse=await h.request(colleague.session,`/api/lenses/${id}`)
  assert.equal(sharedResponse.status,200)
  const shared=(await sharedResponse.json()).lens
