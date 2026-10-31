@@ -162,7 +162,7 @@ try {
   } else {
    const range=page.getByLabel('Milestone agenda',{exact:true}).getByRole('article').filter({has:page.getByRole('link',{name:'Cross-month review',exact:true})});assert.equal(await range.locator('time').getAttribute('datetime'),'2026-10-29');assert.equal(await range.locator('time').innerText(),'Oct 29, 2026');assert.ok((await range.innerText()).includes('ends Nov 4, 2026'));assert.equal(await range.getByText('Dependency conflict',{exact:true}).count(),1)
   }
-  const milestoneLinks=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(links=>links.map(link=>link.getAttribute('href')).sort())
+  const milestoneLinks=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(links=>links.map(link=>link.getAttribute('href')))
   const monthItems=await milestoneLinks()
   assert.ok(monthItems.includes(`/app/milestones/${crossing.id}`));assert.ok(monthItems.includes(`/app/milestones/${point.id}`))
   assert.ok(await page.locator(`a[href="/app/campaigns/${campaign.id}"]`).filter({visible:true}).count(),'Every timeline item links to its campaign at this width')
@@ -208,7 +208,8 @@ try {
   receipt.memberErasure.push(await verifySettingsMemberErasure({ runtime: h, page, width: viewport.width, action, capture }))
   await h.db.prepare('DELETE FROM campaigns WHERE id=?').bind(campaign.id).run()
   await verifyWorkspaceScreens({h,page,command,capture})
-  await verifyMilestoneScreens({h,page,command,capture})
+  receipt.timelineOrdering ??= []
+  receipt.timelineOrdering.push(await verifyMilestoneScreens({h,page,command,capture}))
   await verifyDecisionLensScreens({h,page,command,capture})
   await verifyCommentScreens({h,page,command,capture})
   await verifyCurrentLensScreens({h,page,command,capture})
