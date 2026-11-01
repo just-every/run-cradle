@@ -1455,8 +1455,8 @@ Core · published · **partial**
 2. A record matched by the preview that changed before confirmation produces a conflict and requires a new preview.
 3. Replaying a confirm with the same key within 24 hours returns the original result and creates no second record and no second activity entry.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
-**Gap.** Missing a cited expired-preview journey that advances past 30 minutes and shows confirmation refused with no rows changed; the cited journey covers record staleness and immediate replay only.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": native HTTP proves expiry exactly thirty minutes after independently controlled issuance, confirmation one millisecond before expiry, expiry-specific refusal exactly at and after expiry with records, activity, committed imports and effects unchanged, retained record-staleness refusal and immediate replay.
+**Gap.** Missing explicit missing or wrong token and idempotency-key validation proof, delayed replay throughout the 24-hour window and broader replay and authority combinations. Independent whole-clause judgment and generated-document synchronization remain release prerequisites; this expiry proof makes no DONE claim.
 
 #### IMPORT-005 — Stored file
 
