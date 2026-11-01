@@ -620,8 +620,8 @@ Core · published · **partial**
 **Acceptance.**
 1. Completing or reopening a deliverable records the operator and the time, adds a campaign activity entry, and changes the campaign's derived completion count in the same commit.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public complete/reopen journey reading actor, time, activity and campaign count before and after each committed transition. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public consistency commands complete a deliverable and read the derived count; internal handlers check completion and reopening attribution.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses", through `tests/helpers/launch-consistency-clauses.mjs` — "verifyConsistencyClauses": native creation, fresh-version completion and reopening, independently read campaign counts, command-correlated actor and bounded time, persisted completion attribution, cleared current metadata and retained attributed activity. Retained atomicity: `tests/helpers/launch-campaign-clauses.mjs` — "verifyCampaignClauses"; browser: `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone".
+**Gap.** Missing a public complete/reopen journey reading actor, time, activity and campaign count before and after each committed transition. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public consistency commands complete a deliverable and read the derived count; internal handlers check completion and reopening attribution. Supplemental complete/reopen public-door assertions are now cited in Evidence; independent whole-clause judgment remains outstanding. Status remains partial.
 
 #### DELIV-003 — Overdue
 
