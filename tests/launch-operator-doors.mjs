@@ -8,13 +8,14 @@ import { clauseAnalysisFixture } from './helpers/launch-clause-analysis.mjs'
 import { lifecycleDoors, seedLeaver, verifyRemoval } from './helpers/launch-operator-lifecycle.mjs'
 import { verifyErasure } from './helpers/launch-operator-erasure.mjs'
 import { warehouseExportJourney } from './helpers/warehouse-export-journey.mjs'
+import { childImportMergeJourney } from './helpers/launch-import-merge.mjs'
 
 // High-stakes launch doors through the emitted Worker: data import, sample removal,
 // ownership handover and paging. Each request uses the app's own routes and session.
 const analysis = clauseAnalysisFixture()
 const warehouseEdge=await warehouseNetworkEdge()
 let h
-try{h=await launchAuthorityRuntime({...analysis.configuration,...warehouseEdge.bindings}, { installedLaunchDefinitions: true, installationOwner: true, providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?warehouseEdge.outbound(request):analysis.providerFetch(request) })}catch(error){await warehouseEdge.close();throw error}
+try{h=await launchAuthorityRuntime({...analysis.configuration,...warehouseEdge.bindings}, { installedLaunchDefinitions: true, installationOwner: true, testClock: true, providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?warehouseEdge.outbound(request):analysis.providerFetch(request) })}catch(error){await warehouseEdge.close();throw error}
 after(async()=>{await h.close();await warehouseEdge.close()})
 const envelope = (input, expected = []) => JSON.stringify({ commandId: createUlid(), expected, input })
 async function call(route, init = {}, session = h.ownerSession) {
@@ -56,7 +57,7 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
  assert.equal(await h.db.prepare("SELECT COUNT(*) AS n FROM campaigns WHERE code='IMP-NEW'").first('n'), 0)
 
  // One invalid row blocks the whole file.
- const invalid = await preview('campaign', await upload('invalid.csv', 'Code,Name,Owner\r\nCMP-261,Fine,\r\nIMP-BAD,Bad,nobody@example.invalid\r\n'), { Code: 'code', Name: 'name', Owner: 'ownerId' })
+ const invalid = await preview('campaign', await upload('invalid.csv', 'Code,Name,Owner\r\nCMP-261,Fine,\r\nIMP-BAD,Bad,synthetic-cradle-1\r\n'), { Code: 'code', Name: 'name', Owner: 'ownerId' })
  assert.equal(invalid.body.data.value.state, 'invalid')
  assert.match(invalid.body.data.value.errors[0].message, /does not identify one current operator/)
  assert.equal((await call(`/api/v1/launch/imports/${invalid.body.data.value.id}/commit`, { method: 'POST', body: envelope({ token: invalid.body.data.value.token }) })).status, 400)
@@ -84,6 +85,134 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
  // Deliverable rows merge by campaign code and title; an unknown campaign is a row error.
  const deliverables = (await preview('deliverable', await upload('tasks.csv', 'Campaign,Title,Owner\r\nIMP-NEW,Brief agency,' + owner.email + '\r\nNOPE-1,Orphan,' + owner.email + '\r\n'), { Campaign: 'campaignCode', Title: 'title', Owner: 'ownerId' })).body.data.value
  assert.deepEqual([deliverables.creates, deliverables.errors.map(error => error.message)], [1, ['Referenced campaign must already exist']])
+
+ // Author a real select definition and populated records through the public commands.
+ const definition = await command('launch.custom-field.save', { field: { name: 'Import market', type: 'select', options: ['North', 'South'] } })
+ assert.equal(definition.status, 200, JSON.stringify(definition.body))
+ const fieldId = definition.body.data.value.id
+ const readCampaign = async id => {
+  const read = await call(`/api/campaigns/${id}`)
+  assert.equal(read.status, 200, JSON.stringify(read.body))
+  return read.body
+ }
+ const stored = []
+ for (const [index, market] of ['North', 'South'].entries()) {
+  const created = await command('launch.campaign.create', { fields: {
+   code: `synthetic-cradle-${index + 1}`, name: `Stored campaign ${index + 1}`, ownerId: h.owner,
+   startDate: '2026-11-01', launchDate: '2026-12-01', objective: `Stored objective ${index + 1}`,
+   statusSummary: `Stored summary ${index + 1}`, phase: 'Build', status: 'Watch', health: 67,
+   budgetMinor: 12345, spendMinor: 6789, tags: ['Retained'], customFields: { [fieldId]: market },
+  } })
+  assert.equal(created.status, 200, JSON.stringify(created.body))
+  const captured = await readCampaign(created.body.data.value.id)
+  assert.equal(captured.campaign.objective, `Stored objective ${index + 1}`)
+  assert.equal(captured.customFields.find(field => field.id === fieldId).value, market)
+  stored.push(captured)
+ }
+ const codes = stored.map(row => row.campaign.code)
+ const refusedImport = async (filename, csv, mapping, errors) => {
+  const before = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
+  const response = await preview('campaign', await upload(filename, csv), mapping)
+  assert.equal(response.status, 200, JSON.stringify(response.body))
+  const invalid = response.body.data.value
+  assert.equal(invalid.state, 'invalid')
+  assert.deepEqual(invalid.errors, errors, 'Invalid rows name their physical CSV row')
+  const rows = await call(`/api/v1/launch/imports/${invalid.id}/rows`)
+  assert.equal(rows.status, 200, JSON.stringify(rows.body))
+  assert.deepEqual(rows.body.data.errors, errors)
+  const refused = await call(`/api/v1/launch/imports/${invalid.id}/commit`, { method: 'POST', body: envelope({ token: invalid.token }) })
+  assert.equal(refused.status, 400, JSON.stringify(refused.body))
+  assert.match(refused.body.error.message, /Every row must be valid/)
+  for (const row of before) assert.deepEqual(await readCampaign(row.campaign.id), row, 'Refused confirmation preserves every affected campaign, its select values and activity')
+ }
+
+ // A duplicate key invalidates the entire file, including its otherwise valid updates.
+ await refusedImport('duplicate-keys.csv', `Code,Name\r\n${codes[0]},First proposed update\r\n${codes[1]},Second proposed update\r\n ${codes[0].toUpperCase()} ,Duplicate proposed update\r\n`,
+  { Code: 'code', Name: 'name' }, [{ row: 4, message: 'Duplicate merge key' }])
+
+ // The select is publicly authored; one unknown option also fences the valid sibling row.
+ await refusedImport('unknown-option.csv', `Code,Name,Market\r\n${codes[0]},Valid proposed update,South\r\n${codes[1]},Invalid proposed update,Unknown\r\n`,
+  { Code: 'code', Name: 'name', Market: `custom:${fieldId}` }, [{ row: 3, message: 'Unknown custom field option' }])
+
+ // Built-in phase and status selects refuse an option they do not have in the same way.
+ await refusedImport('unknown-phase.csv', `Code,Phase,Status\r\n${codes[0]},Launched,\r\n${codes[1]},,Green\r\n`,
+  { Code: 'code', Phase: 'phase', Status: 'status' }, [2, 3].map(row => ({ row, message: 'Invalid campaign dates, phase or status' })))
+
+ // Both empty and whitespace-only cells preserve populated values during real updates.
+ const retained = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
+ const headers = ['Code', 'Name', 'Owner', 'Start', 'Launch', 'Objective', 'Summary', 'Phase', 'Status', 'Health', 'Budget', 'Spend', 'Tags', 'Market']
+ const blanks = headers.join(',') + '\r\n' + ['', ' \t '].map((blank, index) =>
+  [codes[index], `Merged campaign ${index + 1}`, ...Array(12).fill(blank)].join(',')).join('\r\n') + '\r\n'
+ const blankPreview = await preview('campaign', await upload('preserve-blanks.csv', blanks), {
+  Code: 'code', Name: 'name', Owner: 'ownerId', Start: 'startDate', Launch: 'launchDate', Objective: 'objective',
+  Summary: 'statusSummary', Phase: 'phase', Status: 'status', Health: 'health', Budget: 'budgetMinor',
+  Spend: 'spendMinor', Tags: 'tags', Market: `custom:${fieldId}`,
+ })
+ assert.equal(blankPreview.status, 200, JSON.stringify(blankPreview.body))
+ const blankResult = blankPreview.body.data.value
+ assert.deepEqual([blankResult.state, blankResult.creates, blankResult.updates, blankResult.unchanged, blankResult.errors], ['valid', 0, 2, 0, []])
+ const blankRows = await call(`/api/v1/launch/imports/${blankResult.id}/rows`)
+ assert.equal(blankRows.status, 200, JSON.stringify(blankRows.body))
+ assert.deepEqual(blankRows.body.data.rows.map(row => ({ row: row.row, changes: row.changes })), retained.map((row, index) => ({
+  row: index + 2, changes: [{ field: 'name', before: row.campaign.name, after: `Merged campaign ${index + 1}` }],
+ })), 'The preview lists only the separate real change, never a blank overwrite')
+ const merged = await call(`/api/v1/launch/imports/${blankResult.id}/commit`, { method: 'POST', body: envelope({ token: blankResult.token }) })
+ assert.equal(merged.status, 200, JSON.stringify(merged.body))
+ assert.deepEqual(merged.body.data.value, { id: blankResult.id, rows: 2 })
+ for (const [index, before] of retained.entries()) {
+  const after = await readCampaign(before.campaign.id)
+  assert.equal(after.campaign.name, `Merged campaign ${index + 1}`, 'The successful merge applies its real change')
+  assert.equal(after.campaign.version, before.campaign.version + 1)
+  for (const field of ['code', 'owner', 'startDate', 'launchDate', 'objective', 'summary', 'phase', 'status', 'health', 'healthSetAt', 'healthSetBy', 'budgetMinor', 'spendMinor', 'tags'])
+   assert.deepEqual(after.campaign[field], before.campaign[field], `${field} survives ${index === 0 ? 'empty' : 'whitespace-only'} incoming cells`)
+  assert.deepEqual(after.customFields, before.customFields, 'Blank select cells retain the independently captured stored options')
+ }
+ // Independently advance authenticated HTTP time across the preview's lifetime.
+ const issuedAt = Date.now() + 60_000, expiresAt = issuedAt + 30 * 60_000
+ h.setNow(issuedAt)
+ try {
+  const timed = []
+  for (const suffix of ['BEFORE', 'EXACT', 'AFTER']) {
+   const code = `IMP-EXP-${suffix}`, name = `Expiry control ${suffix}`
+   const response = await preview('campaign', await upload(`expiry-${suffix}.csv`, `Code,Name,Owner,Start,Launch,Health\r\n${code},${name},${h.owner},2026-11-01,2026-12-01,80\r\n`), mapping)
+   assert.equal(response.status, 200, JSON.stringify(response.body))
+   assert.equal(response.body.meta.evaluatedAt, new Date(issuedAt).toISOString(), 'The authenticated context uses the independently chosen issuance time')
+   const value = response.body.data.value
+   assert.deepEqual([value.state, value.creates, value.updates, value.errors], ['valid', 1, 0, []])
+   assert.equal(value.expiresAt, new Date(expiresAt).toISOString(), 'The token expires exactly thirty minutes after issuance')
+   timed.push({ ...value, code, name })
+  }
+  const [control, exact, after] = timed
+  h.setNow(expiresAt - 1)
+  const accepted = await call(`/api/v1/launch/imports/${control.id}/commit`, { method: 'POST', body: envelope({ token: control.token }) })
+  assert.equal(accepted.status, 200, JSON.stringify(accepted.body))
+  assert.equal(accepted.body.meta.evaluatedAt, new Date(expiresAt - 1).toISOString())
+  assert.deepEqual(accepted.body.data.value, { id: control.id, rows: 1 })
+  const saved = await h.db.prepare('SELECT id,name FROM campaigns WHERE code=?').bind(control.code).first()
+  assert.equal(saved.name, control.name, 'An equivalent valid import commits just before expiry')
+  assert.equal(await h.db.prepare("SELECT COUNT(*) AS n FROM activity_entries WHERE campaign_id=? AND type='import.committed'").bind(saved.id).first('n'), 1)
+
+  const snapshot = async () => {
+   const tables = ['campaigns', 'deliverables', 'milestones', 'activity_entries', 'portability_previews', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox', 'execution_runs', 'execution_attempts']
+   const stored = {}
+   for (const table of tables) stored[table] = (await h.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results
+   return { ...stored, imports: (await call('/api/v1/launch/imports')).body.data.items, providerCalls: warehouseEdge.calls.length }
+  }
+  const beforeExpiryRefusals = await snapshot()
+  for (const [candidate, now] of [[exact, expiresAt], [after, expiresAt + 1]]) {
+   h.setNow(now)
+   const refused = await call(`/api/v1/launch/imports/${candidate.id}/commit`, { method: 'POST', body: envelope({ token: candidate.token }) })
+   assert.deepEqual([refused.status, refused.body.error.code, refused.body.error.message], [409, 'version_conflict', 'Preview expired; make a new preview'], 'Otherwise-valid confirmation is refused specifically for expiry')
+   assert.deepEqual(await snapshot(), beforeExpiryRefusals, 'Expiry changes no records, activity, committed imports, audit, events, queued work or provider effects')
+   assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM campaigns WHERE code=?').bind(candidate.code).first('n'), 0)
+  }
+ } finally { h.setNow(undefined) }
+})
+
+test('[IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells', async () => {
+ const people = (await h.db.prepare('SELECT id,name FROM operators WHERE active=1 AND id<>? ORDER BY name LIMIT 3').bind(h.owner).all()).results
+ assert.equal(people.length, 3, 'Three current colleagues besides the owner')
+ await childImportMergeJourney({ owner: h.owner, people, call, command, envelope, upload, preview })
 })
 
 test('[SET-003] sample data installs and removes in one action, and removal is refused naming edited records', async () => {

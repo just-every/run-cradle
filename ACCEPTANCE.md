@@ -620,8 +620,8 @@ Core · published · **partial**
 **Acceptance.**
 1. Completing or reopening a deliverable records the operator and the time, adds a campaign activity entry, and changes the campaign's derived completion count in the same commit.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public complete/reopen journey reading actor, time, activity and campaign count before and after each committed transition. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public consistency commands complete a deliverable and read the derived count; internal handlers check completion and reopening attribution.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses", through `tests/helpers/launch-consistency-clauses.mjs` — "verifyConsistencyClauses": native creation, fresh-version completion and reopening, independently read campaign counts, command-correlated actor and bounded time, persisted completion attribution, cleared current metadata and retained attributed activity. Retained atomicity: `tests/helpers/launch-campaign-clauses.mjs` — "verifyCampaignClauses"; browser: `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone".
+**Gap.** Missing a public complete/reopen journey reading actor, time, activity and campaign count before and after each committed transition. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public consistency commands complete a deliverable and read the derived count; internal handlers check completion and reopening attribution. Supplemental complete/reopen public-door assertions are now cited in Evidence; independent whole-clause judgment remains outstanding. Status remains partial.
 
 #### DELIV-003 — Overdue
 
@@ -1455,8 +1455,8 @@ Core · published · **partial**
 2. A record matched by the preview that changed before confirmation produces a conflict and requires a new preview.
 3. Replaying a confirm with the same key within 24 hours returns the original result and creates no second record and no second activity entry.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
-**Gap.** Missing a cited expired-preview journey that advances past 30 minutes and shows confirmation refused with no rows changed; the cited journey covers record staleness and immediate replay only.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": native HTTP proves expiry exactly thirty minutes after independently controlled issuance, confirmation one millisecond before expiry, expiry-specific refusal exactly at and after expiry with records, activity, committed imports and effects unchanged, retained record-staleness refusal and immediate replay.
+**Gap.** Missing explicit missing or wrong token and idempotency-key validation proof, delayed replay throughout the 24-hour window and broader replay and authority combinations. Independent whole-clause judgment and generated-document synchronization remain release prerequisites; this expiry proof makes no DONE claim.
 
 #### IMPORT-005 — Stored file
 
