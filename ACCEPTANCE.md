@@ -663,7 +663,7 @@ Core · published · **partial**
 3. Month scale renders one column per calendar month and Quarter scale one per quarter in the workspace timezone; switching scale changes only the columns, never the milestone set.
 4. Every item links to its campaign detail and to its milestone detail.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`; `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone"; `tests/helpers/launch-milestone-screens.mjs` — "verifyMilestoneScreens" proves acceptance 1 through the shipped timeline HTTP result and unsorted visible Month and Quarter identities at 1440 and 390, including tied dates across campaign codes, range start ordering and archived exclusion; the walkthrough retains acceptance 2–4 date shapes, calendar axes, scale-switch membership and detail links.
 **Gap.** Missing a public shipped-timeline journey that reads date-ascending and campaign-code-tiebreak ordering on its populated result. Cited `tests/ui-launch-walkthrough.mjs` checks timeline item sets after sorting the extracted links; `tests/launch-write-effects.mjs` checks ordering through an internal preview, while calendar shapes, axes, stable scale-switch membership and links have public proof.
 
 #### MILE-003 — Dependencies
@@ -1427,7 +1427,7 @@ Core · published · **partial**
 2. A merge key repeated inside the file, and a reference to an owner or select value that does not exist, are row errors.
 3. A value that is empty or only whitespace never overwrites a stored value.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
+**Evidence.** `tests/launch-operator-doors.mjs`; a repeated key, an unknown owner, an unknown custom select option and an unknown phase or status are row-numbered errors that refuse confirmation and leave every public campaign readback unchanged; `tests/helpers/launch-import-merge.mjs`; a repeated key, an unknown owner, an unknown milestone type and a campaign outside the workspace are row-numbered errors that refuse confirmation and change nothing; empty and whitespace-only cells keep stored owners, due dates, types, statuses, dates and conflict reasons.
 **Gap.** Missing a cited merge-key journey that tries duplicate file keys and invalid select values and reads a stored value after a whitespace-only incoming value; the cited journey covers campaign matching, a deliverable preview and unknown owner/campaign errors only.
 
 #### IMPORT-003 — Commit
