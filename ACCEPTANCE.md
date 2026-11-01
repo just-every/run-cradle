@@ -1441,8 +1441,8 @@ Core · published · **partial**
 2. Confirming commits every previewed row in one transaction, records an import record, and writes one activity entry on every campaign it created, updated, or whose deliverables or milestones it changed; any failure rolls back every row.
 3. A committed import cannot be rolled back, which is why IMPORT-001 shows every field it will change.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
-**Gap.** Missing a cited commit-failure journey that executes an unsafe multirow transaction and reads every row unchanged after rollback; invalid input is refused before commit, while the successful path and replay are read back.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": a valid two-update, one-create campaign import is uploaded and previewed over native HTTP, then test-only D1 triggers abort first the import's activity write and then the committed-preview marker after the row mutations; each commit returns the internal server error rather than a validation or staleness refusal, and independent table snapshots plus public readbacks show every campaign, tag, custom value, version, activity entry, preview and marker, admission audit, event, outbox row, execution row and uploaded-file record unchanged with the reviewed preview still valid; with the fault removed the same preview commits once, replays without a second activity entry and serves its original bytes; invalid input is refused before commit.
+**Gap.** Missing the complete deliverable and milestone commit, activity and rollback matrix across kinds, capacity and delayed-replay proof. Independent whole-clause judgment and generated-document synchronization remain release prerequisites; this rollback proof makes no DONE claim.
 
 #### IMPORT-004 — Replay and staleness
 
