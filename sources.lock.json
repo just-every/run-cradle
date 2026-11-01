@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "da8740bf4832b31fa33792a3284d467d5a6e599854f8c113135eaf50ba2ff266",
+      "sha256": "e1f47006dc8042b7a79d90de7fb914f9d5dd6d8650b25a545887ea7a8a91e041",
       "executable": false
     },
     "DEMO.md": {
@@ -5854,7 +5854,7 @@
       "executable": false
     },
     "src/apps/launch/domain.server.ts": {
-      "sha256": "8a2f8d989d46b7683981831f85180dae49807d53e2bda591132b6c0575943bae",
+      "sha256": "30f5628d528e0767d641e86482501a19d695c6a9ed7aa490106f97e4fe55d404",
       "executable": false
     },
     "src/apps/launch/duplicate.server.ts": {
@@ -12346,7 +12346,7 @@
       "executable": false
     },
     "tests/helpers/launch-decision-clauses.mjs": {
-      "sha256": "ad114aeccff245b1e62d8d185c13d737d7433b707becb8b8ff098fd0326c2e40",
+      "sha256": "3777096f668b20ecb6cd955445fe281fda63a16454e2c159dcf22d46ceb7ed8f",
       "executable": false
     },
     "tests/helpers/launch-decision-hydration.mjs": {
