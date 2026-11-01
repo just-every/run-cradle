@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "366591cde93c09fd9ff25b2bdd7094ba7f39228c540f98951db1e7114079eeda",
+      "sha256": "d51e2380b1ae7dd34644fd78efad504d58a3b03010ad396fdf12fe2acec3e124",
       "executable": false
     },
     "DEMO.md": {
@@ -12421,6 +12421,10 @@
       "sha256": "09f5e5aa29b5232dd97e08101d9885d1d2d3c779ada046d280dc361733fb535d",
       "executable": false
     },
+    "tests/helpers/launch-risk-readout-journey.mjs": {
+      "sha256": "877b152b68ad2ceb0b9d396caae8f575ee017f391a1f01c73f02797d4b2f9de4",
+      "executable": false
+    },
     "tests/helpers/launch-run-history.mjs": {
       "sha256": "26aa586b586fdf4a99d291f66b304e4e8c3f234a6c0f50ca30d80bf4a7b580ec",
       "executable": false
@@ -13138,7 +13142,7 @@
       "executable": false
     },
     "tests/launch-installed-runtime.mjs": {
-      "sha256": "2c989b51713afe5587925e2e56cee185d5b7bf1db4b5be658daf764cc8cbfc32",
+      "sha256": "a67e221c4f4fa5b3d115bcc0c5e6a8734ba52bd7d690b28c2f50046d50d7a9cb",
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
