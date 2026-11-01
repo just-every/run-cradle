@@ -828,8 +828,8 @@ Core · published · **partial**
 **Acceptance.**
 1. Approving an unresolved decision records the approver, the time, the outcome, and an optional rationale, adds a campaign activity entry, applies the decision-resolution policy, and removes the decision from Decision Queue, all in one commit.
 
-**Evidence.** `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public approval journey reading approver and time, linked-risk policy outcome and queue removal after the same approval. Cited `tests/ui-launch-walkthrough.mjs` show: Public browser approves, reads persisted outcome/rationale and human activity; internal helpers check full outcome metadata and linked-risk policy.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses", via `tests/helpers/launch-decision-approval.mjs` — "verifyPublicDecisionApproval" and `tests/helpers/launch-decision-clauses.mjs` — "outcomes"; `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone"
+**Gap.** Independent whole-clause judgment and ct contract conversion and generated-document synchronization remain release prerequisites. Native HTTP approval by a known operator distinct from the requester uses a freshly read version; its committed response and retained command status identify that approver within independent time bounds. Public reads prove Approved state and rationale, attributed campaign activity, the linked Escalated risk becoming In progress without resolution, and queue removal while an unresolved control remains. Retained internal assertions cover competing outcomes and atomicity; the browser covers approval and persisted presentation.
 
 #### DEC-004 — First outcome wins
 
