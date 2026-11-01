@@ -16,7 +16,7 @@ export type Lens = {
   version: number
 }
 export type LensDraft = Omit<Lens, 'id' | 'version'>
-export type LensPreview = { total: number | string; records: Array<{ id: string; title: string; subtitle: string; meta: string }> }
+export type LensPreview = { total: number | string; records: Array<{ id: string; title: string; subtitle: string; meta: string; riskRating?: string }> }
 
 export class LensApiError extends Error {
   constructor(message: string, readonly status: number) { super(message) }
@@ -154,6 +154,7 @@ export const previewLens = async (draft: LensDraft): Promise<LensPreview> => {
         title: string(source, 'title', 'Lens preview record'),
         subtitle: string(source, 'subtitle', 'Lens preview record'),
         meta: string(source, 'meta', 'Lens preview record'),
+        ...(source.riskRating === undefined ? {} : { riskRating: string(source, 'riskRating', 'Lens preview record') }),
       }
     }),
   }

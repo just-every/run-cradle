@@ -1,4 +1,5 @@
 import { ResourceBoundary } from "../../../app/ui/operator";
+import { riskRatingLabel } from "./portfolio-format";
 
 import { decodePortfolio, useApiResource } from "./portfolio-api";
 import {
@@ -91,7 +92,7 @@ export const PortfolioOverviewPage = () => {
                 campaigns={attention}
                 currency={workspace.currency}
                 description={(campaign) =>
-                  `${campaign.riskRating} risk · ${campaign.deliverableComplete}/${campaign.deliverableTotal} deliverables complete`
+                  `${riskRatingLabel(campaign.riskRating)} · ${campaign.deliverableComplete}/${campaign.deliverableTotal} deliverables complete`
                 }
               />
             ) : (
@@ -121,7 +122,7 @@ export const PortfolioOverviewPage = () => {
                   <a href={`/app/campaigns/${encodeURIComponent(campaign.id)}`}>
                     <strong>{campaign.name}</strong>
                     <span>
-                      {campaign.code} · {campaign.phase}
+                      {campaign.code} · {campaign.phase} · {riskRatingLabel(campaign.riskRating)}
                     </span>
                   </a>
                   <CampaignHealth campaign={campaign} />

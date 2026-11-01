@@ -98,8 +98,9 @@ async function lifecycle(h, reader, campaign) {
 }
 
 async function ratings(h, reader, campaign) {
- const read = async route => {
-  const response = await h.request(h.ownerSession, route)
+ const { parseCsv } = await import('../../src/domains/portability/csv.ts')
+ const read = async (route, session = h.ownerSession, init = {}) => {
+  const response = await h.request(session, route, init)
   assert.equal(response.status, 200, await response.clone().text())
   return response.json()
  }
@@ -112,18 +113,47 @@ async function ratings(h, reader, campaign) {
   assert.equal(data.state, 'committed')
   return data.value
  }
+ // A unique name and At risk status identify the campaign in the grid export and
+ // keep it in Portfolio Overview's attention list; both are restored afterwards.
+ const original = await reader.get(h.ctx, 'campaign', campaign.id)
+ const listedName = 'Risk rating listing proof'
+ await write('campaign.patch', { id: campaign.id, changes: { name: listedName, status: 'At risk' } }, h.expected('campaign', original))
+ const definition = { name: 'Risk rating campaign lens', description: '', recordType: 'Campaign', conditions: [{ field: 'code', operator: 'equals', value: campaign.code }], sort: { field: 'name', direction: 'asc' }, fields: ['name', 'code', 'status'], display: 'Grid' }
+ const lens = await write('lens.save', { definition })
+ const search = async (session = h.ownerSession) => (await read(`/api/search?q=${encodeURIComponent(campaign.code)}`, session)).items.find(row => row.id === campaign.id)
  const rating = async expected => {
   assert.equal((await reader.get(h.ctx, 'campaign', campaign.id)).riskRating, expected)
   const page = await reader.list(h.ctx, 'campaign', { includeArchived: true, limit: 200 })
   assert.equal(page.items.find(row => row.id === campaign.id)?.riskRating, expected, 'Campaign collections carry the same derived rating')
   assert.equal((await read(`/api/campaigns/${campaign.id}`)).campaign.riskRating, expected, 'Public campaign detail has the authored maximum')
   assert.equal((await read('/api/campaigns?limit=200')).items.find(row => row.id === campaign.id)?.riskRating, expected, 'Public grid has the authored maximum')
+  assert.equal((await read('/api/portfolio')).attention.find(row => row.id === campaign.id)?.riskRating, expected, 'Portfolio Overview attention list has the authored maximum')
+  const results = await read(`/api/lenses/${lens.id}?view=results`)
+  assert.equal(results.items.find(row => row.id === campaign.id)?.riskRating, expected, 'Saved Campaign lens results have the authored maximum')
+  assert.equal(results.selectedDetail?.riskRating, expected, 'The lens selected detail has the same evaluated rating')
+  const preview = await read('/api/lenses/preview', h.ownerSession, { method: 'POST', body: JSON.stringify(definition) })
+  assert.equal(preview.items.find(row => row.id === campaign.id)?.riskRating, expected, 'Campaign lens preview has the authored maximum')
+  assert.equal((await search())?.riskRating, expected, 'Global search has the authored maximum')
+  const exported = parseCsv(new TextEncoder().encode((await read('/api/exports/csv?source=grid&status=At%20risk')).csv))
+  const riskColumn = exported.headers.indexOf('Risk')
+  assert.ok(riskColumn > 0, 'The grid export includes its risk column')
+  assert.equal(exported.rows.find(row => row[0] === listedName)?.[riskColumn], expected, 'Campaign Grid CSV has the authored maximum')
  }
  await rating('None')
  const risks = []
  for (const [severity, expected] of [['Low', 'Low'], ['Medium', 'Medium'], ['High', 'High'], ['Critical', 'Critical']]) {
   risks.push(await write('risk.create', { fields: fields(h, campaign, { severity, title: `${severity} rating evidence` }) }))
   await rating(expected)
+ }
+ // A rating discloses open-risk severities. Search, the records surface, gives a
+ // reader without every risk row or severity no rating, while retained Launch
+ // views refuse that reader outright.
+ for (const restrict of [rule => ({ ...rule, readableFields: rule.readableFields.filter(id => id !== h.r.launchFieldIds.risk.severity) }), rule => ({ ...rule, rows: { kind: 'condition', fieldId: h.r.launchFieldIds.risk.campaignId, op: 'eq', value: h.r.createUlid() } })]) {
+  const person = await h.addPerson({ change: rules => rules.map(rule => rule.entityId === h.r.launchEntities.risk ? restrict(rule) : rule) })
+  const hit = await search(person.session)
+  assert.ok(hit, 'The campaign stays a readable search result')
+  assert.equal(Object.hasOwn(hit, 'riskRating'), false, 'A restricted risk scope yields no derived rating')
+  assert.equal((await h.request(person.session, '/api/portfolio')).status, 403, 'Retained Launch listings refuse a restricted reader')
  }
  // Lowering the highest risk must reveal another risk, not its new severity.
  risks[3] = await write('risk.patch', { id: risks[3].id, changes: { severity: 'Medium' } }, h.expected('risk', risks[3]))
@@ -137,6 +167,9 @@ async function ratings(h, reader, campaign) {
  await rating('Low')
  await write('risk.patch', { id: reopened.id, changes: { severity: 'High' } }, h.expected('risk', reopened))
  await rating('High')
+ await write('lens.delete', { id: lens.id }, h.expected('lens', lens))
+ const listed = await reader.get(h.ctx, 'campaign', campaign.id)
+ await write('campaign.patch', { id: campaign.id, changes: { name: original.name, status: original.status } }, h.expected('campaign', listed))
 }
 
 async function shippedLens(h, reader) {

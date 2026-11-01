@@ -96,6 +96,8 @@ export async function verifyPortfolioScreens({h,page,command,capture}) {
 }
 
 // CAMP-012: reuse the walkthrough registration and its real command transport.
+// Literal labels: a compact listing names None as having no open risks.
+const ratingLabel=rating=>rating==='None'?'No open risks':`${rating} risk`
 export async function verifyCampaignRatingScreens({h,page,command,capture,receipt}) {
  const width=page.viewportSize().width
  const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
@@ -109,14 +111,45 @@ export async function verifyCampaignRatingScreens({h,page,command,capture,receip
   assert.equal(response.status,200,await response.clone().text())
   return response.json()
  }
- const campaign=await write('campaign.create',{fields:{code:`RATING-${width}`,name:'Multi-risk launch',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2026-12-01',objective:'Review independent risk maxima',statusSummary:'Current evidence',phase:'Planning',status:'On track',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
- const show=async(rating,step,proof=false)=>{
+ // At risk keeps the campaign in Portfolio Overview's attention lists as well.
+ const campaign=await write('campaign.create',{fields:{code:`RATING-${width}`,name:'Multi-risk launch',ownerId:h.owner,startDate:'2026-01-01',launchDate:'2026-12-01',objective:'Review independent risk maxima',statusSummary:'Current evidence',phase:'Planning',status:'At risk',health:60,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
+ const lens=await write('lens.save',{definition:{name:`Rating listing ${width}`,description:'Campaign rating listing',recordType:'Campaign',conditions:[{field:'code',operator:'equals',value:campaign.code}],sort:{field:'name',direction:'asc'},fields:['name','code','status'],display:'Grid'}})
+ const row=locator=>locator.filter({has:page.locator(`a[href="/app/campaigns/${campaign.id}"]`)})
+ // Overview attention lists, the saved Campaign lens, its builder preview and global search.
+ const listings=async(rating,step,proof)=>{
+  const label=ratingLabel(rating)
+  await page.goto(`${h.origin}/app/overview`)
+  await page.getByRole('heading',{name:'Portfolio Overview',exact:true}).waitFor()
+  await expect(row(page.locator('.portfolio-campaign-mini-list > li')).locator('p')).toHaveText(`${label} · 0/0 deliverables complete`)
+  await expect(row(page.locator('.portfolio-health-list article')).locator('a span')).toHaveText(`${campaign.code} · Planning · ${label}`)
+  if(proof)await capture(`campaign-rating-${step}-overview`)
+  await page.goto(`${h.origin}/app/lenses/${lens.id}`)
+  await page.getByRole('heading',{name:lens.name,exact:true}).waitFor()
+  const result=page.getByRole('region',{name:'Lens results',exact:true}).getByRole('button').filter({hasText:campaign.name})
+  await expect(result.locator('span')).toHaveText(`${campaign.code} · At risk · ${label}`)
+  const detail=page.getByRole('region',{name:'Selected record detail',exact:true}).locator('dl > div').filter({has:page.getByText('Risk Rating',{exact:true})})
+  await expect(detail.locator('dd')).toHaveText(rating)
+  if(proof)await capture(`campaign-rating-${step}-lens`)
+  await page.goto(`${h.origin}/app/lenses/${lens.id}/edit`)
+  await page.getByRole('heading',{name:'Lens Builder',exact:true}).waitFor()
+  await page.waitForLoadState('networkidle')
+  await page.getByRole('button',{name:'Preview',exact:true}).click()
+  await expect(page.locator('aside li').filter({hasText:campaign.name}).locator('span')).toHaveText(`${campaign.code} · At risk · ${label}`)
+  if(proof)await capture(`campaign-rating-${step}-lens-preview`)
+  const searching=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/search')
+  await page.goto(`${h.origin}/app/search?q=${encodeURIComponent(campaign.code)}`)
+  assert.equal((await searching).status(),200)
+  const hit=page.getByRole('article').filter({has:page.locator(`a[href="/app/records/${LAUNCH_APP_ID}/${launchEntities.campaign}/${campaign.id}"]`)})
+  await expect(hit.locator('.cr-tag')).toHaveText(label)
+  if(proof)await capture(`campaign-rating-${step}-search`)
+ }
+ const show=async(rating,step,proof=false,listed=false)=>{
   const detail=(await read(`/api/campaigns/${campaign.id}`)).campaign
   const grid=(await read('/api/campaigns?limit=200')).items.find(row=>row.id===campaign.id)
   assert.equal(detail.riskRating,rating,`${step} public detail`)
   assert.equal(grid?.riskRating,rating,`${step} public grid`)
   await page.goto(`${h.origin}/app/campaigns/${campaign.id}`)
-  await expect(page.locator('.portfolio-detail-hero .portfolio-pill')).toHaveText(rating==='None'?['On track']:['On track',`${rating} risk`])
+  await expect(page.locator('.portfolio-detail-hero .portfolio-pill')).toHaveText(rating==='None'?['At risk']:['At risk',`${rating} risk`])
   if(proof)await capture(`campaign-rating-${step}-detail`)
   await page.goto(`${h.origin}/app/campaigns`)
   await page.getByRole('heading',{name:'Campaign Grid',exact:true}).waitFor()
@@ -142,27 +175,29 @@ export async function verifyCampaignRatingScreens({h,page,command,capture,receip
   if(width===390)await page.locator('dialog.portfolio-inspector:modal').waitFor()
   if(proof)await capture(`campaign-rating-${step}-inspector`)
   await inspector.getByRole('button',{name:'Close campaign inspector',exact:true}).click()
+  if(listed)await listings(rating,step,proof)
   receipt.campaignRatings??=[]
-  receipt.campaignRatings.push({width,step,expected:rating,detail:detail.riskRating,grid:grid.riskRating,presentation:await table.count()?'grid':'card',inspector:rating})
+  receipt.campaignRatings.push({width,step,expected:rating,detail:detail.riskRating,grid:grid.riskRating,presentation:await table.count()?'grid':'card',inspector:rating,...(listed?{overview:rating,lens:rating,lensPreview:rating,search:rating}:{})})
  }
  try{
   await show('None','empty')
   const risks=[]
   for(const [severity,rating] of [['Low','Low'],['Medium','Medium'],['High','High'],['Critical','Critical']]){
    risks.push(await write('risk.create',{fields:{campaignId:campaign.id,title:`${severity} launch evidence`,ownerId:h.owner,severity,dueDate:null,signal:'Current supplier evidence',mitigation:'Review the evidence'}}))
-   await show(rating,`created-${severity.toLowerCase()}`,severity==='Critical')
+   await show(rating,`created-${severity.toLowerCase()}`,severity==='Critical',severity==='Critical')
   }
   risks[3]=await write('risk.patch',{id:risks[3].id,changes:{severity:'Medium'}},expected('risk',risks[3]))
-  await show('High','highest-lowered')
+  await show('High','highest-lowered',false,true)
   for(const [index,rating,step] of [[2,'Medium','high-resolved'],[1,'Medium','medium-tie-resolved'],[3,'Low','lowered-critical-resolved'],[0,'None','all-resolved']]){
    risks[index]=await write('risk.resolve',{id:risks[index].id,resolutionNote:'Evidence addressed'},expected('risk',risks[index]))
-   await show(rating,step,step==='all-resolved')
+   await show(rating,step,step==='all-resolved',['high-resolved','lowered-critical-resolved','all-resolved'].includes(step))
   }
   const reopened=await write('risk.reopen',{id:risks[0].id},expected('risk',risks[0]))
   await show('Low','reopened',true)
   await write('risk.patch',{id:reopened.id,changes:{severity:'High'}},expected('risk',reopened))
   await show('High','reopened-raised')
  }finally{
+  await write('lens.delete',{id:lens.id},expected('lens',lens))
   await write('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},expected('campaign',campaign))
  }
 }

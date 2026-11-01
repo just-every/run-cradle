@@ -4,8 +4,10 @@ import type { createRecordServices } from '../../../domains/records/service.serv
 import { AdmissionError } from '../../../domains/admission/errors'
 import { launchOverdueKind, overdueFieldIds, projectLaunchOverdue } from '../../../apps/launch/overdue-projection.server'
 import type { SqlPredicate } from '../../../domains/admission/ports'
+import { LAUNCH_APP_ID, launchEntities } from '../../../apps/launch/contracts'
+import { projectCampaignRiskRatings, type RiskRating } from '../../../apps/launch/risk-rating.server'
 
-export type SearchHit = { id: string; appId: string; entityId: string; baseName: string; recordType: string; name: string; href: string; overdue?: boolean }
+export type SearchHit = { id: string; appId: string; entityId: string; baseName: string; recordType: string; name: string; href: string; overdue?: boolean; riskRating?: RiskRating }
 
 export const createSearchService = (db: D1Database, records: ReturnType<typeof createRecordServices>) => ({
   async search(ctx: RequestContext, query: string | undefined, includeArchived: boolean): Promise<SearchHit[]> {
@@ -26,13 +28,18 @@ export const createSearchService = (db: D1Database, records: ReturnType<typeof c
           projection.flags.forEach((value, id) => overdue.set(id, value)); projectionGuards.push(...projection.guards)
         }
       }
+      const ratings = app.id === LAUNCH_APP_ID && entityId === launchEntities.campaign
+        ? await projectCampaignRiskRatings(db, () => records.policy.scope(ctx, { appId: app.id, entityId: launchEntities.risk, purpose: 'read' }), items.map(row => row.id))
+        : null
+      if (ratings) projectionGuards.push(...ratings.guards)
       const titleId = descriptor.schema.primaryFieldId ?? [...descriptor.fields.values()].find(storage => ['name', 'title'].includes(storage.column))?.field.id ?? descriptor.schema.fields.find(field => field.type === 'text')?.id
       return items.map(row => {
         const cell = titleId ? row.fields[titleId] : undefined
         const titleField = descriptor.schema.fields.find(field => field.id === titleId)
         const titleType = titleField?.type === 'computed' ? titleField.resultType : titleField?.type
         const title = cell?.state === 'value' ? typeof cell.value === 'boolean' ? cell.value ? 'Yes' : 'No' : typeof cell.value === 'string' ? titleType === 'select' ? titleField?.options?.find(option => option.id === cell.value)?.label : cell.value : undefined : undefined
-        return { id: row.id, appId: app.id, entityId, baseName: app.name, recordType: descriptor.schema.label, name: title?.trim() || 'Record without a title', href: `/app/records/${app.id}/${entityId}/${row.id}`, ...(overdue.has(row.id) ? { overdue: overdue.get(row.id)! } : {}) }
+        const riskRating = ratings?.ratings.get(row.id)
+        return { id: row.id, appId: app.id, entityId, baseName: app.name, recordType: descriptor.schema.label, name: title?.trim() || 'Record without a title', href: `/app/records/${app.id}/${entityId}/${row.id}`, ...(overdue.has(row.id) ? { overdue: overdue.get(row.id)! } : {}), ...(riskRating ? { riskRating } : {}) }
       })
     })))
     await assertGuards(db, [...searches.flatMap(search => search.guards), ...projectionGuards])

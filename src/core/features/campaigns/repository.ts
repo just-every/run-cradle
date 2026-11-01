@@ -1,5 +1,6 @@
 import { LAUNCH_APP_ID, launchEntities } from '../../../apps/launch/contracts'
 import { readActivityMessage } from '../../../apps/launch/activity-message'
+import { riskRatingSql } from '../../../apps/launch/risk-rating.server'
 import type { Database } from '../shared/repository'
 import { execute, executeBatch, iso, queryAll, queryOne } from '../shared/repository'
 import { toInitials } from '../../shared/people'
@@ -41,8 +42,7 @@ const campaignSelect = `
     (SELECT COUNT(*) FROM deliverables d WHERE d.campaign_id = c.id) AS deliverableTotal,
     (SELECT COUNT(*) FROM deliverables d WHERE d.campaign_id = c.id AND d.state = 'Complete') AS deliverableComplete,
     (SELECT COUNT(*) FROM decisions d WHERE d.campaign_id = c.id AND d.state IN ('Awaiting approval', 'In review')) AS unresolvedDecisionCount,
-    COALESCE((SELECT r.severity FROM risks r WHERE r.campaign_id = c.id AND r.state != 'Resolved'
-      ORDER BY CASE r.severity WHEN 'Critical' THEN 4 WHEN 'High' THEN 3 WHEN 'Medium' THEN 2 ELSE 1 END DESC, r.id ASC LIMIT 1), 'None') AS riskRating
+    ${riskRatingSql('c.id')} AS riskRating
   FROM campaigns c
   JOIN operators o ON o.id = c.owner_id LEFT JOIN operators health_operator ON health_operator.id = c.health_set_by_id
 `

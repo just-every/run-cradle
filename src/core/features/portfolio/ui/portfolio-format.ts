@@ -37,5 +37,9 @@ export const healthLabel = (campaign: CampaignSummary) =>
 export const ownerLabel = (person: Person) =>
   `${person.name} (${person.initials})`;
 
+/** CAMP-012: a compact campaign listing names the derived rating; None means no open risks. */
+export const riskRatingLabel = (rating: string) =>
+  rating === "None" ? "No open risks" : `${rating} risk`;
+
 export const campaignHref = (campaignId: string) =>
   `/app/campaigns/${encodeURIComponent(campaignId)}`;
