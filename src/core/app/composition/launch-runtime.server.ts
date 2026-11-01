@@ -15,6 +15,7 @@ import { createLegacyDigestProjection } from '../../../domains/channels/digest.s
 import { prepareAnalysisRequest,executeAnalysisRequest } from '../../../apps/launch/analysis-requests.server'
 import { launchAnalysisContext } from '../../../apps/launch/analysis.server'
 import { createLaunchModelProvider } from '../../../apps/launch/model-provider.server'
+import { missingAiConfiguration } from '../../../apps/launch/ai-configuration.server'
 import { createLaunchAnalysisReader } from '../../../apps/launch/analysis-reader.server'
 import { launchCommandSchema,LAUNCH_APP_ID } from '../../../apps/launch/contracts'
 import { canonicalHash } from '../../../domains/admission/canonical'
@@ -25,7 +26,7 @@ import { registerTable,eq,trustedPredicate } from '../../../domains/admission/sq
 const briefTable=registerTable('launch_brief_context',['campaign_id','context_hash','last_requested_at'])
 
 export function createInstalledLaunch(platform:Platform,foundation:ServerFoundation,clock=()=>new Date()){
- const db=platform.bindings.DB,channels=createChannelsIntegration(db),automationCommands=launchAutomationCommands(foundation.commands),context={db,policy:foundation.policy,integration:channels,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID),automationCommands}
+ const db=platform.bindings.DB,channels=createChannelsIntegration(db),automationCommands=launchAutomationCommands(foundation.commands),context={db,policy:foundation.policy,integration:channels,releaseId:launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID),automationCommands,aiMissing:()=>missingAiConfiguration(platform.bindings)}
  const release=()=>{if(!context.releaseId)throw new ApiError('unconfigured','INSTALLATION_RELEASE_ID is required for launch background work');return context.releaseId}
  const service=createLegacyAutomationAuthority(context,clock),schedules=createChannelSchedules(db,channels),project=createLegacyDigestProjection(db)
  const analysis=createLaunchAnalysisReader(db,foundation.policy)

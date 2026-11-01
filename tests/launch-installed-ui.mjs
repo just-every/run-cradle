@@ -6,9 +6,9 @@ import path from 'node:path'
 import {chromium,expect} from '@playwright/test'
 import {setup,campaign} from './helpers/launch-installed.mjs'
 
-test('[AI-001/002/003 SET-002] existing campaign, risks, lens builder and settings controls expose real immutable results and errors',async()=>{
+test('[AI-001/002/003 SET-002] existing campaign, risks, lens builder and settings controls refuse unconfigured AI naming what is missing, then expose real immutable results and errors',async()=>{
  let mode='valid',calls=0,browser
- const h=await setup({hostname:'localhost',automaticQueues:true,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{
+ const h=await setup({hostname:'localhost',automaticQueues:true,configuration:{AI_PROVIDER_API_KEY:undefined,AI_MODEL:undefined},providerFetch:async request=>{
   assert.equal(request.url,'https://api.openai.com/v1/responses');calls++;const body=await request.json(),feature=JSON.parse(body.input[0].content[0].text).feature
   if(mode==='refuse')return new Response('{}',{status:403})
   return Response.json({id:'edge-'+calls,model:'edge-model',status:'completed',usage:{input_tokens:9,output_tokens:4},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({content:'Reviewed '+feature+' without changing records',proposedLens:feature==='lens-proposal'?{name:'Suggested risk review',description:'Draft for operator review',recordType:'Risk',conditions:[],sort:{field:'severity',direction:'desc'},fields:['title','severity'],display:'Cards'}:null})}]}]})
@@ -27,10 +27,23 @@ test('[AI-001/002/003 SET-002] existing campaign, risks, lens builder and settin
   const readiness=(await h.read('/api/v1/construction/readiness')).data
   assert.equal(readiness.ready,false);assert.equal(await page.getByRole('link',{name:'App studio',exact:true}).count(),0)
   await expect(page.getByRole('region',{name:'Recent activity',exact:true})).toBeVisible()
-  await page.goto(h.origin+'/app/campaigns/'+c.id)
+  // Unconfigured installation: Settings shows the refused enable naming what is missing at 1440 and 390, and nothing changes.
+  const output=process.env.CRADLE_LAUNCH_EVIDENCE??path.join(tmpdir(),'cradle-installed-launch');await mkdir(output,{recursive:true})
+  const unconfigured=(await h.read('/api/v1/settings')).data,ai=page.locator('section#ai'),refusal=ai.getByRole('status').filter({hasText:'AI cannot be enabled'})
+  await page.goto(h.origin+'/app/settings#ai')
+  for(const width of[1440,390]){
+   await page.setViewportSize({width,height:900});await page.reload();await expect(ai.getByText('Not configured',{exact:true})).toBeVisible();await expect(refusal).toHaveCount(0)
+   await ai.getByRole('button',{name:'Enable AI',exact:true}).click();await expect(refusal).toHaveText('AI cannot be enabled: missing AI_PROVIDER_API_KEY, AI_MODEL');await expect(ai.getByRole('button',{name:'Enable AI',exact:true})).toBeVisible()
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:path.join(output,'ai-unconfigured-'+width+'.png'),fullPage:true})
+  }
+  const refused=(await h.read('/api/v1/settings')).data;assert.deepEqual([refused.aiEnabled,refused.version],[false,unconfigured.version])
+  await page.setViewportSize({width:1440,height:900});await page.goto(h.origin+'/app/campaigns/'+c.id)
+  await page.getByRole('button',{name:'Request campaign brief',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'AI is disabled; configure AI_PROVIDER_API_KEY and AI_MODEL on the installation, then enable AI in Settings'})).toBeVisible()
+  assert.equal(calls,0);assert.equal((await h.db.prepare("SELECT count(*) n FROM automation_runs WHERE automation_id IN (SELECT id FROM automations WHERE shipped_key='campaign-brief')").first()).n,0)
+  // Configured but still off, then enabled: the existing controls.
+  await h.reconfigure({AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'});await page.goto(h.origin+'/app/campaigns/'+c.id)
   await page.getByRole('button',{name:'Request campaign brief',exact:true}).click();await expect(page.getByRole('status').filter({hasText:/AI is disabled/})).toBeVisible();assert.equal(calls,0)
   await page.goto(h.origin+'/app/settings#ai');await page.getByRole('button',{name:'Enable AI',exact:true}).click();await expect(page.getByRole('button',{name:'Disable AI',exact:true})).toBeVisible()
-  const output=process.env.CRADLE_LAUNCH_EVIDENCE??path.join(tmpdir(),'cradle-installed-launch');await mkdir(output,{recursive:true})
   for(const [route,feature]of[['/app/campaigns/'+c.id,'campaign-brief'],['/app/lenses/risks','risk-readout'],['/app/lenses/new','lens-proposal']]){
    await page.goto(h.origin+route);if(feature==='lens-proposal')await page.getByLabel('Describe the lens').fill('Review high risks')
    await page.getByRole('button',{name:'Request '+feature.replaceAll('-',' '),exact:true}).click();await expect(page.getByText('Reviewed '+feature+' without changing records',{exact:true})).toBeVisible({timeout:12000})
