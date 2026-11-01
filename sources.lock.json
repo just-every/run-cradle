@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "fac8d16354fc81ce375d988e365f03a1b73e2104ad21b0492a1a42c8a0679d84",
+      "sha256": "78129caa5aeebe2eba28cf5056dec4916d0f78ccf9ba414e65525d6af54fc296",
       "executable": false
     },
     "DEMO.md": {
@@ -12010,7 +12010,7 @@
       "executable": false
     },
     "tests/helpers/base-emitted-runtime.mjs": {
-      "sha256": "d337d3d079dcff2dcd1ff5e11f078ac6e0fdd5dceef187055f9db19c53029427",
+      "sha256": "7fc1b210530cc0880bb6f4816fddcc4bd7d78db3cf8925199c100a6c429e2db3",
       "executable": false
     },
     "tests/helpers/base-exit-fixture.mjs": {
@@ -12294,7 +12294,7 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "34b7ab0d4cdb43de953f3cc83b35f04de820d6524bf188e7d266c4c708918419",
+      "sha256": "a49810deba0653b3a02e90bb599545b8484b10fca2f57ea560bbeb71afba31dd",
       "executable": false
     },
     "tests/helpers/launch-automation-definitions.mjs": {
@@ -13146,7 +13146,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "cf56823f0f8520dc350c5623ce5a7fc9445a619eb60256a17106586d60e4a4fb",
+      "sha256": "272752a8c18fd0064c7b617c7399429b9f55b88a5da3eda745579506a596ba95",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
