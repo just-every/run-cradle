@@ -867,8 +867,8 @@ Core · published · **partial**
 1. Requesting changes on an unresolved decision requires a rationale of at least one non-whitespace character, records the operator and the time, and sets the decision to In review.
 2. Rejecting or canceling an unresolved decision also requires such a rationale and is a terminal outcome under DEC-004.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public request-changes/rejection/cancellation journey reading acting operator and time with the stored rationale and In review/terminal outcomes. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser rejects with a rationale and public portfolio fixture requests changes/cancels; internal helpers verify attributed transitions.
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/helpers/launch-decision-clauses.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Gap.** Held: ct's contract conversion and generated-document synchronization, and no DONE claim yet. Proved through the emitted Worker's public doors in `tests/launch-write-effects.mjs` (decision clauses, `publicTransitions` in `tests/helpers/launch-decision-clauses.mjs`): a known operator who is not the requester, using freshly read versions, is refused empty and whitespace-only rationales for request-changes, rejection and cancellation with every stored record, the public decision read, campaign activity and Decision Queue unchanged; then the committed and retained command results, public decision reads, Decision Queue and campaign activity show the rationale, In review or terminal state, the acting operator and a time inside the independently captured request window. The retained command status of a terminal outcome is now readable by its operator (decision attribution columns map to the State field). Public browser rejection and portfolio request-changes and cancellation remain in `tests/ui-launch-walkthrough.mjs`.
 
 #### DEC-007 — Linked-risk effect
 
