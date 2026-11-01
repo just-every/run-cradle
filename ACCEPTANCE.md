@@ -8,10 +8,10 @@ The primary journey: move in an existing operations app, review its typed record
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 63 | 139 | 46 | 248 |
+| Core | 64 | 138 | 46 | 248 |
 | Agent surface | 0 | 0 | 9 | 9 |
 | Later | 0 | 0 | 0 | 0 |
-| Full target | 63 | 139 | 55 | 257 |
+| Full target | 64 | 138 | 55 | 257 |
 
 Judged from the code and tests at commit `d7dc8100256a244030024bb616a746d7f0ade6d0` (27 October 2026). Field proof register: 15 rows; 0 passed, 0 failed, 15 not run.
 
@@ -738,7 +738,7 @@ Core · published · **partial**
 
 #### RISK-002 — Lifecycle
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** Risk resolution and reopening preserve an attributed account of the outcome.
 
@@ -747,8 +747,8 @@ Core · published · **partial**
 2. Resolving it requires a resolution note of at least one non-whitespace character and records the operator and the time.
 3. Reopening a resolved risk returns it to Watching and keeps the previous resolution in activity.
 
-**Evidence.** `tests/launch-write-effects.mjs` ("prior full policy covers conservative effects and campaign record clauses") through `tests/helpers/launch-risk-clauses.mjs` (publicLifecycle: native blank-note refusal with unchanged public state, known resolver and bounded resolution time, committed command status, current-version reopen to Watching with cleared resolution metadata, retained previous note and attributed public activity); `tests/ui-launch-walkthrough.mjs` (Launch walkthrough E10–E17 at desktop and phone: public resolution and cleared campaign rating); retained internal lifecycle assertions in `tests/helpers/launch-risk-clauses.mjs`
-**Gap.** Missing the complete public four-open-state matrix and independent whole-clause judgment. The resolution and reopening journey now reads persisted state, note, operator and time through the public risk detail and command-status doors and correlates both transitions with public campaign activity. Status remains partial.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses" through `tests/helpers/launch-risk-clauses.mjs` — "publicOpenStates" (acceptance 1: Watching, Escalated and In progress reached through native commands and the installed example's Needs decision are each listed open on their campaign, counted in its risk rating and kept in the shipped Risks Lens; each refuses reopening and resolves with a note, Resolved leaves all three, and record edits or an operator without state authority change nothing) and "publicLifecycle" (acceptance 2: a whitespace-only note is refused with nothing changed, and a nonblank note commits with the known resolver and a bounded time read through risk detail and command status; acceptance 3: a current-version reopen returns Watching with resolution metadata cleared while campaign activity keeps the previous note and the attributed resolution and reopening); `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone"
+**Gap.** None.
 
 #### RISK-003 — Escalation
 
