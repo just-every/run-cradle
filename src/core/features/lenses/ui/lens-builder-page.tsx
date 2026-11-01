@@ -7,7 +7,7 @@ import { riskRatingLabel } from '../../portfolio/ui/portfolio-format'
 
 type Draft = LensDraft
 const blankDraft: Draft = { name: '', description: '', recordType: 'Risk', conditions: [], sort: 'severity-descending', visibleFields: ['title', 'severity', 'state', 'owner', 'dueDate', 'campaign'], display: 'Cards' }
-const fieldOptions: Record<Draft['recordType'], string[]> = { Campaign: ['name', 'code', 'owner', 'phase', 'status', 'health', 'launchDate'], Risk: ['title', 'severity', 'state', 'owner', 'dueDate', 'campaign'], Milestone: ['title', 'type', 'status', 'owner', 'startDate', 'endDate', 'campaign'], Decision: ['title', 'priority', 'state', 'assignee', 'dueAt', 'campaign'] }
+const fieldOptions: Record<Draft['recordType'], string[]> = { Campaign: ['name', 'code', 'owner', 'phase', 'status', 'health', 'launchDate', 'riskRating'], Risk: ['title', 'severity', 'state', 'owner', 'dueDate', 'campaign'], Milestone: ['title', 'type', 'status', 'owner', 'startDate', 'endDate', 'campaign'], Decision: ['title', 'priority', 'state', 'assignee', 'dueAt', 'campaign'] }
 const operators = ['equals', 'not equals', 'one of', 'contains', 'is empty', 'is not empty', 'before', 'after', 'within the next N days']
 
 const State = ({ title, message, retry }: { title: string; message: ReactNode; retry?: () => void }) => <section className="grid min-h-80 place-items-center rounded-xl border border-border bg-card p-8 text-center"><div className="max-w-md space-y-3"><h1 className="text-xl font-extrabold">{title}</h1><p className="text-sm text-muted-foreground">{message}</p>{retry ? <button className="rounded-md border border-border px-3 py-2 text-sm font-bold" onClick={retry}>Retry</button> : null}</div></section>

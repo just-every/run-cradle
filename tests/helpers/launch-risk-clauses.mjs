@@ -118,7 +118,7 @@ async function ratings(h, reader, campaign) {
  const original = await reader.get(h.ctx, 'campaign', campaign.id)
  const listedName = 'Risk rating listing proof'
  await write('campaign.patch', { id: campaign.id, changes: { name: listedName, status: 'At risk' } }, h.expected('campaign', original))
- const definition = { name: 'Risk rating campaign lens', description: '', recordType: 'Campaign', conditions: [{ field: 'code', operator: 'equals', value: campaign.code }], sort: { field: 'name', direction: 'asc' }, fields: ['name', 'code', 'status'], display: 'Grid' }
+ const definition = { name: 'Risk rating campaign lens', description: '', recordType: 'Campaign', conditions: [{ field: 'code', operator: 'equals', value: campaign.code }], sort: { field: 'name', direction: 'asc' }, fields: ['name', 'code', 'status', 'riskRating'], display: 'Grid' }
  const lens = await write('lens.save', { definition })
  const search = async (session = h.ownerSession) => (await read(`/api/search?q=${encodeURIComponent(campaign.code)}`, session)).items.find(row => row.id === campaign.id)
  const rating = async expected => {
@@ -133,6 +133,8 @@ async function ratings(h, reader, campaign) {
   assert.equal(results.selectedDetail?.riskRating, expected, 'The lens selected detail has the same evaluated rating')
   const preview = await read('/api/lenses/preview', h.ownerSession, { method: 'POST', body: JSON.stringify(definition) })
   assert.equal(preview.items.find(row => row.id === campaign.id)?.riskRating, expected, 'Campaign lens preview has the authored maximum')
+  const lensCsv = parseCsv(new TextEncoder().encode((await read(`/api/exports/csv?source=lens&lensId=${lens.id}`)).csv))
+  assert.deepEqual(lensCsv.rows.map(row => row[definition.fields.indexOf('riskRating')]), [expected], 'A Campaign lens export with the rating field lists the authored maximum')
   assert.equal((await search())?.riskRating, expected, 'Global search has the authored maximum')
   const exported = parseCsv(new TextEncoder().encode((await read('/api/exports/csv?source=grid&status=At%20risk')).csv))
   const riskColumn = exported.headers.indexOf('Risk')

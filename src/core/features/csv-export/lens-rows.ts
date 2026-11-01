@@ -4,6 +4,7 @@ import type { ExportWorkspace } from './workspace-format'
 import { instant, money } from './workspace-format'
 import { launchOverdue, overdueMarkerField } from '../../../apps/launch/overdue-projection.server'
 import { localDate } from '../../../apps/launch/milestones.server'
+import { riskRatingSql } from '../../../apps/launch/risk-rating.server'
 
 type Row = Record<string, string | number | null>
 const labels: Record<string, string> = { code: 'Code', name: 'Name', title: 'Title', owner: 'Owner', ownerId: 'Owner', requester: 'Requester', requesterId: 'Requester', assignee: 'Assignee', assigneeId: 'Assignee', campaign: 'Campaign', campaignId: 'Campaign', campaignCode: 'Campaign code', campaignLaunchDate: 'Campaign launch date', summary: 'Status summary', statusSummary: 'Status summary', dueAt: 'Due' }
@@ -14,7 +15,8 @@ const humanize = (name: string) => name.replace(/([A-Z])/g, ' $1').replace(/^./,
 export async function lensExport(db: D1Database, lens: { name: string; description: string; recordType: string; conditions: unknown; sort: unknown; fields: string[]; display: string }, workspace: ExportWorkspace) {
  const definition = lensDefinition.parse({ name: lens.name, description: lens.description, recordType: lens.recordType, conditions: lens.conditions, sort: lens.sort, fields: lens.fields, display: lens.display })
  const query = await compileLens(db, definition, workspace.capturedAt)
- const rows = (await db.prepare(`SELECT r.*,c.code AS export_campaign_code,c.launch_date AS export_campaign_launch FROM ${query.from} WHERE ${query.where} ORDER BY ${query.order}`).bind(...query.values).all<Row>()).results
+ const rating = query.kind === 'campaign' ? `,${riskRatingSql('r.id')} AS risk_rating` : ''
+ const rows = (await db.prepare(`SELECT r.*,c.code AS export_campaign_code,c.launch_date AS export_campaign_launch${rating} FROM ${query.from} WHERE ${query.where} ORDER BY ${query.order}`).bind(...query.values).all<Row>()).results
  const people = new Map((await db.prepare('SELECT id,name FROM operators').all<{ id: string; name: string }>()).results.map(person => [person.id, person.name]))
  const custom = new Map((await db.prepare('SELECT id,name FROM launch_custom_fields').all<{ id: string; name: string }>()).results.map(field => [field.id, field.name]))
  const values = query.kind === 'campaign' ? (await db.prepare('SELECT campaign_id,field_id,value_json FROM launch_custom_values').all<{ campaign_id: string; field_id: string; value_json: string }>()).results : []
