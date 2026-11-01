@@ -13126,7 +13126,7 @@
       "executable": false
     },
     "tests/launch-installed-runtime.mjs": {
-      "sha256": "c0383b7fe8ef0955825ff57ad6dfaeda1683c573bcf2d398653214545b98f03b",
+      "sha256": "0a3035e8d5698fa39ae64aec05f3821e6e0515231fad963d1692977b0f1e8771",
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {

@@ -35,11 +35,12 @@ test('[AI-001/002/003/004/005/006 SET-002] unconfigured AI refuses enabling and 
   const brief=(await h.db.prepare("SELECT id FROM automations WHERE shipped_key='campaign-brief'").first()).id,critical=(await h.db.prepare("SELECT id FROM automations WHERE shipped_key='critical-risk'").first()).id
   const briefRuns=async()=>(await h.read(`/api/automations/${brief}/runs`)).runs
   const noBrief=async()=>{assert.deepEqual(await briefRuns(),[]);assert.deepEqual({...await h.db.prepare("SELECT (SELECT count(*) FROM admission_outbox WHERE action='launch.analysis.execute') outbox,(SELECT count(*) FROM launch_analysis_requests) requests,(SELECT count(*) FROM launch_model_calls) calls").first()},{outbox:0,requests:0,calls:0});assert.equal(calls.length,0)}
-  const c=await campaign(h,'AI')
-  // The installation omits or blanks declared values: enabling and AI requests are refused naming exactly what is missing, and nothing changes.
+  const c=await campaign(h,'AI'),csrf=(await (await h.request('/auth/csrf',{headers:{cookie:h.owner.cookie}})).json()).csrfToken
+  // The installation omits or blanks declared values: enabling (command and legacy Settings doors) and AI requests are refused naming exactly what is missing, and nothing changes.
   const refuse=async missing=>{
    const before=(await h.read('/api/v1/settings')).data,capability=before.capabilities.find(x=>x.id==='ai.provider.v1');assert.deepEqual([capability.state,capability.missing],['unconfigured',missing])
    assert.equal((await h.command('settings.update',{version:before.version,changes:{aiEnabled:true,aiDailyCeiling:9}},[],400)).error.message,'AI cannot be enabled: missing '+missing.join(', '))
+   const legacy=await h.request('/api/settings',{method:'PATCH',headers:{cookie:h.owner.cookie,'x-csrf-token':csrf,origin:h.origin,'content-type':'application/json'},body:JSON.stringify({version:before.version,aiEnabled:true})});assert.equal(legacy.status,400,await legacy.clone().text());assert.equal((await legacy.json()).error.message,'AI cannot be enabled: missing '+missing.join(', '))
    const after=(await h.read('/api/v1/settings')).data;assert.deepEqual([after.aiEnabled,after.version,after.aiDailyCeiling],[false,before.version,before.aiDailyCeiling])
    assert.equal((await h.command('launch.analysis.request',{feature:'campaign-brief',campaignId:c.id},[],400)).error.message,`AI is disabled; configure ${missing.join(' and ')} on the installation, then enable AI in Settings`)
   }
