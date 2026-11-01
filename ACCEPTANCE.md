@@ -566,8 +566,8 @@ Core · published · **partial**
 **Acceptance.**
 1. A campaign's risk rating is derived as the highest severity among its open risks, or None when it has none, and is shown wherever the campaign is listed.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public campaign-rating journey that reads the highest of multiple open severities in detail and collections, then changes/resolves that highest risk and reads the next rating or None. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser checks a Critical risk on campaign and its disappearance after resolution; internal reader helpers calculate severity rollups.
+**Evidence.** `tests/launch-write-effects.mjs` ("prior full policy covers conservative effects and campaign record clauses") through `tests/helpers/launch-risk-clauses.mjs` (ratings: native commands, retained internal severity assertions, public campaign detail and grid readbacks); `tests/ui-launch-walkthrough.mjs` ("Launch walkthrough E10–E17 at desktop and phone") through `tests/helpers/launch-portfolio-screens.mjs` (verifyCampaignRatingScreens: independently authored Low, Medium, High and Critical maxima, lowering the highest risk, resolving tied maxima to None, reopening and raising severity, public HTTP detail and grid plus rendered campaign detail, grid, card and inspector at 1440 and 390); retained single-Critical browser control
+**Gap.** The named campaign detail, Campaign Grid, phone card and inspector surfaces now have public multi-risk maximum proof. Remaining: campaign listings and lens presentations outside those named surfaces, wider phone coverage and independent whole-clause judgment. Contract conversion and generated-document synchronization remain release prerequisites; no DONE claim.
 
 #### CAMP-013 — Bulk edit
 
