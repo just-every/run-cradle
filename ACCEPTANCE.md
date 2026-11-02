@@ -1343,8 +1343,8 @@ Core · published · **partial**
 1. Initially, a campaign brief receives the campaign’s standard fields and linked deliverables, milestones, open risks and unresolved decisions; a risk readout receives the invoking lens’s result set capped at 200 risks; a lens proposal receives supported field definitions and the operator’s prompt.
 2. Comment text and custom-field values go to none of the three.
 
-**Evidence.** `tests/launch-installed-runtime.mjs`, `tests/launch-installed-event-control.mjs`
-**Gap.** Missing a cited readout journey with more than 200 eligible risks showing the exact cap and chosen lens result set. Existing fixtures show private-context exclusion and ordinary result shapes; they never measure the stated 200-risk boundary.
+**Evidence.** `tests/launch-installed-runtime.mjs` — "[AI-002] risk readout sends exactly the invoking lens's first 200 matching risks in authored order, never overflow or out-of-lens records"; `tests/launch-installed-runtime.mjs` — "[AI-001/002/003/004/005/006 SET-002] actual commands execute three immutable analyses, exclude private context, record usage and enforce one concurrent daily budget"; `tests/launch-installed-event-control.mjs`
+**Gap.** Acceptance 1's risk-readout boundary is now proved: the emitted Worker's captured provider request carries exactly the first 200 of 230 publicly authored matching risks in independently specified order with the invoking lens, a disjoint smaller lens selects only its own three, and retained input revisions equal the authored ids and versions. Still missing: fresh complete campaign-brief context (standard fields with every linked deliverable, milestone, open risk and unresolved decision) and lens-proposal context proved against independently authored expectations, and acceptance 2's comment and custom-field exclusion matrices across all three features (the existing fixtures check only an ordinary payload pattern). Also held: ct's contract conversion and generated-document synchronization; independent judgment, publication scan, guarded landing and candidate Run site.
 
 #### AI-003 — Analysis and applied actions
 
