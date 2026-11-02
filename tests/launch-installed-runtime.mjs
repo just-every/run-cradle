@@ -5,6 +5,7 @@ const {createUlid}=await import('../src/core/shared/ids.ts')
 const {LAUNCH_APP_ID:appId,launchEntities}=await import('../src/apps/launch/contracts.ts')
 const campaignEntity=launchEntities.campaign,riskEntity=launchEntities.risk
 import {setup,value,campaign,waitFor,expected} from './helpers/launch-installed.mjs'
+import {riskReadoutBoundaryJourney} from './helpers/launch-risk-readout-journey.mjs'
 
 test('[AUTO-002/003/004/011] emitted queue escalates committed Critical risk within ten seconds; replay, rollback and disable make no duplicate effects',async()=>{
  const automaticBriefs=[],h=await setup({automaticQueues:true,configuration:{AI_PROVIDER_API_KEY:'edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');automaticBriefs.push(await request.json());return Response.json({id:'automatic-brief',model:'edge-model',status:'completed',usage:{input_tokens:5,output_tokens:3},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({content:'Automatically dispatched immutable brief',proposedLens:null})}]}]})}});try{
@@ -51,4 +52,10 @@ test('[AI-001/002/003/004/005/006 SET-002] actual commands execute three immutab
   assert.equal(calls.length,4);settings=(await h.read('/api/v1/settings')).data;const usage=settings.usage.filter(u=>u.day);assert.equal(usage.reduce((n,u)=>n+u.requests,0),4);assert.equal(usage.reduce((n,u)=>n+u.inputTokens,0),52);assert.ok(usage.every(u=>u.cost===null))
   assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_analysis_requests WHERE authority_json IS NOT NULL').first()).n,0)
  }finally{await h.close()}
+})
+
+test('[AI-002] risk readout sends exactly the invoking lens\'s first 200 matching risks in authored order, never overflow or out-of-lens records',async()=>{
+ const calls=[],h=await setup({configuration:{AI_PROVIDER_API_KEY:'synthetic-cradle-1',AI_MODEL:'test-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');calls.push(await request.json())
+  return Response.json({id:'readout-'+calls.length,model:'test-model',status:'completed',usage:{input_tokens:5,output_tokens:3},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({content:'Read-only risk readout',proposedLens:null})}]}]})}})
+ try{await riskReadoutBoundaryJourney(h,calls)}finally{await h.close()}
 })
