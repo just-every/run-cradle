@@ -10,6 +10,12 @@ import { readableWire } from './result-projection.server'
 import { loadTarget } from './target-authority.server'
 export const localDate=(now:string,timezone:string)=>new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now))
 export const shiftDate=(date:string,days:number)=>new Date(Date.parse(date+'T00:00:00.000Z')+days*86400000).toISOString().slice(0,10)
+// The window the shipped readiness schedule asks in (MILE-004): workspace today through its configured lead time (AUTO-011).
+async function insideReadinessWindow(context:LaunchContext,ctx:RequestContext,date:string){
+ const settings=await context.db.prepare('SELECT timezone FROM workspace_settings LIMIT 1').first<{timezone:string}>();if(!settings)fail('Workspace timezone is required')
+ const readiness=await context.db.prepare("SELECT trigger_config_json FROM automations WHERE shipped_key='launch-readiness'").first<{trigger_config_json:string}>();if(!readiness)fail('Launch readiness is not installed')
+ const today=localDate(ctx.now,settings!.timezone);return date>=today&&date<=shiftDate(today,Number(JSON.parse(readiness!.trigger_config_json).leadDays))
+}
 export async function prepareMilestone(context:LaunchContext,ctx:RequestContext,input:CommandInput<Record<string,unknown>>,operation:string){
  if(operation==='set-predecessors'){
   const before=await loadTarget(context,ctx,input,'launch.milestone.set-predecessors','milestone',String(input.input.id)),set=emptyChange();versionGuard(set,'milestone',before,input.expected)
@@ -25,7 +31,7 @@ export async function prepareMilestone(context:LaunchContext,ctx:RequestContext,
   return plan(context,ctx,input,'launch.milestone.set-predecessors',set,{...await readableWire(context,ctx,set,'milestone',after),predecessorIds:predecessors},'milestone')
  }
  if(!['create','patch','delete'].includes(operation))fail('Unknown milestone operation')
- return prepareRecord(context,ctx,input,'milestone',operation as 'create'|'patch'|'delete',async(set,result)=>{
+ return prepareRecord(context,ctx,input,'milestone',operation as 'create'|'patch'|'delete',async(set,result,before)=>{
  const row=result as Record<string,unknown>,guards=set.guards,mutations=set.mutations
  if(operation==='patch'){
   const conflicts=await context.db.prepare('SELECT p.id,p.version,(COALESCE(p.end_date,p.start_date)>?) AS conflicting FROM milestone_dependencies d JOIN milestones p ON p.id=d.predecessor_id WHERE d.milestone_id=?').bind(String(row.startDate),String(input.input.id)).all<{id:string;version:number;conflicting:number}>()
@@ -35,8 +41,9 @@ export async function prepareMilestone(context:LaunchContext,ctx:RequestContext,
  }
  if(operation!=='create'){
   const request=await context.db.prepare("SELECT id,version,notification_id FROM launch_readiness WHERE milestone_id=? AND state='Outstanding'").bind(String(input.input.id)).first<{id:string;version:number;notification_id:string|null}>()
-  const settings=await context.db.prepare('SELECT timezone FROM workspace_settings LIMIT 1').first<{timezone:string}>();if(!settings)fail('Workspace timezone is required');const today=localDate(ctx.now,settings!.timezone)
-  if(request&&(operation==='delete'||row.status==='Complete'||String(row.startDate)<today||String(row.startDate)>shiftDate(today,5))){if(request.notification_id){const withdrawn=await integration(context,'withdrawNotification')(ctx,request.notification_id);guards.push(...withdrawn.guards);mutations.push(...withdrawn.mutations)}mutations.unshift({kind:'update',table:tables.readiness,set:{state:'Cancelled',updated_at:Date.parse(ctx.now),version:request.version+1},where:eq(tables.readiness,'id',request.id),expectedRows:1})}
+  // MILE-005: deleting or completing the milestone, or moving its date out of the readiness window, cancels the
+  // Outstanding request. Any other edit leaves it Outstanding until its owner acknowledges it (MILE-004).
+  if(request&&(operation==='delete'||row.status==='Complete'||(String(row.startDate)!==String(before!.start_date)&&!await insideReadinessWindow(context,ctx,String(row.startDate))))){if(request.notification_id){const withdrawn=await integration(context,'withdrawNotification')(ctx,request.notification_id);guards.push(...withdrawn.guards);mutations.push(...withdrawn.mutations)}mutations.unshift({kind:'update',table:tables.readiness,set:{state:'Cancelled',updated_at:Date.parse(ctx.now),version:request.version+1},where:eq(tables.readiness,'id',request.id),expectedRows:1})}
  }
  })
 }

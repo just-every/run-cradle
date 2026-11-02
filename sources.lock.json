@@ -5906,7 +5906,7 @@
       "executable": false
     },
     "src/apps/launch/milestones.server.ts": {
-      "sha256": "bc6394d0c2fb5cafad517d899000c608a9245178f1eabd253a82fcc2fbb4cafb",
+      "sha256": "03caa2bec64ecbe1be2a8164d32d9ed90513d1a45b0bd5810b636687c71f9a6b",
       "executable": false
     },
     "src/apps/launch/model-provider.server.ts": {
@@ -5946,7 +5946,7 @@
       "executable": false
     },
     "src/apps/launch/records.server.ts": {
-      "sha256": "40f3a4c8226d14172dec91f1dd665c9e9f1a38837e1b127a09e8c027f748bf38",
+      "sha256": "00251d71b6a700f683aada534529885b8b043257a468f9800133cab7fe10f439",
       "executable": false
     },
     "src/apps/launch/registry.server.ts": {
@@ -13142,7 +13142,7 @@
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
-      "sha256": "83626af1d6e478712d982208e73b349b858a03f978a0173e38d3ff6593bdbd99",
+      "sha256": "b58266e27e092e6a83f582da552ec976ffce0275d2037703a9576a9a3ecfe583",
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {

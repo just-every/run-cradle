@@ -11,9 +11,10 @@ const {createUlid}=await fromRepo('src/core/shared/ids.ts')
 const {completeFirstRun}=await fromRepo('tests/helpers/complete-first-run.mjs')
 const {launchFieldIds}=await fromRepo('src/apps/launch/descriptors.server.ts')
 const {LAUNCH_APP_ID,launchEntities}=await fromRepo('src/apps/launch/contracts.ts')
-// The held-out Monday is always ahead of the wall clock, so its scheduled ticks are never stale.
+// The held-out Monday is at least a week ahead of the wall clock on every weekday: its scheduled ticks are never
+// stale, and commands always edit its milestone while that date lies beyond the default five-day readiness window.
 const addDays=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000).toISOString().slice(0,10)
-const monday=addDays(new Date().toISOString().slice(0,10),7-(new Date().getUTCDay()+6)%7)
+const monday=addDays(new Date().toISOString().slice(0,10),7+(8-new Date().getUTCDay())%7)
 assert.equal(new Date(monday+'T00:00:00Z').getUTCDay(),1)
 
 await test('emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
@@ -128,6 +129,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const currentMilestone=(await read(milestoneRoute,other)).record
    await sendCommand('launch.milestone.patch',{commandId:createUlid(),expected:expected('milestone',currentMilestone),input:{id:milestone.id,changes:{title:'Scheduled launch reviewed by another operator'}}},other)
    assert.equal((await read(milestoneRoute,other)).record.fields[launchFieldIds.milestone.title].value,'Scheduled launch reviewed by another operator')
+   assert.deepEqual((await read(requestRoute)).record,outstanding,'MILE-005 an edit that keeps the milestone date leaves its request Outstanding')
    assert.deepEqual(await notices(other),[],'Readiness notification is addressed only to its owner')
    const acknowledgment={commandId:createUlid(),expected:expected('readiness',outstanding),input:{requestId:outstanding.id}}
    const refused=await sendCommand('launch.readiness.acknowledge',{...acknowledgment,commandId:createUlid()},other,400)
