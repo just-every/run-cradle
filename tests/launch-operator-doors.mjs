@@ -95,6 +95,12 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
   assert.equal(read.status, 200, JSON.stringify(read.body))
   return read.body
  }
+ const snapshot = async () => {
+  const tables = ['campaigns', 'campaign_tags', 'launch_custom_values', 'deliverables', 'milestones', 'activity_entries', 'portability_previews', 'portability_preview_rows', 'evidence_files', 'command_admissions', 'admission_assertions', 'admission_provenance_segments', 'admission_audit', 'admission_events', 'admission_outbox', 'record_automation_context', 'record_automation_events', 'launch_search_rows', 'launch_search', 'execution_runs', 'execution_attempts']
+  const stored = {}
+  for (const table of tables) stored[table] = (await h.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results
+  return { ...stored, imports: (await call('/api/v1/launch/imports')).body.data.items, providerCalls: warehouseEdge.calls.length }
+ }
  const stored = []
  for (const [index, market] of ['North', 'South'].entries()) {
   const created = await command('launch.campaign.create', { fields: {
@@ -137,6 +143,73 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
  // Built-in phase and status selects refuse an option they do not have in the same way.
  await refusedImport('unknown-phase.csv', `Code,Phase,Status\r\n${codes[0]},Launched,\r\n${codes[1]},,Green\r\n`,
   { Code: 'code', Phase: 'phase', Status: 'status' }, [2, 3].map(row => ({ row, message: 'Invalid campaign dates, phase or status' })))
+
+ // A database failure on a later mutation rolls back an otherwise valid multirow import. Test-only triggers abort the
+ // second campaign update only after the first campaign, tags and custom value changed inside this transaction,
+ // then the activity write and committed-preview marker after all row mutations.
+ const faultCsv = `Code,Name,Owner,Start,Launch,Health,Tags,Market\r\n${codes[0]},Fault update 1,,,,,Fault tag 1,South\r\n${codes[1]},Fault update 2,,,,,Fault tag 2,North\r\nIMP-FAULT,Fault created,${owner.email},2026-11-01,2026-12-01,80,Fault tag 3,South\r\n`
+ const faultFileId = await upload('fault.csv', faultCsv)
+ const faultPreview = (await preview('campaign', faultFileId, { ...mapping, Tags: 'tags', Market: `custom:${fieldId}` })).body.data.value
+ assert.deepEqual([faultPreview.state, faultPreview.creates, faultPreview.updates, faultPreview.unchanged, faultPreview.errors], ['valid', 1, 2, 0, []])
+ const faultBody = JSON.stringify({ commandId: createUlid(), expected: [], input: { token: faultPreview.token } })
+ const commitFault = () => call(`/api/v1/launch/imports/${faultPreview.id}/commit`, { method: 'POST', body: faultBody })
+ const beforeFault = await snapshot()
+ const unrelated = await readCampaign(vertex.id)
+ const affectedBefore = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
+ const originalFile = async () => {
+  const response = await h.request(h.ownerSession, `/api/v1/files/${faultFileId}/content`)
+  assert.equal(response.status, 200)
+  return Buffer.from(await response.arrayBuffer())
+ }
+ assert.deepEqual(await originalFile(), Buffer.from(faultCsv))
+ for (const [name, trigger] of [
+  ['later_row', `BEFORE UPDATE OF name ON campaigns
+   WHEN NEW.id='${stored[1].campaign.id}' AND NEW.name='Fault update 2'
+   AND EXISTS(SELECT 1 FROM campaigns WHERE id='${stored[0].campaign.id}' AND name='Fault update 1' AND version=${stored[0].campaign.version + 1})
+   AND EXISTS(SELECT 1 FROM campaign_tags WHERE campaign_id='${stored[0].campaign.id}' AND tag='Fault tag 1')
+   AND EXISTS(SELECT 1 FROM launch_custom_values WHERE campaign_id='${stored[0].campaign.id}' AND field_id='${fieldId}' AND value_json='"South"')`],
+  ['activity', "BEFORE INSERT ON activity_entries WHEN NEW.type='import.committed'"],
+  ['marker', 'BEFORE UPDATE OF committed_command_id ON portability_previews WHEN NEW.committed_command_id IS NOT NULL'],
+ ]) {
+  await h.db.prepare(`CREATE TRIGGER test_import_fault_${name} ${trigger} BEGIN SELECT RAISE(ABORT, 'synthetic-cradle-late-fault'); END`).run()
+  try {
+   const failed = await commitFault()
+   assert.equal(failed.status, 500, `The induced ${name} failure surfaces as a server error: ${JSON.stringify(failed.body)}`)
+   assert.equal(failed.body.error.code, 'internal', 'The failure is not a validation, expiry or staleness refusal')
+  } finally { await h.db.prepare(`DROP TRIGGER test_import_fault_${name}`).run() }
+  assert.deepEqual(await snapshot(), beforeFault, `A failed ${name} write leaves records, values, versions, activity, preview marker, audit, events, outbox, effects and the uploaded file unchanged`)
+  for (const row of affectedBefore) assert.deepEqual(await readCampaign(row.campaign.id), row, 'Every affected public campaign, version, value and activity is unchanged')
+  assert.deepEqual(await readCampaign(vertex.id), unrelated, 'An unrelated campaign is untouched')
+  assert.deepEqual(await originalFile(), Buffer.from(faultCsv), 'Each failed transaction preserves the original uploaded bytes')
+  assert.equal(await h.db.prepare("SELECT COUNT(*) AS n FROM campaigns WHERE code='IMP-FAULT'").first('n'), 0)
+  assert.equal((await call(`/api/v1/launch/imports/${faultPreview.id}/rows`)).body.data.state, 'valid', 'The reviewed preview stays reviewable')
+ }
+ // With the fault removed the same reviewed import commits once and replays without a second effect.
+ const faultCommitted = await commitFault()
+ assert.equal(faultCommitted.status, 200, JSON.stringify(faultCommitted.body))
+ assert.deepEqual(faultCommitted.body.data.value, { id: faultPreview.id, rows: 3 })
+ const afterFaultCommit = await snapshot()
+ const faultReplay = await commitFault()
+ assert.equal(faultReplay.status, 200, JSON.stringify(faultReplay.body))
+ assert.deepEqual(faultReplay.body.data.value, faultCommitted.body.data.value)
+ assert.deepEqual(await snapshot(), afterFaultCommit, 'Replay adds no record mutation, version, activity, admission, event or outbox effect')
+ const faultCreated = await h.db.prepare("SELECT id,name FROM campaigns WHERE code='IMP-FAULT'").first()
+ assert.equal(faultCreated.name, 'Fault created')
+ for (const [index, row] of affectedBefore.entries()) {
+  const after = await readCampaign(row.campaign.id)
+  assert.equal(after.campaign.name, `Fault update ${index + 1}`)
+  assert.equal(after.campaign.version, row.campaign.version + 1, 'Only the successful control increments the version')
+  assert.deepEqual(after.campaign.tags, [`Fault tag ${index + 1}`])
+  assert.equal(after.customFields.find(field => field.id === fieldId).value, ['South', 'North'][index])
+ }
+ assert.equal(await h.db.prepare('SELECT committed_command_id FROM portability_previews WHERE id=?').bind(faultPreview.id).first('committed_command_id'), JSON.parse(faultBody).commandId)
+ assert.deepEqual(await readCampaign(vertex.id), unrelated, 'Successful control also preserves the unrelated campaign')
+ for (const id of [...stored.map(row => row.campaign.id), faultCreated.id])
+  assert.equal(await h.db.prepare("SELECT COUNT(*) AS n FROM activity_entries WHERE campaign_id=? AND type='import.committed'").bind(id).first('n'), 1, 'Each affected campaign gets one activity entry for this import, none from the replay')
+ assert.deepEqual(await originalFile(), Buffer.from(faultCsv), 'The original upload survives the failed attempts byte for byte')
+ const committedFile = await h.request(h.ownerSession, `/api/v1/launch/imports/${faultPreview.id}/file`)
+ assert.equal(committedFile.status, 200)
+ assert.deepEqual(Buffer.from(await committedFile.arrayBuffer()), Buffer.from(faultCsv))
 
  // Both empty and whitespace-only cells preserve populated values during real updates.
  const retained = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
@@ -192,12 +265,6 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
   assert.equal(saved.name, control.name, 'An equivalent valid import commits just before expiry')
   assert.equal(await h.db.prepare("SELECT COUNT(*) AS n FROM activity_entries WHERE campaign_id=? AND type='import.committed'").bind(saved.id).first('n'), 1)
 
-  const snapshot = async () => {
-   const tables = ['campaigns', 'deliverables', 'milestones', 'activity_entries', 'portability_previews', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox', 'execution_runs', 'execution_attempts']
-   const stored = {}
-   for (const table of tables) stored[table] = (await h.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results
-   return { ...stored, imports: (await call('/api/v1/launch/imports')).body.data.items, providerCalls: warehouseEdge.calls.length }
-  }
   const beforeExpiryRefusals = await snapshot()
   for (const [candidate, now] of [[exact, expiresAt], [after, expiresAt + 1]]) {
    h.setNow(now)
