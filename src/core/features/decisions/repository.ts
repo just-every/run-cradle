@@ -9,6 +9,7 @@ type DecisionRow = {
   campaignId: string
   campaignName: string
   dueAt: number
+  createdAt: number
   id: string
   impact: string
   priority: string
@@ -30,7 +31,7 @@ type DecisionRow = {
 }
 
 const select = `
-  SELECT d.id, d.title, d.priority, d.due_at AS dueAt, d.recommendation, d.impact, d.state, d.version, d.risk_id AS riskId, d.rationale,
+  SELECT d.id, d.title, d.priority, d.due_at AS dueAt, d.created_at AS createdAt, d.recommendation, d.impact, d.state, d.version, d.risk_id AS riskId, d.rationale,
     risk.title AS riskTitle, (SELECT next_value FROM activity_entries WHERE subject_id=d.id AND type='decision.created' AND field_name='recommendation' ORDER BY created_at ASC,id ASC LIMIT 1) AS escalationReason, EXISTS(SELECT 1 FROM admission_audit audit JOIN command_admissions admission ON admission.command_id=audit.command_id WHERE json_extract(audit.subject_json,'$.recordId')=d.id AND audit.action='decision.created' AND admission.action IN ('launch.risk.escalate','launch.automation.execute')) AS escalationOrigin, EXISTS(SELECT 1 FROM activity_entries WHERE subject_id=d.id AND type='decision.updated' AND field_name='recommendation') AS recommendationEdited,
     c.id AS campaignId, c.code AS campaignCode, c.name AS campaignName,
     requester.id AS requesterId, requester.name AS requesterName, assignee.id AS assigneeId, assignee.name AS assigneeName,
@@ -47,6 +48,7 @@ const map = (row: DecisionRow) => ({
   assignee: row.assigneeId && row.assigneeName ? { id: row.assigneeId, initials: toInitials(row.assigneeName), name: row.assigneeName } : null,
   campaign: { code: row.campaignCode, id: row.campaignId, name: row.campaignName },
   dueAt: iso(row.dueAt),
+  createdAt: iso(row.createdAt),
   id: row.id,
   impact: row.impact,
   priority: row.priority,
@@ -64,10 +66,10 @@ const map = (row: DecisionRow) => ({
 })
 
 export const createDecisionRepository = (database: Database) => ({
-  async list() {
+  async list(now = Date.now()) {
     const rows = await queryAll<DecisionRow>(database, `${select}
       WHERE c.archived_at IS NULL AND d.state IN ('Awaiting approval', 'In review')
-      ORDER BY d.due_at < ? DESC, CASE d.priority WHEN 'Critical' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END, d.due_at ASC, d.id ASC`, [Date.now()])
+      ORDER BY d.due_at < ? DESC, CASE d.priority WHEN 'Critical' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END, d.due_at ASC, d.created_at ASC, d.id ASC`, [now])
     return rows.map(map)
   },
 

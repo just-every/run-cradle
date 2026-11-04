@@ -1,7 +1,24 @@
 import assert from 'node:assert/strict'
+import { decisionQueueFixture, verifyDecisionQueueHttp } from './launch-decision-queue.mjs'
 import { browserCookies } from './session-cookies.mjs'
 
 export async function verifyDecisionLensScreens({h,page,command,capture}) {
+ const queue = await decisionQueueFixture(h, String(page.viewportSize().width))
+ let queueProof
+ try {
+  await page.setExtraHTTPHeaders({ 'x-cradle-test-now': String(queue.now) })
+  queueProof = await verifyDecisionQueueHttp(h, queue)
+  await page.goto(h.origin + '/app/decisions')
+  await page.locator('#decision-queue-title').waitFor()
+  const links = page.getByRole('list', { name: 'Unresolved decisions', exact: true }).getByRole('link')
+  const domOrder = await links.evaluateAll(items => items.map(item => item.getAttribute('href').split('/').at(-1)))
+  assert.deepEqual(domOrder, queue.order, 'Visible queue preserves the authored membership and order without sorting the DOM')
+  queueProof.domOrder = domOrder
+  await capture('clause-decision-populated-queue')
+ } finally {
+  await page.setExtraHTTPHeaders({})
+  await queue.cleanup()
+ }
  const entities={campaign:'00000000000000000000000701',decision:'00000000000000000000000705',lens:'00000000000000000000000706'}
  const expected=(kind,row)=>[{ref:{appId:'00000000000000000000000700',entityId:entities[kind],recordId:row.id},version:row.version}]
  const create=async(action,input,revisions=[]) => (await command(action,input,revisions)).data.value
@@ -67,4 +84,5 @@ export async function verifyDecisionLensScreens({h,page,command,capture}) {
  } finally {await sharedContext.close()}
  await create('lens.delete',{id},expected('lens',lens))
  await create('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},expected('campaign',campaign))
+ return { width, ...queueProof }
 }

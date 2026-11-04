@@ -1,5 +1,6 @@
 import {recordComment,recordThread,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
+import { decisionQueueFixture, verifyDecisionQueueHttp } from './launch-decision-queue.mjs'
 import { verifyPublicDecisionApproval } from './launch-decision-approval.mjs'
 
 const productTables = ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'evidence_comments', 'campaign_tags', 'launch_custom_values', 'notifications', 'channel_events', 'channel_notifications', 'channel_deliveries', 'activity_entries', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
@@ -244,6 +245,8 @@ async function assignmentsAndComments(h, reader, campaign) {
 }
 
 export async function verifyDecisionClauses(h) {
+ const queue = await decisionQueueFixture(h, 'NATIVE')
+ try { await verifyDecisionQueueHttp(h, queue) } finally { await queue.cleanup() }
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const campaign = await h.campaign('DECISION-CLAUSES'), other = await h.campaign('DECISION-OTHER')
  await records(h, reader, campaign, other)

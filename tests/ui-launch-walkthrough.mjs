@@ -211,7 +211,8 @@ try {
   await verifyWorkspaceScreens({h,page,command,capture})
   receipt.timelineOrdering ??= []
   receipt.timelineOrdering.push(await verifyMilestoneScreens({h,page,command,capture}))
-  await verifyDecisionLensScreens({h,page,command,capture})
+  receipt.decisionQueueOrdering ??= []
+  receipt.decisionQueueOrdering.push(await verifyDecisionLensScreens({h,page,command,capture}))
   await verifyCommentScreens({h,page,command,capture})
   await verifyCurrentLensScreens({h,page,command,capture})
   receipt.expectedConflictConsoleErrors ??= []
