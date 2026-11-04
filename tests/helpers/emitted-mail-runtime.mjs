@@ -8,7 +8,7 @@ export async function emittedMailRuntime(directory,port,bindings,networkEdge,opt
   runtime=await emittedRuntime(directory,port,bindings,request=>mail.fetch(request),options)
   const listener=await runtime.ready
   port=Number(listener.port)
-  mail=await createFixtureMail(port,networkEdge)
+  mail=await createFixtureMail(port,networkEdge,options?.mailResponse)
   bindings={...bindings,APP_ORIGIN:listener.origin,...mail.bindings}
   await runtime.setOptions(await emittedOptions(directory,port,bindings,request=>mail.fetch(request),options))
   return {runtime,mail,origin:listener.origin,port,bindings}

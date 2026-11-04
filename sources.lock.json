@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4b3ba14390150745b9a182cf59171fb5ccedd9f04195aa98e764c5bcfc12a0ad",
+      "sha256": "1131641dfad9fece8ebd1aab0caf96bd547793bda21fce7ebf79f0c782d46456",
       "executable": false
     },
     "DEMO.md": {
@@ -12170,7 +12170,7 @@
       "executable": false
     },
     "tests/helpers/emitted-mail-runtime.mjs": {
-      "sha256": "d6e9f8b103aaf46e550b989b00c228df20fb2e5a7b968ae3a612298d2e2319e8",
+      "sha256": "60dcbf87374998311580f09cbb62f39bee53da59162f3738dcd40d30009116f7",
       "executable": false
     },
     "tests/helpers/emitted-runtime.mjs": {
@@ -12359,6 +12359,10 @@
     },
     "tests/helpers/launch-decision-lens-screens.mjs": {
       "sha256": "a9b7f77c7ab0419223ad806fddfca80719ed573de546755fdc15edb9c5b1d6b5",
+      "executable": false
+    },
+    "tests/helpers/launch-digest-journey.mjs": {
+      "sha256": "af29fa50a88398b8014dae4b94bd24c736722f64b2f7e5d933f47e4d81a0e5d7",
       "executable": false
     },
     "tests/helpers/launch-disabled-ai-console.mjs": {
@@ -12770,7 +12774,7 @@
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
-      "sha256": "f4889d888bf0acbf324f18d7f6a2532e0561987ec7e314772905779b799c4452",
+      "sha256": "ad731a2727e6af76db1233ae44508001c816c5f6c4acbffb5ced26c2e8fab068",
       "executable": false
     },
     "tests/helpers/records-import-crash-child.mjs": {
@@ -13146,7 +13150,7 @@
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
-      "sha256": "b58266e27e092e6a83f582da552ec976ffce0275d2037703a9576a9a3ecfe583",
+      "sha256": "d095110ec4e63c07a0c1c16235b570037f94772ee6969d13128763cebf70a421",
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
