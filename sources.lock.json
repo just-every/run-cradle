@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4b3ba14390150745b9a182cf59171fb5ccedd9f04195aa98e764c5bcfc12a0ad",
+      "sha256": "c22774a5ad9933aa0ae87634a81df18af7b3b08e1ee68c130da3e26eb1838472",
       "executable": false
     },
     "DEMO.md": {
@@ -7250,7 +7250,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/home-page.tsx": {
-      "sha256": "13154692e1b05ea10beea193c45ce52b57b819860bf5bd1ab210deea1c5aec6d",
+      "sha256": "f0460e418f50f2cda6a84fd06354876acba198059b86ce9fb935170b4b27aa1c",
       "executable": false
     },
     "src/core/features/portfolio/ui/index.tsx": {
@@ -7262,7 +7262,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-format.ts": {
-      "sha256": "0a3667cd07c1b69661f48bf04080f4f831d0ca5f27f0f5b92261714541730015",
+      "sha256": "a1aa94bd531d4cb16cd715719cc6930a9ae5d688b6b3a5a25f9e83186a0eae0d",
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-overview-page.tsx": {
@@ -12682,7 +12682,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-review.mjs": {
-      "sha256": "1a16e5e38c8b6e293acd43594fda8960bc051ce2eadb8ee8e42f3cd9bf436661",
+      "sha256": "5343d23655e90abf06a863900316d0234d2d99afe12a66288178577dd1c4ccfb",
       "executable": false
     },
     "tests/helpers/records-browser-runtime.mjs": {
@@ -13514,7 +13514,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "5da1343572105da3aeed27bd8faaac42bc7a30777ce9e02b1d26ab7d70e51734",
+      "sha256": "92ffccab4cc3a882413cf45092c30c56b0f8098793e1f55238b9c4794da1f7c2",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

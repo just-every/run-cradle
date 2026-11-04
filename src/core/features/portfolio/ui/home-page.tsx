@@ -8,7 +8,7 @@ import { ResourceBoundary } from '../../../app/ui/operator'
 import { useAppStudioReady } from '../../../app/ui/operator/operator-shell'
 import { activityActions, activityFieldLabel } from './activity-presentation'
 import { decodePortfolio, useApiResource } from './portfolio-api'
-import { formatDateTime } from './portfolio-format'
+import { formatAbsoluteTime, formatDateTime } from './portfolio-format'
 import { PortfolioPageShell, useOperatorSession } from './portfolio-page-shell'
 import './home-page.css'
 
@@ -53,7 +53,7 @@ export const HomePage = () => {
               <Link className="cr-home-row" to={base.entryUrl} aria-label={base.name} aria-describedby={`base-summary-${base.id}`}>
                 <strong>{base.name}</strong>
                 <span id={`base-summary-${base.id}`} className="cr-home-meta">{base.id === LAUNCH_APP_ID && launch ? <>{quantity(launch.metrics.liveCampaigns, 'live campaign')} · <span className={launch.metrics.needsAttention ? 'cr-home-attention' : undefined}>{launch.metrics.needsAttention} need attention</span></> :
-                  <>{quantity(base.tableCount, 'table')} · {quantity(base.recordCount, 'record')}{base.latestChange ? ` · changed ${changedAge(base.latestChange.occurredAt, evaluatedAt)}` : ''}</>}
+                  <>{quantity(base.tableCount, 'table')} · {quantity(base.recordCount, 'record')}{base.latestChange && <> · changed <time role="timer" dateTime={base.latestChange.occurredAt} aria-label={formatAbsoluteTime(base.latestChange.occurredAt, workspace.timezone)}>{changedAge(base.latestChange.occurredAt, evaluatedAt)}</time></>}</>}
                 </span>
               </Link>
             </li>)}</ul> :

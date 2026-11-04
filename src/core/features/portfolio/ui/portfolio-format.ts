@@ -14,7 +14,7 @@ export const formatDate = (
   return new Intl.DateTimeFormat("en-US", { ...options, timeZone: "UTC" }).format(parsed);
 };
 
-export const formatDateTime = (value: string, timeZone: string) => {
+const formatInstant = (value: string, timeZone: string, options: Intl.DateTimeFormatOptions = {}) => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.valueOf())) return value;
   return new Intl.DateTimeFormat("en-US", {
@@ -24,8 +24,14 @@ export const formatDateTime = (value: string, timeZone: string) => {
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    ...options,
   }).format(parsed);
 };
+
+export const formatDateTime = (value: string, timeZone: string) => formatInstant(value, timeZone);
+
+export const formatAbsoluteTime = (value: string, timeZone: string) =>
+  formatInstant(value, timeZone, { second: "2-digit", timeZoneName: "long" });
 
 export const formatMoney = formatWorkspaceMoney;
 
