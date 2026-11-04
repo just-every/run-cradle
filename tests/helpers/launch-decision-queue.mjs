@@ -87,19 +87,30 @@ export async function verifyDecisionQueueHttp(h, fixture) {
   'Public queue contains both unresolved states, excludes every terminal state and archived campaign, and preserves the authored order')
  assert.deepEqual(queue.decisions, queue.items)
  assert.equal(queue.items.find(row => row.id === fixture.rows['future High retained older'].id).createdAt, '2020-01-01T00:00:00.000Z')
- const seen = [], cursors = new Set()
- let cursor = null
- do {
-  const page = await read('/api/decisions?limit=2' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''))
-  assert.ok(page.items.length <= 2)
-  assert.equal(page.shown, page.items.length)
-  assert.equal(page.total, queue.total)
-  assert.deepEqual(page.decisions, page.items)
-  seen.push(...page.items.map(row => row.id))
-  cursor = page.cursor
-  if (cursor) { assert.equal(cursors.has(cursor), false, 'Cursor must advance'); cursors.add(cursor) }
- } while (cursor)
- assert.deepEqual(seen, queue.items.map(row => row.id), 'Small cursor pages preserve the complete public sequence with no skips or repeats')
- assert.deepEqual(seen.filter(id => ids.has(id)), fixture.order, 'Small pages match the independently authored identities without sorting responses')
- return { expectedOrder: fixture.order, httpOrder: queue.items.filter(row => ids.has(row.id)).map(row => row.id), pages: cursors.size + 1 }
+ for (const name of ['excluded Approved', 'excluded Rejected', 'excluded Cancelled', 'archived Awaiting approval', 'archived In review']) {
+  const expected = fixture.rows[name]
+  const detail = (await read('/api/decisions/' + expected.id)).decision
+  assert.equal(detail.state, expected.state, 'Excluded decisions retain their recorded state and remain individually readable')
+ }
+ const pages = []
+ // A one-item page crosses the reversed identity pair itself; two-item pages
+ // also exercise the due-time and creation-time boundaries in larger slices.
+ for (const limit of [1, 2]) {
+  const seen = [], cursors = new Set()
+  let cursor = null
+  do {
+   const page = await read('/api/decisions?limit=' + limit + (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''))
+   assert.ok(page.items.length <= limit)
+   assert.equal(page.shown, page.items.length)
+   assert.equal(page.total, queue.total)
+   assert.deepEqual(page.decisions, page.items)
+   seen.push(...page.items.map(row => row.id))
+   cursor = page.cursor
+   if (cursor) { assert.equal(cursors.has(cursor), false, 'Cursor must advance'); cursors.add(cursor) }
+  } while (cursor)
+  assert.deepEqual(seen, queue.items.map(row => row.id), 'Small cursor pages preserve the complete public sequence with no skips or repeats')
+  assert.deepEqual(seen.filter(id => ids.has(id)), fixture.order, 'Small pages match the independently authored identities without sorting responses')
+  pages.push({ limit, count: cursors.size + 1 })
+ }
+ return { expectedOrder: fixture.order, httpOrder: queue.items.filter(row => ids.has(row.id)).map(row => row.id), pages }
 }

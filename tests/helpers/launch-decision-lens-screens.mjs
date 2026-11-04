@@ -6,7 +6,6 @@ export async function verifyDecisionLensScreens({h,page,command,capture}) {
  const queue = await decisionQueueFixture(h, String(page.viewportSize().width))
  let queueProof
  try {
-  await page.setExtraHTTPHeaders({ 'x-cradle-test-now': String(queue.now) })
   queueProof = await verifyDecisionQueueHttp(h, queue)
   await page.goto(h.origin + '/app/decisions')
   await page.locator('#decision-queue-title').waitFor()
@@ -16,7 +15,6 @@ export async function verifyDecisionLensScreens({h,page,command,capture}) {
   queueProof.domOrder = domOrder
   await capture('clause-decision-populated-queue')
  } finally {
-  await page.setExtraHTTPHeaders({})
   await queue.cleanup()
  }
  const entities={campaign:'00000000000000000000000701',decision:'00000000000000000000000705',lens:'00000000000000000000000706'}

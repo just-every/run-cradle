@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5ce1b9f4f97d40b710118f3b0f49e6bf4636cb305ea8f9517357bb2ca6e867e8",
+      "sha256": "c68b844d11b8f4e7aee08e1554b54a4310aa60db8154a7d263f512a5c487f77a",
       "executable": false
     },
     "DEMO.md": {
@@ -12358,11 +12358,11 @@
       "executable": false
     },
     "tests/helpers/launch-decision-lens-screens.mjs": {
-      "sha256": "824cac8db91f3d00b40bcf7444e3751982720ba40fc0c2a86ad3b8ee87a09bcf",
+      "sha256": "369b66bf67a1c84282a016191adb455b4b6f2f93659ce5fbae4beb9d6177dd93",
       "executable": false
     },
     "tests/helpers/launch-decision-queue.mjs": {
-      "sha256": "1a6c7492e79984bd7152f2e139ceade2ca6135464958af51cff22144c8296bad",
+      "sha256": "fdb107fe64d66f4658b50dba3bb378d618a7075090a2207bbffbacd3a844405c",
       "executable": false
     },
     "tests/helpers/launch-disabled-ai-console.mjs": {
