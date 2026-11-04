@@ -608,8 +608,8 @@ Core · published · **partial**
 1. An operator can create, edit, and delete a deliverable.
 2. It belongs to exactly one campaign, requires a title and an owner, has an optional due date, and has a state of Open or Complete that starts Open.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public deliverable CRUD journey that deletes a populated deliverable and tries an unsafe deletion without effects, then reads the missing record and updated campaign count. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Browser creates a deliverable and public concurrency edits its title; internal helpers additionally edit/delete and validate.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses", through `tests/helpers/launch-campaign-clauses.mjs` — "verifyCampaignClauses": native HTTP create and edit, current-policy deletion refusal with a freshly read version and unchanged stored state, authorized deletion, public record absence, campaign detail removal, exact count decrement and preserved sibling and unrelated work. Retained browser creation: `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone".
+**Gap.** Missing a public deliverable CRUD journey that deletes a populated deliverable and tries an unsafe deletion without effects, then reads the missing record and updated campaign count. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Browser creates a deliverable and public concurrency edits its title; internal helpers additionally edit/delete and validate. Supplemental public deletion and current-authority refusal assertions are now cited in Evidence; independent whole-clause judgment remains outstanding. Status remains partial.
 
 #### DELIV-002 — Completion
 
