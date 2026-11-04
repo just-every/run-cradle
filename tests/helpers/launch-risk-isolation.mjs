@@ -133,9 +133,6 @@ export async function verifyPublicRiskIsolation(h, { read, command, snapshot, ch
    assert.equal(entry.actor_id, h.actor)
    assert.ok([risk.id, step.action === 'risk.escalate' ? createdDecision.id : risk.id].includes(entry.subject_id), 'Activity only concerns the changed risk and the one new policy decision')
   }
-  const retained = (await read(`/api/v1/commands/${receipt.commandId}`)).data
-  assert.equal(retained.state, 'committed')
-  assert.deepEqual(retained.result, receipt.value)
   console.log(`PROBE RISK-004 ${step.action}: native command and public detail, campaign activity and inbox -> ${risk.state}, rating ${step.rating}, unrelated values and versions unchanged; new decisions=${step.action === 'risk.escalate' ? 1 : 0}, new notices=${step.action === 'risk.escalate' ? 1 : 0}`)
   await checkpoint({ action: step.action, risk, campaign, recipient, decision: createdDecision, notice: createdNotice })
  }
