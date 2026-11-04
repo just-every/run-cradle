@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4b3ba14390150745b9a182cf59171fb5ccedd9f04195aa98e764c5bcfc12a0ad",
+      "sha256": "074f3924e1f926c6c73ce63e5196835f95967756742b4737e20b378213590376",
       "executable": false
     },
     "DEMO.md": {
@@ -12174,7 +12174,7 @@
       "executable": false
     },
     "tests/helpers/emitted-runtime.mjs": {
-      "sha256": "b3be53ffc3a617ccc169a9a33d639894c53fd9e9664cbb5f1002f58ce9ecccf5",
+      "sha256": "2afb48f3b5f2005b507161624efc1bdb63bf5f94bb70fce0445e898baa63b15b",
       "executable": false
     },
     "tests/helpers/erasure-attachments.mjs": {
@@ -12415,6 +12415,14 @@
     },
     "tests/helpers/launch-portfolio-screens.mjs": {
       "sha256": "df93d99567527a168902c6565a76120b896fab10554d2b333bbfe62b8243a57d",
+      "executable": false
+    },
+    "tests/helpers/launch-readiness-rescheduling.mjs": {
+      "sha256": "3955309fb23a0deff7bee71d4b7977bc15830828b5698594d33e3dbd280433bb",
+      "executable": false
+    },
+    "tests/helpers/launch-readiness-screens.mjs": {
+      "sha256": "8cd6ce3af9c65f2d9a576b65d9eec94171453f053fb59c54b8a4944c0f7601b6",
       "executable": false
     },
     "tests/helpers/launch-risk-clauses.mjs": {
@@ -12770,7 +12778,7 @@
       "executable": false
     },
     "tests/helpers/records-import-browser-runtime.mjs": {
-      "sha256": "f4889d888bf0acbf324f18d7f6a2532e0561987ec7e314772905779b799c4452",
+      "sha256": "1d1d5f78acd09ef82fd982787113d9c3eea420fbbd88760f797c02098898274d",
       "executable": false
     },
     "tests/helpers/records-import-crash-child.mjs": {
@@ -13146,7 +13154,7 @@
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
-      "sha256": "b58266e27e092e6a83f582da552ec976ffce0275d2037703a9576a9a3ecfe583",
+      "sha256": "a81d1b90bb48f5aadb846029e8fb607987f0713c2014dc8919f0524a574c326d",
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
