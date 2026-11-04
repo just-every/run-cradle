@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4e7fde70f5aae0155c3cc544ef6a3773e593cfd352924fd9bc803dd7affa9f25",
+      "sha256": "370ae8842c730b5c42c5b045c4afe7410c25be7a3ac247089bca2d6ff21c3d45",
       "executable": false
     },
     "DEMO.md": {
@@ -12302,11 +12302,11 @@
       "executable": false
     },
     "tests/helpers/launch-automation-monitor-screens.mjs": {
-      "sha256": "59467ad030c13730f948c7a7cb9ad86ca1582788071a64811a5cec91dce613d8",
+      "sha256": "7c5790eca71be7c6b90fd74aac155c449c057f89fcf757f5395e0cafdc3da19f",
       "executable": false
     },
     "tests/helpers/launch-base-authority-runtime.mjs": {
-      "sha256": "88c0b3ffb57ab8152494d496be74930cd1ba2f463398cfa943ff4e3d8ae7ac0a",
+      "sha256": "96e25b708a30f37f01905bbc00b7e3a38d5d12566945032b67eaf5027ed7aee4",
       "executable": false
     },
     "tests/helpers/launch-campaign-clauses.mjs": {
@@ -12422,7 +12422,7 @@
       "executable": false
     },
     "tests/helpers/launch-run-history.mjs": {
-      "sha256": "26aa586b586fdf4a99d291f66b304e4e8c3f234a6c0f50ca30d80bf4a7b580ec",
+      "sha256": "a3b8d71606a49d4321eee94cbd112c28f698cccd10ed627bf7d9c1b137df905e",
       "executable": false
     },
     "tests/helpers/launch-service-owner-context.mjs": {
@@ -12442,7 +12442,7 @@
       "executable": false
     },
     "tests/helpers/launch-walkthrough-runtime.mjs": {
-      "sha256": "d6d1b62e5df510531d3b40f3de5f672c7b5844de330a0c8558a05edd4a603bd4",
+      "sha256": "7f3f00f280252b0ddb50882fd4c600733d0a9512bed21d5fba438220750e703a",
       "executable": false
     },
     "tests/helpers/launch-workspace-screens.mjs": {
@@ -13126,7 +13126,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "d4ce35d21d3cf57a3a4c1dd2bf42660e34400ad96483cace58af3cd7da0306ef",
+      "sha256": "32e10cc191ffad503ee34ebaafaf9be1198a71284bd5822cd54a3021bbae5509",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
@@ -13502,7 +13502,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "44d46fc019076af7d49eb169c621e78eee34d88ebbdfc94e95021ca4e08d5ada",
+      "sha256": "ac5cc5f227d6cba08438e5b11b6a3342e2334344780e77cb62d3642c7e0607ee",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
