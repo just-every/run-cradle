@@ -11,6 +11,7 @@ const {createUlid}=await fromRepo('src/core/shared/ids.ts')
 const {completeFirstRun}=await fromRepo('tests/helpers/complete-first-run.mjs')
 const {launchFieldIds}=await fromRepo('src/apps/launch/descriptors.server.ts')
 const {LAUNCH_APP_ID,launchEntities}=await fromRepo('src/apps/launch/contracts.ts')
+const {verifyReadinessRescheduling}=await fromRepo('tests/helpers/launch-readiness-rescheduling.mjs')
 // The held-out Monday is at least a week ahead of the wall clock on every weekday: its scheduled ticks are never
 // stale, and commands always edit its milestone while that date lies beyond the default five-day readiness window.
 const addDays=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000).toISOString().slice(0,10)
@@ -19,7 +20,7 @@ assert.equal(new Date(monday+'T00:00:00Z').getUTCDay(),1)
 
 await test('emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
  let outbound=0
- const h=await recordsImportBrowserRuntime(0,{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
+ const h=await recordsImportBrowserRuntime(0,{testClock:true,outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
  try{
   // Keep the configured Base sender: only its provider request is captured at
   // the test network edge. Exclude the initial sign-in mail from schedule counts.
@@ -29,8 +30,10 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   assert.equal(csrfResponse.status,200)
   const {csrfToken}=await csrfResponse.json()
   const ownerSession={cookie:h.cookie,csrfToken}
+  let requestNow
+  const clockHeaders=()=>requestNow===undefined?{}:{'x-cradle-test-now':String(requestNow)}
   async function sendCommand(action,input,session=ownerSession,status=200){
-   const response=await fetch(h.origin+'/api/v1/commands/'+action,{method:'POST',headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken},body:JSON.stringify(input)})
+   const response=await fetch(h.origin+'/api/v1/commands/'+action,{method:'POST',headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken,...clockHeaders()},body:JSON.stringify(input)})
    const result=await response.json()
    assert.equal(response.status,status,`${action} fixture failed: ${JSON.stringify(result)}`)
    if(status!==200)return result.error
@@ -39,12 +42,13 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   }
   const command=(action,input,expected=[])=>sendCommand(action,{commandId:createUlid(),expected,input})
   async function read(route,session=ownerSession,body){
-   const response=await fetch(h.origin+route,{headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken},...(body?{method:'POST',body:JSON.stringify(body)}:{})})
+   const response=await fetch(h.origin+route,{headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken,...clockHeaders()},...(body?{method:'POST',body:JSON.stringify(body)}:{})})
    assert.equal(response.status,200,await response.clone().text())
    return(await response.json()).data
   }
   const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
   const {member}=await read('/api/v1/session'),owner=member.id,address=member.email.trim().toLowerCase()
+  await verifyReadinessRescheduling({h,command,read,expected,owner,setNow:now=>{requestNow=now},diagnostic:message=>t.diagnostic(message)})
   const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first()),readinessBefore=await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()
   await command('settings.update',{version:settings.version,changes:{readinessVersion:readinessBefore.version,timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
   const readiness=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='launch-readiness'").first()

@@ -25,10 +25,11 @@ export async function recordsImportBrowserRuntime(port=0,network={}) {
  const credentials={session:randomBytes(32).toString('hex'),setup:randomBytes(32).toString('hex')}
  const options={origin,email:'import-owner@example.test',name:'Import owner',workspace:'Import records',timezone:'UTC',currency:'USD'}
  const environment={APP_ORIGIN:origin,AUTH_LOCAL:'true',OWNER_EMAIL:options.email,SESSION_SECRET:credentials.session,SETUP_TOKEN:credentials.setup,WORKSPACE_NAME:options.workspace,WORKSPACE_TIMEZONE:options.timezone,WORKSPACE_CURRENCY:options.currency,MAIL_FROM:'auth@localhost.test',...network.bindings}
+ const runtimeOptions={testClock:network.testClock}
  let runtime,db,mail
  try {
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE emitted-runtime')
-  const fixture=await emittedMailRuntime(directory,port,environment,network.outbound)
+  const fixture=await emittedMailRuntime(directory,port,environment,network.outbound,runtimeOptions)
   ;({runtime,mail,origin,port}=fixture);Object.assign(environment,fixture.bindings)
   if(process.env.CRADLE_FIXTURE_PROGRESS)console.log('FIXTURE d1-binding')
   db=await runtime.getD1Database('DB')
@@ -56,7 +57,7 @@ export async function recordsImportBrowserRuntime(port=0,network={}) {
   const apps=await fetch(origin+'/api/v1/apps',{redirect:'manual',headers:{cookie}});assert.equal(apps.status,200,'Confirmed owner can use the authenticated product API');assert.ok(Array.isArray((await apps.json()).data.items))
   return {get runtime(){return runtime},get db(){return db},origin,cookie,mailMessages:()=>fixtureMessages(origin),
   /** Stop the Worker process and start a new one over the same persisted D1. */
-  async restart(bindingChanges={}){await runtime.dispose();Object.assign(environment,bindingChanges);for(const key of Object.keys(environment))if(environment[key]===undefined)delete environment[key];runtime=await emittedRuntime(directory,port,environment,mail.fetch);db=await runtime.getD1Database('DB');await runtime.ready},
+  async restart(bindingChanges={}){await runtime.dispose();Object.assign(environment,bindingChanges);for(const key of Object.keys(environment))if(environment[key]===undefined)delete environment[key];runtime=await emittedRuntime(directory,port,environment,mail.fetch,runtimeOptions);db=await runtime.getD1Database('DB');await runtime.ready},
   async descriptors(){
    // The native local installation includes the product's source-owned schemas.
    // Use its actual descriptors, as createLaunchFoundation does; an empty source
