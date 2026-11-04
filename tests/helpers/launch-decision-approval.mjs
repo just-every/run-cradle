@@ -57,7 +57,7 @@ export async function verifyPublicDecisionApproval(h, campaign, fields) {
  assert.equal(detail.version, approved.value.version)
  assert.equal(detail.requester.id, h.actor)
  const riskAfter = (await read(`/api/risks/${riskId}`)).risk
- assert.deepEqual(riskAfter, { ...riskBefore, state: 'In progress', version: riskBefore.version + 1 }, 'Approval moves the linked risk to In progress without resolving it or changing other fields')
+ assert.deepEqual(riskAfter, { ...riskBefore, state: 'In progress', version: riskBefore.version + 1, updatedAt: approved.value.updatedAt }, 'Approval moves the linked risk to In progress without resolving it or changing other fields')
  assert.equal(riskAfter.resolvedAt, null)
  assert.equal(riskAfter.resolvedById, null)
  assert.equal(riskAfter.resolutionNote, null)
