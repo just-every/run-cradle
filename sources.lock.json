@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4e7fde70f5aae0155c3cc544ef6a3773e593cfd352924fd9bc803dd7affa9f25",
+      "sha256": "641ec904a8a5d43f7f206db63eb16969277011a90fd8390ffd2136cb26c60bac",
       "executable": false
     },
     "DEMO.md": {
@@ -7226,11 +7226,11 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-grid-page.tsx": {
-      "sha256": "54fe4769b3ad3d7147af4bebbec1e7d1d5741fa81a5bb599bc3141b309462f5a",
+      "sha256": "838274480c8ee9a679394cfbd9c41d896cf9520661cb399b5f132692d55bfa3e",
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-grid-results.tsx": {
-      "sha256": "54c5389a3b5aa6b988f426279786f9f8009d8d0fbe5a7f87597e3837424b5cd9",
+      "sha256": "be5f68a5aaca2245c118cf8f5c12fdaca6ffa8101a86b883f900e900531443e1",
       "executable": false
     },
     "src/core/features/portfolio/ui/campaign-inspector.tsx": {
@@ -7282,7 +7282,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-ui.css": {
-      "sha256": "838a3ae4d9439f7e66eced37e4c0cd3322abd8f3345818726361d9a73b841ea3",
+      "sha256": "92499fd1b72175bf899342b8ff084ee8988d510fe1107f5873e189bbda436e14",
       "executable": false
     },
     "src/core/features/risks/index.ts": {
@@ -12413,6 +12413,10 @@
       "sha256": "f16bf5ade9c6d89075b50e400d1c9e263959355ee6af862c84b36af4014db717",
       "executable": false
     },
+    "tests/helpers/launch-paging-journey.mjs": {
+      "sha256": "a57001340f3ee4b6130551d1435e4382bfc1693535877f8c1d7cc9d8a70566e9",
+      "executable": false
+    },
     "tests/helpers/launch-portfolio-screens.mjs": {
       "sha256": "df93d99567527a168902c6565a76120b896fab10554d2b333bbfe62b8243a57d",
       "executable": false
@@ -13150,7 +13154,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "e9eb6cda8166177d148c67b32dd47c4fd9e9b56db98e3e29ffd11021864da90a",
+      "sha256": "e59ae14de00e6922b223514dbd8f84f6bc17e3a47b5c463e4687387cedafcaa3",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
@@ -13498,7 +13502,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "e25b12f6c7e96983b6613c4df836d207c5a3073f04124837bbbf24ff129aa4a2",
+      "sha256": "c2675c789d8f3d01f5547207a03fe3ad5a5943ab577fb836e5bb0657310769e5",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {

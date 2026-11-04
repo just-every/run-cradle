@@ -6,15 +6,16 @@ import { contract } from './contract.mjs'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { createFixtureAuth } from './helpers/base-fixture-auth.mjs'
 import { doorsBrowser, csvRows } from './helpers/launch-doors-browser.mjs'
+import { pagingCampaigns } from './helpers/launch-paging-journey.mjs'
 
 // One real-door journey per operator door, through the emitted Worker at desktop and phone:
 // import, export, custom fields, bulk edit, sample data and the ownership handover.
-contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone', async () => {
+contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] [VIEW-007] Launch operator doors at desktop and phone', async () => {
  const output = path.resolve(process.env.CRADLE_DOORS_EVIDENCE ?? '../evidence/de-doors')
  await mkdir(output, { recursive: true })
  const h = await launchAuthorityRuntime({}, { installedLaunchDefinitions: true, installationOwner: true })
  const receipt = { environment: 'Actual emitted Worker and native D1, synthetic fixtures only', screens: [], downloads: [], errors: [] }
- const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] })
+ const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ['--no-sandbox', '--use-mock-keychain', '--password-store=basic'] })
  try {
   let actor = { id: h.owner, session: h.ownerSession }
   for (const width of [1440, 390]) {
@@ -202,6 +203,23 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    await context.close()
    actor = { id: successor.id, session: await (await createFixtureAuth(h.db, h.configuration, successor.id)).signIn(successor.id) }
   }
+  // The capped Campaign Grid names both the visible count and its filtered total.
+  const fixture = await pagingCampaigns(h, actor)
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } }), page = await context.newPage()
+  page.on('pageerror', error => receipt.errors.push(`paging: ${error.message}`))
+  await context.addCookies([{ name: fixture.reader.session.cookie.split('=')[0], value: fixture.reader.session.cookie.slice(fixture.reader.session.cookie.indexOf('=') + 1), url: h.origin }])
+  const desktop = doorsBrowser({ h, page, width: 1440, output, session: () => fixture.reader.session, receipt })
+  await desktop.visit(`/app/campaigns?${fixture.query}`)
+  await expect(page.getByRole('status', { name: 'Campaign results' })).toHaveText('200 shown of 201 in My campaigns')
+  assert.deepEqual(await desktop.visibleIds(), fixture.expected.slice(0, 200), 'Rendered rows follow the independently expected first page, with excluded controls absent')
+  receipt.paging = { shown: 200, total: 201, excluded: fixture.excluded.length }
+  await desktop.capture('campaign-grid-paging')
+  await page.setViewportSize({ width: 390, height: 844 })
+  const phone = doorsBrowser({ h, page, width: 390, output, session: () => fixture.reader.session, receipt })
+  await page.getByRole('button', { name: 'Open navigation' }).focus()
+  await page.getByRole('tooltip', { name: 'Open navigation' }).waitFor()
+  await phone.capture('campaign-grid-paging')
+  await context.close()
   assert.deepEqual(receipt.errors, [])
  } finally {
   await writeFile(path.join(output, 'doors-receipt.json'), JSON.stringify(receipt, null, 1))

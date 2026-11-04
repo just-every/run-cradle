@@ -41,7 +41,7 @@ export function CampaignTable({ campaigns, group, fields, currency, selectedId, 
   const visible = (field: CampaignField) => fields.includes(field);
   return (
     <table className="portfolio-campaign-table">
-      <caption>{caption}</caption>
+      <caption className="sr-only">{caption}</caption>
       <thead>
         <tr>
           <th scope="col" className="launch-select-cell"><input type="checkbox" aria-label="Select every campaign on this page" checked={pageChosen} onChange={(event) => choosePage(event.target.checked)} /></th>

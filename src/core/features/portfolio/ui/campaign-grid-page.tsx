@@ -76,6 +76,7 @@ const GridContent = () => {
   const pageItems = campaigns.resource.state === "ready" ? campaigns.resource.data.items : [];
   const pageChosen = pageItems.length > 0 && pageItems.every((campaign) => chosen.has(campaign.id));
   const matching = campaigns.resource.state === "ready" ? campaigns.resource.data.total : 0;
+  const summary = campaigns.resource.state === "ready" ? `${pageItems.length} shown of ${campaigns.resource.data.totalLabel} in ${queryLabels[query.view]}` : "";
   const results = { campaigns: pageItems, group: query.group, fields: query.fields, currency: workspaceCurrency, selectedId: selected?.id ?? null, chosen, toggle, onInspect: setSelectedId };
   const chooseAll = async () => { setSelecting(''); try { setChosen(new Map((await selectAllMatching(campaignQueryUrl(query))).map((item) => [item.id, item.version]))); } catch (cause) { setSelecting(cause instanceof Error ? cause.message : 'Could not select every match.'); } };
   return (
@@ -111,9 +112,10 @@ const GridContent = () => {
         ) : (
           <section className="portfolio-grid-workspace">
             <div className="portfolio-grid-results">
+              <p className="portfolio-grid-summary" role="status" aria-label="Campaign results">{summary}</p>
               <CampaignMoneyTotals campaigns={pageItems} currency={workspaceCurrency} />
               <div className="portfolio-table-wrap">
-                <CampaignTable {...results} caption={`${campaigns.resource.data.totalLabel} in ${queryLabels[query.view]}`} pageChosen={pageChosen} choosePage={(on) => setChosen((current) => { const next = new Map(current); for (const campaign of pageItems) { if (on) next.set(campaign.id, campaign.version); else next.delete(campaign.id); } return next; })} />
+                <CampaignTable {...results} caption={summary} pageChosen={pageChosen} choosePage={(on) => setChosen((current) => { const next = new Map(current); for (const campaign of pageItems) { if (on) next.set(campaign.id, campaign.version); else next.delete(campaign.id); } return next; })} />
               </div>
               <CampaignCards {...results} />
             </div>

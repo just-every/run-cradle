@@ -524,8 +524,8 @@
   border-collapse: collapse;
   text-align: left;
 }
-.portfolio-campaign-table caption {
-  padding: 0 0 9px;
+.portfolio-grid-summary {
+  margin: 0 0 9px;
   color: var(--muted-foreground);
   font-size: var(--text-meta);
   font-weight: 700;
