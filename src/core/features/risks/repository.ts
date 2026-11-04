@@ -7,6 +7,11 @@ type RiskRow = {
   campaignId: string
   campaignName: string
   campaignLaunchDate: string
+  createdAt: number
+  updatedAt: number
+  escalatedAt: number | null
+  escalatedById: string | null
+  escalationReason: string | null
   dueDate: string | null
   id: string
   mitigation: string
@@ -24,6 +29,8 @@ type RiskRow = {
 
 const select = `
   SELECT r.id, r.title, r.severity, r.state, r.due_date AS dueDate, r.signal, r.mitigation, r.version,
+    r.created_at AS createdAt, r.updated_at AS updatedAt,
+    r.escalated_at AS escalatedAt, r.escalated_by_id AS escalatedById, r.escalation_reason AS escalationReason,
     r.resolved_at AS resolvedAt, r.resolved_by_id AS resolvedById, r.resolution_note AS resolutionNote,
     c.id AS campaignId, c.code AS campaignCode, c.name AS campaignName, c.launch_date AS campaignLaunchDate,
     o.id AS ownerId, o.name AS ownerName
@@ -32,6 +39,11 @@ const select = `
 
 const mapRisk = (row: RiskRow) => ({
   campaign: { code: row.campaignCode, id: row.campaignId, name: row.campaignName, launchDate: row.campaignLaunchDate },
+  createdAt: iso(row.createdAt),
+  updatedAt: iso(row.updatedAt),
+  escalatedAt: iso(row.escalatedAt),
+  escalatedById: row.escalatedById,
+  escalationReason: row.escalationReason,
   dueDate: row.dueDate,
   id: row.id,
   mitigation: row.mitigation,

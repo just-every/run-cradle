@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4b3ba14390150745b9a182cf59171fb5ccedd9f04195aa98e764c5bcfc12a0ad",
+      "sha256": "136c0f3570c63963cef1ff63b9765e7be5a0f71f039cce7d16cb18b313d987a0",
       "executable": false
     },
     "DEMO.md": {
@@ -7290,7 +7290,7 @@
       "executable": false
     },
     "src/core/features/risks/repository.ts": {
-      "sha256": "026639d96a2a5ba3ad6c214d5d6acf5e21b43e36e5884f3d47a63fd6f1fbfc97",
+      "sha256": "8cef2d88259979e103d376d143656a4f43c7718419af9e5e7e59f72a503aa4fd",
       "executable": false
     },
     "src/core/features/risks/routes.ts": {
@@ -12346,11 +12346,11 @@
       "executable": false
     },
     "tests/helpers/launch-decision-approval.mjs": {
-      "sha256": "1711f275d52d04a85e16e61c9a714fd47ce398a70d417985394a17eb27e97202",
+      "sha256": "c907b55ac100399caa7dcebade78307fe5c42827ad2e25550f2b98dbd6ce5b77",
       "executable": false
     },
     "tests/helpers/launch-decision-clauses.mjs": {
-      "sha256": "e63d911161e62bb27c2c6e4319b2d81cee926aca7af1820e5a9d2794a3e14d9f",
+      "sha256": "db18c4a21eb451d5b1f1b317c8bdad21a72e2358ee1607d4377b9a93d3d86d61",
       "executable": false
     },
     "tests/helpers/launch-decision-hydration.mjs": {
