@@ -12302,7 +12302,7 @@
       "executable": false
     },
     "tests/helpers/launch-automation-monitor-screens.mjs": {
-      "sha256": "7c5790eca71be7c6b90fd74aac155c449c057f89fcf757f5395e0cafdc3da19f",
+      "sha256": "db297eed09abb6bdedbd926d7c3274e0dd1685d211c75f46a0482d52d01cfc4c",
       "executable": false
     },
     "tests/helpers/launch-base-authority-runtime.mjs": {
@@ -13502,7 +13502,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "ac5cc5f227d6cba08438e5b11b6a3342e2334344780e77cb62d3642c7e0607ee",
+      "sha256": "a8757d4cc1d1b2099d6481bb087dc5e086c34174961d328e267df082c4d858af",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
