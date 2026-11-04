@@ -12390,7 +12390,7 @@
       "executable": false
     },
     "tests/helpers/launch-milestone-clauses.mjs": {
-      "sha256": "121c3c79fdd6cda7a0b469ac8de83e38de84321326008b4c45a48e6020b71c13",
+      "sha256": "90185be0c58ab2ca887028b00c458710f1bc41fb0baaafbd64f33d6ac19b9990",
       "executable": false
     },
     "tests/helpers/launch-milestone-screens.mjs": {

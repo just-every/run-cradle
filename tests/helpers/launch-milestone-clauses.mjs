@@ -74,6 +74,14 @@ export async function verifyPublicMilestoneDependencies(h) {
  assert.ok(Date.parse(entries[0].occurredAt) >= lower && Date.parse(entries[0].occurredAt) <= upper, 'Override activity is attributed within the HTTP request window')
  await markers(true)
  const stored = id => h.db.prepare('SELECT * FROM milestones WHERE id=?').bind(id).first()
+ const timelineDates = async rows => {
+  const timeline = (await read('/api/milestones/timeline')).milestones
+  for (const [row, startDate, endDate, version] of rows) {
+   const item = timeline.find(item => item.id === row.id)
+   assert.ok(item)
+   assert.deepEqual({ startDate: item.startDate, endDate: item.endDate, version: item.version }, { startDate, endDate, version }, 'Timeline retains the independently expected dates and versions')
+  }
+ }
  const successorBefore = await stored(successor.id), successorDetail = await get(successor.id), predecessorBefore = await get(predecessor.id)
  assert.equal(successorBefore.start_date, '2027-06-05'); assert.equal(successorBefore.end_date, null)
  await write('milestone.patch', { id: predecessor.id, changes: { endDate: '2027-06-05' } })
@@ -82,6 +90,7 @@ export async function verifyPublicMilestoneDependencies(h) {
  assert.deepEqual(await stored(successor.id), successorBefore, 'Editing predecessor dates leaves every stored successor value and version unchanged')
  assert.deepEqual(await get(successor.id), { ...successorDetail, dependencyConflict: false })
  await markers(false)
+ await timelineDates([[predecessor, '2027-06-01', '2027-06-05', predecessorBefore.version + 1], [successor, '2027-06-05', null, successorDetail.version]])
  const predecessorStored = await stored(predecessor.id), predecessorDetail = await get(predecessor.id), successorVersion = (await get(successor.id)).version
  assert.equal(predecessorStored.start_date, '2027-06-01'); assert.equal(predecessorStored.end_date, '2027-06-05')
  await write('milestone.patch', { id: successor.id, changes: { startDate: '2027-06-04' } })
@@ -91,6 +100,8 @@ export async function verifyPublicMilestoneDependencies(h) {
  assert.deepEqual(await stored(predecessor.id), predecessorStored, 'Editing successor dates leaves every stored predecessor value and version unchanged')
  assert.deepEqual(await get(predecessor.id), { ...predecessorDetail, dependencyConflict: true })
  await markers(true)
+ await timelineDates([[predecessor, '2027-06-01', '2027-06-05', predecessorDetail.version], [successor, '2027-06-04', null, successorVersion + 1]])
+ assert.deepEqual((await read(`/api/campaigns/${successorCampaign.id}`)).activity.find(row => row.id === entries[0].id), entries[0], 'Later date edits retain the original attributed override activity')
 }
 
 function localEight(day, timezone) {
