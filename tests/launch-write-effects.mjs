@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { launchAuthorityRuntime, launchEntities, launchFieldIds, createUlid } from './helpers/launch-authority-runtime.mjs'
 import { expected, writeContext, mutationSnapshot, launchSource } from './helpers/launch-write-context.mjs'
 import { verifyCampaignClauses } from './helpers/launch-campaign-clauses.mjs'
-import { verifyMilestoneClauses } from './helpers/launch-milestone-clauses.mjs'
+import { verifyMilestoneClauses, verifyPublicMilestoneDeletion } from './helpers/launch-milestone-clauses.mjs'
 import { verifyRiskClauses } from './helpers/launch-risk-clauses.mjs'
 import { verifyCampaignLifecycleClauses } from './helpers/launch-campaign-lifecycle-clauses.mjs'
 import { verifyConcurrencyClauses } from './helpers/launch-concurrency-clauses.mjs'
@@ -36,6 +36,7 @@ test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-01
   }
   await verifyCampaignClauses(clauses)
   await verifyMilestoneClauses(clauses)
+  await verifyPublicMilestoneDeletion(clauses)
   await verifyRiskClauses(clauses)
   await verifyCampaignLifecycleClauses(clauses)
   await verifyOverdueClauses(clauses)
