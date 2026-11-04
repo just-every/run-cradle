@@ -13,6 +13,7 @@ import { verifyDecisionClauses } from './helpers/launch-decision-clauses.mjs'
 import { verifyLensClauses } from './helpers/launch-lens-clauses.mjs'
 import { verifyOverdueClauses } from './helpers/launch-overdue-clauses.mjs'
 import { clauseAnalysisFixture } from './helpers/launch-clause-analysis.mjs'
+import { verifyPublicShippedRiskLens } from './helpers/launch-shipped-risk-journey.mjs'
 
 const campaignFields = ownerId => ({ code: 'WRITE-EFFECTS', name: 'Release', ownerId, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Launch', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} })
 const milestoneFields = (campaignId, ownerId) => ({ campaignId, title: 'Release review', ownerId, type: 'Review', status: 'Not started', startDate: '2026-12-01', endDate: null, conflictReason: null })
@@ -24,6 +25,8 @@ const unchangedDenial = async (h, scope, action, input, revisions, code = 'forbi
 }
 
 test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects and campaign record clauses', async () => {
+ const publicLens = await launchAuthorityRuntime({}, { installedLaunchDefinitions: true, installationOwner: true, testClock: true })
+ try { await verifyPublicShippedRiskLens({ h: publicLens, clear: true }) } finally { await publicLens.close() }
  const analysis=clauseAnalysisFixture()
  const h = await launchAuthorityRuntime(analysis.configuration, {installedLaunchDefinitions:true,installationOwner:true,providerFetch:analysis.providerFetch})
  try {
