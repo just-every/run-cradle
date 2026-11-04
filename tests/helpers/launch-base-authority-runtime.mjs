@@ -42,14 +42,16 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
       }}
       return config
     }
-    runtime = new Miniflare(optionsFor({}))
+    let runtimeOptions=optionsFor({})
+    runtime = new Miniflare(runtimeOptions)
     // Let workerd bind an OS-assigned port, then configure the canonical origin
     // before issuing any requests. Pin that listener across subsequent reloads.
     const listener = await runtime.ready
     port = Number(listener.port || 443)
     const origin = new URL(`https://${hostname}:${port}`).origin
     bindings.APP_ORIGIN = origin
-    await runtime.setOptions(optionsFor({}))
+    runtimeOptions=optionsFor({})
+    await runtime.setOptions(runtimeOptions)
     let db = await runtime.getD1Database('DB')
     const dispatch = (url, init = {}) => new Promise((resolve, reject) => {
       const target = new URL(url)
@@ -71,6 +73,7 @@ export async function launchBaseAuthorityRuntime({providerFetch,configuration={}
       return { cookie, owner: owner.principal_id }
     }
     const nativeCredential = owner => legacyCookieFixture(db,owner)
-    return { origin, get runtime(){return runtime}, get db() { return db }, deliveries, bindings, request, post, dispatch, bootstrap, nativeCredential, reconfigure: async changes => { await runtime.setOptions(optionsFor(changes)); db = await runtime.getD1Database('DB') }, close }
+    const restart=async()=>{await runtime.dispose();runtime=new Miniflare(runtimeOptions);await runtime.ready;db=await runtime.getD1Database('DB')}
+    return { restart, origin, get runtime(){return runtime}, get db() { return db }, deliveries, bindings, request, post, dispatch, bootstrap, nativeCredential, reconfigure: async changes => { runtimeOptions=optionsFor(changes);await runtime.setOptions(runtimeOptions); db = await runtime.getD1Database('DB') }, close }
   } catch (error) { await close(); throw error }
 }

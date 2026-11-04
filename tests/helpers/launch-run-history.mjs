@@ -11,7 +11,9 @@ const count=async(h,sql,...values)=>Number((await h.db.prepare(sql).bind(...valu
 export function historyMailEdge(){
  const edge={refuse:false,subjects:[],async fetch(request){
   assert.equal(request.url,'https://api.sendgrid.com/v3/mail/send')
-  const body=await request.json();edge.subjects.push(body.subject)
+  return edge.respond(await request.json())
+ },respond(body){
+  edge.subjects.push(body.subject)
   const refused=edge.refuse&&body.subject==='Run history mail'
   return new Response(refused?JSON.stringify({errors:[{message:'Refused at the test network edge'}]}):null,{status:refused?400:202,headers:refused?{'content-type':'application/json'}:{'x-message-id':`<history-${edge.subjects.length}@network-edge.example.test>`}})
  }}
@@ -62,6 +64,8 @@ export async function verifyRunHistory(h,{campaign,owner,risk,mail}){
  assert.deepEqual(failed.actions[0].result,{activity:true});assert.deepEqual({result:failed.actions[1].result,message:failed.actions[1].errorMessage},{result:null,message:'Mail provider rejected'})
  assert.deepEqual(cancelled.actions.map(step),[{position:0,command:'add-activity',state:'Pending',errorCode:null},{position:1,command:'send-email',state:'Pending',errorCode:null}],'A cancelled run attempted no action')
 
+ await verifyProviderRefusalStable({h,read:path=>h.read(path),automationId:automation.id,runId:failed.id,mail,tick:at=>h.tick(at),restart:()=>h.restart()})
+
  // Success rate: finished successful runs over finished runs in the trailing 30 days, stating that window.
  const monitor=async windowEnd=>{const body=await h.read(`/api/automations?windowEnd=${windowEnd}`),item=body.automations.find(entry=>entry.id===automation.id);return{window:body.successWindow,rate:item.successRate30Days,finished:item.runCount30Days,succeeded:item.succeededCount30Days}}
  const both=await monitor(iso(second+60000))
@@ -90,4 +94,52 @@ export async function verifyRunHistory(h,{campaign,owner,risk,mail}){
  assert.deepEqual({total:latest.total,newest:latest.runs[0].trigger.key},{total:retained+1,newest:await eventOf(added)})
  assert.deepEqual(await walk(`/api/automations/${automation.id}/runs`,undefined,1),(await h.read(`/api/automations/${automation.id}/runs`)).runs.map(run=>run.id))
  for(const query of ['limit=201','limit=0','cursor=not-a-cursor'])assert.equal((await h.request(`/api/automations/runs?${query}`,{headers:{cookie:h.owner.cookie}})).status,400,query)
+}
+
+// AUTO-008: real provider refusal must survive scheduler wake-ups, duplicate execution
+// delivery and a fresh Worker. The provider accepts again, so an unsafe retry is observable.
+export async function verifyProviderRefusalStable({h,read,automationId,runId,mail,tick,restart}){
+ const history=async()=>(await read(`/api/automations/${automationId}/runs`)).runs
+ const originalHistory=await history(),failed=originalHistory.find(run=>run.id===runId)
+ assert.equal(failed.state,'Failed')
+ assert.deepEqual({code:failed.errorCode,message:failed.errorMessage},{code:'provider_refused',message:'Mail provider rejected'})
+ const monitor=async()=>{
+  const definition=(await read('/api/automations')).automations.find(item=>item.id===automationId)
+  assert.ok(definition,'The failed automation is present in the public Monitor')
+  return {status:definition.lastRunStatus,at:definition.lastRunAt,failure:definition.failure}
+ }
+ const visible={status:'Failed',at:failed.finishedAt,failure:{code:'provider_refused',message:'Mail provider rejected'}}
+ assert.deepEqual(await monitor(),visible,'Monitor exposes the exact retained refusal')
+ const rows=async(sql)=>(await h.db.prepare(sql).bind(runId).all()).results
+ const snapshot=async()=>({
+  run:await h.db.prepare('SELECT * FROM automation_runs WHERE id=?').bind(runId).first(),
+  actions:await rows('SELECT * FROM launch_automation_actions WHERE run_id=? ORDER BY position'),
+  effects:await rows('SELECT * FROM launch_action_effects WHERE run_id=? ORDER BY effect_key'),
+  activity:await rows('SELECT * FROM activity_entries WHERE automation_run_id=? ORDER BY id'),
+  retries:await rows('SELECT * FROM launch_automation_retries WHERE run_id=?'),
+ })
+ const before=await snapshot(),attempts=mail.subjects.filter(subject=>subject==='Run history mail').length
+ assert.ok(attempts>0,'The mail reached the actual provider edge')
+ assert.equal(before.effects.length,1);assert.equal(before.effects[0].state,'Failed');assert.equal(before.effects[0].attempts,1)
+ assert.equal(before.activity.length,1,'The action before the refusal committed exactly once')
+ assert.deepEqual(before.retries,[],'A definitive refusal schedules no retry')
+ const outbox=await h.db.prepare("SELECT id FROM admission_outbox WHERE action='launch.automation.execute' AND json_extract(input_json,'$.runId')=? ORDER BY created_at DESC LIMIT 1").bind(runId).first()
+ assert.ok(outbox,'The refused execution came through the real outbox')
+ mail.refuse=false
+ const replay=async()=>{
+  const worker=await h.runtime.getWorker()
+  await worker.queue('cradle-work',[{id:'refused-execution-replay',timestamp:Date.now(),attempts:2,body:{kind:'cradle.outbox.v1',outboxId:outbox.id}}])
+ }
+ const stable=async()=>{
+  assert.equal(mail.subjects.filter(subject=>subject==='Run history mail').length,attempts,'No new provider attempt after definitive refusal')
+  assert.deepEqual(await snapshot(),before,'Refusal, completed actions and effects remain unchanged')
+  assert.deepEqual(await history(),originalHistory,'No retry run or rewritten failure history')
+  assert.deepEqual(await monitor(),visible,'Monitor retains Failed and the same refusal')
+ }
+ const at=Date.parse(failed.finishedAt)
+ for(const minute of [1,5,15,30,60]){await tick(at+minute*60000);await stable()}
+ await replay();await replay();await stable()
+ await restart();await stable()
+ await replay();await tick(at+61*60000);await tick(at+61*60000);await stable()
+ return visible
 }
