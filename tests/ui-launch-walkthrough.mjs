@@ -160,8 +160,10 @@ try {
   if(calendarShown){
    for(const month of ['Oct 2026','Nov 2026'])assert.deepEqual(await page.getByLabel(`Dates in ${month}`,{exact:true}).locator('span').allTextContents(),['1','8','15','22','29'],'Each month displays its date markers')
    const range=page.getByLabel('Cross-month review, Oct 29, 2026 through Nov 4, 2026',{exact:true});assert.ok((await range.innerText()).includes('Oct 29, 2026 – Nov 4, 2026'));assert.equal(await range.getByLabel('Dependency conflict',{exact:true}).count(),1)
+   assert.equal(await page.getByLabel('Release package, Nov 3, 2026',{exact:true}).getByLabel('Dependency conflict',{exact:true}).count(),1,'The predecessor also shows its timeline marker')
   } else {
    const range=page.getByLabel('Milestone agenda',{exact:true}).getByRole('article').filter({has:page.getByRole('link',{name:'Cross-month review',exact:true})});assert.equal(await range.locator('time').getAttribute('datetime'),'2026-10-29');assert.equal(await range.locator('time').innerText(),'Oct 29, 2026');assert.ok((await range.innerText()).includes('ends Nov 4, 2026'));assert.equal(await range.getByText('Dependency conflict',{exact:true}).count(),1)
+   assert.equal(await page.getByLabel('Milestone agenda',{exact:true}).getByRole('article').filter({has:page.getByRole('link',{name:'Release package',exact:true})}).getByText('Dependency conflict',{exact:true}).count(),1,'The predecessor also shows its timeline marker')
   }
   const milestoneLinks=()=>page.locator('a[href^="/app/milestones/"]').filter({visible:true}).evaluateAll(links=>links.map(link=>link.getAttribute('href')))
   const monthItems=await milestoneLinks()
@@ -172,6 +174,7 @@ try {
   await capture('timeline-quarter');await action(page.getByRole('button',{name:'Month',exact:true}));assert.deepEqual(await milestoneLinks(),monthItems)
   await capture('timeline-cross-month-range');
   await page.goto(`${h.origin}/app/milestones/${crossing.id}`);await page.getByRole('heading',{name:'Cross-month review',exact:true}).waitFor();assert.equal(await page.locator('time[datetime="2026-10-29"]').innerText(),'Oct 29, 2026');assert.equal(await page.locator('time[datetime="2026-11-04"]').innerText(),'Nov 4, 2026');await page.getByText(/Dependency conflict:/).waitFor();await capture('milestone-cross-month-range');
+  await page.goto(`${h.origin}/app/milestones/${point.id}`);await page.getByRole('heading',{name:'Release package',exact:true}).waitFor();await page.getByText(/Dependency conflict:/).waitFor();await capture('milestone-predecessor-conflict')
   const review=await h.db.prepare('SELECT id FROM milestones WHERE title=? AND campaign_id=?').bind('Review package',campaign.id).first();await page.goto(`${h.origin}/app/milestones/${review.id}`);await page.getByRole('heading',{name:'Review package',exact:true}).waitFor();const milestoneText=await page.locator('body').innerText();assert.ok(milestoneText.includes('Oct 18, 2026'));assert.ok(milestoneText.includes('Oct 21, 2026'));assert.doesNotMatch(milestoneText,/2026-10-18|2026-10-21/);await capture('milestone-human-range')
   const risk=await h.db.prepare('SELECT id FROM risks WHERE campaign_id=?').bind(campaign.id).first()
   const priorCreated=await command('decision.create',{fields:{campaignId:campaign.id,riskId:risk.id,supersedesId:null,title:'Earlier supplier review',requesterId:h.owner,assigneeId:h.owner,priority:'High',dueAt:'2026-10-20T15:00:00.000Z',recommendation:'Ask supplier for evidence',impact:'Delivery date',}})

@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4e7fde70f5aae0155c3cc544ef6a3773e593cfd352924fd9bc803dd7affa9f25",
+      "sha256": "5686dd337a590e3ab194d02916d60ceac0f6cbec7676f2fbd7e7edc3d0f2d441",
       "executable": false
     },
     "DEMO.md": {
@@ -12390,7 +12390,7 @@
       "executable": false
     },
     "tests/helpers/launch-milestone-clauses.mjs": {
-      "sha256": "c60ebee8a0682ab454791821c6ce068c6e935ddcab5ac662490e20cecc79caee",
+      "sha256": "121c3c79fdd6cda7a0b469ac8de83e38de84321326008b4c45a48e6020b71c13",
       "executable": false
     },
     "tests/helpers/launch-milestone-screens.mjs": {
@@ -13190,7 +13190,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "7fdcca07f4f2b6f2590af3cf67a14a9513b02b5b0d25345bee2f0b7e2b01aeca",
+      "sha256": "41dd65e4b5ee9c1f430292b9a80eba615a70bdeab559ecbe9f4f8291457ec030",
       "executable": false
     },
     "tests/launch-write-service.mjs": {
@@ -13502,7 +13502,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "44d46fc019076af7d49eb169c621e78eee34d88ebbdfc94e95021ca4e08d5ada",
+      "sha256": "c144264bf4b49349b6ad1549597538f97d6df5eb16c3534ad1526d7c92e47b6b",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {

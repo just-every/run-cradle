@@ -2,6 +2,97 @@ import assert from 'node:assert/strict'
 
 const shift = (day, count) => new Date(Date.parse(day + 'T12:00:00Z') + count * 86400000).toISOString().slice(0, 10)
 const dateIn = (instant, timezone) => new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(instant))
+
+// The emitted Worker admits every write; detail, timeline and campaign activity
+// are read independently. The retained internal graph journey below still runs.
+export async function verifyPublicMilestoneDependencies(h) {
+ const operator = await h.addPerson({ name: 'Milestone operator' })
+ assert.notEqual(operator.id, h.actor)
+ const read = async route => {
+  const response = await h.request(operator.session, route)
+  assert.equal(response.status, 200, await response.clone().text())
+  return response.json()
+ }
+ const get = async id => (await read(`/api/milestones/${id}`)).milestone
+ const submit = async (action, input, commandId = h.r.createUlid()) => h.request(operator.session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected: input.id ? h.expected('milestone', await get(input.id)) : [] }) })
+ const write = async (action, input, commandId) => {
+  const response = await submit(action, input, commandId)
+  assert.equal(response.status, 200, await response.clone().text())
+  const receipt = await response.json()
+  assert.equal(receipt.data.state, 'committed')
+  return receipt.data.value
+ }
+ const campaign = async code => write('campaign.create', { fields: { code, name: code, ownerId: h.actor, startDate: '2027-06-01', launchDate: '2027-06-30', objective: 'Dependency review', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} } })
+ const predecessorCampaign = await campaign('MILE-PUBLIC-P'), successorCampaign = await campaign('MILE-PUBLIC-S')
+ const create = (parent, title, startDate, endDate = null) => write('milestone.create', { fields: { campaignId: parent.id, title, ownerId: h.actor, type: 'Review', status: 'Not started', startDate, endDate, conflictReason: null } })
+ const predecessor = await create(predecessorCampaign, 'Public predecessor', '2027-06-01', '2027-06-06')
+ const extra = await create(successorCampaign, 'Public extra predecessor', '2027-06-01')
+ const successor = await create(successorCampaign, 'Public successor', '2027-06-05')
+ const tail = await create(predecessorCampaign, 'Public dependency tail', '2027-06-20')
+ await write('milestone.set-predecessors', { id: successor.id, predecessorIds: [predecessor.id, extra.id] })
+ await write('milestone.set-predecessors', { id: tail.id, predecessorIds: [successor.id] })
+ const linked = await get(successor.id)
+ assert.equal(linked.campaign.id, successorCampaign.id)
+ assert.equal((await get(predecessor.id)).campaign.id, predecessorCampaign.id)
+ assert.deepEqual(new Set(linked.predecessors.map(row => row.id)), new Set([predecessor.id, extra.id]), 'Public detail retains predecessors from both campaigns')
+ const state = async () => ({
+  details: await Promise.all([predecessor, extra, successor, tail].map(row => get(row.id))),
+  timeline: await read('/api/milestones/timeline'),
+  campaigns: await Promise.all([predecessorCampaign, successorCampaign].map(row => read(`/api/campaigns/${row.id}`))),
+ })
+ const refuse = async (action, input, message) => {
+  const visible = await state(), stored = await h.snapshot()
+  const response = await submit(action, input)
+  assert.equal(response.status, 400, await response.clone().text())
+  const error = (await response.json()).error
+  assert.equal(error.code, 'validation'); assert.match(error.message, message)
+  assert.deepEqual(await h.snapshot(), stored, 'A current-version validation refusal changes no record, dependency, activity or effect')
+  assert.deepEqual(await state(), visible, 'Refusal leaves public details, timeline and campaign activity unchanged')
+ }
+ await refuse('milestone.set-predecessors', { id: predecessor.id, predecessorIds: [tail.id] }, /cycle/i)
+ const markers = async expectedConflict => {
+  const timeline = (await read('/api/milestones/timeline')).milestones
+  for (const row of [predecessor, successor]) {
+   assert.equal((await get(row.id)).dependencyConflict, expectedConflict, 'Detail reflects the derived conflict at both endpoints')
+   assert.equal(timeline.find(item => item.id === row.id)?.dependencyConflict, expectedConflict, 'Timeline reflects the derived conflict at both endpoints')
+  }
+  for (const row of [extra, tail]) assert.equal((await get(row.id)).dependencyConflict, false, 'Nonconflicting edges stay clear')
+ }
+ await markers(true)
+ await refuse('milestone.patch', { id: successor.id, changes: { status: 'On track' } }, /conflictReason/)
+ await refuse('milestone.patch', { id: successor.id, changes: { status: 'On track', conflictReason: ' \t ' } }, /schema/)
+ const reason = 'Owner reviewed the packaging overlap', commandId = h.r.createUlid(), lower = Date.now()
+ await write('milestone.patch', { id: successor.id, changes: { status: 'On track', conflictReason: reason } }, commandId)
+ const upper = Date.now(), overridden = await get(successor.id)
+ assert.equal(overridden.status, 'On track'); assert.equal(overridden.conflictReason, reason)
+ const retained = (await read(`/api/v1/commands/${commandId}`)).data
+ assert.equal((retained.value ?? retained.result).conflictReason, reason)
+ const entries = (await read(`/api/campaigns/${successorCampaign.id}`)).activity.filter(row => row.actionId === commandId && row.subjectId === successor.id && row.fieldName === 'conflict_reason')
+ assert.equal(entries.length, 1)
+ assert.equal(entries[0].previousValue, null); assert.equal(entries[0].nextValue, reason)
+ assert.equal(entries[0].actor.id, operator.id); assert.equal(entries[0].actor.name, 'Milestone operator')
+ assert.ok(Date.parse(entries[0].occurredAt) >= lower && Date.parse(entries[0].occurredAt) <= upper, 'Override activity is attributed within the HTTP request window')
+ await markers(true)
+ const stored = id => h.db.prepare('SELECT * FROM milestones WHERE id=?').bind(id).first()
+ const successorBefore = await stored(successor.id), successorDetail = await get(successor.id), predecessorBefore = await get(predecessor.id)
+ assert.equal(successorBefore.start_date, '2027-06-05'); assert.equal(successorBefore.end_date, null)
+ await write('milestone.patch', { id: predecessor.id, changes: { endDate: '2027-06-05' } })
+ assert.equal((await get(predecessor.id)).endDate, '2027-06-05')
+ assert.equal((await get(predecessor.id)).version, predecessorBefore.version + 1)
+ assert.deepEqual(await stored(successor.id), successorBefore, 'Editing predecessor dates leaves every stored successor value and version unchanged')
+ assert.deepEqual(await get(successor.id), { ...successorDetail, dependencyConflict: false })
+ await markers(false)
+ const predecessorStored = await stored(predecessor.id), predecessorDetail = await get(predecessor.id), successorVersion = (await get(successor.id)).version
+ assert.equal(predecessorStored.start_date, '2027-06-01'); assert.equal(predecessorStored.end_date, '2027-06-05')
+ await write('milestone.patch', { id: successor.id, changes: { startDate: '2027-06-04' } })
+ assert.equal((await get(successor.id)).startDate, '2027-06-04')
+ assert.equal((await get(successor.id)).version, successorVersion + 1)
+ assert.equal((await get(successor.id)).conflictReason, reason)
+ assert.deepEqual(await stored(predecessor.id), predecessorStored, 'Editing successor dates leaves every stored predecessor value and version unchanged')
+ assert.deepEqual(await get(predecessor.id), { ...predecessorDetail, dependencyConflict: true })
+ await markers(true)
+}
+
 function localEight(day, timezone) {
  let instant = Date.parse(day + 'T08:00:00Z')
  for (let attempt = 0; attempt < 3; attempt++) {
