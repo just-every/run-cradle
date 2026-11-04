@@ -33,11 +33,13 @@ export async function verifyPublicShippedRiskLens({ h, clear = false, page, capt
  const settings = (await read('/api/v1/settings')).data
  const owners = [await h.addPerson({ name: 'Amber Risk Reviewer' }), await h.addPerson({ name: 'Rowan Risk Reviewer' })]
  const names = ['Amber Risk Reviewer', 'Rowan Risk Reviewer']
- // Pin the entire request clock at 00:30 Brisbane, on the next UTC date.
- // This stays within the fixture session lifetime and distinguishes workspace
- // today from UTC today without racing the host's midnight.
- const host = new Date(), now = Date.UTC(host.getUTCFullYear(), host.getUTCMonth(), host.getUTCDate(), 14, 30)
+ // Use the next 00:30 Brisbane without rewinding behind completed privacy
+ // erasures from the retained walkthrough. This stays within the fixture
+ // session lifetime and distinguishes workspace today from UTC today.
+ const host = new Date(), anchor = Date.UTC(host.getUTCFullYear(), host.getUTCMonth(), host.getUTCDate(), 14, 30)
+ const now = anchor > host.getTime() ? anchor : anchor + 86400000
  const today = shifted(now, 1), campaigns = [], rows = new Map()
+ let journeyError
  h.setNow(now)
  if (page) await page.context().setExtraHTTPHeaders({ 'x-cradle-test-now': String(now) })
  try {
@@ -117,11 +119,19 @@ export async function verifyPublicShippedRiskLens({ h, clear = false, page, capt
    receipt.shippedRiskLens.push({ width: page.viewportSize().width, now, today, expected, observed })
    await capture('shipped-risk-lens-complete')
   }
+ } catch (error) {
+  journeyError = error
+  throw error
  } finally {
-  for (const campaign of campaigns) await h.db.prepare('DELETE FROM campaigns WHERE id=?').bind(campaign.id).run()
-  const currentSettings = (await read('/api/v1/settings')).data
-  await command('settings.update', { version: currentSettings.version, changes: { timezone: settings.timezone } })
-  h.setNow(undefined)
-  if (page) await page.context().setExtraHTTPHeaders({})
+  try {
+   h.setNow(undefined)
+   if (page) await page.context().setExtraHTTPHeaders({})
+   for (const campaign of campaigns) await h.db.prepare('DELETE FROM campaigns WHERE id=?').bind(campaign.id).run()
+   const currentSettings = (await read('/api/v1/settings')).data
+   await command('settings.update', { version: currentSettings.version, changes: { timezone: settings.timezone } })
+  } catch (restoreError) {
+   if (journeyError) throw new AggregateError([journeyError, restoreError], 'Shipped Risks Lens journey and fixture restoration failed', { cause: journeyError })
+   throw restoreError
+  }
  }
 }
