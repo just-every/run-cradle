@@ -14,7 +14,7 @@ import {createFixtureAuth} from './base-fixture-auth.mjs'
 import {completeFirstRun} from './complete-first-run.mjs'
 import { migrateFixture } from './migrate-fixture.mjs'
 import { queueConsumerOptions } from './queue-consumers.mjs'
-import { testClockSource } from './base-emitted-runtime.mjs'
+import { launchTestClockSource } from './launch-runtime-clock.mjs'
 const { createUlid } = await import('../../src/core/shared/ids.ts')
 const { LAUNCH_APP_ID, launchEntities } = await import('../../src/apps/launch/contracts.ts')
 const { launchFieldIds } = await import('../../src/apps/launch/descriptors.server.ts')
@@ -47,7 +47,7 @@ export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,in
     if (testClock) modules.unshift({ type: 'ESModule', path: path.join(modulesRoot, '__launch_test_clock__.mjs'), contents: `
       import actual, { InstallationCoordinator } from './${path.basename(main)}';
       export { InstallationCoordinator };
-      ${testClockSource}
+      ${launchTestClockSource}
       export default { ...actual, fetch(request,env,context) {
         const now = request.headers.get('x-cradle-test-now');
         return withTestClock(now === null ? undefined : Number(now),()=>actual.fetch(request,env,context));

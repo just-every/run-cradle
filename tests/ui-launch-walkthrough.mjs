@@ -22,7 +22,8 @@ import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
 import {launchWalkthroughRuntime} from './helpers/launch-walkthrough-runtime.mjs'
 import {launchWalkthroughCapture} from './helpers/launch-walkthrough-capture.mjs'
-contract('VIEW-004', '[OPS-006] [OPS-003] [CAMP-006] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
+import {verifyPublicShippedRiskLens} from './helpers/launch-shipped-risk-journey.mjs'
+contract('VIEW-004', '[OPS-006] [OPS-003] [CAMP-006] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [RISK-005] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
 const {h,command,workspaceName,close}=await launchWalkthroughRuntime()
 const receipt={environment:'Actual emitted Worker and native D1, synthetic test fixtures only',screens:[],inspectorChecks:[],decisionHydration:[],errors:[],consoleEvents:[],consoleErrors:[],expectedConsoleErrors:[],unexpectedConsoleErrors:[],external:[],clauses:['VIEW-002','CAMP-001','CAMP-002','CAMP-005','VIEW-004','RISK-003','DEC-002','ACT-001','ACT-003','BASE-PUBLIC-003','AUTO-006','CAMP-007']}
@@ -217,6 +218,18 @@ try {
   receipt.expectedConflictConsoleErrors ??= []
   await verifyConcurrencyScreens({h,page,command,capture,receipt})
   await context.close()
+ }
+ // Keep the public shipped-lens fixture after the retained journeys so its
+ // independent owners, request clock and settings cannot alter their inputs.
+ for (const width of accessibilityWidths) {
+  const viewport={width,height:width===390?844:900}
+  const context=await browser.newContext(accessibilityContextOptions({viewport})),page=await context.newPage()
+  page.on('pageerror',error=>receipt.errors.push(error.message))
+  recordLaunchConsole(page,receipt,width)
+  page.on('request',request=>{if(new URL(request.url()).origin!==h.origin)receipt.external.push(new URL(request.url()).origin)})
+  await context.addCookies([{name:h.ownerSession.cookie.split('=')[0],value:h.ownerSession.cookie.slice(h.ownerSession.cookie.indexOf('=')+1),url:h.origin}])
+  try { await verifyPublicShippedRiskLens({h,clear:true,page,capture:launchWalkthroughCapture({page,receipt,viewport,output,workspaceName}),receipt}) }
+  finally { await context.close() }
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])
 } finally {if(browser)await browser.close();await close();await writeFile(path.join(output,'receipt.json'),stringifySafeEvidence(receipt))}

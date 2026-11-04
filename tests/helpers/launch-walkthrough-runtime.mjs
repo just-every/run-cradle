@@ -12,7 +12,7 @@ const setNotificationMailStatus=status=>{notificationMailStatus=status}
 const outageProvider=recordCalendarProvider()
 const progressProvider=await warehouseNetworkEdge()
 let h
-try{h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',...progressProvider.bindings,CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}, {providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?progressProvider.outbound(request):outageProvider.fetch(request),installedLaunchDefinitions:true,installationOwner:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})}catch(error){await progressProvider.close();throw error}
+try{h=await launchAuthorityRuntime({GOOGLE_CLIENT_ID:'synthetic-cradle-client',GOOGLE_CLIENT_SECRET:'synthetic-cradle-secret',...progressProvider.bindings,CONNECTION_ENCRYPTION_KEY_VERSION:'v1'}, {providerFetch:request=>request.url==='https://relay.egress.example.com/v1/deliver'?progressProvider.outbound(request):outageProvider.fetch(request),installedLaunchDefinitions:true,installationOwner:true,testClock:true,mailResponse:message=>message.subject==='You were mentioned in a comment'&&notificationMailStatus!==202?new Response(null,{status:notificationMailStatus}):undefined})}catch(error){await progressProvider.close();throw error}
 h.notificationOutageProvider=outageProvider
 h.notificationProgressProvider=progressProvider
 const command=async(action,input,expected=[])=>{
