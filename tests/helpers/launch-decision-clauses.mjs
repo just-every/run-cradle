@@ -141,12 +141,57 @@ async function finality(h, reader, campaign, terminal) {
  assert.deepEqual(queuedReplacement.supersedes, replacementDetail.supersedes)
 }
 
-// DEC-006 through the public command and read doors only: a known operator who
+// Non-approval outcomes through public command and read doors: a known operator who
 // is not the requester submits each transition against a freshly read version.
 async function publicTransitions(h, campaign) {
  const operator = await h.addPerson({ name: 'Decision operator' })
  assert.notEqual(operator.id, h.actor)
  const read = async id => (await readHttp(h, `/api/decisions/${id}`)).decision
+ const riskRead = async id => (await readHttp(h, `/api/risks/${id}`)).risk
+ const command = async (action, input, expected = []) => {
+  const lower = Date.now()
+  const response = await h.request(h.ownerSession, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input, expected }) })
+  const upper = Date.now(), body = await response.json()
+  assert.equal(response.status, 200, JSON.stringify(body))
+  assert.equal(body.data.state, 'committed')
+  return { value: body.data.value, lower, upper }
+ }
+ const riskFields = { campaignId: campaign.id, title: 'synthetic-cradle-701', ownerId: h.actor, severity: 'High', dueDate: '2026-12-12', signal: 'Supplier evidence is missing', mitigation: 'Request independent review' }
+ const created = await command('risk.create', { fields: riskFields })
+ const escalated = await command('risk.escalate', { id: created.value.id, reason: 'Evidence needs a decision' }, h.expected('risk', created.value))
+ const linked = escalated.value.risk
+ const control = await command('risk.create', { fields: { ...riskFields, title: 'synthetic-cradle-702', severity: 'Low' } })
+ const resolvedControl = await command('risk.resolve', { id: control.value.id, resolutionNote: 'Independent control is already addressed' }, h.expected('risk', control.value))
+ const capture = async native => {
+  const record = await riskRead(native.id)
+  // Compare public fields with the independently retained native command result,
+  // including all timestamps and resolution metadata before taking a snapshot.
+  const { campaignId, ownerId, ...values } = native
+  assert.deepEqual(record, { ...values, campaign: { id: campaign.id, code: campaign.code, name: campaign.name, launchDate: campaign.launchDate }, owner: { ...record.owner, id: h.actor } })
+  return record
+ }
+ const riskBefore = await capture(linked), controlBefore = await capture(resolvedControl.value)
+ for (const [key, value] of Object.entries(riskFields)) {
+  const observed = key === 'campaignId' ? riskBefore.campaign.id : key === 'ownerId' ? riskBefore.owner.id : riskBefore[key]
+  assert.equal(observed, value, `The captured risk retains its ${key}`)
+ }
+ assert.equal(riskBefore.state, 'Escalated')
+ assert.equal(riskBefore.version, created.value.version + 1)
+ assert.equal(riskBefore.createdAt, created.value.createdAt)
+ for (const [value, bounds] of [[riskBefore.createdAt, created], [riskBefore.updatedAt, escalated], [riskBefore.escalatedAt, escalated]]) {
+  assert.ok(Date.parse(value) >= bounds.lower && Date.parse(value) <= bounds.upper, 'Risk timestamps lie within independent command bounds')
+ }
+ assert.equal(riskBefore.escalatedById, h.actor)
+ assert.equal(riskBefore.escalationReason, 'Evidence needs a decision')
+ for (const field of ['resolutionNote', 'resolvedAt', 'resolvedById']) assert.equal(riskBefore[field], null)
+ assert.equal(controlBefore.state, 'Resolved')
+ assert.equal(controlBefore.resolutionNote, 'Independent control is already addressed')
+ assert.equal(controlBefore.resolvedById, h.actor)
+ assert.ok(Date.parse(controlBefore.resolvedAt) >= resolvedControl.lower && Date.parse(controlBefore.resolvedAt) <= resolvedControl.upper)
+ const unchangedRisks = async action => {
+  assert.deepEqual(await riskRead(linked.id), riskBefore, `${action} preserves the complete linked Escalated risk, version and timestamps`)
+  assert.deepEqual(await riskRead(control.value.id), controlBefore, `${action} preserves the unrelated risk including its resolution metadata`)
+ }
  const queue = async () => (await readHttp(h, '/api/decisions')).items
  const trail = async id => (await readHttp(h, `/api/campaigns/${campaign.id}`)).activity.filter(entry => entry.subjectId === id)
  const submit = async (id, action, input, commandId = h.r.createUlid()) => h.request(operator.session, `/api/v1/commands/launch.decision.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input: { id, ...input }, expected: h.expected('decision', await read(id)) }) })
@@ -177,6 +222,9 @@ async function publicTransitions(h, campaign) {
   const detail = await read(id)
   assert.equal(detail.state, state)
   assert.equal(detail.rationale, input.rationale)
+  assert.equal(detail.risk.id, linked.id)
+  assert.equal(detail.version, value.version)
+  await unchangedRisks(state)
   const entries = (await trail(id)).filter(entry => entry.actionId === commandId)
   for (const [field, next] of [['state', state], ['rationale', input.rationale]]) {
    const entry = entries.find(item => item.fieldName === field)
@@ -195,7 +243,7 @@ async function publicTransitions(h, campaign) {
   }
   return value
  }
- const create = () => h.commit('decision.create', { fields: fields(h, campaign) })
+ const create = async () => (await command('decision.create', { fields: fields(h, campaign, { riskId: linked.id }) })).value
  const rejected = await create(), cancelled = await create()
  for (const rationale of ['', ' ', ' \t\n']) await refuse(rejected.id, 'request-change', { rationale })
  await settle(rejected.id, 'request-change', { rationale: 'Attach current evidence' }, 'In review')
