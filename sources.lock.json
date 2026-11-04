@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4b3ba14390150745b9a182cf59171fb5ccedd9f04195aa98e764c5bcfc12a0ad",
+      "sha256": "3d964ee362d8112aae07345f322bc41fb78522af6ffc7c7af3f4f3cbcce358ad",
       "executable": false
     },
     "DEMO.md": {
@@ -13502,7 +13502,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "e25b12f6c7e96983b6613c4df836d207c5a3073f04124837bbbf24ff129aa4a2",
+      "sha256": "ced15869c2302afc041f05c852b7808228c431d4d32966eff64403eee5fba162",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
