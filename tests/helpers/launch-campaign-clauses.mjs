@@ -35,7 +35,7 @@ export async function verifyPublicCampaignValidation(h) {
  const refuse = async (action, input, id, field) => {
   const before = await detail(id), control = await detail(other.id)
   assert.ok((await read('/api/campaigns?limit=200')).items.some(row => row.id === id), 'Required-field refusals concern a listed active campaign')
-  const persisted = await snapshot()
+  assert.ok(before.campaign.version > campaign.version, 'Refusals use the current version after accepted edits')
   const { response, body } = await command(action, input,
    action === 'campaign.patch' ? h.expected('campaign', before.campaign) : [])
   assert.equal(response.status, 400, `${field}: ${JSON.stringify(body)}`)
@@ -46,6 +46,17 @@ export async function verifyPublicCampaignValidation(h) {
   assert.deepEqual(await detail(other.id), control, `${field} refusal preserves the unrelated campaign`)
   assert.deepEqual(await snapshot(), persisted, `${field} refusal admits no persisted effects`)
  }
+ for (const health of [0, 100]) {
+  const before = await detail(campaign.id)
+  await commit('campaign.patch', { id: campaign.id, changes: { health, budgetMinor: 0, spendMinor: 0 } }, h.expected('campaign', before.campaign))
+  const after = await detail(campaign.id)
+  assert.equal(after.campaign.health, health)
+  assert.equal(after.campaign.budgetMinor, 0); assert.equal(after.campaign.spendMinor, 0)
+  assert.equal(after.campaign.version, before.campaign.version + 1)
+ }
+ // Each refusal must preserve this same admitted state; comparing after every
+ // attempt also catches any earlier refusal that erroneously admitted an effect.
+ const persisted = await snapshot()
  for (const [changes, field] of [
   [{ launchDate: '2026-09-30' }, 'launchDate'],
   [{ health: -1 }, 'health'], [{ health: 101 }, 'health'], [{ health: 1.5 }, 'health'],
@@ -55,14 +66,6 @@ export async function verifyPublicCampaignValidation(h) {
  ]) await refuse('campaign.patch', { id: campaign.id, changes }, campaign.id, field)
  await refuse('campaign.create', { fields: fields('  SYNTHETIC-cradle-149B  ') }, campaign.id, 'code')
 
- for (const health of [0, 100]) {
-  const before = await detail(campaign.id)
-  await commit('campaign.patch', { id: campaign.id, changes: { health, budgetMinor: 0, spendMinor: 0 } }, h.expected('campaign', before.campaign))
-  const after = await detail(campaign.id)
-  assert.equal(after.campaign.health, health)
-  assert.equal(after.campaign.budgetMinor, 0); assert.equal(after.campaign.spendMinor, 0)
-  assert.equal(after.campaign.version, before.campaign.version + 1)
- }
  const before = await detail(campaign.id)
  await commit('campaign.patch', { id: campaign.id, changes: { code: '  synthetic-cradle-149c  ' } }, h.expected('campaign', before.campaign))
  const after = await detail(campaign.id)
