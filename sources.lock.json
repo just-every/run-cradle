@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4e7fde70f5aae0155c3cc544ef6a3773e593cfd352924fd9bc803dd7affa9f25",
+      "sha256": "4ff89f82b8fadb57049c32cd36b09839c0a05fe701b6b6ebc9add9c7843693e7",
       "executable": false
     },
     "DEMO.md": {
@@ -12437,6 +12437,10 @@
       "sha256": "32f431e38602eba598ff767a89323017cff47dc839bb1434acf50f515dcffea6",
       "executable": false
     },
+    "tests/helpers/launch-usage-proof.mjs": {
+      "sha256": "ed0479bf7ec6ebe774461957b8d71e1119b5a2cb00ce2f91db10248c010ca703",
+      "executable": false
+    },
     "tests/helpers/launch-walkthrough-capture.mjs": {
       "sha256": "e5eb638cac691611b8ba42c59352e045a9dbdef357824d9d475b4a4203b63f8c",
       "executable": false
@@ -13122,7 +13126,7 @@
       "executable": false
     },
     "tests/launch-installed-ai-failures.mjs": {
-      "sha256": "fe8c7a0c27a27b294952c135deee1bf76aa22e73e9d95eeedbdcea0391f057d2",
+      "sha256": "dabd4695cef1eb14e9b69074a1022edc3245982fce3618b6133fbac939c162cd",
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
@@ -13138,7 +13142,7 @@
       "executable": false
     },
     "tests/launch-installed-runtime.mjs": {
-      "sha256": "2c989b51713afe5587925e2e56cee185d5b7bf1db4b5be658daf764cc8cbfc32",
+      "sha256": "0727470b07d94a06c411ccf7fd31ffc3c1725ab836777ffd4dce0b48167d162b",
       "executable": false
     },
     "tests/launch-installed-schedules.mjs": {
@@ -13146,7 +13150,7 @@
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
-      "sha256": "9abf46cad4583cd8db9c728e8d771eac14190946fe3d39598626ed9def418d26",
+      "sha256": "e7c5f223efa2260e33c0521fba5551b827792f8afcc55c2f83ad217383c9743f",
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
