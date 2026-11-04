@@ -4,7 +4,7 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {baseAction,baseMenu,chooseBase} from './records-base-menu.mjs'
 import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import assert from 'node:assert/strict'
-import {chromium} from '@playwright/test'
+import {chromium,expect} from '@playwright/test'
 import {recordsBrowserRuntime} from './records-browser-runtime.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
 import {accessibilityContextOptions,accessibilityWidths} from './accessibility-evidence.mjs'
@@ -59,14 +59,35 @@ async function openRecords(page,j){
  if(!await link.count()){await j.action(page.getByRole('button',{name:'Open navigation',exact:true}));link=page.getByRole('dialog',{name:'Navigation',exact:true}).getByRole('link',{name:'Records',exact:true})}
  await j.action(link)
 }
+async function homeChangeTime(page,origin,baseId,record,{before,after}){
+ assert.ok(Date.parse(record.updatedAt)>=before&&Date.parse(record.updatedAt)<=after,'The native write supplies an independently bounded committed instant')
+ const sessionReply=await page.request.get(origin+'/api/session');assert.equal(sessionReply.status(),200)
+ const zone=(await sessionReply.json()).workspace.timezone
+ // Read the browser's real discovery response, including its evaluation clock.
+ const discovery=page.waitForResponse(response=>response.request().method()==='GET'&&new URL(response.url()).pathname==='/api/v1/apps')
+ await page.goto(origin+'/app');const discoveryReply=await discovery;assert.equal(discoveryReply.status(),200)
+ const {data}=await discoveryReply.json(),base=data.items.find(item=>item.id===baseId);assert.ok(base)
+ assert.equal(base.latestChange.id,record.id);assert.equal(base.latestChange.occurredAt,record.updatedAt)
+ const readbackReply=await page.request.get(`${origin}/api/v1/apps/${baseId}/entities/${record.ref.entityId}/records/${record.id}`);assert.equal(readbackReply.status(),200)
+ assert.equal((await readbackReply.json()).data.record.updatedAt,record.updatedAt,'The committed record and discovery retain the same instant')
+ const elapsed=Date.parse(data.evaluatedAt)-Date.parse(record.updatedAt)
+ assert.ok(elapsed>=0&&elapsed<60000,'The newly committed change is less than a minute old')
+ const card=page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:base.name,exact:true}),time=card.getByRole('timer')
+ await expect(time).toHaveText('just now')
+ await expect(time).toHaveAttribute('datetime',record.updatedAt)
+ const absolute=new Intl.DateTimeFormat('en-US',{timeZone:zone,month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit',timeZoneName:'long'}).format(new Date(record.updatedAt))
+ await expect(time).toHaveAccessibleName(absolute)
+ assert.match(await card.innerText(),/1 table · 1 record · changed just now/,'The relative summary remains visible')
+ return {base,proof:{instant:record.updatedAt,workspaceZone:zone,relative:await time.innerText(),absolute}}
+}
 export async function homeReview(output){
  let h,browser
  const receipts=[]
  try{
-  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
+  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic','--no-sandbox'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   for(const width of recordsBrowserWidths(accessibilityWidths)){
    h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0))
-   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900},timezoneId:'UTC'})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');const initialBases=await homeBases(page,h.origin);assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
    const membership=await h.db.prepare('SELECT principal_id,state FROM authority_memberships WHERE app_id=?').bind(LAUNCH_APP_ID).first();assert.ok(membership)
    await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE principal_id=? AND app_id=?").bind(membership.principal_id,LAUNCH_APP_ID).run()
@@ -85,14 +106,22 @@ export async function homeReview(output){
    assert.equal(await page.getByRole('heading',{name:'Choose an application',exact:true}).count(),0);await baseAction(page,'New base',j.action);await templateChoices(page,j,h.origin)
    await baseAction(page,'New base',j.action);await chooserHidden(page);await j.action(page.getByRole('button',{name:'Cancel schema changes',exact:true}));await page.getByRole('button',{name:/^Base ▾/}).waitFor();await j.capture('base-actions')
    await baseAction(page,'New base',j.action);await page.getByLabel('Base name',{exact:true}).fill(`Home records ${width}`);await page.getByLabel('Table name',{exact:true}).fill('Notes');await page.getByLabel('Field name',{exact:true}).fill('Note')
-   const base=await j.adopt(),record=await j.record({Note:`Existing record ${width}`})
-   await page.goto(h.origin+'/app');const native=(await homeBases(page,h.origin)).find(app=>app.id===base.appId);assert.ok(native);assert.equal(native.tableCount,1);assert.equal(native.recordCount,1);assert.equal(native.latestChange.name,`Existing record ${width}`)
+   const base=await j.adopt(),createdBefore=Date.now(),record=await j.record({Note:`Existing record ${width}`}),createdAfter=Date.now()
+   const createdTime=await homeChangeTime(page,h.origin,base.appId,record,{before:createdBefore,after:createdAfter})
+   let native=(await homeBases(page,h.origin)).find(app=>app.id===base.appId);assert.ok(native);assert.equal(native.tableCount,1);assert.equal(native.recordCount,1);assert.equal(native.latestChange.name,`Existing record ${width}`)
+   await j.capture('home-created-time')
+   await j.action(page.getByRole('region',{name:'Recent activity',exact:true}).getByRole('link',{name:native.latestChange.name,exact:true}))
+   await j.action(page.getByRole('button',{name:'Edit record',exact:true}));await page.getByLabel('Note',{exact:true}).fill(`Edited record ${width}`)
+   const editedBefore=Date.now(),edited=await j.command(page.getByRole('button',{name:'Save record',exact:true}),'record.patch'),editedAfter=Date.now()
+   assert.ok(Date.parse(edited.updatedAt)>Date.parse(record.updatedAt),'An actual edit advances the retained instant')
+   const editedTime=await homeChangeTime(page,h.origin,base.appId,edited,{before:editedBefore,after:editedAfter});native=editedTime.base
+   assert.equal(native.latestChange.name,`Edited record ${width}`);await homeBases(page,h.origin)
    const entitiesReply=await page.request.get(`${h.origin}/api/v1/apps/${base.appId}/entities`);assert.equal(entitiesReply.status(),200);const entity=(await entitiesReply.json()).data.items.find(entity=>entity.id===record.ref.entityId);assert.ok(entity,'The created record identifies its own table')
    const csrfReply=await page.request.get(h.origin+'/auth/csrf');assert.equal(csrfReply.status(),200);const {csrfToken}=await csrfReply.json()
    const queryReply=await page.request.post(`${h.origin}/api/v1/apps/${base.appId}/entities/${entity.id}/query`,{headers:{origin:h.origin,'x-csrf-token':csrfToken},data:{}});assert.equal(queryReply.status(),200)
    const visible=(await queryReply.json()).data;assert.equal(native.recordCount,visible.total.value,'Discovery counts exactly the records available through the current query door');assert.equal(native.latestChange.id,visible.items[0].id);assert.equal(native.latestChange.href,`/app/records/${base.appId}/${entity.id}/${visible.items[0].id}`)
    await page.getByRole('region',{name:'Recent activity',exact:true}).getByText(native.latestChange.name,{exact:true}).waitFor();await j.capture('records-only-home')
-   await j.action(page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}));await j.table('Notes');await page.getByRole('link',{name:`Existing record ${width}`,exact:true}).waitFor()
+   await j.action(page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}));await j.table('Notes');await page.getByRole('link',{name:`Edited record ${width}`,exact:true}).waitFor()
    await entryCases(page,j,h,browser,base.appId,width,output)
    const verifyLaunch=await retainedLaunch(page,j,h,width);await verifyLaunch();await page.goto(h.origin+'/app');const current=await homeBases(page,h.origin);assert.ok(current.some(app=>app.id===base.appId));assert.ok(current.some(app=>app.name==='Launch readiness'));assert.equal(await page.getByRole('region',{name:'Your bases',exact:true}).getByRole('link',{name:`Home records ${width}`,exact:true}).getAttribute('href'),base.entryUrl??`/app/records/${base.appId}`);await j.capture('records-and-launch-home')
    if(width===1440){
@@ -129,7 +158,7 @@ export async function homeReview(output){
     assert.equal(new Set(changes.map(row=>row.detail)).size,10,'Each quiet line identifies a different field change')
     await j.capture('home-multi-field-changes')
    }
-   receipts.push({width,baseId:base.appId,recordId:record.id,emptyHomeExercised:true,homeSummaryMatchesQuery:true,newestTenMergeExercised:width===1440,checkpoints:j.checkpoints});await context.close();await h.close();h=null
+   receipts.push({width,baseId:base.appId,recordId:record.id,createdTime:createdTime.proof,editedTime:editedTime.proof,emptyHomeExercised:true,homeSummaryMatchesQuery:true,newestTenMergeExercised:width===1440,checkpoints:j.checkpoints});await context.close();await h.close();h=null
   }
   return receipts
  }finally{await browser?.close();await h?.close()}
