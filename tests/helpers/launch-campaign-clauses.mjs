@@ -1,10 +1,17 @@
 import {recordComment,recordThread} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import { mutationSnapshot } from './launch-write-context.mjs'
+import { LAUNCH_APP_ID, launchEntities, launchFieldIds } from './launch-authority-runtime.mjs'
 
 export async function verifyCampaignClauses(h) {
  const {db,commit,prepare,expected,actor,r,ctx}=h
  const reader=r.createLaunchReader(db,h.policy)
+ const read=async(path,session=h.ownerSession)=>{const response=await h.request(session,path);assert.equal(response.status,200,await response.clone().text());return response.json()}
+ const command=async(action,input,revisions=[],session=h.ownerSession)=>{
+  const response=await h.request(session,`/api/v1/commands/launch.${action}`,{method:'POST',body:JSON.stringify({commandId:r.createUlid(),input,expected:revisions})})
+  assert.equal(response.status,200,await response.clone().text())
+  const receipt=await response.json();assert.equal(receipt.data.state,'committed');return receipt.data.value
+ }
  let campaign=await h.campaign('CLAUSE-CAMPAIGN')
  const unchanged=async(action,input,revisions,field)=>{
   const before=await mutationSnapshot(db)
@@ -27,11 +34,16 @@ export async function verifyCampaignClauses(h) {
  await unchanged('campaign.patch',{id:other.id,changes:{code:'  cLaUsE-cAmPaIgN  '}},expected('campaign',other),'code')
  await unchanged('campaign.create',{fields:{...Object.fromEntries(Object.keys(r.campaignFields.shape).map(key=>[key,key==='tags'?[]:key==='customFields'?{}:campaign[key]]))}},[],'code')
 
- let deliverable=await commit('deliverable.create',{fields:{campaignId:campaign.id,title:'Prepare release notes',ownerId:actor,dueDate:null}})
+ const operator=await h.addPerson({name:'Deliverable operator'})
+ let deliverable=await command('deliverable.create',{fields:{campaignId:campaign.id,title:'Prepare release notes',ownerId:actor,dueDate:null}},[],operator.session)
  assert.equal(deliverable.state,'Open');assert.equal(deliverable.campaignId,campaign.id);assert.equal(deliverable.dueDate,null)
+ const created=(await read(`/api/campaigns/${campaign.id}`)).deliverables.find(row=>row.id===deliverable.id)
+ assert.ok(created);assert.equal(created.title,'Prepare release notes');assert.equal(created.owner.id,actor);assert.equal(created.dueDate,null);assert.equal(created.state,'Open')
  for(const [changes,field] of [[{title:'  '},'title'],[{ownerId:null},'ownerId'],[{campaignId:null},'campaignId']])await unchanged('deliverable.patch',{id:deliverable.id,changes},expected('deliverable',deliverable),field)
- deliverable=await commit('deliverable.patch',{id:deliverable.id,changes:{title:'Publish release notes',dueDate:'2026-10-21'}},expected('deliverable',deliverable))
+ deliverable=await command('deliverable.patch',{id:deliverable.id,changes:{title:'Publish release notes',dueDate:'2026-10-21'}},expected('deliverable',created),operator.session)
  assert.equal(deliverable.title,'Publish release notes');assert.equal(deliverable.dueDate,'2026-10-21')
+ const edited=(await read(`/api/campaigns/${campaign.id}`)).deliverables.find(row=>row.id===deliverable.id)
+ assert.equal(edited.title,'Publish release notes');assert.equal(edited.dueDate,'2026-10-21');assert.equal(edited.version,created.version+1)
  const rollup=async(complete,total)=>{const value=await reader.get(ctx,'campaign',campaign.id);assert.equal(value.deliverableComplete,complete);assert.equal(value.deliverableTotal,total)}
  await rollup(0,1)
  for(const [action,state,complete]of [['complete','Complete',1],['reopen','Open',0]]){
@@ -57,7 +69,42 @@ export async function verifyCampaignClauses(h) {
  assert.ok(JSON.stringify(await recordThread(h,expected('campaign',campaign)[0].ref)).includes('Reviewer booked'));assert.ok(JSON.stringify(detail).includes(deliverable.id))
  const activities=await db.prepare('SELECT id FROM activity_entries WHERE campaign_id=?').bind(campaign.id).all()
  for(const activity of activities.results)assert.ok(JSON.stringify(detail).includes(activity.id),'Detail contains committed campaign activity')
- await commit('deliverable.delete',{id:deliverable.id},expected('deliverable',deliverable))
- await rollup(0,0)
+ const sibling=await command('deliverable.create',{fields:{campaignId:campaign.id,title:'Keep release checklist',ownerId:actor,dueDate:null}})
+ const otherDeliverable=await command('deliverable.create',{fields:{campaignId:other.id,title:'Keep other campaign work',ownerId:actor,dueDate:'2026-12-01'}})
+ const otherBefore=await read(`/api/campaigns/${other.id}`)
+ assert.ok(otherBefore.deliverables.some(row=>row.id===otherDeliverable.id))
+ // The same operator's current policy loses deletion authority while retaining
+ // reads. Use a fresh public version so a stale-write refusal cannot pass this.
+ const narrowed=operator.rules.map(rule=>rule.entityId===launchEntities.deliverable?{...rule,writableFields:rule.writableFields.filter(id=>id!==launchFieldIds.deliverable.title)}:rule)
+ await db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(narrowed),operator.policyId).run()
+ const beforeDelete=await read(`/api/campaigns/${campaign.id}`,operator.session)
+ const current=beforeDelete.deliverables.find(row=>row.id===deliverable.id)
+ assert.ok(current);assert.equal(current.version,deliverable.version)
+ assert.equal(beforeDelete.campaign.deliverableTotal,2);assert.equal(beforeDelete.campaign.deliverableComplete,0)
+ const recordPath=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.deliverable}/records/${deliverable.id}`
+ const recordBefore=await read(recordPath,operator.session)
+ assert.equal(recordBefore.data.record.id,deliverable.id);assert.equal(recordBefore.data.record.version,current.version)
+ const snapshot=await mutationSnapshot(db,{omitSessionReadTimestamp:true})
+ const refused=await h.request(operator.session,'/api/v1/commands/launch.deliverable.delete',{method:'POST',body:JSON.stringify({commandId:r.createUlid(),input:{id:deliverable.id},expected:expected('deliverable',current)})})
+ assert.equal(refused.status,403,await refused.clone().text());assert.equal((await refused.json()).error.code,'forbidden')
+ assert.deepEqual(await mutationSnapshot(db,{omitSessionReadTimestamp:true}),snapshot,'Forbidden deletion changes no stored product, authority, activity, audit, admission, event or outbox row')
+ assert.deepEqual((await read(recordPath,operator.session)).data.record,recordBefore.data.record,'Refused deletion preserves the publicly readable populated record')
+ assert.deepEqual(await read(`/api/campaigns/${campaign.id}`),beforeDelete,'Refused deletion preserves campaign detail and counts')
+ assert.deepEqual(await read(`/api/campaigns/${other.id}`),otherBefore)
+ const deleted=await command('deliverable.delete',{id:deliverable.id},expected('deliverable',current))
+ assert.equal(deleted.deletedId,deliverable.id)
+ const absent=await h.request(h.ownerSession,recordPath)
+ assert.equal(absent.status,404);assert.equal((await absent.json()).error.code,'not_found')
+ const afterDelete=await read(`/api/campaigns/${campaign.id}`)
+ assert.equal(afterDelete.deliverables.some(row=>row.id===deliverable.id),false)
+ assert.equal(afterDelete.campaign.deliverableTotal,beforeDelete.campaign.deliverableTotal-1)
+ assert.equal(afterDelete.campaign.deliverableComplete,beforeDelete.campaign.deliverableComplete)
+ assert.deepEqual(afterDelete.deliverables,beforeDelete.deliverables.filter(row=>row.id!==deliverable.id),'Deletion preserves the populated sibling deliverable')
+ assert.ok(afterDelete.deliverables.some(row=>row.id===sibling.id))
+ for(const part of ['milestones','risks','decisions','customFields'])assert.deepEqual(afterDelete[part],beforeDelete[part],`Deletion preserves unrelated ${part}`)
+ for(const activity of beforeDelete.activity)assert.deepEqual(afterDelete.activity.find(row=>row.id===activity.id),activity,'Deletion preserves prior campaign activity')
+ assert.deepEqual(await read(`/api/campaigns/${other.id}`),otherBefore,'Deletion preserves the other campaign and its work')
+ assert.ok(JSON.stringify(await recordThread(h,expected('campaign',campaign)[0].ref)).includes('Reviewer booked'))
+ await rollup(0,1)
  assert.equal(await db.prepare('SELECT id FROM deliverables WHERE id=?').bind(deliverable.id).first(),null)
 }
