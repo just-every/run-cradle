@@ -8,6 +8,7 @@ const repo=path.resolve(process.env.CRADLE_REPO??process.cwd())
 const fromRepo=file=>import(pathToFileURL(path.join(repo,file)).href)
 const {recordsImportBrowserRuntime}=await fromRepo('tests/helpers/records-import-browser-runtime.mjs')
 const {createUlid}=await fromRepo('src/core/shared/ids.ts')
+const {populateDigestSections,assertDigestSections}=await fromRepo('tests/helpers/launch-digest-journey.mjs')
 const {completeFirstRun}=await fromRepo('tests/helpers/complete-first-run.mjs')
 const {launchFieldIds}=await fromRepo('src/apps/launch/descriptors.server.ts')
 const {LAUNCH_APP_ID,launchEntities}=await fromRepo('src/apps/launch/contracts.ts')
@@ -18,8 +19,10 @@ const monday=addDays(new Date().toISOString().slice(0,10),7+(8-new Date().getUTC
 assert.equal(new Date(monday+'T00:00:00Z').getUTCDay(),1)
 
 await test('emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
- let outbound=0
- const h=await recordsImportBrowserRuntime(0,{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
+ let outbound=0,refusedMail=0
+ const h=await recordsImportBrowserRuntime(0,{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')},mailResponse(message){
+  if(message.subject==='synthetic-cradle-130 refused automation'){refusedMail++;return new Response(null,{status:400})}
+ }})
  try{
   // Keep the configured Base sender: only its provider request is captured at
   // the test network edge. Exclude the initial sign-in mail from schedule counts.
@@ -152,12 +155,15 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   await t.test('NOTIFY-004: enabled Monday digest creates one notification/delivery and mail',async st=>{
    const automation=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='weekly-digest'").first()
    assert.ok(automation,'Native setup must install the digest definition')
-   await command('launch.automation.enable',{id:automation.id},expected('automation',automation))
    const digestSettings=await h.db.prepare("SELECT version FROM channel_digest_settings WHERE id='digest'").first()
    await command('digest.update',{version:digestSettings.version,recipientIds:[owner]})
    const cutoffCampaign=async(code,name,launchDate)=>command('launch.campaign.create',{fields:{code,name,ownerId:owner,startDate:monday,launchDate,objective:'Digest cutoff',statusSummary:'Ready',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}})
    await cutoffCampaign('DAY30','Included at thirty days',addDays(monday,30));await cutoffCampaign('DAY31','Outside thirty days',addDays(monday,31))
-   const archived=await cutoffCampaign('ARCHIVED','Archived launch excluded',monday);await command('launch.campaign.archive',{id:archived.id},expected('campaign',archived))
+   const archived=await cutoffCampaign('ARCHIVED','Archived launch excluded',monday)
+   const digestProof=await populateDigestSections({command,expected,h,tick,owner,campaign,archived,monday,addDays})
+   await command('launch.automation.enable',{id:automation.id},expected('automation',automation))
+   assert.equal(refusedMail,3,'All failed-run controls reach the rejecting provider edge once')
+   await command('launch.campaign.archive',{id:archived.id},expected('campaign',archived))
    const quiet=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:quiet.version,changes:{quietHoursStart:'09:00',quietHoursEnd:'10:00'}})
    const before=await snapshot(),at=monday+'T09:00:00.000Z'
    await tick(monday+'T08:59:59.000Z');assert.equal((await snapshot()).digest,before.digest)
@@ -173,6 +179,9 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    assert.ok(mail,'The provider request must contain the weekly digest')
    const text=mail.content.find(part=>part.type==='text/plain').value
    assert.ok(text.includes('Scheduled held-out campaign'));assert.ok(!text.includes('Archived launch excluded'));const launches=text.split('Launches in the next 30 days')[1].split('Open High and Critical risks')[0];assert.ok(launches.includes('Included at thirty days'));assert.ok(!launches.includes('Outside thirty days'))
+   assertDigestSections(text,monday)
+   st.diagnostic('PROBE NOTIFY-004 acceptance-2: native records and emitted execution with provider refusal, then Monday cron -> exact campaign, launch, open High and Critical risk, unresolved decision and recent Failed run sections; exclusion controls absent')
+   st.diagnostic(JSON.stringify({digestProof}))
    await assertAccepted('weekly-digest')
    const prefs=async()=>{const response=await fetch(h.origin+'/api/v1/settings',{headers:{cookie:h.cookie}});assert.equal(response.status,200);return(await response.json()).data.preferences}
    const setMuted=async mutedKinds=>{const before=await prefs();await command('preferences.update',{version:before.version,preferences:{timezone:before.timezone,mutedKinds,digestEnabled:before.digestEnabled,progressEnabled:before.progressEnabled}})}
@@ -188,7 +197,9 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    await tick(addDays(monday,21)+'T09:00:00.000Z')
    const restored=(await digestRows()).filter(row=>!beforeMuteRows.some(old=>old.id===row.id)&&row.id!==muted[0].id)
    assert.equal(restored.length,1);assert.equal(restored[0].state,'accepted','NOTIFY-007 unmuting restores the next weekly email')
-   assert.equal((await scheduledMail()).filter(message=>message.custom_args.rer_delivery_id===restored[0].group_id).length,1)
+   const restoredMail=(await scheduledMail()).filter(message=>message.custom_args.rer_delivery_id===restored[0].group_id)
+   assert.equal(restoredMail.length,1)
+   assertDigestSections(restoredMail[0].content.find(part=>part.type==='text/plain').value,addDays(monday,21),false)
    assert.equal((await digestRows()).find(row=>row.id===muted[0].id).state,'muted','NOTIFY-007 unmuting never replays the old muted email')
   })
   await t.test('NOTIFY-008: unresolved decision due plus fifteen minutes notifies once and re-arms',async st=>{
