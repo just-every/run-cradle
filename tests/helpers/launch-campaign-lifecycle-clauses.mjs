@@ -2,7 +2,7 @@ import {recordComment,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { mutationSnapshot } from './launch-write-context.mjs'
-import { createUlid, LAUNCH_APP_ID, launchEntities } from './launch-authority-runtime.mjs'
+import { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds } from './launch-authority-runtime.mjs'
 
 /** The emitted Worker and browser registrations share public retention readbacks.
  * Command responses locate records; separate reads capture their stored values. */
@@ -22,7 +22,8 @@ export async function verifyPublicCampaignLifecycle(h, { transition, show = asyn
   return body.data.value
  }
  const record = async (kind, id) => (await read(`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}/records/${id}`)).data.record
- const campaign = await command(h.ownerSession, 'campaign.create', { fields: { code: `PUBLIC-LIFECYCLE-${createUlid()}`, name: 'Retained launch campaign', ownerId: h.owner, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Keep unresolved launch work', statusSummary: 'Awaiting supplier review', phase: 'Build', status: 'Watch', health: 43, budgetMinor: 12345, spendMinor: 678, tags: ['Retention'], customFields: {} } })
+ const code = `PUBLIC-LIFECYCLE-${createUlid()}`
+ const campaign = await command(h.ownerSession, 'campaign.create', { fields: { code, name: 'Retained launch campaign', ownerId: h.owner, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Keep unresolved launch work', statusSummary: 'Awaiting supplier review', phase: 'Build', status: 'Watch', health: 43, budgetMinor: 12345, spendMinor: 678, tags: ['Retention'], customFields: {} } })
  const deliverable = await command(h.ownerSession, 'deliverable.create', { fields: { campaignId: campaign.id, title: 'Retained launch kit', ownerId: h.owner, dueDate: '2026-11-12' } })
  const milestone = await command(h.ownerSession, 'milestone.create', { fields: { campaignId: campaign.id, title: 'Retained supplier review', ownerId: h.owner, type: 'Review', status: 'Not started', startDate: '2026-11-10', endDate: '2026-11-13', conflictReason: null } })
  const risk = await command(h.ownerSession, 'risk.create', { fields: { campaignId: campaign.id, title: 'Retained supplier risk', ownerId: h.owner, severity: 'High', dueDate: '2026-11-11', signal: 'Supplier evidence pending', mitigation: 'Review alternate supplier' } })
@@ -30,6 +31,30 @@ export async function verifyPublicCampaignLifecycle(h, { transition, show = asyn
  const subjects = { campaign, deliverable, milestone, risk, decision }
  const captured = Object.fromEntries(await Promise.all(Object.entries(subjects).map(async ([kind, created]) => [kind, await record(kind, created.id)])))
  for (const [kind, created] of Object.entries(subjects)) assert.equal(captured[kind].id, created.id, `${kind} identity independently read`)
+ const link = (kind, id) => ({ appId: LAUNCH_APP_ID, entityId: launchEntities[kind], recordId: id })
+ const choice = option => ({ option })
+ // Independently authored business expectations prevent an empty or wrong
+ // initial read from becoming the oracle for both archive and restore.
+ const known = {
+  campaign: { code, name: 'Retained launch campaign', ownerId: h.owner, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Keep unresolved launch work', statusSummary: 'Awaiting supplier review', phase: choice('Build'), status: choice('Watch'), health: '0.43', budgetMinor: { minor: '12345', currency: 'USD', scale: 2 }, spendMinor: { minor: '678', currency: 'USD', scale: 2 } },
+  deliverable: { campaignId: link('campaign', campaign.id), title: 'Retained launch kit', ownerId: h.owner, dueDate: '2026-11-12', state: choice('Open') },
+  milestone: { campaignId: link('campaign', campaign.id), title: 'Retained supplier review', ownerId: h.owner, type: choice('Review'), status: choice('Not started'), startDate: '2026-11-10', endDate: '2026-11-13', conflictReason: null },
+  risk: { campaignId: link('campaign', campaign.id), title: 'Retained supplier risk', ownerId: h.owner, severity: choice('High'), dueDate: '2026-11-11', signal: 'Supplier evidence pending', mitigation: 'Review alternate supplier', state: choice('Watching'), resolutionNote: null },
+  decision: { campaignId: link('campaign', campaign.id), riskId: link('risk', risk.id), supersedesId: null, title: 'Retained supplier decision', requesterId: h.owner, assigneeId: h.owner, priority: choice('High'), dueAt: '2026-11-11T15:00:00.000Z', recommendation: 'Retain alternate supplier', impact: 'Launch timing', state: choice('Awaiting approval'), rationale: null },
+ }
+ for (const [kind, values] of Object.entries(known)) {
+  const schema = (await read(`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}`)).data
+  for (const [name, expected] of Object.entries(values)) {
+   const fieldId = launchFieldIds[kind][name]
+   let value = expected
+   if (expected?.option) {
+    const option = schema.fields.find(field => field.id === fieldId)?.options.find(option => option.label === expected.option)
+    assert.ok(option, `${kind}.${name}: public schema exposes ${expected.option}`)
+    value = option.id
+   }
+   assert.deepEqual(captured[kind].fields[fieldId], { state: 'value', value }, `${kind}.${name}: captured public value matches the intended business value`)
+  }
+ }
  const detail = await read(`/api/campaigns/${campaign.id}`)
  // These expectations are authored independently of the captured record maps.
  assert.equal(detail.campaign.name, 'Retained launch campaign')
@@ -46,7 +71,16 @@ export async function verifyPublicCampaignLifecycle(h, { transition, show = asyn
  const inspect = async lifecycle => {
   const current = await record('campaign', campaign.id)
   assert.equal(current.lifecycle, lifecycle, 'Public record exposes the campaign lifecycle')
-  const detail = (await read(`/api/campaigns/${campaign.id}`)).campaign
+  const page = await read(`/api/campaigns/${campaign.id}`), detail = page.campaign
+  assert.equal(detail.code, code)
+  assert.deepEqual(detail.tags, ['Retention'])
+  assert.equal(detail.deliverableTotal, 1)
+  assert.equal(detail.deliverableComplete, 0)
+  assert.equal(detail.unresolvedDecisionCount, 1)
+  assert.equal(page.deliverables.find(row => row.id === deliverable.id)?.state, 'Open')
+  assert.equal(page.milestones.find(row => row.id === milestone.id)?.status, 'Not started')
+  assert.equal(page.risks.find(row => row.id === risk.id)?.state, 'Watching')
+  assert.equal(page.decisions.find(row => row.id === decision.id)?.state, 'Awaiting approval')
   if(lifecycle === 'archived') assert.ok(Number.isFinite(Date.parse(detail.archivedAt)), 'Shipped detail exposes the archived timestamp')
   else assert.equal(detail.archivedAt, null, 'Shipped detail exposes active lifecycle')
   assert.equal((await read('/api/campaigns?limit=200')).items.some(row => row.id === campaign.id), lifecycle === 'active', 'Active list withdraws and returns the populated campaign')
@@ -54,7 +88,11 @@ export async function verifyPublicCampaignLifecycle(h, { transition, show = asyn
    const retained = await record(kind, original.id)
    assert.equal(retained.id, original.id)
    assert.deepEqual(retained.fields, original.fields, `${lifecycle}: every stored ${kind} business value survives`)
-   if (kind !== 'campaign') assert.equal(retained.version, original.version, `${kind} is neither completed nor resolved`)
+   assert.equal(retained.createdAt, original.createdAt, `${kind} retains its creation identity`)
+   if (kind !== 'campaign') {
+    assert.equal(retained.version, original.version, `${kind} is neither completed nor resolved`)
+    assert.equal(retained.updatedAt, original.updatedAt, `${kind} has no hidden lifecycle edit`)
+   }
   }
   await show({ stage: lifecycle === 'archived' ? 'archived' : current.version === captured.campaign.version ? 'active' : 'restored', campaign: current, subjects, operator })
   return current
