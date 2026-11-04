@@ -45,8 +45,18 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   }
   const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
   const {member}=await read('/api/v1/session'),owner=member.id,address=member.email.trim().toLowerCase()
-  const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first()),readinessBefore=await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()
-  await command('settings.update',{version:settings.version,changes:{readinessVersion:readinessBefore.version,timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
+  const definitions=async()=>{const response=await fetch(h.origin+'/api/automations',{headers:{cookie:h.cookie}});assert.equal(response.status,200);return(await response.json()).automations}
+  const definitionsBefore=await definitions()
+  const settings=await read('/api/v1/settings')
+  assert.deepEqual([settings.readinessLeadDays,settings.readinessHour],[5,8])
+  await command('settings.update',{version:settings.version,changes:{readinessVersion:settings.readinessVersion,timezone:'Asia/Kathmandu',readinessHour:10,readinessLeadDays:3}})
+  const settingsAfter=await read('/api/v1/settings'),definitionsAfter=await definitions()
+  assert.deepEqual([settingsAfter.readinessLeadDays,settingsAfter.readinessHour,settingsAfter.readinessVersion],[3,10,settings.readinessVersion+1])
+  const configured=definitionsAfter.find(row=>row.name==='Launch readiness'),original=definitionsBefore.find(row=>row.id===configured.id)
+  assert.equal(configured.trigger,'Every day at 10:00 workspace time, 3 days before launch')
+  assert.deepEqual({...configured,trigger:original.trigger,version:original.version,definitionVersion:original.definitionVersion},original)
+  assert.deepEqual(definitionsAfter.filter(row=>row.id!==configured.id),definitionsBefore.filter(row=>row.id!==configured.id))
+  t.diagnostic('PROBE AUTO-011 3: Settings command changes five days at 08:00 to three days at 10:00 -> public Settings and Monitor agree; other parameters and definitions unchanged')
   const readiness=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='launch-readiness'").first()
   assert.ok(readiness,'Native setup must install the readiness definition')
   await command('launch.automation.enable',{id:readiness.id},expected('automation',readiness))
@@ -79,7 +89,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   }}
   await t.test('MILE-004 AUTO-011: configured local readiness schedule creates one request and mail',async st=>{
    const before=await snapshot(),at=monday+'T'+String(config.hour).padStart(2,'0')+':05:00.000Z'
-   await tick(monday+'T07:59:59.000Z');assert.deepEqual(await snapshot(),before)
+   await tick(monday+'T09:59:59.000Z');assert.deepEqual(await snapshot(),before)
    await tick(at)
    assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0)
    const first=await snapshot();st.diagnostic(JSON.stringify({at,before,first}))
@@ -88,7 +98,7 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    await tick(at)
    const duplicate=await snapshot();assert.equal(duplicate.readiness,first.readiness);assert.equal(duplicate.mail,first.mail)
    const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessVersion:(await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()).version,readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
-   await tick(addDays(monday,1)+'T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
+   await tick(addDays(monday,1)+'T10:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
    await assertAccepted('readiness')
    const readinessRoute=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.readiness}`
    const schema=await read(readinessRoute),stateId=launchFieldIds.readiness.state
