@@ -108,6 +108,7 @@ export type DecisionSummary = {
 };
 
 export type CampaignDetail = CampaignSummary & {
+  archivedAt: string | null;
   objective: string;
   summary: string;
   healthSetBy: Person | null;
