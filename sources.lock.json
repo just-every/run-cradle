@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4e7fde70f5aae0155c3cc544ef6a3773e593cfd352924fd9bc803dd7affa9f25",
+      "sha256": "4b3ba14390150745b9a182cf59171fb5ccedd9f04195aa98e764c5bcfc12a0ad",
       "executable": false
     },
     "DEMO.md": {
@@ -12386,7 +12386,7 @@
       "executable": false
     },
     "tests/helpers/launch-lens-clauses.mjs": {
-      "sha256": "6c8485f725670ef8b5b9c71d0d94d9518a485123865854ecf12a499490952ce8",
+      "sha256": "17632f3bc37ea13a86bce578c718e548145a3a66acc99d776e216cdf6fd38cbb",
       "executable": false
     },
     "tests/helpers/launch-milestone-clauses.mjs": {
@@ -12431,6 +12431,10 @@
     },
     "tests/helpers/launch-settled-row.mjs": {
       "sha256": "cead74bd3f971dd53bf73cc3b5d46363596bff2141502ff609e3381327600fca",
+      "executable": false
+    },
+    "tests/helpers/launch-shipped-lens-journey.mjs": {
+      "sha256": "2002dc1f69c5e2af69753102b53e9f4329be362e9b481979d3843db7fa7a94f3",
       "executable": false
     },
     "tests/helpers/launch-ui-source.mjs": {
