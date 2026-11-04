@@ -7,6 +7,7 @@ import type { RequestContext, PolicyPort } from '../../domains/authority/ports'
 import type { AdmissionPort } from '../../domains/admission/ports'
 import { createImportService } from '../../domains/portability/import.server'
 import { parseCsv } from '../../domains/portability/csv'
+import { EvidenceError } from '../../domains/evidence/shared.server'
 import { idSchema } from '../../domains/records/validators'
 import { createLegacyImportAdapter } from './import.server'
 import { launchImportFields, launchImportKinds, type LaunchImportKind } from './import-fields'
@@ -17,6 +18,7 @@ import type { LaunchContext } from './domain.server'
 export type LaunchImportDependencies = {
  db: D1Database; bucket: R2Bucket; policy: PolicyPort; admission: AdmissionPort; context: LaunchContext
  authenticate(request: Request, ingress: RequestContext['ingress'], id: string): Promise<RequestContext>
+ metadata(ctx: RequestContext, fileId: string): Promise<{ state: string }>
  download(ctx: RequestContext, fileId: string): Promise<Response>
 }
 const envelope = <T extends z.ZodType>(input: T) => z.object({ commandId: idSchema, expected: z.array(z.unknown()).max(0), input }).strict()
@@ -52,6 +54,9 @@ export function createLaunchImportHttp(deps: LaunchImportDependencies) {
    const path = url.pathname.replace(/^\/api\/v1\/launch\/imports/, '')
    if (request.method === 'POST' && path === '/preview') {
     const command = previewInput.parse(await readJsonBody(request)), mapping = await fields(command.input.kind, command.input.mapping)
+    // Metadata checks current file visibility before exposing a rejected upload's parse refusal.
+    const metadata = await deps.metadata(ctx, command.input.fileId)
+    if (metadata.state === 'rejected') throw new ApiError('validation', 'The CSV could not be read: the upload failed validation. Use UTF-8 CSV without binary NUL bytes.')
     const file = await deps.download(ctx, command.input.fileId), bytes = new Uint8Array(await file.arrayBuffer())
     try { parseCsv(bytes) } catch (error) { throw new ApiError('validation', `The CSV could not be read: ${error instanceof Error ? error.message : 'invalid file'}.`) }
     const receipt = await service(command.input.kind).preview(ctx, { commandId: command.commandId, appId: LAUNCH_APP_ID, entityId: launchEntities[command.input.kind], fileId: command.input.fileId, mapping }, bytes)
@@ -94,7 +99,7 @@ export function createLaunchImportHttp(deps: LaunchImportDependencies) {
     return respond({ items: list.results.map(row => { const preview = JSON.parse(row.preview_json) as { creates: number; updates: number; unchanged: number }; return { id: row.id, kind: kindOf(row.entity_id), filename: row.filename, bytes: row.bytes, committedBy: row.actor, committedAt: row.committed_at, creates: preview.creates, updates: preview.updates, unchanged: preview.unchanged } }) })
    }
    throw new ApiError('not_found', 'Unknown launch import route.')
-  } catch (error) { return errorResponse(error, requestId, `${request.method} ${url.pathname}`) }
+  } catch (error) { return errorResponse(error instanceof EvidenceError ? new ApiError(error.code as never, error.message) : error, requestId, `${request.method} ${url.pathname}`) }
  })
  return app
 }
