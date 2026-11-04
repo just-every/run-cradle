@@ -12310,7 +12310,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-clauses.mjs": {
-      "sha256": "3fbec00248fe3c65938cb53349b13a0b36f708e3119d4c6eac448d4be542d4a2",
+      "sha256": "b34eaac6220725935eb69e8aaeea75198c6e1228082f2b06b6853914412440dc",
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
