@@ -13150,7 +13150,7 @@
       "executable": false
     },
     "tests/launch-installed-ui.mjs": {
-      "sha256": "e7c5f223efa2260e33c0521fba5551b827792f8afcc55c2f83ad217383c9743f",
+      "sha256": "03383d62cfc9e7a6929b95cd1eb2de7ff592652e97d39ff1b609ed21a674714f",
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
