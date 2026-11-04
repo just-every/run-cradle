@@ -6,8 +6,46 @@ const {LAUNCH_APP_ID:appId,launchEntities}=await import('../src/apps/launch/cont
 const campaignEntity=launchEntities.campaign,riskEntity=launchEntities.risk
 import {setup,value,campaign,waitFor,expected} from './helpers/launch-installed.mjs'
 
-test('[AUTO-002/003/004/011] emitted queue escalates committed Critical risk within ten seconds; replay, rollback and disable make no duplicate effects',async()=>{
+test('[AUTO-002/003/004/011] emitted queue escalates committed Critical risk within ten seconds; replay, rollback and disable make no duplicate effects',async t=>{
  const automaticBriefs=[],h=await setup({automaticQueues:true,configuration:{AI_PROVIDER_API_KEY:'edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{assert.equal(request.url,'https://api.openai.com/v1/responses');automaticBriefs.push(await request.json());return Response.json({id:'automatic-brief',model:'edge-model',status:'completed',usage:{input_tokens:5,output_tokens:3},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({content:'Automatically dispatched immutable brief',proposedLens:null})}]}]})}});try{
+  // Read the installed definitions before any fixture or settings command can change them.
+  const definitions=async()=>(await h.read('/api/automations')).automations
+  const shipped=await definitions()
+  assert.equal(shipped.length,4,'A fresh install exposes exactly the four shipped automations')
+  const declared=rows=>rows.map(({name,trigger,actions,enabled})=>({name,trigger,actions,enabled})).sort((a,b)=>a.name.localeCompare(b.name))
+  assert.deepEqual(declared(shipped),[
+   {name:'Campaign brief',trigger:'campaign created or campaign updated',actions:['request-ai-analysis'],enabled:true},
+   {name:'Critical risk escalation',trigger:'risk updated',actions:['escalate-risk'],enabled:true},
+   {name:'Launch readiness',trigger:'Every day at 08:00 workspace time, 5 days before launch',actions:['readiness'],enabled:true},
+   {name:'Weekly portfolio digest',trigger:'Every Monday at 09:00 workspace time',actions:['digest'],enabled:false},
+  ])
+  const initialSettings=(await h.read('/api/v1/settings')).data
+  assert.deepEqual([initialSettings.readinessLeadDays,initialSettings.readinessHour],[5,8])
+  t.diagnostic('PROBE AUTO-011 1-5: fresh Monitor and Settings -> four declared names, triggers, actions and enabled defaults; readiness five days at 08:00, Monday 09:00 digest disabled')
+  const effects=async()=>({
+   definitions:(await h.db.prepare('SELECT * FROM automations ORDER BY id').all()).results,
+   runs:(await h.read('/api/automations/runs')).runs,
+   records:(await h.db.batch(['activity_entries','decisions','launch_readiness','notifications','channel_deliveries','launch_analyses','launch_analysis_requests'].map(table=>h.db.prepare(`SELECT * FROM ${table} ORDER BY id`)))).map(result=>result.results),
+  })
+  async function refuseShippedEdits(){
+   const before=await effects(),visible=await definitions(),subject=createUlid()
+   for(const installed of visible){
+    // These are well-formed save payloads, so the refusal must come from the shipped-definition rule.
+    const definition={name:installed.name,enabled:installed.enabled,trigger:{kind:'event',event:'risk.updated.v1'},actions:[{command:'add-activity',input:{campaignId:subject,message:'Must never be committed'}}]}
+    for(const [parameter,change] of [
+     ['name',{name:'Forbidden replacement'}],
+     ['trigger',{trigger:{kind:'event',event:'campaign.created.v1'}}],
+     ['actions',{actions:[{command:'request-ai-analysis',input:{campaignId:subject}}]}],
+    ]){
+     const refused=await h.command('launch.automation.save',{id:installed.id,definition:{...definition,...change}},expected(launchEntities.automation,installed),400)
+     assert.equal(refused.error.code,'validation',`${installed.name} ${parameter} must be a validation refusal`)
+     assert.match(refused.error.message,/Shipped automations only permit/)
+     assert.deepEqual(await definitions(),visible,`${installed.name} ${parameter} refusal preserves every public definition and version`)
+     assert.deepEqual(await effects(),before,`${installed.name} ${parameter} refusal preserves definitions and effects`)
+    }
+   }
+  }
+  await refuseShippedEdits()
   const c=await campaign(h),owner=c.ownerId??(await h.db.prepare('SELECT owner_id FROM campaigns WHERE id=?').bind(c.id).first()).owner_id
   const r=value(await h.command('launch.risk.create',{fields:{campaignId:c.id,ownerId:owner,title:'Risk',severity:'High',signal:'Signal',mitigation:'Mitigation',dueDate:null}}))
   const failed=await h.command('launch.risk.patch',{id:r.id,changes:{severity:'Critical'}},expected(riskEntity,{...r,version:r.version+1}),409);assert.ok(failed.error)
@@ -22,6 +60,25 @@ test('[AUTO-002/003/004/011] emitted queue escalates committed Critical risk wit
   const campaignStart=Date.now(),automatic=await campaign(h,'AUTOMATIC')
   await waitFor(()=>h.db.prepare('SELECT state FROM automation_runs WHERE subject_id=?').bind(automatic.id).first(),row=>row?.state==='Succeeded')
   assert.ok(Date.now()-campaignStart<10000);assert.equal(automaticBriefs.length,1);assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_analyses WHERE subject_id=?').bind(automatic.id).first()).n,1)
+  // Repeat against populated execution history, then exercise every shipped disable door.
+  await refuseShippedEdits()
+  t.diagnostic('PROBE AUTO-011 6: name, trigger and action save attempts for all four current versions -> validation refusal; public definitions and populated effects unchanged')
+  for(let installed of await definitions()){
+   if(!installed.enabled)installed=value(await h.command('launch.automation.enable',{id:installed.id},expected(launchEntities.automation,installed)))
+   const disabled=value(await h.command('launch.automation.disable',{id:installed.id},expected(launchEntities.automation,installed)))
+   const after=(await definitions()).find(row=>row.id===installed.id)
+   assert.equal(disabled.enabled,false);assert.equal(after.enabled,false)
+   assert.equal(after.version,installed.version+1);assert.equal(after.definitionVersion,installed.definitionVersion+1)
+   assert.deepEqual({name:after.name,trigger:after.trigger,actions:after.actions},{name:installed.name,trigger:shipped.find(row=>row.id===installed.id).trigger,actions:shipped.find(row=>row.id===installed.id).actions})
+  }
+  const disabledEffects=await effects()
+  const noBrief=await campaign(h,'DISABLED')
+  await h.tick()
+  assert.equal(automaticBriefs.length,1)
+  assert.deepEqual((await h.read('/api/automations/runs')).runs,disabledEffects.runs,'Disabled shipped definitions admit no new run')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_analyses WHERE subject_id=?').bind(noBrief.id).first()).n,0)
+  t.diagnostic('PROBE AUTO-011 6: native disable commands -> all four read back disabled with advanced versions and preserved names, triggers and actions; later campaign creates no brief')
+
  }finally{await h.close()}
 })
 
