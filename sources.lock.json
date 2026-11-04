@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "1c728d7b1e491bc03fec8c4d99ceafa43952b94abed3169672db439fd84ca3e5",
+      "sha256": "8dbc2c7c6ae9f9c920aeb32b141dc4937b80b2374e6166a61ddf5c6d5d839bdf",
       "executable": false
     },
     "DEMO.md": {
@@ -12370,7 +12370,7 @@
       "executable": false
     },
     "tests/helpers/launch-duplication-screens.mjs": {
-      "sha256": "0204cd8aaad8961fdb6e219ba07542c59826bc6aa3e65994c939a4a67198ba06",
+      "sha256": "c7f20a1c5f0d98a9b3c793e316e29bbdaf29d703d36c4d3d67bcea2cd8623e45",
       "executable": false
     },
     "tests/helpers/launch-grid-view-screens.mjs": {
@@ -12422,7 +12422,7 @@
       "executable": false
     },
     "tests/helpers/launch-public-duplication.mjs": {
-      "sha256": "062facea7605c32a0a222ed3d4d2a5074b7dda75861adf14834ac369458cc558",
+      "sha256": "fa123633cb776f2b40adebdd5393c25e2e96d39cbd03cd78293f6556a53a1191",
       "executable": false
     },
     "tests/helpers/launch-risk-clauses.mjs": {

@@ -40,8 +40,10 @@ export async function verifyPublicCampaignDuplication({ h, namespace, completeAn
  const dated = await create('deliverable.create', { fields: { campaignId: source.id, title: 'Reviewed release kit', ownerId: h.owner, dueDate: '2028-02-27' } })
  let undated = await create('deliverable.create', { fields: { campaignId: source.id, title: 'Completed undated checklist', ownerId: h.owner, dueDate: null } })
  undated = await create('deliverable.complete', { id: undated.id }, revision('deliverable', undated))
- const predecessor = await create('milestone.create', { fields: { campaignId: source.id, title: 'Reusable review', ownerId: h.owner, type: 'Review', status: 'On track', startDate: '2028-02-23', endDate: '2028-02-25', conflictReason: null } })
- let successor = await create('milestone.create', { fields: { campaignId: source.id, title: 'Reusable approval', ownerId: h.owner, type: 'Approval', status: 'Watch', startDate: '2028-02-26', endDate: null, conflictReason: 'Keep the reviewed sequence' } })
+ let predecessor = await create('milestone.create', { fields: { campaignId: source.id, title: 'Reusable review', ownerId: h.owner, type: 'Review', status: 'Not started', startDate: '2028-02-23', endDate: '2028-02-25', conflictReason: null } })
+ predecessor = await create('milestone.patch', { id: predecessor.id, changes: { status: 'On track' } }, revision('milestone', predecessor))
+ let successor = await create('milestone.create', { fields: { campaignId: source.id, title: 'Reusable approval', ownerId: h.owner, type: 'Approval', status: 'Not started', startDate: '2028-02-26', endDate: null, conflictReason: null } })
+ successor = await create('milestone.patch', { id: successor.id, changes: { status: 'Watch', conflictReason: 'Keep the reviewed sequence' } }, revision('milestone', successor))
  successor = await create('milestone.set-predecessors', { id: successor.id, predecessorIds: [predecessor.id] }, revision('milestone', successor))
  const risk = await create('risk.create', { fields: { campaignId: source.id, title: 'Source-only risk', ownerId: h.owner, severity: 'High', dueDate: null, signal: 'Source-only signal', mitigation: 'Source-only mitigation' } })
  const person = await h.addPerson({ name: 'Duplication notice recipient' })
@@ -62,7 +64,7 @@ export async function verifyPublicCampaignDuplication({ h, namespace, completeAn
  assert.ok((await read(`/api/automations/${automation.id}/runs`)).runs.length > 0, 'The enabled automation really ran for source creation')
  const sourceRows = async () => {
   const result = {}
-  for (const table of ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'campaign_tags', 'launch_custom_values', 'activity_entries', 'channel_notifications']) result[table] = await all(h.db, `SELECT * FROM ${table} WHERE ${table === 'campaigns' ? 'id' : 'campaign_id'}=? ORDER BY id`, source.id)
+  for (const table of ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'campaign_tags', 'launch_custom_values', 'activity_entries', 'channel_notifications']) result[table] = await all(h.db, `SELECT * FROM ${table} WHERE ${table === 'campaigns' ? 'id' : 'campaign_id'}=? ORDER BY 1`, source.id)
   result.comments = await all(h.db, 'SELECT * FROM evidence_comments WHERE record_id=? ORDER BY id', source.id)
   result.analyses = await all(h.db, 'SELECT * FROM launch_analyses WHERE subject_id=? ORDER BY id', source.id)
   result.dependencies = await all(h.db, 'SELECT * FROM milestone_dependencies WHERE milestone_id=? ORDER BY id', successor.id)
@@ -71,7 +73,7 @@ export async function verifyPublicCampaignDuplication({ h, namespace, completeAn
  const original = await sourceRows()
  const effects = async () => {
   const result = {}
-  for (const table of ['admission_events', 'admission_outbox', 'automation_runs', 'notifications', 'channel_notifications', 'channel_deliveries']) result[table] = await all(h.db, `SELECT * FROM ${table} ORDER BY id`)
+  for (const table of ['admission_events', 'admission_outbox', 'automation_runs', 'notifications', 'channel_notifications', 'channel_deliveries']) result[table] = await all(h.db, `SELECT * FROM ${table} ORDER BY 1`)
   return result
  }
  const effectsBefore = await effects(), allIds = new Set([source.id, dated.id, undated.id, predecessor.id, successor.id])
@@ -116,7 +118,7 @@ export async function verifyPublicCampaignDuplication({ h, namespace, completeAn
   assert.ok(copy.activity.every(item => item.type === 'campaign.duplicated' && item.subjectId === campaign.id && !before.activity.some(old => old.id === item.id)), 'No source historical activity is copied')
   assert.ok(copy.activity.every(item => item.actionId === result.commandId && item.actor.id === h.owner), 'Fresh duplication activity belongs to this command and operator')
   assert.deepEqual(await all(h.db, 'SELECT id FROM launch_analyses WHERE subject_id=?', campaign.id), [])
-  assert.deepEqual(await all(h.db, 'SELECT id FROM channel_notifications WHERE campaign_id=?', campaign.id), [])
+  assert.deepEqual(await all(h.db, 'SELECT notification_id FROM channel_notifications WHERE campaign_id=?', campaign.id), [])
   assert.deepEqual(await effects(), effectsBefore, 'Duplication adds no event, queued command, run, notification or delivery')
   await (await h.runtime.getWorker()).queue('cradle-work', [1, 2].map(attempt => ({ id: createUlid(), timestamp: Date.now(), attempts: attempt, body: { kind: 'cradle.launch.events.v1', commandId: result.commandId } })))
   assert.deepEqual(await effects(), effectsBefore, 'Real event queue delivery and replay add no automation work')

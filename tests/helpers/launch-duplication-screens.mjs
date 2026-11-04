@@ -14,7 +14,16 @@ export async function verifyCampaignDuplicationScreens(output) {
  const analysis = clauseAnalysisFixture()
  let h
  try {
-  h = await launchAuthorityRuntime(analysis.configuration, { installedLaunchDefinitions: true, installationOwner: true, providerFetch: analysis.providerFetch })
+  // This independent fixture has its own listener as well as its own database;
+  // the outer walkthrough must never reuse its closing HTTP connections.
+  const originalPort = process.env.CRADLE_AUTHORITY_PORT
+  try {
+   process.env.CRADLE_AUTHORITY_PORT = String(Number(originalPort ?? 41879) + 1)
+   h = await launchAuthorityRuntime(analysis.configuration, { installedLaunchDefinitions: true, installationOwner: true, providerFetch: analysis.providerFetch })
+  } finally {
+   if (originalPort === undefined) delete process.env.CRADLE_AUTHORITY_PORT
+   else process.env.CRADLE_AUTHORITY_PORT = originalPort
+  }
   for (const width of [1440, 390]) {
    const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 } })
    try {
@@ -60,19 +69,19 @@ export async function verifyCampaignDuplicationScreens(output) {
       assert.equal(new URL(page.url()).pathname, `/app/campaigns/${copy.campaign.id}`, 'The grid link opened the new copy')
       await page.getByText(input.newCode, { exact: true }).waitFor()
       const details = page.locator('.portfolio-priority-details')
-      if (!await details.evaluate(element => element.open)) await details.locator('summary').click()
+      if (!await details.evaluate(element => element.open)) await details.locator(':scope > summary').click()
       for (const text of ['Ship the reviewed release', 'Supplier review complete', 'Reviewed reusable plan', '23.5', 'Yes', expectedDates.custom]) await expect(details).toContainText(text)
       const formatted = date => new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${date}T12:00:00Z`))
       for (const date of [expectedDates.start, expectedDates.launch]) await expect(details).toContainText(formatted(date))
       await expect(page.locator('.portfolio-deliverable-list')).toContainText(`Due ${formatted(expectedDates.due)}`)
       await expect(page.locator('.portfolio-deliverable-list li').filter({ hasText: 'Completed undated checklist' }).getByRole('checkbox')).toBeChecked()
       const risks = page.locator('.portfolio-priority-risks'), decisions = page.locator('.portfolio-priority-decisions')
-      for (const section of [risks, decisions]) if (!await section.evaluate(element => element.open)) await section.locator('summary').click()
+      for (const section of [risks, decisions]) if (!await section.evaluate(element => element.open)) await section.locator(':scope > summary').click()
       await expect(risks).toContainText('No risks are linked.')
       await expect(decisions).toContainText('No unresolved decisions are linked.')
       await expect(page.locator('body')).not.toContainText('Source-only discussion')
       const history = page.locator('.portfolio-priority-history')
-      if (!await history.evaluate(element => element.open)) await history.locator('summary').click()
+      if (!await history.evaluate(element => element.open)) await history.locator(':scope > summary').click()
       await expect(history.locator('.portfolio-activity-list')).not.toContainText('Source creation control fired')
       await capture(input.newLaunchDate ? 'duplicate-shift-open' : 'duplicate-same-open')
       await page.goto(`${h.origin}/app/milestones/${milestone.id}`)
