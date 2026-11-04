@@ -2,6 +2,7 @@ import {recordComment,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { mutationSnapshot } from './launch-write-context.mjs'
+import { verifyPublicCampaignDuplication } from './launch-public-duplication.mjs'
 
 const shift = (date, count, field = 'date') => {
  assert.ok(typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date), `${field}: expected YYYY-MM-DD, received ${JSON.stringify(date)}`)
@@ -272,4 +273,5 @@ export async function verifyCampaignLifecycleClauses(h) {
  assert.equal(await h.db.prepare('SELECT id FROM portability_previews WHERE id=?').bind(imported.previewId).first(), null, 'Deletion removes the actual retained import preview')
  assert.equal((await h.db.prepare('SELECT state FROM evidence_files WHERE id=?').bind(imported.fileId).first()).state, 'erased', 'The staged import file is included in campaign erasure')
  await restoreRemovedOwner(h, reader, f.person)
+ await verifyPublicCampaignDuplication({ h, namespace: 'NATIVE', completeAnalysis: h.completeAnalysis })
 }

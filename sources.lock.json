@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4e7fde70f5aae0155c3cc544ef6a3773e593cfd352924fd9bc803dd7affa9f25",
+      "sha256": "1c728d7b1e491bc03fec8c4d99ceafa43952b94abed3169672db439fd84ca3e5",
       "executable": false
     },
     "DEMO.md": {
@@ -12314,7 +12314,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
-      "sha256": "66bab6ba382b22016ebfefa8554c704d20ed29d55c2ecb9c3fe75542c0385bd3",
+      "sha256": "2a35ae8d1c2b18dd2a9ee8acfe18563a1ac1b2710f5518e106c155c2eb26baea",
       "executable": false
     },
     "tests/helpers/launch-clause-analysis.mjs": {
@@ -12369,6 +12369,10 @@
       "sha256": "91a853f199e35757d03ad5233c7ae0bf591d78d07151d1a3fa76b5c2cad71843",
       "executable": false
     },
+    "tests/helpers/launch-duplication-screens.mjs": {
+      "sha256": "0204cd8aaad8961fdb6e219ba07542c59826bc6aa3e65994c939a4a67198ba06",
+      "executable": false
+    },
     "tests/helpers/launch-grid-view-screens.mjs": {
       "sha256": "54d87668eb521ddba8b7d9f37b0d5da62065dc75fc099a8b3b2ad7217a7d4b7b",
       "executable": false
@@ -12415,6 +12419,10 @@
     },
     "tests/helpers/launch-portfolio-screens.mjs": {
       "sha256": "df93d99567527a168902c6565a76120b896fab10554d2b333bbfe62b8243a57d",
+      "executable": false
+    },
+    "tests/helpers/launch-public-duplication.mjs": {
+      "sha256": "062facea7605c32a0a222ed3d4d2a5074b7dda75861adf14834ac369458cc558",
       "executable": false
     },
     "tests/helpers/launch-risk-clauses.mjs": {
@@ -13502,7 +13510,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "44d46fc019076af7d49eb169c621e78eee34d88ebbdfc94e95021ca4e08d5ada",
+      "sha256": "bff257e17fbdfcab7c0ec6373011a3d2b3578ab12e47075e5b16c89e6330fea8",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
