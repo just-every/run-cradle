@@ -12366,7 +12366,7 @@
       "executable": false
     },
     "tests/helpers/launch-doors-browser.mjs": {
-      "sha256": "91a853f199e35757d03ad5233c7ae0bf591d78d07151d1a3fa76b5c2cad71843",
+      "sha256": "c13425f9cfa497dd6d8cd97c9d3b04e198b85b8ceae0b1ce4f1c061bcb13b680",
       "executable": false
     },
     "tests/helpers/launch-grid-view-screens.mjs": {
@@ -12414,7 +12414,7 @@
       "executable": false
     },
     "tests/helpers/launch-paging-journey.mjs": {
-      "sha256": "a57001340f3ee4b6130551d1435e4382bfc1693535877f8c1d7cc9d8a70566e9",
+      "sha256": "00ddf17f7fbdfeb77397beddfaca8ca4499f7658fcae6ae22da0587b1cc58b89",
       "executable": false
     },
     "tests/helpers/launch-portfolio-screens.mjs": {
@@ -13154,7 +13154,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "e59ae14de00e6922b223514dbd8f84f6bc17e3a47b5c463e4687387cedafcaa3",
+      "sha256": "713e659e16b942cb8c32464906e177bcf23504ca82e5e75ddb41ca914e4020bb",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
@@ -13502,7 +13502,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "c2675c789d8f3d01f5547207a03fe3ad5a5943ab577fb836e5bb0657310769e5",
+      "sha256": "cff1d8880d20a5b67905cf6bbab5b38e991b91e347d3c6eee38a904abe3eff6e",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {

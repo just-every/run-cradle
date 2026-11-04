@@ -7,13 +7,13 @@ import { createUlid, LAUNCH_APP_ID, launchEntities } from './launch-authority-ru
 /** One operator's browser on the emitted Worker, with evidence capture and the app's own doors. */
 export function doorsBrowser({ h, page, width, output, session, receipt }) {
  const visit = async route => { await page.goto(h.origin + route); await page.waitForLoadState('networkidle') }
- async function capture(name) {
+ async function capture(name, { fullPage = true } = {}) {
   await page.waitForLoadState('networkidle')
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${name} at ${width} must not scroll sideways`)
   const violations = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact))
   assert.deepEqual(violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`), [], `${name} at ${width} accessibility`)
   const file = `${name}-${width}.png`
-  await page.screenshot({ path: path.join(output, file), fullPage: true })
+  await page.screenshot({ path: path.join(output, file), fullPage })
   receipt.screens.push({ name, width, file })
  }
  async function download(trigger) {

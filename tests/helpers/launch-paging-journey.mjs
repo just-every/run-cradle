@@ -24,12 +24,14 @@ export async function pagingCampaigns(h, author) {
  // or the product comparator. Do not sort an observed page before comparing it.
  const expected = authored.map(row => row.id).sort()
  const last = authored.find(row => row.id === expected.at(-1))
- await command('launch.campaign.patch', { id: last.id, changes: { launchDate: '2026-02-01' } }, [ref(last)])
+ authored[authored.indexOf(last)] = await command('launch.campaign.patch', { id: last.id, changes: { launchDate: '2026-02-01' } }, [ref(last)])
  const excluded = [await create({ phase: 'Build' }), await create({ status: 'Blocked' }), await create({ ownerId: author.id })]
  const archived = await create({})
- await command('launch.campaign.archive', { id: archived.id }, [ref(archived)])
- excluded.push(archived)
- return { reader, expected, excluded: excluded.map(row => row.id), query: 'view=mine&phase=Review&status=Watch&sort=name&direction=asc' }
+ excluded.push(await command('launch.campaign.archive', { id: archived.id }, [ref(archived)]))
+ const cleanup = async () => {
+  for (const row of [...authored, ...excluded]) await command('launch.campaign.delete', { id: row.id, confirmationCode: row.code }, [ref(row)])
+ }
+ return { reader, expected, excluded: excluded.map(row => row.id), query: 'view=mine&phase=Review&status=Watch&sort=name&direction=asc', cleanup }
 }
 
 export async function verifyPagingCampaigns(h, fixture) {

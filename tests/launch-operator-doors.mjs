@@ -315,7 +315,7 @@ test('[VIEW-007] campaign pages cap at 200, order ties by ID, report exact filte
  for (let page = await read(first.cursor); ; page = await read(page.cursor)) { rest.push(...page.items.map(item => item.id)); if (!page.cursor) break }
  assert.deepEqual([...first.items.map(item => item.id), ...rest], before, 'Every existing record appears once and in order')
  const fixture = await pagingCampaigns(h, { id: h.owner, session: h.ownerSession })
- await verifyPagingCampaigns(h, fixture)
+ try { await verifyPagingCampaigns(h, fixture) } finally { await fixture.cleanup() }
 })
 
 test('[PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good', async t => {
