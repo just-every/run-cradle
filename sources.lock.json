@@ -12442,7 +12442,7 @@
       "executable": false
     },
     "tests/helpers/launch-shipped-risk-journey.mjs": {
-      "sha256": "0c2685db89a5246137bd16aec908b0d45d4cc7fcbbc3e47cb6d6f5e9e51fee9c",
+      "sha256": "b2108fad9e20cebd88cfcea3a284a3036705960757a181e8f994e24797ad3b53",
       "executable": false
     },
     "tests/helpers/launch-ui-source.mjs": {
