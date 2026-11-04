@@ -3,7 +3,78 @@ import assert from 'node:assert/strict'
 import { mutationSnapshot } from './launch-write-context.mjs'
 import { LAUNCH_APP_ID, launchEntities, launchFieldIds } from './launch-authority-runtime.mjs'
 
+// Exercise the emitted Worker's command and query doors independently of the
+// retained handler matrix below. Every patch uses the version just read over HTTP.
+export async function verifyPublicCampaignValidation(h) {
+ const read = async route => {
+  const response = await h.request(h.ownerSession, route), body = await response.json()
+  assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+  return body
+ }
+ const command = async (action, input, expected = []) => {
+  const commandId = h.r.createUlid()
+  const response = await h.request(h.ownerSession, `/api/v1/commands/launch.${action}`, {
+   method: 'POST', body: JSON.stringify({ commandId, input, expected }),
+  })
+  return { response, body: await response.json(), commandId }
+ }
+ const commit = async (action, input, expected = []) => {
+  const { response, body } = await command(action, input, expected)
+  assert.equal(response.status, 200, `${action}: ${JSON.stringify(body)}`)
+  assert.equal(body.data.state, 'committed')
+  return body.data.value
+ }
+ const fields = code => ({ code, name: 'Native validation campaign', ownerId: h.actor,
+  startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Validate before committing',
+  statusSummary: '', phase: 'Planning', status: 'On track', health: 50,
+  budgetMinor: 100, spendMinor: 25, tags: [], customFields: {} })
+ const campaign = await commit('campaign.create', { fields: fields('synthetic-cradle-149a') })
+ const other = await commit('campaign.create', { fields: fields('synthetic-cradle-149b') })
+ const detail = id => read(`/api/campaigns/${id}`)
+ const snapshot = () => mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ const refuse = async (action, input, id, field) => {
+  const before = await detail(id), control = await detail(other.id)
+  assert.ok((await read('/api/campaigns?limit=200')).items.some(row => row.id === id), 'Required-field refusals concern a listed active campaign')
+  const persisted = await snapshot()
+  const { response, body } = await command(action, input,
+   action === 'campaign.patch' ? h.expected('campaign', before.campaign) : [])
+  assert.equal(response.status, 400, `${field}: ${JSON.stringify(body)}`)
+  assert.equal(body.error.code, 'validation', 'A current version must reach validation, not a conflict shortcut')
+  assert.ok(body.error.issues?.some(issue => issue.path.split('.').at(-1) === field)
+   || new RegExp(`\\b${field}\\b`, 'i').test(body.error.message), `${field} must be named in the public validation error`)
+  assert.deepEqual(await detail(id), before, `${field} refusal preserves public records, versions and activity`)
+  assert.deepEqual(await detail(other.id), control, `${field} refusal preserves the unrelated campaign`)
+  assert.deepEqual(await snapshot(), persisted, `${field} refusal admits no persisted effects`)
+ }
+ for (const [changes, field] of [
+  [{ launchDate: '2026-09-30' }, 'launchDate'],
+  [{ health: -1 }, 'health'], [{ health: 101 }, 'health'], [{ health: 1.5 }, 'health'],
+  [{ budgetMinor: -1 }, 'budgetMinor'], [{ spendMinor: -1 }, 'spendMinor'],
+  [{ ownerId: null }, 'ownerId'], [{ startDate: null }, 'startDate'], [{ launchDate: null }, 'launchDate'],
+  [{ code: '  SYNTHETIC-cradle-149B  ' }, 'code'],
+ ]) await refuse('campaign.patch', { id: campaign.id, changes }, campaign.id, field)
+ await refuse('campaign.create', { fields: fields('  SYNTHETIC-cradle-149B  ') }, campaign.id, 'code')
+
+ for (const health of [0, 100]) {
+  const before = await detail(campaign.id)
+  await commit('campaign.patch', { id: campaign.id, changes: { health, budgetMinor: 0, spendMinor: 0 } }, h.expected('campaign', before.campaign))
+  const after = await detail(campaign.id)
+  assert.equal(after.campaign.health, health)
+  assert.equal(after.campaign.budgetMinor, 0); assert.equal(after.campaign.spendMinor, 0)
+  assert.equal(after.campaign.version, before.campaign.version + 1)
+ }
+ const before = await detail(campaign.id)
+ await commit('campaign.patch', { id: campaign.id, changes: { code: '  synthetic-cradle-149c  ' } }, h.expected('campaign', before.campaign))
+ const after = await detail(campaign.id)
+ assert.equal(after.campaign.code, 'synthetic-cradle-149c')
+ assert.equal(after.campaign.version, before.campaign.version + 1)
+ const listed = (await read('/api/campaigns?limit=200')).items.find(row => row.id === campaign.id)
+ assert.equal(listed.code, 'synthetic-cradle-149c'); assert.equal(listed.health, 100)
+ assert.equal(listed.budgetMinor, 0); assert.equal(listed.spendMinor, 0)
+}
+
 export async function verifyCampaignClauses(h) {
+ await verifyPublicCampaignValidation(h)
  const {db,commit,prepare,expected,actor,r,ctx}=h
  const reader=r.createLaunchReader(db,h.policy)
  const read=async(path,session=h.ownerSession)=>{const response=await h.request(session,path);assert.equal(response.status,200,await response.clone().text());return response.json()}
