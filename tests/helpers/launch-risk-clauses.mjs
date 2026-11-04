@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { writeContext, mutationSnapshot } from './launch-write-context.mjs'
+import { verifyPublicRiskIsolation } from './launch-risk-isolation.mjs'
 
 const day = (date, offset) => new Date(Date.parse(`${date}T12:00:00Z`) + offset * 86400000).toISOString().slice(0, 10)
 const fields = (h, campaign, changes = {}) => ({ campaignId: campaign.id, title: 'Evidence requires review', ownerId: h.actor, severity: 'High', dueDate: null, signal: 'Supplier evidence', mitigation: 'Review the evidence', ...changes })
@@ -448,4 +449,5 @@ export async function verifyRiskClauses(h) {
  await shippedLens(h, reader)
  await publicLifecycle(h, campaign)
  await publicOpenStates(h)
+ await verifyPublicRiskIsolation(h, { read: (route, session) => publicRead(h, route, session), command: (...args) => publicCommand(h, ...args), snapshot: id => snapshot(h.db, id) })
 }
