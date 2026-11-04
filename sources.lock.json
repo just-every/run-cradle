@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "f3fcf632d0b5c0c027d6d82b02d9527c69868642b743e49a25b026c49a466af3",
+      "sha256": "e9ea658848503c2830a6037ff14c9ffc1ddf102e723693101ffe605b87d896d9",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "370ae8842c730b5c42c5b045c4afe7410c25be7a3ac247089bca2d6ff21c3d45",
+      "sha256": "95eb5e205b4310ad03570a03e88aec3d83a03a6b1188ef8c3a6db7c380299eb8",
       "executable": false
     },
     "DEMO.md": {
@@ -12386,7 +12386,7 @@
       "executable": false
     },
     "tests/helpers/launch-lens-clauses.mjs": {
-      "sha256": "6c8485f725670ef8b5b9c71d0d94d9518a485123865854ecf12a499490952ce8",
+      "sha256": "17632f3bc37ea13a86bce578c718e548145a3a66acc99d776e216cdf6fd38cbb",
       "executable": false
     },
     "tests/helpers/launch-milestone-clauses.mjs": {
@@ -12431,6 +12431,10 @@
     },
     "tests/helpers/launch-settled-row.mjs": {
       "sha256": "cead74bd3f971dd53bf73cc3b5d46363596bff2141502ff609e3381327600fca",
+      "executable": false
+    },
+    "tests/helpers/launch-shipped-lens-journey.mjs": {
+      "sha256": "2002dc1f69c5e2af69753102b53e9f4329be362e9b481979d3843db7fa7a94f3",
       "executable": false
     },
     "tests/helpers/launch-ui-source.mjs": {

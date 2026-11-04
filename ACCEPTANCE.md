@@ -972,8 +972,8 @@ Core · published · **partial**
 1. Risks Lens and Timeline Lens ship as saved lenses.
 2. Operators can duplicate or edit them, and restoring either returns its definition to exactly the one in RISK-005 or MILE-002 without changing a record.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public shipped-lens journey that executes duplicate/edit/restore at the native door and reads the exact restored definitions and unchanged business state. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal handlers duplicate/edit/restore both installed lenses and public reads show resulting definitions.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses"; `tests/helpers/launch-shipped-lens-journey.mjs` — "verifyShippedLensLifecycle" proves both installed saved definitions, native duplicate, independent copy edits, original edits and restore with complete independent definition expectations, public record readbacks and populated business and queued-effect snapshots; `tests/ui-launch-walkthrough.mjs` retains shipped lens screens.
+**Gap.** Selected public duplicate, edit and restore proof is complete for both shipped lenses. Independent whole-clause judgment and ct contract conversion and generated-document synchronization remain release prerequisites; complete Risks Lens membership and ordering, timeline ordering, capacity and wider phone journeys remain unclaimed.
 
 #### LENS-007 — Conditions
 
