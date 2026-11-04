@@ -13498,7 +13498,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "48597f32a162e443ba0929ab28d3e9fd16ede9475c7d216824b3aff259e5d16b",
+      "sha256": "b86dc08dc76cc99ce988816a4cac6d799122b601dfd733d135d524fb7aac8c08",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {

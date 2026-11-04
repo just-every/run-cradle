@@ -88,13 +88,14 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    assert.equal(targets(members).length, 1, 'Reconciliation leaves one matching target identity')
    checkIdentity(targets(members)[0])
    assert.deepEqual(targets(members)[0].scopes, invited.scopes)
-   await page.waitForLoadState('networkidle')
-   const reloadedMembers = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/members' && response.request().method() === 'GET').then(async response => {
-    assert.equal(response.status(), 200)
-    return (await response.json()).data.items
-   })
-   await openPeople()
-   const reloaded = await reloadedMembers
+   // Observe the new document only; a refresh from the submitted form can finish during navigation.
+   await b.visit('/app/settings')
+   const [reloadedMembers] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/members' && new URL(response.url()).searchParams.get('appId') === LAUNCH_APP_ID && response.request().method() === 'GET'),
+    (async () => { await b.openPanel('People and authority'); await page.getByLabel('Application').selectOption(LAUNCH_APP_ID); await page.getByRole('region', { name: 'Workspace members' }).waitFor() })(),
+   ])
+   assert.equal(reloadedMembers.status(), 200)
+   const reloaded = (await reloadedMembers.json()).data.items
    assert.deepEqual(targets(reloaded).map(member => member.id), [invited.id], 'Reload reads the same single identity from the public member door')
    checkIdentity(targets(reloaded)[0])
    await expect(row(invitedName)).toHaveCount(1)
