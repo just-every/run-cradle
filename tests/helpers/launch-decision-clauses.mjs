@@ -206,12 +206,13 @@ async function publicTransitions(h, campaign) {
   assert.deepEqual(await queue(), queued)
  }
  const settle = async (id, action, input, state) => {
-  const commandId = h.r.createUlid(), lower = Date.now()
+  const commandId = h.r.createUlid(), before = await read(id), lower = Date.now()
   const response = await submit(id, action, input, commandId), upper = Date.now()
   assert.equal(response.status, 200, await response.clone().text())
   const { data } = await response.json(), value = data.value
   assert.equal(data.state, 'committed')
   assert.equal(value.state, state)
+  assert.equal(value.version, before.version + 1, 'Each native transition commits against the freshly read decision version')
   assert.equal(value.rationale, input.rationale)
   const stamp = text => { const at = Date.parse(text); assert.ok(at >= lower && at <= upper, `${text} lies within the request window`); return at }
   stamp(value.updatedAt)
