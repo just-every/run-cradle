@@ -90,7 +90,13 @@ export async function verifyPublicShippedRiskLens({ h, clear = false, page, capt
    await page.goto(`${h.origin}/app/lenses/risks`)
    await page.getByText(`${expected.length} matching risks`, { exact: true }).waitFor()
    const cards = page.locator('main[aria-labelledby="risks-lens-title"] article')
-   const observed = await cards.evaluateAll(elements => elements.map(card => ({ href: card.querySelector('h2 a').getAttribute('href'), text: card.innerText })))
+   const observed = await cards.evaluateAll(elements => elements.map(card => ({
+    href: card.querySelector('h2 a').getAttribute('href'), title: card.querySelector('h2').innerText,
+    severity: card.querySelector('header span').innerText, state: card.querySelectorAll('header span')[1].innerText,
+    due: card.querySelector('header > span').innerText, campaignAndOwner: card.querySelector('h2 + p').innerText,
+    campaignHref: card.querySelector('h2 + p a').getAttribute('href'),
+    signal: card.querySelectorAll('dd')[0].innerText, mitigation: card.querySelectorAll('dd')[1].innerText,
+   })))
    // The business assertions run at the desktop width; both widths retain
    // actual rendered order and values in the browser receipt and screenshot.
    if (page.viewportSize().width === 1440) {
@@ -101,9 +107,10 @@ export async function verifyPublicShippedRiskLens({ h, clear = false, page, capt
      const dueText = wanted.dueDate ? `Due ${new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${wanted.dueDate}T12:00:00Z`))}` : 'No due date'
      await expect(card.getByText(dueText, { exact: true })).toBeVisible()
      await expect(card.locator('h2 a')).toHaveText(wanted.title)
-     await expect(card.locator('h2 + p')).toContainText(wanted.owner.name)
+     await expect(card.locator('h2 + p')).toHaveText(`${wanted.campaign.name} · ${wanted.owner.name}`)
      await expect(card.getByRole('link', { name: wanted.campaign.name, exact: true })).toHaveAttribute('href', `/app/campaigns/${wanted.campaign.id}`)
      for (const [label, value] of [['Signal', wanted.signal], ['Mitigation', wanted.mitigation]]) await expect(card.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd')).toHaveText(value)
+     for (const field of [card.locator('h2 a'), card.locator('h2 + p'), card.locator('dl dd').nth(0), card.locator('dl dd').nth(1)]) await expect(field).toBeVisible()
     }
    }
    receipt.shippedRiskLens ??= []
