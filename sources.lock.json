@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "1743eb9a8b605065bcb5da78c54badcd789fe73032cc19dfa714c6c618c5545b",
+      "sha256": "eab3a1870f9a191b2b029ac672bc521375aa1694b2f0ce2e179bc6fcaa56dd0c",
       "executable": false
     },
     "DEMO.md": {
@@ -12350,7 +12350,7 @@
       "executable": false
     },
     "tests/helpers/launch-decision-clauses.mjs": {
-      "sha256": "db18c4a21eb451d5b1f1b317c8bdad21a72e2358ee1607d4377b9a93d3d86d61",
+      "sha256": "1428960e9934bc8e6be44f2799b6df036d65079ce49e859c5c13cea8d01f85c1",
       "executable": false
     },
     "tests/helpers/launch-decision-hydration.mjs": {
