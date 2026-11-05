@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c859341e2b9efb455187229355d242cf9b7d6d0c76e9fb82dcc35442f45f6c97",
+      "sha256": "2606d016d41c9a21b50361366dac008842de90c2ec1a89d86a40295be5adf436",
       "executable": false
     },
     "DEMO.md": {
@@ -13174,7 +13174,7 @@
       "executable": false
     },
     "tests/launch-scoped-authority.mjs": {
-      "sha256": "a50bcc4be49f33b82c74c0b3ff97a2627219d1fd30c96b9869c7238437cbbf83",
+      "sha256": "579ef05877e478be5caf61c5c9d3dbb99889f3ac0140973947065f3d56b30e6c",
       "executable": false
     },
     "tests/launch-search-authority.mjs": {
