@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "39001fdf4a955cbd53d5437f4ec66eeada66ad1b36913831a3bb593a710022de",
+      "sha256": "ed8a147fabca6d437237a971f81e611b3c2d5bfb0bf34f42b6cebcab5b5d26ed",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "2d89bc944864e0a762991fad3fdb60b17879fb463985a198f5b5cf62a69723b3",
+      "sha256": "42c8d8b87ad58502461c842ed2ab0b431ea29ac3e7be87399ee428ca89235491",
       "executable": false
     },
     "DEMO.md": {
@@ -6950,7 +6950,7 @@
       "executable": false
     },
     "src/core/features/campaigns/repository.ts": {
-      "sha256": "6dcb9771332ba5d5387e97b95b7e5e30b51c42456c93015d563e3a6030d37d60",
+      "sha256": "0cc7e019670014a88ac7833fc4c63f4f89737ed55296d977146c7843a496cbc3",
       "executable": false
     },
     "src/core/features/campaigns/routes.ts": {
@@ -7258,7 +7258,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-api.tsx": {
-      "sha256": "61075cdb1730594a0ee66ae8cf2acc8ec6153e0175e34eb3109dba8916c3e0c2",
+      "sha256": "80f9887f95a486d3e80d53b9dbc62b1ca8b03e688e30f07e0762342adaaef8ac",
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-format.ts": {
@@ -7278,7 +7278,7 @@
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-types.tsx": {
-      "sha256": "182d676b75220ca4e0c47fb2e38c8eaf868336f97921e7b2032c6f84f7a161e4",
+      "sha256": "f2de1e565aa38e69958b0b1dd98983c459625d174eff0171a5ef9899974ec39c",
       "executable": false
     },
     "src/core/features/portfolio/ui/portfolio-ui.css": {
@@ -10658,7 +10658,7 @@
       "executable": false
     },
     "src/ui/launch/campaign-actions.tsx": {
-      "sha256": "c6067c67157dcc4d04c9191ec72d01bc714b502e930f5c27c3351955bcba62ae",
+      "sha256": "dcef900a47394d0eea881ad19cfe468312f48efcaed35bfc4c14180459f9a283",
       "executable": false
     },
     "src/ui/launch/campaign-custom-fields.tsx": {
@@ -12314,7 +12314,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
-      "sha256": "66bab6ba382b22016ebfefa8554c704d20ed29d55c2ecb9c3fe75542c0385bd3",
+      "sha256": "b863d3b11c2a21e3a4ac378c142eb2c4592313afa6e486acc72ccfcf57987997",
       "executable": false
     },
     "tests/helpers/launch-clause-analysis.mjs": {
@@ -13514,7 +13514,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "44d46fc019076af7d49eb169c621e78eee34d88ebbdfc94e95021ca4e08d5ada",
+      "sha256": "aed2c5474f74805376aa347974f24d401832375a939d1cef6b79e33282528ac1",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
