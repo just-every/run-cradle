@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "ed8a147fabca6d437237a971f81e611b3c2d5bfb0bf34f42b6cebcab5b5d26ed",
+      "sha256": "ea38790814a1755078b72458e1e4def2e14b9eaff2112f520402d3bfe983b600",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "42c8d8b87ad58502461c842ed2ab0b431ea29ac3e7be87399ee428ca89235491",
+      "sha256": "750c690f15d323681565ac366d6e14202663deb92035b1122979e4d82196c82f",
       "executable": false
     },
     "DEMO.md": {
@@ -12310,7 +12310,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-clauses.mjs": {
-      "sha256": "458e56ff8874eb2d00ba2d3b86894d8616bf1c00092c4d3ce71f0462078e3ba2",
+      "sha256": "9584e84f9db376eb8a38dea3ad7cc1ece5feb56226672296b60522c13bcd7ad6",
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
@@ -13202,7 +13202,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "7fdcca07f4f2b6f2590af3cf67a14a9513b02b5b0d25345bee2f0b7e2b01aeca",
+      "sha256": "7bf6b8d6a659d37a3fc016d8754078927999d8aaf064513d206421cdd030e278",
       "executable": false
     },
     "tests/launch-write-service.mjs": {
