@@ -169,6 +169,10 @@ test('[AUTO-005/011 AI-002 AI-004] [AUTO-010] bulk edits and committed imports f
   assert.equal((await h.db.prepare('SELECT state FROM automation_runs WHERE id=?').bind(retried.runId).first()).state,'Succeeded');assert.equal(contexts.length,6);assert.equal(contexts.at(-1).campaign.id,b.id)
   assert.deepEqual(await h.db.prepare('SELECT * FROM launch_analysis_requests WHERE id=?').bind(completedA.id).first(),completedA)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_model_calls').first()).n,6)
+  const afterRetry=(await h.read(`/api/automations/${brief.id}/runs`)).runs,recovered=afterRetry.find(run=>run.id===retried.runId)
+  assert.equal(recovered.state,'Succeeded');assert.equal(recovered.retryOf,failed.id);assert.equal(recovered.actions[0].state,'Complete')
+  assert.deepEqual(afterRetry.find(run=>run.id===failed.id),history,'Explicit retry retains the original public failure and attempted action')
+  assert.deepEqual((await h.read(analysisPath)).data,completedAnalysis,'Explicit retry preserves the completed peer analysis')
   const {csrfToken}=await h.read('/auth/csrf'),headers={cookie:h.owner.cookie,'x-csrf-token':csrfToken}
   const post=async(path,input,commandId=createUlid())=>{
    const response=await h.post(path,{commandId,expected:[],input},headers);assert.equal(response.status,200,await response.clone().text());return response.json()
