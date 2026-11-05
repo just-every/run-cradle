@@ -433,7 +433,7 @@ Core · published · **partial**
 2. Archiving deletes nothing.
 3. The initial phases are Planning, Build, Production, Review and Launch prep; the initial statuses are On track, Watch, At risk and Blocked; the initial launch-preparation phase is Launch prep.
 
-**Evidence.** `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/ui-launch-walkthrough.mjs`; `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses", through `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "verifyPublicCampaignLifecycle" and "verifyCampaignLifecycleClauses"; public lifecycle, active-list withdrawal and return, unchanged fields and child revisions, attributed activity and shipped controls at 1440 and 390. Existing internal lifecycle and public portfolio archive assertions remain.
 **Gap.** Missing a public lifecycle journey that restores the archived campaign, reads retained records and demonstrates operator lifecycle behavior; the cited browser never restores. Cited `tests/ui-launch-walkthrough.mjs` show: Public archive calls preserve unresolved child states in portfolio proof.
 
 #### CAMP-003 — Validation
