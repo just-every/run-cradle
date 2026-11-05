@@ -706,7 +706,7 @@ Core · published · **partial**
 2. Completing or deleting the milestone, or archiving its campaign, cancels an Outstanding request.
 3. A milestone whose date has already passed receives no request.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/launch-installed-schedules.mjs` — "emitted scheduled handler supplies readiness, weekly digest and overdue decision effects", through `tests/helpers/launch-readiness-rescheduling.mjs` — "verifyReadinessRescheduling": emitted cron creates addressed Outstanding requests with the five-day window; fresh-version native commands move one outside and inside, cancel without immediate replacement, then the next daily evaluation creates exactly one new request despite duplicate ticks; separate complete, delete and campaign archive commands leave no Outstanding request and withdraw each prior notice; a past-date control receives no request. Public readiness queries and inbox readbacks agree with read-only D1 observations; `tests/helpers/launch-readiness-screens.mjs`; `tests/helpers/launch-milestone-clauses.mjs`
 **Gap.** Missing an emitted scheduled/public-command rescheduling journey showing outside/inside-window, completion/deletion/archive cancellation and no requests for past dates. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal retained scheduler helpers create real readiness, reschedule/cancel and inspect durability; browser does not drive these cases.
 
 #### MILE-006 — Overdue
