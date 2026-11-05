@@ -447,7 +447,7 @@ Core · published · **partial**
 2. Campaign codes are trimmed and unique case-insensitively.
 3. A mutation breaking any of these, or clearing the owner, start date, or launch date of an active campaign, is rejected with a validation error naming the field and changes nothing.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-campaign-clauses.mjs` (verifyPublicCampaignValidation: native command refusals name invalid dates, health, amounts, duplicate codes and cleared active required fields, preserve public readbacks and all persisted effects, and read back valid boundaries and trimmed codes; verifyCampaignClauses retains the internal matrix)
 **Gap.** Missing a public campaign-validation journey that attempts invalid dates, health, money, codes and required-field removal, observes field errors and unchanged state, and completes a valid edit. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal command-handler/admission helpers check campaign validation and atomic snapshots; cited browser creates valid campaigns.
 
 #### CAMP-004 — Detail and rollups
