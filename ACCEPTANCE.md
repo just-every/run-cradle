@@ -787,7 +787,7 @@ Core · published · **partial**
 1. As shipped and before any operator edit, Risks Lens contains exactly the open risks of severity High or Critical whose campaign is non-archived and whose launch date is no later than 30 days from today in the workspace timezone, so a campaign already past its launch date stays in the lens.
 2. It orders Critical before High, then earliest due date, then risks without a due date, then campaign code, and shows severity, state, owner, due date, signal, mitigation, and campaign.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-shipped-risk-journey.mjs`; retained internal fixture in `tests/helpers/launch-risk-clauses.mjs` — "shippedLens"
 **Gap.** Missing a public shipped-lens journey reading the complete set/order across overdue/day-30/day-31/archive/resolved/severity fixtures and each listed business field. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Browser opens populated high/critical risks; internal lens preview checks full membership, ordering and fields.
 
 ### Decisions

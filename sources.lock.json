@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "bde12ec20c2d4be0ebb6c0b0e556e725be16909dfc9bbd7c4da951d5cf9bcf53",
+      "sha256": "d156df4441aca80c2cc946f06f2134b27bd5b66ae4783e46684d7393f8285379",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c859341e2b9efb455187229355d242cf9b7d6d0c76e9fb82dcc35442f45f6c97",
+      "sha256": "2cfaea7f44eb6504bc600b20823b01eef0f25537c0152709dde66f295204b8d6",
       "executable": false
     },
     "DEMO.md": {
@@ -12294,7 +12294,7 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "a49810deba0653b3a02e90bb599545b8484b10fca2f57ea560bbeb71afba31dd",
+      "sha256": "b91ef4520dd5a06bdec1723428cd6b35331295aad7717cc9a0d14c35e1bd78dc",
       "executable": false
     },
     "tests/helpers/launch-automation-definitions.mjs": {
@@ -12429,6 +12429,10 @@
       "sha256": "26aa586b586fdf4a99d291f66b304e4e8c3f234a6c0f50ca30d80bf4a7b580ec",
       "executable": false
     },
+    "tests/helpers/launch-runtime-clock.mjs": {
+      "sha256": "c0524eec94004286a8b326ba46b46bf959c0753fb11a15fa0d87e25860c0126e",
+      "executable": false
+    },
     "tests/helpers/launch-service-owner-context.mjs": {
       "sha256": "ef8e4ab1d98f1e9cc2ea03e2852fc3ca914b9630d1c6578ba337af7f55d79d88",
       "executable": false
@@ -12441,6 +12445,10 @@
       "sha256": "2002dc1f69c5e2af69753102b53e9f4329be362e9b481979d3843db7fa7a94f3",
       "executable": false
     },
+    "tests/helpers/launch-shipped-risk-journey.mjs": {
+      "sha256": "b2108fad9e20cebd88cfcea3a284a3036705960757a181e8f994e24797ad3b53",
+      "executable": false
+    },
     "tests/helpers/launch-ui-source.mjs": {
       "sha256": "32f431e38602eba598ff767a89323017cff47dc839bb1434acf50f515dcffea6",
       "executable": false
@@ -12450,7 +12458,7 @@
       "executable": false
     },
     "tests/helpers/launch-walkthrough-runtime.mjs": {
-      "sha256": "d6d1b62e5df510531d3b40f3de5f672c7b5844de330a0c8558a05edd4a603bd4",
+      "sha256": "baddd799fcecf1e8a4df909bbeeac9eaa8c197b564283037a48f00efd6a39725",
       "executable": false
     },
     "tests/helpers/launch-workspace-screens.mjs": {
@@ -13198,7 +13206,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "7fdcca07f4f2b6f2590af3cf67a14a9513b02b5b0d25345bee2f0b7e2b01aeca",
+      "sha256": "f42f1aa83069d4f9f81fe044417750804f04612aa332ae2b4a7a7a4d36ac8b4b",
       "executable": false
     },
     "tests/launch-write-service.mjs": {
@@ -13510,7 +13518,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "44d46fc019076af7d49eb169c621e78eee34d88ebbdfc94e95021ca4e08d5ada",
+      "sha256": "fdde5658731bd99081018cba458fa4df08afcf624832829316729afcd5e6d7ad",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {
