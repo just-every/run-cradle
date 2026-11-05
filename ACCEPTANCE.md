@@ -803,7 +803,7 @@ Core · published · **partial**
 2. It belongs to exactly one campaign, links to at most one risk and to at most one decision it supersedes, requires a title and a requester, and has a priority of Critical, High, Medium, or Low, a due time, a recommendation, an impact statement, an optional assignee, and a state of Awaiting approval, In review, Approved, Rejected, or Canceled.
 3. Awaiting approval and In review are unresolved; the other three are terminal.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-decision-records.mjs`
 **Gap.** Missing a public decision CRUD journey deleting a decision and trying an unsafe deletion without changing linked records, then reading its absence. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser creates decisions and reads recommendation/impact/links; internal handlers check full typed CRUD and deletion.
 
 #### DEC-002 — Queue

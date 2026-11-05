@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "28920ca3dd5c3581577cff73cb4c1d393fca68eb6d1ad06ec82361396db464e3",
+      "sha256": "bde12ec20c2d4be0ebb6c0b0e556e725be16909dfc9bbd7c4da951d5cf9bcf53",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "7b1284ab9783ca68c387e091b94228d7ae12e936e24f7ec08f9533b0b6ec5c6a",
+      "sha256": "c859341e2b9efb455187229355d242cf9b7d6d0c76e9fb82dcc35442f45f6c97",
       "executable": false
     },
     "DEMO.md": {
@@ -12350,7 +12350,7 @@
       "executable": false
     },
     "tests/helpers/launch-decision-clauses.mjs": {
-      "sha256": "e63d911161e62bb27c2c6e4319b2d81cee926aca7af1820e5a9d2794a3e14d9f",
+      "sha256": "2128270ce75193e1d56ad3ac21622c54301d5763ddbde3d4963efb9beac63c47",
       "executable": false
     },
     "tests/helpers/launch-decision-hydration.mjs": {
@@ -12359,6 +12359,10 @@
     },
     "tests/helpers/launch-decision-lens-screens.mjs": {
       "sha256": "a9b7f77c7ab0419223ad806fddfca80719ed573de546755fdc15edb9c5b1d6b5",
+      "executable": false
+    },
+    "tests/helpers/launch-decision-records.mjs": {
+      "sha256": "ff92378cce291b581289880af07fb350587bd5836a1615acf9bfacff12b2717e",
       "executable": false
     },
     "tests/helpers/launch-disabled-ai-console.mjs": {
