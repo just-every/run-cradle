@@ -13134,7 +13134,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "9dd36e306bcb40eaca20ab879df97d2f6144325d8d060ebb7e833c2aee79b2f6",
+      "sha256": "0921d82ff615f4b7506c81970c67e6cec01d0fbefec42f45bb1ff1ee0281ac82",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
