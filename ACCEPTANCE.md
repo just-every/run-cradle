@@ -774,7 +774,7 @@ Core · published · **partial**
 1. Escalating, updating, or resolving a risk changes that risk, the campaign activity entry ACT-001 requires, the campaign's derived rollups, and — when the risk-escalation policy fires — the one decision and one notification it creates.
 2. No other record changes; a linked decision changes only through the decision-resolution policy.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-risk-isolation.mjs`
 **Gap.** Missing a public risk-isolation journey reading unchanged unrelated records plus the exact allowed activity/rollup/decision/notification effects. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal snapshots check risk isolation; public browser escalates/resolves but inspects only selected related fields.
 
 #### RISK-005 — Shipped lens
