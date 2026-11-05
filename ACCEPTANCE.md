@@ -733,7 +733,7 @@ Core · published · **partial**
 1. An operator can create, edit, and delete a risk.
 2. It belongs to exactly one campaign, requires a title and an owner, has a severity of Low, Medium, High, or Critical, has an optional due date, carries a signal and a mitigation as free text of at most 2,000 characters each — the signal being the evidence that raised the risk — and has a workflow state.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-risk-clauses.mjs`; an unlinked deletion proves the restricted operator has risk-delete authority); supplemental proof retained without replacing main’s current judgment.
 **Gap.** Missing a public risk CRUD journey deleting a risk and refusing an unsafe deletion without effect while preserving its linked decision. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser creates risks and current-lens journey edits signal; internal handlers validate/edit/delete complete risk data.
 
 #### RISK-002 — Lifecycle
