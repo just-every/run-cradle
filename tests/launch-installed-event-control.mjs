@@ -71,15 +71,16 @@ test('[AUTO-003 AI-003] duplicate emitted queue delivery during an in-flight bri
  }finally{release();await first?.catch(()=>{});await h.close()}
 })
 
-test('[AUTO-005/011 AI-002] [AUTO-010] bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress',async()=>{
+test('[AUTO-005/011 AI-002 AI-004] [AUTO-010] bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress',async()=>{
  let failCampaign=null
- const contexts=[],h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'network-edge-only',AI_MODEL:'edge-model'},providerFetch:async request=>{
+ const contexts=[],deliveries=[],h=await setup({automaticQueues:false,configuration:{AI_PROVIDER_API_KEY:'synthetic-cradle-144',AI_MODEL:'synthetic-cradle-144-model'},providerFetch:async request=>{
+  if(request.url==='https://api.sendgrid.com/v3/mail/send'){deliveries.push(await request.json());return new Response(null,{status:202,headers:{'x-message-id':'synthetic-cradle-144-mail'}})}
   assert.equal(request.url,'https://api.openai.com/v1/responses');contexts.push(JSON.parse((await request.json()).input[0].content[0].text))
   if(contexts.at(-1).campaign.id===failCampaign)return new Response(null,{status:503})
   return Response.json({id:'bulk-brief-'+contexts.length,model:'edge-model',status:'completed',usage:{input_tokens:7,output_tokens:4},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({content:'Immutable bulk brief',proposedLens:null})}]}]})
  }})
  try{
-  const settings=(await h.read('/api/v1/settings')).data;await h.command('settings.update',{version:settings.version,changes:{aiEnabled:true,aiDailyCeiling:10}})
+  const settings=(await h.read('/api/v1/settings')).data;await h.command('settings.update',{version:settings.version,changes:{aiEnabled:true,aiDailyCeiling:10,quietHoursStart:'00:00',quietHoursEnd:'00:00'}})
   const a=await campaign(h,'BULK-A'),b=await campaign(h,'BULK-B')
   await h.command('launch.campaign.patch',{id:a.id,changes:{status:'Watch'}},expected(launchEntities.campaign,a))
   const at=Date.now();await h.tick(at);assert.equal(contexts.length,2)
@@ -115,11 +116,55 @@ test('[AUTO-005/011 AI-002] [AUTO-010] bulk edits and committed imports fan out 
   assert.equal(contexts.length,3);assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_model_calls').first()).n,3);assert.deepEqual(await readContexts(),priorContexts)
   const skipped=await h.db.prepare("SELECT r.state,a.state action_state,a.result_json FROM automation_runs r JOIN launch_automation_actions a ON a.run_id=r.id WHERE r.trigger_key IN (SELECT id FROM admission_events WHERE command_id=?) AND r.automation_id IN (SELECT id FROM automations WHERE shipped_key='campaign-brief')").bind(unchanged.data.commandId).first()
   assert.equal(skipped.state,'Succeeded');assert.equal(skipped.action_state,'Complete');assert.equal(JSON.parse(skipped.result_json).analyses,0);assert.deepEqual(JSON.parse(skipped.result_json).skippedCampaignIds,[a.id,b.id])
-  failCampaign=b.id;const partial=await bulk('On track');await h.tick(at+10800003)
+  // Keep the provider refusal active until unrelated public work and delivery finish.
+  failCampaign=b.id;const partial=await bulk('On track')
+  const beforeFailure=(await h.db.prepare('SELECT * FROM campaigns ORDER BY id').all()).results
+  const analysesB=async()=>(await h.db.prepare('SELECT * FROM launch_analyses WHERE subject_id=? ORDER BY id').bind(b.id).all()).results
+  const retainedB=await analysesB()
+  assert.ok(retainedB.length>0,'The failed campaign already has completed analysis to preserve')
+  await h.tick(at+10800003)
   const failed=await h.db.prepare("SELECT * FROM automation_runs WHERE trigger_key IN (SELECT id FROM admission_events WHERE command_id=?) AND automation_id IN (SELECT id FROM automations WHERE shipped_key='campaign-brief')").bind(partial.data.commandId).first()
   assert.equal(failed.state,'Failed');assert.deepEqual(contexts.slice(3).map(c=>c.campaign.id),[a.id,b.id])
   const completedA=await h.db.prepare("SELECT * FROM launch_analysis_requests WHERE automation_run_id=? AND state='Complete'").bind(failed.id).first();assert.ok(completedA)
-  failCampaign=null;const retried=value(await h.command('launch.automation.retry',{runId:failed.id,version:failed.version}));await h.tick(at+10800004)
+  const failure={code:'provider_unavailable',message:'Provider outcome is unresolved (HTTP 503).'}
+  const history=(await h.read(`/api/automations/${brief.id}/runs`)).runs.find(run=>run.id===failed.id)
+  assert.ok(history,'Run history exposes the failed batch')
+  assert.deepEqual({state:history.state,subjectIds:history.subjectIds,code:history.errorCode,message:history.errorMessage},{state:'Failed',subjectIds:[a.id,b.id],...failure})
+  assert.deepEqual(history.actions.map(action=>({position:action.position,command:action.command,state:action.state,result:action.result,code:action.errorCode,message:action.errorMessage})),[{position:0,command:'request-ai-analysis',state:'Failed',result:null,...failure}],'The attempted AI action exposes the exact provider error')
+  const monitor=(await h.read('/api/automations')).automations.find(automation=>automation.id===brief.id)
+  assert.equal(monitor.lastRunStatus,'Failed');assert.deepEqual(monitor.failure,failure,'Automation Monitor exposes the same provider error')
+  const failedB=await h.db.prepare("SELECT state,analysis_id,error_code,error_message FROM launch_analysis_requests WHERE automation_run_id=? AND json_extract(input_json,'$.campaignId')=?").bind(failed.id,b.id).first()
+  assert.deepEqual(failedB,{state:'Failed',analysis_id:null,error_code:failure.code,error_message:failure.message})
+  assert.deepEqual(await analysesB(),retainedB,'A refused campaign stores no new analysis and preserves its earlier analyses')
+  assert.deepEqual((await h.db.prepare('SELECT * FROM campaigns ORDER BY id').all()).results,beforeFailure,'Neither successful nor failed analysis changes campaign fields')
+  const analysisPath=`/api/v1/launch/analyses/${completedA.analysis_id}`,completedAnalysis=(await h.read(analysisPath)).data
+  assert.equal(completedAnalysis.campaignId,a.id);assert.equal(completedAnalysis.content,'Immutable bulk brief')
+
+  const owner=(await h.read(`/api/campaigns/${b.id}`)).campaign.owner.id
+  const isolated=value(await h.command('launch.automation.save',{definition:{name:'Work during AI refusal',enabled:true,trigger:{kind:'event',event:'risk.created.v1'},actions:[
+   {command:'add-activity',input:{campaignId:b.id,message:'Unrelated automation completed during AI refusal'}},
+   {command:'notify-operator',input:{operatorId:owner,subjectId:b.id,title:'Unrelated notification during AI refusal',body:'Non-AI work remains available'}},
+   {command:'send-email',input:{operatorId:owner,subjectId:b.id,title:'Unrelated mail during AI refusal',body:'Permitted non-AI delivery'}},
+  ]}}))
+  const createdRisk=await h.command('launch.risk.create',{fields:{campaignId:b.id,ownerId:owner,title:'Non-AI risk during provider refusal',severity:'Critical',signal:'Known',mitigation:'Review',dueDate:null}}),risk=value(createdRisk)
+  assert.equal((await h.read(`/api/risks/${risk.id}`)).risk.state,'Watching','A non-AI mutation and read work while AI refuses')
+  for(let step=0;step<3;step++)await h.tick(at+10800004+step)
+  const afterRisk=await h.read(`/api/risks/${risk.id}`)
+  assert.equal(afterRisk.risk.state,'Escalated');assert.equal(afterRisk.decision.priority,'Critical');assert.equal(afterRisk.decision.state,'Awaiting approval','The shipped non-AI automation completes its business effect')
+  const isolatedRun=(await h.read(`/api/automations/${isolated.id}/runs`)).runs.find(run=>run.subjectId===risk.id)
+  assert.equal(isolatedRun.state,'Succeeded');assert.deepEqual(isolatedRun.actions.map(action=>({command:action.command,state:action.state})),[{command:'add-activity',state:'Complete'},{command:'notify-operator',state:'Complete'},{command:'send-email',state:'Complete'}])
+  assert.ok((await h.read(`/api/campaigns/${b.id}`)).activity.some(entry=>entry.description==='Unrelated automation completed during AI refusal'))
+  const notice=(await h.read('/api/notifications')).notifications.find(notice=>notice.title==='Unrelated notification during AI refusal')
+  assert.ok(notice);assert.equal(notice.subject.id,b.id);assert.equal(notice.subject.available,true)
+  const sent=deliveries.filter(message=>message.subject==='Unrelated mail during AI refusal')
+  assert.equal(sent.length,1);assert.equal(sent[0].personalizations[0].to.length,1);assert.equal(sent[0].personalizations[0].to[0].email,(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner).first()).email)
+  assert.equal(contexts.length,5,'Non-AI work neither retries nor calls the unavailable AI provider')
+  assert.deepEqual((await h.read(analysisPath)).data,completedAnalysis,'Unrelated work preserves the completed analysis')
+  assert.deepEqual(await analysesB(),retainedB)
+  assert.deepEqual((await h.read(`/api/automations/${brief.id}/runs`)).runs.find(run=>run.id===failed.id),history,'Non-AI progress leaves the failed run available and unchanged')
+  const currentIsolation=(await h.read('/api/automations')).automations.find(automation=>automation.id===isolated.id)
+  await h.command('launch.automation.disable',{id:isolated.id},expected(launchEntities.automation,currentIsolation))
+  failCampaign=null;const retried=value(await h.command('launch.automation.retry',{runId:failed.id,version:failed.version}));await h.tick(at+10800007)
   assert.equal((await h.db.prepare('SELECT state FROM automation_runs WHERE id=?').bind(retried.runId).first()).state,'Succeeded');assert.equal(contexts.length,6);assert.equal(contexts.at(-1).campaign.id,b.id)
   assert.deepEqual(await h.db.prepare('SELECT * FROM launch_analysis_requests WHERE id=?').bind(completedA.id).first(),completedA)
   assert.equal((await h.db.prepare('SELECT count(*) n FROM launch_model_calls').first()).n,6)

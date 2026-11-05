@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c859341e2b9efb455187229355d242cf9b7d6d0c76e9fb82dcc35442f45f6c97",
+      "sha256": "96d4aa6ff8f58e5e1a1b80a9b72cf5b1c81623aa4ffc19954347f2b677408e49",
       "executable": false
     },
     "DEMO.md": {
@@ -13134,7 +13134,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "d4ce35d21d3cf57a3a4c1dd2bf42660e34400ad96483cace58af3cd7da0306ef",
+      "sha256": "9dd36e306bcb40eaca20ab879df97d2f6144325d8d060ebb7e833c2aee79b2f6",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
