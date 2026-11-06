@@ -1,0 +1,119 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f207",
+  "head": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+  "startedAt": "2026-11-06T04:39:40.777982+00:00",
+  "commands": [
+    {
+      "name": "views-write",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "write"
+      ],
+      "exit": 0,
+      "seconds": 0.186,
+      "log": "views-write.log"
+    },
+    {
+      "name": "views-check",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "seconds": 0.221,
+      "log": "views-check.log"
+    },
+    {
+      "name": "views-restore",
+      "command": [
+        "git",
+        "checkout",
+        "origin/main",
+        "--",
+        "ACCEPTANCE.md",
+        "docs/CLAIMS.md"
+      ],
+      "exit": 0,
+      "seconds": 0.017,
+      "log": "views-restore.log"
+    },
+    {
+      "name": "source-lock",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "lock"
+      ],
+      "exit": 0,
+      "seconds": 0.623,
+      "log": "source-lock.log"
+    },
+    {
+      "name": "source-check",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "seconds": 0.616,
+      "log": "source-check.log"
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "pnpm",
+        "check:types"
+      ],
+      "exit": 0,
+      "seconds": 23.467,
+      "log": "typecheck.log"
+    },
+    {
+      "name": "first-party",
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "exit": 0,
+      "seconds": 0.805,
+      "log": "first-party.log"
+    },
+    {
+      "name": "test-budget",
+      "command": [
+        "node",
+        "tests/helpers/test-budget.mjs"
+      ],
+      "exit": 0,
+      "seconds": 1.354,
+      "log": "test-budget.log"
+    },
+    {
+      "name": "clean-tree",
+      "command": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD",
+        "--"
+      ],
+      "exit": 0,
+      "seconds": 0.014,
+      "log": "clean-tree.log"
+    }
+  ],
+  "finishedAt": "2026-11-06T04:40:08.085410+00:00",
+  "ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration added or edited"
+  }
+}

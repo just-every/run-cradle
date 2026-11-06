@@ -1,0 +1,5 @@
+build	Check generated contract documents	﻿2026-11-06T04:38:49.0089497Z ##[group]Run node src/base/contract-docs.mjs check
+build	Check generated contract documents	2026-11-06T04:38:49.1445442Z ACCEPTANCE.md: generated content differs; run contract-docs write.
+build	Check generated contract documents	2026-11-06T04:38:49.1506532Z ##[error]Process completed with exit code 1.
+verify	Require the plan and every verification worker	﻿2026-11-06T04:38:53.7983744Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T04:38:53.8570165Z ##[error]Process completed with exit code 1.

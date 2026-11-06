@@ -1,0 +1,40 @@
+{
+  "head": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+  "run": 42163688295,
+  "event": "push",
+  "status": "completed",
+  "conclusion": "failure",
+  "failureClass": "expected-generated-view-freshness",
+  "failedJobs": [
+    {
+      "id": 127715098557,
+      "name": "build",
+      "step": "Check generated contract documents",
+      "command": "node src/base/contract-docs.mjs check",
+      "error": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+      "exit": 1,
+      "logReadCommand": "gh run view 42163688295 --repo just-every/run-cradle --job 127715098557 --log-failed",
+      "logReadExit": 0
+    },
+    {
+      "id": 127715203276,
+      "name": "verify",
+      "step": "Require the plan and every verification worker",
+      "reason": "Required build failed and workers were skipped",
+      "logReadCommand": "gh run view 42163688295 --repo just-every/run-cradle --job 127715203276 --log-failed",
+      "logReadExit": 0
+    }
+  ],
+  "localExactCommand": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+  },
+  "repairRounds": 0,
+  "workflowDispatches": 0,
+  "workflowReruns": 0,
+  "githubCalls": 7,
+  "pollIntervalSeconds": 301,
+  "diagnostics": "ci-failure.log",
+  "omitted": "Raw failed-step logs have workflow environment listings; retained outside the packet and not selected for publication"
+}

@@ -1,0 +1,144 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f207",
+  "head": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+  "remoteHead": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+  "remoteVerifiedAt": "2026-11-06T04:41:18.137174+00:00",
+  "push": {
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sd-cradle-c-f207",
+    "attempts": 1,
+    "exit": 0,
+    "status": "PUSH_OK"
+  },
+  "identityAudit": [
+    {
+      "head": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+      "fleetIdentity": true,
+      "trailers": []
+    },
+    {
+      "head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+      "fleetIdentity": true,
+      "trailers": []
+    },
+    {
+      "head": "27775f3981567e723a043f8d3c15391344754b04",
+      "fleetIdentity": true,
+      "trailers": []
+    }
+  ],
+  "statusRowAudit": [
+    {
+      "commit": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+      "parent": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+      "parentStatusRows": 257,
+      "retainedStatusRows": 257,
+      "dropped": []
+    },
+    {
+      "commit": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+      "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "parentStatusRows": 257,
+      "retainedStatusRows": 257,
+      "dropped": []
+    },
+    {
+      "commit": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+      "parent": "27775f3981567e723a043f8d3c15391344754b04",
+      "parentStatusRows": 257,
+      "retainedStatusRows": 257,
+      "dropped": []
+    },
+    {
+      "commit": "27775f3981567e723a043f8d3c15391344754b04",
+      "parent": "234432f0b726fba470fb6ce4e1816f50cd082601",
+      "parentStatusRows": 257,
+      "retainedStatusRows": 257,
+      "dropped": []
+    }
+  ],
+  "native": {
+    "command": "CRADLE_AUTHORITY_PORT=41880 cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 --test-name-pattern='campaign CSV previews changes' tests/launch-operator-doors.mjs",
+    "head": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+    "exit": 0,
+    "tests": 1,
+    "passed": 1,
+    "originalObjectRemovalMs": 1464,
+    "log": "import-exact-sha.log"
+  },
+  "browser": {
+    "command": "cloud_run timeout 1200 node --import /tmp/cradle-system-chromium.mjs tests/ui-launch-operator-doors.mjs",
+    "head": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+    "exit": 0,
+    "tests": 1,
+    "passed": 1,
+    "widths": [
+      1440,
+      390
+    ],
+    "screens": 25,
+    "log": "browser.log",
+    "firstAttempt": {
+      "exit": 1,
+      "failure": "EEXIST: file already exists, mkdir '/tmp/cradle-test-mail-41879'",
+      "cause": "Native and browser fixtures shared their default port and mail directory; sequential rerun passed without product changes"
+    }
+  },
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257,
+    "registrations": 174,
+    "cap": 200
+  },
+  "publicationScan": {
+    "status": "not-run",
+    "owner": "Mac guarded lander"
+  },
+  "productLanding": {
+    "status": "branch-only",
+    "mainChanged": false
+  },
+  "ci": {
+    "head": "bdce2513df80ccb8b8e02cc2acd8ed3821f04f18",
+    "run": 42163688295,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "failure",
+    "failureClass": "expected-generated-view-freshness",
+    "failedJobs": [
+      {
+        "id": 127715098557,
+        "name": "build",
+        "step": "Check generated contract documents",
+        "command": "node src/base/contract-docs.mjs check",
+        "error": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+        "exit": 1,
+        "logReadCommand": "gh run view 42163688295 --repo just-every/run-cradle --job 127715098557 --log-failed",
+        "logReadExit": 0
+      },
+      {
+        "id": 127715203276,
+        "name": "verify",
+        "step": "Require the plan and every verification worker",
+        "reason": "Required build failed and workers were skipped",
+        "logReadCommand": "gh run view 42163688295 --repo just-every/run-cradle --job 127715203276 --log-failed",
+        "logReadExit": 0
+      }
+    ],
+    "localExactCommand": {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 1,
+      "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+    },
+    "repairRounds": 0,
+    "workflowDispatches": 0,
+    "workflowReruns": 0,
+    "githubCalls": 7,
+    "pollIntervalSeconds": 301,
+    "diagnostics": "ci-failure.log",
+    "omitted": "Raw failed-step logs have workflow environment listings; retained outside the packet and not selected for publication"
+  },
+  "terminalCustody": "READY under the cloud generated-view exception; whole clause remains PARTIAL"
+}
