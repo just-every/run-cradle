@@ -1,0 +1,9 @@
+{
+  "status": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "total": 257,
+  "new_test_registrations": 0
+}

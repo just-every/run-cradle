@@ -1,0 +1,133 @@
+{
+  "tag": "sd-cradle-c-f202",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f202",
+  "head": "a7faed4964ba8cf568af63761c52261aef1d896a",
+  "required_base": "212a0b202ba32d1c54f0bb2b0a20a6614328923e",
+  "main_base": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "status_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "status_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "status_rows": 257,
+  "test_registrations": 174,
+  "new_test_registrations": 0,
+  "code_changes_after_required_base": false,
+  "rebase_to_current_main": true,
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email <fleet address> --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "log": "types.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "perl -e 'alarm 1200; exec @ARGV' -- pnpm test:foundation",
+      "exit": 0,
+      "log": "foundation.log",
+      "tests": 1,
+      "failures": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log",
+      "views_restored_from_main": true
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.json"
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs --inventory",
+      "exit": 0,
+      "log": "test-budget.log"
+    }
+  ],
+  "browser": {
+    "executable": "/usr/bin/chromium",
+    "launch_arguments": [
+      "--no-sandbox",
+      "--use-mock-keychain",
+      "--password-store=basic"
+    ],
+    "scenarios": 8,
+    "widths": [
+      1440,
+      390
+    ],
+    "sections_per_scenario": 7,
+    "installation_data_requests": 0,
+    "external_resource_requests": 0,
+    "installation_only_links": 0,
+    "render_measurements": 328
+  },
+  "proof_sources": [
+    "tests/foundation-shell.mjs:21",
+    "tests/helpers/homepage-journey.mjs:5",
+    "tests/helpers/static-site.mjs:9"
+  ],
+  "migration_ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration changes"
+  },
+  "publication_scan": {
+    "complete": false,
+    "historyScanned": false,
+    "findings": null,
+    "reason": "Cloud route delegates full-history publication scan to maintained Mac lander"
+  },
+  "done_claim": false,
+  "ci": {
+    "run_id": 42157020796,
+    "event": "push",
+    "status": "completed",
+    "actual_conclusion": "failure",
+    "head": "a7faed4964ba8cf568af63761c52261aef1d896a",
+    "build_job": 127693538456,
+    "aggregate_job": 127693797430,
+    "browser_workers": "skipped",
+    "expected_generated_view_exception": true,
+    "exact_failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "ci_log_reads": 2,
+    "ci_log_environment_blocks_omitted": true,
+    "github_cli_invocations": 8,
+    "reruns": 0,
+    "dispatches": 0
+  },
+  "product_push": {
+    "status": "pushed",
+    "attempts": 1,
+    "remote_head_verified": true
+  }
+}

@@ -1,0 +1,7 @@
+build	Check generated contract documents	﻿2026-11-06T03:31:57.4143927Z ##[group]Run node src/base/contract-docs.mjs check
+build	Check generated contract documents	2026-11-06T03:31:57.4144187Z [36;1mnode src/base/contract-docs.mjs check[0m
+build	Check generated contract documents	2026-11-06T03:31:57.4161058Z shell: /usr/bin/bash -e {0}
+[CI environment block omitted from public packet]
+build	Check generated contract documents	2026-11-06T03:31:57.4161741Z ##[endgroup]
+build	Check generated contract documents	2026-11-06T03:31:57.4941931Z ACCEPTANCE.md: generated content differs; run contract-docs write.
+build	Check generated contract documents	2026-11-06T03:31:57.4992466Z ##[error]Process completed with exit code 1.

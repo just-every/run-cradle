@@ -1,0 +1,5829 @@
+{
+  "commit": "a7faed4964ba8cf568af63761c52261aef1d896a",
+  "routes": [
+    {
+      "route": "/app",
+      "width": 1440,
+      "file": "route-00-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/records",
+      "width": 1440,
+      "file": "route-01-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/operations/studio",
+      "width": 1440,
+      "file": "route-02-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/overview",
+      "width": 1440,
+      "file": "route-03-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/campaigns",
+      "width": 1440,
+      "file": "route-04-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/campaigns/01ARZ3NDEKTSV4RRFFQ69G5FBB",
+      "width": 1440,
+      "file": "route-05-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/lenses/risks",
+      "width": 1440,
+      "file": "route-06-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/risks/01ARZ3NDEKTSV4RRFFQ69G5FGB",
+      "width": 1440,
+      "file": "route-07-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/lenses/timeline",
+      "width": 1440,
+      "file": "route-08-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/milestones/01ARZ3NDEKTSV4RRFFQ69G5FEC",
+      "width": 1440,
+      "file": "route-09-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/lenses/new",
+      "width": 1440,
+      "file": "route-10-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/decisions",
+      "width": 1440,
+      "file": "route-11-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/decisions/01ARZ3NDEKTSV4RRFFQ69G5FHB",
+      "width": 1440,
+      "file": "route-12-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/automations",
+      "width": 1440,
+      "file": "route-13-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/notifications",
+      "width": 1440,
+      "file": "route-14-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/search",
+      "width": 1440,
+      "file": "route-15-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/settings",
+      "width": 1440,
+      "file": "route-16-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/operations",
+      "width": 1440,
+      "file": "route-17-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/repairs",
+      "width": 1440,
+      "file": "route-18-1440.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app",
+      "width": 390,
+      "file": "route-00-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/records",
+      "width": 390,
+      "file": "route-01-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/operations/studio",
+      "width": 390,
+      "file": "route-02-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/overview",
+      "width": 390,
+      "file": "route-03-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/campaigns",
+      "width": 390,
+      "file": "route-04-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/campaigns/01ARZ3NDEKTSV4RRFFQ69G5FBB",
+      "width": 390,
+      "file": "route-05-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/lenses/risks",
+      "width": 390,
+      "file": "route-06-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/risks/01ARZ3NDEKTSV4RRFFQ69G5FGB",
+      "width": 390,
+      "file": "route-07-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/lenses/timeline",
+      "width": 390,
+      "file": "route-08-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/milestones/01ARZ3NDEKTSV4RRFFQ69G5FEC",
+      "width": 390,
+      "file": "route-09-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/lenses/new",
+      "width": 390,
+      "file": "route-10-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/decisions",
+      "width": 390,
+      "file": "route-11-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/decisions/01ARZ3NDEKTSV4RRFFQ69G5FHB",
+      "width": 390,
+      "file": "route-12-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/automations",
+      "width": 390,
+      "file": "route-13-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/notifications",
+      "width": 390,
+      "file": "route-14-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/search",
+      "width": 390,
+      "file": "route-15-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/settings",
+      "width": 390,
+      "file": "route-16-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/operations",
+      "width": 390,
+      "file": "route-17-390.jpg",
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "route": "/app/repairs",
+      "width": 390,
+      "file": "route-18-390.jpg",
+      "status": 200,
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "remoteIdentityHidden": true,
+  "homepage": {
+    "build": {
+      "command": "pnpm exec rer build --site",
+      "htmlSha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+    },
+    "scenarios": [
+      {
+        "width": 1440,
+        "javaScriptEnabled": true,
+        "reducedMotion": "no-preference",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 128.9375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 460,
+                "height": 58.78125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 22.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 160.8125,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 181.1875,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 580,
+                "height": 324,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 508.34375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 461.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 409.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 306.5,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 28.796875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.65625,
+                "height": 307.484375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 576,
+                "height": 53.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 468,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 158.8125,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": [],
+        "screenshot": "homepage-1440.jpg"
+      },
+      {
+        "width": 1440,
+        "javaScriptEnabled": true,
+        "reducedMotion": "reduce",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 128.9375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 460,
+                "height": 58.78125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 22.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 160.8125,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 181.1875,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 580,
+                "height": 324,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 508.34375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 461.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 409.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 306.5,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 28.796875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.65625,
+                "height": 307.484375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 576,
+                "height": 53.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 468,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 158.8125,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": []
+      },
+      {
+        "width": 1440,
+        "javaScriptEnabled": false,
+        "reducedMotion": "no-preference",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 128.9375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 460,
+                "height": 58.78125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 22.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 160.8125,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 181.1875,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 580,
+                "height": 324,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 508.34375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 461.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 409.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 306.5,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 28.796875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.65625,
+                "height": 307.484375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 576,
+                "height": 53.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 468,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 158.8125,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": []
+      },
+      {
+        "width": 1440,
+        "javaScriptEnabled": false,
+        "reducedMotion": "reduce",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 128.9375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 460,
+                "height": 58.78125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 650,
+                "height": 22.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 160.8125,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 181.1875,
+                "height": 53.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 580,
+                "height": 324,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 508.34375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 461.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 486,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 690,
+                "height": 409.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 384,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 339.5,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 306.5,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 356.5,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 107.5,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 28.796875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.671875,
+                "height": 86.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 432.65625,
+                "height": 307.484375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 576,
+                "height": 53.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 468,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 158.8125,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": []
+      },
+      {
+        "width": 390,
+        "javaScriptEnabled": true,
+        "reducedMotion": "no-preference",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 70.71875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 47.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 42,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 150.28125,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 168.390625,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 354,
+                "height": 337.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 663.015625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 612.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 548.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 300,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 115.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 443.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 54.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 320,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": [],
+        "screenshot": "homepage-390.jpg"
+      },
+      {
+        "width": 390,
+        "javaScriptEnabled": true,
+        "reducedMotion": "reduce",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 70.71875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 47.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 42,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 150.28125,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 168.390625,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 354,
+                "height": 337.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 663.015625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 612.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 548.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 300,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 115.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 443.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 54.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 320,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": []
+      },
+      {
+        "width": 390,
+        "javaScriptEnabled": false,
+        "reducedMotion": "no-preference",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 70.71875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 47.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 42,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 150.28125,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 168.390625,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 354,
+                "height": 337.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 663.015625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 612.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 548.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 300,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 115.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 443.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 54.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 320,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": []
+      },
+      {
+        "width": 390,
+        "javaScriptEnabled": false,
+        "reducedMotion": "reduce",
+        "sections": [
+          {
+            "id": "top",
+            "elements": [
+              {
+                "selector": "h1",
+                "text": 39,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 70.71875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 71,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 47.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-hero-copy p",
+                "text": 53,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 42,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 150.28125,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 12,
+                "opacity": 1,
+                "hidden": false,
+                "width": 168.390625,
+                "height": 50.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-actions a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-project",
+                "text": 21,
+                "opacity": 1,
+                "hidden": false,
+                "width": 354,
+                "height": 337.890625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "tables",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 22,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 133,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 325,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 663.015625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "views",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 31,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 114,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 284,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 612.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "changes",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 108.75,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-screen",
+                "text": 157,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 548.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "practical",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 35.828125,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 18.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-intro p",
+                "text": 95,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 81.5625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 15,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 23,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row h3",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 27.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 138,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 165,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 160,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 102.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row p",
+                "text": 54,
+                "opacity": 1,
+                "hidden": false,
+                "width": 300,
+                "height": 48,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 16,
+                "opacity": 1,
+                "hidden": false,
+                "width": 121.59375,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-row a",
+                "text": 27,
+                "opacity": 1,
+                "hidden": false,
+                "width": 217.203125,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 36,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 114.390625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 172,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 263.984375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-mini",
+                "text": 120,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 177.09375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "ownership",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 24,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 46,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 57.59375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy p:not(.lp-eyebrow)",
+                "text": 97,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 115.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 57.046875,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-copy a",
+                "text": 20,
+                "opacity": 1,
+                "hidden": false,
+                "width": 149.75,
+                "height": 33,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": ".lp-acct",
+                "text": 111,
+                "opacity": 1,
+                "hidden": false,
+                "width": 302,
+                "height": 443.96875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          },
+          {
+            "id": "start",
+            "elements": [
+              {
+                "selector": "h2",
+                "text": 25,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 71.65625,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "p",
+                "text": 65,
+                "opacity": 1,
+                "hidden": false,
+                "width": 350,
+                "height": 54.375,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 10,
+                "opacity": 1,
+                "hidden": false,
+                "width": 320,
+                "height": 56,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              },
+              {
+                "selector": "a",
+                "text": 13,
+                "opacity": 1,
+                "hidden": false,
+                "width": 123.8125,
+                "height": 37.1875,
+                "inViewport": true,
+                "unobscured": true,
+                "renderedContent": true
+              }
+            ]
+          }
+        ],
+        "links": [
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "/contract",
+            "text": "Contract"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "https://demo.run-cradle.com/",
+            "text": "Try the demo"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "/docs/importing",
+            "text": "Importing a base"
+          },
+          {
+            "href": "/docs/automations",
+            "text": "How record automations work"
+          },
+          {
+            "href": "/docs/install",
+            "text": "Install it"
+          },
+          {
+            "href": "/docs/leaving",
+            "text": "Leave with your data"
+          },
+          {
+            "href": "/run",
+            "text": "Run Cradle"
+          },
+          {
+            "href": "/docs",
+            "text": "Read the docs"
+          },
+          {
+            "href": "#tables",
+            "text": "Tables"
+          },
+          {
+            "href": "#views",
+            "text": "Views"
+          },
+          {
+            "href": "#changes",
+            "text": "Changes"
+          },
+          {
+            "href": "#ownership",
+            "text": "Ownership"
+          },
+          {
+            "href": "/docs",
+            "text": "Docs"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle",
+            "text": "Source"
+          },
+          {
+            "href": "https://github.com/just-every/run-cradle/blob/main/LICENSE",
+            "text": "MIT licence"
+          },
+          {
+            "href": "https://runeditrun.com",
+            "text": "runeditrun.com"
+          }
+        ],
+        "requests": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "type": "document"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "type": "stylesheet"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "type": "font"
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "type": "font"
+          }
+        ],
+        "responses": [
+          {
+            "url": "http://127.0.0.1:34851/",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/styles-Dy-7MjD-.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/site-assets/style-D30YjftQ.css",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/cradle-sans-semibold.ttf",
+            "status": 200
+          },
+          {
+            "url": "http://127.0.0.1:34851/fonts/lexend.woff2",
+            "status": 200
+          }
+        ],
+        "errors": [],
+        "failed": []
+      }
+    ],
+    "served": [
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "file": "index.html",
+        "sha256": "6a390f57c7ca887758ea8ff27975da417a944962eb2fe9262a92d9bd40e92846"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/styles-Dy-7MjD-.css",
+        "status": 200,
+        "file": "site-assets/styles-Dy-7MjD-.css",
+        "sha256": "bd21d59573d599996d2ba81432e6283170f58a4097dcec52f2a439aec4a089c9"
+      },
+      {
+        "method": "GET",
+        "path": "/site-assets/style-D30YjftQ.css",
+        "status": 200,
+        "file": "site-assets/style-D30YjftQ.css",
+        "sha256": "56a1b47f98f1487fbb07198a1ed370f89f54f798853d46e56b04b8e1a5ed4da8"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/lexend.woff2",
+        "status": 200,
+        "file": "fonts/lexend.woff2",
+        "sha256": "1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans-semibold.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans-semibold.ttf",
+        "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+      },
+      {
+        "method": "GET",
+        "path": "/fonts/cradle-sans.ttf",
+        "status": 200,
+        "file": "fonts/cradle-sans.ttf",
+        "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+      },
+      {
+        "method": "GET",
+        "path": "/favicon.ico",
+        "status": 200,
+        "file": "favicon.ico",
+        "sha256": "af51cb054cf99e0b8418aef0337142a6594c39ec58dcd10e271a34f650311b9a"
+      }
+    ]
+  }
+}

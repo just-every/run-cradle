@@ -1,0 +1,26 @@
+{
+  "candidate": "a7faed4964ba8cf568af63761c52261aef1d896a",
+  "main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "files_changed_from_main": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "tests/foundation-shell.mjs",
+    "tests/helpers/homepage-journey.mjs",
+    "tests/helpers/static-site.mjs"
+  ],
+  "replayed_commit_count": 1,
+  "proof_source_bytes": {
+    "tests/foundation-shell.mjs": "f812649bf1f8fd12cf53f52c492c27f055844983f9eae1f9b41aa28bf90622c3",
+    "tests/helpers/homepage-journey.mjs": "a046096b1d0475fcc93b9641cef6b2394762c144dbfc11aa4539cd37f728078f",
+    "tests/helpers/static-site.mjs": "0408083d189ae8da80150b065b3c9f8e4de630a202acdf2a7ce013211dc3d1e5",
+    "src/site/pages.tsx": "31bbdb30e435463a1f69f02a53bbde68a9ceb5bbc28d0c4d783409333bba890f",
+    "src/core/app/screens/landing/Landing.tsx": "26accbed2499872e6f65f0963becc967dd1434f8a3dda5cdaff851aba8dac59d",
+    "src/core/app/screens/landing/css/motion.css": "fd7b75a46e7adf8d6d6603a4ac8d74752f9431591bb556eb2b9c3c02669ed3b1",
+    "src/core/app/site/SiteHeader.tsx": "708dd49bc1df7959bcde4c0cd918f6e368163ac908496b4cd64126bc25b613e4",
+    "src/core/app/site/SiteFooter.tsx": "d40a7c3b9cbb43d6736479583b0107001c1446edeb00b1987dca57d5236c72cc"
+  },
+  "selected_files_unchanged_after_required_base": true,
+  "parent_status_rows_retained": true,
+  "generated_views_committed": false,
+  "checkout_clean": true
+}

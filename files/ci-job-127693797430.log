@@ -1,0 +1,8 @@
+verify	Require the plan and every verification worker	﻿2026-11-06T03:32:02.7530749Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T03:32:02.7531626Z [36;1mtest "$PLAN" = success[0m
+verify	Require the plan and every verification worker	2026-11-06T03:32:02.7532451Z [36;1mif [ "$SKIP" = true ]; then exit 0; fi[0m
+verify	Require the plan and every verification worker	2026-11-06T03:32:02.7533535Z [36;1mfor result in $RESULTS; do test "$result" = success; done[0m
+verify	Require the plan and every verification worker	2026-11-06T03:32:02.7937380Z shell: /usr/bin/bash -e {0}
+[CI environment block omitted from public packet]
+verify	Require the plan and every verification worker	2026-11-06T03:32:02.7943075Z ##[endgroup]
+verify	Require the plan and every verification worker	2026-11-06T03:32:02.8129744Z ##[error]Process completed with exit code 1.

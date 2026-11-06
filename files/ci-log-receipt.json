@@ -1,0 +1,12 @@
+[
+  {
+    "command": "gh run view 42157020796 --repo just-every/run-cradle --job 127693538456 --log-failed",
+    "exit": 0,
+    "log": "ci-job-127693538456.log"
+  },
+  {
+    "command": "gh run view 42157020796 --repo just-every/run-cradle --job 127693797430 --log-failed",
+    "exit": 0,
+    "log": "ci-job-127693797430.log"
+  }
+]
