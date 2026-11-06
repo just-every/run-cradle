@@ -221,8 +221,8 @@ Core · published · **partial** · Cites BASE-ACCESS-001, BASE-ACCESS-002, BASE
 4. Local and hosted installations expose no captured-mail inbox or outbox. Hosted mail failures give actionable guidance; an unclaimed installation directs its host to finish deployment.
 5. Absent owner configuration admits neither the legacy sign-in path nor legacy product cookies.
 
-**Evidence.** `tests/auth-base-only-runtime.mjs` (including “AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration”), `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs`
-**Gap.** Missing a journey in the old Evidence set that prepares a product mutation, revokes its Base session and proves refusal with no effect, plus the local rer-dev/private-setup and durable first-run paths; the cited files exercise production bootstrap and sign-in, not these retained paths. Existing local dev/first-run browser journeys are in ui-local-signin.mjs and installed-home.mjs, which this old Evidence cell does not cite.
+**Evidence.** `tests/base-installation.mjs` — “emitted Base SendGrid magic-link uses a read-only confirmation before one-time POST and signs the mapped owner into Cradle”, with `tests/helpers/base-session-mutation.mjs` proving prepared Launch admission and captured HTTP refusal after public Base session revocation; `tests/auth-base-only-runtime.mjs` (including “AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration”), `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs`
+**Gap.** Evidence reconciliation for the existing local development, private setup and durable first-run paths remains open: the existing browser journeys in `tests/ui-local-signin.mjs` and `tests/installed-home.mjs` have not been reconciled here. The broader authentication, configuration and mail matrix, ct contract conversion and generated-document synchronization, and independent whole-clause judgment remain unclaimed.
 
 #### OPS-001 — Equal operators
 
