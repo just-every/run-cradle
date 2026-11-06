@@ -1,0 +1,18 @@
+{
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "commands": [
+    "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+    "cloud_run npx -y @runeditrun/rer build"
+  ],
+  "checks": {
+    "setup": {
+      "exit": 0,
+      "observedCompletion": true
+    },
+    "build": {
+      "exit": 0,
+      "observedCompletion": true
+    }
+  },
+  "rerPin": "0.2.80"
+}

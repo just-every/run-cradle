@@ -1,0 +1,315 @@
+{
+  "tag": "sd-cradle-c-f208",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f208",
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "newProductCommits": 0,
+  "productWorkingTreeClean": true,
+  "clause": {
+    "id": "SET-003",
+    "before": "PARTIAL",
+    "after": "PARTIAL",
+    "countsBefore": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "countsAfter": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "statusRowsBefore": 257,
+    "statusRowsAfter": 257,
+    "testRegistrationsBefore": 174,
+    "testRegistrationsAfter": 174
+  },
+  "checks": [
+    {
+      "name": "authority-browser",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-name-pattern=native owner creation",
+        "tests/launch-authority-browser.mjs"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:40:11.545881+00:00",
+      "completedAt": "2026-11-06T04:43:41.011588+00:00",
+      "log": "/tmp/cradle-authority-browser.log"
+    },
+    {
+      "name": "first-party",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:40:22.830407+00:00",
+      "completedAt": "2026-11-06T04:40:24.088852+00:00",
+      "log": "/tmp/cradle-first-party.log"
+    },
+    {
+      "name": "installed-home",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "tests/installed-home.mjs"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:40:11.364406+00:00",
+      "completedAt": "2026-11-06T04:42:22.362959+00:00",
+      "log": "/tmp/cradle-installed-home.log"
+    },
+    {
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "commands": [
+        "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+        "cloud_run npx -y @runeditrun/rer build"
+      ],
+      "checks": {
+        "setup": {
+          "exit": 0,
+          "observedCompletion": true
+        },
+        "build": {
+          "exit": 0,
+          "observedCompletion": true
+        }
+      },
+      "rerPin": "0.2.80"
+    },
+    {
+      "name": "source-check",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:44:13.351403+00:00",
+      "completedAt": "2026-11-06T04:44:13.935821+00:00",
+      "log": "/tmp/cradle-source-check.log"
+    },
+    {
+      "name": "source-lock",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "lock"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:44:12.498931+00:00",
+      "completedAt": "2026-11-06T04:44:13.292340+00:00",
+      "log": "/tmp/cradle-source-lock.log"
+    },
+    {
+      "name": "test-budget",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "node",
+        "tests/helpers/test-budget.mjs"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:40:24.166027+00:00",
+      "completedAt": "2026-11-06T04:40:25.993091+00:00",
+      "log": "/tmp/cradle-test-budget.log"
+    },
+    {
+      "name": "types",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "pnpm",
+        "check:types"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:39:59.891746+00:00",
+      "completedAt": "2026-11-06T04:40:22.750394+00:00",
+      "log": "/tmp/cradle-types.log"
+    },
+    {
+      "name": "views-check",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:44:12.256476+00:00",
+      "completedAt": "2026-11-06T04:44:12.419961+00:00",
+      "log": "/tmp/cradle-views-check.log"
+    },
+    {
+      "name": "views-write",
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "write"
+      ],
+      "exit": 0,
+      "startedAt": "2026-11-06T04:44:12.043877+00:00",
+      "completedAt": "2026-11-06T04:44:12.203650+00:00",
+      "log": "/tmp/cradle-views-write.log"
+    }
+  ],
+  "firstRun": [
+    {
+      "width": 1440,
+      "reads": [
+        {
+          "phase": "first run",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "reload",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "new sign-in",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "populated installation isolated",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        }
+      ],
+      "reload": true,
+      "reauthenticated": true,
+      "populatedControl": true
+    },
+    {
+      "width": 390,
+      "reads": [
+        {
+          "phase": "first run",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "reload",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "new sign-in",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "populated installation isolated",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        }
+      ],
+      "reload": true,
+      "reauthenticated": true,
+      "populatedControl": true
+    }
+  ],
+  "screenshotsInspected": true,
+  "selectedScreenshots": [
+    "first-run-empty-decisions-1440.jpg",
+    "first-run-empty-decisions-390.jpg",
+    "first-run-empty-timeline-1440.jpg",
+    "first-run-empty-timeline-390.jpg",
+    "first-run-populated-decisions-1440.jpg",
+    "first-run-populated-decisions-390.jpg",
+    "first-run-populated-timeline-1440.jpg",
+    "first-run-populated-timeline-390.jpg"
+  ],
+  "browserErrors": [],
+  "publicationScan": "fleet lander gate; not run in cloud",
+  "candidateVerifyRun": 42164258200,
+  "ciStatus": "completed",
+  "pr": null,
+  "blockers": [],
+  "planRowsChanged": [],
+  "expectedGeneratedViewCheck": {
+    "name": "committed-views-check",
+    "head": "8034f4854c72ae82753eee43486594aa12c05876",
+    "command": [
+      "node",
+      "src/base/contract-docs.mjs",
+      "check"
+    ],
+    "exit": 1,
+    "startedAt": "2026-11-06T04:46:01.358171+00:00",
+    "completedAt": "2026-11-06T04:46:01.563348+00:00",
+    "log": "/tmp/cradle-committed-views-check.log",
+    "expectedFailure": "Restored ACCEPTANCE.md is stale; fleet lander regenerates it"
+  },
+  "githubCallsUsed": 8,
+  "ciConclusion": "failure",
+  "expectedGeneratedViewsOnly": true,
+  "ciJobs": [
+    {
+      "conclusion": "success",
+      "id": 127716901455,
+      "name": "plan",
+      "status": "completed",
+      "steps": []
+    },
+    {
+      "conclusion": "failure",
+      "id": 127716946703,
+      "name": "build",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "failure",
+          "name": "Check generated contract documents"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "id": 127717060817,
+      "name": "verify",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "failure",
+          "name": "Require the plan and every verification worker"
+        }
+      ]
+    },
+    {
+      "conclusion": "skipped",
+      "id": 127717062285,
+      "name": "verify-${{ matrix.name }}",
+      "status": "completed",
+      "steps": []
+    }
+  ],
+  "handoff": "eligible under the generated-view exception; product remains branch-only"
+}

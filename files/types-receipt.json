@@ -1,0 +1,12 @@
+{
+  "name": "types",
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "command": [
+    "pnpm",
+    "check:types"
+  ],
+  "exit": 0,
+  "startedAt": "2026-11-06T04:39:59.891746+00:00",
+  "completedAt": "2026-11-06T04:40:22.750394+00:00",
+  "log": "/tmp/cradle-types.log"
+}

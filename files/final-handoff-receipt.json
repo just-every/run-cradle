@@ -1,0 +1,23 @@
+{
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "branch": "cloud/sd-cradle-c-f208",
+  "remoteConfirmed": true,
+  "productPushExit": 0,
+  "workingTreeClean": true,
+  "sourceLockCheckExit": 0,
+  "contractGenerationWriteExit": 0,
+  "contractGenerationCheckBeforeRestoreExit": 0,
+  "contractGenerationCheckAfterRestoreExit": 1,
+  "expectedGeneratedView": "ACCEPTANCE.md",
+  "nativeJourneyExit": 0,
+  "browserJourneyExit": 0,
+  "typecheckExit": 0,
+  "firstPartyExit": 0,
+  "verifyRun": 42164258200,
+  "verifyHead": "8034f4854c72ae82753eee43486594aa12c05876",
+  "verifyConclusion": "failure",
+  "generatedViewException": true,
+  "publicationScan": "not run in cloud; fleet gate",
+  "newTaskCommits": 0,
+  "pr": null
+}

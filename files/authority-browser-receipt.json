@@ -1,0 +1,18 @@
+{
+  "name": "authority-browser",
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "command": [
+    "timeout",
+    "1200",
+    "node",
+    "--import",
+    "./tests/helpers/typescript-loader.mjs",
+    "--test",
+    "--test-name-pattern=native owner creation",
+    "tests/launch-authority-browser.mjs"
+  ],
+  "exit": 0,
+  "startedAt": "2026-11-06T04:40:11.545881+00:00",
+  "completedAt": "2026-11-06T04:43:41.011588+00:00",
+  "log": "/tmp/cradle-authority-browser.log"
+}

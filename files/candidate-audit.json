@@ -1,0 +1,25 @@
+{
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "candidates": [
+    {
+      "head": "8034f4854c72ae82753eee43486594aa12c05876",
+      "identity": "fleet author and committer",
+      "trailers": "",
+      "statusRows": 257,
+      "parents": [
+        {
+          "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+          "statusRows": 257,
+          "missing": []
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "workingTreeClean": true,
+  "newCommitsThisTask": 0
+}

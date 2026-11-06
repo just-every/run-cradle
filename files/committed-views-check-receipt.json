@@ -1,0 +1,13 @@
+{
+  "name": "committed-views-check",
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "command": [
+    "node",
+    "src/base/contract-docs.mjs",
+    "check"
+  ],
+  "exit": 1,
+  "startedAt": "2026-11-06T04:46:01.358171+00:00",
+  "completedAt": "2026-11-06T04:46:01.563348+00:00",
+  "log": "/tmp/cradle-committed-views-check.log"
+}

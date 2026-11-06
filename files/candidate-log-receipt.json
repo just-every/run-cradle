@@ -1,0 +1,22 @@
+[
+  {
+    "command": "gh run view 42164258200 --repo just-every/run-cradle --job 127716946703 --log-failed",
+    "exit": 0,
+    "job": 127716946703,
+    "attempts": 1,
+    "rawOutputBytes": 1035,
+    "sanitizedOutputBytes": 1035,
+    "omittedWorkflowEnvironmentLines": 4,
+    "publicOutputBytes": 737
+  },
+  {
+    "command": "gh run view 42164258200 --repo just-every/run-cradle --job 127717060817 --log-failed",
+    "exit": 0,
+    "job": 127717060817,
+    "attempts": 1,
+    "rawOutputBytes": 1584,
+    "sanitizedOutputBytes": 1584,
+    "omittedWorkflowEnvironmentLines": 7,
+    "publicOutputBytes": 920
+  }
+]

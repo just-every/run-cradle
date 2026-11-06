@@ -1,0 +1,13 @@
+{
+  "name": "views-check",
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "command": [
+    "node",
+    "src/base/contract-docs.mjs",
+    "check"
+  ],
+  "exit": 0,
+  "startedAt": "2026-11-06T04:44:12.256476+00:00",
+  "completedAt": "2026-11-06T04:44:12.419961+00:00",
+  "log": "/tmp/cradle-views-check.log"
+}

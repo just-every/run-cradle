@@ -1,0 +1,12 @@
+{
+  "name": "test-budget",
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "command": [
+    "node",
+    "tests/helpers/test-budget.mjs"
+  ],
+  "exit": 0,
+  "startedAt": "2026-11-06T04:40:24.166027+00:00",
+  "completedAt": "2026-11-06T04:40:25.993091+00:00",
+  "log": "/tmp/cradle-test-budget.log"
+}

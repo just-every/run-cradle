@@ -1,0 +1,8 @@
+[Workflow environment block omitted from the public packet.]
+verify	Require the plan and every verification worker	﻿2026-11-06T04:44:50.7749618Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T04:44:50.7750309Z [36;1mtest "$PLAN" = success[0m
+verify	Require the plan and every verification worker	2026-11-06T04:44:50.7751049Z [36;1mif [ "$SKIP" = true ]; then exit 0; fi[0m
+verify	Require the plan and every verification worker	2026-11-06T04:44:50.7752162Z [36;1mfor result in $RESULTS; do test "$result" = success; done[0m
+verify	Require the plan and every verification worker	2026-11-06T04:44:50.9706757Z shell: /usr/bin/bash -e {0}
+verify	Require the plan and every verification worker	2026-11-06T04:44:50.9711528Z ##[endgroup]
+verify	Require the plan and every verification worker	2026-11-06T04:44:50.9935278Z ##[error]Process completed with exit code 1.

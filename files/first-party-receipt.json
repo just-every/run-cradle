@@ -1,0 +1,16 @@
+{
+  "name": "first-party",
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "command": [
+    "pnpm",
+    "exec",
+    "rer",
+    "check",
+    "--profile",
+    "first-party"
+  ],
+  "exit": 0,
+  "startedAt": "2026-11-06T04:40:22.830407+00:00",
+  "completedAt": "2026-11-06T04:40:24.088852+00:00",
+  "log": "/tmp/cradle-first-party.log"
+}
