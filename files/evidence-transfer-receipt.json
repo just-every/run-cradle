@@ -1,0 +1,34 @@
+{
+  "tag": "sd-cradle-c-f195",
+  "repository": "just-every/run-cradle",
+  "productBranch": "cloud/sd-cradle-c-f195",
+  "productHead": "b721822ff74b1319c2e3fde3c0b38c30c942d3ee",
+  "productPushed": true,
+  "failure": "Git ls-remote failed exit=128",
+  "diagnostic": "Invalid username or token. Password authentication is not supported for Git operations.",
+  "httpStatus": "unknown (not supplied by Git)",
+  "source": "Only the launcher decrypted bundle and its required helper are used.",
+  "retryDelaysSeconds": [
+    15,
+    45,
+    90,
+    150
+  ],
+  "recovered": true,
+  "attempts": 3,
+  "attemptResults": [
+    {
+      "attempt": 1,
+      "result": "Git ls-remote failed exit=128"
+    },
+    {
+      "attempt": 2,
+      "result": "Git ls-remote failed exit=128"
+    },
+    {
+      "attempt": 3,
+      "result": "published",
+      "head": "36f3222e097fa457521f3461ee1a68ba4d985c6d"
+    }
+  ]
+}

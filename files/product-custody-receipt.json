@@ -1,0 +1,23 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f195",
+  "head": "b721822ff74b1319c2e3fde3c0b38c30c942d3ee",
+  "evidenceRef": "refs/heads/evidence/sd-cradle-c-f195",
+  "evidenceVerified": true,
+  "evidenceFiles": 42,
+  "evidenceAttempts": 3,
+  "packet": "/home/agent/rer-consolidation/work/sd-cradle-c-f195/packet",
+  "verifyRun": 42153045282,
+  "verifyConclusion": "failure only on retained generated ACCEPTANCE.md; permitted exception",
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "statusRows": 257,
+  "tests": 174,
+  "doneClaim": false,
+  "productBlockers": [],
+  "priorEvidenceHead": "36f3222e097fa457521f3461ee1a68ba4d985c6d",
+  "note": "This receipt records verification of the initial evidence publication. The complete packet is subsequently republished; the terminal EVIDENCE line names its final head."
+}
