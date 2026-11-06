@@ -300,6 +300,76 @@ async function restoreRemovedOwner(h, reader, person) {
  assert.equal(campaign.archivedAt, null)
 }
 
+export async function verifyPublicRemovedOwnerRestore(h) {
+ const formerOwner = await h.addPerson({ name: 'Former campaign owner' })
+ const replacement = await h.addPerson({ name: 'Current campaign owner' })
+ const read = async route => {
+  const response = await h.request(h.ownerSession, route), body = await response.json()
+  assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+  return body
+ }
+ const command = async (action, input, expected = [], status = 200) => {
+  const response = await h.request(h.ownerSession, `/api/v1/commands/${action}`, {
+   method: 'POST', body: JSON.stringify({ commandId: createUlid(), input, expected }),
+  }), body = await response.json()
+  assert.equal(response.status, status, `${action}: ${JSON.stringify(body)}`)
+  if (status === 200) assert.equal(body.data.state, 'committed')
+  return body
+ }
+ const create = async (kind, fields) => (await command(`launch.${kind}.create`, { fields })).data.value
+ const record = async (kind, id) => (await read(`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}/records/${id}`)).data.record
+ const members = async () => (await read(`/api/v1/members?appId=${LAUNCH_APP_ID}`)).data.items
+ const campaign = await create('campaign', { code: `synthetic-cradle-${createUlid()}`, name: 'Archived owner replacement', ownerId: formerOwner.id, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Restore with current ownership', statusSummary: 'Awaiting a new owner', phase: 'Build', status: 'Watch', health: 43, budgetMinor: 12345, spendMinor: 678, tags: ['Retention'], customFields: {} })
+ const deliverable = await create('deliverable', { campaignId: campaign.id, title: 'Owner replacement launch kit', ownerId: h.owner, dueDate: '2026-11-12' })
+ const milestone = await create('milestone', { campaignId: campaign.id, title: 'Owner replacement review', ownerId: h.owner, type: 'Review', status: 'Not started', startDate: '2026-11-10', endDate: '2026-11-13', conflictReason: null })
+ const risk = await create('risk', { campaignId: campaign.id, title: 'Owner replacement supplier risk', ownerId: h.owner, severity: 'High', dueDate: '2026-11-11', signal: 'Supplier review pending', mitigation: 'Review alternate supplier' })
+ const decision = await create('decision', { campaignId: campaign.id, riskId: risk.id, supersedesId: null, title: 'Owner replacement supplier decision', requesterId: h.owner, assigneeId: h.owner, priority: 'High', dueAt: '2026-11-11T15:00:00.000Z', recommendation: 'Retain alternate supplier', impact: 'Launch timing' })
+ const subjects = { campaign, deliverable, milestone, risk, decision }
+ const records = () => Promise.all(Object.entries(subjects).map(async ([kind, row]) => [kind, await record(kind, row.id)]))
+ assert.equal((await read(`/api/campaigns/${campaign.id}`)).campaign.owner.id, formerOwner.id)
+ await command('launch.campaign.archive', { id: campaign.id }, h.expected('campaign', await record('campaign', campaign.id)))
+ const member = (await members()).find(row => row.id === formerOwner.id)
+ assert.ok(member, 'The archived campaign owner is a current member before removal')
+ const removed = await command('member.remove', { memberId: formerOwner.id, reason: 'Archived campaign owner has left' }, [{ ref: { appId: LAUNCH_APP_ID, entityId: '00000000000000000000000101', recordId: formerOwner.id }, version: member.version }])
+ assert.equal(removed.data.value.state, 'removed')
+
+ // Read after member removal so a stale revision cannot masquerade as validation.
+ const archived = await record('campaign', campaign.id)
+ assert.equal(archived.lifecycle, 'archived')
+ const before = await records(), detailBefore = await read(`/api/campaigns/${campaign.id}`)
+ for (const [kind, row] of Object.entries(subjects)) {
+  assert.equal(before.find(([name]) => name === kind)[1].id, row.id)
+ }
+ assert.ok(detailBefore.activity.length > 0, 'The refusal protects populated campaign activity')
+ assert.equal(detailBefore.deliverables.find(row => row.id === deliverable.id)?.state, 'Open')
+ assert.equal(detailBefore.milestones.find(row => row.id === milestone.id)?.status, 'Not started')
+ assert.equal((await read(`/api/risks/${risk.id}`)).risk.state, 'Watching')
+ assert.equal((await read(`/api/decisions/${decision.id}`)).decision.state, 'Awaiting approval')
+ const persisted = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ assert.ok(persisted.admission_events.length > 0, 'The refusal protects admitted creation events')
+ const refused = await command('launch.campaign.restore', { id: campaign.id }, h.expected('campaign', archived), 400)
+ assert.equal(refused.error.code, 'validation', 'A fresh revision reaches owner validation')
+ assert.match(refused.error.message, /operator.*not current/i)
+ assert.ok(refused.error.message.includes(formerOwner.id), 'The refusal identifies the removed campaign owner')
+ assert.deepEqual(await records(), before, 'Refused restore preserves campaign and every child, including revisions')
+ assert.deepEqual(await read(`/api/campaigns/${campaign.id}`), detailBefore, 'Refused restore preserves shipped detail and activity')
+ const afterRefusal = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ assert.deepEqual(afterRefusal.admission_events, persisted.admission_events, 'Refused restore emits no event')
+ assert.deepEqual(afterRefusal.admission_outbox, persisted.admission_outbox, 'Refused restore enqueues no work')
+ assert.deepEqual(afterRefusal, persisted, 'Refused restore admits no persisted effect')
+
+ assert.ok((await members()).some(row => row.id === replacement.id && row.state === 'active'), 'The independently selected replacement is a current member')
+ await command('launch.campaign.restore', { id: campaign.id, ownerId: replacement.id }, h.expected('campaign', await record('campaign', campaign.id)))
+ const restored = await record('campaign', campaign.id)
+ const detailAfter = await read(`/api/campaigns/${campaign.id}`)
+ assert.equal(restored.lifecycle, 'active')
+ assert.equal(restored.version, archived.version + 1, 'Only the supported restore increments the campaign revision')
+ assert.equal(detailAfter.campaign.archivedAt, null)
+ assert.equal(detailAfter.campaign.owner.id, replacement.id, 'Public detail names the independently known current owner')
+ assert.ok((await read('/api/campaigns?limit=200')).items.some(row => row.id === campaign.id), 'The restored campaign returns to the active list')
+ console.log('PROBE CAMP-010 2: HTTP archive, member.remove and fresh-version restore without owner -> 400 owner-specific validation; campaign, children, activity, events and outbox unchanged; restore with known current owner -> active with that owner')
+}
+
 async function deletion(h, reader, campaign) {
  const subjects = [campaign.id]
  for (const kind of children) subjects.push(...(await reader.list(h.ctx, kind, { campaignId: campaign.id })).items.map(row => row.id))
@@ -327,6 +397,7 @@ async function deletion(h, reader, campaign) {
 
 export async function verifyCampaignLifecycleClauses(h) {
  await verifyPublicCampaignLifecycle(h)
+ await verifyPublicRemovedOwnerRestore(h)
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const f = await fixture(h, reader)
  const imported = await stagedImport(h, f.campaign)

@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "4cf4c24d340293a95ac885ac436f562e92982ff87b6f656e188f95ba053995fe",
       "executable": false
     },
     "DEMO.md": {
@@ -12314,7 +12314,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
-      "sha256": "b863d3b11c2a21e3a4ac378c142eb2c4592313afa6e486acc72ccfcf57987997",
+      "sha256": "8837c966cea545d567a1ded3ebebac8d0893b52f50085f9c12c1635d919da6cf",
       "executable": false
     },
     "tests/helpers/launch-clause-analysis.mjs": {
