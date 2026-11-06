@@ -1,0 +1,1 @@
+PROBE CAMP-001 acceptance 1: native current-version deletion with wrong-case confirmation -> 400 validation naming confirmationCode; 8 public records, populated activity, retained bytes and queued work unchanged

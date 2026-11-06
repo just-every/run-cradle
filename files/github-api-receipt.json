@@ -1,0 +1,74 @@
+{
+  "calls": 6,
+  "budget": 10,
+  "requests": [
+    {
+      "time": 1793939826.9861665,
+      "command": [
+        "gh",
+        "api",
+        "repos/just-every/run-cradle/actions/runs?head_sha=6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746&per_page=100",
+        "--jq",
+        ".workflow_runs | map({id,name,event,status,conclusion,head_sha,html_url})"
+      ]
+    },
+    {
+      "time": 1793940158.3926582,
+      "command": [
+        "gh",
+        "api",
+        "repos/just-every/run-cradle/actions/runs?head_sha=b319d67fbee4957a74027c219211e817c8b9e51f&per_page=100",
+        "--jq",
+        ".workflow_runs | map({id,name,event,status,conclusion,head_sha,head_branch,html_url})"
+      ]
+    },
+    {
+      "time": 1793940471.8166559,
+      "command": [
+        "gh",
+        "api",
+        "repos/just-every/run-cradle/actions/runs/42164091132",
+        "--jq",
+        "{status,conclusion,head_sha,html_url}"
+      ]
+    },
+    {
+      "time": 1793940483.5793848,
+      "command": [
+        "gh",
+        "api",
+        "repos/just-every/run-cradle/actions/runs/42164091132/jobs",
+        "--jq",
+        ".jobs | map({id,name,status,conclusion,steps: [.steps[] | {name,conclusion}]})"
+      ]
+    },
+    {
+      "time": 1793940501.9760892,
+      "command": [
+        "gh",
+        "run",
+        "view",
+        "42164091132",
+        "--repo",
+        "just-every/run-cradle",
+        "--job",
+        "127716410040",
+        "--log-failed"
+      ]
+    },
+    {
+      "time": 1793940503.3496242,
+      "command": [
+        "gh",
+        "run",
+        "view",
+        "42164091132",
+        "--repo",
+        "just-every/run-cradle",
+        "--job",
+        "127716495743",
+        "--log-failed"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,350 @@
+{
+  "tag": "sd-cradle-c-f210",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f210",
+  "head": "b319d67fbee4957a74027c219211e817c8b9e51f",
+  "new_product_commits": 0,
+  "clauses": [
+    {
+      "id": "CAMP-001",
+      "before": "partial",
+      "after": "partial",
+      "selected_points": "already implemented by required predecessor; native unsafe-deletion probe and enclosing lifecycle registration passed",
+      "whole_clause_done": false
+    }
+  ],
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "receipt": "setup.log"
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "receipt": "build.log"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "receipt": "types.log"
+    },
+    {
+      "command": "cloud_run pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "receipt": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "receipt": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check (after write)",
+      "exit": 0,
+      "receipt": "views-check.log"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check (after instructed restore)",
+      "exit": 1,
+      "receipt": "restored-views-check.log",
+      "expected": true,
+      "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "receipt": "lock-write.json"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "receipt": "lock-check.json"
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "registrations": 174,
+      "cap": 200
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check immediately before push",
+      "exit": 0,
+      "receipt": "pre-push-lock-check.json"
+    },
+    {
+      "command": "git fetch origin main then git rebase origin/main",
+      "exit": 0,
+      "result": "branch already up to date; no history rewritten"
+    },
+    {
+      "command": "cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-write-effects.mjs",
+      "head": "b319d67fbee4957a74027c219211e817c8b9e51f",
+      "exit": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 650650.622531,
+      "receipt": "launch-write-effects.tap"
+    }
+  ],
+  "native_test_status": "3 passed; 0 failures; 0 skips; exit 0",
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "status_rows": 257,
+  "registrations": 174,
+  "migrations_changed": false,
+  "pr": null,
+  "publication_scan": "not run in cloud; fleet landing gate",
+  "candidate_run_site": "fleet landing gate",
+  "native_probe": "PROBE CAMP-001 acceptance 1: native current-version deletion with wrong-case confirmation -> 400 validation naming confirmationCode; 8 public records, populated activity, retained bytes and queued work unchanged",
+  "native_probe_status": "passed",
+  "local_runtime": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4",
+    "rer": "0.2.80",
+    "ci_node": "22.20.0"
+  },
+  "main_ci": [
+    {
+      "conclusion": "success",
+      "event": "dynamic",
+      "head_sha": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153995027",
+      "id": 42153995027,
+      "name": "Push on main",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153995434",
+      "id": 42153995434,
+      "name": "Verify",
+      "status": "completed"
+    },
+    {
+      "conclusion": "skipped",
+      "event": "push",
+      "head_sha": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153995377",
+      "id": 42153995377,
+      "name": "Run demo",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153995317",
+      "id": 42153995317,
+      "name": "Run site",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42151556605",
+      "id": 42151556605,
+      "name": "Verify",
+      "status": "completed"
+    }
+  ],
+  "status_row_receipt": "status-rows.json",
+  "identity_receipt": "identity-audit.json",
+  "product_push": {
+    "status": "pushed",
+    "attempts": 1,
+    "branch": "cloud/sd-cradle-c-f210",
+    "head": "b319d67fbee4957a74027c219211e817c8b9e51f",
+    "receipt": "product-push.txt"
+  },
+  "candidate_ci": [
+    {
+      "conclusion": null,
+      "event": "push",
+      "head_branch": "cloud/sd-cradle-c-f210",
+      "head_sha": "b319d67fbee4957a74027c219211e817c8b9e51f",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42164091132",
+      "id": 42164091132,
+      "name": "Verify",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": "failure",
+      "event": "push",
+      "head_branch": "cloud/sd-cradle-c-f194",
+      "head_sha": "b319d67fbee4957a74027c219211e817c8b9e51f",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42154166532",
+      "id": 42154166532,
+      "name": "Verify",
+      "status": "completed"
+    }
+  ],
+  "candidate_ci_status": {
+    "conclusion": "failure",
+    "head_sha": "b319d67fbee4957a74027c219211e817c8b9e51f",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42164091132",
+    "status": "completed"
+  },
+  "candidate_ci_jobs": [
+    {
+      "conclusion": "success",
+      "id": 127716361273,
+      "name": "plan",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run bash scripts/ci/verify-reuse.sh"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "id": 127716410040,
+      "name": "build",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run echo \"matrix=$(node scripts/verify-ci.mjs --matrix \"$TIER\")\" >> \"$GITHUB_OUTPUT\""
+        },
+        {
+          "conclusion": "success",
+          "name": "Run npm install --global pnpm@10.12.4"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/cache@5a3ec84eff668545956fd18022155c47e93e2684"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run pnpm install --frozen-lockfile --ignore-workspace"
+        },
+        {
+          "conclusion": "failure",
+          "name": "Check generated contract documents"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Build, types and managed specification"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Pack production build"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Run actions/upload-artifact@v4"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Post Run actions/cache@5a3ec84eff668545956fd18022155c47e93e2684"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "id": 127716495743,
+      "name": "verify",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "failure",
+          "name": "Require the plan and every verification worker"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    },
+    {
+      "conclusion": "skipped",
+      "id": 127716496823,
+      "name": "verify-${{ matrix.name }}",
+      "status": "completed",
+      "steps": []
+    }
+  ],
+  "github_calls": 6,
+  "working_tree": "clean",
+  "candidate_ci_interpretation": "Confirmed generated-view-only failure. Build job 127716410040 fails only on ACCEPTANCE.md freshness; gate job 127716495743 reports success failure skipped. Explicit cloud handoff exception applies. No repair or rerun was attempted.",
+  "ci_archives": [
+    {
+      "job": 127716410040,
+      "command": "gh run view 42164091132 --repo just-every/run-cradle --job 127716410040 --log-failed",
+      "exit": 0,
+      "receipt": "ci-build-failure.log"
+    },
+    {
+      "job": 127716495743,
+      "command": "gh run view 42164091132 --repo just-every/run-cradle --job 127716495743 --log-failed",
+      "exit": 0,
+      "receipt": "ci-gate-failure.log"
+    }
+  ],
+  "terminal_custody": "READY under the generated-view exception; no DONE or landing claim",
+  "blockers": [],
+  "remote_product_ref_verified": true
+}
