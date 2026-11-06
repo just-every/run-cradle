@@ -378,8 +378,8 @@ Core · published · **partial**
 5. Archived records are returned only when explicitly included.
 6. Search meets its 500ms response target.
 
-**Evidence.** `tests/launch-search-authority.mjs`
-**Gap.** Missing a search journey for text, URL and select prefix matches, comment exclusion and archived opt-in, the twenty-results-per-table bound and the 500ms bar. Cited `tests/launch-search-authority.mjs` show: Cross-base search and current membership/row/field authorization are exercised with launch and vault text.
+**Evidence.** `tests/launch-search-authority.mjs`; `tests/helpers/launch-search-values-journey.mjs` — searchValuesJourney: mixed-case text, URL and select-label token prefixes, native detail links, twenty results from twenty-four matches plus another table, readable comment exclusion and explicit archived Launch inclusion
+**Gap.** Missing the 500ms measurement, complete authorized-base and Launch-attribute coverage, concurrent-policy matrices, rendered search breadth and wider phone qualification. Cross-base membership, row and field privacy assertions remain. Independent whole-clause judgment and generated-document synchronization remain release prerequisites; no DONE claim.
 
 #### VIEW-006 — Concurrent edits
 
