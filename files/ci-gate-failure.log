@@ -1,0 +1,8 @@
+Workflow environment listings omitted; command and failure output retained.
+verify	Require the plan and every verification worker	﻿2026-11-06T02:52:57.4727285Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T02:52:57.4728432Z [36;1mtest "$PLAN" = success[0m
+verify	Require the plan and every verification worker	2026-11-06T02:52:57.4729275Z [36;1mif [ "$SKIP" = true ]; then exit 0; fi[0m
+verify	Require the plan and every verification worker	2026-11-06T02:52:57.4731016Z [36;1mfor result in $RESULTS; do test "$result" = success; done[0m
+verify	Require the plan and every verification worker	2026-11-06T02:52:57.4979171Z shell: /usr/bin/bash -e {0}
+verify	Require the plan and every verification worker	2026-11-06T02:52:57.4985035Z ##[endgroup]
+verify	Require the plan and every verification worker	2026-11-06T02:52:57.5195661Z ##[error]Process completed with exit code 1.

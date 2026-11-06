@@ -1,0 +1,139 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f195",
+  "head": "b721822ff74b1319c2e3fde3c0b38c30c942d3ee",
+  "remoteHead": "b721822ff74b1319c2e3fde3c0b38c30c942d3ee",
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "shallow": "false",
+  "workingTreeClean": true,
+  "commits": [
+    {
+      "head": "b721822ff74b1319c2e3fde3c0b38c30c942d3ee",
+      "parents": [
+        "6be02e8eacfc24dc46a310479ac01301ee771ebc"
+      ],
+      "statusRows": 257,
+      "files": [
+        "sources.lock.json",
+        "tests/helpers/settings-attribution-journey.mjs"
+      ],
+      "identity": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>"
+    },
+    {
+      "head": "6be02e8eacfc24dc46a310479ac01301ee771ebc",
+      "parents": [
+        "234432f0b726fba470fb6ce4e1816f50cd082601"
+      ],
+      "statusRows": 257,
+      "files": [
+        "CONTRACT.md",
+        "sources.lock.json",
+        "tests/helpers/settings-attribution-journey.mjs",
+        "tests/ui-launch-operator-doors.mjs"
+      ],
+      "identity": "Run Edit Run fleet <fleet@runeditrun.com>\nRun Edit Run fleet <fleet@runeditrun.com>"
+    }
+  ],
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node tests/ui-launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "screens": 27,
+      "widths": [
+        1440,
+        390
+      ],
+      "sourceBytesMatchHead": true,
+      "note": "The passing journey ran before the final commit. Its tested source bytes were committed unchanged; production source and emitted Worker bytes did not change."
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write && node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "generatedViewsRestoredFrom": "origin/main",
+      "generatedViewsCommitted": false
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock && node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "checkOutputSha256": "0897e5693f2825c50f7e4539c68b12d855ac7ed923380b9fdb38e991e29bb382"
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "registrations": 174,
+      "cap": 200
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "migrations": "none",
+  "countsBefore": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "rows": 257
+  },
+  "countsAfter": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "rows": 257
+  },
+  "initialLocalFailure": {
+    "command": "node tests/ui-launch-operator-doors.mjs",
+    "exit": 1,
+    "failure": "response.text: Protocol error (Network.getResponseBody): No resource with given identifier found",
+    "cause": "The new helper eagerly read a response body after the successful save navigated away. The helper now asserts the HTTP status without reading a discarded browser response body.",
+    "productionRepair": false
+  },
+  "publicationScan": "Not run in cloud; required on exact candidate by guarded lander.",
+  "runSite": "Candidate not run; guarded lander owns main-only Run site.",
+  "retainedGeneratedViewsCheck": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "expected": true,
+    "viewsCommitted": false
+  },
+  "ci": {
+    "runId": 42153045282,
+    "event": "push",
+    "conclusion": "failure",
+    "head_sha": "b721822ff74b1319c2e3fde3c0b38c30c942d3ee",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153045282",
+    "status": "completed",
+    "failedBuildJob": 127680648075,
+    "aggregateGateJob": 127680773931,
+    "cause": "Only stale generated ACCEPTANCE.md; downstream shards skipped and aggregate gate failed.",
+    "permittedGeneratedViewException": true,
+    "archiveReads": [
+      {
+        "command": "gh run view 42153045282 --repo just-every/run-cradle --job 127680648075 --log-failed",
+        "exit": 0
+      },
+      {
+        "command": "gh run view 42153045282 --repo just-every/run-cradle --job 127680773931 --log-failed",
+        "exit": 0
+      }
+    ]
+  },
+  "githubBudgetCommands": 6,
+  "productBlockers": []
+}

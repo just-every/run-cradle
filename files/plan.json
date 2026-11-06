@@ -1,0 +1,32 @@
+{
+  "tag": "sd-cradle-c-f195",
+  "repository": "just-every/run-cradle",
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "target": "SET-001",
+  "before": {
+    "status": "partial",
+    "counts": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "rows": 257
+  },
+  "steps": [
+    "Map both acceptance sentences and existing journeys; keep the selected scope and release holds.",
+    "Extend the existing emitted Worker operator-door registration with a focused Settings attribution helper.",
+    "Capture the real browser save payload and independent operator, time bounds and admitted command identity; publicly read exactly one matching audit entry.",
+    "Reload Settings, replay the captured command and verify no second update or audit entry.",
+    "Run touched browser proof at 1440 and 390, types and first-party checks; generate and restore views; regenerate and check the source lock.",
+    "Preserve all parent Status rows, inspect identities and trailers, push only the named cloud branch and inspect exact-SHA Verify through REST.",
+    "Publish the selected non-secret report packet separately; hand publication scanning, judgment and landing to the fleet."
+  ],
+  "held": [
+    "Complete Settings section and current-usage inventory, including OWN-001 capacities.",
+    "Already-dispatched versus later-work matrix.",
+    "Existing owner, policy and notification holds.",
+    "Ct contract conversion and generated-document synchronization.",
+    "Independent whole-clause judgment, publication scanning, guarded landing and candidate Run site."
+  ],
+  "doneClaim": false
+}

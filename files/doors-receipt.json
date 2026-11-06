@@ -1,0 +1,237 @@
+{
+ "environment": "Actual emitted Worker and native D1, synthetic fixtures only",
+ "screens": [
+  {
+   "name": "import-row-error",
+   "width": 1440,
+   "file": "import-row-error-1440.png"
+  },
+  {
+   "name": "import-preview",
+   "width": 1440,
+   "file": "import-preview-1440.png"
+  },
+  {
+   "name": "import-committed",
+   "width": 1440,
+   "file": "import-committed-1440.png"
+  },
+  {
+   "name": "decision-queue-export",
+   "width": 1440,
+   "file": "decision-queue-export-1440.png"
+  },
+  {
+   "name": "settings-workspace-attributed",
+   "width": 1440,
+   "file": "settings-workspace-attributed-1440.png"
+  },
+  {
+   "name": "settings-custom-fields",
+   "width": 1440,
+   "file": "settings-custom-fields-1440.png"
+  },
+  {
+   "name": "campaign-custom-fields",
+   "width": 1440,
+   "file": "campaign-custom-fields-1440.png"
+  },
+  {
+   "name": "bulk-edit-selection",
+   "width": 1440,
+   "file": "bulk-edit-selection-1440.png"
+  },
+  {
+   "name": "bulk-edit-applied",
+   "width": 1440,
+   "file": "bulk-edit-applied-1440.png"
+  },
+  {
+   "name": "sample-data-refused",
+   "width": 1440,
+   "file": "sample-data-refused-1440.png"
+  },
+  {
+   "name": "sample-data-removed",
+   "width": 1440,
+   "file": "sample-data-removed-1440.png"
+  },
+  {
+   "name": "ownership-confirm-first",
+   "width": 1440,
+   "file": "ownership-confirm-first-1440.png"
+  },
+  {
+   "name": "ownership-handed-over",
+   "width": 1440,
+   "file": "ownership-handed-over-1440.png"
+  },
+  {
+   "name": "ownership-remove-self",
+   "width": 1440,
+   "file": "ownership-remove-self-1440.png"
+  },
+  {
+   "name": "import-row-error",
+   "width": 390,
+   "file": "import-row-error-390.png"
+  },
+  {
+   "name": "import-preview",
+   "width": 390,
+   "file": "import-preview-390.png"
+  },
+  {
+   "name": "import-committed",
+   "width": 390,
+   "file": "import-committed-390.png"
+  },
+  {
+   "name": "decision-queue-export",
+   "width": 390,
+   "file": "decision-queue-export-390.png"
+  },
+  {
+   "name": "settings-workspace-attributed",
+   "width": 390,
+   "file": "settings-workspace-attributed-390.png"
+  },
+  {
+   "name": "settings-custom-fields",
+   "width": 390,
+   "file": "settings-custom-fields-390.png"
+  },
+  {
+   "name": "campaign-custom-fields",
+   "width": 390,
+   "file": "campaign-custom-fields-390.png"
+  },
+  {
+   "name": "bulk-edit-selection",
+   "width": 390,
+   "file": "bulk-edit-selection-390.png"
+  },
+  {
+   "name": "bulk-edit-applied",
+   "width": 390,
+   "file": "bulk-edit-applied-390.png"
+  },
+  {
+   "name": "sample-data-refused",
+   "width": 390,
+   "file": "sample-data-refused-390.png"
+  },
+  {
+   "name": "sample-data-removed",
+   "width": 390,
+   "file": "sample-data-removed-390.png"
+  },
+  {
+   "name": "ownership-handed-over",
+   "width": 390,
+   "file": "ownership-handed-over-390.png"
+  },
+  {
+   "name": "ownership-remove-self",
+   "width": 390,
+   "file": "ownership-remove-self-390.png"
+  }
+ ],
+ "downloads": [
+  {
+   "width": 1440,
+   "door": "import",
+   "name": "launches-1440.csv",
+   "bytes": 163
+  },
+  {
+   "width": 1440,
+   "door": "grid export",
+   "name": "Campaign grid · All active — USD — 2026-11-06, 12-50 GMT+10-00.csv",
+   "rows": 5
+  },
+  {
+   "width": 1440,
+   "door": "lens export",
+   "name": "Risks Lens — USD — 2026-11-06, 12-50 GMT+10-00.csv",
+   "rows": 3
+  },
+  {
+   "width": 1440,
+   "door": "queue export",
+   "name": "Decision Queue — USD — 2026-11-06, 12-50 GMT+10-00.csv",
+   "rows": 3
+  },
+  {
+   "width": 390,
+   "door": "import",
+   "name": "launches-390.csv",
+   "bytes": 184
+  },
+  {
+   "width": 390,
+   "door": "grid export",
+   "name": "Campaign grid · All active — USD — 2026-11-06, 12-51 GMT+10-00.csv",
+   "rows": 10
+  },
+  {
+   "width": 390,
+   "door": "lens export",
+   "name": "Risks Lens — USD — 2026-11-06, 12-51 GMT+10-00.csv",
+   "rows": 6
+  },
+  {
+   "width": 390,
+   "door": "queue export",
+   "name": "Decision Queue — USD — 2026-11-06, 12-51 GMT+10-00.csv",
+   "rows": 6
+  }
+ ],
+ "errors": [],
+ "settings": [
+  {
+   "width": 1440,
+   "operatorId": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+   "operator": "Maya Chen",
+   "commandId": "01M6QC829KV5D4ENG8XYR3Y5HQ",
+   "startedAt": "2026-11-06T02:50:45.344Z",
+   "finishedAt": "2026-11-06T02:50:45.473Z",
+   "audit": {
+    "id": "command:01M6QC829V8343VQJ157P45KWH:base:00000000000000000000000700",
+    "eventId": "01M6QC829KV5D4ENG8XYR3Y5HQ",
+    "action": "settings.update",
+    "personId": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+    "person": "Maya Chen",
+    "baseId": "00000000000000000000000700",
+    "createdAt": "2026-11-06T02:50:45.434Z"
+   },
+   "savedName": "synthetic-cradle-workspace-1440",
+   "settingsVersion": 2,
+   "workspaceVersion": 2,
+   "replayStatus": 200,
+   "matchingAuditEntries": 1
+  },
+  {
+   "width": 390,
+   "operatorId": "01M6QC7VBHPFN4F209VEANNZG4",
+   "operator": "Alex Successor",
+   "commandId": "01M6QC8YDKGVMNEX2SF3G8A7QP",
+   "startedAt": "2026-11-06T02:51:14.148Z",
+   "finishedAt": "2026-11-06T02:51:14.268Z",
+   "audit": {
+    "id": "command:01M6QC8YDT9X69M7GE8ZP7H4KC:base:00000000000000000000000700",
+    "eventId": "01M6QC8YDKGVMNEX2SF3G8A7QP",
+    "action": "settings.update",
+    "personId": "01M6QC7VBHPFN4F209VEANNZG4",
+    "person": "Alex Successor",
+    "baseId": "00000000000000000000000700",
+    "createdAt": "2026-11-06T02:51:14.234Z"
+   },
+   "savedName": "synthetic-cradle-workspace-390",
+   "settingsVersion": 3,
+   "workspaceVersion": 3,
+   "replayStatus": 200,
+   "matchingAuditEntries": 1
+  }
+ ]
+}
