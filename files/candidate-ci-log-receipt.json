@@ -1,0 +1,9 @@
+{
+  "command": "gh run view 42164190274 --repo just-every/run-cradle --job 127716731200 --log-failed",
+  "exit": 0,
+  "output_file": "candidate-ci-failed-build.log",
+  "attempts": 1,
+  "original_output_bytes": 1035,
+  "selected_output_bytes": 766,
+  "sanitization": "Omitted the workflow step environment stanza to exclude environment dumps; command and complete failure retained."
+}

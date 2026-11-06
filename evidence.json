@@ -1,0 +1,124 @@
+{
+  "files": [
+    {
+      "blob": "1fb945d5a6bcf00834748106e956e6075f073fa1",
+      "bytes": 9611,
+      "path": "RECEIPT.json",
+      "sha256": "e9896a82d8bf00bef5102417955698b1f2d52df0c44d8fdeba21a590f681a7b5"
+    },
+    {
+      "blob": "93d43c4003a5e5a63cb42fc9b324a504220395cb",
+      "bytes": 13987,
+      "path": "REPORT.md",
+      "sha256": "557516a9ab96a490e8fb16911fd26bd04a4c86f55072461008ed9984980a54b1"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "base-ci-failed-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "e2a7dc9538e7002085ac1895dde4b55a1386db36",
+      "bytes": 446,
+      "path": "base-ci-jobs.json",
+      "sha256": "e28fda0be55f8f1197005647ecbaa62c18ef86d4655ccc94e5d472baf23766b4"
+    },
+    {
+      "blob": "562a377d4f87e2560e12aa3593e1f5770b4b13b8",
+      "bytes": 229,
+      "path": "base-ci.json",
+      "sha256": "1043745f3e6ecf8b2c90f94d95acb83073807ac92c7c4b7ed1a8778a80048fa7"
+    },
+    {
+      "blob": "b7ec94e3d1fa600b4c4161f5ef524cab52f0a4a9",
+      "bytes": 1608,
+      "path": "candidate-audit.json",
+      "sha256": "e0c76c8496ee15cf32eae914f131ea63b0c854e49393fbd70c4bf4bef88a463f"
+    },
+    {
+      "blob": "d7af4d305a3be4a9d82914bee2bf35a0d8a61324",
+      "bytes": 766,
+      "path": "candidate-ci-failed-build.log",
+      "sha256": "4c8993e4c88ec96b0bac1fcc245368aeca10eb655e8203b3373866427fc5dfec"
+    },
+    {
+      "blob": "c803eb693b4b13ad04ca705100629ba9b0f768bc",
+      "bytes": 179,
+      "path": "candidate-ci-final.json",
+      "sha256": "101ddd7df787d359dc10d50066dbcdc080f97943a54dbe175541b752943b46d1"
+    },
+    {
+      "blob": "fe0ab02b8acaecb922daef095bfa10c00d3e055f",
+      "bytes": 446,
+      "path": "candidate-ci-jobs.json",
+      "sha256": "6fd1508317dd495559069c65e2dc9dbf80484ca3a0fe4cdf24594d2e95812625"
+    },
+    {
+      "blob": "7a050c9f3cfeb073c8dbed45d02ee46f275fb6ce",
+      "bytes": 384,
+      "path": "candidate-ci-log-receipt.json",
+      "sha256": "521036428a51fcc4e003e07e311f9c31bdb4a5fcfae8e2b934c2b0f2d1ec0741"
+    },
+    {
+      "blob": "c907cb5b9141612fea1250942e5014ded4fa1bda",
+      "bytes": 531,
+      "path": "candidate-ci.json",
+      "sha256": "53cacb089011c9b4b4414555e9fedd126df9b8903d925c3173340013dcb84b64"
+    },
+    {
+      "blob": "55bfeff023c4ae17dc59e12f86f446b1960e6b53",
+      "bytes": 85,
+      "path": "candidate-identities.log",
+      "sha256": "148bad84b5b174568017df50d58e073566703d43c6c9fe7fa6f1af04420adf55"
+    },
+    {
+      "blob": "fba560db7c48416c914446f2a1e319a79104d105",
+      "bytes": 67,
+      "path": "contract-before.log",
+      "sha256": "183372998615cc516043a5f66404b300281009a84349eda72da66d79fe542603"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "e4a49207309438602e0661178a53c37db931abc2",
+      "bytes": 1383894,
+      "path": "mechanical.json",
+      "sha256": "19843de39895bfadc68bd9b4f0d07ff7f93a9e7cfc6016e53c6ce4aebb32a1c6"
+    },
+    {
+      "blob": "91e2e034a97712e588393f1d71e6099fb5a3dd75",
+      "bytes": 907,
+      "path": "product-push.log",
+      "sha256": "d37587ced543f993d44c871343b75f1688df264fa3b45214c399b4c3f9bbb881"
+    },
+    {
+      "blob": "71c4383ea1c071888efc45f9fcaee58c23d115ec",
+      "bytes": 435,
+      "path": "records-csv-fence.log",
+      "sha256": "4d77ce0517bebf9531d28b38688b3c169f69dd03bd91eca0f8ddd1a2ecc882f9"
+    },
+    {
+      "blob": "1898a7d9c12a7b398c13c7e06abce8580b1446d2",
+      "bytes": 75,
+      "path": "remote-product-ref.txt",
+      "sha256": "aa8b1d588a843dfb9fb128368c4ca126a88679c70e1f16e0e51dea2a2f9ddd31"
+    },
+    {
+      "blob": "7f7bf19396359dd9ef5b7e8e364a710580963ff3",
+      "bytes": 172,
+      "path": "typecheck.log",
+      "sha256": "01921a56281e67378ec9dd166aa60beb366687580255b6d6bdb6999d3812b70f"
+    }
+  ],
+  "product_branch": "cloud/sd-cradle-c-f212",
+  "product_head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "ref": "refs/heads/evidence/sd-cradle-c-f212",
+  "repository": "just-every/run-cradle",
+  "schema": 1,
+  "tag": "sd-cradle-c-f212"
+}

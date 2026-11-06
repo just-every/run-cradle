@@ -1,0 +1,265 @@
+{
+  "tag": "sd-cradle-c-f212",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f212",
+  "head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "created_at": "2026-11-06T04:44:47.771077+00:00",
+  "new_product_commits": 0,
+  "product_changes": "The required base already implements every selected POINT; no product or contract edit was needed.",
+  "checks": [
+    {
+      "command": "pnpm install --frozen-lockfile --ignore-workspace",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run pnpm exec rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0,
+      "result": "Application built, local migrations applied, owner and workspace prepared; no setup log selected because local settings are private."
+    },
+    {
+      "command": "cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/records-csv-fence.mjs",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "duration_ms": 21994.441518,
+      "log": "records-csv-fence.log"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "cloud_run pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "stdout": "empty on success"
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "registrations": 174,
+      "cap": 200
+    },
+    {
+      "command": "git fetch origin main; git rebase origin/main",
+      "exit": 0,
+      "result": "Current branch cloud/sd-cradle-c-f212 is up to date. HEAD unchanged."
+    }
+  ],
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "status_rows": 257,
+    "test_registrations": 174
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "status_rows": 257,
+    "test_registrations": 174
+  },
+  "clause": "RECORDS-010",
+  "status_before": "partial",
+  "status_after": "partial",
+  "proof_unchanged_after_test": true,
+  "mechanical": "mechanical.json",
+  "audit": "candidate-audit.json",
+  "probes": [
+    {
+      "point": "acceptance 1: clean control",
+      "door": "Native scheduled event then GET /api/v1/records/sheets-schedule and public record query",
+      "observed": "committed; prospective creates 1, updates 1, unchanged 0, rejected 0; applied creates 1, updates 1; amounts 31 and 40"
+    },
+    {
+      "point": "acceptance 1: unchanged control",
+      "door": "Next hourly scheduled event then public outcome read",
+      "observed": "unchanged; prospective creates 0, updates 0, unchanged 2, rejected 0; applied creates 0, updates 0; record versions unchanged"
+    },
+    {
+      "point": "acceptance 1: mixed refused run",
+      "door": "Native scheduled event at 2026-10-24T14:00:00Z using recorded Sheets response",
+      "observed": "paused, review_required; physical row 5 names synthetic-cradle-6 and numeric refusal; retained preview identity and before 31 and proposed 32; public values, all record bytes, versions, import admissions, record audit and automation event captures unchanged"
+    },
+    {
+      "point": "acceptance 3: exact counts",
+      "door": "GET /api/v1/records/sheets-schedule after mixed attempt",
+      "observed": "prospective creates 1, updates 1, unchanged 1, rejected 1; applied creates 0, updates 0; one refused row"
+    },
+    {
+      "point": "duplicate delivery and restart",
+      "door": "Duplicate scheduled event, Worker restart, later hourly event and outcome read",
+      "observed": "same complete held outcome; no additional provider read; all record and effect snapshots unchanged"
+    },
+    {
+      "point": "current-authority outcome read",
+      "door": "Public outcome GET with native sessions and changed current policy",
+      "observed": "anonymous 401; member 403; owner without import.preview 403 with no preview ID; owner without mapped Amount field read 403"
+    },
+    {
+      "point": "fresh-preview recovery",
+      "door": "POST /api/v1/records/sheets-schedule with source still invalid, then corrected; subsequent scheduled event",
+      "observed": "invalid enable 400 and fresh provider read; corrected source alone stays paused; authorized enable obtains fresh preview with zero writes; next tick commits creates 1 and updates 1 using a new preview ID; duplicate tick changes nothing"
+    },
+    {
+      "point": "lost-authority control",
+      "door": "Remove current import and connection authority; deliver next scheduled event",
+      "observed": "schedule paused; public data snapshot, record versions and effects unchanged"
+    },
+    {
+      "point": "acceptance 2 and automation choice",
+      "door": "none",
+      "observed": "Explicitly omitted wider scope in the planner POINTS; remains in clause Gap, with no DONE claim"
+    }
+  ],
+  "remaining": "ct contract conversion and generated-document synchronization; CSV and JSON URL sources; emailed attachments under INTEG-002; importer automation opt-in; broader mapping, version, concurrency and recovery matrices; RECORDS-008 merge, link and undo scope; SCALE-002 limits above 80 fields or 100 physical columns; AUTO-USER-009 lifetime and authorship and AUTO-USER-010 consent and recipients.",
+  "ui": "No UI code or screen changed; new browser screenshots not applicable.",
+  "fleet_gates": "Publication scanning, independent whole-clause judgment, guarded landing, main equality and candidate Run site remain unclaimed.",
+  "files": [
+    {
+      "path": "base-ci-failed-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "base-ci-jobs.json",
+      "bytes": 446,
+      "sha256": "e28fda0be55f8f1197005647ecbaa62c18ef86d4655ccc94e5d472baf23766b4"
+    },
+    {
+      "path": "base-ci.json",
+      "bytes": 229,
+      "sha256": "1043745f3e6ecf8b2c90f94d95acb83073807ac92c7c4b7ed1a8778a80048fa7"
+    },
+    {
+      "path": "candidate-audit.json",
+      "bytes": 1608,
+      "sha256": "e0c76c8496ee15cf32eae914f131ea63b0c854e49393fbd70c4bf4bef88a463f"
+    },
+    {
+      "path": "candidate-ci-failed-build.log",
+      "bytes": 766,
+      "sha256": "4c8993e4c88ec96b0bac1fcc245368aeca10eb655e8203b3373866427fc5dfec"
+    },
+    {
+      "path": "candidate-ci-final.json",
+      "bytes": 179,
+      "sha256": "101ddd7df787d359dc10d50066dbcdc080f97943a54dbe175541b752943b46d1"
+    },
+    {
+      "path": "candidate-ci-jobs.json",
+      "bytes": 446,
+      "sha256": "6fd1508317dd495559069c65e2dc9dbf80484ca3a0fe4cdf24594d2e95812625"
+    },
+    {
+      "path": "candidate-ci-log-receipt.json",
+      "bytes": 384,
+      "sha256": "521036428a51fcc4e003e07e311f9c31bdb4a5fcfae8e2b934c2b0f2d1ec0741"
+    },
+    {
+      "path": "candidate-ci.json",
+      "bytes": 531,
+      "sha256": "53cacb089011c9b4b4414555e9fedd126df9b8903d925c3173340013dcb84b64"
+    },
+    {
+      "path": "candidate-identities.log",
+      "bytes": 85,
+      "sha256": "148bad84b5b174568017df50d58e073566703d43c6c9fe7fa6f1af04420adf55"
+    },
+    {
+      "path": "contract-before.log",
+      "bytes": 67,
+      "sha256": "183372998615cc516043a5f66404b300281009a84349eda72da66d79fe542603"
+    },
+    {
+      "path": "first-party.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mechanical.json",
+      "bytes": 1383894,
+      "sha256": "19843de39895bfadc68bd9b4f0d07ff7f93a9e7cfc6016e53c6ce4aebb32a1c6"
+    },
+    {
+      "path": "product-push.log",
+      "bytes": 907,
+      "sha256": "d37587ced543f993d44c871343b75f1688df264fa3b45214c399b4c3f9bbb881"
+    },
+    {
+      "path": "records-csv-fence.log",
+      "bytes": 435,
+      "sha256": "4d77ce0517bebf9531d28b38688b3c169f69dd03bd91eca0f8ddd1a2ecc882f9"
+    },
+    {
+      "path": "remote-product-ref.txt",
+      "bytes": 75,
+      "sha256": "aa8b1d588a843dfb9fb128368c4ca126a88679c70e1f16e0e51dea2a2f9ddd31"
+    },
+    {
+      "path": "typecheck.log",
+      "bytes": 172,
+      "sha256": "01921a56281e67378ec9dd166aa60beb366687580255b6d6bdb6999d3812b70f"
+    }
+  ],
+  "product_push": {
+    "exit": 0,
+    "ref": "refs/heads/cloud/sd-cradle-c-f212",
+    "remote_head": "801883df3f7dae49b33514809f185c953fe6434c",
+    "log": "product-push.log",
+    "attempts": 1
+  },
+  "remaining_github_call_budget": 3,
+  "ci": {
+    "run_id": 42164190274,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "failure",
+    "head_sha": "801883df3f7dae49b33514809f185c953fe6434c",
+    "url": "https://github.com/just-every/run-cradle/actions/runs/42164190274",
+    "jobs": [
+      {
+        "conclusion": "success",
+        "id": 127716682819,
+        "name": "plan",
+        "steps": []
+      },
+      {
+        "conclusion": "failure",
+        "id": 127716731200,
+        "name": "build",
+        "steps": [
+          {
+            "conclusion": "failure",
+            "name": "Check generated contract documents"
+          }
+        ]
+      },
+      {
+        "conclusion": "failure",
+        "id": 127716822318,
+        "name": "verify",
+        "steps": [
+          {
+            "conclusion": "failure",
+            "name": "Require the plan and every verification worker"
+          }
+        ]
+      },
+      {
+        "conclusion": "skipped",
+        "id": 127716823557,
+        "name": "verify-${{ matrix.name }}",
+        "steps": []
+      }
+    ],
+    "generated_view_exception": true,
+    "local_exact_check": "contract-before.log",
+    "log_receipt": "candidate-ci-log-receipt.json",
+    "no_repair_or_rerun": true
+  },
+  "github_calls": 7
+}
