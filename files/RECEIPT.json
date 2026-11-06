@@ -1,0 +1,240 @@
+{
+  "head": "0918d1f978aa8f6b5b810257fe65c8fb6e832512",
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "branch": "cloud/sd-cradle-c-f179",
+  "repository": "just-every/run-cradle",
+  "clause": {
+    "id": "CAMP-008",
+    "before": "partial",
+    "after": "partial",
+    "doneClaim": false
+  },
+  "counts": {
+    "before": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "after": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "statusRowsBefore": 257,
+    "statusRowsAfter": 257,
+    "testRegistrationsBefore": 174,
+    "testRegistrationsAfter": 174
+  },
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "builtSource": "234432f0b726fba470fb6ce4e1816f50cd082601",
+      "note": "Production source is unchanged between the base and candidate; only test and contract inputs change."
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "total": 174
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "note": "Checked generated views locally, then restored both from origin main as required."
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "git diff --cached --check",
+      "exit": 0
+    },
+    {
+      "command": "git rebase origin/main",
+      "exit": 0,
+      "note": "Already current, no rewritten commits."
+    }
+  ],
+  "publicationScan": {
+    "status": "not run in cloud",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null,
+    "custody": "fleet lander"
+  },
+  "landing": {
+    "mainEqualsCandidate": false,
+    "candidateRunSite": null,
+    "custody": "fleet lander"
+  },
+  "ci": {
+    "run": 42152067416,
+    "event": "push",
+    "conclusion": "failure",
+    "head_sha": "0918d1f978aa8f6b5b810257fe65c8fb6e832512",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42152067416",
+    "status": "completed",
+    "githubCalls": 6,
+    "generatedViewException": true,
+    "repairRounds": 0,
+    "reruns": 0,
+    "jobs": [
+      {
+        "id": 127677406092,
+        "name": "plan",
+        "conclusion": "success",
+        "failedSteps": []
+      },
+      {
+        "id": 127677448672,
+        "name": "build",
+        "conclusion": "failure",
+        "failedSteps": [
+          "Check generated contract documents"
+        ]
+      },
+      {
+        "id": 127677574526,
+        "name": "verify",
+        "conclusion": "failure",
+        "failedSteps": [
+          "Require the plan and every verification worker"
+        ]
+      },
+      {
+        "id": 127677575660,
+        "name": "verify-${{ matrix.name }}",
+        "conclusion": "skipped",
+        "failedSteps": []
+      }
+    ],
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "failedLogReads": [
+      {
+        "command": "gh run view 42152067416 --repo just-every/run-cradle --job 127677448672 --log-failed",
+        "exit": 0,
+        "reads": 1
+      },
+      {
+        "command": "gh run view 42152067416 --repo just-every/run-cradle --job 127677574526 --log-failed",
+        "exit": 0,
+        "reads": 1
+      }
+    ],
+    "aggregateReason": "RESULTS: success failure skipped",
+    "disposition": "Expected stale generated view; lander regenerates. No product assertion failed, and no CI repair or rerun is requested."
+  },
+  "probes": [
+    "PROBE CAMP-008 2 native: two independent stored select values, third unset; current-version wrong count -> 400 Confirm deletion of 2 campaign values, snapshots unchanged; correct count -> committed affected 2, public archive removes exactly definition and two values.",
+    "PROBE CAMP-008 2 browser 1440 and 390: Settings warning names exactly two campaigns; Keep field -> unchanged; fresh-version wrong count -> 400 unchanged; shipped Delete -> definition absent, both stored values absent, unrelated definitions and campaign business fields intact."
+  ],
+  "assertionLocations": {
+    "independentValues": "tests/helpers/launch-custom-field-deletion.mjs:43-49",
+    "wrongCountRefusal": "tests/helpers/launch-custom-field-deletion.mjs:52-58",
+    "publicStoredRowProof": "tests/helpers/launch-custom-field-deletion.mjs:63-90",
+    "nativeExecution": "tests/launch-operator-doors.mjs:321",
+    "confirmationAndCancel": "tests/helpers/launch-custom-field-deletion-browser.mjs:24-33",
+    "shippedDelete": "tests/helpers/launch-custom-field-deletion-browser.mjs:35-46",
+    "browserExecution": "tests/ui-launch-operator-doors.mjs:108"
+  },
+  "assertionHygiene": {
+    "removed": false,
+    "narrowed": false,
+    "widthConditionsAdded": false,
+    "newRegistrations": 0,
+    "newEmailShapedStrings": 0,
+    "newProviderShapedKeyValues": 0
+  },
+  "mechanical": "MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; views=node src/base/contract-docs.mjs write and check exit=0, derived views restored from origin main; ledger=none exit=0 (no migrations changed)",
+  "productPush": {
+    "guard": "cloud-push.py",
+    "attempt": 1,
+    "exit": 0,
+    "remoteHead": "0918d1f978aa8f6b5b810257fe65c8fb6e832512"
+  },
+  "pr": null,
+  "heldRemainder": [
+    "definition editing and complete declared-type, grid, filter, lens-condition and CSV import and export matrix",
+    "other-type deletion",
+    "concurrent affected-count changes",
+    "broader authority and capacity combinations",
+    "ct contract conversion and generated-document synchronization",
+    "independent whole-clause judgment",
+    "publication scanning, guarded landing and candidate Run site"
+  ],
+  "fileHashes": {
+    "CONTRACT.md": "711945e8fd4dbcaf67d085072227ea5f6dbfc36889e0bf8befdea8eefa09529c",
+    "sources.lock.json": "b7dda786e881a251953d270d0099d9a8ed9e05709a8f481e1d18647932fb2054",
+    "tests/helpers/launch-custom-field-deletion-browser.mjs": "8632350f454e6dc311ba0dc65ff1896ac93b1370665cae452a9085f781a10cd7",
+    "tests/helpers/launch-custom-field-deletion.mjs": "a914f34df6f681d5d4a16c766576f6eb96d322243a0fc181128e7b7737c7373b",
+    "tests/launch-operator-doors.mjs": "0d2edc1d1c79016a3cd219398846e6ab908637315cb93d53f141afe9d91a7d1e",
+    "tests/ui-launch-operator-doors.mjs": "9fa3933da17d129b91d94f06f7c0071112a17d6e50de76e42407f2142435bc0f"
+  },
+  "mainCI": {
+    "head": "234432f0b726fba470fb6ce4e1816f50cd082601",
+    "verify": [
+      42140073091,
+      42123065555
+    ],
+    "runSite": 42123065870,
+    "conclusion": "success"
+  },
+  "runtimeProof": {
+    "head": "0918d1f978aa8f6b5b810257fe65c8fb6e832512",
+    "native": {
+      "command": "timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='campaign CSV previews changes' tests/launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "log": "NATIVE.txt"
+    },
+    "browser": {
+      "command": "timeout 1200 node --import /tmp/rer-system-chromium.mjs tests/ui-launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "widths": [
+        1440,
+        390
+      ],
+      "screens": 31,
+      "pageErrors": [],
+      "log": "BROWSER.txt",
+      "receipt": "browser-final/doors-receipt.json",
+      "chromium": "/usr/bin/chromium",
+      "sandboxArgument": "--no-sandbox"
+    },
+    "nativePort": 41879,
+    "browserPort": 41880
+  },
+  "restoredViewCheck": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "expected": true
+  },
+  "finalStatus": "READY under the generated-view exception"
+}

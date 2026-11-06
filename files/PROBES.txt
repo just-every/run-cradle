@@ -1,0 +1,3 @@
+PROBE CAMP-008 2 native: two independent stored select values, third unset; current-version wrong count -> 400 Confirm deletion of 2 campaign values, snapshots unchanged; correct count -> committed affected 2, public archive removes exactly definition and two values.
+PROBE CAMP-008 2 browser 1440 and 390: Settings warning names exactly two campaigns; Keep field -> unchanged; fresh-version wrong count -> 400 unchanged; shipped Delete -> definition absent, both stored values absent, unrelated definitions and campaign business fields intact.
+MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; views=node src/base/contract-docs.mjs write and check exit=0, derived views restored from origin main; ledger=none exit=0 (no migrations changed)

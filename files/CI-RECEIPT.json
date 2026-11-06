@@ -1,0 +1,57 @@
+{
+  "run": 42152067416,
+  "event": "push",
+  "conclusion": "failure",
+  "head_sha": "0918d1f978aa8f6b5b810257fe65c8fb6e832512",
+  "html_url": "https://github.com/just-every/run-cradle/actions/runs/42152067416",
+  "status": "completed",
+  "githubCalls": 6,
+  "generatedViewException": true,
+  "repairRounds": 0,
+  "reruns": 0,
+  "jobs": [
+    {
+      "id": 127677406092,
+      "name": "plan",
+      "conclusion": "success",
+      "failedSteps": []
+    },
+    {
+      "id": 127677448672,
+      "name": "build",
+      "conclusion": "failure",
+      "failedSteps": [
+        "Check generated contract documents"
+      ]
+    },
+    {
+      "id": 127677574526,
+      "name": "verify",
+      "conclusion": "failure",
+      "failedSteps": [
+        "Require the plan and every verification worker"
+      ]
+    },
+    {
+      "id": 127677575660,
+      "name": "verify-${{ matrix.name }}",
+      "conclusion": "skipped",
+      "failedSteps": []
+    }
+  ],
+  "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+  "failedLogReads": [
+    {
+      "command": "gh run view 42152067416 --repo just-every/run-cradle --job 127677448672 --log-failed",
+      "exit": 0,
+      "reads": 1
+    },
+    {
+      "command": "gh run view 42152067416 --repo just-every/run-cradle --job 127677574526 --log-failed",
+      "exit": 0,
+      "reads": 1
+    }
+  ],
+  "aggregateReason": "RESULTS: success failure skipped",
+  "disposition": "Expected stale generated view; lander regenerates. No product assertion failed, and no CI repair or rerun is requested."
+}
