@@ -4534,7 +4534,7 @@
       "executable": false
     },
     "docs/privacy/operator-erasure.md": {
-      "sha256": "1479a2eeb7156a7b0a2741c197233ff5e0f163b16503db1b3146c3106f1041aa",
+      "sha256": "394627bc691595e170b5723d832fd181b857b2a803d8da6e9d1ad2836bc60565",
       "executable": false
     },
     "docs/research.md": {
@@ -5662,7 +5662,7 @@
       "executable": false
     },
     "scripts/portability/worker.mjs": {
-      "sha256": "c109dd4e55e1850f60228aafce8b19d850ca3c4a745ab15bf2d26fd8e9f07d07",
+      "sha256": "59b5e9ed81707447c02cfc7bf61c9548fa6701a9bb7c977a2b3e17f7d6cb9d51",
       "executable": false
     },
     "scripts/prove-company-workbooks.mjs": {
@@ -8842,7 +8842,7 @@
       "executable": false
     },
     "src/domains/lifecycle/cleanup.server.ts": {
-      "sha256": "a3dc2025f2f47e143efcca7d484694aa648f9e7a0fa37b9ea546539e07b1bbe1",
+      "sha256": "655552a3e6add103864161f487d0f144260c629de4c0eae52913e3009ca0d971",
       "executable": false
     },
     "src/domains/lifecycle/file-writes.server.ts": {
@@ -8850,7 +8850,7 @@
       "executable": false
     },
     "src/domains/lifecycle/finish-member-erasure.server.ts": {
-      "sha256": "c1c64eeaf6844c66d7f1c9b1f48fabfa1a1724d41b693f62b2d88cff7e2fcee9",
+      "sha256": "9c8bdfc57c1e71db7c99e819401788df08f6ab3cb4f0f6060540644a96ff93b3",
       "executable": false
     },
     "src/domains/lifecycle/gzip-text.server.ts": {
@@ -8922,7 +8922,7 @@
       "executable": false
     },
     "src/domains/lifecycle/portability-custody.server.ts": {
-      "sha256": "3f91e133826856ed4ec58656967185bab385364d876e4bc72c1c0b3b0c413cad",
+      "sha256": "f07bcbe431ccf5e079de05848d53af9bf43bd32a31231e13d30ded80d8c23069",
       "executable": false
     },
     "src/domains/lifecycle/removal.server.ts": {
@@ -8931,6 +8931,10 @@
     },
     "src/domains/lifecycle/restore-checkpoint.server.ts": {
       "sha256": "e21fcb56076f0f4b597adc7da2f1cf4d93c7fe96e53cbb1916187be2ceb9effa",
+      "executable": false
+    },
+    "src/domains/lifecycle/snapshot-retirement.server.ts": {
+      "sha256": "42c5c52829ed28509f725b4c284a4b551071eeed19c4dc2782ee360bcdef5b13",
       "executable": false
     },
     "src/domains/operations/admission-bridge.server.ts": {
@@ -9081,6 +9085,14 @@
       "sha256": "fa91411f46035b47ee1e4992efc351e26bed686594d254ae1d01c32ee7f978c8",
       "executable": false
     },
+    "src/domains/portability/export-custody.d.mts": {
+      "sha256": "becca2b49d16a5bb2ee41fbbcb37d483cfb7d457b74f63927162d5632de722ca",
+      "executable": false
+    },
+    "src/domains/portability/export-custody.mjs": {
+      "sha256": "33990e0cdbafc9b6e5903e38fd3653509bf775d0b3912434ce173d6efc5cad71",
+      "executable": false
+    },
     "src/domains/portability/fts.server.ts": {
       "sha256": "9361585487295ca33234d86180d40164c18c96d2c337faa540544d29810b038b",
       "executable": false
@@ -9102,7 +9114,7 @@
       "executable": false
     },
     "src/domains/portability/installation-http.server.ts": {
-      "sha256": "b981b3c9c91f2c30367c0aac06ebfe2571039cba518e7e14bcfe2a6c4474461f",
+      "sha256": "f0704129e05df1a46b48454076beda74b2f3aef781b662a08fd2c9f23a29d163",
       "executable": false
     },
     "src/domains/portability/installation-policy.d.mts": {

@@ -2,6 +2,7 @@ import type {D1Sql} from '../../../vendor/base/modules/import-kit/src/d1/types'
 import {AuthorityError} from '../authority/errors'
 import {identifier,trustedPredicate} from '../admission/sql.server'
 import type {Effects} from './changes.server'
+import {prepareSnapshotRetirement} from './snapshot-retirement.server'
 
 const copies="type='table' AND (name GLOB 'rer_portability_snap_*' OR name GLOB 'rer_portability_stage_*')"
 const inventory=`SELECT json_group_array(name) FROM (SELECT name FROM sqlite_master WHERE ${copies} ORDER BY name)`
@@ -13,23 +14,24 @@ export const installationTransfersIdle=async(db:D1Database)=>Boolean(await db.pr
 /** Base erasure's fence.transfers() contract retires ALL installation snapshots,
  * not native records or import-kit undo custody. Only terminal transfers may be
  * retired: an applying import can own R2 writes outside the database transaction.
- * Preparation writes nothing; admission, retirement and the durable checkpoint
+ * Preparation installs only fenced schema controls; admission, retirement and the durable checkpoint
  * share one batch, with the same inventory checked again after native writes.
  * This matches portability/journal.mjs invalidateTransfersStatements, preserving
  * its durable journal/epochs and deleting no native FILES objects. */
 export async function preparePortabilityCustody(db:D1Database,change:Effects){
  if(!await installationTransfersIdle(db))throw new AuthorityError('version_conflict','Finish or cancel active installation transfers before erasure; no identity was erased.',409)
  const tables=(await db.prepare(`SELECT name FROM sqlite_master WHERE ${copies} ORDER BY name`).all<{name:string}>()).results.map(row=>row.name)
+ const retirement=await prepareSnapshotRetirement(db,tables)
  const jobInventory=(await db.prepare(`SELECT (${jobs}) snapshot`).first<{snapshot:string}>())!.snapshot
- const guards=[trustedPredicate(quiescent),trustedPredicate(`(${inventory})=?`,[JSON.stringify(tables)]),trustedPredicate(`(${jobs})=?`,[jobInventory])]
+ const guards=[...retirement.guards,trustedPredicate(quiescent),trustedPredicate(`(${inventory})=?`,[JSON.stringify(tables)]),trustedPredicate(`(${jobs})=?`,[jobInventory])]
  change.guards.push(...guards)
  const statements:D1Sql[]=[...guards.map(guard=>({sql:`INSERT INTO rer_portability_guard(value) SELECT CASE WHEN (${guard.sql}) THEN 1 ELSE 0 END`,params:[...guard.values]})),
-  ...tables.map(name=>({sql:`DROP TABLE ${identifier(name)}`})),
+  ...tables.filter(name=>!retirement.covered.has(name)).map(name=>({sql:`DROP TABLE ${identifier(name)}`})),
   {sql:'DELETE FROM rer_portability_segments'},{sql:'DELETE FROM rer_portability_parts'},
   {sql:'DELETE FROM rer_portability_jobs'}, // owned rows cascade; FILES objects stay native custody.
   {sql:'UPDATE rer_portability_state SET import_job=NULL,applying=0 WHERE id=1'},
   {sql:'DELETE FROM rer_portability_guard'},
  ]
- const final:D1Sql[]=[{sql:`NOT EXISTS(SELECT 1 FROM sqlite_master WHERE ${copies}) AND ${stores.map(name=>`NOT EXISTS(SELECT 1 FROM ${name})`).join(' AND ')}`}]
+ const final:D1Sql[]=[{sql:`${retirement.empty} AND NOT EXISTS(SELECT 1 FROM sqlite_master WHERE ${copies} AND name NOT IN (SELECT value FROM json_each(?))) AND ${stores.map(name=>`NOT EXISTS(SELECT 1 FROM ${name})`).join(' AND ')}`,params:[JSON.stringify([...retirement.covered])]}]
  return {statements,final,managedTables:new Set([...stores,...tables]),places:[{store:'installation transfer custody',action:'delete' as const,rows:JSON.parse(jobInventory).length,reason:'completed or aborted installation transfers invalidated by the erasure checkpoint'}]}
 }

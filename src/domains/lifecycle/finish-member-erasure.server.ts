@@ -2,6 +2,7 @@ import {AuthorityError} from '../authority/errors'
 import {effects} from './changes.server'
 import {installationTransfersIdle,preparePortabilityCustody} from './portability-custody.server'
 import {restoreCheckpoint} from './restore-checkpoint.server'
+import {collectRetiredSnapshots} from './snapshot-retirement.server'
 
 /** R2 cleanup runs outside D1. A transfer may have captured personal object keys
  * during that interval, so completion retires its terminal custody again. The
@@ -25,4 +26,5 @@ export async function finishMemberErasure(db:D1Database,id:string){
   if(!await installationTransfersIdle(db))return
   throw error
  }
+ await collectRetiredSnapshots(db)
 }

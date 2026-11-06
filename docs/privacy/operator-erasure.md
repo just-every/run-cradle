@@ -4,8 +4,22 @@ have completed. Whole-token matching and explicit ownership remain mandatory;
 other people's native rows, files and independent import jobs are preserved.
 
 Completed or aborted installation transfer artifacts are invalidated under Base's
-erasure contract: snapshot/staging tables, archived parts and manifest metadata
-are retired together. These are temporary whole-installation copies, separate
+erasure contract: snapshot/staging content, archived parts and manifest metadata
+are retired together. Completed installation exports retain their verified parts
+and manifest, rather than redundant per-table snapshots. The edition verifies the
+entire stored archive before compacting those snapshots; downloads, preview rows,
+archive hashes and restoration content stay unchanged. A failed compaction can be
+retried by advancing the same completed archive.
+
+Older terminal transfers may still have snapshot tables. Preparation installs
+inert, exact-owner deletion triggers and fences their definitions and the complete
+custody inventory. Deleting the transfer jobs clears those snapshots in the same
+D1 transaction as native erasure and its checkpoint, without one submitted DROP
+statement per retained table. Refusal or rollback leaves their bytes and access
+unchanged. Only empty tables with no owning job are collected afterward; receipt
+retry reconciles that schema cleanup. Unknown copies retain the original atomic
+DROP path. No applied migration changes or archive-format conversion are needed.
+These are temporary whole-installation copies, separate
 from the native records and import-kit originals, plans, provenance and undo
 reports that erasure preserves for unrelated people. Active installation transfers
 must finish or be cancelled before erasure starts. If one starts during object

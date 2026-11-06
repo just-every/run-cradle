@@ -10,6 +10,7 @@ import type {ServerFoundation} from '../../core/app/foundation.server'
 import {ApiError, errorResponse} from '../../core/registry/errors.server'
 import {createUlid} from '../../core/shared/ids'
 import {readBoundedJson} from '../authority/http.server'
+import {retainedExports} from './export-custody.mjs'
 
 /** The same portable format, privacy policy and file checks as rer export. */
 export function installationArchiveHttp(platform:Platform, foundation:ServerFoundation) {
@@ -26,7 +27,7 @@ export function installationArchiveHttp(platform:Platform, foundation:ServerFoun
     if(request.method!=='GET'&&request.headers.get('origin')!==platform.auth.configuration.appOrigin)throw new ApiError('forbidden','A same-origin request is required.')
     if(await db.prepare('SELECT 1 FROM lifecycle_file_writes LIMIT 1').first())throw new ApiError('version_conflict','A file is still being saved. Wait for it to finish, then prepare the archive again.')
     if(await db.prepare("SELECT 1 FROM lifecycle_erasures WHERE state='pending' LIMIT 1").first())throw new ApiError('version_conflict','Privacy erasure is still running. Wait for it to finish, then prepare the archive again.')
-    const service=await createPortability({db,buckets:{FILES:installationBucket(db,platform.bindings.FILES),WAREHOUSE:platform.bindings.WAREHOUSE},policy:{...installationPortabilityPolicy(platform.bindings.WAREHOUSE),derivedTables:await derivedSearch(db)}})
+    const service=retainedExports(db,await createPortability({db,buckets:{FILES:installationBucket(db,platform.bindings.FILES),WAREHOUSE:platform.bindings.WAREHOUSE},policy:{...installationPortabilityPolicy(platform.bindings.WAREHOUSE),derivedTables:await derivedSearch(db)}}))
     const respond=(data:unknown)=>c.json({data,meta:{requestId:ctx.requestId,apiVersion:'cradle.api.v1',evaluatedAt:ctx.now,consistencyToken:''}},200,{'cache-control':'no-store'})
     if(request.method==='POST'&&c.req.path==='/api/v1/commands/export.start'){
       z.object({scope:z.literal('installation'),format:z.literal('archive')}).strict().parse(await readBoundedJson(request,1024))
