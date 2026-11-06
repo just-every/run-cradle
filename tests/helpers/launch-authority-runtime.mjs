@@ -22,8 +22,8 @@ const { prepareLaunchSetup } = await import('../../src/apps/launch/setup.server.
 const { initializeLegacyAuthority } = await import('../../src/domains/authority/setup.server.ts')
 
 export { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds, prepareLaunchSetup, initializeLegacyAuthority }
-export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch,mailResponse,testClock=false} = {}) {
-  const port = Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879), origin = `http://127.0.0.1:${port}`
+export async function launchAuthorityRuntime(overrides = {}, {automaticQueues,installedLaunchDefinitions=false,installationOwner=false,providerFetch,mailResponse,testClock=false,port=Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879)} = {}) {
+  const origin = `http://127.0.0.1:${port}`
   const available = await new Promise(resolve => { const server=createServer();server.once('error',()=>resolve(false));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true))) })
   assert.equal(available,true,'Authority test listener must be unoccupied')
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-launch-authority-'))

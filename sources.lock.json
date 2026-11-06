@@ -12294,7 +12294,7 @@
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
-      "sha256": "a49810deba0653b3a02e90bb599545b8484b10fca2f57ea560bbeb71afba31dd",
+      "sha256": "dbf74289f87429ae806425ad179c08b2deb82c97ba745c74e6d55b38598fdfd7",
       "executable": false
     },
     "tests/helpers/launch-automation-definitions.mjs": {
@@ -12350,7 +12350,7 @@
       "executable": false
     },
     "tests/helpers/launch-custom-field-deletion.mjs": {
-      "sha256": "a914f34df6f681d5d4a16c766576f6eb96d322243a0fc181128e7b7737c7373b",
+      "sha256": "c2b200f73ba0bd541b12cf51088689adc5fac49b606eeca32462032fa777d698",
       "executable": false
     },
     "tests/helpers/launch-decision-approval.mjs": {
@@ -13178,7 +13178,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "0d2edc1d1c79016a3cd219398846e6ab908637315cb93d53f141afe9d91a7d1e",
+      "sha256": "8ea5267354d624fd9a32859b3edcd704a71db30b1b93aff5c0a6292a63bc1858",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {

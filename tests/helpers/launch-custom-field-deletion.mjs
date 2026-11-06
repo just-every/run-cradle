@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { readArchive } from '@runeditrun/rer/modules/portability'
-import { createUlid, LAUNCH_APP_ID, launchEntities } from './launch-authority-runtime.mjs'
+import { createUlid, LAUNCH_APP_ID, launchEntities, launchAuthorityRuntime } from './launch-authority-runtime.mjs'
 
 /** Public writes and independent reads for a populated definition and an unrelated control. */
 export async function customFieldDeletionFixture(h, session, ownerId, suffix, existing = {}) {
@@ -92,7 +92,12 @@ export async function customFieldDeletionFixture(h, session, ownerId, suffix, ex
  return { ids, target, retained, read, write, snapshot, expected, assertPopulated, refuseWrongCount, storedRows, assertDeleted }
 }
 
-export async function customFieldDeletionJourney(h) {
+export async function customFieldDeletionJourney() {
+ // Installation exports retain their own snapshot tables. Keep this journey's
+ // complete before and after archives in its own real installation, independent
+ // of the operator file's later ownership and warehouse erasure journeys.
+ const h = await launchAuthorityRuntime({}, { installedLaunchDefinitions: true, installationOwner: true, port: Number(process.env.CRADLE_AUTHORITY_PORT ?? 41879) + 2 })
+ try {
  const f = await customFieldDeletionFixture(h, () => h.ownerSession, h.owner, 'native')
  for (const [index, value] of ['North', 'South'].entries()) {
   const row = (await f.read(`/api/campaigns/${f.ids[index]}`)).campaign
@@ -105,4 +110,5 @@ export async function customFieldDeletionJourney(h) {
  assert.deepEqual(deleted, { deletedId: field.id, affected: 2 })
  await f.assertDeleted(before, storedBefore)
  console.log('PROBE CAMP-008 2 native: two stored select values and one unset campaign; current-version wrong count refused unchanged; confirmed deletion removes exactly definition and two values through public reads and archive')
+ } finally { await h.close() }
 }
