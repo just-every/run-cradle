@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "955cb5e601f7659b072e9261005079216bd4c6f5b1024a5774ee4b88ff6fd158",
       "executable": false
     },
     "DEMO.md": {
@@ -5870,7 +5870,7 @@
       "executable": false
     },
     "src/apps/launch/import-http.server.ts": {
-      "sha256": "c64883081d49efc18dc04c2267cdec02b0dc38e4391c48daab725af47c14760d",
+      "sha256": "6aa7bd7801d72349f91b7514831b679dbca03fb9501bd19f38053577b3159029",
       "executable": false
     },
     "src/apps/launch/import-preview.server.ts": {
@@ -6370,7 +6370,7 @@
       "executable": false
     },
     "src/core/app/composition/events.server.ts": {
-      "sha256": "8861134e3100f9ce1073a2df4af71628adcdbb01d2e529a15f6d627a8af5d93b",
+      "sha256": "f37c66d3f9be533d52651826101aad168d37860103bdcd14d9f9aef944837f53",
       "executable": false
     },
     "src/core/app/composition/execution-guards.server.ts": {
@@ -6394,7 +6394,7 @@
       "executable": false
     },
     "src/core/app/composition/lifecycle.server.ts": {
-      "sha256": "8d5b40683b3e18bb2bb88ae2402b30a75b416221cbc2e215b2f8f279f38743eb",
+      "sha256": "7fed291437a3bd0ffaa9365bcee82dad4a1d36f8c95bf6f4b45899455b77b887",
       "executable": false
     },
     "src/core/app/composition/providers.server.ts": {
@@ -8842,7 +8842,7 @@
       "executable": false
     },
     "src/domains/lifecycle/cleanup.server.ts": {
-      "sha256": "a3dc2025f2f47e143efcca7d484694aa648f9e7a0fa37b9ea546539e07b1bbe1",
+      "sha256": "e2bf3668765382188109a91713db2b81f69d7862a9d29b55a14da3812c54907f",
       "executable": false
     },
     "src/domains/lifecycle/file-writes.server.ts": {
@@ -13170,7 +13170,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "3e7b209bb582081ac72af84a2c169a6bfe588199c31567dcda046d30f79833d1",
+      "sha256": "5c4f6c308aab223976cbde8be4c9503607fb8e9563e8d7e6e496b5eaf201ec8a",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
