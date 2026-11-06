@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 
 /** Actual uploads, commands and scheduled delivery on the emitted Worker. R2 is observed only. */
-export async function launchImportDeletionJourney({ h, call, command, envelope, upload, preview, mapping, unrelatedId, unrelatedBytes }) {
+export async function launchImportDeletionJourney({ h, call, command, envelope, upload, preview, mapping, unrelatedId, unrelatedBytes, sharedId }) {
  const actor = await h.addPerson({ name: 'Import custodian' })
  const denied = await h.addPerson({ name: 'Import reader', change: rules => rules.map(rule => ({ ...rule, actions: rule.actions.filter(action => action !== 'import.delete') })) })
  const csv = `Code,Name,Owner,Start,Launch,Health\r\nIMP-NEW,Preserved imported update,,,,\r\nDEL-NEW,Preserved imported creation,${h.owner},2026-11-01,2026-12-01,80\r\n`
@@ -30,6 +30,13 @@ export async function launchImportDeletionJourney({ h, call, command, envelope, 
  const file = await h.db.prepare('SELECT object_key FROM evidence_files WHERE id=?').bind(fileId).first()
  const bucket = () => h.runtime.getR2Bucket('FILES')
  assert.equal((await (await bucket()).head(file.object_key)).size, Buffer.byteLength(csv))
+ const unrelatedFile = await h.db.prepare('SELECT f.object_key FROM evidence_files f JOIN portability_previews p ON p.file_id=f.id WHERE p.id=?').bind(unrelatedId).first()
+ const objectIdentity = async key => {
+  const head = await (await bucket()).head(key)
+  assert.ok(head)
+  return { key: head.key, size: head.size, etag: head.etag, uploaded: head.uploaded.toISOString() }
+ }
+ const unrelatedObject = await objectIdentity(unrelatedFile.object_key)
  const business = async () => {
   const result = {}
   for (const table of ['campaigns', 'campaign_tags', 'launch_custom_values', 'deliverables', 'milestones', 'activity_entries'])
@@ -48,6 +55,11 @@ export async function launchImportDeletionJourney({ h, call, command, envelope, 
  assert.equal(imported.find(row => row.code === 'DEL-NEW').name, 'Preserved imported creation')
  assert.equal(imported.find(row => row.code === 'IMP-NEW').name, 'Preserved imported update')
  const publicBefore = await Promise.all(imported.map(async row => (await call(`/api/campaigns/${row.id}`)).body))
+ const beforeShared = await snapshot()
+ const shared = await command('import.delete', { previewId: sharedId }, [], actor.session)
+ assert.equal(shared.status, 409, JSON.stringify(shared.body))
+ assert.match(shared.body.error.message, /shared/)
+ assert.deepEqual(await snapshot(), beforeShared, 'The conservative shared-file refusal preserves both import artifacts')
  const deleteBody = envelope({ previewId: artifact.id })
  const beforeDenied = await snapshot()
  const refused = await call('/api/v1/commands/import.delete', { method: 'POST', body: deleteBody }, denied.session)
@@ -73,6 +85,11 @@ export async function launchImportDeletionJourney({ h, call, command, envelope, 
  assert.deepEqual(await business(), retained, 'Deleting an artifact preserves every imported record, version and activity entry')
  assert.equal(await h.db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(receipt.erasureId).first('state'), 'pending')
  assert.ok(await (await bucket()).head(file.object_key), 'Original bytes await durable scheduled cleanup')
+ const pending = await snapshot()
+ const pendingReplay = await call('/api/v1/commands/import.delete', { method: 'POST', body: deleteBody }, actor.session)
+ assert.equal(pendingReplay.status, 200, JSON.stringify(pendingReplay.body))
+ assert.deepEqual(pendingReplay.body.data.value, receipt)
+ assert.deepEqual(await snapshot(), pending, 'Repeated submission while pending adds no cleanup or audit receipt')
 
  await h.restart()
  assert.equal(await h.db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(receipt.erasureId).first('state'), 'pending', 'The cleanup obligation survives Worker restart')
@@ -98,6 +115,7 @@ export async function launchImportDeletionJourney({ h, call, command, envelope, 
  assert.deepEqual(await business(), retained, 'Restart and repeated scheduled delivery cannot alter business history')
  assert.deepEqual(await Promise.all(imported.map(async row => (await call(`/api/campaigns/${row.id}`)).body)), publicBefore, 'Public campaigns retain their complete values and versions')
  await readFile(unrelatedId, unrelatedBytes)
+ assert.deepEqual(await objectIdentity(unrelatedFile.object_key), unrelatedObject, 'The unrelated original object, metadata and byte identity survive cleanup')
  assert.equal(await (await bucket()).head(file.object_key), null)
 
  await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?')
