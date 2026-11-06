@@ -1,0 +1,26 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ [BASE-ACCESS-003 VIEW-001 VIEW-004 CAMP-001] native owner creation, scoped transport and safe October error states at 1440/390 (99345.507705ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 101684.583204
+
+✖ failing tests:
+
+test at tests/launch-authority-browser.mjs:15:1
+✖ [BASE-ACCESS-003 VIEW-001 VIEW-004 CAMP-001] native owner creation, scoped transport and safe October error states at 1440/390 (99345.507705ms)
+  locator.waitFor: Timeout 30000ms exceeded.
+  Call log:
+  [2m  - waiting for getByRole('tooltip', { name: 'Close campaign inspector', exact: true }) to be visible[22m
+  
+      at campaignGridStateJourney (/workspace/run-cradle-sd-cradle-c-f180/tests/helpers/campaign-grid-state-journey.mjs:19:86)
+      at async TestContext.<anonymous> (/workspace/run-cradle-sd-cradle-c-f180/tests/launch-authority-browser.mjs:80:5) {
+    name: 'TimeoutError',
+    log: [ "  - waiting for getByRole('tooltip', { name: 'Close campaign inspector', exact: true }) to be visible" ]
+  }

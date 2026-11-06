@@ -1,0 +1,11 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f180",
+  "head": "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+  "remoteRef": "refs/heads/cloud/sd-cradle-c-f180",
+  "remoteHead": "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+  "main": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "clean": true,
+  "productPush": "fleet guard PUSH_OK observed; remote identity independently verified",
+  "pr": null
+}

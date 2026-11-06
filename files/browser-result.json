@@ -1,0 +1,51 @@
+{
+  "head": "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+  "dirty": false,
+  "exit": 0,
+  "tests": 1,
+  "passed": 1,
+  "failed": 0,
+  "captures": 30,
+  "errors": [],
+  "gridRefresh": [
+    {
+      "width": 1440,
+      "heldRequests": 2,
+      "failedStatus": 500,
+      "loadingClearedResults": true,
+      "failureClearedResults": true,
+      "retryName": "Current launch 1440",
+      "campaignId": "01M6QBYJT4GXA440YHAM0NE9J2"
+    },
+    {
+      "width": 390,
+      "heldRequests": 2,
+      "failedStatus": 500,
+      "loadingClearedResults": true,
+      "failureClearedResults": true,
+      "retryName": "Current launch 390",
+      "campaignId": "01M6QBYY092QKCZVSBCWM3QJB1"
+    }
+  ],
+  "completedAt": "2026-11-06T02:47:00.981Z",
+  "receipt": "browser/manifest.json",
+  "log": "browser-test.log",
+  "argv": [
+    "python3",
+    "/tmp/rer-reap.py",
+    "env",
+    "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium",
+    "CRADLE_AUTHORITY_EVIDENCE=/home/agent/rer-consolidation/work/sd-cradle-c-f180/packet/browser",
+    "perl",
+    "-e",
+    "alarm 1200; exec @ARGV",
+    "--",
+    "node",
+    "--import",
+    "./tests/helpers/typescript-loader.mjs",
+    "--test",
+    "--test-name-pattern=native owner creation",
+    "tests/launch-authority-browser.mjs"
+  ],
+  "cwd": "/workspace/run-cradle-sd-cradle-c-f180"
+}

@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "commits": [
+    {
+      "head": "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+      "author": {
+        "name": "Run Edit Run fleet",
+        "email": "fleet@runeditrun.com"
+      },
+      "committer": {
+        "name": "Run Edit Run fleet",
+        "email": "fleet@runeditrun.com"
+      },
+      "trailers": []
+    }
+  ],
+  "note": "An earlier receipt parser rejected the formatter blank line for absent trailers. Direct log inspection and this corrected audit confirm no trailers exist."
+}

@@ -1,0 +1,1 @@
+{"command": "gh run view 42152159100 --repo just-every/run-cradle --job 127677867902 --log-failed", "exit": 0}

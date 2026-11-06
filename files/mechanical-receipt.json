@@ -1,0 +1,23 @@
+{
+  "head": "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+  "checks": [
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check (generated views restored from main)",
+      "exit": 1
+    }
+  ],
+  "viewsWriteThenCheckExit": 0,
+  "migrationLedger": "not applicable; no migrations edited"
+}

@@ -1,0 +1,8 @@
+verify	Require the plan and every verification worker	﻿2026-11-06T02:44:20.6901537Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T02:44:20.6902242Z [36;1mtest "$PLAN" = success[0m
+verify	Require the plan and every verification worker	2026-11-06T02:44:20.6902919Z [36;1mif [ "$SKIP" = true ]; then exit 0; fi[0m
+verify	Require the plan and every verification worker	2026-11-06T02:44:20.6903994Z [36;1mfor result in $RESULTS; do test "$result" = success; done[0m
+verify	Require the plan and every verification worker	2026-11-06T02:44:20.7106716Z shell: /usr/bin/bash -e {0}
+[Workflow environment block omitted from public evidence.]
+verify	Require the plan and every verification worker	2026-11-06T02:44:20.7111545Z ##[endgroup]
+verify	Require the plan and every verification worker	2026-11-06T02:44:20.7283830Z ##[error]Process completed with exit code 1.

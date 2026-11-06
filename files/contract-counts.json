@@ -1,0 +1,16 @@
+{
+  "parent": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "statusRowsBefore": 257,
+  "statusRowsAfter": 257,
+  "countsBefore": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "countsAfter": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "droppedStatusIds": []
+}

@@ -1,0 +1,5 @@
+{"time": "2026-11-06T02:44:22Z", "command": ["gh", "api", "repos/just-every/run-cradle/actions/runs?head_sha=55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b&per_page=100", "--jq", "{workflow_runs:[.workflow_runs[]|{id,name,status,conclusion,head_sha,html_url,event}]}"], "exit": 0}
+{"time": "2026-11-06T02:49:26Z", "command": ["gh", "api", "repos/just-every/run-cradle/actions/runs/42152159100", "--jq", "{status,conclusion,head_sha,html_url}"], "exit": 0}
+{"time": "2026-11-06T02:49:53Z", "command": ["gh", "api", "repos/just-every/run-cradle/actions/runs/42152159100/jobs?filter=latest&per_page=100", "--jq", "{jobs:[.jobs[]|{id,name,status,conclusion,head_sha,steps:[.steps[]|{name,conclusion}]}]}"], "exit": 0}
+{"time": "2026-11-06T02:50:30Z", "command": ["gh", "run", "view", "42152159100", "--repo", "just-every/run-cradle", "--job", "127677867902", "--log-failed"], "exit": 0}
+{"time": "2026-11-06T02:50:30Z", "command": ["gh", "run", "view", "42152159100", "--repo", "just-every/run-cradle", "--job", "127677748672", "--log-failed"], "exit": 0}

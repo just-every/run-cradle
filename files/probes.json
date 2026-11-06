@@ -1,0 +1,14 @@
+[
+  {
+    "id": "VIEW-004",
+    "point": "acceptance 2, Campaign Grid",
+    "door": "Campaign Grid Sort refresh, real Campaign API request held until D1 table read is unavailable; Retry after restoration and public patch",
+    "input": "independently created campaign; name sort; isolated missing D1 campaigns table; current native campaign name",
+    "observed": "loading has no previous result; native HTTP 500; operation-named failed state with Retry and no previous rows, cards, identifiers, inspector or selected sample; Retry returns new native name at 1440 and 390",
+    "proof": "tests/helpers/campaign-grid-state-journey.mjs:6-85",
+    "claim": "selected point only; whole clause remains partial",
+    "head": "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+    "receipt": "browser-result.json",
+    "exit": 0
+  }
+]
