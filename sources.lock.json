@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "711945e8fd4dbcaf67d085072227ea5f6dbfc36889e0bf8befdea8eefa09529c",
       "executable": false
     },
     "DEMO.md": {
@@ -12345,6 +12345,14 @@
       "sha256": "d2f38c121b455657624ee11673c49c28456affdae579bab18cab7e43a26dabde",
       "executable": false
     },
+    "tests/helpers/launch-custom-field-deletion-browser.mjs": {
+      "sha256": "8632350f454e6dc311ba0dc65ff1896ac93b1370665cae452a9085f781a10cd7",
+      "executable": false
+    },
+    "tests/helpers/launch-custom-field-deletion.mjs": {
+      "sha256": "a914f34df6f681d5d4a16c766576f6eb96d322243a0fc181128e7b7737c7373b",
+      "executable": false
+    },
     "tests/helpers/launch-decision-approval.mjs": {
       "sha256": "1711f275d52d04a85e16e61c9a714fd47ce398a70d417985394a17eb27e97202",
       "executable": false
@@ -13170,7 +13178,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "3e7b209bb582081ac72af84a2c169a6bfe588199c31567dcda046d30f79833d1",
+      "sha256": "0d2edc1d1c79016a3cd219398846e6ab908637315cb93d53f141afe9d91a7d1e",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
@@ -13518,7 +13526,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "e25b12f6c7e96983b6613c4df836d207c5a3073f04124837bbbf24ff129aa4a2",
+      "sha256": "9fa3933da17d129b91d94f06f7c0071112a17d6e50de76e42407f2142435bc0f",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
