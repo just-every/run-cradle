@@ -1,0 +1,133 @@
+{
+  "command": "rer build --site",
+  "pages": [
+    {
+      "route": "/docs",
+      "status": 200,
+      "source": "docs/overview.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/getting-started",
+      "status": 200,
+      "source": "docs/getting-started.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/install",
+      "status": 200,
+      "source": "docs/install.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/boundaries",
+      "status": 200,
+      "source": "docs/boundaries.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/importing",
+      "status": 200,
+      "source": "docs/importing.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/automations",
+      "status": 200,
+      "source": "docs/user-automations.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/api",
+      "status": 200,
+      "source": "docs/api-v1.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/workbooks",
+      "status": 200,
+      "source": "docs/workbooks.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/leaving",
+      "status": 200,
+      "source": "docs/leaving-cradle.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/archives",
+      "status": 200,
+      "source": "docs/installation-archives.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/company-identity",
+      "status": 200,
+      "source": "docs/company-identity.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    },
+    {
+      "route": "/docs/measured-scale",
+      "status": 200,
+      "source": "docs/measured-scale.md",
+      "sharedChrome": true,
+      "docsCurrent": true,
+      "editableSource": true,
+      "installedLinks": false
+    }
+  ],
+  "builds": [
+    {
+      "kind": "missing target",
+      "exit": 1,
+      "source": "docs/overview.md",
+      "href": "./synthetic-cradle-missing.md",
+      "diagnostic": "synthetic-cradle-missing.md (docs/synthetic-cradle-missing.md does not exist"
+    },
+    {
+      "kind": "missing heading",
+      "exit": 1,
+      "source": "docs/overview.md",
+      "href": "#synthetic-cradle-missing-heading",
+      "diagnostic": "#synthetic-cradle-missing-heading (no such heading"
+    },
+    {
+      "kind": "restored control",
+      "exit": 0
+    }
+  ]
+}

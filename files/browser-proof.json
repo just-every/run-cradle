@@ -1,0 +1,378 @@
+{
+  "head": "49fbe271a6637928296e1d224874c75cca568bc1",
+  "result": {
+    "command": "rer build --site",
+    "pages": [
+      {
+        "route": "/docs",
+        "status": 200,
+        "source": "docs/overview.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/getting-started",
+        "status": 200,
+        "source": "docs/getting-started.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/install",
+        "status": 200,
+        "source": "docs/install.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/boundaries",
+        "status": 200,
+        "source": "docs/boundaries.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/importing",
+        "status": 200,
+        "source": "docs/importing.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/automations",
+        "status": 200,
+        "source": "docs/user-automations.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/api",
+        "status": 200,
+        "source": "docs/api-v1.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/workbooks",
+        "status": 200,
+        "source": "docs/workbooks.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/leaving",
+        "status": 200,
+        "source": "docs/leaving-cradle.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/archives",
+        "status": 200,
+        "source": "docs/installation-archives.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/company-identity",
+        "status": 200,
+        "source": "docs/company-identity.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      },
+      {
+        "route": "/docs/measured-scale",
+        "status": 200,
+        "source": "docs/measured-scale.md",
+        "sharedChrome": true,
+        "docsCurrent": true,
+        "editableSource": true,
+        "installedLinks": false
+      }
+    ],
+    "builds": [
+      {
+        "kind": "missing target",
+        "exit": 1,
+        "source": "docs/overview.md",
+        "href": "./synthetic-cradle-missing.md",
+        "diagnostic": "synthetic-cradle-missing.md (docs/synthetic-cradle-missing.md does not exist"
+      },
+      {
+        "kind": "missing heading",
+        "exit": 1,
+        "source": "docs/overview.md",
+        "href": "#synthetic-cradle-missing-heading",
+        "diagnostic": "#synthetic-cradle-missing-heading (no such heading"
+      },
+      {
+        "kind": "restored control",
+        "exit": 0
+      }
+    ]
+  },
+  "screens": [
+    {
+      "route": "/docs",
+      "width": 1440,
+      "status": 200,
+      "title": "Cradle docs",
+      "heading": "Cradle documentation",
+      "file": "screens/overview-1440.png",
+      "bytes": 281040,
+      "sha256": "4a5bc129d0a5ca6f1b2bec7120efd6dbddb0492969b89f796db4e96dda4b9292"
+    },
+    {
+      "route": "/docs/getting-started",
+      "width": 1440,
+      "status": 200,
+      "title": "Getting started · Cradle docs",
+      "heading": "Getting started",
+      "file": "screens/getting-started-1440.png",
+      "bytes": 201296,
+      "sha256": "d5619875b349e495b54a0143af97c4db7e4e987ef0f1b79981b665a3dc9b41bd"
+    },
+    {
+      "route": "/docs/install",
+      "width": 1440,
+      "status": 200,
+      "title": "Install Cradle · Cradle docs",
+      "heading": "Install Cradle",
+      "file": "screens/install-1440.png",
+      "bytes": 488195,
+      "sha256": "dc7aadffb58ce5e505e61dd25396f7f680cc1bc483132b1900b730286e9a15d2"
+    },
+    {
+      "route": "/docs/boundaries",
+      "width": 1440,
+      "status": 200,
+      "title": "What Cradle is not · Cradle docs",
+      "heading": "What Cradle is not",
+      "file": "screens/boundaries-1440.png",
+      "bytes": 297589,
+      "sha256": "bbda3e9031720bed84645861a376387c472b6f7f7f14364ebb7191c15869e6bf"
+    },
+    {
+      "route": "/docs/importing",
+      "width": 1440,
+      "status": 200,
+      "title": "Importing a base · Cradle docs",
+      "heading": "Importing a base",
+      "file": "screens/importing-1440.png",
+      "bytes": 1293352,
+      "sha256": "ec98420a253ea1193cd1d68d0bd62e87bafbd473770b8838634a6ff030b50873"
+    },
+    {
+      "route": "/docs/automations",
+      "width": 1440,
+      "status": 200,
+      "title": "Record automations · Cradle docs",
+      "heading": "Record automations",
+      "file": "screens/automations-1440.png",
+      "bytes": 545988,
+      "sha256": "d12f4dd0ec37de097b0e663bc57ab2ee542e45e3c379b612e2a373b8b3597733"
+    },
+    {
+      "route": "/docs/api",
+      "width": 1440,
+      "status": 200,
+      "title": "Cradle API v1 · Cradle docs",
+      "heading": "Cradle API v1",
+      "file": "screens/api-1440.png",
+      "bytes": 621877,
+      "sha256": "b2a446027f3c0a6defe40b6749142c40419ed48627bde16b62ef622cb10e902b"
+    },
+    {
+      "route": "/docs/workbooks",
+      "width": 1440,
+      "status": 200,
+      "title": "Importing and exporting workbooks · Cradle docs",
+      "heading": "Importing and exporting workbooks",
+      "file": "screens/workbooks-1440.png",
+      "bytes": 449865,
+      "sha256": "fa593ad1eb596947850231cea68b97ec75b1464e8dd929eb2b6e4d19decdd8f8"
+    },
+    {
+      "route": "/docs/leaving",
+      "width": 1440,
+      "status": 200,
+      "title": "Leaving Cradle and coming back · Cradle docs",
+      "heading": "Leaving Cradle and coming back",
+      "file": "screens/leaving-1440.png",
+      "bytes": 1254057,
+      "sha256": "cebed1526dba3a0bdcec0361a2cf57f3a5df9a2e4c9f8159531fe4626a4beabf"
+    },
+    {
+      "route": "/docs/archives",
+      "width": 1440,
+      "status": 200,
+      "title": "Installation archives · Cradle docs",
+      "heading": "Installation archives",
+      "file": "screens/archives-1440.png",
+      "bytes": 1193209,
+      "sha256": "e1428eafc1f0008da078dce0d49bd06b54b2775dcb1d69a83100080cbb0283d1"
+    },
+    {
+      "route": "/docs/company-identity",
+      "width": 1440,
+      "status": 200,
+      "title": "Signing in with your company identity and SCIM provisioning · Cradle docs",
+      "heading": "Signing in with your company identity and SCIM provisioning",
+      "file": "screens/company-identity-1440.png",
+      "bytes": 428267,
+      "sha256": "fd77254d70d64e4fb8a2ef1ffa60e00782f360f2ec724584acc4a3dd303a5f6e"
+    },
+    {
+      "route": "/docs/measured-scale",
+      "width": 1440,
+      "status": 200,
+      "title": "Measured scale · Cradle docs",
+      "heading": "Measured scale",
+      "file": "screens/measured-scale-1440.png",
+      "bytes": 311328,
+      "sha256": "ff75796efe1f4c08f11234d0feabe6ddd3bd478ef4353929e56611df237a0a65"
+    },
+    {
+      "route": "/docs",
+      "width": 390,
+      "status": 200,
+      "title": "Cradle docs",
+      "heading": "Cradle documentation",
+      "file": "screens/overview-390.png",
+      "bytes": 217929,
+      "sha256": "a99c411e57997e4b96bec1fcba7627543ae078de377043a94ba27486eb6947be"
+    },
+    {
+      "route": "/docs/getting-started",
+      "width": 390,
+      "status": 200,
+      "title": "Getting started · Cradle docs",
+      "heading": "Getting started",
+      "file": "screens/getting-started-390.png",
+      "bytes": 156163,
+      "sha256": "4ff9e808a1b6616e0d5585bb219b1fadb72adfc93efb20ffaf27fa132d181eae"
+    },
+    {
+      "route": "/docs/install",
+      "width": 390,
+      "status": 200,
+      "title": "Install Cradle · Cradle docs",
+      "heading": "Install Cradle",
+      "file": "screens/install-390.png",
+      "bytes": 411940,
+      "sha256": "1bf5389eb04a0bc1b52b1963486e3a402820ae31d21970972db158fbdf0c9219"
+    },
+    {
+      "route": "/docs/boundaries",
+      "width": 390,
+      "status": 200,
+      "title": "What Cradle is not · Cradle docs",
+      "heading": "What Cradle is not",
+      "file": "screens/boundaries-390.png",
+      "bytes": 223101,
+      "sha256": "c9f349888f952faef4841bd544be017a418ad949bed877794a5b2b809b23838a"
+    },
+    {
+      "route": "/docs/importing",
+      "width": 390,
+      "status": 200,
+      "title": "Importing a base · Cradle docs",
+      "heading": "Importing a base",
+      "file": "screens/importing-390.png",
+      "bytes": 1251075,
+      "sha256": "f9a069c2c168312691d751406176d6c76846187bd40dae1a5ca8dfd1f47ae80a"
+    },
+    {
+      "route": "/docs/automations",
+      "width": 390,
+      "status": 200,
+      "title": "Record automations · Cradle docs",
+      "heading": "Record automations",
+      "file": "screens/automations-390.png",
+      "bytes": 512036,
+      "sha256": "4aad6bb03188719a476223e18e149e9ea002ec06c81cd87f0e0db976f034fc2f"
+    },
+    {
+      "route": "/docs/api",
+      "width": 390,
+      "status": 200,
+      "title": "Cradle API v1 · Cradle docs",
+      "heading": "Cradle API v1",
+      "file": "screens/api-390.png",
+      "bytes": 564482,
+      "sha256": "101c4de46b27d02a943dd694b1c713af647e1eca0a3bbbbe718e80fd5d9adba5"
+    },
+    {
+      "route": "/docs/workbooks",
+      "width": 390,
+      "status": 200,
+      "title": "Importing and exporting workbooks · Cradle docs",
+      "heading": "Importing and exporting workbooks",
+      "file": "screens/workbooks-390.png",
+      "bytes": 410065,
+      "sha256": "cf3125003425e68c172a10e9279560c4832bc0d3493388fa1e5949523ce919cb"
+    },
+    {
+      "route": "/docs/leaving",
+      "width": 390,
+      "status": 200,
+      "title": "Leaving Cradle and coming back · Cradle docs",
+      "heading": "Leaving Cradle and coming back",
+      "file": "screens/leaving-390.png",
+      "bytes": 1252858,
+      "sha256": "e12b7da499ff2491d38e6f63be9c4bbd92fab6b94e8d48bcf72704365d23a96f"
+    },
+    {
+      "route": "/docs/archives",
+      "width": 390,
+      "status": 200,
+      "title": "Installation archives · Cradle docs",
+      "heading": "Installation archives",
+      "file": "screens/archives-390.png",
+      "bytes": 1127631,
+      "sha256": "37353fb254fc0cbbe56349908a0515b793754338afa01554147da8f84bc98152"
+    },
+    {
+      "route": "/docs/company-identity",
+      "width": 390,
+      "status": 200,
+      "title": "Signing in with your company identity and SCIM provisioning · Cradle docs",
+      "heading": "Signing in with your company identity and SCIM provisioning",
+      "file": "screens/company-identity-390.png",
+      "bytes": 387140,
+      "sha256": "b1a49953553908afff7cc13f79f483c0619538dee185fcb572fce2b4fd53bd41"
+    },
+    {
+      "route": "/docs/measured-scale",
+      "width": 390,
+      "status": 200,
+      "title": "Measured scale · Cradle docs",
+      "heading": "Measured scale",
+      "file": "screens/measured-scale-390.png",
+      "bytes": 265573,
+      "sha256": "d12b9765f3c6135ea63bae8d8a4694c4557427389e4d02762ae41943a4320ac9"
+    }
+  ]
+}

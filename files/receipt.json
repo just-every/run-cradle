@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "tag": "sd-cradle-c-f181",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f181",
+  "head": "49fbe271a6637928296e1d224874c75cca568bc1",
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "product_push": {
+    "status": "published",
+    "attempts": 1,
+    "remote_head": "49fbe271a6637928296e1d224874c75cca568bc1"
+  },
+  "pr": null,
+  "changes": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "tests/helpers/static-site.mjs",
+    "tests/public-document-runtime.mjs"
+  ],
+  "clauses": {
+    "DOCS-001": {
+      "before": "partial",
+      "after": "partial",
+      "selected_points": "closed",
+      "done_claim": false
+    }
+  },
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "status_rows_before": 257,
+  "status_rows_after": 257,
+  "registrations_before": 174,
+  "registrations_after": 174,
+  "test_cap": 200,
+  "checks": [
+    {
+      "command": "pnpm exec rer build",
+      "exit": 0,
+      "scope": "production build for the retained installed-document journey"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "scope": "after generation before restoring views"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "scope": "after generation and again after up-to-date rebase"
+    },
+    {
+      "command": "git diff --cached --check",
+      "exit": 0
+    },
+    {
+      "command": "node --test --test-concurrency=1 tests/public-document-runtime.mjs",
+      "exit": 0,
+      "head": "49fbe271a6637928296e1d224874c75cca568bc1",
+      "tests": 2,
+      "failures": 0
+    }
+  ],
+  "runtime_test": {
+    "command": "node --test --test-concurrency=1 tests/public-document-runtime.mjs",
+    "head": "49fbe271a6637928296e1d224874c75cca568bc1",
+    "status": "passed",
+    "exit": 0,
+    "tests": 2,
+    "failures": 0
+  },
+  "mechanical": {
+    "views_write_exit": 0,
+    "views_check_exit": 0,
+    "candidate_views_check_exit": 1,
+    "candidate_views_failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "views_restored_from_main": true,
+    "lock_exit": 0,
+    "lock_check_exit": 0,
+    "ledger": "not applicable: no migrations changed"
+  },
+  "ci": {
+    "verify_run": 42151827620,
+    "event": "push",
+    "head": "49fbe271a6637928296e1d224874c75cca568bc1",
+    "status_at_discovery": "in_progress",
+    "conclusion_at_discovery": null,
+    "rest_calls_used": 6,
+    "status": "completed",
+    "conclusion": "failure",
+    "only_substantive_failure": "expected generated ACCEPTANCE.md freshness check",
+    "build_job": 127676671776,
+    "verify_job": 127676794440,
+    "shards": "skipped due to generated-view failure",
+    "ready_exception": "explicit generated-view exception in cloud instructions"
+  },
+  "screens": {
+    "pages": 12,
+    "widths": [
+      1440,
+      390
+    ],
+    "count": 24,
+    "receipt": "browser-proof.json"
+  },
+  "retained_assertions": "No existing assertion removed, narrowed, skipped or moved behind a width or branch condition.",
+  "authority_erasure_replay": "No production, authority, erasure, replay, credential or storage code changed.",
+  "publication_scan": "Not run in cloud; full-history scan and publication custody belong to the fleet lander.",
+  "landing": "Not performed; main and candidate Run site remain lander gates."
+}

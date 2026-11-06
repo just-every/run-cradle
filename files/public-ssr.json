@@ -1,0 +1,58 @@
+{
+  "environment": "Actual emitted Worker, fresh native D1; synthetic fixtures only",
+  "checks": [
+    {
+      "route": "/",
+      "configured": true,
+      "unavailable": true,
+      "status": 200,
+      "publicIdentity": true
+    },
+    {
+      "route": "/signin",
+      "configured": true,
+      "unavailable": true,
+      "status": 200,
+      "publicIdentity": true
+    },
+    {
+      "route": "/",
+      "configured": true,
+      "recoveredRename": true,
+      "status": 200
+    },
+    {
+      "route": "/signin",
+      "configured": true,
+      "recoveredRename": true,
+      "status": 200
+    },
+    {
+      "route": "/",
+      "configured": false,
+      "status": 503,
+      "unconfigured": true
+    },
+    {
+      "route": "/signin",
+      "configured": false,
+      "status": 200,
+      "actionableMailSetup": true,
+      "emailForm": false
+    },
+    {
+      "route": "/",
+      "configured": true,
+      "status": 200,
+      "recoveredMail": true,
+      "recoveredRename": true
+    },
+    {
+      "route": "/signin",
+      "configured": true,
+      "status": 200,
+      "recoveredMail": true,
+      "recoveredRename": true
+    }
+  ]
+}

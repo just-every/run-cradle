@@ -1,0 +1,4 @@
+PROBE DOCS-001 static documents: actual rer build --site in a disposable copy, emitted documents served without cookies -> all 12 navigation-listed routes return HTTP 200 with shared header and footer, Docs current, complete navigation, own Markdown marker and exact editable-source link; installed Sign in and Open workspace links absent.
+PROBE DOCS-001 missing target: published overview plus ./synthetic-cradle-missing.md -> real build exits 1 naming docs/overview.md and docs/synthetic-cradle-missing.md does not exist.
+PROBE DOCS-001 missing heading: published overview plus #synthetic-cradle-missing-heading -> separate real build exits 1 naming docs/overview.md and no such heading.
+PROBE DOCS-001 restored control: both invalid inputs restored -> real build exits 0; all emitted pages remain readable.
