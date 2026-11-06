@@ -1,3 +1,4 @@
+import { launchImportDeletionJourney } from './helpers/launch-import-deletion.mjs'
 import {warehouseNetworkEdge} from './helpers/warehouse-network-edge.mjs'
 import {companyLifecycle} from './helpers/company-lifecycle.mjs'
 import test, { after } from 'node:test'
@@ -320,6 +321,7 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
    assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM campaigns WHERE code=?').bind(candidate.code).first('n'), 0)
   }
  } finally { h.setNow(undefined) }
+ await launchImportDeletionJourney({ h, call, command, envelope, upload, preview, mapping, unrelatedId: faultPreview.id, unrelatedBytes: faultCsv, sharedId: fresh.id })
 })
 
 test('[IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells', async () => {

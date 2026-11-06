@@ -2,7 +2,9 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {workbookDoors} from './workbook-http.mjs'
 import {fileStoreActors} from './file-stores-actors.mjs'
+import {missingStoreResolution} from './store-reference-missing.mjs'
 export async function storeReferenceResolution(h,provider,snapshot){
+ await missingStoreResolution(h,provider)
  const source=structuredClone(snapshot),attacher=createUlid()
  for(const table of source.base.tables)for(const row of table.records)for(const value of Object.values(row.values))if(Array.isArray(value))for(const item of value)if(item?.kind==='store')item.attachedBy=attacher
  const d=await workbookDoors(h),bytes=Buffer.from(JSON.stringify(source)),returned=await d.adopt(bytes,'synthetic-cradle-resolve.json'),appId=returned.preview.identities.appId,entities=(await d.call(`/api/v1/apps/${appId}/entities`)).items,entity=entities.find(e=>e.id===returned.preview.identities.tables[source.base.tables[0].id].entityId),field=entity.fields.find(f=>f.type==='attachment'),rows=(await d.call(`/api/v1/apps/${appId}/entities/${entity.id}/query`,{})).items,row=rows.find(r=>r.fields[field.id]?.value?.length),ref={appId,entityId:entity.id,recordId:row.id},address={...ref,fieldId:field.id}

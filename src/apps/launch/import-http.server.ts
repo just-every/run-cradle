@@ -88,6 +88,7 @@ export function createLaunchImportHttp(deps: LaunchImportDependencies) {
     const object = await deps.bucket.get(original.object_key)
     if (!object) throw new ApiError('internal', 'The stored import file is missing.')
     await recheck()
+    if (!await deps.db.prepare("SELECT 1 FROM portability_previews p JOIN evidence_files f ON f.id=p.file_id WHERE p.id=? AND f.id=? AND f.state='available'").bind(file[1]!, preview.file_id).first()) throw new ApiError('not_found', 'The stored import file is no longer available.')
     return new Response(object.body, { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Length': String(original.bytes), 'Content-Disposition': `attachment; filename="import.csv"; filename*=UTF-8''${encodeURIComponent(original.filename)}`, 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "sandbox; default-src 'none'" } })
    }
    if (request.method === 'GET' && path === '') {
