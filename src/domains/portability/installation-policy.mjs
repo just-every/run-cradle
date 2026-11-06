@@ -124,6 +124,6 @@ export function archivePolicyFor(manifest,input){
  const previews=portabilityPolicy.includeTables;
  const present=previews.filter(name=>manifest.tables.some(table=>table.name===name));
  if(present.length===previews.length)return input;
- if(present.length||!manifest.excludedTables?.includes('portability_%'))throw new PortabilityError('preview_inventory',409);
+ if(present.length||!previews.every(name=>manifest.excludedTables?.includes(name)))throw new PortabilityError('preview_inventory',409);
  return {...input,includeTables:(input.includeTables??[]).filter(name=>!previews.includes(name))};
 }
