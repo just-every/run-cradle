@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "a136f3aab6ff7814e9c719927aac0d4e606aafd73e209cc57d2bbc920ffb66ce",
       "executable": false
     },
     "DEMO.md": {
@@ -12093,6 +12093,10 @@
       "sha256": "84d401db2db32886f8812d7ad857c25c135417c84a1ce0decdc03f823dfe8bff",
       "executable": false
     },
+    "tests/helpers/campaign-grid-state-journey.mjs": {
+      "sha256": "745967df5c71cbe975617d56302b5e06935d795c0e40d3f84774d32b23ee5351",
+      "executable": false
+    },
     "tests/helpers/capacity-message.mjs": {
       "sha256": "308e8de52969fdad07e9aa0543a3c32b78bd6d4fd5ae07cdf5209fd8db6e0cbf",
       "executable": false
@@ -13138,7 +13142,7 @@
       "executable": false
     },
     "tests/launch-authority-browser.mjs": {
-      "sha256": "8818135feeba44d775754a34bad79f5cfd2de6cf7503dd7df77c13b2c056ef9b",
+      "sha256": "e59a986c61b3440a9bc9d13c0cb24e566e6051f0f94377351c9eadbfcfb5453d",
       "executable": false
     },
     "tests/launch-installed-ai-failures.mjs": {
