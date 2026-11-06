@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './records-browser-widths.mjs'
 import {displayAction,tableAction,tableCommand} from './records-table-tools.mjs'
 import assert from 'node:assert/strict'
 import { mkdir } from 'node:fs/promises'
@@ -39,8 +40,8 @@ export async function timelineBrowserJourney() {
   try {
     h = await recordsBrowserRuntime(0)
     browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] })
-    for (const width of [1440, 390]) {
-      const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 1000 } }), page = await context.newPage(), j = recordsJourney(page, h.origin, output, width)
+    for (const width of recordsBrowserWidths()) {
+      const context = await browser.newContext({ viewport: { width, height: width <= 390 ? 844 : 1000 } }), page = await context.newPage(), j = recordsJourney(page, h.origin, output, width)
       try {
         page.setDefaultTimeout(20000)
         await context.addCookies([{ name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=') + 1), url: h.origin }])

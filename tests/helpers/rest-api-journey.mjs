@@ -2,6 +2,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
 import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
+import {keyWriterHistoryJourney} from './key-writer-history-journey.mjs'
 export async function recordsRestJourney(h){
  const appId=createUlid(),entityId=createUlid(),nameId=createUlid(),flagId=createUlid(),hiddenId=createUlid()
  const draft={appId,name:'synthetic-cradle-201 REST',tables:[{id:entityId,label:'REST items',primaryFieldId:nameId,fields:[
@@ -106,5 +107,7 @@ export async function recordsRestJourney(h){
   await call('update',{id:inserted.id,status:403,secret:narrow.secret,body:{commandId:createUlid(),version:merged.version,changes:{[nameId]:'synthetic-cradle-211 refused update'}}})
  }finally{await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(owner.rules_json,owner.id).run()}
  assert.deepEqual([...seen].sort(),operations.map(item=>item.operation['x-cradle-operation']).sort(),'The contract test drives every documented endpoint')
+ const historyKey=await key()
+ await keyWriterHistoryJourney(h,{appId,entityId,nameId,flagId,hiddenId,key:historyKey,call:(name,options)=>call(name,{...options,secret:historyKey.secret})})
  return {appId,entityId,operations:seen.size,created:100,updated:100,deleted:100}
 }
