@@ -1101,8 +1101,8 @@ Core · published · **partial**
 2. Editing an automation affects only later triggers.
 3. Disabling one cancels queued runs that have not started, recording each as Canceled with no action executed.
 
-**Evidence.** `tests/launch-installed-event-control.mjs`, `tests/launch-installed-network-cancel.mjs`
-**Gap.** Missing a cited journey that edits the definition while a retained run exists and reads old versus later-trigger actions; the cited journeys show version numbering and disable/cancel, but never distinguish retained-run action snapshots from an edited definition.
+**Evidence.** `tests/launch-installed-event-control.mjs` — "[AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; disable cancels queued work before any effect; full run history pages with each attempted action and a 30-day success rate" (acceptances 1–2: "verifyRetainedDefinition" in `tests/helpers/launch-automation-definitions.mjs`; acceptance 3: queued disable); `tests/launch-installed-network-cancel.mjs`
+**Gap.** Independent whole-clause judgment and ct’s contract conversion and generated-document synchronization remain release prerequisites. Remaining disable, in-flight and cancellation combinations and the wider action, trigger and crash or restart matrix remain unproved; authorship and credential lifetime are unchanged.
 
 #### AUTO-005 — Loop protection
 

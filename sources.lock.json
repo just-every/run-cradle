@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "8ea02d0ae0b7f403464cb1aaafeb2ce4a47a8377627cf50b630803eb9b1ab6cb",
+      "sha256": "d41b95a515c07b345b2abddfe76892a40ffc7aae29d3965dcb9d2e0857a27a1d",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "cdf25b010e691b00b54ce80b5b40dad7fd9de96e2511ca05305f58ee79d9ca73",
+      "sha256": "259a135a97f5cf9c640e06abbbc3aba825821d9c41c06c4b534a8f21ff7a44f4",
       "executable": false
     },
     "DEMO.md": {
@@ -12298,7 +12298,7 @@
       "executable": false
     },
     "tests/helpers/launch-automation-definitions.mjs": {
-      "sha256": "f5ff72dd87b6595f59324d756f0a81812b806962eda220b35abf884616e2e0d5",
+      "sha256": "15180294b06442f8f950aa6fb5f0541da22838a83837308e66ab0046282b00fb",
       "executable": false
     },
     "tests/helpers/launch-automation-monitor-screens.mjs": {
@@ -13150,7 +13150,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "d4ce35d21d3cf57a3a4c1dd2bf42660e34400ad96483cace58af3cd7da0306ef",
+      "sha256": "e1ca12c03a9b4c4f7eead22d99d5f5a44a200efb8fb6eab567ecfdf4efee0ad9",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
