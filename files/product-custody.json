@@ -1,0 +1,8 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f201",
+  "head": "021e2f9aeddac3e74a1987a1a694e09adfd1be46",
+  "remoteVerified": true,
+  "pushGuard": "cloud-push.py",
+  "forcePush": false
+}

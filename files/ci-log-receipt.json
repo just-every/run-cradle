@@ -1,0 +1,24 @@
+{
+  "head": "021e2f9aeddac3e74a1987a1a694e09adfd1be46",
+  "run": 42157315533,
+  "logs": [
+    {
+      "job": 127694468442,
+      "name": "build",
+      "command": "gh run view 42157315533 --repo just-every/run-cradle --job 127694468442 --log-failed",
+      "exit": 0,
+      "archiveReadCount": 1,
+      "publishedExcerpt": "Actual failed command and assertion lines; workflow environment listings omitted"
+    },
+    {
+      "job": 127694571301,
+      "name": "verify",
+      "command": "gh run view 42157315533 --repo just-every/run-cradle --job 127694571301 --log-failed",
+      "exit": 0,
+      "archiveReadCount": 1,
+      "publishedExcerpt": "Actual failed command and assertion lines; workflow environment listings omitted"
+    }
+  ],
+  "githubCalls": 6,
+  "exception": "Only stale generated ACCEPTANCE.md plus dependent aggregate failure and skipped shards"
+}

@@ -1,0 +1,9 @@
+{
+  "head": "021e2f9aeddac3e74a1987a1a694e09adfd1be46",
+  "command": "node src/base/contract-docs.mjs check",
+  "exit": 1,
+  "stdout": "",
+  "stderr": "ACCEPTANCE.md: generated content differs; run contract-docs write.\n",
+  "expected": true,
+  "reason": "Generated views restored whole from origin main; lander regeneration required"
+}

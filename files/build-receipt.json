@@ -1,0 +1,8 @@
+{
+  "head": "021e2f9aeddac3e74a1987a1a694e09adfd1be46",
+  "command": "cloud_run npx -y @runeditrun/rer build",
+  "exit": 0,
+  "completion": "build: complete (exit 0)",
+  "builtSourcesUnchangedSinceBuild": true,
+  "node": "v24.19.0"
+}

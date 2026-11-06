@@ -1,0 +1,30 @@
+{
+  "head": "021e2f9aeddac3e74a1987a1a694e09adfd1be46",
+  "command": "cloud_run env PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium CRADLE_AUTHORITY_EVIDENCE=/home/agent/rer-consolidation/work/sd-cradle-c-f201/packet/browser perl -e 'alarm 1200; exec @ARGV' -- node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 --test-name-pattern='native owner creation' tests/launch-authority-browser.mjs",
+  "exit": 0,
+  "tests": 1,
+  "passCount": 1,
+  "failCount": 0,
+  "captures": 30,
+  "gridRefresh": [
+    {
+      "width": 1440,
+      "heldRequests": 2,
+      "failedStatus": 500,
+      "loadingClearedResults": true,
+      "failureClearedResults": true,
+      "retryName": "Current launch 1440",
+      "campaignId": "01M6QEHKFT7PX5X83G2R0S2JMQ"
+    },
+    {
+      "width": 390,
+      "heldRequests": 2,
+      "failedStatus": 500,
+      "loadingClearedResults": true,
+      "failureClearedResults": true,
+      "retryName": "Current launch 390",
+      "campaignId": "01M6QEHYGVJ649VEQP8HD1PZ1J"
+    }
+  ],
+  "environment": "Local emitted Worker, real synthetic D1 binding; no hosted claim"
+}

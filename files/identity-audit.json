@@ -1,0 +1,32 @@
+{
+  "commits": [
+    {
+      "head": "021e2f9aeddac3e74a1987a1a694e09adfd1be46",
+      "authorName": "Run Edit Run fleet",
+      "authorEmail": "fleet@runeditrun.com",
+      "committerName": "Run Edit Run fleet",
+      "committerEmail": "fleet@runeditrun.com",
+      "trailers": "",
+      "parents": [
+        "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+        "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746"
+      ],
+      "statusRowsRetained": true
+    },
+    {
+      "head": "55a01caaf9f3bb394978d9fc3e401fbb27ff7d5b",
+      "authorName": "Run Edit Run fleet",
+      "authorEmail": "fleet@runeditrun.com",
+      "committerName": "Run Edit Run fleet",
+      "committerEmail": "fleet@runeditrun.com",
+      "trailers": "",
+      "parents": [
+        "234432f0b726fba470fb6ce4e1816f50cd082601"
+      ],
+      "statusRowsRetained": true
+    }
+  ],
+  "clean": true,
+  "newEmailShapedStrings": 0,
+  "providerShapedTokens": 0
+}

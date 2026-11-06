@@ -1,0 +1,56 @@
+{
+  "head": "021e2f9aeddac3e74a1987a1a694e09adfd1be46",
+  "checks": [
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "seconds": 0.183,
+      "stdout": "Wrote 1 contract documents.\n",
+      "stderr": ""
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "seconds": 0.281,
+      "stdout": "Contract documents are current.\n",
+      "stderr": ""
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0,
+      "seconds": 0.011,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "seconds": 0.955,
+      "stdout": "{\"ok\": true, \"schemaVersion\": 1, \"edition\": \"just-every/cradle\"}",
+      "stderr": ""
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "seconds": 1.94,
+      "stdout": "TOTAL 174\n",
+      "stderr": ""
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "seconds": 49.66,
+      "stdout": "\u2009WARN\u2009 Unsupported engine: wanted: {\"node\":\"22.20.0\"} (current: {\"node\":\"v24.19.0\",\"pnpm\":\"10.12.4\"})\n\n> cradle@0.4.0 check:types /workspace/run-cradle\n> tsc --noEmit\n\n",
+      "stderr": ""
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "seconds": 1.178,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "migrationLedger": "not applicable: no migrations changed",
+  "worktree": ""
+}
