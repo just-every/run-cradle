@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "8fe43fa3ea023ec4b7afed8182c9b80b3dfabe701149d13878464adfbfbd5685",
       "executable": false
     },
     "DEMO.md": {
@@ -12165,6 +12165,10 @@
       "sha256": "389cdb6e9ebf1cbf09dd0b22ce586dfe894c49c81e49bd828dd7615d16612f84",
       "executable": false
     },
+    "tests/helpers/current-policy-privacy-journey.mjs": {
+      "sha256": "b351d4a79b41a889721cdc5ee812c08c6dec16dc135e9fcd71365ff2fbedf0c4",
+      "executable": false
+    },
     "tests/helpers/dev-gate.mjs": {
       "sha256": "93bc4b3b0e0b8c99ffe71b4fa2c17e801b9568d615938a4ef9a3044eee83f642",
       "executable": false
@@ -13190,7 +13194,7 @@
       "executable": false
     },
     "tests/launch-search-authority.mjs": {
-      "sha256": "f98973bacf15604e1e6a2c2950540bbd1b16999700d095040d951cc1f57fbabd",
+      "sha256": "89afe7a9e32e0d9849fd9b603a1895581a8af7f9c495732c8b0ed96a8065de01",
       "executable": false
     },
     "tests/launch-setup-race.mjs": {
