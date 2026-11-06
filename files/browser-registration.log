@@ -1,0 +1,17 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE ACT-001 1: three fresh native campaign edits -> public detail returns reverse authored command order
+PROBE ACT-001 1: rendered activity at 1440 -> three grouped edits in reverse authored command order
+PROBE ACT-001 1: three fresh native campaign edits -> public detail returns reverse authored command order
+PROBE ACT-001 1: rendered activity at 390 -> three grouped edits in reverse authored command order
+Launch walkthrough passed 206 real-runtime screens
+✔ [VIEW-004] [OPS-006] [OPS-003] [CAMP-006] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone (444482.240621ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 444488.400845

@@ -1,0 +1,42 @@
+{
+  "mutations": [
+    {
+      "id": "M1-repository-order",
+      "mutation": {
+        "file": "src/core/features/campaigns/repository.ts",
+        "before": "ORDER BY createdAt DESC, id DESC",
+        "after": "ORDER BY createdAt ASC, id ASC"
+      },
+      "command": [
+        "node",
+        "/tmp/cradle-activity-probe.mjs",
+        "native"
+      ],
+      "buildExit": 0,
+      "exit": 1,
+      "expectedFailure": "Public campaign detail returns the authored edits newest first",
+      "observedExpectedFailure": true,
+      "timestamp": "2026-11-06T02:45:54.062501+00:00"
+    },
+    {
+      "id": "M2-rendered-order",
+      "mutation": {
+        "file": "src/core/features/portfolio/ui/activity-presentation.ts",
+        "before": "return [...groups.values()].map(facts =>",
+        "after": "return [...groups.values()].reverse().map(facts =>"
+      },
+      "command": [
+        "node",
+        "/tmp/cradle-activity-probe.mjs",
+        "browser"
+      ],
+      "buildExit": 0,
+      "exit": 1,
+      "expectedFailure": "Initially collapsed activity groups already show reverse authored write order",
+      "observedExpectedFailure": true,
+      "timestamp": "2026-11-06T02:47:20.092700+00:00"
+    }
+  ],
+  "productionSourcesRestored": true,
+  "restoredBuildExit": 0
+}

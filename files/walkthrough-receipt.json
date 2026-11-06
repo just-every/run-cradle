@@ -1,0 +1,3360 @@
+{
+  "environment": "Actual emitted Worker and native D1, synthetic test fixtures only",
+  "screens": [
+    {
+      "file": "campaign-grid-grouped-fields-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-empty-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-before-archive-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-half-up-and-stale-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-attention-status-change-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-created-critical-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-created-critical-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-created-critical-inspector-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-all-resolved-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-all-resolved-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-all-resolved-inspector-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-reopened-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-reopened-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-reopened-inspector-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-active-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-active-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-grid-before-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-form-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-populated-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-selected-inspector-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-filter-hidden-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-empty-work-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-form-review-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-form-release-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-form-cross-month-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-create-form-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-with-risk-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "timeline-two-months-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "timeline-quarter-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "timeline-cross-month-range-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-cross-month-range-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-human-range-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-rejected-rationale-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-lens-singular-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-readout-disabled-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-escalated-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-explicit-choice-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-independent-recommendation-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-unresolved-decision-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-confirmed-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-reopened-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-lens-escalation-form-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-lens-confirmed-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-human-actions-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-human-history-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-risk-resolved-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "automations-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "home-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "overview-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "new-lens-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "empty-decision-queue-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "notifications-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-quiet-hours-keyboard-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-active-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-removal-confirm-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-removed-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-erasure-confirm-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-erased-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-aud-london-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-aud-form-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-aud-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-jpy-london-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-jpy-form-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-jpy-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-london-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-kwd-form-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-kwd-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-grid-totals-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-inspector-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-overview-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-london-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-london-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timezone-deadline-london-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-brisbane-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timezone-deadline-brisbane-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timeline-calendar-quarters-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timeline-calendar-months-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timeline-overdue-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-milestone-overdue-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-search-overdue-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-milestone-complete-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-decision-superseded-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-decision-superseding-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-preview-zero-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-saved-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-shared-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-comment-posted-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-comment-deleted-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-comment-deleted-reopened-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-current-selected-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-current-refreshed-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-current-empty-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-readiness-saved-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-readiness-stale-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-samples-stale-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-samples-removed-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-activity-newest-first-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-grid-grouped-fields-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-empty-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-before-archive-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-half-up-and-stale-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-portfolio-attention-status-change-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-created-critical-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-created-critical-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-created-critical-inspector-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-all-resolved-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-all-resolved-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-all-resolved-inspector-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-reopened-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-reopened-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-rating-reopened-inspector-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-active-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-active-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-grid-before-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-form-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-populated-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-selected-inspector-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-filter-hidden-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-empty-work-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-form-review-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-form-release-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-form-cross-month-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-create-form-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-with-risk-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "timeline-two-months-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "timeline-quarter-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "timeline-cross-month-range-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-cross-month-range-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "milestone-human-range-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-rejected-rationale-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-lens-singular-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-readout-disabled-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-escalated-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-explicit-choice-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-independent-recommendation-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-unresolved-decision-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-confirmed-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "decision-reopened-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-lens-escalation-form-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "risk-lens-confirmed-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-human-actions-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-human-history-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-risk-resolved-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "automations-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "home-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "overview-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "new-lens-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "empty-decision-queue-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "notifications-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-quiet-hours-keyboard-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-active-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-removal-confirm-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-removed-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-erasure-confirm-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "settings-member-erased-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-aud-london-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-aud-form-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-aud-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-jpy-london-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-jpy-form-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-jpy-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-london-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-kwd-form-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-kwd-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-grid-totals-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-inspector-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-money-overview-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-london-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-london-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timezone-deadline-london-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-workspace-kwd-brisbane-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timezone-deadline-brisbane-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timeline-calendar-quarters-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timeline-calendar-months-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-timeline-overdue-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-milestone-overdue-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-search-overdue-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-milestone-complete-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-decision-superseded-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-decision-superseding-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-preview-zero-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-saved-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-shared-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-comment-posted-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-comment-deleted-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-comment-deleted-reopened-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-current-selected-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-current-refreshed-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-lens-current-empty-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-readiness-saved-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-readiness-stale-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-samples-stale-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "clause-concurrency-samples-removed-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-activity-newest-first-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    }
+  ],
+  "inspectorChecks": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "backgroundColor": "rgb(255, 254, 253)",
+      "effectiveAlpha": 1,
+      "sectionOverlaps": [],
+      "underlayTextSamples": 0,
+      "underlayTextUncovered": 0
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "backgroundColor": "rgb(255, 254, 253)",
+      "effectiveAlpha": 1,
+      "sectionOverlaps": [],
+      "underlayTextSamples": 8,
+      "underlayTextUncovered": 0,
+      "keyboardModal": {
+        "escapeClosed": true,
+        "escapeReturnedFocus": true,
+        "closeReturnedFocus": true,
+        "reopenedCloseReturnedFocus": true
+      }
+    }
+  ],
+  "decisionHydration": [
+    {
+      "viewport": 1440,
+      "blockedBeforeHydration": true,
+      "enabledAfterHydration": true
+    },
+    {
+      "viewport": 390,
+      "blockedBeforeHydration": true,
+      "enabledAfterHydration": true
+    }
+  ],
+  "errors": [],
+  "consoleEvents": [
+    {
+      "id": 0,
+      "width": 1440,
+      "time": 1793932747662,
+      "path": "/app/lenses/risks",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 1,
+      "width": 1440,
+      "time": 1793932787227,
+      "path": "/app/settings",
+      "type": "warning",
+      "message": "The resource http://127.0.0.1:41889/fonts/lexend.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:41889/app/settings",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 2,
+      "width": 1440,
+      "time": 1793932790994,
+      "path": "/app/settings",
+      "type": "warning",
+      "message": "The resource http://127.0.0.1:41889/fonts/lexend.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:41889/app/settings",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 3,
+      "width": 1440,
+      "time": 1793932850222,
+      "path": "/app/lenses/01M6QBNS4466JGRM9PAPW1R4WD",
+      "type": "warning",
+      "message": "The resource http://127.0.0.1:41889/fonts/lexend.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:41889/app/lenses/01M6QBNS4466JGRM9PAPW1R4WD",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 4,
+      "width": 1440,
+      "time": 1793932864079,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/settings.update",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 5,
+      "width": 1440,
+      "time": 1793932866683,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.samples.remove",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 6,
+      "width": 390,
+      "time": 1793932934791,
+      "path": "/app/lenses/risks",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 7,
+      "width": 390,
+      "time": 1793932972219,
+      "path": "/app/settings",
+      "type": "warning",
+      "message": "The resource http://127.0.0.1:41889/fonts/lexend.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:41889/app/settings",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 8,
+      "width": 390,
+      "time": 1793932976343,
+      "path": "/app/settings",
+      "type": "warning",
+      "message": "The resource http://127.0.0.1:41889/fonts/lexend.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:41889/app/settings",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 9,
+      "width": 390,
+      "time": 1793933031311,
+      "path": "/app/lenses/01M6QBVA07F7727KGJAQJBSV46",
+      "type": "warning",
+      "message": "The resource http://127.0.0.1:41889/fonts/lexend.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:41889/app/lenses/01M6QBVA07F7727KGJAQJBSV46",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 10,
+      "width": 390,
+      "time": 1793933043785,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/settings.update",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 11,
+      "width": 390,
+      "time": 1793933046481,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.samples.remove",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "consoleErrors": [
+    {
+      "id": 0,
+      "width": 1440,
+      "time": 1793932747662,
+      "path": "/app/lenses/risks",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 4,
+      "width": 1440,
+      "time": 1793932864079,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/settings.update",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 5,
+      "width": 1440,
+      "time": 1793932866683,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.samples.remove",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 6,
+      "width": 390,
+      "time": 1793932934791,
+      "path": "/app/lenses/risks",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 10,
+      "width": 390,
+      "time": 1793933043785,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/settings.update",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "id": 11,
+      "width": 390,
+      "time": 1793933046481,
+      "path": "/app/settings",
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "location": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.samples.remove",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "expectedConsoleErrors": [
+    {
+      "eventId": 0,
+      "width": 1440,
+      "reason": "Verified disabled-AI refusal",
+      "request": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "method": "POST",
+        "body": {
+          "commandId": "01M6QBJRTCP39JAYFYQCX6BFA0",
+          "expected": [],
+          "input": {
+            "feature": "risk-readout",
+            "lensId": "01M6QBGMMW7XR61495DTNQSTYF"
+          }
+        },
+        "time": 1793932747637
+      },
+      "response": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "status": 400,
+        "body": {
+          "error": {
+            "requestId": "01M6QBJRVZZ3PCA51303553JC3",
+            "operation": "POST /api/v1/commands/launch.analysis.request",
+            "code": "validation",
+            "message": "AI is disabled; enable a configured provider in settings",
+            "retry": "after_change"
+          }
+        },
+        "time": 1793932747660,
+        "finishedAt": 1793932747663
+      },
+      "window": {
+        "start": 1793932747637,
+        "end": 1793932747685
+      },
+      "beforeReadout": {
+        "requests": 0,
+        "results": 0
+      },
+      "afterReadout": {
+        "requests": 0,
+        "results": 0
+      }
+    },
+    {
+      "eventId": 6,
+      "width": 390,
+      "reason": "Verified disabled-AI refusal",
+      "request": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "method": "POST",
+        "body": {
+          "commandId": "01M6QBRFJHAJCRWVRYDJBPTWWW",
+          "expected": [],
+          "input": {
+            "feature": "risk-readout",
+            "lensId": "01M6QBGMMW7XR61495DTNQSTYF"
+          }
+        },
+        "time": 1793932934769
+      },
+      "response": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.analysis.request",
+        "status": 400,
+        "body": {
+          "error": {
+            "requestId": "01M6QBRFKSHV68JFMF8WA170HA",
+            "operation": "POST /api/v1/commands/launch.analysis.request",
+            "code": "validation",
+            "message": "AI is disabled; enable a configured provider in settings",
+            "retry": "after_change"
+          }
+        },
+        "time": 1793932934791,
+        "finishedAt": 1793932934792
+      },
+      "window": {
+        "start": 1793932934769,
+        "end": 1793932934816
+      },
+      "beforeReadout": {
+        "requests": 0,
+        "results": 0
+      },
+      "afterReadout": {
+        "requests": 0,
+        "results": 0
+      }
+    }
+  ],
+  "unexpectedConsoleErrors": [],
+  "external": [],
+  "clauses": [
+    "VIEW-002",
+    "CAMP-001",
+    "CAMP-002",
+    "CAMP-005",
+    "VIEW-004",
+    "RISK-003",
+    "DEC-002",
+    "ACT-001",
+    "ACT-003",
+    "BASE-PUBLIC-003",
+    "AUTO-006",
+    "CAMP-007"
+  ],
+  "campaignRatings": [
+    {
+      "width": 1440,
+      "step": "empty",
+      "expected": "None",
+      "detail": "None",
+      "grid": "None",
+      "presentation": "grid",
+      "inspector": "None"
+    },
+    {
+      "width": 1440,
+      "step": "created-low",
+      "expected": "Low",
+      "detail": "Low",
+      "grid": "Low",
+      "presentation": "grid",
+      "inspector": "Low"
+    },
+    {
+      "width": 1440,
+      "step": "created-medium",
+      "expected": "Medium",
+      "detail": "Medium",
+      "grid": "Medium",
+      "presentation": "grid",
+      "inspector": "Medium"
+    },
+    {
+      "width": 1440,
+      "step": "created-high",
+      "expected": "High",
+      "detail": "High",
+      "grid": "High",
+      "presentation": "grid",
+      "inspector": "High"
+    },
+    {
+      "width": 1440,
+      "step": "created-critical",
+      "expected": "Critical",
+      "detail": "Critical",
+      "grid": "Critical",
+      "presentation": "grid",
+      "inspector": "Critical"
+    },
+    {
+      "width": 1440,
+      "step": "highest-lowered",
+      "expected": "High",
+      "detail": "High",
+      "grid": "High",
+      "presentation": "grid",
+      "inspector": "High"
+    },
+    {
+      "width": 1440,
+      "step": "high-resolved",
+      "expected": "Medium",
+      "detail": "Medium",
+      "grid": "Medium",
+      "presentation": "grid",
+      "inspector": "Medium"
+    },
+    {
+      "width": 1440,
+      "step": "medium-tie-resolved",
+      "expected": "Medium",
+      "detail": "Medium",
+      "grid": "Medium",
+      "presentation": "grid",
+      "inspector": "Medium"
+    },
+    {
+      "width": 1440,
+      "step": "lowered-critical-resolved",
+      "expected": "Low",
+      "detail": "Low",
+      "grid": "Low",
+      "presentation": "grid",
+      "inspector": "Low"
+    },
+    {
+      "width": 1440,
+      "step": "all-resolved",
+      "expected": "None",
+      "detail": "None",
+      "grid": "None",
+      "presentation": "grid",
+      "inspector": "None"
+    },
+    {
+      "width": 1440,
+      "step": "reopened",
+      "expected": "Low",
+      "detail": "Low",
+      "grid": "Low",
+      "presentation": "grid",
+      "inspector": "Low"
+    },
+    {
+      "width": 1440,
+      "step": "reopened-raised",
+      "expected": "High",
+      "detail": "High",
+      "grid": "High",
+      "presentation": "grid",
+      "inspector": "High"
+    },
+    {
+      "width": 390,
+      "step": "empty",
+      "expected": "None",
+      "detail": "None",
+      "grid": "None",
+      "presentation": "card",
+      "inspector": "None"
+    },
+    {
+      "width": 390,
+      "step": "created-low",
+      "expected": "Low",
+      "detail": "Low",
+      "grid": "Low",
+      "presentation": "card",
+      "inspector": "Low"
+    },
+    {
+      "width": 390,
+      "step": "created-medium",
+      "expected": "Medium",
+      "detail": "Medium",
+      "grid": "Medium",
+      "presentation": "card",
+      "inspector": "Medium"
+    },
+    {
+      "width": 390,
+      "step": "created-high",
+      "expected": "High",
+      "detail": "High",
+      "grid": "High",
+      "presentation": "card",
+      "inspector": "High"
+    },
+    {
+      "width": 390,
+      "step": "created-critical",
+      "expected": "Critical",
+      "detail": "Critical",
+      "grid": "Critical",
+      "presentation": "card",
+      "inspector": "Critical"
+    },
+    {
+      "width": 390,
+      "step": "highest-lowered",
+      "expected": "High",
+      "detail": "High",
+      "grid": "High",
+      "presentation": "card",
+      "inspector": "High"
+    },
+    {
+      "width": 390,
+      "step": "high-resolved",
+      "expected": "Medium",
+      "detail": "Medium",
+      "grid": "Medium",
+      "presentation": "card",
+      "inspector": "Medium"
+    },
+    {
+      "width": 390,
+      "step": "medium-tie-resolved",
+      "expected": "Medium",
+      "detail": "Medium",
+      "grid": "Medium",
+      "presentation": "card",
+      "inspector": "Medium"
+    },
+    {
+      "width": 390,
+      "step": "lowered-critical-resolved",
+      "expected": "Low",
+      "detail": "Low",
+      "grid": "Low",
+      "presentation": "card",
+      "inspector": "Low"
+    },
+    {
+      "width": 390,
+      "step": "all-resolved",
+      "expected": "None",
+      "detail": "None",
+      "grid": "None",
+      "presentation": "card",
+      "inspector": "None"
+    },
+    {
+      "width": 390,
+      "step": "reopened",
+      "expected": "Low",
+      "detail": "Low",
+      "grid": "Low",
+      "presentation": "card",
+      "inspector": "Low"
+    },
+    {
+      "width": 390,
+      "step": "reopened-raised",
+      "expected": "High",
+      "detail": "High",
+      "grid": "High",
+      "presentation": "card",
+      "inspector": "High"
+    }
+  ],
+  "campaignLifecycle": [
+    {
+      "width": 1440,
+      "proof": [
+        {
+          "action": "archive",
+          "lifecycle": "archived",
+          "version": 2,
+          "childIds": [
+            "01M6QBHNRNGA8YA100638M7CYV",
+            "01M6QBHNT27JHFQHV3YP58MZ64",
+            "01M6QBHNVANAYD2N5Y1D1PKJ88",
+            "01M6QBHNWJT821YN6EJXVC57F6"
+          ],
+          "actorId": "01M6QBHN8DC8M0ZW2N9WYVCXK9"
+        },
+        {
+          "action": "restore",
+          "lifecycle": "active",
+          "version": 3,
+          "childIds": [
+            "01M6QBHNRNGA8YA100638M7CYV",
+            "01M6QBHNT27JHFQHV3YP58MZ64",
+            "01M6QBHNVANAYD2N5Y1D1PKJ88",
+            "01M6QBHNWJT821YN6EJXVC57F6"
+          ],
+          "actorId": "01M6QBHN8DC8M0ZW2N9WYVCXK9"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "proof": [
+        {
+          "action": "archive",
+          "lifecycle": "archived",
+          "version": 2,
+          "childIds": [
+            "01M6QBQFZ20BVREC0G4R919157",
+            "01M6QBQG0EH2NEHKDE95XY616Q",
+            "01M6QBQG1TXNHQW5W02AYAAJBJ",
+            "01M6QBQG4DT1HYGGRKHMRQ4GEA"
+          ],
+          "actorId": "01M6QBQFFK3QVYG3KFS4XCRXVV"
+        },
+        {
+          "action": "restore",
+          "lifecycle": "active",
+          "version": 3,
+          "childIds": [
+            "01M6QBQFZ20BVREC0G4R919157",
+            "01M6QBQG0EH2NEHKDE95XY616Q",
+            "01M6QBQG1TXNHQW5W02AYAAJBJ",
+            "01M6QBQG4DT1HYGGRKHMRQ4GEA"
+          ],
+          "actorId": "01M6QBQFFK3QVYG3KFS4XCRXVV"
+        }
+      ]
+    }
+  ],
+  "responsiveChecks": [
+    {
+      "file": "campaign-form-1024.png",
+      "viewport": {
+        "width": 1024,
+        "height": 900
+      },
+      "left": 260,
+      "right": 984,
+      "width": 724,
+      "contentOverflow": false,
+      "pageOverflow": false
+    }
+  ],
+  "memberErasure": [
+    {
+      "width": 1440,
+      "route": "/app/settings",
+      "fixture": {
+        "memberName": "A11y member 1440",
+        "email": "01m6qbksb8fzzk9947cshnt5p9@example.test"
+      },
+      "states": [
+        "active",
+        "removal confirmation",
+        "removed",
+        "erasure confirmation",
+        "erased and complete"
+      ],
+      "actions": [
+        "Open People and authority",
+        "Select Application",
+        "Remove access",
+        "Type removal reason",
+        "Confirm removal",
+        "Erase identity",
+        "Type erasure reason",
+        "Confirm erasure"
+      ],
+      "completionText": "Identity erasure and file deletion are complete."
+    },
+    {
+      "width": 390,
+      "route": "/app/settings",
+      "fixture": {
+        "memberName": "A11y member 390",
+        "email": "01m6qbse7zwtzhfp7nhv61kkq5@example.test"
+      },
+      "states": [
+        "active",
+        "removal confirmation",
+        "removed",
+        "erasure confirmation",
+        "erased and complete"
+      ],
+      "actions": [
+        "Open People and authority",
+        "Select Application",
+        "Remove access",
+        "Type removal reason",
+        "Confirm removal",
+        "Erase identity",
+        "Type erasure reason",
+        "Confirm erasure"
+      ],
+      "completionText": "Identity erasure and file deletion are complete."
+    }
+  ],
+  "timelineOrdering": [
+    {
+      "width": 1440,
+      "expectedOrder": [
+        "01M6QBNAZEMSC0K5NW1WNSSN4Q",
+        "01M6QBNAXY08F1GKXZ9041BZ2M",
+        "01M6QBNAWE60TCA7A021CFWZZZ",
+        "01M6QBNATN19A9CJTWNHWMSXEY"
+      ],
+      "httpOrder": [
+        "01M6QBNAZEMSC0K5NW1WNSSN4Q",
+        "01M6QBNAXY08F1GKXZ9041BZ2M",
+        "01M6QBNAWE60TCA7A021CFWZZZ",
+        "01M6QBNATN19A9CJTWNHWMSXEY"
+      ],
+      "month": [
+        "/app/milestones/01M6QBNAZEMSC0K5NW1WNSSN4Q",
+        "/app/milestones/01M6QBNAXY08F1GKXZ9041BZ2M",
+        "/app/milestones/01M6QBNAWE60TCA7A021CFWZZZ",
+        "/app/milestones/01M6QBNATN19A9CJTWNHWMSXEY"
+      ],
+      "quarter": [
+        "/app/milestones/01M6QBNAZEMSC0K5NW1WNSSN4Q",
+        "/app/milestones/01M6QBNAXY08F1GKXZ9041BZ2M",
+        "/app/milestones/01M6QBNAWE60TCA7A021CFWZZZ",
+        "/app/milestones/01M6QBNATN19A9CJTWNHWMSXEY"
+      ]
+    },
+    {
+      "width": 390,
+      "expectedOrder": [
+        "01M6QBTXX7HZFJVX2A3NPJE9VN",
+        "01M6QBTXW3HA33YWZ610FEWNGZ",
+        "01M6QBTXTYDTJZ8H71E3AJWKCR",
+        "01M6QBTXSJ076DK803WJ4617ZN"
+      ],
+      "httpOrder": [
+        "01M6QBTXX7HZFJVX2A3NPJE9VN",
+        "01M6QBTXW3HA33YWZ610FEWNGZ",
+        "01M6QBTXTYDTJZ8H71E3AJWKCR",
+        "01M6QBTXSJ076DK803WJ4617ZN"
+      ],
+      "month": [
+        "/app/milestones/01M6QBTXX7HZFJVX2A3NPJE9VN",
+        "/app/milestones/01M6QBTXW3HA33YWZ610FEWNGZ",
+        "/app/milestones/01M6QBTXTYDTJZ8H71E3AJWKCR",
+        "/app/milestones/01M6QBTXSJ076DK803WJ4617ZN"
+      ],
+      "quarter": [
+        "/app/milestones/01M6QBTXX7HZFJVX2A3NPJE9VN",
+        "/app/milestones/01M6QBTXW3HA33YWZ610FEWNGZ",
+        "/app/milestones/01M6QBTXTYDTJZ8H71E3AJWKCR",
+        "/app/milestones/01M6QBTXSJ076DK803WJ4617ZN"
+      ]
+    }
+  ],
+  "expectedConflictConsoleErrors": [
+    {
+      "eventId": 4,
+      "width": 1440,
+      "reason": "Verified stale-version refusal",
+      "request": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/settings.update",
+        "method": "POST",
+        "body": {
+          "commandId": "01M6QBPAG6VMASY2NAMVCDFXVK",
+          "expected": [],
+          "input": {
+            "version": 9,
+            "changes": {
+              "readinessVersion": 2,
+              "readinessHour": 8,
+              "readinessLeadDays": 6
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "error": {
+            "requestId": "01M6QBPAHQDQV4814TVXDBKYXP",
+            "operation": "POST /api/v1/commands/settings.update",
+            "code": "version_conflict",
+            "message": "Readiness automation has current version 3",
+            "retry": "after_change",
+            "currentVersion": 3
+          }
+        }
+      },
+      "window": {
+        "start": 1793932863981,
+        "end": 1793932864164
+      }
+    },
+    {
+      "eventId": 5,
+      "width": 1440,
+      "reason": "Verified stale-version refusal",
+      "request": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.samples.remove",
+        "method": "POST",
+        "body": {
+          "commandId": "01M6QBPD2FAA1GB9Q8ZTXN0DEM",
+          "expected": [
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBPCWF0WNGMVPA5FZEKERM"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBPCWF5THVTYCXTE03B1TE"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBPCWF666TBH88KX5X7QH9"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBPCWFBTH1P2WKKF5H628F"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBPCWF092Q8FP4KX87MWWG"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBPCWF2WVTJF2HVWGN9AA8"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBPCWF4F2RTF0RYPMS2KVE"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBPCWF90BE6GM2WW5CQVGY"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBPCWFEXNZJ4AZPRYK9RVR"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBPCWG3PKTJWGSX1DEM1E7"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBPCWG3YDJQ4R2BMGPQP0C"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBPCWG6CZEXR959XECEYYA"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBPCWGPJQHB60X62YG3FFS"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBPCWGYTPYHEY5PJKFQ4QT"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBPCWHAGJHGF4NX4EQW6K6"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBPCWHAJ1K1VS0F9RY8S4D"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBPCWHH1PCYGB9HVRYP0CT"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBPCWHVNF40XSE5WHFCRCN"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000705",
+                "recordId": "01M6QBPCWH3CECSYJ5NSAQYAC5"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000705",
+                "recordId": "01M6QBPCWH8NVJ1RZDJ1AJ9ACF"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000705",
+                "recordId": "01M6QBPCWHZQ65S8A2AN4DCHJS"
+              },
+              "version": 1
+            }
+          ],
+          "input": {
+            "installationId": "01M6QBPCWEMKBQ3KH8RJ6KEH9J"
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "error": {
+            "requestId": "01M6QBPD3RTEBEQ87ZTGBD3D77",
+            "operation": "POST /api/v1/commands/launch.samples.remove",
+            "code": "version_conflict",
+            "message": "campaign has current version 2",
+            "retry": "after_change",
+            "currentVersion": 2
+          }
+        }
+      },
+      "window": {
+        "start": 1793932866617,
+        "end": 1793932866691
+      }
+    },
+    {
+      "eventId": 10,
+      "width": 390,
+      "reason": "Verified stale-version refusal",
+      "request": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/settings.update",
+        "method": "POST",
+        "body": {
+          "commandId": "01M6QBVSZN2Q5GCGAX962Q6FD9",
+          "expected": [],
+          "input": {
+            "version": 17,
+            "changes": {
+              "readinessVersion": 4,
+              "readinessHour": 8,
+              "readinessLeadDays": 7
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "error": {
+            "requestId": "01M6QBVT1F34WXW8Y6WR4SG0PJ",
+            "operation": "POST /api/v1/commands/settings.update",
+            "code": "version_conflict",
+            "message": "Readiness automation has current version 5",
+            "retry": "after_change",
+            "currentVersion": 5
+          }
+        }
+      },
+      "window": {
+        "start": 1793933043677,
+        "end": 1793933043833
+      }
+    },
+    {
+      "eventId": 11,
+      "width": 390,
+      "reason": "Verified stale-version refusal",
+      "request": {
+        "url": "http://127.0.0.1:41889/api/v1/commands/launch.samples.remove",
+        "method": "POST",
+        "body": {
+          "commandId": "01M6QBVWN1N5P3W2V9BCP42AZX",
+          "expected": [
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBVWAA03CETWBCKXKJ08CV"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBVWAA5YCJZFA8KX985S2S"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBVWAAAFFKP74B068488JX"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000701",
+                "recordId": "01M6QBVWAAF1YCCAYRYFPS6D7M"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBVWAB484V3T390ECHSQES"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBVWAB6GHQR0C2EJ55HCRN"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBVWABBE9VYZ0QSV8691EM"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBVWABJX673GJCCWA5HFWC"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000702",
+                "recordId": "01M6QBVWABYKPWP9Z9H0ND91GA"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBVWAC206Y9CN4NJM756M6"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBVWAC8Q51WDRB2N3HGM3B"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBVWACDRMT0FWB3ZNSPMGT"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBVWACGSE3SW94GP63NPAF"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000703",
+                "recordId": "01M6QBVWACYCJ09AR9NY6044F6"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBVWADJ5VN3WPP10E8Z83N"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBVWADPGK5JKA6SWRQQ59V"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBVWADS5YKT3P7HATBDMTH"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000704",
+                "recordId": "01M6QBVWADT6W90AX094QWZH5J"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000705",
+                "recordId": "01M6QBVWADAC567ZRQH67A7DN5"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000705",
+                "recordId": "01M6QBVWADKTV8SAMF77JQG007"
+              },
+              "version": 1
+            },
+            {
+              "ref": {
+                "appId": "00000000000000000000000700",
+                "entityId": "00000000000000000000000705",
+                "recordId": "01M6QBVWADR52G1TDPVWQBW7DD"
+              },
+              "version": 1
+            }
+          ],
+          "input": {
+            "installationId": "01M6QBVWAA6PCC8B74XXE6VNEA"
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "error": {
+            "requestId": "01M6QBVWPBFFKZQ2RK8HHP57JF",
+            "operation": "POST /api/v1/commands/launch.samples.remove",
+            "code": "version_conflict",
+            "message": "campaign has current version 2",
+            "retry": "after_change",
+            "currentVersion": 2
+          }
+        }
+      },
+      "window": {
+        "start": 1793933046404,
+        "end": 1793933046489
+      }
+    }
+  ],
+  "activityOrdering": [
+    {
+      "width": 1440,
+      "campaignId": "01M6QBPGW175RZA3JSZ2XFQCKM",
+      "authored": [
+        {
+          "commandId": "01M6QBPGXKZE2620C18NSZT595",
+          "name": "Zulu release review",
+          "objective": "Review the supplier evidence",
+          "started": 1793932870579,
+          "finished": 1793932870628,
+          "version": 2,
+          "occurredAt": "2026-11-06T02:41:10.600Z"
+        },
+        {
+          "commandId": "01M6QBPH0FG9AZKNPG5X3TXMT8",
+          "name": "Alpha release preparation",
+          "objective": "Prepare the approved package",
+          "started": 1793932870671,
+          "finished": 1793932870730,
+          "version": 3,
+          "occurredAt": "2026-11-06T02:41:10.692Z"
+        },
+        {
+          "commandId": "01M6QBPH3S9TGTWD8MAEAYJYZP",
+          "name": "Mike release confirmation",
+          "objective": "Confirm the delivery handover",
+          "started": 1793932870777,
+          "finished": 1793932870826,
+          "version": 4,
+          "occurredAt": "2026-11-06T02:41:10.798Z"
+        }
+      ],
+      "expectedActions": [
+        "01M6QBPH3S9TGTWD8MAEAYJYZP",
+        "01M6QBPH0FG9AZKNPG5X3TXMT8",
+        "01M6QBPGXKZE2620C18NSZT595"
+      ],
+      "observedActions": [
+        "01M6QBPH3S9TGTWD8MAEAYJYZP",
+        "01M6QBPH3S9TGTWD8MAEAYJYZP",
+        "01M6QBPH0FG9AZKNPG5X3TXMT8",
+        "01M6QBPH0FG9AZKNPG5X3TXMT8",
+        "01M6QBPGXKZE2620C18NSZT595",
+        "01M6QBPGXKZE2620C18NSZT595"
+      ],
+      "renderedActions": [
+        "01M6QBPH3S9TGTWD8MAEAYJYZP",
+        "01M6QBPH0FG9AZKNPG5X3TXMT8",
+        "01M6QBPGXKZE2620C18NSZT595"
+      ],
+      "groups": [
+        {
+          "occurredAt": "2026-11-06T02:41:10.798Z",
+          "changes": [
+            {
+              "field": "Objective",
+              "value": "Prepare the approved package → Confirm the delivery handover"
+            },
+            {
+              "field": "Name",
+              "value": "Alpha release preparation → Mike release confirmation"
+            }
+          ],
+          "commandId": "01M6QBPH3S9TGTWD8MAEAYJYZP"
+        },
+        {
+          "occurredAt": "2026-11-06T02:41:10.692Z",
+          "changes": [
+            {
+              "field": "Name",
+              "value": "Zulu release review → Alpha release preparation"
+            },
+            {
+              "field": "Objective",
+              "value": "Review the supplier evidence → Prepare the approved package"
+            }
+          ],
+          "commandId": "01M6QBPH0FG9AZKNPG5X3TXMT8"
+        },
+        {
+          "occurredAt": "2026-11-06T02:41:10.600Z",
+          "changes": [
+            {
+              "field": "Name",
+              "value": "Initial activity campaign → Zulu release review"
+            },
+            {
+              "field": "Objective",
+              "value": "Initial activity objective → Review the supplier evidence"
+            }
+          ],
+          "commandId": "01M6QBPGXKZE2620C18NSZT595"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "campaignId": "01M6QBW0HYQ2RAJQFTAKCRXC32",
+      "authored": [
+        {
+          "commandId": "01M6QBW0KJJW93NMQ5Z8YEHNMP",
+          "name": "Zulu release review",
+          "objective": "Review the supplier evidence",
+          "started": 1793933050482,
+          "finished": 1793933050525,
+          "version": 2,
+          "occurredAt": "2026-11-06T02:44:10.500Z"
+        },
+        {
+          "commandId": "01M6QBW0PCJA8WQHHR6HB9XBEP",
+          "name": "Alpha release preparation",
+          "objective": "Prepare the approved package",
+          "started": 1793933050572,
+          "finished": 1793933050620,
+          "version": 3,
+          "occurredAt": "2026-11-06T02:44:10.592Z"
+        },
+        {
+          "commandId": "01M6QBW0S9S4N5C78W5J2ZCVNW",
+          "name": "Mike release confirmation",
+          "objective": "Confirm the delivery handover",
+          "started": 1793933050666,
+          "finished": 1793933050715,
+          "version": 4,
+          "occurredAt": "2026-11-06T02:44:10.687Z"
+        }
+      ],
+      "expectedActions": [
+        "01M6QBW0S9S4N5C78W5J2ZCVNW",
+        "01M6QBW0PCJA8WQHHR6HB9XBEP",
+        "01M6QBW0KJJW93NMQ5Z8YEHNMP"
+      ],
+      "observedActions": [
+        "01M6QBW0S9S4N5C78W5J2ZCVNW",
+        "01M6QBW0S9S4N5C78W5J2ZCVNW",
+        "01M6QBW0PCJA8WQHHR6HB9XBEP",
+        "01M6QBW0PCJA8WQHHR6HB9XBEP",
+        "01M6QBW0KJJW93NMQ5Z8YEHNMP",
+        "01M6QBW0KJJW93NMQ5Z8YEHNMP"
+      ],
+      "renderedActions": [
+        "01M6QBW0S9S4N5C78W5J2ZCVNW",
+        "01M6QBW0PCJA8WQHHR6HB9XBEP",
+        "01M6QBW0KJJW93NMQ5Z8YEHNMP"
+      ],
+      "groups": [
+        {
+          "occurredAt": "2026-11-06T02:44:10.687Z",
+          "changes": [
+            {
+              "field": "Objective",
+              "value": "Prepare the approved package → Confirm the delivery handover"
+            },
+            {
+              "field": "Name",
+              "value": "Alpha release preparation → Mike release confirmation"
+            }
+          ],
+          "commandId": "01M6QBW0S9S4N5C78W5J2ZCVNW"
+        },
+        {
+          "occurredAt": "2026-11-06T02:44:10.592Z",
+          "changes": [
+            {
+              "field": "Objective",
+              "value": "Review the supplier evidence → Prepare the approved package"
+            },
+            {
+              "field": "Name",
+              "value": "Zulu release review → Alpha release preparation"
+            }
+          ],
+          "commandId": "01M6QBW0PCJA8WQHHR6HB9XBEP"
+        },
+        {
+          "occurredAt": "2026-11-06T02:44:10.500Z",
+          "changes": [
+            {
+              "field": "Name",
+              "value": "Initial activity campaign → Zulu release review"
+            },
+            {
+              "field": "Objective",
+              "value": "Initial activity objective → Review the supplier evidence"
+            }
+          ],
+          "commandId": "01M6QBW0KJJW93NMQ5Z8YEHNMP"
+        }
+      ]
+    }
+  ]
+}

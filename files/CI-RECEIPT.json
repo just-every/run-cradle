@@ -1,0 +1,15 @@
+{
+  "runId": 42152796818,
+  "event": "push",
+  "head": "e6a77220e30e200460edc6e751b46c7b7e19c377",
+  "status": "completed",
+  "conclusion": "failure",
+  "rootCauseJob": 127679816621,
+  "rootCauseStep": "Check generated contract documents",
+  "command": "node src/base/contract-docs.mjs check",
+  "observedFailure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+  "exit": 1,
+  "aggregateJob": 127679926334,
+  "shards": "skipped",
+  "disposition": "Expected generated-view-only failure; leave views for the guarded lander. No repair or rerun."
+}

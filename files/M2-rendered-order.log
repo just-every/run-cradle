@@ -1,0 +1,38 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE ACT-001 1: three fresh native campaign edits -> public detail returns reverse authored command order
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Initially collapsed activity groups already show reverse authored write order
++ actual - expected
+
+  [
++   '01M6QC1RDSR2HY1R947MRVX9A1',
++   '01M6QC1RKER6F3YGS6ZFV70B29',
+    '01M6QC1RTB2K6NXXN18F1TBWMB',
+-   '01M6QC1RKER6F3YGS6ZFV70B29',
+-   '01M6QC1RDSR2HY1R947MRVX9A1'
+  ]
+
+    at verifyCampaignActivityOrderScreens (file:///workspace/run-cradle/tests/helpers/launch-activity-order-screens.mjs:16:9)
+    at async file:///tmp/cradle-activity-probe.mjs:16:18 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    '01M6QC1RDSR2HY1R947MRVX9A1',
+    '01M6QC1RKER6F3YGS6ZFV70B29',
+    '01M6QC1RTB2K6NXXN18F1TBWMB'
+  ],
+  expected: [
+    '01M6QC1RTB2K6NXXN18F1TBWMB',
+    '01M6QC1RKER6F3YGS6ZFV70B29',
+    '01M6QC1RDSR2HY1R947MRVX9A1'
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

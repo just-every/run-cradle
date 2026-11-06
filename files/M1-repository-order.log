@@ -1,0 +1,49 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Public campaign detail returns the authored edits newest first, with adjacent facts; observed entries are never sorted
++ actual - expected
+
+  [
++   '01M6QBZ5AY94YXEE6K6AGYBVHB',
++   '01M6QBZ5AY94YXEE6K6AGYBVHB',
++   '01M6QBZ5EC67XQ2V2RKVR44Q9E',
++   '01M6QBZ5EC67XQ2V2RKVR44Q9E',
+    '01M6QBZ5HNKKF7SWFPZNV1JZQ4',
+    '01M6QBZ5HNKKF7SWFPZNV1JZQ4',
+-   '01M6QBZ5EC67XQ2V2RKVR44Q9E',
+-   '01M6QBZ5EC67XQ2V2RKVR44Q9E',
+-   '01M6QBZ5AY94YXEE6K6AGYBVHB',
+-   '01M6QBZ5AY94YXEE6K6AGYBVHB'
+  ]
+
+    at verifyPublicCampaignActivityOrder (file:///workspace/run-cradle/tests/helpers/launch-activity-order-journey.mjs:66:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///tmp/cradle-activity-probe.mjs:20:25 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    '01M6QBZ5AY94YXEE6K6AGYBVHB',
+    '01M6QBZ5AY94YXEE6K6AGYBVHB',
+    '01M6QBZ5EC67XQ2V2RKVR44Q9E',
+    '01M6QBZ5EC67XQ2V2RKVR44Q9E',
+    '01M6QBZ5HNKKF7SWFPZNV1JZQ4',
+    '01M6QBZ5HNKKF7SWFPZNV1JZQ4'
+  ],
+  expected: [
+    '01M6QBZ5HNKKF7SWFPZNV1JZQ4',
+    '01M6QBZ5HNKKF7SWFPZNV1JZQ4',
+    '01M6QBZ5EC67XQ2V2RKVR44Q9E',
+    '01M6QBZ5EC67XQ2V2RKVR44Q9E',
+    '01M6QBZ5AY94YXEE6K6AGYBVHB',
+    '01M6QBZ5AY94YXEE6K6AGYBVHB'
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
