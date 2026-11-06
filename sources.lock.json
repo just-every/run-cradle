@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "f7931de0ec2432ffd794a8115541af03a41f2e2983803c9c99036a96d2828332",
       "executable": false
     },
     "DEMO.md": {
@@ -12293,6 +12293,10 @@
       "sha256": "4aa2f2580ccb399044821a78af343712790d7479d6d8819ca0aff4e2ac20168d",
       "executable": false
     },
+    "tests/helpers/key-writer-history-journey.mjs": {
+      "sha256": "41b4d12f77628d7e777925fdc153f3dc8ad0ee3026f94cb77c433e7aaefb6848",
+      "executable": false
+    },
     "tests/helpers/launch-authority-runtime.mjs": {
       "sha256": "a49810deba0653b3a02e90bb599545b8484b10fca2f57ea560bbeb71afba31dd",
       "executable": false
@@ -12962,7 +12966,7 @@
       "executable": false
     },
     "tests/helpers/rest-api-journey.mjs": {
-      "sha256": "a6e9aeaaf95bf1b9cc2016805d72e84c96499c501b4df03550923c653e9fc533",
+      "sha256": "0229cff5d1f958d7d0e6f751999aa522690d2c7ef10a4d670c9ad4434076cdf5",
       "executable": false
     },
     "tests/helpers/saml-provider.mjs": {
@@ -13558,7 +13562,7 @@
       "executable": false
     },
     "tests/user-api-keys.mjs": {
-      "sha256": "f0b0985dc42ab809f15b5ecbf75bd8b770bd25fa3603a9f175d51374d90ceb86",
+      "sha256": "29a10fdf8a70c520ff42cd613f2de76d63ea43fc2370707d3736aac20bf0e812",
       "executable": false
     },
     "tests/user-automations.mjs": {
