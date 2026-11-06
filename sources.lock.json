@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "97de656b9628ba6742d82077a647209229abbd50a5302935a48aa61faa86258b",
       "executable": false
     },
     "DEMO.md": {
@@ -12306,7 +12306,7 @@
       "executable": false
     },
     "tests/helpers/launch-base-authority-runtime.mjs": {
-      "sha256": "88c0b3ffb57ab8152494d496be74930cd1ba2f463398cfa943ff4e3d8ae7ac0a",
+      "sha256": "26c4e30589ad737d73f5d8147a4faaf739d1963a2620fc7780bf552f6e88b6f4",
       "executable": false
     },
     "tests/helpers/launch-campaign-clauses.mjs": {
@@ -12419,6 +12419,10 @@
     },
     "tests/helpers/launch-portfolio-screens.mjs": {
       "sha256": "df93d99567527a168902c6565a76120b896fab10554d2b333bbfe62b8243a57d",
+      "executable": false
+    },
+    "tests/helpers/launch-queued-campaign-archive.mjs": {
+      "sha256": "2b05f72a1179ee7abb41d8a9962350a54385790752143c616811a087ab29d475",
       "executable": false
     },
     "tests/helpers/launch-readiness-rescheduling.mjs": {
@@ -13146,7 +13150,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "d4ce35d21d3cf57a3a4c1dd2bf42660e34400ad96483cace58af3cd7da0306ef",
+      "sha256": "7850f606adf6860f1a7ee26e9a361cd9905e3c71e182f9f7e0e827b38a420ba0",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
