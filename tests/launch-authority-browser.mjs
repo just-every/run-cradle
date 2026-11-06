@@ -11,12 +11,13 @@ import { navigateFromSignInToApp, openSignInFromDocs } from './helpers/public-ap
 import { accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilityWidths, auditAccessibility } from './helpers/accessibility-evidence.mjs'
 import { campaignGridStateJourney } from './helpers/campaign-grid-state-journey.mjs'
 import { installKeyboardInteractions } from './helpers/accessibility-keyboard.mjs'
+import { firstRunEmptyBrowser, firstRunPopulatedControl } from './helpers/launch-first-run-journey.mjs'
 
 test('[BASE-ACCESS-003 VIEW-001 VIEW-004 CAMP-001] native owner creation, scoped transport and safe October error states at 1440/390', async () => {
 const output=process.env.CRADLE_AUTHORITY_EVIDENCE??path.join(tmpdir(),'launch-authority-browser')
 const receipt={ commit:spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim(), dirty:!!spawnSync('git',['status','--porcelain'],{encoding:'utf8'}).stdout.trim(), startedAt:new Date().toISOString(), completedAt:null, environment:'local emitted Worker, synthetic D1; no hosted claim', captures:[], created:[], related:[], errors:[], generatedRequests:[] }
 const h=await launchAuthorityRuntime()
-let browser, production
+let browser, production, firstRunControl
 try {
   await mkdir(output,{recursive:true})
   browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP cradle.authority.test 127.0.0.1','--no-proxy-server']})
@@ -167,6 +168,7 @@ try {
   production=await launchBaseAuthorityRuntime()
   const productionOrigin=production.origin
   const baseOwner=await production.bootstrap()
+  firstRunControl=await firstRunPopulatedControl()
   const nativeCookie=await production.nativeCredential(baseOwner.owner)
   for(const width of accessibilityWidths) {
     const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:960},ignoreHTTPSErrors:true})),page=await context.newPage()
@@ -191,6 +193,7 @@ try {
     assert.equal(new URL(page.url()).pathname,'/app')
     await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
     await capture(page,'production-home',width)
+    baseOwner.cookie=await firstRunEmptyBrowser({page,context,h:production,control:firstRunControl,width,capture,receipt})
     await context.close()
   }
   assert.deepEqual(receipt.errors,[])
@@ -202,6 +205,7 @@ try {
 } finally {
   if(browser)await browser.close()
   await production?.close()
+  await firstRunControl?.h.close()
   await h.close()
 }
 
