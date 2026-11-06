@@ -12242,7 +12242,7 @@
       "executable": false
     },
     "tests/helpers/file-stores-browser.mjs": {
-      "sha256": "7201958f8365a90eee497c9fa47e8af0d885fb35397bb07d83b81e725f1712d0",
+      "sha256": "42a0807c02e0b20d7907c3dbd1ffe87f240e1b272c8c302b07839de38c2153de",
       "executable": false
     },
     "tests/helpers/file-stores-journey.mjs": {
@@ -12254,7 +12254,7 @@
       "executable": false
     },
     "tests/helpers/file-stores-provider.mjs": {
-      "sha256": "84d9ec20b9f76208deec8bb18d7c1f5011979998c33eab65c7c0cc2972e7c9fb",
+      "sha256": "ed8a36a1abeb304726da5dc7409b1b02dd3897216068f9b51dcddc24de60bd62",
       "executable": false
     },
     "tests/helpers/file-upload-journey.mjs": {
@@ -13046,7 +13046,7 @@
       "executable": false
     },
     "tests/helpers/store-reference-resolution.mjs": {
-      "sha256": "9109cc95f0b9485aac9762b3d32bbb6318bdb69090925ce3b0e301dcddef38f7",
+      "sha256": "08e598b8da649bcd801a1cfa86a87ba150eff888490ae75399daaeea1f125352",
       "executable": false
     },
     "tests/helpers/teams-app-network-edge.mjs": {
