@@ -1,0 +1,39 @@
+{
+  "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "views_write": {
+    "command": "node src/base/contract-docs.mjs write",
+    "exit": 0,
+    "output": "Wrote 1 contract documents.\n"
+  },
+  "views_check": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 0,
+    "output": "Contract documents are current.\n"
+  },
+  "restore": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+  "restored_views_check": {
+    "exit": 1,
+    "expected": true,
+    "output": "ACCEPTANCE.md: generated content differs; run contract-docs write.\n"
+  },
+  "lock_write": {
+    "command": "node scripts/edition-authoring/cli.mjs lock",
+    "exit": 0
+  },
+  "lock_check": {
+    "command": "node scripts/edition-authoring/cli.mjs check",
+    "exit": 0
+  },
+  "ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration changed"
+  },
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "working_tree_clean": true
+}

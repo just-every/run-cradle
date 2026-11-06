@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "tag": "sd-cradle-c-f214",
+  "repository": "just-every/run-cradle",
+  "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "branch": "cloud/sd-cradle-c-f214",
+  "required_base": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "recorded_at_utc": "2026-11-06T05:04:31.740418+00:00",
+  "scope": "CAMP-009 selected public queued-run cancellation proof for campaign and one risk child",
+  "status_before": "partial",
+  "status_after": "partial",
+  "done_claim": false,
+  "new_product_commits": 0,
+  "source_edits": [],
+  "plan_rows_changed": [],
+  "checks": [
+    {
+      "command": "cloud_run pnpm install --frozen-lockfile",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run timeout 1200 npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-installed-event-control.mjs",
+      "exit": 0,
+      "node": "22.20.0",
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0,
+      "duration_ms": 377495.915384,
+      "log": "event-control.tap"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "registrations": 174,
+      "cap": 200,
+      "log": "test-budget.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "mechanical": "mechanical.json",
+  "commit_audit": "commit-audit.json",
+  "product_custody": "custody.json",
+  "ci": {
+    "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+    "branch": "cloud/sd-cradle-c-f214",
+    "run": 42165957266,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "failure",
+    "classification": "permitted generated-view-only failure",
+    "failed_build_job": 127722410446,
+    "failed_step": "Check generated contract documents",
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "runtime_shards": "skipped following generated-view failure",
+    "repairs": 0,
+    "reruns": 0,
+    "dispatches": 0,
+    "gh_calls": 6
+  },
+  "ci_gh_calls": 6,
+  "publication_scan": {
+    "status": "not run",
+    "owner": "guarded fleet lander"
+  },
+  "candidate_run_site": {
+    "status": "not run",
+    "owner": "guarded fleet lander"
+  },
+  "browser_proof": {
+    "status": "not run",
+    "reason": "No screen or UI behavior changed in this continuation or its selected-point base diff"
+  },
+  "remaining_gap": "Other child-subject and multi-subject runs, in-flight combinations, readiness cancellation, complete withdrawals from lenses and digests, overdue and portfolio counts, search withdrawals, held mail disposal, complete child-preservation matrix, ct release prerequisites and independent whole-clause judgment remain unchanged.",
+  "blocked": false,
+  "pr": null,
+  "evidence_destination": "refs/heads/evidence/sd-cradle-c-f214",
+  "log_sanitization": "Failed CI step logs omit environment-value lines; original command, assertion diagnostic and exit remain."
+}

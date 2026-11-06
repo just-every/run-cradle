@@ -1,0 +1,18 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f214",
+  "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "remote_ref": "5dddd01d5ace8d43a44f888031fc69a3f789ff61\trefs/heads/cloud/sd-cradle-c-f214",
+  "product_push": {
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sd-cradle-c-f214",
+    "exit": 0,
+    "file": "product-push.log"
+  },
+  "new_product_commits": 0,
+  "generated_views_committed": false,
+  "plan_rows_changed": [],
+  "clause_before": "partial",
+  "clause_after": "partial",
+  "selected_points": "Already present in required base; freshly verified",
+  "pr": null
+}

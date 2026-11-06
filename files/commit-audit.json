@@ -1,0 +1,16 @@
+[
+  {
+    "commit": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+    "author": {
+      "name": "Run Edit Run fleet",
+      "email": "fleet@runeditrun.com"
+    },
+    "committer": {
+      "name": "Run Edit Run fleet",
+      "email": "fleet@runeditrun.com"
+    },
+    "trailers": "",
+    "message": "Prove queued campaign archive cancellation through emitted Worker",
+    "status_rows": 257
+  }
+]
