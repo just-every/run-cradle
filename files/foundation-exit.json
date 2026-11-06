@@ -1,0 +1,5 @@
+{
+  "head": "212a0b202ba32d1c54f0bb2b0a20a6614328923e",
+  "command": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium timeout 1200 node --test --test-concurrency=1 tests/foundation-shell.mjs",
+  "exit": 0
+}

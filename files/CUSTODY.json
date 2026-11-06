@@ -1,0 +1,20 @@
+{
+  "head": "212a0b202ba32d1c54f0bb2b0a20a6614328923e",
+  "branch": "cloud/sd-cradle-c-f182",
+  "remote_refs": [
+    "212a0b202ba32d1c54f0bb2b0a20a6614328923e\trefs/heads/cloud/sd-cradle-c-f182",
+    "234432f0b726fba470fb6ce4e1816f50cd082601\trefs/heads/main"
+  ],
+  "product_push": {
+    "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sd-cradle-c-f182",
+    "attempts": 1,
+    "exit": 0
+  },
+  "candidate_commits": 1,
+  "identity_audit": "pass; fleet authors and committers; no trailers",
+  "worktree_clean": true,
+  "base_in_ancestry": true,
+  "landing": false,
+  "publication_scan": "Not run in cloud; required fleet gate",
+  "candidate_run_site": "Not run; required fleet gate"
+}

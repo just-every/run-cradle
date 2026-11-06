@@ -1,0 +1,34 @@
+{
+  "head": "212a0b202ba32d1c54f0bb2b0a20a6614328923e",
+  "commands": [
+    {
+      "label": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "label": "views-check",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "label": "restore-views",
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "label": "lock",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "label": "lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    }
+  ],
+  "ledger": {
+    "command": "none; no migration changed",
+    "exit": 0
+  }
+}

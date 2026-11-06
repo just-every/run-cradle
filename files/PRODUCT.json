@@ -1,0 +1,28 @@
+{
+  "head": "212a0b202ba32d1c54f0bb2b0a20a6614328923e",
+  "branch": "cloud/sd-cradle-c-f182",
+  "repository": "just-every/run-cradle",
+  "before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "status_rows_before": 257,
+  "status_rows_after": 257,
+  "changed_clauses": [
+    "HOME-002"
+  ],
+  "clause_status": {
+    "HOME-002": {
+      "before": "partial",
+      "after": "partial"
+    }
+  },
+  "generated_views_committed": false,
+  "pr": null
+}

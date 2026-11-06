@@ -1,0 +1,36 @@
+{
+  "head": "212a0b202ba32d1c54f0bb2b0a20a6614328923e",
+  "method": "One ephemeral response mutation per run of homepageJourney; product source and committed tree remain unchanged.",
+  "rows": [
+    {
+      "id": "M1",
+      "change": "Hide the views section in delivered CSS",
+      "result": "caught",
+      "failure": "views: content is rendered"
+    },
+    {
+      "id": "M2",
+      "change": "Remove the tables illustration in delivered HTML",
+      "result": "caught",
+      "failure": "tables: .lp-screen is present"
+    },
+    {
+      "id": "M3",
+      "change": "Replace a Run anchor with the installation sign-in door",
+      "result": "caught",
+      "failure": "No installation-only link: /signin"
+    },
+    {
+      "id": "M4",
+      "change": "Load an external stylesheet",
+      "result": "caught",
+      "failure": "Same-origin resource: https://synthetic-cradle.invalid/resource.css\n+ actual - expected\n\n+ 'https://synthetic-cradle.invalid'\n- 'http://127.0.0.1:39719'\n       ^\n"
+    },
+    {
+      "id": "M5",
+      "change": "Read an installation data endpoint",
+      "result": "caught",
+      "failure": "No installation data request: http://127.0.0.1:39719/api/synthetic-cradle-1"
+    }
+  ]
+}

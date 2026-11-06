@@ -1,0 +1,8 @@
+Command: gh run view 42152193332 --repo just-every/run-cradle --job 127677864448 --log-failed
+ACCEPTANCE.md: generated content differs; run contract-docs write.
+Process completed with exit code 1.
+
+Command: gh run view 42152193332 --repo just-every/run-cradle --job 127677980598 --log-failed
+Require the plan and every verification worker: Process completed with exit code 1; failed build dependency.
+
+Both log archive reads succeeded once. Environment lines are omitted from this public receipt.

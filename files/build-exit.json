@@ -1,0 +1,5 @@
+{
+  "head": "212a0b202ba32d1c54f0bb2b0a20a6614328923e",
+  "command": "npx -y @runeditrun/rer build",
+  "exit": 0
+}
