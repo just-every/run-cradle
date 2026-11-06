@@ -23,7 +23,7 @@ export async function settingsAttributionJourney({ h, page, b, actor, width, rec
   page.getByRole('button', { name: 'Save workspace', exact: true }).click(),
  ])
  const finishedAt = Date.now()
- assert.equal(saved.status(), 200, await saved.text())
+ assert.equal(saved.status(), 200, 'The native Settings save succeeds before its document reload')
  const body = saved.request().postDataJSON()
  assert.equal(body.workspaceName, name, 'The actual browser request carries the intended name')
  assert.equal(body.version, before.version, 'The browser saves the version it read')
@@ -33,6 +33,8 @@ export async function settingsAttributionJourney({ h, page, b, actor, width, rec
  const status = (await read(`/api/v1/commands/${commandId}`)).data
  assert.equal(status.action, 'settings.update')
  assert.equal(status.state, 'committed', 'The captured save has a publicly committed command')
+ assert.equal(status.result.workspaceName, name, 'The admitted command result matches the captured browser save')
+ assert.equal(status.result.version, before.version + 1)
  const auditRoute = '/api/v1/launch/admin-audit'
  const audit = (await read(auditRoute)).data.items.filter(row => row.action === 'settings.update')
  const matching = audit.filter(row => row.eventId === commandId)

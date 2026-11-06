@@ -12981,6 +12981,10 @@
       "sha256": "3bfd1645f101f922a5b0f130ec17791390031646eeabeb03b0a5c41ffdf6b4b5",
       "executable": false
     },
+    "tests/helpers/settings-attribution-journey.mjs": {
+      "sha256": "8975a7ecf91ad3f78185fee850b3f18720f48a667d1360ca6161871ef9d50903",
+      "executable": false
+    },
     "tests/helpers/settings-members-accessibility.mjs": {
       "sha256": "ab8a34e856a02b506241fe8017ed532ff8454e6e6584f3e8e2d3ae3cd752dcdf",
       "executable": false
