@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "3cb5e82e26550cf061de03f92a27dc70343992a91327cb0528b67665fc28002d",
       "executable": false
     },
     "DEMO.md": {
@@ -12774,7 +12774,7 @@
       "executable": false
     },
     "tests/helpers/records-grid-range-browser.mjs": {
-      "sha256": "6b42deb86bab7bbe4fe6ed21b0fc021fec5a24f38502a08859fb134650e3177f",
+      "sha256": "b5b7cc58413894e736b6d736a137ea19dd9a6a58ac5e1d58df20001f576912d0",
       "executable": false
     },
     "tests/helpers/records-grid-range-fixture.mjs": {

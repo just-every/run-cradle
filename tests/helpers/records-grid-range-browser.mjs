@@ -73,7 +73,14 @@ async function keyboardEditJourney(page, journey, base, name, value) {
   page.on('request', observe)
   await cell(0, 0).waitFor()
   // Reach the first cell from the document's normal Tab order, without focus injection.
-  for (let tabs = 0; tabs < 80 && !await focused(cell(0, 0)); tabs++) await page.keyboard.press('Tab')
+  for (let tabs = 0; tabs < 80 && !await focused(cell(0, 0)); tabs++) {
+    await page.keyboard.press('Tab')
+    const tools = page.getByRole('button', { name: 'Table tools', exact: true })
+    if (await focused(tools)) {
+      await tools.getByRole('tooltip').waitFor()
+      await journey.capture('grid-tools-tooltip')
+    }
+  }
   assert.equal(await focused(cell(0, 0)), true, 'Tab navigation enters the first grid cell')
   for (const [key, row, column] of [['ArrowRight', 0, 1], ['ArrowDown', 1, 1], ['ArrowLeft', 1, 0], ['ArrowUp', 0, 0], ['ArrowRight', 0, 1]]) {
     await page.keyboard.press(key)
@@ -152,7 +159,7 @@ async function rangePasteBrowserJourney(runtime, browser, width, output) {
     await fixture.values(fixture.before, 1)
     assert.deepEqual(await fixture.read(), beforeInvalid, 'Invalid paste preserves all 250 cells and every record version')
     assert.deepEqual(observed, [], 'Invalid paste submits no partial command')
-    await journey.capture('range-invalid')
+    await journey.capture('range-invalid', { viewport: true })
     await page.evaluate(text => navigator.clipboard.writeText(text), fixture.text)
     let pending = patch()
     await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+v`)
