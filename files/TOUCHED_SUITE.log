@@ -1,0 +1,17 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE IMPORT-005 2: native campaign CSV upload, preview, commit and human import.delete -> artifact withdrawn, original FILES object absent in 2036 ms after restart and scheduled delivery; imported records, versions, activity and unrelated bytes unchanged; missing and revoked authority refused unchanged
+✔ [IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file (16146.188593ms)
+✔ [IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells (1999.375852ms)
+✔ [SET-003] sample data installs and removes in one action, and removal is refused naming edited records (686.826967ms)
+✔ [VIEW-007] campaign pages follow a keyset cursor: a record added before the cursor neither repeats nor skips others (412.088911ms)
+✔ [PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good (213985.657999ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 290524.214094

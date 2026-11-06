@@ -1,0 +1,13 @@
+{
+  "command": "timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-operator-doors.mjs",
+  "head_at_start": "27775f3981567e723a043f8d3c15391344754b04",
+  "working_tree_dirty": true,
+  "source_and_test_bytes_match_candidate": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+  "candidate_changes_after_this_run": "Only source lock regeneration and commit; no source or test bytes changed after the full run.",
+  "exit": 0,
+  "tests": 5,
+  "passed": 5,
+  "failed": 0,
+  "elapsed_ms": 290524.214094,
+  "log": "TOUCHED_SUITE.log"
+}

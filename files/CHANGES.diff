@@ -1,0 +1,300 @@
+diff --git a/CONTRACT.md b/CONTRACT.md
+index 223e6ac..37d7c77 100644
+--- a/CONTRACT.md
++++ b/CONTRACT.md
+@@ -3130,7 +3130,7 @@ Judged from the code and tests at commit `d7dc8100256a244030024bb616a746d7f0ade6
+ | `IMPORT-002` | Merge keys | published | partial | `tests/launch-operator-doors.mjs`; a repeated key, an unknown owner, an unknown custom select option and an unknown phase or status are row-numbered errors that refuse confirmation and leave every public campaign readback unchanged; `tests/helpers/launch-import-merge.mjs`; a repeated key, an unknown owner, an unknown milestone type and a campaign outside the workspace are row-numbered errors that refuse confirmation and change nothing; empty and whitespace-only cells keep stored owners, due dates, types, statuses, dates and conflict reasons. | Missing a cited merge-key journey that tries duplicate file keys and invalid select values and reads a stored value after a whitespace-only incoming value; the cited journey covers campaign matching, a deliverable preview and unknown owner/campaign errors only. |
+ | `IMPORT-003` | Commit | published | partial | `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": a valid two-update, one-create campaign import is uploaded and previewed over native HTTP, then test-only D1 triggers abort a later campaign update only after the earlier campaign name, version, tag and custom value are visible inside the transaction, then separately abort the activity write and committed-preview marker after the row mutations; each commit returns the internal server error rather than a validation or staleness refusal, and independent table snapshots plus public readbacks show every campaign, tag, custom value, version, activity entry, preview and marker, admission audit, event, outbox row, execution row and uploaded-file record unchanged with the reviewed preview still valid; with the fault removed the same preview commits once, replays without a second activity entry and serves its original bytes; invalid input is refused before commit. | Missing a cited commit-failure journey that executes an unsafe multirow transaction and reads every row unchanged after rollback; invalid input is refused before commit, while the successful path and replay are read back. Supplemental campaign late-transaction rollback assertions are now cited in Evidence; independent whole-clause judgment remains outstanding. Status remains partial. |
+ | `IMPORT-004` | Replay and staleness | published | partial | `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": native HTTP proves expiry exactly thirty minutes after independently controlled issuance, confirmation one millisecond before expiry, expiry-specific refusal exactly at and after expiry with records, activity, committed imports and effects unchanged, retained record-staleness refusal and immediate replay. | Missing explicit missing or wrong token and idempotency-key validation proof, delayed replay throughout the 24-hour window and broader replay and authority combinations. Independent whole-clause judgment and generated-document synchronization remain release prerequisites; this expiry proof makes no DONE claim. |
+-| `IMPORT-005` | Stored file | published | partial | `tests/launch-operator-doors.mjs` | Missing a cited import-deletion journey that deletes the import record and verifies the stored file is gone within five minutes; the cited journeys only download the retained file. |
++| `IMPORT-005` | Stored file | published | partial | `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file", extended by `tests/helpers/launch-import-deletion.mjs`: native upload, preview and commit followed by the mounted human import.delete command withdraws one committed campaign import and its preview content, fences its file doors, and confirms original FILES object removal within 300000 ms after Worker restart and scheduled delivery; every campaign, version and activity entry and an unrelated import file remain exact; missing and revoked import.delete authority refuse unchanged, captured confirmation cannot resurrect the import, and repeated delivery retains one cleanup and audit receipt. | Missing acceptance 1's complete any-operator and cross-kind download matrix, deletion proof for other import kinds, shared-file custody beyond conservative refusal of shared or non-import artifacts, archive and restore erasure, and broader authority, concurrency and crash combinations. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; independent whole-clause judgment remains outstanding. Status remains partial with no wider deletion grant. |
+ | `SET-001` | Settings area | published | partial | `tests/ui-launch-operator-doors.mjs` | Missing a cited Settings journey that reads every named section/current usage and changes a setting with actor/time readback while distinguishing already-dispatched from later work; the cited journey exercises custom fields, samples and ownership only. |
+ | `SET-002` | AI configuration | published | partial | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-ui.mjs` | Missing a cited unconfigured-provider journey that refuses enabling AI with missing configuration named and shows no campaign-brief dispatch; the cited journeys use a fully configured provider and test AI off/on only. |
+ | `SET-003` | First run and sample data | published | partial | `tests/launch-operator-doors.mjs` | Missing a first-run journey in this clause's old evidence that exercises configured/unconfigured setup, durable completion and empty initial data; the cited operator-door file covers sample installation/removal only. The existing first-run journeys are in installed-home.mjs and ui-local-signin.mjs, which this old Evidence cell does not cite. |
+diff --git a/src/apps/launch/import-deletion.server.ts b/src/apps/launch/import-deletion.server.ts
+new file mode 100644
+index 0000000..ae1d6b0
+--- /dev/null
++++ b/src/apps/launch/import-deletion.server.ts
+@@ -0,0 +1,69 @@
++import { z } from 'zod'
++import type { Json } from '../../contracts/primitives'
++import type { CommandRegistry } from '../../core/registry/commands'
++import type { PolicyPort, RequestContext } from '../../domains/authority/ports'
++import { AuthorityError } from '../../domains/authority/errors'
++import { canonicalJson } from '../../domains/authority/grants.server'
++import { digest } from '../../domains/authority/crypto.server'
++import { idSchema } from '../../domains/authority/validators'
++import { trustedPredicate } from '../../domains/admission/sql.server'
++import { effects, removeRows, updateRows } from '../../domains/lifecycle/changes.server'
++import { requireQuiescentFiles } from '../../domains/lifecycle/file-writes.server'
++import { retainCleanup } from '../../domains/lifecycle/cleanup.server'
++import { STAGING_ENTITY } from '../../domains/evidence/staging.server'
++import { LAUNCH_APP_ID, launchEntities } from './contracts'
++
++const command = z.object({
++ commandId: idSchema, expected: z.array(z.never()).max(0),
++ input: z.object({ previewId: idSchema }).strict(),
++}).strict()
++
++/** Remove a campaign import artifact, never the business records it admitted.
++ * Shared or non-import files require their own custody path; refuse them intact. */
++export function registerLaunchImportDeletion(db: D1Database, policy: PolicyPort, commands: CommandRegistry) {
++ const identity = async (ctx: RequestContext, value: Pick<z.infer<typeof command>, 'commandId' | 'input'>) => {
++  if (ctx.principal.kind !== 'human') throw new AuthorityError('forbidden', 'A human operator must delete an import.', 403)
++  const canonicalInputHash = await digest(canonicalJson(value.input))
++  // Recheck the action before receipt replay, including after the artifact is gone.
++  const permit = await policy.authorize(ctx, { appId: LAUNCH_APP_ID, targetEntityId: launchEntities.campaign, action: 'import.delete', expected: [], cost: [], inputHash: canonicalInputHash, commandId: value.commandId })
++  return { appId: LAUNCH_APP_ID, canonicalInputHash, permit }
++ }
++ commands.register({
++  action: 'import.delete', description: 'Delete a retained campaign import and its original file, preserving imported records.',
++  inputSchema: z.toJSONSchema(command) as Json, input: command,
++  visible: async ctx => {
++   try { await identity(ctx, { commandId: LAUNCH_APP_ID, input: { previewId: LAUNCH_APP_ID } }); return true }
++   catch (error) { if (error instanceof AuthorityError) return false; throw error }
++  },
++  replayIdentity: identity,
++  prepare: async (ctx, value) => {
++   const { canonicalInputHash, permit } = await identity(ctx, value)
++   const preview = await db.prepare(`SELECT p.file_id,p.committed_command_id,f.object_key,f.version,f.state,f.source_id,f.entity_id,s.purpose
++    FROM portability_previews p JOIN evidence_files f ON f.id=p.file_id AND f.app_id=p.app_id
++    LEFT JOIN evidence_staging s ON s.id=f.record_id AND s.app_id=f.app_id
++    WHERE p.id=? AND p.app_id=? AND p.entity_id=? AND p.committed_command_id IS NOT NULL`)
++    .bind(value.input.previewId, LAUNCH_APP_ID, launchEntities.campaign)
++    .first<{ file_id: string; committed_command_id: string; object_key: string; version: number; state: string; source_id: string | null; entity_id: string; purpose: string | null }>()
++   if (!preview) throw new AuthorityError('not_found', 'Committed campaign import not found.', 404)
++   const privateArtifact = trustedPredicate(`EXISTS(SELECT 1 FROM evidence_files f JOIN evidence_staging s ON s.id=f.record_id AND s.app_id=f.app_id
++    WHERE f.id=? AND f.app_id=? AND f.entity_id=? AND f.state='available' AND f.version=? AND f.object_key=? AND f.source_id IS NULL AND s.purpose='import')
++    AND NOT EXISTS(SELECT 1 FROM portability_previews WHERE file_id=? AND id<>?)`,
++    [preview.file_id, LAUNCH_APP_ID, STAGING_ENTITY, preview.version, preview.object_key, preview.file_id, value.input.previewId])
++   if (!await db.prepare(`SELECT 1 WHERE ${privateArtifact.sql}`).bind(...privateArtifact.values).first())
++    throw new AuthorityError('version_conflict', 'This file is shared or is not a private retained import. Nothing was deleted.', 409)
++   const change = effects()
++   await requireQuiescentFiles(db, change)
++   change.guards.push(privateArtifact, trustedPredicate('EXISTS(SELECT 1 FROM portability_previews WHERE id=? AND file_id=? AND committed_command_id=?)', [value.input.previewId, preview.file_id, preview.committed_command_id]))
++   await removeRows(db, change, 'portability_preview_rows', 'preview_id=?', [value.input.previewId])
++   await removeRows(db, change, 'portability_previews', 'id=?', [value.input.previewId])
++   await updateRows(db, change, 'evidence_files', { state: 'erased', filename: 'erased', updated_at: ctx.now, version: preview.version + 1 }, 'id=?', [preview.file_id])
++   retainCleanup(change, { id: value.commandId, appId: LAUNCH_APP_ID, kind: 'campaign-import', subjectId: value.input.previewId, label: 'Deleted campaign import', now: ctx.now, keys: [preview.object_key] })
++   return {
++    commandId: value.commandId, appId: LAUNCH_APP_ID, action: 'import.delete', canonicalInputHash, permit,
++    guards: change.guards, mutations: change.mutations,
++    audit: [{ action: 'import.delete', subject: null, changes: [], sourceIds: [], personalContentRefs: [] }], events: [], outbox: [],
++    committedResult: { id: value.input.previewId, erasureId: value.commandId, state: 'pending' },
++   }
++  },
++ })
++}
+diff --git a/src/apps/launch/import-http.server.ts b/src/apps/launch/import-http.server.ts
+index baaf9ca..8dc33e7 100644
+--- a/src/apps/launch/import-http.server.ts
++++ b/src/apps/launch/import-http.server.ts
+@@ -88,6 +88,7 @@ export function createLaunchImportHttp(deps: LaunchImportDependencies) {
+     const object = await deps.bucket.get(original.object_key)
+     if (!object) throw new ApiError('internal', 'The stored import file is missing.')
+     await recheck()
++    if (!await deps.db.prepare("SELECT 1 FROM portability_previews p JOIN evidence_files f ON f.id=p.file_id WHERE p.id=? AND f.id=? AND f.state='available'").bind(file[1]!, preview.file_id).first()) throw new ApiError('not_found', 'The stored import file is no longer available.')
+     return new Response(object.body, { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Length': String(original.bytes), 'Content-Disposition': `attachment; filename="import.csv"; filename*=UTF-8''${encodeURIComponent(original.filename)}`, 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "sandbox; default-src 'none'" } })
+    }
+    if (request.method === 'GET' && path === '') {
+diff --git a/src/core/app/composition/events.server.ts b/src/core/app/composition/events.server.ts
+index 5d5b0d0..ccdd7c6 100644
+--- a/src/core/app/composition/events.server.ts
++++ b/src/core/app/composition/events.server.ts
+@@ -28,8 +28,10 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
+     await runtime.providers.handlers.scheduled()
+   }
+   async function scheduled() {
++    // Privacy cleanup must precede admissions that its pending receipt fences.
++    // Resume other scheduled work on the next delivery with a fresh request clock.
++    if (await runtime.lifecycle.cleanup.maintain()) return
+     await runtime.launch.scheduled()
+-    await runtime.lifecycle.cleanup.maintain()
+     await runtime.trashPurge()
+     // Owed import and export notices retry every tick, whatever their job's schedule.
+     await deliverOwedProgress(platform.bindings.DB, 'schedule',undefined,clock())
+diff --git a/src/core/app/composition/lifecycle.server.ts b/src/core/app/composition/lifecycle.server.ts
+index 8152442..7310bd1 100644
+--- a/src/core/app/composition/lifecycle.server.ts
++++ b/src/core/app/composition/lifecycle.server.ts
+@@ -1,3 +1,4 @@
++import {registerLaunchImportDeletion} from '../../../apps/launch/import-deletion.server'
+ import {guestRoutes} from './guests.server'
+ import {eraseWarehouseObject} from '../../../domains/warehouse/destination.server'
+ import {errorResponse} from '../../registry/errors.server'
+@@ -20,6 +21,7 @@ import type {Json} from '../../../contracts/primitives'
+ import type {RequestContext} from '../../../domains/authority/ports'
+ export function createLifecycleComposition(platform:Platform,foundation:ServerFoundation){
+  const db=platform.bindings.DB,service=createMemberService(db,foundation.policy,memberLifecycle(db,platform.bindings.FILES,foundation.descriptors)),cleanup=createLifecycleCleanup(db,platform.bindings.FILES,platform.bindings.WAREHOUSE,key=>eraseWarehouseObject(platform.bindings,platform.bindings.WAREHOUSE,key))
++ registerLaunchImportDeletion(db,foundation.policy,foundation.commands)
+  const ref=z.object({appId:idSchema,entityId:idSchema,recordId:idSchema}).strict(),expected=z.array(z.object({ref,version:z.number().int().positive()}).strict()).min(1).max(100)
+  const visible=async(ctx:RequestContext,action:string)=>{if(ctx.principal.kind!=='human')return false;for(const app of (await db.prepare("SELECT app_id FROM authority_memberships WHERE principal_id=? AND state='active'").bind(ctx.principal.id).all<{app_id:string}>()).results){try{await foundation.policy.authorize(ctx,{appId:app.app_id,action,expected:[],cost:[],inputHash:''});return true}catch(error){if(!(error instanceof AuthorityError))throw error}}return false}
+  const inviteInput=z.object({email:z.email().max(254),name:z.string().trim().min(1).max(200),scopes:z.array(z.object({appId:idSchema,policyId:idSchema,legacy:z.literal(false)}).strict()).min(1).max(100)}).strict()
+diff --git a/src/domains/lifecycle/cleanup.server.ts b/src/domains/lifecycle/cleanup.server.ts
+index 858657a..58d5c2c 100644
+--- a/src/domains/lifecycle/cleanup.server.ts
++++ b/src/domains/lifecycle/cleanup.server.ts
+@@ -1,3 +1,4 @@
++import {launchEntities} from '../../apps/launch/contracts'
+ import {AuthorityError} from '../authority/errors'
+ import type {RequestContext,PolicyPort} from '../authority/ports'
+ import {registerTable} from '../admission/sql.server'
+@@ -26,5 +27,5 @@ export function createLifecycleCleanup(db:D1Database,bucket:R2Bucket,warehouse?:
+   const current=await db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(id).first<{state:'pending'|'complete'}>()
+   return {id,state:current!.state}
+  }
+- return {advance,async maintain(){for(const job of (await db.prepare("SELECT id FROM lifecycle_erasures WHERE state='pending' ORDER BY requested_at LIMIT 20").all<{id:string}>()).results)await advance(job.id)},async status(ctx:RequestContext,policy:PolicyPort,id:string){const row=await db.prepare('SELECT app_id,subject_kind,state,requested_at,completed_at,anonymous_label FROM lifecycle_erasures WHERE id=?').bind(id).first<{app_id:string;subject_kind:string;state:string;requested_at:string;completed_at:string|null;anonymous_label:string}>();if(!row)throw new AuthorityError('not_found','Erasure receipt not found.',404);await policy.authorize(ctx,{appId:row.app_id,action:row.subject_kind==='member'?'member.erase':'launch.campaign.delete',expected:[],cost:[],inputHash:''});return row}}
++ return {advance,async maintain(){const jobs=(await db.prepare("SELECT id FROM lifecycle_erasures WHERE state='pending' ORDER BY requested_at LIMIT 20").all<{id:string}>()).results;for(const job of jobs)await advance(job.id);return jobs.length},async status(ctx:RequestContext,policy:PolicyPort,id:string){const row=await db.prepare('SELECT app_id,subject_kind,state,requested_at,completed_at,anonymous_label FROM lifecycle_erasures WHERE id=?').bind(id).first<{app_id:string;subject_kind:string;state:string;requested_at:string;completed_at:string|null;anonymous_label:string}>();if(!row)throw new AuthorityError('not_found','Erasure receipt not found.',404);await policy.authorize(ctx,{appId:row.app_id,action:row.subject_kind==='member'?'member.erase':row.subject_kind==='campaign-import'?'import.delete':'launch.campaign.delete',...(row.subject_kind==='campaign-import'?{targetEntityId:launchEntities.campaign}:{}),expected:[],cost:[],inputHash:''});return row}}
+ }
+diff --git a/tests/helpers/launch-import-deletion.mjs b/tests/helpers/launch-import-deletion.mjs
+new file mode 100644
+index 0000000..70f1693
+--- /dev/null
++++ b/tests/helpers/launch-import-deletion.mjs
+@@ -0,0 +1,128 @@
++import assert from 'node:assert/strict'
++
++/** Actual uploads, commands and scheduled delivery on the emitted Worker. R2 is observed only. */
++export async function launchImportDeletionJourney({ h, call, command, envelope, upload, preview, mapping, unrelatedId, unrelatedBytes, sharedId }) {
++ const actor = await h.addPerson({ name: 'Import custodian' })
++ const denied = await h.addPerson({ name: 'Import reader', change: rules => rules.map(rule => ({ ...rule, actions: rule.actions.filter(action => action !== 'import.delete') })) })
++ const csv = `Code,Name,Owner,Start,Launch,Health\r\nIMP-NEW,Preserved imported update,,,,\r\nDEL-NEW,Preserved imported creation,${h.owner},2026-11-01,2026-12-01,80\r\n`
++ const fileId = await upload('delete-artifact.csv', csv)
++ const reviewed = await preview('campaign', fileId, mapping)
++ assert.equal(reviewed.status, 200, JSON.stringify(reviewed.body))
++ const artifact = reviewed.body.data.value
++ assert.deepEqual([artifact.state, artifact.creates, artifact.updates, artifact.errors], ['valid', 1, 1, []])
++ const rows = await call(`/api/v1/launch/imports/${artifact.id}/rows`)
++ assert.equal(rows.status, 200, JSON.stringify(rows.body))
++ assert.equal(rows.body.data.rows.length, 2, 'The retained preview really contains imported content')
++ const commitBody = envelope({ token: artifact.token })
++ const committed = await call(`/api/v1/launch/imports/${artifact.id}/commit`, { method: 'POST', body: commitBody })
++ assert.equal(committed.status, 200, JSON.stringify(committed.body))
++ const readFile = async (id, bytes, session = h.ownerSession) => {
++  const response = await h.request(session, `/api/v1/launch/imports/${id}/file`)
++  assert.equal(response.status, 200)
++  assert.deepEqual(Buffer.from(await response.arrayBuffer()), Buffer.from(bytes))
++ }
++ const listed = () => call('/api/v1/launch/imports')
++ const beforeList = (await listed()).body.data.items
++ assert.ok(beforeList.some(item => item.id === artifact.id))
++ assert.ok(beforeList.some(item => item.id === unrelatedId))
++ await readFile(artifact.id, csv, actor.session)
++ await readFile(unrelatedId, unrelatedBytes)
++ const file = await h.db.prepare('SELECT object_key FROM evidence_files WHERE id=?').bind(fileId).first()
++ const bucket = () => h.runtime.getR2Bucket('FILES')
++ assert.equal((await (await bucket()).head(file.object_key)).size, Buffer.byteLength(csv))
++ const unrelatedFile = await h.db.prepare('SELECT f.object_key FROM evidence_files f JOIN portability_previews p ON p.file_id=f.id WHERE p.id=?').bind(unrelatedId).first()
++ const objectIdentity = async key => {
++  const head = await (await bucket()).head(key)
++  assert.ok(head)
++  return { key: head.key, size: head.size, etag: head.etag, uploaded: head.uploaded.toISOString() }
++ }
++ const unrelatedObject = await objectIdentity(unrelatedFile.object_key)
++ const business = async () => {
++  const result = {}
++  for (const table of ['campaigns', 'campaign_tags', 'launch_custom_values', 'deliverables', 'milestones', 'activity_entries'])
++   result[table] = (await h.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results
++  return result
++ }
++ const snapshot = async () => {
++  const result = await business()
++  for (const table of ['portability_previews', 'portability_preview_rows', 'evidence_files', 'lifecycle_erasures', 'lifecycle_erasure_blobs', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox'])
++   result[table] = (await h.db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()).results
++  return result
++ }
++ const retained = await business()
++ const imported = retained.campaigns.filter(row => ['IMP-NEW', 'DEL-NEW'].includes(row.code))
++ assert.equal(imported.length, 2)
++ assert.equal(imported.find(row => row.code === 'DEL-NEW').name, 'Preserved imported creation')
++ assert.equal(imported.find(row => row.code === 'IMP-NEW').name, 'Preserved imported update')
++ const publicBefore = await Promise.all(imported.map(async row => (await call(`/api/campaigns/${row.id}`)).body))
++ const beforeShared = await snapshot()
++ const shared = await command('import.delete', { previewId: sharedId }, [], actor.session)
++ assert.equal(shared.status, 409, JSON.stringify(shared.body))
++ assert.match(shared.body.error.message, /shared/)
++ assert.deepEqual(await snapshot(), beforeShared, 'The conservative shared-file refusal preserves both import artifacts')
++ const deleteBody = envelope({ previewId: artifact.id })
++ const beforeDenied = await snapshot()
++ const refused = await call('/api/v1/commands/import.delete', { method: 'POST', body: deleteBody }, denied.session)
++ assert.equal(refused.status, 403, JSON.stringify(refused.body))
++ assert.deepEqual(await snapshot(), beforeDenied, 'Missing current import.delete authority changes nothing, including receipts and cleanup')
++ await readFile(artifact.id, csv)
++ assert.ok(await (await bucket()).head(file.object_key), 'Refusal retains the original R2 object')
++
++ const started = performance.now()
++ const removed = await call('/api/v1/commands/import.delete', { method: 'POST', body: deleteBody }, actor.session)
++ assert.equal(removed.status, 200, JSON.stringify(removed.body))
++ assert.equal(removed.body.data.state, 'committed')
++ const receipt = removed.body.data.value
++ assert.equal(receipt.id, artifact.id)
++ assert.equal(receipt.state, 'pending', 'The response does not claim external cleanup before it is confirmed')
++ const remaining = (await listed()).body.data.items
++ assert.deepEqual(remaining, beforeList.filter(item => item.id !== artifact.id), 'Only the deleted import is withdrawn from the public listing')
++ for (const path of [`/api/v1/launch/imports/${artifact.id}/file`, `/api/v1/launch/imports/${artifact.id}/rows`, `/api/v1/files/${fileId}/content`])
++  assert.equal((await h.request(h.ownerSession, path)).status, 404, `${path} cannot disclose the deleted artifact`)
++ assert.equal((await call(`/api/v1/launch/imports/${artifact.id}/commit`, { method: 'POST', body: commitBody })).status, 404, 'Captured import confirmation cannot resurrect a deleted artifact')
++ assert.equal(await h.db.prepare('SELECT COUNT(*) n FROM portability_previews WHERE id=?').bind(artifact.id).first('n'), 0)
++ assert.equal(await h.db.prepare('SELECT COUNT(*) n FROM portability_preview_rows WHERE preview_id=?').bind(artifact.id).first('n'), 0)
++ assert.deepEqual(await business(), retained, 'Deleting an artifact preserves every imported record, version and activity entry')
++ assert.equal(await h.db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(receipt.erasureId).first('state'), 'pending')
++ assert.ok(await (await bucket()).head(file.object_key), 'Original bytes await durable scheduled cleanup')
++ const pending = await snapshot()
++ const pendingReplay = await call('/api/v1/commands/import.delete', { method: 'POST', body: deleteBody }, actor.session)
++ assert.equal(pendingReplay.status, 200, JSON.stringify(pendingReplay.body))
++ assert.deepEqual(pendingReplay.body.data.value, receipt)
++ assert.deepEqual(await snapshot(), pending, 'Repeated submission while pending adds no cleanup or audit receipt')
++
++ await h.restart()
++ assert.equal(await h.db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(receipt.erasureId).first('state'), 'pending', 'The cleanup obligation survives Worker restart')
++ const tick = async () => {
++  const result = await (await h.runtime.getWorker()).scheduled({ cron: '* * * * *', scheduledTime: Date.now() })
++  assert.equal(result.outcome, 'ok')
++ }
++ await tick()
++ assert.equal(await (await bucket()).head(file.object_key), null, 'Scheduled cleanup confirms removal of the original FILES object')
++ const elapsedMs = performance.now() - started
++ assert.ok(elapsedMs <= 300000, `Original object removal took ${elapsedMs} ms`)
++ const status = await call(`/api/v1/erasures/${receipt.erasureId}`, {}, actor.session)
++ assert.equal(status.status, 200, JSON.stringify(status.body))
++ assert.equal(status.body.data.state, 'complete')
++ assert.ok(status.body.data.completed_at)
++ const completed = await h.db.prepare('SELECT * FROM lifecycle_erasures WHERE id=?').bind(receipt.erasureId).first()
++ await tick()
++ const replayed = await call('/api/v1/commands/import.delete', { method: 'POST', body: deleteBody }, actor.session)
++ assert.equal(replayed.status, 200, JSON.stringify(replayed.body))
++ assert.deepEqual(replayed.body.data.value, receipt)
++ assert.deepEqual(await h.db.prepare('SELECT * FROM lifecycle_erasures WHERE id=?').bind(receipt.erasureId).first(), completed, 'Repeated delivery and command replay preserve the completed receipt')
++ assert.equal(await h.db.prepare('SELECT COUNT(*) n FROM admission_audit WHERE command_id=? AND action=?').bind(receipt.erasureId, 'import.delete').first('n'), 1)
++ assert.deepEqual(await business(), retained, 'Restart and repeated scheduled delivery cannot alter business history')
++ assert.deepEqual(await Promise.all(imported.map(async row => (await call(`/api/campaigns/${row.id}`)).body)), publicBefore, 'Public campaigns retain their complete values and versions')
++ await readFile(unrelatedId, unrelatedBytes)
++ assert.deepEqual(await objectIdentity(unrelatedFile.object_key), unrelatedObject, 'The unrelated original object, metadata and byte identity survive cleanup')
++ assert.equal(await (await bucket()).head(file.object_key), null)
++
++ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?')
++  .bind(JSON.stringify(actor.rules.map(rule => ({ ...rule, actions: rule.actions.filter(action => action !== 'import.delete') }))), actor.policyId).run()
++ const beforeRevoked = await snapshot()
++ assert.equal((await call('/api/v1/commands/import.delete', { method: 'POST', body: deleteBody }, actor.session)).status, 403, 'Revoking import.delete also fences a captured deletion receipt')
++ assert.equal((await call(`/api/v1/erasures/${receipt.erasureId}`, {}, actor.session)).status, 403, 'Cleanup status requires current import deletion authority')
++ assert.deepEqual(await snapshot(), beforeRevoked, 'Revoked replay changes nothing')
++ console.log(`PROBE IMPORT-005 2: native campaign CSV upload, preview, commit and human import.delete -> artifact withdrawn, original FILES object absent in ${Math.ceil(elapsedMs)} ms after restart and scheduled delivery; imported records, versions, activity and unrelated bytes unchanged; missing and revoked authority refused unchanged`)
++}
+diff --git a/tests/launch-operator-doors.mjs b/tests/launch-operator-doors.mjs
+index e99c056..a62e0ef 100644
+--- a/tests/launch-operator-doors.mjs
++++ b/tests/launch-operator-doors.mjs
+@@ -1,3 +1,4 @@
++import { launchImportDeletionJourney } from './helpers/launch-import-deletion.mjs'
+ import {warehouseNetworkEdge} from './helpers/warehouse-network-edge.mjs'
+ import {companyLifecycle} from './helpers/company-lifecycle.mjs'
+ import test, { after } from 'node:test'
+@@ -319,6 +320,7 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign
+    assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM campaigns WHERE code=?').bind(candidate.code).first('n'), 0)
+   }
+  } finally { h.setNow(undefined) }
++ await launchImportDeletionJourney({ h, call, command, envelope, upload, preview, mapping, unrelatedId: faultPreview.id, unrelatedBytes: faultCsv, sharedId: fresh.id })
+ })
+ 
+ test('[IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells', async () => {

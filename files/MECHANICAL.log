@@ -1,0 +1,3 @@
+Wrote 1 contract documents.
+Contract documents are current.
+MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; views=node src/base/contract-docs.mjs write and check, then restored main views exit=0; ledger=none exit=0

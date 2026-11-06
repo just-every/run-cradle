@@ -1,0 +1,53 @@
+{
+  "repository": "just-every/run-cradle",
+  "tag": "sd-cradle-c-f192",
+  "branch": "cloud/sd-cradle-c-f192",
+  "head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+  "remote_head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "full_history": true,
+  "product_pushed": true,
+  "push_attempts_per_head": [
+    1,
+    1
+  ],
+  "commits": [
+    "27775f3981567e723a043f8d3c15391344754b04",
+    "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0"
+  ],
+  "working_tree_clean": true,
+  "status_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "status_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "clause": "IMPORT-005",
+  "clause_before": "partial",
+  "clause_after": "partial",
+  "test_registrations_before": 174,
+  "test_registrations_after": 174,
+  "candidate_elapsed_ms": 1511,
+  "verify_run": 42153114768,
+  "verify_event": "push",
+  "verify_actual_conclusion": "failure",
+  "permitted_exception": "Only generated ACCEPTANCE.md freshness fails; shards skipped and verify dependency aggregate fails. No product assertion failure.",
+  "pr": null,
+  "publication_scan": "not run; fleet gate",
+  "main_equality": "not claimed; fleet gate",
+  "run_site": "not run; fleet gate",
+  "ready_under_generated_view_exception": true,
+  "bundle": {
+    "path": "/home/agent/rer-consolidation/work/sd-cradle-c-f192/candidate.bundle",
+    "sha256": "4922ef4bdd39c1ec315f50e822fbb19ab5c18fc8bb79dee4cecec08a69579fe7",
+    "verified": true,
+    "requires_commit": "234432f0b726fba470fb6ce4e1816f50cd082601"
+  },
+  "recorded_at": "2026-11-06T02:56:13.038161+00:00"
+}

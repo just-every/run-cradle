@@ -1,0 +1,83 @@
+{
+  "repository": "just-every/run-cradle",
+  "head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+  "calls": [
+    {
+      "at": "2026-11-06T02:53:57.525073+00:00",
+      "command": [
+        "python3",
+        "/tmp/rer-gh.py",
+        "api",
+        "repos/just-every/run-cradle/actions/runs?head_sha=2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0&per_page=100",
+        "--jq",
+        "{workflow_runs:[.workflow_runs[]|{id,name,event,status,conclusion,head_sha,html_url}]}"
+      ]
+    },
+    {
+      "at": "2026-11-06T02:54:22.813186+00:00",
+      "command": [
+        "python3",
+        "/tmp/rer-gh.py",
+        "api",
+        "repos/just-every/run-cradle/actions/runs/42153114768/jobs"
+      ],
+      "exit": 0,
+      "receipt": "CI_JOBS.json"
+    },
+    {
+      "at": "2026-11-06T02:54:22.813200+00:00",
+      "command": [
+        "python3",
+        "/tmp/rer-gh.py",
+        "run",
+        "view",
+        "42153114768",
+        "--repo",
+        "just-every/run-cradle",
+        "--job",
+        "127680868115",
+        "--log-failed"
+      ],
+      "exit": 0,
+      "receipt": "CI_BUILD_FAILURE.txt"
+    }
+  ],
+  "observations": [
+    {
+      "at": "2026-11-06T02:53:58.201978+00:00",
+      "conclusion": "failure",
+      "event": "push",
+      "head_sha": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153114768",
+      "id": 42153114768,
+      "name": "Verify",
+      "status": "completed"
+    }
+  ],
+  "discovery": {
+    "workflow_runs": [
+      {
+        "conclusion": "failure",
+        "event": "push",
+        "head_sha": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+        "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153114768",
+        "id": 42153114768,
+        "name": "Verify",
+        "status": "completed"
+      }
+    ]
+  },
+  "run_id": 42153114768,
+  "last": {
+    "conclusion": "failure",
+    "event": "push",
+    "head_sha": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153114768",
+    "id": 42153114768,
+    "name": "Verify",
+    "status": "completed"
+  },
+  "classification": "expected-generated-view-only failure; build stops at ACCEPTANCE.md freshness, shards skip, verify aggregates dependency failure; permitted READY exception",
+  "api_call_count": 3,
+  "repairs": 0
+}

@@ -1,0 +1,70 @@
+[
+  {
+    "name": "native-import-timing",
+    "head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+    "working_tree_dirty": false,
+    "command": [
+      "timeout",
+      "1200",
+      "node",
+      "--import",
+      "./tests/helpers/typescript-loader.mjs",
+      "--test",
+      "--test-name-pattern=campaign CSV",
+      "tests/launch-operator-doors.mjs"
+    ],
+    "started": "2026-11-06T02:53:58.416282+00:00",
+    "finished": "2026-11-06T02:55:09.464239+00:00",
+    "elapsed_seconds": 71.04795123300005,
+    "exit": 0,
+    "log": "NATIVE.log"
+  },
+  {
+    "name": "typecheck",
+    "head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+    "working_tree_dirty": false,
+    "command": [
+      "pnpm",
+      "exec",
+      "tsc",
+      "--noEmit"
+    ],
+    "started": "2026-11-06T02:55:09.533474+00:00",
+    "finished": "2026-11-06T02:55:29.791250+00:00",
+    "elapsed_seconds": 20.25778693899997,
+    "exit": 0,
+    "log": "TYPES.log"
+  },
+  {
+    "name": "first-party",
+    "head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+    "working_tree_dirty": false,
+    "command": [
+      "pnpm",
+      "exec",
+      "rer",
+      "check",
+      "--profile",
+      "first-party"
+    ],
+    "started": "2026-11-06T02:55:29.854345+00:00",
+    "finished": "2026-11-06T02:55:30.586130+00:00",
+    "elapsed_seconds": 0.7317923580001207,
+    "exit": 0,
+    "log": "FIRST_PARTY.log"
+  },
+  {
+    "name": "mechanical",
+    "head": "2597f1e14c7e3b8dde8ce24b29368fbe51ddcef0",
+    "working_tree_dirty": false,
+    "command": [
+      "bash",
+      "/tmp/rer-final-mechanical.sh"
+    ],
+    "started": "2026-11-06T02:55:30.645407+00:00",
+    "finished": "2026-11-06T02:55:31.873730+00:00",
+    "elapsed_seconds": 1.2283313620000627,
+    "exit": 0,
+    "log": "MECHANICAL.log"
+  }
+]
