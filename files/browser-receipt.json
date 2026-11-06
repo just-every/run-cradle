@@ -1,0 +1,142 @@
+{
+  "head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "command": "timeout 1200 node --import /tmp/cradle-system-chromium.mjs tests/ui-launch-operator-doors.mjs",
+  "exit": 0,
+  "browser": "/usr/bin/chromium with --no-sandbox",
+  "testAssertions": "unchanged",
+  "widths": [
+    1440,
+    390
+  ],
+  "screens": [
+    {
+      "name": "import-row-error",
+      "width": 1440,
+      "file": "import-row-error-1440.png"
+    },
+    {
+      "name": "import-preview",
+      "width": 1440,
+      "file": "import-preview-1440.png"
+    },
+    {
+      "name": "import-committed",
+      "width": 1440,
+      "file": "import-committed-1440.png"
+    },
+    {
+      "name": "decision-queue-export",
+      "width": 1440,
+      "file": "decision-queue-export-1440.png"
+    },
+    {
+      "name": "settings-custom-fields",
+      "width": 1440,
+      "file": "settings-custom-fields-1440.png"
+    },
+    {
+      "name": "campaign-custom-fields",
+      "width": 1440,
+      "file": "campaign-custom-fields-1440.png"
+    },
+    {
+      "name": "bulk-edit-selection",
+      "width": 1440,
+      "file": "bulk-edit-selection-1440.png"
+    },
+    {
+      "name": "bulk-edit-applied",
+      "width": 1440,
+      "file": "bulk-edit-applied-1440.png"
+    },
+    {
+      "name": "sample-data-refused",
+      "width": 1440,
+      "file": "sample-data-refused-1440.png"
+    },
+    {
+      "name": "sample-data-removed",
+      "width": 1440,
+      "file": "sample-data-removed-1440.png"
+    },
+    {
+      "name": "ownership-confirm-first",
+      "width": 1440,
+      "file": "ownership-confirm-first-1440.png"
+    },
+    {
+      "name": "ownership-handed-over",
+      "width": 1440,
+      "file": "ownership-handed-over-1440.png"
+    },
+    {
+      "name": "ownership-remove-self",
+      "width": 1440,
+      "file": "ownership-remove-self-1440.png"
+    },
+    {
+      "name": "import-row-error",
+      "width": 390,
+      "file": "import-row-error-390.png"
+    },
+    {
+      "name": "import-preview",
+      "width": 390,
+      "file": "import-preview-390.png"
+    },
+    {
+      "name": "import-committed",
+      "width": 390,
+      "file": "import-committed-390.png"
+    },
+    {
+      "name": "decision-queue-export",
+      "width": 390,
+      "file": "decision-queue-export-390.png"
+    },
+    {
+      "name": "settings-custom-fields",
+      "width": 390,
+      "file": "settings-custom-fields-390.png"
+    },
+    {
+      "name": "campaign-custom-fields",
+      "width": 390,
+      "file": "campaign-custom-fields-390.png"
+    },
+    {
+      "name": "bulk-edit-selection",
+      "width": 390,
+      "file": "bulk-edit-selection-390.png"
+    },
+    {
+      "name": "bulk-edit-applied",
+      "width": 390,
+      "file": "bulk-edit-applied-390.png"
+    },
+    {
+      "name": "sample-data-refused",
+      "width": 390,
+      "file": "sample-data-refused-390.png"
+    },
+    {
+      "name": "sample-data-removed",
+      "width": 390,
+      "file": "sample-data-removed-390.png"
+    },
+    {
+      "name": "ownership-handed-over",
+      "width": 390,
+      "file": "ownership-handed-over-390.png"
+    },
+    {
+      "name": "ownership-remove-self",
+      "width": 390,
+      "file": "ownership-remove-self-390.png"
+    }
+  ],
+  "errors": [],
+  "tests": 1,
+  "passed": 1,
+  "failed": 0
+}

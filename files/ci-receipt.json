@@ -1,0 +1,32 @@
+{
+  "head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "run": 42168637203,
+  "event": "push",
+  "status": "completed",
+  "conclusion": "failure",
+  "url": "https://github.com/just-every/run-cradle/actions/runs/42168637203",
+  "rootFailure": {
+    "job": 127731025403,
+    "step": "Check generated contract documents",
+    "command": "node src/base/contract-docs.mjs check",
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "exit": 1
+  },
+  "downstreamFailure": {
+    "job": 127731133040,
+    "step": "Require the plan and every verification worker",
+    "reason": "Build failure; verification shards skipped"
+  },
+  "localReproduction": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "head": "76d830686c4c1eb587f776d30daf9e92369e3a20"
+  },
+  "repairs": 0,
+  "reruns": 0,
+  "classification": "Sole root failure is the explicitly permitted generated-view check. Generated views stay at main for guarded lander regeneration.",
+  "githubCommandInvocations": 6,
+  "scan": "unestablished; fleet custody",
+  "candidateRunSite": "unestablished; fleet custody"
+}

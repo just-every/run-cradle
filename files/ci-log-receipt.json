@@ -1,0 +1,18 @@
+{
+  "run": 42168637203,
+  "reads": [
+    {
+      "job": "127731025403",
+      "command": "gh run view 42168637203 --repo just-every/run-cradle --job 127731025403 --log-failed",
+      "exit": 0,
+      "log": "ci-failed-job-127731025403.log"
+    },
+    {
+      "job": "127731133040",
+      "command": "gh run view 42168637203 --repo just-every/run-cradle --job 127731133040 --log-failed",
+      "exit": 0,
+      "log": "ci-failed-job-127731133040.log"
+    }
+  ],
+  "redaction": "CI step environment blocks omitted; command and failure output retained"
+}

@@ -1,0 +1,27 @@
+{
+  "head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "views": {
+    "write": "node src/base/contract-docs.mjs write",
+    "writeExit": 0,
+    "check": "node src/base/contract-docs.mjs check",
+    "checkExit": 0,
+    "restored": [
+      "ACCEPTANCE.md",
+      "docs/CLAIMS.md"
+    ],
+    "restoredFrom": "origin/main"
+  },
+  "lock": {
+    "write": "node scripts/edition-authoring/cli.mjs lock",
+    "writeExit": 0,
+    "check": "node scripts/edition-authoring/cli.mjs check",
+    "checkExit": 0,
+    "sha256": "8d7e3a6fc9df59564b745cebc267dfe4e2c3758065f7c05dbeead5db3e518d90"
+  },
+  "migrationLedger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration added or edited"
+  },
+  "cleanTree": true
+}

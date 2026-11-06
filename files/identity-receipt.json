@@ -1,0 +1,25 @@
+{
+  "head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "candidateCommits": [
+    {
+      "head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+      "author": "fleet",
+      "committer": "fleet",
+      "trailers": "absent",
+      "pass": true
+    },
+    {
+      "head": "0fe10fa1ecc655a2f18bc7cb35f8fad7a15a4105",
+      "author": "owner",
+      "committer": "owner",
+      "trailers": "absent",
+      "pass": true
+    }
+  ],
+  "statusCounts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "statusRows": 257
+}

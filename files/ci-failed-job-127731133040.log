@@ -1,0 +1,8 @@
+verify	Require the plan and every verification worker	﻿2026-11-06T05:29:10.8972783Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T05:29:10.8973681Z [36;1mtest "$PLAN" = success[0m
+verify	Require the plan and every verification worker	2026-11-06T05:29:10.8974404Z [36;1mif [ "$SKIP" = true ]; then exit 0; fi[0m
+verify	Require the plan and every verification worker	2026-11-06T05:29:10.8975537Z [36;1mfor result in $RESULTS; do test "$result" = success; done[0m
+verify	Require the plan and every verification worker	2026-11-06T05:29:10.9258867Z shell: /usr/bin/bash -e {0}
+[CI step environment block omitted from public evidence]
+verify	Require the plan and every verification worker	2026-11-06T05:29:10.9264851Z ##[endgroup]
+verify	Require the plan and every verification worker	2026-11-06T05:29:10.9456632Z ##[error]Process completed with exit code 1.

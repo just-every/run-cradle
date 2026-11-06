@@ -1,0 +1,64 @@
+{
+  "head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "base": "0fe10fa1ecc655a2f18bc7cb35f8fad7a15a4105",
+  "main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "commands": [
+    {
+      "command": "pnpm install --frozen-lockfile",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email [fleet address] --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "registrations": 175
+    },
+    {
+      "command": "timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 --test-name-pattern='CAMP-013' tests/launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "sourceChangesInThisRound": "No new implementation or assertions; merge of required base and current main only",
+  "status": {
+    "before": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "after": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "rows": 257,
+    "clause": "CAMP-013",
+    "beforeClause": "partial",
+    "afterClause": "partial"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "branch": "cloud/sd-cradle-c-f216",
+  "command": "python3 $HOME/rer-consolidation/.tools/cloud-push.py origin cloud/sd-cradle-c-f216",
+  "exit": 0,
+  "attempts": 1,
+  "remoteHead": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "remoteRef": "refs/heads/cloud/sd-cradle-c-f216",
+  "forcePush": false,
+  "productTreeClean": true,
+  "identityAudit": "identity-receipt.json"
+}

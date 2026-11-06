@@ -1,0 +1,17 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE CAMP-013 expiry: native bulk apply at T on three separate two-campaign batches -> each undoExpiresAt is T + 3600000 ms
+PROBE CAMP-013 before-expiry: native undo at T + 3599999 ms -> both distinct prior statuses restored, versions advance once
+PROBE CAMP-013 single-use: new undo command before expiry -> refused unchanged; original successful command replay -> original result and no writes or activity
+PROBE CAMP-013 exact-expiry: native undo at T + 3600000 ms -> refused; both campaigns and all effects unchanged
+PROBE CAMP-013 after-expiry: native undo at T + 3600001 ms -> refused; both campaigns and all effects unchanged
+✔ [CAMP-013] two-campaign bulk status undo restores once before one hour, refuses at and after expiry, and replays without effects (1717.864155ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37249.379134

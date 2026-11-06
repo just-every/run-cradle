@@ -1,0 +1,178 @@
+{
+  "files": [
+    {
+      "blob": "8f931c48714623b8e8d0c311317dca4453c2ea9c",
+      "bytes": 2273,
+      "path": "PLAN.md",
+      "sha256": "ccc1b25c85d766e87e3be29aa8d084c75e92620fea2fc9b5b0014a6979d40b4d"
+    },
+    {
+      "blob": "9af7129b9f2ca360f03c109b46cac7b765efa0b4",
+      "bytes": 11368,
+      "path": "REPORT.md",
+      "sha256": "6d1a3a8a1f842ee9c68c9cd25abd53496d3641c2cc883a1984c317fca9126d4f"
+    },
+    {
+      "blob": "7a904ca7c484861393894b1c2e48cf577b6aa4cf",
+      "bytes": 3261,
+      "path": "browser-receipt.json",
+      "sha256": "222304aeec1e7ccc9291ffde3e7e72a1bd70ef1be68fc0d20d0c0675a8a8f26b"
+    },
+    {
+      "blob": "c48a48ee83d3846321ccb3db7efe7c6b4f9ebf61",
+      "bytes": 419,
+      "path": "browser.log",
+      "sha256": "b7d2ba724c07a90628f7428f6e5dbf378d04e32a4611241040ffa96714e452d2"
+    },
+    {
+      "blob": "9c06b52177877f9dfb63966240df324ebb3bdec1",
+      "bytes": 151129,
+      "path": "bulk-edit-applied-1440.png",
+      "sha256": "7913978bae5fb96199b2ba522cfe97919986ba13c6821b0a8a1f22f1bcceeac2"
+    },
+    {
+      "blob": "bcc63e2fc134c59c40e8f8ad93419b2f31c16439",
+      "bytes": 202983,
+      "path": "bulk-edit-applied-390.png",
+      "sha256": "41a36562f63b9c733e4428b8c55b48b37471015189d5aebb5d9d1b71a2f76277"
+    },
+    {
+      "blob": "40605d6acc2c366a0b73fe31cb9df60dc7991346",
+      "bytes": 155272,
+      "path": "bulk-edit-selection-1440.png",
+      "sha256": "6d17af4072d65286e5e94d7eb5a60ebf46a08eb02ba2fe08d1840c8005cc730f"
+    },
+    {
+      "blob": "b68bac743672c118e813fac1b61076cd7b46e823",
+      "bytes": 206475,
+      "path": "bulk-edit-selection-390.png",
+      "sha256": "0c3c0cbd2539ff6b141187aa6dcc4149704d414616a1a1327a18a49f4bb9ec22"
+    },
+    {
+      "blob": "bd87ca49067067ec7f23c862422385adcb04cb77",
+      "bytes": 312,
+      "path": "ci-discovery.json",
+      "sha256": "7e3f26f8e423f124314138f75b13b3b5a0b8d85d062c7ab26d545323ed724189"
+    },
+    {
+      "blob": "21173e504ddd97919a9853d306c2d09d663d1533",
+      "bytes": 733,
+      "path": "ci-failed-job-127731025403.log",
+      "sha256": "3686e9c646bc3b4697efa28d618a63ee4a1ce57d22cfeb2adc941eb900fa95fd"
+    },
+    {
+      "blob": "f12786edd2b8acf1e5f0119de3cfdeee498443cc",
+      "bytes": 916,
+      "path": "ci-failed-job-127731133040.log",
+      "sha256": "db89f05449108efad6bda89186dea942c6ed2311988c2b5e4703fe1ae0abb386"
+    },
+    {
+      "blob": "73baa9dfec66f14bda922902b972cbbf1c387758",
+      "bytes": 7578,
+      "path": "ci-jobs.json",
+      "sha256": "73ad43946322ece308fa37448481e7994f977a777cc5f4d3a514f56be2db5156"
+    },
+    {
+      "blob": "bee438e7613ede840149121bcdcb65adcc7ce03c",
+      "bytes": 552,
+      "path": "ci-log-receipt.json",
+      "sha256": "afe1dc7041374043134b09a251a6713066c67c62e616dccfc5d5ef6f0739889d"
+    },
+    {
+      "blob": "ff923d3c318309d9648108edf1cbd6c2df3c6d52",
+      "bytes": 1212,
+      "path": "ci-receipt.json",
+      "sha256": "723f64ddef296442125d6ee29c97343b82a55cc167ddd9e2171b5ab25c00bf03"
+    },
+    {
+      "blob": "145915a3e0a1c00a4d5aebd932c0f621e6fecd77",
+      "bytes": 3730,
+      "path": "doors-receipt.json",
+      "sha256": "a4140e31db41dd84a88a704562254e5cf51cb1452fb80f59acadb4830026f213"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "4fcc3d7e96580a649ce86e71f68b2dc05a92c43a",
+      "bytes": 527,
+      "path": "identity-receipt.json",
+      "sha256": "6cc910ee409ecd898ccba123a517b5cb797534e9b0dfdb38a97daebe53171df8"
+    },
+    {
+      "blob": "98a702df93574af8fac46656e1e2275553ac9d75",
+      "bytes": 1651,
+      "path": "local-receipt.json",
+      "sha256": "53e8a86925fa19d7191c6a7e38dc6322aeac90deaa9cb70f9222c2b92e7112d5"
+    },
+    {
+      "blob": "51eed0c03386118fc91bd3bcd41a1f3c5ba65a0e",
+      "bytes": 717,
+      "path": "mechanical-receipt.json",
+      "sha256": "8b665efaefe61a72d68965af558a10372ee1630319afe18ca371cca0eca72f0d"
+    },
+    {
+      "blob": "adc8c3b8cd636c31eebb8687b58136edc066c951",
+      "bytes": 2091,
+      "path": "native-doors.log",
+      "sha256": "6528b6c043360c06b38100bd748325f8dcc288bdb93cb8929b614abd612d513d"
+    },
+    {
+      "blob": "8007ac188ae4f4989e08c3699cd648bcab7cdfa8",
+      "bytes": 1035,
+      "path": "native-undo.log",
+      "sha256": "394e26fd6537690ddb9cc2be588fe4fb63999b33ee0896cc9b128fdfe854d39f"
+    },
+    {
+      "blob": "44f827125f08d850270c4a0cc34ccce68af0bc9d",
+      "bytes": 75,
+      "path": "product-remote.txt",
+      "sha256": "f18deee2c1387721cee9868d8d8a7c68bf6620933dd631f6b5833e3abf36b84f"
+    },
+    {
+      "blob": "fb807c888b057a01272a099c2e543aad21e6e80d",
+      "bytes": 430,
+      "path": "push-receipt.json",
+      "sha256": "147c673eab8338dac0689f104b1fe2bdfb04f293a7a008a2608083699f1b54d0"
+    },
+    {
+      "blob": "fba560db7c48416c914446f2a1e319a79104d105",
+      "bytes": 67,
+      "path": "restored-views-check.log",
+      "sha256": "183372998615cc516043a5f66404b300281009a84349eda72da66d79fe542603"
+    },
+    {
+      "blob": "65792e3c6a7e85dbd06406d9c07d1ac0ca8a8084",
+      "bytes": 10,
+      "path": "test-budget.log",
+      "sha256": "02d9febc63850e4d77391a9009badd8314a9a2be002c05cfd3e3c8d6565e4e9f"
+    },
+    {
+      "blob": "7f7bf19396359dd9ef5b7e8e364a710580963ff3",
+      "bytes": 172,
+      "path": "typecheck.log",
+      "sha256": "01921a56281e67378ec9dd166aa60beb366687580255b6d6bdb6999d3812b70f"
+    },
+    {
+      "blob": "ae869b2fafd3acf46a2dc6ce35ec869497ae9cfb",
+      "bytes": 32,
+      "path": "views-check.log",
+      "sha256": "c21aae40192141751d6d5c7a3a1d0eb701a6852f305d592d77b4dcab9c2536ab"
+    },
+    {
+      "blob": "d4d1e60ea7fdc565c576421664992b40e47a816e",
+      "bytes": 28,
+      "path": "views-write.log",
+      "sha256": "df91012bf66fb476e9cd1a30c002829398beb55f869e07cc7be477197fa5a276"
+    }
+  ],
+  "product_branch": "cloud/sd-cradle-c-f216",
+  "product_head": "76d830686c4c1eb587f776d30daf9e92369e3a20",
+  "ref": "refs/heads/evidence/sd-cradle-c-f216",
+  "repository": "just-every/run-cradle",
+  "schema": 1,
+  "tag": "sd-cradle-c-f216"
+}

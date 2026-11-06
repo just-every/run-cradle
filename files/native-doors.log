@@ -1,0 +1,22 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✔ [IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file (7054.497809ms)
+✔ [IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells (1115.309093ms)
+PROBE CAMP-013 expiry: native bulk apply at T on three separate two-campaign batches -> each undoExpiresAt is T + 3600000 ms
+PROBE CAMP-013 before-expiry: native undo at T + 3599999 ms -> both distinct prior statuses restored, versions advance once
+PROBE CAMP-013 single-use: new undo command before expiry -> refused unchanged; original successful command replay -> original result and no writes or activity
+PROBE CAMP-013 exact-expiry: native undo at T + 3600000 ms -> refused; both campaigns and all effects unchanged
+PROBE CAMP-013 after-expiry: native undo at T + 3600001 ms -> refused; both campaigns and all effects unchanged
+✔ [CAMP-013] two-campaign bulk status undo restores once before one hour, refuses at and after expiry, and replays without effects (1461.989721ms)
+✔ [SET-003] sample data installs and removes in one action, and removal is refused naming edited records (398.335776ms)
+✔ [VIEW-007] campaign pages follow a keyset cursor: a record added before the cursor neither repeats nor skips others (260.991794ms)
+✔ [PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good (137827.227592ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 183163.661164
