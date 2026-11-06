@@ -1,0 +1,107 @@
+{
+  "base_head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "original_bundle_sha256": "bf2cb7c7846af3963cd04922f13f23e8067922112ad724af7fb2e3a5d7dac696",
+  "mutations": [
+    {
+      "id": "M1",
+      "base_head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "description": "Allow valid writes from a refused scheduled preview",
+      "mutation": {
+        "before": "if (preview.rejected) {\n\t\t\t\tstate = \"paused\";",
+        "after": "if (false) {\n\t\t\t\tstate = \"paused\";"
+      },
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "tests/records-csv-fence.mjs"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 9.349,
+      "detected": true,
+      "log": "mutation-M1.log",
+      "assertion_location": "tests/helpers/sheets-journey.mjs:31:9",
+      "failure_excerpt": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  'active' !== 'paused'"
+    },
+    {
+      "id": "M2",
+      "base_head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "description": "Read an outcome without its current import-preview permission",
+      "mutation": {
+        "before": "\t\t\tfieldIds,\n\t\t\taction: \"import.preview\",\n\t\t\texpected: [],\n\t\t\tcost: [],\n\t\t\tinputHash: await canonicalHash$1({ scheduleId: id })",
+        "after": "\t\t\tfieldIds,\n\t\t\taction: \"import.commit\",\n\t\t\texpected: [],\n\t\t\tcost: [],\n\t\t\tinputHash: await canonicalHash$1({ scheduleId: id })"
+      },
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "tests/records-csv-fence.mjs"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 9.958,
+      "detected": true,
+      "log": "mutation-M2.log",
+      "assertion_location": "tests/helpers/sheets-journey.mjs:46:15",
+      "failure_excerpt": "AssertionError [ERR_ASSERTION]: /api/v1/records/sheets-schedule?id=01M6QD7MK37TRW9117TMY65GG1: {\"data\":{\"id\":\"01M6QD7MK37TRW9117TMY65GG1\",\"appId\":\"01M6QD7JKA0Z2YWYAMJFS5N2JP\",\"entityId\":\"01M6QD7JKAQ49BZHRQBDEPM3HM\",\"state\":\"paused\",\"frequency\":\"hourly\",\"outcome\":{\"runId\":\"01M6QD7NFEG5EJ8DJKSHPGBJ0F\",\"slot\":\"2026-10-24T14\",\"status\":\"review_required\",\"applied\":{\"creates\":0,\"updates\":0},\"previewId\":\"01M6QD7NKGK0G9P2TV87AG4E3R\",\"prospective\":{\"creates\":1,\"updates\":1,\"unchanged\":1,\"rejected\":1},\"refusals\":[{\"row\":5,\"label\":\"synthetic-cradle-6\",\"message\":\"Amount: Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).\",\"problems\":[\"Amount: Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).\"]}]}},\"meta\":{\"requestId\":\"01M6QD7PS44VF4EZ53337273DA\",\"apiVersion\":\"cradle.api.v1\",\"evaluatedAt\":\"2026-11-06T03:08:02.212Z\"}}\n  \n  200 !== 403"
+    },
+    {
+      "id": "M3",
+      "base_head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "description": "Permit outcome reads after a mapped field becomes unreadable",
+      "mutation": {
+        "before": "if (!scope.unrestrictedRows || fieldIds.some((fieldId) => !scope.readableFieldIds.includes(fieldId))) throw new ApiError(\"forbidden\", \"Current access does not cover this import outcome.\");",
+        "after": "if (false) throw new ApiError(\"forbidden\", \"Current access does not cover this import outcome.\");"
+      },
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "tests/records-csv-fence.mjs"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 10.294,
+      "detected": true,
+      "log": "mutation-M3.log",
+      "assertion_location": "tests/helpers/sheets-journey.mjs:49:2",
+      "failure_excerpt": "AssertionError [ERR_ASSERTION]: /api/v1/records/sheets-schedule?id=01M6QD7YATY7RFW1GZW4JGVVYN: {\"data\":{\"id\":\"01M6QD7YATY7RFW1GZW4JGVVYN\",\"appId\":\"01M6QD7WAMQ9BZZ6BVN7GSZDW8\",\"entityId\":\"01M6QD7WAN0MAXG711BRFWBQBG\",\"state\":\"paused\",\"frequency\":\"hourly\",\"outcome\":{\"runId\":\"01M6QD7Z8HYFMV1D9GW7X6S8N7\",\"slot\":\"2026-10-24T14\",\"status\":\"review_required\",\"applied\":{\"creates\":0,\"updates\":0},\"previewId\":\"01M6QD7ZCTW927G87RTMHMKF3W\",\"prospective\":{\"creates\":1,\"updates\":1,\"unchanged\":1,\"rejected\":1},\"refusals\":[{\"row\":5,\"label\":\"synthetic-cradle-6\",\"message\":\"Amount: Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).\",\"problems\":[\"Amount: Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).\"]}]}},\"meta\":{\"requestId\":\"01M6QD80TZSZMDXJW9K5FH90XB\",\"apiVersion\":\"cradle.api.v1\",\"evaluatedAt\":\"2026-11-06T03:08:12.511Z\"}}\n  \n  200 !== 403"
+    },
+    {
+      "id": "M4",
+      "base_head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "description": "Enable a schedule whose fresh preview still contains refused rows",
+      "mutation": {
+        "before": "})).rejected) throw new ApiError(\"validation\", \"The fresh source preview has refused rows. Correct them before enabling this schedule.\");",
+        "after": "})).rejected && false) throw new ApiError(\"validation\", \"The fresh source preview has refused rows. Correct them before enabling this schedule.\");"
+      },
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "tests/records-csv-fence.mjs"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 9.926,
+      "detected": true,
+      "log": "mutation-M4.log",
+      "assertion_location": "tests/helpers/sheets-journey.mjs:40:16",
+      "failure_excerpt": "AssertionError [ERR_ASSERTION]: /api/v1/records/sheets-schedule: {\"data\":{\"id\":\"01M6QD88BSW947MFFRS9P0S9EN\",\"state\":\"active\",\"frequency\":\"hourly\"},\"meta\":{\"requestId\":\"01M6QD8AD33VECPC265W1HF507\",\"apiVersion\":\"cradle.api.v1\",\"evaluatedAt\":\"2026-11-06T03:08:22.313Z\"}}\n  \n  200 !== 400"
+    }
+  ],
+  "restored_bundle_sha256": "bf2cb7c7846af3963cd04922f13f23e8067922112ad724af7fb2e3a5d7dac696"
+}

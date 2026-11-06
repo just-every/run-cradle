@@ -1,0 +1,71 @@
+{
+  "head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "checks": [
+    {
+      "head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "tests/records-csv-fence.mjs"
+      ],
+      "started_at": "2026-11-06T03:05:48.189339+00:00",
+      "elapsed_seconds": 11.123,
+      "exit": 0,
+      "log": "records-csv-fence.log"
+    },
+    {
+      "head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "command": [
+        "pnpm",
+        "check:types"
+      ],
+      "started_at": "2026-11-06T03:05:59.312997+00:00",
+      "elapsed_seconds": 12.41,
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "started_at": "2026-11-06T03:06:11.723522+00:00",
+      "elapsed_seconds": 0.496,
+      "exit": 0,
+      "log": "first-party-check.log"
+    },
+    {
+      "head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "command": [
+        "node",
+        "tests/helpers/test-budget.mjs"
+      ],
+      "started_at": "2026-11-06T03:06:12.219827+00:00",
+      "elapsed_seconds": 0.788,
+      "exit": 0,
+      "log": "test-budget.log"
+    },
+    {
+      "head": "801883df3f7dae49b33514809f185c953fe6434c",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "started_at": "2026-11-06T03:06:13.008167+00:00",
+      "elapsed_seconds": 0.343,
+      "exit": 0,
+      "log": "lock-check.json"
+    }
+  ]
+}

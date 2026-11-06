@@ -1,0 +1,39 @@
+{
+  "head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "run_id": 42154375283,
+  "github_calls_so_far": 6,
+  "archives": [
+    {
+      "command": [
+        "gh",
+        "run",
+        "view",
+        "42154375283",
+        "--repo",
+        "just-every/run-cradle",
+        "--job",
+        "127684941826",
+        "--log-failed"
+      ],
+      "exit": 0,
+      "job_id": 127684941826,
+      "log": "ci-failed-job-127684941826.log"
+    },
+    {
+      "command": [
+        "gh",
+        "run",
+        "view",
+        "42154375283",
+        "--repo",
+        "just-every/run-cradle",
+        "--job",
+        "127685061764",
+        "--log-failed"
+      ],
+      "exit": 0,
+      "job_id": 127685061764,
+      "log": "ci-failed-job-127685061764.log"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "branch": "cloud/sd-cradle-c-f198",
+  "product_push": "succeeded on attempt 1",
+  "remote_head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "status_rows_before": 257,
+  "status_rows_after": 257,
+  "pipe_rows_before": 425,
+  "pipe_rows_after": 425,
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "test_registrations_before": 174,
+  "test_registrations_after": 174,
+  "generated_views_committed": false,
+  "source_lock_fresh": true,
+  "working_tree_clean": true,
+  "changed_files": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "src/domains/records/sheets/http.server.ts",
+    "src/domains/records/sheets/schedules.server.ts",
+    "tests/helpers/sheets-journey.mjs",
+    "tests/helpers/sheets-provider.mjs"
+  ]
+}

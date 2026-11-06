@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-06T03:05:50.667798+00:00",
+  "command": [
+    "gh",
+    "api",
+    "repos/just-every/run-cradle/actions/runs?head_sha=801883df3f7dae49b33514809f185c953fe6434c&per_page=100",
+    "--jq",
+    ".workflow_runs[]|{id,name,status,conclusion,head_sha,event,html_url}"
+  ],
+  "exit": 0,
+  "runs": [
+    {
+      "conclusion": null,
+      "event": "push",
+      "head_sha": "801883df3f7dae49b33514809f185c953fe6434c",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42154375283",
+      "id": 42154375283,
+      "name": "Verify",
+      "status": "in_progress"
+    }
+  ]
+}

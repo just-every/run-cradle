@@ -1,0 +1,13 @@
+{
+  "head": "801883df3f7dae49b33514809f185c953fe6434c",
+  "command": [
+    "npx",
+    "-y",
+    "@runeditrun/rer",
+    "build"
+  ],
+  "runner": "cloud_run",
+  "exit": 0,
+  "server_bundle_sha256": "bf2cb7c7846af3963cd04922f13f23e8067922112ad724af7fb2e3a5d7dac696",
+  "note": "Build completed after the unpublished rebase onto main. Mutation probes restored these exact emitted bytes."
+}

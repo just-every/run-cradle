@@ -1,0 +1,35 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ [INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 RECORDS-010 FIELD-005 CSV, workbook and Sheets imports retain review, mapping, scheduled merge and export fences (8290.726158ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9916.312001
+
+✖ failing tests:
+
+test at tests/records-csv-fence.mjs:145:1
+✖ [INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 RECORDS-010 FIELD-005 CSV, workbook and Sheets imports retain review, mapping, scheduled merge and export fences (8290.726158ms)
+  AssertionError [ERR_ASSERTION]: /api/v1/records/sheets-schedule?id=01M6QD7MK37TRW9117TMY65GG1: {"data":{"id":"01M6QD7MK37TRW9117TMY65GG1","appId":"01M6QD7JKA0Z2YWYAMJFS5N2JP","entityId":"01M6QD7JKAQ49BZHRQBDEPM3HM","state":"paused","frequency":"hourly","outcome":{"runId":"01M6QD7NFEG5EJ8DJKSHPGBJ0F","slot":"2026-10-24T14","status":"review_required","applied":{"creates":0,"updates":0},"previewId":"01M6QD7NKGK0G9P2TV87AG4E3R","prospective":{"creates":1,"updates":1,"unchanged":1,"rejected":1},"refusals":[{"row":5,"label":"synthetic-cradle-6","message":"Amount: Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).","problems":["Amount: Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits)."]}]}},"meta":{"requestId":"01M6QD7PS44VF4EZ53337273DA","apiVersion":"cradle.api.v1","evaluatedAt":"2026-11-06T03:08:02.212Z"}}
+  
+  200 !== 403
+  
+      at Object.call (file:///home/agent/rer-consolidation/work/sd-cradle-c-f198/run-cradle/tests/helpers/workbook-http.mjs:6:96)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async sheetsJourney (file:///home/agent/rer-consolidation/work/sd-cradle-c-f198/run-cradle/tests/helpers/sheets-journey.mjs:46:15)
+      at async workbookJourney (file:///home/agent/rer-consolidation/work/sd-cradle-c-f198/run-cradle/tests/helpers/workbook-journey.mjs:40:3)
+      at async TestContext.<anonymous> (file:///home/agent/rer-consolidation/work/sd-cradle-c-f198/run-cradle/tests/records-csv-fence.mjs:161:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 403,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

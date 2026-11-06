@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-06T03:11:16.779021+00:00",
+  "command": [
+    "gh",
+    "api",
+    "repos/just-every/run-cradle/actions/runs/42154375283",
+    "--jq",
+    "{status,conclusion,head_sha,html_url}"
+  ],
+  "exit": 0,
+  "run_id": 42154375283,
+  "run": {
+    "conclusion": "failure",
+    "head_sha": "801883df3f7dae49b33514809f185c953fe6434c",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42154375283",
+    "status": "completed"
+  },
+  "github_calls_so_far": 3,
+  "github_calls_total": 6,
+  "classification": "Only permitted generated-view freshness failure and its dependent aggregate failure; functional shards skipped",
+  "ready_exception": "ACCEPTANCE.md and docs/CLAIMS.md are restored from main and must not be committed by this cloud builder",
+  "product_test_failure": false,
+  "rerun_or_dispatch": false
+}
