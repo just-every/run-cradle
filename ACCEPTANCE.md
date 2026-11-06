@@ -236,7 +236,7 @@ Core · published · **partial** · Cites BASE-ROLE-001
 3. The only restrictable action is inviting and removing operators, under the operator-management policy.
 4. There are no roles.
 
-**Evidence.** `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs`
+**Evidence.** `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs`; other-application access, scoped-write widening and deleted-membership command replay are refused, with existing policies and memberships preserved. This selected positive legacy-mutation slice supplies no whole-clause acceptance.
 **Gap.** Missing a legacy-operator journey that executes representative permitted mutations as well as reads while demonstrating the launch-only equal-rights scope. Cited `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs` show: Retained legacy read access and explicit scoped-policy/membership preservation are exercised.
 
 #### OPS-002 — Management
