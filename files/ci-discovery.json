@@ -1,0 +1,14 @@
+{
+  "workflow_runs": [
+    {
+      "id": 42152322782,
+      "name": "Verify",
+      "status": "queued",
+      "conclusion": null,
+      "head_sha": "e0011a97b8f8e7c0f15c8492b950b1922e419df6",
+      "event": "push",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42152322782",
+      "created_at": "2026-11-06T02:45:22Z"
+    }
+  ]
+}

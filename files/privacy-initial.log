@@ -1,0 +1,34 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ [PERM-002 VIEW-005 APP-SCOPE-001] global search covers authorized bases and rechecks current row and field policy (65912.78233ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67634.996933
+
+✖ failing tests:
+
+test at tests/launch-search-authority.mjs:6:1
+✖ [PERM-002 VIEW-005 APP-SCOPE-001] global search covers authorized bases and rechecks current row and field policy (65912.78233ms)
+  AssertionError [ERR_ASSERTION]: /api/v1/history?appId=01M6QBNXD9XYSXVRBNMP16GSJY&entityId=01M6QBNXDAQAJZ36C8GW7EZXPN&recordId=01M6QBNXMP7VHXQ0XA27QBK37F: {"error":{"requestId":"01M6QBNYJT8Q7297947JCZE5QT","operation":"GET /api/v1/history","code":"forbidden","message":"Current authority does not permit this action.","retry":"after_change"}}
+  
+  403 !== 404
+  
+      at call (file:///workspace/run-cradle/tests/helpers/current-policy-privacy-journey.mjs:11:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async currentPolicyPrivacyJourney (file:///workspace/run-cradle/tests/helpers/current-policy-privacy-journey.mjs:86:3)
+      at async TestContext.<anonymous> (file:///workspace/run-cradle/tests/launch-search-authority.mjs:82:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 403,
+    expected: 404,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

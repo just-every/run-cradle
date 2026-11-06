@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "tag": "sd-cradle-c-f190",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f190",
+  "head": "e0011a97b8f8e7c0f15c8492b950b1922e419df6",
+  "recorded_at": "2026-11-06T02:51:57.459790+00:00",
+  "product_push": {
+    "status": "success",
+    "attempt": 1,
+    "remote": "origin",
+    "ref": "refs/heads/cloud/sd-cradle-c-f190",
+    "verified_by_guard": true
+  },
+  "clause": {
+    "id": "PERM-002",
+    "before": "partial",
+    "after": "partial",
+    "claim_done": false
+  },
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "status_rows_before": 257,
+  "status_rows_after": 257,
+  "all_pipe_rows_before": 425,
+  "all_pipe_rows_after": 425,
+  "test_registrations_before": 174,
+  "test_registrations_after": 174,
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs --test tests/launch-search-authority.mjs",
+      "exit": 0,
+      "log": "privacy-test.log",
+      "tests": 1,
+      "pass": 1
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='IFACE-006 VIEW-014' tests/records-manual-roundtrip.mjs",
+      "exit": 0,
+      "log": "calculation-test.log",
+      "tests": 1,
+      "pass": 1
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check after write",
+      "exit": 0,
+      "log": "views-check.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check after restoring generated views",
+      "exit": 1,
+      "log": "views-restored-check.log",
+      "expected": true
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "lock.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-check.log",
+      "ok": true
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "total": 174
+    },
+    {
+      "command": "git diff --cached --check",
+      "exit": 0
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs --test tests/launch-search-authority.mjs",
+      "exit": 0,
+      "head": "e0011a97b8f8e7c0f15c8492b950b1922e419df6",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "log": "privacy-exact-head.log"
+    }
+  ],
+  "candidate_files": {
+    "CONTRACT.md": "8fe43fa3ea023ec4b7afed8182c9b80b3dfabe701149d13878464adfbfbd5685",
+    "sources.lock.json": "fc16fd222683d2f3d6b23192c7cf39c39769477c45bedfa2d27aea6bef3bcdb9",
+    "tests/launch-search-authority.mjs": "89afe7a9e32e0d9849fd9b603a1895581a8af7f9c495732c8b0ed96a8065de01",
+    "tests/helpers/current-policy-privacy-journey.mjs": "b351d4a79b41a889721cdc5ee812c08c6dec16dc135e9fcd71365ff2fbedf0c4"
+  },
+  "policy_fixture": "Only policy state and the human fixture are set directly in D1, matching retained authority journeys. Schemas, records and all observed responses use real authenticated HTTP on the emitted Worker.",
+  "provenance": {
+    "parent_main": "234432f0b726fba470fb6ce4e1816f50cd082601",
+    "rebase": "up to date; no rewritten commits",
+    "authors_and_committers": "Run Edit Run fleet <fleet@runeditrun.com>",
+    "candidate_commits": 1,
+    "trailers": [],
+    "product_checkout_clean": true
+  },
+  "publication_scan": "not run in cloud; guarded lander must run full-history scan on exact candidate",
+  "candidate_run_site": "not run; guarded landing responsibility",
+  "pr": null,
+  "github_calls": 6,
+  "ci": [
+    {
+      "conclusion": "failure",
+      "event": "push",
+      "head_sha": "e0011a97b8f8e7c0f15c8492b950b1922e419df6",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42152322782",
+      "id": 42152322782,
+      "status": "completed",
+      "updated_at": "2026-11-06T02:45:58Z"
+    }
+  ],
+  "mechanical_rerun_after_rebase": {
+    "head": "e0011a97b8f8e7c0f15c8492b950b1922e419df6",
+    "views_write": 0,
+    "views_check_before_restore": 0,
+    "lock": 0,
+    "lock_check": 0,
+    "checkout_clean": true
+  },
+  "identity_audit": {
+    "all_candidate_commits": true,
+    "side_parents_included": true,
+    "result": "pass",
+    "trailers": []
+  },
+  "packet_hygiene": {
+    "selected_regular_files_only": true,
+    "credential_pattern_scan": "pass",
+    "changed_test_email_strings": 0,
+    "new_test_registrations": 0,
+    "existing_assertions_removed_or_weakened": false
+  },
+  "probes_file": "PROBES.txt",
+  "ui": "not applicable: no UI source or screen changed",
+  "initial_test_authoring_corrections": [
+    "Hidden history endpoint returns 403; the new assertion initially expected 404.",
+    "Query filtering supports eq; the new input initially used unsupported gt."
+  ],
+  "ci_diagnostics": {
+    "failed_jobs": [
+      127678290581,
+      127678410246
+    ],
+    "cause": "ACCEPTANCE.md generated content differs; downstream required-worker gate sees build failure and skipped shards.",
+    "allowed_generated_view_exception": true,
+    "log_reads_per_failed_job": 1,
+    "log_read_exit": 0,
+    "repair_rounds": 0,
+    "reruns": 0,
+    "shards_ran": false,
+    "logs_sanitized": "CI environment blocks omitted; commands and diagnostics retained."
+  },
+  "terminal_custody": "READY under explicit generated-view exception; no whole-clause DONE claim"
+}

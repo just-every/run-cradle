@@ -1,0 +1,9 @@
+✔ IFACE-006 VIEW-014 VIEW-009 VIEW-015 FIELD-001 CALC-001 CALC-002 CALC-003 CALC-004 RECORDS-001 RECORDS-002 RECORDS-003 RECORDS-004 RECORDS-006 saved grid and board survive field removal and export current view CSV, base JSON and all-table CSV through HTTP (13166.637725ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16476.127751

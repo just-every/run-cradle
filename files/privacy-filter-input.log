@@ -1,0 +1,35 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ [PERM-002 VIEW-005 APP-SCOPE-001] global search covers authorized bases and rechecks current row and field policy (63031.707933ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65569.129386
+
+✖ failing tests:
+
+test at tests/launch-search-authority.mjs:6:1
+✖ [PERM-002 VIEW-005 APP-SCOPE-001] global search covers authorized bases and rechecks current row and field policy (63031.707933ms)
+  AssertionError [ERR_ASSERTION]: /api/v1/apps/01M6QBT93P2CBZ2Z44YZ4F9DND/entities/01M6QBT93P3B9HS719H5M0HRKX/query: {"error":{"requestId":"01M6QBTAKQM94057J45JX3Z0PR","operation":"POST /api/v1/apps/01M6QBT93P2CBZ2Z44YZ4F9DND/entities/01M6QBT93P3B9HS719H5M0HRKX/query","code":"validation","message":"The request did not match its schema.","retry":"after_change","issues":[{"path":"filter","message":"Invalid input"}]}}
+  
+  400 !== 403
+  
+      at call (file:///workspace/run-cradle/tests/helpers/current-policy-privacy-journey.mjs:11:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async refusals (file:///workspace/run-cradle/tests/helpers/current-policy-privacy-journey.mjs:124:21)
+      at async currentPolicyPrivacyJourney (file:///workspace/run-cradle/tests/helpers/current-policy-privacy-journey.mjs:131:18)
+      at async TestContext.<anonymous> (file:///workspace/run-cradle/tests/launch-search-authority.mjs:82:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 400,
+    expected: 403,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
