@@ -9,6 +9,7 @@ import { lifecycleDoors, seedLeaver, verifyRemoval } from './helpers/launch-oper
 import { verifyErasure } from './helpers/launch-operator-erasure.mjs'
 import { warehouseExportJourney } from './helpers/warehouse-export-journey.mjs'
 import { childImportMergeJourney } from './helpers/launch-import-merge.mjs'
+import { customFieldDeletionJourney } from './helpers/launch-custom-field-deletion.mjs'
 
 // High-stakes launch doors through the emitted Worker: data import, sample removal,
 // ownership handover and paging. Each request uses the app's own routes and session.
@@ -319,6 +320,7 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
    assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM campaigns WHERE code=?').bind(candidate.code).first('n'), 0)
   }
  } finally { h.setNow(undefined) }
+ await customFieldDeletionJourney(h)
 })
 
 test('[IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells', async () => {

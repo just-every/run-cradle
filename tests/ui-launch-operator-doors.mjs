@@ -6,6 +6,7 @@ import { contract } from './contract.mjs'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { createFixtureAuth } from './helpers/base-fixture-auth.mjs'
 import { doorsBrowser, csvRows } from './helpers/launch-doors-browser.mjs'
+import { customFieldDeletionBrowser } from './helpers/launch-custom-field-deletion-browser.mjs'
 
 // One real-door journey per operator door, through the emitted Worker at desktop and phone:
 // import, export, custom fields, bulk edit, sample data, invitations and ownership handover.
@@ -186,6 +187,7 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    await page.locator('.launch-custom-values', { hasText: 'North' }).waitFor()
    assert.equal(await h.db.prepare('SELECT v.value_json FROM launch_custom_values v JOIN launch_custom_fields f ON f.id=v.field_id WHERE f.name=? AND v.campaign_id=?').bind(fieldName, imported).first('value_json'), '"North"')
    await b.capture('campaign-custom-fields')
+   await customFieldDeletionBrowser({ h, b, page, actor, width, receipt, fieldName, firstId: imported })
 
    // Bulk edit a selection and undo it.
    await b.visit('/app/campaigns')
