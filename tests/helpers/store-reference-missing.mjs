@@ -59,10 +59,11 @@ export async function missingStoreResolution(h,provider){
   await h.restart()
   await proof.unchanged()
   const afterRestart=await proof.check(proof.missing);assert.equal(afterRestart.state,'unresolved');assert.match(afterRestart.reason,/not find|not grant access/);await proof.unchanged()
+  const versionAfterMissing=(await proof.record()).version
   const control=await proof.check(proof.present);assert.equal(control.state,'resolved','A separate present item resolves through the same account')
   const current=await proof.record(),missing=current.fields[proof.address.fieldId].value.find(member=>member.reference.itemId===proof.missing.itemId).reference
   assert.equal(missing.resolution,'unresolved');assert.equal(missing.connectionId,null);assert.deepEqual(missing.portable,proof.captures[0]);assert.equal(JSON.stringify((await proof.portable())[0]),proof.missingPortable,'The control cannot change the missing portable capture')
-  const traces=proof.metadataOnly(),receipt={point:'FILE-007 acceptance 2 missing item',missing:'unresolved',reason:afterRestart.reason,connectionId:missing.connectionId,versionBefore:proof.original.version,versionAfterMissing:proof.original.version,portableUnchanged:true,repeatedChecks:3,workerRestart:true,present:control.state,traces}
+  const traces=proof.metadataOnly(),receipt={point:'FILE-007 acceptance 2 missing item',missing:'unresolved',reason:afterRestart.reason,connectionId:missing.connectionId,versionBefore:proof.original.version,versionAfterMissing,portableUnchanged:true,repeatedChecks:3,workerRestart:true,present:control.state,traces}
   console.log('PROBE FILE-007 acceptance-2: matching-account metadata HTTP 404 -> Unresolved, no binding, unchanged version and portable content; repeated checks and Worker restart persist; present control resolves')
   if(process.env.CRADLE_FILE_STORE_MISSING_RECEIPT){const {writeFile}=await import('node:fs/promises');await writeFile(process.env.CRADLE_FILE_STORE_MISSING_RECEIPT,JSON.stringify(receipt,null,2)+'\n')}
  }finally{proof.cleanup()}

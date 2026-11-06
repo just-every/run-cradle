@@ -137,15 +137,17 @@ async function missingStoresBrowser(page,h,width,output){
   await page.reload();await missing.getByRole('button',{name:'Check my store',exact:true}).waitFor();await missing.getByText('Unresolved',{exact:true}).waitFor();assert.equal(await missing.locator('.cr-store-thumb').count(),0);await proof.unchanged()
   assert.deepEqual(thumbnails,[],'A missing unresolved capture never asks for a thumbnail')
   const metadata=proof.metadataOnly()
+  const versionAfterMissing=(await proof.record()).version
   const present=page.locator('.cr-store-reference').filter({hasText:proof.present.name}),response=page.waitForResponse(r=>r.url().endsWith('/file-stores/resolve')&&r.request().method()==='POST'),ready=page.waitForNavigation({waitUntil:'domcontentloaded'})
-  await j.action(present.getByRole('button',{name:'Check my store',exact:true}));const answer=await response;assert.equal(answer.status(),200);assert.equal((await answer.json()).data.state,'resolved');await ready
+  await j.action(present.getByRole('button',{name:'Check my store',exact:true}));const answer=await response;assert.equal(answer.status(),200);await ready
   await present.getByText('Unresolved',{exact:true}).waitFor({state:'detached'});await missing.getByText('Unresolved',{exact:true}).waitFor();assert.equal(await missing.locator('.cr-store-thumb').count(),0)
   const current=await proof.record(),reference=current.fields[proof.address.fieldId].value.find(member=>member.reference.itemId===proof.missing.itemId).reference
+  const resolved=current.fields[proof.address.fieldId].value.find(member=>member.reference.itemId===proof.present.itemId).reference;assert.equal(resolved.resolution,'resolved');assert.ok(resolved.connectionId)
   assert.equal(reference.connectionId,null);assert.equal(reference.resolution,'unresolved');assert.deepEqual(reference.portable,proof.captures[0]);assert.equal(JSON.stringify((await proof.portable())[0]),proof.missingPortable)
   // The resolved control may now fetch its thumbnail; resolution itself used metadata alone.
   assert.ok(metadata.length>=2)
   assert.deepEqual(h.fileStoresProvider.writes,[])
   await j.capture('file-store-return-missing-with-present-control')
-  await writeFile(path.join(output,`file-store-missing-${width}.json`),JSON.stringify({width,missing:{state:reference.resolution,connectionId:reference.connectionId,versionBefore:proof.original.version,versionAfterMissing:proof.original.version,portableUnchanged:true},present:'resolved',metadata,checkpoints:j.checkpoints},null,2)+'\n')
+  await writeFile(path.join(output,`file-store-missing-${width}.json`),JSON.stringify({width,missing:{state:reference.resolution,connectionId:reference.connectionId,versionBefore:proof.original.version,versionAfterMissing,portableUnchanged:true},present:resolved.resolution,metadata,checkpoints:j.checkpoints},null,2)+'\n')
  }finally{page.off('request',observe);proof.cleanup()}
 }
