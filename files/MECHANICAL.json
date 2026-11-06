@@ -1,0 +1,112 @@
+{
+  "checks": [
+    {
+      "name": "types",
+      "command": [
+        "pnpm",
+        "check:types"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:47:54.811414+00:00",
+      "log": "TYPES.log"
+    },
+    {
+      "name": "first-party",
+      "command": [
+        "npx",
+        "-y",
+        "@runeditrun/rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:23.640446+00:00",
+      "log": "FIRST-PARTY.log"
+    },
+    {
+      "name": "views-write",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "write"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:26.042875+00:00",
+      "log": "VIEWS-WRITE.log"
+    },
+    {
+      "name": "views-check",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:26.260287+00:00",
+      "log": "VIEWS-CHECK.log"
+    },
+    {
+      "name": "restore-generated",
+      "command": [
+        "git",
+        "checkout",
+        "origin/main",
+        "--",
+        "ACCEPTANCE.md",
+        "docs/CLAIMS.md"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:26.534973+00:00",
+      "log": "VIEWS-RESTORE.log"
+    },
+    {
+      "name": "lock-write",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "lock"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:26.548346+00:00",
+      "log": "LOCK-WRITE.log"
+    },
+    {
+      "name": "lock-check",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:28.143372+00:00",
+      "log": "LOCK-CHECK.log"
+    },
+    {
+      "name": "test-budget",
+      "command": [
+        "node",
+        "tests/helpers/test-budget.mjs"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:28.949798+00:00",
+      "log": "TEST-BUDGET.log"
+    },
+    {
+      "name": "generated-clean",
+      "command": [
+        "git",
+        "diff",
+        "--exit-code",
+        "origin/main",
+        "--",
+        "ACCEPTANCE.md",
+        "docs/CLAIMS.md"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T02:48:30.475134+00:00",
+      "log": "VIEWS-CLEAN.log"
+    }
+  ],
+  "ledger": "none: no migration changed"
+}

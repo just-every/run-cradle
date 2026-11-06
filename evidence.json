@@ -1,0 +1,178 @@
+{
+  "files": [
+    {
+      "blob": "e9b38226059d3c57857bc539efbabc7aaf75e464",
+      "bytes": 1627,
+      "path": "BASELINE.json",
+      "sha256": "5b36aba5704c6ff6acdeb27ea38060139a39cac104abe16ae9f37eec31b2a6e3"
+    },
+    {
+      "blob": "061a050004777acc64843ae2046aebb9b6ed5b67",
+      "bytes": 219,
+      "path": "CANDIDATE-CI.jsonl",
+      "sha256": "3bfd7fe2cbaa2d8019818fd2cd6b2f859e1df160bce8367d6e11c21d8b1a53ab"
+    },
+    {
+      "blob": "6e80d8fb023858f7104543faf072deaf6a75b9f9",
+      "bytes": 2471,
+      "path": "EVENT-CONTROL-INITIAL.log",
+      "sha256": "586944a77e6ee91f48310e04b3db1ef372a8896c181e5da80a3ad5c18a60b3aa"
+    },
+    {
+      "blob": "8a04f452160606649d9ee80e324042c2b385b531",
+      "bytes": 2269,
+      "path": "EVENT-CONTROL.log",
+      "sha256": "bda94f892d62a277b1a509a47f04d0e8da1b4c52112c3d7210cf45475e0beedf"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "FIRST-PARTY.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "55bfeff023c4ae17dc59e12f86f446b1960e6b53",
+      "bytes": 85,
+      "path": "IDENTITY.log",
+      "sha256": "148bad84b5b174568017df50d58e073566703d43c6c9fe7fa6f1af04420adf55"
+    },
+    {
+      "blob": "149bc94e23603625bfc9cfef978146978c48ddb3",
+      "bytes": 644669,
+      "path": "LOCK-CHECK.log",
+      "sha256": "920920d3303bfeeed28d0a6ab575437669c61a81ac76329aa1b6693a9d6070ab"
+    },
+    {
+      "blob": "af1ceb6c89691ef618a5f4eeb40a4d6f11b1239b",
+      "bytes": 644655,
+      "path": "LOCK-WRITE.log",
+      "sha256": "1a02ad2aa0f7f5be9895c1b883200124fab15a9bafaa11af91eca5bee5b21450"
+    },
+    {
+      "blob": "42c7137b819f8c1a00d0e07c714297f757e0110b",
+      "bytes": 1375,
+      "path": "MAIN-CI.jsonl",
+      "sha256": "d4b1685bce4c2af92c78ab77bce8023733be964c5907fd25cc23447f844f5c36"
+    },
+    {
+      "blob": "5dd60b31439dce6ae53820d0b61b96f18416fddd",
+      "bytes": 2364,
+      "path": "MECHANICAL.json",
+      "sha256": "e763bf5e94cb5384e91b1b144ae73be040cd8eefe608ff4440b18cd7c00a8555"
+    },
+    {
+      "blob": "7e80723396309887c30d21238985460d3fa424ad",
+      "bytes": 1923,
+      "path": "PLAN.md",
+      "sha256": "a175c773dacf87315b4ccaabfc613c316bdbdbb8746871cc0e8810f38b2d4965"
+    },
+    {
+      "blob": "b947c0b14486c7743f013c1eef292e8a6fa32c8a",
+      "bytes": 1759,
+      "path": "PROBES.md",
+      "sha256": "5b594210b3f4e7f38fff2dd5cb38876c05fb8522fa0ba544cbcabc5d5ca5c022"
+    },
+    {
+      "blob": "3d52e310c839da4d548a8c7384497c496a5bfb19",
+      "bytes": 908,
+      "path": "PUSH.log",
+      "sha256": "ab63f77e7ab53d79b0bb67663795846affe6189b9fe474fdcbb1a1bf88521ed0"
+    },
+    {
+      "blob": "200fef73bb644a7571e2d328078bf62694a44281",
+      "bytes": 8356,
+      "path": "RECEIPT.json",
+      "sha256": "00b36e820a046222bed2d1607a4e62efba4d7586cbb1c525e483e522e6f12d90"
+    },
+    {
+      "blob": "22640d07dd2f85678d3a54437771a4a64cff99a6",
+      "bytes": 7333,
+      "path": "REPORT.md",
+      "sha256": "94eb472e652e91a6c1622a4e84e23c9dffac9b02b0596cb2120d8350adc4f0c1"
+    },
+    {
+      "blob": "fba560db7c48416c914446f2a1e319a79104d105",
+      "bytes": 67,
+      "path": "RESTORED-VIEWS-CHECK.log",
+      "sha256": "183372998615cc516043a5f66404b300281009a84349eda72da66d79fe542603"
+    },
+    {
+      "blob": "2935b176a2463b297131b0a7a2b9f6939d3f622d",
+      "bytes": 284,
+      "path": "STAGED-CHECKS.json",
+      "sha256": "311d9671b92b3cb9a9dc0c0073c03e31ebc1470ba8021465484f1406c762b88a"
+    },
+    {
+      "blob": "e3e597b0922cb673100cf44b5d9efcb90dad9bcb",
+      "bytes": 10,
+      "path": "TEST-BUDGET.log",
+      "sha256": "2a93f71d13fa1fd3a73b8648bd6722977521bff8592c08884f8a79e84dad478a"
+    },
+    {
+      "blob": "6c027bcfe76802a6781e63086c9063aad2120a37",
+      "bytes": 178,
+      "path": "TYPES.log",
+      "sha256": "d90a4b78f9f3ac11154562cda1525832d96ce306d267db0efe66069b247e7ea4"
+    },
+    {
+      "blob": "c548ba3351d8eb19ae6e3eb1355c81245fdac2d6",
+      "bytes": 1584,
+      "path": "VERIFY-AGGREGATE-FAILED.log",
+      "sha256": "8fbbeebffb327d27e7a07fc470f30eaa0a27d79107fd633c5d9505a86dd793d1"
+    },
+    {
+      "blob": "905aecaaf44ed8278d6481e06ced23b82d5e56f5",
+      "bytes": 1035,
+      "path": "VERIFY-BUILD-FAILED.log",
+      "sha256": "f6ffe3488c2411eed504f4ec464a78c79614ec2eb3a42f241f4ea3d8227dfce9"
+    },
+    {
+      "blob": "359b65fc84c674aec52d7169b088f3265cff3bdf",
+      "bytes": 574,
+      "path": "VERIFY-JOBS.jsonl",
+      "sha256": "64eedcbfd773094cd9d0b73379ae87dd2706d637ce4851688ef45fdb248bb153"
+    },
+    {
+      "blob": "832417f8541d3c8e05286a2db4072c67113a68aa",
+      "bytes": 361,
+      "path": "VERIFY-LOG-RECEIPT.json",
+      "sha256": "dc06d78d6602c17d36d6855223e1cd04163e6b2cb37e3ddb430bbc4474c5aebd"
+    },
+    {
+      "blob": "83997bb0218d6542ca3ce1c9741729170242b057",
+      "bytes": 179,
+      "path": "VERIFY-STATUS.json",
+      "sha256": "2c78c13d66f62d22fefb324a530091674143b7fe737321586fca1fc544e44a82"
+    },
+    {
+      "blob": "ae869b2fafd3acf46a2dc6ce35ec869497ae9cfb",
+      "bytes": 32,
+      "path": "VIEWS-CHECK.log",
+      "sha256": "c21aae40192141751d6d5c7a3a1d0eb701a6852f305d592d77b4dcab9c2536ab"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "VIEWS-CLEAN.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "VIEWS-RESTORE.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "blob": "d4d1e60ea7fdc565c576421664992b40e47a816e",
+      "bytes": 28,
+      "path": "VIEWS-WRITE.log",
+      "sha256": "df91012bf66fb476e9cd1a30c002829398beb55f869e07cc7be477197fa5a276"
+    }
+  ],
+  "product_branch": "cloud/sd-cradle-c-f189",
+  "product_head": "35a5227158a0ecafb2d127a3c8eb6c93106126e1",
+  "ref": "refs/heads/evidence/sd-cradle-c-f189",
+  "repository": "just-every/run-cradle",
+  "schema": 1,
+  "tag": "sd-cradle-c-f189"
+}

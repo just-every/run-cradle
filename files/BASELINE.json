@@ -1,0 +1,25 @@
+{
+  "head": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "clauses": 257,
+  "target": {
+    "id": "CAMP-009",
+    "title": "Archiving",
+    "kind": "published",
+    "status": "partial",
+    "evidence": [
+      "tests/launch-write-effects.mjs",
+      "tests/ui-launch-walkthrough.mjs"
+    ],
+    "gap": "Missing a public archive journey on populated work that executes archive and reads all withdrawals, cancellations and held-mail disposal without completing/resolving the children. Cited tests/launch-write-effects.mjs, tests/ui-launch-walkthrough.mjs show: Public archive is read in portfolio/collections; internal lifecycle helpers inspect queue/readiness/mail/digest effects.",
+    "area": "Campaigns",
+    "text": "**Requirement.** Archiving withdraws a campaign’s active work without completing it. **Acceptance.** 1. Archiving a campaign is allowed while it has open deliverables, milestones, risks, and decisions, and withdraws its work in one commit: its unresolved decisions leave Decision Queue, its risks and milestones leave every lens and the digest, its incomplete deliverables and milestones stop counting as overdue, it leaves the counts in CAMP-006 and every search that does not ask for archived campaigns, its outstanding readiness requests and every queued automation run whose subject is that campaign or one of its records are canceled without executing an action, and email held under NOTIFY-002 for that campaign is dropped. 2. Archiving completes and resolves nothing.",
+    "line": 513,
+    "row": 3063
+  },
+  "tests": 174
+}

@@ -1,0 +1,15 @@
+{
+  "run": 42153042618,
+  "jobs": [
+    {
+      "id": 127680633351,
+      "command": "gh run view 42153042618 --repo just-every/run-cradle --job 127680633351 --log-failed",
+      "exit": 0
+    },
+    {
+      "id": 127680736275,
+      "command": "gh run view 42153042618 --repo just-every/run-cradle --job 127680736275 --log-failed",
+      "exit": 0
+    }
+  ]
+}

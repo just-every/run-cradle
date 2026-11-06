@@ -1,0 +1,38 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✖ [CAMP-009] [AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; archive and disable cancel queued work before any effect; full run history pages with each attempted action and a 30-day success rate (67050.658725ms)
+✔ [AUTO-005/011] emitted campaign brief runs at most once per hour and skips unchanged allowed context (65529.030489ms)
+✔ [AUTO-003 AI-003] duplicate emitted queue delivery during an in-flight brief preserves its wake-up and completes once (63473.462754ms)
+✔ [AUTO-005/011 AI-002] [AUTO-010] bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress (68368.978671ms)
+✔ [AUTO-008] revoked saved automation authority fails queued work visibly without a business effect (67196.048638ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 333963.170873
+
+✖ failing tests:
+
+test at tests/launch-installed-event-control.mjs:11:1
+✖ [CAMP-009] [AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; archive and disable cancel queued work before any effect; full run history pages with each attempted action and a 30-day success rate (67050.658725ms)
+  AssertionError [ERR_ASSERTION]: Unrelated work completes exactly once
+  
+  0 !== 1
+  
+      at replay (file:///workspace/sd-cradle-c-f189/tests/helpers/launch-campaign-lifecycle-clauses.mjs:102:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async verifyPublicQueuedCampaignArchive (file:///workspace/sd-cradle-c-f189/tests/helpers/launch-campaign-lifecycle-clauses.mjs:104:2)
+      at async TestContext.<anonymous> (file:///workspace/sd-cradle-c-f189/tests/launch-installed-event-control.mjs:13:3)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

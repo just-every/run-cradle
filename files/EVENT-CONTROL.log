@@ -1,0 +1,41 @@
+TAP version 13
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# Subtest: [CAMP-009] [AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; archive and disable cancel queued work before any effect; full run history pages with each attempted action and a 30-day success rate
+ok 1 - [CAMP-009] [AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; archive and disable cancel queued work before any effect; full run history pages with each attempted action and a 30-day success rate
+  ---
+  duration_ms: 78770.956217
+  type: 'test'
+  ...
+# Subtest: [AUTO-005/011] emitted campaign brief runs at most once per hour and skips unchanged allowed context
+ok 2 - [AUTO-005/011] emitted campaign brief runs at most once per hour and skips unchanged allowed context
+  ---
+  duration_ms: 73183.232352
+  type: 'test'
+  ...
+# Subtest: [AUTO-003 AI-003] duplicate emitted queue delivery during an in-flight brief preserves its wake-up and completes once
+ok 3 - [AUTO-003 AI-003] duplicate emitted queue delivery during an in-flight brief preserves its wake-up and completes once
+  ---
+  duration_ms: 68479.947274
+  type: 'test'
+  ...
+# Subtest: [AUTO-005/011 AI-002] [AUTO-010] bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress
+ok 4 - [AUTO-005/011 AI-002] [AUTO-010] bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress
+  ---
+  duration_ms: 68133.505559
+  type: 'test'
+  ...
+# Subtest: [AUTO-008] revoked saved automation authority fails queued work visibly without a business effect
+ok 5 - [AUTO-008] revoked saved automation authority fails queued work visibly without a business effect
+  ---
+  duration_ms: 68346.647674
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 359715.403981

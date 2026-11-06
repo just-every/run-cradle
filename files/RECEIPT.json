@@ -1,0 +1,288 @@
+{
+  "tag": "sd-cradle-c-f189",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f189",
+  "head": "35a5227158a0ecafb2d127a3c8eb6c93106126e1",
+  "tree": "6097ef53ac8ba20a86e586617928d483b0086842",
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "mainIntegrated": true,
+  "productPushed": true,
+  "remoteHead": "35a5227158a0ecafb2d127a3c8eb6c93106126e1",
+  "pr": null,
+  "clause": {
+    "id": "CAMP-009",
+    "before": "partial",
+    "after": "partial",
+    "selectedPoint": "acceptance 1: public queued-run cancellation for a campaign and one risk child",
+    "remainingGap": "See REPORT.md and CONTRACT.md"
+  },
+  "countsBefore": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "countsAfter": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "testRegistrations": {
+    "before": 174,
+    "after": 174,
+    "cap": 200
+  },
+  "changedFiles": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "tests/helpers/launch-base-authority-runtime.mjs",
+    "tests/helpers/launch-queued-campaign-archive.mjs",
+    "tests/launch-installed-event-control.mjs"
+  ],
+  "localTests": {
+    "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-reporter=tap --test-concurrency=1 tests/launch-installed-event-control.mjs",
+    "exit": 0,
+    "tests": 5,
+    "pass": 5,
+    "fail": 0,
+    "skip": 0,
+    "durationMs": 359715.403981,
+    "log": "EVENT-CONTROL.log",
+    "note": "Executed on candidate source bytes before commit; the final helper edit only removed an extra blank EOF line. No assertion or executable source changed after the passing run began."
+  },
+  "mechanical": {
+    "checks": [
+      {
+        "name": "types",
+        "command": [
+          "pnpm",
+          "check:types"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:47:54.811414+00:00",
+        "log": "TYPES.log"
+      },
+      {
+        "name": "first-party",
+        "command": [
+          "npx",
+          "-y",
+          "@runeditrun/rer",
+          "check",
+          "--profile",
+          "first-party"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:23.640446+00:00",
+        "log": "FIRST-PARTY.log"
+      },
+      {
+        "name": "views-write",
+        "command": [
+          "node",
+          "src/base/contract-docs.mjs",
+          "write"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:26.042875+00:00",
+        "log": "VIEWS-WRITE.log"
+      },
+      {
+        "name": "views-check",
+        "command": [
+          "node",
+          "src/base/contract-docs.mjs",
+          "check"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:26.260287+00:00",
+        "log": "VIEWS-CHECK.log"
+      },
+      {
+        "name": "restore-generated",
+        "command": [
+          "git",
+          "checkout",
+          "origin/main",
+          "--",
+          "ACCEPTANCE.md",
+          "docs/CLAIMS.md"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:26.534973+00:00",
+        "log": "VIEWS-RESTORE.log"
+      },
+      {
+        "name": "lock-write",
+        "command": [
+          "node",
+          "scripts/edition-authoring/cli.mjs",
+          "lock"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:26.548346+00:00",
+        "log": "LOCK-WRITE.log"
+      },
+      {
+        "name": "lock-check",
+        "command": [
+          "node",
+          "scripts/edition-authoring/cli.mjs",
+          "check"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:28.143372+00:00",
+        "log": "LOCK-CHECK.log"
+      },
+      {
+        "name": "test-budget",
+        "command": [
+          "node",
+          "tests/helpers/test-budget.mjs"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:28.949798+00:00",
+        "log": "TEST-BUDGET.log"
+      },
+      {
+        "name": "generated-clean",
+        "command": [
+          "git",
+          "diff",
+          "--exit-code",
+          "origin/main",
+          "--",
+          "ACCEPTANCE.md",
+          "docs/CLAIMS.md"
+        ],
+        "exit": 0,
+        "started": "2026-11-06T02:48:30.475134+00:00",
+        "log": "VIEWS-CLEAN.log"
+      }
+    ],
+    "ledger": "none: no migration changed"
+  },
+  "identity": {
+    "candidateCommitCount": 1,
+    "author": "Run Edit Run fleet",
+    "committer": "Run Edit Run fleet",
+    "trailers": [],
+    "allSideParentsInspected": true,
+    "openaiCoauthorAbsent": true
+  },
+  "generatedViewsCommitted": false,
+  "assertionsRemovedOrNarrowed": false,
+  "newPolicy": false,
+  "uiChanged": false,
+  "migrationChanged": false,
+  "publicationScan": {
+    "status": "not run in cloud; fleet gate",
+    "complete": null,
+    "historyScanned": null,
+    "findings": null
+  },
+  "landing": "not claimed; guarded fleet gate",
+  "runSite": "not claimed on candidate",
+  "doneClaim": false,
+  "blockersSelectedPoint": [],
+  "createdUtc": "2026-11-06T02:53:07.623312+00:00",
+  "productSourceHashes": {
+    "CONTRACT.md": "97de656b9628ba6742d82077a647209229abbd50a5302935a48aa61faa86258b",
+    "sources.lock.json": "047a086ed7b7e756b92c0965d08528d6138ba9d741df4cc221e41fafe2baee3d",
+    "tests/helpers/launch-base-authority-runtime.mjs": "26c4e30589ad737d73f5d8147a4faaf739d1963a2620fc7780bf552f6e88b6f4",
+    "tests/helpers/launch-queued-campaign-archive.mjs": "2b05f72a1179ee7abb41d8a9962350a54385790752143c616811a087ab29d475",
+    "tests/launch-installed-event-control.mjs": "7850f606adf6860f1a7ee26e9a361cd9905e3c71e182f9f7e0e827b38a420ba0"
+  },
+  "ci": {
+    "at": 1793933550.5347195,
+    "runs": [
+      {
+        "conclusion": null,
+        "event": "push",
+        "head_sha": "35a5227158a0ecafb2d127a3c8eb6c93106126e1",
+        "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153042618",
+        "id": 42153042618,
+        "name": "Verify",
+        "status": "queued"
+      }
+    ],
+    "final": {
+      "conclusion": "failure",
+      "head_sha": "35a5227158a0ecafb2d127a3c8eb6c93106126e1",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42153042618",
+      "status": "completed"
+    },
+    "runId": 42153042618,
+    "jobs": [
+      {
+        "conclusion": "success",
+        "failedSteps": [],
+        "id": 127680585146,
+        "name": "plan",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "failedSteps": [
+          {
+            "conclusion": "failure",
+            "name": "Check generated contract documents",
+            "number": 8
+          }
+        ],
+        "id": 127680633351,
+        "name": "build",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "failedSteps": [
+          {
+            "conclusion": "failure",
+            "name": "Require the plan and every verification worker",
+            "number": 2
+          }
+        ],
+        "id": 127680736275,
+        "name": "verify",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "failedSteps": [],
+        "id": 127680737587,
+        "name": "verify-${{ matrix.name }}",
+        "status": "completed"
+      }
+    ],
+    "classification": "Only stale ACCEPTANCE.md in generated contract check; downstream aggregate failure and skipped shards. Permitted generated-view exception applies; no test failure or repair.",
+    "actualSuccess": false,
+    "acceptedUnderGeneratedViewException": true,
+    "logReceipt": {
+      "run": 42153042618,
+      "jobs": [
+        {
+          "id": 127680633351,
+          "command": "gh run view 42153042618 --repo just-every/run-cradle --job 127680633351 --log-failed",
+          "exit": 0
+        },
+        {
+          "id": 127680736275,
+          "command": "gh run view 42153042618 --repo just-every/run-cradle --job 127680736275 --log-failed",
+          "exit": 0
+        }
+      ]
+    }
+  },
+  "restoredViewsCheck": {
+    "exit": 1,
+    "log": "RESTORED-VIEWS-CHECK.log",
+    "classification": "expected stale ACCEPTANCE.md after required restoration; not a product failure"
+  },
+  "githubCalls": 6,
+  "planRowsChanged": [
+    "CAMP-009 Evidence and remaining Gap; status remains partial"
+  ],
+  "ready": "Product pushed; local touched gates pass; Verify only generated-view exception; fleet owns publication scan, regenerated-view Verify, guarded landing and Run site."
+}
