@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "8ea02d0ae0b7f403464cb1aaafeb2ce4a47a8377627cf50b630803eb9b1ab6cb",
+      "sha256": "c3562884d0eb4fbe836f67eee1883781632f1c9cb252644972b03afc48e17ab6",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "cdf25b010e691b00b54ce80b5b40dad7fd9de96e2511ca05305f58ee79d9ca73",
+      "sha256": "8cfcc20f054fb2c0a88d89b51529ae25d4f06ae8d2c350814ef8d9dd03ffabfd",
       "executable": false
     },
     "DEMO.md": {
@@ -13150,7 +13150,7 @@
       "executable": false
     },
     "tests/launch-installed-event-control.mjs": {
-      "sha256": "d4ce35d21d3cf57a3a4c1dd2bf42660e34400ad96483cace58af3cd7da0306ef",
+      "sha256": "0921d82ff615f4b7506c81970c67e6cec01d0fbefec42f45bb1ff1ee0281ac82",
       "executable": false
     },
     "tests/launch-installed-network-cancel.mjs": {
