@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "7fcab0c696427e5b7ec91538ad4446ecf2cf4178164933adf53c4102d5fa6823",
+      "sha256": "db52a838e21fae1871fe836133fa62884855fd350d0a2b3d5e273b6939a13fb7",
       "executable": false
     },
     "DEMO.md": {
@@ -12318,7 +12318,7 @@
       "executable": false
     },
     "tests/helpers/launch-activity-order-screens.mjs": {
-      "sha256": "e57982dc6ec603d3f03323fe42c333662652419d4ecf63698e5f495d69add337",
+      "sha256": "5a080b92cadb54c679918477e1cb0854fdd16f9f6510b68b5e3c437c931ec6f1",
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {
