@@ -1,0 +1,23 @@
+[
+  {
+    "attempt": 1,
+    "exit": 128,
+    "output": "remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https://github.com/just-every/run-cradle.git/'\n"
+  },
+  {
+    "attempt": 2,
+    "exit": 128,
+    "HTTP": "unknown (not supplied by Git)",
+    "output": "remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https://github.com/just-every/run-cradle.git/'\n",
+    "refreshExit": 0,
+    "setupExit": 0
+  },
+  {
+    "attempt": 3,
+    "exit": 0,
+    "HTTP": "unknown (not supplied by Git)",
+    "output": "35a5227158a0ecafb2d127a3c8eb6c93106126e1\trefs/heads/cloud/sd-cradle-c-f189\ne556953bb3a09c1c3cf9c5a15771f19dd3b1413b\trefs/heads/evidence/sd-cradle-c-f189\n",
+    "refreshExit": 0,
+    "setupExit": 0
+  }
+]

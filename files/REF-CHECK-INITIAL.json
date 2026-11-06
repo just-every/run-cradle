@@ -1,0 +1,4 @@
+{
+  "exit": 128,
+  "output": "remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https://github.com/just-every/run-cradle.git/'\n"
+}

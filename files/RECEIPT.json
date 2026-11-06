@@ -284,5 +284,13 @@
   "planRowsChanged": [
     "CAMP-009 Evidence and remaining Gap; status remains partial"
   ],
-  "ready": "Product pushed; local touched gates pass; Verify only generated-view exception; fleet owns publication scan, regenerated-view Verify, guarded landing and Run site."
+  "ready": "Product pushed; local touched gates pass; Verify only generated-view exception; fleet owns publication scan, regenerated-view Verify, guarded landing and Run site.",
+  "terminalRefVerification": {
+    "status": "success",
+    "attempt": 3,
+    "log": "REF-RECOVERY.json",
+    "productHead": "35a5227158a0ecafb2d127a3c8eb6c93106126e1",
+    "priorEvidenceHead": "e556953bb3a09c1c3cf9c5a15771f19dd3b1413b",
+    "note": "A final read-only check initially failed authentication; fleet refresh and backoff recovered. Both original pushes had succeeded; no product commit was lost or rewritten."
+  }
 }
