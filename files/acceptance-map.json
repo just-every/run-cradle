@@ -1,0 +1,47 @@
+{
+  "clause": "ACT-001",
+  "status": "partial",
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "statusRows": 257,
+  "points": [
+    {
+      "id": "1",
+      "requirement": "Campaign activity is ordered newest first.",
+      "covered": "Human campaign field changes: three distinguishable two-field edits with fresh public revisions, bounded disjoint intervals, direct reverse authored command order in public detail and collapsed and expanded groups at 1440 and 390.",
+      "native": "tests/helpers/launch-activity-order-journey.mjs:7-68",
+      "browser": "tests/helpers/launch-activity-order-screens.mjs:4-47",
+      "remaining": "Equal-time ordering and broader history capacity; broader event types remain unclaimed."
+    },
+    {
+      "id": "2",
+      "requirement": "Every campaign and child create, field change, archive, restore and delete, comments, imports and automation mutations.",
+      "covered": "Existing native and browser journeys provide partial event coverage.",
+      "remaining": "Complete event matrix remains explicitly held by the assignment."
+    },
+    {
+      "id": "3",
+      "requirement": "Per-entry type, subject identity, actor or run, time and field before and after values.",
+      "covered": "Native selected human edits check all those human attribution fields and both changed fields.",
+      "remaining": "Complete per-entry attribution for every event type and automation run remains explicitly held."
+    },
+    {
+      "id": "4",
+      "requirement": "Activity is the visible Base audit view and campaign deletion removes the view.",
+      "covered": "No new claim.",
+      "remaining": "Campaign deletion and retained anonymized audit remain explicitly held; the acceptance source is not rewritten."
+    }
+  ],
+  "policy": "No new policy decision or acceptance text change. No DONE claim.",
+  "releasePrerequisites": [
+    "ct contract conversion",
+    "generated-document synchronization",
+    "independent whole-clause judgment",
+    "guarded landing",
+    "exact-candidate publication scan",
+    "candidate Run site"
+  ]
+}

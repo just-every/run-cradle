@@ -1,0 +1,59 @@
+{
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "checks": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email <fleet identity> --non-interactive",
+      "exit": 0,
+      "notes": "Through cloud_run. Setup output is excluded from public evidence."
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "notes": "Through cloud_run; emitted Worker used by native and browser journeys."
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "registrations": 174,
+      "cap": 200
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-write-effects.mjs",
+      "exit": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "provenance": "Run started at parent 3534997; native implementation and native test bytes are identical at candidate. Browser helper, contract Evidence and source lock are the only final commit changes."
+    },
+    {
+      "command": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium node tests/ui-launch-walkthrough.mjs",
+      "exit": 0,
+      "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+      "widths": [
+        1440,
+        390
+      ],
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "screens": 206,
+      "pageErrors": 0,
+      "externalRequests": 0,
+      "unhandledConsoleErrors": 0
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs /tmp/cradle-focused-activity.mjs native",
+      "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+      "exit": 0,
+      "notes": "After restoration, actual public HTTP proof repeated on the exact clean candidate."
+    }
+  ]
+}

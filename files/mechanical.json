@@ -1,0 +1,43 @@
+{
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "contractWrite": {
+    "command": "node src/base/contract-docs.mjs write",
+    "exit": 0,
+    "output": "Wrote 1 contract documents.\nContract documents are current.\n"
+  },
+  "contractCheck": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 0,
+    "viewsRestoredFrom": "origin/main",
+    "viewsCommitted": false
+  },
+  "sourceLock": {
+    "command": "node scripts/edition-authoring/cli.mjs lock",
+    "exit": 0,
+    "checkCommand": "node scripts/edition-authoring/cli.mjs check",
+    "checkExit": 0,
+    "ok": true
+  },
+  "migrationLedger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration change."
+  },
+  "statusRows": {
+    "before": 257,
+    "after": 257,
+    "dropped": 0
+  },
+  "allTableRows": 425,
+  "diffEmailFindings": 0,
+  "publicationScan": {
+    "status": "not run in cloud",
+    "reason": "The cloud task cannot run the fleet publication scan; the guarded lander owns exact-tree scanning."
+  },
+  "restoredViewCheck": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "output": "ACCEPTANCE.md: generated content differs; run contract-docs write.\n",
+    "expected": true
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "campaignId": "01M6QF2RXKDCQHNH8P5JG6NBJ3",
+  "authored": [
+    {
+      "commandId": "01M6QF2RYZWVTKE2RDWG2YKJVQ",
+      "name": "Zulu release review",
+      "objective": "Review the supplier evidence",
+      "started": 1793936417759,
+      "finished": 1793936417792,
+      "version": 2,
+      "occurredAt": "2026-11-06T03:40:17.772Z"
+    },
+    {
+      "commandId": "01M6QF2S0XX254WJDR0KSWQXTH",
+      "name": "Alpha release preparation",
+      "objective": "Prepare the approved package",
+      "started": 1793936417821,
+      "finished": 1793936417852,
+      "version": 3,
+      "occurredAt": "2026-11-06T03:40:17.835Z"
+    },
+    {
+      "commandId": "01M6QF2S2V398FZ791C9RTQTH5",
+      "name": "Mike release confirmation",
+      "objective": "Confirm the delivery handover",
+      "started": 1793936417883,
+      "finished": 1793936417915,
+      "version": 4,
+      "occurredAt": "2026-11-06T03:40:17.895Z"
+    }
+  ],
+  "expectedActions": [
+    "01M6QF2S2V398FZ791C9RTQTH5",
+    "01M6QF2S0XX254WJDR0KSWQXTH",
+    "01M6QF2RYZWVTKE2RDWG2YKJVQ"
+  ],
+  "observedActions": [
+    "01M6QF2S2V398FZ791C9RTQTH5",
+    "01M6QF2S2V398FZ791C9RTQTH5",
+    "01M6QF2S0XX254WJDR0KSWQXTH",
+    "01M6QF2S0XX254WJDR0KSWQXTH",
+    "01M6QF2RYZWVTKE2RDWG2YKJVQ",
+    "01M6QF2RYZWVTKE2RDWG2YKJVQ"
+  ]
+}

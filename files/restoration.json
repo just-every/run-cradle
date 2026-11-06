@@ -1,0 +1,20 @@
+{
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "worktreeClean": true,
+  "indexClean": true,
+  "restoredBuildExit": 0,
+  "restoredNativeExit": 0,
+  "restoredLockExit": 0,
+  "mutatedSourceFiles": [
+    {
+      "path": "src/core/features/campaigns/repository.ts",
+      "matchesCommittedBytes": true,
+      "sha256": "0cc7e019670014a88ac7833fc4c63f4f89737ed55296d977146c7843a496cbc3"
+    },
+    {
+      "path": "src/core/features/portfolio/ui/activity-presentation.ts",
+      "matchesCommittedBytes": true,
+      "sha256": "35078ac15821a48eeebab0ad621eeb093d4a151ec52104ac21470fe1fccb695c"
+    }
+  ]
+}

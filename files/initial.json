@@ -1,0 +1,9 @@
+{
+  "tag": "sd-cradle-c-f200",
+  "repository": "just-every/run-cradle",
+  "base": "e6a77220e30e200460edc6e751b46c7b7e19c377",
+  "initialMain": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "selectedPoint": "ACT-001 acceptance 1, human campaign field edits",
+  "statusBefore": "partial",
+  "doneClaim": false
+}

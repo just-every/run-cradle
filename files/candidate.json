@@ -1,0 +1,18 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f200",
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "initialMain": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "specifiedBase": "e6a77220e30e200460edc6e751b46c7b7e19c377",
+  "integrationSave": "3534997",
+  "newChange": "Added visible vertical-order assertion to the retained browser helper and updated ACT-001 Evidence. No production behavior change was needed.",
+  "status": "partial",
+  "registrationCount": 174,
+  "statusCounts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "generatedViewsCommitted": false,
+  "planRowsChanged": []
+}

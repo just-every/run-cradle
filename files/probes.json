@@ -1,0 +1,225 @@
+{
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "points": [
+    {
+      "id": "ACT-001 1",
+      "door": "POST native campaign commands and GET public campaign detail",
+      "input": "Create campaign; three two-field edits using fresh versions at independently observed distinct intervals.",
+      "observed": "Versions 2, 3 and 4, exactly two correctly attributed field facts per command, reverse authored command sequence with adjacent facts."
+    },
+    {
+      "id": "ACT-001 1 browser",
+      "door": "Built campaign detail Activity disclosure at 1440 and 390",
+      "input": "Read collapsed groups; expand change details.",
+      "observed": "Three grouped edits in reverse authored command order, correct field values and timestamps, visible positions increasing in the same observed DOM order."
+    }
+  ],
+  "browserOrdering": [
+    {
+      "width": 1440,
+      "campaignId": "01M6QERNXE7F2DFG9GTNYG9VVG",
+      "authored": [
+        {
+          "commandId": "01M6QERNYCGJ31F88NRXXQP1RR",
+          "name": "Zulu release review",
+          "objective": "Review the supplier evidence",
+          "started": 1793936086988,
+          "finished": 1793936087016,
+          "version": 2,
+          "occurredAt": "2026-11-06T03:34:47.000Z"
+        },
+        {
+          "commandId": "01M6QERP00MFH3D0PVJ3VQ6FV4",
+          "name": "Alpha release preparation",
+          "objective": "Prepare the approved package",
+          "started": 1793936087040,
+          "finished": 1793936087097,
+          "version": 3,
+          "occurredAt": "2026-11-06T03:34:47.051Z"
+        },
+        {
+          "commandId": "01M6QERP2PMF29AE2VGJDFFW4Q",
+          "name": "Mike release confirmation",
+          "objective": "Confirm the delivery handover",
+          "started": 1793936087126,
+          "finished": 1793936087152,
+          "version": 4,
+          "occurredAt": "2026-11-06T03:34:47.136Z"
+        }
+      ],
+      "expectedActions": [
+        "01M6QERP2PMF29AE2VGJDFFW4Q",
+        "01M6QERP00MFH3D0PVJ3VQ6FV4",
+        "01M6QERNYCGJ31F88NRXXQP1RR"
+      ],
+      "observedActions": [
+        "01M6QERP2PMF29AE2VGJDFFW4Q",
+        "01M6QERP2PMF29AE2VGJDFFW4Q",
+        "01M6QERP00MFH3D0PVJ3VQ6FV4",
+        "01M6QERP00MFH3D0PVJ3VQ6FV4",
+        "01M6QERNYCGJ31F88NRXXQP1RR",
+        "01M6QERNYCGJ31F88NRXXQP1RR"
+      ],
+      "collapsedActions": [
+        "01M6QERP2PMF29AE2VGJDFFW4Q",
+        "01M6QERP00MFH3D0PVJ3VQ6FV4",
+        "01M6QERNYCGJ31F88NRXXQP1RR"
+      ],
+      "renderedActions": [
+        "01M6QERP2PMF29AE2VGJDFFW4Q",
+        "01M6QERP00MFH3D0PVJ3VQ6FV4",
+        "01M6QERNYCGJ31F88NRXXQP1RR"
+      ],
+      "groups": [
+        {
+          "occurredAt": "2026-11-06T03:34:47.136Z",
+          "top": 19.234375,
+          "changes": [
+            {
+              "field": "Name",
+              "value": "Alpha release preparation \u2192 Mike release confirmation"
+            },
+            {
+              "field": "Objective",
+              "value": "Prepare the approved package \u2192 Confirm the delivery handover"
+            }
+          ],
+          "commandId": "01M6QERP2PMF29AE2VGJDFFW4Q"
+        },
+        {
+          "occurredAt": "2026-11-06T03:34:47.051Z",
+          "top": 213.453125,
+          "changes": [
+            {
+              "field": "Objective",
+              "value": "Review the supplier evidence \u2192 Prepare the approved package"
+            },
+            {
+              "field": "Name",
+              "value": "Zulu release review \u2192 Alpha release preparation"
+            }
+          ],
+          "commandId": "01M6QERP00MFH3D0PVJ3VQ6FV4"
+        },
+        {
+          "occurredAt": "2026-11-06T03:34:47.000Z",
+          "top": 407.671875,
+          "changes": [
+            {
+              "field": "Name",
+              "value": "Initial activity campaign \u2192 Zulu release review"
+            },
+            {
+              "field": "Objective",
+              "value": "Initial activity objective \u2192 Review the supplier evidence"
+            }
+          ],
+          "commandId": "01M6QERNYCGJ31F88NRXXQP1RR"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "campaignId": "01M6QEW8K5TTX17YZ2HWY3W098",
+      "authored": [
+        {
+          "commandId": "01M6QEW8Q90XQ735GKKAKC5HWC",
+          "name": "Zulu release review",
+          "objective": "Review the supplier evidence",
+          "started": 1793936204521,
+          "finished": 1793936204552,
+          "version": 2,
+          "occurredAt": "2026-11-06T03:36:44.537Z"
+        },
+        {
+          "commandId": "01M6QEW8S0KFJK2PRDQ4D0C60W",
+          "name": "Alpha release preparation",
+          "objective": "Prepare the approved package",
+          "started": 1793936204576,
+          "finished": 1793936204600,
+          "version": 3,
+          "occurredAt": "2026-11-06T03:36:44.586Z"
+        },
+        {
+          "commandId": "01M6QEW8TF23PS2GNQY8HCKW0Y",
+          "name": "Mike release confirmation",
+          "objective": "Confirm the delivery handover",
+          "started": 1793936204623,
+          "finished": 1793936204647,
+          "version": 4,
+          "occurredAt": "2026-11-06T03:36:44.634Z"
+        }
+      ],
+      "expectedActions": [
+        "01M6QEW8TF23PS2GNQY8HCKW0Y",
+        "01M6QEW8S0KFJK2PRDQ4D0C60W",
+        "01M6QEW8Q90XQ735GKKAKC5HWC"
+      ],
+      "observedActions": [
+        "01M6QEW8TF23PS2GNQY8HCKW0Y",
+        "01M6QEW8TF23PS2GNQY8HCKW0Y",
+        "01M6QEW8S0KFJK2PRDQ4D0C60W",
+        "01M6QEW8S0KFJK2PRDQ4D0C60W",
+        "01M6QEW8Q90XQ735GKKAKC5HWC",
+        "01M6QEW8Q90XQ735GKKAKC5HWC"
+      ],
+      "collapsedActions": [
+        "01M6QEW8TF23PS2GNQY8HCKW0Y",
+        "01M6QEW8S0KFJK2PRDQ4D0C60W",
+        "01M6QEW8Q90XQ735GKKAKC5HWC"
+      ],
+      "renderedActions": [
+        "01M6QEW8TF23PS2GNQY8HCKW0Y",
+        "01M6QEW8S0KFJK2PRDQ4D0C60W",
+        "01M6QEW8Q90XQ735GKKAKC5HWC"
+      ],
+      "groups": [
+        {
+          "occurredAt": "2026-11-06T03:36:44.634Z",
+          "top": -344,
+          "changes": [
+            {
+              "field": "Name",
+              "value": "Alpha release preparation \u2192 Mike release confirmation"
+            },
+            {
+              "field": "Objective",
+              "value": "Prepare the approved package \u2192 Confirm the delivery handover"
+            }
+          ],
+          "commandId": "01M6QEW8TF23PS2GNQY8HCKW0Y"
+        },
+        {
+          "occurredAt": "2026-11-06T03:36:44.586Z",
+          "top": -81.0625,
+          "changes": [
+            {
+              "field": "Objective",
+              "value": "Review the supplier evidence \u2192 Prepare the approved package"
+            },
+            {
+              "field": "Name",
+              "value": "Zulu release review \u2192 Alpha release preparation"
+            }
+          ],
+          "commandId": "01M6QEW8S0KFJK2PRDQ4D0C60W"
+        },
+        {
+          "occurredAt": "2026-11-06T03:36:44.537Z",
+          "top": 181.875,
+          "changes": [
+            {
+              "field": "Name",
+              "value": "Initial activity campaign \u2192 Zulu release review"
+            },
+            {
+              "field": "Objective",
+              "value": "Initial activity objective \u2192 Review the supplier evidence"
+            }
+          ],
+          "commandId": "01M6QEW8Q90XQ735GKKAKC5HWC"
+        }
+      ]
+    }
+  ]
+}

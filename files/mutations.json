@@ -1,0 +1,43 @@
+{
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "mutations": [
+    {
+      "id": "M1",
+      "candidate": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+      "mutation": "Repository activity query returns ascending time and identity order.",
+      "assertion": "tests/helpers/launch-activity-order-journey.mjs:66",
+      "exit": 1,
+      "failure": "Public campaign detail returns the authored edits newest first, with adjacent facts; observed entries are never sorted",
+      "result": "killed",
+      "log": "repository-mutation.log",
+      "committed": false,
+      "provenance": "M3 ran immediately before final commit with identical browser-helper bytes; M1 and M2 run after exact candidate push."
+    },
+    {
+      "id": "M2",
+      "candidate": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+      "mutation": "Activity action groups are reversed before rendering.",
+      "assertion": "tests/helpers/launch-activity-order-screens.mjs:16",
+      "exit": 1,
+      "failure": "Initially collapsed activity groups already show reverse authored write order",
+      "result": "killed",
+      "log": "rendered-mutation.log",
+      "committed": false,
+      "provenance": "M3 ran immediately before final commit with identical browser-helper bytes; M1 and M2 run after exact candidate push."
+    },
+    {
+      "id": "M3",
+      "candidate": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+      "mutation": "Rendered list uses reversed vertical layout while retaining DOM order.",
+      "assertion": "tests/helpers/launch-activity-order-screens.mjs:37",
+      "exit": 1,
+      "failure": "The newest authored edit appears above the older edit on screen, in the same order as the DOM",
+      "result": "killed",
+      "log": "visual-mutation.log",
+      "committed": false,
+      "provenance": "M3 ran immediately before final commit with identical browser-helper bytes; M1 and M2 run after exact candidate push."
+    }
+  ],
+  "productionMutationsCommitted": false,
+  "restoreVerification": "Final clean diff and source lock check are recorded after restoration."
+}

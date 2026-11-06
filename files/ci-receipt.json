@@ -1,0 +1,78 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f200",
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "verify": {
+    "conclusion": "failure",
+    "event": "push",
+    "head_sha": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42157697979",
+    "id": 42157697979,
+    "name": "Verify",
+    "status": "completed"
+  },
+  "jobs": [
+    {
+      "conclusion": "success",
+      "id": 127695664120,
+      "name": "plan",
+      "status": "completed",
+      "steps": []
+    },
+    {
+      "conclusion": "failure",
+      "id": 127695704630,
+      "name": "build",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "failure",
+          "name": "Check generated contract documents",
+          "number": 8
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "id": 127695808569,
+      "name": "verify",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "failure",
+          "name": "Require the plan and every verification worker",
+          "number": 2
+        }
+      ]
+    },
+    {
+      "conclusion": "skipped",
+      "id": 127695810110,
+      "name": "verify-${{ matrix.name }}",
+      "status": "completed",
+      "steps": []
+    }
+  ],
+  "failedJobsReadOnce": [
+    {
+      "command": "gh run view 42157697979 --repo just-every/run-cradle --job 127695704630 --log-failed",
+      "exit": 0,
+      "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+    },
+    {
+      "command": "gh run view 42157697979 --repo just-every/run-cradle --job 127695808569 --log-failed",
+      "exit": 0,
+      "failure": "Require the plan and every verification worker: build failure and skipped shards cause the aggregator to fail."
+    }
+  ],
+  "expectedGeneratedViewOnly": true,
+  "generatedViewsCommitted": false,
+  "testShardsExecuted": false,
+  "readyAllowedByCloudContractException": true,
+  "ciRepairAttempted": false,
+  "rerunOrDispatchAttempted": false,
+  "githubInvocationBudgetUsed": 6,
+  "statusQueriesMinimumSpacingSeconds": 300,
+  "candidateRunSite": "not run; main-only after guarded landing",
+  "publicationScan": "not run in cloud; guarded lander owns it"
+}

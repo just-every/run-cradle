@@ -1,0 +1,61 @@
+{
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "doneClaim": false,
+  "rows": [
+    {
+      "row": 1,
+      "result": "PARTIAL",
+      "evidence": "Selected human field-change ordering reaches the native command and query doors and actual browser list. Full ACT-001 outcomes are explicitly unclaimed; acceptance 2 through 4 remain gapped."
+    },
+    {
+      "row": 2,
+      "result": "PASS for selected point",
+      "evidence": "The helper authors three distinguishable two-field edits independently, reads a fresh public version before each, checks actual version increments, distinct bounded event instants, actor, subject, field before and after values, and direct reverse command order. It does not sort observed results."
+    },
+    {
+      "row": 3,
+      "result": "CONFIGURED; exact-run stopped at expected generated views",
+      "evidence": "Verify 42157697979, push, exact candidate fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57: build job 127695704630 fails only Check generated contract documents; aggregator job 127695808569 fails on that result and test shards skip. No CI assertion execution or whole-clause DONE proof is claimed. The explicit cloud generated-view exception permits READY after local touched checks."
+    },
+    {
+      "row": 4,
+      "result": "PASS local exact-head provenance",
+      "evidence": "Browser walkthrough passes on the final commit at 1440 and 390; 206 screens, zero page errors. Restored focused native HTTP probe passes on the exact clean candidate. Full native suite passes 3 registrations with identical relevant native bytes. See restoration.json and checks.json."
+    },
+    {
+      "row": 5,
+      "result": "INSPECTED",
+      "evidence": "ACT-001 acceptance 4 already names BASE-OPS-005. No new inherited-duty claim is made."
+    },
+    {
+      "row": 6,
+      "result": "PARTIAL, mechanical details retained",
+      "evidence": "Gap remains explicit. Generator write and check pass locally, generated views are restored from main, source lock check passes. The intentionally stale ACCEPTANCE.md differs after restoration. Whole-clause judged provenance is not changed or claimed."
+    },
+    {
+      "row": 7,
+      "result": "PASS",
+      "evidence": "No acceptance point, clause ID or status is changed. All 257 parent Status rows remain. No contract conversion or coverage rewrite is attempted."
+    },
+    {
+      "row": 8,
+      "result": "NOT APPLICABLE to new change",
+      "evidence": "The change adds an order assertion only. Authority, erasure and replay implementations and existing assertions are retained; the touched native suite includes zero-authority no-op refusal."
+    },
+    {
+      "row": 9,
+      "result": "PASS boundary",
+      "evidence": "No live-provider, legal or retention boundary is claimed as proved. Deletion and retained anonymized audit remain in the Gap."
+    },
+    {
+      "row": 10,
+      "result": "NOT APPLICABLE",
+      "evidence": "No new custody, consent, spending or authority policy is adopted."
+    },
+    {
+      "row": 11,
+      "result": "PENDING guarded lander",
+      "evidence": "No main push, publication scan, landing or candidate Run site is claimed. Initial main Verify 42153995434 and Run site 42153995317 were successful at initial main, and are not offered as candidate proof."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f200",
+  "head": "fa2468c65cd12b4d4d91ac9a6dbebc53229e8f57",
+  "command": "python3 cloud-push.py origin cloud/sd-cradle-c-f200",
+  "exit": 0,
+  "attempts": 1,
+  "output": "PUSH_OK branch=cloud/sd-cradle-c-f200",
+  "mainUpdated": false,
+  "publishedHistoryRewritten": false,
+  "remoteHeadVerified": true
+}
