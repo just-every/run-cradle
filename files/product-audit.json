@@ -1,0 +1,16 @@
+{
+  "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "commits": [
+    {
+      "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+      "parents": [
+        "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746"
+      ],
+      "status_rows": 257,
+      "dropped_rows": 0,
+      "identity": "fleet",
+      "trailers": []
+    }
+  ],
+  "new_email_shaped_strings": 0
+}

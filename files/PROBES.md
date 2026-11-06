@@ -1,0 +1,3 @@
+PROBE CAMP-009 1: public automation save, campaign and risk mutation, emitted event queue, run history and current-version archive -> campaign and risk runs Queued then Cancelled; execution rows cancelled; neither activity appears after duplicate execution delivery, scheduled ticks and Worker restart; unrelated queued activity completes exactly once.
+
+PROBE CAMP-009 2: the existing public lifecycle helper additionally retains open deliverable, milestone, risk and decision fields through archive and restore at 1440 and 390; this is a retained control and does not claim the omitted complete child-preservation matrix.

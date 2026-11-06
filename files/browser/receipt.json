@@ -1,0 +1,175 @@
+{
+  "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "screens": [
+    {
+      "file": "campaign-lifecycle-active-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-active-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-detail-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-grid-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-active-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-active-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-archived-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-detail-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    },
+    {
+      "file": "campaign-lifecycle-restored-grid-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "seriousCritical": 0
+    }
+  ],
+  "campaignLifecycle": [
+    {
+      "width": 1440,
+      "proof": [
+        {
+          "action": "archive",
+          "lifecycle": "archived",
+          "version": 2,
+          "childIds": [
+            "01M6QG6WG23ZE2PE9S350R402Q",
+            "01M6QG6WHH13GER520VA59Y632",
+            "01M6QG6WK315K3E4EWTS361MEF",
+            "01M6QG6WMQAHTTR43KRQAM5FYN"
+          ],
+          "actorId": "01M6QG6VSP4N6QD1ZPYWD2BZHD"
+        },
+        {
+          "action": "restore",
+          "lifecycle": "active",
+          "version": 3,
+          "childIds": [
+            "01M6QG6WG23ZE2PE9S350R402Q",
+            "01M6QG6WHH13GER520VA59Y632",
+            "01M6QG6WK315K3E4EWTS361MEF",
+            "01M6QG6WMQAHTTR43KRQAM5FYN"
+          ],
+          "actorId": "01M6QG6VSP4N6QD1ZPYWD2BZHD"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "proof": [
+        {
+          "action": "archive",
+          "lifecycle": "archived",
+          "version": 2,
+          "childIds": [
+            "01M6QG7BD36HD6VE4FC5JNVCT8",
+            "01M6QG7BECHZ7XFKFEGDCTGCZK",
+            "01M6QG7BFK4VT53697KSZFVYSA",
+            "01M6QG7BH0P3922712KQTY6BYY"
+          ],
+          "actorId": "01M6QG7ARD8PAKG6PK92RXGWMC"
+        },
+        {
+          "action": "restore",
+          "lifecycle": "active",
+          "version": 3,
+          "childIds": [
+            "01M6QG7BD36HD6VE4FC5JNVCT8",
+            "01M6QG7BECHZ7XFKFEGDCTGCZK",
+            "01M6QG7BFK4VT53697KSZFVYSA",
+            "01M6QG7BH0P3922712KQTY6BYY"
+          ],
+          "actorId": "01M6QG7ARD8PAKG6PK92RXGWMC"
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "result": "passed"
+}

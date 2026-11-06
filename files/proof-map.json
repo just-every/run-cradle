@@ -1,0 +1,71 @@
+{
+  "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "files": {
+    "tests/helpers/launch-queued-campaign-archive.mjs": [
+      {
+        "line": 7,
+        "source": "export async function verifyPublicQueuedCampaignArchive(h) {"
+      },
+      {
+        "line": 14,
+        "source": "const save = async (name, event, campaignId, message) => installedValue(await h.command('launch.automation.save', {"
+      },
+      {
+        "line": 23,
+        "source": "const campaignEvent = await h.command('launch.campaign.patch', { id: campaign.id, changes: { statusSummary: 'Archive queued campaign work' } }, installedExpected(launchEntities.campaign, await record('campaign', campaign.id)))"
+      },
+      {
+        "line": 31,
+        "source": "for (const item of cases) {"
+      },
+      {
+        "line": 57,
+        "source": "const current = await record('campaign', campaign.id)"
+      },
+      {
+        "line": 63,
+        "source": "const cancelled = async () => {"
+      },
+      {
+        "line": 80,
+        "source": "const retained = await cancelled()"
+      },
+      {
+        "line": 89,
+        "source": "const replay = async label => {"
+      },
+      {
+        "line": 90,
+        "source": "for (let attempt = 1; attempt <= 2; attempt++) for (const item of cases) {"
+      },
+      {
+        "line": 101,
+        "source": "await replay('before-tick')"
+      },
+      {
+        "line": 106,
+        "source": "await h.restart()"
+      },
+      {
+        "line": 107,
+        "source": "await replay('after-restart')"
+      }
+    ],
+    "tests/launch-installed-event-control.mjs": [
+      {
+        "line": 13,
+        "source": "await verifyPublicQueuedCampaignArchive(h)"
+      }
+    ],
+    "tests/helpers/launch-base-authority-runtime.mjs": [
+      {
+        "line": 32,
+        "source": "const current = { ...options.bindings, ...bindings, ...changes }"
+      },
+      {
+        "line": 77,
+        "source": "const restart = async () => {"
+      }
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "branch": "cloud/sd-cradle-c-f206",
+  "candidate_run_site": "not performed",
+  "clause": {
+    "after": "partial",
+    "before": "partial",
+    "done_claim": false,
+    "id": "CAMP-009"
+  },
+  "commands": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "log": "typecheck.log"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log"
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "log": "test-budget.log",
+      "registrations": 174
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "final-views-write.log"
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "final-views-check.log",
+      "phase": "after generation"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 1,
+      "expected_exception": "ACCEPTANCE.md generated content differs",
+      "log": "restored-views-check.log",
+      "phase": "after restoring main views"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "final-lock-write.log"
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "final-lock-check.log"
+    },
+    {
+      "command": "cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs /tmp/camp-009-browser.mjs",
+      "exit": 0,
+      "receipt": "browser/receipt.json",
+      "screens": 12,
+      "widths": [
+        1440,
+        390
+      ]
+    },
+    {
+      "cancelled": 0,
+      "command": "cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-installed-event-control.mjs tests/launch-write-effects.mjs",
+      "duration_ms": 811401.947247,
+      "exit": 0,
+      "failed": 0,
+      "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+      "log": "native-tests.tap",
+      "passed": 8,
+      "skipped": 0,
+      "tests": 8
+    }
+  ],
+  "counts": {
+    "after": {
+      "done": 64,
+      "missing": 55,
+      "partial": 138
+    },
+    "before": {
+      "done": 64,
+      "missing": 55,
+      "partial": 138
+    },
+    "registration_cap": 200,
+    "registrations": 174,
+    "status_rows": 257
+  },
+  "finished_at": "2026-11-06T04:11:59.841943+00:00",
+  "github_calls": 6,
+  "head": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+  "integrated_main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "landing": "not performed",
+  "migration_ledger": "not applicable; no migration changes",
+  "original_base": "35a5227158a0ecafb2d127a3c8eb6c93106126e1",
+  "product_push_exit": 0,
+  "product_remote_verified": true,
+  "publication_scan": "not run in cloud; exact-tree full-history fleet scan remains required",
+  "pull_request": null,
+  "repository": "just-every/run-cradle",
+  "schema": 1,
+  "selected_point_result": "passed",
+  "tag": "sd-cradle-c-f206",
+  "terminal_product_result": "READY under generated-view-only Verify exception",
+  "verify": {
+    "conclusion": "failure",
+    "event": "push",
+    "exception": "generated view freshness only; build job 127703505325; downstream aggregate job 127703592042 fails and shards skip",
+    "failed_job_logs_read_once": [
+      127703505325,
+      127703592042
+    ],
+    "head_sha": "5dddd01d5ace8d43a44f888031fc69a3f789ff61",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42160094905",
+    "id": 42160094905,
+    "status": "completed"
+  },
+  "working_tree_clean": true
+}
