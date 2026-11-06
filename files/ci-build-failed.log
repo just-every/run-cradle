@@ -1,0 +1,6 @@
+build	Check generated contract documents	﻿2026-11-06T02:57:56.6152888Z ##[group]Run node src/base/contract-docs.mjs check
+build	Check generated contract documents	2026-11-06T02:57:56.6153310Z [36;1mnode src/base/contract-docs.mjs check[0m
+build	Check generated contract documents	2026-11-06T02:57:56.6174986Z shell: /usr/bin/bash -e {0}
+build	Check generated contract documents	2026-11-06T02:57:56.6176469Z ##[endgroup]
+build	Check generated contract documents	2026-11-06T02:57:56.7527094Z ACCEPTANCE.md: generated content differs; run contract-docs write.
+build	Check generated contract documents	2026-11-06T02:57:56.7590907Z ##[error]Process completed with exit code 1.

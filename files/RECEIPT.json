@@ -1,0 +1,134 @@
+{
+  "tag": "sd-cradle-c-f196",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f196",
+  "head": "ea240814465776985765d84b8299bd4e0225770b",
+  "product_pushed": true,
+  "remote_advertised_head": "ea240814465776985765d84b8299bd4e0225770b",
+  "pr": null,
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "status_rows_before": 257,
+  "status_rows_after": 257,
+  "registrations_before": 174,
+  "registrations_after": 174,
+  "clause": {
+    "id": "FILE-007",
+    "before": "partial",
+    "after": "partial",
+    "selected_point": "acceptance 2 missing item with a non-null matching Google Drive account",
+    "done_claim": false
+  },
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0,
+      "head": "ea240814465776985765d84b8299bd4e0225770b"
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "head": "ea240814465776985765d84b8299bd4e0225770b"
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/evidence-read-privacy.mjs",
+      "exit": 0,
+      "tests": 2,
+      "failures": 0,
+      "receipt": "native-full.log"
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='personal store references attach' tests/evidence-read-privacy.mjs",
+      "exit": 0,
+      "tests": 1,
+      "failures": 0,
+      "head": "ea240814465776985765d84b8299bd4e0225770b",
+      "receipt": "native-final.log"
+    },
+    {
+      "command": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-base-import.mjs",
+      "exit": 0,
+      "tests": 1,
+      "failures": 0,
+      "widths": [
+        1440,
+        390
+      ],
+      "receipt": "browser.log",
+      "source_custody": "source-custody.json",
+      "note": "Run started with the exact final helper bytes before the candidate commit; final committed helper bytes are unchanged."
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write then check; restore main views",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock then check",
+      "exit": 0,
+      "head": "ea240814465776985765d84b8299bd4e0225770b"
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "total": 174
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check after restoring origin/main views",
+      "exit": 1,
+      "expected_failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+    }
+  ],
+  "ci": {
+    "verify_run_id": 42153551982,
+    "event": "push",
+    "head": "ea240814465776985765d84b8299bd4e0225770b",
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/just-every/run-cradle/actions/runs/42153551982",
+    "classification": "expected generated-view freshness failure only; READY exception applies",
+    "build_job": 127682286419,
+    "aggregate_job": 127682398419,
+    "shards": "skipped",
+    "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+  },
+  "publication_scan": "not run in cloud; guarded lander duty",
+  "candidate_run_site": "not run; guarded lander duty",
+  "landing": "not attempted",
+  "blockers": [],
+  "initial_local_failures": [
+    {
+      "command": "native file and privacy journey without system Chromium variable",
+      "error": "Existing helper could not find bundled chromium_headless_shell-1243; FILE-007 registration passed.",
+      "resolution": "Rerun with the required system Chromium variable passed both registrations."
+    },
+    {
+      "command": "initial new browser proof",
+      "error": "Network.getResponseBody: No resource with given identifier found after control navigated away.",
+      "resolution": "Assert persisted resolved state and binding through the public record readback after navigation; final browser journey passed."
+    }
+  ],
+  "mechanical_receipt": "mechanical.json",
+  "probe_receipt": "native-missing.json",
+  "assertion_preservation": "Every pre-existing assertion expression in the three changed helpers remains intact; FILE-007 acceptance and citations are byte-identical to main.",
+  "github_api_calls": 6,
+  "ci_repair_rounds": 0,
+  "publication_identity_audit": {
+    "candidate_commits": 2,
+    "all_authors_and_committers": "fleet",
+    "coauthor_trailers": 0,
+    "side_parents_included": true,
+    "status_rows_retained": true
+  }
+}

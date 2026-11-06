@@ -1,0 +1,472 @@
+[
+  {
+    "width": 1440,
+    "jobId": "e7325ad4-cc2a-4887-8f51-427ac3955915",
+    "batchCheckpoints": [
+      15
+    ],
+    "checkpoints": [
+      {
+        "name": "source-record-map-completed",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "source-record-map-undone",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-before-hydration",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-before-hydration",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-signin-disabled",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-empty",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-failure",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-configured",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-provisioning",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-import-controls",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-import-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-export-controls",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-base-export",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-merge-mapping",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-merge-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-import-controls",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-schedule-enabled",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-schedule-paused",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-upload",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-recomputed",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-schema-impact",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-completed",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-stored-resume",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-incoming-chips",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-linked-record",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-undone",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-edge-lists",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      }
+    ],
+    "consoleErrors": [],
+    "externalRequests": []
+  },
+  {
+    "width": 390,
+    "jobId": "dc74633a-ca99-402e-8e4d-e4c4c4c392c0",
+    "batchCheckpoints": [
+      15
+    ],
+    "checkpoints": [
+      {
+        "name": "source-record-map-completed",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "source-record-map-undone",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-before-hydration",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-before-hydration",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-signin-disabled",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-empty",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-failure",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-configured",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "company-settings-provisioning",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-import-controls",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-import-preview",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-export-controls",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-base-export",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-merge-mapping",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "workbook-merge-preview",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-import-controls",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-schedule-enabled",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "sheets-schedule-paused",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-upload",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-preview",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-recomputed",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-schema-impact",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-completed",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-stored-resume",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-incoming-chips",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-linked-record",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-undone",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      },
+      {
+        "name": "import-edge-lists",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "axeViolations": 0
+      }
+    ],
+    "consoleErrors": [],
+    "externalRequests": []
+  }
+]

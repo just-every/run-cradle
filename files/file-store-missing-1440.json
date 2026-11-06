@@ -1,0 +1,47 @@
+{
+  "width": 1440,
+  "missing": {
+    "state": "unresolved",
+    "connectionId": null,
+    "versionBefore": 1,
+    "versionAfterMissing": 1,
+    "portableUnchanged": true
+  },
+  "present": "resolved",
+  "metadata": [
+    {
+      "method": "GET",
+      "origin": "https://www.googleapis.com",
+      "path": "/drive/v3/files/synthetic-cradle-drive-0",
+      "query": {
+        "fields": "id,name,mimeType,size,modifiedTime,webViewLink,thumbnailLink,sha256Checksum,sha1Checksum,md5Checksum,trashed"
+      },
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "origin": "https://www.googleapis.com",
+      "path": "/drive/v3/files/synthetic-cradle-drive-0",
+      "query": {
+        "fields": "id,name,mimeType,size,modifiedTime,webViewLink,thumbnailLink,sha256Checksum,sha1Checksum,md5Checksum,trashed"
+      },
+      "status": 404
+    }
+  ],
+  "checkpoints": [
+    {
+      "name": "file-store-return-missing",
+      "width": 1440,
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    },
+    {
+      "name": "file-store-return-missing-with-present-control",
+      "width": 1440,
+      "serious": 0,
+      "critical": 0,
+      "pageOverflow": false
+    }
+  ]
+}

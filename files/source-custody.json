@@ -1,0 +1,50 @@
+{
+  "head": "ea240814465776985765d84b8299bd4e0225770b",
+  "files": [
+    {
+      "path": "tests/evidence-read-privacy.mjs",
+      "sha256": "becbeee64675a967bfa8fad2b98178b3577fd0ea74b8d646a557b7af7f16c841",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "tests/ui-base-import.mjs",
+      "sha256": "023f42599fad1782ded97e769855b66df2c9644441a84c450920f3215e6eb7ce",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "tests/helpers/store-reference-missing.mjs",
+      "sha256": "23455fd349a1b3020f8474d2b80932d13930e3fabafe020fb88e3606da26256c",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "tests/helpers/store-reference-resolution.mjs",
+      "sha256": "08e598b8da649bcd801a1cfa86a87ba150eff888490ae75399daaeea1f125352",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "tests/helpers/file-stores-provider.mjs",
+      "sha256": "ed8a36a1abeb304726da5dc7409b1b02dd3897216068f9b51dcddc24de60bd62",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "tests/helpers/file-stores-browser.mjs",
+      "sha256": "7b86a61995405415acad3e9f6f1ca45bba68f363961aae548d4ad1eed91fe775",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "src/adapters/file-stores.server.ts",
+      "sha256": "f51948baa99ac2c666dd113f4b3fdc5e7f0d84e51a61275efa72dbfdfb87a121",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "src/domains/records/file-stores/resolution.server.ts",
+      "sha256": "936e6aa4f48dabe78a68559e8fe430b1b0e2753cc6414e84eb8d8a914e4fa603",
+      "candidate_bytes_equal": true
+    },
+    {
+      "path": "src/ui/records/store-reference-resolution.tsx",
+      "sha256": "4873fb99d18107cfa4494ac47e9d91f9cb837d5803a6aa22a474339d3dfdae33",
+      "candidate_bytes_equal": true
+    }
+  ]
+}

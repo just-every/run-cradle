@@ -1,0 +1,50 @@
+{
+  "point": "FILE-007 acceptance 2 missing item",
+  "missing": "unresolved",
+  "reason": "The store did not find this file or did not grant access.",
+  "connectionId": null,
+  "versionBefore": 1,
+  "versionAfterMissing": 1,
+  "portableUnchanged": true,
+  "repeatedChecks": 3,
+  "workerRestart": true,
+  "present": "resolved",
+  "traces": [
+    {
+      "method": "GET",
+      "origin": "https://www.googleapis.com",
+      "path": "/drive/v3/files/synthetic-cradle-drive-0",
+      "query": {
+        "fields": "id,name,mimeType,size,modifiedTime,webViewLink,thumbnailLink,sha256Checksum,sha1Checksum,md5Checksum,trashed"
+      },
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "origin": "https://www.googleapis.com",
+      "path": "/drive/v3/files/synthetic-cradle-drive-0",
+      "query": {
+        "fields": "id,name,mimeType,size,modifiedTime,webViewLink,thumbnailLink,sha256Checksum,sha1Checksum,md5Checksum,trashed"
+      },
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "origin": "https://www.googleapis.com",
+      "path": "/drive/v3/files/synthetic-cradle-drive-0",
+      "query": {
+        "fields": "id,name,mimeType,size,modifiedTime,webViewLink,thumbnailLink,sha256Checksum,sha1Checksum,md5Checksum,trashed"
+      },
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "origin": "https://www.googleapis.com",
+      "path": "/drive/v3/files/synthetic-cradle-drive-1",
+      "query": {
+        "fields": "id,name,mimeType,size,modifiedTime,webViewLink,thumbnailLink,sha256Checksum,sha1Checksum,md5Checksum,trashed"
+      },
+      "status": 200
+    }
+  ]
+}

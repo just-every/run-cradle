@@ -1,0 +1,13 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE FILE-007 acceptance-2: matching-account metadata HTTP 404 -> Unresolved, no binding, unchanged version and portable content; repeated checks and Worker restart persist; present control resolves
+✔ [FILE-002 FILE-004 FILE-005 FILE-006 FILE-007 COLLAB-002 BASE-ACCESS-004] record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store (52923.990765ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 56055.133302

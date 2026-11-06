@@ -1,0 +1,20 @@
+{
+  "lock": {
+    "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+    "exit": 0
+  },
+  "views": {
+    "command": "node src/base/contract-docs.mjs write; node src/base/contract-docs.mjs check; git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+    "exit": 0
+  },
+  "ledger": {
+    "command": "none: no migration edited",
+    "exit": 0
+  },
+  "test_registrations": 174,
+  "restored_views_check": {
+    "command": "node src/base/contract-docs.mjs check after restoring origin/main views",
+    "exit": 1,
+    "expected_failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+  }
+}
