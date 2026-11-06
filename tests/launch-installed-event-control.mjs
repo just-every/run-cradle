@@ -4,11 +4,13 @@ import {createHash} from 'node:crypto'
 import {setup,value,campaign,expected} from './helpers/launch-installed.mjs'
 import {verifyDefinitions,verifyContributedRun} from './helpers/launch-automation-definitions.mjs'
 import {historyMailEdge,verifyRunHistory} from './helpers/launch-run-history.mjs'
+import {verifyPublicQueuedCampaignArchive} from './helpers/launch-queued-campaign-archive.mjs'
 const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
 const {createUlid}=await import('../src/core/shared/ids.ts')
 
-test('[AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; disable cancels queued work before any effect; full run history pages with each attempted action and a 30-day success rate',async()=>{
+test('[CAMP-009] [AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; archive and disable cancel queued work before any effect; full run history pages with each attempted action and a 30-day success rate',async()=>{
  const mail=historyMailEdge(),h=await setup({automaticQueues:false,providerFetch:mail.fetch});try{
+  await verifyPublicQueuedCampaignArchive(h)
   const c=await campaign(h,'CANCEL'),owner=(await h.db.prepare('SELECT owner_id FROM campaigns WHERE id=?').bind(c.id).first()).owner_id
   const created=await h.command('launch.risk.create',{fields:{campaignId:c.id,ownerId:owner,title:'Queued critical risk',severity:'Critical',signal:'Known',mitigation:'Review',dueDate:null}}),risk=value(created),worker=await h.runtime.getWorker()
   await worker.queue('cradle-work',[{id:'admit-event',timestamp:Date.now(),attempts:1,body:{kind:'cradle.launch.events.v1',commandId:created.data.commandId}}])
