@@ -1,0 +1,261 @@
+Using project Node 22.20.0 (current Node 24.19.0).
+Heavy job admitted: Cradle build:workflow [c90948f3c0d8]
+Checking pinned pnpm
+10.12.4
+Building your application
+ WARN  Unsupported engine: wanted: {"node":"22.20.0"} (current: {"node":"v24.19.0","pnpm":"10.12.4"})
+
+> cradle@0.4.0 build:app [REDACTED]
+> vite build && node scripts/build-migrations.mjs
+
+▲ [WARNING] Proxy environment variables detected. We'll use your proxy for fetch requests.
+
+
+vite v8.2.2 building client environment for production...
+transforming...
+[plugin tanstack-start-core::server-fn:client] [REDACTED]/src/core/app/loaders.ts:10:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:client] [REDACTED]/src/core/app/loaders.ts:26:35 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+✓ 730 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/client/.assetsignore                                                0.02 kB
+dist/client/assets/settings-page-DLWECfRi.css                            3.86 kB │ gzip:  1.07 kB
+dist/client/assets/operator-D2U9m-Kp.css                                 6.72 kB │ gzip:  1.80 kB
+dist/client/assets/records-CLtwxf7N.css                                 13.68 kB │ gzip:  3.29 kB
+dist/client/assets/ui-CTVWd4JY.css                                      15.10 kB │ gzip:  3.60 kB
+dist/client/assets/DocsPage-CDbfwuRa.css                                17.36 kB │ gzip:  4.27 kB
+dist/client/assets/ui-7XbJT-1k.css                                      30.14 kB │ gzip:  5.67 kB
+dist/client/assets/styles-Dy-7MjD-.css                                  50.16 kB │ gzip: 10.93 kB
+dist/client/assets/router-BxX4eSjk.js                                    0.08 kB │ gzip:  0.10 kB
+dist/client/assets/app.approvals.index-DOHP-WWs.js                       0.19 kB │ gzip:  0.16 kB
+dist/client/assets/app.operations.studio-DLqKY_us.js                     0.19 kB │ gzip:  0.16 kB
+dist/client/assets/app.repairs.index-p4zzaadl.js                         0.19 kB │ gzip:  0.16 kB
+dist/client/assets/app.repairs.new-D-vm9WrN.js                           0.19 kB │ gzip:  0.16 kB
+dist/client/assets/docs._slug-1YwRtZKG.js                                0.25 kB │ gzip:  0.20 kB
+dist/client/assets/docs.index-Dxc8JqP0.js                                0.25 kB │ gzip:  0.20 kB
+dist/client/assets/app.operations.index-DCgZ7gEX.js                      0.26 kB │ gzip:  0.20 kB
+dist/client/assets/app.records._appId.index-B7vlqaEN.js                  0.26 kB │ gzip:  0.20 kB
+dist/client/assets/app.cases._caseId-ClXzgYHY.js                         0.26 kB │ gzip:  0.21 kB
+dist/client/assets/app.repairs._repairId-CvywD3YH.js                     0.27 kB │ gzip:  0.21 kB
+dist/client/assets/app.repairs.intakes._intakeId-BqvgKJgE.js             0.27 kB │ gzip:  0.21 kB
+dist/client/assets/app.operations.mandates._mandateId-Du0Rlt3t.js        0.27 kB │ gzip:  0.20 kB
+dist/client/assets/app.approvals._decisionId-C_G9OAHh.js                 0.27 kB │ gzip:  0.21 kB
+dist/client/assets/app.operations.studio._candidateId-oxJIaQ4q.js        0.27 kB │ gzip:  0.21 kB
+dist/client/assets/app.records._appId._entityId.index-DcAHDEIR.js        0.28 kB │ gzip:  0.21 kB
+dist/client/assets/app.search-D-KBIkxt.js                                0.29 kB │ gzip:  0.23 kB
+dist/client/assets/app.campaigns.index-Dam1U8yp.js                       0.31 kB │ gzip:  0.23 kB
+dist/client/assets/app.index-R_KVUzWt.js                                 0.31 kB │ gzip:  0.23 kB
+dist/client/assets/app.overview-DVSWZ33B.js                              0.31 kB │ gzip:  0.23 kB
+dist/client/assets/app.records.index-B0CsVznU.js                         0.32 kB │ gzip:  0.24 kB
+dist/client/assets/app.forms._formId-9h1wPJTk.js                         0.35 kB │ gzip:  0.25 kB
+dist/client/assets/leaf-BZLux9aU.js                                      0.35 kB │ gzip:  0.26 kB
+dist/client/assets/app.campaigns._campaignId-rLU5Rw0r.js                 0.35 kB │ gzip:  0.25 kB
+dist/client/assets/app.records._appId._entityId._recordId-KtiOd4CF.js    0.39 kB │ gzip:  0.26 kB
+dist/client/assets/app.evidence._sourceId-C0wUEWdM.js                    0.44 kB │ gzip:  0.30 kB
+dist/client/assets/versioned-loaders-BAi_yCUk.js                         0.45 kB │ gzip:  0.33 kB
+dist/client/assets/app.lenses.new-C2QuxOjo.js                            0.46 kB │ gzip:  0.29 kB
+dist/client/assets/app.decisions.index-Djnfp1zL.js                       0.46 kB │ gzip:  0.29 kB
+dist/client/assets/app.lenses._lensId.edit-D80LWv7T.js                   0.49 kB │ gzip:  0.30 kB
+dist/client/assets/app.decisions._decisionId-vr2uXElc.js                 0.51 kB │ gzip:  0.31 kB
+dist/client/assets/app.settings._section-GeVCAVzH.js                     0.56 kB │ gzip:  0.34 kB
+dist/client/assets/app.settings.index-MeG_XLEr.js                        0.56 kB │ gzip:  0.34 kB
+dist/client/assets/loaders-vMIfEe_D.js                                   0.57 kB │ gzip:  0.35 kB
+dist/client/assets/operator-feature-page-BwN2jOIu.js                     0.58 kB │ gzip:  0.32 kB
+dist/client/assets/rolldown-runtime-CbXtAM7H.js                          0.58 kB │ gzip:  0.36 kB
+dist/client/assets/session-BqRQiQU4.js                                   0.96 kB │ gzip:  0.55 kB
+dist/client/assets/preload-helper-Czpn1I53.js                            1.19 kB │ gzip:  0.67 kB
+dist/client/assets/setup-yw5ZhlFq.js                                     1.62 kB │ gzip:  0.64 kB
+dist/client/assets/_virtual_cradle-docs-BmhQgCre.js                      2.21 kB │ gzip:  0.79 kB
+dist/client/assets/getting-started-D9c48R9R.js                           2.31 kB │ gzip:  0.99 kB
+dist/client/assets/page-P4EPGJJh.js                                      2.66 kB │ gzip:  1.14 kB
+dist/client/assets/measured-scale-KSRKoIuh.js                            2.66 kB │ gzip:  1.33 kB
+dist/client/assets/milestone-client-r3EhNaft.js                          2.79 kB │ gzip:  1.12 kB
+dist/client/assets/signin-CCTUv2ST.js                                    3.71 kB │ gzip:  1.54 kB
+dist/client/assets/lazyRouteComponent-l9wkL7tT.js                        3.82 kB │ gzip:  1.44 kB
+dist/client/assets/company-identity-B-6UmPUc.js                          3.93 kB │ gzip:  1.77 kB
+dist/client/assets/boundaries-Cba7Lptt.js                                3.94 kB │ gzip:  1.05 kB
+dist/client/assets/workbooks-1NmJoBJN.js                                 4.08 kB │ gzip:  1.73 kB
+dist/client/assets/risk-client-CwtM8zFo.js                               4.48 kB │ gzip:  1.72 kB
+dist/client/assets/app.milestones._milestoneId-BbhEnXzH.js               4.57 kB │ gzip:  1.35 kB
+dist/client/assets/app.risks._riskId-Dxj5qfxI.js                         5.35 kB │ gzip:  1.88 kB
+dist/client/assets/automations-DfIvbspw.js                               5.78 kB │ gzip:  2.56 kB
+dist/client/assets/app.lenses._lensId-CskMIhLo.js                        6.70 kB │ gzip:  2.44 kB
+dist/client/assets/app.notifications-DumqKgFW.js                         6.78 kB │ gzip:  2.29 kB
+dist/client/assets/app.lenses.risks-ArE2d0-m.js                          7.40 kB │ gzip:  2.33 kB
+dist/client/assets/install--sHN0EST.js                                   7.61 kB │ gzip:  2.43 kB
+dist/client/assets/app.lenses.timeline-c5oo966A.js                       7.81 kB │ gzip:  2.61 kB
+dist/client/assets/DocsPage-BE9Aiqjm.js                                  8.31 kB │ gzip:  2.58 kB
+dist/client/assets/api-DHigSC9i.js                                      11.29 kB │ gzip:  3.12 kB
+dist/client/assets/lens-builder-page-CHxZoNbD.js                        13.39 kB │ gzip:  4.10 kB
+dist/client/assets/leaving-DlNK6xwR.js                                  13.78 kB │ gzip:  5.09 kB
+dist/client/assets/decision-queue-page-BnVD82UZ.js                      13.83 kB │ gzip:  4.00 kB
+dist/client/assets/importing-BPEhUCRC.js                                14.73 kB │ gzip:  5.74 kB
+dist/client/assets/archives-Bi2slXvq.js                                 14.74 kB │ gzip:  5.46 kB
+dist/client/assets/app-GSHMq19C.js                                      16.50 kB │ gzip:  6.37 kB
+dist/client/assets/createServerFn-B9VVph6M.js                           37.18 kB │ gzip: 11.97 kB
+dist/client/assets/source-page-B62srrOl.js                              37.83 kB │ gzip:  9.94 kB
+dist/client/assets/app.automations-DRDr6MqC.js                          42.09 kB │ gzip: 10.30 kB
+dist/client/assets/operator-D7OYlYkh.js                                 54.19 kB │ gzip: 19.29 kB
+dist/client/assets/settings-page-Dcqkz-uY.js                            89.64 kB │ gzip: 20.44 kB
+dist/client/assets/contracts-CQEawlyd.js                               127.18 kB │ gzip: 37.10 kB
+dist/client/assets/ui-DEUrAuxh.js                                      190.51 kB │ gzip: 52.20 kB
+dist/client/assets/index-VwUrSMAo.js                                   282.95 kB │ gzip: 90.89 kB
+dist/client/assets/ui-BK_IGXT2.js                                      340.06 kB │ gzip: 85.84 kB
+
+✓ built in 2.22s
+vite v8.2.2 building ssr environment for production...
+transforming...
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts?tss-serverfn-split:10:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts?tss-serverfn-split:26:35 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts:10:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+[plugin tanstack-start-core::server-fn:ssr] [REDACTED]/src/core/app/loaders.ts:26:35 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+✓ 2036 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/server/wrangler.json                                                  1.93 kB │ gzip:   0.93 kB
+dist/server/.vite/manifest.json                                           44.54 kB │ gzip:   5.00 kB
+dist/server/assets/settings-page-DLWECfRi.css                              3.86 kB │ gzip:   1.07 kB
+dist/server/assets/operator-D2U9m-Kp.css                                   6.72 kB │ gzip:   1.80 kB
+dist/server/assets/records-CLtwxf7N.css                                   13.68 kB │ gzip:   3.29 kB
+dist/server/assets/ui-CTVWd4JY.css                                        15.10 kB │ gzip:   3.60 kB
+dist/server/assets/DocsPage-CDbfwuRa.css                                  17.36 kB │ gzip:   4.27 kB
+dist/server/assets/ui-7XbJT-1k.css                                        30.14 kB │ gzip:   5.67 kB
+dist/server/assets/styles-Dy-7MjD-.css                                    50.16 kB │ gzip:  10.93 kB
+dist/server/assets/router-D6_l7rkT.js                                      0.18 kB │ gzip:   0.15 kB
+dist/server/assets/coerce-B6MWdXXW.js                                      0.27 kB │ gzip:   0.20 kB
+dist/server/assets/empty-plugin-adapters-D_0twvAa.js                       0.28 kB │ gzip:   0.18 kB
+dist/server/assets/start-D4hYFEGt.js                                       0.28 kB │ gzip:   0.20 kB
+dist/server/assets/config-D7dBahHL.js                                      0.29 kB │ gzip:   0.21 kB
+dist/server/assets/contracts-BBkraZk5.js                                   0.32 kB │ gzip:   0.16 kB
+dist/server/assets/lifecycle-D-P5e735.js                                   0.39 kB │ gzip:   0.26 kB
+dist/server/assets/createServerRpc-clVF8hjL.js                             0.45 kB │ gzip:   0.29 kB
+dist/server/assets/app.repairs.new-qkMQYiZ9.js                             0.46 kB │ gzip:   0.29 kB
+dist/server/assets/app.repairs.index-DYCEC5NV.js                           0.47 kB │ gzip:   0.28 kB
+dist/server/assets/app.approvals.index-OR0IrIRV.js                         0.47 kB │ gzip:   0.29 kB
+dist/server/assets/app.operations.studio-AaG8mhWW.js                       0.49 kB │ gzip:   0.29 kB
+dist/server/assets/app.cases._caseId-C2YcdDZC.js                           0.56 kB │ gzip:   0.32 kB
+dist/server/assets/app.records._appId.index-JQCWZVBK.js                    0.57 kB │ gzip:   0.33 kB
+dist/server/assets/app.operations.index-ZFDEp83n.js                        0.57 kB │ gzip:   0.33 kB
+dist/server/assets/app.repairs._repairId-C7xHLxO3.js                       0.57 kB │ gzip:   0.33 kB
+dist/server/assets/app.approvals._decisionId-DqbisFWW.js                   0.58 kB │ gzip:   0.33 kB
+dist/server/assets/app.operations.mandates._mandateId-CYbjj16x.js          0.59 kB │ gzip:   0.34 kB
+dist/server/assets/app.repairs.intakes._intakeId-Busqs4tx.js               0.59 kB │ gzip:   0.34 kB
+dist/server/assets/app.search-Dk3Tkpdu.js                                  0.60 kB │ gzip:   0.35 kB
+dist/server/assets/app.records._appId._entityId.index-DD8p8aZO.js          0.60 kB │ gzip:   0.35 kB
+dist/server/assets/app.operations.studio._candidateId-BGSdhjZl.js          0.61 kB │ gzip:   0.34 kB
+dist/server/assets/session.server-Ccg00gfq.js                              0.61 kB │ gzip:   0.37 kB
+dist/server/assets/docs.index-C0hbL7aJ.js                                  0.64 kB │ gzip:   0.39 kB
+dist/server/assets/app.records.index-B7xarklm.js                           0.65 kB │ gzip:   0.37 kB
+dist/server/assets/createSsrRpc-DV8qS7gd.js                                0.66 kB │ gzip:   0.39 kB
+dist/server/assets/docs._slug-CTID7JYt.js                                  0.67 kB │ gzip:   0.40 kB
+dist/server/assets/app.index-batuO2RG.js                                   0.71 kB │ gzip:   0.39 kB
+dist/server/assets/app.campaigns.index-BeQecoQf.js                         0.74 kB │ gzip:   0.40 kB
+dist/server/assets/app.overview-Dsjxqg7t.js                                0.74 kB │ gzip:   0.40 kB
+dist/server/assets/app.forms._formId-CXTxCuxh.js                           0.78 kB │ gzip:   0.42 kB
+dist/server/assets/app.campaigns._campaignId-C_DYVKpY.js                   0.80 kB │ gzip:   0.42 kB
+dist/server/assets/ids-BWVRUS-s.js                                         0.82 kB │ gzip:   0.47 kB
+dist/server/assets/app.records._appId._entityId._recordId-DWVy5bss.js      0.85 kB │ gzip:   0.45 kB
+dist/server/assets/session-SnwJ-48K.js                                     0.86 kB │ gzip:   0.46 kB
+dist/server/assets/sign-in-document.server-Blke0Igx.js                     0.86 kB │ gzip:   0.44 kB
+dist/server/assets/utils-DY6DpMw8.js                                       0.86 kB │ gzip:   0.47 kB
+dist/server/assets/app.evidence._sourceId-uYqHgUA4.js                      0.91 kB │ gzip:   0.48 kB
+dist/server/assets/not-found-DhdZhR3a.js                                   0.94 kB │ gzip:   0.51 kB
+dist/server/assets/app.lenses.new-D5YzmjOt.js                              0.98 kB │ gzip:   0.47 kB
+dist/server/assets/app.decisions.index-g6y3l0BC.js                         0.99 kB │ gzip:   0.47 kB
+dist/server/assets/app.lenses._lensId.edit-MvUnIqb_.js                     1.03 kB │ gzip:   0.49 kB
+dist/server/assets/app.decisions._decisionId-CjnlhvcV.js                   1.05 kB │ gzip:   0.49 kB
+dist/server/assets/app.settings.index-D92mIUsE.js                          1.08 kB │ gzip:   0.53 kB
+dist/server/assets/app.settings._section-BmnN4K9Y.js                       1.09 kB │ gzip:   0.53 kB
+dist/server/assets/operator-feature-page-BYua5lYN.js                       1.10 kB │ gzip:   0.50 kB
+dist/server/assets/versioned-loaders-emuGEpiT.js                           1.10 kB │ gzip:   0.65 kB
+dist/server/assets/public-document.server-VdeQs7Fr.js                      1.19 kB │ gzip:   0.64 kB
+dist/server/assets/canonical-BNMY-aJ_.js                                   1.26 kB │ gzip:   0.64 kB
+dist/server/assets/loaders-CBK5lKrT.js                                     1.43 kB │ gzip:   0.73 kB
+dist/server/assets/rolldown-runtime-DC62tzP2.js                            1.44 kB │ gzip:   0.67 kB
+dist/server/assets/session-DppjRonp.js                                     1.46 kB │ gzip:   0.79 kB
+dist/server/assets/document.server-BLjBMupM.js                             1.59 kB │ gzip:   0.71 kB
+dist/server/assets/leaf-D0axNf3J.js                                        1.61 kB │ gzip:   0.81 kB
+dist/server/assets/clock-BU9Nx2N7.js                                       1.68 kB │ gzip:   0.84 kB
+dist/server/assets/redirect-BDbpra0T.js                                    1.75 kB │ gzip:   0.85 kB
+dist/server/assets/__23tanstack-start-server-fn-resolver-BFX4zUyX.js       1.91 kB │ gzip:   0.77 kB
+dist/server/assets/ports-BftdbOB7.js                                       2.07 kB │ gzip:   0.94 kB
+dist/server/assets/versioned-loaders-BaPJkTx0.js                           2.12 kB │ gzip:   1.01 kB
+dist/server/assets/validators-rXhM7O1L.js                                  2.22 kB │ gzip:   0.98 kB
+dist/server/assets/config-CQ8eh5KY.js                                      2.29 kB │ gzip:   0.90 kB
+dist/server/assets/sign-in-search-UTG0HXZ9.js                              2.36 kB │ gzip:   0.95 kB
+dist/server/assets/getting-started-rifyqz3m.js                             2.51 kB │ gzip:   1.06 kB
+dist/server/assets/_virtual_cradle-docs-CRJrOS-R.js                        2.74 kB │ gzip:   0.85 kB
+dist/server/assets/measured-scale-Dmq75QaV.js                              2.82 kB │ gzip:   1.40 kB
+dist/server/assets/page-Bv_yJHgr.js                                        2.96 kB │ gzip:   1.22 kB
+dist/server/assets/validation-values.server-CVF_v4Xf.js                    3.22 kB │ gzip:   1.27 kB
+dist/server/assets/setup-DWIjzFFg.js                                       3.23 kB │ gzip:   0.85 kB
+dist/server/assets/document.server-BTdJuDQf.js                             3.33 kB │ gzip:   1.29 kB
+dist/server/assets/loaders-Byx3J2fe.js                                     3.35 kB │ gzip:   1.04 kB
+dist/server/assets/codec.server-DW_Zk4J4.js                                3.59 kB │ gzip:   1.23 kB
+dist/server/assets/company-identity-BnQk22tq.js                            4.11 kB │ gzip:   1.83 kB
+dist/server/assets/workbooks-DDEsmxUh.js                                   4.23 kB │ gzip:   1.79 kB
+dist/server/assets/sql.server-Bir7249S.js                                  4.37 kB │ gzip:   1.65 kB
+dist/server/assets/boundaries--hMALNSv.js                                  4.48 kB │ gzip:   1.14 kB
+dist/server/assets/hash-BPR5Unc8.js                                        4.70 kB │ gzip:   2.16 kB
+dist/server/assets/storage-Bqn2L1Wi.js                                     4.92 kB │ gzip:   1.96 kB
+dist/server/assets/milestone-client-C31DQAxS.js                            4.94 kB │ gzip:   1.62 kB
+dist/server/assets/server-BDvmo74u.js                                      5.63 kB │ gzip:   2.01 kB
+dist/server/assets/automations-i5PNohPE.js                                 6.06 kB │ gzip:   2.66 kB
+dist/server/assets/signin-BWZ2TlE-.js                                      7.13 kB │ gzip:   2.08 kB
+dist/server/assets/risk-client-DoFmzqwD.js                                 7.70 kB │ gzip:   2.36 kB
+dist/server/assets/app.milestones._milestoneId-DLPmC1c3.js                 7.77 kB │ gzip:   1.78 kB
+dist/server/assets/install-C_sVFdro.js                                     8.05 kB │ gzip:   2.54 kB
+dist/server/assets/app.risks._riskId-DTEMrCv2.js                           9.26 kB │ gzip:   2.48 kB
+dist/server/assets/contracts-BiOXu8xt.js                                   9.95 kB │ gzip:   2.86 kB
+dist/server/assets/effects-BayqDjBd.js                                    10.90 kB │ gzip:   4.08 kB
+dist/server/assets/money-Ch9ktSa0.js                                      11.17 kB │ gzip:   3.89 kB
+dist/server/assets/app.notifications-D1sSjo0v.js                          11.66 kB │ gzip:   3.05 kB
+dist/server/assets/api-DuScPeOm.js                                        11.72 kB │ gzip:   3.21 kB
+dist/server/assets/Match-B1a_oIO7.js                                      11.74 kB │ gzip:   3.07 kB
+dist/server/assets/app.lenses._lensId-DyEk6Jpd.js                         11.80 kB │ gzip:   3.28 kB
+dist/server/assets/lazyRouteComponent-Da-clV4j.js                         11.87 kB │ gzip:   3.04 kB
+dist/server/assets/createServerFn-LbQwuMn2.js                             12.37 kB │ gzip:   3.65 kB
+dist/server/assets/app.lenses.risks-BLPzgEhW.js                           12.63 kB │ gzip:   3.10 kB
+dist/server/assets/request-response-yw-zrk0o.js                           13.45 kB │ gzip:   3.97 kB
+dist/server/assets/app.lenses.timeline-DdvReWCU.js                        13.61 kB │ gzip:   3.44 kB
+dist/server/assets/leaving-BWMLSdtd.js                                    14.12 kB │ gzip:   5.19 kB
+dist/server/assets/archives-DO_XZ4OW.js                                   15.33 kB │ gzip:   5.59 kB
+dist/server/assets/importing-2hTYBi06.js                                  15.35 kB │ gzip:   5.88 kB
+dist/server/assets/_tanstack-start-manifest_v-DRmVJ-lE.js                 16.55 kB │ gzip:   2.09 kB
+dist/server/assets/portfolio-api-Dl2o7ZEk.js                              17.38 kB │ gzip:   4.16 kB
+dist/server/assets/DocsPage-N2c_IybY.js                                   19.24 kB │ gzip:   4.60 kB
+dist/server/assets/contracts-DpKDC7iL.js                                  20.18 kB │ gzip:   4.02 kB
+dist/server/assets/lens-builder-page-B9bPqveI.js                          23.74 kB │ gzip:   5.53 kB
+dist/server/assets/decision-queue-page-BKbPYqvc.js                        24.52 kB │ gzip:   5.33 kB
+dist/server/assets/app-ux4S15tu.js                                        24.97 kB │ gzip:   7.92 kB
+dist/server/assets/validators-BUcBhFAr.js                                 30.39 kB │ gzip:   8.63 kB
+dist/server/assets/useSelector-ms6s1pXz.js                                39.36 kB │ gzip:  11.30 kB
+dist/server/assets/workspace-money-B_3zomWO.js                            39.88 kB │ gzip:  11.75 kB
+dist/server/assets/source-page-BFXsNyUD.js                                46.73 kB │ gzip:   9.57 kB
+dist/server/assets/router-yOfo4QWP.js                                     63.93 kB │ gzip:  14.77 kB
+dist/server/assets/operator-62p9Q35-.js                                   72.22 kB │ gzip:  19.37 kB
+dist/server/assets/app.automations-BzXXjMdn.js                            79.78 kB │ gzip:  14.32 kB
+dist/server/assets/manifest-CN8zFWU0.js                                  109.78 kB │ gzip:  26.70 kB
+dist/server/assets/lib-BVlz2tE-.js                                       141.14 kB │ gzip:  39.51 kB
+dist/server/assets/settings-page-v9m2WNcG.js                             168.27 kB │ gzip:  28.72 kB
+dist/server/assets/store-references-DEnLcRzO.js                          199.72 kB │ gzip:  44.28 kB
+dist/server/assets/saml.server-DMRL3LDf.js                               248.72 kB │ gzip:  50.58 kB
+dist/server/assets/ui-pKNCiXSJ.js                                        308.65 kB │ gzip:  61.55 kB
+dist/server/assets/base-auth.server-VhQcovLI.js                          309.96 kB │ gzip:  76.73 kB
+dist/server/assets/service-DqOxeatZ.js                                   317.51 kB │ gzip:  72.34 kB
+dist/server/assets/target.server-BwHrbIaK.js                             421.52 kB │ gzip: 103.54 kB
+dist/server/assets/ui-DzuE_LYm.js                                        625.26 kB │ gzip: 119.62 kB
+dist/server/index.js                                                   3,692.47 kB │ gzip: 871.59 kB
+
+[INEFFECTIVE_DYNAMIC_IMPORT] vendor/base/modules/demo/index.mjs is dynamically imported by src/demo/analysis.server.ts but also statically imported by src/server.ts, dynamic import will not move module into another chunk.
+
+✓ built in 4.32s
+[PLUGIN_TIMINGS] JavaScript callbacks ran for 3.6s of this 4.3s build (85%).
+3 callbacks are listed without a time. Their calls overlapped, so the time inside one call includes work from other calls. To find their cost, profile the build with `node --cpu-prof`:
+  - plugin tanstack-start-core:import-protection resolveId (7764 calls)
+  - plugin tanstack-start-core::server-fn:ssr transform (23 calls)
+  - plugin @tailwindcss/vite:generate:build transform (22 calls)
+See https://rolldown.rs/reference/InputOptions.checks#bundlertimings for more details.
+
+Your application is built
+build: complete (exit 0)

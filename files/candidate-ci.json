@@ -1,0 +1,21 @@
+{
+  "queriedAt": "2026-11-06T03:46:10.385475+00:00",
+  "route": "repos/just-every/run-cradle/actions/runs?head_sha=12535b100b7120b75e08f8f69a682ff26f13e976&per_page=100",
+  "callsUsed": 6,
+  "runs": [
+    {
+      "id": 42158403192,
+      "name": "Verify",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "12535b100b7120b75e08f8f69a682ff26f13e976",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42158403192"
+    }
+  ],
+  "interpretation": "Only generated acceptance freshness failed; explicit READY exception; shards skipped; no test failure or repair",
+  "failedBuildJob": 127698001260,
+  "diagnosticCommand": "gh run view 42158403192 --repo just-every/run-cradle --job 127698001260 --log-failed",
+  "diagnosticReadExit": 0,
+  "expectedGeneratedViewFailure": true
+}

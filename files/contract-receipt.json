@@ -1,0 +1,33 @@
+{
+  "head": "12535b100b7120b75e08f8f69a682ff26f13e976",
+  "parents": [
+    "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+    "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746"
+  ],
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "clause": {
+    "id": "OWN-001",
+    "title": "Owned installation without seat charges",
+    "kind": "target",
+    "status": "partial",
+    "evidence": [
+      "scripts/installer/seed.mjs",
+      "tests/rer-data-roundtrip.mjs",
+      "tests/rer-retained-archive.mjs",
+      "tests/ui-launch-operator-doors.mjs",
+      "tests/helpers/settings-capacity-browser.mjs"
+    ],
+    "gap": "Settings covers campaigns, campaignCustomFields, deliverables, milestones, risks, decisions, savedLenses and automations only. Operator, session and lens-condition coverage and every other declared limit remain unproved, including selection, import, upload, request, public-rate, timeline and warehouse measurements and boundary matrices. Fresh own-account or Managed installation, R-12 receipts, SCALE-001 and SCALE-002 qualification and whole-clause judgment remain unclaimed. Ct contract conversion and generated-document synchronization remain release prerequisites.",
+    "area": "Records, schema and the app model — target",
+    "text": "*Tier:* Core · *Cites:* BASE-INSTALL-001, BASE-DATA-005, BASE-DATA-001 · *Register:* R-12 **Requirement.** Cradle is MIT licensed and offers RER Managed hosting as an alternative installation path. Settings shows current product usage against every declared workspace limit. **Acceptance.** 1. Settings shows the current usage and named capacity for every declared workspace limit.",
+    "line": 1212,
+    "row": 2924
+  },
+  "tableLines": 425,
+  "parentStatusRowsRetained": true
+}

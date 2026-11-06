@@ -1,0 +1,8 @@
+{
+  "branch": "cloud/sd-cradle-c-f204",
+  "head": "12535b100b7120b75e08f8f69a682ff26f13e976",
+  "remoteAdvertisedHead": "12535b100b7120b75e08f8f69a682ff26f13e976",
+  "push": "success on first guard attempt",
+  "productWorkingTreeClean": true,
+  "pr": "none required; Verify has branch push entry point"
+}

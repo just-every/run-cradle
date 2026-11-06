@@ -1,0 +1,304 @@
+{
+ "environment": "Actual emitted Worker and native D1, synthetic fixtures only",
+ "screens": [
+  {
+   "name": "settings-capacity-initial",
+   "width": 1440,
+   "file": "settings-capacity-initial-1440.png"
+  },
+  {
+   "name": "settings-capacity-refreshed",
+   "width": 1440,
+   "file": "settings-capacity-refreshed-1440.png"
+  },
+  {
+   "name": "settings-capacity-persisted",
+   "width": 1440,
+   "file": "settings-capacity-persisted-1440.png"
+  },
+  {
+   "name": "import-row-error",
+   "width": 1440,
+   "file": "import-row-error-1440.png"
+  },
+  {
+   "name": "import-preview",
+   "width": 1440,
+   "file": "import-preview-1440.png"
+  },
+  {
+   "name": "import-committed",
+   "width": 1440,
+   "file": "import-committed-1440.png"
+  },
+  {
+   "name": "decision-queue-export",
+   "width": 1440,
+   "file": "decision-queue-export-1440.png"
+  },
+  {
+   "name": "settings-custom-fields",
+   "width": 1440,
+   "file": "settings-custom-fields-1440.png"
+  },
+  {
+   "name": "campaign-custom-fields",
+   "width": 1440,
+   "file": "campaign-custom-fields-1440.png"
+  },
+  {
+   "name": "bulk-edit-selection",
+   "width": 1440,
+   "file": "bulk-edit-selection-1440.png"
+  },
+  {
+   "name": "bulk-edit-applied",
+   "width": 1440,
+   "file": "bulk-edit-applied-1440.png"
+  },
+  {
+   "name": "sample-data-refused",
+   "width": 1440,
+   "file": "sample-data-refused-1440.png"
+  },
+  {
+   "name": "sample-data-removed",
+   "width": 1440,
+   "file": "sample-data-removed-1440.png"
+  },
+  {
+   "name": "ownership-confirm-first",
+   "width": 1440,
+   "file": "ownership-confirm-first-1440.png"
+  },
+  {
+   "name": "ownership-handed-over",
+   "width": 1440,
+   "file": "ownership-handed-over-1440.png"
+  },
+  {
+   "name": "ownership-remove-self",
+   "width": 1440,
+   "file": "ownership-remove-self-1440.png"
+  },
+  {
+   "name": "settings-capacity-persisted",
+   "width": 390,
+   "file": "settings-capacity-persisted-390.png"
+  },
+  {
+   "name": "import-row-error",
+   "width": 390,
+   "file": "import-row-error-390.png"
+  },
+  {
+   "name": "import-preview",
+   "width": 390,
+   "file": "import-preview-390.png"
+  },
+  {
+   "name": "import-committed",
+   "width": 390,
+   "file": "import-committed-390.png"
+  },
+  {
+   "name": "decision-queue-export",
+   "width": 390,
+   "file": "decision-queue-export-390.png"
+  },
+  {
+   "name": "settings-custom-fields",
+   "width": 390,
+   "file": "settings-custom-fields-390.png"
+  },
+  {
+   "name": "campaign-custom-fields",
+   "width": 390,
+   "file": "campaign-custom-fields-390.png"
+  },
+  {
+   "name": "bulk-edit-selection",
+   "width": 390,
+   "file": "bulk-edit-selection-390.png"
+  },
+  {
+   "name": "bulk-edit-applied",
+   "width": 390,
+   "file": "bulk-edit-applied-390.png"
+  },
+  {
+   "name": "sample-data-refused",
+   "width": 390,
+   "file": "sample-data-refused-390.png"
+  },
+  {
+   "name": "sample-data-removed",
+   "width": 390,
+   "file": "sample-data-removed-390.png"
+  },
+  {
+   "name": "ownership-handed-over",
+   "width": 390,
+   "file": "ownership-handed-over-390.png"
+  },
+  {
+   "name": "ownership-remove-self",
+   "width": 390,
+   "file": "ownership-remove-self-390.png"
+  }
+ ],
+ "downloads": [
+  {
+   "width": 1440,
+   "door": "import",
+   "name": "launches-1440.csv",
+   "bytes": 163
+  },
+  {
+   "width": 1440,
+   "door": "grid export",
+   "name": "Campaign grid · All active — USD — 2026-11-06, 13-43 GMT+10-00.csv",
+   "rows": 5
+  },
+  {
+   "width": 1440,
+   "door": "lens export",
+   "name": "Risks Lens — USD — 2026-11-06, 13-43 GMT+10-00.csv",
+   "rows": 3
+  },
+  {
+   "width": 1440,
+   "door": "queue export",
+   "name": "Decision Queue — USD — 2026-11-06, 13-43 GMT+10-00.csv",
+   "rows": 3
+  },
+  {
+   "width": 390,
+   "door": "import",
+   "name": "launches-390.csv",
+   "bytes": 184
+  },
+  {
+   "width": 390,
+   "door": "grid export",
+   "name": "Campaign grid · All active — USD — 2026-11-06, 13-44 GMT+10-00.csv",
+   "rows": 10
+  },
+  {
+   "width": 390,
+   "door": "lens export",
+   "name": "Risks Lens — USD — 2026-11-06, 13-44 GMT+10-00.csv",
+   "rows": 6
+  },
+  {
+   "width": 390,
+   "door": "queue export",
+   "name": "Decision Queue — USD — 2026-11-06, 13-44 GMT+10-00.csv",
+   "rows": 6
+  }
+ ],
+ "errors": [],
+ "capacity": [
+  {
+   "stage": "initial fixture inventory",
+   "width": 1440,
+   "expected": {
+    "campaigns": 4,
+    "campaignCustomFields": 0,
+    "deliverables": 5,
+    "milestones": 5,
+    "risks": 4,
+    "decisions": 3,
+    "savedLenses": 2,
+    "automations": 4
+   },
+   "maxima": {
+    "campaigns": 50000,
+    "campaignCustomFields": 50,
+    "deliverables": 500000,
+    "milestones": 250000,
+    "risks": 250000,
+    "decisions": 250000,
+    "savedLenses": 200,
+    "automations": 100
+   }
+  },
+  {
+   "stage": "native creation and refresh",
+   "width": 1440,
+   "expected": {
+    "campaigns": 5,
+    "campaignCustomFields": 2,
+    "deliverables": 8,
+    "milestones": 9,
+    "risks": 9,
+    "decisions": 9,
+    "savedLenses": 9,
+    "automations": 12
+   },
+   "maxima": {
+    "campaigns": 50000,
+    "campaignCustomFields": 50,
+    "deliverables": 500000,
+    "milestones": 250000,
+    "risks": 250000,
+    "decisions": 250000,
+    "savedLenses": 200,
+    "automations": 100
+   }
+  },
+  {
+   "stage": "archived campaign still consumes stored capacity",
+   "width": 1440,
+   "expected": {
+    "campaigns": 5,
+    "campaignCustomFields": 2,
+    "deliverables": 8,
+    "milestones": 9,
+    "risks": 9,
+    "decisions": 9,
+    "savedLenses": 9,
+    "automations": 12
+   },
+   "maxima": {
+    "campaigns": 50000,
+    "campaignCustomFields": 50,
+    "deliverables": 500000,
+    "milestones": 250000,
+    "risks": 250000,
+    "decisions": 250000,
+    "savedLenses": 200,
+    "automations": 100
+   }
+  },
+  {
+   "stage": "persisted after Worker restart and page reload",
+   "width": 1440,
+   "expected": {
+    "campaigns": 5,
+    "campaignCustomFields": 2,
+    "deliverables": 8,
+    "milestones": 9,
+    "risks": 9,
+    "decisions": 9,
+    "savedLenses": 9,
+    "automations": 12
+   },
+   "maxima": {
+    "campaigns": 50000,
+    "campaignCustomFields": 50,
+    "deliverables": 500000,
+    "milestones": 250000,
+    "risks": 250000,
+    "decisions": 250000,
+    "savedLenses": 200,
+    "automations": 100
+   }
+  },
+  {
+   "stage": "access restrictions",
+   "signedOut": 401,
+   "policyDenied": 403
+  }
+ ]
+}

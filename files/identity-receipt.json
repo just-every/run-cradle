@@ -1,0 +1,30 @@
+{
+  "head": "12535b100b7120b75e08f8f69a682ff26f13e976",
+  "commits": [
+    {
+      "head": "12535b100b7120b75e08f8f69a682ff26f13e976",
+      "identity": "fleet",
+      "trailers": ""
+    },
+    {
+      "head": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+      "identity": "fleet",
+      "trailers": ""
+    },
+    {
+      "head": "6e7ec4371c40eb091c3bc5c44fbd64846e8718aa",
+      "identity": "fleet",
+      "trailers": ""
+    }
+  ],
+  "candidatePaths": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "src/core/features/settings/ui/settings-page.tsx",
+    "src/ui/settings/capacity-panel.tsx",
+    "tests/helpers/settings-capacity-browser.mjs",
+    "tests/ui-launch-operator-doors.mjs"
+  ],
+  "noGeneratedViewsCommitted": true,
+  "allSideParentsChecked": true
+}

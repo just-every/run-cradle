@@ -1,0 +1,99 @@
+{
+  "head": "12535b100b7120b75e08f8f69a682ff26f13e976",
+  "branch": "cloud/sd-cradle-c-f204",
+  "recordedAt": "2026-11-06T03:45:25.591311+00:00",
+  "local": true,
+  "checks": [
+    {
+      "name": "setup",
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "name": "build",
+      "command": "cloud_run timeout 1200 npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "name": "first-party",
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "name": "browser",
+      "command": "cloud_run timeout 1200 env PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium CRADLE_DOORS_EVIDENCE=<task browser directory> node tests/ui-launch-operator-doors.mjs",
+      "exit": 0
+    },
+    {
+      "name": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "name": "views-check",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "name": "lock",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "name": "lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "name": "test-budget",
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0
+    }
+  ],
+  "browser": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "durationMs": 162273.777157,
+    "screens": 29,
+    "widths": [
+      1440,
+      390
+    ],
+    "behaviorAssertionsWidth": 1440,
+    "pageErrors": []
+  },
+  "counts": {
+    "before": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55,
+      "total": 257
+    },
+    "after": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55,
+      "total": 257
+    }
+  },
+  "registrations": {
+    "before": 174,
+    "after": 174,
+    "cap": 200
+  },
+  "contractStatus": "PARTIAL",
+  "selectedPointsAlreadyImplemented": true,
+  "newProductImplementation": false,
+  "mergedMain": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "generatedViewsRestoredFromMain": true,
+  "migrationsChanged": false,
+  "publicationScan": "not run; fleet lander duty",
+  "runSite": "not run; fleet lander duty",
+  "providerReceipts": "not claimed"
+}
