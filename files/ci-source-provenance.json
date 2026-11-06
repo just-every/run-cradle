@@ -1,0 +1,44 @@
+[
+  {
+    "path": "tests/launch-installed-ui.mjs",
+    "main_blob": "71f6e7caf6b694ab79f5b0f31e27d44da7436832",
+    "candidate_blob": "71f6e7caf6b694ab79f5b0f31e27d44da7436832",
+    "unchanged": true
+  },
+  {
+    "path": "tests/launch-write-authority.mjs",
+    "main_blob": "2a2a55c512e79dd23f5254a26ad404aaa8a80bfe",
+    "candidate_blob": "2a2a55c512e79dd23f5254a26ad404aaa8a80bfe",
+    "unchanged": true
+  },
+  {
+    "path": "src/apps/launch/search-rebuild.server.ts",
+    "main_blob": "65903659658c48a5a95bb0ad3df3e537becbcabd",
+    "candidate_blob": "65903659658c48a5a95bb0ad3df3e537becbcabd",
+    "unchanged": true
+  },
+  {
+    "path": "verification.json",
+    "main_blob": "761be3b084e1927aa5811926ae2d61d1dd4f7e72",
+    "candidate_blob": "761be3b084e1927aa5811926ae2d61d1dd4f7e72",
+    "unchanged": true
+  },
+  {
+    "path": ".github/workflows/verify.yml",
+    "main_blob": "527a09cff287c369d69287b17c42b75f87c23413",
+    "candidate_blob": "527a09cff287c369d69287b17c42b75f87c23413",
+    "unchanged": true
+  },
+  {
+    "path": "src/ui/launch/analysis-panel.tsx",
+    "main_blob": "945af1d59da93226104e0d92fd7d9a1b9c5ab7a2",
+    "candidate_blob": "945af1d59da93226104e0d92fd7d9a1b9c5ab7a2",
+    "unchanged": true
+  },
+  {
+    "path": "src/core/features/lenses/ui/lens-builder-page.tsx",
+    "main_blob": "5f5d935ab3d7b55e8e55c2e702943a3925d9a8d2",
+    "candidate_blob": "5f5d935ab3d7b55e8e55c2e702943a3925d9a8d2",
+    "unchanged": true
+  }
+]

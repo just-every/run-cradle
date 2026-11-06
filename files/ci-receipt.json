@@ -1,0 +1,27 @@
+{
+  "repository": "just-every/run-cradle",
+  "run_id": 42176012080,
+  "conclusion": "failure",
+  "head_sha": "56394db55fc4a49079242515836a71947230256a",
+  "html_url": "https://github.com/just-every/run-cradle/actions/runs/42176012080",
+  "status": "completed",
+  "jobs": 37,
+  "worker_jobs": 34,
+  "worker_conclusions": {
+    "success": 33,
+    "failure": 1
+  },
+  "failed_assertion_job": 127754795769,
+  "failed_assertion_job_name": "verify-launch-8",
+  "aggregate_failure_job": 127758578830,
+  "aggregate_failure": "Requires every verification worker; derivative of launch-8 failure, no separate product assertion.",
+  "failure": "tests/launch-installed-ui.mjs:36:92 locator.click timed out at 30000ms because Request lens proposal remained disabled",
+  "observed_tls_messages": "SSLV3_ALERT_CERTIFICATE_UNKNOWN in same log; not asserted to be the cause",
+  "failed_log_command": "gh run view 42176012080 --repo just-every/run-cradle --job 127754795769 --log-failed",
+  "failed_log_read": "succeeded; actual sanitized log retained, no retry or blocked blob download",
+  "github_calls_used": 7,
+  "no_workflow_rerun_or_dispatch": true,
+  "no_noop_commit": true,
+  "custody": "PUSHED; READY withheld because exact-SHA Verify is red",
+  "remaining_dependency": "Authorized resolution of the unchanged AI/lens UI failure and a green exact-SHA Verify under fleet rules; no UI/AI/test/workflow change is authorized by this custody lease."
+}

@@ -33,5 +33,39 @@
       "--jq",
       "{status,conclusion,head_sha,html_url}"
     ]
+  },
+  {
+    "call": 5,
+    "time": "2026-11-06T06:58:26.723989+00:00",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42176012080",
+      "--jq",
+      "{status,conclusion,head_sha,html_url}"
+    ]
+  },
+  {
+    "call": 6,
+    "time": "2026-11-06T07:04:19.928354+00:00",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42176012080/jobs?per_page=100",
+      "--jq",
+      "{jobs:[.jobs[]|{id,name,status,conclusion,head_sha,steps:[.steps[]|select(.conclusion==\"failure\")|{name,number,conclusion}]}]}"
+    ]
+  },
+  {
+    "call": 7,
+    "time": "2026-11-06T07:10:11.581757+00:00",
+    "args": [
+      "run",
+      "view",
+      "42176012080",
+      "--repo",
+      "just-every/run-cradle",
+      "--job",
+      "127754795769",
+      "--log-failed"
+    ]
   }
 ]

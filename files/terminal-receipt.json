@@ -1,0 +1,31 @@
+{
+  "time": "2026-11-06T07:17:05.507718+00:00",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-erasure-custody-1",
+  "head": "56394db55fc4a49079242515836a71947230256a",
+  "remote_head": "56394db55fc4a49079242515836a71947230256a",
+  "product_pushed": true,
+  "clean_before_cleanup": true,
+  "ready": false,
+  "terminal": "BLOCKED",
+  "blocker": "Authorized resolution of the unchanged AI/lens UI failure and a green exact-SHA Verify under fleet rules; no UI/AI/test/workflow change is authorized by this custody lease.",
+  "ci_run": 42176012080,
+  "ci_conclusion": "failure",
+  "pr": null,
+  "contract_status_changes": {},
+  "status_counts_before_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "test_count_before": 174,
+  "test_count_after": 174,
+  "ordinary_before_snapshots": 916,
+  "ordinary_after_snapshots": 0,
+  "legacy_transition_before_snapshots": 924,
+  "legacy_transition_after_snapshots": 0,
+  "all_finished_product_work_pushed": true,
+  "independent_affected_gate_and_review_hold": "remain with fleet",
+  "publication_full_history_scan": "not run in cloud; remains required on fleet",
+  "evidence_ref": "refs/heads/evidence/sd-cradle-erasure-custody-1"
+}
