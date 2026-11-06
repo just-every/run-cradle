@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "87402a0f8afb61c8b5ef8278539384f015f28a6ccfc9a84387c3a14161b3fa1d",
       "executable": false
     },
     "DEMO.md": {
@@ -12314,7 +12314,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
-      "sha256": "b863d3b11c2a21e3a4ac378c142eb2c4592313afa6e486acc72ccfcf57987997",
+      "sha256": "a21d8068130ad76dcd0c05c5d7ab361854d30f774e1dc3e50fc2d9bd0e4d9bfd",
       "executable": false
     },
     "tests/helpers/launch-clause-analysis.mjs": {
@@ -13210,7 +13210,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "7bf6b8d6a659d37a3fc016d8754078927999d8aaf064513d206421cdd030e278",
+      "sha256": "6d737aedc17dabfe6142775458ddb7060c5829a79f6e41240b2be2d76196fdef",
       "executable": false
     },
     "tests/launch-write-service.mjs": {

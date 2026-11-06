@@ -105,11 +105,17 @@ async function stagedImport(h, campaign) {
  assert.equal(response.status, 200, JSON.stringify(preview.error))
  assert.equal(preview.data.value.state, 'valid')
  assert.ok((await h.db.prepare('SELECT COUNT(*) AS n FROM portability_preview_rows WHERE preview_id=? AND record_id=?').bind(preview.data.value.id, campaign.id).first()).n > 0, 'A real staged CSV preview references the campaign')
- return { previewId: preview.data.value.id, fileId: upload.file.id }
+ return { previewId: preview.data.value.id, fileId: upload.file.id, bytes: Buffer.from(csv) }
 }
 
 async function fixture(h, reader) {
- let campaign = await h.campaign('LIFECYCLE-PROOF')
+ const created = await h.request(h.ownerSession, '/api/v1/commands/launch.campaign.create', { method: 'POST', body: JSON.stringify({ commandId: createUlid(), expected: [], input: { fields: { code: 'synthetic-cradle-194A', name: 'Unsafe deletion proof campaign', ownerId: h.actor, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Retain populated work after unsafe deletion', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} } } }) })
+ const receipt = await created.json()
+ assert.equal(created.status, 200, JSON.stringify(receipt.error))
+ assert.equal(receipt.data.state, 'committed')
+ let campaign = (await json(h, `/api/campaigns/${receipt.data.value.id}`)).campaign
+ assert.equal(campaign.code, 'synthetic-cradle-194A')
+ assert.equal(campaign.name, 'Unsafe deletion proof campaign')
  const custom = await h.commit('custom-field.save', { field: { name: 'Lifecycle date', type: 'date' } })
  campaign = await h.commit('campaign.patch', { id: campaign.id, changes: { name: 'Lifecycleproof campaign', status: 'At risk', health: 37, tags: ['Lifecycle', 'Review'], customFields: { [custom.id]: '2026-11-10' } } }, h.expected('campaign', campaign))
  const deliverable = await h.commit('deliverable.create', { fields: { campaignId: campaign.id, title: 'Lifecycleproof deliverable', ownerId: h.actor, dueDate: '2026-09-20' } })
@@ -300,14 +306,75 @@ async function restoreRemovedOwner(h, reader, person) {
  assert.equal(campaign.archivedAt, null)
 }
 
-async function deletion(h, reader, campaign) {
+async function deletion(h, reader, campaign, imported) {
+ const command = async (action, input, expected = []) => {
+  const commandId = createUlid()
+  const response = await h.request(h.ownerSession, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected }) })
+  const body = await response.json()
+  assert.equal(response.status, 200, JSON.stringify(body.error))
+  assert.equal(body.data.state, 'committed')
+  return { commandId, value: body.data.value }
+ }
+ // Admit real queued work after restore; an empty queue cannot prove refusal
+ // preserves it. Deliver only the committed event, leaving execution pending.
+ const automation = (await command('automation.save', { definition: { name: 'Unsafe deletion queued control', enabled: true, trigger: { kind: 'event', event: 'campaign.updated.v1' }, actions: [{ command: 'add-activity', input: { campaignId: campaign.id, message: 'Retained pending deletion work' } }] } })).value
+ const current = (await json(h, `/api/campaigns/${campaign.id}`)).campaign
+ const patched = await command('campaign.patch', { id: campaign.id, changes: { statusSummary: 'Pending work must survive refused deletion' } }, h.expected('campaign', current))
+ await (await h.runtime.getWorker()).queue('cradle-work', [{ id: createUlid(), timestamp: Date.now(), attempts: 1, body: { kind: 'cradle.launch.events.v1', commandId: patched.commandId } }])
+ const historyPath = `/api/automations/${automation.id}/runs`
+ const history = await json(h, historyPath)
+ assert.equal(history.runs.length, 1)
+ assert.equal(history.runs[0].state, 'Queued')
+ assert.equal(history.runs[0].subjectId, campaign.id)
+ assert.ok(history.runs[0].actions.length > 0 && history.runs[0].actions.every(action => action.state === 'Pending'))
+ const queued = await h.db.prepare("SELECT * FROM admission_outbox WHERE action='launch.automation.execute' AND state='pending' AND json_extract(input_json,'$.runId')=?").bind(history.runs[0].id).all()
+ assert.ok(queued.results.length > 0, 'Queued work has a real pending execution outbox entry')
+ const detailPath = `/api/campaigns/${campaign.id}`, detail = await json(h, detailPath)
+ campaign = detail.campaign
+ assert.equal(campaign.version, current.version + 1, 'The refusal uses the new version independently read after an admitted edit')
+ assert.equal(campaign.summary, 'Pending work must survive refused deletion')
+ assert.ok(detail.activity.length > 0 && detail.deliverables.length > 0 && detail.milestones.length > 0 && detail.risks.length > 0 && detail.decisions.length > 0)
  const subjects = [campaign.id]
- for (const kind of children) subjects.push(...(await reader.list(h.ctx, kind, { campaignId: campaign.id })).items.map(row => row.id))
+ const publicRecords = []
+ for (const kind of ['campaign', ...children]) {
+  const ids = kind === 'campaign' ? [campaign.id] : (await reader.list(h.ctx, kind, { campaignId: campaign.id })).items.map(row => row.id)
+  if (kind !== 'campaign') subjects.push(...ids)
+  for (const id of ids) {
+   const route = `/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}/records/${id}`
+   const body = await json(h, route)
+   assert.equal(body.data.record.id, id)
+   publicRecords.push({ route, record: body.data.record })
+  }
+ }
  const audit = (await h.db.prepare("SELECT id FROM admission_audit WHERE json_extract(subject_json,'$.recordId') IN (SELECT value FROM json_each(?))").bind(JSON.stringify(subjects)).all()).results
  assert.ok(audit.length)
- const before = await mutationSnapshot(h.db)
+ const filePath = `/api/v1/files/${imported.fileId}`
+ const file = (await json(h, filePath)).data
+ const content = async () => {
+  const response = await h.request(h.ownerSession, `${filePath}/content`)
+  assert.equal(response.status, 200, 'The retained import file is still downloadable')
+  return Buffer.from(await response.arrayBuffer())
+ }
+ assert.deepEqual(await content(), imported.bytes, 'Original retained file bytes are populated before deletion')
+ const preparedBefore = await mutationSnapshot(h.db)
  await assert.rejects(() => h.commit('campaign.delete', { id: campaign.id, confirmationCode: campaign.code.toLowerCase() }, h.expected('campaign', campaign)), error => error.code === 'validation')
- assert.deepEqual(await mutationSnapshot(h.db), before, 'Wrong confirmation changes nothing')
+ assert.deepEqual(await mutationSnapshot(h.db), preparedBefore, 'Wrong confirmation changes nothing')
+ const before = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ const commandId = createUlid(), confirmationCode = campaign.code.toLowerCase()
+ assert.notEqual(confirmationCode, campaign.code, 'Only the case of the current campaign code is wrong')
+ const refused = await h.request(h.ownerSession, '/api/v1/commands/launch.campaign.delete', { method: 'POST', body: JSON.stringify({ commandId, expected: h.expected('campaign', campaign), input: { id: campaign.id, confirmationCode } }) })
+ const failure = await refused.json()
+ assert.equal(refused.status, 400, JSON.stringify(failure))
+ assert.equal(failure.error.code, 'validation', 'The current version reaches confirmation validation rather than a stale-version conflict')
+ assert.match(failure.error.message, /\bconfirmationCode\b/, 'The public validation refusal specifically names confirmationCode')
+ assert.deepEqual(await json(h, detailPath), detail, 'Unsafe deletion preserves campaign, child work, rollups and activity publicly')
+ for (const { route, record } of publicRecords) assert.deepEqual((await json(h, route)).data.record, record, 'Every campaign and child record retains its public fields and revision')
+ assert.deepEqual(await json(h, historyPath), history, 'Queued run, definition and unattempted actions survive unchanged')
+ assert.deepEqual((await json(h, filePath)).data, file, 'Retained file metadata survives unchanged')
+ assert.deepEqual(await content(), imported.bytes, 'Unsafe deletion preserves the original retained bytes')
+ assert.equal(await h.db.prepare('SELECT command_id FROM command_admissions WHERE command_id=?').bind(commandId).first(), null, 'Refused deletion admits no command')
+ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), before, 'Wrong confirmation changes no product, authority, activity, admission, audit, event, retained-file or queued-work state')
+ console.log(`PROBE CAMP-001 acceptance 1: native current-version deletion with wrong-case confirmation -> 400 validation naming confirmationCode; ${publicRecords.length} public records, populated activity, retained bytes and queued work unchanged`)
  const erased=await h.request(h.ownerSession,'/api/v1/commands/launch.campaign.delete',{method:'POST',body:JSON.stringify({commandId:h.r.createUlid(),expected:h.expected('campaign',campaign),input:{id:campaign.id,confirmationCode:campaign.code}})})
  const receipt=await erased.json();assert.equal(erased.status,200,JSON.stringify(receipt.error));assert.equal(receipt.data.value.deletedId,campaign.id);assert.equal(receipt.data.value.confirmed,true,'The public deletion door completes retained-file cleanup')
  for (const table of ['deliverables', 'milestones', 'risks', 'decisions', 'activity_entries', 'campaign_tags', 'launch_custom_values']) assert.equal((await rows(h.db, table, campaign.id)).length, 0, `Deletion removes ${table}`)
@@ -341,7 +408,7 @@ export async function verifyCampaignLifecycleClauses(h) {
  await duplication(h, reader, f)
  assert.deepEqual(await h.db.prepare('SELECT * FROM launch_analyses WHERE id=?').bind(analysisId).first(), analysis, 'Duplication preserves the populated source analysis')
  const campaign = await archiveRestore(h, reader, f)
- await deletion(h, reader, campaign)
+ await deletion(h, reader, campaign, imported)
  assert.equal(await h.db.prepare('SELECT id FROM launch_analyses WHERE id=?').bind(analysisId).first(), null, 'Campaign erasure removes the populated AI analysis')
  for (const request of requests) assert.equal(await h.db.prepare('SELECT id FROM launch_analysis_requests WHERE id=?').bind(request.id).first(), null, 'Campaign erasure removes the completed analysis request')
  assert.equal(await h.db.prepare('SELECT id FROM portability_previews WHERE id=?').bind(imported.previewId).first(), null, 'Deletion removes the actual retained import preview')
