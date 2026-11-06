@@ -22,6 +22,7 @@ export async function verifyCampaignActivityOrderScreens({ h, page, action, capt
  // either the HTTP response or the rendered groups to obtain an expectation.
  const groups = await list.locator(':scope > li').evaluateAll(elements => elements.map(element => ({
   occurredAt: element.querySelector('time')?.dateTime,
+  top: element.getBoundingClientRect().top,
   changes: [...element.querySelectorAll('dl > div')].map(fact => ({
    field: fact.querySelector('dt')?.textContent,
    value: fact.querySelector('dd')?.textContent,
@@ -32,6 +33,9 @@ export async function verifyCampaignActivityOrderScreens({ h, page, action, capt
   return edit ? [{ ...group, commandId: edit.commandId }] : []
  })
  assert.deepEqual(observed.map(group => group.commandId), proof.expectedActions, 'Rendered activity groups follow reverse authored write order without sorting observed results')
+ for (let index = 1; index < observed.length; index++) {
+  assert.ok(observed[index - 1].top < observed[index].top, 'The newest authored edit appears above the older edit on screen, in the same order as the DOM')
+ }
  for (const group of observed) {
   const edit = proof.authored.find(candidate => candidate.commandId === group.commandId)
   assert.equal(group.occurredAt, edit.occurredAt, 'The rendered group identifies the same publicly read command instant')
