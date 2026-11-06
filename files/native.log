@@ -1,0 +1,39 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE CAMP-008 2 native: two stored select values and one unset campaign; current-version wrong count refused unchanged; confirmed deletion removes exactly definition and two values through public reads and archive
+✔ [IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file (30216.935342ms)
+✔ [IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells (2301.555354ms)
+✔ [SET-003] sample data installs and removes in one action, and removal is refused naming edited records (874.843618ms)
+✔ [VIEW-007] campaign pages follow a keyset cursor: a record added before the cursor neither repeats nor skips others (391.518021ms)
+✖ [PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good (210694.990428ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 316081.81886
+
+✖ failing tests:
+
+test at tests/launch-operator-doors.mjs:365:1
+✖ [PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good (210694.990428ms)
+  AssertionError [ERR_ASSERTION]: {"error":{"requestId":"01M6QHRMYK0XBX53647HF7DRAZ","operation":"POST /api/v1/commands/member.erase","code":"internal","message":"The operation could not be completed.","retry":"never"}}
+  
+  500 !== 503
+  
+      at erasureProbe (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/tests/helpers/warehouse-export-journey.mjs:49:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async verifyErasure (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/tests/helpers/launch-operator-erasure.mjs:53:18)
+      at async TestContext.<anonymous> (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/tests/launch-operator-doors.mjs:455:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 503,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,14 @@
+{
+  "base": "0918d1f978aa8f6b5b810257fe65c8fb6e832512",
+  "files": {
+    "src/apps/launch/custom-fields.server.ts": "99079a0b37029112ee1974dccae7d33986bd32f3eec983494f9c71bc601db2e7",
+    "src/ui/settings/custom-fields-panel.tsx": "0d5074d04a7a341613f2dcf8db058e5805a545aac086a485d2384c30600795c4",
+    "src/apps/launch/settings-http.server.ts": "48b10e0623202d880563e042a75e3c5d5b367905ed1ae2beab6241e839a3374a",
+    "tests/launch-operator-doors.mjs": "0d2edc1d1c79016a3cd219398846e6ab908637315cb93d53f141afe9d91a7d1e",
+    "tests/ui-launch-operator-doors.mjs": "9fa3933da17d129b91d94f06f7c0071112a17d6e50de76e42407f2142435bc0f",
+    "tests/helpers/launch-custom-field-deletion.mjs": "a914f34df6f681d5d4a16c766576f6eb96d322243a0fc181128e7b7737c7373b",
+    "tests/helpers/launch-custom-field-deletion-browser.mjs": "8632350f454e6dc311ba0dc65ff1896ac93b1370665cae452a9085f781a10cd7"
+  },
+  "candidate": "576c635640301474e16b4f75020220c6baa80dc7",
+  "unchangedAfterLocalProof": true
+}

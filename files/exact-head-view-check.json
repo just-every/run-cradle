@@ -1,0 +1,7 @@
+{
+  "head": "576c635640301474e16b4f75020220c6baa80dc7",
+  "command": "node src/base/contract-docs.mjs check",
+  "node": "22.20.0",
+  "exit": 1,
+  "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+}

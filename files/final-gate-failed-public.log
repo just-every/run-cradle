@@ -1,0 +1,8 @@
+verify	Require the plan and every verification worker	﻿2026-11-06T04:53:42.7501505Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T04:53:42.7502198Z [36;1mtest "$PLAN" = success[0m
+verify	Require the plan and every verification worker	2026-11-06T04:53:42.7502881Z [36;1mif [ "$SKIP" = true ]; then exit 0; fi[0m
+verify	Require the plan and every verification worker	2026-11-06T04:53:42.7503762Z [36;1mfor result in $RESULTS; do test "$result" = success; done[0m
+verify	Require the plan and every verification worker	2026-11-06T04:53:42.7719454Z shell: /usr/bin/bash -e {0}
+Runner flag listings omitted from this public copy.
+verify	Require the plan and every verification worker	2026-11-06T04:53:42.7724056Z ##[endgroup]
+verify	Require the plan and every verification worker	2026-11-06T04:53:42.7873188Z ##[error]Process completed with exit code 1.

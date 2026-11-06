@@ -1,0 +1,76 @@
+{
+  "limit": 10,
+  "calls": [
+    {
+      "call": 1,
+      "purpose": "Current main discovery",
+      "head": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "file": "main-ci.json"
+    },
+    {
+      "call": 2,
+      "purpose": "Candidate exact-head discovery",
+      "head": "576c635640301474e16b4f75020220c6baa80dc7",
+      "run": 42162846812,
+      "file": "candidate-ci.json",
+      "observedAt": "2026-11-06T04:30:22.039778+00:00"
+    },
+    {
+      "call": 3,
+      "purpose": "Exact-head status",
+      "run": 42162846812,
+      "file": "candidate-ci-final.json",
+      "observedAt": "2026-11-06T04:35:25.320233+00:00"
+    },
+    {
+      "call": 4,
+      "purpose": "Failed-step diagnosis",
+      "run": 42162846812,
+      "file": "candidate-jobs.json"
+    },
+    {
+      "call": 5,
+      "purpose": "Failed build job archive, read once",
+      "run": 42162846812,
+      "job": 127712420885,
+      "file": "candidate-build-failed.log"
+    },
+    {
+      "call": 6,
+      "purpose": "Failed aggregate job archive, read once",
+      "run": 42162846812,
+      "job": 127712535833,
+      "file": "candidate-gate-failed.log"
+    },
+    {
+      "call": 7,
+      "purpose": "Final exact-head discovery",
+      "run": 42165120309,
+      "file": "final-ci.json"
+    },
+    {
+      "call": 8,
+      "purpose": "Final failed-step diagnosis",
+      "run": 42165120309,
+      "file": "final-jobs.json",
+      "exit": 0,
+      "observedAt": "2026-11-06T05:00:07.094230+00:00"
+    },
+    {
+      "call": 9,
+      "purpose": "Final failed build job archive, read once",
+      "run": 42165120309,
+      "file": "final-build-failed.log",
+      "exit": 0,
+      "observedAt": "2026-11-06T05:05:14.306652+00:00"
+    },
+    {
+      "call": 10,
+      "purpose": "Final dependent aggregate job archive, read once",
+      "run": 42165120309,
+      "file": "final-gate-failed.log",
+      "exit": 0,
+      "observedAt": "2026-11-06T05:10:19.033921+00:00"
+    }
+  ]
+}

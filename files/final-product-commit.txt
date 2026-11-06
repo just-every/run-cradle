@@ -1,0 +1,10 @@
+ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f
+576c635640301474e16b4f75020220c6baa80dc7
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+Isolate counted field deletion proof from other native journeys
+
+Run the counted-deletion journey in its own real installation because its two public exports retain snapshot custody. Keep every public deletion, wrong-count refusal, archive readback and unrelated-data assertion, while preserving the warehouse-erasure journey's independent fixture.
+
+CAMP-008 remains partial with its broader declared gaps unchanged. No production behavior or acceptance text changes.
+

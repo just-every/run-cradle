@@ -1,0 +1,10 @@
+{
+  "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+  "job": 127719720782,
+  "command": "node src/base/contract-docs.mjs check",
+  "test": "Check generated contract documents",
+  "exit": 1,
+  "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+  "node": "22.20.0",
+  "expectedGeneratedViewFailure": true
+}

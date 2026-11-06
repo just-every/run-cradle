@@ -1,0 +1,375 @@
+{
+  "tag": "sd-cradle-c-f209",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f209",
+  "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+  "base": "0918d1f978aa8f6b5b810257fe65c8fb6e832512",
+  "mergedMain": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "clause": {
+    "id": "CAMP-008",
+    "before": "partial",
+    "after": "partial",
+    "doneClaim": false,
+    "selectedPointsAlreadyInBase": true
+  },
+  "counts": {
+    "before": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "after": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "rows": 257,
+    "testsBefore": 174,
+    "testsAfter": 174
+  },
+  "checks": [
+    {
+      "name": "setup",
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "name": "build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "name": "typecheck",
+      "command": "cloud_run pnpm check:types",
+      "exit": 0
+    },
+    {
+      "name": "first-party",
+      "command": "cloud_run pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "name": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "name": "views-check-before-restore",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "name": "source-lock-write",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "name": "source-lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "name": "migration-ledger",
+      "required": false,
+      "exit": 0,
+      "reason": "No migration changes"
+    },
+    {
+      "name": "native-file",
+      "command": "cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-operator-doors.mjs",
+      "exit": 1,
+      "tests": 5,
+      "passCount": 4,
+      "failCount": 1,
+      "selectedPointPassed": true,
+      "log": "native.log"
+    },
+    {
+      "name": "browser",
+      "command": "CRADLE_AUTHORITY_PORT=42081 cloud_run timeout 1200 node --import /tmp/cloud-system-chromium.mjs tests/ui-launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "passCount": 1,
+      "failCount": 0,
+      "widths": [
+        1440,
+        390
+      ],
+      "screens": 31,
+      "log": "browser.log"
+    },
+    {
+      "name": "native-warehouse-isolation",
+      "command": "CRADLE_AUTHORITY_PORT=42181 cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 --test-name-pattern 'sole owner hands over ownership' tests/launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "passCount": 1,
+      "failCount": 0,
+      "log": "native-isolated.log"
+    },
+    {
+      "name": "main-native-baseline",
+      "head": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "command": "CRADLE_AUTHORITY_PORT=42281 cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 5,
+      "passCount": 5,
+      "failCount": 0,
+      "log": "main-native.log"
+    },
+    {
+      "name": "selected-native-exact-head",
+      "head": "576c635640301474e16b4f75020220c6baa80dc7",
+      "command": "CRADLE_AUTHORITY_PORT=42381 cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 --test-name-pattern 'campaign CSV previews changes' tests/launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "passCount": 1,
+      "failCount": 0,
+      "log": "native-selected-exact-head.log"
+    },
+    {
+      "name": "node22-build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "node22-build.log"
+    },
+    {
+      "name": "node22-typecheck",
+      "command": "cloud_run pnpm check:types",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "typecheck-node22.log"
+    },
+    {
+      "name": "node22-first-party",
+      "command": "cloud_run pnpm exec rer check --profile first-party",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "first-party-node22.log"
+    },
+    {
+      "name": "expected-generated-view-check",
+      "head": "576c635640301474e16b4f75020220c6baa80dc7",
+      "command": "node src/base/contract-docs.mjs check",
+      "node": "22.20.0",
+      "exit": 1,
+      "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+      "expectedFailure": true,
+      "log": "exact-head-view-check.log"
+    },
+    {
+      "name": "node22-full-native-before-fixture-isolation",
+      "head": "576c635640301474e16b4f75020220c6baa80dc7",
+      "node": "22.20.0",
+      "exit": 1,
+      "passCount": 4,
+      "failCount": 1,
+      "log": "native-node22.log"
+    },
+    {
+      "name": "archive-erasure-reproduction",
+      "head": "576c635640301474e16b4f75020220c6baa80dc7",
+      "node": "22.20.0",
+      "exit": 1,
+      "observedStatus": 500,
+      "snapshotTables": 916,
+      "cause": "IMPORT_D1_REQUEST_LIMIT",
+      "log": "archive-erasure-probe.log"
+    },
+    {
+      "name": "main-archive-erasure-reproduction",
+      "head": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "node": "22.20.0",
+      "exit": 1,
+      "observedStatus": 500,
+      "snapshotTables": 916,
+      "log": "main-archive-erasure-probe.log"
+    },
+    {
+      "name": "isolation-typecheck",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "isolation-typecheck.log"
+    },
+    {
+      "name": "isolation-first-party",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "isolation-first-party.log"
+    },
+    {
+      "name": "full-native-final",
+      "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+      "command": "CRADLE_AUTHORITY_PORT=42781 cloud_run timeout 1200 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-operator-doors.mjs",
+      "node": "22.20.0",
+      "exit": 0,
+      "tests": 5,
+      "passCount": 5,
+      "failCount": 0,
+      "log": "native-isolated-fixtures.log"
+    },
+    {
+      "name": "browser-final",
+      "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+      "command": "CRADLE_AUTHORITY_PORT=42981 cloud_run timeout 1200 node --import /tmp/cloud-system-chromium.mjs tests/ui-launch-operator-doors.mjs",
+      "node": "22.20.0",
+      "exit": 0,
+      "tests": 1,
+      "passCount": 1,
+      "failCount": 0,
+      "widths": [
+        1440,
+        390
+      ],
+      "screens": 31,
+      "pageErrors": [],
+      "log": "browser-final.log"
+    },
+    {
+      "name": "final-contract-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "name": "final-contract-check-before-restore",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0
+    },
+    {
+      "name": "final-lock-write",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0
+    },
+    {
+      "name": "final-lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "name": "final-source-build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "node": "22.20.0",
+      "exit": 0,
+      "log": "isolation-build.log"
+    },
+    {
+      "name": "committed-lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "candidate-lock-check.log"
+    }
+  ],
+  "pr": null,
+  "publicationScan": {
+    "status": "not_run",
+    "custody": "fleet lander"
+  },
+  "landing": {
+    "status": "not_performed",
+    "custody": "fleet lander"
+  },
+  "runSite": {
+    "status": "not_run_on_candidate",
+    "custody": "fleet lander"
+  },
+  "push": {
+    "status": "success",
+    "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+    "attempts": 1,
+    "log": "final-product-push.log"
+  },
+  "updatedAt": "2026-11-06T04:54:00.567919+00:00",
+  "knownExistingDefect": {
+    "head": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+    "door": "member.erase after two public installation exports",
+    "status": 500,
+    "cause": "IMPORT_D1_REQUEST_LIMIT",
+    "snapshotTables": 916,
+    "introducedByThisChange": false,
+    "fixed": false,
+    "route": "sd seed follow-up"
+  },
+  "repair": {
+    "kind": "isolate independent test installations",
+    "attempt": 1,
+    "productionChanges": false,
+    "assertionsRemovedOrNarrowed": false,
+    "reason": "The counted-deletion proof retained two installation exports in the shared native fixture, adding 916 snapshot tables to an unrelated later warehouse-erasure case",
+    "result": "Full native file passes with every assertion retained",
+    "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f"
+  },
+  "priorHead": "576c635640301474e16b4f75020220c6baa80dc7",
+  "verifyPriorHead": {
+    "run": 42162846812,
+    "event": "push",
+    "conclusion": "failure",
+    "head_sha": "576c635640301474e16b4f75020220c6baa80dc7",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42162846812",
+    "status": "completed",
+    "diagnosis": "Pending failed-step read at the mandated interval"
+  },
+  "verify": {
+    "run": 42165120309,
+    "conclusion": "failure",
+    "event": "push",
+    "head_sha": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42165120309",
+    "name": "Verify",
+    "status": "completed",
+    "diagnosis": "Expected generated-view check plus dependent aggregate guard",
+    "failedJobs": [
+      {
+        "id": 127719720782,
+        "name": "build",
+        "failedSteps": [
+          "Check generated contract documents"
+        ]
+      },
+      {
+        "id": 127719808906,
+        "name": "verify",
+        "failedSteps": [
+          "Require the plan and every verification worker"
+        ]
+      }
+    ],
+    "reproduction": {
+      "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+      "job": 127719720782,
+      "command": "node src/base/contract-docs.mjs check",
+      "test": "Check generated contract documents",
+      "exit": 1,
+      "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+      "node": "22.20.0",
+      "expectedGeneratedViewFailure": true
+    },
+    "buildArchiveReadOnce": true,
+    "aggregateArchiveReadOnce": true,
+    "exception": "Generated-view freshness failure is explicitly permitted for handoff",
+    "buildArchive": "final-build-failed-public.log",
+    "aggregateArchive": "final-gate-failed-public.log"
+  },
+  "blockers": [],
+  "productionSourceEqualsMain": true,
+  "finalMechanical": {
+    "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+    "lock": {
+      "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    "views": {
+      "command": "node src/base/contract-docs.mjs write; node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "generatedViewsRestoredFromMain": true,
+      "afterRestoreExit": 1,
+      "afterRestoreFailure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+    },
+    "ledger": {
+      "command": null,
+      "exit": 0,
+      "reason": "No migration changes"
+    }
+  },
+  "githubCalls": 10
+}

@@ -1,0 +1,8 @@
+576c635640301474e16b4f75020220c6baa80dc7
+0918d1f978aa8f6b5b810257fe65c8fb6e832512 6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746
+Run Edit Run fleet <fleet@runeditrun.com>
+Run Edit Run fleet <fleet@runeditrun.com>
+Integrate current main with counted campaign-field deletion proof
+
+Preserve the published CAMP-008 proof base and current main provenance. The selected counted-deletion journey already exists at the required base; retain its evidence and explicit broader gaps without claiming DONE.
+

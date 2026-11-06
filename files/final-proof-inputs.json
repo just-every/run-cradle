@@ -1,0 +1,14 @@
+{
+  "files": {
+    "src/apps/launch/custom-fields.server.ts": "99079a0b37029112ee1974dccae7d33986bd32f3eec983494f9c71bc601db2e7",
+    "src/ui/settings/custom-fields-panel.tsx": "0d5074d04a7a341613f2dcf8db058e5805a545aac086a485d2384c30600795c4",
+    "src/apps/launch/settings-http.server.ts": "48b10e0623202d880563e042a75e3c5d5b367905ed1ae2beab6241e839a3374a",
+    "tests/launch-operator-doors.mjs": "8ea5267354d624fd9a32859b3edcd704a71db30b1b93aff5c0a6292a63bc1858",
+    "tests/ui-launch-operator-doors.mjs": "9fa3933da17d129b91d94f06f7c0071112a17d6e50de76e42407f2142435bc0f",
+    "tests/helpers/launch-custom-field-deletion.mjs": "c2b200f73ba0bd541b12cf51088689adc5fac49b606eeca32462032fa777d698",
+    "tests/helpers/launch-custom-field-deletion-browser.mjs": "8632350f454e6dc311ba0dc65ff1896ac93b1370665cae452a9085f781a10cd7",
+    "tests/helpers/launch-authority-runtime.mjs": "dbf74289f87429ae806425ad179c08b2deb82c97ba745c74e6d55b38598fdfd7"
+  },
+  "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+  "unchangedAfterPassingRuns": true
+}

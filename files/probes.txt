@@ -1,0 +1,3 @@
+PROBE CAMP-008 2 native: two stored select values and one unset campaign; current-version wrong count refused unchanged; confirmed deletion removes exactly definition and two values through public reads and archive
+PROBE CAMP-008 2 browser 1440: Settings confirms exactly two campaigns, cancellation unchanged, fresh-version wrong count refused unchanged, shipped Delete removes definition and both values; unset campaign and unrelated data intact
+PROBE CAMP-008 2 browser 390: Settings confirms exactly two campaigns, cancellation unchanged, fresh-version wrong count refused unchanged, shipped Delete removes definition and both values; unset campaign and unrelated data intact

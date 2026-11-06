@@ -1,0 +1,11 @@
+# sd-cradle-c-f209 actual plan
+
+1. Start from the required published base 0918d1f978aa8f6b5b810257fe65c8fb6e832512, read the live clause and retained native and browser journeys, and map every selected POINT to independent assertions.
+2. Preserve current main and the published base by merging main, resolving the contract source first if needed. Do not rewrite published commits.
+3. Run setup and build with the pinned repository tool, the retained native operator-door registration, the retained browser operator-door journey at 1440 and 390, typecheck and the first-party check. Use system Chromium with no sandbox as the cloud requires. Do not add duplicate tests or broaden the selected POINTS.
+4. Regenerate and check contract documents, restore generated views from main, regenerate the source lock last and check it. Verify all parent Status rows survive and inspect every candidate identity and trailer.
+5. Push only cloud/sd-cradle-c-f209 through the fleet guard. Discover exact-head Verify with the bounded REST budget and record the actual result. Publish these actual reports and receipts only on the task evidence ref. Leave landing, publication scanning and Run site to the fleet.
+
+Initial finding: the required base already implements the entire selected acceptance-2 scenario. CAMP-008 has two acceptance sentences. Sentence 1 still lacks the full definition editing and declared-type, grid, filtering, lens and CSV matrix. Sentence 2 has the selected populated-select proof; broader type, concurrent count, authority and capacity combinations remain unproved. No DONE claim or acceptance-text change is planned.
+
+Additional required work found by verification: the added public archive proof left two complete exports, holding 916 snapshot tables, in the native operator fixture. The unrelated later warehouse-erasure case then exhausted its existing statement budget. A public reproduction confirms the same limit on unchanged main. Keep that existing capacity defect as a separate seed follow-up; give the counted-deletion journey its own real Worker and database so independent native journeys retain their own preconditions. Preserve every assertion, then rerun the full native file and both browser widths on the final source.

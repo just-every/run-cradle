@@ -1,0 +1,72 @@
+TAP version 13
+# [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+# PROBE CAMP-008 2 native: two stored select values and one unset campaign; current-version wrong count refused unchanged; confirmed deletion removes exactly definition and two values through public reads and archive
+# Subtest: [IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file
+ok 1 - [IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file
+  ---
+  duration_ms: 31727.318047
+  type: 'test'
+  ...
+# Subtest: [IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells
+ok 2 - [IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells
+  ---
+  duration_ms: 2336.883716
+  type: 'test'
+  ...
+# Subtest: [SET-003] sample data installs and removes in one action, and removal is refused naming edited records
+ok 3 - [SET-003] sample data installs and removes in one action, and removal is refused naming edited records
+  ---
+  duration_ms: 806.765784
+  type: 'test'
+  ...
+# Subtest: [VIEW-007] campaign pages follow a keyset cursor: a record added before the cursor neither repeats nor skips others
+ok 4 - [VIEW-007] campaign pages follow a keyset cursor: a record added before the cursor neither repeats nor skips others
+  ---
+  duration_ms: 404.474954
+  type: 'test'
+  ...
+# ERASURE_DIAGNOSTIC Error: IMPORT_D1_REQUEST_LIMIT
+#     at prepareD1ImportCustodyRetirement (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:27995:105)
+#     at async retireD1ImportCustody (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:27897:19)
+#     at async Object.commit (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:28966:4)
+#     at async Object.commit (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:20719:28)
+#     at async Object.commit (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:33259:20)
+#     at async Object.execute (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:34125:14)
+#     at async Array.<anonymous> (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:30333:81)
+#     at async dispatch (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:338:11)
+#     at async file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:69544:3
+#     at async dispatch (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/dist/server/index.js:338:11)
+# Subtest: [PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good
+not ok 5 - [PERM-007] [OPS-002] [OPS-004] [OPS-005] [SYNC-002] [BASE-ACCESS] the sole owner hands over ownership after a fresh confirmation, the installation keeps exactly one owner, the former owner removes themselves, Base operator routes cannot remove the owner, and scheduled CSV and Parquet exports to every destination follow current policy before a leaver is removed and erased through company SCIM for good
+  ---
+  duration_ms: 232869.007593
+  type: 'test'
+  location: '/home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/tests/launch-operator-doors.mjs:365:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"error":{"requestId":"01M6QJWR1EVEPS6HV279556A82","operation":"POST /api/v1/commands/member.erase","code":"internal","message":"The operation could not be completed.","retry":"never"}}
+    
+    500 !== 503
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 503
+  actual: 500
+  operator: 'strictEqual'
+  stack: |-
+    erasureProbe (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/tests/helpers/warehouse-export-journey.mjs:49:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async verifyErasure (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/tests/helpers/launch-operator-erasure.mjs:53:18)
+    async TestContext.<anonymous> (file:///home/agent/rer-consolidation/work/sd-cradle-c-f209/run-cradle/tests/launch-operator-doors.mjs:455:2)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 338741.216469

@@ -1,0 +1,19 @@
+{
+  "head": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f",
+  "lock": {
+    "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+    "exit": 0
+  },
+  "views": {
+    "command": "node src/base/contract-docs.mjs write; node src/base/contract-docs.mjs check",
+    "exit": 0,
+    "generatedViewsRestoredFromMain": true,
+    "afterRestoreExit": 1,
+    "afterRestoreFailure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+  },
+  "ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migration changes"
+  }
+}

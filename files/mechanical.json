@@ -1,0 +1,25 @@
+{
+  "viewsWrite": 0,
+  "viewsCheckBeforeRestoring": 0,
+  "lockWrite": 0,
+  "ledger": {
+    "required": false,
+    "reason": "No migration changes"
+  },
+  "checks": [
+    {
+      "name": "views-restored",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 1,
+      "log": "views-restored.log",
+      "sha256": "183372998615cc516043a5f66404b300281009a84349eda72da66d79fe542603"
+    },
+    {
+      "name": "lock-final",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "lock-final.log",
+      "sha256": "66946badf2e5a73fe857601f54fc6b6d9392c33c718b6778d1d659932f7aa378"
+    }
+  ]
+}
