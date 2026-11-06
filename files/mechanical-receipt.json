@@ -1,0 +1,75 @@
+{
+  "head": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+  "branch": "cloud/sd-cradle-c-f191",
+  "checks": [
+    {
+      "name": "typecheck",
+      "command": "pnpm check:types",
+      "exit": 0,
+      "log": "typecheck.log",
+      "sha256": "01921a56281e67378ec9dd166aa60beb366687580255b6d6bdb6999d3812b70f",
+      "provenance": "Run on final source bytes; build precedes the fixture-only correction, which changes no emitted product source."
+    },
+    {
+      "name": "first-party",
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "log": "first-party.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "provenance": "Run on final source bytes; build precedes the fixture-only correction, which changes no emitted product source."
+    },
+    {
+      "name": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "log": "views-write.log",
+      "sha256": "df91012bf66fb476e9cd1a30c002829398beb55f869e07cc7be477197fa5a276",
+      "provenance": "Run on final source bytes; build precedes the fixture-only correction, which changes no emitted product source."
+    },
+    {
+      "name": "views-check",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "log": "views-check.log",
+      "sha256": "c21aae40192141751d6d5c7a3a1d0eb701a6852f305d592d77b4dcab9c2536ab",
+      "provenance": "Run on final source bytes; build precedes the fixture-only correction, which changes no emitted product source."
+    },
+    {
+      "name": "lock-write",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "log": "source-lock-write.json",
+      "sha256": "adae5746304f706f3be4fd7c1da7d2e9090f40bbc5269eb780db9caed1dec9c0",
+      "provenance": "Run on final source bytes; build precedes the fixture-only correction, which changes no emitted product source."
+    },
+    {
+      "name": "lock-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "log": "source-lock-check.json",
+      "sha256": "5f02a72366cc0292cc1396dd72d10bb78f4d3f4f66c7d711b4849a6bc8ce14ac",
+      "provenance": "Run on final source bytes; build precedes the fixture-only correction, which changes no emitted product source."
+    },
+    {
+      "name": "build",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log",
+      "sha256": "ded1f0ea0a93c3dd9f07224d646a9310f608709d7f23a999f0b497f31895371d",
+      "provenance": "Run on final source bytes; build precedes the fixture-only correction, which changes no emitted product source."
+    }
+  ],
+  "viewsRestoredFrom": "origin/main",
+  "migrationLedger": {
+    "command": null,
+    "reason": "No migrations changed",
+    "exit": 0
+  },
+  "mechanical": "MECHANICAL lock=node scripts/edition-authoring/cli.mjs lock and check exit=0; views=node src/base/contract-docs.mjs write and check exit=0; ledger=none exit=0",
+  "exactCandidateLockCheck": {
+    "head": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+    "exit": 0,
+    "log": "source-lock-check.json",
+    "sha256": "5f02a72366cc0292cc1396dd72d10bb78f4d3f4f66c7d711b4849a6bc8ce14ac"
+  }
+}

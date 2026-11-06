@@ -1,0 +1,14 @@
+verify	Require the plan and every verification worker	﻿2026-11-06T02:47:14.8296278Z ##[group]Run test "$PLAN" = success
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8296873Z [36;1mtest "$PLAN" = success[0m
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8297277Z [36;1mif [ "$SKIP" = true ]; then exit 0; fi[0m
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8297902Z [36;1mfor result in $RESULTS; do test "$result" = success; done[0m
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8594052Z shell: /usr/bin/bash -e {0}
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8595079Z env:
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8595562Z   CI: true
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8596257Z   WRANGLER_SEND_METRICS: false
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8596826Z   PLAYWRIGHT_SKIP_BROWSER_GC: 1
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8597484Z   PLAN: success
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8597972Z   SKIP: false
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8598452Z   RESULTS: success failure skipped
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8599043Z ##[endgroup]
+verify	Require the plan and every verification worker	2026-11-06T02:47:14.8773070Z ##[error]Process completed with exit code 1.

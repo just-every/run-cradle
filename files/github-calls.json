@@ -1,0 +1,60 @@
+[
+  {
+    "at": 1793933037.1850035,
+    "command": [
+      "gh",
+      "api",
+      "repos/just-every/run-cradle/actions/runs?head_sha=234432f0b726fba470fb6ce4e1816f50cd082601&per_page=100",
+      "--jq",
+      ".workflow_runs[] | {id,name,event,status,conclusion,head_sha,html_url}"
+    ]
+  },
+  {
+    "at": 1793933297.0662954,
+    "command": [
+      "gh",
+      "api",
+      "repos/just-every/run-cradle/actions/runs?head_sha=e1b0d890e9401d8842ad425f3fbe1d932ab92fd6&per_page=100",
+      "--jq",
+      ".workflow_runs[] | {id,name,event,status,conclusion,head_sha,html_url}"
+    ]
+  },
+  {
+    "at": 1793933331.2177315,
+    "command": [
+      "gh",
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42152471756/jobs",
+      "--jq",
+      ".jobs[] | {id,name,status,conclusion,steps:[.steps[] | select(.conclusion==\"failure\") | {name,conclusion}]}"
+    ]
+  },
+  {
+    "at": 1793933413.397466,
+    "command": [
+      "gh",
+      "run",
+      "view",
+      "42152471756",
+      "--repo",
+      "just-every/run-cradle",
+      "--job",
+      "127678854214",
+      "--log-failed"
+    ]
+  },
+  {
+    "at": 1793933413.4075358,
+    "command": [
+      "gh",
+      "run",
+      "view",
+      "42152471756",
+      "--repo",
+      "just-every/run-cradle",
+      "--job",
+      "127678755729",
+      "--log-failed"
+    ]
+  }
+]

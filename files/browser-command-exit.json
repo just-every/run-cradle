@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "head": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+  "command": "cloud_run timeout 1200 env PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium CRADLE_DOORS_EVIDENCE=<packet browser directory> node --import /tmp/cradle-exit-receipt.mjs tests/ui-launch-operator-doors.mjs"
+}

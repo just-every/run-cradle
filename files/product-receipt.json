@@ -1,0 +1,31 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f191",
+  "head": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+  "remoteHead": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+  "commits": [
+    "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+    "6e7ec4371c40eb091c3bc5c44fbd64846e8718aa"
+  ],
+  "identityAudit": "all candidate commits, including side parents, pass fleet author and committer identity; no trailers",
+  "statusCountsBefore": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "statusCountsAfter": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "registrationsBefore": 174,
+  "registrationsAfter": 174,
+  "changedClause": "OWN-001",
+  "before": "partial",
+  "after": "partial",
+  "workingTreeClean": true,
+  "publicationScan": "not run in cloud; required at guarded landing",
+  "landing": "not attempted"
+}

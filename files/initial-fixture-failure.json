@@ -1,0 +1,8 @@
+{
+  "exit": 1,
+  "test": "Launch operator doors at desktop and phone",
+  "failure": "POST /api/v1/commands/launch.decision.assign returned 409 version_conflict: A prepared mutation no longer matches current state. Read and prepare again.",
+  "cause": "The new count-only decisions were assigned to the departing owner on an archived campaign. The retained ownership journey attempts to move assigned decisions, which correctly refuses the archived campaign.",
+  "repair": "Use unassigned decisions for these count-only native fixtures. Existing ownership assertions and production code were unchanged.",
+  "subsequentResult": "Full retained journey passed, 1 test, 0 failures, both widths."
+}

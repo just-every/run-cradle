@@ -1,0 +1,19 @@
+{
+  "head": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+  "exit": 0,
+  "nodeExit": 0,
+  "tests": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "registration": "[IMPORT-001] [OWN-001] [IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone",
+  "widths": [
+    1440,
+    390
+  ],
+  "capacityAssertionWidth": 1440,
+  "screens": 29,
+  "receipt": "browser/doors-receipt.json",
+  "log": "browser-test.log",
+  "supervisorDiscrepancy": "An earlier exact-candidate execution printed one passing test but its tool supervising shell returned 1. No code changed; this execution records both actual Node and supervising command exit 0."
+}

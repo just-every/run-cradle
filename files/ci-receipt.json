@@ -1,0 +1,16 @@
+{
+  "head": "e1b0d890e9401d8842ad425f3fbe1d932ab92fd6",
+  "run": 42152471756,
+  "event": "push",
+  "status": "completed",
+  "conclusion": "failure",
+  "expectedGeneratedViewException": true,
+  "failedJob": 127678755729,
+  "failedStep": "Check generated contract documents",
+  "error": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+  "consequentialFailedJob": 127678854214,
+  "shards": "skipped",
+  "workflowChanged": false,
+  "reruns": 0,
+  "dispatches": 0
+}
