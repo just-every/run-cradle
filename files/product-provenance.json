@@ -1,0 +1,32 @@
+{
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-erasure-custody-1",
+  "head": "56394db55fc4a49079242515836a71947230256a",
+  "base_main": "bf02cc16bc41362d7c5859f1b008f9877eb7db81",
+  "remote_head": "56394db55fc4a49079242515836a71947230256a",
+  "clean": true,
+  "paths": {
+    "docs/privacy/operator-erasure.md": "782425a0de881ab463f74bbb8842d64e9304f0278f86d9e22987b8de4460894f",
+    "scripts/portability/worker.mjs": "809525527e0f56c9c7e5eb1adab6c0fbd2b7841cddcbf39ab452471c5eb921af",
+    "sources.lock.json": "ffcf66bdc9d0f5dc47efc0e23f3c08873ef0a113c939fc99c01ea76da95f317e",
+    "src/domains/lifecycle/cleanup.server.ts": "655552a3e6add103864161f487d0f144260c629de4c0eae52913e3009ca0d971",
+    "src/domains/lifecycle/finish-member-erasure.server.ts": "9c8bdfc57c1e71db7c99e819401788df08f6ab3cb4f0f6060540644a96ff93b3",
+    "src/domains/lifecycle/portability-custody.server.ts": "6d0ffbdc434557d74c7672269219b0b780dee9e5288fb79f14bb5d13d6b43ca6",
+    "src/domains/lifecycle/snapshot-retirement.server.ts": "4fba53af773d366e95afb0906b18fa34b073c0df8c465ea789afa47caf6b1e92",
+    "src/domains/portability/export-custody.d.mts": "becca2b49d16a5bb2ee41fbbcb37d483cfb7d457b74f63927162d5632de722ca",
+    "src/domains/portability/export-custody.mjs": "33990e0cdbafc9b6e5903e38fd3653509bf775d0b3912434ce173d6efc5cad71",
+    "src/domains/portability/installation-http.server.ts": "f0704129e05df1a46b48454076beda74b2f3aef781b662a08fd2c9f23a29d163",
+    "src/domains/portability/installation-policy.d.mts": "4f95618dc26ec3abf8f5b6568479982a584cf0d38cf88adfc781fbeb699a8795",
+    "src/domains/portability/installation-policy.mjs": "fe430c1a47c66966c9712998be89e2be599bfe6d7449da35d9830339392a8f16"
+  },
+  "product_commits": [
+    "56394db55fc4a49079242515836a71947230256a",
+    "bdda1ecdf15303acc681f70311b453ea099b986c",
+    "01ab3adf5af9b93aebcb2dddadddba9e71d0ad7a",
+    "c8a32f610abc7623dd189b65664f528a17bd2eae"
+  ],
+  "pr": null,
+  "migration_paths_changed": false,
+  "generated_views_changed": false,
+  "tests_changed": false
+}

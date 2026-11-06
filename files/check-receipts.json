@@ -1,0 +1,76 @@
+{
+  "setup": {
+    "command": "cloud_run npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+    "exit": 0,
+    "log": "setup.log"
+  },
+  "initial_build": {
+    "command": "cloud_run npx -y @runeditrun/rer build",
+    "exit": 0,
+    "log": "build.log"
+  },
+  "initial_types": {
+    "command": "cloud_run pnpm run check:types",
+    "exit": 0,
+    "log": "typecheck.log"
+  },
+  "initial_lifecycle": {
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/lifecycle-erasure.mjs tests/lifecycle-identity-security.mjs",
+    "exit": 0,
+    "passed": 5,
+    "failed": 0,
+    "log": "lifecycle.log"
+  },
+  "first_after_probe": {
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs ../packet/after-probe.mjs",
+    "exit": 1,
+    "log": "after-probe.log",
+    "finding": "Full-preview assertion found current main's broad portability_% exclusion. Corrected product policy; no assertions removed or weakened."
+  },
+  "preview_types": {
+    "command": "cloud_run pnpm run check:types",
+    "exit": 0,
+    "log": "typecheck-preview.log"
+  },
+  "permanent_test_count": {
+    "before": 174,
+    "after": 174,
+    "cap": 200,
+    "changes": 0
+  },
+  "applied_migration_edits": 0,
+  "new_sql_migration": false,
+  "baseline_reruns": 0,
+  "local_full_suite_runs": 0,
+  "publication_scans": 0,
+  "workflow_dispatches_or_reruns": 0,
+  "ordinary_after": {
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs ../packet/after-probe.mjs",
+    "exit": 0,
+    "producer_head": "bdda1ecdf15303acc681f70311b453ea099b986c",
+    "log": "after-final.log",
+    "receipt": "after-receipt.json",
+    "note": "Later 56394db changes only the released CLI inventory selection; exact-SHA build, native phase and lifecycle proofs are recorded separately."
+  },
+  "retained_first_attempt": {
+    "exit": 1,
+    "log": "retained-exact.log",
+    "observed": "v0.3.0 archive restored exactly; later actual Platform CLI import reported native_error. No assertion or test was weakened. Diagnostic actual native restore matched 231 tables/62 rows/2 objects; original journey retry in progress."
+  },
+  "retained_retry": {
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs --test ../packet/retained-archive-adapted.mjs",
+    "head": "56394db55fc4a49079242515836a71947230256a",
+    "exit": 0,
+    "passed": 1,
+    "failed": 0,
+    "log": "retained-retry.log",
+    "note": "Identical assertions; no product change between the first generic native_error and this full passing retry. Cause of first attempt remains unreproduced."
+  },
+  "post_erasure_restore": {
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs ../packet/post-erasure-restore.mjs",
+    "head": "56394db55fc4a49079242515836a71947230256a",
+    "exit": 0,
+    "log": "post-erasure-restore.log",
+    "receipt": "post-erasure-restore-receipt.json"
+  }
+}

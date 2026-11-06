@@ -1,0 +1,23 @@
+rer toolchain: node v24.19.0 pnpm 10.12.4 (pins 22.20.0 / 10.12.4)
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+LIVE_IMPORT_ERASURE {"beforeApplied":20,"attemptsBefore":1,"owedBefore":1,"places":[{"action":"delete","reason":"their held import and export attempts","rows":1,"store":"channel_progress_attempts"},{"action":"delete","reason":"their unpublished import and export progress notices","rows":1,"store":"channel_progress_owed"}],"attemptsAfter":0,"owedAfter":0,"state":"complete","eraseMilliseconds":2172,"retainedImportJobs":1,"retainedStarterReferences":1,"laterMail":0}
+✔ [BASE-DATA-001 BASE-DATA-003] public erasure before the first installation transfer creates its checkpoint atomically (119784.459027ms)
+ERASURE_IDENTITY_MATCHES {"before":{"matches":105,"stores":["decoded import 54abbc15-219d-472a-a3ea-57b76674ab1f","decoded import ddb17a80-3fc5-4e5b-9bfe-9db9bdb03747","evidence_files","ik_d1_reversal_reports","ik_d1_staging","ik_jobs","oa_operators","operators","r_01m6qrxjm8ptg7wps0b3nkmtfc_manual_01m6qrxjnjsan2gxc7ec512pxk","r_01m6qrxjm8ptg7wps0b3nkmtfc_manual_01m6qrxjnjsan2gxc7ec512pxk_search","r_01m6qrxjm8ptg7wps0b3nkmtfc_manual_01m6qrxjnjsan2gxc7ec512pxk_search_content","record_import_review_chunks"]},"after":{"matches":0,"stores":[]}}
+ERASURE_CUSTODY_COUNTS {"before":[{"store":"ik_originals","rows":4},{"store":"ik_jobs","rows":4},{"store":"ik_d1_staging","rows":1},{"store":"ik_d1_reversal_reports","rows":2},{"store":"record_import_reviews","rows":3},{"store":"record_import_review_chunks","rows":3}],"journals":[{"destination":"01M6QRXJCZ176Q9GSP365J25D2","records_erased":0,"jobs_retired":1,"stores_json":[{"store":"ik_batches","rows":2},{"store":"ik_d1_entries","rows":1},{"store":"ik_d1_indexed_jobs","rows":1},{"store":"ik_d1_original_chunks","rows":1},{"store":"ik_d1_plan_index","rows":1},{"store":"ik_d1_reversal_reports","rows":1},{"store":"ik_d1_staging","rows":1},{"store":"ik_jobs","rows":1},{"store":"ik_original_sets","rows":1},{"store":"ik_originals","rows":1},{"store":"ik_provenance","rows":1}]},{"destination":"01M6QRXJM83C27AYM6ER5SJBD0","records_erased":1,"jobs_retired":0,"stores_json":[{"store":"ik_d1_entries","rows":1},{"store":"ik_d1_indexed_jobs","rows":1},{"store":"ik_d1_original_chunks","rows":1},{"store":"ik_d1_plan_index","rows":1},{"store":"ik_jobs","rows":1},{"store":"ik_originals","rows":1},{"store":"ik_provenance","rows":2},{"store":"ik_sources","rows":1}]},{"destination":"01M6QRXJS137JM6B8FNZ12974H","records_erased":0,"jobs_retired":0,"stores_json":[]}],"after":[{"store":"ik_originals","rows":3},{"store":"ik_jobs","rows":3},{"store":"ik_d1_staging","rows":0},{"store":"ik_d1_reversal_reports","rows":3},{"store":"record_import_reviews","rows":1},{"store":"record_import_review_chunks","rows":1}]}
+✔ [BASE-DATA-001 BASE-DATA-003 RECORDS-005] public person erasure decodes compressed files, retires custody atomically, preserves controls and fences old archives (66207.118906ms)
+✔ [BASE-DATA-001 BASE-DATA-003] erasure completes beside other people's uninspectable files and confirmed name-only import copies (3666.842445ms)
+✔ [BASE-DATA-001] erasing an operator who recorded a human effect resolution removes their name and email from its receipt (2057.2861ms)
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+✔ [BASE-DATA-003 BASE-ACCESS-002] member erasure retires attributed OIDC custody, retains used grants and preserves accountant mappings (19566.368995ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 262037.988226

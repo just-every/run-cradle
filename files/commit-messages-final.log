@@ -1,0 +1,12 @@
+56394db55fc4a49079242515836a71947230256a
+Recognize the recorded preview exclusions in released archives
+
+bdda1ecdf15303acc681f70311b453ea099b986c
+Preserve full preview custody and released archive restoration
+
+01ab3adf5af9b93aebcb2dddadddba9e71d0ad7a
+Bound legacy snapshot retirement verification as retention grows
+
+c8a32f610abc7623dd189b65664f528a17bd2eae
+Coordinate retained archive custody with atomic erasure [skip ci]
+

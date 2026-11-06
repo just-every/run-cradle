@@ -1,0 +1,37 @@
+[
+  {
+    "call": 1,
+    "purpose": "read retained fixture helper via repository contents API",
+    "ref": "ed307c7bf56f7b2cd3e1f8cec7264489c21c6a2f"
+  },
+  {
+    "call": 2,
+    "time": "2026-11-06T06:41:25.552965+00:00",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs?head_sha=56394db55fc4a49079242515836a71947230256a&per_page=100",
+      "--jq",
+      "{workflow_runs:[.workflow_runs[]|{id,name,status,conclusion,head_sha,html_url}]}"
+    ]
+  },
+  {
+    "call": 3,
+    "time": "2026-11-06T06:47:50.590487+00:00",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42176012080",
+      "--jq",
+      "{status,conclusion,head_sha,html_url}"
+    ]
+  },
+  {
+    "call": 4,
+    "time": "2026-11-06T06:53:08.255702+00:00",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42176012080",
+      "--jq",
+      "{status,conclusion,head_sha,html_url}"
+    ]
+  }
+]

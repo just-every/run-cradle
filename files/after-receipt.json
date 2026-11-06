@@ -1,0 +1,41 @@
+{
+  "receipts": [
+    {
+      "phase": "native",
+      "status": 500,
+      "publicArchivesByteIdentical": true,
+      "nativeAndAuthorityUnchanged": true
+    },
+    {
+      "phase": "checkpoint",
+      "status": 500,
+      "publicArchivesByteIdentical": true,
+      "nativeAndAuthorityUnchanged": true
+    },
+    {
+      "phase": "ordinary-two-export-after",
+      "exports": 2,
+      "snapshotTables": 0,
+      "status": 200,
+      "confirmed": true,
+      "previewRows": 1,
+      "fullPreviewContentPreserved": true,
+      "unaffectedControls": true
+    },
+    {
+      "phase": "populated-legacy-transition",
+      "exports": 2,
+      "snapshotTablesBefore": 924,
+      "failedRetirementStatus": 500,
+      "failedArchivesByteIdentical": true,
+      "restarted": true,
+      "erasureStatus": 200,
+      "confirmed": true,
+      "snapshotTablesAfter": 0,
+      "personResurrection": false,
+      "staleImportRefused": true,
+      "replayEpochStable": true,
+      "unaffectedControls": true
+    }
+  ]
+}

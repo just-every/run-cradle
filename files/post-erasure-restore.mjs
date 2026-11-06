@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
+import {fixture,identity,control} from '../run-cradle/tests/helpers/lifecycle-erasure-fixture.mjs';
+import {migratedD1} from '../run-cradle/tests/helpers/sqlite-d1.mjs';
+import {objectBucket} from '../run-cradle/tests/helpers/erasure-attachments.mjs';
+import {createPortability,readArchive} from '../run-cradle/node_modules/@runeditrun/rer/modules/portability/index.mjs';
+import {portabilityPolicy} from '../run-cradle/src/domains/portability/installation-policy.mjs';
+import {derivedSearch} from '../run-cradle/src/domains/portability/derived-search.mjs';
+import {portableRecordSchema} from '../run-cradle/src/domains/records/portable-schema.server.ts';
+import {retainedExports} from '../run-cradle/src/domains/portability/export-custody.mjs';
+const h=await fixture();let target;
+try{
+ const mixed=await h.imported([identity,control],'synthetic-post-erasure'),appId=mixed.preview.identities.appId;await h.assign(appId);
+ const version=()=>h.sql.prepare('SELECT version FROM authority_principals WHERE id=?').get(h.person).version;
+ assert.equal((await h.send('remove',{appId},version())).status,200);
+ const erased=await h.send('erase',{appId},version()),erasure=await erased.json();assert.equal(erased.status,200,JSON.stringify(erasure));assert.equal(erasure.data.value.confirmed,true);
+ const sourceRows=h.sql.prepare('SELECT * FROM "'+mixed.table+'" ORDER BY id').all();assert.ok(JSON.stringify(sourceRows).includes(control.email));assert.ok(!JSON.stringify(sourceRows).includes(identity.email));
+ const service=retainedExports(h.db,await createPortability({db:h.db,buckets:{FILES:h.bucket},policy:{...portabilityPolicy,derivedTables:await derivedSearch(h.db)}})),id=await service.exports.create('synthetic-post-erasure');
+ while((await service.exports.status(id)).phase!=='complete')await service.exports.advance(id,{maxParts:100});
+ const bytes=await new Response(await service.exports.download(id)).text(),records=[];for await(const record of readArchive(new Response(bytes).body))records.push(record);
+ assert.ok(!bytes.includes(identity.name)&&!bytes.includes(identity.email),'A newly verified post-erasure archive contains no erased identity literal');
+ target=migratedD1();const schemas=h.sql.prepare('SELECT schema_json FROM record_schemas').all().map(r=>JSON.parse(r.schema_json));for(const plan of portableRecordSchema([schemas]))target.sql.exec(plan.sql);
+ const restored=await createPortability({db:target.db,buckets:{FILES:objectBucket()},policy:{...portabilityPolicy,derivedTables:await derivedSearch(target.db)}}),job=await restored.imports.create(records[0],'synthetic-post-erasure');
+ for(const part of records.filter(r=>r.kind==='part'))await restored.imports.uploadPart(job,part.index,part);
+ const result=await restored.imports.finalize(job,records.at(-1));assert.equal(result.phase,'complete');
+ assert.equal(target.sql.prepare('SELECT count(*) n FROM operators WHERE name=? OR email=?').get(identity.name,identity.email).n,0);
+ assert.equal(target.sql.prepare('SELECT state FROM authority_principals WHERE id=?').get(h.person).state,'erased');
+ assert.deepEqual(target.sql.prepare('SELECT * FROM "'+mixed.table+'" ORDER BY id').all(),sourceRows,'Every unaffected and anonymised business cell restores exactly');
+ assert.equal(target.sql.prepare("SELECT count(*) n FROM authority_principals WHERE kind<>'system' AND state='active'").get().n,0);
+ assert.equal(target.sql.prepare("SELECT count(*) n FROM authority_memberships WHERE state='active'").get().n,0);
+ assert.equal(target.sql.prepare('SELECT count(*) n FROM authority_grants WHERE restore_hold<>1').get().n,0);
+ const receipt={sourceErasureStatus:erased.status,confirmed:true,exportTables:records[0].tables.length,archiveContainsErasedIdentity:false,restorePhase:result.phase,restoredErasedPrincipalState:'erased',unaffectedAndAnonymousRowsExact:true,currentAuthorityHeld:true,snapshotTables:h.sql.prepare("SELECT count(*) n FROM sqlite_master WHERE type='table' AND name GLOB 'rer_portability_snap_*'").get().n};
+ console.log('POST_ERASURE_RESTORE '+JSON.stringify(receipt));await writeFile(new URL('./post-erasure-restore-receipt.json',import.meta.url),JSON.stringify(receipt,null,2)+'\n');
+}finally{target?.close();h.close();}

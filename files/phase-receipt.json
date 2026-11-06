@@ -1,0 +1,21 @@
+{
+  "receipts": [
+    {
+      "phase": "restart-after-atomic-retirement-before-collection",
+      "emptyUnaddressableTables": 462,
+      "personalRows": 0,
+      "archiveAccessible": false,
+      "restartRetryStatus": 200,
+      "confirmed": true
+    },
+    {
+      "phase": "verification-before-compaction",
+      "failureStatus": 400,
+      "retainedAlternateTables": 462,
+      "restarted": true,
+      "retryStatus": 200,
+      "fullArchiveVerified": true,
+      "snapshotTablesAfter": 0
+    }
+  ]
+}

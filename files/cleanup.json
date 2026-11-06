@@ -1,0 +1,8 @@
+{
+  "time": "2026-11-06T06:51:34.008672+00:00",
+  "diagnostic_clone_removed": "/tmp/cradle-rer-ZYEFwq",
+  "diagnostic_data_removed": "/home/agent/rer-consolidation/work/sd-cradle-erasure-custody-1/diagnostic-data",
+  "test_fixtures_removed_by_journey": true,
+  "runtime_processes": "All owned test/Miniflare subreaper commands completed; no live owned workerd/browser/server observed. Dead Git zombies have no running process to stop.",
+  "product_clone": "retained until CI and separate evidence publication finish"
+}

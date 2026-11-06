@@ -1,0 +1,47 @@
+[
+  {
+    "name": "types-exact",
+    "command": "cloud_run pnpm run check:types",
+    "head": "56394db55fc4a49079242515836a71947230256a",
+    "start": "2026-11-06T06:18:44.678759+00:00",
+    "end": "2026-11-06T06:19:23.775587+00:00",
+    "exit": 0,
+    "log": "types-exact.log"
+  },
+  {
+    "name": "build-exact",
+    "command": "cloud_run npx -y @runeditrun/rer build",
+    "head": "56394db55fc4a49079242515836a71947230256a",
+    "start": "2026-11-06T06:19:23.776072+00:00",
+    "end": "2026-11-06T06:19:39.350767+00:00",
+    "exit": 0,
+    "log": "build-exact.log"
+  },
+  {
+    "name": "phase-exact",
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs ../packet/phase-probe.mjs",
+    "head": "56394db55fc4a49079242515836a71947230256a",
+    "start": "2026-11-06T06:19:39.351115+00:00",
+    "end": "2026-11-06T06:21:54.610895+00:00",
+    "exit": 0,
+    "log": "phase-exact.log"
+  },
+  {
+    "name": "retained-exact",
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs --test ../packet/retained-archive-adapted.mjs",
+    "head": "56394db55fc4a49079242515836a71947230256a",
+    "start": "2026-11-06T06:21:54.611863+00:00",
+    "end": "2026-11-06T06:29:17.366754+00:00",
+    "exit": 1,
+    "log": "retained-exact.log"
+  },
+  {
+    "name": "lifecycle-exact",
+    "command": "cloud_run node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/lifecycle-erasure.mjs tests/lifecycle-identity-security.mjs",
+    "head": "56394db55fc4a49079242515836a71947230256a",
+    "start": "2026-11-06T06:29:17.369454+00:00",
+    "end": "2026-11-06T06:33:49.792956+00:00",
+    "exit": 0,
+    "log": "lifecycle-exact.log"
+  }
+]

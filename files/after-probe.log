@@ -1,0 +1,51 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ []
+- [
+-   {
+-     actor_id: '01ARZ3NDEKTSV4RRFFQ69G5FAA',
+-     app_id: '00000000000000000000000700',
+-     committed_command_id: null,
+-     created_at: '2026-11-06T06:06:48.176Z',
+-     entity_id: '00000000000000000000000701',
+-     expires_at: '2026-11-06T06:36:48.176Z',
+-     file_id: '01M6QQF1675Z88J7N0E4WXER8J',
+-     id: '01M6QQF1CCGJCE9SRGRFKJVQRC',
+-     input_hash: '37766a5a3625869f1681f30addfe14ba83cb8ee918fb6ed8e8a9191a6dfdc711',
+-     mapping_json: '{"Code":"code","Summary":"statusSummary"}',
+-     preview_json: '{"id":"01M6QQF1CCGJCE9SRGRFKJVQRC","token":"01M6QQF1CC4QC6XWRCF46DZZ4Y","mergeFieldIds":[],"state":"valid","expiresAt":"2026-11-06T06:36:48.176Z","creates":0,"updates":1,"unchanged":0,"errors":[]}'
+-   }
+- ]
+
+    at file:///home/agent/rer-consolidation/work/sd-cradle-erasure-custody-1/packet/after-probe.mjs:30:186 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [],
+  expected: [
+    {
+      id: '01M6QQF1CCGJCE9SRGRFKJVQRC',
+      actor_id: '01ARZ3NDEKTSV4RRFFQ69G5FAA',
+      app_id: '00000000000000000000000700',
+      entity_id: '00000000000000000000000701',
+      file_id: '01M6QQF1675Z88J7N0E4WXER8J',
+      mapping_json: '{"Code":"code","Summary":"statusSummary"}',
+      preview_json: '{"id":"01M6QQF1CCGJCE9SRGRFKJVQRC","token":"01M6QQF1CC4QC6XWRCF46DZZ4Y","mergeFieldIds":[],"state":"valid","expiresAt":"2026-11-06T06:36:48.176Z","creates":0,"updates":1,"unchanged":0,"errors":[]}',
+      input_hash: '37766a5a3625869f1681f30addfe14ba83cb8ee918fb6ed8e8a9191a6dfdc711',
+      created_at: '2026-11-06T06:06:48.176Z',
+      expires_at: '2026-11-06T06:36:48.176Z',
+      committed_command_id: null
+    }
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

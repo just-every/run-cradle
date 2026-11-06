@@ -1,0 +1,8 @@
+{
+  "new_diff_credential_patterns": {
+    "github_credential": false,
+    "private_key": false,
+    "credential_url": false
+  },
+  "publication_scan": "NOT RUN: cloud cannot perform fleet full-history publication scan; Mac lander retains it"
+}

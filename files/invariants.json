@@ -1,0 +1,27 @@
+{
+  "initial_main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "merged_main": "bf02cc16bc41362d7c5859f1b008f9877eb7db81",
+  "candidate": "56394db55fc4a49079242515836a71947230256a",
+  "contract_initial_sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+  "contract_main_sha256": "cdf25b010e691b00b54ce80b5b40dad7fd9de96e2511ca05305f58ee79d9ca73",
+  "contract_candidate_sha256": "cdf25b010e691b00b54ce80b5b40dad7fd9de96e2511ca05305f58ee79d9ca73",
+  "all_main_source_text_byte_identical": true,
+  "initial_status_counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "main_status_counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "candidate_status_counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "original_erasure_test_sha256": "2c700e0b997c8b5578ba456655deee9c2f8a620a1bf7f7b2bf989ef814ae6151",
+  "own_clause_status_changes": {},
+  "own_migration_changes": false
+}

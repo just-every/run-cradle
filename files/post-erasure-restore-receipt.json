@@ -1,0 +1,11 @@
+{
+  "sourceErasureStatus": 200,
+  "confirmed": true,
+  "exportTables": 232,
+  "archiveContainsErasedIdentity": false,
+  "restorePhase": "complete",
+  "restoredErasedPrincipalState": "erased",
+  "unaffectedAndAnonymousRowsExact": true,
+  "currentAuthorityHeld": true,
+  "snapshotTables": 0
+}
