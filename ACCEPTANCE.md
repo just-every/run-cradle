@@ -1413,8 +1413,8 @@ Core · published · **partial** · Cites BASE-INPUT-001, BASE-INPUT-003
 2. The file must be UTF-8, comma-delimited, and carry a header row; a byte-order mark is accepted and anything else is rejected with a parse error.
 3. Import requires an explicit mapping from columns to fields and, before any record changes and within 60 seconds at the row limit, shows the number of creates, updates, and unchanged rows, every row error, and for each updated row the fields that will change with their stored and incoming values.
 
-**Evidence.** `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited maximum-row CSV preview timed within 60 seconds and malformed/non-UTF-8 format refusal; the cited journeys cover small BOM/quoted campaign CSV and a deliverable preview, not the measurable row-limit bar.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": native text upload rejects invalid UTF-8 and NUL bytes, while a BOM without a header, unterminated quotes and illegally closed quoted cells reach Launch parsing byte for byte; each Launch preview returns an identifiable CSV parsing refusal without a preview or token, snapshots after upload plus public campaign reads retain records, activity, previews, events, outbox and execution work unchanged, and unreadable rejected files disclose no parsing details. The successful BOM and quoted-field control remains. `tests/ui-launch-operator-doors.mjs` covers the existing mapped preview.
+**Gap.** Missing the complete campaign, deliverable and milestone upload-limit matrix, remaining delimiter, header and format combinations, maximum-row preview timed within 60 seconds and complete mapping, change and error matrix. Independent whole-clause judgment and ct's contract conversion and generated-document synchronization remain release prerequisites; no DONE claim.
 
 #### IMPORT-002 — Merge keys
 
