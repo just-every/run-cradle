@@ -1,0 +1,37 @@
+{
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "lock": {
+    "generate": "node scripts/edition-authoring/cli.mjs lock",
+    "check": "node scripts/edition-authoring/cli.mjs check",
+    "exit": 0
+  },
+  "views": {
+    "generate": "node src/base/contract-docs.mjs write",
+    "check": "node src/base/contract-docs.mjs check",
+    "exit": 0,
+    "restored": [
+      "ACCEPTANCE.md",
+      "docs/CLAIMS.md"
+    ],
+    "generatedFilesCommitted": false
+  },
+  "ledger": {
+    "command": "none; no migration changed",
+    "exit": 0
+  },
+  "typecheck": {
+    "command": "pnpm check:types",
+    "exit": 0
+  },
+  "firstParty": {
+    "command": "pnpm exec rer check --profile first-party",
+    "exit": 0
+  },
+  "registrations": 174,
+  "statusRows": 257,
+  "noParentStatusRowsDropped": true,
+  "candidateCommits": 1,
+  "identityAndTrailers": "pass",
+  "publicationScan": "Not run in cloud; owned by guarded lander",
+  "runSite": "Not claimed on candidate; owned by guarded lander"
+}

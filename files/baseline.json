@@ -1,0 +1,13 @@
+{
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "statusRows": 257,
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "clause": "SET-003",
+  "before": "partial",
+  "after": "partial",
+  "registrations": 174
+}

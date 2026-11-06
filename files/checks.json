@@ -1,0 +1,136 @@
+{
+  "tag": "sd-cradle-c-f197",
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "clause": "SET-003",
+  "claim": "PARTIAL remains PARTIAL",
+  "selectedPoint": "acceptance 3: fresh Decision Queue and Timeline Lens empty states",
+  "localRuns": [
+    {
+      "command": "npx -y @runeditrun/rer setup --owner-email fleet@runeditrun.com --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "node --test --test-concurrency=1 tests/installed-home.mjs",
+      "exit": 0,
+      "tests": 1,
+      "durationMs": 144307.0391,
+      "candidateBytes": "same native code and helper assertions as candidate; later helper transport correction affects browser section only"
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "registrations": 174
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write; node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "viewsRestored": true
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock; node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    }
+  ],
+  "developmentAttempts": [
+    {
+      "test": "native owner creation browser journey",
+      "exit": 1,
+      "failure": "Playwright APIRequestContext does not inherit Chromium host resolver rules: getaddrinfo ENOTFOUND cradle.authority.test",
+      "fix": "Execute sign-out with same-origin browser fetch; use canonical native runtime dispatch for setup read",
+      "productRepair": false
+    },
+    {
+      "test": "native owner creation browser journey",
+      "exit": 1,
+      "failure": "New auth/request assertion expected 202; current public auth/request returns successful 200, distinct from legacy magic-link 202",
+      "fix": "Assert the actual auth/request success code, retaining visible email acceptance, confirmed link, fresh session, revoked old-session refusal and empty reads",
+      "productRepair": false
+    }
+  ],
+  "githubCalls": 5,
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "statusRows": 257,
+  "registrations": 174,
+  "productPush": {
+    "branch": "cloud/sd-cradle-c-f197",
+    "head": "8034f4854c72ae82753eee43486594aa12c05876",
+    "attempts": 1,
+    "status": "pushed"
+  },
+  "pr": null,
+  "ciReadProtocol": "One exact-head discovery; completed-run jobs read for failure diagnosis, no status polling or workflow dispatch.",
+  "ci": {
+    "head": "8034f4854c72ae82753eee43486594aa12c05876",
+    "run": 42154093928,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "failure",
+    "url": "https://github.com/just-every/run-cradle/actions/runs/42154093928",
+    "buildJob": 127684031151,
+    "failedStep": "Check generated contract documents",
+    "command": "node src/base/contract-docs.mjs check",
+    "allLaterBuildSteps": "skipped",
+    "shards": "skipped",
+    "aggregateJob": 127684127183,
+    "aggregateError": [
+      "verify\tRequire the plan and every verification worker\t2026-11-06T03:03:18.9075339Z ##[error]Process completed with exit code 1."
+    ],
+    "archiveReads": [
+      {
+        "command": "gh run view 42154093928 --repo just-every/run-cradle --job 127684031151 --log-failed",
+        "exit": 0,
+        "outputBytes": 0,
+        "note": "The archive command returned no failed-step text; not retried."
+      },
+      {
+        "command": "gh run view 42154093928 --repo just-every/run-cradle --job 127684127183 --log-failed",
+        "exit": 0,
+        "error": "Process completed with exit code 1."
+      }
+    ],
+    "localGeneratedViewCheck": {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 1,
+      "error": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+    },
+    "disposition": "Expected generated-view-only exception. Generator write and check pass locally; generated views restored from origin/main, never committed. No Verify repair, rerun or dispatch."
+  },
+  "buildProvenanceNote": "Initial post-rebase local run used the prior emitted build. It is superseded by a fresh rebuild and final exact candidate proof.",
+  "finalProof": {
+    "head": "8034f4854c72ae82753eee43486594aa12c05876",
+    "build": "build-provenance.json",
+    "native": "native-exit.json",
+    "browser": "browser-exit.json",
+    "browserReceipt": "browser-receipt.json",
+    "nativeTests": 1,
+    "browserTests": 1,
+    "failures": 0,
+    "captures": 30,
+    "selectedCaptures": 8,
+    "widths": [
+      1440,
+      390
+    ],
+    "dirty": false,
+    "sourceLockFresh": true
+  },
+  "completedAt": "2026-11-06T03:13:01.455451+00:00"
+}

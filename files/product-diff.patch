@@ -1,0 +1,272 @@
+commit 8034f4854c72ae82753eee43486594aa12c05876
+Author:     Run Edit Run fleet <fleet@runeditrun.com>
+AuthorDate: Fri Nov 6 03:02:39 2026 +0000
+Commit:     Run Edit Run fleet <fleet@runeditrun.com>
+CommitDate: Fri Nov 6 03:02:44 2026 +0000
+
+    Prove first-run decision and timeline empty states
+
+diff --git a/CONTRACT.md b/CONTRACT.md
+index 223e6ac..b7cfb49 100644
+--- a/CONTRACT.md
++++ b/CONTRACT.md
+@@ -3133,7 +3133,7 @@ Judged from the code and tests at commit `d7dc8100256a244030024bb616a746d7f0ade6
+ | `IMPORT-005` | Stored file | published | partial | `tests/launch-operator-doors.mjs` | Missing a cited import-deletion journey that deletes the import record and verifies the stored file is gone within five minutes; the cited journeys only download the retained file. |
+ | `SET-001` | Settings area | published | partial | `tests/ui-launch-operator-doors.mjs` | Missing a cited Settings journey that reads every named section/current usage and changes a setting with actor/time readback while distinguishing already-dispatched from later work; the cited journey exercises custom fields, samples and ownership only. |
+ | `SET-002` | AI configuration | published | partial | `tests/launch-installed-runtime.mjs`, `tests/launch-installed-ui.mjs` | Missing a cited unconfigured-provider journey that refuses enabling AI with missing configuration named and shows no campaign-brief dispatch; the cited journeys use a fully configured provider and test AI off/on only. |
+-| `SET-003` | First run and sample data | published | partial | `tests/launch-operator-doors.mjs` | Missing a first-run journey in this clause's old evidence that exercises configured/unconfigured setup, durable completion and empty initial data; the cited operator-door file covers sample installation/removal only. The existing first-run journeys are in installed-home.mjs and ui-local-signin.mjs, which this old Evidence cell does not cite. |
++| `SET-003` | First run and sample data | published | partial | `tests/launch-operator-doors.mjs` — sample installation and removal; `tests/installed-home.mjs` — "The installed Lobby recognizes the owner claim, validates workspace setup, preserves money on relabel and moves workspace schedules"; `tests/launch-authority-browser.mjs` — "native owner creation, scoped transport and safe October error states at 1440/390", including `tests/helpers/launch-first-run-journey.mjs` for fresh Decision Queue and Timeline Lens reads, visible empty states, reload, new sign-in and a separate populated installation. | Acceptances 1 and 2 configuration and durable-setup evidence reconciliation; acceptance 3 complete configured operator, timezone, currency, shipped-lens and automation default census and every other initial surface; wider sample-data combinations. Existing ct contract conversion and generated-document synchronization release prerequisites and independent whole-clause judgment remain unclaimed. |
+ | `DATA-001` | Export contents | published | partial | `src/domains/portability/archive.server.ts`, `tests/rer-retained-archive.mjs` | Installation archive machinery and retained-archive restoration have current push coverage. Full clause-named enumeration of every required Launch entity, setting and original import file remains unproven. |
+ | `DATA-002` | CSV export | published | done | `tests/ui-launch-operator-doors.mjs` — "[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone" |  |
+ | `DATA-003` | Capacity limits | published | partial | `src/apps/launch/domain.server.ts`, `tests/records-import-d1.mjs`, `tests/records-manual-release.mjs` | Launch storage guards and import/adoption capacity refusals are implemented and related tests run in CI. Full clause-named create/invitation/import coverage of every declared workspace limit, exact error counts and zero effects remains unproven. Gap: `fieldsPerTable` 500 is declared in code, not `seed.json -> limits`; field 501 is refused as HTTP 400 `validation`, not `capacity_limit`; imports still cap at 80 fields. |
+diff --git a/sources.lock.json b/sources.lock.json
+index 23dffc4..b4677de 100644
+--- a/sources.lock.json
++++ b/sources.lock.json
+@@ -2994,7 +2994,7 @@
+       "executable": false
+     },
+     "CONTRACT.md": {
+-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
++      "sha256": "ddf538bda3aec7dbf676b1193017a65a2a66347425e9217b6fc22a4098bba224",
+       "executable": false
+     },
+     "DEMO.md": {
+@@ -12373,6 +12373,10 @@
+       "sha256": "91a853f199e35757d03ad5233c7ae0bf591d78d07151d1a3fa76b5c2cad71843",
+       "executable": false
+     },
++    "tests/helpers/launch-first-run-journey.mjs": {
++      "sha256": "a143ce80cef003c6e4be1e67166241e5737c2ae6a02cafdace9645319ac21727",
++      "executable": false
++    },
+     "tests/helpers/launch-grid-view-screens.mjs": {
+       "sha256": "54d87668eb521ddba8b7d9f37b0d5da62065dc75fc099a8b3b2ad7217a7d4b7b",
+       "executable": false
+@@ -13126,7 +13130,7 @@
+       "executable": false
+     },
+     "tests/installed-home.mjs": {
+-      "sha256": "b2f93a12c885a100ade9d0e0e748ab4875fc96524e80d4324ef69958e5fb0748",
++      "sha256": "1763fed7079524aa221b1003e2d7d52c86ff0d43325711b1090f8dc793e45b24",
+       "executable": false
+     },
+     "tests/intelligence-fixture.mjs": {
+@@ -13138,7 +13142,7 @@
+       "executable": false
+     },
+     "tests/launch-authority-browser.mjs": {
+-      "sha256": "8818135feeba44d775754a34bad79f5cfd2de6cf7503dd7df77c13b2c056ef9b",
++      "sha256": "86bfb8f783fc066f83a94cdbf376a808eccf1b913b8d71bcdc0b615680f9c0e6",
+       "executable": false
+     },
+     "tests/launch-installed-ai-failures.mjs": {
+diff --git a/tests/helpers/launch-first-run-journey.mjs b/tests/helpers/launch-first-run-journey.mjs
+new file mode 100644
+index 0000000..c8eba5f
+--- /dev/null
++++ b/tests/helpers/launch-first-run-journey.mjs
+@@ -0,0 +1,132 @@
++import assert from 'node:assert/strict'
++import { setup, campaign, value } from './launch-installed.mjs'
++
++// Read the native doors separately from the documents and their embedded data.
++export async function readInitialLaunch(h, cookie) {
++  const read = async route => {
++    const response = await h.request(route, { headers: { cookie } })
++    assert.equal(response.status, 200, route)
++    return response.json()
++  }
++  const campaigns = await read('/api/campaigns')
++  const decisions = await read('/api/decisions')
++  const timeline = await read('/api/milestones/timeline')
++  assert.deepEqual(campaigns.items, [], 'First run creates no campaigns')
++  assert.deepEqual(decisions.decisions, [], 'The native decision queue is independently empty')
++  assert.equal(Number(decisions.total), 0)
++  assert.deepEqual(timeline.milestones, [], 'The native timeline is independently empty')
++  return { campaigns: campaigns.items.length, decisions: decisions.decisions.length, milestones: timeline.milestones.length }
++}
++
++const surfaces = [
++  { path: '/app/decisions', title: 'No unresolved decisions', message: 'New decisions appear here when they need a response.' },
++  { path: '/app/lenses/timeline', title: 'No milestones in Timeline Lens', message: 'Create a milestone on an active campaign to begin planning the launch path.' },
++]
++
++// Populate a different installation through commands; never seed or clear the
++// installation whose initial state is being proved.
++export async function firstRunPopulatedControl() {
++  const h = await setup()
++  try {
++    const c = await campaign(h, 'FIRST-RUN-CONTROL')
++    const { operator } = await (await h.request('/api/session', { headers: { cookie: h.owner.cookie } })).json()
++    const milestone = value(await h.command('launch.milestone.create', { fields: {
++      campaignId: c.id, title: 'synthetic-cradle-control-milestone', ownerId: operator.id,
++      type: 'Review', status: 'Not started', startDate: '2026-01-01', endDate: null, conflictReason: null,
++    } }))
++    const decision = value(await h.command('launch.decision.create', { fields: {
++      campaignId: c.id, title: 'synthetic-cradle-control-decision', requesterId: operator.id,
++      riskId: null, supersedesId: null, assigneeId: null, priority: 'High', dueAt: '2027-01-01T00:00:00.000Z',
++      recommendation: 'Review the launch', impact: 'Launch readiness',
++    } }))
++    const read = async route => {
++      const response = await h.request(route, { headers: { cookie: h.owner.cookie } })
++      assert.equal(response.status, 200)
++      return response.json()
++    }
++    assert.deepEqual((await read('/api/decisions')).decisions.map(row => row.id), [decision.id])
++    assert.deepEqual((await read('/api/milestones/timeline')).milestones.map(row => row.id), [milestone.id])
++    return { h, campaign: c, milestone, decision, operator }
++  } catch (error) { await h.close(); throw error }
++}
++
++export async function firstRunEmptyBrowser({ page, context, h, control, width, capture, receipt }) {
++  const sessionCookie = async () => {
++    const session = (await context.cookies(h.origin)).find(item => item.name === '__Host-operator_session')
++    assert.ok(session, 'The owner has a native session')
++    return `${session.name}=${session.value}`
++  }
++  let cookie = await sessionCookie()
++  const initialCookie = cookie
++  const reads = [{ phase: 'first run', ...await readInitialLaunch(h, cookie) }]
++  const content = page.locator('.operator-content')
++  const empty = async surface => {
++    await content.getByRole('heading', { name: surface.title, exact: true }).waitFor()
++    assert.equal(await content.getByText(surface.message, { exact: true }).isVisible(), true)
++    assert.equal(await content.locator('article, [aria-label="Unresolved decisions"] li, [aria-label="Milestone agenda"], a[href^="/app/campaigns/"], a[href^="/app/decisions/"], a[href^="/app/milestones/"], time').count(), 0, 'Empty surfaces contain no business cards or record links')
++    const text = await content.innerText()
++    for (const identity of [control.campaign.name, control.decision.title, control.milestone.title, control.operator.name]) {
++      assert.equal(text.includes(identity), false, 'No populated business identity appears in the empty content')
++    }
++  }
++  for (const surface of surfaces) {
++    const response = await page.goto(h.origin + surface.path)
++    assert.equal(response.status(), 200)
++    await empty(surface)
++    await capture(page, surface.path === '/app/decisions' ? 'first-run-empty-decisions' : 'first-run-empty-timeline', width)
++    assert.equal((await page.reload()).status(), 200)
++    await empty(surface)
++  }
++  reads.push({ phase: 'reload', ...await readInitialLaunch(h, cookie) })
++
++  // Revoke this session and actually authenticate again; copying a retained
++  // session back into the browser would not prove the first-run outcome lasts.
++  const signedOut = await page.evaluate(async () => {
++    const csrf = await fetch('/auth/csrf')
++    if (!csrf.ok) throw new Error('Could not read sign-out authority')
++    return (await fetch('/auth/sign-out', { method: 'POST', headers: { 'x-csrf-token': (await csrf.json()).csrfToken } })).status
++  })
++  assert.equal(signedOut, 200)
++  assert.equal((await h.request('/api/decisions', { headers: { cookie } })).status, 401)
++  await context.clearCookies()
++  await page.goto(h.origin + '/signin?returnTo=%2Fapp')
++  await page.getByLabel('Email address', { exact: true }).fill(h.bindings.OWNER_EMAIL)
++  const requested = page.waitForResponse(response => response.url().endsWith('/auth/request') && response.request().method() === 'POST')
++  await page.getByRole('button', { name: 'Send sign-in link', exact: true }).click()
++  assert.equal((await requested).status(), 200)
++  await page.getByRole('heading', { name: 'Check your email', exact: true }).waitFor()
++  const plain = h.deliveries.at(-1).content.find(part => part.type === 'text/plain').value
++  const link = new URL(plain.match(/https:\/\/[^\s]+/)[0])
++  assert.equal(link.origin, h.origin)
++  await page.goto(link.href)
++  await page.locator('form button').click()
++  await page.waitForURL(h.origin + '/app')
++  cookie = await sessionCookie()
++  assert.notEqual(cookie, initialCookie, 'Reauthentication issues a new session')
++  const setup = await h.request('/setup', { headers: { cookie } })
++  assert.equal(setup.status, 303, 'A new sign-in retains first-run completion')
++  assert.equal(new URL(setup.headers.get('location'), h.origin).pathname, '/app')
++  reads.push({ phase: 'new sign-in', ...await readInitialLaunch(h, cookie) })
++  for (const surface of surfaces) {
++    assert.equal((await page.goto(h.origin + surface.path)).status(), 200)
++    await empty(surface)
++  }
++
++  const positiveContext = await context.browser().newContext({ viewport: { width, height: 960 }, ignoreHTTPSErrors: true })
++  try {
++    await positiveContext.addCookies([{ name: '__Host-operator_session', value: control.h.owner.cookie.split('=')[1], url: control.h.origin, secure: true, httpOnly: true, sameSite: 'Lax' }])
++    const positive = await positiveContext.newPage()
++    for (const [surface, record] of [[surfaces[0], control.decision], [surfaces[1], control.milestone]]) {
++      assert.equal((await positive.goto(control.h.origin + surface.path)).status(), 200)
++      const populated = positive.locator('.operator-content')
++      await populated.getByRole('link', { name: record.title, exact: surface !== surfaces[0] }).first().waitFor()
++      assert.equal(await populated.getByRole('heading', { name: surface.title, exact: true }).count(), 0)
++      assert.ok((await populated.innerText()).includes(control.campaign.name))
++      await capture(positive, surface === surfaces[0] ? 'first-run-populated-decisions' : 'first-run-populated-timeline', width)
++    }
++  } finally { await positiveContext.close() }
++  reads.push({ phase: 'populated installation isolated', ...await readInitialLaunch(h, cookie) })
++  receipt.firstRun ??= []
++  receipt.firstRun.push({ width, reads, reload: true, reauthenticated: true, populatedControl: true })
++  return cookie
++}
+diff --git a/tests/installed-home.mjs b/tests/installed-home.mjs
+index 352b124..a8729a1 100644
+--- a/tests/installed-home.mjs
++++ b/tests/installed-home.mjs
+@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
+ import { contract } from './contract.mjs'
+ import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
+ import { workspaceOperations } from './helpers/workspace-operations.mjs'
++import { readInitialLaunch } from './helpers/launch-first-run-journey.mjs'
+ 
+ contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001 OPS-003 OPS-006', '[OPS-006] [OPS-003] The installed Lobby recognizes the owner claim, validates workspace setup, preserves money on relabel and moves workspace schedules', async () => {
+   const h = await launchBaseAuthorityRuntime()
+@@ -56,6 +57,7 @@ contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001 OPS-003 OPS-0
+       assert.equal((await h.db.prepare('SELECT completed_at FROM cradle_first_run').first()).completed_at,null)
+     }
+     assert.equal((await submit(new URLSearchParams(details))).status,303)
++    await readInitialLaunch(h, cookie)
+     await h.db.prepare("UPDATE workspace SET name='Northwind' WHERE id='workspace'").run()
+     assert.deepEqual(await state(), { state: 'claimed' })
+     const claimed = await home()
+@@ -81,6 +83,7 @@ async function configuredInstallation() {
+     const firstVisit = await h.request('/app', { headers: { cookie } })
+     assert.equal(firstVisit.status, 200, 'The owner opens the app without a second setup')
+     await firstVisit.arrayBuffer()
++    await readInitialLaunch(h, cookie)
+     const read = async route => {
+       const response = await h.request(route, { headers: { cookie } })
+       assert.equal(response.status, 200, route)
+diff --git a/tests/launch-authority-browser.mjs b/tests/launch-authority-browser.mjs
+index f299156..2ad5047 100644
+--- a/tests/launch-authority-browser.mjs
++++ b/tests/launch-authority-browser.mjs
+@@ -10,12 +10,13 @@ import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers
+ import { navigateFromSignInToApp, openSignInFromDocs } from './helpers/public-app-navigation.mjs'
+ import { accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilityWidths, auditAccessibility } from './helpers/accessibility-evidence.mjs'
+ import { installKeyboardInteractions } from './helpers/accessibility-keyboard.mjs'
++import { firstRunEmptyBrowser, firstRunPopulatedControl } from './helpers/launch-first-run-journey.mjs'
+ 
+ test('[BASE-ACCESS-003 VIEW-001 VIEW-004 CAMP-001] native owner creation, scoped transport and safe October error states at 1440/390', async () => {
+ const output=process.env.CRADLE_AUTHORITY_EVIDENCE??path.join(tmpdir(),'launch-authority-browser')
+ const receipt={ commit:spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim(), dirty:!!spawnSync('git',['status','--porcelain'],{encoding:'utf8'}).stdout.trim(), startedAt:new Date().toISOString(), completedAt:null, environment:'local emitted Worker, synthetic D1; no hosted claim', captures:[], created:[], related:[], errors:[], generatedRequests:[] }
+ const h=await launchAuthorityRuntime()
+-let browser, production
++let browser, production, firstRunControl
+ try {
+   await mkdir(output,{recursive:true})
+   browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP cradle.authority.test 127.0.0.1','--no-proxy-server']})
+@@ -165,6 +166,7 @@ try {
+   production=await launchBaseAuthorityRuntime()
+   const productionOrigin=production.origin
+   const baseOwner=await production.bootstrap()
++  firstRunControl=await firstRunPopulatedControl()
+   const nativeCookie=await production.nativeCredential(baseOwner.owner)
+   for(const width of accessibilityWidths) {
+     const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:960},ignoreHTTPSErrors:true})),page=await context.newPage()
+@@ -189,6 +191,7 @@ try {
+     assert.equal(new URL(page.url()).pathname,'/app')
+     await page.getByRole('region',{name:'Your bases',exact:true}).waitFor()
+     await capture(page,'production-home',width)
++    baseOwner.cookie=await firstRunEmptyBrowser({page,context,h:production,control:firstRunControl,width,capture,receipt})
+     await context.close()
+   }
+   assert.deepEqual(receipt.errors,[])
+@@ -200,6 +203,7 @@ try {
+ } finally {
+   if(browser)await browser.close()
+   await production?.close()
++  await firstRunControl?.h.close()
+   await h.close()
+ }
+ 

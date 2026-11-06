@@ -1,0 +1,12 @@
+# sd-cradle-c-f197 plan
+
+Work only in the declared Cradle repository on cloud/sd-cradle-c-f197. Preserve SET-003 as partial; do not change acceptance sentences, homepage, dependencies or generated views.
+
+1. Map SET-003 acceptance 3 to the existing installed-home native registration and launch-authority-browser production installation section. Existing source supplies both selected empty states; initial missing coverage is direct empty reads, rendered outcomes, reload, new authentication and an independent populated control.
+2. Extend the retained registrations and, where useful, their emitted-Worker helper. Start with migrated clean storage, bootstrap and complete first run without campaign fixtures or sample installation or removal. Assert public empty campaigns, decision queue and timeline independently. Assert the selected rendered headings and explanations, absent business cards and identities at desktop; capture the same screens at 1440 and 390.
+3. Reload each screen, sign out and obtain a new owner session through the native email-link door; repeat reads and visible empty states. Populate a different emitted-Worker installation through public commands and prove both surfaces contain its records while the fresh installation remains empty.
+4. Run touched native and browser registrations, typecheck, first-party check, and the existing test-budget counter. Repair only demonstrated defects. Preserve all prior assertions and existing setup and sample behavior.
+5. Fetch main and integrate it without rewriting any published history. Generate and check contract views, restore the generated files from main, regenerate source lock last and check it. Stage only tests, source lock and SET-003 evidence or Gap changes justified by the proof. Retain every parent Status row at each commit.
+6. Commit with fleet identity and active repository hooks, inspect every candidate identity and message, push only the named cloud branch through the guard, and inspect exact-SHA Verify through the bounded REST budget. Publish actual non-secret reports and receipts only through the task evidence ref, then relay branch custody and clause status to sd.
+
+Held: acceptance 1 and 2 evidence reconciliation, complete initial-default census, other initial surfaces, wider sample combinations, AUTO-011 work, existing ct conversion and document synchronization prerequisites, whole-clause judgment, publication scan, guarded landing and candidate Run site. These remain unclaimed.

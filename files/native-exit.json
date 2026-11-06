@@ -1,0 +1,7 @@
+{
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "exit": 0,
+  "buildReceipt": "build-provenance.json",
+  "emittedWorkerSha256": "8b2e39544b0c935e894984778650eb186d4aa6f452a80eee0ef611ebbb999a3c",
+  "command": "timeout 1200 node --test --test-concurrency=1 tests/installed-home.mjs"
+}

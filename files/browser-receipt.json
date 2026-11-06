@@ -1,0 +1,336 @@
+{
+  "commit": "8034f4854c72ae82753eee43486594aa12c05876",
+  "dirty": false,
+  "startedAt": "2026-11-06T03:08:52.455Z",
+  "completedAt": "2026-11-06T03:12:43.988Z",
+  "environment": "local emitted Worker, synthetic D1; no hosted claim",
+  "captures": [
+    {
+      "file": "create-ready-1440.jpg",
+      "width": 1440,
+      "url": "/app/campaigns",
+      "overflow": false
+    },
+    {
+      "file": "created-campaign-1440.jpg",
+      "width": 1440,
+      "url": "/app/campaigns/01M6QDBCRVEJ0P08YW5MGZHMZP",
+      "overflow": false
+    },
+    {
+      "file": "created-deliverable-1440.jpg",
+      "width": 1440,
+      "url": "/app/campaigns/01M6QDBCRVEJ0P08YW5MGZHMZP",
+      "overflow": false
+    },
+    {
+      "file": "long-resource-error-1440.jpg",
+      "width": 1440,
+      "url": "/app/approvals/LongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApproval",
+      "overflow": false
+    },
+    {
+      "file": "scoped-resource-1440.jpg",
+      "width": 1440,
+      "url": "/app/approvals/00000000000000000000000000",
+      "overflow": false
+    },
+    {
+      "file": "database-error-1440.jpg",
+      "width": 1440,
+      "url": "/app/campaigns/01ARZ3NDEKTSV4RRFFQ69G5FBB",
+      "overflow": false
+    },
+    {
+      "file": "scoped-home-1440.jpg",
+      "width": 1440,
+      "url": "/app",
+      "overflow": false
+    },
+    {
+      "file": "revoked-record-1440.jpg",
+      "width": 1440,
+      "url": "/app/records/00000000000000000000000700/00000000000000000000000701/01ARZ3NDEKTSV4RRFFQ69G5FBB",
+      "overflow": false
+    },
+    {
+      "file": "missing-record-1440.jpg",
+      "width": 1440,
+      "url": "/app/records/00000000000000000000000700/00000000000000000000000701/00000000000000000000000000",
+      "overflow": false
+    },
+    {
+      "file": "create-ready-390.jpg",
+      "width": 390,
+      "url": "/app/campaigns",
+      "overflow": false
+    },
+    {
+      "file": "created-campaign-390.jpg",
+      "width": 390,
+      "url": "/app/campaigns/01M6QDBPTK252J69YTM112RHCB",
+      "overflow": false
+    },
+    {
+      "file": "created-deliverable-390.jpg",
+      "width": 390,
+      "url": "/app/campaigns/01M6QDBPTK252J69YTM112RHCB",
+      "overflow": false
+    },
+    {
+      "file": "long-resource-error-390.jpg",
+      "width": 390,
+      "url": "/app/approvals/LongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApprovalLongUnavailableApproval",
+      "overflow": false
+    },
+    {
+      "file": "scoped-resource-390.jpg",
+      "width": 390,
+      "url": "/app/approvals/00000000000000000000000000",
+      "overflow": false
+    },
+    {
+      "file": "database-error-390.jpg",
+      "width": 390,
+      "url": "/app/campaigns/01ARZ3NDEKTSV4RRFFQ69G5FBB",
+      "overflow": false
+    },
+    {
+      "file": "scoped-home-390.jpg",
+      "width": 390,
+      "url": "/app",
+      "overflow": false
+    },
+    {
+      "file": "revoked-record-390.jpg",
+      "width": 390,
+      "url": "/app/records/00000000000000000000000700/00000000000000000000000701/01ARZ3NDEKTSV4RRFFQ69G5FBB",
+      "overflow": false
+    },
+    {
+      "file": "missing-record-390.jpg",
+      "width": 390,
+      "url": "/app/records/00000000000000000000000700/00000000000000000000000701/00000000000000000000000000",
+      "overflow": false
+    },
+    {
+      "file": "production-signin-1440.jpg",
+      "width": 1440,
+      "url": "/signin",
+      "profile": "production HTTPS on local Worker",
+      "overflow": false
+    },
+    {
+      "file": "production-home-1440.jpg",
+      "width": 1440,
+      "url": "/app",
+      "overflow": false
+    },
+    {
+      "file": "first-run-empty-decisions-1440.jpg",
+      "width": 1440,
+      "url": "/app/decisions",
+      "overflow": false
+    },
+    {
+      "file": "first-run-empty-timeline-1440.jpg",
+      "width": 1440,
+      "url": "/app/lenses/timeline",
+      "overflow": false
+    },
+    {
+      "file": "first-run-populated-decisions-1440.jpg",
+      "width": 1440,
+      "url": "/app/decisions",
+      "overflow": false
+    },
+    {
+      "file": "first-run-populated-timeline-1440.jpg",
+      "width": 1440,
+      "url": "/app/lenses/timeline",
+      "overflow": false
+    },
+    {
+      "file": "production-signin-390.jpg",
+      "width": 390,
+      "url": "/signin",
+      "profile": "production HTTPS on local Worker",
+      "overflow": false
+    },
+    {
+      "file": "production-home-390.jpg",
+      "width": 390,
+      "url": "/app",
+      "overflow": false
+    },
+    {
+      "file": "first-run-empty-decisions-390.jpg",
+      "width": 390,
+      "url": "/app/decisions",
+      "overflow": false
+    },
+    {
+      "file": "first-run-empty-timeline-390.jpg",
+      "width": 390,
+      "url": "/app/lenses/timeline",
+      "overflow": false
+    },
+    {
+      "file": "first-run-populated-decisions-390.jpg",
+      "width": 390,
+      "url": "/app/decisions",
+      "overflow": false
+    },
+    {
+      "file": "first-run-populated-timeline-390.jpg",
+      "width": 390,
+      "url": "/app/lenses/timeline",
+      "overflow": false
+    }
+  ],
+  "created": [
+    {
+      "id": "01M6QDBCRVEJ0P08YW5MGZHMZP",
+      "name": "Autumn launch 1440",
+      "owner_id": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+      "budget_minor": 100000,
+      "spend_minor": 12500,
+      "version": 1
+    },
+    {
+      "id": "01M6QDBPTK252J69YTM112RHCB",
+      "name": "Autumn launch 390",
+      "owner_id": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+      "budget_minor": 100000,
+      "spend_minor": 12500,
+      "version": 1
+    }
+  ],
+  "related": [
+    {
+      "id": "01M6QDBE6GN2NTWHB4J00G9QZG",
+      "campaign_id": "01M6QDBCRVEJ0P08YW5MGZHMZP",
+      "owner_id": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+      "title": "Delivery notes 1440"
+    },
+    {
+      "id": "01M6QDBR5XE45CPSXVEGQPRZXY",
+      "campaign_id": "01M6QDBPTK252J69YTM112RHCB",
+      "owner_id": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+      "title": "Delivery notes 390"
+    }
+  ],
+  "errors": [],
+  "generatedRequests": [
+    {
+      "path": "/_serverFn/e4fecdd9f21743243081b839b738cb7f913d8c968f430d7330d37858ff9db4d2"
+    },
+    {
+      "path": "/_serverFn/2db9a37655da8a536347f025ba0cb72c43cb068bccfeb0e5deacc3fd214461f3"
+    },
+    {
+      "path": "/_serverFn/2db9a37655da8a536347f025ba0cb72c43cb068bccfeb0e5deacc3fd214461f3"
+    },
+    {
+      "path": "/_serverFn/2db9a37655da8a536347f025ba0cb72c43cb068bccfeb0e5deacc3fd214461f3"
+    },
+    {
+      "path": "/_serverFn/e4fecdd9f21743243081b839b738cb7f913d8c968f430d7330d37858ff9db4d2"
+    },
+    {
+      "path": "/_serverFn/2db9a37655da8a536347f025ba0cb72c43cb068bccfeb0e5deacc3fd214461f3"
+    },
+    {
+      "path": "/_serverFn/2db9a37655da8a536347f025ba0cb72c43cb068bccfeb0e5deacc3fd214461f3"
+    },
+    {
+      "path": "/_serverFn/2db9a37655da8a536347f025ba0cb72c43cb068bccfeb0e5deacc3fd214461f3"
+    }
+  ],
+  "authorityReadPreservation": [
+    {
+      "width": 1440,
+      "unchanged": true,
+      "counts": {
+        "authority_memberships": 3,
+        "authority_grants": 0,
+        "command_admissions": 2
+      }
+    },
+    {
+      "width": 390,
+      "unchanged": true,
+      "counts": {
+        "authority_memberships": 3,
+        "authority_grants": 0,
+        "command_admissions": 4
+      }
+    }
+  ],
+  "firstRun": [
+    {
+      "width": 1440,
+      "reads": [
+        {
+          "phase": "first run",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "reload",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "new sign-in",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "populated installation isolated",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        }
+      ],
+      "reload": true,
+      "reauthenticated": true,
+      "populatedControl": true
+    },
+    {
+      "width": 390,
+      "reads": [
+        {
+          "phase": "first run",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "reload",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "new sign-in",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        },
+        {
+          "phase": "populated installation isolated",
+          "campaigns": 0,
+          "decisions": 0,
+          "milestones": 0
+        }
+      ],
+      "reload": true,
+      "reauthenticated": true,
+      "populatedControl": true
+    }
+  ]
+}

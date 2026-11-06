@@ -1,0 +1,36 @@
+{
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "run": 42154093928,
+  "event": "push",
+  "status": "completed",
+  "conclusion": "failure",
+  "url": "https://github.com/just-every/run-cradle/actions/runs/42154093928",
+  "buildJob": 127684031151,
+  "failedStep": "Check generated contract documents",
+  "command": "node src/base/contract-docs.mjs check",
+  "allLaterBuildSteps": "skipped",
+  "shards": "skipped",
+  "aggregateJob": 127684127183,
+  "aggregateError": [
+    "verify\tRequire the plan and every verification worker\t2026-11-06T03:03:18.9075339Z ##[error]Process completed with exit code 1."
+  ],
+  "archiveReads": [
+    {
+      "command": "gh run view 42154093928 --repo just-every/run-cradle --job 127684031151 --log-failed",
+      "exit": 0,
+      "outputBytes": 0,
+      "note": "The archive command returned no failed-step text; not retried."
+    },
+    {
+      "command": "gh run view 42154093928 --repo just-every/run-cradle --job 127684127183 --log-failed",
+      "exit": 0,
+      "error": "Process completed with exit code 1."
+    }
+  ],
+  "localGeneratedViewCheck": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "error": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+  },
+  "disposition": "Expected generated-view-only exception. Generator write and check pass locally; generated views restored from origin/main, never committed. No Verify repair, rerun or dispatch."
+}

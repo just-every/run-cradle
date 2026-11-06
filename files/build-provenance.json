@@ -1,0 +1,9 @@
+{
+  "head": "8034f4854c72ae82753eee43486594aa12c05876",
+  "command": "npx -y @runeditrun/rer build",
+  "exit": 0,
+  "completedAt": "2026-11-06T03:08:13.282319+00:00",
+  "dirty": false,
+  "emittedWorkerSha256": "8b2e39544b0c935e894984778650eb186d4aa6f452a80eee0ef611ebbb999a3c",
+  "description": "Fresh emitted Worker after integration of main; all final proof must run after this build."
+}
