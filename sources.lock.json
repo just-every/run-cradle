@@ -12298,7 +12298,7 @@
       "executable": false
     },
     "tests/helpers/launch-activity-order-screens.mjs": {
-      "sha256": "d20b254a8e791afd20bd0fd0fc73c4f572572cad1ee9b0a661c6d7fd669bd130",
+      "sha256": "e57982dc6ec603d3f03323fe42c333662652419d4ecf63698e5f495d69add337",
       "executable": false
     },
     "tests/helpers/launch-authority-runtime.mjs": {

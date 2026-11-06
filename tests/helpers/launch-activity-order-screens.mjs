@@ -8,6 +8,12 @@ export async function verifyCampaignActivityOrderScreens({ h, page, action, capt
  await action(page.getByText('Activity', { exact: true }))
  const list = page.locator('.portfolio-activity-list')
  await list.waitFor()
+ const collapsedInstants = await list.locator(':scope > li time').evaluateAll(elements => elements.map(element => element.dateTime))
+ const collapsedActions = collapsedInstants.flatMap(instant => {
+  const edit = proof.authored.find(candidate => candidate.occurredAt === instant)
+  return edit ? [edit.commandId] : []
+ })
+ assert.deepEqual(collapsedActions, proof.expectedActions, 'Initially collapsed activity groups already show reverse authored write order')
  const disclosures = list.locator('details summary')
  for (const disclosure of await disclosures.all()) {
   if (!(await disclosure.evaluate(element => element.parentElement.open))) await action(disclosure)
@@ -34,5 +40,5 @@ export async function verifyCampaignActivityOrderScreens({ h, page, action, capt
  }
  await capture('campaign-activity-newest-first')
  console.log(`PROBE ACT-001 1: rendered activity at ${width} -> three grouped edits in reverse authored command order`)
- return { width, ...proof, renderedActions: observed.map(group => group.commandId), groups: observed }
+ return { width, ...proof, collapsedActions, renderedActions: observed.map(group => group.commandId), groups: observed }
 }
