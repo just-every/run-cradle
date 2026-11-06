@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "7fcab0c696427e5b7ec91538ad4446ecf2cf4178164933adf53c4102d5fa6823",
       "executable": false
     },
     "DEMO.md": {
@@ -12293,6 +12293,14 @@
       "sha256": "4aa2f2580ccb399044821a78af343712790d7479d6d8819ca0aff4e2ac20168d",
       "executable": false
     },
+    "tests/helpers/launch-activity-order-journey.mjs": {
+      "sha256": "938ee517932a33a36c94992c824195220011dcac2f8a615aa0f42a2129f5b090",
+      "executable": false
+    },
+    "tests/helpers/launch-activity-order-screens.mjs": {
+      "sha256": "d20b254a8e791afd20bd0fd0fc73c4f572572cad1ee9b0a661c6d7fd669bd130",
+      "executable": false
+    },
     "tests/helpers/launch-authority-runtime.mjs": {
       "sha256": "a49810deba0653b3a02e90bb599545b8484b10fca2f57ea560bbeb71afba31dd",
       "executable": false
@@ -13210,7 +13218,7 @@
       "executable": false
     },
     "tests/launch-write-effects.mjs": {
-      "sha256": "7bf6b8d6a659d37a3fc016d8754078927999d8aaf064513d206421cdd030e278",
+      "sha256": "549b14749da162dad4e0acc0b39be994eb862e82622b5b43e4477617b078eda3",
       "executable": false
     },
     "tests/launch-write-service.mjs": {
@@ -13522,7 +13530,7 @@
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
-      "sha256": "aed2c5474f74805376aa347974f24d401832375a939d1cef6b79e33282528ac1",
+      "sha256": "2a19249a360177b28e578c66f725732accc82f2a57bed242e73ecb9f14190450",
       "executable": false
     },
     "tests/ui-local-signin.mjs": {

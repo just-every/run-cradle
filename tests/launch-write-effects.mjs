@@ -7,6 +7,7 @@ import { verifyMilestoneClauses } from './helpers/launch-milestone-clauses.mjs'
 import { verifyRiskClauses } from './helpers/launch-risk-clauses.mjs'
 import { verifyCampaignLifecycleClauses } from './helpers/launch-campaign-lifecycle-clauses.mjs'
 import { verifyConcurrencyClauses } from './helpers/launch-concurrency-clauses.mjs'
+import { verifyPublicCampaignActivityOrder } from './helpers/launch-activity-order-journey.mjs'
 import { verifyConsistencyClauses } from './helpers/launch-consistency-clauses.mjs'
 import { verifyCommentClauses } from './helpers/launch-comment-clauses.mjs'
 import { verifyDecisionClauses } from './helpers/launch-decision-clauses.mjs'
@@ -97,13 +98,14 @@ test('[RECORDS-001] zero writable fields and explicit deny rules cannot obtain v
  } finally { await h.close() }
 })
 
-test('[RECORDS-001 DELIV-002 DEC-001 DEC-003 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-002 ACT-004 VIEW-003 VIEW-006 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision and lens clauses', async () => {
+test('[RECORDS-001 DELIV-002 DEC-001 DEC-003 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-001 ACT-002 ACT-004 VIEW-003 VIEW-006 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision and lens clauses', async () => {
  const h = await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
  try {
   const owner = await writeContext(h,h.ownerSession,createUlid()), policyBefore = await h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(h.policy.id).first()
   const clauses={...h,...owner,r:launchSource,actor:h.owner,expected,campaign:code=>owner.commit('campaign.create',{fields:{...campaignFields(h.owner),code}})}
   await verifyConcurrencyClauses(clauses)
   await verifyConsistencyClauses(clauses)
+  await verifyPublicCampaignActivityOrder(h)
   await verifyCommentClauses(clauses)
   await verifyDecisionClauses(clauses)
   await verifyLensClauses(clauses)
