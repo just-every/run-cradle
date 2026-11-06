@@ -3,6 +3,9 @@ import {PortabilityError} from '@runeditrun/rer/modules/portability';
 export const transient = ['Durable Object initialization cache', 'WORK_QUEUE deliveries', 'local caches and logs'];
 export const portabilityPolicy = {
  product:'just-every/cradle',
+ // Preview definitions and their complete staged rows are promised installation
+ // data, even though the other portability_* tables are transfer bookkeeping.
+ includeTables:['portability_previews','portability_preview_rows'],
  excludeTables:['slack_app_installation','slack_app_oauth_states','slack_app_link_codes','slack_app_links','sms_installation','record_calendar_catalogues','record_capacity','record_trash_maintenance',
   'company_identity_config','company_scim_users','company_scim_credentials','company_saml_requests','company_saml_assertions',
   'record_presence',
@@ -112,3 +115,15 @@ export const portabilityPolicy = {
 /** Installations with the scheduled-export binding keep its retained copies in
  * the same verified archive and erasure checkpoint as canonical files. */
 export const installationPortabilityPolicy = warehouse => {if(!warehouse?.get)throw new PortabilityError('missing_bucket:WAREHOUSE',409);return {...portabilityPolicy,buckets:{...portabilityPolicy.buckets,WAREHOUSE:{}}};};
+
+/** Released archives excluded both preview tables. Restore their authenticated
+ * contents under that released policy; the empty-destination preflight still
+ * checks every current product table. Never omit a table carried by an archive.
+ */
+export function archivePolicyFor(manifest,input){
+ const previews=portabilityPolicy.includeTables;
+ const present=previews.filter(name=>manifest.tables.some(table=>table.name===name));
+ if(present.length===previews.length)return input;
+ if(present.length||!manifest.excludedTables?.includes('portability_%'))throw new PortabilityError('preview_inventory',409);
+ return {...input,includeTables:(input.includeTables??[]).filter(name=>!previews.includes(name))};
+}

@@ -4534,7 +4534,7 @@
       "executable": false
     },
     "docs/privacy/operator-erasure.md": {
-      "sha256": "394627bc691595e170b5723d832fd181b857b2a803d8da6e9d1ad2836bc60565",
+      "sha256": "782425a0de881ab463f74bbb8842d64e9304f0278f86d9e22987b8de4460894f",
       "executable": false
     },
     "docs/research.md": {
@@ -5662,7 +5662,7 @@
       "executable": false
     },
     "scripts/portability/worker.mjs": {
-      "sha256": "59b5e9ed81707447c02cfc7bf61c9548fa6701a9bb7c977a2b3e17f7d6cb9d51",
+      "sha256": "809525527e0f56c9c7e5eb1adab6c0fbd2b7841cddcbf39ab452471c5eb921af",
       "executable": false
     },
     "scripts/prove-company-workbooks.mjs": {
@@ -9118,11 +9118,11 @@
       "executable": false
     },
     "src/domains/portability/installation-policy.d.mts": {
-      "sha256": "aedc7c87a4eafec3639503ac8a8e52f035e6f230dabd8c72b83a7c7c5155f474",
+      "sha256": "4f95618dc26ec3abf8f5b6568479982a584cf0d38cf88adfc781fbeb699a8795",
       "executable": false
     },
     "src/domains/portability/installation-policy.mjs": {
-      "sha256": "a1675dc88c9d9098fd737218c302bea10b7745a925ef537015d0b50c85e1a04e",
+      "sha256": "1c030202692e6298e860386d5a46cfc543e8313d911361186b4b96334afd7e6c",
       "executable": false
     },
     "src/domains/portability/record-import.server.ts": {

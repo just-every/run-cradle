@@ -10,6 +10,11 @@ and manifest, rather than redundant per-table snapshots. The edition verifies th
 entire stored archive before compacting those snapshots; downloads, preview rows,
 archive hashes and restoration content stay unchanged. A failed compaction can be
 retried by advancing the same completed archive.
+New archives explicitly include both preview tables in full. The CLI recognizes
+released archives that excluded both under `portability_%` and restores their
+authenticated contents using that released inventory; it still refuses a
+nonempty current destination, including existing previews. An archive carrying
+only one preview table is refused rather than silently losing staged content.
 
 Older terminal transfers may still have snapshot tables. Preparation installs
 inert, exact-owner deletion triggers and fences their definitions and the complete
