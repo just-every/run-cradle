@@ -1,0 +1,40 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE FILE-001 direct-boundary: authenticated upload and download -> 104857600 bytes, checksum equal
+PROBE FILE-001 oversized-initiation: limit plus one -> 400, named limit, no custody
+PROBE FILE-001 overflowing-body: limit plus one and declaration plus one -> 413, named limit, no R2 bytes
+PROBE FILE-001 current-authority: row, readable field, writable field, action and removed membership -> retained and new writes refused
+PROBE FILE-001 streamed-authority-loss: field write permission removed during a reserved PUT -> 403, no R2 bytes or erasure reservation
+✖ [FILE-001 BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001] private sources, files and authority identifiers become indistinguishable from missing after current access is removed (15972.863122ms)
+PROBE FILE-007 acceptance-2: matching-account metadata HTTP 404 -> Unresolved, no binding, unchanged version and portable content; repeated checks and Worker restart persist; present control resolves
+✔ [FILE-002 FILE-004 FILE-005 FILE-006 FILE-007 COLLAB-002 BASE-ACCESS-004] record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store (30066.976339ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 47648.754404
+
+✖ failing tests:
+
+test at tests/contract.mjs:4:3
+✖ [FILE-001 BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001] private sources, files and authority identifiers become indistinguishable from missing after current access is removed (15972.863122ms)
+  browserType.launch: Executable doesn't exist at /home/agent/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+  ╔════════════════════════════════════════════════════════════╗
+  ║ Looks like Playwright was just installed or updated.       ║
+  ║ Please run the following command to download new browsers: ║
+  ║                                                            ║
+  ║     npx playwright install                                 ║
+  ║                                                            ║
+  ║ <3 Playwright Team                                         ║
+  ╚════════════════════════════════════════════════════════════╝
+      at anonymousThreadScreen (/home/agent/rer-consolidation/work/sd-cradle-c-f211/run-cradle/tests/helpers/evidence-comment-erasure.mjs:82:31)
+      at async evidenceCommentErasureJourney (/home/agent/rer-consolidation/work/sd-cradle-c-f211/run-cradle/tests/helpers/evidence-comment-erasure.mjs:77:2)
+      at async evidenceCommentsJourney (/home/agent/rer-consolidation/work/sd-cradle-c-f211/run-cradle/tests/helpers/evidence-comments-journey.mjs:74:2)
+      at async TestContext.<anonymous> (/home/agent/rer-consolidation/work/sd-cradle-c-f211/run-cradle/tests/evidence-read-privacy.mjs:21:3) {
+    name: 'Error',
+    log: []
+  }

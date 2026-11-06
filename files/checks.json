@@ -1,0 +1,155 @@
+{
+  "tag": "sd-cradle-c-f211",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f211",
+  "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848",
+  "base_requested": "ea240814465776985765d84b8299bd4e0225770b",
+  "main_integrated": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "recorded_at": "2026-11-06T04:40:51.519432+00:00",
+  "checks": [
+    {
+      "name": "build",
+      "command": "npx -y @runeditrun/rer build",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "native",
+      "command": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/evidence-read-privacy.mjs",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "browser",
+      "command": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium node --import ./tests/helpers/typescript-loader.mjs tests/ui-base-import.mjs",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "types",
+      "command": "pnpm check:types",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "first-party",
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "views-write",
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "views-check-after-write",
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "source-lock",
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "source-check",
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    },
+    {
+      "name": "budget",
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+    }
+  ],
+  "native_tests": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "browser_tests": {
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "widths": [
+      1440,
+      390
+    ]
+  },
+  "registrations_before": 174,
+  "registrations_after": 174,
+  "status_rows_before": 257,
+  "status_rows_after": 257,
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "clause": "FILE-007",
+  "before": "PARTIAL",
+  "after": "PARTIAL",
+  "new_source_edits": false,
+  "new_commits_authored": 0,
+  "preserved_base_commits": [
+    "f767660b69bd2be0087605767d2b7de29237c492",
+    "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+  ],
+  "initial_native_attempt": {
+    "exit": 1,
+    "reason": "Missing default Playwright browser executable; rerun with system Chromium, no source change"
+  },
+  "migration_ledger": {
+    "command": null,
+    "exit": 0,
+    "reason": "No migrations changed"
+  },
+  "publication_scan": "NOT RUN in cloud; maintained fleet lander required",
+  "candidate_run_site": "NOT RUN; maintained fleet lander required",
+  "done_claim": false,
+  "generated_view_committed_check": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "message": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "classification": "Expected restored-view freshness failure; no repair"
+  },
+  "product_push": {
+    "branch": "cloud/sd-cradle-c-f211",
+    "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848",
+    "attempts": 1,
+    "success": true
+  },
+  "main_ci": {
+    "head": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+    "verify": 42153995434,
+    "verify_conclusion": "success",
+    "run_site": 42153995317,
+    "run_site_conclusion": "success"
+  },
+  "candidate_ci": {
+    "run": 42163878893,
+    "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "failure",
+    "build_job": 127715713326,
+    "failed_step": "Check generated contract documents",
+    "dependent_gate_job": 127715819261,
+    "expected_generated_view_only": true,
+    "local_reproduction_exit": 1,
+    "product_assertion_failure": false,
+    "repair_attempts": 0,
+    "reruns": 0,
+    "github_calls": 3
+  }
+}

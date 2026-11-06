@@ -1,0 +1,84 @@
+{
+  "head": "43c9684e6418c2ff0f6a5b0861f59ac27f105848",
+  "branch": "cloud/sd-cradle-c-f211",
+  "integrated_main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "worktree_clean": true,
+  "candidate_range": [
+    "f767660b69bd2be0087605767d2b7de29237c492",
+    "43c9684e6418c2ff0f6a5b0861f59ac27f105848"
+  ],
+  "selected_code_and_test_bytes": [
+    {
+      "path": "src/adapters/file-stores.server.ts",
+      "requested_base_blob": "be315c70c58ea767e1bca94775ff6770631c91f5",
+      "candidate_blob": "be315c70c58ea767e1bca94775ff6770631c91f5",
+      "equal": true
+    },
+    {
+      "path": "src/adapters/file-stores-metadata.server.ts",
+      "requested_base_blob": "146a98b37d2f8a369832b43527a1a3120c7812d0",
+      "candidate_blob": "146a98b37d2f8a369832b43527a1a3120c7812d0",
+      "equal": true
+    },
+    {
+      "path": "src/domains/records/file-stores/resolution.server.ts",
+      "requested_base_blob": "feea7cc6c8c8a49cd08cb6b556ff5ebfb192c7e7",
+      "candidate_blob": "feea7cc6c8c8a49cd08cb6b556ff5ebfb192c7e7",
+      "equal": true
+    },
+    {
+      "path": "src/ui/records/store-reference-resolution.tsx",
+      "requested_base_blob": "b00b079c8d9ec6085e09277c0c5bfa82ea260f2a",
+      "candidate_blob": "b00b079c8d9ec6085e09277c0c5bfa82ea260f2a",
+      "equal": true
+    },
+    {
+      "path": "tests/helpers/file-stores-provider.mjs",
+      "requested_base_blob": "915a85ef8bf811a947ec34c5d06ee3b33058ffed",
+      "candidate_blob": "915a85ef8bf811a947ec34c5d06ee3b33058ffed",
+      "equal": true
+    },
+    {
+      "path": "tests/helpers/store-reference-resolution.mjs",
+      "requested_base_blob": "9f00d9533daeda2aac8d781c06506073b4c576eb",
+      "candidate_blob": "9f00d9533daeda2aac8d781c06506073b4c576eb",
+      "equal": true
+    },
+    {
+      "path": "tests/helpers/store-reference-missing.mjs",
+      "requested_base_blob": "709871b4d33d9eda676b522cecd7c0fd409749a9",
+      "candidate_blob": "709871b4d33d9eda676b522cecd7c0fd409749a9",
+      "equal": true
+    },
+    {
+      "path": "tests/helpers/file-stores-browser.mjs",
+      "requested_base_blob": "97c4f10c5178f56c40bd69288590aa6a27881689",
+      "candidate_blob": "97c4f10c5178f56c40bd69288590aa6a27881689",
+      "equal": true
+    },
+    {
+      "path": "tests/evidence-read-privacy.mjs",
+      "requested_base_blob": "fc2aa01d28fd92f85260faa0abdefc15dd0fd9cf",
+      "candidate_blob": "fc2aa01d28fd92f85260faa0abdefc15dd0fd9cf",
+      "equal": true
+    },
+    {
+      "path": "tests/ui-base-import.mjs",
+      "requested_base_blob": "62df11fcefaa927bf1b5598530dc4517b5f64b47",
+      "candidate_blob": "62df11fcefaa927bf1b5598530dc4517b5f64b47",
+      "equal": true
+    }
+  ],
+  "generated_views_equal_main": {
+    "ACCEPTANCE.md": true,
+    "docs/CLAIMS.md": true
+  },
+  "changed_paths_against_main": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "tests/helpers/file-stores-browser.mjs",
+    "tests/helpers/file-stores-provider.mjs",
+    "tests/helpers/store-reference-missing.mjs",
+    "tests/helpers/store-reference-resolution.mjs"
+  ]
+}
