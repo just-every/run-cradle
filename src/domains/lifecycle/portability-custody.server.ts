@@ -32,6 +32,6 @@ export async function preparePortabilityCustody(db:D1Database,change:Effects){
   {sql:'UPDATE rer_portability_state SET import_job=NULL,applying=0 WHERE id=1'},
   {sql:'DELETE FROM rer_portability_guard'},
  ]
- const final:D1Sql[]=[{sql:`${retirement.empty} AND NOT EXISTS(SELECT 1 FROM sqlite_master WHERE ${copies} AND name NOT IN (SELECT value FROM json_each(?))) AND ${stores.map(name=>`NOT EXISTS(SELECT 1 FROM ${name})`).join(' AND ')}`,params:[JSON.stringify([...retirement.covered])]}]
+ const final:D1Sql[]=[...retirement.empty.map(sql=>({sql})),{sql:`NOT EXISTS(SELECT 1 FROM sqlite_master WHERE ${copies} AND name NOT IN (SELECT value FROM json_each(?))) AND ${stores.map(name=>`NOT EXISTS(SELECT 1 FROM ${name})`).join(' AND ')}`,params:[JSON.stringify([...retirement.covered])]}]
  return {statements,final,managedTables:new Set([...stores,...tables]),places:[{store:'installation transfer custody',action:'delete' as const,rows:JSON.parse(jobInventory).length,reason:'completed or aborted installation transfers invalidated by the erasure checkpoint'}]}
 }

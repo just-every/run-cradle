@@ -28,7 +28,10 @@ export async function prepareSnapshotRetirement(db:D1Database,tables:string[]){
   guards.push(trustedPredicate('EXISTS(SELECT 1 FROM rer_portability_jobs WHERE id=? AND metadata=?)',[row.id,row.metadata]))
   for(const name of names)covered.add(name)
  }
- return {covered,guards,empty:balanced([...covered].map(name=>`NOT EXISTS(SELECT 1 FROM ${quoteCopy(name)})`))}
+ // Keep each final predicate under D1's SQL text limit as retention grows.
+ const names=[...covered],empty:string[]=[]
+ for(let offset=0;offset<names.length;offset+=128)empty.push(balanced(names.slice(offset,offset+128).map(name=>`NOT EXISTS(SELECT 1 FROM ${quoteCopy(name)})`)))
+ return {covered,guards,empty}
 }
 
 /** Only unaddressable, already-empty copies are garbage. A durable job always
