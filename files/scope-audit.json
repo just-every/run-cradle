@@ -1,0 +1,14 @@
+{
+  "head": "b621c99c9055644e09389ca469486f35f058d721",
+  "fullHistory": true,
+  "changedFiles": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "tests/helpers/current-policy-privacy-journey.mjs",
+    "tests/launch-search-authority.mjs"
+  ],
+  "existingTestChanges": "Only registration tag expanded; import and invocation added; no assertion removed or narrowed",
+  "fixtureEmails": 0,
+  "providerShapedFixtureSecrets": 0,
+  "uiChanges": false
+}

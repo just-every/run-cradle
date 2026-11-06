@@ -1,0 +1,12 @@
+{
+  "name": "test-budget",
+  "head": "b621c99c9055644e09389ca469486f35f058d721",
+  "command": [
+    "node",
+    "tests/helpers/test-budget.mjs"
+  ],
+  "exit": 0,
+  "started": "2026-11-06T03:30:29.175771+00:00",
+  "finished": "2026-11-06T03:30:30.559768+00:00",
+  "log": "test-budget.log"
+}

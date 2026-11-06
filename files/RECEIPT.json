@@ -1,0 +1,239 @@
+{
+  "schema": 1,
+  "repository": "just-every/run-cradle",
+  "tag": "sd-cradle-c-f203",
+  "branch": "cloud/sd-cradle-c-f203",
+  "head": "b621c99c9055644e09389ca469486f35f058d721",
+  "remoteHead": "b621c99c9055644e09389ca469486f35f058d721",
+  "checks": [
+    {
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0,
+      "log": "build.log",
+      "recorded": "2026-11-06T03:32:04.165795+00:00"
+    },
+    {
+      "name": "current-policy",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "timeout",
+        "1200",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "tests/launch-search-authority.mjs"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:18.620734+00:00",
+      "finished": "2026-11-06T03:31:25.720947+00:00",
+      "log": "current-policy.log"
+    },
+    {
+      "name": "typecheck",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "pnpm",
+        "check:types"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:05.020868+00:00",
+      "finished": "2026-11-06T03:30:28.184700+00:00",
+      "log": "typecheck.log"
+    },
+    {
+      "name": "first-party",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "pnpm",
+        "exec",
+        "rer",
+        "check",
+        "--profile",
+        "first-party"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:28.219641+00:00",
+      "finished": "2026-11-06T03:30:29.131449+00:00",
+      "log": "first-party.log"
+    },
+    {
+      "name": "test-budget",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "node",
+        "tests/helpers/test-budget.mjs"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:29.175771+00:00",
+      "finished": "2026-11-06T03:30:30.559768+00:00",
+      "log": "test-budget.log"
+    },
+    {
+      "name": "views-write",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "write"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:06.844024+00:00",
+      "finished": "2026-11-06T03:30:07.045075+00:00",
+      "log": "views-write.log"
+    },
+    {
+      "name": "views-check",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "node",
+        "src/base/contract-docs.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:07.079185+00:00",
+      "finished": "2026-11-06T03:30:07.252790+00:00",
+      "log": "views-check.log"
+    },
+    {
+      "name": "lock-write",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "lock"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:07.311655+00:00",
+      "finished": "2026-11-06T03:30:07.922374+00:00",
+      "log": "lock-write.log"
+    },
+    {
+      "name": "lock-check",
+      "head": "b621c99c9055644e09389ca469486f35f058d721",
+      "command": [
+        "node",
+        "scripts/edition-authoring/cli.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "started": "2026-11-06T03:30:07.959933+00:00",
+      "finished": "2026-11-06T03:30:08.564624+00:00",
+      "log": "lock-check.log"
+    }
+  ],
+  "audit": {
+    "head": "b621c99c9055644e09389ca469486f35f058d721",
+    "main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+    "statusRowRetention": [
+      {
+        "commit": "b621c99c9055644e09389ca469486f35f058d721",
+        "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+        "previousRows": 257,
+        "rows": 257,
+        "missing": []
+      }
+    ],
+    "beforeCounts": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "afterCounts": {
+      "done": 64,
+      "partial": 138,
+      "missing": 55
+    },
+    "identities": "fleet only",
+    "trailers": "absent",
+    "addedEmailStrings": [],
+    "worktree": "",
+    "generatedViewsUnchanged": true
+  },
+  "ci": [
+    {
+      "conclusion": null,
+      "event": "push",
+      "head_branch": "cloud/sd-cradle-c-f203",
+      "head_sha": "b621c99c9055644e09389ca469486f35f058d721",
+      "html_url": "https://github.com/just-every/run-cradle/actions/runs/42157132101",
+      "id": 42157132101,
+      "name": "Verify",
+      "status": "in_progress"
+    }
+  ],
+  "clauses": [
+    {
+      "id": "PERM-002",
+      "before": "partial",
+      "after": "partial",
+      "selectedPoints": "already present at requested base; freshly passed on rebased candidate",
+      "doneClaim": false
+    }
+  ],
+  "pr": null,
+  "publicationScan": "not run: fleet guarded lander owns this scan",
+  "runSite": "not run: fleet guarded lander owns landing",
+  "recorded": "2026-11-06T03:38:12.424816+00:00",
+  "expectedGeneratedViewCheck": {
+    "name": "restored-views-check",
+    "head": "b621c99c9055644e09389ca469486f35f058d721",
+    "command": [
+      "node",
+      "src/base/contract-docs.mjs",
+      "check"
+    ],
+    "exit": 1,
+    "started": "2026-11-06T03:33:52.059324+00:00",
+    "finished": "2026-11-06T03:33:52.310419+00:00",
+    "log": "restored-views-check.log"
+  },
+  "ciFinal": {
+    "conclusion": "failure",
+    "head_sha": "b621c99c9055644e09389ca469486f35f058d721",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42157132101",
+    "status": "completed"
+  },
+  "ciJobs": [
+    {
+      "conclusion": "success",
+      "id": 127693845597,
+      "name": "plan",
+      "steps": []
+    },
+    {
+      "conclusion": "failure",
+      "id": 127693892585,
+      "name": "build",
+      "steps": [
+        {
+          "conclusion": "failure",
+          "name": "Check generated contract documents"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "id": 127694011921,
+      "name": "verify",
+      "steps": [
+        {
+          "conclusion": "failure",
+          "name": "Require the plan and every verification worker"
+        }
+      ]
+    },
+    {
+      "conclusion": "skipped",
+      "id": 127694013310,
+      "name": "verify-${{ matrix.name }}",
+      "steps": []
+    }
+  ],
+  "githubCalls": 7,
+  "readyBasis": "Explicit generated-view-only Verify exception; runtime journey and all required local checks passed on exact pushed head",
+  "handoff": "READY",
+  "productPush": "success"
+}

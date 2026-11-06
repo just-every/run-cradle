@@ -1,0 +1,18 @@
+{
+  "name": "current-policy",
+  "head": "b621c99c9055644e09389ca469486f35f058d721",
+  "command": [
+    "timeout",
+    "1200",
+    "node",
+    "--import",
+    "./tests/helpers/typescript-loader.mjs",
+    "--test",
+    "--test-concurrency=1",
+    "tests/launch-search-authority.mjs"
+  ],
+  "exit": 0,
+  "started": "2026-11-06T03:30:18.620734+00:00",
+  "finished": "2026-11-06T03:31:25.720947+00:00",
+  "log": "current-policy.log"
+}

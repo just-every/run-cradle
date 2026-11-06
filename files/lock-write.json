@@ -1,0 +1,13 @@
+{
+  "name": "lock-write",
+  "head": "b621c99c9055644e09389ca469486f35f058d721",
+  "command": [
+    "node",
+    "scripts/edition-authoring/cli.mjs",
+    "lock"
+  ],
+  "exit": 0,
+  "started": "2026-11-06T03:30:07.311655+00:00",
+  "finished": "2026-11-06T03:30:07.922374+00:00",
+  "log": "lock-write.log"
+}

@@ -1,0 +1,2 @@
+build	Check generated contract documents	2026-11-06T02:45:50.8207521Z ACCEPTANCE.md: generated content differs; run contract-docs write.
+build	Check generated contract documents	2026-11-06T02:45:50.8258972Z ##[error]Process completed with exit code 1.

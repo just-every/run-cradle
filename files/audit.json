@@ -1,0 +1,28 @@
+{
+  "head": "b621c99c9055644e09389ca469486f35f058d721",
+  "main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "statusRowRetention": [
+    {
+      "commit": "b621c99c9055644e09389ca469486f35f058d721",
+      "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "previousRows": 257,
+      "rows": 257,
+      "missing": []
+    }
+  ],
+  "beforeCounts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "afterCounts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "identities": "fleet only",
+  "trailers": "absent",
+  "addedEmailStrings": [],
+  "worktree": "",
+  "generatedViewsUnchanged": true
+}
