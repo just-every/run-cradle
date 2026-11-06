@@ -12986,7 +12986,7 @@
       "executable": false
     },
     "tests/helpers/settings-capacity-browser.mjs": {
-      "sha256": "f97fa15a65330873d28c197f5efd0258191c6b2ac6cf3fc0c05066c7d4573a7b",
+      "sha256": "60dc2c934f2efb312be08e6b794075d336838ecda90746bfa50147e241888b5c",
       "executable": false
     },
     "tests/helpers/settings-members-accessibility.mjs": {
