@@ -1,0 +1,4 @@
+{"conclusion":"success","failedSteps":[],"id":127716575340,"name":"plan","status":"completed"}
+{"conclusion":"failure","failedSteps":[{"conclusion":"failure","name":"Check generated contract documents"}],"id":127716612015,"name":"build","status":"completed"}
+{"conclusion":"failure","failedSteps":[{"conclusion":"failure","name":"Require the plan and every verification worker"}],"id":127716721737,"name":"verify","status":"completed"}
+{"conclusion":"skipped","failedSteps":[],"id":127716722960,"name":"verify-${{ matrix.name }}","status":"completed"}

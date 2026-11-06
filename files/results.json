@@ -1,0 +1,141 @@
+{
+  "schema": 1,
+  "tag": "sd-cradle-c-f213",
+  "repository": "just-every/run-cradle",
+  "branch": "cloud/sd-cradle-c-f213",
+  "head": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+  "base": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+  "integratedMain": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "newProductCommits": 0,
+  "clause": {
+    "id": "SET-001",
+    "before": "partial",
+    "after": "partial",
+    "selectedPointAlreadyImplemented": true,
+    "selectedPointVerified": true,
+    "doneClaim": false
+  },
+  "countsBefore": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "countsAfter": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "registrationsBefore": 174,
+  "registrationsAfter": 174,
+  "checks": [
+    {
+      "command": "cloud_run npx -y @runeditrun/rer setup --owner-email [fleet identity] --non-interactive",
+      "exit": 0
+    },
+    {
+      "command": "cloud_run npx -y @runeditrun/rer build",
+      "exit": 0
+    },
+    {
+      "command": "CRADLE_DOORS_EVIDENCE=[task browser proof] cloud_run timeout 1200 node --import /tmp/cloud-chromium.mjs --test tests/ui-launch-operator-doors.mjs",
+      "exit": 0,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "widths": [
+        1440,
+        390
+      ],
+      "screens": 27,
+      "browser": "/usr/bin/chromium",
+      "argsAdded": [
+        "--no-sandbox"
+      ]
+    },
+    {
+      "command": "pnpm check:types",
+      "exit": 0
+    },
+    {
+      "command": "pnpm exec rer check --profile first-party",
+      "exit": 0
+    },
+    {
+      "command": "node tests/helpers/test-budget.mjs",
+      "exit": 0,
+      "total": 174,
+      "cap": 200
+    },
+    {
+      "command": "node src/base/contract-docs.mjs write",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 0,
+      "phase": "after generation"
+    },
+    {
+      "command": "git checkout origin/main -- ACCEPTANCE.md docs/CLAIMS.md",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs lock",
+      "exit": 0,
+      "changed": false
+    },
+    {
+      "command": "node scripts/edition-authoring/cli.mjs check",
+      "exit": 0
+    },
+    {
+      "command": "node src/base/contract-docs.mjs check",
+      "exit": 1,
+      "phase": "after restoring main views",
+      "expected": true,
+      "failure": "ACCEPTANCE.md: generated content differs; run contract-docs write."
+    }
+  ],
+  "migrationLedger": "not applicable: no migration changed",
+  "assertionsRemovedOrWeakened": false,
+  "policyOrAcceptanceChanges": false,
+  "productPush": {
+    "status": "pushed",
+    "attempts": 1,
+    "verifiedRemoteHead": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61"
+  },
+  "publicationScan": {
+    "status": "not run in cloud",
+    "custody": "fleet lander"
+  },
+  "candidateRunSite": {
+    "status": "not run",
+    "custody": "fleet lander"
+  },
+  "pr": null,
+  "planRowsChanged": [],
+  "selectedScopeBlockers": [],
+  "ci": {
+    "githubCalls": 7,
+    "head": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+    "verifyRun": 42164157571,
+    "status": "completed",
+    "conclusion": "failure",
+    "onlyFailure": "expected generated ACCEPTANCE.md freshness; dependent aggregation failed and shards skipped",
+    "buildJob": 127716612015,
+    "aggregationJob": 127716721737,
+    "readFailedJobLogOnce": true,
+    "cloudGeneratedViewExceptionApplies": true,
+    "passingShardsClaimed": false,
+    "rerunsOrDispatches": 0
+  },
+  "mainCi": {
+    "head": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+    "verifyRun": 42153995434,
+    "verify": "success",
+    "runSite": 42153995317,
+    "site": "success"
+  }
+}

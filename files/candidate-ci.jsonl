@@ -1,0 +1,2 @@
+{"conclusion":null,"event":"push","head_branch":"cloud/sd-cradle-c-f213","head_sha":"d7c8fa5cd9c407b50e6ad0359376534f27f3cb61","html_url":"https://github.com/just-every/run-cradle/actions/runs/42164157571","id":42164157571,"name":"Verify","status":"queued"}
+{"conclusion":"failure","event":"push","head_branch":"cloud/sd-cradle-c-f205","head_sha":"d7c8fa5cd9c407b50e6ad0359376534f27f3cb61","html_url":"https://github.com/just-every/run-cradle/actions/runs/42158624542","id":42158624542,"name":"Verify","status":"completed"}
