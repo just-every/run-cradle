@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "d7bb6e4b4d22f77ddc03d4d15ae2efea17793c58de1af84535af40cd170b16a5",
       "executable": false
     },
     "DEMO.md": {
@@ -7370,7 +7370,7 @@
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.tsx": {
-      "sha256": "9c0b9c5da1fca7bccf8a84f10592a6b897196e047f38d255465011cffba47ac3",
+      "sha256": "4940e24f5d15f61e567fa57aa7b86db692d9d1ad71599bff9ff134190e9de81a",
       "executable": false
     },
     "src/core/features/setup/document.server.ts": {
@@ -11365,6 +11365,10 @@
       "sha256": "b809f044babf2fda8f7c3c232e487a1e6fba1eca95cf192c80663f4ebcf683fa",
       "executable": false
     },
+    "src/ui/settings/capacity-panel.tsx": {
+      "sha256": "e9b4be7bf59c95d837475c68d47ddae72be868143840d894eb7895d20f535843",
+      "executable": false
+    },
     "src/ui/settings/connect-gmail.tsx": {
       "sha256": "256b3693d0a368610ebd631985c2d0a40684e52507c6b2978c0684743521d477",
       "executable": false
@@ -12981,6 +12985,10 @@
       "sha256": "3bfd1645f101f922a5b0f130ec17791390031646eeabeb03b0a5c41ffdf6b4b5",
       "executable": false
     },
+    "tests/helpers/settings-capacity-browser.mjs": {
+      "sha256": "f97fa15a65330873d28c197f5efd0258191c6b2ac6cf3fc0c05066c7d4573a7b",
+      "executable": false
+    },
     "tests/helpers/settings-members-accessibility.mjs": {
       "sha256": "ab8a34e856a02b506241fe8017ed532ff8454e6e6584f3e8e2d3ae3cd752dcdf",
       "executable": false
@@ -13518,7 +13526,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "e25b12f6c7e96983b6613c4df836d207c5a3073f04124837bbbf24ff129aa4a2",
+      "sha256": "86372608fae8c92ba47c38e515ff2abc7fe4316128df39109f5eb7d64209298f",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {

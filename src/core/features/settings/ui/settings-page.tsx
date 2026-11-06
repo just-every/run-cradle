@@ -1,4 +1,5 @@
 import {RecordTemplateButtonsPanel} from '../../../../ui/settings/record-template-buttons-panel'
+import {CapacityPanel} from '../../../../ui/settings/capacity-panel'
 import {GuestsPanel} from '../../../../ui/settings/guests-panel'
 import {EmailDeliveryStatus} from '../../../../ui/settings/email-delivery-status'
 import {SlackAppPanel} from '../../../../ui/settings/slack-app-panel'
@@ -59,6 +60,7 @@ export const SettingsPage = () => {
         <section className="cr-card cr-capability" id="ai">{!current.ai.configured && <span className="cr-tag cr-tag--warn">Not configured</span>}<h2>AI</h2><p className="cr-muted">{current.ai.configured ? current.ai.enabled ? 'AI is configured and enabled. Outputs remain read-only.' : 'AI is configured but disabled.' : 'AI is not configured. Set the installation provider and model.'}</p><LaunchAiSettings configured={current.ai.configured} /></section>
         <section className="cr-card cr-capability">{!current.email.configured && <span className="cr-tag cr-tag--warn">Not configured</span>}<h2>Email</h2><p className="cr-muted">{current.email.configured ? 'Email delivery is configured; failed deliveries remain visible here.' : 'Email is not configured. The workspace owner needs to connect an email provider.'}</p>{current.email.deliveries ? <EmailDeliveryStatus value={current.email.deliveries} /> : null}</section>
       </div>
+      <CapacityPanel />
       <ReadinessSettings/><Details title="Profile" values={current.profile} /><Details title="Appearance" values={current.appearance} /><Details title="Security" values={current.security} /><Details title="Data & storage" values={current.dataStorage} />
     </div>
     <div className="cr-settings-side">
