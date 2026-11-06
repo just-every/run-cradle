@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "485c42948f3a0de60ca3ee0df58df8aac3ba36a4f30faa741df38b375edf3b14",
       "executable": false
     },
     "DEMO.md": {
@@ -11878,7 +11878,7 @@
       "executable": false
     },
     "tests/foundation-shell.mjs": {
-      "sha256": "3e61b07a2327abb3088abbb44cca4f0b9288c5d2cff038cc604c8ff8fa20aba7",
+      "sha256": "f812649bf1f8fd12cf53f52c492c27f055844983f9eae1f9b41aa28bf90622c3",
       "executable": false
     },
     "tests/helpers/accessibility-axe.mjs": {
@@ -12271,6 +12271,10 @@
     },
     "tests/helpers/guest-access-journey.mjs": {
       "sha256": "2d53937715bce0c3f23e23cbece8eb794f5b405e21c3e28a1ea34285ef06e0a1",
+      "executable": false
+    },
+    "tests/helpers/homepage-journey.mjs": {
+      "sha256": "a046096b1d0475fcc93b9641cef6b2394762c144dbfc11aa4539cd37f728078f",
       "executable": false
     },
     "tests/helpers/import-effects.mjs": {
@@ -13039,6 +13043,10 @@
     },
     "tests/helpers/sqlite-d1.mjs": {
       "sha256": "d4ad9aa33025d22b8130943ba6c3c66261fdc2bf4a65a11f373606dcfa97ed06",
+      "executable": false
+    },
+    "tests/helpers/static-site.mjs": {
+      "sha256": "0408083d189ae8da80150b065b3c9f8e4de630a202acdf2a7ce013211dc3d1e5",
       "executable": false
     },
     "tests/helpers/store-reference-exits.mjs": {

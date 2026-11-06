@@ -11,6 +11,8 @@ import AxeBuilder from '@axe-core/playwright'
 import {verifySignInForward} from './helpers/sign-in-forward-journey.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
+import { serveStaticSite } from './helpers/static-site.mjs'
+import { homepageJourney } from './helpers/homepage-journey.mjs'
 
 const port = Number(process.env.CRADLE_FOUNDATION_PORT ?? 0)
 let origin = `http://127.0.0.1:${port}`
@@ -18,7 +20,7 @@ const output = process.env.CRADLE_FOUNDATION_EVIDENCE ?? path.join(tmpdir(), 'cr
 
 test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed responsive shell, records-first navigation, 404 and Base sign-in without a mail viewer', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'cradle-foundation-'))
-  let worker, browser, production
+  let worker, browser, production, site
   const receipt = { commit: spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim(), routes: [], errors: [], remoteIdentityHidden: false }
   try {
     assert.equal(await fetch(`${origin}/health`).catch(() => null), null, 'Test listener must be unoccupied')
@@ -38,7 +40,10 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
     const routes = ['/app', '/app/records', '/app/operations/studio', '/app/overview', '/app/campaigns', `/app/campaigns/${campaigns.items[0].id}`, '/app/lenses/risks', `/app/risks/${risks.items[0].id}`, '/app/lenses/timeline', `/app/milestones/${milestones.items[0].id}`, '/app/lenses/new', '/app/decisions', `/app/decisions/${decisions.items[0].id}`, '/app/automations', '/app/notifications', '/app/search', '/app/settings', '/app/operations', '/app/repairs']
     browser = await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,args:['--no-sandbox','--use-mock-keychain','--password-store=basic']})
     await mkdir(output, { recursive: true })
+    site = await serveStaticSite()
+    receipt.homepage = { build: site.build, scenarios: [] }
     for (const width of [1440, 390]) {
+      receipt.homepage.scenarios.push(...await homepageJourney({ browser, site, width, output }))
       const context = await browser.newContext({ viewport: { width, height: 960 } })
       await context.addCookies([{ name: cookie.split('=')[0], value: cookie.slice(cookie.indexOf('=')+1), url: origin }])
       const page = await context.newPage()
@@ -127,10 +132,12 @@ test('[VIEW-001 HOME-002 BASE-ACCESS-003 RECORDS-001 APP-SCOPE-001] one themed r
     await page.screenshot({ path: path.join(output, 'remote-signin.jpg'), type: 'jpeg', quality: 75 })
     assert.deepEqual(receipt.errors, [])
     await context.close()
+    receipt.homepage.served = site.requests
     await writeFile(path.join(output, 'manifest.json'), JSON.stringify(receipt, null, 2))
     console.log(JSON.stringify({ routes: receipt.routes.length, remoteIdentityHidden: true, errors: receipt.errors, evidence: output }))
   } finally {
     if (browser) await browser.close()
+    await site?.close()
     await production?.close()
     if (worker && worker.exitCode === null) { const exit = new Promise(resolve => worker.once('exit', resolve)); process.kill(-worker.pid, 'SIGTERM'); await exit }
     await rm(directory, { recursive: true, force: true })
