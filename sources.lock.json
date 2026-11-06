@@ -10918,7 +10918,7 @@
       "executable": false
     },
     "src/ui/records/grid-interaction.tsx": {
-      "sha256": "863a1c8f6b1b71040a62507a17b68938d4f17e2f893de467db6f3dfe4eea3822",
+      "sha256": "6b3c9db7e4f555af0569d254c0c1802bb085b1014fe1b94644358582847be494",
       "executable": false
     },
     "src/ui/records/grid-values.ts": {
