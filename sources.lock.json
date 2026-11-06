@@ -12806,11 +12806,11 @@
       "executable": false
     },
     "tests/helpers/records-grid-range-browser.mjs": {
-      "sha256": "320b80610ea2d053d4a16b990425a7b675724c6973edb3224c208f67db7c5305",
+      "sha256": "6b42deb86bab7bbe4fe6ed21b0fc021fec5a24f38502a08859fb134650e3177f",
       "executable": false
     },
     "tests/helpers/records-grid-range-fixture.mjs": {
-      "sha256": "5ce9d4b75afd84e9662e150dd645e0cc14e8776e4a21ded0fb62e21d7f78484e",
+      "sha256": "71c31ee8473295b575ea8dc8ce2a1f6289ec695f05738f1b3b92496b4d812787",
       "executable": false
     },
     "tests/helpers/records-history-journey.mjs": {
