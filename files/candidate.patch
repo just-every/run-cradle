@@ -1,0 +1,170 @@
+diff --git a/CONTRACT.md b/CONTRACT.md
+index 223e6ac..8b1d8ff 100644
+--- a/CONTRACT.md
++++ b/CONTRACT.md
+@@ -3052,7 +3052,7 @@ Judged from the code and tests at commit `d7dc8100256a244030024bb616a746d7f0ade6
+ | `VIEW-005` | Search | published | partial | `tests/launch-search-authority.mjs` | Missing a search journey for text, URL and select prefix matches, comment exclusion and archived opt-in, the twenty-results-per-table bound and the 500ms bar. Cited `tests/launch-search-authority.mjs` show: Cross-base search and current membership/row/field authorization are exercised with launch and vault text. |
+ | `VIEW-006` | Concurrent edits | published | done | `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision/lens clauses"; `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone" |  |
+ | `VIEW-007` | Paging and order | published | partial | `tests/launch-operator-doors.mjs` | Missing a public paging journey for the 200-record cap, stable tied ordering, exact totals through 10,000, 10,000+ above it and shown-out-of-total presentation. Cited `tests/launch-operator-doors.mjs` show: The cited HTTP journey follows tiny keyset pages and inserts before the cursor without repeats/skips. |
+-| `CAMP-001` | Record | published | partial | `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs` | Missing a campaign CRUD journey that also edits, archives and deletes through the cited public doors, with the unsafe deletion refused unchanged. Cited `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs` show: The cited browser journeys create campaigns with populated or blank optional prose and read detail/reload. |
++| `CAMP-001` | Record | published | partial | `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs`; `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects, native campaign validation and campaign record clauses" via `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "deletion" | Wider public create, edit and archive matrix and the complete required, optional and custom-field matrix remain unproved. The lifecycle journey creates an independently named campaign through native HTTP, reads its current version, refuses wrong-case confirmation with a confirmationCode validation error, and checks unchanged public campaign, children, activity, retained file bytes and queued work plus persisted admission effects; successful public deletion remains the positive control. Ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites. |
+ | `CAMP-002` | Lifecycle | published | partial | `tests/ui-launch-walkthrough.mjs`; `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses", through `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "verifyPublicCampaignLifecycle" and "verifyCampaignLifecycleClauses"; public lifecycle, active-list withdrawal and return, unchanged fields and child revisions, attributed activity and shipped controls at 1440 and 390. Existing internal lifecycle and public portfolio archive assertions remain. | Missing a public lifecycle journey that restores the archived campaign, reads retained records and demonstrates operator lifecycle behavior; the cited browser never restores. Cited `tests/ui-launch-walkthrough.mjs` show: Public archive calls preserve unresolved child states in portfolio proof. |
+ | `CAMP-003` | Validation | published | partial | `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-campaign-clauses.mjs` (verifyPublicCampaignValidation: native command refusals name invalid dates, health, amounts, duplicate codes and cleared active required fields, preserve public readbacks and all persisted effects, and read back valid boundaries and trimmed codes; verifyCampaignClauses retains the internal matrix) | Missing a public campaign-validation journey that attempts invalid dates, health, money, codes and required-field removal, observes field errors and unchanged state, and completes a valid edit. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal command-handler/admission helpers check campaign validation and atomic snapshots; cited browser creates valid campaigns. |
+ | `CAMP-004` | Detail and rollups | published | done | `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses"; `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone" |  |
+diff --git a/sources.lock.json b/sources.lock.json
+index 23dffc4..73104cf 100644
+--- a/sources.lock.json
++++ b/sources.lock.json
+@@ -2994,7 +2994,7 @@
+       "executable": false
+     },
+     "CONTRACT.md": {
+-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
++      "sha256": "87402a0f8afb61c8b5ef8278539384f015f28a6ccfc9a84387c3a14161b3fa1d",
+       "executable": false
+     },
+     "DEMO.md": {
+@@ -12314,7 +12314,7 @@
+       "executable": false
+     },
+     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
+-      "sha256": "b863d3b11c2a21e3a4ac378c142eb2c4592313afa6e486acc72ccfcf57987997",
++      "sha256": "a21d8068130ad76dcd0c05c5d7ab361854d30f774e1dc3e50fc2d9bd0e4d9bfd",
+       "executable": false
+     },
+     "tests/helpers/launch-clause-analysis.mjs": {
+@@ -13210,7 +13210,7 @@
+       "executable": false
+     },
+     "tests/launch-write-effects.mjs": {
+-      "sha256": "7bf6b8d6a659d37a3fc016d8754078927999d8aaf064513d206421cdd030e278",
++      "sha256": "6d737aedc17dabfe6142775458ddb7060c5829a79f6e41240b2be2d76196fdef",
+       "executable": false
+     },
+     "tests/launch-write-service.mjs": {
+diff --git a/tests/helpers/launch-campaign-lifecycle-clauses.mjs b/tests/helpers/launch-campaign-lifecycle-clauses.mjs
+index 3b89b76..1b61ce2 100644
+--- a/tests/helpers/launch-campaign-lifecycle-clauses.mjs
++++ b/tests/helpers/launch-campaign-lifecycle-clauses.mjs
+@@ -105,11 +105,17 @@ async function stagedImport(h, campaign) {
+  assert.equal(response.status, 200, JSON.stringify(preview.error))
+  assert.equal(preview.data.value.state, 'valid')
+  assert.ok((await h.db.prepare('SELECT COUNT(*) AS n FROM portability_preview_rows WHERE preview_id=? AND record_id=?').bind(preview.data.value.id, campaign.id).first()).n > 0, 'A real staged CSV preview references the campaign')
+- return { previewId: preview.data.value.id, fileId: upload.file.id }
++ return { previewId: preview.data.value.id, fileId: upload.file.id, bytes: Buffer.from(csv) }
+ }
+ 
+ async function fixture(h, reader) {
+- let campaign = await h.campaign('LIFECYCLE-PROOF')
++ const created = await h.request(h.ownerSession, '/api/v1/commands/launch.campaign.create', { method: 'POST', body: JSON.stringify({ commandId: createUlid(), expected: [], input: { fields: { code: 'synthetic-cradle-194A', name: 'Unsafe deletion proof campaign', ownerId: h.actor, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Retain populated work after unsafe deletion', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} } } }) })
++ const receipt = await created.json()
++ assert.equal(created.status, 200, JSON.stringify(receipt.error))
++ assert.equal(receipt.data.state, 'committed')
++ let campaign = (await json(h, `/api/campaigns/${receipt.data.value.id}`)).campaign
++ assert.equal(campaign.code, 'synthetic-cradle-194A')
++ assert.equal(campaign.name, 'Unsafe deletion proof campaign')
+  const custom = await h.commit('custom-field.save', { field: { name: 'Lifecycle date', type: 'date' } })
+  campaign = await h.commit('campaign.patch', { id: campaign.id, changes: { name: 'Lifecycleproof campaign', status: 'At risk', health: 37, tags: ['Lifecycle', 'Review'], customFields: { [custom.id]: '2026-11-10' } } }, h.expected('campaign', campaign))
+  const deliverable = await h.commit('deliverable.create', { fields: { campaignId: campaign.id, title: 'Lifecycleproof deliverable', ownerId: h.actor, dueDate: '2026-09-20' } })
+@@ -300,14 +306,75 @@ async function restoreRemovedOwner(h, reader, person) {
+  assert.equal(campaign.archivedAt, null)
+ }
+ 
+-async function deletion(h, reader, campaign) {
++async function deletion(h, reader, campaign, imported) {
++ const command = async (action, input, expected = []) => {
++  const commandId = createUlid()
++  const response = await h.request(h.ownerSession, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected }) })
++  const body = await response.json()
++  assert.equal(response.status, 200, JSON.stringify(body.error))
++  assert.equal(body.data.state, 'committed')
++  return { commandId, value: body.data.value }
++ }
++ // Admit real queued work after restore; an empty queue cannot prove refusal
++ // preserves it. Deliver only the committed event, leaving execution pending.
++ const automation = (await command('automation.save', { definition: { name: 'Unsafe deletion queued control', enabled: true, trigger: { kind: 'event', event: 'campaign.updated.v1' }, actions: [{ command: 'add-activity', input: { campaignId: campaign.id, message: 'Retained pending deletion work' } }] } })).value
++ const current = (await json(h, `/api/campaigns/${campaign.id}`)).campaign
++ const patched = await command('campaign.patch', { id: campaign.id, changes: { statusSummary: 'Pending work must survive refused deletion' } }, h.expected('campaign', current))
++ await (await h.runtime.getWorker()).queue('cradle-work', [{ id: createUlid(), timestamp: Date.now(), attempts: 1, body: { kind: 'cradle.launch.events.v1', commandId: patched.commandId } }])
++ const historyPath = `/api/automations/${automation.id}/runs`
++ const history = await json(h, historyPath)
++ assert.equal(history.runs.length, 1)
++ assert.equal(history.runs[0].state, 'Queued')
++ assert.equal(history.runs[0].subjectId, campaign.id)
++ assert.ok(history.runs[0].actions.length > 0 && history.runs[0].actions.every(action => action.state === 'Pending'))
++ const queued = await h.db.prepare("SELECT * FROM admission_outbox WHERE action='launch.automation.execute' AND state='pending' AND json_extract(input_json,'$.runId')=?").bind(history.runs[0].id).all()
++ assert.ok(queued.results.length > 0, 'Queued work has a real pending execution outbox entry')
++ const detailPath = `/api/campaigns/${campaign.id}`, detail = await json(h, detailPath)
++ campaign = detail.campaign
++ assert.equal(campaign.version, current.version + 1, 'The refusal uses the new version independently read after an admitted edit')
++ assert.equal(campaign.summary, 'Pending work must survive refused deletion')
++ assert.ok(detail.activity.length > 0 && detail.deliverables.length > 0 && detail.milestones.length > 0 && detail.risks.length > 0 && detail.decisions.length > 0)
+  const subjects = [campaign.id]
+- for (const kind of children) subjects.push(...(await reader.list(h.ctx, kind, { campaignId: campaign.id })).items.map(row => row.id))
++ const publicRecords = []
++ for (const kind of ['campaign', ...children]) {
++  const ids = kind === 'campaign' ? [campaign.id] : (await reader.list(h.ctx, kind, { campaignId: campaign.id })).items.map(row => row.id)
++  if (kind !== 'campaign') subjects.push(...ids)
++  for (const id of ids) {
++   const route = `/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}/records/${id}`
++   const body = await json(h, route)
++   assert.equal(body.data.record.id, id)
++   publicRecords.push({ route, record: body.data.record })
++  }
++ }
+  const audit = (await h.db.prepare("SELECT id FROM admission_audit WHERE json_extract(subject_json,'$.recordId') IN (SELECT value FROM json_each(?))").bind(JSON.stringify(subjects)).all()).results
+  assert.ok(audit.length)
+- const before = await mutationSnapshot(h.db)
++ const filePath = `/api/v1/files/${imported.fileId}`
++ const file = (await json(h, filePath)).data
++ const content = async () => {
++  const response = await h.request(h.ownerSession, `${filePath}/content`)
++  assert.equal(response.status, 200, 'The retained import file is still downloadable')
++  return Buffer.from(await response.arrayBuffer())
++ }
++ assert.deepEqual(await content(), imported.bytes, 'Original retained file bytes are populated before deletion')
++ const preparedBefore = await mutationSnapshot(h.db)
+  await assert.rejects(() => h.commit('campaign.delete', { id: campaign.id, confirmationCode: campaign.code.toLowerCase() }, h.expected('campaign', campaign)), error => error.code === 'validation')
+- assert.deepEqual(await mutationSnapshot(h.db), before, 'Wrong confirmation changes nothing')
++ assert.deepEqual(await mutationSnapshot(h.db), preparedBefore, 'Wrong confirmation changes nothing')
++ const before = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
++ const commandId = createUlid(), confirmationCode = campaign.code.toLowerCase()
++ assert.notEqual(confirmationCode, campaign.code, 'Only the case of the current campaign code is wrong')
++ const refused = await h.request(h.ownerSession, '/api/v1/commands/launch.campaign.delete', { method: 'POST', body: JSON.stringify({ commandId, expected: h.expected('campaign', campaign), input: { id: campaign.id, confirmationCode } }) })
++ const failure = await refused.json()
++ assert.equal(refused.status, 400, JSON.stringify(failure))
++ assert.equal(failure.error.code, 'validation', 'The current version reaches confirmation validation rather than a stale-version conflict')
++ assert.match(failure.error.message, /\bconfirmationCode\b/, 'The public validation refusal specifically names confirmationCode')
++ assert.deepEqual(await json(h, detailPath), detail, 'Unsafe deletion preserves campaign, child work, rollups and activity publicly')
++ for (const { route, record } of publicRecords) assert.deepEqual((await json(h, route)).data.record, record, 'Every campaign and child record retains its public fields and revision')
++ assert.deepEqual(await json(h, historyPath), history, 'Queued run, definition and unattempted actions survive unchanged')
++ assert.deepEqual((await json(h, filePath)).data, file, 'Retained file metadata survives unchanged')
++ assert.deepEqual(await content(), imported.bytes, 'Unsafe deletion preserves the original retained bytes')
++ assert.equal(await h.db.prepare('SELECT command_id FROM command_admissions WHERE command_id=?').bind(commandId).first(), null, 'Refused deletion admits no command')
++ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), before, 'Wrong confirmation changes no product, authority, activity, admission, audit, event, retained-file or queued-work state')
++ console.log(`PROBE CAMP-001 acceptance 1: native current-version deletion with wrong-case confirmation -> 400 validation naming confirmationCode; ${publicRecords.length} public records, populated activity, retained bytes and queued work unchanged`)
+  const erased=await h.request(h.ownerSession,'/api/v1/commands/launch.campaign.delete',{method:'POST',body:JSON.stringify({commandId:h.r.createUlid(),expected:h.expected('campaign',campaign),input:{id:campaign.id,confirmationCode:campaign.code}})})
+  const receipt=await erased.json();assert.equal(erased.status,200,JSON.stringify(receipt.error));assert.equal(receipt.data.value.deletedId,campaign.id);assert.equal(receipt.data.value.confirmed,true,'The public deletion door completes retained-file cleanup')
+  for (const table of ['deliverables', 'milestones', 'risks', 'decisions', 'activity_entries', 'campaign_tags', 'launch_custom_values']) assert.equal((await rows(h.db, table, campaign.id)).length, 0, `Deletion removes ${table}`)
+@@ -341,7 +408,7 @@ export async function verifyCampaignLifecycleClauses(h) {
+  await duplication(h, reader, f)
+  assert.deepEqual(await h.db.prepare('SELECT * FROM launch_analyses WHERE id=?').bind(analysisId).first(), analysis, 'Duplication preserves the populated source analysis')
+  const campaign = await archiveRestore(h, reader, f)
+- await deletion(h, reader, campaign)
++ await deletion(h, reader, campaign, imported)
+  assert.equal(await h.db.prepare('SELECT id FROM launch_analyses WHERE id=?').bind(analysisId).first(), null, 'Campaign erasure removes the populated AI analysis')
+  for (const request of requests) assert.equal(await h.db.prepare('SELECT id FROM launch_analysis_requests WHERE id=?').bind(request.id).first(), null, 'Campaign erasure removes the completed analysis request')
+  assert.equal(await h.db.prepare('SELECT id FROM portability_previews WHERE id=?').bind(imported.previewId).first(), null, 'Deletion removes the actual retained import preview')
+diff --git a/tests/launch-write-effects.mjs b/tests/launch-write-effects.mjs
+index b09f6b3..c1fc95e 100644
+--- a/tests/launch-write-effects.mjs
++++ b/tests/launch-write-effects.mjs
+@@ -23,7 +23,7 @@ const unchangedDenial = async (h, scope, action, input, revisions, code = 'forbi
+  assert.deepEqual(await mutationSnapshot(h.db), before, action)
+ }
+ 
+-test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects, native campaign validation and campaign record clauses', async () => {
++test('[RECORDS-001 CAMP-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects, native campaign validation and campaign record clauses', async () => {
+  const analysis=clauseAnalysisFixture()
+  const h = await launchAuthorityRuntime(analysis.configuration, {installedLaunchDefinitions:true,installationOwner:true,providerFetch:analysis.providerFetch})
+  try {

@@ -1,0 +1,8 @@
+HTTP campaign creation: tests/helpers/launch-campaign-lifecycle-clauses.mjs:112
+Fresh version and queued work: tests/helpers/launch-campaign-lifecycle-clauses.mjs:321
+Public before snapshots: tests/helpers/launch-campaign-lifecycle-clauses.mjs:332
+Retained original handler refusal: tests/helpers/launch-campaign-lifecycle-clauses.mjs:359
+Native wrong-case refusal: tests/helpers/launch-campaign-lifecycle-clauses.mjs:365
+Unchanged public and durable state: tests/helpers/launch-campaign-lifecycle-clauses.mjs:370
+Positive deletion control: tests/helpers/launch-campaign-lifecycle-clauses.mjs:378
+Verify registration: tests/launch-write-effects.mjs:26

@@ -1,0 +1,11 @@
+# CAMP-001 selected public deletion proof
+
+1. Read the launcher, repository guide, contract, acceptance view, inline plan extract and DONE riders. Map the selected unsafe-deletion point to the retained lifecycle registration.
+2. Preserve the existing product confirmation policy. Create an independently named campaign over native HTTP, populate its children, comments, activity, analysis and retained import file through the existing lifecycle fixture.
+3. After archive and restore, admit a real campaign edit and deliver its committed event through the emitted Worker queue door. Leave its admitted automation and execution outbox pending.
+4. Read the current campaign version over HTTP. Submit the same code with different case through the campaign deletion command; require HTTP 400 and a validation error specifically naming confirmationCode. Compare populated public records, detail, activity, file metadata, original file bytes, queued history and all persisted state except successful-session read timestamps. Preserve the successful public deletion and erasure assertions.
+5. Update only CAMP-001 evidence and its honest remaining gap. Preserve PARTIAL and all acceptance wording, parent rows and summary counts. No browser screen or product UI change is planned.
+6. Run the existing touched test file, typecheck and first-party check. Generate and check contract views, restore both views from main, regenerate the source lock last and check it. Audit changed text and all candidate commit identities and trailers.
+7. Integrate fresh main before the final commit and push only the named cloud branch through the fleet guard. Discover exact-head Verify through REST, respecting the five-minute polling limit. Preserve complete non-secret results and receipts in this packet and publish them only on the separate evidence ref.
+
+The wider public create, edit and archive matrix; complete required, optional and custom-field matrix; broader deletion and erasure combinations; and CAMP-011 company policy remain outside the selected POINTS. Ct conversion and generated-document synchronization, whole-clause judgment, publication scanning, guarded landing and candidate Run site remain unclaimed. No DONE claim is planned.

@@ -1,0 +1,12 @@
+{
+  "test_file": "tests/launch-write-effects.mjs",
+  "registration": "prior full policy covers conservative effects, native campaign validation and campaign record clauses",
+  "registration_line": 26,
+  "workflow": ".github/workflows/verify.yml",
+  "workflow_event": "push",
+  "registration_command": "node scripts/verify-suite.mjs test:launch 17/17",
+  "verification_group": "launch-effects",
+  "new_registrations": 0,
+  "browser_proof": "not applicable; no UI changed",
+  "done_claim": false
+}

@@ -1,0 +1,90 @@
+{
+  "views_write": {
+    "command": "node src/base/contract-docs.mjs write",
+    "exit": 0
+  },
+  "views_check_after_write": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 0
+  },
+  "views_restored": [
+    "ACCEPTANCE.md",
+    "docs/CLAIMS.md"
+  ],
+  "lock": {
+    "command": "node scripts/edition-authoring/cli.mjs lock",
+    "exit": 0
+  },
+  "lock_check": {
+    "command": "node scripts/edition-authoring/cli.mjs check",
+    "exit": 0
+  },
+  "migration_ledger": {
+    "command": "none; no migrations changed",
+    "exit": 0
+  },
+  "typecheck": {
+    "command": "pnpm check:types",
+    "exit": 0
+  },
+  "first_party": {
+    "command": "pnpm exec rer check --profile first-party",
+    "exit": 0
+  },
+  "build": {
+    "command": "npx -y @runeditrun/rer build through cloud_run",
+    "exit": 0
+  },
+  "initial_test_attempt": {
+    "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-write-effects.mjs",
+    "exit": 1,
+    "passed": 2,
+    "failed": 1,
+    "failure": "new readback asserted campaign.statusSummary, but the public detail exposes campaign.summary; expected text, actual undefined",
+    "correction": "read the established summary property; compare stored record and file data without per-request envelope metadata",
+    "production_changes": false
+  },
+  "touched_file": {
+    "command": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/launch-write-effects.mjs",
+    "exit": 0,
+    "passed": 3,
+    "failed": 0,
+    "duration_ms": 418629.274845,
+    "note": "full corrected run; final source additionally retains the original direct-handler refusal, separately reverified by final-lifecycle.log"
+  },
+  "runtime": {
+    "node": "v24.19.0",
+    "pnpm": "10.12.4"
+  },
+  "committed_view_check": {
+    "command": "node src/base/contract-docs.mjs check",
+    "exit": 1,
+    "result": "ACCEPTANCE.md: generated content differs; run contract-docs write.",
+    "expected": "The restored acceptance view differs only by the new evidence and gap; the lander regenerates it."
+  },
+  "post_rebase_views_write_exit": 0,
+  "post_rebase_views_check_after_write_exit": 0,
+  "post_rebase_lock_check_exit": 0,
+  "final_lifecycle": {
+    "command": "CRADLE_AUTHORITY_PORT=41889 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 --test-name-pattern='prior full policy' tests/launch-write-effects.mjs",
+    "exit": 0,
+    "passed": 1,
+    "failed": 0,
+    "duration_ms": 222575.293011,
+    "note": "final source before rebase; only the named registration selected"
+  },
+  "exact_head_lifecycle": {
+    "head": "b319d67fbee4957a74027c219211e817c8b9e51f",
+    "command": "CRADLE_AUTHORITY_PORT=41889 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 --test-name-pattern='prior full policy' tests/launch-write-effects.mjs",
+    "exit": 0,
+    "passed": 1,
+    "failed": 0,
+    "duration_ms": 225082.939613,
+    "door": "actual emitted Worker HTTP and native queue",
+    "selected_point": "400 confirmationCode validation; 8 populated public records, activity, file bytes and queued work unchanged; positive deletion and erasure pass"
+  },
+  "exact_head_typecheck_exit": 0,
+  "exact_head_first_party_exit": 0,
+  "exact_head_build_exit": 0,
+  "post_rebase_test_count": 174
+}

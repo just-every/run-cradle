@@ -1,0 +1,23 @@
+{
+  "base": "234432f0b726fba470fb6ce4e1816f50cd082601",
+  "before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "parent_status_ids_preserved": true,
+  "acceptance_text_changed": false,
+  "registrations_before": 174,
+  "registrations_after": 174,
+  "product_change": "test proof and CAMP-001 evidence only",
+  "publicationscan": "deferred to guarded lander",
+  "candidate_run_site": "deferred to guarded lander",
+  "browser_screens": "not applicable; no screen changed"
+}

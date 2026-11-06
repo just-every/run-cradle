@@ -1,0 +1,13 @@
+{
+  "parent_status_rows": 257,
+  "index_status_rows": 257,
+  "parent_status_preserved": true,
+  "acceptance_unchanged": true,
+  "files": [
+    "CONTRACT.md",
+    "sources.lock.json",
+    "tests/helpers/launch-campaign-lifecycle-clauses.mjs",
+    "tests/launch-write-effects.mjs"
+  ],
+  "tree": "7f6400e6b8ebeb7c496535bad5ed09458f2d85d2"
+}

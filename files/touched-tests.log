@@ -1,0 +1,18 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+PROBE RISK-004 risk.patch: native command and public detail, campaign activity and inbox -> Watching, rating Critical, unrelated values and versions unchanged; new decisions=0, new notices=0
+PROBE RISK-004 risk.escalate: native command and public detail, campaign activity and inbox -> Escalated, rating Critical, unrelated values and versions unchanged; new decisions=1, new notices=1
+PROBE RISK-004 risk.resolve: native command and public detail, campaign activity and inbox -> Resolved, rating Medium, unrelated values and versions unchanged; new decisions=0, new notices=0
+PROBE CAMP-001 acceptance 1: native current-version deletion with wrong-case confirmation -> 400 validation naming confirmationCode; 8 public records, populated activity, retained bytes and queued work unchanged
+✔ [RECORDS-001 CAMP-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects, native campaign validation and campaign record clauses (210630.081711ms)
+✔ [RECORDS-001] zero writable fields and explicit deny rules cannot obtain vacuous no-op authority (60545.787668ms)
+✔ [RECORDS-001 DELIV-002 DEC-001 DEC-003 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-002 ACT-004 VIEW-003 VIEW-006 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision and lens clauses (145797.333162ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 418629.274845

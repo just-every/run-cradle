@@ -1,0 +1,23 @@
+{
+  "head": "b319d67fbee4957a74027c219211e817c8b9e51f",
+  "branch": "cloud/sd-cradle-c-f194",
+  "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "published": true,
+  "push_attempts": 1,
+  "pr": null,
+  "rebase_before_first_push": true,
+  "prior_tested_tree": "7f6400e6b8ebeb7c496535bad5ed09458f2d85d2",
+  "candidate_tree": "f8834be9556cd4c555cb5e96cf68c72185027152",
+  "main_changes_retained": [
+    "sources.lock.json",
+    "src/apps/launch/analysis.server.ts",
+    "tests/launch-installed-runtime.mjs"
+  ],
+  "campaign_handler_and_selected_tests_changed_by_rebase": false,
+  "reverification": "exact-head rebuild, focused lifecycle test, typecheck, first-party check, source lock check and test recount passed",
+  "candidate_count": 1,
+  "author_and_committer_audit": "pass; one candidate commit, fleet identity, no trailers",
+  "full_history": true,
+  "worktree_clean": true,
+  "remote_head_confirmed": "b319d67fbee4957a74027c219211e817c8b9e51f"
+}

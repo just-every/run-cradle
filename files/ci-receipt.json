@@ -1,0 +1,21 @@
+{
+  "head": "b319d67fbee4957a74027c219211e817c8b9e51f",
+  "run_id": 42154166532,
+  "event": "push",
+  "status": "completed",
+  "conclusion": "failure",
+  "build_job": 127684276851,
+  "build_failure": "Check generated contract documents: ACCEPTANCE.md generated content differs",
+  "aggregate_job": 127684377601,
+  "aggregate_failure": "dependency on the expected generated-view failure",
+  "shards": "skipped after build",
+  "disposition": "permitted generated-view exception; no product repair or rerun",
+  "failed_log_command": "gh run view 42154166532 --repo just-every/run-cradle --job 127684276851 --log-failed",
+  "failed_log_exit": 0,
+  "github_calls": 7,
+  "candidate_status_polls": 2,
+  "poll_interval_seconds_at_least": 300,
+  "aggregate_log_command": "gh run view 42154166532 --repo just-every/run-cradle --job 127684377601 --log-failed",
+  "aggregate_log_exit": 0,
+  "published_log_filter": "Public CI environment blocks omitted; command, diagnostic and exit preserved."
+}
