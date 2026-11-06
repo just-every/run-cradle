@@ -6,9 +6,10 @@ import { contract } from './contract.mjs'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { createFixtureAuth } from './helpers/base-fixture-auth.mjs'
 import { doorsBrowser, csvRows } from './helpers/launch-doors-browser.mjs'
+import { settingsAttributionJourney } from './helpers/settings-attribution-journey.mjs'
 
 // One real-door journey per operator door, through the emitted Worker at desktop and phone:
-// import, export, custom fields, bulk edit, sample data and the ownership handover.
+// import, export, workspace attribution, custom fields, bulk edit, samples and ownership.
 contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone', async () => {
  const output = path.resolve(process.env.CRADLE_DOORS_EVIDENCE ?? '../evidence/de-doors')
  await mkdir(output, { recursive: true })
@@ -81,6 +82,8 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    assert.ok(queueRows.slice(1).every(row => /GMT\+10:00$/.test(row[1])), 'Due times use the workspace timezone')
    receipt.downloads.push({ width, door: 'queue export', name: queue.name, rows: queueRows.length - 1 })
    await b.capture('decision-queue-export')
+
+   await settingsAttributionJourney({ h, page, b, actor, width, receipt })
 
    // Custom fields: define one in Settings, fill it on a campaign.
    const fieldName = `Market ${width}`
