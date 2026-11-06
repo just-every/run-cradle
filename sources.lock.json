@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "aff2bf925cf5f2fbb559d38bd9b4fe51f068f49dce0a0bd2f6cc1d3e0821af53",
       "executable": false
     },
     "DEMO.md": {
@@ -12242,7 +12242,7 @@
       "executable": false
     },
     "tests/helpers/file-stores-browser.mjs": {
-      "sha256": "42a0807c02e0b20d7907c3dbd1ffe87f240e1b272c8c302b07839de38c2153de",
+      "sha256": "7b86a61995405415acad3e9f6f1ca45bba68f363961aae548d4ad1eed91fe775",
       "executable": false
     },
     "tests/helpers/file-stores-journey.mjs": {
@@ -13043,6 +13043,10 @@
     },
     "tests/helpers/store-reference-exits.mjs": {
       "sha256": "8ecb5948ef3ca409cdb7ed8e1e72a76075a4d30bea96422b489320fd7458bcfa",
+      "executable": false
+    },
+    "tests/helpers/store-reference-missing.mjs": {
+      "sha256": "23455fd349a1b3020f8474d2b80932d13930e3fabafe020fb88e3606da26256c",
       "executable": false
     },
     "tests/helpers/store-reference-resolution.mjs": {
