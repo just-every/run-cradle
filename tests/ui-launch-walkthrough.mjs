@@ -22,6 +22,7 @@ import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
 import {launchWalkthroughRuntime} from './helpers/launch-walkthrough-runtime.mjs'
 import {launchWalkthroughCapture} from './helpers/launch-walkthrough-capture.mjs'
+import {verifyCampaignActivityOrderScreens} from './helpers/launch-activity-order-screens.mjs'
 import {verifyPublicCampaignLifecycle} from './helpers/launch-campaign-lifecycle-clauses.mjs'
 contract('VIEW-004', '[OPS-006] [OPS-003] [CAMP-006] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
@@ -279,6 +280,8 @@ try {
   await verifyCurrentLensScreens({h,page,command,capture})
   receipt.expectedConflictConsoleErrors ??= []
   await verifyConcurrencyScreens({h,page,command,capture,receipt})
+  receipt.activityOrdering ??= []
+  receipt.activityOrdering.push(await verifyCampaignActivityOrderScreens({h,page,action,capture,width:viewport.width}))
   await context.close()
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])
