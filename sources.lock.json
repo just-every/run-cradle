@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "5249961da3f0de91b0cfeefcdbb210ea170cf65aef602b1fea83f75acd580f46",
+      "sha256": "271c7fdaabc2442ba69d6f65cbf27c9317fe070c1ddf22026e19b1839054fff0",
       "executable": false
     },
     "DEMO.md": {
@@ -12309,6 +12309,10 @@
       "sha256": "88c0b3ffb57ab8152494d496be74930cd1ba2f463398cfa943ff4e3d8ae7ac0a",
       "executable": false
     },
+    "tests/helpers/launch-bulk-undo.mjs": {
+      "sha256": "38dea10e0fc1c6416dea4e4c9dd566b607fea6938864f917c324310f7c1e2844",
+      "executable": false
+    },
     "tests/helpers/launch-campaign-clauses.mjs": {
       "sha256": "9584e84f9db376eb8a38dea3ad7cc1ece5feb56226672296b60522c13bcd7ad6",
       "executable": false
@@ -13170,7 +13174,7 @@
       "executable": false
     },
     "tests/launch-operator-doors.mjs": {
-      "sha256": "3e7b209bb582081ac72af84a2c169a6bfe588199c31567dcda046d30f79833d1",
+      "sha256": "9d89dd44ce812961d47742eb8fbcc0142612db47c6574977618a8c1c5f0f14fa",
       "executable": false
     },
     "tests/launch-optional-fields.mjs": {
