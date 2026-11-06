@@ -1,0 +1,95 @@
+{
+  "head": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+  "command": "CRADLE_DOORS_EVIDENCE=<packet>/browser cloud_run perl -e 'alarm 1200; exec @ARGV' -- node --import /tmp/rer-system-chromium.mjs tests/ui-launch-operator-doors.mjs",
+  "exit": 0,
+  "tests": 1,
+  "passed": 1,
+  "failed": 0,
+  "durationMs": 129276.343554,
+  "runtime": "Actual emitted Worker, native D1, synthetic fixtures and network-edge mail capture",
+  "node": "24.19.0",
+  "pnpm": "10.12.4",
+  "rer": "0.2.80",
+  "chromium": "/usr/bin/chromium",
+  "browserArgs": [
+    "--use-mock-keychain",
+    "--password-store=basic",
+    "--no-sandbox"
+  ],
+  "settings": [
+    {
+      "width": 1440,
+      "operatorId": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+      "operator": "Maya Chen",
+      "commandId": "01M6QMYF4AKHJGNYGH935XQ2V1",
+      "startedAt": "2026-11-06T05:22:47.982Z",
+      "finishedAt": "2026-11-06T05:22:48.127Z",
+      "audit": {
+        "id": "command:01M6QMYF4KREK6PD6W08Y4BMJ4:base:00000000000000000000000700",
+        "eventId": "01M6QMYF4AKHJGNYGH935XQ2V1",
+        "action": "settings.update",
+        "personId": "01ARZ3NDEKTSV4RRFFQ69G5FAA",
+        "person": "Maya Chen",
+        "baseId": "00000000000000000000000700",
+        "createdAt": "2026-11-06T05:22:48.082Z"
+      },
+      "savedName": "synthetic-cradle-workspace-1440",
+      "settingsVersion": 2,
+      "workspaceVersion": 2,
+      "replayStatus": 200,
+      "matchingAuditEntries": 1
+    },
+    {
+      "width": 390,
+      "operatorId": "01M6QMY75SBBWM1CE8EAEKMQ17",
+      "operator": "Alex Successor",
+      "commandId": "01M6QMZHH75DMTKN0274FW1JPB",
+      "startedAt": "2026-11-06T05:23:23.207Z",
+      "finishedAt": "2026-11-06T05:23:23.351Z",
+      "audit": {
+        "id": "command:01M6QMZHHFTE7F8TYBFCGDQ061:base:00000000000000000000000700",
+        "eventId": "01M6QMZHH75DMTKN0274FW1JPB",
+        "action": "settings.update",
+        "personId": "01M6QMY75SBBWM1CE8EAEKMQ17",
+        "person": "Alex Successor",
+        "baseId": "00000000000000000000000700",
+        "createdAt": "2026-11-06T05:23:23.310Z"
+      },
+      "savedName": "synthetic-cradle-workspace-390",
+      "settingsVersion": 3,
+      "workspaceVersion": 3,
+      "replayStatus": 200,
+      "matchingAuditEntries": 1
+    }
+  ],
+  "screens": [
+    {
+      "name": "settings-workspace-attributed",
+      "width": 1440,
+      "file": "settings-workspace-attributed-1440.png"
+    },
+    {
+      "name": "settings-workspace-attributed",
+      "width": 390,
+      "file": "settings-workspace-attributed-390.png"
+    }
+  ],
+  "setup": {
+    "command": "cloud_run npx -y @runeditrun/rer setup --owner-email <fleet identity> --non-interactive",
+    "exit": 0
+  },
+  "build": {
+    "command": "cloud_run npx -y @runeditrun/rer build",
+    "exit": 0
+  },
+  "typecheck": {
+    "command": "pnpm check:types",
+    "exit": 0
+  },
+  "firstParty": {
+    "command": "pnpm exec rer check --profile first-party",
+    "exit": 0
+  },
+  "newProductEdits": false,
+  "sourceBytesChangedSinceProof": false
+}

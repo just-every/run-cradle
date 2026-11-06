@@ -1,0 +1,49 @@
+{
+  "head": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+  "branch": "cloud/sd-cradle-c-f215",
+  "base": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+  "main": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+  "newCommitsThisRound": 0,
+  "statusRows": 257,
+  "counts": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55
+  },
+  "statusRowRetention": [
+    {
+      "commit": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+      "parent": "5e0a07404cae5277708327ada644676567fb6839",
+      "rows": 257,
+      "parentRows": 257,
+      "missing": []
+    },
+    {
+      "commit": "5e0a07404cae5277708327ada644676567fb6839",
+      "parent": "6e9e8d18245e8eb2d3a9bf0cca8e4c07c056f746",
+      "rows": 257,
+      "parentRows": 257,
+      "missing": []
+    }
+  ],
+  "identityAudit": [
+    {
+      "commit": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+      "author": "Run Edit Run fleet",
+      "authorEmail": "fleet@runeditrun.com",
+      "committer": "James Peter",
+      "committerEmail": "github@zemaj.com",
+      "trailers": ""
+    },
+    {
+      "commit": "5e0a07404cae5277708327ada644676567fb6839",
+      "author": "Run Edit Run fleet",
+      "authorEmail": "fleet@runeditrun.com",
+      "committer": "James Peter",
+      "committerEmail": "github@zemaj.com",
+      "trailers": ""
+    }
+  ],
+  "workingTreeClean": true,
+  "sourceLockSha256": "3a6fb0b849cc3dc686bc53cb021e3d6d4cd6cb189f3884985294189444b4afe8"
+}

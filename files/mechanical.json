@@ -1,0 +1,19 @@
+{
+  "viewsWrite": 0,
+  "viewsCheck": 0,
+  "firstParty": 0,
+  "lock": 0,
+  "lockCheck": 0,
+  "head": "d7c8fa5cd9c407b50e6ad0359376534f27f3cb61",
+  "afterFinalMainIntegration": true,
+  "generatedViewsRestoredFrom": "origin/main",
+  "generatedViewsCommitted": false,
+  "lockCommand": "node scripts/edition-authoring/cli.mjs lock",
+  "lockCheckCommand": "node scripts/edition-authoring/cli.mjs check",
+  "viewsWriteCommand": "node src/base/contract-docs.mjs write",
+  "viewsCheckCommand": "node src/base/contract-docs.mjs check",
+  "ledgerCommand": null,
+  "ledgerExit": 0,
+  "migrationsChanged": false,
+  "sourceLockSha256": "3a6fb0b849cc3dc686bc53cb021e3d6d4cd6cb189f3884985294189444b4afe8"
+}
