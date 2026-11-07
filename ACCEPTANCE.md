@@ -2064,8 +2064,8 @@ Core · target · **partial**
 **Acceptance.**
 1. History reads hide fields the reader cannot see; restore-from-history journey.
 
-**Evidence.** `tests/evidence-read-privacy.mjs`, `docs/contract/COLLAB-002/`
-**Gap.** Missing a cited history journey that reads changes actually made by automation, import, API-key and agent doors with their actor and time. The cited journey reads/restores human writes and synthetic retained attachment history under current authority; the named other writers are not executed/read back.
+**Evidence.** `tests/user-api-keys.mjs` — "scoped subscription credentials and record reads/writes stop on revoke and issuer policy change", through `tests/helpers/key-writer-history-journey.mjs` — "keyWriterHistoryJourney": real keyed REST updates and native human history reads check exact before and after cells, independently known connector principal, original commands, observed write-time bounds, replay without duplicate history, current field-policy narrowing and revoked-write refusal without record or history changes; `tests/evidence-read-privacy.mjs` — "record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store"; `docs/contract/COLLAB-002/`
+**Gap.** Actual automation, import and agent writer-history attribution, broader history paging and lifecycle and restoration combinations remain unproved. The retained privacy journey reads and restores human writes and synthetic retained attachment history under current authority. Ct contract conversion and generated-document synchronization remain release prerequisites; existing API-USER-004 credential-lifetime and agent-authority holds are unchanged. Independent whole-clause judgment, publication scanning, guarded landing and candidate Run site remain unclaimed.
 
 #### COLLAB-003 — Watching and change notifications
 
