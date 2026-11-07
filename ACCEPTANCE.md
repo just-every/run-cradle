@@ -1468,8 +1468,8 @@ Core · published · **partial** · Cites BASE-INPUT-003, BASE-DATA-003
 1. The uploaded file is stored with its import record and is downloadable by any operator.
 2. Deleting the import record deletes the file within 5 minutes.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
-**Gap.** Missing a cited import-deletion journey that deletes the import record and verifies the stored file is gone within five minutes; the cited journeys only download the retained file.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file", extended by `tests/helpers/launch-import-deletion.mjs`: native upload, preview and commit followed by the mounted human import.delete command withdraws one committed campaign import and its preview content, fences its file doors, and confirms original FILES object removal within 300000 ms after Worker restart and scheduled delivery; every campaign, version and activity entry and an unrelated import file remain exact; missing and revoked import.delete authority refuse unchanged, captured confirmation cannot resurrect the import, and repeated delivery retains one cleanup and audit receipt.
+**Gap.** Missing acceptance 1's complete any-operator and cross-kind download matrix, deletion proof for other import kinds, shared-file custody beyond conservative refusal of shared or non-import artifacts, archive and restore erasure, and broader authority, concurrency and crash combinations. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; independent whole-clause judgment remains outstanding. Status remains partial with no wider deletion grant.
 
 ### Settings
 
