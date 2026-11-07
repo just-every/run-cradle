@@ -515,8 +515,8 @@ Core · published · **partial**
 1. An operator can define, edit and delete declared campaign custom-field types, and those fields are available in grid display, filtering, lens conditions, CSV import and CSV export.
 2. Deleting a definition deletes its stored values and is confirmed with the number of campaigns holding one.
 
-**Evidence.** `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a custom-field journey editing/deleting definitions with the affected-value count, reading deleted values absent and using the field in grid/filter/lens/CSV import and export. Cited `tests/ui-launch-operator-doors.mjs` show: The sole cited browser creates and fills a select custom field.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file" (customFieldDeletionJourney); `tests/ui-launch-operator-doors.mjs` — "Launch operator doors at desktop and phone", with `tests/helpers/launch-custom-field-deletion.mjs` and `tests/helpers/launch-custom-field-deletion-browser.mjs`: independently authored North and South select values, a third unset campaign, exact two-campaign Settings confirmation, cancellation and fresh-version incorrect-count refusal unchanged, shipped deletion, public definition and value readback including the installation archive, unrelated definitions and business fields retained.
+**Gap.** Acceptance 1 still needs definition editing and the complete declared-type, grid, filter, lens-condition and CSV import and export matrix. Acceptance 2 has populated select deletion proof; other-type deletion, concurrent affected-count changes and broader authority and capacity combinations remain unproved. Existing ct contract conversion and generated-document synchronization remain release prerequisites; independent whole-clause judgment, publication scanning, guarded landing and candidate Run site remain outstanding.
 
 #### CAMP-009 — Archiving
 
