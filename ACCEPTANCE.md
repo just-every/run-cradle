@@ -203,8 +203,8 @@ Core · published · **partial** · Cites BASE-DOCS-001, BASE-PUBLIC-001, BASE-A
 **Acceptance.**
 1. Public document and built-site journeys open the landing, docs, setup and sign-in surfaces.
 
-**Evidence.** `tests/public-document-runtime.mjs`, `tests/start-resources.mjs`
-**Gap.** Missing a cited built-site/broken-link journey proving build-time Markdown link/anchor refusal and the static site’s sign-in-free chrome. Existing cited journeys read the installed docs and genuine 404s, but do not build/check those static-site outcomes.
+**Evidence.** `tests/public-document-runtime.mjs` — "Every published docs page shares the site chrome and serves truthful product and regulated-data boundaries without a session", including `tests/helpers/static-site.mjs` (staticSiteJourney: real CLI refusals for a missing Markdown target and heading, restored control build, every emitted docs page served without a session with current navigation, shared chrome and editable source, without installed sign-in links); `tests/start-resources.mjs`
+**Gap.** The selected built-static-site gap is proved. Wider malformed-link, image and manifest cases, complete static asset and privacy proof, unlisted-slug static HTTP coverage and expanded setup and sign-in journeys remain unproved here. Existing ct release prerequisites, generated-document synchronization and independent whole-clause judgment remain unclaimed; external R-2 and R-3 receipts stay in the Field proof register.
 
 ### Operators
 
