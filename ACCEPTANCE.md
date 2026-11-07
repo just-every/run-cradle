@@ -236,8 +236,8 @@ Core · published · **partial** · Cites BASE-ROLE-001
 3. The only restrictable action is inviting and removing operators, under the operator-management policy.
 4. There are no roles.
 
-**Evidence.** `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs`
-**Gap.** Missing a legacy-operator journey that executes representative permitted mutations as well as reads while demonstrating the launch-only equal-rights scope. Cited `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs` show: Retained legacy read access and explicit scoped-policy/membership preservation are exercised.
+**Evidence.** `tests/launch-production-composition.mjs`; `tests/launch-scoped-authority.mjs` — "[OPS-001 APP-SCOPE-001] reviewed legacy mapping retains identities and rights without replacing an existing scoped policy": two non-owner peers with reviewed retained mappings create and edit campaigns owned by the other operator, create and complete and reopen their deliverables through native HTTP commands, and independently read committed values as both peers; other-application access, scoped-write widening and deleted-membership command replay are refused, with existing policies and memberships preserved.
+**Gap.** The complete every-operator and every-mutation matrix, invitation and removal policy combinations, wider application authority, and the existing ct contract-conversion and generated-document synchronization release prerequisites remain open. The selected positive legacy-mutation slice adds no roles, grants or startup authority; no whole-clause DONE claim.
 
 #### OPS-002 — Management
 
