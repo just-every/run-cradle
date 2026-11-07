@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { launchAuthorityRuntime, launchEntities, launchFieldIds, createUlid } from './helpers/launch-authority-runtime.mjs'
 import { expected, writeContext, mutationSnapshot, launchSource } from './helpers/launch-write-context.mjs'
 import { verifyCampaignClauses } from './helpers/launch-campaign-clauses.mjs'
-import { verifyMilestoneClauses } from './helpers/launch-milestone-clauses.mjs'
+import { verifyMilestoneClauses, verifyPublicMilestoneDeletion } from './helpers/launch-milestone-clauses.mjs'
 import { verifyRiskClauses } from './helpers/launch-risk-clauses.mjs'
 import { verifyCampaignLifecycleClauses } from './helpers/launch-campaign-lifecycle-clauses.mjs'
 import { verifyConcurrencyClauses } from './helpers/launch-concurrency-clauses.mjs'
@@ -23,7 +23,7 @@ const unchangedDenial = async (h, scope, action, input, revisions, code = 'forbi
  assert.deepEqual(await mutationSnapshot(h.db), before, action)
 }
 
-test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects and campaign record clauses', async () => {
+test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects, native campaign validation and campaign record clauses', async () => {
  const analysis=clauseAnalysisFixture()
  const h = await launchAuthorityRuntime(analysis.configuration, {installedLaunchDefinitions:true,installationOwner:true,providerFetch:analysis.providerFetch})
  try {
@@ -36,6 +36,7 @@ test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-01
   }
   await verifyCampaignClauses(clauses)
   await verifyMilestoneClauses(clauses)
+  await verifyPublicMilestoneDeletion(clauses)
   await verifyRiskClauses(clauses)
   await verifyCampaignLifecycleClauses(clauses)
   await verifyOverdueClauses(clauses)

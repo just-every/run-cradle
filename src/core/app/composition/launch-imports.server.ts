@@ -11,5 +11,5 @@ import { createFileService } from '../../../domains/evidence/files.server'
 export function createLaunchImportComposition(platform: Platform, foundation: ServerFoundation, records: ReturnType<typeof createRecordsComposition>) {
  const db = platform.bindings.DB, files = createFileService(records.deps)
  const context = { db, policy: foundation.policy, releaseId: launchSourceRelease(platform.bindings.INSTALLATION_RELEASE_ID), integration: { ...createChannelsIntegration(db), deleteCampaign: (ctx: Parameters<typeof campaignErasure>[1], id: string) => campaignErasure(db, ctx, id) } }
- return createLaunchImportHttp({ db, bucket: platform.bindings.FILES, policy: foundation.policy, admission: foundation.admission, context, authenticate: foundation.authenticate, download: (ctx, id) => files.download(ctx, id) })
+ return createLaunchImportHttp({ db, bucket: platform.bindings.FILES, policy: foundation.policy, admission: foundation.admission, context, authenticate: foundation.authenticate, metadata: (ctx, id) => files.metadata(ctx, id), download: (ctx, id) => files.download(ctx, id) })
 }

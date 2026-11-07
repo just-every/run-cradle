@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { writeContext, mutationSnapshot } from './launch-write-context.mjs'
+import { verifyPublicRiskIsolation } from './launch-risk-isolation.mjs'
 
 const day = (date, offset) => new Date(Date.parse(`${date}T12:00:00Z`) + offset * 86400000).toISOString().slice(0, 10)
 const fields = (h, campaign, changes = {}) => ({ campaignId: campaign.id, title: 'Evidence requires review', ownerId: h.actor, severity: 'High', dueDate: null, signal: 'Supplier evidence', mitigation: 'Review the evidence', ...changes })
@@ -204,6 +205,74 @@ async function publicCommand(h, session, action, input, expected = [], status = 
  return { commandId, started, finished, body, value: body.data?.value }
 }
 
+async function publicLinkedRiskDeletion(h, campaign) {
+ const editor = await h.addPerson({ name: 'Risk deletion operator', change: rules => rules.map(rule => rule.entityId === h.r.launchEntities.decision ? { ...rule, writableFields: rule.writableFields.filter(id => id !== h.r.launchFieldIds.decision.riskId) } : rule) })
+ const deleter = await h.addPerson({ name: 'Linked risk custodian' })
+ const command = (...args) => publicCommand(h, ...args)
+ const read = route => publicRead(h, route)
+ const quiet = () => mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+
+ // This same operator can delete a risk; only the secondary decision write is restricted.
+ const control = (await command(editor.session, 'risk.create', { fields: fields(h, campaign, { title: 'Unlinked deletion control' }) })).value
+ assert.equal((await command(editor.session, 'risk.delete', { id: control.id }, h.expected('risk', control))).value.deletedId, control.id)
+ assert.equal((await h.request(h.ownerSession, `/api/risks/${control.id}`)).status, 404)
+
+ const created = (await command(editor.session, 'risk.create', { fields: fields(h, campaign, { title: 'Public linked risk', signal: 'Original supplier evidence' }) })).value
+ const decision = (await command(h.ownerSession, 'decision.create', { fields: { campaignId: campaign.id, riskId: created.id, supersedesId: null, title: 'Retain the supplier decision', requesterId: h.actor, assigneeId: null, priority: 'High', dueAt: '2030-12-01T12:00:00.000Z', recommendation: 'Review retained evidence', impact: 'Supplier readiness' } })).value
+ const changes = { title: 'Edited public linked risk', signal: 'Reviewed supplier evidence', mitigation: 'Retain the decision on deletion', dueDate: '2030-11-30' }
+ const edited = (await command(editor.session, 'risk.patch', { id: created.id, changes }, h.expected('risk', created))).value
+ assert.equal(edited.version, created.version + 1)
+ const riskRoute = `/api/risks/${created.id}`, decisionRoute = `/api/decisions/${decision.id}`, campaignRoute = `/api/campaigns/${campaign.id}`
+ const beforeRisk = await read(riskRoute), beforeDecision = await read(decisionRoute), beforeCampaign = await read(campaignRoute)
+ for (const [field, value] of Object.entries(changes)) assert.equal(beforeRisk.risk[field], value, `The public risk retains the edited ${field}`)
+ assert.equal(beforeRisk.risk.version, edited.version)
+ assert.equal(beforeRisk.risk.campaign.id, campaign.id)
+ assert.equal(beforeRisk.risk.owner.id, h.actor)
+ assert.equal(beforeRisk.decision.id, decision.id)
+ assert.deepEqual(beforeDecision.decision.risk, { id: created.id, title: changes.title })
+ assert.ok(beforeCampaign.risks.some(row => row.id === created.id))
+ assert.ok(beforeCampaign.decisions.some(row => row.id === decision.id))
+
+ const before = await quiet()
+ const refused = await command(editor.session, 'risk.delete', { id: created.id }, h.expected('risk', beforeRisk.risk), 403)
+ assert.equal(refused.body.error.code, 'forbidden')
+ assert.deepEqual(await quiet(), before, 'A fresh-version linked deletion without detach authority changes no records, activity, audit, receipts or queued effects')
+ assert.deepEqual(await read(riskRoute), beforeRisk)
+ assert.deepEqual(await read(decisionRoute), beforeDecision)
+ assert.deepEqual(await read(campaignRoute), beforeCampaign, 'The refused deletion preserves the public campaign and its activity')
+
+ const deleted = await command(deleter.session, 'risk.delete', { id: created.id }, h.expected('risk', beforeRisk.risk))
+ assert.equal(deleted.value.deletedId, created.id)
+ const missing = await h.request(h.ownerSession, riskRoute)
+ assert.equal(missing.status, 404, 'The authorized deletion removes the public risk')
+ const afterDecision = await read(decisionRoute), afterCampaign = await read(campaignRoute)
+ assert.deepEqual(afterDecision, { ...beforeDecision, decision: { ...beforeDecision.decision, risk: null, version: beforeDecision.decision.version + 1 } }, 'The public decision survives with only its risk link cleared and one version change')
+ assert.ok(!afterCampaign.risks.some(row => row.id === created.id))
+ assert.deepEqual(afterCampaign.decisions.find(row => row.id === decision.id), { ...beforeCampaign.decisions.find(row => row.id === decision.id), version: decision.version + 1 })
+ const previousIds = new Set(beforeCampaign.activity.map(entry => entry.id))
+ assert.deepEqual(afterCampaign.activity.filter(entry => previousIds.has(entry.id)), beforeCampaign.activity, 'Deletion preserves prior public activity')
+ const added = afterCampaign.activity.filter(entry => !previousIds.has(entry.id))
+ assert.equal(added.length, 2, 'Only the risk deletion and the decision link clearing add activity')
+ assert.ok(added.every(entry => entry.actionId === deleted.commandId && entry.actor?.id === deleter.id))
+ const detached = added.find(entry => entry.subjectId === decision.id)
+ assert.equal(detached.fieldName, 'risk_id')
+ assert.equal(detached.previousValue, created.id)
+ assert.equal(detached.nextValue, null)
+ assert.ok(added.some(entry => entry.subjectId === created.id && entry.type === 'risk.deleted'))
+
+ const after = await quiet(), storedBefore = before.decisions.find(row => row.id === decision.id), storedAfter = after.decisions.find(row => row.id === decision.id)
+ assert.ok(storedAfter.updated_at >= deleted.started && storedAfter.updated_at <= deleted.finished)
+ assert.deepEqual(storedAfter, { ...storedBefore, risk_id: null, version: storedBefore.version + 1, updated_at: storedAfter.updated_at, launch_updated_iso: new Date(storedAfter.updated_at).toISOString() }, 'Independent storage retains every decision value except the link and its single versioned update')
+ assert.deepEqual(after.risks, before.risks.filter(row => row.id !== created.id), 'Only the selected risk is removed')
+ assert.deepEqual(after.decisions.filter(row => row.id !== decision.id), before.decisions.filter(row => row.id !== decision.id), 'Every unrelated decision stays exact')
+ for (const table of tables.filter(table => !['risks', 'decisions'].includes(table))) assert.deepEqual(after[table], before[table], `${table} stays unchanged by authorized risk deletion`)
+ const receipt = await h.request(deleter.session, `/api/v1/commands/${deleted.commandId}`), receiptBody = await receipt.json()
+ assert.equal(receipt.status, 403, 'Current authority refuses a retained receipt whose risk subject has been deleted')
+ assert.equal(receiptBody.error.code, 'forbidden')
+ assert.equal(Object.hasOwn(receiptBody, 'data'), false)
+ assert.deepEqual(await quiet(), after, 'The refused deleted-subject receipt changes nothing')
+}
+
 async function publicLifecycle(h, campaign) {
  const resolver = await h.addPerson({ name: 'Risk resolver' }), reopener = await h.addPerson({ name: 'Risk reopener' })
  assert.notEqual(resolver.id, h.actor)
@@ -375,8 +444,10 @@ export async function verifyRiskClauses(h) {
  await h.commit('deliverable.create', { fields: { campaignId: campaign.id, title: 'Unrelated deliverable', ownerId: h.actor, dueDate: null } })
  await h.commit('milestone.create', { fields: { campaignId: campaign.id, title: 'Unrelated milestone', ownerId: h.actor, type: 'Review', status: 'Not started', startDate: '2026-10-20', endDate: null, conflictReason: null } })
  await lifecycle(h, reader, campaign)
+ await publicLinkedRiskDeletion(h, campaign)
  await ratings(h, reader, campaign)
  await shippedLens(h, reader)
  await publicLifecycle(h, campaign)
  await publicOpenStates(h)
+ await verifyPublicRiskIsolation(h, { read: (route, session) => publicRead(h, route, session), command: (...args) => publicCommand(h, ...args), snapshot: id => snapshot(h.db, id) })
 }

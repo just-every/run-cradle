@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { verifyShippedLensLifecycle as shipped } from './launch-shipped-lens-journey.mjs'
 
 const businessTables = ['campaigns', 'campaign_tags', 'launch_custom_values', 'deliverables', 'milestones', 'milestone_dependencies', 'risks', 'decisions', 'evidence_comments', 'launch_readiness', 'notifications', 'channel_notifications', 'channel_deliveries', 'channel_events', 'automations', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'activity_entries']
 const observedTables = [...businessTables, 'lenses', 'launch_lens_history', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
@@ -199,38 +200,6 @@ async function publicDeletion(h, fixtures) {
  assert.deepEqual(await snapshot(h.db, businessTables), before, 'Public save and deletion preserve every business table, including queued business effects')
 }
 
-async function shipped(h) {
- const expected = {
-  risks: { recordType: 'Risk', conditions: [{ field: 'severity', operator: 'one of', value: ['High', 'Critical'] }, { field: 'state', operator: 'not equals', value: 'Resolved' }, { field: 'campaignLaunchDate', operator: 'within the next N days', value: '30' }], sort: { field: 'severity', direction: 'desc' }, fields: ['severity', 'state', 'owner', 'dueDate', 'signal', 'mitigation', 'campaign'], display: 'Cards' },
-  timeline: { recordType: 'Milestone', conditions: [], sort: { field: 'startDate', direction: 'asc' }, fields: ['title', 'startDate', 'endDate', 'campaign'], display: 'Timeline' },
- }
- for (const [key, required] of Object.entries(expected)) {
-  let original = (await read(h, '/api/lenses')).items.find(lens => lens.shippedKey === key)
-  assert.ok(original, `${key} is installed as a saved lens`)
-  const shippedDefinition = { ...canonical(original), ...required }
-  const before = await snapshot(h.db, businessTables)
-  await assert.rejects(h.prepare('lens.delete', { id: original.id }, h.expected('lens', original)), error => error.code === 'validation')
-  const current = (await read(h, `/api/lenses/${original.id}`)).lens
-  const beforeRefusal = await snapshot(h.db)
-  const refused = await command(h, h.ownerSession, 'lens.delete', { id: current.id }, h.expected('lens', current))
-  assert.equal(refused.status, 400, JSON.stringify(refused.body))
-  assert.equal(refused.body.error.code, 'validation')
-  assert.match(refused.body.error.message, /shipped lens cannot be deleted/i)
-  assert.deepEqual((await read(h, `/api/lenses/${current.id}`)).lens, current)
-  assert.deepEqual((await read(h, '/api/lenses')).items.find(lens => lens.id === current.id), original)
-  assert.deepEqual(await snapshot(h.db), beforeRefusal, 'Public shipped-lens refusal preserves definitions, business records, admissions and queued effects')
-  const duplicate = await h.commit('lens.save', { definition: { ...canonical(original), name: original.name + ' operator copy' } })
-  assert.equal((await read(h, `/api/lenses/${duplicate.id}`)).lens.shippedKey, null)
-  assert.equal((await read(h, `/api/lenses/${original.id}`)).lens.version, original.version)
-  original = await h.commit('lens.save', { id: original.id, definition: { ...canonical(original), name: 'Edited shipped lens', description: 'Operator changes', conditions: [{ field: 'title', operator: 'contains', value: 'held out' }], fields: ['title'], sort: { field: 'title', direction: 'desc' } } }, h.expected('lens', original))
-  const restored = await h.commit('lens.restore', { id: original.id }, h.expected('lens', original))
-  assert.deepEqual(canonical(restored), shippedDefinition, 'Restore reinstates the complete shipped definition')
-  assert.deepEqual((await read(h, `/api/lenses/${original.id}`)).lens.conditions, required.conditions)
-  await h.commit('lens.delete', { id: duplicate.id }, h.expected('lens', duplicate))
-  assert.deepEqual(await snapshot(h.db, businessTables), before, 'Duplicating, editing and restoring shipped lenses changes no business record')
- }
-}
-
 export async function verifyLensClauses(h) {
  const timezone = (await h.db.prepare('SELECT timezone FROM workspace_settings LIMIT 1').first()).timezone
  const today = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(h.ctx.now))
@@ -250,5 +219,5 @@ export async function verifyLensClauses(h) {
  await conditions(h, fixtures)
  await publicDeletion(h, fixtures)
  await lifecycle(h, fixtures)
- await shipped(h)
+ await shipped(h, fixtures)
 }

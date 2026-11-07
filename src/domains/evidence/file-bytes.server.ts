@@ -16,16 +16,20 @@ function magic(type:string, bytes:Uint8Array){
 export async function storeFileBytes(bucket:R2Bucket, file:FileBytes, body:ReadableStream<Uint8Array>){
  let bytes=0, pref=0
  const prefix=new Uint8Array(32), text=file.media_type.startsWith('text/')?new TextDecoder('utf-8',{fatal:true}):null
+ const decodeText=(chunk?:Uint8Array,stream=false)=>{
+  try{text?.decode(chunk,{stream})}
+  catch(error){if(error instanceof TypeError)throw new EvidenceError('upload_rejected','Text must be valid UTF-8');throw error}
+ }
  const stream=body.pipeThrough(new TransformStream<Uint8Array,Uint8Array>({
   transform(chunk,controller){
    bytes+=chunk.length
    if(bytes>file.bytes||bytes>directUploadBytes)throw new EvidenceError('upload_rejected',`File exceeds its declared ${file.bytes} bytes. Direct uploads allow at most ${directUploadLimit}.`,413)
    if(pref<32){const take=chunk.subarray(0,32-pref);prefix.set(take,pref);pref+=take.length}
-   if(text){if(chunk.includes(0))throw new EvidenceError('upload_rejected','Text contains a binary NUL');text.decode(chunk,{stream:true})}
+   if(text){if(chunk.includes(0))throw new EvidenceError('upload_rejected','Text contains a binary NUL');decodeText(chunk,true)}
    controller.enqueue(chunk)
   },
   flush(){
-   if(text)text.decode()
+   decodeText()
    if(bytes!==file.bytes||!magic(file.media_type,prefix.subarray(0,pref)))throw new EvidenceError('upload_rejected','File length or signature does not match')
   },
  }))

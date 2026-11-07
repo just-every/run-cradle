@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { LAUNCH_APP_ID, launchEntities } from '../../apps/launch/contracts'
 import { useCommand } from '../shared/api'
 import { CommandFeedback } from '../shared/presentation'
-export function CampaignActions({ campaign }: { campaign: { id: string; code: string; version: number; archivedAt?: string | null } }) {
+export function CampaignActions({ campaign }: { campaign: { id: string; code: string; version: number; archivedAt: string | null } }) {
   const [action, setAction] = useState<'archive' | 'restore' | 'duplicate' | 'delete' | null>(null)
   const [code, setCode] = useState(''), [date, setDate] = useState('')
   const command = useCommand(`launch-actions:${campaign.id}`)

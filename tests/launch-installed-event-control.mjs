@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {setup,value,campaign,expected} from './helpers/launch-installed.mjs'
-import {verifyDefinitions,verifyContributedRun} from './helpers/launch-automation-definitions.mjs'
+import {verifyDefinitions,verifyContributedRun,verifyRetainedDefinition} from './helpers/launch-automation-definitions.mjs'
 import {historyMailEdge,verifyRunHistory} from './helpers/launch-run-history.mjs'
 const {LAUNCH_APP_ID,launchEntities}=await import('../src/apps/launch/contracts.ts')
 const {createUlid}=await import('../src/core/shared/ids.ts')
@@ -26,6 +26,7 @@ test('[AUTO-001] [AUTO-003/004] [AUTO-006] [AUTO-008] definitions version every 
   for(let i=0;i<2;i++){outcomes.push((await h.tick()).outcome);await worker.queue('cradle-work',[{id:'erased-event-'+i,timestamp:Date.now(),attempts:1,body:{kind:'cradle.launch.events.v1',commandId:pending.data.commandId}}])}
   assert.deepEqual({redacted:redacted.length>0,outcomes,history:await history(),receipts:(await h.db.prepare('SELECT count(*) n FROM launch_event_dispatches WHERE event_id IN (SELECT value FROM json_each(?))').bind(ids).first()).n,runs:(await h.db.prepare('SELECT id FROM automation_runs WHERE trigger_key IN (SELECT value FROM json_each(?))').bind(ids).all()).results,campaign:await h.db.prepare('SELECT * FROM campaigns WHERE id=?').bind(erased.id).first(),activity:(await h.db.prepare('SELECT * FROM activity_entries WHERE campaign_id=?').bind(erased.id).all()).results},{redacted:true,outcomes:['ok','ok'],history:before,receipts:redacted.length,runs:[],campaign:null,activity:[]},'Repeated scheduled and queue delivery consumes erased events without effects or rewriting erasure history')
   await verifyDefinitions(h,{campaign:c,owner,risk})
+  await verifyRetainedDefinition(h)
   const contributed=await verifyContributedRun(h,{campaign:c,owner})
   await verifyRunHistory(h,{campaign:c,owner,risk:contributed.risk,mail})
  }finally{await h.close()}
