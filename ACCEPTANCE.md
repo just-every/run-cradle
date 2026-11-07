@@ -1371,7 +1371,7 @@ Core · published · **partial**
 3. An operator-initiated request shows the provider's error code and message where it was requested; an automation-initiated one fails that run under AUTO-008.
 4. Every other automation, notification, mutation, and read proceeds unaffected.
 
-**Evidence.** `tests/launch-installed-ai-failures.mjs`
+**Evidence.** `tests/launch-installed-ai-failures.mjs`; `tests/launch-installed-event-control.mjs` — "bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress": automated campaign-brief HTTP 503 failure and attempted-action error readback through run history and Automation Monitor, no new analysis for the failed campaign, preservation of the completed peer analysis, and unrelated native risk mutation, read, automation effects, notification and permitted mail while refusal remains active.
 **Gap.** Missing a cited automation-initiated provider-failure journey reading the failed automation run and showing unrelated automation/notification work still completes. The cited failure test disables campaign-brief automation and exercises operator requests only.
 
 #### AI-005 — Usage
