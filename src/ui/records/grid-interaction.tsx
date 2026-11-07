@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
 import type { CellValue } from '../../contracts/primitives'
 import type { EntitySchema, Field, RecordRow } from '../../domains/records/contracts'
 import { gridClipboard, gridText, gridValue, parseGridText } from './grid-values'
@@ -12,6 +12,7 @@ export function useGridInteraction(schema: EntitySchema, rows: RecordRow[], fiel
   const [editing, setEditing] = useState<Editing | null>(null), [draft, setDraft] = useState(''), [errors, setErrors] = useState<string[]>([])
   const region = useRef<HTMLDivElement>(null)
   const active = useRef<Point>({ row: 0, column: 0 })
+  const savedCell = useRef<{ recordId: string; fieldId: string } | null>(null)
   const writable = (row: RecordRow, field: Field) => !field.readOnly && field.type !== 'computed' && row.fields[field.id]?.state === 'value' && row.allowedActions.some(action => action.action === 'record.patch' && action.enabled)
   const bounds = { top: Math.min(anchor.row, end.row), bottom: Math.max(anchor.row, end.row), left: Math.min(anchor.column, end.column), right: Math.max(anchor.column, end.column) }
   function focus(point: Point, extend = false) {
@@ -44,7 +45,10 @@ export function useGridInteraction(schema: EntitySchema, rows: RecordRow[], fiel
     setErrors(failures)
     if (failures.length) return false
     const committed = await history.execute(changes, sourceRows)
-    if (committed) { setEditing(null); setErrors([]) }
+    if (committed) {
+      if (editing) savedCell.current = { recordId: editing.record.id, fieldId: editing.field.id }
+      setEditing(null); setErrors([])
+    }
     return committed
   }
   function cancel() { if (history.busy) return; history.clearFeedback(); setEditing(null); setDraft(''); setErrors([]) }
@@ -74,6 +78,13 @@ export function useGridInteraction(schema: EntitySchema, rows: RecordRow[], fiel
     const values = fields.slice(bounds.left, bounds.right + 1).map(field => { const cell = first.fields[field.id]; return cell?.state === 'value' ? gridText(field, cell.value) : '' })
     void apply(Array.from({ length: bounds.bottom - bounds.top }, () => values), { row: bounds.top + 1, column: bounds.left })
   }
+  useLayoutEffect(() => {
+    if (editing || !savedCell.current) return
+    const { recordId, fieldId } = savedCell.current
+    savedCell.current = null
+    const row = rows.findIndex(item => item.id === recordId), column = fields.findIndex(item => item.id === fieldId)
+    if (row >= 0 && column >= 0) focus({ row, column })
+  }, [editing, rows, fields])
   useEffect(() => {
     if (!editing) return
     const rowIndex = rows.findIndex(row => row.id === editing.record.id), column = fields.findIndex(field => field.id === editing.field.id)

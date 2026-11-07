@@ -1,3 +1,4 @@
+import { launchImportDeletionJourney } from './helpers/launch-import-deletion.mjs'
 import {warehouseNetworkEdge} from './helpers/warehouse-network-edge.mjs'
 import {companyLifecycle} from './helpers/company-lifecycle.mjs'
 import test, { after } from 'node:test'
@@ -24,16 +25,20 @@ async function call(route, init = {}, session = h.ownerSession) {
 }
 const command = (action, input, expected = [], session) => call(`/api/v1/commands/${action}`, { method: 'POST', body: envelope(input, expected) }, session)
 const campaignRef = row => ({ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities.campaign, recordId: row.id }, version: row.version })
-async function upload(filename, text) {
+async function uploadBytes(filename, text) {
  const staged = (await command('source.stage', { appId: LAUNCH_APP_ID, purpose: 'import' })).body.data.value
  const sha256 = createHash('sha256').update(text).digest('hex')
  const begun = await command('upload.begin', { appId: LAUNCH_APP_ID, subject: staged.subject, filename, mediaType: 'text/csv', bytes: Buffer.byteLength(text), sha256 })
  assert.equal(begun.status, 200, JSON.stringify(begun.body))
  const put = await h.request(h.ownerSession, begun.body.data.value.uploadUrl, { method: 'PUT', headers: { 'content-type': 'text/csv' }, body: text })
- assert.equal(put.status, 200, await put.text())
- return begun.body.data.value.file.id
+ return { fileId: begun.body.data.value.file.id, status: put.status, body: await put.json() }
 }
-const preview = (kind, fileId, mapping) => call('/api/v1/launch/imports/preview', { method: 'POST', body: envelope({ kind, fileId, mapping: Object.entries(mapping).map(([column, field]) => ({ column, field })) }) })
+async function upload(filename, text) {
+ const result = await uploadBytes(filename, text)
+ assert.equal(result.status, 200, JSON.stringify(result.body))
+ return result.fileId
+}
+const preview = (kind, fileId, mapping, session) => call('/api/v1/launch/imports/preview', { method: 'POST', body: envelope({ kind, fileId, mapping: Object.entries(mapping).map(([column, field]) => ({ column, field })) }) }, session)
 
 test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file', async () => {
  const vertex = await h.db.prepare("SELECT id,name FROM campaigns WHERE code='CMP-261'").first(), brand = await h.db.prepare("SELECT name FROM campaigns WHERE code='CMP-262'").first()
@@ -116,6 +121,47 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
   stored.push(captured)
  }
  const codes = stored.map(row => row.campaign.code)
+ // Malformed bytes and quoted cells must fail parsing before a preview or any business effect.
+ const validPrefix = `Code,Name\r\n${codes[0]},Proposed update before malformed row\r\n`
+ const malformedFiles = [
+  ['invalid-utf8.csv', Buffer.concat([Buffer.from(validPrefix + `${codes[1]},`), Buffer.from([0xc3, 0x28]), Buffer.from('\r\n')]), /UTF-8/],
+  ['nul.csv', Buffer.from(validPrefix + `${codes[1]},Rejected\0name\r\n`), /NUL/],
+  ['bom-without-header.csv', Buffer.from([0xef, 0xbb, 0xbf]), null],
+  ['unterminated-quote.csv', Buffer.from(validPrefix + `${codes[1]},"Unterminated name\r\n`), null],
+  ['illegally-closed-quote.csv', Buffer.from(validPrefix + `${codes[1]},"Closed name"suffix\r\n`), null],
+ ]
+ const restricted = await h.addPerson({ change: () => [] })
+ for (const [filename, bytes, uploadError] of malformedFiles) {
+  const uploaded = await uploadBytes(filename, bytes), { fileId } = uploaded
+  const original = await h.request(h.ownerSession, `/api/v1/files/${fileId}/content`)
+  if (uploadError) {
+   assert.equal(uploaded.status, 413, JSON.stringify(uploaded.body))
+   assert.equal(uploaded.body.error.code, 'upload_rejected')
+   assert.match(uploaded.body.error.message, uploadError)
+   assert.equal((await call(`/api/v1/files/${fileId}`)).body.data.state, 'rejected')
+   assert.equal(original.status, 404, 'Rejected text bytes cannot be downloaded')
+  } else {
+   assert.equal(uploaded.status, 200, JSON.stringify(uploaded.body))
+   assert.equal(original.status, 200, filename)
+   assert.deepEqual(Buffer.from(await original.arrayBuffer()), bytes, 'The native upload retains the actual malformed structure')
+  }
+  const beforeRecords = await Promise.all([...stored.map(row => row.campaign.id), vertex.id].map(readCampaign))
+  const before = await snapshot() // Upload has completed; only the preview attempt is measured.
+  const refused = await preview('campaign', fileId, { Code: 'code', Name: 'name' })
+  assert.equal(refused.status, 400, `${filename}: ${JSON.stringify(refused.body)}`)
+  assert.equal(refused.body.error.code, 'validation', filename)
+  assert.match(refused.body.error.message, /The CSV could not be read: .+/, filename)
+  assert.equal(refused.body.data, undefined, 'A parse refusal supplies no preview or confirmation token')
+  assert.deepEqual(await snapshot(), before, `${filename}: parsing refusal changes no retained records, activity, previews, files, admissions, events, outbox or execution work`)
+  assert.deepEqual(await Promise.all([...stored.map(row => row.campaign.id), vertex.id].map(readCampaign)), beforeRecords, `${filename}: affected and unrelated campaigns, custom values and activity stay unchanged through public reads`)
+  if (uploadError) {
+   const hidden = await preview('campaign', fileId, { Code: 'code', Name: 'name' }, restricted.session)
+   const absent = await preview('campaign', createUlid(), { Code: 'code', Name: 'name' }, restricted.session)
+   assert.deepEqual([hidden.status, hidden.body.error.code, hidden.body.error.message], [404, 'not_found', absent.body.error.message], 'An unreadable rejected upload reveals no file state or parsing details')
+   assert.equal(absent.status, 404)
+   assert.deepEqual(await snapshot(), before, 'Hidden and absent file refusals also change no business state')
+  }
+ }
  const refusedImport = async (filename, csv, mapping, errors) => {
   const before = await Promise.all(stored.map(row => readCampaign(row.campaign.id)))
   const response = await preview('campaign', await upload(filename, csv), mapping)
@@ -274,6 +320,7 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
    assert.equal(await h.db.prepare('SELECT COUNT(*) AS n FROM campaigns WHERE code=?').bind(candidate.code).first('n'), 0)
   }
  } finally { h.setNow(undefined) }
+ await launchImportDeletionJourney({ h, call, command, envelope, upload, preview, mapping, unrelatedId: faultPreview.id, unrelatedBytes: faultCsv, sharedId: fresh.id })
 })
 
 test('[IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells', async () => {

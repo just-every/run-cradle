@@ -3,10 +3,11 @@ import assert from 'node:assert/strict'
 import { launchAuthorityRuntime, launchEntities, launchFieldIds, createUlid } from './helpers/launch-authority-runtime.mjs'
 import { expected, writeContext, mutationSnapshot, launchSource } from './helpers/launch-write-context.mjs'
 import { verifyCampaignClauses } from './helpers/launch-campaign-clauses.mjs'
-import { verifyMilestoneClauses } from './helpers/launch-milestone-clauses.mjs'
+import { verifyMilestoneClauses, verifyPublicMilestoneDeletion } from './helpers/launch-milestone-clauses.mjs'
 import { verifyRiskClauses } from './helpers/launch-risk-clauses.mjs'
 import { verifyCampaignLifecycleClauses } from './helpers/launch-campaign-lifecycle-clauses.mjs'
 import { verifyConcurrencyClauses } from './helpers/launch-concurrency-clauses.mjs'
+import { verifyPublicCampaignActivityOrder } from './helpers/launch-activity-order-journey.mjs'
 import { verifyConsistencyClauses } from './helpers/launch-consistency-clauses.mjs'
 import { verifyCommentClauses } from './helpers/launch-comment-clauses.mjs'
 import { verifyDecisionClauses } from './helpers/launch-decision-clauses.mjs'
@@ -23,7 +24,7 @@ const unchangedDenial = async (h, scope, action, input, revisions, code = 'forbi
  assert.deepEqual(await mutationSnapshot(h.db), before, action)
 }
 
-test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects and campaign record clauses', async () => {
+test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-014 DELIV-001 DELIV-002 DELIV-003 MILE-001 MILE-002 MILE-003 MILE-005 MILE-006 RISK-001 RISK-002 RISK-004 RISK-005] prior full policy covers conservative effects, native campaign validation and campaign record clauses', async () => {
  const analysis=clauseAnalysisFixture()
  const h = await launchAuthorityRuntime(analysis.configuration, {installedLaunchDefinitions:true,installationOwner:true,providerFetch:analysis.providerFetch})
  try {
@@ -36,6 +37,7 @@ test('[RECORDS-001 CAMP-003 CAMP-004 CAMP-009 CAMP-010 CAMP-011 CAMP-012 CAMP-01
   }
   await verifyCampaignClauses(clauses)
   await verifyMilestoneClauses(clauses)
+  await verifyPublicMilestoneDeletion(clauses)
   await verifyRiskClauses(clauses)
   await verifyCampaignLifecycleClauses(clauses)
   await verifyOverdueClauses(clauses)
@@ -97,13 +99,14 @@ test('[RECORDS-001] zero writable fields and explicit deny rules cannot obtain v
  } finally { await h.close() }
 })
 
-test('[RECORDS-001 DELIV-002 DEC-001 DEC-003 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-002 ACT-004 VIEW-003 VIEW-006 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision and lens clauses', async () => {
+test('[RECORDS-001 DELIV-002 DEC-001 DEC-003 DEC-004 DEC-005 DEC-006 DEC-007 DEC-008 ACT-001 ACT-002 ACT-004 VIEW-003 VIEW-006 LENS-001 LENS-002 LENS-003 LENS-004 LENS-005 LENS-006 LENS-007] unmodelled definition changes and decision and lens clauses', async () => {
  const h = await launchAuthorityRuntime({}, {installedLaunchDefinitions:true,installationOwner:true})
  try {
   const owner = await writeContext(h,h.ownerSession,createUlid()), policyBefore = await h.db.prepare('SELECT * FROM authority_policies WHERE id=?').bind(h.policy.id).first()
   const clauses={...h,...owner,r:launchSource,actor:h.owner,expected,campaign:code=>owner.commit('campaign.create',{fields:{...campaignFields(h.owner),code}})}
   await verifyConcurrencyClauses(clauses)
   await verifyConsistencyClauses(clauses)
+  await verifyPublicCampaignActivityOrder(h)
   await verifyCommentClauses(clauses)
   await verifyDecisionClauses(clauses)
   await verifyLensClauses(clauses)

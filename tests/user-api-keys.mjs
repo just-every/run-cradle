@@ -7,7 +7,7 @@ import {contract} from './contract.mjs'
 import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
 import {createUlid} from '../src/core/shared/ids.ts'
 
-contract('API-USER-001','[API-USER-002] [WEBHOOK-USER-002] scoped subscription credentials and record reads/writes stop on revoke and issuer policy change',async()=>{
+contract('API-USER-001','[API-USER-002] [WEBHOOK-USER-002] [COLLAB-002] scoped subscription credentials and record reads/writes stop on revoke and issuer policy change',async()=>{
  const h=await userAutomationRuntime(0,{bindings:{CONNECTION_ENCRYPTION_KEY:randomBytes(32).toString('base64'),EGRESS_RELAY_URL:'https://relay.example.com/v1/deliver',EGRESS_RELAY_SECRET:'synthetic-cradle-1'}})
  try {
   await recordsRestJourney(h)

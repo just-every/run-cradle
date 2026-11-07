@@ -2,6 +2,118 @@ import {recordComment,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { mutationSnapshot } from './launch-write-context.mjs'
+import { createUlid, LAUNCH_APP_ID, launchEntities, launchFieldIds } from './launch-authority-runtime.mjs'
+
+/** The emitted Worker and browser registrations share public retention readbacks.
+ * Command responses locate records; separate reads capture their stored values. */
+export async function verifyPublicCampaignLifecycle(h, { transition, show = async () => {} } = {}) {
+ const operator = await h.addPerson({ name: 'Lifecycle operator' })
+ assert.notEqual(operator.id, h.owner, 'Lifecycle operator is not the campaign owner')
+ const read = async (route, init) => {
+  const response = await h.request(operator.session, route, init), body = await response.json()
+  assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+  return body
+ }
+ const revisions = (kind, row) => [{ ref: { appId: LAUNCH_APP_ID, entityId: launchEntities[kind], recordId: row.id }, version: row.version }]
+ const command = async (session, action, input, expected = []) => {
+  const response = await h.request(session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId: createUlid(), input, expected }) }), body = await response.json()
+  assert.equal(response.status, 200, `${action}: ${JSON.stringify(body)}`)
+  assert.equal(body.data.state, 'committed')
+  return body.data.value
+ }
+ const record = async (kind, id) => (await read(`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}/records/${id}`)).data.record
+ const code = `PUBLIC-LIFECYCLE-${createUlid()}`
+ const campaign = await command(h.ownerSession, 'campaign.create', { fields: { code, name: 'Retained launch campaign', ownerId: h.owner, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Keep unresolved launch work', statusSummary: 'Awaiting supplier review', phase: 'Build', status: 'Watch', health: 43, budgetMinor: 12345, spendMinor: 678, tags: ['Retention'], customFields: {} } })
+ const deliverable = await command(h.ownerSession, 'deliverable.create', { fields: { campaignId: campaign.id, title: 'Retained launch kit', ownerId: h.owner, dueDate: '2026-11-12' } })
+ const milestone = await command(h.ownerSession, 'milestone.create', { fields: { campaignId: campaign.id, title: 'Retained supplier review', ownerId: h.owner, type: 'Review', status: 'Not started', startDate: '2026-11-10', endDate: '2026-11-13', conflictReason: null } })
+ const risk = await command(h.ownerSession, 'risk.create', { fields: { campaignId: campaign.id, title: 'Retained supplier risk', ownerId: h.owner, severity: 'High', dueDate: '2026-11-11', signal: 'Supplier evidence pending', mitigation: 'Review alternate supplier' } })
+ const decision = await command(h.ownerSession, 'decision.create', { fields: { campaignId: campaign.id, riskId: risk.id, supersedesId: null, title: 'Retained supplier decision', requesterId: h.owner, assigneeId: h.owner, priority: 'High', dueAt: '2026-11-11T15:00:00.000Z', recommendation: 'Retain alternate supplier', impact: 'Launch timing' } })
+ const subjects = { campaign, deliverable, milestone, risk, decision }
+ const captured = Object.fromEntries(await Promise.all(Object.entries(subjects).map(async ([kind, created]) => [kind, await record(kind, created.id)])))
+ for (const [kind, created] of Object.entries(subjects)) assert.equal(captured[kind].id, created.id, `${kind} identity independently read`)
+ const link = (kind, id) => ({ appId: LAUNCH_APP_ID, entityId: launchEntities[kind], recordId: id })
+ const choice = option => ({ option })
+ // Independently authored business expectations prevent an empty or wrong
+ // initial read from becoming the oracle for both archive and restore.
+ const known = {
+  campaign: { code, name: 'Retained launch campaign', ownerId: h.owner, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Keep unresolved launch work', statusSummary: 'Awaiting supplier review', phase: choice('Build'), status: choice('Watch'), health: '0.43', budgetMinor: { minor: '12345', currency: 'USD', scale: 2 }, spendMinor: { minor: '678', currency: 'USD', scale: 2 } },
+  deliverable: { campaignId: link('campaign', campaign.id), title: 'Retained launch kit', ownerId: h.owner, dueDate: '2026-11-12', state: choice('Open') },
+  milestone: { campaignId: link('campaign', campaign.id), title: 'Retained supplier review', ownerId: h.owner, type: choice('Review'), status: choice('Not started'), startDate: '2026-11-10', endDate: '2026-11-13', conflictReason: null },
+  risk: { campaignId: link('campaign', campaign.id), title: 'Retained supplier risk', ownerId: h.owner, severity: choice('High'), dueDate: '2026-11-11', signal: 'Supplier evidence pending', mitigation: 'Review alternate supplier', state: choice('Watching'), resolutionNote: null },
+  decision: { campaignId: link('campaign', campaign.id), riskId: link('risk', risk.id), supersedesId: null, title: 'Retained supplier decision', requesterId: h.owner, assigneeId: h.owner, priority: choice('High'), dueAt: '2026-11-11T15:00:00.000Z', recommendation: 'Retain alternate supplier', impact: 'Launch timing', state: choice('Awaiting approval'), rationale: null },
+ }
+ for (const [kind, values] of Object.entries(known)) {
+  const schema = (await read(`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}`)).data
+  for (const [name, expected] of Object.entries(values)) {
+   const fieldId = launchFieldIds[kind][name]
+   let value = expected
+   if (expected?.option) {
+    const option = schema.fields.find(field => field.id === fieldId)?.options.find(option => option.label === expected.option)
+    assert.ok(option, `${kind}.${name}: public schema exposes ${expected.option}`)
+    value = option.id
+   }
+   assert.deepEqual(captured[kind].fields[fieldId], { state: 'value', value }, `${kind}.${name}: captured public value matches the intended business value`)
+  }
+ }
+ const detail = await read(`/api/campaigns/${campaign.id}`)
+ // These expectations are authored independently of the captured record maps.
+ assert.equal(detail.campaign.name, 'Retained launch campaign')
+ assert.equal(detail.campaign.owner.id, h.owner)
+ assert.equal(detail.deliverables.find(row => row.id === deliverable.id)?.state, 'Open')
+ assert.equal(detail.milestones.find(row => row.id === milestone.id)?.status, 'Not started')
+ const riskBefore = (await read(`/api/risks/${risk.id}`)).risk
+ assert.equal(riskBefore.state, 'Watching')
+ assert.equal(riskBefore.signal, 'Supplier evidence pending')
+ const decisionBefore = (await read(`/api/decisions/${decision.id}`)).decision
+ assert.equal(decisionBefore.state, 'Awaiting approval')
+ assert.equal(decisionBefore.recommendation, 'Retain alternate supplier')
+ assert.equal(decisionBefore.risk.id, risk.id)
+ const inspect = async lifecycle => {
+  const current = await record('campaign', campaign.id)
+  assert.equal(current.lifecycle, lifecycle, 'Public record exposes the campaign lifecycle')
+  const page = await read(`/api/campaigns/${campaign.id}`), detail = page.campaign
+  assert.equal(detail.code, code)
+  assert.deepEqual(detail.tags, ['Retention'])
+  assert.equal(detail.deliverableTotal, 1)
+  assert.equal(detail.deliverableComplete, 0)
+  assert.equal(detail.unresolvedDecisionCount, 1)
+  assert.equal(page.deliverables.find(row => row.id === deliverable.id)?.state, 'Open')
+  assert.equal(page.milestones.find(row => row.id === milestone.id)?.status, 'Not started')
+  assert.equal(page.risks.find(row => row.id === risk.id)?.state, 'Watching')
+  assert.equal(page.decisions.find(row => row.id === decision.id)?.state, 'Awaiting approval')
+  if(lifecycle === 'archived') assert.ok(Number.isFinite(Date.parse(detail.archivedAt)), 'Shipped detail exposes the archived timestamp')
+  else assert.equal(detail.archivedAt, null, 'Shipped detail exposes active lifecycle')
+  assert.equal((await read('/api/campaigns?limit=200')).items.some(row => row.id === campaign.id), lifecycle === 'active', 'Active list withdraws and returns the populated campaign')
+  for (const [kind, original] of Object.entries(captured)) {
+   const retained = await record(kind, original.id)
+   assert.equal(retained.id, original.id)
+   assert.deepEqual(retained.fields, original.fields, `${lifecycle}: every stored ${kind} business value survives`)
+   assert.equal(retained.createdAt, original.createdAt, `${kind} retains its creation identity`)
+   if (kind !== 'campaign') {
+    assert.equal(retained.version, original.version, `${kind} is neither completed nor resolved`)
+    assert.equal(retained.updatedAt, original.updatedAt, `${kind} has no hidden lifecycle edit`)
+   }
+  }
+  await show({ stage: lifecycle === 'archived' ? 'archived' : current.version === captured.campaign.version ? 'active' : 'restored', campaign: current, subjects, operator })
+  return current
+ }
+ let current = await inspect('active')
+ const proof = []
+ for (const [action, lifecycle] of [['archive', 'archived'], ['restore', 'active']]) {
+  // Obtain the revision from a fresh public read, never from an earlier command.
+  current = await record('campaign', campaign.id)
+  if (transition) await transition({ action, campaign: current, subjects, operator })
+  else await command(operator.session, `campaign.${action}`, { id: campaign.id }, revisions('campaign', current))
+  const after = await inspect(lifecycle)
+  assert.equal(after.version, current.version + 1, `${action} commits exactly once`)
+  const activity = (await read(`/api/campaigns/${campaign.id}`)).activity.filter(row => row.type === `campaign.${action === 'archive' ? 'archived' : 'restored'}`)
+  assert.equal(activity.length, 1)
+  assert.equal(activity[0].actor.id, operator.id, 'A distinct operator performed the lifecycle change')
+  proof.push({ action, lifecycle: after.lifecycle, version: after.version, childIds: children.map(kind => captured[kind].id), actorId: operator.id })
+ }
+ await command(h.ownerSession, 'campaign.delete', { id: campaign.id, confirmationCode: campaign.code }, revisions('campaign', await record('campaign', campaign.id)))
+ return proof
+}
 
 const shift = (date, count, field = 'date') => {
  assert.ok(typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date), `${field}: expected YYYY-MM-DD, received ${JSON.stringify(date)}`)
@@ -226,6 +338,76 @@ async function restoreRemovedOwner(h, reader, person) {
  assert.equal(campaign.archivedAt, null)
 }
 
+export async function verifyPublicRemovedOwnerRestore(h) {
+ const formerOwner = await h.addPerson({ name: 'Former campaign owner' })
+ const replacement = await h.addPerson({ name: 'Current campaign owner' })
+ const read = async route => {
+  const response = await h.request(h.ownerSession, route), body = await response.json()
+  assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+  return body
+ }
+ const command = async (action, input, expected = [], status = 200) => {
+  const response = await h.request(h.ownerSession, `/api/v1/commands/${action}`, {
+   method: 'POST', body: JSON.stringify({ commandId: createUlid(), input, expected }),
+  }), body = await response.json()
+  assert.equal(response.status, status, `${action}: ${JSON.stringify(body)}`)
+  if (status === 200) assert.equal(body.data.state, 'committed')
+  return body
+ }
+ const create = async (kind, fields) => (await command(`launch.${kind}.create`, { fields })).data.value
+ const record = async (kind, id) => (await read(`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities[kind]}/records/${id}`)).data.record
+ const members = async () => (await read(`/api/v1/members?appId=${LAUNCH_APP_ID}`)).data.items
+ const campaign = await create('campaign', { code: `synthetic-cradle-${createUlid()}`, name: 'Archived owner replacement', ownerId: formerOwner.id, startDate: '2026-10-01', launchDate: '2026-12-01', objective: 'Restore with current ownership', statusSummary: 'Awaiting a new owner', phase: 'Build', status: 'Watch', health: 43, budgetMinor: 12345, spendMinor: 678, tags: ['Retention'], customFields: {} })
+ const deliverable = await create('deliverable', { campaignId: campaign.id, title: 'Owner replacement launch kit', ownerId: h.owner, dueDate: '2026-11-12' })
+ const milestone = await create('milestone', { campaignId: campaign.id, title: 'Owner replacement review', ownerId: h.owner, type: 'Review', status: 'Not started', startDate: '2026-11-10', endDate: '2026-11-13', conflictReason: null })
+ const risk = await create('risk', { campaignId: campaign.id, title: 'Owner replacement supplier risk', ownerId: h.owner, severity: 'High', dueDate: '2026-11-11', signal: 'Supplier review pending', mitigation: 'Review alternate supplier' })
+ const decision = await create('decision', { campaignId: campaign.id, riskId: risk.id, supersedesId: null, title: 'Owner replacement supplier decision', requesterId: h.owner, assigneeId: h.owner, priority: 'High', dueAt: '2026-11-11T15:00:00.000Z', recommendation: 'Retain alternate supplier', impact: 'Launch timing' })
+ const subjects = { campaign, deliverable, milestone, risk, decision }
+ const records = () => Promise.all(Object.entries(subjects).map(async ([kind, row]) => [kind, await record(kind, row.id)]))
+ assert.equal((await read(`/api/campaigns/${campaign.id}`)).campaign.owner.id, formerOwner.id)
+ await command('launch.campaign.archive', { id: campaign.id }, h.expected('campaign', await record('campaign', campaign.id)))
+ const member = (await members()).find(row => row.id === formerOwner.id)
+ assert.ok(member, 'The archived campaign owner is a current member before removal')
+ const removed = await command('member.remove', { memberId: formerOwner.id, reason: 'Archived campaign owner has left' }, [{ ref: { appId: LAUNCH_APP_ID, entityId: '00000000000000000000000101', recordId: formerOwner.id }, version: member.version }])
+ assert.equal(removed.data.value.state, 'removed')
+
+ // Read after member removal so a stale revision cannot masquerade as validation.
+ const archived = await record('campaign', campaign.id)
+ assert.equal(archived.lifecycle, 'archived')
+ const before = await records(), detailBefore = await read(`/api/campaigns/${campaign.id}`)
+ for (const [kind, row] of Object.entries(subjects)) {
+  assert.equal(before.find(([name]) => name === kind)[1].id, row.id)
+ }
+ assert.ok(detailBefore.activity.length > 0, 'The refusal protects populated campaign activity')
+ assert.equal(detailBefore.deliverables.find(row => row.id === deliverable.id)?.state, 'Open')
+ assert.equal(detailBefore.milestones.find(row => row.id === milestone.id)?.status, 'Not started')
+ assert.equal((await read(`/api/risks/${risk.id}`)).risk.state, 'Watching')
+ assert.equal((await read(`/api/decisions/${decision.id}`)).decision.state, 'Awaiting approval')
+ const persisted = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ assert.ok(persisted.admission_events.length > 0, 'The refusal protects admitted creation events')
+ const refused = await command('launch.campaign.restore', { id: campaign.id }, h.expected('campaign', archived), 400)
+ assert.equal(refused.error.code, 'validation', 'A fresh revision reaches owner validation')
+ assert.match(refused.error.message, /operator.*not current/i)
+ assert.ok(refused.error.message.includes(formerOwner.id), 'The refusal identifies the removed campaign owner')
+ assert.deepEqual(await records(), before, 'Refused restore preserves campaign and every child, including revisions')
+ assert.deepEqual(await read(`/api/campaigns/${campaign.id}`), detailBefore, 'Refused restore preserves shipped detail and activity')
+ const afterRefusal = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ assert.deepEqual(afterRefusal.admission_events, persisted.admission_events, 'Refused restore emits no event')
+ assert.deepEqual(afterRefusal.admission_outbox, persisted.admission_outbox, 'Refused restore enqueues no work')
+ assert.deepEqual(afterRefusal, persisted, 'Refused restore admits no persisted effect')
+
+ assert.ok((await members()).some(row => row.id === replacement.id && row.state === 'active'), 'The independently selected replacement is a current member')
+ await command('launch.campaign.restore', { id: campaign.id, ownerId: replacement.id }, h.expected('campaign', await record('campaign', campaign.id)))
+ const restored = await record('campaign', campaign.id)
+ const detailAfter = await read(`/api/campaigns/${campaign.id}`)
+ assert.equal(restored.lifecycle, 'active')
+ assert.equal(restored.version, archived.version + 1, 'Only the supported restore increments the campaign revision')
+ assert.equal(detailAfter.campaign.archivedAt, null)
+ assert.equal(detailAfter.campaign.owner.id, replacement.id, 'Public detail names the independently known current owner')
+ assert.ok((await read('/api/campaigns?limit=200')).items.some(row => row.id === campaign.id), 'The restored campaign returns to the active list')
+ console.log('PROBE CAMP-010 2: HTTP archive, member.remove and fresh-version restore without owner -> 400 owner-specific validation; campaign, children, activity, events and outbox unchanged; restore with known current owner -> active with that owner')
+}
+
 async function deletion(h, reader, campaign) {
  const subjects = [campaign.id]
  for (const kind of children) subjects.push(...(await reader.list(h.ctx, kind, { campaignId: campaign.id })).items.map(row => row.id))
@@ -252,6 +434,8 @@ async function deletion(h, reader, campaign) {
 }
 
 export async function verifyCampaignLifecycleClauses(h) {
+ await verifyPublicCampaignLifecycle(h)
+ await verifyPublicRemovedOwnerRestore(h)
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const f = await fixture(h, reader)
  const imported = await stagedImport(h, f.campaign)

@@ -55,7 +55,7 @@ export async function prepareAnalysis(context:LaunchContext,ports:LegacyAnalysis
  if(output.call.durationMs!==null&&output.call.durationMs>60000)fail('AI provider exceeded the 60-second timeout')
  if(feature!=='lens-proposal'&&output.value.proposedLens!==null)fail('Only a lens proposal can contain a proposed lens')
  const contextHash=await import('../../domains/admission/canonical').then(m=>m.canonicalHash(JSON.parse(JSON.stringify(source.data),(key,value)=>key==='version'?undefined:value)))
- const id=createUlid(),now=Date.parse(ctx.now),set=emptyChange();
+ const id=createUlid(),now=Date.now(),set=emptyChange();
  set.guards.push(...await analysisSourceGuards(context,ctx,source.versions))
  set.mutations.push({kind:'insert',table:analyses,row:{id,created_at:now,updated_at:now,version:1,feature,context_hash:contextHash,subject_id:input.input.campaignId?String(input.input.campaignId):null,lens_id:input.input.lensId?String(input.input.lensId):null,lens_draft_json:input.input.lensDraft?JSON.stringify(input.input.lensDraft):null,input_versions_json:JSON.stringify(source.versions),model_call_id:output.call.id,content:output.value.content,proposed_lens_json:output.value.proposedLens?JSON.stringify(output.value.proposedLens):null}})
  return plan(context,ctx,input,'launch.analysis.request',set,{id,version:1,createdAt:new Date(now).toISOString(),updatedAt:new Date(now).toISOString(),feature,content:output.value.content,proposedLens:output.value.proposedLens as Json,inputVersions:source.versions as unknown as Json,modelCallId:output.call.id,aiGenerated:true},'campaign')
