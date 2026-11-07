@@ -1,4 +1,103 @@
 import assert from 'node:assert/strict'
+import { mutationSnapshot } from './launch-write-context.mjs'
+
+// MILE-001's deletion outcome uses the emitted Worker's native commands and
+// public reads. Keep the broader internal clause assertions below as well.
+export async function verifyPublicMilestoneDeletion(h) {
+ const operator = await h.addPerson({ name: 'Milestone operator' })
+ const base = `/api/v1/apps/${h.r.LAUNCH_APP_ID}/entities/${h.r.launchEntities.milestone}`
+ const read = async (route, session = h.ownerSession) => {
+  const response = await h.request(session, route)
+  assert.equal(response.status, 200, await response.clone().text())
+  return response.json()
+ }
+ const submit = (session, action, input, revisions = []) => h.request(session, `/api/v1/commands/launch.${action}`, {
+  method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input, expected: revisions }),
+ })
+ const write = async (action, input, revisions = [], session = operator.session) => {
+  const response = await submit(session, action, input, revisions)
+  assert.equal(response.status, 200, await response.clone().text())
+  const { data } = await response.json()
+  assert.equal(data.state, 'committed')
+  return data.value
+ }
+ const campaign = await write('campaign.create', { fields: {
+  code: 'MILE-PUBLIC', name: 'Milestone deletion', ownerId: h.actor,
+  startDate: '2026-11-01', launchDate: '2026-12-01', objective: 'Independent milestones',
+  statusSummary: '', phase: 'Planning', status: 'On track', health: 50,
+  budgetMinor: 0, spendMinor: 0, tags: [], customFields: {},
+ } })
+ const fields = { campaignId: campaign.id, title: 'Public review', ownerId: operator.id,
+  type: 'Review', status: 'Not started', startDate: '2026-11-20', endDate: null, conflictReason: null }
+ const created = await write('milestone.create', { fields })
+ const neighbor = await write('milestone.create', { fields: {
+  ...fields, title: 'Independent publication', ownerId: h.actor, type: 'Publish',
+  startDate: '2026-11-25', endDate: '2026-11-26',
+ } })
+ const record = async (id, session) => (await read(`${base}/records/${id}`, session)).data.record
+ const detail = async id => (await read(`/api/milestones/${id}`)).milestone
+ const collection = async () => ({
+  campaign: (await read(`/api/campaigns/${campaign.id}`)).milestones,
+  timeline: (await read('/api/milestones/timeline')).items,
+ })
+ const original = await detail(created.id), neighborRecord = await record(neighbor.id), neighborDetail = await detail(neighbor.id)
+ for (const [field, value] of Object.entries(fields)) {
+  if (field === 'campaignId') assert.equal(original.campaign.id, value)
+  else if (field === 'ownerId') assert.equal(original.owner.id, value)
+  else assert.deepEqual(original[field], value)
+ }
+ const neighborBefore = await collection()
+ for (const rows of Object.values(neighborBefore)) {
+  assert.ok(rows.some(row => row.id === created.id), 'The created milestone is publicly listed before deletion')
+  assert.ok(rows.some(row => row.id === neighbor.id), 'The independent neighboring milestone is publicly listed')
+ }
+ const revision = await record(created.id, operator.session)
+ await write('milestone.patch', { id: created.id, changes: {
+  title: 'Reviewed public milestone', startDate: '2026-11-21', endDate: '2026-11-22', status: 'Watch',
+ } }, h.expected('milestone', revision))
+ const current = await record(created.id, operator.session), edited = await detail(created.id)
+ assert.equal(current.version, revision.version + 1)
+ assert.equal(edited.version, current.version)
+ assert.equal(edited.title, 'Reviewed public milestone')
+ assert.equal(edited.startDate, '2026-11-21')
+ assert.equal(edited.endDate, '2026-11-22')
+ assert.equal(edited.status, 'Watch')
+ assert.deepEqual(await record(neighbor.id), neighborRecord, 'Editing one milestone leaves the neighboring record unchanged')
+ assert.deepEqual(await detail(neighbor.id), neighborDetail)
+
+ // Retain this signed-in operator and the freshly read revision while removing
+ // only delete authority; read and patch authority remain in the current policy.
+ const narrowed = operator.rules.map(rule => rule.entityId === h.r.launchEntities.milestone
+  ? { ...rule, actions: rule.actions.filter(action => action !== 'launch.milestone.delete') } : rule)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?')
+  .bind(JSON.stringify(narrowed), operator.policyId).run()
+ assert.deepEqual(await record(created.id, operator.session), current)
+ const visibleBefore = await collection(), before = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ const denied = await submit(operator.session, 'milestone.delete', { id: created.id }, h.expected('milestone', current))
+ assert.equal(denied.status, 404, await denied.clone().text())
+ assert.equal((await denied.json()).error.code, 'not_found')
+ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), before,
+  'A delete refused by current authority changes no stored product, activity, audit, event or admission')
+ assert.deepEqual(await record(created.id), current)
+ assert.deepEqual(await detail(created.id), edited)
+ assert.deepEqual(await collection(), visibleBefore)
+
+ const authorized = await record(created.id)
+ const deleted = await write('milestone.delete', { id: created.id }, h.expected('milestone', authorized), h.ownerSession)
+ assert.equal(deleted.deletedId, created.id)
+ for (const route of [`${base}/records/${created.id}`, `/api/milestones/${created.id}`]) {
+  assert.equal((await h.request(h.ownerSession, route)).status, 404, 'Deleted milestone detail is publicly absent')
+ }
+ const after = await collection()
+ for (const key of ['campaign', 'timeline']) {
+  assert.ok(!after[key].some(row => row.id === created.id), `Deleted milestone is absent from ${key}`)
+  assert.deepEqual(after[key], visibleBefore[key].filter(row => row.id !== created.id),
+   'Deletion removes only the selected milestone from populated public collections')
+  assert.deepEqual(after[key].find(row => row.id === neighbor.id), neighborBefore[key].find(row => row.id === neighbor.id))
+ }
+ assert.deepEqual(await record(neighbor.id), neighborRecord, 'Deletion preserves the complete independently captured neighboring record')
+ assert.deepEqual(await detail(neighbor.id), neighborDetail)
+}
 
 const shift = (day, count) => new Date(Date.parse(day + 'T12:00:00Z') + count * 86400000).toISOString().slice(0, 10)
 const dateIn = (instant, timezone) => new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(instant))

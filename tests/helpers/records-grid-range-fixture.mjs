@@ -16,7 +16,7 @@ export async function rangeFixture(owner, runtime, width) {
     const suffix = String(index).padStart(2, '0'), day = String(index % 28 + 1).padStart(2, '0')
     before.push([`Before ${suffix}`, `${index + 100}.5`, `2026-11-${day}`, index % 2 === 0, `https://example.test/before-${suffix}`])
     after.push([`Pasted ${suffix}`, `-${index + 1}.25`, `2027-02-${day}`, index % 2 !== 0, `https://example.test/after-${suffix}`])
-    clipboard.push([`Pasted ${suffix}`, `-${index + 1}.2500`, `2027-02-${day}`, index % 2 ? 'yes' : 'no', `https://example.test/after-${suffix}`].join('\t'))
+    clipboard.push([`Pasted ${suffix}`, `-${index + 1}.2500`, `2027-02-${day}`, index % 2 ? 'yes' : 'no', `https://example.test/after-${suffix}`])
     const values = Object.fromEntries(fields.map((field, column) => [field.id, before[index][column]]))
     const created = await browserCall(owner, '/api/v1/commands/record.create', liveCommand({ appId, entityId, values }, [{ ref: { appId, entityId: '00000000000000000000000001', recordId: entityId }, version: schema.version }]))
     ids.push(created.value.id)
@@ -48,7 +48,11 @@ export async function rangeFixture(owner, runtime, width) {
     }
     return rows
   }
-  return { appId, entityId, base, fields, ids, before, after, text: clipboard.join('\n'), operator, cookie: session.cookie, role, read, values, path: `${runtime.origin}/app/records/${appId}/${entityId}` }
+  const invalid = clipboard.map(row => [...row])
+  invalid[16][1] = 'twelve crates'
+  invalid[37][2] = '2027-02-30'
+  const text = matrix => matrix.map(row => row.join('\t')).join('\n')
+  return { appId, entityId, base, fields, ids, before, after, text: text(clipboard), invalidText: text(invalid), operator, cookie: session.cookie, role, read, values, path: `${runtime.origin}/app/records/${appId}/${entityId}` }
 }
 
 export async function rangeReceipt(runtime, response, fixture, actor) {

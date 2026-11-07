@@ -9,6 +9,7 @@ import { chromium } from '@playwright/test'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { navigateFromSignInToApp, openSignInFromDocs } from './helpers/public-app-navigation.mjs'
 import { accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilityWidths, auditAccessibility } from './helpers/accessibility-evidence.mjs'
+import { campaignGridStateJourney } from './helpers/campaign-grid-state-journey.mjs'
 import { installKeyboardInteractions } from './helpers/accessibility-keyboard.mjs'
 
 test('[BASE-ACCESS-003 VIEW-001 VIEW-004 CAMP-001] native owner creation, scoped transport and safe October error states at 1440/390', async () => {
@@ -25,8 +26,8 @@ try {
   const recordPath=`/app/records/${LAUNCH_APP_ID}/${launchEntities.campaign}/${sample.id}`
   assert.equal((await h.request(revoked.session,recordPath)).status,200)
   await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE principal_id=? AND app_id=?").bind(revoked.id,LAUNCH_APP_ID).run()
-  const capture=async(page,name,width,{publicMissing=false}={})=>{
-    await page.waitForLoadState('networkidle')
+  const capture=async(page,name,width,{publicMissing=false,pending=false}={})=>{
+    if(!pending)await page.waitForLoadState('networkidle')
     // Capture the full document from its top so fixed navigation remains at the
     // viewport origin after form controls have scrolled themselves into view.
     await page.evaluate(()=>window.scrollTo(0,0))
@@ -76,6 +77,7 @@ try {
     const related=await h.db.prepare('SELECT id,campaign_id,owner_id,title FROM deliverables WHERE title=?').bind(`Delivery notes ${width}`).first()
     assert.equal(related.campaign_id,row.id);assert.equal(related.owner_id,h.owner);receipt.related.push(related)
     await capture(page,'created-deliverable',width)
+    await campaignGridStateJourney({page,h,campaign:{...row,code},sample,width,capture,receipt})
     // The mounted repair API validates decision IDs. Exercise its real failure
     // state with a long URL, then the launch operator's scoped denial for a
     // valid decision ID. Authorization precedes any missing-record disclosure.
