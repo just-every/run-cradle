@@ -579,8 +579,8 @@ Core · published · **partial**
 1. In the campaign grid and in any Grid or Cards lens an operator can select up to 500 records, including every record matching the current conditions, and apply one change to all of them: owner, phase, status, a tag added or removed, a custom-field value, archive, or restore.
 2. A bulk change commits for every selected record or none, is rejected naming the first record that fails validation, writes one activity entry on each changed record and one bulk entry naming the operator and the count, and can be undone once within 1 hour, restoring the prior value of every record it changed.
 
-**Evidence.** `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a bulk-edit journey that exercises the 500-record bound, both lens doors, allowed change classes, atomic invalid-record refusal, per-record and bulk activity and one-hour/single-use undo. Cited `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs` show: The cited browser applies a two-campaign status change, undoes it and uses matching owner selection; internal admission helpers check field guards.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[CAMP-013] two-campaign bulk status undo restores once before one hour, refuses at and after expiry, and replays without effects"; `tests/ui-launch-operator-doors.mjs` — "[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone"; `tests/launch-write-authority.mjs`
+**Gap.** Acceptance 1 still needs the 500-record selection bound, both Grid and Cards lens doors and the complete owner, phase, status, tag, custom-field, archive and restore matrix. Acceptance 2 still needs first-invalid-record atomicity and complete per-record and bulk attribution; broader undo concurrency and authority combinations remain unproved. The native HTTP journey proves exact one-hour expiry for three separate two-campaign status batches, restoration of each prior status just before expiry, unchanged refusal exactly at and after expiry, single use with a new command ID and effect-free replay of the successful command. Ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
 
 #### CAMP-014 — Duplicating
 
@@ -1608,8 +1608,8 @@ Core · target · **partial** · Cites BASE-INSTALL-001, BASE-DATA-005, BASE-DAT
 **Acceptance.**
 1. Settings shows the current usage and named capacity for every declared workspace limit.
 
-**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited Settings-usage journey that reads usage against every declared limit; the cited browser journey exercises custom fields, samples and ownership without reading usage. Installer and whole-installation archive work are covered by the cited CLI journeys, but neither every-limit usage nor a fresh own-account/Managed installation is exercised here.
+**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`; `tests/ui-launch-operator-doors.mjs` (Launch operator doors at desktop and phone), via `tests/helpers/settings-capacity-browser.mjs`: native fixture inventories and distinct creation deltas agree with Settings HTTP and rendered maxima for eight retained entity capacities; refresh, archived campaign capacity, Worker restart persistence and access refusals.
+**Gap.** Settings covers campaigns, campaignCustomFields, deliverables, milestones, risks, decisions, savedLenses and automations only. Operator, session and lens-condition coverage and every other declared limit remain unproved, including selection, import, upload, request, public-rate, timeline and warehouse measurements and boundary matrices. Fresh own-account or Managed installation, R-12 receipts, SCALE-001 and SCALE-002 qualification and whole-clause judgment remain unclaimed. Ct contract conversion and generated-document synchronization remain release prerequisites.
 
 #### SCALE-001 — Operational scale
 
