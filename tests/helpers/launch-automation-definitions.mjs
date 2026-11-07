@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {value,expected} from './launch-installed.mjs'
+import {value,expected,campaign} from './launch-installed.mjs'
 const {launchEntities}=await import('../../src/apps/launch/contracts.ts')
 
 // AUTO-001 through the emitted Worker's command door: one definition holding every built-in
@@ -74,4 +74,72 @@ export async function verifyContributedRun(h,{campaign,owner}){
  assert.deepEqual({id:listed.id,state:listed.state,affected:listed.affectedCount,definitionVersion:listed.definitionVersion,trigger:listed.trigger,actions:listed.actions.map(step=>({position:step.position,command:step.command,state:step.state,deliverable:step.result.id,errorCode:step.errorCode}))},
   {id:run.id,state:'Succeeded',affected:1,definitionVersion:1,trigger:{kind:'event',key:run.trigger_key,event:'risk.created.v1'},actions:[{position:0,command:'launch.deliverable.create',state:'Complete',deliverable:created[0].id,errorCode:null}]})
  return {definition,run,risk:value(risk)}
+}
+
+// An admitted run keeps its original action and authority when the owner edits the definition.
+// Read versions and actions through public history, and distinguish effects on two campaigns.
+export async function verifyRetainedDefinition(h){
+ const oldCampaign=await campaign(h,'RETAINED'),newCampaign=await campaign(h,'LATER'),worker=await h.runtime.getWorker()
+ const oldMessage='Activity from the retained definition',newMessage='Activity from the later definition'
+ const oldAction={command:'add-activity',input:{campaignId:oldCampaign.id,message:oldMessage}}
+ const newAction={command:'add-activity',input:{campaignId:newCampaign.id,message:newMessage}}
+ const definition={name:'Retained definition journey',enabled:true,trigger:{kind:'event',event:'campaign.updated.v1'},actions:[oldAction]}
+ const saved=value(await h.command('launch.automation.save',{definition}))
+ assert.deepEqual({version:saved.definitionVersion,actions:saved.actions},{version:1,actions:[oldAction]})
+ const history=async()=>(await h.read(`/api/automations/${saved.id}/runs`)).runs
+ const monitor=async()=>{
+  const item=(await h.read('/api/automations')).automations.find(item=>item.id===saved.id)
+  return {version:item.version,definitionVersion:item.definitionVersion,enabled:item.enabled,actions:item.actions}
+ }
+ assert.deepEqual(await monitor(),{version:saved.version,definitionVersion:1,enabled:true,actions:['add-activity']})
+ const effects=async()=>{
+  const read=async id=>(await h.read(`/api/campaigns/${id}`)).activity.filter(entry=>[oldMessage,newMessage].includes(entry.description))
+  return {old:await read(oldCampaign.id),later:await read(newCampaign.id)}
+ }
+ assert.deepEqual(await effects(),{old:[],later:[]})
+ const eventMessage=response=>[{id:`retained-event-${response.data.commandId}`,timestamp:Date.now(),attempts:1,body:{kind:'cradle.launch.events.v1',commandId:response.data.commandId}}]
+ const patch=record=>h.command('launch.campaign.patch',{id:record.id,changes:{statusSummary:'Trigger the saved definition'}},expected(launchEntities.campaign,record))
+ const oldEvent=eventMessage(await patch(oldCampaign))
+ await worker.queue('cradle-work',oldEvent)
+ const queued=await history();assert.equal(queued.length,1)
+ const original=queued[0]
+ const step=run=>({id:run.id,definitionVersion:run.definitionVersion,state:run.state,subjectId:run.subjectId,event:run.trigger.event,actions:run.actions.map(action=>({command:action.command,state:action.state,result:action.result}))})
+ const oldQueued={id:original.id,definitionVersion:1,state:'Queued',subjectId:oldCampaign.id,event:'campaign.updated.v1',actions:[{command:'add-activity',state:'Pending',result:null}]}
+ assert.deepEqual(step(original),oldQueued,'The committed event admits an original-version run before the edit')
+ const edited=value(await h.command('launch.automation.save',{id:saved.id,definition:{...definition,actions:[newAction]}},expected(launchEntities.automation,saved)))
+ assert.deepEqual({version:edited.definitionVersion,actions:edited.actions},{version:2,actions:[newAction]})
+ assert.deepEqual(await monitor(),{version:edited.version,definitionVersion:2,enabled:true,actions:['add-activity']})
+ assert.deepEqual((await history()).map(step),[oldQueued],'Saving a new action leaves the queued original version intact')
+ assert.deepEqual(await effects(),{old:[],later:[]},'Admission and editing execute neither action')
+ const execution=async run=>{
+  const outbox=await h.db.prepare("SELECT id FROM admission_outbox WHERE action='launch.automation.execute' AND json_extract(input_json,'$.runId')=?").bind(run.id).first()
+  assert.ok(outbox,'The admitted run has a durable execution message')
+  return [{id:`retained-execute-${run.id}`,timestamp:Date.now(),attempts:1,body:{kind:'cradle.outbox.v1',outboxId:outbox.id}}]
+ }
+ const oldExecute=await execution(original)
+ await worker.queue('cradle-work',oldExecute)
+ for(let delivery=0;delivery<2;delivery++){await worker.queue('cradle-work',oldEvent);await worker.queue('cradle-work',oldExecute)}
+ const completed={command:'add-activity',state:'Complete',result:{activity:true}}
+ const oldSucceeded={...oldQueued,state:'Succeeded',actions:[completed]}
+ assert.deepEqual((await history()).map(step),[oldSucceeded])
+ const retained=await effects()
+ assert.deepEqual({old:retained.old.map(entry=>entry.description),later:retained.later},{old:[oldMessage],later:[]},'The retained execution uses only its original target and message, exactly once')
+ const newEvent=eventMessage(await patch(newCampaign))
+ await worker.queue('cradle-work',newEvent)
+ const admitted=await history();assert.equal(admitted.length,2)
+ const later=admitted.find(run=>run.id!==original.id)
+ const newQueued={id:later.id,definitionVersion:2,state:'Queued',subjectId:newCampaign.id,event:'campaign.updated.v1',actions:[{command:'add-activity',state:'Pending',result:null}]}
+ assert.deepEqual(step(later),newQueued,'A later committed trigger uses the edited definition version')
+ assert.deepEqual(step(admitted.find(run=>run.id===original.id)),oldSucceeded)
+ assert.notEqual(later.trigger.key,original.trigger.key)
+ assert.deepEqual(await effects(),retained,'The later trigger also waits for execution')
+ const newExecute=await execution(later)
+ await worker.queue('cradle-work',newExecute)
+ for(let delivery=0;delivery<2;delivery++)for(const message of [oldEvent,newEvent,oldExecute,newExecute])await worker.queue('cradle-work',message)
+ const finished=await history();assert.equal(finished.length,2,'Event redelivery creates no additional run after editing')
+ assert.deepEqual(step(finished.find(run=>run.id===original.id)),oldSucceeded)
+ assert.deepEqual(step(finished.find(run=>run.id===later.id)),{...newQueued,state:'Succeeded',actions:[completed]})
+ const result=await effects()
+ assert.deepEqual(result.old,retained.old,'Later work and duplicate delivery preserve the original effect unchanged')
+ assert.deepEqual(result.later.map(entry=>entry.description),[newMessage],'Only the new target receives the new action, exactly once')
 }
