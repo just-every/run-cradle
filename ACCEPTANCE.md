@@ -250,8 +250,8 @@ Core · published · **partial** · Cites BASE-SIGNIN-001, BASE-ACCESS-001, BASE
 2. Because the installation always keeps an active owner, that owner first hands ownership to another active member in settings — after a fresh email-link confirmation of their own identity — and can then remove themselves once they own no active campaign and hold no unresolved assigned decision.
 3. The initial operator-management policy allows any operator to invite or remove.
 
-**Evidence.** `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a Settings invitation journey that creates an operator and reads the resulting admitted identity; cited journeys create their people with fixture helpers. Cited `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs` show: Settings handover/removal with fresh identity confirmation, last-owner refusal and self-removal are exercised.
+**Evidence.** `tests/ui-launch-operator-doors.mjs` — "Launch operator doors at desktop and phone": a non-owner Launch operator selects their current explicit policy and submits a uniquely named invitation in Settings; the committed response, reconciled command, public member readback and reloaded Settings row retain one target identity with the submitted name, email, invited state and selected application scope at 1440 and 390. Retained `tests/launch-operator-doors.mjs` and the same browser journey exercise fresh-confirmation handover, last-owner refusal and self-removal.
+**Gap.** The selected acceptance-3 Settings invitation proof is present; independent whole-clause judgment, ct contract conversion and generated-document synchronization remain outstanding. Invitation activation and sign-in, alternate-policy and multi-application combinations, and the wider acceptance-1 and acceptance-2 ownership, removal and erasure combinations receive no new proof in this round; existing owner, guest and policy restrictions remain unchanged. Status remains partial.
 
 #### OPS-003 — Workspace timezone
 
