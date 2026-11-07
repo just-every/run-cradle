@@ -541,8 +541,8 @@ Core · published · **partial**
 1. Restoring returns the campaign and every record archived with it to the state each had at archiving, and creates no notification, readiness request, or automation run for the archived period.
 2. CAMP-003 is applied at restore: a campaign whose owner was removed while it was archived must be given a current owner before it becomes active.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public restore journey with the same populated state, observed no-catch-up effects and a removed-owner refusal that changes nothing. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal lifecycle helpers check restoration state, no catch-up work and removed-owner refusal.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects, native campaign validation and campaign record clauses", through `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "verifyPublicRemovedOwnerRestore": acceptance 2 uses HTTP creation, archive, member removal and fresh-version restore; owner-specific validation preserves public campaign, children and activity plus persisted events and outbox; a known current replacement restores publicly readable active state and ownership. Existing internal lifecycle controls and `tests/ui-launch-walkthrough.mjs` remain.
+**Gap.** Acceptance 1 still needs complete populated public restoration and archived-period no-catch-up proof; wider restore, date and authority combinations remain unproved. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; independent whole-clause judgment is not claimed.
 
 #### CAMP-011 — Deletion
 

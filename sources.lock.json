@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "3c7bd01c620349e42f05b4cbe520bfe91cd332777c37fc432cbf102ad7480867",
+      "sha256": "ec4b669e167267875a454dd9416fe3ff9aaa303fcd9192c0a0c1d16677b8525f",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ae0fd7932f4bd596e7a74f50806a29319318ab1141621107bb0608a9a6d2a170",
+      "sha256": "150f8027297cc943ed34f9c0ab6e7180e637dab9f82b5bd33e1797b0a4609c4b",
       "executable": false
     },
     "DEMO.md": {
@@ -12318,7 +12318,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
-      "sha256": "1abdd57607be2bd1132267447bda3935229647c14399b9714ea022f63579bc54",
+      "sha256": "0ca4a885d3fb2457413d9f15be0974a144ede1d2375dfeef0bee09fe6ec1c5c5",
       "executable": false
     },
     "tests/helpers/launch-clause-analysis.mjs": {
