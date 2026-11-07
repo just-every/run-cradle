@@ -1,13 +1,9 @@
+import {fileURLToPath} from 'node:url'
+import {spawn} from 'node:child_process'
 import {recordTemplateBrowser} from './helpers/record-template-browser.mjs'
 import {gridRangeBrowserJourney} from './helpers/records-grid-range-browser.mjs'
 import {baseAction} from './helpers/records-base-menu.mjs'
-import {fieldBrowser} from './helpers/field-browser.mjs'
-import {recordTrashBrowser} from './helpers/record-trash-browser.mjs'
 import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
-import {baseRolesJourney} from './helpers/records-base-roles-journey.mjs'
-import { collectionLookupsBrowser } from './helpers/records-collection-browser.mjs'
-import { historyBrowserJourney } from './helpers/records-history-journey.mjs'
-import { conditionalFormsJourney } from './helpers/records-forms-journey.mjs'
 import {boardBrowserJourney} from './helpers/records-board-journey.mjs'
 import {findBrowserJourney} from './helpers/records-find-journey.mjs'
 import {liveBrowserJourney} from './helpers/records-live-journey.mjs'
@@ -34,23 +30,41 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
  try{
   h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const fixture=await relationFixture(h);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
   const receipts=[]
-  for(const width of recordsBrowserWidths(accessibilityWidths)){
-   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+  for(const width of recordsBrowserWidths([...accessibilityWidths,320])){
+   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width<=390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    try{await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);receipts.push({width,...await relationReview(page,j,h,fixture),checkpoints:j.checkpoints})}finally{await context.close()}
   }
   await writeFile(path.join(output,'relation-results.json'),JSON.stringify(receipts,null,2))
  }finally{await browser?.close();await h?.close()}
 })
-contract(['CALC-001','PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009','FILE-001'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
- await fieldBrowser()
- await recordTrashBrowser()
- await baseRolesJourney()
+contract(['MOBILE-001','CALC-001','PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009','FILE-001'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
+ // These two streams own separate Workers, databases, browser contexts and
+ // evidence directories. Await both cleanups even when one assertion fails.
+ const results=await Promise.allSettled([manualRecordsBrowser(),supportingRecordsBrowsers()])
+ for(const result of results)if(result.status==='rejected')throw result.reason
+})
+
+async function supportingRecordsBrowsers(){
+ // The real installation migrations are synchronous. Isolate their event
+ // loop so they cannot starve the core journey's Playwright protocol/timers.
+ await new Promise((resolve,reject)=>{
+  const env={...process.env};delete env.NODE_TEST_CONTEXT
+  const child=spawn(process.execPath,[
+   '--import',fileURLToPath(new URL('./helpers/typescript-loader.mjs',import.meta.url)),
+   fileURLToPath(new URL('./helpers/records-supporting-browsers.mjs',import.meta.url)),
+  ],{stdio:'inherit',env})
+  child.once('error',reject)
+  child.once('exit',(code,signal)=>code===0?resolve():reject(new Error(`Supporting records journeys failed: ${signal??code}`)))
+ })
+}
+
+async function manualRecordsBrowser(){
 let h,browser,activePage
 try{
  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
  const receipts=[]
- for(const width of recordsBrowserWidths(accessibilityWidths)){
-  const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width);activePage=page
+ for(const width of recordsBrowserWidths([...accessibilityWidths,320])){
+  const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width<=390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width);activePage=page
   await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}])
   const verifyRetained=await retainedLaunch(page,j,h,width)
   await page.goto(h.origin+'/app/records');await page.getByRole('button',{name:/^Base ▾/}).waitFor()
@@ -73,8 +87,5 @@ try{
  const aiCounts={};for(const table of ['execution_model_calls','operation_model_tasks','operation_model_usage','construction_model_tasks','launch_analyses']){aiCounts[table]=(await h.db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n;assert.equal(aiCounts[table],0,`${table}: ordinary records must not call a model`)}
  await writeFile(path.join(output,'ai-counts.json'),JSON.stringify(aiCounts,null,2));
  await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2));console.log(JSON.stringify({passed:receipts,evidence:output}))
-}catch(error){if(activePage){await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:true});await writeFile(path.join(output,'failure.html'),await activePage.content())}throw error}finally{await browser?.close();await h?.close()}
-await collectionLookupsBrowser()
-await conditionalFormsJourney()
-await historyBrowserJourney()
-})
+}catch(error){if(activePage){try{await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:false,timeout:5000});await writeFile(path.join(output,'failure.html'),await activePage.content())}catch{console.warn('Failure screenshot unavailable; retaining the original journey error.')}}throw error}finally{await browser?.close();await h?.close()}
+}

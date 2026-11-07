@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {mkdir} from 'node:fs/promises'
 import AxeBuilder from '@axe-core/playwright'
-export async function automationTestBrowser(page,h,width){
+export async function automationTestBrowser(page,h,width,journey){
  const panel=page.getByRole('region',{name:'Test automation',exact:true})
  await panel.getByRole('combobox').first().selectOption({label:`synthetic-cradle-${width} · Packaging approval`})
  const response=page.waitForResponse(response=>response.url().endsWith('/test')&&response.request().method()==='POST')
@@ -11,5 +11,6 @@ export async function automationTestBrowser(page,h,width){
  await page.waitForLoadState('networkidle')
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
  const axe=await new AxeBuilder({page}).analyze();assert.deepEqual(axe.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.map(node=>node.target)})),[])
- await mkdir('docs/contract/AUTO-USER-005',{recursive:true});await panel.evaluate(element=>scrollTo(0,Math.max(0,element.getBoundingClientRect().top+scrollY-100)));await page.screenshot({path:`docs/contract/AUTO-USER-005/test-panel-${width}.png`,fullPage:false});await panel.locator('ol').evaluate(element=>scrollTo(0,Math.max(0,element.getBoundingClientRect().top+scrollY-100)));await page.screenshot({path:`docs/contract/AUTO-USER-005/test-panel-results-${width}.png`,fullPage:false})
+ await journey.capture('automation-test-results')
+ await mkdir('.private/automation-tests',{recursive:true});await panel.evaluate(element=>scrollTo(0,Math.max(0,element.getBoundingClientRect().top+scrollY-100)));await page.screenshot({path:`.private/automation-tests/test-panel-${width}.png`,fullPage:false});await panel.locator('ol').evaluate(element=>scrollTo(0,Math.max(0,element.getBoundingClientRect().top+scrollY-100)));await page.screenshot({path:`.private/automation-tests/test-panel-results-${width}.png`,fullPage:false})
 }

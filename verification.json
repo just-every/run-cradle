@@ -138,10 +138,11 @@
     },
     {
       "name": "launch-effects",
-      "browser": false,
+      "browser": true,
       "hosted": false,
       "commands": [
-        "node scripts/verify-suite.mjs test:launch 17/17"
+        "node scripts/verify-suite.mjs test:launch 17/17",
+        "env CRADLE_RECORDS_BROWSER_WIDTH=320 CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
       ]
     },
     {
@@ -246,11 +247,12 @@
     },
     {
       "name": "identity",
-      "browser": false,
+      "browser": true,
       "hosted": false,
       "commands": [
         "pnpm test:oidc",
-        "node --test --test-concurrency=1 tests/installed-home.mjs tests/public-document-runtime.mjs tests/local-auth-runtime.mjs"
+        "node --test --test-concurrency=1 tests/installed-home.mjs tests/public-document-runtime.mjs tests/local-auth-runtime.mjs",
+        "CRADLE_RECORDS_BROWSER_WIDTH=320 pnpm exec node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='Home presents records|Record detail keeps' tests/ui-records-builder.mjs"
       ]
     },
     {
@@ -268,7 +270,7 @@
       "browser": true,
       "hosted": false,
       "commands": [
-        "env CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
+        "env CRADLE_RECORDS_BROWSER_WIDTH=1440,390 CRADLE_RECORDS_CALENDAR_GROUP=views pnpm test:calendar"
       ]
     },
     {

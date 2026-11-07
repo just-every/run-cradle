@@ -64,9 +64,9 @@ export async function homeReview(output){
  const receipts=[]
  try{
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
-  for(const width of recordsBrowserWidths(accessibilityWidths)){
+  for(const width of recordsBrowserWidths([...accessibilityWidths,320])){
    h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0))
-   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width===390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
+   const context=await browser.newContext(accessibilityContextOptions({viewport:{width,height:width<=390?844:900}})),page=await context.newPage(),j=recordsJourney(page,h.origin,output,width)
    await context.addCookies([{name: h.cookie.split('=')[0], value: h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app');const initialBases=await homeBases(page,h.origin);assert.equal((await h.db.prepare('SELECT COUNT(*) AS n FROM manual_record_bases').first()).n,0)
    const membership=await h.db.prepare('SELECT principal_id,state FROM authority_memberships WHERE app_id=?').bind(LAUNCH_APP_ID).first();assert.ok(membership)
    await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE principal_id=? AND app_id=?").bind(membership.principal_id,LAUNCH_APP_ID).run()
@@ -146,7 +146,7 @@ async function entryCases(page,j,h,browser,lastBase,width,output) {
  await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,name,email,active) VALUES(?,?,?,?,?,1)').bind(id,now,now,'New teammate',`empty-${width}@records.example.test`).run()
  await h.db.prepare("INSERT INTO authority_principals(id,kind,human_id,state,initial_owner,created_at,updated_at) VALUES(?,'human',?,'active',0,?,?)").bind(id,id,now,now).run()
  const auth=await createFixtureAuth(h.db,{appOrigin:h.origin,sessionSecret:'test-only-records-session-secret-at-least-32-characters',mode:'development'},id),{cookie}=await auth.signIn(id)
- const emptyContext=await browser.newContext({viewport:{width,height:width===390?844:900}})
+ const emptyContext=await browser.newContext({viewport:{width,height:width<=390?844:900}})
  try {
   await emptyContext.addCookies([{name:cookie.split('=')[0],value:cookie.slice(cookie.indexOf('=')+1),url:h.origin}])
   const empty=await emptyContext.newPage(),ej=recordsJourney(empty,h.origin,output,width)

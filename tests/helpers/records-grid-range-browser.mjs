@@ -21,19 +21,20 @@ export async function gridRangeBrowserJourney() {
     browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ['--no-sandbox', '--use-mock-keychain', '--password-store=basic'] })
     const results = []
     for (const width of recordsBrowserWidths()) {
-      await fillBrowserJourney(runtime, browser, width)
-      results.push(await rangePasteBrowserJourney(runtime, browser, width, output))
+      const keyboard = await fillBrowserJourney(runtime, browser, width, output)
+      results.push({ ...await rangePasteBrowserJourney(runtime, browser, width, output), keyboard })
     }
     await writeFile(path.join(output, 'results.json'), JSON.stringify(results, null, 2))
     console.log(JSON.stringify({ rangeHistory: results }))
   } finally { await browser?.close(); await runtime?.close() }
 }
 
-async function fillBrowserJourney(runtime, browser, width) {
-    const context = await browser.newContext({ viewport: { width, height: 900 } })
+async function fillBrowserJourney(runtime, browser, width, output) {
+    const context = await browser.newContext({ viewport: { width, height: width <= 390 ? 844 : 900 } })
     try {
     await context.addCookies([{ name: runtime.cookie.split('=')[0], value: runtime.cookie.slice(runtime.cookie.indexOf('=') + 1), url: runtime.origin }])
     const page = await context.newPage()
+    const journey = recordsJourney(page, runtime.origin, output, width)
     await page.goto(runtime.origin + '/app/records')
     await page.getByRole('button', { name: /^Base ▾/ }).waitFor()
     const appId = createUlid(), entityId = createUlid(), name = newField('Item'), value = newField('Quantity', 'number')
@@ -45,9 +46,11 @@ async function fillBrowserJourney(runtime, browser, width) {
     const first = page.locator(`td[data-field-id="${value.id}"][data-grid-row="0"]`)
     const patch = () => page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/commands/record.patch'))
     const quantities = async () => (await browserCall(page, base + '/query', {})).items.map(row => row.fields[value.id].value)
+    const keyboard = await keyboardEditJourney(page, journey, base, name, value)
     await first.click(); await page.keyboard.press('Shift+ArrowDown')
     let pending = patch(); await tableAction(page, 'Fill down'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '2'])
+    await journey.capture('grid-range-filled')
     pending = patch(); await tableAction(page, 'Undo'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '7'])
     // Do not wait for a background read: the admitted command's rows already
@@ -58,12 +61,77 @@ async function fillBrowserJourney(runtime, browser, width) {
     pending = patch(); await tableAction(page, 'Undo'); assert.equal((await pending).status(), 200)
     pending = patch(); await tableAction(page, 'Redo'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '2'])
+    await journey.capture('grid-range-redone')
+    return keyboard
     } finally { await context.close() }
+}
+
+async function keyboardEditJourney(page, journey, base, name, value) {
+  const cell = (row, column) => page.locator(`td[data-grid-row="${row}"][data-grid-column="${column}"]`)
+  const focused = target => target.evaluate(element => element === document.activeElement)
+  const read = async () => (await browserCall(page, base + '/query', {})).items
+  const initial = await read(), commands = []
+  const observe = request => { if (request.method() === 'POST' && request.url().endsWith('/commands/record.patch')) commands.push(request.postDataJSON().commandId) }
+  page.on('request', observe)
+  await cell(0, 0).waitFor()
+  // Reach the first cell from the document's normal Tab order, without focus injection.
+  for (let tabs = 0; tabs < 80 && !await focused(cell(0, 0)); tabs++) {
+    await page.keyboard.press('Tab')
+    const tools = page.getByRole('button', { name: 'Table tools', exact: true })
+    if (await focused(tools)) {
+      await tools.getByRole('tooltip').waitFor()
+      await journey.capture('grid-tools-tooltip')
+    }
+  }
+  assert.equal(await focused(cell(0, 0)), true, 'Tab navigation enters the first grid cell')
+  for (const [key, row, column] of [['ArrowRight', 0, 1], ['ArrowDown', 1, 1], ['ArrowLeft', 1, 0], ['ArrowUp', 0, 0], ['ArrowRight', 0, 1]]) {
+    await page.keyboard.press(key)
+    assert.equal(await focused(cell(row, column)), true, `${key} moves to row ${row + 1}, column ${column + 1}`)
+  }
+  const modifier = process.platform === 'darwin' ? 'Meta' : 'Control'
+  for (const [key, text, version, capture] of [['Enter', '11.5', 2, 'keyboard-enter'], ['F2', '2', 3, 'keyboard-f2']]) {
+    await page.keyboard.press(key)
+    const input = page.getByLabel('Edit Quantity', { exact: true })
+    await input.waitFor()
+    assert.equal(await focused(input), true, `${key} focuses the inline editor`)
+    assert.equal(await input.inputValue(), version === 2 ? '2' : '11.5')
+    await page.keyboard.press(`${modifier}+a`); await page.keyboard.insertText(text)
+    await journey.capture(capture)
+    const pending = page.waitForResponse(response => response.request().method() === 'POST' && response.url().endsWith('/commands/record.patch'))
+    await page.keyboard.press('Enter')
+    const response = await pending
+    assert.equal(response.status(), 200)
+    assert.equal((await response.json()).data.state, 'committed')
+    await input.waitFor({ state: 'detached' })
+    assert.equal(await cell(0, 1).innerText(), text)
+    assert.equal(await focused(cell(0, 1)), true, 'Keyboard save returns focus to the edited cell')
+    const rows = await read()
+    assert.equal(rows[0].fields[value.id].value, text)
+    assert.equal(rows[0].version, version)
+    assert.deepEqual(rows[0].fields[name.id], initial[0].fields[name.id])
+    assert.deepEqual(rows[1], initial[1], 'Inline editing leaves the other record unchanged')
+  }
+  await page.keyboard.press('ArrowDown')
+  assert.equal(await focused(cell(1, 1)), true)
+  const beforeCancel = await read()
+  await page.keyboard.press('F2')
+  const input = page.getByLabel('Edit Quantity', { exact: true })
+  await input.waitFor(); assert.equal(await input.inputValue(), '7')
+  await page.keyboard.press(`${modifier}+a`); await page.keyboard.insertText('888')
+  await page.keyboard.press('Escape')
+  await input.waitFor({ state: 'detached' })
+  assert.equal(await focused(cell(1, 1)), true, 'Escape returns focus to the cancelled cell')
+  assert.equal(await cell(1, 1).innerText(), '7')
+  assert.deepEqual(await read(), beforeCancel, 'Escape preserves every value and version')
+  assert.equal(commands.length, 2, 'Only the two saved edits submit commands')
+  await journey.capture('keyboard-cancelled')
+  page.off('request', observe)
+  return { entry: 'Tab', moves: ['Right', 'Down', 'Left', 'Up'], saves: ['Enter', 'F2'], commands, cancel: 'unchanged', checkpoints: journey.checkpoints }
 }
 
 async function rangePasteBrowserJourney(runtime, browser, width, output) {
   const ownerContext = await browser.newContext({ viewport: { width, height: 900 } })
-  const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, permissions: ['clipboard-read', 'clipboard-write'] })
+  const context = await browser.newContext({ viewport: { width, height: width <= 390 ? 844 : 900 }, permissions: ['clipboard-read', 'clipboard-write'] })
   const page = await context.newPage(), owner = await ownerContext.newPage(), journey = recordsJourney(page, runtime.origin, output, width)
   page.setDefaultTimeout(15000)
   const cookie = (context, value) => context.addCookies([{ name: value.split('=')[0], value: value.slice(value.indexOf('=') + 1), url: runtime.origin }])
@@ -82,11 +150,24 @@ async function rangePasteBrowserJourney(runtime, browser, width, output) {
     page.on('request', observe)
     const first = page.locator('td[data-grid-row="0"][data-grid-column="0"]')
     await first.focus()
+    const beforeInvalid = await fixture.read()
+    await page.evaluate(text => navigator.clipboard.writeText(text), fixture.invalidText)
+    await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+v`)
+    const invalid = page.getByRole('alert').filter({ hasText: 'Nothing was changed.' })
+    await invalid.getByText(/Row 17, Quantity:.*Enter a number/).waitFor()
+    await invalid.getByText(/Row 38, Ship date:.*real calendar date/).waitFor()
+    const invalidErrors = await invalid.locator('li').allTextContents()
+    assert.equal(invalidErrors.length, 2, 'Every invalid cell is named, with no unrelated error')
+    await fixture.values(fixture.before, 1)
+    assert.deepEqual(await fixture.read(), beforeInvalid, 'Invalid paste preserves all 250 cells and every record version')
+    assert.deepEqual(observed, [], 'Invalid paste submits no partial command')
+    await journey.capture('range-invalid', { viewport: true })
     await page.evaluate(text => navigator.clipboard.writeText(text), fixture.text)
     let pending = patch()
     await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+v`)
     commands.push(await rangeReceipt(runtime, await pending, fixture, fixture.operator))
     await fixture.values(fixture.after, 2)
+    assert.equal(await invalid.count(), 0, 'Corrected paste clears validation errors')
     await journey.capture('range-pasted')
     pending = patch(); await tableAction(page, 'Undo')
     commands.push(await rangeReceipt(runtime, await pending, fixture, fixture.operator))
@@ -130,7 +211,7 @@ async function rangePasteBrowserJourney(runtime, browser, width, output) {
     }
     assert.equal(observed.length, 5, 'Neither refusal silently retries the range')
     await journey.capture('range-demoted')
-    return { width, records: 50, cells: 250, commands, conflict: { row: 25, field: quantity.label, currentValue: '9876.5', status: 409 }, demoted: 403, checkpoints: journey.checkpoints }
+    return { width, records: 50, cells: 250, invalidErrors, invalidPaste: 'unchanged', commands, conflict: { row: 25, field: quantity.label, currentValue: '9876.5', status: 409 }, demoted: 403, checkpoints: journey.checkpoints }
   } catch (error) {
     await page.screenshot({ path: path.join(output, `failure-${width}.png`), fullPage: true })
     throw error

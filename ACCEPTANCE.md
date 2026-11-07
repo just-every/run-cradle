@@ -419,8 +419,8 @@ Core · published · **partial**
 1. An operator can create, edit, archive, and delete a campaign.
 2. It requires a code, a name, an owner, a start date, and a launch date, and it also carries an objective, a status summary of at most 280 characters, a phase, a status, health, budget, spend, tags, and custom fields.
 
-**Evidence.** `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs`
-**Gap.** Missing a campaign CRUD journey that also edits, archives and deletes through the cited public doors, with the unsafe deletion refused unchanged. Cited `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs` show: The cited browser journeys create campaigns with populated or blank optional prose and read detail/reload.
+**Evidence.** `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs`; `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects, native campaign validation and campaign record clauses" via `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "deletion"
+**Gap.** Wider public create, edit and archive matrix and the complete required, optional and custom-field matrix remain unproved. The lifecycle journey creates an independently named campaign through native HTTP, reads its current version, refuses wrong-case confirmation with a confirmationCode validation error, and checks unchanged public campaign, children, activity, retained file bytes and queued work plus persisted admission effects; successful public deletion remains the positive control. Ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
 
 #### CAMP-002 — Lifecycle
 
@@ -579,8 +579,8 @@ Core · published · **partial**
 1. In the campaign grid and in any Grid or Cards lens an operator can select up to 500 records, including every record matching the current conditions, and apply one change to all of them: owner, phase, status, a tag added or removed, a custom-field value, archive, or restore.
 2. A bulk change commits for every selected record or none, is rejected naming the first record that fails validation, writes one activity entry on each changed record and one bulk entry naming the operator and the count, and can be undone once within 1 hour, restoring the prior value of every record it changed.
 
-**Evidence.** `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a bulk-edit journey that exercises the 500-record bound, both lens doors, allowed change classes, atomic invalid-record refusal, per-record and bulk activity and one-hour/single-use undo. Cited `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs` show: The cited browser applies a two-campaign status change, undoes it and uses matching owner selection; internal admission helpers check field guards.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[CAMP-013] two-campaign bulk status undo restores once before one hour, refuses at and after expiry, and replays without effects"; `tests/ui-launch-operator-doors.mjs` — "[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone"; `tests/launch-write-authority.mjs`
+**Gap.** Acceptance 1 still needs the 500-record selection bound, both Grid and Cards lens doors and the complete owner, phase, status, tag, custom-field, archive and restore matrix. Acceptance 2 still needs first-invalid-record atomicity and complete per-record and bulk attribution; broader undo concurrency and authority combinations remain unproved. The native HTTP journey proves exact one-hour expiry for three separate two-campaign status batches, restoration of each prior status just before expiry, unchanged refusal exactly at and after expiry, single use with a new command ID and effect-free replay of the successful command. Ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
 
 #### CAMP-014 — Duplicating
 
@@ -1468,8 +1468,8 @@ Core · published · **partial** · Cites BASE-INPUT-003, BASE-DATA-003
 1. The uploaded file is stored with its import record and is downloadable by any operator.
 2. Deleting the import record deletes the file within 5 minutes.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
-**Gap.** Missing a cited import-deletion journey that deletes the import record and verifies the stored file is gone within five minutes; the cited journeys only download the retained file.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file", extended by `tests/helpers/launch-import-deletion.mjs`: native upload, preview and commit followed by the mounted human import.delete command withdraws one committed campaign import and its preview content, fences its file doors, and confirms original FILES object removal within 300000 ms after Worker restart and scheduled delivery; every campaign, version and activity entry and an unrelated import file remain exact; missing and revoked import.delete authority refuse unchanged, captured confirmation cannot resurrect the import, and repeated delivery retains one cleanup and audit receipt.
+**Gap.** Missing acceptance 1's complete any-operator and cross-kind download matrix, deletion proof for other import kinds, shared-file custody beyond conservative refusal of shared or non-import artifacts, archive and restore erasure, and broader authority, concurrency and crash combinations. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; independent whole-clause judgment remains outstanding. Status remains partial with no wider deletion grant.
 
 ### Settings
 
@@ -1483,8 +1483,8 @@ Core · published · **partial**
 1. Settings is one operator-only area with sections for the workspace (name, timezone, currency, quiet hours), operators, notification preferences, custom-field definitions, automations and digest recipients, AI, imports and failed email deliveries, and current usage against every declared workspace limit.
 2. Changing a setting records the operator and the time and applies to work dispatched after the change; work already dispatched is unaffected.
 
-**Evidence.** `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited Settings journey that reads every named section/current usage and changes a setting with actor/time readback while distinguishing already-dispatched from later work; the cited journey exercises custom fields, samples and ownership only.
+**Evidence.** `tests/ui-launch-operator-doors.mjs` — "[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone"; `tests/helpers/settings-attribution-journey.mjs` — Workspace name save, known operator, bounded audit time, reload and command replay
+**Gap.** Missing the complete named-section and current-usage inventory, including OWN-001 capacities, and the already-dispatched versus later-work matrix. Existing owner, policy and notification holds, ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
 
 #### SET-002 — AI configuration
 
@@ -1608,8 +1608,8 @@ Core · target · **partial** · Cites BASE-INSTALL-001, BASE-DATA-005, BASE-DAT
 **Acceptance.**
 1. Settings shows the current usage and named capacity for every declared workspace limit.
 
-**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited Settings-usage journey that reads usage against every declared limit; the cited browser journey exercises custom fields, samples and ownership without reading usage. Installer and whole-installation archive work are covered by the cited CLI journeys, but neither every-limit usage nor a fresh own-account/Managed installation is exercised here.
+**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`; `tests/ui-launch-operator-doors.mjs` (Launch operator doors at desktop and phone), via `tests/helpers/settings-capacity-browser.mjs`: native fixture inventories and distinct creation deltas agree with Settings HTTP and rendered maxima for eight retained entity capacities; refresh, archived campaign capacity, Worker restart persistence and access refusals.
+**Gap.** Settings covers campaigns, campaignCustomFields, deliverables, milestones, risks, decisions, savedLenses and automations only. Operator, session and lens-condition coverage and every other declared limit remain unproved, including selection, import, upload, request, public-rate, timeline and warehouse measurements and boundary matrices. Fresh own-account or Managed installation, R-12 receipts, SCALE-001 and SCALE-002 qualification and whole-clause judgment remain unclaimed. Ct contract conversion and generated-document synchronization remain release prerequisites.
 
 #### SCALE-001 — Operational scale
 
@@ -2880,8 +2880,8 @@ Core · target · **partial** · Cites BASE-ACCESSIBILITY-001 · Register R-2, R
 **Acceptance.**
 1. Every browser journey above also runs at 390 and 320 with axe.
 
-**Evidence.** `tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`
-**Gap.** Current CI exercises records, import/exit, calendar/board/gallery/timeline, collaboration, roles, automation and Launch browser journeys at 390 as well as 1440 (`tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`, `tests/ui-base-exits.mjs`, `tests/ui-records-calendar.mjs`, `tests/ui-user-automations.mjs`, `tests/ui-launch-walkthrough.mjs`); 320 px and complete coverage of every target journey remain unproven
+**Evidence.** `tests/ui-records-builder.mjs` (Home presents records and bases before launch work at desktop and phone widths; Record detail keeps one relation heading, reachable links and policy restrictions; [SNAP-002] Manual records browser journeys and concrete UI review corrections, including historyBrowserJourney, baseRolesJourney, collectionLookupsBrowser, conditionalFormsJourney and recordCommentsBrowser); `tests/ui-records-calendar.mjs` (record calendars, boards, private covers and saved view presentation at desktop and phone widths); `tests/ui-user-automations.mjs` (owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone); `tests/helpers/records-browser-journey.mjs` (recordsJourney: actual phone viewport, page overflow, measured active 24-by-24 CSS-pixel hit regions and serious or critical axe checks)
+**Gap.** Every other records, import, view, form, interface, comment and automation-history journey still needs complete 320 and 390 coverage, target measurements and accessibility proof, including journeys for currently unbuilt features. These bounded sanity journeys do not satisfy the whole-phone-app clause. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; this held pin has no contract-docs generator or declared Lander-Regenerate command.
 
 #### MOBILE-002 — Installable app with camera and scanning
 
