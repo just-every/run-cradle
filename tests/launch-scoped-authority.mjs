@@ -163,22 +163,104 @@ test('[BASE-ACCESS-004 RECORDS-001] every retained launch transport enforces cur
 test('[OPS-001 APP-SCOPE-001] reviewed legacy mapping retains identities and rights without replacing an existing scoped policy', async () => {
   const h = await launchAuthorityRuntime()
   try {
-    const id=createUlid(),policyId=createUlid(),now=new Date().toISOString()
-    await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,version,name,email,active) VALUES(?,1,1,1,?,?,1)').bind(id,'Prior launch operator',`${id}@example.test`).run()
-    const rules=JSON.parse(h.policy.rules_json).map(rule=>({...rule,id:createUlid(),principals:[{kind:'human',id}],rows:rule.rows.kind==='condition'&&rule.rows.value===h.owner?{...rule.rows,value:id}:rule.rows}))
-    const policy={id:policyId,appId:LAUNCH_APP_ID,name:'Reviewed original launch mapping',rules,version:1,createdAt:now,updatedAt:now}
-    const input={initialOwnerId:h.owner,launchAppId:LAUNCH_APP_ID,policies:[policy],memberships:[{memberId:id,policyId}]}
+    const scoped=await h.addPerson({change:rules=>rules.map(rule=>({...rule,actions:[],writableFields:[]}))})
+    const otherApp=await h.addPerson({appId:'00000000000000000000000600'})
+    const authority=async()=>Object.fromEntries(await Promise.all(['authority_policies','authority_memberships','authority_grants'].map(async table=>[table,(await h.db.prepare(`SELECT * FROM ${table} ORDER BY 1,2`).all()).results])))
+    const original=await authority(),peers=[],now=new Date().toISOString()
+    for(const name of ['Prior launch operator','Second launch operator']){
+      const id=createUlid(),policyId=createUlid()
+      await h.db.prepare('INSERT INTO operators(id,created_at,updated_at,version,name,email,active) VALUES(?,1,1,1,?,?,1)').bind(id,name,`${id}@example.test`).run()
+      const rules=JSON.parse(h.policy.rules_json).map(rule=>({...rule,id:createUlid(),principals:[{kind:'human',id}],rows:rule.rows.kind==='condition'&&rule.rows.value===h.owner?{...rule.rows,value:id}:rule.rows}))
+      const policy={id:policyId,appId:LAUNCH_APP_ID,name:'Reviewed original launch mapping',rules,version:1,createdAt:now,updatedAt:now}
+      peers.push({id,policyId,policy})
+    }
+    // Include an already-scoped person in the historical input: its current
+    // policy and membership must win over the reviewed legacy mapping.
+    const retainedPolicy={...peers[0].policy,id:createUlid(),rules:peers[0].policy.rules.map(rule=>({...rule,id:createUlid(),principals:[{kind:'human',id:scoped.id}],rows:rule.rows.kind==='condition'&&rule.rows.value===peers[0].id?{...rule.rows,value:scoped.id}:rule.rows}))}
+    const input={initialOwnerId:h.owner,launchAppId:LAUNCH_APP_ID,policies:[...peers.map(peer=>peer.policy),retainedPolicy],memberships:[...peers.map(({id,policyId})=>({memberId:id,policyId})),{memberId:scoped.id,policyId:retainedPolicy.id}]}
     await initializeLegacyAuthority(h.db,input)
-    const before=await h.db.prepare('SELECT * FROM authority_memberships WHERE principal_id=?').bind(id).first()
+    const before=await authority()
+    for(const [table,rows] of Object.entries(original))for(const row of rows)assert.ok(before[table].some(current=>JSON.stringify(current)===JSON.stringify(row)),'Existing scoped authority is preserved exactly')
+    for(const peer of peers){
+      const membership=before.authority_memberships.find(row=>row.principal_id===peer.id)
+      assert.equal(membership.policy_id,peer.policyId);assert.equal(membership.legacy,1)
+    }
     await initializeLegacyAuthority(h.db,input)
     await h.db.batch(await prepareLaunchSetup(h.db,h.owner))
-    assert.deepEqual(await h.db.prepare('SELECT * FROM authority_memberships WHERE principal_id=?').bind(id).first(),before)
-    assert.equal(before.legacy,1)
+    assert.deepEqual(await authority(),before)
     await adoptFixtureOperators(h.db)
-    assert.equal((await h.request(await h.signIn(id),'/api/campaigns')).status,200)
+    for(const peer of peers){
+      peer.session=await h.signIn(peer.id)
+      assert.notEqual(peer.id,h.owner)
+      assert.equal((await h.db.prepare('SELECT role FROM oa_operators WHERE id=?').bind(peer.id).first()).role,'member')
+      assert.equal((await body(await h.request(peer.session,'/api/session'))).operator.id,peer.id)
+      assert.equal((await h.request(peer.session,'/api/campaigns')).status,200)
+      const denied=await h.request(peer.session,'/api/v1/apps/00000000000000000000000600/entities/00000000000000000000000610/query',{method:'POST',body:'{}'})
+      assert.equal(denied.status,403,'Retained Launch rights do not expose another application')
+      assert.equal(Object.hasOwn(await denied.json(),'data'),false)
+    }
+    const revisions=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
+    const committed=[]
+    const command=async(peer,action,input,expected=[])=>{
+      const route=`/api/v1/commands/launch.${action}`,envelope=JSON.stringify({commandId:createUlid(),input,expected})
+      const data=(await body(await h.request(peer.session,route,{method:'POST',body:envelope}))).data
+      assert.equal(data.state,'committed');committed.push({peer,route,envelope});return data.value
+    }
+    const readCampaign=async(peer,id)=>(await body(await h.request(peer.session,`/api/campaigns/${id}`))).campaign
+    for(const [index,actor] of peers.entries()){
+      const owner=peers[1-index]
+      const fields={code:`LEGACY-${index}`,name:`Shared campaign ${index}`,ownerId:owner.id,startDate:'2026-01-01',launchDate:'2027-01-01',objective:'Original objective',statusSummary:'Shared work',phase:'Planning',status:'On track',health:50,budgetMinor:0,spendMinor:0,tags:[],customFields:{}}
+      const campaign=await command(actor,'campaign.create',{fields})
+      for(const reader of peers){
+        const current=await readCampaign(reader,campaign.id)
+        assert.equal(current.name,`Shared campaign ${index}`);assert.equal(current.owner.id,owner.id)
+        assert.equal(current.objective,'Original objective');assert.equal(current.version,1)
+      }
+      // Optimistic versions come from a fresh public read, never fixture SQL.
+      await command(actor,'campaign.patch',{id:campaign.id,changes:{name:`Edited campaign ${index}`,objective:'Edited by the other operator'}},revisions('campaign',await readCampaign(actor,campaign.id)))
+      for(const reader of peers){
+        const current=await readCampaign(reader,campaign.id)
+        assert.equal(current.name,`Edited campaign ${index}`);assert.equal(current.owner.id,owner.id)
+        assert.equal(current.objective,'Edited by the other operator');assert.equal(current.version,2)
+      }
+      const deliverable=await command(actor,'deliverable.create',{fields:{campaignId:campaign.id,title:`Shared deliverable ${index}`,ownerId:owner.id,dueDate:null}})
+      const readDeliverable=async reader=>{
+        const detail=await body(await h.request(reader.session,`/api/campaigns/${campaign.id}`))
+        const row=detail.deliverables.find(row=>row.id===deliverable.id)
+        assert.ok(row);assert.equal(row.title,`Shared deliverable ${index}`);assert.equal(row.owner.id,owner.id)
+        assert.equal(detail.campaign.deliverableTotal,1)
+        assert.equal(detail.campaign.deliverableComplete,row.state==='Complete'?1:0)
+        return row
+      }
+      for(const [action,state,version] of [[null,'Open',1],['complete','Complete',2],['reopen','Open',3]]){
+        if(action)await command(actor,`deliverable.${action}`,{id:deliverable.id},revisions('deliverable',await readDeliverable(actor)))
+        for(const reader of peers){
+          const current=await readDeliverable(reader)
+          assert.equal(current.state,state);assert.equal(current.version,version)
+          assert.equal(current.completedById,state==='Complete'?actor.id:null)
+          if(state==='Complete')assert.ok(current.completedAt);else assert.equal(current.completedAt,null)
+        }
+      }
+      assert.equal((await h.request(otherApp.session,`/api/campaigns/${campaign.id}`)).status,403)
+      const denied=await h.request(scoped.session,'/api/v1/commands/launch.campaign.patch',{method:'POST',body:JSON.stringify({commandId:createUlid(),input:{id:campaign.id,changes:{name:'Forbidden scoped edit'}},expected:revisions('campaign',await readCampaign(scoped,campaign.id))})})
+      assert.equal(denied.status,404,'A reviewed legacy mapping does not widen an existing scoped membership')
+      const refusal=await denied.json()
+      assert.equal(refusal.error.code,'not_found');assert.equal(Object.hasOwn(refusal.error,'currentVersion'),false)
+      for(const reader of peers)assert.equal((await readCampaign(reader,campaign.id)).name,`Edited campaign ${index}`)
+    }
+    assert.deepEqual(await authority(),before,'Native mutations create no grants and alter no policies or memberships')
+    const id=peers[0].id
     await h.db.prepare('DELETE FROM authority_memberships WHERE principal_id=?').bind(id).run()
     await initializeLegacyAuthority(h.db,input)
     assert.equal(await h.db.prepare('SELECT 1 FROM authority_memberships WHERE principal_id=?').bind(id).first(),null,'Repeating an exact historical mapping cannot restore a deleted membership')
+    assert.equal((await h.request(peers[0].session,'/api/campaigns')).status,403)
+    const captured=committed[0]
+    const campaignState=async()=>(await body(await h.request(peers[1].session,'/api/campaigns'))).items.map(({id,name,version,owner})=>({id,name,version,owner}))
+    const prior=await campaignState(),replay=await h.request(captured.peer.session,captured.route,{method:'POST',body:captured.envelope})
+    assert.equal(replay.status,404,'Deleted membership fences a captured committed command as well as new reads')
+    const refusal=await replay.json()
+    assert.equal(refusal.error.code,'not_found');assert.equal(Object.hasOwn(refusal,'data'),false)
+    assert.deepEqual(await campaignState(),prior,'Refused replay does not create or change campaign work')
     assert.equal((await h.db.prepare('SELECT count(*) n FROM authority_grants').first()).n,0)
   } finally { await h.close() }
 })

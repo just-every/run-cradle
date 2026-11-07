@@ -203,8 +203,8 @@ Core · published · **partial** · Cites BASE-DOCS-001, BASE-PUBLIC-001, BASE-A
 **Acceptance.**
 1. Public document and built-site journeys open the landing, docs, setup and sign-in surfaces.
 
-**Evidence.** `tests/public-document-runtime.mjs`, `tests/start-resources.mjs`
-**Gap.** Missing a cited built-site/broken-link journey proving build-time Markdown link/anchor refusal and the static site’s sign-in-free chrome. Existing cited journeys read the installed docs and genuine 404s, but do not build/check those static-site outcomes.
+**Evidence.** `tests/public-document-runtime.mjs` — "Every published docs page shares the site chrome and serves truthful product and regulated-data boundaries without a session", including `tests/helpers/static-site.mjs` (staticSiteJourney: real CLI refusals for a missing Markdown target and heading, restored control build, every emitted docs page served without a session with current navigation, shared chrome and editable source, without installed sign-in links); `tests/start-resources.mjs`
+**Gap.** The selected built-static-site gap is proved. Wider malformed-link, image and manifest cases, complete static asset and privacy proof, unlisted-slug static HTTP coverage and expanded setup and sign-in journeys remain unproved here. Existing ct release prerequisites, generated-document synchronization and independent whole-clause judgment remain unclaimed; external R-2 and R-3 receipts stay in the Field proof register.
 
 ### Operators
 
@@ -221,8 +221,8 @@ Core · published · **partial** · Cites BASE-ACCESS-001, BASE-ACCESS-002, BASE
 4. Local and hosted installations expose no captured-mail inbox or outbox. Hosted mail failures give actionable guidance; an unclaimed installation directs its host to finish deployment.
 5. Absent owner configuration admits neither the legacy sign-in path nor legacy product cookies.
 
-**Evidence.** `tests/auth-base-only-runtime.mjs` (including “AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration”), `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs`
-**Gap.** Missing a journey in the old Evidence set that prepares a product mutation, revokes its Base session and proves refusal with no effect, plus the local rer-dev/private-setup and durable first-run paths; the cited files exercise production bootstrap and sign-in, not these retained paths. Existing local dev/first-run browser journeys are in ui-local-signin.mjs and installed-home.mjs, which this old Evidence cell does not cite.
+**Evidence.** `tests/base-installation.mjs` — “emitted Base SendGrid magic-link uses a read-only confirmation before one-time POST and signs the mapped owner into Cradle”, with `tests/helpers/base-session-mutation.mjs` proving prepared Launch admission and captured HTTP refusal after public Base session revocation; `tests/auth-base-only-runtime.mjs` (including “AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration”), `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs`
+**Gap.** Evidence reconciliation for the existing local development, private setup and durable first-run paths remains open: the existing browser journeys in `tests/ui-local-signin.mjs` and `tests/installed-home.mjs` have not been reconciled here. The broader authentication, configuration and mail matrix, ct contract conversion and generated-document synchronization, and independent whole-clause judgment remain unclaimed.
 
 #### OPS-001 — Equal operators
 
@@ -236,8 +236,8 @@ Core · published · **partial** · Cites BASE-ROLE-001
 3. The only restrictable action is inviting and removing operators, under the operator-management policy.
 4. There are no roles.
 
-**Evidence.** `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs`
-**Gap.** Missing a legacy-operator journey that executes representative permitted mutations as well as reads while demonstrating the launch-only equal-rights scope. Cited `tests/launch-production-composition.mjs`, `tests/launch-scoped-authority.mjs` show: Retained legacy read access and explicit scoped-policy/membership preservation are exercised.
+**Evidence.** `tests/launch-production-composition.mjs`; `tests/launch-scoped-authority.mjs` — "[OPS-001 APP-SCOPE-001] reviewed legacy mapping retains identities and rights without replacing an existing scoped policy": two non-owner peers with reviewed retained mappings create and edit campaigns owned by the other operator, create and complete and reopen their deliverables through native HTTP commands, and independently read committed values as both peers; other-application access, scoped-write widening and deleted-membership command replay are refused, with existing policies and memberships preserved.
+**Gap.** The complete every-operator and every-mutation matrix, invitation and removal policy combinations, wider application authority, and the existing ct contract-conversion and generated-document synchronization release prerequisites remain open. The selected positive legacy-mutation slice adds no roles, grants or startup authority; no whole-clause DONE claim.
 
 #### OPS-002 — Management
 
@@ -250,7 +250,7 @@ Core · published · **partial** · Cites BASE-SIGNIN-001, BASE-ACCESS-001, BASE
 2. Because the installation always keeps an active owner, that owner first hands ownership to another active member in settings — after a fresh email-link confirmation of their own identity — and can then remove themselves once they own no active campaign and hold no unresolved assigned decision.
 3. The initial operator-management policy allows any operator to invite or remove.
 
-**Evidence.** `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs`
+**Evidence.** `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs`; additional unjudged invitation checks in `tests/ui-launch-operator-doors.mjs` — "Launch operator doors at desktop and phone" exercise a non-owner selecting their current explicit policy in Settings, submitting a unique name and email, and retaining the committed identity and selected application scope through command reconciliation, public member readback and reloaded Settings at 1440 and 390; no whole-clause acceptance, invitation activation/sign-in, alternate-policy or multi-application coverage is claimed.
 **Gap.** Missing a Settings invitation journey that creates an operator and reads the resulting admitted identity; cited journeys create their people with fixture helpers. Cited `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs` show: Settings handover/removal with fresh identity confirmation, last-owner refusal and self-removal are exercised.
 
 #### OPS-003 — Workspace timezone
@@ -361,8 +361,8 @@ Core · published · **partial**
 2. The failed state names the operation that failed and offers a retry; it renders no rows, no sample data, and no result of an earlier successful read.
 3. An action a policy forbids is refused with a stated reason and changes nothing.
 
-**Evidence.** `tests/launch-authority-browser.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a collection/detail state journey that observes loading and signed-out transitions, fails after a populated read and checks no stale rows, and attempts a policy-forbidden action with no effect. Cited `tests/launch-authority-browser.mjs`, `tests/ui-launch-walkthrough.mjs` show: Scoped/missing and real D1-failure screens with retry plus some empty states are exercised.
+**Evidence.** `tests/launch-authority-browser.mjs` — native owner creation, scoped transport and safe October error states; `tests/helpers/campaign-grid-state-journey.mjs` — populated Campaign Grid, pending refresh, real D1 failure with no retained results and Retry against current native data; `tests/ui-launch-walkthrough.mjs`
+**Gap.** Missing the complete collection and detail loading, empty, not-found and signed-out transition matrix, failure-after-success proof on other surfaces, and the stated-reason, no-effect forbidden-action matrix. Wider phone qualification, ct contract conversion and generated-document synchronization remain release prerequisites. Campaign Grid failure-after-success is exercised with independently created data, a held actual request, an isolated D1 read failure, absent prior rows, identifiers and inspector content, and successful current-data retry at 1440 and 390.
 
 #### VIEW-005 — Search
 
@@ -378,8 +378,8 @@ Core · published · **partial**
 5. Archived records are returned only when explicitly included.
 6. Search meets its 500ms response target.
 
-**Evidence.** `tests/launch-search-authority.mjs`
-**Gap.** Missing a search journey for text, URL and select prefix matches, comment exclusion and archived opt-in, the twenty-results-per-table bound and the 500ms bar. Cited `tests/launch-search-authority.mjs` show: Cross-base search and current membership/row/field authorization are exercised with launch and vault text.
+**Evidence.** `tests/launch-search-authority.mjs`; `tests/helpers/launch-search-values-journey.mjs` — searchValuesJourney: mixed-case text, URL and select-label token prefixes, native detail links, twenty results from twenty-four matches plus another table, readable comment exclusion and explicit archived Launch inclusion
+**Gap.** Missing the 500ms measurement, complete authorized-base and Launch-attribute coverage, concurrent-policy matrices, rendered search breadth and wider phone qualification. Cross-base membership, row and field privacy assertions remain. Independent whole-clause judgment and generated-document synchronization remain release prerequisites; no DONE claim.
 
 #### VIEW-006 — Concurrent edits
 
@@ -419,8 +419,8 @@ Core · published · **partial**
 1. An operator can create, edit, archive, and delete a campaign.
 2. It requires a code, a name, an owner, a start date, and a launch date, and it also carries an objective, a status summary of at most 280 characters, a phase, a status, health, budget, spend, tags, and custom fields.
 
-**Evidence.** `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs`
-**Gap.** Missing a campaign CRUD journey that also edits, archives and deletes through the cited public doors, with the unsafe deletion refused unchanged. Cited `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs` show: The cited browser journeys create campaigns with populated or blank optional prose and read detail/reload.
+**Evidence.** `tests/launch-authority-browser.mjs`, `tests/launch-optional-fields.mjs`; `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects, native campaign validation and campaign record clauses" via `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "deletion"
+**Gap.** Wider public create, edit and archive matrix and the complete required, optional and custom-field matrix remain unproved. The lifecycle journey creates an independently named campaign through native HTTP, reads its current version, refuses wrong-case confirmation with a confirmationCode validation error, and checks unchanged public campaign, children, activity, retained file bytes and queued work plus persisted admission effects; successful public deletion remains the positive control. Ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
 
 #### CAMP-002 — Lifecycle
 
@@ -541,8 +541,8 @@ Core · published · **partial**
 1. Restoring returns the campaign and every record archived with it to the state each had at archiving, and creates no notification, readiness request, or automation run for the archived period.
 2. CAMP-003 is applied at restore: a campaign whose owner was removed while it was archived must be given a current owner before it becomes active.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public restore journey with the same populated state, observed no-catch-up effects and a removed-owner refusal that changes nothing. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal lifecycle helpers check restoration state, no catch-up work and removed-owner refusal.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects, native campaign validation and campaign record clauses", through `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "verifyPublicRemovedOwnerRestore": acceptance 2 uses HTTP creation, archive, member removal and fresh-version restore; owner-specific validation preserves public campaign, children and activity plus persisted events and outbox; a known current replacement restores publicly readable active state and ownership. Existing internal lifecycle controls and `tests/ui-launch-walkthrough.mjs` remain.
+**Gap.** Acceptance 1 still needs complete populated public restoration and archived-period no-catch-up proof; wider restore, date and authority combinations remain unproved. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; independent whole-clause judgment is not claimed.
 
 #### CAMP-011 — Deletion
 
@@ -648,8 +648,8 @@ Core · published · **partial**
 1. An operator can create, edit, and delete a milestone.
 2. It belongs to exactly one campaign, requires a title and an owner, has a type of Launch, Review, Approval, Decision, Event, or Publish, has a status of Not started, On track, Watch, At risk, Blocked, or Complete that starts Not started, and has either a single date or a start and end date whose end does not fall before its start.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public milestone CRUD journey deleting a real milestone, refusing an unsafe date/relationship without effects and reading the complete supported record state. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser creates point/range milestones and public concurrency edits; internal helpers validate all types/statuses and delete.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses", via `tests/helpers/launch-milestone-clauses.mjs` — "verifyPublicMilestoneDeletion" and "verifyMilestoneClauses"; `tests/ui-launch-walkthrough.mjs`
+**Gap.** Native HTTP commands now create and edit an independent milestone, read its current version, refuse deletion after current delete authority is removed without changing stored state, and authorize deletion with public detail absence and removal from populated campaign milestones and Timeline Lens while an independently captured neighbor remains unchanged. Existing internal type, status, validation and deletion assertions and browser creation and concurrency proof remain. Gap: Public unsafe-date and relationship refusals without effects and the complete supported type, status, required-field, date and relationship matrix remain unproved. Broader dependency and readiness deletion combinations, whole-clause judgment and the existing ct contract conversion and generated-document synchronization release prerequisites remain unclaimed.
 
 #### MILE-002 — Timeline lens
 
@@ -1003,8 +1003,8 @@ Core · published · **partial** · Cites BASE-OPS-005, BASE-AUDIT-001, BASE-DAT
 3. Each entry carries its type, its subject's ID, the operator or the automation run that acted, the time, and for a field change the field name with its previous and new value.
 4. Campaign activity is the operator-visible view of the audit records in `BASE-OPS-005`: deleting a campaign removes this view,
 
-**Evidence.** `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public activity journey reading newest-first entries for campaign/child/import/automation changes with subject, actor/run, timestamp and previous/new field values, plus retained anonymized audit after deletion. Cited `tests/ui-launch-walkthrough.mjs` show: The browser reads human-readable escalation/approval activity with the actor and expanded dates.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses", through `tests/helpers/launch-activity-order-journey.mjs` — "verifyPublicCampaignActivityOrder": native HTTP creation and three distinguishable two-field edits, each using a freshly read revision and independently bounded distinct time; public campaign detail is compared directly with reverse authored command order without sorting observed entries. `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone", through `tests/helpers/launch-activity-order-screens.mjs` — "verifyCampaignActivityOrderScreens": rendered activity groups are correlated to the authored edits by field values and command instants, in observed order at desktop and phone widths. Retained human-readable escalation and approval activity proof remains.
+**Gap.** Missing complete event coverage for campaign and child creation, field changes, archive, restore and deletion, comments, imports and automation mutations; complete per-entry type, subject, actor or run, time and previous and new field-value attribution; deletion and retained anonymized audit; equal-time ordering and broader history capacity. Supplemental newest-first proof for human campaign field changes is now cited in Evidence; ct contract conversion and generated-document synchronization remain release prerequisites, and independent whole-clause judgment remains outstanding. Status remains partial.
 
 #### ACT-002 — Comments
 
@@ -1101,8 +1101,8 @@ Core · published · **partial**
 2. Editing an automation affects only later triggers.
 3. Disabling one cancels queued runs that have not started, recording each as Canceled with no action executed.
 
-**Evidence.** `tests/launch-installed-event-control.mjs`, `tests/launch-installed-network-cancel.mjs`
-**Gap.** Missing a cited journey that edits the definition while a retained run exists and reads old versus later-trigger actions; the cited journeys show version numbering and disable/cancel, but never distinguish retained-run action snapshots from an edited definition.
+**Evidence.** `tests/launch-installed-event-control.mjs` — "[AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; disable cancels queued work before any effect; full run history pages with each attempted action and a 30-day success rate" (acceptances 1–2: "verifyRetainedDefinition" in `tests/helpers/launch-automation-definitions.mjs`; acceptance 3: queued disable); `tests/launch-installed-network-cancel.mjs`
+**Gap.** Independent whole-clause judgment and ct’s contract conversion and generated-document synchronization remain release prerequisites. Remaining disable, in-flight and cancellation combinations and the wider action, trigger and crash or restart matrix remain unproved; authorship and credential lifetime are unchanged.
 
 #### AUTO-005 — Loop protection
 
@@ -1371,7 +1371,7 @@ Core · published · **partial**
 3. An operator-initiated request shows the provider's error code and message where it was requested; an automation-initiated one fails that run under AUTO-008.
 4. Every other automation, notification, mutation, and read proceeds unaffected.
 
-**Evidence.** `tests/launch-installed-ai-failures.mjs`
+**Evidence.** `tests/launch-installed-ai-failures.mjs`; `tests/launch-installed-event-control.mjs` — "bulk edits and committed imports fan out once per automation while mixed briefs preserve skips, quota and retry progress": automated campaign-brief HTTP 503 failure and attempted-action error readback through run history and Automation Monitor, no new analysis for the failed campaign, preservation of the completed peer analysis, and unrelated native risk mutation, read, automation effects, notification and permitted mail while refusal remains active.
 **Gap.** Missing a cited automation-initiated provider-failure journey reading the failed automation run and showing unrelated automation/notification work still completes. The cited failure test disables campaign-brief automation and exercises operator requests only.
 
 #### AI-005 — Usage
@@ -1413,8 +1413,8 @@ Core · published · **partial** · Cites BASE-INPUT-001, BASE-INPUT-003
 2. The file must be UTF-8, comma-delimited, and carry a header row; a byte-order mark is accepted and anything else is rejected with a parse error.
 3. Import requires an explicit mapping from columns to fields and, before any record changes and within 60 seconds at the row limit, shows the number of creates, updates, and unchanged rows, every row error, and for each updated row the fields that will change with their stored and incoming values.
 
-**Evidence.** `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited maximum-row CSV preview timed within 60 seconds and malformed/non-UTF-8 format refusal; the cited journeys cover small BOM/quoted campaign CSV and a deliverable preview, not the measurable row-limit bar.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": native text upload rejects invalid UTF-8 and NUL bytes, while a BOM without a header, unterminated quotes and illegally closed quoted cells reach Launch parsing byte for byte; each Launch preview returns an identifiable CSV parsing refusal without a preview or token, snapshots after upload plus public campaign reads retain records, activity, previews, events, outbox and execution work unchanged, and unreadable rejected files disclose no parsing details. The successful BOM and quoted-field control remains. `tests/ui-launch-operator-doors.mjs` covers the existing mapped preview.
+**Gap.** Missing the complete campaign, deliverable and milestone upload-limit matrix, remaining delimiter, header and format combinations, maximum-row preview timed within 60 seconds and complete mapping, change and error matrix. Independent whole-clause judgment and ct's contract conversion and generated-document synchronization remain release prerequisites; no DONE claim.
 
 #### IMPORT-002 — Merge keys
 
@@ -1468,8 +1468,8 @@ Core · published · **partial** · Cites BASE-INPUT-003, BASE-DATA-003
 1. The uploaded file is stored with its import record and is downloadable by any operator.
 2. Deleting the import record deletes the file within 5 minutes.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
-**Gap.** Missing a cited import-deletion journey that deletes the import record and verifies the stored file is gone within five minutes; the cited journeys only download the retained file.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file", extended by `tests/helpers/launch-import-deletion.mjs`: native upload, preview and commit followed by the mounted human import.delete command withdraws one committed campaign import and its preview content, fences its file doors, and confirms original FILES object removal within 300000 ms after Worker restart and scheduled delivery; every campaign, version and activity entry and an unrelated import file remain exact; missing and revoked import.delete authority refuse unchanged, captured confirmation cannot resurrect the import, and repeated delivery retains one cleanup and audit receipt.
+**Gap.** Missing acceptance 1's complete any-operator and cross-kind download matrix, deletion proof for other import kinds, shared-file custody beyond conservative refusal of shared or non-import artifacts, archive and restore erasure, and broader authority, concurrency and crash combinations. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; independent whole-clause judgment remains outstanding. Status remains partial with no wider deletion grant.
 
 ### Settings
 
@@ -1583,8 +1583,8 @@ Core · target · **partial** · From RECORDS-008
 2. Run the same saved mapping from a CSV URL, JSON URL and an emailed attachment received under INTEG-002; each applies RECORDS-008’s conversion, matching, preview, authority and version rules.
 3. The receipt counts created, updated, unchanged and refused rows, and the chosen automation setting is respected.
 
-**Evidence.** `tests/records-csv-fence.mjs`, `src/domains/records/csv-mappings.server.ts`, `src/domains/records/csv-typed-values.ts`, `src/ui/records/manual-import-mappings.tsx`, `docs/contract/RECORDS-008/`
-**Gap.** Versioned per-person/table/source CSV mappings restore columns and one merge key for next week; preview and commit recheck schema, policy and record versions. US/ISO dates, exact USD/number amounts, checkbox words, select and separated/quoted multi-select labels convert; primary-value links and ambiguous names use current policy. Real 61-vendor create then saved-mapping update is exercised at 1440/390. Workbook and Google Sheets intake now use the same mapping, before/after preview and atomic merge; hourly Sheets merges recheck the configuring owner and pause on lost rights. Gaps: zero or multiple merge keys, missing-link creation, phone normalization, scheduled CSV/JSON URLs and emailed attachments under RECORDS-010, seven-day undo and automation choice. Currency and multi-select field authoring is recorded under FIELD-001 (`src/ui/records/schema/field-type-label.ts`). Gap (SCALE-002): imports take at most 80 fields and 100 physical columns per table; a wider source table is refused before any write (HTTP 400 `validation` above 80 fields, HTTP 409 `capacity_limit` above 100 physical columns) and cannot move in until SCALE-002.
+**Evidence.** `tests/records-csv-fence.mjs` ("[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 RECORDS-010 FIELD-005 CSV, workbook and Sheets imports retain review, mapping, scheduled merge and export fences") through `tests/helpers/sheets-journey.mjs` (fixed-clock clean, unchanged and refused hourly imports, public retained outcome, atomic hold, restart and current-authority re-enable); `src/domains/records/csv-mappings.server.ts`, `src/domains/records/csv-typed-values.ts`, `src/ui/records/manual-import-mappings.tsx`, `docs/contract/RECORDS-008/`
+**Gap.** Versioned per-person/table/source CSV mappings restore columns and one merge key for next week; preview and commit recheck schema, policy and record versions. US/ISO dates, exact USD/number amounts, checkbox words, select and separated/quoted multi-select labels convert; primary-value links and ambiguous names use current policy. Real 61-vendor create then saved-mapping update is exercised at 1440/390. Workbook and Google Sheets intake now use the same mapping, before/after preview and atomic merge; hourly Sheets merges recheck the configuring owner and pause on lost rights. Gaps: zero or multiple merge keys, missing-link creation, phone normalization, scheduled CSV/JSON URLs and emailed attachments under RECORDS-010, seven-day undo and automation choice. Currency and multi-select field authoring is recorded under FIELD-001 (`src/ui/records/schema/field-type-label.ts`). Gap (SCALE-002): imports take at most 80 fields and 100 physical columns per table; a wider source table is refused before any write (HTTP 400 `validation` above 80 fields, HTTP 409 `capacity_limit` above 100 physical columns) and cannot move in until SCALE-002. The hourly Google Sheets source retains a held preview identity, physical row refusal reasons and all four prospective counts separately from zero applied creates and updates. Current owners with destination import authority and unrestricted mapped-field reads can read the latest outcome; duplicate ticks and Worker restart retain the pause, and enabling requires a new clean preview with current authority. Remaining: ct contract conversion and generated-document synchronization; CSV and JSON URL sources, emailed attachments under INTEG-002, automation opt-in, broader mapping, version, concurrency and recovery matrices, RECORDS-008 link and undo work, SCALE-002 wide-table prerequisites, AUTO-USER-009 lifetime and authorship and AUTO-USER-010 consent and recipient holds. No new provider, recipient or credential authority and no whole-clause DONE claim.
 
 #### RECORDS-009 — Record templates and duplicate record
 
@@ -1900,7 +1900,7 @@ Core · target · **partial** · From FILE-004 · Cites BASE-ROLE-001, BASE-SECR
 5. Provider-edge traces contain no write or sharing call, restricted fields stay absent, and re-exporting unresolved content yields identical portable objects.
 
 **Evidence.** `tests/records-base-exits.mjs` (“[RECORDS-005 RECORDS-006] actual D1 portable base return matrix preserves native data, reviewed correspondence and independent JSON copies”), `tests/evidence-read-privacy.mjs`, `tests/ui-base-import.mjs`, `docs/contract/FILE-004/`
-**Gap.** Base JSON, CSV-set and workbook export portable store references without connection bindings, credentials, preview URLs or bytes; canonical unresolved returns and copies preserve those objects, show their metadata without thumbnails and list them on the move-in receipt. Own matching-account metadata checks resolve equal digests, mark null digests unverified, and require audited explicit confirmation for changed content; current row/field authority, anonymous attacher export and uploaded-byte refusal are proven. Evidence: `tests/records-base-exits.mjs` (existing launch roundtrip), `tests/evidence-read-privacy.mjs`, `tests/ui-base-import.mjs`, `tests/helpers/store-reference-exits.mjs`, `tests/helpers/store-reference-resolution.mjs`, `docs/contract/FILE-004/`. Bulk changed-content confirmation reviews multiple selected references, rechecks every observed digest and current row, field and own matching-account connection authority, commits atomically, audits each accepted change and refreshes portable metadata without provider writes. Evidence: `tests/helpers/store-reference-resolution.mjs` (storeReferenceResolution: multi-selection, stale-digest, foreign-account, reader, row, field, connection and current-policy refusals, per-reference audit and portable metadata); `tests/helpers/file-stores-browser.mjs` (resolvedStoresBrowser: explicit selected-file review and confirmation at 1440 and 390). Gap: automatic import-preview lookup, null-account resolution (including current Dropbox, Box and Chest captures) and cross-algorithm equality remain unbuilt or unproven. Older references without captured digest metadata or attachment instant require reattachment; uploaded bytes stay FILE-003. Reference and connection erasure and archive custody follow FILE-002 and FILE-005. This part retains its own unresolved return cases. No real provider call or consent; real consents NOT RUN.
+**Gap.** Base JSON, CSV-set and workbook export portable store references without connection bindings, credentials, preview URLs or bytes; canonical unresolved returns and copies preserve those objects, show their metadata without thumbnails and list them on the move-in receipt. Own matching-account metadata checks resolve equal digests, mark null digests unverified, and require audited explicit confirmation for changed content; current row/field authority, anonymous attacher export and uploaded-byte refusal are proven. Evidence: `tests/records-base-exits.mjs` (existing launch roundtrip), `tests/evidence-read-privacy.mjs`, `tests/ui-base-import.mjs`, `tests/helpers/store-reference-exits.mjs`, `tests/helpers/store-reference-resolution.mjs`, `docs/contract/FILE-004/`. Bulk changed-content confirmation reviews multiple selected references, rechecks every observed digest and current row, field and own matching-account connection authority, commits atomically, audits each accepted change and refreshes portable metadata without provider writes. Evidence: `tests/helpers/store-reference-resolution.mjs` (storeReferenceResolution: multi-selection, stale-digest, foreign-account, reader, row, field, connection and current-policy refusals, per-reference audit and portable metadata); `tests/helpers/file-stores-browser.mjs` (resolvedStoresBrowser: explicit selected-file review and confirmation at 1440 and 390). A returned Google Drive item with a captured non-null account stays Unresolved when its own matching connection receives a metadata HTTP 404, with a useful reason, no thumbnail or connection binding, unchanged record version and byte-equal canonical portable content. Repeated checks and a Worker restart retain that result while a separate present item resolves. Evidence: `tests/evidence-read-privacy.mjs` via `tests/helpers/store-reference-resolution.mjs` and `tests/helpers/store-reference-missing.mjs` (missingStoreResolution); `tests/ui-base-import.mjs` via `tests/helpers/file-stores-browser.mjs` (missingStoresBrowser at 1440 and 390). The retained provider-edge traces show metadata reads only, with no provider writes or file-byte fetches. Gap: automatic import-preview lookup, null-account resolution (including current Dropbox, Box and Chest captures) and cross-algorithm equality remain unbuilt or unproven. Older references without captured digest metadata or attachment instant require reattachment; uploaded bytes stay FILE-003. Reference and connection erasure and archive custody follow FILE-002 and FILE-005. This part retains its own unresolved return cases. No real provider call or consent; real consents NOT RUN.
 
 ### Views, editing and collaboration
 
@@ -1913,8 +1913,8 @@ Core · target · **partial**
 **Acceptance.**
 1. Grid browser journey with keyboard-only editing, a pasted 50×5 range from clipboard text and a refused invalid paste.
 
-**Evidence.** `tests/records-grid-range.mjs`, `src/ui/records/record-grid.tsx`, `src/ui/records/grid-interaction.tsx`, `docs/contract/VIEW-008/`
-**Gap.** Missing a cited browser journey for inline/keyboard editing, row expansion, clipboard copy, column resize/freeze/hide/reorder and last-row creation. The cited native range journey proves atomic 50×5 paste, refusal and recovery, while UI source and receipts do not execute those browser outcomes.
+**Evidence.** `tests/ui-records-builder.mjs` (Home presents records and bases before launch work with atomic range history at desktop and phone widths) through `tests/helpers/records-grid-range-browser.mjs` (gridRangeBrowserJourney: Tab entry, arrow navigation, Enter and F2 inline edits saved by keyboard, Escape cancellation, rejected 50×5 clipboard paste naming invalid numeric and date cells with every value and version unchanged, corrected typed paste at 1440 and 390); `tests/records-grid-range.mjs` (VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, stale-safe and policy checked)
+**Gap.** Clipboard-copy fidelity, row expansion, column resize, freeze, hide and reorder, last-row creation and remaining spreadsheet interaction breadth lack browser proof. Ct contract conversion and generated-document synchronization remain release prerequisites. Whole-clause judgment and complete MOBILE-001 qualification remain unclaimed.
 
 #### VIEW-009 — Kanban
 
@@ -2064,8 +2064,8 @@ Core · target · **partial**
 **Acceptance.**
 1. History reads hide fields the reader cannot see; restore-from-history journey.
 
-**Evidence.** `tests/evidence-read-privacy.mjs`, `docs/contract/COLLAB-002/`
-**Gap.** Missing a cited history journey that reads changes actually made by automation, import, API-key and agent doors with their actor and time. The cited journey reads/restores human writes and synthetic retained attachment history under current authority; the named other writers are not executed/read back.
+**Evidence.** `tests/user-api-keys.mjs` — "scoped subscription credentials and record reads/writes stop on revoke and issuer policy change", through `tests/helpers/key-writer-history-journey.mjs` — "keyWriterHistoryJourney": real keyed REST updates and native human history reads check exact before and after cells, independently known connector principal, original commands, observed write-time bounds, replay without duplicate history, current field-policy narrowing and revoked-write refusal without record or history changes; `tests/evidence-read-privacy.mjs` — "record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store"; `docs/contract/COLLAB-002/`
+**Gap.** Actual automation, import and agent writer-history attribution, broader history paging and lifecycle and restoration combinations remain unproved. The retained privacy journey reads and restores human writes and synthetic retained attachment history under current authority. Ct contract conversion and generated-document synchronization remain release prerequisites; existing API-USER-004 credential-lifetime and agent-authority holds are unchanged. Independent whole-clause judgment, publication scanning, guarded landing and candidate Run site remain unclaimed.
 
 #### COLLAB-003 — Watching and change notifications
 

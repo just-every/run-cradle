@@ -22,6 +22,7 @@ import { stringifySafeEvidence } from './helpers/accessibility-redaction.mjs'
 import { accessibilityAction, accessibilityCaptureOnly, accessibilityContextOptions, accessibilityEvidence, accessibilitySetChecked, accessibilityWidths, verifyNavigationDrawerWithKeyboard } from './helpers/accessibility-evidence.mjs'
 import {launchWalkthroughRuntime} from './helpers/launch-walkthrough-runtime.mjs'
 import {launchWalkthroughCapture} from './helpers/launch-walkthrough-capture.mjs'
+import {verifyCampaignActivityOrderScreens} from './helpers/launch-activity-order-screens.mjs'
 import {verifyPublicCampaignLifecycle} from './helpers/launch-campaign-lifecycle-clauses.mjs'
 contract('VIEW-004', '[OPS-006] [OPS-003] [CAMP-006] [VIEW-006] [LENS-005] [ACT-002] [ACT-004] [MILE-002] [MILE-006] [DEC-008] [LENS-002] [LENS-003] [DELIV-003] [CAMP-004] [CAMP-012] [VIEW-002] [CAMP-001] [CAMP-002] [CAMP-005] [RISK-003] [DEC-002] [DEC-003] [ACT-001] [ACT-003] [BASE-PUBLIC-003] [AUTO-006] [CAMP-007] Launch walkthrough E10–E17 at desktop and phone', async () => {
 const output=path.resolve(process.env.CRADLE_LAUNCH_EVIDENCE ?? '../evidence/de-launch')
@@ -89,6 +90,14 @@ try {
     show: async ({stage,campaign,subjects,operator}) => {
      await context.addCookies([{name:operator.session.cookie.split('=')[0],value:operator.session.cookie.slice(operator.session.cookie.indexOf('=')+1),url:h.origin}])
      await page.goto(`${h.origin}/app/campaigns/${campaign.id}`)
+     const response=await page.request.get(`${h.origin}/api/campaigns/${campaign.id}`),visible=await response.json()
+     assert.equal(response.status(),200)
+     assert.equal(visible.campaign.id,campaign.id)
+     assert.equal(visible.campaign.version,campaign.version,'The browser session reads the current public revision')
+     assert.equal(visible.campaign.archivedAt===null,stage!=='archived','The rendered page reads the actual lifecycle')
+     for(const [kind,collection] of [['deliverable','deliverables'],['milestone','milestones'],['risk','risks'],['decision','decisions']]) {
+      assert.deepEqual(visible[collection].map(row=>row.id),[subjects[kind].id],`${stage}: the rendered detail retains the captured ${kind} identity`)
+     }
      await expect(page.getByRole('heading',{name:'Retained launch campaign',exact:true})).toBeVisible()
      for(const [selector,title,state] of [
       ['.portfolio-deliverable-list','Retained launch kit',null],
@@ -112,17 +121,24 @@ try {
      else await expect(links.first()).toBeVisible()
      await capture(`campaign-lifecycle-${stage}-grid`,{operatorName:'Lifecycle operator'})
     },
-    transition: async ({action:verb,campaign}) => {
+    transition: async ({action:verb,campaign,operator}) => {
      await page.goto(`${h.origin}/app/campaigns/${campaign.id}`)
+     const response=await page.request.get(`${h.origin}/api/campaigns/${campaign.id}`)
+     assert.equal(response.status(),200)
+     const fresh=await response.json()
+     assert.equal(fresh.campaign.version,campaign.version)
      const actions=page.getByText('More campaign actions',{exact:true})
      if(!(await actions.evaluate(el=>el.parentElement.open)))await action(actions)
      await action(page.getByRole('button',{name:verb==='archive'?'Archive':'Restore',exact:true}))
      const submitted=page.waitForResponse(response=>response.url().endsWith(`/api/v1/commands/launch.campaign.${verb}`)&&response.request().method()==='POST')
      await action(page.getByRole('button',{name:verb==='archive'?'Archive campaign':'Restore campaign',exact:true}))
-     const response=await submitted,body=await response.json()
-     assert.equal(response.status(),200,JSON.stringify(body))
+     const committed=await submitted,body=await committed.json()
+     assert.equal(committed.status(),200,JSON.stringify(body))
      assert.equal(body.data.state,'committed')
-     assert.equal(response.request().postDataJSON().expected[0].version,campaign.version,'Shipped control submits the freshly loaded campaign revision')
+     assert.equal(committed.request().postDataJSON().expected[0].version,campaign.version,'Shipped control submits the freshly loaded campaign revision')
+     assert.equal(body.data.value.id,campaign.id)
+     assert.equal(body.data.value.version,campaign.version+1)
+     assert.notEqual(operator.id,h.owner,'The shipped control belongs to an operator distinct from the campaign owner')
      await page.getByRole('link',{name:'Return to campaigns',exact:true}).waitFor()
     },
    })
@@ -264,6 +280,8 @@ try {
   await verifyCurrentLensScreens({h,page,command,capture})
   receipt.expectedConflictConsoleErrors ??= []
   await verifyConcurrencyScreens({h,page,command,capture,receipt})
+  receipt.activityOrdering ??= []
+  receipt.activityOrdering.push(await verifyCampaignActivityOrderScreens({h,page,action,capture,width:viewport.width}))
   await context.close()
  }
  assert.deepEqual(receipt.decisionHydration.map(check=>check.viewport),accessibilityWidths,'Decision hydration checked at every requested width');assert.deepEqual(receipt.inspectorChecks.map(check=>check.viewport.width),accessibilityWidths,'Inspector presentation checked at every requested width');assert.deepEqual(receipt.memberErasure.map(check=>check.width),accessibilityWidths,'Member erasure checked at every requested width');assert.deepEqual(receipt.errors,[]);assertNoUnexpectedLaunchConsoleErrors(receipt,accessibilityWidths);assert.deepEqual(receipt.external,[])
