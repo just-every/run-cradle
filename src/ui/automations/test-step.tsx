@@ -5,7 +5,7 @@ const value=(input:unknown):string=>input===undefined?'Unavailable':input===null
 export function AutomationTestStep({step,entity}:{step:VisibleTestStep;entity:EntitySchema}){
  const input=step.input as {action:RecordAutomationAction;values:Record<string,unknown>},raw=step.output as Record<string,unknown>|null,output=(raw?.preview??raw) as Record<string,unknown>|null
  const action=input.action,field=action.kind==='update'?entity.fields.find(field=>field.id===action.fieldId):undefined
- return <li className="cr-stack"><strong>Action {step.position+1} · {step.kind} · {step.state}</strong><details><summary>Input and output</summary><div className="cr-stack">
+ return <li className="cr-stack"><strong>Action {step.position+1} · {step.kind} · {step.state}</strong><details className="cr-detail"><summary>Input and output</summary><div className="cr-stack">
   <h4>Record input</h4><dl className="cr-stack">{entity.fields.filter(field=>Object.hasOwn(input.values,field.id)).map(field=><div key={field.id}><dt className="cr-muted">{field.label}</dt><dd style={{marginInlineStart:0,overflowWrap:'anywhere'}}>{value(input.values[field.id])}</dd></div>)}</dl>
   {action.kind==='apply_record_template'&&<><h4>Record template</h4><p>{value(output?.name)} · {value(output?.childCount)} child records</p><p>{raw?.result?step.state==='Complete'?'The record and its children were created.':'The template could not be applied.':'Preview only. No records were created.'}</p></>}
   {action.kind==='update'&&<><h4>Proposed update</h4>{field?<dl className="cr-stack"><div><dt>{field.label} before</dt><dd>{value(output?.before)}</dd></div><div><dt>{field.label} after</dt><dd>{value(output?.after)}</dd></div></dl>:<p role="alert">Refresh the schema to view this field.</p>}</>}

@@ -4,6 +4,7 @@ import path from 'node:path'
 import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 import { seedConfig } from '../src/ext/config.ts'
+import { staticSiteJourney } from './helpers/static-site.mjs'
 const { fieldSchema } = await import('../src/domains/records/validators.ts')
 
 contract('HOME-003 AUTH-BASE-001', 'Actual emitted public SSR survives unavailable workspace names and recovers persisted renames', async () => {
@@ -140,4 +141,9 @@ contract('DOCS-001 BOUND-001 BOUND-002', 'Every published docs page shares the s
     for (const type of fieldTypes) assert.doesNotMatch(type, /card|payment|phi|patient|medical|health|diagnos|ehr/i, `${type} is not a card-number or PHI-specific field type`)
     for (const route of ['/docs/no-such-page', '/docs/install/extra']) assert.equal((await page(route)).status, 404, `${route} is a genuine 404`)
   } finally { await h.close() }
+  const staticSite = await staticSiteJourney()
+  if (process.env.CRADLE_PUBLIC_EVIDENCE) {
+    await mkdir(process.env.CRADLE_PUBLIC_EVIDENCE, { recursive: true })
+    await writeFile(path.join(process.env.CRADLE_PUBLIC_EVIDENCE, 'static-site.json'), JSON.stringify(staticSite, null, 2) + '\n')
+  }
 })
