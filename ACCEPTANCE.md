@@ -1913,8 +1913,8 @@ Core · target · **partial**
 **Acceptance.**
 1. Grid browser journey with keyboard-only editing, a pasted 50×5 range from clipboard text and a refused invalid paste.
 
-**Evidence.** `tests/records-grid-range.mjs`, `src/ui/records/record-grid.tsx`, `src/ui/records/grid-interaction.tsx`, `docs/contract/VIEW-008/`
-**Gap.** Missing a cited browser journey for inline/keyboard editing, row expansion, clipboard copy, column resize/freeze/hide/reorder and last-row creation. The cited native range journey proves atomic 50×5 paste, refusal and recovery, while UI source and receipts do not execute those browser outcomes.
+**Evidence.** `tests/ui-records-builder.mjs` (Home presents records and bases before launch work with atomic range history at desktop and phone widths) through `tests/helpers/records-grid-range-browser.mjs` (gridRangeBrowserJourney: Tab entry, arrow navigation, Enter and F2 inline edits saved by keyboard, Escape cancellation, rejected 50×5 clipboard paste naming invalid numeric and date cells with every value and version unchanged, corrected typed paste at 1440 and 390); `tests/records-grid-range.mjs` (VIEW-014 VIEW-008 VIEW-015 native HTTP range paste is atomic, reversible, stale-safe and policy checked)
+**Gap.** Clipboard-copy fidelity, row expansion, column resize, freeze, hide and reorder, last-row creation and remaining spreadsheet interaction breadth lack browser proof. Ct contract conversion and generated-document synchronization remain release prerequisites. Whole-clause judgment and complete MOBILE-001 qualification remain unclaimed.
 
 #### VIEW-009 — Kanban
 
