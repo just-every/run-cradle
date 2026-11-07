@@ -1511,8 +1511,8 @@ Core · published · **partial**
 3. The installation starts with the configured operator, timezone and currency, two shipped lenses, four shipped automations and no campaigns; every surface shows its VIEW-004 empty state.
 4. Settings installs or removes sample data in one action; removal deletes only its created records and is refused naming them once any has been edited.
 
-**Evidence.** `tests/launch-operator-doors.mjs`
-**Gap.** Missing a first-run journey in this clause's old evidence that exercises configured/unconfigured setup, durable completion and empty initial data; the cited operator-door file covers sample installation/removal only. The existing first-run journeys are in installed-home.mjs and ui-local-signin.mjs, which this old Evidence cell does not cite.
+**Evidence.** `tests/launch-operator-doors.mjs` — sample installation and removal; `tests/installed-home.mjs` — "The installed Lobby recognizes the owner claim, validates workspace setup, preserves money on relabel and moves workspace schedules"; `tests/launch-authority-browser.mjs` — "native owner creation, scoped transport and safe October error states at 1440/390", including `tests/helpers/launch-first-run-journey.mjs` for fresh Decision Queue and Timeline Lens reads, visible empty states, reload, new sign-in and a separate populated installation.
+**Gap.** Acceptances 1 and 2 configuration and durable-setup evidence reconciliation; acceptance 3 complete configured operator, timezone, currency, shipped-lens and automation default census and every other initial surface; wider sample-data combinations. Existing ct contract conversion and generated-document synchronization release prerequisites and independent whole-clause judgment remain unclaimed.
 
 ### Data
 

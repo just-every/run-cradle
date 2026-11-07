@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "deee45c31010ae5876d77beea8b1d70c010b052ca4c2060efd276bf70fc14129",
+      "sha256": "8510e0f9ce7ddd770df7afe8edec09b1a222d7fdc6f9616654141b94e93f12ca",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9227e2627221eb27e312bf39fdde6f16cae727dbea3b84bc3f570a24c55cf4b2",
+      "sha256": "aaca80dca381a9a9d1081e3ba538cdfd1f68bea0ec8c9141519c2cb0f39440ab",
       "executable": false
     },
     "DEMO.md": {
@@ -12397,6 +12397,10 @@
       "sha256": "91a853f199e35757d03ad5233c7ae0bf591d78d07151d1a3fa76b5c2cad71843",
       "executable": false
     },
+    "tests/helpers/launch-first-run-journey.mjs": {
+      "sha256": "a143ce80cef003c6e4be1e67166241e5737c2ae6a02cafdace9645319ac21727",
+      "executable": false
+    },
     "tests/helpers/launch-grid-view-screens.mjs": {
       "sha256": "54d87668eb521ddba8b7d9f37b0d5da62065dc75fc099a8b3b2ad7217a7d4b7b",
       "executable": false
@@ -13166,7 +13170,7 @@
       "executable": false
     },
     "tests/installed-home.mjs": {
-      "sha256": "b2f93a12c885a100ade9d0e0e748ab4875fc96524e80d4324ef69958e5fb0748",
+      "sha256": "1763fed7079524aa221b1003e2d7d52c86ff0d43325711b1090f8dc793e45b24",
       "executable": false
     },
     "tests/intelligence-fixture.mjs": {
@@ -13178,7 +13182,7 @@
       "executable": false
     },
     "tests/launch-authority-browser.mjs": {
-      "sha256": "e59a986c61b3440a9bc9d13c0cb24e566e6051f0f94377351c9eadbfcfb5453d",
+      "sha256": "99c1e4a653f06305dcd8e685ca9a48299d019e41a641b5048daafbb841bff054",
       "executable": false
     },
     "tests/launch-installed-ai-failures.mjs": {
