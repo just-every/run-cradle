@@ -648,8 +648,8 @@ Core · published · **partial**
 1. An operator can create, edit, and delete a milestone.
 2. It belongs to exactly one campaign, requires a title and an owner, has a type of Launch, Review, Approval, Decision, Event, or Publish, has a status of Not started, On track, Watch, At risk, Blocked, or Complete that starts Not started, and has either a single date or a start and end date whose end does not fall before its start.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public milestone CRUD journey deleting a real milestone, refusing an unsafe date/relationship without effects and reading the complete supported record state. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser creates point/range milestones and public concurrency edits; internal helpers validate all types/statuses and delete.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses", via `tests/helpers/launch-milestone-clauses.mjs` — "verifyPublicMilestoneDeletion" and "verifyMilestoneClauses"; `tests/ui-launch-walkthrough.mjs`
+**Gap.** Native HTTP commands now create and edit an independent milestone, read its current version, refuse deletion after current delete authority is removed without changing stored state, and authorize deletion with public detail absence and removal from populated campaign milestones and Timeline Lens while an independently captured neighbor remains unchanged. Existing internal type, status, validation and deletion assertions and browser creation and concurrency proof remain. Gap: Public unsafe-date and relationship refusals without effects and the complete supported type, status, required-field, date and relationship matrix remain unproved. Broader dependency and readiness deletion combinations, whole-clause judgment and the existing ct contract conversion and generated-document synchronization release prerequisites remain unclaimed.
 
 #### MILE-002 — Timeline lens
 
