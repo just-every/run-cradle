@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { launchAuthorityRuntime, launchEntities, launchFieldIds, createUlid } from './helpers/launch-authority-runtime.mjs'
+import { searchValuesJourney } from './helpers/launch-search-values-journey.mjs'
 
 test('[VIEW-005 APP-SCOPE-001] global search covers authorized bases and rechecks current row and field policy', async () => {
   const h = await launchAuthorityRuntime({}, { installationOwner: true })
@@ -78,5 +79,6 @@ test('[VIEW-005 APP-SCOPE-001] global search covers authorized bases and recheck
     assert.deepEqual((await hiddenField.json()).items, [])
     await h.db.prepare("UPDATE authority_memberships SET state='removed',version=version+1 WHERE principal_id=?").bind(collaborator.id).run()
     assert.deepEqual(await read(collaborator.session), [])
+    await searchValuesJourney(h)
   } finally { await h.close() }
 })
