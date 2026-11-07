@@ -880,8 +880,8 @@ Core · published · **partial**
 1. A decision outcome changes its linked risk only through the resolution policy, and no other decision action changes a risk.
 2. Initially, approval moves a linked risk from Needs decision or Escalated to In progress; requesting changes, rejection and cancellation leave it unchanged, and no decision outcome resolves a risk.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public linked-risk policy journey reading the risk after approval and another outcome, including no changes from other decision actions and no implicit resolution. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser approves a linked risk decision; internal helpers inspect all resolution-policy transitions and unchanged risks.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses", `tests/helpers/launch-decision-clauses.mjs` — "publicTransitions" publicly creates an Escalated linked risk and decisions, commits request-changes, rejection and cancellation with fresh versions, and reads unchanged complete risk records and an unrelated resolved control after each transition; `tests/ui-launch-walkthrough.mjs` retains public linked approval; internal resolution-policy assertions remain.
+**Gap.** Missing public approval proof from Needs decision and the remaining risk-state combinations, unchanged risks after every other decision action, custom resolution policies and no implicit resolution across the remaining outcome combinations. Whole-clause ct judgment, contract conversion and generated-document synchronization remain release prerequisites; the selected non-approval preservation proof makes no DONE claim.
 
 #### DEC-008 — Finality
 
