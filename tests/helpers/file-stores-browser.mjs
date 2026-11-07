@@ -5,6 +5,9 @@ import assert from 'node:assert/strict'
 import {createUlid} from '../../src/core/shared/ids.ts'
 import {workbookDoors} from './workbook-http.mjs'
 import {recordsJourney} from './records-browser-journey.mjs'
+import {missingStoreReturn} from './store-reference-missing.mjs'
+import {writeFile} from 'node:fs/promises'
+import path from 'node:path'
 /** The attachment cell and its chooser at one width: connect, choose, attach, save, and read the reference back. */
 export async function fileStoresBrowser(page,h,width,output){
  const beforeFiles=(await h.db.prepare('SELECT count(*) n FROM evidence_files').first()).n
@@ -77,6 +80,7 @@ export async function unresolvedStoresBrowser(page,h,width,output){
 }
 
 export async function resolvedStoresBrowser(page,h,width,output){
+ await missingStoresBrowser(page,h,width,output)
  const j=recordsJourney(page,h.origin,output,width),d=await workbookDoors(h),fixture=portableStoreFixture(),seed=await importStoreSnapshot(h,fixture.snapshot)
  async function connect(appId,provider){const id=(await d.command('connection.configure',{appId,adapterId:provider,name:'synthetic-cradle-browser-return-'+provider,accountId:'ignored-caller-account',scopes:[],ownership:[],credentialRef:null})).value.connectionId,consent=(await d.command('connection.begin-consent',{connectionId:id,returnTo:'/app/records'})).value,family=provider==='onedrive'?'microsoft':'google',response=await d.raw('/oauth/'+family+'/callback?'+new URLSearchParams({code:'synthetic-cradle-code-2',state:new URL(consent.authorizationUrl).searchParams.get('state')}));assert.equal(response.status,303);await response.arrayBuffer();return id}
  const seedId=seed.preview.identities.appId,seedEntity=seed.preview.identities.tables[fixture.entityId].entityId,seedField=seed.preview.identities.tables[fixture.entityId].fields[fixture.filesId],driveId=await connect(seedId,'google-drive'),graphId=await connect(seedId,'onedrive'),address={appId:seedId,entityId:seedEntity,fieldId:seedField},drive=await d.call('/api/v1/records/file-stores/browse',{...address,connectionId:driveId}),graph=await d.call('/api/v1/records/file-stores/browse',{...address,connectionId:graphId})
@@ -111,4 +115,39 @@ export async function resolvedStoresBrowser(page,h,width,output){
  await page.locator('.cr-store-reference').filter({hasText:bulkItems[2].name}).getByText('Unresolved',{exact:true}).waitFor()
  await j.capture('file-store-bulk-changed-confirmed')
  assert.deepEqual(h.fileStoresProvider.writes,[])
+}
+
+/** Check a returned missing capture and a present control through the ordinary record screen. */
+async function missingStoresBrowser(page,h,width,output){
+ const j=recordsJourney(page,h.origin,output,width),proof=await missingStoreReturn(h,h.fileStoresProvider,'synthetic-cradle-code-2'),thumbnails=[]
+ const observe=request=>{if(request.url().includes('/file-stores/thumbnail'))thumbnails.push(request.url().split('?')[0])}
+ page.on('request',observe)
+ try{
+  await page.goto(`${h.origin}/app/records/${proof.appId}`);await j.table('Files');await j.action(page.getByRole('link',{name:'synthetic-cradle-returned-files',exact:true}).first())
+  const missing=page.locator('.cr-store-reference').filter({hasText:proof.missing.name})
+  for(let attempt=0;attempt<2;attempt++){
+   const response=page.waitForResponse(r=>r.url().endsWith('/file-stores/resolve')&&r.request().method()==='POST')
+   await j.action(missing.getByRole('button',{name:'Check my store',exact:true}));const answer=await response;assert.equal(answer.status(),200);const result=(await answer.json()).data
+   assert.equal(result.state,'unresolved');assert.match(result.reason,/not find|not grant access/)
+   await missing.getByText(result.reason,{exact:true}).waitFor();await missing.getByText('Unresolved',{exact:true}).waitFor()
+   assert.equal(await missing.locator('.cr-store-thumb').count(),0);assert.equal(await missing.getByRole('link').getAttribute('href'),proof.missing.link)
+   await proof.unchanged()
+  }
+  await j.capture('file-store-return-missing')
+  await page.reload();await missing.getByRole('button',{name:'Check my store',exact:true}).waitFor();await missing.getByText('Unresolved',{exact:true}).waitFor();assert.equal(await missing.locator('.cr-store-thumb').count(),0);await proof.unchanged()
+  assert.deepEqual(thumbnails,[],'A missing unresolved capture never asks for a thumbnail')
+  const metadata=proof.metadataOnly()
+  const versionAfterMissing=(await proof.record()).version
+  const present=page.locator('.cr-store-reference').filter({hasText:proof.present.name}),response=page.waitForResponse(r=>r.url().endsWith('/file-stores/resolve')&&r.request().method()==='POST'),ready=page.waitForNavigation({waitUntil:'domcontentloaded'})
+  await j.action(present.getByRole('button',{name:'Check my store',exact:true}));const answer=await response;assert.equal(answer.status(),200);await ready
+  await present.getByText('Unresolved',{exact:true}).waitFor({state:'detached'});await missing.getByText('Unresolved',{exact:true}).waitFor();assert.equal(await missing.locator('.cr-store-thumb').count(),0)
+  const current=await proof.record(),reference=current.fields[proof.address.fieldId].value.find(member=>member.reference.itemId===proof.missing.itemId).reference
+  const resolved=current.fields[proof.address.fieldId].value.find(member=>member.reference.itemId===proof.present.itemId).reference;assert.equal(resolved.resolution,'resolved');assert.ok(resolved.connectionId)
+  assert.equal(reference.connectionId,null);assert.equal(reference.resolution,'unresolved');assert.deepEqual(reference.portable,proof.captures[0]);assert.equal(JSON.stringify((await proof.portable())[0]),proof.missingPortable)
+  // The resolved control may now fetch its thumbnail; resolution itself used metadata alone.
+  assert.ok(metadata.length>=2)
+  assert.deepEqual(h.fileStoresProvider.writes,[])
+  await j.capture('file-store-return-missing-with-present-control')
+  await writeFile(path.join(output,`file-store-missing-${width}.json`),JSON.stringify({width,missing:{state:reference.resolution,connectionId:reference.connectionId,versionBefore:proof.original.version,versionAfterMissing,portableUnchanged:true},present:resolved.resolution,metadata,checkpoints:j.checkpoints},null,2)+'\n')
+ }finally{page.off('request',observe);proof.cleanup()}
 }

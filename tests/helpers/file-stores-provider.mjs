@@ -6,7 +6,7 @@ export const storeScopes = { 'google-drive': ['https://www.googleapis.com/auth/d
 const reads = new Set(['/2/files/download','/2/files/get_metadata', '/2/files/list_folder', '/2/files/list_folder/continue', '/2/files/search_v2', '/2/files/get_thumbnail_v2','/revoke','/2/auth/token/revoke'])
 /** Synthetic provider edge for the four stores. Records every request so a journey can prove nothing was written or shared. */
 export function fileStoresProvider() {
-  const seen = [], writes = [],denied=new Set()
+  const seen = [], writes = [],traces=[],denied=new Set(),missingMetadata=new Set()
   const changed = new Map(),metadata=new Map()
   const payload = (provider, index) => Buffer.alloc(files[index][2], `synthetic-cradle-${provider}-${index}-${changed.get(`${provider}:${index}`) ?? 'original'}`)
   const hash = (algorithm, data) => createHash(algorithm).update(data).digest()
@@ -25,9 +25,11 @@ export function fileStoresProvider() {
   const image = async () => {await thumbnailObserver?.();return new Response(png, { headers: { 'content-type': 'image/png' } })}
   const named = (prefix, i) => `${prefix}-${i}`
   return {
-    seen, writes, png,payload,denied,changeDigest(provider,itemId){const i=indexOf(itemId);assert.ok(files[i]);changed.set(`${provider}:${i}`,(changed.get(`${provider}:${i}`)??0)+1)},observeThumbnails(observer){thumbnailObserver=observer},observeMetadata(observer){metadataObserver=observer},changeMetadata(provider,itemId,value){metadata.set(`${provider}:${indexOf(itemId)}`,value)},
+    seen, writes, traces, png,payload,denied,missingMetadata,changeDigest(provider,itemId){const i=indexOf(itemId);assert.ok(files[i]);changed.set(`${provider}:${i}`,(changed.get(`${provider}:${i}`)??0)+1)},observeThumbnails(observer){thumbnailObserver=observer},observeMetadata(observer){metadataObserver=observer},changeMetadata(provider,itemId,value){metadata.set(`${provider}:${indexOf(itemId)}`,value)},
     async fetch(request) {
       const u = new URL(request.url); seen.push(`${request.method} ${u.origin}${u.pathname}`)
+      // Retain metadata selectors and response status, never credentials or consent parameters.
+      const trace={method:request.method,origin:u.origin,path:u.pathname,query:Object.fromEntries([...u.searchParams].filter(([key])=>['fields','alt','$select','$expand'].includes(key)))};traces.push(trace)
       const form = async () => new URLSearchParams(await request.clone().text())
       if (request.method !== 'GET' && !u.pathname.endsWith('/token') && !reads.has(u.pathname)) writes.push(`${request.method} ${u.origin}${u.pathname}`)
       if (u.pathname.endsWith('/token')) {
@@ -47,7 +49,7 @@ export function fileStoresProvider() {
         return Response.json({ files: files.map(drive).filter(f => !match || f.name.includes(match)) })
       }
       if(u.hostname==='www.googleapis.com'&&u.searchParams.get('alt')==='media'){const i=indexOf(u.pathname);return new Response(payload('google-drive',i))}
-      if (u.hostname === 'www.googleapis.com' && u.pathname.startsWith('/drive/v3/files/')) {await metadataObserver?.(u.pathname);const i=indexOf(u.pathname);return files[i]?Response.json(drive(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
+      if (u.hostname === 'www.googleapis.com' && u.pathname.startsWith('/drive/v3/files/')) {await metadataObserver?.(u.pathname);const i=indexOf(u.pathname),missing=missingMetadata.has('google-drive:'+decodeURIComponent(u.pathname.split('/').at(-1)));trace.status=files[i]&&!missing?200:404;return trace.status===200?Response.json(drive(files[i],i)):Response.json({error:{code:404,message:'File not found.'}},{status:404})}
       if (u.hostname === 'graph.microsoft.com') {
         if(u.pathname.endsWith('/content')){const i=indexOf(u.pathname.replace(/\/content$/,''));return new Response(null,{status:302,headers:{location:`https://synthetic-cradle.files.1drv.com/synthetic-cradle-content-${i}`}})}
         if (/\/items\//.test(u.pathname)) {await metadataObserver?.(u.pathname);const i=indexOf(u.pathname);return files[i]?Response.json(graph(files[i],i)):Response.json({error:'synthetic-cradle-not-found'},{status:404})}
