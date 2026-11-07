@@ -12314,7 +12314,7 @@
       "executable": false
     },
     "tests/helpers/launch-campaign-clauses.mjs": {
-      "sha256": "9584e84f9db376eb8a38dea3ad7cc1ece5feb56226672296b60522c13bcd7ad6",
+      "sha256": "65307d3be2c519cc073d474e2e1e11fe96076c5ac45da6c54148398636be065d",
       "executable": false
     },
     "tests/helpers/launch-campaign-lifecycle-clauses.mjs": {
