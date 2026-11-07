@@ -361,8 +361,8 @@ Core · published · **partial**
 2. The failed state names the operation that failed and offers a retry; it renders no rows, no sample data, and no result of an earlier successful read.
 3. An action a policy forbids is refused with a stated reason and changes nothing.
 
-**Evidence.** `tests/launch-authority-browser.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a collection/detail state journey that observes loading and signed-out transitions, fails after a populated read and checks no stale rows, and attempts a policy-forbidden action with no effect. Cited `tests/launch-authority-browser.mjs`, `tests/ui-launch-walkthrough.mjs` show: Scoped/missing and real D1-failure screens with retry plus some empty states are exercised.
+**Evidence.** `tests/launch-authority-browser.mjs` — native owner creation, scoped transport and safe October error states; `tests/helpers/campaign-grid-state-journey.mjs` — populated Campaign Grid, pending refresh, real D1 failure with no retained results and Retry against current native data; `tests/ui-launch-walkthrough.mjs`
+**Gap.** Missing the complete collection and detail loading, empty, not-found and signed-out transition matrix, failure-after-success proof on other surfaces, and the stated-reason, no-effect forbidden-action matrix. Wider phone qualification, ct contract conversion and generated-document synchronization remain release prerequisites. Campaign Grid failure-after-success is exercised with independently created data, a held actual request, an isolated D1 read failure, absent prior rows, identifiers and inspector content, and successful current-data retry at 1440 and 390.
 
 #### VIEW-005 — Search
 
