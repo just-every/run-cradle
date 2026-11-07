@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { baseEmittedRuntime } from './helpers/base-emitted-runtime.mjs'
 import {completeFirstRun} from './helpers/complete-first-run.mjs'
+import { verifyBaseSessionMutationRevocation } from './helpers/base-session-mutation.mjs'
 
 const origin='https://cradle.base.test'
 const setupToken='test-only-base-bootstrap-secret-32-characters'
@@ -38,7 +39,7 @@ async function installation(run, mail=false, prior=false) {
    return new Response(null,{status:202,headers:{'x-message-id':'test-only-workerd-mail-receipt'}})
   })
   const worker=await runtime.getWorker(),db=await runtime.getD1Database('DB')
-  const request=(route,body,cookie)=>worker.fetch(origin+'/__test_envelope',{method:'POST',redirect:'manual',body:JSON.stringify({url:origin+route,method:body?'POST':'GET',headers:{host:'cradle.base.test',origin,'cf-connecting-ip':'192.0.2.55',...(cookie?{cookie}:{}),...(body?{'content-type':body instanceof URLSearchParams?'application/x-www-form-urlencoded':'application/json'}:{})},...(body?{body:body instanceof URLSearchParams?body.toString():JSON.stringify(body)}:{})})})
+  const request=(route,body,cookie,headers={})=>worker.fetch(origin+'/__test_envelope',{method:'POST',redirect:'manual',body:JSON.stringify({url:origin+route,method:body?'POST':'GET',headers:{host:'cradle.base.test',origin,'cf-connecting-ip':'192.0.2.55',...(cookie?{cookie}:{}),...(body?{'content-type':body instanceof URLSearchParams?'application/x-www-form-urlencoded':'application/json'}:{}),...headers},...(body?{body:body instanceof URLSearchParams?body.toString():JSON.stringify(body)}:{})})})
   const finish=cookie=>completeFirstRun(origin,cookie,(url,init)=>request(new URL(url).pathname,init.method==='POST'?new URLSearchParams(init.body):undefined,cookie))
   await run({request,finish,db,deliveries})
  }finally{await runtime?.dispose();await rm(directory,{recursive:true,force:true})}
@@ -111,17 +112,17 @@ test('emitted Base SendGrid magic-link uses a read-only confirmation before one-
  const page=await request('/app',undefined,cookie);assert.equal(page.status,200);assert.match(await page.text(),/Magic Owner/)
  assert.equal((await request('/auth/confirm',{token})).status,400)
  const session=await(await request('/api/session',undefined,cookie)).json();assert.equal(session.operator.email,ownerEmail)
- const baseSession=await db.prepare('SELECT id FROM oa_sessions ORDER BY created_at DESC LIMIT 1').first()
  const {createBaseSessionReader}=await import('../src/domains/authority/base-session.server.ts')
  const {principalGuards}=await import('../src/domains/authority/guards.server.ts')
  const base=createOperatorAuth({db,config:{origin,OWNER_EMAIL:ownerEmail,SESSION_SECRET:secret},clientIp:()=> '192.0.2.55'})
- const read=createBaseSessionReader(db,{appOrigin:origin,sessionSecret:secret,mode:'production',initializeBaseOwner:async()=>{assert.equal((await request('/app',undefined,cookie)).status,200)}},base)
+ const configuration={appOrigin:origin,sessionSecret:secret,mode:'production',base,initializeBaseOwner:async()=>{assert.equal((await request('/app',undefined,cookie)).status,200)}}
+ const read=createBaseSessionReader(db,configuration,base)
  const identity=await read(new Request(origin+'/api/session',{headers:{host:'cradle.base.test',cookie}}))
  const guards=principalGuards({principal:identity.principal,now:new Date().toISOString()})
  const prepared=()=>db.prepare('SELECT 1 AS authorized WHERE '+guards.map(g=>'('+g.sql+')').join(' AND ')).bind(...guards.flatMap(g=>g.values)).first()
  assert.ok(await prepared(),'Current Base session admits a prepared product command')
  const csrf=await(await request('/auth/csrf',undefined,cookie)).json();assert.ok(csrf.csrfToken)
- await db.prepare('UPDATE oa_sessions SET revoked_at=? WHERE id=?').bind(Date.now(),baseSession.id).run()
+ await verifyBaseSessionMutationRevocation({db,request,origin,configuration,cookie,controlCookie:bootstrap.headers.get('set-cookie').split(';')[0]})
  assert.equal(await prepared(),null,'Revoking Base after preparation defeats the atomic product guard')
  assert.equal((await request('/api/session',undefined,cookie)).status,401)
 },true))
