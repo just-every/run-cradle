@@ -221,8 +221,8 @@ Core · published · **partial** · Cites BASE-ACCESS-001, BASE-ACCESS-002, BASE
 4. Local and hosted installations expose no captured-mail inbox or outbox. Hosted mail failures give actionable guidance; an unclaimed installation directs its host to finish deployment.
 5. Absent owner configuration admits neither the legacy sign-in path nor legacy product cookies.
 
-**Evidence.** `tests/auth-base-only-runtime.mjs` (including “AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration”), `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs`
-**Gap.** Missing a journey in the old Evidence set that prepares a product mutation, revokes its Base session and proves refusal with no effect, plus the local rer-dev/private-setup and durable first-run paths; the cited files exercise production bootstrap and sign-in, not these retained paths. Existing local dev/first-run browser journeys are in ui-local-signin.mjs and installed-home.mjs, which this old Evidence cell does not cite.
+**Evidence.** `tests/base-installation.mjs` — “emitted Base SendGrid magic-link uses a read-only confirmation before one-time POST and signs the mapped owner into Cradle”, with `tests/helpers/base-session-mutation.mjs` proving prepared Launch admission and captured HTTP refusal after public Base session revocation; `tests/auth-base-only-runtime.mjs` (including “AUTH-BASE-001: emitted production rejects missing OWNER_EMAIL despite complete legacy mail configuration”), `tests/launch-production-composition.mjs`, `tests/local-auth-runtime.mjs`
+**Gap.** Evidence reconciliation for the existing local development, private setup and durable first-run paths remains open: the existing browser journeys in `tests/ui-local-signin.mjs` and `tests/installed-home.mjs` have not been reconciled here. The broader authentication, configuration and mail matrix, ct contract conversion and generated-document synchronization, and independent whole-clause judgment remain unclaimed.
 
 #### OPS-001 — Equal operators
 
@@ -378,8 +378,8 @@ Core · published · **partial**
 5. Archived records are returned only when explicitly included.
 6. Search meets its 500ms response target.
 
-**Evidence.** `tests/launch-search-authority.mjs`
-**Gap.** Missing a search journey for text, URL and select prefix matches, comment exclusion and archived opt-in, the twenty-results-per-table bound and the 500ms bar. Cited `tests/launch-search-authority.mjs` show: Cross-base search and current membership/row/field authorization are exercised with launch and vault text.
+**Evidence.** `tests/launch-search-authority.mjs`; `tests/helpers/launch-search-values-journey.mjs` — searchValuesJourney: mixed-case text, URL and select-label token prefixes, native detail links, twenty results from twenty-four matches plus another table, readable comment exclusion and explicit archived Launch inclusion
+**Gap.** Missing the 500ms measurement, complete authorized-base and Launch-attribute coverage, concurrent-policy matrices, rendered search breadth and wider phone qualification. Cross-base membership, row and field privacy assertions remain. Independent whole-clause judgment and generated-document synchronization remain release prerequisites; no DONE claim.
 
 #### VIEW-006 — Concurrent edits
 
@@ -433,7 +433,7 @@ Core · published · **partial**
 2. Archiving deletes nothing.
 3. The initial phases are Planning, Build, Production, Review and Launch prep; the initial statuses are On track, Watch, At risk and Blocked; the initial launch-preparation phase is Launch prep.
 
-**Evidence.** `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/ui-launch-walkthrough.mjs`; `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses", through `tests/helpers/launch-campaign-lifecycle-clauses.mjs` — "verifyPublicCampaignLifecycle" and "verifyCampaignLifecycleClauses"; public lifecycle, active-list withdrawal and return, unchanged fields and child revisions, attributed activity and shipped controls at 1440 and 390. Existing internal lifecycle and public portfolio archive assertions remain.
 **Gap.** Missing a public lifecycle journey that restores the archived campaign, reads retained records and demonstrates operator lifecycle behavior; the cited browser never restores. Cited `tests/ui-launch-walkthrough.mjs` show: Public archive calls preserve unresolved child states in portfolio proof.
 
 #### CAMP-003 — Validation
@@ -447,7 +447,7 @@ Core · published · **partial**
 2. Campaign codes are trimmed and unique case-insensitively.
 3. A mutation breaking any of these, or clearing the owner, start date, or launch date of an active campaign, is rejected with a validation error naming the field and changes nothing.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-campaign-clauses.mjs` (verifyPublicCampaignValidation: native command refusals name invalid dates, health, amounts, duplicate codes and cleared active required fields, preserve public readbacks and all persisted effects, and read back valid boundaries and trimmed codes; verifyCampaignClauses retains the internal matrix)
 **Gap.** Missing a public campaign-validation journey that attempts invalid dates, health, money, codes and required-field removal, observes field errors and unchanged state, and completes a valid edit. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal command-handler/admission helpers check campaign validation and atomic snapshots; cited browser creates valid campaigns.
 
 #### CAMP-004 — Detail and rollups
@@ -608,8 +608,8 @@ Core · published · **partial**
 1. An operator can create, edit, and delete a deliverable.
 2. It belongs to exactly one campaign, requires a title and an owner, has an optional due date, and has a state of Open or Complete that starts Open.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public deliverable CRUD journey that deletes a populated deliverable and tries an unsafe deletion without effects, then reads the missing record and updated campaign count. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Browser creates a deliverable and public concurrency edits its title; internal helpers additionally edit/delete and validate.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses", through `tests/helpers/launch-campaign-clauses.mjs` — "verifyCampaignClauses": native HTTP create and edit, current-policy deletion refusal with a freshly read version and unchanged stored state, authorized deletion, public record absence, campaign detail removal, exact count decrement and preserved sibling and unrelated work. Retained browser creation: `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone".
+**Gap.** Missing a public deliverable CRUD journey that deletes a populated deliverable and tries an unsafe deletion without effects, then reads the missing record and updated campaign count. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Browser creates a deliverable and public concurrency edits its title; internal helpers additionally edit/delete and validate. Supplemental public deletion and current-authority refusal assertions are now cited in Evidence; independent whole-clause judgment remains outstanding. Status remains partial.
 
 #### DELIV-002 — Completion
 
@@ -706,7 +706,7 @@ Core · published · **partial**
 2. Completing or deleting the milestone, or archiving its campaign, cancels an Outstanding request.
 3. A milestone whose date has already passed receives no request.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/launch-installed-schedules.mjs` — "emitted scheduled handler supplies readiness, weekly digest and overdue decision effects", through `tests/helpers/launch-readiness-rescheduling.mjs` — "verifyReadinessRescheduling": emitted cron creates addressed Outstanding requests with the five-day window; fresh-version native commands move one outside and inside, cancel without immediate replacement, then the next daily evaluation creates exactly one new request despite duplicate ticks; separate complete, delete and campaign archive commands leave no Outstanding request and withdraw each prior notice; a past-date control receives no request. Public readiness queries and inbox readbacks agree with read-only D1 observations; `tests/helpers/launch-readiness-screens.mjs`; `tests/helpers/launch-milestone-clauses.mjs`
 **Gap.** Missing an emitted scheduled/public-command rescheduling journey showing outside/inside-window, completion/deletion/archive cancellation and no requests for past dates. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal retained scheduler helpers create real readiness, reschedule/cancel and inspect durability; browser does not drive these cases.
 
 #### MILE-006 — Overdue
@@ -733,7 +733,7 @@ Core · published · **partial**
 1. An operator can create, edit, and delete a risk.
 2. It belongs to exactly one campaign, requires a title and an owner, has a severity of Low, Medium, High, or Critical, has an optional due date, carries a signal and a mitigation as free text of at most 2,000 characters each — the signal being the evidence that raised the risk — and has a workflow state.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-risk-clauses.mjs`; an unlinked deletion proves the restricted operator has risk-delete authority); supplemental proof retained without replacing main’s current judgment.
 **Gap.** Missing a public risk CRUD journey deleting a risk and refusing an unsafe deletion without effect while preserving its linked decision. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser creates risks and current-lens journey edits signal; internal handlers validate/edit/delete complete risk data.
 
 #### RISK-002 — Lifecycle
@@ -774,7 +774,7 @@ Core · published · **partial**
 1. Escalating, updating, or resolving a risk changes that risk, the campaign activity entry ACT-001 requires, the campaign's derived rollups, and — when the risk-escalation policy fires — the one decision and one notification it creates.
 2. No other record changes; a linked decision changes only through the decision-resolution policy.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-risk-isolation.mjs`
 **Gap.** Missing a public risk-isolation journey reading unchanged unrelated records plus the exact allowed activity/rollup/decision/notification effects. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal snapshots check risk isolation; public browser escalates/resolves but inspects only selected related fields.
 
 #### RISK-005 — Shipped lens
@@ -787,8 +787,8 @@ Core · published · **partial**
 1. As shipped and before any operator edit, Risks Lens contains exactly the open risks of severity High or Critical whose campaign is non-archived and whose launch date is no later than 30 days from today in the workspace timezone, so a campaign already past its launch date stays in the lens.
 2. It orders Critical before High, then earliest due date, then risks without a due date, then campaign code, and shows severity, state, owner, due date, signal, mitigation, and campaign.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public shipped-lens journey reading the complete set/order across overdue/day-30/day-31/archive/resolved/severity fixtures and each listed business field. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Browser opens populated high/critical risks; internal lens preview checks full membership, ordering and fields.
+**Evidence.** `tests/launch-write-effects.mjs` — "prior full policy covers conservative effects and campaign record clauses" via `tests/helpers/launch-shipped-risk-journey.mjs` — "verifyPublicShippedRiskLens"; `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone"; retained internal fixture in `tests/helpers/launch-risk-clauses.mjs` — "shippedLens"
+**Gap.** Public commands create overdue, day-30 and day-31 campaigns, archived and resolved exclusions and every severity before any shipped-definition edit. The public Risks Lens proves exact membership and independently authored severity, due-date, null-date and campaign-code order, with every listed business field; built cards assert these values at 1440 and record the same screen at 390. Existing ct contract-conversion and generated-document synchronization release prerequisites and independent whole-clause judgment remain unclaimed. Queued LENS-006 duplicate, edit and restore work, broader lens capacity, other risk lifecycle and policy work and whole-phone-app qualification receive no new scope.
 
 ### Decisions
 
@@ -803,7 +803,7 @@ Core · published · **partial**
 2. It belongs to exactly one campaign, links to at most one risk and to at most one decision it supersedes, requires a title and a requester, and has a priority of Critical, High, Medium, or Low, a due time, a recommendation, an impact statement, an optional assignee, and a state of Awaiting approval, In review, Approved, Rejected, or Canceled.
 3. Awaiting approval and In review are unresolved; the other three are terminal.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
+**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`; `tests/helpers/launch-decision-records.mjs`
 **Gap.** Missing a public decision CRUD journey deleting a decision and trying an unsafe deletion without changing linked records, then reading its absence. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Public browser creates decisions and reads recommendation/impact/links; internal handlers check full typed CRUD and deletion.
 
 #### DEC-002 — Queue
@@ -972,8 +972,8 @@ Core · published · **partial**
 1. Risks Lens and Timeline Lens ship as saved lenses.
 2. Operators can duplicate or edit them, and restoring either returns its definition to exactly the one in RISK-005 or MILE-002 without changing a record.
 
-**Evidence.** `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public shipped-lens journey that executes duplicate/edit/restore at the native door and reads the exact restored definitions and unchanged business state. Cited `tests/launch-write-effects.mjs`, `tests/ui-launch-walkthrough.mjs` show: Internal handlers duplicate/edit/restore both installed lenses and public reads show resulting definitions.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses"; `tests/helpers/launch-shipped-lens-journey.mjs` — "verifyShippedLensLifecycle" proves both installed saved definitions, native duplicate, independent copy edits, original edits and restore with complete independent definition expectations, public record readbacks and populated business and queued-effect snapshots; `tests/ui-launch-walkthrough.mjs` retains shipped lens screens.
+**Gap.** Selected public duplicate, edit and restore proof is complete for both shipped lenses. Independent whole-clause judgment and ct contract conversion and generated-document synchronization remain release prerequisites; complete Risks Lens membership and ordering, timeline ordering, capacity and wider phone journeys remain unclaimed.
 
 #### LENS-007 — Conditions
 
@@ -1101,8 +1101,8 @@ Core · published · **partial**
 2. Editing an automation affects only later triggers.
 3. Disabling one cancels queued runs that have not started, recording each as Canceled with no action executed.
 
-**Evidence.** `tests/launch-installed-event-control.mjs`, `tests/launch-installed-network-cancel.mjs`
-**Gap.** Missing a cited journey that edits the definition while a retained run exists and reads old versus later-trigger actions; the cited journeys show version numbering and disable/cancel, but never distinguish retained-run action snapshots from an edited definition.
+**Evidence.** `tests/launch-installed-event-control.mjs` — "[AUTO-001] [AUTO-003/004] [AUTO-006] definitions version every edit and refuse undeclared events, sub-hourly schedules and uncontributed commands; a jobs.commands.v1 action runs once from the emitted queue; disable cancels queued work before any effect; full run history pages with each attempted action and a 30-day success rate" (acceptances 1–2: "verifyRetainedDefinition" in `tests/helpers/launch-automation-definitions.mjs`; acceptance 3: queued disable); `tests/launch-installed-network-cancel.mjs`
+**Gap.** Independent whole-clause judgment and ct’s contract conversion and generated-document synchronization remain release prerequisites. Remaining disable, in-flight and cancellation combinations and the wider action, trigger and crash or restart matrix remain unproved; authorship and credential lifetime are unchanged.
 
 #### AUTO-005 — Loop protection
 
@@ -1413,8 +1413,8 @@ Core · published · **partial** · Cites BASE-INPUT-001, BASE-INPUT-003
 2. The file must be UTF-8, comma-delimited, and carry a header row; a byte-order mark is accepted and anything else is rejected with a parse error.
 3. Import requires an explicit mapping from columns to fields and, before any record changes and within 60 seconds at the row limit, shows the number of creates, updates, and unchanged rows, every row error, and for each updated row the fields that will change with their stored and incoming values.
 
-**Evidence.** `tests/launch-operator-doors.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited maximum-row CSV preview timed within 60 seconds and malformed/non-UTF-8 format refusal; the cited journeys cover small BOM/quoted campaign CSV and a deliverable preview, not the measurable row-limit bar.
+**Evidence.** `tests/launch-operator-doors.mjs` — "[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign CSV previews changes, refuses stale or invalid files, commits once and keeps its file": native text upload rejects invalid UTF-8 and NUL bytes, while a BOM without a header, unterminated quotes and illegally closed quoted cells reach Launch parsing byte for byte; each Launch preview returns an identifiable CSV parsing refusal without a preview or token, snapshots after upload plus public campaign reads retain records, activity, previews, events, outbox and execution work unchanged, and unreadable rejected files disclose no parsing details. The successful BOM and quoted-field control remains. `tests/ui-launch-operator-doors.mjs` covers the existing mapped preview.
+**Gap.** Missing the complete campaign, deliverable and milestone upload-limit matrix, remaining delimiter, header and format combinations, maximum-row preview timed within 60 seconds and complete mapping, change and error matrix. Independent whole-clause judgment and ct's contract conversion and generated-document synchronization remain release prerequisites; no DONE claim.
 
 #### IMPORT-002 — Merge keys
 
