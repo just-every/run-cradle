@@ -30,7 +30,7 @@ export async function gridRangeBrowserJourney() {
 }
 
 async function fillBrowserJourney(runtime, browser, width, output) {
-    const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 } })
+    const context = await browser.newContext({ viewport: { width, height: width <= 390 ? 844 : 900 } })
     try {
     await context.addCookies([{ name: runtime.cookie.split('=')[0], value: runtime.cookie.slice(runtime.cookie.indexOf('=') + 1), url: runtime.origin }])
     const page = await context.newPage()
@@ -50,6 +50,7 @@ async function fillBrowserJourney(runtime, browser, width, output) {
     await first.click(); await page.keyboard.press('Shift+ArrowDown')
     let pending = patch(); await tableAction(page, 'Fill down'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '2'])
+    await journey.capture('grid-range-filled')
     pending = patch(); await tableAction(page, 'Undo'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '7'])
     // Do not wait for a background read: the admitted command's rows already
@@ -60,6 +61,7 @@ async function fillBrowserJourney(runtime, browser, width, output) {
     pending = patch(); await tableAction(page, 'Undo'); assert.equal((await pending).status(), 200)
     pending = patch(); await tableAction(page, 'Redo'); assert.equal((await pending).status(), 200)
     assert.deepEqual(await quantities(), ['2', '2'])
+    await journey.capture('grid-range-redone')
     return keyboard
     } finally { await context.close() }
 }
@@ -129,7 +131,7 @@ async function keyboardEditJourney(page, journey, base, name, value) {
 
 async function rangePasteBrowserJourney(runtime, browser, width, output) {
   const ownerContext = await browser.newContext({ viewport: { width, height: 900 } })
-  const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, permissions: ['clipboard-read', 'clipboard-write'] })
+  const context = await browser.newContext({ viewport: { width, height: width <= 390 ? 844 : 900 }, permissions: ['clipboard-read', 'clipboard-write'] })
   const page = await context.newPage(), owner = await ownerContext.newPage(), journey = recordsJourney(page, runtime.origin, output, width)
   page.setDefaultTimeout(15000)
   const cookie = (context, value) => context.addCookies([{ name: value.split('=')[0], value: value.slice(value.indexOf('=') + 1), url: runtime.origin }])

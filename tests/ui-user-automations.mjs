@@ -1,3 +1,4 @@
+import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
 import {browserFailureDiagnostic} from './helpers/browser-failure-diagnostic.mjs'
 import {chatProviderBrowser} from './helpers/chat-provider-browser.mjs'
 import {slackAppBrowser} from './helpers/slack-app-browser.mjs'
@@ -33,8 +34,8 @@ contract('AUTOMATIONS-USER-UI-001','[AUTO-USER-005] [AUTO-USER-006] [AUTO-USER-0
   assert.equal(process.env.HOME,userInfo().homedir)
   browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']})
   console.log('OWNED_BROWSER_PIDS '+execFileSync('ps',['-axo','pid,ppid,comm'],{encoding:'utf8'}).split('\n').filter(line=>line.trim().split(/\s+/)[1]===String(process.pid)).join(' | '))
-  for(const width of [1440,390]) {
-   const context=await browser.newContext({viewport:{width,height:width===390?844:900}})
+  for(const width of recordsBrowserWidths()) {
+   const context=await browser.newContext({viewport:{width,height:width<=390?844:900}})
    try {
     await context.addCookies(browserCookies(h.cookie,h.origin))
     const page=await context.newPage(),journey=recordsJourney(page,h.origin,output,width)
