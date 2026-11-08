@@ -1,3 +1,4 @@
+import { launchImportDeletionJourney } from './helpers/launch-import-deletion.mjs'
 import {warehouseNetworkEdge} from './helpers/warehouse-network-edge.mjs'
 import {companyLifecycle} from './helpers/company-lifecycle.mjs'
 import test, { after } from 'node:test'
@@ -10,6 +11,7 @@ import { verifyErasure } from './helpers/launch-operator-erasure.mjs'
 import { warehouseExportJourney } from './helpers/warehouse-export-journey.mjs'
 import { childImportMergeJourney } from './helpers/launch-import-merge.mjs'
 import { customFieldDeletionJourney } from './helpers/launch-custom-field-deletion.mjs'
+import { launchBulkUndoJourney } from './helpers/launch-bulk-undo.mjs'
 
 // High-stakes launch doors through the emitted Worker: data import, sample removal,
 // ownership handover and paging. Each request uses the app's own routes and session.
@@ -321,12 +323,17 @@ test('[IMPORT-001] [IMPORT-002] [IMPORT-003] [IMPORT-004] [IMPORT-005] campaign 
   }
  } finally { h.setNow(undefined) }
  await customFieldDeletionJourney()
+ await launchImportDeletionJourney({ h, call, command, envelope, upload, preview, mapping, unrelatedId: faultPreview.id, unrelatedBytes: faultCsv, sharedId: fresh.id })
 })
 
 test('[IMPORT-002] deliverable and milestone CSV rows merge by campaign code and title, name key, owner, select and campaign errors by row and keep stored values for blank cells', async () => {
  const people = (await h.db.prepare('SELECT id,name FROM operators WHERE active=1 AND id<>? ORDER BY name LIMIT 3').bind(h.owner).all()).results
  assert.equal(people.length, 3, 'Three current colleagues besides the owner')
  await childImportMergeJourney({ owner: h.owner, people, call, command, envelope, upload, preview })
+})
+
+test('[CAMP-013] two-campaign bulk status undo restores once before one hour, refuses at and after expiry, and replays without effects', async () => {
+ await launchBulkUndoJourney({ h, call, command, envelope, campaignRef })
 })
 
 test('[SET-003] sample data installs and removes in one action, and removal is refused naming edited records', async () => {
