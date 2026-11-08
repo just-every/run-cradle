@@ -1,0 +1,278 @@
+
+> cradle@0.4.0 test:records:browser /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle
+> node --import ./tests/helpers/typescript-loader.mjs tests/ui-records-builder.mjs
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+TAP version 13
+CLOUD_SCREEN 2026-11-08T05:34:55.037Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/empty-home-1440.png
+CLOUD_SCREEN 2026-11-08T05:34:55.771Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/empty-home-builder-1440.png
+CLOUD_SCREEN 2026-11-08T05:34:56.663Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/fresh-home-1440.png
+CLOUD_SCREEN 2026-11-08T05:34:58.818Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/launch-edit-fields-1440.png
+CLOUD_SCREEN 2026-11-08T05:34:59.490Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/launch-people-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:00.598Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/base-actions-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:01.354Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:01.907Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:03.133Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/records-only-home-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:06.579Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/records-with-no-bases-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:08.080Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/retained-launch-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:08.934Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/records-and-launch-home-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:11.097Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/home-newest-ten-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:12.392Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/home-multi-field-changes-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:17.447Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/grid-tools-tooltip-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:18.142Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/keyboard-enter-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:18.922Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/keyboard-f2-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:19.682Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/keyboard-cancelled-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:20.454Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/grid-range-filled-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:21.705Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/grid-range-redone-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:28.683Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/range-invalid-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:31.261Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/range-pasted-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:34.271Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/range-undone-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:37.404Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/range-redone-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:40.969Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/range-conflict-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:44.157Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-range/range-demoted-1440.png
+{"rangeHistory":[{"width":1440,"records":50,"cells":250,"invalidErrors":["Row 17, Quantity: Quantity: Enter a number such as 12 or 12.50 (up to 128 integer and 32 decimal digits).","Row 38, Ship date: Ship date: Enter a real calendar date as YYYY-MM-DD or M/D/YYYY."],"invalidPaste":"unchanged","commands":[{"commandId":"01M6WTF3Z23V51VCST5T4A5HFS","actor":"01M6WTF0AADAP96GJHDB0Q9BX4","records":50,"cells":250},{"commandId":"01M6WTF6RZ9GWEGDNFETPSS3QQ","actor":"01M6WTF0AADAP96GJHDB0Q9BX4","records":50,"cells":250},{"commandId":"01M6WTF9VXC81T2W85FN5CEHXG","actor":"01M6WTF0AADAP96GJHDB0Q9BX4","records":50,"cells":250}],"conflict":{"row":25,"field":"Quantity","currentValue":"9876.5","status":409},"demoted":403,"checkpoints":[{"name":"range-invalid","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"range-pasted","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"range-undone","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"range-redone","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"range-conflict","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"range-demoted","width":1440,"serious":0,"critical":0,"pageOverflow":false}],"keyboard":{"entry":"Tab","moves":["Right","Down","Left","Up"],"saves":["Enter","F2"],"commands":["01M6WTESP2E0WK9574WSRG0Q0T","01M6WTETEC44D6QGKW27PYCADW"],"cancel":"unchanged","checkpoints":[{"name":"grid-tools-tooltip","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"keyboard-enter","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"keyboard-f2","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"keyboard-cancelled","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"grid-range-filled","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"grid-range-redone","width":1440,"serious":0,"critical":0,"pageOverflow":false}]}}]}
+# Subtest: [RECORDS-001] [BASE-PUBLIC-003] [VIEW-008] [VIEW-015] Home presents records and bases before launch work with atomic range history at desktop and phone widths
+ok 1 - [RECORDS-001] [BASE-PUBLIC-003] [VIEW-008] [VIEW-015] Home presents records and bases before launch work with atomic range history at desktop and phone widths
+  ---
+  duration_ms: 53525.594868
+  type: 'test'
+  ...
+CLOUD_SCREEN 2026-11-08T05:35:48.781Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/relation-single-heading-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:49.682Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/relation-link-reachable-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:50.568Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/relation-row-policy-filtered-1440.png
+CLOUD_SCREEN 2026-11-08T05:35:51.470Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/relation-field-restricted-1440.png
+# Subtest: [RECORDS-002] [RECORDS-003] Record detail keeps one relation heading, reachable links and policy restrictions
+ok 2 - [RECORDS-002] [RECORDS-003] Record detail keeps one relation heading, reachable links and policy restrictions
+  ---
+  duration_ms: 7133.785299
+  type: 'test'
+  ...
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+CLOUD_SCREEN 2026-11-08T05:35:58.751Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/schema-builder-1440.png
+FIELD_BROWSER_OWNED_PIDS [{"pid":36209,"parent":35263,"name":"node"},{"pid":36351,"parent":36209,"name":"esbuild"},{"pid":36376,"parent":36209,"name":"workerd"},{"pid":36396,"parent":36209,"name":"chromium"},{"pid":36416,"parent":36396,"name":"chromium"},{"pid":36417,"parent":36396,"name":"chromium"},{"pid":36438,"parent":36416,"name":"chromium"},{"pid":36441,"parent":36396,"name":"chromium"},{"pid":36456,"parent":36417,"name":"chromium"},{"pid":36479,"parent":36209,"name":"ps"}]
+CLOUD_SCREEN 2026-11-08T05:35:59.851Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:00.706Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:01.057Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-phone-type-authoring-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:02.017Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/companies-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:02.566Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-email-type-authoring-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:03.470Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/contacts-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:03.943Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-rating-type-authoring-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:05.408Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-duration-type-authoring-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:05.854Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/deals-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:06.840Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-phone-conversion-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:07.770Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/grid-grouped-sort-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:08.482Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/whole-query-summary-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:08.621Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-phone-display-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:09.606Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-phone-invalid-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:09.679Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/find-readable-link-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:10.407Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-email-invalid-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:11.279Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-rating-invalid-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:12.184Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/saved-filtered-view-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:12.192Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-duration-invalid-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:13.089Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-typed-fields-valid-save-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:13.252Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/direct-board-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:14.024Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-phone-valid-save-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:15.370Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/kanban-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:15.956Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-existing-field-controls-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:17.489Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-linked-label-select-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:17.644Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/authenticated-form-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:19.204Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-conversion-options-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:20.658Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-conversion-link-controls-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:21.497Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/saved-cards-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:23.289Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-conversion-refused-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:24.649Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/saved-calendar-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:24.904Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-last-table-guard-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:27.721Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-creator-loss-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:27.828Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/saved-timeline-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:28.539Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-creator-awaiting-owner-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:30.237Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-owner-review-unconfirmed-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:30.857Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-owner-review-confirmed-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:30.912Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/saved-agenda-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:31.721Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-owner-adopted-recovery-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:33.173Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-detail-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:33.520Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-field-and-table-trash-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:34.997Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/linked-record-detail-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:35.448Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-field-restored-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:37.217Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/destructive-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:37.254Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-table-restored-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:39.306Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-2-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:39.805Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-restored-grid-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:39.959Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:41.887Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-owner-direct-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:42.195Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/migrated-relations-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:42.804Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-builder-adopted-recovery-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:43.257Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-3-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:43.933Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:44.487Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-linked-table-delete-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:45.647Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/recovered-field-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:46.274Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-linked-table-trash-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:47.058Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-4-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:47.683Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:48.171Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/field-browser/field-linked-table-restored-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:50.167Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/csv-preview-1440.png
+OWNED_PROCESSES [{"pid":36209,"parent":35263,"name":"node"},{"pid":37409,"parent":36209,"name":"workerd"}]
+CLOUD_SCREEN 2026-11-08T05:36:54.015Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/csv-paged-grid-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:54.503Z .private/record-trash/trash-record-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:55.323Z .private/record-trash/trash-dialog-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:56.008Z .private/record-trash/trash-deleted-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:57.096Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-5-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:57.419Z .private/record-trash/trash-list-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:57.673Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:36:59.171Z .private/record-trash/trash-restored-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:00.144Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/csv-preview-1440.png
+OWNED_PROCESSES_AFTER [{"pid":36209,"parent":35263,"name":"node"}]
+CLOUD_SCREEN 2026-11-08T05:37:02.843Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/csv-idempotent-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:04.102Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/csv-roundtrip-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:05.095Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/csv-mixed-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:07.889Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/base-collaborators-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:08.089Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/csv-mixed-imported-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:09.691Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-catalogue-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:10.071Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-formula-error-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:11.319Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-formula-editor-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:11.654Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-launch-included-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:12.331Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/impact-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:12.984Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-formula-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:13.215Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-6-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:13.701Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:13.999Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:14.910Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-adopted-field-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:16.193Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-additive-editor-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:16.692Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-companies-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:16.991Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-additive-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:18.245Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-7-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:18.467Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/editor-plain-help-and-choice-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:18.978Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:19.460Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-additive-adopted-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:20.366Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-awaiting-owner-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:21.420Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/owner-review-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:21.707Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-projects-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:23.324Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/editor-collaborative-view-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:23.577Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-inventory-schema-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:24.646Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-8-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:24.788Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/creator-retained-formula-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:25.343Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:25.660Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/base-roles/demoted-creator-formula-refused-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:28.317Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-products-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:29.515Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-copy-exclusions-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:33.152Z .private/collection-lookups/collection-source-authoring-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:33.365Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-copy-without-records-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:34.413Z .private/collection-lookups/collection-results-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:35.321Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-vendors-schema-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:36.097Z .private/collection-lookups/collection-record-values-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:36.428Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-9-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:37.240Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:37.683Z .private/collection-lookups/collection-next-read-1440.png
+CALC-002 collection builder and record journeys passed at 1440
+CLOUD_SCREEN 2026-11-08T05:37:40.326Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-vendors-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:42.137Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-assets-schema-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:43.209Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-10-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:43.679Z .private/conditional-forms/conditional-form-editor-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:43.920Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:44.675Z .private/conditional-forms/conditional-form-request-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:45.263Z .private/conditional-forms/conditional-form-delivery-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:45.878Z .private/conditional-forms/conditional-form-pickup-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:46.504Z .private/conditional-forms/conditional-form-complete-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:46.792Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-locations-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:48.553Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-events-schema-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:49.450Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-11-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:50.204Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:53.683Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-venues-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:54.061Z .private/record-history/history-record-editor-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:55.259Z .private/record-history/history-detail-undo-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:55.565Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-field-operations-schema-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:56.648Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-12-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:57.016Z .private/record-history/history-bulk-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:57.370Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:58.165Z .private/record-history/history-bulk-undo-1440.png
+CLOUD_SCREEN 2026-11-08T05:37:59.542Z .private/record-history/history-calendar-redo-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:00.894Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-sites-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:01.258Z .private/record-history/history-unrelated-edit-preserved-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:02.280Z .private/record-history/history-cell-conflict-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:02.929Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-content-schema-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:03.406Z .private/record-history/history-changed-back-conflict-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:04.011Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-13-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:04.407Z .private/record-history/history-authority-refused-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:04.773Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:08.047Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/template-campaigns-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:10.028Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/impact-preview-14-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:10.725Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/adoption-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:16.069Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/kanban-long-card-titles-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:16.876Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/kanban-long-column-0-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:17.722Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/kanban-long-column-1-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:18.488Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/kanban-long-titles-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:20.332Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-no-text-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:22.971Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/board-before-move-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:24.959Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/board-saved-undo-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:26.021Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/board-conflict-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:27.759Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/board-readonly-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:28.679Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/retained-launch-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:30.739Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/populated-home-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:32.823Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-attachment-upload-verified-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:33.829Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-duplicate-without-links-or-files-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:34.963Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-duplicate-created-without-links-or-files-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:36.181Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-duplicate-with-links-and-files-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:37.496Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-duplicate-created-with-links-and-files-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:38.797Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-save-with-child-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:39.646Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-saved-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:40.943Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-grid-edit-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:42.087Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-grid-created-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:42.991Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-form-edit-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:43.813Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-form-submitted-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:46.395Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-button-settings-saved-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:47.501Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-button-confirmation-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:49.025Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-button-created-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:51.422Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-button-without-confirmation-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:52.722Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-button-disabled-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:54.391Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-automation-configured-1440.png
+CLOUD_SCREEN 2026-11-08T05:38:56.157Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/record-template-automation-preview-1440.png
+CLOUD_SCREEN 2026-11-08T05:39:05.800Z .private/record-comments/clause-comment-posted-1440.png
+CLOUD_SCREEN 2026-11-08T05:39:06.840Z .private/record-comments/clause-comment-deleted-1440.png
+CLOUD_SCREEN 2026-11-08T05:39:07.767Z .private/record-comments/clause-comment-deleted-reopened-1440.png
+Find fixture ready at 1440px
+Find grid at 1440px
+CLOUD_SCREEN 2026-11-08T05:39:38.102Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/find-grid-1440.png
+Find cards at 1440px
+CLOUD_SCREEN 2026-11-08T05:39:45.594Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/find-cards-1440.png
+Find board at 1440px
+CLOUD_EVALUATE 1181 ({
+  options
+}) => {
+  return window.axe.finishRun(JSON.parse(win
+CLOUD_SCREEN 2026-11-08T05:39:56.745Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/find-board-1440.png
+Find calendar at 1440px
+CLOUD_SCREEN 2026-11-08T05:40:12.999Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/find-calendar-1440.png
+Find timeline at 1440px
+CLOUD_SCREEN 2026-11-08T05:40:34.461Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/find-timeline-1440.png
+Find agenda at 1440px
+CLOUD_SCREEN 2026-11-08T05:40:42.904Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/find-agenda-1440.png
+CLOUD_SCREEN 2026-11-08T05:40:48.324Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-presence-1440.png
+CLOUD_SCREEN 2026-11-08T05:40:48.959Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-new-record-1440.png
+CLOUD_SCREEN 2026-11-08T05:40:50.608Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-conflict-1440.png
+CLOUD_SCREEN 2026-11-08T05:40:53.004Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-grid-1440.png
+CLOUD_SCREEN 2026-11-08T05:40:55.233Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-cards-1440.png
+CLOUD_SCREEN 2026-11-08T05:40:57.604Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-board-1440.png
+CLOUD_SCREEN 2026-11-08T05:41:00.173Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-calendar-1440.png
+CLOUD_SCREEN 2026-11-08T05:41:02.569Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-timeline-1440.png
+CLOUD_SCREEN 2026-11-08T05:41:04.871Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-agenda-1440.png
+CLOUD_SCREEN 2026-11-08T05:41:06.530Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-record-detail-1440.png
+CLOUD_SCREEN 2026-11-08T05:41:08.345Z /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser/live-revoked-1440.png
+{"passed":[{"views":{"savedViewId":"01M6WTGCVTMJ76VW95G32AXGAK","boardId":"01M6WTGG3V744V7QBTZ3C3E614","formId":"01M6WTGJ0D3RWMQGTES2PN3GTQ","formRecordId":"01M6WTGK5HDZ53GZ1XZH5NY55D","hydration":{"blockedBeforeHydration":true,"enabledAfterHydration":true},"groupedTable":[{"headerCount":1,"headerFirst":true,"records":[["","New","First deal","0","2027-01-15","No","New","Acme 北, \"Co\"","Acme 北, \"Co\"","Active"],["","New","Third deal","200","Not set","No","New","Not set","Not set","Active"]],"associated":true},{"headerCount":1,"headerFirst":true,"records":[["","Qualified","Second deal","125.25","Not set","No","Qualified","Not set","Not set","Active"]],"associated":true}],"savedTable":[{"headerCount":1,"headerFirst":true,"records":[["","New","First deal","0","New","Active"]],"associated":true}],"additional":[{"display":"cards","id":"01M6WTGNKANVXXTYBR31ZY1N60","exportedRows":4},{"display":"calendar","id":"01M6WTGRMFT0TPVB11DA73Z1BK","exportedRows":4},{"display":"timeline","id":"01M6WTGVPX53MYX3BTNB9RRV60","exportedRows":4},{"display":"agenda","id":"01M6WTGYW5M0QYK8CMCGZKSBGE","exportedRows":4}]},"templates":[{"template":"Launch readiness","appId":"00000000000000000000000700","included":true},{"template":"Customer relationships","appId":"01M6WTJ965A3DGNHQP5BX92QPD","recordId":"01M6WTJBQPTR2RYPPZ2VXBGY3D"},{"template":"Project tracker","appId":"01M6WTJE2E07FF81H4F4ZQ21MM","recordId":"01M6WTJGNQNSRQH6N8XRC5SX7M"},{"template":"Inventory and orders","appId":"01M6WTJJYAR3P4D96SZWCC22ZP","recordId":"01M6WTJQ6MNQM4732BS11Z350G"},{"template":"Inventory and orders","sourceAppId":"01M6WTJJYAR3P4D96SZWCC22ZP","copyAppId":"01M6WTJTAK3C7YB8Q4FH4EKMZ4","includeRecords":false},{"template":"Vendor and contract register","appId":"01M6WTJYGYGTGBG75KX3MTDAWP","recordId":"01M6WTK2M26908Z41NFBMBT5WS"},{"template":"Asset and equipment register","appId":"01M6WTK57HP6GFJKREK7F72421","recordId":"01M6WTK95ME7NB7A77JNZ24138"},{"template":"Event planning","appId":"01M6WTKBHK4QADZM1H9F0JBMZD","recordId":"01M6WTKFTTQ1KBVXVS6H7DK2BQ"},{"template":"Field operations tracker","appId":"01M6WTKJCDFQRNHZ2DNTHJ0D0R","recordId":"01M6WTKPSP4BQVNWBZRJCG7E3K"},{"template":"Content production","appId":"01M6WTKSCTJKCG4KDK2ZFMZSHB","recordId":"01M6WTKY1A8Y63EBEQTZZZDXCH"}],"recordTemplates":{"automation":{"automationId":"7TRQE4ETZQ0SHV6QFHJ8P02FES","childCount":1},"buttons":{"buttonId":"01M6WTN3EVFHVS8PD55HD2Q3G3","createdRecordIds":["01M6WTN6EP7DZWSQ6KWHDZT38Z","01M6WTN92K2SBBTWANY92W4RNC"],"childRecordsCreated":2},"duplicates":["01M6WTMRY7Z19A57566VZGQ1H7","01M6WTMV87G7MBYPHSB021E11Y"],"templateId":"01M6WTMXRTK95HXQJG3WMCGA6M","gridRecordId":"01M6WTMZWV9JFKDAASV0DPWN04","formRecordId":"01M6WTN1W0ETGYFZVTMHNMH466","childRecordsCreated":2},"csv":{"source":"01M6WTHFGF80HECXVGDDT0J1Q6","destination":"01M6WTHS492TH8Z1JJR6JH60SA","rows":205,"exactRoundtrip":true,"idempotent":true,"mixedRowsImported":true},"width":1440,"baseId":"01M6WTFYVKG72RTQ81NANDRED3","companyId":"01M6WTG3RH3KHCXSSFP1SYH2QT","pageErrors":[],"checkpoints":[{"name":"schema-builder","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"companies","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"contacts","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"deals","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"grid-grouped-sort","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"whole-query-summary","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"find-readable-link","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"saved-filtered-view","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"direct-board","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"kanban","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"authenticated-form","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"saved-cards","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"saved-calendar","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"saved-timeline","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"saved-agenda","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-detail","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"linked-record-detail","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"destructive-preview","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-2","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"migrated-relations","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-3","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"recovered-field","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-4","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"csv-preview","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"csv-paged-grid","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-5","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"csv-preview","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"csv-idempotent-preview","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"csv-roundtrip","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"csv-mixed-preview","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"csv-mixed-imported","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-catalogue","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-launch-included","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-6","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-companies","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-7","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-projects","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-inventory-schema","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-8","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-products","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-copy-exclusions","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-copy-without-records","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-vendors-schema","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-9","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-vendors","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-assets-schema","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-10","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-locations","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-events-schema","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-11","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-venues","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-field-operations-schema","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-12","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-sites","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-content-schema","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-13","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"template-campaigns","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"impact-preview-14","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"adoption","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"kanban-long-card-titles","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"kanban-long-column-0","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"kanban-long-column-1","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"kanban-long-titles","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-no-text","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"board-before-move","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"board-saved-undo","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"board-conflict","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"board-readonly","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"retained-launch","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"populated-home","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-attachment-upload-verified","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-duplicate-without-links-or-files","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-duplicate-created-without-links-or-files","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-duplicate-with-links-and-files","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-duplicate-created-with-links-and-files","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-save-with-child","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-saved","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-grid-edit","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-grid-created","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-form-edit","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-form-submitted","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-button-settings-saved","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-button-confirmation","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-button-created","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-button-without-confirmation","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-button-disabled","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-automation-configured","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"record-template-automation-preview","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"find-grid","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"find-cards","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"find-board","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"find-calendar","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"find-timeline","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"find-agenda","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-presence","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-new-record","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-conflict","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-grid","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-cards","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-board","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-calendar","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-timeline","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-agenda","width":1440,"serious":0,"critical":0,"pageOverflow":false},{"name":"live-record-detail","width":1440,"serious":0,"critical":0,"pageOverflow":false}]}],"evidence":"/home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle/.private/records-builder/browser"}
+# Subtest: [MOBILE-001] [CALC-001] [PERM-009] [IFACE-006] [CALC-002] [FORM-002] [VIEW-014] [VIEW-009] [VIEW-013] [VIEW-015] [VIEW-016] [RECORDS-002] [RECORDS-003] [RECORDS-004] [RECORDS-009] [FILE-001] [SNAP-002] Manual records browser journeys and concrete UI review corrections
+ok 3 - [MOBILE-001] [CALC-001] [PERM-009] [IFACE-006] [CALC-002] [FORM-002] [VIEW-014] [VIEW-009] [VIEW-013] [VIEW-015] [VIEW-016] [RECORDS-002] [RECORDS-003] [RECORDS-004] [RECORDS-009] [FILE-001] [SNAP-002] Manual records browser journeys and concrete UI review corrections
+  ---
+  duration_ms: 316971.974697
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 377636.312189

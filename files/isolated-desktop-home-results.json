@@ -1,0 +1,103 @@
+[
+  {
+    "width": 1440,
+    "baseId": "01M6WTE8KRVSW51X8YE2Q1X0NF",
+    "recordId": "01M6WTEA7E7ER8T5TG1EPC8T3P",
+    "emptyHomeExercised": true,
+    "homeSummaryMatchesQuery": true,
+    "newestTenMergeExercised": true,
+    "checkpoints": [
+      {
+        "name": "empty-home",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "empty-home-builder",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "fresh-home",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "launch-edit-fields",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "launch-people",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "base-actions",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "records-only-home",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "retained-launch",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "records-and-launch-home",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "home-newest-ten",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "home-multi-field-changes",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,1020 @@
+[
+  {
+    "views": {
+      "savedViewId": "01M6WTGCVTMJ76VW95G32AXGAK",
+      "boardId": "01M6WTGG3V744V7QBTZ3C3E614",
+      "formId": "01M6WTGJ0D3RWMQGTES2PN3GTQ",
+      "formRecordId": "01M6WTGK5HDZ53GZ1XZH5NY55D",
+      "hydration": {
+        "blockedBeforeHydration": true,
+        "enabledAfterHydration": true
+      },
+      "groupedTable": [
+        {
+          "headerCount": 1,
+          "headerFirst": true,
+          "records": [
+            [
+              "",
+              "New",
+              "First deal",
+              "0",
+              "2027-01-15",
+              "No",
+              "New",
+              "Acme 北, \"Co\"",
+              "Acme 北, \"Co\"",
+              "Active"
+            ],
+            [
+              "",
+              "New",
+              "Third deal",
+              "200",
+              "Not set",
+              "No",
+              "New",
+              "Not set",
+              "Not set",
+              "Active"
+            ]
+          ],
+          "associated": true
+        },
+        {
+          "headerCount": 1,
+          "headerFirst": true,
+          "records": [
+            [
+              "",
+              "Qualified",
+              "Second deal",
+              "125.25",
+              "Not set",
+              "No",
+              "Qualified",
+              "Not set",
+              "Not set",
+              "Active"
+            ]
+          ],
+          "associated": true
+        }
+      ],
+      "savedTable": [
+        {
+          "headerCount": 1,
+          "headerFirst": true,
+          "records": [
+            [
+              "",
+              "New",
+              "First deal",
+              "0",
+              "New",
+              "Active"
+            ]
+          ],
+          "associated": true
+        }
+      ],
+      "additional": [
+        {
+          "display": "cards",
+          "id": "01M6WTGNKANVXXTYBR31ZY1N60",
+          "exportedRows": 4
+        },
+        {
+          "display": "calendar",
+          "id": "01M6WTGRMFT0TPVB11DA73Z1BK",
+          "exportedRows": 4
+        },
+        {
+          "display": "timeline",
+          "id": "01M6WTGVPX53MYX3BTNB9RRV60",
+          "exportedRows": 4
+        },
+        {
+          "display": "agenda",
+          "id": "01M6WTGYW5M0QYK8CMCGZKSBGE",
+          "exportedRows": 4
+        }
+      ]
+    },
+    "templates": [
+      {
+        "template": "Launch readiness",
+        "appId": "00000000000000000000000700",
+        "included": true
+      },
+      {
+        "template": "Customer relationships",
+        "appId": "01M6WTJ965A3DGNHQP5BX92QPD",
+        "recordId": "01M6WTJBQPTR2RYPPZ2VXBGY3D"
+      },
+      {
+        "template": "Project tracker",
+        "appId": "01M6WTJE2E07FF81H4F4ZQ21MM",
+        "recordId": "01M6WTJGNQNSRQH6N8XRC5SX7M"
+      },
+      {
+        "template": "Inventory and orders",
+        "appId": "01M6WTJJYAR3P4D96SZWCC22ZP",
+        "recordId": "01M6WTJQ6MNQM4732BS11Z350G"
+      },
+      {
+        "template": "Inventory and orders",
+        "sourceAppId": "01M6WTJJYAR3P4D96SZWCC22ZP",
+        "copyAppId": "01M6WTJTAK3C7YB8Q4FH4EKMZ4",
+        "includeRecords": false
+      },
+      {
+        "template": "Vendor and contract register",
+        "appId": "01M6WTJYGYGTGBG75KX3MTDAWP",
+        "recordId": "01M6WTK2M26908Z41NFBMBT5WS"
+      },
+      {
+        "template": "Asset and equipment register",
+        "appId": "01M6WTK57HP6GFJKREK7F72421",
+        "recordId": "01M6WTK95ME7NB7A77JNZ24138"
+      },
+      {
+        "template": "Event planning",
+        "appId": "01M6WTKBHK4QADZM1H9F0JBMZD",
+        "recordId": "01M6WTKFTTQ1KBVXVS6H7DK2BQ"
+      },
+      {
+        "template": "Field operations tracker",
+        "appId": "01M6WTKJCDFQRNHZ2DNTHJ0D0R",
+        "recordId": "01M6WTKPSP4BQVNWBZRJCG7E3K"
+      },
+      {
+        "template": "Content production",
+        "appId": "01M6WTKSCTJKCG4KDK2ZFMZSHB",
+        "recordId": "01M6WTKY1A8Y63EBEQTZZZDXCH"
+      }
+    ],
+    "recordTemplates": {
+      "automation": {
+        "automationId": "7TRQE4ETZQ0SHV6QFHJ8P02FES",
+        "childCount": 1
+      },
+      "buttons": {
+        "buttonId": "01M6WTN3EVFHVS8PD55HD2Q3G3",
+        "createdRecordIds": [
+          "01M6WTN6EP7DZWSQ6KWHDZT38Z",
+          "01M6WTN92K2SBBTWANY92W4RNC"
+        ],
+        "childRecordsCreated": 2
+      },
+      "duplicates": [
+        "01M6WTMRY7Z19A57566VZGQ1H7",
+        "01M6WTMV87G7MBYPHSB021E11Y"
+      ],
+      "templateId": "01M6WTMXRTK95HXQJG3WMCGA6M",
+      "gridRecordId": "01M6WTMZWV9JFKDAASV0DPWN04",
+      "formRecordId": "01M6WTN1W0ETGYFZVTMHNMH466",
+      "childRecordsCreated": 2
+    },
+    "csv": {
+      "source": "01M6WTHFGF80HECXVGDDT0J1Q6",
+      "destination": "01M6WTHS492TH8Z1JJR6JH60SA",
+      "rows": 205,
+      "exactRoundtrip": true,
+      "idempotent": true,
+      "mixedRowsImported": true
+    },
+    "width": 1440,
+    "baseId": "01M6WTFYVKG72RTQ81NANDRED3",
+    "companyId": "01M6WTG3RH3KHCXSSFP1SYH2QT",
+    "pageErrors": [],
+    "checkpoints": [
+      {
+        "name": "schema-builder",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "companies",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "contacts",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deals",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "grid-grouped-sort",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "whole-query-summary",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "find-readable-link",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "saved-filtered-view",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "direct-board",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "kanban",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "authenticated-form",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "saved-cards",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "saved-calendar",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "saved-timeline",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "saved-agenda",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-detail",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "linked-record-detail",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "destructive-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-2",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "migrated-relations",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-3",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "recovered-field",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-4",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "csv-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "csv-paged-grid",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-5",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "csv-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "csv-idempotent-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "csv-roundtrip",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "csv-mixed-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "csv-mixed-imported",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-catalogue",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-launch-included",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-6",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-companies",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-7",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-projects",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-inventory-schema",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-8",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-products",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-copy-exclusions",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-copy-without-records",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-vendors-schema",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-9",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-vendors",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-assets-schema",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-10",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-locations",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-events-schema",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-11",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-venues",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-field-operations-schema",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-12",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-sites",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-content-schema",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-13",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "template-campaigns",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "impact-preview-14",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "adoption",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "kanban-long-card-titles",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "kanban-long-column-0",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "kanban-long-column-1",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "kanban-long-titles",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-no-text",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "board-before-move",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "board-saved-undo",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "board-conflict",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "board-readonly",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "retained-launch",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "populated-home",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-attachment-upload-verified",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-duplicate-without-links-or-files",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-duplicate-created-without-links-or-files",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-duplicate-with-links-and-files",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-duplicate-created-with-links-and-files",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-save-with-child",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-saved",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-grid-edit",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-grid-created",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-form-edit",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-form-submitted",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-button-settings-saved",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-button-confirmation",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-button-created",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-button-without-confirmation",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-button-disabled",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-automation-configured",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "record-template-automation-preview",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "find-grid",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "find-cards",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "find-board",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "find-calendar",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "find-timeline",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "find-agenda",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-presence",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-new-record",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-conflict",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-grid",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-cards",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-board",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-calendar",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-timeline",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-agenda",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "live-record-detail",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      }
+    ]
+  }
+]

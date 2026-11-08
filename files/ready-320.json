@@ -1,0 +1,19 @@
+{
+  "name": "ready-320",
+  "head": "45a3691577b5897f5792aeb8789524d2da9aa6e9",
+  "command": [
+    "env",
+    "CRADLE_RECORDS_BROWSER_WIDTH=320",
+    "pnpm",
+    "exec",
+    "node",
+    "--import",
+    "./tests/helpers/typescript-loader.mjs",
+    "--test",
+    "--test-name-pattern=Manual records",
+    "tests/ui-records-builder.mjs"
+  ],
+  "hard_alarm_seconds": 1200,
+  "elapsed_seconds": 406.103,
+  "exit_code": 0
+}

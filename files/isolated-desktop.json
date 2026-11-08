@@ -1,0 +1,13 @@
+{
+  "name": "isolated-desktop",
+  "head": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+  "command": [
+    "env",
+    "CRADLE_RECORDS_BROWSER_WIDTH=1440",
+    "pnpm",
+    "test:records:browser"
+  ],
+  "hard_alarm_seconds": 1200,
+  "elapsed_seconds": 380.378,
+  "exit_code": 0
+}

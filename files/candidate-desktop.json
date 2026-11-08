@@ -1,0 +1,13 @@
+{
+  "name": "candidate-desktop",
+  "head": "5010e1ffdc38a44c6a3e9bdd2d786c588b9bc614",
+  "command": [
+    "env",
+    "CRADLE_RECORDS_BROWSER_WIDTH=1440",
+    "pnpm",
+    "test:records:browser"
+  ],
+  "hard_alarm_seconds": 1200,
+  "elapsed_seconds": 468.071,
+  "exit_code": 0
+}

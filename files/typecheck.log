@@ -1,0 +1,4 @@
+
+> cradle@0.4.0 check:types /home/agent/rer-consolidation/work/sd-cradle-c-f42-fix1/run-cradle
+> tsc --noEmit
+

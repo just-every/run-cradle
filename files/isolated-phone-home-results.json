@@ -1,0 +1,636 @@
+[
+  {
+    "width": 390,
+    "baseId": "01M6WTSW7F2Y6HPHA6GMDSYRC5",
+    "recordId": "01M6WTSXV0KBDBRES0D520N8PZ",
+    "emptyHomeExercised": true,
+    "homeSummaryMatchesQuery": true,
+    "newestTenMergeExercised": false,
+    "checkpoints": [
+      {
+        "name": "empty-home",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "New base",
+            "width": 107.42,
+            "height": 44,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "empty-home-builder",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cancel schema changes",
+            "width": 206.02,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Base name",
+            "width": 274,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Table 1",
+            "width": 76.28,
+            "height": 36,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Add table",
+            "width": 107.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Table name",
+            "width": 274,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Field name",
+            "width": 274,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Field type",
+            "width": 274,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Required",
+            "width": 274,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Remove field",
+            "width": 128.02,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Help text",
+            "width": 274,
+            "height": 139,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Unique value",
+            "width": 274,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Validation and default",
+            "width": 272,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Add table rule",
+            "width": 137.02,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Add field",
+            "width": 102.16,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Preview schema changes",
+            "width": 211.66,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Customer relationships",
+            "width": 228.25,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Launch readiness",
+            "width": 189.23,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Project tracker",
+            "width": 171.28,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Inventory and orders",
+            "width": 211.16,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Vendor and contract register",
+            "width": 265.95,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Asset and equipment register",
+            "width": 270.94,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Event planning",
+            "width": 169.97,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Field operations tracker",
+            "width": 231.64,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Use Content production",
+            "width": 204.61,
+            "height": 44,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "fresh-home",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "New base",
+            "width": 65.42,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Import a base",
+            "width": 93.16,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Launch readiness",
+            "width": 324,
+            "height": 77.39,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "launch-edit-fields",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Close",
+            "width": 79.89,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Field name",
+            "width": 348,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Type Text Number Date Yes or no Single choice Multiple choice Link",
+            "width": 348,
+            "height": 73,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "launch-people",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Close",
+            "width": 79.89,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Invite a person",
+            "width": 346,
+            "height": 52,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "base-actions",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Base ▾",
+            "width": 84.89,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Campaigns ▾",
+            "width": 128.45,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Filter",
+            "width": 74.05,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Sort and group",
+            "width": 115.06,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Table tools",
+            "width": 46,
+            "height": 44,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "impact-preview",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Base ▾",
+            "width": 84.89,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cancel schema changes",
+            "width": 206.02,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "I reviewed the data changes and owner access.",
+            "width": 308,
+            "height": 64,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Revise schema",
+            "width": 308,
+            "height": 44,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "adoption",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Base ▾",
+            "width": 84.89,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Open Home records 390",
+            "width": 308,
+            "height": 44,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "records-only-home",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "New base",
+            "width": 65.42,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Import a base",
+            "width": 93.16,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Launch readiness",
+            "width": 324,
+            "height": 77.39,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Home records 390",
+            "width": 324,
+            "height": 77.39,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Existing record 390",
+            "width": 324,
+            "height": 77.39,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "retained-launch",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "View grid",
+            "width": 47.3,
+            "height": 39,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Timeline lens",
+            "width": 81.91,
+            "height": 28,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "records-and-launch-home",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "New base",
+            "width": 65.42,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Import a base",
+            "width": 93.16,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Launch readiness",
+            "width": 324,
+            "height": 77.39,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Home records 390",
+            "width": 324,
+            "height": 77.39,
+            "hitAreaSquare24": true
+          }
+        ]
+      }
+    ]
+  }
+]

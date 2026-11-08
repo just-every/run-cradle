@@ -1,0 +1,11 @@
+709:  page.setDefaultTimeout(20000);page.on('pageerror',error=>errors.push(error.message))
+744:    page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000)
+904:     page.setDefaultTimeout(15000)
+957:    page.setDefaultTimeout(15000)
+970:     page.setDefaultTimeout(15000)
+990:    page.setDefaultTimeout(15000)
+1028:   page.setDefaultTimeout(15000)
+1059:     page.setDefaultTimeout(15000)
+1101:         page.setDefaultTimeout(20000)
+1122:    page.setDefaultTimeout(15000);await context.addCookies([{name:h.cookie.split('=')[0],value:h.cookie.slice(h.cookie.indexOf('=')+1),url:h.origin}]);await page.goto(h.origin+'/app')
+1203:+}catch(error){if(activePage){try{await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:false,timeout:5000});await writeFile(path.join(output,'failure.html'),await activePage.content())}catch{console.warn('Failure screenshot unavailable; retaining the original journey error.')}}throw error}finally{await browser?.close();await h?.close()}

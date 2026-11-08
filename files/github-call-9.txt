@@ -1,0 +1,10 @@
+build	Check generated contract documents	﻿2026-11-08T05:28:57.6853636Z ##[group]Run node src/base/contract-docs.mjs check
+build	Check generated contract documents	2026-11-08T05:28:57.6854292Z [36;1mnode src/base/contract-docs.mjs check[0m
+build	Check generated contract documents	2026-11-08T05:28:57.6874192Z shell: /usr/bin/bash -e {0}
+build	Check generated contract documents	2026-11-08T05:28:57.6874628Z env:
+build	Check generated contract documents	2026-11-08T05:28:57.6874907Z   CI: true
+build	Check generated contract documents	2026-11-08T05:28:57.6875247Z   WRANGLER_SEND_METRICS: false
+build	Check generated contract documents	2026-11-08T05:28:57.6875883Z   PLAYWRIGHT_SKIP_BROWSER_GC: 1
+build	Check generated contract documents	2026-11-08T05:28:57.6876309Z ##[endgroup]
+build	Check generated contract documents	2026-11-08T05:28:57.8134718Z ACCEPTANCE.md: generated content differs; run contract-docs write.
+build	Check generated contract documents	2026-11-08T05:28:57.8184244Z ##[error]Process completed with exit code 1.

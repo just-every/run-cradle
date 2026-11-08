@@ -1,0 +1,7 @@
+{
+  "head": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+  "tree": "3ad6a37f83cd4cef9956598e9661c03d46fdd275",
+  "scope": "product diff against main; not the fleet publication scan",
+  "diff_sha256": "d0b1f94b5b7ff6f02d47d7f088af46b732c675b40d6090ad878145e4076d8c78",
+  "result": "passed"
+}

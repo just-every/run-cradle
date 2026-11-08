@@ -1,0 +1,40 @@
+[
+  {
+    "width": 1440,
+    "authorisedLinks": 1,
+    "policyHiddenLinks": 1,
+    "linkedRecordReached": true,
+    "singleHeading": true,
+    "restrictedField": true,
+    "checkpoints": [
+      {
+        "name": "relation-single-heading",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "relation-link-reachable",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "relation-row-policy-filtered",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "relation-field-restricted",
+        "width": 1440,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false
+      }
+    ]
+  }
+]

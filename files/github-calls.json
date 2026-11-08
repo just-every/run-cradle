@@ -1,0 +1,118 @@
+[
+  {
+    "number": 1,
+    "utc": "2026-11-08T04:54:24Z",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs?head_sha=3c51ebd19e07021a2a517e2228383e5e15d54987&per_page=100",
+      "--jq",
+      ".workflow_runs[] | {id,name,status,conclusion,head_sha,html_url}"
+    ]
+  },
+  {
+    "number": 2,
+    "utc": "2026-11-08T04:59:06Z",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs?head_sha=5010e1ffdc38a44c6a3e9bdd2d786c588b9bc614&per_page=100",
+      "--jq",
+      ".workflow_runs[] | {id,name,status,conclusion,head_sha,html_url}"
+    ]
+  },
+  {
+    "number": 3,
+    "utc": "2026-11-08T05:04:27Z",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42448917105",
+      "--jq",
+      "{status,conclusion,head_sha,html_url}"
+    ]
+  },
+  {
+    "number": 4,
+    "utc": "2026-11-08T05:04:45Z",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42448917105/jobs?per_page=100",
+      "--jq",
+      "[.jobs[] | {id,name,conclusion,failed_steps:[.steps[] | select(.conclusion==\"failure\") | .name]}]"
+    ]
+  },
+  {
+    "number": 5,
+    "utc": "2026-11-08T05:04:55Z",
+    "args": [
+      "run",
+      "view",
+      "42448917105",
+      "--repo",
+      "just-every/run-cradle",
+      "--job",
+      "128633756520",
+      "--log-failed"
+    ]
+  },
+  {
+    "number": 6,
+    "utc": "2026-11-08T05:04:59Z",
+    "args": [
+      "run",
+      "view",
+      "42448917105",
+      "--repo",
+      "just-every/run-cradle",
+      "--job",
+      "128633816533",
+      "--log-failed"
+    ]
+  },
+  {
+    "number": 7,
+    "utc": "2026-11-08T05:48:45Z",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs?head_sha=f167c22c517ef5560ebc5bc3b3e33cc850fb8a80&per_page=100",
+      "--jq",
+      "[.workflow_runs[] | select(.name==\"Verify\") | {id,name,status,conclusion,head_sha,html_url}]"
+    ]
+  },
+  {
+    "number": 8,
+    "utc": "2026-11-08T05:49:12Z",
+    "args": [
+      "api",
+      "repos/just-every/run-cradle/actions/runs/42450910046/jobs?per_page=100",
+      "--jq",
+      "[.jobs[] | {id,name,conclusion,failed_steps:[.steps[] | select(.conclusion==\"failure\") | .name]}]"
+    ]
+  },
+  {
+    "number": 9,
+    "utc": "2026-11-08T05:49:24Z",
+    "args": [
+      "run",
+      "view",
+      "42450910046",
+      "--repo",
+      "just-every/run-cradle",
+      "--job",
+      "128639768394",
+      "--log-failed"
+    ]
+  },
+  {
+    "number": 10,
+    "utc": "2026-11-08T05:49:28Z",
+    "args": [
+      "run",
+      "view",
+      "42450910046",
+      "--repo",
+      "just-every/run-cradle",
+      "--job",
+      "128639831360",
+      "--log-failed"
+    ]
+  }
+]

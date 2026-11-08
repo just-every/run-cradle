@@ -1,0 +1,140 @@
+{
+  "repository": "just-every/run-cradle",
+  "tag": "sd-cradle-c-f42-fix1",
+  "branch": "cloud/sd-cradle-c-f42-fix1",
+  "head": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+  "tree": "3ad6a37f83cd4cef9956598e9661c03d46fdd275",
+  "starting_head": "8a060233ba158a19cf2ec3a7bf3dc90027a929de",
+  "main_at_integration": "69c49e789c2a8c914144498136d3c4e9019d81aa",
+  "generated_at": "2026-11-08T05:51:00.347685+00:00",
+  "product_state": "READY under the explicit generated-view-only exception",
+  "landed_by_cloud": false,
+  "measurements": [
+    {
+      "name": "isolated-320",
+      "head": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+      "command": [
+        "env",
+        "CRADLE_RECORDS_BROWSER_WIDTH=320",
+        "pnpm",
+        "exec",
+        "node",
+        "--import",
+        "./tests/helpers/typescript-loader.mjs",
+        "--test",
+        "--test-name-pattern=Manual records",
+        "tests/ui-records-builder.mjs"
+      ],
+      "hard_alarm_seconds": 1200,
+      "elapsed_seconds": 358.965,
+      "exit_code": 0
+    },
+    {
+      "name": "isolated-desktop",
+      "head": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+      "command": [
+        "env",
+        "CRADLE_RECORDS_BROWSER_WIDTH=1440",
+        "pnpm",
+        "test:records:browser"
+      ],
+      "hard_alarm_seconds": 1200,
+      "elapsed_seconds": 380.378,
+      "exit_code": 0
+    },
+    {
+      "name": "isolated-phone",
+      "head": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+      "command": [
+        "env",
+        "CRADLE_RECORDS_BROWSER_WIDTH=390",
+        "pnpm",
+        "test:records:browser"
+      ],
+      "hard_alarm_seconds": 1200,
+      "elapsed_seconds": 441.359,
+      "exit_code": 0
+    }
+  ],
+  "baseline_320_seconds": 568.012,
+  "hard_alarm_seconds": 1200,
+  "source_integrity": "passed",
+  "typecheck": "passed on final head",
+  "test_budget_before": 175,
+  "test_budget_after": 175,
+  "counts_before": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "counts_after": {
+    "done": 64,
+    "partial": 138,
+    "missing": 55,
+    "total": 257
+  },
+  "clause_status_before": {
+    "MOBILE-001": "partial"
+  },
+  "clause_status_after": {
+    "MOBILE-001": "partial"
+  },
+  "no_raised_timeout": true,
+  "no_shard_rebalance": true,
+  "no_assertion_removed_or_weakened": true,
+  "generated_views_match_main": true,
+  "all_candidate_commit_identities_and_messages_checked": 15,
+  "fleet_hooks_active": true,
+  "product_push_confirmed": true,
+  "verify": {
+    "conclusion": "failure",
+    "head_sha": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+    "html_url": "https://github.com/just-every/run-cradle/actions/runs/42450910046",
+    "id": 42450910046,
+    "name": "Verify",
+    "status": "completed",
+    "expected_contract_view_exception": true,
+    "jobs": [
+      {
+        "conclusion": "success",
+        "failed_steps": [],
+        "id": 128639744570,
+        "name": "plan"
+      },
+      {
+        "conclusion": "failure",
+        "failed_steps": [
+          "Check generated contract documents"
+        ],
+        "id": 128639768394,
+        "name": "build"
+      },
+      {
+        "conclusion": "failure",
+        "failed_steps": [
+          "Require the plan and every verification worker"
+        ],
+        "id": 128639831360,
+        "name": "verify"
+      },
+      {
+        "conclusion": "skipped",
+        "failed_steps": [],
+        "id": 128639832384,
+        "name": "verify-${{ matrix.name }}"
+      }
+    ],
+    "shards_ran": false
+  },
+  "github_call_count": 10,
+  "publication_scan": "Mac landing gate; not available in cloud",
+  "blockers": [],
+  "own_commits": [
+    "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80 Isolate blocking supporting fixture setup from browser waits",
+    "45a3691577b5897f5792aeb8789524d2da9aa6e9 Await the rendered record save before reload proof",
+    "ce8c534ca856c31b07d9e441b80aeee6b46a8ff2 Capture rendered records without repeated network-idle waits",
+    "5010e1ffdc38a44c6a3e9bdd2d786c588b9bc614 Run isolated records browser streams concurrently",
+    "3c51ebd19e07021a2a517e2228383e5e15d54987 Keep narrow records proof outside the full base shard"
+  ]
+}

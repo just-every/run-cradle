@@ -1,0 +1,13 @@
+{
+  "name": "isolated-phone",
+  "head": "f167c22c517ef5560ebc5bc3b3e33cc850fb8a80",
+  "command": [
+    "env",
+    "CRADLE_RECORDS_BROWSER_WIDTH=390",
+    "pnpm",
+    "test:records:browser"
+  ],
+  "hard_alarm_seconds": 1200,
+  "elapsed_seconds": 441.359,
+  "exit_code": 0
+}

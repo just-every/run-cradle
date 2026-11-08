@@ -1,0 +1,19 @@
+{
+  "name": "baseline-320",
+  "head": "8a060233ba158a19cf2ec3a7bf3dc90027a929de",
+  "command": [
+    "env",
+    "CRADLE_RECORDS_BROWSER_WIDTH=320",
+    "pnpm",
+    "exec",
+    "node",
+    "--import",
+    "./tests/helpers/typescript-loader.mjs",
+    "--test",
+    "--test-name-pattern=Manual records",
+    "tests/ui-records-builder.mjs"
+  ],
+  "hard_alarm_seconds": 1200,
+  "elapsed_seconds": 568.012,
+  "exit_code": 0
+}

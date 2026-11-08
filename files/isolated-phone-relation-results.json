@@ -1,0 +1,330 @@
+[
+  {
+    "width": 390,
+    "authorisedLinks": 1,
+    "policyHiddenLinks": 1,
+    "linkedRecordReached": true,
+    "singleHeading": true,
+    "restrictedField": true,
+    "checkpoints": [
+      {
+        "name": "relation-single-heading",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "← Back to records",
+            "width": 129.2,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Edit record",
+            "width": 117.11,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Linked item 000",
+            "width": 146.27,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Record actions",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Calendar sync",
+            "width": 138.67,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Search this thread",
+            "width": 308,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Add a comment",
+            "width": 308,
+            "height": 139,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "@ Mention people",
+            "width": 306,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "History and evidence",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "relation-link-reachable",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "← Back to records",
+            "width": 129.2,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Edit record",
+            "width": 117.11,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Record actions",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Calendar sync",
+            "width": 138.67,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Search this thread",
+            "width": 308,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Add a comment",
+            "width": 308,
+            "height": 139,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "@ Mention people",
+            "width": 306,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "History and evidence",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "relation-row-policy-filtered",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "← Back to records",
+            "width": 129.2,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Edit record",
+            "width": 117.11,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Record actions",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Calendar sync",
+            "width": 138.67,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Search this thread",
+            "width": 308,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Add a comment",
+            "width": 308,
+            "height": 139,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "@ Mention people",
+            "width": 306,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "History and evidence",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          }
+        ]
+      },
+      {
+        "name": "relation-field-restricted",
+        "width": 390,
+        "serious": 0,
+        "critical": 0,
+        "pageOverflow": false,
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "smallTargetCount": 0,
+        "touchTargets": [
+          {
+            "name": "Open navigation",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Cradle",
+            "width": 101.73,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "No unread notifications",
+            "width": 44,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "← Back to records",
+            "width": 129.2,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Edit record",
+            "width": 117.11,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Record actions",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Calendar sync",
+            "width": 138.67,
+            "height": 44,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Search this thread",
+            "width": 308,
+            "height": 73,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "Add a comment",
+            "width": 308,
+            "height": 139,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "@ Mention people",
+            "width": 306,
+            "height": 52,
+            "hitAreaSquare24": true
+          },
+          {
+            "name": "History and evidence",
+            "width": 356,
+            "height": 52,
+            "hitAreaSquare24": true
+          }
+        ]
+      }
+    ]
+  }
+]
