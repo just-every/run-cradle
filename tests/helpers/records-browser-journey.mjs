@@ -11,7 +11,14 @@ export function recordsJourney(page,origin,output,width,{allAxe=false,measureTar
  installKeyboardInteractions(page)
  const checkpoints=[],errors=[];let previews=0;page.on('pageerror',e=>errors.push(e.message))
  async function capture(name,{viewport=false}={}){
-  await page.waitForLoadState('networkidle')
+  // A capture needs the rendered resource and stable font geometry, not a
+  // fresh 500 ms of network silence after every already-awaited UI action.
+  await page.waitForLoadState('domcontentloaded')
+  await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'))
+  await page.evaluate(async()=>{
+   await document.fonts.ready
+   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))
+  })
   await page.waitForFunction(()=>!document.querySelector('[aria-busy="true"]'))
   if(!viewport)await page.evaluate(()=>scrollTo(0,0))
   const measuredLayout=measureTargets?await measureAccessibilityLayout(page):undefined
