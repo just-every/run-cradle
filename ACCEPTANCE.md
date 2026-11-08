@@ -579,8 +579,8 @@ Core · published · **partial**
 1. In the campaign grid and in any Grid or Cards lens an operator can select up to 500 records, including every record matching the current conditions, and apply one change to all of them: owner, phase, status, a tag added or removed, a custom-field value, archive, or restore.
 2. A bulk change commits for every selected record or none, is rejected naming the first record that fails validation, writes one activity entry on each changed record and one bulk entry naming the operator and the count, and can be undone once within 1 hour, restoring the prior value of every record it changed.
 
-**Evidence.** `tests/launch-operator-doors.mjs` — "[CAMP-013] two-campaign bulk status undo restores once before one hour, refuses at and after expiry, and replays without effects"; `tests/ui-launch-operator-doors.mjs` — "[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone"; `tests/launch-write-authority.mjs`
-**Gap.** Acceptance 1 still needs the 500-record selection bound, both Grid and Cards lens doors and the complete owner, phase, status, tag, custom-field, archive and restore matrix. Acceptance 2 still needs first-invalid-record atomicity and complete per-record and bulk attribution; broader undo concurrency and authority combinations remain unproved. The native HTTP journey proves exact one-hour expiry for three separate two-campaign status batches, restoration of each prior status just before expiry, unchanged refusal exactly at and after expiry, single use with a new command ID and effect-free replay of the successful command. Ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
+**Evidence.** `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs`
+**Gap.** Missing a bulk-edit journey that exercises the 500-record bound, both lens doors, allowed change classes, atomic invalid-record refusal, per-record and bulk activity and one-hour/single-use undo. Cited `tests/launch-write-authority.mjs`, `tests/ui-launch-operator-doors.mjs` show: The cited browser applies a two-campaign status change, undoes it and uses matching owner selection; internal admission helpers check field guards.
 
 #### CAMP-014 — Duplicating
 
@@ -1003,8 +1003,8 @@ Core · published · **partial** · Cites BASE-OPS-005, BASE-AUDIT-001, BASE-DAT
 3. Each entry carries its type, its subject's ID, the operator or the automation run that acted, the time, and for a field change the field name with its previous and new value.
 4. Campaign activity is the operator-visible view of the audit records in `BASE-OPS-005`: deleting a campaign removes this view,
 
-**Evidence.** `tests/ui-launch-walkthrough.mjs`
-**Gap.** Missing a public activity journey reading newest-first entries for campaign/child/import/automation changes with subject, actor/run, timestamp and previous/new field values, plus retained anonymized audit after deletion. Cited `tests/ui-launch-walkthrough.mjs` show: The browser reads human-readable escalation/approval activity with the actor and expanded dates.
+**Evidence.** `tests/launch-write-effects.mjs` — "unmodelled definition changes and decision and lens clauses", through `tests/helpers/launch-activity-order-journey.mjs` — "verifyPublicCampaignActivityOrder": native HTTP creation and three distinguishable two-field edits, each using a freshly read revision and independently bounded distinct time; public campaign detail is compared directly with reverse authored command order without sorting observed entries. `tests/ui-launch-walkthrough.mjs` — "Launch walkthrough E10–E17 at desktop and phone", through `tests/helpers/launch-activity-order-screens.mjs` — "verifyCampaignActivityOrderScreens": rendered activity groups are correlated to the authored edits by field values and command instants, in observed order at desktop and phone widths; initial collapsed order and the visible vertical order of expanded groups are checked directly. Retained human-readable escalation and approval activity proof remains.
+**Gap.** Missing complete event coverage for campaign and child creation, field changes, archive, restore and deletion, comments, imports and automation mutations; complete per-entry type, subject, actor or run, time and previous and new field-value attribution; deletion and retained anonymized audit; equal-time ordering and broader history capacity. Supplemental newest-first proof for human campaign field changes is now cited in Evidence; ct contract conversion and generated-document synchronization remain release prerequisites, and independent whole-clause judgment remains outstanding. Status remains partial.
 
 #### ACT-002 — Comments
 
@@ -1483,8 +1483,8 @@ Core · published · **partial**
 1. Settings is one operator-only area with sections for the workspace (name, timezone, currency, quiet hours), operators, notification preferences, custom-field definitions, automations and digest recipients, AI, imports and failed email deliveries, and current usage against every declared workspace limit.
 2. Changing a setting records the operator and the time and applies to work dispatched after the change; work already dispatched is unaffected.
 
-**Evidence.** `tests/ui-launch-operator-doors.mjs` — "[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone"; `tests/helpers/settings-attribution-journey.mjs` — Workspace name save, known operator, bounded audit time, reload and command replay
-**Gap.** Missing the complete named-section and current-usage inventory, including OWN-001 capacities, and the already-dispatched versus later-work matrix. Existing owner, policy and notification holds, ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
+**Evidence.** `tests/ui-launch-operator-doors.mjs`
+**Gap.** Missing a cited Settings journey that reads every named section/current usage and changes a setting with actor/time readback while distinguishing already-dispatched from later work; the cited journey exercises custom fields, samples and ownership only.
 
 #### SET-002 — AI configuration
 
@@ -1608,8 +1608,8 @@ Core · target · **partial** · Cites BASE-INSTALL-001, BASE-DATA-005, BASE-DAT
 **Acceptance.**
 1. Settings shows the current usage and named capacity for every declared workspace limit.
 
-**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`; `tests/ui-launch-operator-doors.mjs` (Launch operator doors at desktop and phone), via `tests/helpers/settings-capacity-browser.mjs`: native fixture inventories and distinct creation deltas agree with Settings HTTP and rendered maxima for eight retained entity capacities; refresh, archived campaign capacity, Worker restart persistence and access refusals.
-**Gap.** Settings covers campaigns, campaignCustomFields, deliverables, milestones, risks, decisions, savedLenses and automations only. Operator, session and lens-condition coverage and every other declared limit remain unproved, including selection, import, upload, request, public-rate, timeline and warehouse measurements and boundary matrices. Fresh own-account or Managed installation, R-12 receipts, SCALE-001 and SCALE-002 qualification and whole-clause judgment remain unclaimed. Ct contract conversion and generated-document synchronization remain release prerequisites.
+**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`, `tests/ui-launch-operator-doors.mjs`
+**Gap.** Missing a cited Settings-usage journey that reads usage against every declared limit; the cited browser journey exercises custom fields, samples and ownership without reading usage. Installer and whole-installation archive work are covered by the cited CLI journeys, but neither every-limit usage nor a fresh own-account/Managed installation is exercised here.
 
 #### SCALE-001 — Operational scale
 
@@ -2880,8 +2880,8 @@ Core · target · **partial** · Cites BASE-ACCESSIBILITY-001 · Register R-2, R
 **Acceptance.**
 1. Every browser journey above also runs at 390 and 320 with axe.
 
-**Evidence.** `tests/ui-records-builder.mjs` (Home presents records and bases before launch work at desktop and phone widths; Record detail keeps one relation heading, reachable links and policy restrictions; [SNAP-002] Manual records browser journeys and concrete UI review corrections, including historyBrowserJourney, baseRolesJourney, collectionLookupsBrowser, conditionalFormsJourney and recordCommentsBrowser); `tests/ui-records-calendar.mjs` (record calendars, boards, private covers and saved view presentation at desktop and phone widths); `tests/ui-user-automations.mjs` (owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone); `tests/helpers/records-browser-journey.mjs` (recordsJourney: actual phone viewport, page overflow, measured active 24-by-24 CSS-pixel hit regions and serious or critical axe checks)
-**Gap.** Every other records, import, view, form, interface, comment and automation-history journey still needs complete 320 and 390 coverage, target measurements and accessibility proof, including journeys for currently unbuilt features. These bounded sanity journeys do not satisfy the whole-phone-app clause. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; this held pin has no contract-docs generator or declared Lander-Regenerate command.
+**Evidence.** `tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`
+**Gap.** Current CI exercises records, import/exit, calendar/board/gallery/timeline, collaboration, roles, automation and Launch browser journeys at 390 as well as 1440 (`tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`, `tests/ui-base-exits.mjs`, `tests/ui-records-calendar.mjs`, `tests/ui-user-automations.mjs`, `tests/ui-launch-walkthrough.mjs`); 320 px and complete coverage of every target journey remain unproven
 
 #### MOBILE-002 — Installable app with camera and scanning
 
