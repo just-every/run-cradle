@@ -12754,7 +12754,7 @@
       "executable": false
     },
     "tests/helpers/records-browser-templates.mjs": {
-      "sha256": "c1b13fbd2d18878809b9eddc68dc6f134fe7386c2708d881c587c384bbe98322",
+      "sha256": "3a349bac0d8078f236a99b8427863d91e83204afaec40670d151079488b647f2",
       "executable": false
     },
     "tests/helpers/records-browser-views.mjs": {

@@ -58,6 +58,8 @@ export async function exerciseTemplates(page,j,origin,width){
   await j.action(page.getByRole('button',{name:'Edit record',exact:true}))
   await page.getByLabel(label,{exact:true}).fill(edited)
   await j.command(page.getByRole('button',{name:'Save record',exact:true}),'record.patch')
+  // Observe the completed client save before testing a fresh document load.
+  await page.getByRole('heading',{name:edited,exact:true}).waitFor()
   await page.reload();await page.getByRole('heading',{name:edited,exact:true}).waitFor()
   await j.capture(`template-${table.toLowerCase()}`)
   receipts.push({template:name,appId:result.appId,recordId:row.id})
