@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "2dd389906b708443d39e5c162b3f85c8422dd72fcf209f2e6ddb296cd208174c",
+      "sha256": "0980dfb0e3abd5e3f5d02ebda335d8a76d040aec810ed1c0da30afbbcbbbc216",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c58446eed9daae176ab98ae99df8365114f00949aca85f7a2213a1bb84de57df",
+      "sha256": "12eae99c5e0f9f6916630315e6e95c5409804667221e958eed51a3e9480da8ad",
       "executable": false
     },
     "DEMO.md": {
@@ -7374,7 +7374,7 @@
       "executable": false
     },
     "src/core/features/settings/ui/settings-page.tsx": {
-      "sha256": "9c0b9c5da1fca7bccf8a84f10592a6b897196e047f38d255465011cffba47ac3",
+      "sha256": "4940e24f5d15f61e567fa57aa7b86db692d9d1ad71599bff9ff134190e9de81a",
       "executable": false
     },
     "src/core/features/setup/document.server.ts": {
@@ -11369,6 +11369,10 @@
       "sha256": "b809f044babf2fda8f7c3c232e487a1e6fba1eca95cf192c80663f4ebcf683fa",
       "executable": false
     },
+    "src/ui/settings/capacity-panel.tsx": {
+      "sha256": "e9b4be7bf59c95d837475c68d47ddae72be868143840d894eb7895d20f535843",
+      "executable": false
+    },
     "src/ui/settings/connect-gmail.tsx": {
       "sha256": "256b3693d0a368610ebd631985c2d0a40684e52507c6b2978c0684743521d477",
       "executable": false
@@ -13025,6 +13029,10 @@
       "sha256": "3bfd1645f101f922a5b0f130ec17791390031646eeabeb03b0a5c41ffdf6b4b5",
       "executable": false
     },
+    "tests/helpers/settings-capacity-browser.mjs": {
+      "sha256": "60dc2c934f2efb312be08e6b794075d336838ecda90746bfa50147e241888b5c",
+      "executable": false
+    },
     "tests/helpers/settings-members-accessibility.mjs": {
       "sha256": "ab8a34e856a02b506241fe8017ed532ff8454e6e6584f3e8e2d3ae3cd752dcdf",
       "executable": false
@@ -13570,7 +13578,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "ced15869c2302afc041f05c852b7808228c431d4d32966eff64403eee5fba162",
+      "sha256": "9faf33a4430cb5ab12987f05924c1ee96bf21b13e76927653dd1877333638957",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {

@@ -1608,8 +1608,8 @@ Core · target · **partial** · Cites BASE-INSTALL-001, BASE-DATA-005, BASE-DAT
 **Acceptance.**
 1. Settings shows the current usage and named capacity for every declared workspace limit.
 
-**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited Settings-usage journey that reads usage against every declared limit; the cited browser journey exercises custom fields, samples and ownership without reading usage. Installer and whole-installation archive work are covered by the cited CLI journeys, but neither every-limit usage nor a fresh own-account/Managed installation is exercised here.
+**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`; `tests/ui-launch-operator-doors.mjs` (Launch operator doors at desktop and phone), via `tests/helpers/settings-capacity-browser.mjs`: native fixture inventories and distinct creation deltas agree with Settings HTTP and rendered maxima for eight retained entity capacities; refresh, archived campaign capacity, Worker restart persistence and access refusals.
+**Gap.** Settings covers campaigns, campaignCustomFields, deliverables, milestones, risks, decisions, savedLenses and automations only. Operator, session and lens-condition coverage and every other declared limit remain unproved, including selection, import, upload, request, public-rate, timeline and warehouse measurements and boundary matrices. Fresh own-account or Managed installation, R-12 receipts, SCALE-001 and SCALE-002 qualification and whole-clause judgment remain unclaimed. Ct contract conversion and generated-document synchronization remain release prerequisites.
 
 #### SCALE-001 — Operational scale
 
