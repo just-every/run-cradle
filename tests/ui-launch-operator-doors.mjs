@@ -5,11 +5,13 @@ import { chromium, expect } from '@playwright/test'
 import { contract } from './contract.mjs'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { createFixtureAuth } from './helpers/base-fixture-auth.mjs'
+import { settingsCapacityBrowser } from './helpers/settings-capacity-browser.mjs'
 import { doorsBrowser, csvRows } from './helpers/launch-doors-browser.mjs'
+import { settingsAttributionJourney } from './helpers/settings-attribution-journey.mjs'
 
 // One real-door journey per operator door, through the emitted Worker at desktop and phone:
-// import, export, custom fields, bulk edit, sample data, invitations and ownership handover.
-contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone', async () => {
+// import, export, workspace attribution, custom fields, bulk edit, sample data, invitations and ownership handover.
+contract('IMPORT-001', '[OWN-001] [IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone', async () => {
  const output = path.resolve(process.env.CRADLE_DOORS_EVIDENCE ?? '../evidence/de-doors')
  await mkdir(output, { recursive: true })
  const h = await launchAuthorityRuntime({}, { installedLaunchDefinitions: true, installationOwner: true })
@@ -24,6 +26,7 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    await context.addCookies([{ name: actor.session.cookie.split('=')[0], value: actor.session.cookie.slice(actor.session.cookie.indexOf('=') + 1), url: h.origin }])
    const b = doorsBrowser({ h, page, width, output, session: () => actor.session, receipt })
    try {
+   await settingsCapacityBrowser({ h, page, b, width, actor, receipt })
    const actorEmail = await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(actor.id).first('email')
    const openPeople = async () => { await b.visit('/app/settings'); await b.openPanel('People and authority'); await page.getByLabel('Application').selectOption(LAUNCH_APP_ID); await page.getByRole('region', { name: 'Workspace members' }).waitFor() }
    const row = name => page.getByRole('region', { name: 'Workspace members' }).locator('tr', { hasText: name })
@@ -163,6 +166,8 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    assert.ok(queueRows.slice(1).every(row => /GMT\+10:00$/.test(row[1])), 'Due times use the workspace timezone')
    receipt.downloads.push({ width, door: 'queue export', name: queue.name, rows: queueRows.length - 1 })
    await b.capture('decision-queue-export')
+
+   await settingsAttributionJourney({ h, page, b, actor, width, receipt })
 
    // Custom fields: define one in Settings, fill it on a campaign.
    const fieldName = `Market ${width}`

@@ -1483,8 +1483,8 @@ Core · published · **partial**
 1. Settings is one operator-only area with sections for the workspace (name, timezone, currency, quiet hours), operators, notification preferences, custom-field definitions, automations and digest recipients, AI, imports and failed email deliveries, and current usage against every declared workspace limit.
 2. Changing a setting records the operator and the time and applies to work dispatched after the change; work already dispatched is unaffected.
 
-**Evidence.** `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited Settings journey that reads every named section/current usage and changes a setting with actor/time readback while distinguishing already-dispatched from later work; the cited journey exercises custom fields, samples and ownership only.
+**Evidence.** `tests/ui-launch-operator-doors.mjs` — "[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone"; `tests/helpers/settings-attribution-journey.mjs` — Workspace name save, known operator, bounded audit time, reload and command replay
+**Gap.** Missing the complete named-section and current-usage inventory, including OWN-001 capacities, and the already-dispatched versus later-work matrix. Existing owner, policy and notification holds, ct contract conversion, generated-document synchronization and independent whole-clause judgment remain release prerequisites.
 
 #### SET-002 — AI configuration
 
@@ -1608,8 +1608,8 @@ Core · target · **partial** · Cites BASE-INSTALL-001, BASE-DATA-005, BASE-DAT
 **Acceptance.**
 1. Settings shows the current usage and named capacity for every declared workspace limit.
 
-**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`, `tests/ui-launch-operator-doors.mjs`
-**Gap.** Missing a cited Settings-usage journey that reads usage against every declared limit; the cited browser journey exercises custom fields, samples and ownership without reading usage. Installer and whole-installation archive work are covered by the cited CLI journeys, but neither every-limit usage nor a fresh own-account/Managed installation is exercised here.
+**Evidence.** `scripts/installer/seed.mjs`, `tests/rer-data-roundtrip.mjs`, `tests/rer-retained-archive.mjs`; `tests/ui-launch-operator-doors.mjs` (Launch operator doors at desktop and phone), via `tests/helpers/settings-capacity-browser.mjs`: native fixture inventories and distinct creation deltas agree with Settings HTTP and rendered maxima for eight retained entity capacities; refresh, archived campaign capacity, Worker restart persistence and access refusals.
+**Gap.** Settings covers campaigns, campaignCustomFields, deliverables, milestones, risks, decisions, savedLenses and automations only. Operator, session and lens-condition coverage and every other declared limit remain unproved, including selection, import, upload, request, public-rate, timeline and warehouse measurements and boundary matrices. Fresh own-account or Managed installation, R-12 receipts, SCALE-001 and SCALE-002 qualification and whole-clause judgment remain unclaimed. Ct contract conversion and generated-document synchronization remain release prerequisites.
 
 #### SCALE-001 — Operational scale
 
@@ -2880,8 +2880,8 @@ Core · target · **partial** · Cites BASE-ACCESSIBILITY-001 · Register R-2, R
 **Acceptance.**
 1. Every browser journey above also runs at 390 and 320 with axe.
 
-**Evidence.** `tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`
-**Gap.** Current CI exercises records, import/exit, calendar/board/gallery/timeline, collaboration, roles, automation and Launch browser journeys at 390 as well as 1440 (`tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`, `tests/ui-base-exits.mjs`, `tests/ui-records-calendar.mjs`, `tests/ui-user-automations.mjs`, `tests/ui-launch-walkthrough.mjs`); 320 px and complete coverage of every target journey remain unproven
+**Evidence.** `tests/ui-records-builder.mjs` (Home presents records and bases before launch work at desktop and phone widths; Record detail keeps one relation heading, reachable links and policy restrictions; [SNAP-002] Manual records browser journeys and concrete UI review corrections, including historyBrowserJourney, baseRolesJourney, collectionLookupsBrowser, conditionalFormsJourney and recordCommentsBrowser); `tests/ui-records-calendar.mjs` (record calendars, boards, private covers and saved view presentation at desktop and phone widths); `tests/ui-user-automations.mjs` (owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone); `tests/helpers/records-browser-journey.mjs` (recordsJourney: actual phone viewport, page overflow, measured active 24-by-24 CSS-pixel hit regions and serious or critical axe checks)
+**Gap.** Every other records, import, view, form, interface, comment and automation-history journey still needs complete 320 and 390 coverage, target measurements and accessibility proof, including journeys for currently unbuilt features. These bounded sanity journeys do not satisfy the whole-phone-app clause. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; this held pin has no contract-docs generator or declared Lander-Regenerate command.
 
 #### MOBILE-002 — Installable app with camera and scanning
 

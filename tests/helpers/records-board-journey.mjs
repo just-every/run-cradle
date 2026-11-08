@@ -116,12 +116,21 @@ export async function boardBrowserJourney(page,j,h,width){
  await action(()=>tableAction(page,'Undo'));await inColumn(f.stage.options[0].id)
  await j.capture('board-saved-undo')
  // A second writer changes the loaded card. Its stale move must expose the conflict and preserve that write.
+ // Retain a real presence response at the network edge for this stale-client
+ // probe; the separate live journey asserts that ordinary refreshes land.
+ const presenceUrl=`${h.origin}/api/v1/views/${f.view.id}/presence`
+ let heartbeat
+ const delayedPresence=async route=>{heartbeat??=await route.fetch();await route.fulfill({response:heartbeat})}
+ await page.route(presenceUrl,delayedPresence)
+ await page.waitForResponse(response=>Boolean(heartbeat)&&response.url()===presenceUrl)
+ try{
  const before=await row();await call('/api/v1/commands/record.patch',command(range(f,before,f.stage.options[1].id),expected([before])))
  await card().getByRole('combobox',{name:'Move to Board card',exact:true}).selectOption('__unset')
  await action(()=>j.action(card().getByRole('button',{name:'Move Board card',exact:true})),409)
  await page.getByRole('alert').filter({hasText:/Stage:.*record changed/}).waitFor()
  assert.equal((await row()).fields[f.stage.id].value,f.stage.options[1].id)
  await j.capture('board-conflict')
+ }finally{await page.unroute(presenceUrl,delayedPresence)}
  await denyBoardWrites(h.db,f)
  await page.goto(path);await displayAction(page,'Board',j.action)
  await inColumn(f.stage.options[1].id)
