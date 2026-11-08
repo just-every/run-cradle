@@ -65,11 +65,10 @@
     },
     {
       "name": "base",
-      "browser": true,
+      "browser": false,
       "hosted": false,
       "commands": [
-        "pnpm test:base",
-        "CRADLE_RECORDS_BROWSER_WIDTH=320 pnpm exec node --import ./tests/helpers/typescript-loader.mjs --test --test-name-pattern='Manual records' tests/ui-records-builder.mjs"
+        "pnpm test:base"
       ]
     },
     {

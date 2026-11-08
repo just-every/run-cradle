@@ -2926,7 +2926,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "0980dfb0e3abd5e3f5d02ebda335d8a76d040aec810ed1c0da30afbbcbbbc216",
+      "sha256": "48723910f2e6836362cf4ba483fbdf80db649f455aa306ec24e95b9292c32054",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2994,7 +2994,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "12eae99c5e0f9f6916630315e6e95c5409804667221e958eed51a3e9480da8ad",
+      "sha256": "2f6fa4878b963e6043dc316c2725fc5be0524f8ce5fb0f1b072abf1628eacf21",
       "executable": false
     },
     "DEMO.md": {
@@ -13029,6 +13029,10 @@
       "sha256": "3bfd1645f101f922a5b0f130ec17791390031646eeabeb03b0a5c41ffdf6b4b5",
       "executable": false
     },
+    "tests/helpers/settings-attribution-journey.mjs": {
+      "sha256": "8975a7ecf91ad3f78185fee850b3f18720f48a667d1360ca6161871ef9d50903",
+      "executable": false
+    },
     "tests/helpers/settings-capacity-browser.mjs": {
       "sha256": "60dc2c934f2efb312be08e6b794075d336838ecda90746bfa50147e241888b5c",
       "executable": false
@@ -13578,7 +13582,7 @@
       "executable": false
     },
     "tests/ui-launch-operator-doors.mjs": {
-      "sha256": "9faf33a4430cb5ab12987f05924c1ee96bf21b13e76927653dd1877333638957",
+      "sha256": "a783d78bc1d4c4743cf60da0f02d3eb0cf5636b87ab29a8842faa26ff2cd1aa5",
       "executable": false
     },
     "tests/ui-launch-walkthrough.mjs": {
@@ -15674,7 +15678,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "c16eeb0a7c76c80231e1271bf83314d4fbc32abe6829e823e52dcaeeeecb4ba4",
+      "sha256": "49b8044af87dc22e6d6a3e9b0274b14ad1c743702d9fc51fece12422f102e564",
       "executable": false
     },
     "vite.config.ts": {
