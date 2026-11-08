@@ -24,7 +24,7 @@ export async function writeContext(h, session = h.ownerSession, releaseId) {
  const replay = createReplayAccess(h.db, policy, entities)
  const admission = createAdmissionService(h.db, { authorizeReplay: replay.authorizeReplay })
  const resolve = createRequestContextFactory(h.db, h.configuration)
- const ctx = await resolve(new Request(`${h.origin}/api/v1/session`, { headers: { host:new URL(h.origin).host, cookie: session.cookie } }), 'http')
+ const ctx = await resolve(session.request ?? new Request(`${h.origin}/api/v1/session`, { headers: { host:new URL(h.origin).host, cookie: session.cookie } }), 'http')
  const context = { releaseId, db: h.db, policy, integration: { ...createChannelsIntegration(h.db), deleteCampaign: (ctx,id)=>source.campaignErasure(h.db,ctx,id) } }
  const handlers = createLaunchHandlers(context)
  const prepare = (action, input, revisions = []) => handlers[action](ctx, launchCommandSchema(action).parse({ commandId: createUlid(), input, expected: revisions }))
