@@ -35,7 +35,9 @@ input[type="checkbox"], input[type="radio"] { flex: none; width: 20px; height: 2
 /* Filter conditions. */
 .cr-filter-group { margin: 12px 0; padding: 16px; border: 1px solid var(--line); border-radius: var(--r-tile); background: var(--card); }
 .cr-filter-group legend { padding: 0 8px; font-size: 14px; font-weight: 600; }
-.cr-filter-group legend select { min-height: 36px; margin-left: 4px; padding: 4px 10px; border: 1px solid var(--input-line); border-radius: var(--r-field); background-color: var(--card); font: inherit; }
+.cr-filter-match { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 14px; font-weight: 600; }
+.cr-filter-match select, .cr-view-sheet__body .cr-filter-match select { width: auto; min-height: 36px; padding-block: 4px; padding-inline-start: 10px; border: 1px solid var(--input-line); border-radius: var(--r-field); background-color: var(--card); font: inherit; }
+.cr-filter-set > .cr-filter-group { margin-top: 8px; }
 .cr-filter-condition { display: flex; align-items: start; gap: 12px; margin: 12px 0; }
 .cr-filter-condition > div, .cr-filter-condition > fieldset { flex: 1; min-width: 0; }
 .cr-filter-condition .cr-card { padding: 16px; border-radius: var(--r-tile); }

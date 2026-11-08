@@ -142,7 +142,7 @@ async function evaluatedPagingJourney(h){
  assert.deepEqual(actual,expected,'Computed exports/query pages include every permitted row across raw-page boundaries')
 }
 
-test('[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 FIELD-005 CSV, workbook and Sheets imports retain review, mapping, scheduled merge and export fences',async()=>{
+test('[INTEG-003] RECORDS-001 RECORDS-004 RECORDS-008 RECORDS-010 FIELD-005 CSV, workbook and Sheets imports retain review, mapping, scheduled merge and export fences',async()=>{
  const migrations=migrationInventory(),mappingMigration=migrations.find(item=>item.name==='1230_record_csv_mappings.sql')
  const h=await harness(migratedD1(migrations.filter(item=>item!==mappingMigration)))
  try{

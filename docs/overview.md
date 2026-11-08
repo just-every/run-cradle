@@ -4,7 +4,7 @@ Cradle is a self-hosted records workspace for one business: tables and typed fie
 
 ## Build a base
 
-Open **Records → Create base**. Start from a template (Customer relationships, Launch readiness or Project tracker) or name your own tables and fields. **Preview schema changes** shows what will change before you adopt it, and you can edit the schema later the same way.
+Open **Records → Base ▾ → New base**. Start from one of the nine templates (Customer relationships, Launch readiness, Project tracker, Inventory and orders, Vendor and contract register, Asset and equipment register, Event planning, Field operations tracker or Content production) or name your own tables and fields. **Preview schema changes** shows what will change before you adopt it, and you can edit the schema later the same way.
 
 ## Work with your records
 

@@ -12,13 +12,14 @@ const methods:SummaryAggregate[]=['sum','average','min','max','count','empty','p
 /** Stream revision-fenced pages into bounded per-column statistics, never a retained copy of the table. */
 export async function readViewSummary({schema,query,fields,viewId}:ViewSummaryInput,signal:AbortSignal):Promise<ViewSummarySnapshot>{
  const visible=[...new Set(fields)].filter(id=>schema.fields.some(field=>field.id===id))
- if(!visible.length)throw Error('Choose at least one visible, readable field before calculating a summary.')
+ if(!visible.length&&!query.groupBy?.length)throw Error('Choose at least one visible, readable field before calculating a summary.')
  const url=viewId?`/api/v1/views/${encodeURIComponent(viewId)}/query`:`/api/v1/apps/${encodeURIComponent(schema.appId)}/entities/${encodeURIComponent(schema.id)}/query`
  const accumulators=new Map(visible.map(id=>[id,createSummaryAccumulator(schema.fields.find(f=>f.id===id)!)])),ids=new Set<string>(),cursors=new Set<string>(),groups=new Map<string,SummaryGroup>()
  let cursor:string|undefined,reported:Page<RecordRow>['total']|undefined,evaluatedAt='',groupBy=query.groupBy??[],viewVersion:number|undefined,groupsUnavailable:string|undefined
  do{
   signal.throwIfAborted()
-  const body={...query,fields:[...new Set([...visible,...groupBy])],cursor}
+  // Group totals are accumulated below. Do not rescan every group for each page.
+  const body={...query,includeGroups:false,fields:[...new Set([...visible,...groupBy])],cursor}
   const {data}=await readApi<Page<RecordRow>|ViewResult>(url,{method:'POST',body:JSON.stringify(body)},signal);signal.throwIfAborted()
   const page='records'in data?data.records:data
   if('records'in data){

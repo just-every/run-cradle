@@ -13,6 +13,8 @@ separately. The `.rer` file is a data archive, not a source-code bundle. Uploade
 source originals stored as business records can be included; that does not replace
 the application checkout needed to run them.
 
+## Restore an archive
+
 To restore a Settings download, use an empty checkout of the matching Cradle
 source. Copy the downloaded file into that checkout as `exports/workspace.rer`,
 then run:
@@ -33,110 +35,110 @@ before using them. `rer doctor` may exit 3 for local configuration missing befor
 that first dev launch; this alone does not show that archive import failed.
 
 The public `rer export` and `rer import` commands are also described in
-[Run it locally](../RUN-LOCALLY.md).
-The maintained Base portability module owns the archive format, bounded streaming,
-checksums, atomic D1 restore and R2 object custody. Cradle supplies its real DB/FILES
-bindings and operational data policy. All ordered migration groups are applied.
-Write CLI archives beneath the protected `exports/` directory, for example
-`--output exports/workspace.rer`, or to a private path outside the checkout.
+[Run it locally](../RUN-LOCALLY.md). Archives are streamed with checksums and
+restored in one step, so a failed restore leaves the empty target unchanged.
+Write command-line archives beneath the protected `exports/` directory, for
+example `--output exports/workspace.rer`, or to a private path outside the checkout.
 
-Business records, schema, views, forms, source originals, attribution, audits and
-history retain their IDs. FILES bytes and metadata transfer. Launch search is derived
-and rebuilt from the existing SQL projection. Manual record tables and retained
-schema revisions are reconstructed by Cradle's admitted schema compiler before
-Base restores their cells. Their search indexes are rebuilt from those cells.
-Archive SQL is never executed as a schema-authoring input. Work queue deliveries, Durable Object
-initialization caches and local logs do not transfer.
+The Settings download works from the signed-in installation, including a hosted
+one. `rer import` restores into local storage; it does not restore directly into
+hosted resources. Import asks for your confirmation and needs an empty target. A
+populated installation is refused. Private settings and hosting credentials are
+supplied separately. CSV and base JSON have their own documented scopes; see
+[leaving Cradle](leaving-cradle.md).
 
-Base/native sessions, one-use sign-in tokens, machine credentials, private provider
-credentials, OAuth handshakes, development mail, admission wakes, active transfer
-bookkeeping and temporary importer staging do not transfer. Contractor credential
-records are business evidence and do transfer. Sealed execution inputs are omitted.
-Connections need configuration; grants are held; automation definitions are disabled;
-queued work is cancelled. API keys, signed admission ledgers, sealed destination credentials and live delegation bindings do not transfer. User automation credential references are cleared and pending captured events are completed without dispatch. Queued integration deliveries are rejected and in-flight deliveries become uncertain. Possible external effects remain Unknown and are never
-silently retried. Historical imports retain their plan, originals and provenance and
-require explicit continuation after restore.
+## What an archive holds
 
-Import requires explicit confirmation and an empty target. Only actual migration
-bootstrap rows are replaceable. A populated installation is refused. Private settings
-and hosting credentials are supplied separately. After import, start local dev
-as above, or optionally choose an owner email with setup first. Fresh admission
-transfers the archived installation owner's exact application permissions and current manual-base control.
-It preserves historical actor IDs, row ownership, policy records and other users'
-inactive memberships. Reinvitations and renewed automation approvals are explicit.
+Business records, schema, views, forms, source originals, attribution, audit
+records and history keep their IDs. Files and their details transfer. Search is
+rebuilt from the restored records, and tables you built in Records are rebuilt
+from their schema with their search indexes.
 
-The Settings download works through the signed-in installation, including a hosted
-installation. The CLI adapter imports into local storage; it does not restore
-directly into hosted resources. CSV and base JSON have their own documented
-scopes; see [leaving Cradle](leaving-cradle.md).
+An archive does not carry sign-in sessions, one-use sign-in links, API keys and
+other machine credentials, private provider credentials and sign-ins in progress,
+local development mail, work waiting in queues, or temporary import staging.
+Contractor credential records are business evidence and do transfer. Sealed
+execution inputs are left out.
 
-Each available evidence file carries its byte count and SHA-256 in D1. Export
-compares those values with the actual stored bytes; a mismatch refuses the archive
-and identifies the file ID. Import checks both the transport checksums and the
-staged evidence row's expected checksum before committing any business data.
-Execution ciphertext is omitted from installation archives. Ordinary file upload,
-private execution storage, archive copying and restore copying supply a checksum
-to R2; private writes and final restore copies also verify the resulting bytes.
-Existing evidence rows already required SHA-256 in migration 0400; existing
-execution references already contained the digest calculated from the stored
-ciphertext. No applied migration is rewritten or checksum invented from a filename.
+Each stored file carries its size and SHA-256 checksum. Export compares them with
+the stored bytes; a mismatch refuses the archive and names the file. Import checks
+the transfer checksums and each file's expected checksum before it commits any
+business data.
 
-The owner erases a removed person in Settings → People and authority → Erase
-identity. Remove access first; active campaign ownership or an unresolved assigned
-decision blocks removal. The confirmation states that erasure cannot be undone.
-The response and retained receipt distinguish anonymisation from completed file
-deletion. A pending receipt can be checked again; the scheduled handler continues
-its bounded file cleanup. Completion is only reported after every listed blob is
-absent. Comments, campaign activity and decision outcomes remain attributed to the
-stable anonymous person; notifications and delivery records are deleted.
+## After a restore
 
-Erasure touches only the person's identity places, listed in
-`src/domains/lifecycle/member-identity-places.ts` and returned as the receipt's
-`plan`: their operator and Base sign-in rows (whole values replaced), rows that
-reference them by id or are attributed to them (author, owner, assignee, requester,
-actor, mentions and admission records naming them; whole-token rewrites only), their
-notifications, preferences and the development mail addressed to them (deleted).
-R2 objects are deleted only through an exact link: captured inputs of their runs and
-files in their own private source intake that carry their identity as a whole token.
+- Connections need to be set up again, and grants are held until you approve them.
+- Automations come back disabled and queued work is cancelled. Automation
+  credential references are cleared, and events still waiting to be sent are
+  completed without sending.
+- Queued integration deliveries are rejected and deliveries that were in flight
+  become uncertain. Their possible effects on other systems stay Unknown and are
+  never retried silently.
+- Past imports keep their plan, originals and source; continuing one needs your
+  explicit go-ahead.
+- The installation owner in the archive is admitted again with the same
+  application permissions and control of manual bases. Historical actors, row
+  ownership, policy records and other people's inactive memberships are kept.
+  Re-inviting people and renewing automation approvals are explicit steps.
 
-Before any mutation, a literal scan of every physical text/BLOB column, JSON value
-and key, and every R2 key, metadata and UTF-8-decoded body finds each other copy of
-the name or email. A copy inside a longer word (`Mark` in `Marketing`), inside
-another person's name (`Jo Lee` in `Jo Leeds`) or in content not attributed to the
-person refuses with 409, naming each store and reason in `erasureCopies`; nothing is
-rewritten or deleted. The owner edits those copies, or confirms that they are not
-this person's identity (`keepCopies` lists the confirmed stores) and the copies stay
-byte-for-byte unchanged. In a confirmed attributed row only whole-token occurrences
-are rewritten. Derived search follows its source triggers. Ambiguous shared identities, JSON-key collisions, non-string identities,
-noncanonical JSON escapes that cannot be safely replaced, protected identifiers, versioned operation-case custody,
-and retained import/archive/source-version or signed construction/release custody still refuse before any identity mutation.
-These holds remain unresolved erasure work;
-they are not successful erasures. Transformed or paraphrased identity and copies
-already downloaded or delivered outside the installation are not discoverable by
-literal matching.
+## Erase a person
 
-Binary-custody refusal applies when a matching D1 value is not stored as text.
-The R2 scan does not decompress files, parse media formats or decode arbitrary
-encodings. Identity inside compressed PDFs or other encoded binary content can
-remain undiscovered. Erasure of those copies remains unproven; a completed receipt
-does not establish universal erasure of such content.
+Open Settings → People and authority → **Erase identity**. Remove the person's
+access first; active campaign ownership or an unresolved assigned decision blocks
+removal. The confirmation states that erasure cannot be undone. The result and
+its receipt say separately whether the person was anonymised and whether their
+files are fully deleted. A pending receipt can be checked again, and a scheduled
+job continues the file cleanup. Completion is reported only after every listed
+file is gone. Comments, campaign activity and decision outcomes stay attributed
+to the same anonymous person; notifications and delivery records are deleted.
 
-Campaign deletion requires the exact campaign code. Canonical children cascade;
-the seed adapter explicitly clears imported source references, evidence files,
-analyses, retained undo/sample snapshots, captured execution inputs, event/result
-copies and related notification deliveries. The audit survives with an anonymous
-campaign reference. Construction dataset/runner custody blocks deletion until that
-custody is explicitly cleared. No external runner or provider is contacted by this
-local cleanup path.
+Erasure touches only the person's own identity places: their sign-in rows, items
+that reference them (author, owner, assignee, requester, actor, mentions and
+admission records naming them), their notifications and preferences, and the
+development mail addressed to them. Files are deleted only when they are exactly
+linked to the person: captured inputs of their runs and files in their own private
+source intake that carry their identity.
 
-Post-erasure archives retain the anonymous identity and `erased` state. The
-existing record-erasure restore adapter retains its re-erasure semantics. Adopting
-the shared erasure helper and choosing its old-archive refusal fence versus that
-seed policy remains an owner decision. The refreshed Base auth/schema retains
-this existing seed policy. A pre-erasure archive restored to a new store without a later erasure journal cannot
-be recognised as stale. Raw database imports also bypass product safeguards.
+Before changing anything, Cradle scans every text value and stored file for any
+other copy of the name or email. A copy inside a longer word (`Mark` in
+`Marketing`), inside another person's name (`Jo Lee` in `Jo Leeds`) or in content
+not attributed to the person stops the erasure with a conflict that names each
+place and reason; nothing is rewritten or deleted. You can edit those copies, or
+confirm that they are not this person's identity, and then they stay exactly as
+they are. In a confirmed attributed row only whole-word occurrences are rewritten.
 
-Recovery rehearsal (run from a disposable installation, with serving stopped). Set `PORT` to its configured local port. The truncated import is expected to exit 1; continue with the original archive:
+Some cases still stop an erasure before any change: ambiguous shared identities,
+values that cannot be safely replaced, protected identifiers, operation-case
+custody, and import, archive or source-version custody that is still held. These
+stay unresolved erasure work and are never reported as successful erasures.
+Rewritten or paraphrased identity, and copies already downloaded or delivered
+outside the installation, cannot be found by matching text. Inside compressed PDFs
+and other encoded files, a copy of the identity can remain undiscovered, so a
+completed receipt does not prove that such content is clear.
+
+Erasure waits while a file is still being written. An interrupted write keeps its
+hold until you stop and investigate it, verify or remove its bytes and resolve
+the hold before retrying; holds never expire silently.
+
+## Delete a campaign
+
+Campaign deletion asks for the exact campaign code. Its records are deleted with
+it, and its imported source references, evidence files, analyses, undo snapshots,
+captured execution inputs, event copies and notification deliveries are cleared.
+The audit survives with an anonymous campaign reference. Construction dataset and
+runner custody blocks deletion until you clear it. Nothing outside the
+installation is contacted.
+
+Archives made after an erasure keep the anonymous identity and its erased state.
+An archive made before an erasure and restored into a new installation cannot be
+recognised as out of date, so check it for anyone you have erased since. Raw
+database imports bypass the product's safeguards.
+
+## Recovery rehearsal
+
+Run this from a disposable installation with serving stopped. Set `PORT` to its
+configured local port. The truncated import is expected to exit 1; continue with
+the original archive:
 
 ```sh
 rer dev --stop --json
@@ -150,39 +152,43 @@ rer setup --owner-email you@example.com --port "$PORT" --non-interactive --json
 rer dev --non-interactive --json
 ```
 
-`truncated.rer` is a scratch copy of `exports/first.rer` with its closing line removed.
-Open the final dev command’s private `openUrl` from its ready event. It signs in
-the configured local owner. No local mail viewer or printed email sign-in link
-is needed.
-The first import must refuse and leave the empty target unchanged. The second
-imports the original complete archive. Edit a restored record as the installation
-owner. The targeted `tests/rer-data-roundtrip.mjs` journey verifies the command
-steps and all archived table cells and file metadata, including fresh owner
-admission.
-Local evidence does not establish hosted D1/R2 performance or remote recovery.
+`truncated.rer` is a scratch copy of `exports/first.rer` with its closing line
+removed. Open the final dev command's private `openUrl` from its ready event; it
+signs in the configured local owner. No local mail viewer or printed email
+sign-in link is needed. The first import must refuse and leave the empty target
+unchanged. The second imports the original complete archive. Edit a restored
+record as the installation owner to confirm it works.
 
-Audit and history have no age-based pruning in the current implementation:
+This rehearsal runs on your computer. It says nothing about the speed of hosted
+storage or about recovering a hosted installation.
 
-| Stores | Retention and explicit exceptions |
+## How long history is kept
+
+Audit and history are not pruned by age. Scheduled jobs deliver notifications,
+continue provider and automation work, and finish requested erasures; they never
+delete history because it is old.
+
+| What | How it is kept |
 | --- | --- |
-| `admission_audit`, `command_admissions`, `admission_events`, provenance segments, outbox | Retained; explicit erasure removes personal payload/reference copies while retaining action history. |
-| Campaign `activity_entries`, `comments`, decision outcomes | Retained with anonymous authors; campaign deletion removes that campaign's activity view and children. |
-| `automation_runs`, launch action history, record automation versions/events | Retained; restore holds/cancels execution rather than pruning history. |
-| Evidence versions, nodes, claims, comments, contexts and erasure receipts | Retained; explicit privacy erasure clears content/dependencies and deletes the listed bytes. |
-| Execution runs, attempts, receipts and model calls | Retained. `0502_auth_payload_retention.sql` only adds `reconcile_input`; it defines no expiry or sweeper. Explicit erasure clears sealed and reconcile inputs. |
-| Operation case history/recovery reviews, knowledge fact revisions | Retained; explicit source erasure invalidates dependent content. |
-| Channel events/deliveries, integration delivery attempts/resolutions/replays | Retained; person erasure deletes their notifications/deliveries. External delivery history is not silently retried after restore. |
-| Import jobs, reports, originals, mapping and provenance | Retained after completion/undo; source custody must be explicitly resolved before an erasure can claim completion. |
-| Repair visits, completion claims, acceptances, handoffs and business decisions | Retained as outcomes; no general expiry task. |
-| Lens history, bulk-undo snapshots, analyses, construction/release evidence | Retained; validity deadlines are not automatic deletion. Campaign deletion removes its matching undo/source copies. |
+| Admission and change audit records, events and the outbox | Kept. Erasing a person removes personal details while keeping the action history. |
+| Campaign activity, comments and decision outcomes | Kept with anonymous authors. Deleting a campaign removes its activity and children. |
+| Automation runs, Launch action history and record automation versions | Kept. A restore holds or cancels execution rather than pruning history. |
+| Evidence versions, claims, comments and erasure receipts | Kept. Privacy erasure clears content and deletes the listed files. |
+| Execution runs, attempts, receipts and model calls | Kept; nothing expires them. Erasure clears their sealed inputs. |
+| Operation case history, recovery reviews and knowledge fact revisions | Kept. Erasing a source invalidates content that depends on it. |
+| Channel events and deliveries, integration delivery attempts and replays | Kept. Erasing a person deletes their notifications and deliveries. External delivery history is never retried silently after a restore. |
+| Import jobs, reports, originals, mappings and provenance | Kept after completion or undo. Custody of the source must be resolved before an erasure can report completion. |
+| Repair visits, completion claims, acceptances, handoffs and business decisions | Kept as outcomes; nothing expires them. |
+| Lens history, undo snapshots, analyses, construction and release evidence | Kept; a validity deadline does not delete anything. Deleting a campaign removes its undo and source copies. |
 
-Scheduled jobs deliver notifications, continue configured provider/automation work,
-and finish requested erasures. They do not prune audit/history by age. Temporary
-admission assertions and completed erasure blob-work rows are deleted only after
-their transaction or verified cleanup finishes; durable receipts survive.
+Temporary admission records and finished erasure file-cleanup work are deleted
+once their work completes; the receipts stay.
 
-Concurrent R2 writes reserve durable custody before writing. Erasure refuses while a reservation exists, and an old request cannot reserve after a newer erasure completes. Evidence publication releases its reservation atomically with admission; execution does so when its attempt becomes durable. Archive and restore copying release on their corresponding durable progress/commit. An interrupted writer keeps its reservation: stop and investigate that writer, verify or remove its bytes, and resolve its custody before retrying erasure. Reservations are never silently expired.
+Search results are preserved across upgrades and rebuilt on restore. No upgrade
+adds a grant or membership.
 
-Migration 9025 preserves existing search rows and adds an indexed map from record identity to FTS row ID. Restore rebuilds the same logical search projection using that retained map. No grant or membership is added by 9023, 9024 or 9025.
-
-The `launch.comment.create` command is included in new explicit launch operator setup. Existing persisted policies are preserved: the owner must explicitly add this action on the campaign entity for an older policy to use the new command. Row, field, current-session and explicit-deny rules still apply. No update silently appends it to stored policies or grants.
+The Launch comment action is part of every new Launch operator setup. A policy
+you already saved keeps exactly what it had: to let an older policy comment, add
+the action on the campaign entity yourself. Row, field, current-session and
+explicit-deny rules still apply, and nothing is added to saved policies or grants
+automatically.

@@ -12,9 +12,10 @@ import {retirementReplay} from './retired-comments.mjs';
 // Records bases are schema the owner builds at runtime, not migrations: each
 // base's physical table and its indexes and search tables are named r_<entity
 // ULID>... (src/domains/records/descriptors.server.ts generatedName). No
-// migration creates an object in that namespace. Calendar capture triggers are
-// likewise rebuilt by the seed compiler from the archived record definitions.
-const recordObject=name=>/^(?:r_[0-9a-hjkmnp-tv-z]{26}(?:_|$)|record_calendar_[0-9a-hjkmnp-tv-z]{26}_(?:insert|update)$)/.test(name);
+// migration creates an object in that namespace. Calendar and automation
+// capture triggers are likewise rebuilt by the seed compiler
+// from the archived record definitions.
+const recordObject=name=>/^(?:r_[0-9a-hjkmnp-tv-z]{26}(?:_|$)|record_calendar_[0-9a-hjkmnp-tv-z]{26}_(?:insert|update)$|record_auto_[0-9a-hjkmnp-tv-z]{26}_(?:created|updated)$)/.test(name);
 
 /**
  * Replay the destination's applied files in its recorded order, never the

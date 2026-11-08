@@ -1,4 +1,5 @@
 import {isStoreReferenceMember} from '../store-references'
+import {sourceRecordMapState} from './source-record-map'
 import type { ImportStatus, PreparedSource, PlannedRecord, ImportIdentities, ColumnAccounting } from './contracts'
 import type { Json } from '../../../../vendor/base/modules/import-kit/src/types'
 
@@ -43,11 +44,12 @@ export function buildReceipt(input:ReceiptInput){
     ...(isAttachmentColumn(c)?{attachmentManifest:true}:{})})),
    ...(pending&&(pending.records||pending.linkCells)?{notYetApplied:pending}:{})}
  })
- const undo=status.reversal
+ const undo=status.reversal,mapState=sourceRecordMapState(status,source)
  return {format:'cradle-move-in-receipt',version:1,generatedAt:input.generatedAt,
   job:{id:status.job.id,state:stateOf(status.job.state),jobState:status.job.state,stateAsOf:input.generatedAt,reviewedAt:input.reviewedAt,baseName:input.baseName,appId:status.job.destination},
   source:{kind:source.format,statement:'The source was a file set the owner supplied to Cradle. This receipt makes no claim about any live source account.',files:input.files},
   tables,
+  sourceRecordMap:{...mapState,recordCount:mapState.available?records.length:0},
   storeReferences:records.flatMap(row=>Object.entries(row.fields).flatMap(([fieldId,value])=>Array.isArray(value)?value.filter(isStoreReferenceMember).map(member=>({tableKey:row.tableKey,rowKey:row.rowKey,fieldId,state:'unresolved' as const,...member.reference.portable})):[])),
   ...(status.progress?{progress:status.progress}:{}),
   reconciliation:{ok:status.reconciliation.ok,missing:status.reconciliation.missing.length,duplicate:status.reconciliation.duplicate.length,extra:status.reconciliation.extra.length,mismatched:status.reconciliation.mismatched.length},

@@ -5,6 +5,7 @@ import { execute, executeBatch, iso, queryAll, queryOne } from '../shared/reposi
 import { toInitials } from '../../shared/people'
 
 type CampaignRow = {
+  archivedAt: number | null
   budgetMinor: number
   code: string
   deliverableComplete: number
@@ -33,7 +34,7 @@ type CampaignRow = {
 export type CampaignSummary = ReturnType<typeof campaignSummary>
 
 const campaignSelect = `
-  SELECT c.id, c.code, c.name, c.owner_id AS ownerId, o.name AS ownerName, c.phase, c.status, c.health,
+  SELECT c.id, c.code, c.name, c.archived_at AS archivedAt, c.owner_id AS ownerId, o.name AS ownerName, c.phase, c.status, c.health,
     c.health_updated_at AS healthUpdatedAt, c.health_set_by_id AS healthSetById, health_operator.name AS healthSetByName, c.start_date AS startDate, c.launch_date AS launchDate,
     c.budget_minor AS budgetMinor, c.spend_minor AS spendMinor, c.version, c.objective,
     c.status_summary AS statusSummary,
@@ -83,6 +84,7 @@ export const createCampaignRepository = (database: Database) => ({
     const row = await queryOne<CampaignRow>(database, `${campaignSelect} WHERE c.id = ?`, [id])
     return row ? {
       ...campaignSummary(row),
+      archivedAt: iso(row.archivedAt),
       objective: row.objective,
       summary: row.statusSummary,
       healthSetBy: row.healthSetById && row.healthSetByName ? {id:row.healthSetById,name:row.healthSetByName,initials:toInitials(row.healthSetByName)} : null,
@@ -116,8 +118,8 @@ export const createCampaignRepository = (database: Database) => ({
 
   async detailParts(id: string) {
     const [deliverables, milestones, risks, decisions, activity] = await Promise.all([
-      queryAll<{ id: string, title: string, dueDate: string | null, state: string, version: number, ownerId: string, ownerName: string }>(database, `SELECT d.id, d.title, d.due_date AS dueDate, d.state, d.version, o.id AS ownerId, o.name AS ownerName,
-        d.completed_at AS completedAt FROM deliverables d JOIN operators o ON o.id = d.owner_id WHERE d.campaign_id = ? ORDER BY d.due_date ASC, d.id ASC`, [id]),
+      queryAll<{ id: string, title: string, dueDate: string | null, state: string, version: number, ownerId: string, ownerName: string, completedAt: number | null, completedById: string | null }>(database, `SELECT d.id, d.title, d.due_date AS dueDate, d.state, d.version, o.id AS ownerId, o.name AS ownerName,
+        d.completed_at AS completedAt, d.completed_by_id AS completedById FROM deliverables d JOIN operators o ON o.id = d.owner_id WHERE d.campaign_id = ? ORDER BY d.due_date ASC, d.id ASC`, [id]),
       queryAll<{ id: string, title: string, type: string, status: string, startDate: string, endDate: string | null, conflictReason: string | null, version: number, ownerId: string, ownerName: string }>(database, `SELECT m.id, m.title, m.type, m.status, m.start_date AS startDate, m.end_date AS endDate, m.conflict_reason AS conflictReason, m.version,
         o.id AS ownerId, o.name AS ownerName FROM milestones m JOIN operators o ON o.id = m.owner_id WHERE m.campaign_id = ? ORDER BY m.start_date ASC, m.id ASC`, [id]),
       queryAll<{ id: string, title: string, severity: string, state: string, dueDate: string | null, signal: string, mitigation: string, version: number, ownerId: string, ownerName: string }>(database, `SELECT r.id, r.title, r.severity, r.state, r.due_date AS dueDate, r.signal, r.mitigation, r.version,
@@ -174,6 +176,8 @@ export const createCampaignRepository = (database: Database) => ({
         owner: person(deliverable.ownerId, deliverable.ownerName),
         dueDate: deliverable.dueDate,
         state: deliverable.state,
+        completedAt: iso(deliverable.completedAt),
+        completedById: deliverable.completedById,
         overdue: archived?.archivedAt===null && deliverable.state !== 'Complete' && Boolean(deliverable.dueDate && deliverable.dueDate < today),
         version: deliverable.version,
       })),

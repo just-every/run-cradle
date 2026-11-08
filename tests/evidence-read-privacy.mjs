@@ -2,6 +2,7 @@ import './helpers/typescript-loader.mjs'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {contract} from './contract.mjs'
+import {fileUploadJourney} from './helpers/file-upload-journey.mjs'
 import {fileStoresProvider} from './helpers/file-stores-provider.mjs'
 
 // Resolve TypeScript dependencies only after the loader has registered its hooks.
@@ -13,9 +14,10 @@ const [{fileStoresJourney,fileStoreBindings},{userAutomationRuntime},{STAGING_EN
  import('./helpers/evidence-comments-journey.mjs'),
 ])
 
-contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
+contract('FILE-001 BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private sources, files and authority identifiers become indistinguishable from missing after current access is removed',async()=>{
  const h=await userAutomationRuntime(0)
  try{
+  await fileUploadJourney(h)
   await evidenceCommentsJourney(h)
   const command=input=>({commandId:createUlid(),expected:[],input})
   const staged=(await h.request('/api/v1/commands/source.stage',{method:'POST',body:command({appId:h.appId,purpose:'source'})})).data.value
@@ -67,7 +69,7 @@ contract('BASE-INPUT-003 BASE-ACCESS-004 COLLAB-001','private source/file and au
  }finally{await h.close()}
 })
 
-contract('FILE-002 FILE-004 COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store',async()=>{
+contract('FILE-002 FILE-004 FILE-005 FILE-006 FILE-007 COLLAB-002 BASE-ACCESS-004','record history reprojects retained relation and attachment cells under current authority; personal store references attach without unasked copying and retain only owner-requested copies from each connected store',async()=>{
  const provider=fileStoresProvider(),h=await userAutomationRuntime(0,{outbound:request=>provider.fetch(request),bindings:fileStoreBindings}),observations={}
  try{
   const relationId=createUlid(),visible=(await h.create('Visible history')).record,hidden=(await h.create('Hidden history')).record

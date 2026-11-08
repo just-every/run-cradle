@@ -2,7 +2,7 @@ import {browserCookies,sessionCookieWithToken} from './helpers/session-cookies.m
 import {baseHttpSession} from './helpers/base-http-session.mjs'
 import { expiredToken, revokedToken, authoritySessionControlsSql } from './helpers/session-controls.mjs'
 import { installLegacyFixture } from './helpers/install-legacy-fixture.mjs'
-import { navigateFromSignInToApp } from './helpers/public-app-navigation.mjs'
+import { navigateFromSignInToApp, openSignInFromDocs } from './helpers/public-app-navigation.mjs'
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
@@ -101,7 +101,7 @@ const get = (url, session = cookie) => request(`${origin}${url}`, { redirect: 'm
     page.on('request', req => { if (req.url().includes('/_serverFn/') && new URL(req.url()).searchParams.has('payload')) dataWire = { url: req.url(), headers: req.headers() } })
     await page.goto(`${origin}/docs`)
     const timeOrigin = await page.evaluate(() => performance.timeOrigin)
-    await page.getByRole('banner').getByRole('link', { name: 'Sign in', exact: true }).click()
+    await openSignInFromDocs(page)
     await page.waitForURL('**/app')
     await navigateFromSignInToApp(page)
     await page.waitForURL('**/app')

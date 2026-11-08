@@ -384,18 +384,18 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    while(changed){changed=false;for(const child of processes)if(owned.has(child.ppid)&&!owned.has(child.pid)){owned.add(child.pid);changed=true}}
    // An earlier stopped workerd that is not yet reaped has exited; it is not a candidate.
    const workers=processes.filter(child=>owned.has(child.pid)&&!child.stat.startsWith('Z')&&/workerd$/.test(child.name))
-   assert.equal(workers.length,1,`NOTIFY-009 this fixture owns exactly one workerd to interrupt: ${JSON.stringify(workers)}`)
-   console.log(`NOTIFY-009 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
+   assert.equal(workers.length,1,`NOTIFY-010 this fixture owns exactly one workerd to interrupt: ${JSON.stringify(workers)}`)
+   console.log(`NOTIFY-010 ${width}: stop owned workerd PID ${workers[0].pid} after its export claim`)
    process.kill(workers[0].pid,'SIGKILL');onStopped()
    release()
    await invocation
    await h.restart()
    const claim=await h.db.prepare('SELECT running_id,running_started_at,running_slot,version,last_slot FROM warehouse_exports WHERE id=?').bind(id).first()
-   assert.ok(claim.running_id,'NOTIFY-009 a runtime interruption retains the real export claim')
-   assert.equal(claim.last_slot,null,'NOTIFY-009 the interrupted execution has not committed')
+   assert.ok(claim.running_id,'NOTIFY-010 a runtime interruption retains the real export claim')
+   assert.equal(claim.last_slot,null,'NOTIFY-010 the interrupted execution has not committed')
    const eventId=`warehouse-export:${id}:${claim.version}:${claim.running_slot}:failed`
    const attempt=await h.db.prepare('SELECT token,live_until FROM channel_progress_attempts WHERE event_id=?').bind(eventId).first()
-   assert.equal(attempt.token,claim.running_id,'NOTIFY-009 the retained attempt belongs to the interrupted execution')
+   assert.equal(attempt.token,claim.running_id,'NOTIFY-010 the retained attempt belongs to the interrupted execution')
    return {id,eventId,claim}
  }
  const interruptedExport=async(retainedId,boundary='SELECT object_key FROM warehouse_objects WHERE export_id=? AND run_id=? ORDER BY object_key')=>{
@@ -404,7 +404,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   const saved=await state(),matches=[],pauses=[],resolutions=[]
   inspector.protocol='http:';inspector.pathname='/json'
   const targets=await(await fetch(inspector)).json(),target=targets.find(t=>String(t.id).startsWith('core:user:'))
-  assert.ok(target,'NOTIFY-009 the owned emitted Worker exposes its inspector target')
+  assert.ok(target,'NOTIFY-010 the owned emitted Worker exposes its inspector target')
   const socket=new WebSocket(target.webSocketDebuggerUrl),pending=new Map(),scripts=[]
   const breakpoints=new Set(),bindings=new Map()
   let serial=0,hit,stopped=false
@@ -425,28 +425,28 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    for(const script of sources){
     const {scriptSource}=script,offset=scriptSource.indexOf(needle)
     if(offset<0)continue
-    assert.equal(scriptSource.indexOf(needle,offset+1),-1,'NOTIFY-009 the emitted after-claim boundary is unambiguous')
+    assert.equal(scriptSource.indexOf(needle,offset+1),-1,'NOTIFY-010 the emitted after-claim boundary is unambiguous')
     const before=scriptSource.slice(0,offset),location={scriptId:script.scriptId,lineNumber:before.split('\n').length-1,columnNumber:offset-before.lastIndexOf('\n')-1}
     const match={scriptId:script.scriptId,url:script.url,executionContextId:script.executionContextId,requested:location}
     matches.push(match)
-    assert.ok(script.url,'NOTIFY-009 the emitted boundary has a module URL')
+    assert.ok(script.url,'NOTIFY-010 the emitted boundary has a module URL')
     const binding=JSON.stringify([script.url,location.lineNumber,location.columnNumber])
     // The module URL binds current and later parsed instances of this boundary.
     if(!bindings.has(binding)){
      const resolved=await command('Debugger.setBreakpointByUrl',{url:script.url,lineNumber:location.lineNumber,columnNumber:location.columnNumber})
-     assert.ok(resolved.locations.length,'NOTIFY-009 the interruption boundary resolves in the emitted module')
+     assert.ok(resolved.locations.length,'NOTIFY-010 the interruption boundary resolves in the emitted module')
      bindings.set(binding,resolved);breakpoints.add(resolved.breakpointId)
     }
     match.locations=bindings.get(binding).locations
    }
-   assert.ok(breakpoints.size,'NOTIFY-009 the after-claim boundary is present in the emitted Worker')
+   assert.ok(breakpoints.size,'NOTIFY-010 the after-claim boundary is present in the emitted Worker')
    const before=await state()
    const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
    // An execution that ends before its boundary is a failure with its outcome,
    // never a wait for a pause that cannot come.
    const ended=await Promise.race([paused.then(()=>null),invocation])
    if(ended){
-    assert.fail(`NOTIFY-009 the breakpoint did not pause before the scheduled execution ended: ${JSON.stringify({outcome:ended.result?.outcome??String(ended.error),targets:targets.map(({id,title,url})=>({id,title,url})),matches,saved,before,pauses,resolutions,after:await state()})}`)
+    assert.fail(`NOTIFY-010 the breakpoint did not pause before the scheduled execution ended: ${JSON.stringify({outcome:ended.result?.outcome??String(ended.error),targets:targets.map(({id,title,url})=>({id,title,url})),matches,saved,before,pauses,resolutions,after:await state()})}`)
    }
    return await stopExport(id,invocation,()=>socket.close(),()=>{stopped=true})
   }finally{
@@ -462,18 +462,18 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   // Advance only the notification lease, not the current execution ownership.
   await h.db.prepare("UPDATE channel_progress_attempts SET live_until='2000-01-01T00:00:00.000Z' WHERE event_id=?").bind(matching.eventId).run()
   await tick(heldAt+60000)
-  assert.deepEqual(await rows(matching.id),[],'NOTIFY-009 an expired notification lease does not publish failure while the matching active execution claim remains')
-  assert.equal((await h.mailMessages()).length,matchingMail,'NOTIFY-009 a matching active claim suppresses every premature failure mail')
-  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE event_id=? AND outcome=?').bind(matching.eventId,'failed').first()).n,1,'NOTIFY-009 matching-claim protection preserves its write-ahead failed debt')
+  assert.deepEqual(await rows(matching.id),[],'NOTIFY-010 an expired notification lease does not publish failure while the matching active execution claim remains')
+  assert.equal((await h.mailMessages()).length,matchingMail,'NOTIFY-010 a matching active claim suppresses every premature failure mail')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE event_id=? AND outcome=?').bind(matching.eventId,'failed').first()).n,1,'NOTIFY-010 matching-claim protection preserves its write-ahead failed debt')
   // The synthetic crash clock makes the old execution credential expire before
   // the real scheduled door reclaims and completes the same retained run.
   await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),matching.id).run()
   await tick(heldAt+120000);await tick(heldAt+180000)
   await check(matching.id,starter,muted,matchingMail,['export','completed'])
-  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-009 successful protected resume never creates a false failure event')
-  assert.equal((await h.mailMessages()).slice(matchingMail).filter(message=>message.subject===progressText.export.failed.title).length,0,'NOTIFY-009 successful protected resume never sends failure mail')
-  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(matching.id).first()).n,0,'NOTIFY-009 successful protected resume leaves no notification debt')
-  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-009 successful protected resume leaves no attempt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_events WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-010 successful protected resume never creates a false failure event')
+  assert.equal((await h.mailMessages()).slice(matchingMail).filter(message=>message.subject===progressText.export.failed.title).length,0,'NOTIFY-010 successful protected resume never sends failure mail')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(matching.id).first()).n,0,'NOTIFY-010 successful protected resume leaves no notification debt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(matching.eventId).first()).n,0,'NOTIFY-010 successful protected resume leaves no attempt')
   await removeExport(starter,matching.id)
 
   const controlMail=(await h.mailMessages()).length,control=await interruptedExport(),controlAt=Date.now()
@@ -483,13 +483,13 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   await tick(controlAt+60000);await tick(controlAt+120000)
   const published=await check(control.id,starter,muted,controlMail,['export','failed'])
   await tick(controlAt+180000)
-  assert.deepEqual(await rows(control.id),[published],'NOTIFY-009 an unrelated claim does not hold or repeat another execution outcome')
-  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(control.id).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no debt')
-  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(control.eventId).first()).n,0,'NOTIFY-009 the nonmatching execution outcome leaves no attempt')
+  assert.deepEqual(await rows(control.id),[published],'NOTIFY-010 an unrelated claim does not hold or repeat another execution outcome')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(control.id).first()).n,0,'NOTIFY-010 the nonmatching execution outcome leaves no debt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_attempts WHERE event_id=?').bind(control.eventId).first()).n,0,'NOTIFY-010 the nonmatching execution outcome leaves no attempt')
   await h.db.prepare('UPDATE warehouse_exports SET running_started_at=? WHERE id=?').bind(new Date(Date.now()-400000).toISOString(),control.id).run()
   const retiredControl=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:controlAt+240000})
-  assert.equal(retiredControl.outcome,'exception','NOTIFY-009 the nonmatching control cannot commit across its published outcome admission')
-  assert.equal((await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(control.id).first()).running_id,null,'NOTIFY-009 the refused control resume releases its execution claim')
+  assert.equal(retiredControl.outcome,'exception','NOTIFY-010 the nonmatching control cannot commit across its published outcome admission')
+  assert.equal((await h.db.prepare('SELECT running_id FROM warehouse_exports WHERE id=?').bind(control.id).first()).running_id,null,'NOTIFY-010 the refused control resume releases its execution claim')
   await removeExport(starter,control.id)
  }
  // Keep the actual interrupted claim and token. Only the retained event's
@@ -502,7 +502,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   // Retain a real positive previous version for the obsolete-version fixture.
   await request(starter.session,'warehouse.save',{id,name:saved.name,bases:saved.bases,mode:saved.mode,format:saved.format,destination:saved.destination,localRule:saved.localRule,timezone:saved.timezone,version:saved.version})
   const mailStart=(await h.mailMessages()).length,control=await interruptedExport(id),at=Date.now()
-  const label=`NOTIFY-009 ${width} obsolete-${obsolete} muted=${muted}`
+  const label=`NOTIFY-010 ${width} obsolete-${obsolete} muted=${muted}`
   const eventId=`warehouse-export:${control.id}:${obsolete==='version'?control.claim.version-1:control.claim.version}:${obsolete==='slot'?'2000-01-01':control.claim.running_slot}:failed`
   try{
    await h.db.batch([
@@ -541,9 +541,9 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    await removeExport(starter,control.id)
   }
  }
- if(obsoleteFailures.length)throw new AggregateError(obsoleteFailures,`NOTIFY-009 ${width}: obsolete event identity controls failed`)
+ if(obsoleteFailures.length)throw new AggregateError(obsoleteFailures,`NOTIFY-010 ${width}: obsolete event identity controls failed`)
  await prefs(starter,[],true)
- console.log(`NOTIFY-009 ${width}: expired notification lease discriminates matching and unrelated active claims; protected resume completes once with no false failure or debt`)
+ console.log(`NOTIFY-010 ${width}: expired notification lease discriminates matching and unrelated active claims; protected resume completes once with no false failure or debt`)
 
  // Repeated interrupted resumptions follow the finite recovery policy: no report
  // while recovery continues, exactly one needs-attention outcome once it stops,
@@ -556,35 +556,35 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   // The synthetic crash clock ages each lease; the real scheduled door resumes.
   await aged(run.id);await interruptedExport(run.id)
   await tick(at+60000)
-  assert.deepEqual(await rows(run.id),[],'NOTIFY-009 automatic recovery continues within its finite policy without a report')
+  assert.deepEqual(await rows(run.id),[],'NOTIFY-010 automatic recovery continues within its finite policy without a report')
   // Past the stopped execution's lease on the scheduled clock: recovery stops here.
   await aged(run.id);await tick(at+420000)
   const stopped=await check(run.id,starter,muted,mail,['export','stopped'])
   const kept=await recoveryState(run.id)
-  assert.equal(kept.running_id,run.claim.running_id,'NOTIFY-009 stopping automatic recovery keeps the resumable claim')
-  assert.ok(kept.running_stopped_slot,'NOTIFY-009 the stop is durable')
+  assert.equal(kept.running_id,run.claim.running_id,'NOTIFY-010 stopping automatic recovery keeps the resumable claim')
+  assert.ok(kept.running_stopped_slot,'NOTIFY-010 the stop is durable')
   for(const offset of [480000,3600000,23*3600000]){
    await tick(at+offset)
-   assert.deepEqual(await rows(run.id),[stopped],'NOTIFY-009 a stopped recovery is reported exactly once')
+   assert.deepEqual(await rows(run.id),[stopped],'NOTIFY-010 a stopped recovery is reported exactly once')
   }
-  assert.equal((await h.mailMessages()).slice(mail).length,muted?0:1,'NOTIFY-009 a stopped recovery sends its starter at most one mail, none when muted')
+  assert.equal((await h.mailMessages()).slice(mail).length,muted?0:1,'NOTIFY-010 a stopped recovery sends its starter at most one mail, none when muted')
   // The stated next step: the export tries again at its next scheduled time. The
   // starter has read the report, so the later outcome is its own row (NOTIFY-006).
   assert.equal((await h.request(starter.session,`/api/notifications/${stopped.id}/read`,{method:'POST',body:'{}'})).status,204)
   const nextMail=(await h.mailMessages()).length
   await aged(run.id)
   const retired=await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+86400000+60000})
-  assert.equal(retired.outcome,'exception','NOTIFY-009 the next scheduled time retires the stale retained transfer under the records-changed rule')
+  assert.equal(retired.outcome,'exception','NOTIFY-010 the next scheduled time retires the stale retained transfer under the records-changed rule')
   await tick(at+86400000+120000)
   const outcomes=await rows(run.id),later=outcomes.find(n=>n.id!==stopped.id)
-  assert.deepEqual(outcomes.map(n=>n.title).sort(),[progressText.export.completed.title,progressText.export.stopped.title].sort(),'NOTIFY-009 the next scheduled time reports exactly one completion and no second failure')
+  assert.deepEqual(outcomes.map(n=>n.title).sort(),[progressText.export.completed.title,progressText.export.stopped.title].sort(),'NOTIFY-010 the next scheduled time reports exactly one completion and no second failure')
   assert.deepEqual({to:later.operator_id,title:later.title,body:later.body,state:later.state},{to:starter.id,...progressText.export.completed,state:muted?'muted':'accepted'})
   const email=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(starter.id).first()).email,completedMail=(await h.mailMessages()).slice(nextMail)
-  assert.deepEqual(completedMail.filter(m=>later.group_id&&m.custom_args?.rer_delivery_id===later.group_id).map(m=>({to:m.personalizations.flatMap(p=>p.to.map(r=>r.email)),subject:m.subject})),muted?[]:[{to:[email],subject:progressText.export.completed.title}],'NOTIFY-009 the later completion mails exactly its starter per preference')
+  assert.deepEqual(completedMail.filter(m=>later.group_id&&m.custom_args?.rer_delivery_id===later.group_id).map(m=>({to:m.personalizations.flatMap(p=>p.to.map(r=>r.email)),subject:m.subject})),muted?[]:[{to:[email],subject:progressText.export.completed.title}],'NOTIFY-010 the later completion mails exactly its starter per preference')
   assert.equal(completedMail.length,muted?0:1)
   assert.equal((await recoveryState(run.id)).running_id,null)
-  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(run.id).first()).n,0,'NOTIFY-009 the later completion leaves no debt')
-  assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%'").bind(run.id).first()).n,0,'NOTIFY-009 the later completion leaves no attempt')
+  assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(run.id).first()).n,0,'NOTIFY-010 the later completion leaves no debt')
+  assert.equal((await h.db.prepare("SELECT count(*) n FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%'").bind(run.id).first()).n,0,'NOTIFY-010 the later completion leaves no attempt')
   await removeExport(starter,run.id)
  }
  const preClaimStarted=performance.now()
@@ -598,31 +598,31 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   await h.db.prepare('UPDATE warehouse_exports SET sealed_json=NULL WHERE id=?').bind(run.id).run()
   try{
    await aged(run.id)
-   assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+60000})).outcome,'exception','NOTIFY-009 pre-claim resume fails without destination authority')
+   assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+60000})).outcome,'exception','NOTIFY-010 pre-claim resume fails without destination authority')
    const counted=await recoveryState(run.id)
-   assert.equal(counted.running_failures,1,'NOTIFY-009 pre-claim resume failure is counted durably')
-   assert.equal(counted.running_id,run.claim.running_id,'NOTIFY-009 pre-claim failure retains safe claim custody')
-   assert.deepEqual(await h.db.prepare('SELECT * FROM channel_progress_attempts WHERE event_id=?').bind(run.eventId).first(),attempt,'NOTIFY-009 pre-claim failure never reaches the attempt claim batch')
-   assert.deepEqual(await rows(run.id),[],'NOTIFY-009 pre-claim failure is not reported before the finite bound')
+   assert.equal(counted.running_failures,1,'NOTIFY-010 pre-claim resume failure is counted durably')
+   assert.equal(counted.running_id,run.claim.running_id,'NOTIFY-010 pre-claim failure retains safe claim custody')
+   assert.deepEqual(await h.db.prepare('SELECT * FROM channel_progress_attempts WHERE event_id=?').bind(run.eventId).first(),attempt,'NOTIFY-010 pre-claim failure never reaches the attempt claim batch')
+   assert.deepEqual(await rows(run.id),[],'NOTIFY-010 pre-claim failure is not reported before the finite bound')
    await aged(run.id);await tick(at+420000)
    const stopped=await check(run.id,starter,muted,mail,['export','stopped'])
    assert.equal((await recoveryState(run.id)).running_id,run.claim.running_id)
    assert.ok((await recoveryState(run.id)).running_stopped_slot)
    await tick(at+480000);await tick(at+3600000)
-   assert.deepEqual(await rows(run.id),[stopped],'NOTIFY-009 pre-claim recovery stop is published once')
-   assert.equal((await h.mailMessages()).slice(mail).length,muted?0:1,'NOTIFY-009 pre-claim recovery stop mails only the unmuted starter once')
+   assert.deepEqual(await rows(run.id),[stopped],'NOTIFY-010 pre-claim recovery stop is published once')
+   assert.equal((await h.mailMessages()).slice(mail).length,muted?0:1,'NOTIFY-010 pre-claim recovery stop mails only the unmuted starter once')
    assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(run.id).first()).n,0)
    assert.equal((await h.request(starter.session,`/api/notifications/${stopped.id}/read`,{method:'POST',body:'{}'})).status,204)
   }finally{await h.db.prepare('UPDATE warehouse_exports SET sealed_json=? WHERE id=?').bind(sealed,run.id).run()}
   await aged(run.id)
   assert.equal((await(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+86400000+60000})).outcome,'exception')
   await tick(at+86400000+120000)
-  assert.deepEqual((await rows(run.id)).map(n=>n.title).sort(),[progressText.export.stopped.title,progressText.export.completed.title].sort(),'NOTIFY-009 pre-claim recovery preserves the later distinct completion')
+  assert.deepEqual((await rows(run.id)).map(n=>n.title).sort(),[progressText.export.stopped.title,progressText.export.completed.title].sort(),'NOTIFY-010 pre-claim recovery preserves the later distinct completion')
   assert.equal((await recoveryState(run.id)).running_id,null)
   await removeExport(starter,run.id)
  }
  console.log(`NOTIFICATION_SCENARIO width=${width} journey=pre-claim-resume seconds=${((performance.now()-preClaimStarted)/1000).toFixed(3)}`)
- console.log(`NOTIFY-009 ${width}: pre-claim resume failure is counted, bounded and reported once with safe custody and later completion`)
+ console.log(`NOTIFY-010 ${width}: pre-claim resume failure is counted, bounded and reported once with safe custody and later completion`)
 
  const staleWorkerStarted=performance.now()
  // Let an old real execution continue after another scheduled invocation has
@@ -633,28 +633,28 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   const old=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at})
   let replacementHold,replacement
   try{
-   assert.equal(await Promise.race([oldHold.reached.then(()=>null),old]),null,'NOTIFY-009 original execution reaches the provider before re-claim')
+   assert.equal(await Promise.race([oldHold.reached.then(()=>null),old]),null,'NOTIFY-010 original execution reaches the provider before re-claim')
    const original=await recoveryState(id);assert.ok(original.running_id)
    await aged(id)
    replacementHold=edge.holdNextPut()
    replacement=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:at+60000})
    const ended=await Promise.race([replacementHold.reached.then(()=>null),replacement])
-   assert.equal(ended,null,'NOTIFY-009 replacement reaches the provider while the stale execution is still live')
+   assert.equal(ended,null,'NOTIFY-010 replacement reaches the provider while the stale execution is still live')
    const current=await recoveryState(id)
    assert.equal(current.running_id,original.running_id)
-   assert.notEqual(current.running_started_at,original.running_started_at,'NOTIFY-009 re-claim replaces execution ownership')
+   assert.notEqual(current.running_started_at,original.running_started_at,'NOTIFY-010 re-claim replaces execution ownership')
    const custody=async()=>({objects:(await h.db.prepare('SELECT * FROM warehouse_objects WHERE export_id=? ORDER BY object_key').bind(id).all()).results,attempts:(await h.db.prepare("SELECT * FROM channel_progress_attempts WHERE event_id LIKE 'warehouse-export:'||?||':%' ORDER BY event_id").bind(id).all()).results,owed:(await h.db.prepare('SELECT * FROM channel_progress_owed WHERE subject_id=? ORDER BY event_id').bind(id).all()).results,writes:(await h.db.prepare('SELECT * FROM lifecycle_file_writes WHERE object_key=? AND started_at=?').bind('warehouse:'+id,current.running_started_at).all()).results})
    const before=await custody(),deletes=edge.calls.filter(c=>c.method==='DELETE').length
-   assert.ok(before.objects.length&&before.attempts.length&&before.owed.length&&before.writes.length,'NOTIFY-009 replacement positively holds object, attempt, debt and file-write custody')
+   assert.ok(before.objects.length&&before.attempts.length&&before.owed.length&&before.writes.length,'NOTIFY-010 replacement positively holds object, attempt, debt and file-write custody')
    oldHold.release()
-   assert.equal((await old).outcome,'exception','NOTIFY-009 stale execution is refused after re-claim')
-   assert.deepEqual(await recoveryState(id),current,'NOTIFY-009 stale execution cannot commit or release the replacement claim')
-   assert.deepEqual(await custody(),before,'NOTIFY-009 stale execution cannot clean up objects, settle the replacement attempt or retire its debt')
-   assert.equal(edge.calls.filter(c=>c.method==='DELETE').length,deletes,'NOTIFY-009 stale execution performs no provider cleanup')
-   assert.deepEqual(await rows(id),[],'NOTIFY-009 stale execution cannot report over a live replacement')
-   assert.equal((await h.mailMessages()).length,mail,'NOTIFY-009 no false failure mail while replacement remains live')
+   assert.equal((await old).outcome,'exception','NOTIFY-010 stale execution is refused after re-claim')
+   assert.deepEqual(await recoveryState(id),current,'NOTIFY-010 stale execution cannot commit or release the replacement claim')
+   assert.deepEqual(await custody(),before,'NOTIFY-010 stale execution cannot clean up objects, settle the replacement attempt or retire its debt')
+   assert.equal(edge.calls.filter(c=>c.method==='DELETE').length,deletes,'NOTIFY-010 stale execution performs no provider cleanup')
+   assert.deepEqual(await rows(id),[],'NOTIFY-010 stale execution cannot report over a live replacement')
+   assert.equal((await h.mailMessages()).length,mail,'NOTIFY-010 no false failure mail while replacement remains live')
    replacementHold.release()
-   assert.equal((await replacement).outcome,'ok','NOTIFY-009 the concurrently valid replacement completes')
+   assert.equal((await replacement).outcome,'ok','NOTIFY-010 the concurrently valid replacement completes')
    await tick(at+120000)
    await check(id,starter,muted,mail,['export','completed'])
    assert.equal((await h.db.prepare('SELECT count(*) n FROM channel_progress_owed WHERE subject_id=?').bind(id).first()).n,0)
@@ -663,7 +663,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   await removeExport(starter,id)
  }
  console.log(`NOTIFICATION_SCENARIO width=${width} journey=stale-worker seconds=${((performance.now()-staleWorkerStarted)/1000).toFixed(3)}`)
- console.log(`NOTIFY-009 ${width}: stale execution after re-claim cannot commit, clean up, settle or publish over its live replacement`)
+ console.log(`NOTIFY-010 ${width}: stale execution after re-claim cannot commit, clean up, settle or publish over its live replacement`)
 
  // An execution that adds retained objects before it stops made useful progress:
  // it extends recovery, but never past four unsuccessful executions in total.
@@ -681,19 +681,19 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
    const invocation=(await h.runtime.getWorker()).scheduled({cron:'* * * * *',scheduledTime:Date.now()}).then(result=>({result}),error=>({error}))
    try{
     const ended=await Promise.race([held.reached.then(()=>null),invocation])
-    assert.equal(ended,null,'NOTIFY-009 the scheduled execution reaches its retained-object boundary')
+    assert.equal(ended,null,'NOTIFY-010 the scheduled execution reaches its retained-object boundary')
     const count=(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(id).first()).n
-    assert.equal(count,initial+2,'NOTIFY-009 the real execution retains two new objects before its worker process is stopped')
-    console.log(`NOTIFY-009 ${width}: provider edge held with retained objects ${initial} then ${count}`)
+    assert.equal(count,initial+2,'NOTIFY-010 the real execution retains two new objects before its worker process is stopped')
+    console.log(`NOTIFY-010 ${width}: provider edge held with retained objects ${initial} then ${count}`)
     return await stopExport(id,invocation,held.release)
    }finally{held.release()}
   }
   const mail=(await h.mailMessages()).length,run=await advancingExport(),at=Date.now(),retainedObjects=async()=>(await h.db.prepare('SELECT count(*) n FROM warehouse_objects WHERE export_id=?').bind(run.id).first()).n,counts=[await retainedObjects()]
   for(let n=1;n<4;n++){
    await aged(run.id);await advancingExport(run.id);counts.push(await retainedObjects())
-   assert.deepEqual(await rows(run.id),[],'NOTIFY-009 an advancing run is not reported before its total bound')
+   assert.deepEqual(await rows(run.id),[],'NOTIFY-010 an advancing run is not reported before its total bound')
   }
-  assert.ok(counts.every((count,index)=>count>(counts[index-1]??0)),'NOTIFY-009 each interrupted execution added retained objects')
+  assert.ok(counts.every((count,index)=>count>(counts[index-1]??0)),'NOTIFY-010 each interrupted execution added retained objects')
   await aged(run.id);await tick(at+420000)
   await check(run.id,starter,false,mail,['export','stopped'])
   assert.equal((await recoveryState(run.id)).running_id,run.claim.running_id)
@@ -710,8 +710,8 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   await held.reached
   const live=await recoveryState(id);assert.ok(live.running_id)
   for(const offset of [60000,120000,180000])await tick(at+offset)
-  assert.deepEqual(await recoveryState(id),live,'NOTIFY-009 a live slow worker is never counted or re-claimed')
-  assert.deepEqual(await rows(id),[],'NOTIFY-009 a live slow worker is never reported as failed')
+  assert.deepEqual(await recoveryState(id),live,'NOTIFY-010 a live slow worker is never counted or re-claimed')
+  assert.deepEqual(await rows(id),[],'NOTIFY-010 a live slow worker is never reported as failed')
   held.release()
   assert.equal((await slow).outcome,'ok')
   await tick(at+240000)
@@ -720,7 +720,7 @@ async function progressMatrix({h,width,request,preferences,tick,retained}){
   await removeExport(starter,id)
  }
  await prefs(starter,[],true)
- console.log(`NOTIFY-009 ${width}: repeated interrupted resumptions stop automatic recovery with one report and a kept claim; the next scheduled time completes once; a live slow worker is never counted`)
+ console.log(`NOTIFY-010 ${width}: repeated interrupted resumptions stop automatic recovery with one report and a kept claim; the next scheduled time completes once; a live slow worker is never counted`)
 
  // Completion describes the current job only: removal or a saved new version
  // must retire an unpublished old completion without creating mail.

@@ -14,12 +14,13 @@ import {derivedSearch} from '../../src/domains/portability/derived-search.mjs';
 
 /** Integrity is checked by Base before any destination schema is changed. */
 export async function prepareRecordRestore(db,root,path,config){
- let manifest;const current=[],groups=[],calendarBindings=[];
+ let manifest;const current=[],groups=[],calendarBindings=[],automationBindings=[];
  for await(const record of fileRecords(path)){
   if(record.kind==='manifest')manifest=record;
   if(record.kind!=='part')continue;
   for(const item of record.items){
    if(item.kind!=='row')continue;
+   if(item.table==='record_automation_triggers')automationBindings.push({app_id:item.row.app_id,entity_id:item.row.entity_id});
    if(item.table==='record_calendar_definitions')calendarBindings.push({app_id:item.row.app_id,entity_id:item.row.entity_id});
    if(item.table==='record_schemas')current.push(JSON.parse(item.row.schema_json));
    if(item.table==='manual_record_releases'){
@@ -39,7 +40,7 @@ export async function prepareRecordRestore(db,root,path,config){
  const {build}=createRequire(join(root,'package.json'))('esbuild');
  const compiled=await build({entryPoints:[join(root,'src/domains/records/portable-schema.server.ts')],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
  const {portableRecordSchema}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].contents).toString('base64'));
- const plans=portableRecordSchema(groups,calendarBindings).filter(plan=>!plan.table||manifest.schemaObjects?.some(object=>object.name===plan.name)),byName=new Map(plans.map(plan=>[plan.name,plan]));
+ const plans=portableRecordSchema(groups,calendarBindings,automationBindings).filter(plan=>!plan.table||manifest.schemaObjects?.some(object=>object.name===plan.name)),byName=new Map(plans.map(plan=>[plan.name,plan]));
  // Base authenticates the original manifest and every skipped bookkeeping row.
  // Only product tables may require a schema compiled from archived records.
  const missing=manifest.tables.filter(t=>!platformTable(t.name)&&!cat.tables.some(old=>old.name===t.name));

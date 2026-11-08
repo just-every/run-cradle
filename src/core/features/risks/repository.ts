@@ -13,6 +13,7 @@ type RiskRow = {
   ownerId: string
   ownerName: string
   resolvedAt: number | null
+  resolvedById: string | null
   resolutionNote: string | null
   severity: string
   signal: string
@@ -23,7 +24,7 @@ type RiskRow = {
 
 const select = `
   SELECT r.id, r.title, r.severity, r.state, r.due_date AS dueDate, r.signal, r.mitigation, r.version,
-    r.resolved_at AS resolvedAt, r.resolution_note AS resolutionNote,
+    r.resolved_at AS resolvedAt, r.resolved_by_id AS resolvedById, r.resolution_note AS resolutionNote,
     c.id AS campaignId, c.code AS campaignCode, c.name AS campaignName, c.launch_date AS campaignLaunchDate,
     o.id AS ownerId, o.name AS ownerName
   FROM risks r JOIN campaigns c ON c.id = r.campaign_id JOIN operators o ON o.id = r.owner_id
@@ -36,6 +37,7 @@ const mapRisk = (row: RiskRow) => ({
   mitigation: row.mitigation,
   owner: { id: row.ownerId, initials: toInitials(row.ownerName), name: row.ownerName },
   resolvedAt: row.state === 'Resolved' ? iso(row.resolvedAt) : null,
+  resolvedById: row.resolvedById,
   resolutionNote: row.resolutionNote,
   severity: row.severity,
   signal: row.signal,

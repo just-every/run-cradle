@@ -16,8 +16,11 @@ export async function retainedThroughClock(copy,port){
   }
   return result
  })
- let calls=0;await withRerEmittedWorker(copy,'http://127.0.0.1:'+port,async runtime=>{const worker=await runtime.getWorker();const result=await worker.scheduled({cron:'* * * * *'});assert.equal(result.outcome,'ok')})
+ // The archive intentionally holds an active hourly Sheets source. Exercise
+ // retention outside its provider-sync window, regardless of the wall clock.
+ const tick=new Date();tick.setUTCMinutes(30,0,0)
+ let calls=0;await withRerEmittedWorker(copy,'http://127.0.0.1:'+port,async runtime=>{const worker=await runtime.getWorker();const result=await worker.scheduled({cron:'* * * * *',scheduledTime:tick.getTime()});assert.equal(result.outcome,'ok')})
  await bindings(copy.source,async({DB})=>{for(const row of aged)if(row.rows!==undefined)assert.equal((await DB.prepare('SELECT count(*) n FROM "'+row.table+'" WHERE created_at=?').bind(row.value).first()).n,row.rows,'Aged retained rows survive scheduled tick: '+row.table)})
- console.log('RETENTION_CLOCK '+JSON.stringify({clock:new Date().toISOString(),agedTo:old,externalCalls:calls,tables:aged.map(({value,...row})=>row)}))
+ console.log('RETENTION_CLOCK '+JSON.stringify({clock:tick.toISOString(),agedTo:old,externalCalls:calls,tables:aged.map(({value,...row})=>row)}))
  await retentionRows(copy.source,'after-aged-scheduled-tick')
 }

@@ -8,15 +8,19 @@ const repo=path.resolve(process.env.CRADLE_REPO??process.cwd())
 const fromRepo=file=>import(pathToFileURL(path.join(repo,file)).href)
 const {recordsImportBrowserRuntime}=await fromRepo('tests/helpers/records-import-browser-runtime.mjs')
 const {createUlid}=await fromRepo('src/core/shared/ids.ts')
+const {completeFirstRun}=await fromRepo('tests/helpers/complete-first-run.mjs')
+const {launchFieldIds}=await fromRepo('src/apps/launch/descriptors.server.ts')
 const {LAUNCH_APP_ID,launchEntities}=await fromRepo('src/apps/launch/contracts.ts')
-// The held-out Monday is always ahead of the wall clock, so its scheduled ticks are never stale.
+const {verifyReadinessRescheduling}=await fromRepo('tests/helpers/launch-readiness-rescheduling.mjs')
+// The held-out Monday is at least a week ahead of the wall clock on every weekday: its scheduled ticks are never
+// stale, and commands always edit its milestone while that date lies beyond the default five-day readiness window.
 const addDays=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000).toISOString().slice(0,10)
-const monday=addDays(new Date().toISOString().slice(0,10),7-(new Date().getUTCDay()+6)%7)
+const monday=addDays(new Date().toISOString().slice(0,10),7+(8-new Date().getUTCDay())%7)
 assert.equal(new Date(monday+'T00:00:00Z').getUTCDay(),1)
 
 await test('emitted scheduled handler supplies readiness, weekly digest and overdue decision effects',async t=>{
  let outbound=0
- const h=await recordsImportBrowserRuntime(0,{outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
+ const h=await recordsImportBrowserRuntime(0,{testClock:true,outbound(){outbound++;throw Error('Scheduled probe prohibits outbound network')}})
  try{
   // Keep the configured Base sender: only its provider request is captured at
   // the test network edge. Exclude the initial sign-in mail from schedule counts.
@@ -25,16 +29,26 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
   const csrfResponse=await fetch(h.origin+'/auth/csrf',{headers:{cookie:h.cookie}})
   assert.equal(csrfResponse.status,200)
   const {csrfToken}=await csrfResponse.json()
-  async function command(action,input,expected=[]){
-   const response=await fetch(h.origin+'/api/v1/commands/'+action,{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({commandId:createUlid(),expected,input})})
+  const ownerSession={cookie:h.cookie,csrfToken}
+  let requestNow
+  const clockHeaders=()=>requestNow===undefined?{}:{'x-cradle-test-now':String(requestNow)}
+  async function sendCommand(action,input,session=ownerSession,status=200){
+   const response=await fetch(h.origin+'/api/v1/commands/'+action,{method:'POST',headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken,...clockHeaders()},body:JSON.stringify(input)})
    const result=await response.json()
-   assert.equal(response.status,200,`${action} fixture failed: ${JSON.stringify(result)}`)
+   assert.equal(response.status,status,`${action} fixture failed: ${JSON.stringify(result)}`)
+   if(status!==200)return result.error
    assert.equal(result.data.state,'committed',`${action} fixture did not commit`)
    return result.data.value
   }
+  const command=(action,input,expected=[])=>sendCommand(action,{commandId:createUlid(),expected,input})
+  async function read(route,session=ownerSession,body){
+   const response=await fetch(h.origin+route,{headers:{cookie:session.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':session.csrfToken,...clockHeaders()},...(body?{method:'POST',body:JSON.stringify(body)}:{})})
+   assert.equal(response.status,200,await response.clone().text())
+   return(await response.json()).data
+  }
   const expected=(kind,row)=>[{ref:{appId:LAUNCH_APP_ID,entityId:launchEntities[kind],recordId:row.id},version:row.version}]
-  const owner=(await h.db.prepare("SELECT id FROM operators WHERE email='import-owner@example.test'").first()).id
-  const address=(await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(owner).first()).email.trim().toLowerCase()
+  const {member}=await read('/api/v1/session'),owner=member.id,address=member.email.trim().toLowerCase()
+  await verifyReadinessRescheduling({h,command,read,expected,owner,setNow:now=>{requestNow=now},diagnostic:message=>t.diagnostic(message)})
   const settings=(await h.db.prepare('SELECT version FROM workspace_settings LIMIT 1').first()),readinessBefore=await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()
   await command('settings.update',{version:settings.version,changes:{readinessVersion:readinessBefore.version,timezone:'Asia/Kathmandu',readinessHour:8,readinessLeadDays:3}})
   const readiness=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='launch-readiness'").first()
@@ -80,6 +94,64 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const settingsNow=await h.db.prepare('SELECT version FROM workspace_settings').first();await command('settings.update',{version:settingsNow.version,changes:{readinessVersion:(await h.db.prepare("SELECT version FROM automations WHERE shipped_key='launch-readiness'").first()).version,readinessLeadDays:4}});await tick(at);assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),0,'Changing settings cannot duplicate the same local day evaluation')
    await tick(addDays(monday,1)+'T08:00:00.000Z');assert.equal(await count('SELECT count(*) n FROM launch_readiness WHERE milestone_id=?',later.id),1)
    await assertAccepted('readiness')
+   const readinessRoute=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.readiness}`
+   const schema=await read(readinessRoute),stateId=launchFieldIds.readiness.state
+   const state=label=>{const option=schema.fields.find(field=>field.id===stateId).options.find(option=>option.label===label);assert.ok(option);return {state:'value',value:option.id}}
+   const requests=(await read(readinessRoute+'/query',ownerSession,{filter:{kind:'condition',fieldId:launchFieldIds.readiness.milestoneId,op:'eq',value:{appId:LAUNCH_APP_ID,entityId:launchEntities.milestone,recordId:milestone.id}},limit:20})).items
+   assert.equal(requests.length,1,'The scheduled request is visible through the record query')
+   const requestRoute=readinessRoute+'/records/'+requests[0].id
+   const outstanding=(await read(requestRoute)).record
+   assert.deepEqual(outstanding.fields[stateId],state('Outstanding'))
+   assert.deepEqual(outstanding.fields[launchFieldIds.readiness.ownerId],{state:'value',value:owner})
+   assert.deepEqual(outstanding.fields[launchFieldIds.readiness.milestoneId],{state:'value',value:{appId:LAUNCH_APP_ID,entityId:launchEntities.milestone,recordId:milestone.id}})
+   const notices=async session=>(await read('/api/v1/notifications',session)).items.filter(item=>item.kind==='readiness'&&item.subject.id===milestone.id)
+   const addressed=await notices(ownerSession)
+   assert.equal(addressed.length,1,'The addressed owner sees one in-app readiness notification')
+   assert.equal(addressed[0].subject.available,true)
+   assert.ok(addressed[0].subject.href.includes(milestone.id))
+
+   // Give another real operator the inviter's current Launch policy, through public doors.
+   const policies=await read('/api/v1/authority/invite-policies?appId='+LAUNCH_APP_ID)
+   const policy=policies.find(item=>item.actions.includes('launch.readiness.acknowledge'))
+   assert.ok(policy,'The second operator receives ordinary readiness command authority')
+   const name='synthetic-cradle-6401',email=[name,'example.test'].join('@')
+   const invited=await command('member.invite',{name,email,scopes:[{appId:LAUNCH_APP_ID,policyId:policy.id,legacy:false}]})
+   const invitation=await fetch(h.origin+'/auth/invite',{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({email,displayName:name,role:'member'})})
+   assert.equal(invitation.status,202,await invitation.clone().text())
+   const message=(await h.mailMessages()).findLast(message=>message.personalizations.some(group=>group.to.some(recipient=>recipient.email===email)))
+   assert.ok(message,'The provider edge captures the native invitation')
+   const link=new URL(message.content.find(part=>part.type==='text/plain').value.match(/https?:\/\/[^\s]+/)[0])
+   const confirmed=await fetch(h.origin+'/auth/confirm',{method:'POST',redirect:'manual',headers:{origin:h.origin,'content-type':'application/json'},body:JSON.stringify({token:link.searchParams.get('token')})})
+   assert.equal(confirmed.status,303)
+   const cookie=confirmed.headers.getSetCookie().map(value=>value.split(';')[0]).join('; ')
+   await completeFirstRun(h.origin,cookie)
+   const otherCsrf=await fetch(h.origin+'/auth/csrf',{headers:{cookie}});assert.equal(otherCsrf.status,200)
+   const other={cookie,csrfToken:(await otherCsrf.json()).csrfToken}
+   const otherMember=(await read('/api/v1/session',other)).member
+   assert.equal(otherMember.id,invited.id);assert.equal(otherMember.state,'active');assert.notEqual(otherMember.id,owner)
+   const milestoneRoute=`/api/v1/apps/${LAUNCH_APP_ID}/entities/${launchEntities.milestone}/records/${milestone.id}`
+   const currentMilestone=(await read(milestoneRoute,other)).record
+   await sendCommand('launch.milestone.patch',{commandId:createUlid(),expected:expected('milestone',currentMilestone),input:{id:milestone.id,changes:{title:'Scheduled launch reviewed by another operator'}}},other)
+   assert.equal((await read(milestoneRoute,other)).record.fields[launchFieldIds.milestone.title].value,'Scheduled launch reviewed by another operator')
+   assert.deepEqual((await read(requestRoute)).record,outstanding,'MILE-005 an edit that keeps the milestone date leaves its request Outstanding')
+   assert.deepEqual(await notices(other),[],'Readiness notification is addressed only to its owner')
+   const acknowledgment={commandId:createUlid(),expected:expected('readiness',outstanding),input:{requestId:outstanding.id}}
+   const refused=await sendCommand('launch.readiness.acknowledge',{...acknowledgment,commandId:createUlid()},other,400)
+   assert.match(refused.message,/Only the addressed milestone owner/)
+   assert.deepEqual((await read(requestRoute)).record,outstanding,'Another authorized operator cannot change the outstanding request')
+   assert.deepEqual(await notices(ownerSession),addressed,'Refused acknowledgment preserves the addressed notification')
+   const beforeAcknowledgment=Date.now()
+   const acknowledged=await sendCommand('launch.readiness.acknowledge',acknowledgment)
+   assert.equal(acknowledged.requestId,outstanding.id);assert.equal(acknowledged.state,'Acknowledged')
+   assert.ok(Number.isFinite(Date.parse(acknowledged.acknowledgedAt)))
+   assert.ok(Date.parse(acknowledged.acknowledgedAt)>=beforeAcknowledgment&&Date.parse(acknowledged.acknowledgedAt)<=Date.now(),'Acknowledgment returns the time of the owner command')
+   const after=(await read(requestRoute)).record
+   assert.deepEqual(after.fields[stateId],state('Acknowledged'));assert.equal(after.version,outstanding.version+1)
+   assert.equal(after.updatedAt,acknowledged.acknowledgedAt)
+   assert.deepEqual(await sendCommand('launch.readiness.acknowledge',acknowledgment),acknowledged,'Replay returns the original acknowledgment time')
+   assert.deepEqual((await read(requestRoute)).record,after,'Replaying the command makes no second transition')
+   assert.deepEqual(await notices(ownerSession),addressed,'Acknowledgment replay creates no additional notification')
+   st.diagnostic(JSON.stringify({probe:'MILE-004 acknowledgment',requestId:outstanding.id,refused:refused.code,before:'Outstanding',after:'Acknowledged',version:after.version,acknowledgedAt:acknowledged.acknowledgedAt,replay:'unchanged'}))
   })
   await t.test('NOTIFY-004: enabled Monday digest creates one notification/delivery and mail',async st=>{
    const automation=await h.db.prepare("SELECT * FROM automations WHERE shipped_key='weekly-digest'").first()
@@ -163,6 +235,66 @@ await test('emitted scheduled handler supplies readiness, weekly digest and over
    const visible=(await monitor.json()).automations.find(item=>item.id===saved.id)
    assert.ok(visible);assert.equal(visible.runCount30Days,1);assert.equal(visible.lastRunStatus,'Succeeded')
    await command('launch.automation.disable',{id:saved.id},expected('automation',saved))
+  }
+  // AUTO-002: consecutive fixed scheduler hours stay inside the native owner's current authority.
+  {
+   const fixture={name:'Disabled campaign note',rule:'hourly',at:localDate+'T11:00:00.000Z',after:localDate+'T11:05:00.000Z',message:'Enabled schedule control activity'}
+   const saved=await command('launch.automation.save',{definition:{name:fixture.name,enabled:false,
+    trigger:{kind:'schedule',localRule:fixture.rule,timezone:'Asia/Kathmandu'},actions:[{command:'add-activity',input:{campaignId:campaign.id,message:fixture.message}}]}})
+   const read=async route=>{const response=await fetch(h.origin+route,{headers:{cookie:h.cookie}});assert.equal(response.status,200);return response.json()}
+   const monitor=async at=>{
+    const visible=(await read('/api/automations?windowEnd='+encodeURIComponent(at))).automations.find(item=>item.id===saved.id)
+    assert.ok(visible,'Saved schedule must appear in Monitor');return visible
+   }
+   const observe=async at=>({
+    // Read every state, not only successful runs: a canceled or suppressed run still violates disabled dispatch.
+    runs:(await h.db.prepare('SELECT id,state,definition_version,trigger_key FROM automation_runs WHERE automation_id=? ORDER BY id').bind(saved.id).all()).results,
+    actions:(await h.db.prepare('SELECT id,state FROM launch_automation_actions WHERE run_id IN (SELECT id FROM automation_runs WHERE automation_id=?) ORDER BY id').bind(saved.id).all()).results,
+    effects:(await h.db.prepare('SELECT id,message,automation_run_id FROM activity_entries WHERE automation_run_id IN (SELECT id FROM automation_runs WHERE automation_id=?) OR (campaign_id=? AND message=?) ORDER BY id').bind(saved.id,campaign.id,fixture.message).all()).results,
+    history:(await read('/api/automations/'+saved.id+'/runs')).runs,
+    visibleEffects:(await read('/api/campaigns/'+campaign.id)).activity.filter(item=>item.description===fixture.message),
+    visible:await monitor(at),
+   })
+   const assertEmpty=async at=>{
+    const state=await observe(at)
+    assert.deepEqual(state.runs,[],'Disabled schedule must record no run in any state')
+    assert.deepEqual(state.actions,[],'Disabled schedule must record no action')
+    assert.deepEqual(state.effects,[],'Disabled schedule must commit no activity effect')
+    assert.deepEqual(state.history,[],'Disabled schedule must have empty public run history')
+    assert.deepEqual(state.visibleEffects,[],'Disabled schedule must add no visible campaign activity')
+    assert.equal(state.visible.enabled,false);assert.equal(state.visible.runCount30Days,0)
+    assert.equal(state.visible.lastRunStatus,null);assert.equal(state.visible.lastRunAt,null)
+   }
+   await assertEmpty(fixture.at)
+   await tick(fixture.at);await assertEmpty(fixture.at)
+   await tick(fixture.at);await assertEmpty(fixture.at)
+   t.diagnostic(`PROBE AUTO-002 acceptance-3 ${fixture.rule}: saved disabled, due tick and repeat -> zero runs, actions and effects in D1 and public Monitor`)
+   const enabled=await command('launch.automation.enable',{id:saved.id},expected('automation',saved))
+   const later=(at,occurrences)=>new Date(Date.parse(at)+occurrences*3600000).toISOString()
+   const at=later(fixture.at,1),after=later(fixture.after,1)
+   const notDue=new Date(Date.parse(at)-1000).toISOString()
+   await tick(notDue);assert.equal((await observe(notDue)).effects.length,0)
+   await tick(after)
+   const first=await observe(after)
+   assert.equal(first.effects.length,1,'Enabled schedule must fire at its next due hour')
+   assert.equal(first.effects[0].message,fixture.message)
+   assert.equal(first.runs.length,1);assert.equal(first.runs[0].state,'Succeeded')
+   assert.equal(first.runs[0].definition_version,enabled.definitionVersion)
+   assert.equal(first.runs[0].trigger_key,'schedule:'+at.slice(0,13))
+   assert.equal(first.actions.length,1);assert.equal(first.actions[0].state,'Complete')
+   assert.equal(first.effects[0].automation_run_id,first.runs[0].id)
+   assert.equal(first.history.length,1);assert.equal(first.history[0].id,first.runs[0].id)
+   assert.equal(first.visibleEffects.length,1)
+   assert.equal(first.visible.enabled,true);assert.equal(first.visible.runCount30Days,1);assert.equal(first.visible.lastRunStatus,'Succeeded')
+   await tick(after);assert.deepEqual(await observe(after),first,'Repeated cron must preserve one effect per schedule occurrence')
+   t.diagnostic(`PROBE AUTO-002 acceptance-3 ${fixture.rule}: enable and next due tick -> one Succeeded run, Complete action and visible activity; repeated tick unchanged`)
+   await command('launch.automation.disable',{id:saved.id},expected('automation',enabled))
+   const disabledAt=later(fixture.after,2),disabled=await observe(disabledAt)
+   assert.equal(disabled.visible.enabled,false)
+   await tick(disabledAt);assert.deepEqual(await observe(disabledAt),disabled,'Disabling after success must add no run, action or effect at the next due occurrence')
+   await tick(disabledAt);assert.deepEqual(await observe(disabledAt),disabled,'Repeated disabled occurrence must preserve all retained history and effects')
+   t.diagnostic(`PROBE AUTO-002 acceptance-3 ${fixture.rule}: disable and later due tick twice -> retained single run, action and effect unchanged`)
+
   }
   const invalid=await fetch(h.origin+'/api/v1/commands/launch.automation.save',{method:'POST',headers:{cookie:h.cookie,origin:h.origin,'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify({commandId:createUlid(),expected:[],input:{definition:{name:'Missing trigger',enabled:true,actions:[{command:'add-activity',input:{campaignId:campaign.id,message:'Must never run'}}]}}})})
   assert.equal(invalid.status,400,'An enabled automation without a trigger must be rejected before saving')

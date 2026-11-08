@@ -23,6 +23,7 @@ import { prepareReviewRetention } from './review-retention'
 import { importReversalReport, completeImportUndoReport } from './undo-report.server'
 import { authorizeUndoReport } from './undo-privacy.server'
 import { buildReceipt, isAttachmentColumn } from './receipt'
+import { buildSourceRecordMap } from './source-record-map'
 import { attachmentManifestCsv, parseApiAttachmentValue, parseCsvAttachmentCell } from './attachment-manifest'
 import { prepareCsvSource } from './source'
 import { nonempty } from './format'
@@ -109,6 +110,11 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   return {status,detail,row,plan,expected,context:c}
  }
  async function status(ctx:RequestContext,id:string):Promise<ImportStatus>{return (await inspect(ctx,id)).status}
+ async function sourceRecordMap(ctx:RequestContext,id:string){
+  const {status,detail,context:c}=await inspect(ctx,id)
+  await readD1ImportOriginals(id,c)
+  return buildSourceRecordMap({status,source:detail.source,records:detail.records,identities:detail.identities})
+ }
  async function receipt(ctx:RequestContext,id:string){
   const {status,detail,row,plan,expected,context:c}=await inspect(ctx,id),originals=await readD1ImportOriginals(id,c),pendingByEntity=new Map<string,{records:number;linkCells:number}>()
   if(['queued','applying','failed'].includes(status.job.state))for(const effect of plan.entries.flatMap(e=>e.effects)){
@@ -164,5 +170,5 @@ export function createBaseImportService(db:D1Database,policy:PolicyPort,registry
   else if(job.state==='failed')await notify('failed')
   return job
  }
- return {preview,uploadPreview,review,adopt,status,receipt,attachmentManifest,resume:(ctx:RequestContext,id:string)=>act(ctx,id,'resume'),undo:(ctx:RequestContext,id:string)=>act(ctx,id,'undo'),rollback:(ctx:RequestContext,id:string)=>act(ctx,id,'rollback'),originals:async(ctx:RequestContext,id:string)=>readD1ImportOriginals(id,await jobContext(ctx,id))}
+ return {preview,uploadPreview,review,adopt,status,receipt,sourceRecordMap,attachmentManifest,resume:(ctx:RequestContext,id:string)=>act(ctx,id,'resume'),undo:(ctx:RequestContext,id:string)=>act(ctx,id,'undo'),rollback:(ctx:RequestContext,id:string)=>act(ctx,id,'rollback'),originals:async(ctx:RequestContext,id:string)=>readD1ImportOriginals(id,await jobContext(ctx,id))}
 }

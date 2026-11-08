@@ -1,5 +1,17 @@
 import assert from 'node:assert/strict'
 
+/**
+ * A docs page opened with a session offers Open workspace, never Sign in. The journey still enters the app through the
+ * public sign-in loader, from the same document and without a reload, by routing to /signin as the old Sign in link did.
+ */
+export async function openSignInFromDocs(page) {
+  const header = page.getByRole('banner')
+  await header.getByRole('link', { name: 'Open workspace', exact: true }).waitFor()
+  assert.equal(await header.getByRole('link', { name: 'Sign in', exact: true }).count(), 0, 'An open session is not offered Sign in')
+  await page.waitForFunction(() => typeof window.__TSR_ROUTER__?.navigate === 'function')
+  await page.evaluate(() => window.__TSR_ROUTER__.navigate({ to: '/signin' }))
+}
+
 // These callers hold real sessions: /signin must forward into the app. Keep
 // proving that Start's hydrated router survives real private link navigation.
 // All assertions stay inside the callers' existing tagged registrations.

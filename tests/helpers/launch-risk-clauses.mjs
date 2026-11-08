@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import { writeContext, mutationSnapshot } from './launch-write-context.mjs'
+import { verifyPublicRiskIsolation } from './launch-risk-isolation.mjs'
 
 const day = (date, offset) => new Date(Date.parse(`${date}T12:00:00Z`) + offset * 86400000).toISOString().slice(0, 10)
 const fields = (h, campaign, changes = {}) => ({ campaignId: campaign.id, title: 'Evidence requires review', ownerId: h.actor, severity: 'High', dueDate: null, signal: 'Supplier evidence', mitigation: 'Review the evidence', ...changes })
@@ -98,24 +100,44 @@ async function lifecycle(h, reader, campaign) {
 }
 
 async function ratings(h, reader, campaign) {
+ const read = async route => {
+  const response = await h.request(h.ownerSession, route)
+  assert.equal(response.status, 200, await response.clone().text())
+  return response.json()
+ }
+ const write = async (action, input, revisions = []) => {
+  const response = await h.request(h.ownerSession, `/api/v1/commands/launch.${action}`, {
+   method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input, expected: revisions }),
+  })
+  assert.equal(response.status, 200, await response.clone().text())
+  const { data } = await response.json()
+  assert.equal(data.state, 'committed')
+  return data.value
+ }
  const rating = async expected => {
   assert.equal((await reader.get(h.ctx, 'campaign', campaign.id)).riskRating, expected)
   const page = await reader.list(h.ctx, 'campaign', { includeArchived: true, limit: 200 })
   assert.equal(page.items.find(row => row.id === campaign.id)?.riskRating, expected, 'Campaign collections carry the same derived rating')
+  assert.equal((await read(`/api/campaigns/${campaign.id}`)).campaign.riskRating, expected, 'Public campaign detail has the authored maximum')
+  assert.equal((await read('/api/campaigns?limit=200')).items.find(row => row.id === campaign.id)?.riskRating, expected, 'Public grid has the authored maximum')
  }
  await rating('None')
  const risks = []
- for (const severity of ['Low', 'Medium', 'High', 'Critical']) {
-  risks.push(await h.commit('risk.create', { fields: fields(h, campaign, { severity, title: `${severity} rating evidence` }) }))
-  await rating(severity)
+ for (const [severity, expected] of [['Low', 'Low'], ['Medium', 'Medium'], ['High', 'High'], ['Critical', 'Critical']]) {
+  risks.push(await write('risk.create', { fields: fields(h, campaign, { severity, title: `${severity} rating evidence` }) }))
+  await rating(expected)
  }
- for (let i = risks.length - 1; i >= 0; i--) {
-  await h.commit('risk.resolve', { id: risks[i].id, resolutionNote: 'Addressed' }, h.expected('risk', risks[i]))
-  await rating(i ? risks[i - 1].severity : 'None')
+ // Lowering the highest risk must reveal another risk, not its new severity.
+ risks[3] = await write('risk.patch', { id: risks[3].id, changes: { severity: 'Medium' } }, h.expected('risk', risks[3]))
+ await rating('High')
+ // Literal expectations include tied maxima; none is derived from returned risks.
+ for (const [index, expected] of [[2, 'Medium'], [1, 'Medium'], [3, 'Low'], [0, 'None']]) {
+  risks[index] = await write('risk.resolve', { id: risks[index].id, resolutionNote: 'Addressed' }, h.expected('risk', risks[index]))
+  await rating(expected)
  }
- const reopened = await h.commit('risk.reopen', { id: risks[0].id }, h.expected('risk', await reader.get(h.ctx, 'risk', risks[0].id)))
+ const reopened = await write('risk.reopen', { id: risks[0].id }, h.expected('risk', await reader.get(h.ctx, 'risk', risks[0].id)))
  await rating('Low')
- await h.commit('risk.patch', { id: reopened.id, changes: { severity: 'High' } }, h.expected('risk', reopened))
+ await write('risk.patch', { id: reopened.id, changes: { severity: 'High' } }, h.expected('risk', reopened))
  await rating('High')
 }
 
@@ -167,6 +189,254 @@ async function shippedLens(h, reader) {
  assert.ok(!(await read()).some(row => row.id === high.id), 'A committed resolution immediately removes the risk from the lens')
 }
 
+// Native HTTP doors shared by the public risk journeys.
+async function publicRead(h, route, session = h.ownerSession) {
+ const response = await h.request(session, route), body = await response.json()
+ assert.equal(response.status, 200, `${route}: ${JSON.stringify(body)}`)
+ return body
+}
+
+async function publicCommand(h, session, action, input, expected = [], status = 200) {
+ const commandId = h.r.createUlid(), started = Date.now()
+ const response = await h.request(session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input, expected }) })
+ const finished = Date.now(), body = await response.json()
+ assert.equal(response.status, status, `${action}: ${JSON.stringify(body)}`)
+ if (status === 200) assert.equal(body.data.state, 'committed')
+ return { commandId, started, finished, body, value: body.data?.value }
+}
+
+async function publicLinkedRiskDeletion(h, campaign) {
+ const editor = await h.addPerson({ name: 'Risk deletion operator', change: rules => rules.map(rule => rule.entityId === h.r.launchEntities.decision ? { ...rule, writableFields: rule.writableFields.filter(id => id !== h.r.launchFieldIds.decision.riskId) } : rule) })
+ const deleter = await h.addPerson({ name: 'Linked risk custodian' })
+ const command = (...args) => publicCommand(h, ...args)
+ const read = route => publicRead(h, route)
+ const quiet = () => mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+
+ // This same operator can delete a risk; only the secondary decision write is restricted.
+ const control = (await command(editor.session, 'risk.create', { fields: fields(h, campaign, { title: 'Unlinked deletion control' }) })).value
+ assert.equal((await command(editor.session, 'risk.delete', { id: control.id }, h.expected('risk', control))).value.deletedId, control.id)
+ assert.equal((await h.request(h.ownerSession, `/api/risks/${control.id}`)).status, 404)
+
+ const created = (await command(editor.session, 'risk.create', { fields: fields(h, campaign, { title: 'Public linked risk', signal: 'Original supplier evidence' }) })).value
+ const decision = (await command(h.ownerSession, 'decision.create', { fields: { campaignId: campaign.id, riskId: created.id, supersedesId: null, title: 'Retain the supplier decision', requesterId: h.actor, assigneeId: null, priority: 'High', dueAt: '2030-12-01T12:00:00.000Z', recommendation: 'Review retained evidence', impact: 'Supplier readiness' } })).value
+ const changes = { title: 'Edited public linked risk', signal: 'Reviewed supplier evidence', mitigation: 'Retain the decision on deletion', dueDate: '2030-11-30' }
+ const edited = (await command(editor.session, 'risk.patch', { id: created.id, changes }, h.expected('risk', created))).value
+ assert.equal(edited.version, created.version + 1)
+ const riskRoute = `/api/risks/${created.id}`, decisionRoute = `/api/decisions/${decision.id}`, campaignRoute = `/api/campaigns/${campaign.id}`
+ const beforeRisk = await read(riskRoute), beforeDecision = await read(decisionRoute), beforeCampaign = await read(campaignRoute)
+ for (const [field, value] of Object.entries(changes)) assert.equal(beforeRisk.risk[field], value, `The public risk retains the edited ${field}`)
+ assert.equal(beforeRisk.risk.version, edited.version)
+ assert.equal(beforeRisk.risk.campaign.id, campaign.id)
+ assert.equal(beforeRisk.risk.owner.id, h.actor)
+ assert.equal(beforeRisk.decision.id, decision.id)
+ assert.deepEqual(beforeDecision.decision.risk, { id: created.id, title: changes.title })
+ assert.ok(beforeCampaign.risks.some(row => row.id === created.id))
+ assert.ok(beforeCampaign.decisions.some(row => row.id === decision.id))
+
+ const before = await quiet()
+ const refused = await command(editor.session, 'risk.delete', { id: created.id }, h.expected('risk', beforeRisk.risk), 403)
+ assert.equal(refused.body.error.code, 'forbidden')
+ assert.deepEqual(await quiet(), before, 'A fresh-version linked deletion without detach authority changes no records, activity, audit, receipts or queued effects')
+ assert.deepEqual(await read(riskRoute), beforeRisk)
+ assert.deepEqual(await read(decisionRoute), beforeDecision)
+ assert.deepEqual(await read(campaignRoute), beforeCampaign, 'The refused deletion preserves the public campaign and its activity')
+
+ const deleted = await command(deleter.session, 'risk.delete', { id: created.id }, h.expected('risk', beforeRisk.risk))
+ assert.equal(deleted.value.deletedId, created.id)
+ const missing = await h.request(h.ownerSession, riskRoute)
+ assert.equal(missing.status, 404, 'The authorized deletion removes the public risk')
+ const afterDecision = await read(decisionRoute), afterCampaign = await read(campaignRoute)
+ assert.deepEqual(afterDecision, { ...beforeDecision, decision: { ...beforeDecision.decision, risk: null, version: beforeDecision.decision.version + 1 } }, 'The public decision survives with only its risk link cleared and one version change')
+ assert.ok(!afterCampaign.risks.some(row => row.id === created.id))
+ assert.deepEqual(afterCampaign.decisions.find(row => row.id === decision.id), { ...beforeCampaign.decisions.find(row => row.id === decision.id), version: decision.version + 1 })
+ const previousIds = new Set(beforeCampaign.activity.map(entry => entry.id))
+ assert.deepEqual(afterCampaign.activity.filter(entry => previousIds.has(entry.id)), beforeCampaign.activity, 'Deletion preserves prior public activity')
+ const added = afterCampaign.activity.filter(entry => !previousIds.has(entry.id))
+ assert.equal(added.length, 2, 'Only the risk deletion and the decision link clearing add activity')
+ assert.ok(added.every(entry => entry.actionId === deleted.commandId && entry.actor?.id === deleter.id))
+ const detached = added.find(entry => entry.subjectId === decision.id)
+ assert.equal(detached.fieldName, 'risk_id')
+ assert.equal(detached.previousValue, created.id)
+ assert.equal(detached.nextValue, null)
+ assert.ok(added.some(entry => entry.subjectId === created.id && entry.type === 'risk.deleted'))
+
+ const after = await quiet(), storedBefore = before.decisions.find(row => row.id === decision.id), storedAfter = after.decisions.find(row => row.id === decision.id)
+ assert.ok(storedAfter.updated_at >= deleted.started && storedAfter.updated_at <= deleted.finished)
+ assert.deepEqual(storedAfter, { ...storedBefore, risk_id: null, version: storedBefore.version + 1, updated_at: storedAfter.updated_at, launch_updated_iso: new Date(storedAfter.updated_at).toISOString() }, 'Independent storage retains every decision value except the link and its single versioned update')
+ assert.deepEqual(after.risks, before.risks.filter(row => row.id !== created.id), 'Only the selected risk is removed')
+ assert.deepEqual(after.decisions.filter(row => row.id !== decision.id), before.decisions.filter(row => row.id !== decision.id), 'Every unrelated decision stays exact')
+ for (const table of tables.filter(table => !['risks', 'decisions'].includes(table))) assert.deepEqual(after[table], before[table], `${table} stays unchanged by authorized risk deletion`)
+ const receipt = await h.request(deleter.session, `/api/v1/commands/${deleted.commandId}`), receiptBody = await receipt.json()
+ assert.equal(receipt.status, 403, 'Current authority refuses a retained receipt whose risk subject has been deleted')
+ assert.equal(receiptBody.error.code, 'forbidden')
+ assert.equal(Object.hasOwn(receiptBody, 'data'), false)
+ assert.deepEqual(await quiet(), after, 'The refused deleted-subject receipt changes nothing')
+}
+
+async function publicLifecycle(h, campaign) {
+ const resolver = await h.addPerson({ name: 'Risk resolver' }), reopener = await h.addPerson({ name: 'Risk reopener' })
+ assert.notEqual(resolver.id, h.actor)
+ assert.notEqual(reopener.id, resolver.id)
+ const read = (route, session) => publicRead(h, route, session), command = (...args) => publicCommand(h, ...args)
+ const within = (instant, receipt) => {
+  assert.ok(Number.isFinite(Date.parse(instant)) && Date.parse(instant) >= receipt.started && Date.parse(instant) <= receipt.finished, 'Recorded time lies within independent request bounds')
+ }
+ const created = await command(h.ownerSession, 'risk.create', { fields: fields(h, campaign, { title: 'Public lifecycle evidence' }) })
+ const riskId = created.value.id
+ const risk = async () => (await read(`/api/risks/${riskId}`)).risk
+ const activity = async () => (await read(`/api/campaigns/${campaign.id}`)).activity
+ const before = await risk(), historyBefore = await activity()
+ assert.equal(before.state, 'Watching')
+ for (const field of ['resolutionNote', 'resolvedAt', 'resolvedById']) assert.equal(before[field], null)
+ const unchanged = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ const refused = await command(resolver.session, 'risk.resolve', { id: riskId, resolutionNote: ' \n\t ' }, h.expected('risk', before), 400)
+ assert.equal(refused.body.error.code, 'validation')
+ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), unchanged, 'Blank resolution commits no data, activity, audit, event or receipt')
+ assert.deepEqual(await risk(), before, 'A refused resolution preserves the public risk including its version')
+ assert.deepEqual(await activity(), historyBefore, 'A refused resolution preserves public campaign activity')
+
+ const note = 'Supplier evidence independently verified'
+ const resolved = await command(resolver.session, 'risk.resolve', { id: riskId, resolutionNote: note }, h.expected('risk', before))
+ const resolution = await risk()
+ for (const row of [resolution, resolved.value]) {
+  assert.equal(row.state, 'Resolved')
+  assert.equal(row.resolutionNote, note)
+  assert.equal(row.resolvedById, resolver.id, 'The resolver is the known acting operator, rather than the risk owner')
+  within(row.resolvedAt, resolved)
+ }
+ assert.equal(resolution.version, before.version + 1)
+ assert.equal(resolution.resolvedAt, resolved.value.resolvedAt)
+ const retained = (await read(`/api/v1/commands/${resolved.commandId}`, resolver.session)).data
+ assert.equal(retained.state, 'committed')
+ assert.deepEqual(retained.result, resolved.value, 'The public command status retains the committed resolution')
+ const transition = (entries, receipt, actor, field, previousValue, nextValue) => {
+  const matches = entries.filter(entry => entry.actionId === receipt.commandId && entry.subjectId === riskId && entry.fieldName === field)
+  assert.equal(matches.length, 1, `One public ${field} transition belongs to the committed command`)
+  const entry = matches[0]
+  assert.equal(entry.actor?.id, actor.id)
+  assert.equal(entry.actor?.name, actor.name)
+  assert.equal(entry.previousValue, previousValue)
+  assert.equal(entry.nextValue, nextValue)
+  within(entry.occurredAt, receipt)
+ }
+ const resolvedActivity = await activity()
+ transition(resolvedActivity, resolved, { id: resolver.id, name: 'Risk resolver' }, 'state', 'Watching', 'Resolved')
+ transition(resolvedActivity, resolved, { id: resolver.id, name: 'Risk resolver' }, 'resolution_note', null, note)
+
+ const reopened = await command(reopener.session, 'risk.reopen', { id: riskId }, h.expected('risk', resolution))
+ const watching = await risk()
+ for (const row of [watching, reopened.value]) {
+  assert.equal(row.state, 'Watching')
+  assert.equal(row.resolutionNote, null)
+  assert.equal(row.resolvedAt, null)
+  assert.equal(row.resolvedById, null)
+ }
+ assert.equal(watching.version, resolution.version + 1)
+ const reopening = (await read(`/api/v1/commands/${reopened.commandId}`, reopener.session)).data
+ assert.equal(reopening.state, 'committed')
+ assert.deepEqual(reopening.result, reopened.value)
+ const reopenedActivity = await activity()
+ const priorIds = new Set(resolvedActivity.map(entry => entry.id))
+ assert.deepEqual(reopenedActivity.filter(entry => priorIds.has(entry.id)), resolvedActivity, 'Reopening preserves every previous public activity entry')
+ transition(reopenedActivity, reopened, { id: reopener.id, name: 'Risk reopener' }, 'state', 'Resolved', 'Watching')
+ transition(reopenedActivity, reopened, { id: reopener.id, name: 'Risk reopener' }, 'resolution_note', note, null)
+ const narrowed = resolver.rules.map(rule => rule.entityId === h.r.launchEntities.risk ? { ...rule, readableFields: rule.readableFields.filter(id => id !== h.r.launchFieldIds.risk.state) } : rule)
+ await h.db.prepare('UPDATE authority_policies SET rules_json=?,version=version+1 WHERE id=?').bind(JSON.stringify(narrowed), resolver.policyId).run()
+ const beforeDeniedRead = await mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ for (const route of [`/api/v1/commands/${resolved.commandId}`, `/api/risks/${riskId}`]) {
+  const response = await h.request(resolver.session, route), body = await response.json()
+  assert.equal(response.status, 403, 'Current read authority still fences risk metadata and retained resolution receipts')
+  assert.equal(Object.hasOwn(body, 'data'), false)
+  assert.equal(Object.hasOwn(body, 'risk'), false)
+ }
+ assert.deepEqual(await mutationSnapshot(h.db, { omitSessionReadTimestamp: true }), beforeDeniedRead, 'Refused metadata reads change nothing')
+}
+
+// Native commands reach Watching, Escalated and In progress; the installed example
+// supplies Needs decision, which no command sets. Each is open in every public
+// projection, resolves with a note and reopens to Watching; Resolved is not open.
+async function publicOpenStates(h) {
+ const read = (route, session) => publicRead(h, route, session), command = (...args) => publicCommand(h, ...args)
+ const quiet = () => mutationSnapshot(h.db, { omitSessionReadTimestamp: true })
+ const lens = async () => {
+  const items = []; let cursor = null
+  do {
+   const page = await read(`/api/risks/lens${cursor === null ? '' : `?cursor=${encodeURIComponent(cursor)}`}`)
+   items.push(...page.items); cursor = page.nextCursor ?? null
+  } while (cursor !== null)
+  return new Map(items.map(row => [row.id, row.state]))
+ }
+ const projections = async id => {
+  const { risk } = await read(`/api/risks/${id}`), detail = await read(`/api/campaigns/${risk.campaign.id}`)
+  return { risk, rating: detail.campaign.riskRating, open: detail.risks.map(row => [row.id, row.state]) }
+ }
+ // A launch date already passed keeps each High risk inside the shipped lens window on any clock.
+ const create = async code => {
+  const campaign = (await command(h.ownerSession, 'campaign.create', { fields: { code, name: `${code} launch`, ownerId: h.actor, startDate: '2026-01-05', launchDate: '2026-02-02', objective: 'Prove the open risk states', statusSummary: '', phase: 'Planning', status: 'On track', health: 50, budgetMinor: 0, spendMinor: 0, tags: [], customFields: {} } })).value
+  return (await command(h.ownerSession, 'risk.create', { fields: fields(h, campaign, { title: `${code} evidence` }) })).value
+ }
+ const watching = await create('OPEN-WATCHING'), escalated = await create('OPEN-ESCALATED'), progressing = await create('OPEN-PROGRESS')
+ await command(h.ownerSession, 'risk.escalate', { id: escalated.id, reason: 'Supplier evidence needs attention' }, h.expected('risk', escalated))
+ const awaiting = (await command(h.ownerSession, 'risk.escalate', { id: progressing.id, reason: 'Supplier evidence needs a decision' }, h.expected('risk', progressing))).value.risk
+ const decision = (await command(h.ownerSession, 'decision.create', { fields: { campaignId: awaiting.campaignId, riskId: awaiting.id, supersedesId: null, title: 'Approve the evidence plan', requesterId: h.actor, assigneeId: null, priority: 'High', dueAt: new Date(Date.now() + 86400000).toISOString(), recommendation: 'Proceed with the evidence plan', impact: 'Launch readiness' } })).value
+ await command(h.ownerSession, 'decision.outcome', { id: decision.id, outcome: 'Approved', rationale: '' }, h.expected('decision', decision))
+ const retained = JSON.parse(await readFile(new URL('../../sample-data/cradle.json', import.meta.url), 'utf8')).risks.filter(row => row.state === 'Needs decision')
+ assert.equal(retained.length, 1, 'The installed example independently supplies one risk awaiting a decision')
+ const matrix = [['Watching', watching.id], ['In progress', progressing.id], ['Needs decision', retained[0].id], ['Escalated', escalated.id]]
+ const limited = await h.addPerson({ name: 'Risk editor without state', change: rules => rules.map(rule => rule.entityId === h.r.launchEntities.risk ? { ...rule, writableFields: rule.writableFields.filter(id => id !== h.r.launchFieldIds.risk.state) } : rule) })
+
+ let listed = await lens()
+ const opened = await quiet()
+ for (const [state, id] of matrix) {
+  const { risk, rating, open } = await projections(id)
+  assert.equal(risk.state, state)
+  for (const field of ['resolutionNote', 'resolvedAt', 'resolvedById']) assert.equal(risk[field], null)
+  assert.deepEqual(open, [[id, state]], `${state} is listed as an open risk of its campaign`)
+  assert.equal(rating, 'High', `${state} counts toward the campaign risk rating`)
+  assert.equal(listed.get(id), state, `${state} stays in the shipped open-risk lens`)
+  assert.equal((await command(h.ownerSession, 'risk.reopen', { id }, h.expected('risk', risk), 400)).body.error.code, 'validation', `An open ${state} risk cannot reopen`)
+ }
+ // Only the lifecycle commands change state: record edits and an operator without state authority cannot resolve.
+ for (const changes of [{ state: 'Resolved' }, { resolutionNote: 'Edited outcome' }]) {
+  assert.equal((await command(h.ownerSession, 'risk.patch', { id: watching.id, changes }, h.expected('risk', watching), 400)).body.error.code, 'validation')
+ }
+ assert.equal((await command(limited.session, 'risk.resolve', { id: watching.id, resolutionNote: 'Closed without authority' }, h.expected('risk', watching), 403)).body.error.code, 'forbidden')
+ assert.deepEqual(await quiet(), opened, 'Refused reopening, record edits and unauthorized resolution change nothing')
+
+ for (const [state, id] of matrix) {
+  const { risk } = await read(`/api/risks/${id}`)
+  assert.equal((await command(h.ownerSession, 'risk.resolve', { id, resolutionNote: `Closed from ${state}` }, h.expected('risk', risk))).value.state, 'Resolved', `${state} resolves with a note`)
+ }
+ listed = await lens()
+ const closed = await quiet()
+ for (const [state, id] of matrix) {
+  const { risk, rating, open } = await projections(id)
+  assert.equal(risk.state, 'Resolved')
+  assert.equal(risk.resolutionNote, `Closed from ${state}`)
+  assert.equal(risk.resolvedById, h.actor)
+  assert.deepEqual(open, [], `A risk resolved from ${state} is no longer open on its campaign`)
+  assert.equal(rating, 'None', `A risk resolved from ${state} no longer counts toward the rating`)
+  assert.equal(listed.has(id), false, `A risk resolved from ${state} leaves the open-risk lens`)
+  assert.equal((await command(h.ownerSession, 'risk.resolve', { id, resolutionNote: 'Closed again' }, h.expected('risk', risk), 400)).body.error.code, 'validation')
+ }
+ const resolvedWatching = (await read(`/api/risks/${watching.id}`)).risk
+ assert.equal((await command(limited.session, 'risk.reopen', { id: watching.id }, h.expected('risk', resolvedWatching), 403)).body.error.code, 'forbidden')
+ assert.deepEqual(await quiet(), closed, 'A resolved risk refuses another resolution and unauthorized reopening without change')
+
+ for (const [state, id] of matrix) {
+  const { risk } = await read(`/api/risks/${id}`)
+  assert.equal((await command(h.ownerSession, 'risk.reopen', { id }, h.expected('risk', risk))).value.state, 'Watching', `A risk resolved from ${state} reopens to Watching`)
+ }
+ listed = await lens()
+ for (const [state, id] of matrix) {
+  const { risk, rating, open } = await projections(id)
+  assert.equal(risk.state, 'Watching')
+  assert.deepEqual(open, [[id, 'Watching']], `A risk reopened after ${state} is open again`)
+  assert.equal(rating, 'High')
+  assert.equal(listed.get(id), 'Watching')
+ }
+}
+
 export async function verifyRiskClauses(h) {
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const campaign = await h.campaign('RISK-LIFECYCLE'), other = await h.campaign('RISK-ISOLATION')
@@ -174,6 +444,10 @@ export async function verifyRiskClauses(h) {
  await h.commit('deliverable.create', { fields: { campaignId: campaign.id, title: 'Unrelated deliverable', ownerId: h.actor, dueDate: null } })
  await h.commit('milestone.create', { fields: { campaignId: campaign.id, title: 'Unrelated milestone', ownerId: h.actor, type: 'Review', status: 'Not started', startDate: '2026-10-20', endDate: null, conflictReason: null } })
  await lifecycle(h, reader, campaign)
+ await publicLinkedRiskDeletion(h, campaign)
  await ratings(h, reader, campaign)
  await shippedLens(h, reader)
+ await publicLifecycle(h, campaign)
+ await publicOpenStates(h)
+ await verifyPublicRiskIsolation(h, { read: (route, session) => publicRead(h, route, session), command: (...args) => publicCommand(h, ...args), snapshot: id => snapshot(h.db, id) })
 }

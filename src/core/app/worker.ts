@@ -77,7 +77,7 @@ export default {
 
 
     // The installed variant: the claim state and the Lobby at /, before the document renderer.
-    const home = await installedHomeResponse(request, bindings)
+    const home = await installedHomeResponse(request, bindings, request => createSessionReader(platform).getIdentity(request))
     if (home) return home
     const document=editorDocumentHeaders(await start.fetch(request),bindings)
     if (path === '/setup') {
@@ -85,6 +85,12 @@ export default {
       headers.set('cache-control','private, no-store, no-transform')
       headers.append('vary','Cookie')
       return new Response(document.body,{status:document.status,statusText:document.statusText,headers})
+    }
+    // The docs header offers the workspace to an open session, so a docs document varies with the cookie.
+    if (path === '/docs' || path.startsWith('/docs/')) {
+      const headers=new Headers(document.headers)
+      headers.append('vary','Cookie')
+      return noTransformDocument(new Response(document.body,{status:document.status,statusText:document.statusText,headers}))
     }
     return noTransformDocument(document)
 

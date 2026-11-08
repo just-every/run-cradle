@@ -24,13 +24,14 @@ values. Slack sends the owner's explicitly approved literal message.
 
 Save an HTTPS receiver in the action editor. Its URL and signing key are
 encrypted at rest. Copy the webhook signing key when first shown; it cannot be
-recovered later. Saving a new destination rotates the configuration. Verify
-receipts with Base integrations' `verifyWebhook`, using the original body bytes,
-the key decoded from base64url, expected application ID as `tenant` and the
-saved destination ID. The `webhook-*` headers bind the body, event, tenant,
-destination, delivery ID and timestamp. Keep accepted delivery identities to
-reject receiver-side duplicate processing. A body or destination change fails
-verification.
+recovered later. Saving a new destination rotates the configuration. Your receiver
+verifies each delivery's signature with the `verifyWebhook` function that ships
+in your installation's source (search it for `verifyWebhook`), using the
+original body bytes, the key decoded from base64url, the application ID as
+`tenant` and the saved destination ID. The `webhook-*` headers bind the body,
+event, tenant, destination, delivery ID and timestamp. Keep the delivery IDs you
+have accepted so your receiver can ignore duplicates. A changed body or
+destination fails verification.
 
 An **Unknown** action may already have been accepted. The automation does not
 resend it. Check the receiver's delivery receipt before taking further action.
@@ -65,7 +66,7 @@ Load the relay credential through the process's private environment and use
 `EGRESS_RELAY_PORT` to choose its loopback port (default 8789). The command does
 not create hosting, certificates or a deployment. Stop it with Ctrl-C.
 
-The real relay uses the vendored Base `NodePinnedTransport`: it validates all
+The real relay uses the pinned transport bundled with Cradle (`NodePinnedTransport`): it validates all
 DNS answers, pins a public address to verified TLS, permits HTTPS only, and never
 follows redirects. Destination requests are limited to 1 MiB, responses to
 64 KiB, and DNS/transport phases to five seconds each. Relay input is bounded to

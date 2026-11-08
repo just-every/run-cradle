@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { browserCookies } from './session-cookies.mjs'
 
 export async function verifyDecisionLensScreens({h,page,command,capture}) {
  const entities={campaign:'00000000000000000000000701',decision:'00000000000000000000000705',lens:'00000000000000000000000706'}
@@ -20,6 +21,10 @@ export async function verifyDecisionLensScreens({h,page,command,capture}) {
  assert.equal(await page.getByRole('region',{name:'Related decisions',exact:true}).getByRole('link',{name:prior.title,exact:true}).getAttribute('href'),`/app/decisions/${prior.id}`)
  await capture('clause-decision-superseding')
 
+ const saver=await h.addPerson({name:'Lens browser author'})
+ assert.notEqual(saver.id,h.owner,'The browser saver is not the installation owner')
+ await page.context().addCookies(browserCookies(saver.session.cookie,h.origin))
+ try {
  await page.goto(`${h.origin}/app/lenses/new`)
  await page.getByRole('heading',{name:'Create a Lens',exact:true}).waitFor()
  await page.waitForLoadState('networkidle')
@@ -31,19 +36,48 @@ export async function verifyDecisionLensScreens({h,page,command,capture}) {
  await page.getByLabel('Condition 1 value',{exact:true}).fill(`No matching supplier risk ${width}`)
  await page.getByRole('button',{name:'Preview',exact:true}).click()
  await page.getByRole('heading',{name:'No matching records',exact:true}).waitFor()
- await capture('clause-lens-preview-zero')
+ await capture('clause-lens-preview-zero',{operatorName:'Lens browser author'})
+ const saveStartedAt=Date.now()
  await page.getByRole('button',{name:'Save lens',exact:true}).click()
  const open=page.getByRole('link',{name:'Open saved lens',exact:true})
  await open.waitFor()
- await capture('clause-lens-saved')
+ const saveFinishedAt=Date.now()
+ await capture('clause-lens-saved',{operatorName:'Lens browser author'})
  const url=await open.getAttribute('href')
  await open.click();await page.getByRole('heading',{name:`Supplier review ${width}`,exact:true}).waitFor()
  await page.getByRole('heading',{name:'No matching records',exact:true}).waitFor()
- await capture('clause-lens-shared')
+ await capture('clause-lens-shared',{operatorName:'Lens browser author'})
  const id=new URL(url,h.origin).pathname.split('/')[3]
- const response=await h.request(h.ownerSession,`/api/lenses/${id}`)
+ const response=await h.request(saver.session,`/api/lenses/${id}`)
  assert.equal(response.status,200)
  const lens=(await response.json()).lens
+ assert.equal(lens.createdById,saver.id,'Browser save records the independently known current operator')
+ assert.ok(Number.isFinite(lens.createdAt)&&lens.createdAt>=saveStartedAt&&lens.createdAt<=saveFinishedAt,'Browser save creation time falls within independently observed save bounds')
+ const colleague=await h.addPerson({name:'Lens browser colleague'})
+ assert.notEqual(colleague.id,h.owner)
+ assert.notEqual(colleague.id,saver.id)
+ const listResponse=await h.request(colleague.session,'/api/lenses')
+ assert.equal(listResponse.status,200)
+ const listed=(await listResponse.json()).items.find(item=>item.id===id)
+ assert.ok(listed,'Another operator discovers the browser-saved lens in their collection')
+ assert.equal(listed.name,`Supplier review ${width}`)
+ assert.equal(listed.createdById,saver.id,'The shared collection names the independently known saver')
+ assert.equal(listed.createdAt,lens.createdAt,'Collection and direct reads retain the same saved time')
+ const sharedResponse=await h.request(colleague.session,`/api/lenses/${id}`)
+ assert.equal(sharedResponse.status,200)
+ const shared=(await sharedResponse.json()).lens
+ assert.equal(shared.createdById,saver.id,'A different current operator reads the original saver')
+ assert.equal(shared.createdAt,lens.createdAt,'A different current operator reads the same creation time')
+ const sharedContext=await page.context().browser().newContext({viewport:page.viewportSize()})
+ try {
+  await sharedContext.addCookies(browserCookies(colleague.session.cookie,h.origin))
+  const sharedPage=await sharedContext.newPage()
+  const document=await sharedPage.goto(new URL(url,h.origin).href)
+  assert.equal(document.status(),200,'Another operator opens the URL produced by the browser save')
+  await sharedPage.getByRole('heading',{name:`Supplier review ${width}`,exact:true}).waitFor()
+  await sharedPage.getByRole('heading',{name:'No matching records',exact:true}).waitFor()
+ } finally {await sharedContext.close()}
  await create('lens.delete',{id},expected('lens',lens))
  await create('campaign.delete',{id:campaign.id,confirmationCode:campaign.code},expected('campaign',campaign))
+ } finally {await page.context().addCookies(browserCookies(h.ownerSession.cookie,h.origin))}
 }

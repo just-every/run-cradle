@@ -13,7 +13,7 @@
 .cr-import-boundary { border-left: 3px solid var(--sage); padding-left: 12px; color: var(--muted); }
 .cr-base-import progress { width: 100%; accent-color: var(--ink-deep); }
 .cr-base-import input[type=file] { width: 100%; min-width: 0; }
-@media(max-width:600px) { .cr-import-column, .cr-import-ack { padding: 12px; } .cr-import-columns { grid-template-columns: 1fr; } }
+@media(max-width:600px) { .cr-import-column, .cr-import-ack { padding: 12px; } .cr-import-columns { grid-template-columns: 1fr; } .cr-import-boundary summary { padding-block: 10px; } }
 
 .cr-base-import details, .cr-base-import summary { min-width: 0; overflow-wrap: anywhere; }
 .cr-base-import select { min-width: 0; max-width: 100%; width: 100%; }

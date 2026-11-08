@@ -22,5 +22,5 @@ export type DocsPageData = {
   toc: DocsTocEntry[]
 }
 
-/** What a docs route loads: the page, the navigation and repository it is shown with, and the docs version it came from. */
-export type DocsView = { page: DocsPageData; sections: DocsSection[]; repository: DocsRepository | null; version: number }
+/** What a docs route loads: the page, the navigation and repository it is shown with, the docs version it came from and, on an installation, whether the visitor has an open session. */
+export type DocsView = { page: DocsPageData; sections: DocsSection[]; repository: DocsRepository | null; version: number; signedIn?: boolean }

@@ -1,5 +1,7 @@
 import {recordComment,recordThread,commentNotices} from './record-comment-command.mjs'
 import assert from 'node:assert/strict'
+import { verifyPublicDecisionApproval } from './launch-decision-approval.mjs'
+import { verifyPublicDecisionRecords } from './launch-decision-records.mjs'
 
 const productTables = ['campaigns', 'deliverables', 'milestones', 'risks', 'decisions', 'evidence_comments', 'campaign_tags', 'launch_custom_values', 'notifications', 'channel_events', 'channel_notifications', 'channel_deliveries', 'activity_entries', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
 async function snapshot(db, tables = productTables) {
@@ -49,6 +51,7 @@ async function records(h, reader, campaign, other) {
   await rejectsUnchanged(h, 'decision.create', { fields: missing })
  }
 }
+
 
 async function outcomes(h, reader, campaign) {
  const create = changes => h.commit('decision.create', { fields: fields(h, campaign, changes) })
@@ -140,6 +143,72 @@ async function finality(h, reader, campaign, terminal) {
  assert.deepEqual(queuedReplacement.supersedes, replacementDetail.supersedes)
 }
 
+// DEC-006 through the public command and read doors only: a known operator who
+// is not the requester submits each transition against a freshly read version.
+async function publicTransitions(h, campaign) {
+ const operator = await h.addPerson({ name: 'Decision operator' })
+ assert.notEqual(operator.id, h.actor)
+ const read = async id => (await readHttp(h, `/api/decisions/${id}`)).decision
+ const queue = async () => (await readHttp(h, '/api/decisions')).items
+ const trail = async id => (await readHttp(h, `/api/campaigns/${campaign.id}`)).activity.filter(entry => entry.subjectId === id)
+ const submit = async (id, action, input, commandId = h.r.createUlid()) => h.request(operator.session, `/api/v1/commands/launch.decision.${action}`, { method: 'POST', body: JSON.stringify({ commandId, input: { id, ...input }, expected: h.expected('decision', await read(id)) }) })
+ const refuse = async (id, action, input) => {
+  const before = await snapshot(h.db), detail = await read(id), entries = await trail(id), queued = await queue()
+  const response = await submit(id, action, input)
+  assert.equal(response.status, 400, `${action} ${JSON.stringify(input)}`)
+  assert.equal((await response.json()).error.code, 'validation')
+  assert.deepEqual(await snapshot(h.db), before, `${action} refusal leaves every stored record unchanged`)
+  assert.deepEqual(await read(id), detail)
+  assert.deepEqual(await trail(id), entries)
+  assert.deepEqual(await queue(), queued)
+ }
+ const settle = async (id, action, input, state) => {
+  const commandId = h.r.createUlid(), lower = Date.now()
+  const response = await submit(id, action, input, commandId), upper = Date.now()
+  assert.equal(response.status, 200, await response.clone().text())
+  const { data } = await response.json(), value = data.value
+  assert.equal(data.state, 'committed')
+  assert.equal(value.state, state)
+  assert.equal(value.rationale, input.rationale)
+  const stamp = text => { const at = Date.parse(text); assert.ok(at >= lower && at <= upper, `${text} lies within the request window`); return at }
+  stamp(value.updatedAt)
+  const status = await h.request(operator.session, `/api/v1/commands/${commandId}`), statusText = await status.text()
+  assert.equal(status.status, 200, statusText)
+  const retained = JSON.parse(statusText).data
+  assert.deepEqual(retained.value ?? retained.result, value, 'The retained command result matches the committed one')
+  const detail = await read(id)
+  assert.equal(detail.state, state)
+  assert.equal(detail.rationale, input.rationale)
+  const entries = (await trail(id)).filter(entry => entry.actionId === commandId)
+  for (const [field, next] of [['state', state], ['rationale', input.rationale]]) {
+   const entry = entries.find(item => item.fieldName === field)
+   assert.ok(entry, `${field} appears in campaign activity`)
+   assert.equal(entry.nextValue, next)
+   assert.equal(entry.actor.id, operator.id)
+   stamp(entry.occurredAt)
+  }
+  if (state === 'In review') {
+   assert.equal(value.outcomeById, null)
+   assert.ok((await queue()).some(item => item.id === id && item.state === 'In review'), 'An In review decision stays in Decision Queue')
+  } else {
+   assert.equal(value.outcomeById, operator.id)
+   assert.equal(stamp(value.outcomeAt), Date.parse(value.updatedAt))
+   assert.equal((await queue()).some(item => item.id === id), false, 'A terminal decision leaves Decision Queue')
+  }
+  return value
+ }
+ const create = () => h.commit('decision.create', { fields: fields(h, campaign) })
+ const rejected = await create(), cancelled = await create()
+ for (const rationale of ['', ' ', ' \t\n']) await refuse(rejected.id, 'request-change', { rationale })
+ await settle(rejected.id, 'request-change', { rationale: 'Attach current evidence' }, 'In review')
+ for (const rationale of ['', ' ', ' \t\n']) {
+  await refuse(rejected.id, 'outcome', { outcome: 'Rejected', rationale })
+  await refuse(cancelled.id, 'outcome', { outcome: 'Cancelled', rationale })
+ }
+ await settle(rejected.id, 'outcome', { outcome: 'Rejected', rationale: 'Evidence is still missing' }, 'Rejected')
+ await settle(cancelled.id, 'outcome', { outcome: 'Cancelled', rationale: 'No longer needed' }, 'Cancelled')
+}
+
 async function assignmentsAndComments(h, reader, campaign) {
  const first = await h.addPerson({ name: 'Decision reviewer' }), second = await h.addPerson({ name: 'Second decision reviewer' })
  const risk = await h.commit('risk.create', { fields: { campaignId: campaign.id, title: 'Assignment isolation risk', ownerId: h.actor, severity: 'High', dueDate: null, signal: '', mitigation: '' } })
@@ -180,6 +249,9 @@ export async function verifyDecisionClauses(h) {
  const reader = h.r.createLaunchReader(h.db, h.context.policy)
  const campaign = await h.campaign('DECISION-CLAUSES'), other = await h.campaign('DECISION-OTHER')
  await records(h, reader, campaign, other)
+ await verifyPublicDecisionRecords(h, campaign, changes => fields(h, campaign, changes))
  await outcomes(h, reader, campaign)
+ await verifyPublicDecisionApproval(h, campaign, changes => fields(h, campaign, changes))
  await assignmentsAndComments(h, reader, campaign)
+ await publicTransitions(h, campaign)
 }

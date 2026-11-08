@@ -19,6 +19,9 @@ export function ImportReceipt({ jobId }: { jobId: string }) {
         <p>Reconciliation: {data.reconciliation.ok?'native readback matches the job':'native readback differs from the job'} ({data.reconciliation.missing} missing, {data.reconciliation.duplicate} duplicate, {data.reconciliation.extra} extra, {data.reconciliation.mismatched} mismatched).</p>
         {data.undo&&<p>Reversal: {data.undo.reversed} reversed, {data.undo.retained} kept as conflicts, {data.undo.remaining} remaining.</p>}
       </section>
+      <section className="cr-stack" aria-labelledby="receipt-record-map"><h2 id="receipt-record-map">Source record ID map</h2>
+        {data.sourceRecordMap.available?<><p>{data.sourceRecordMap.recordCount} imported records, identified by their original source table and record IDs. Rejected rows have no mapping. Both downloads check current authority and native readback.</p><div className="cr-actions"><a className="cr-button cr-button--quiet" href={`${base}/source-record-map.csv`} download>Download ID map CSV</a><a className="cr-button cr-button--quiet" href={`${base}/source-record-map.json`} download>Download ID map JSON</a></div></>:<p>{data.sourceRecordMap.reason}</p>}
+      </section>
       <section className="cr-stack" aria-labelledby="receipt-files"><h2 id="receipt-files">Source files</h2><ul>{data.source.files.map(file=><li key={file.name}><strong>{file.name}</strong> · {file.size} bytes · SHA-256 <code>{file.sha256}</code></li>)}</ul></section>
       <section className="cr-stack" aria-labelledby="receipt-tables"><h2 id="receipt-tables">Tables</h2>{data.tables.map(table=><article className="cr-card cr-stack" key={table.tableKey}>
         <h3>{table.label}</h3>

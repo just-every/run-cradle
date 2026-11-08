@@ -324,6 +324,7 @@ export const decodeCampaignDetail: Decoder<CampaignDetailResponse> = (
   );
   const campaign: CampaignDetail = {
     ...decodeCampaignSummary(campaignRecord),
+    archivedAt: requiredNullableString(campaignRecord, "campaign.archivedAt"),
     objective: requiredText(campaignRecord, "campaign.objective"),
     summary: requiredText(campaignRecord, "campaign.summary"),
     healthSetBy: optionalRecord(campaignRecord, "campaign.healthSetBy")

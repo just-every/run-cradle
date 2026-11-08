@@ -15,7 +15,7 @@ import type { DocsPageData } from '../core/features/docs/types'
 import { run } from './run'
 import '../core/app/styles.css'
 
-const description = 'A self-hosted records builder for one business: typed records, relationships, forms and saved views in a private workspace you run and change yourself. 100% free, open source alternative to Airtable and Smartsheet.'
+const description = 'A self-hosted records builder for one business: typed records, relationships, forms and saved views in a private workspace you run and change yourself. An open source alternative to Airtable and Smartsheet.'
 
 export async function sitePages({ styles, contract }: SiteContext): Promise<SiteBuild> {
   const document = (title: string, summary: string, body: ReactElement) => '<!doctype html>' + renderToStaticMarkup(

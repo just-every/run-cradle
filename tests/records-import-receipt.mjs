@@ -6,6 +6,7 @@ import {userAutomationRuntime} from './helpers/user-automation-runtime.mjs'
 import {prepareFixture} from './helpers/records-import-fixture.mjs'
 import {csvFiles,adoptUpload,adopt,reviewRecordedSource,jobAction,finish,rekeyedPortable} from './helpers/import-effects.mjs'
 import {parseBaseCsv} from '../src/domains/records/base-transfer/parse.ts'
+import {sourceRecordMapJourney,refuseRecordMaps} from './helpers/source-record-map-journey.mjs'
 
 const jobs='/api/v1/records/base-import/jobs/'
 const fixtureRoot=new URL('./fixtures/base-transfer/',import.meta.url)
@@ -37,7 +38,7 @@ async function manifest(h,jobId,tableKey,columnKey){
  return parsed.rows.map(row=>Object.fromEntries(row.cells.map((cell,i)=>[parsed.headers[i],cell])))
 }
 
-contract('RECORDS-005','move-in receipt and skipped-attachment manifest come from the retained job for CSV, recorded API and JSON imports, partial and undone',async()=>{
+contract('RECORDS-005 MIGRATE-005','move-in receipt and skipped-attachment manifest come from the retained job for CSV, recorded API and JSON imports, partial and undone',async()=>{
  const h=await userAutomationRuntime(0)
  try {
   const receipt=async id=>(await h.request(`${jobs}${id}/receipt.json`)).data
@@ -51,6 +52,7 @@ contract('RECORDS-005','move-in receipt and skipped-attachment manifest come fro
   assert.equal(pendingLinks,partial.progress.plannedLinkCells-partial.progress.appliedLinkCells)
   await finish(h,first.job.id,'resume','completed')
   const applied=await receipt(first.job.id)
+  await refuseRecordMaps(h,first.job.id)
   assert.equal(applied.job.state,'applied');assert.equal(applied.reconciliation.ok,true);assert.equal(applied.source.kind,'csv-set')
   assert.deepEqual(applied.source.files.map(f=>f.name).sort(),csv.manifest.csvFiles.map(f=>f.path.slice(4)).sort())
   assertAgainstTruth(applied,csv,'csv')
@@ -79,6 +81,7 @@ contract('RECORDS-005','move-in receipt and skipped-attachment manifest come fro
   const json=await adoptUpload(h,[{name:'business.cradle.json',bytes:Buffer.from(JSON.stringify(portable))}],{name:portable.base.name})
   await finish(h,json.job.id,'resume','completed')
   const jsonReceipt=await receipt(json.job.id)
+  await refuseRecordMaps(h,json.job.id)
   assert.equal(jsonReceipt.source.kind,'cradle-base-v1');assert.deepEqual(jsonReceipt.source.files.map(f=>f.name),['business.cradle.json'])
   assert.deepEqual(jsonReceipt.tables.map(t=>[t.label,t.rowsRead,t.created,t.rejected]),portable.base.tables.map(t=>[t.label,t.records.length,t.records.length,0]))
 
@@ -111,5 +114,6 @@ contract('RECORDS-005','move-in receipt and skipped-attachment manifest come fro
    ['no','',''],['no','',''],['no','',''],
    ['yes',JSON.stringify(['Smith, Jones (signed).pdf','b.pdf']),JSON.stringify(['https://a.example/contract.pdf','https://a.example/6/b.pdf'])],
   ])
+  await sourceRecordMapJourney()
  }finally{await h.close()}
 })

@@ -3,10 +3,11 @@ import {createUlid} from '../../src/core/shared/ids.ts'
 import {channelLegacyPolicyRules} from '../../src/domains/channels/setup.server.ts'
 import {LAUNCH_APP_ID} from '../../src/apps/launch/contracts.ts'
 import {completeFirstRun} from './complete-first-run.mjs'
+import {evidenceCommentErasureJourney} from './evidence-comment-erasure.mjs'
 
 /** Native sessions and public comment/read doors; only the paid mail edge is fake. */
 export async function evidenceCommentsJourney(h){
- const email='comment-reader@example.test',name='Comment reader'
+ const name='synthetic-cradle-5701',email=[name,'example.test'].join('@')
  await h.request('/auth/invite',{method:'POST',status:202,body:{email,displayName:name,role:'member'}})
  const messages=await h.mailMessages(),invite=messages.findLast(message=>message.personalizations?.some(group=>group.to?.some(to=>to.email===email)))
  assert.ok(invite)
@@ -70,4 +71,5 @@ export async function evidenceCommentsJourney(h){
  await h.request('/api/v1/commands/comment.delete',{method:'POST',body:command({subject,id:added.id,version:edited.version})})
  assert.equal((await h.request(search)).data.items.length,0)
  assert.ok((await h.request('/api/v1/comments?'+query)).data.items.find(item=>item.id===added.id).deletedAt)
+ await evidenceCommentErasureJourney(h,{recipient,operator,name,email,confirmationToken:new URL(href).searchParams.get('token')})
 }

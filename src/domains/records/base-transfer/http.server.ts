@@ -11,6 +11,7 @@ import type { createBaseImportService } from './service.server'
 import { idSchema } from '../validators'
 import { sourceKinds } from './source-kinds'
 import { ImportInputError } from './input-error'
+import { sourceRecordMapCsv } from './source-record-map'
 const types=z.enum(['email','rating','duration','phone','text','number','date','instant','money','boolean','select','multi_select','url','person','relation','attachment','computed'])
 const overrides=z.object({sourceKind:z.enum(sourceKinds).optional(),sourceChoices:z.array(z.string().min(1).max(200)).max(10000).optional(),lookup:z.object({relationColumnKey:z.string(),valueColumnKey:z.string()}).strict().optional(),type:types.optional(),label:z.string().max(200).optional(),options:z.array(z.string().max(200)).max(10000).optional(),dateConvention:z.enum(['iso','day-first','month-first']).optional(),relationTableKey:z.string().max(500).optional(),cardinality:z.enum(['one','many']).optional(),onDelete:z.literal('restrict').optional(),reciprocal:z.object({tableKey:z.string(),columnKey:z.string()}).strict().optional(),derivedFrom:z.object({tableKey:z.string(),columnKey:z.string()}).strict().optional(),skip:z.boolean().optional()}).strict()
 const optionsSchema=z.object({correspondenceAcceptedFingerprint:z.string().regex(/^[a-f0-9]{64}$/).optional(),referenceChoices:z.record(z.string().max(2000),z.string().max(500)).optional(),name:z.string().max(120),tables:z.record(z.string(),z.object({label:z.string().min(1).max(120).optional(),primaryColumnKey:z.string().optional(),columns:z.record(z.string(),overrides).optional()}).strict()).optional()}).strict()
@@ -60,11 +61,12 @@ export function baseImportHttp(service:ReturnType<typeof createBaseImportService
   }else if(request.method==='POST'&&url.pathname===prefix+'/adopt'){
    const input=z.object({reviewId:idSchema,fingerprint:z.string().regex(/^[a-f0-9]{64}$/),physicalFingerprint:z.string().regex(/^[a-f0-9]{64}$/),acceptLoss:z.boolean()}).strict().parse(await readJsonBody(request));data=await service.adopt(ctx,input.reviewId,input)
   }else{
-   const match=url.pathname.match(/^\/api\/v1\/records\/base-import\/jobs\/([^/]+)(?:\/(resume|undo|rollback|report\.json|receipt\.json|attachment-manifest\.csv))?$/)
+   const match=url.pathname.match(/^\/api\/v1\/records\/base-import\/jobs\/([^/]+)(?:\/(resume|undo|rollback|report\.json|receipt\.json|source-record-map\.(?:csv|json)|attachment-manifest\.csv))?$/)
    if(!match)throw new ApiError('not_found','Import route not found.')
    const id=z.uuid().parse(match[1]),action=match[2]
    const download=(body:string,type:string,filename:string)=>new Response(body,{headers:{'content-type':type,'content-disposition':`attachment; filename="${filename.replace(/[^A-Za-z0-9._ -]/g,'_')}"`,'cache-control':'no-store'}})
    if(request.method==='GET'&&action==='receipt.json'){data=await service.receipt(ctx,id);if(url.searchParams.get('download')==='1')return download(JSON.stringify(data,null,2),'application/json','base-import-receipt.json')}
+   else if(request.method==='GET'&&(action==='source-record-map.csv'||action==='source-record-map.json')){const map=await service.sourceRecordMap(ctx,id);return action.endsWith('.csv')?download(sourceRecordMapCsv(map),'text/csv; charset=utf-8','source-record-map.csv'):download(JSON.stringify(map,null,2),'application/json','source-record-map.json')}
    else if(request.method==='GET'&&action==='attachment-manifest.csv'){const manifest=await service.attachmentManifest(ctx,id,z.string().min(1).max(500).parse(url.searchParams.get('table')),z.string().min(1).max(500).parse(url.searchParams.get('column')));return download(manifest.csv,'text/csv; charset=utf-8',manifest.filename)}
    else if(request.method==='GET'&&(!action||action==='report.json')){data=await service.status(ctx,id);if(action)return new Response(JSON.stringify(data,null,2),{headers:{'content-type':'application/json','content-disposition':'attachment; filename="base-import-report.json"','cache-control':'no-store'}})}
    else if(request.method==='POST'&&['resume','undo','rollback'].includes(action??'')){z.object({}).strict().parse(await readJsonBody(request));data=await service[action as 'resume'|'undo'|'rollback'](ctx,id)}

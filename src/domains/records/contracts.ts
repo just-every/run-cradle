@@ -27,6 +27,7 @@ export type Query = PageQuery & {
     groupBy?: Id[];
     fields?: Id[];
     includeArchived?: boolean;
+    includeGroups?: boolean;
 };
 export type Expr = {
     kind: 'field';

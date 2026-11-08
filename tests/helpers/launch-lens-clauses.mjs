@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { verifyShippedLensLifecycle as shipped } from './launch-shipped-lens-journey.mjs'
 
 const businessTables = ['campaigns', 'campaign_tags', 'launch_custom_values', 'deliverables', 'milestones', 'milestone_dependencies', 'risks', 'decisions', 'evidence_comments', 'launch_readiness', 'notifications', 'channel_notifications', 'channel_deliveries', 'channel_events', 'automations', 'automation_runs', 'launch_analyses', 'launch_analysis_requests', 'launch_model_calls', 'activity_entries']
 const observedTables = [...businessTables, 'lenses', 'launch_lens_history', 'command_admissions', 'admission_audit', 'admission_events', 'admission_outbox']
@@ -13,6 +14,10 @@ async function read(h, route, session = h.ownerSession) {
  const response = await h.request(session, route)
  assert.equal(response.status, 200, route)
  return response.json()
+}
+async function command(h, session, action, input, expected = []) {
+ const response = await h.request(session, `/api/v1/commands/launch.${action}`, { method: 'POST', body: JSON.stringify({ commandId: h.r.createUlid(), input, expected }) })
+ return { status: response.status, body: await response.json() }
 }
 async function preview(h, input, expectedIds) {
  const started = performance.now()
@@ -117,9 +122,22 @@ async function lifecycle(h, fixtures) {
  }
  for (const [recordType, display, field] of [['Campaign', 'Cards', 'code'], ['Risk', 'Timeline', 'title'], ['Milestone', 'Grid', 'title'], ['Decision', 'Agenda', 'title']]) await invalid(h, definition({ recordType, display, sort: { field, direction: 'asc' }, fields: [field] }))
  const input = definition({ conditions: [{ field: 'code', operator: 'contains', value: fixtures.prefix }, { field: 'phase', operator: 'equals', value: 'Planning' }] })
- let saved = await h.commit('lens.save', { definition: input })
+ const saver = await h.addPerson({ name: 'Lens author' })
+ assert.notEqual(saver.id, h.owner)
+ const saveStartedAt = Date.now()
+ const saveResponse = await h.request(saver.session, '/api/lenses', { method: 'POST', body: JSON.stringify(input) })
+ assert.equal(saveResponse.status, 201)
+ const saveFinishedAt = Date.now()
+ let saved = (await saveResponse.json()).lens
+ const attribution = (await read(h, `/api/lenses/${saved.id}`, saver.session)).lens
+ assert.equal(attribution.createdById, saver.id, 'HTTP readback names the independently known saving operator')
+ assert.ok(Number.isFinite(attribution.createdAt) && attribution.createdAt >= saveStartedAt && attribution.createdAt <= saveFinishedAt, 'HTTP creation time falls within the observed save interval')
  const person = await h.addPerson({ name: 'Shared lens colleague' })
- assert.deepEqual(canonical((await read(h, `/api/lenses/${saved.id}`, person.session)).lens), input)
+ assert.notEqual(person.id, saver.id)
+ const shared = (await read(h, `/api/lenses/${saved.id}`, person.session)).lens
+ assert.deepEqual(canonical(shared), input)
+ assert.equal(shared.createdById, saver.id, 'Another operator sees the saver rather than themselves')
+ assert.equal(shared.createdAt, attribution.createdAt, 'Every operator reads the same saved creation time')
  assert.ok((await read(h, '/api/lenses', person.session)).items.some(row => row.id === saved.id))
  const document = await h.request(person.session, saved.shareUrl)
  assert.equal(document.status, 200, 'A saved lens share opens for another signed-in operator')
@@ -153,27 +171,33 @@ async function lifecycle(h, fixtures) {
  assert.equal((await h.request(person.session, `/api/lenses/${saved.id}?view=results`)).status,404)
 }
 
-async function shipped(h) {
- const expected = {
-  risks: { recordType: 'Risk', conditions: [{ field: 'severity', operator: 'one of', value: ['High', 'Critical'] }, { field: 'state', operator: 'not equals', value: 'Resolved' }, { field: 'campaignLaunchDate', operator: 'within the next N days', value: '30' }], sort: { field: 'severity', direction: 'desc' }, fields: ['severity', 'state', 'owner', 'dueDate', 'signal', 'mitigation', 'campaign'], display: 'Cards' },
-  timeline: { recordType: 'Milestone', conditions: [], sort: { field: 'startDate', direction: 'asc' }, fields: ['title', 'startDate', 'endDate', 'campaign'], display: 'Timeline' },
- }
- for (const [key, required] of Object.entries(expected)) {
-  let original = (await read(h, '/api/lenses')).items.find(lens => lens.shippedKey === key)
-  assert.ok(original, `${key} is installed as a saved lens`)
-  const shippedDefinition = { ...canonical(original), ...required }
-  const before = await snapshot(h.db, businessTables)
-  await assert.rejects(h.prepare('lens.delete', { id: original.id }, h.expected('lens', original)), error => error.code === 'validation')
-  const duplicate = await h.commit('lens.save', { definition: { ...canonical(original), name: original.name + ' operator copy' } })
-  assert.equal((await read(h, `/api/lenses/${duplicate.id}`)).lens.shippedKey, null)
-  assert.equal((await read(h, `/api/lenses/${original.id}`)).lens.version, original.version)
-  original = await h.commit('lens.save', { id: original.id, definition: { ...canonical(original), name: 'Edited shipped lens', description: 'Operator changes', conditions: [{ field: 'title', operator: 'contains', value: 'held out' }], fields: ['title'], sort: { field: 'title', direction: 'desc' } } }, h.expected('lens', original))
-  const restored = await h.commit('lens.restore', { id: original.id }, h.expected('lens', original))
-  assert.deepEqual(canonical(restored), shippedDefinition, 'Restore reinstates the complete shipped definition')
-  assert.deepEqual((await read(h, `/api/lenses/${original.id}`)).lens.conditions, required.conditions)
-  await h.commit('lens.delete', { id: duplicate.id }, h.expected('lens', duplicate))
-  assert.deepEqual(await snapshot(h.db, businessTables), before, 'Duplicating, editing and restoring shipped lenses changes no business record')
- }
+async function publicDeletion(h, fixtures) {
+ const person = await h.addPerson({ name: 'Lens deletion operator' })
+ const input = definition({ conditions: [{ field: 'code', operator: 'contains', value: fixtures.prefix }, { field: 'phase', operator: 'equals', value: 'Planning' }] })
+ const records = [fixtures.a, fixtures.b, fixtures.c]
+ const beforeRecords = await Promise.all(records.map(async row => (await read(h, `/api/campaigns/${row.id}`, person.session)).campaign))
+ const before = await snapshot(h.db, businessTables)
+ const created = await command(h, person.session, 'lens.save', { definition: input })
+ assert.equal(created.status, 200, JSON.stringify(created.body))
+ const saved = created.body.data.value
+ assert.deepEqual(canonical(saved), input)
+ await currentResults(h, saved, [fixtures.a.id, fixtures.c.id], person.session)
+ // The excluded control is an active, readable campaign, excluded only by the saved condition.
+ assert.equal(beforeRecords[1].phase, 'Build')
+ const grid = await read(h, '/api/campaigns?limit=200', person.session)
+ const beforeGrid = records.map(row => grid.items.find(item => item.id === row.id))
+ assert.ok(beforeGrid.every(Boolean), 'Both displayed campaigns and the condition-excluded campaign exist in the public grid')
+ const current = (await read(h, `/api/lenses/${saved.id}`, person.session)).lens
+ const deleted = await command(h, person.session, 'lens.delete', { id: current.id }, h.expected('lens', current))
+ assert.equal(deleted.status, 200, JSON.stringify(deleted.body))
+ assert.deepEqual(deleted.body.data.value, { deletedId: saved.id })
+ assert.equal((await read(h, '/api/lenses', person.session)).items.some(row => row.id === saved.id), false)
+ for (const suffix of ['', '?view=results']) assert.equal((await h.request(person.session, `/api/lenses/${saved.id}${suffix}`)).status, 404)
+ const afterRecords = await Promise.all(records.map(async row => (await read(h, `/api/campaigns/${row.id}`, person.session)).campaign))
+ assert.deepEqual(afterRecords, beforeRecords, 'Public lens deletion preserves the displayed and condition-excluded records, including versions and archive state')
+ const afterGrid = await read(h, '/api/campaigns?limit=200', person.session)
+ assert.deepEqual(records.map(row => afterGrid.items.find(item => item.id === row.id)), beforeGrid)
+ assert.deepEqual(await snapshot(h.db, businessTables), before, 'Public save and deletion preserve every business table, including queued business effects')
 }
 
 export async function verifyLensClauses(h) {
@@ -193,6 +217,7 @@ export async function verifyLensClauses(h) {
  const tagged = await h.commit('campaign.patch', { id: a.id, changes: { customFields: { [custom.id]: 'north' }, tags: ['Supplier'] } }, h.expected('campaign', a))
  const fixtures = { a: tagged, b, c, prefix, today, custom }
  await conditions(h, fixtures)
+ await publicDeletion(h, fixtures)
  await lifecycle(h, fixtures)
- await shipped(h)
+ await shipped(h, fixtures)
 }
