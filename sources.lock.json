@@ -13594,7 +13594,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "0f1c3183428fff0d21fc8752cb70ebebc2a65612fd9e932c0aea7eaddeefdf63",
+      "sha256": "4d7e7d89e52a47e701f51c137a8630079462db34a3083a871a14e691db897987",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {

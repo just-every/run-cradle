@@ -43,9 +43,23 @@ contract(['RECORDS-002','RECORDS-003'].join('] ['),'Record detail keeps one rela
  }finally{await browser?.close();await h?.close()}
 })
 contract(['MOBILE-001','CALC-001','PERM-009','IFACE-006','CALC-002','FORM-002','VIEW-014','VIEW-009','VIEW-013','VIEW-015','VIEW-016','RECORDS-002','RECORDS-003','RECORDS-004','RECORDS-009','FILE-001'].join('] ['),'[SNAP-002] Manual records browser journeys and concrete UI review corrections',async()=>{
+ // These two streams own separate Workers, databases, browser contexts and
+ // evidence directories. Await both cleanups even when one assertion fails.
+ const results=await Promise.allSettled([manualRecordsBrowser(),supportingRecordsBrowsers()])
+ for(const result of results)if(result.status==='rejected')throw result.reason
+})
+
+async function supportingRecordsBrowsers(){
  await fieldBrowser()
  await recordTrashBrowser()
  await baseRolesJourney()
+ await collectionLookupsBrowser()
+ await conditionalFormsJourney()
+ await historyBrowserJourney()
+ await recordCommentsBrowser()
+}
+
+async function manualRecordsBrowser(){
 let h,browser,activePage
 try{
  h=await recordsBrowserRuntime(Number(process.env.CRADLE_RECORDS_PORT ?? 0));const bindings=await h.runtime.getBindings();for(const key of ['AI_PROVIDER_API_KEY','OPENAI_API_KEY','ANTHROPIC_API_KEY'])assert.ok(!bindings[key],`${key} must be absent for no-AI records acceptance`);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic'],...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})})
@@ -75,8 +89,4 @@ try{
  await writeFile(path.join(output,'ai-counts.json'),JSON.stringify(aiCounts,null,2));
  await writeFile(path.join(output,'results.json'),JSON.stringify(receipts,null,2));console.log(JSON.stringify({passed:receipts,evidence:output}))
 }catch(error){if(activePage){try{await activePage.screenshot({path:path.join(output,'failure.png'),fullPage:false,timeout:5000});await writeFile(path.join(output,'failure.html'),await activePage.content())}catch{console.warn('Failure screenshot unavailable; retaining the original journey error.')}}throw error}finally{await browser?.close();await h?.close()}
-await collectionLookupsBrowser()
-await conditionalFormsJourney()
-await historyBrowserJourney()
-await recordCommentsBrowser()
-})
+}
