@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { contract } from './contract.mjs'
 import { launchBaseAuthorityRuntime } from './helpers/launch-base-authority-runtime.mjs'
 import { workspaceOperations } from './helpers/workspace-operations.mjs'
+import { readInitialLaunch } from './helpers/launch-first-run-journey.mjs'
 
 contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001 OPS-003 OPS-006', '[OPS-006] [OPS-003] The installed Lobby recognizes the owner claim, validates workspace setup, preserves money on relabel and moves workspace schedules', async () => {
   const h = await launchBaseAuthorityRuntime()
@@ -56,6 +57,7 @@ contract('HOME-003 BASE-DATA-001 RECORDS-006 SET-003 AUTH-BASE-001 OPS-003 OPS-0
       assert.equal((await h.db.prepare('SELECT completed_at FROM cradle_first_run').first()).completed_at,null)
     }
     assert.equal((await submit(new URLSearchParams(details))).status,303)
+    await readInitialLaunch(h, cookie)
     await h.db.prepare("UPDATE workspace SET name='Northwind' WHERE id='workspace'").run()
     assert.deepEqual(await state(), { state: 'claimed' })
     const claimed = await home()
@@ -81,6 +83,7 @@ async function configuredInstallation() {
     const firstVisit = await h.request('/app', { headers: { cookie } })
     assert.equal(firstVisit.status, 200, 'The owner opens the app without a second setup')
     await firstVisit.arrayBuffer()
+    await readInitialLaunch(h, cookie)
     const read = async route => {
       const response = await h.request(route, { headers: { cookie } })
       assert.equal(response.status, 200, route)

@@ -5,17 +5,18 @@ import { chromium, expect } from '@playwright/test'
 import { contract } from './contract.mjs'
 import { launchAuthorityRuntime, LAUNCH_APP_ID, launchEntities } from './helpers/launch-authority-runtime.mjs'
 import { createFixtureAuth } from './helpers/base-fixture-auth.mjs'
+import { settingsCapacityBrowser } from './helpers/settings-capacity-browser.mjs'
 import { doorsBrowser, csvRows } from './helpers/launch-doors-browser.mjs'
 import { settingsAttributionJourney } from './helpers/settings-attribution-journey.mjs'
 
 // One real-door journey per operator door, through the emitted Worker at desktop and phone:
-// import, export, workspace attribution, custom fields, bulk edit, samples and ownership.
-contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone', async () => {
+// import, export, workspace attribution, custom fields, bulk edit, sample data, invitations and ownership handover.
+contract('IMPORT-001', '[OWN-001] [IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-013] [SET-001] [SET-003] [OPS-002] Launch operator doors at desktop and phone', async () => {
  const output = path.resolve(process.env.CRADLE_DOORS_EVIDENCE ?? '../evidence/de-doors')
  await mkdir(output, { recursive: true })
  const h = await launchAuthorityRuntime({}, { installedLaunchDefinitions: true, installationOwner: true })
- const receipt = { environment: 'Actual emitted Worker and native D1, synthetic fixtures only', screens: [], downloads: [], errors: [] }
- const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] })
+ const receipt = { environment: 'Actual emitted Worker and native D1, synthetic fixtures only', screens: [], downloads: [], invitations: [], errors: [] }
+ const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ['--no-sandbox', '--use-mock-keychain', '--password-store=basic'] })
  try {
   let actor = { id: h.owner, session: h.ownerSession }
   for (const width of [1440, 390]) {
@@ -25,7 +26,90 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
    await context.addCookies([{ name: actor.session.cookie.split('=')[0], value: actor.session.cookie.slice(actor.session.cookie.indexOf('=') + 1), url: h.origin }])
    const b = doorsBrowser({ h, page, width, output, session: () => actor.session, receipt })
    try {
+   await settingsCapacityBrowser({ h, page, b, width, actor, receipt })
    const actorEmail = await h.db.prepare('SELECT email FROM operators WHERE id=?').bind(actor.id).first('email')
+   const openPeople = async () => { await b.visit('/app/settings'); await b.openPanel('People and authority'); await page.getByLabel('Application').selectOption(LAUNCH_APP_ID); await page.getByRole('region', { name: 'Workspace members' }).waitFor() }
+   const row = name => page.getByRole('region', { name: 'Workspace members' }).locator('tr', { hasText: name })
+
+   // The inviter is a current non-owner operator. Only the inviter is fixture-created;
+   // the new identity must come from the shipped Settings form under the initial policy.
+   const inviter = await h.addPerson({ name: `Invitation operator ${width}`, legacy: true })
+   const read = async route => {
+    const response = await h.request(inviter.session, route)
+    assert.equal(response.status, 200, await response.clone().text())
+    return (await response.json()).data
+   }
+   assert.equal((await read('/api/v1/session')).member.id, inviter.id)
+   assert.equal((await read(`/api/v1/members?appId=${LAUNCH_APP_ID}`)).items.find(member => member.id === inviter.id).owner, false, 'The invitation is submitted by a non-owner')
+   assert.ok(inviter.rules.every(rule => !rule.actions.includes('member.invite')), 'Invitation authority comes from the unchanged initial management policy')
+   const choices = await read(`/api/v1/authority/invite-policies?appId=${LAUNCH_APP_ID}`)
+   const selected = choices.find(policy => policy.id === inviter.policyId)
+   assert.ok(selected, 'The inviter can explicitly select their current Launch policy')
+   assert.equal(selected.appId, LAUNCH_APP_ID)
+   const invitedName = `Invited Launch operator ${width} ${inviter.id}`
+   const invitedEmail = `synthetic-cradle-invited-${inviter.id.toLowerCase()}${String.fromCharCode(64)}example.test`
+   const targets = members => members.filter(member => member.name === invitedName || member.email === invitedEmail)
+   assert.deepEqual(targets((await read(`/api/v1/members?appId=${LAUNCH_APP_ID}`)).items), [], 'The invitation target does not exist before submission')
+   await context.addCookies([{ name: inviter.session.cookie.split('=')[0], value: inviter.session.cookie.slice(inviter.session.cookie.indexOf('=') + 1), url: h.origin }])
+   await openPeople()
+   await page.getByText('Invite a person', { exact: true }).click()
+   const inviteForm = page.locator('form').filter({ has: page.getByRole('button', { name: 'Invite to this application' }) })
+   await inviteForm.getByLabel('Name', { exact: true }).fill(invitedName)
+   await inviteForm.getByLabel('Email', { exact: true }).fill(invitedEmail)
+   await inviteForm.getByLabel('Application access').selectOption({ value: selected.id })
+   await expect(inviteForm.getByLabel('Application access').locator('option:checked')).toHaveText(selected.name)
+   await b.capture('settings-invitation-review')
+   const [invitation] = await Promise.all([
+    page.waitForResponse(response => response.url().endsWith('/api/v1/commands/member.invite') && response.request().method() === 'POST'),
+    inviteForm.getByRole('button', { name: 'Invite to this application' }).click(),
+   ])
+   assert.equal(invitation.status(), 200, await invitation.text())
+   const submitted = invitation.request().postDataJSON(), committed = (await invitation.json()).data
+   assert.deepEqual(submitted.input, { name: invitedName, email: invitedEmail, scopes: [{ appId: LAUNCH_APP_ID, policyId: selected.id, legacy: false }] })
+   assert.equal(committed.commandId, submitted.commandId)
+   assert.equal(committed.state, 'committed')
+   const invited = committed.value
+   assert.match(invited.id, /^[0-9A-HJKMNP-TV-Z]{26}$/)
+   assert.notEqual(invited.id, inviter.id)
+   const checkIdentity = member => {
+    assert.equal(member.id, invited.id, 'Readback retains the committed target identity')
+    assert.equal(member.name, invitedName)
+    assert.equal(member.email, invitedEmail)
+    assert.equal(member.state, 'invited')
+    assert.equal(member.scopes.length, 1, 'The invitation gives access to exactly the selected application')
+    assert.equal(member.scopes[0].appId, LAUNCH_APP_ID)
+    assert.equal(member.scopes[0].legacy, false)
+    assert.match(member.scopes[0].policyId, /^[0-9A-HJKMNP-TV-Z]{26}$/)
+    assert.notEqual(member.scopes[0].policyId, selected.id, 'The invitee receives their own scoped policy')
+   }
+   checkIdentity(invited)
+   const reconciliation = await read(`/api/v1/commands/${submitted.commandId}`)
+   assert.equal(reconciliation.state, 'committed')
+   assert.equal(reconciliation.commandId, submitted.commandId)
+   assert.deepEqual(reconciliation.result, invited, 'Reconciliation returns the original invitation identity and scope')
+   const members = (await read(`/api/v1/members?appId=${LAUNCH_APP_ID}`)).items
+   assert.equal(targets(members).length, 1, 'Reconciliation leaves one matching target identity')
+   checkIdentity(targets(members)[0])
+   assert.deepEqual(targets(members)[0].scopes, invited.scopes)
+   // Navigate before observing readback so a departing document cannot own the response.
+   await b.visit('/app/settings')
+   await b.openPanel('People and authority')
+   const reloadedMembers = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/members' && response.request().method() === 'GET').then(async response => {
+    assert.equal(response.status(), 200)
+    return (await response.json()).data.items
+   })
+   const [reloaded] = await Promise.all([
+    reloadedMembers,
+    page.getByLabel('Application').selectOption(LAUNCH_APP_ID),
+   ])
+   await page.getByRole('region', { name: 'Workspace members' }).waitFor()
+   assert.deepEqual(targets(reloaded).map(member => member.id), [invited.id], 'Reload reads the same single identity from the public member door')
+   checkIdentity(targets(reloaded)[0])
+   await expect(row(invitedName)).toHaveCount(1)
+   await expect(row(invitedName).locator('td')).toHaveText([invitedName, invitedEmail, 'invited', '1 scoped applications', 'Remove access'])
+   await b.capture('settings-invitation-reloaded')
+   receipt.invitations.push({ width, commandId: submitted.commandId, memberId: invited.id, appId: LAUNCH_APP_ID, state: invited.state, targetCount: targets(reloaded).length })
+   await context.addCookies([{ name: actor.session.cookie.split('=')[0], value: actor.session.cookie.slice(actor.session.cookie.indexOf('=') + 1), url: h.origin }])
 
    // Import: upload, map, review creates/updates, confirm atomically, download the stored file.
    const vertex = await h.db.prepare("SELECT name FROM campaigns WHERE code='CMP-261'").first('name')
@@ -154,8 +238,6 @@ contract('IMPORT-001', '[IMPORT-003] [IMPORT-005] [DATA-002] [CAMP-008] [CAMP-01
 
    // Ownership: hand over after a fresh email-link confirmation, move work, then leave.
    if (width === 1440) await h.db.prepare('UPDATE oa_sessions SET created_at=created_at-700000 WHERE id=?').bind(actor.session.baseId).run()
-   const openPeople = async () => { await b.visit('/app/settings'); await b.openPanel('People and authority'); await page.getByLabel('Application').selectOption(LAUNCH_APP_ID); await page.getByRole('region', { name: 'Workspace members' }).waitFor() }
-   const row = name => page.getByRole('region', { name: 'Workspace members' }).locator('tr', { hasText: name })
    await openPeople()
    await row(successorName).getByRole('button', { name: 'Make owner' }).click()
    await page.getByRole('button', { name: `Hand over ownership to ${successorName}` }).click()

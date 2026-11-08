@@ -28,8 +28,10 @@ export function createRuntimeEvents(platform: Platform, runtime: Runtime,clock=(
     await runtime.providers.handlers.scheduled()
   }
   async function scheduled() {
+    // Privacy cleanup must precede admissions that its pending receipt fences.
+    // Resume other scheduled work on the next delivery with a fresh request clock.
+    if (await runtime.lifecycle.cleanup.maintain()) return
     await runtime.launch.scheduled()
-    await runtime.lifecycle.cleanup.maintain()
     await runtime.trashPurge()
     // Owed import and export notices retry every tick, whatever their job's schedule.
     await deliverOwedProgress(platform.bindings.DB, 'schedule',undefined,clock())

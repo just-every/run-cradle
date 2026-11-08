@@ -1,3 +1,4 @@
+import {launchEntities} from '../../apps/launch/contracts'
 import {AuthorityError} from '../authority/errors'
 import type {RequestContext,PolicyPort} from '../authority/ports'
 import {registerTable} from '../admission/sql.server'
@@ -26,5 +27,5 @@ export function createLifecycleCleanup(db:D1Database,bucket:R2Bucket,warehouse?:
   const current=await db.prepare('SELECT state FROM lifecycle_erasures WHERE id=?').bind(id).first<{state:'pending'|'complete'}>()
   return {id,state:current!.state}
  }
- return {advance,async maintain(){for(const job of (await db.prepare("SELECT id FROM lifecycle_erasures WHERE state='pending' ORDER BY requested_at LIMIT 20").all<{id:string}>()).results)await advance(job.id)},async status(ctx:RequestContext,policy:PolicyPort,id:string){const row=await db.prepare('SELECT app_id,subject_kind,state,requested_at,completed_at,anonymous_label FROM lifecycle_erasures WHERE id=?').bind(id).first<{app_id:string;subject_kind:string;state:string;requested_at:string;completed_at:string|null;anonymous_label:string}>();if(!row)throw new AuthorityError('not_found','Erasure receipt not found.',404);await policy.authorize(ctx,{appId:row.app_id,action:row.subject_kind==='member'?'member.erase':'launch.campaign.delete',expected:[],cost:[],inputHash:''});return row}}
+ return {advance,async maintain(){const jobs=(await db.prepare("SELECT id FROM lifecycle_erasures WHERE state='pending' ORDER BY requested_at LIMIT 20").all<{id:string}>()).results;for(const job of jobs)await advance(job.id);return jobs.length},async status(ctx:RequestContext,policy:PolicyPort,id:string){const row=await db.prepare('SELECT app_id,subject_kind,state,requested_at,completed_at,anonymous_label FROM lifecycle_erasures WHERE id=?').bind(id).first<{app_id:string;subject_kind:string;state:string;requested_at:string;completed_at:string|null;anonymous_label:string}>();if(!row)throw new AuthorityError('not_found','Erasure receipt not found.',404);await policy.authorize(ctx,{appId:row.app_id,action:row.subject_kind==='member'?'member.erase':row.subject_kind==='campaign-import'?'import.delete':'launch.campaign.delete',...(row.subject_kind==='campaign-import'?{targetEntityId:launchEntities.campaign}:{}),expected:[],cost:[],inputHash:''});return row}}
 }
