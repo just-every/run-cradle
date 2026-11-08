@@ -1,14 +1,9 @@
-import {recordCommentsBrowser} from './helpers/records-comment-browser.mjs'
+import {fileURLToPath} from 'node:url'
+import {spawn} from 'node:child_process'
 import {recordTemplateBrowser} from './helpers/record-template-browser.mjs'
 import {gridRangeBrowserJourney} from './helpers/records-grid-range-browser.mjs'
 import {baseAction} from './helpers/records-base-menu.mjs'
-import {fieldBrowser} from './helpers/field-browser.mjs'
-import {recordTrashBrowser} from './helpers/record-trash-browser.mjs'
 import {recordsBrowserWidths} from './helpers/records-browser-widths.mjs'
-import {baseRolesJourney} from './helpers/records-base-roles-journey.mjs'
-import { collectionLookupsBrowser } from './helpers/records-collection-browser.mjs'
-import { historyBrowserJourney } from './helpers/records-history-journey.mjs'
-import { conditionalFormsJourney } from './helpers/records-forms-journey.mjs'
 import {boardBrowserJourney} from './helpers/records-board-journey.mjs'
 import {findBrowserJourney} from './helpers/records-find-journey.mjs'
 import {liveBrowserJourney} from './helpers/records-live-journey.mjs'
@@ -50,13 +45,17 @@ contract(['MOBILE-001','CALC-001','PERM-009','IFACE-006','CALC-002','FORM-002','
 })
 
 async function supportingRecordsBrowsers(){
- await fieldBrowser()
- await recordTrashBrowser()
- await baseRolesJourney()
- await collectionLookupsBrowser()
- await conditionalFormsJourney()
- await historyBrowserJourney()
- await recordCommentsBrowser()
+ // The real installation migrations are synchronous. Isolate their event
+ // loop so they cannot starve the core journey's Playwright protocol/timers.
+ await new Promise((resolve,reject)=>{
+  const env={...process.env};delete env.NODE_TEST_CONTEXT
+  const child=spawn(process.execPath,[
+   '--import',fileURLToPath(new URL('./helpers/typescript-loader.mjs',import.meta.url)),
+   fileURLToPath(new URL('./helpers/records-supporting-browsers.mjs',import.meta.url)),
+  ],{stdio:'inherit',env})
+  child.once('error',reject)
+  child.once('exit',(code,signal)=>code===0?resolve():reject(new Error(`Supporting records journeys failed: ${signal??code}`)))
+ })
 }
 
 async function manualRecordsBrowser(){

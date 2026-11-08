@@ -12905,6 +12905,10 @@
       "sha256": "713e0ccbbbba8aa7502c857e5c761c7cf5d10d18df371e7ef37b2a22faac2ca5",
       "executable": false
     },
+    "tests/helpers/records-supporting-browsers.mjs": {
+      "sha256": "dae44942f9edf74ef246f30885d78d091a98164b5e5ad41ce05279659b415256",
+      "executable": false
+    },
     "tests/helpers/records-table-tools.mjs": {
       "sha256": "b76a0b8aaab8862dc328297db4152fada65cd4df7f48a5498980be1b1a0c5759",
       "executable": false
@@ -13594,7 +13598,7 @@
       "executable": false
     },
     "tests/ui-records-builder.mjs": {
-      "sha256": "4d7e7d89e52a47e701f51c137a8630079462db34a3083a871a14e691db897987",
+      "sha256": "5836b35a2ed802a03db5b84d80aa8b9b4ed1935ea8c6eb5835584b7acb686fa5",
       "executable": false
     },
     "tests/ui-records-calendar.mjs": {
