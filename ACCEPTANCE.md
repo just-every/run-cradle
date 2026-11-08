@@ -2880,8 +2880,8 @@ Core · target · **partial** · Cites BASE-ACCESSIBILITY-001 · Register R-2, R
 **Acceptance.**
 1. Every browser journey above also runs at 390 and 320 with axe.
 
-**Evidence.** `tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`
-**Gap.** Current CI exercises records, import/exit, calendar/board/gallery/timeline, collaboration, roles, automation and Launch browser journeys at 390 as well as 1440 (`tests/ui-records-builder.mjs`, `tests/ui-base-import.mjs`, `tests/ui-base-exits.mjs`, `tests/ui-records-calendar.mjs`, `tests/ui-user-automations.mjs`, `tests/ui-launch-walkthrough.mjs`); 320 px and complete coverage of every target journey remain unproven
+**Evidence.** `tests/ui-records-builder.mjs` (Home presents records and bases before launch work at desktop and phone widths; Record detail keeps one relation heading, reachable links and policy restrictions; [SNAP-002] Manual records browser journeys and concrete UI review corrections, including historyBrowserJourney, baseRolesJourney, collectionLookupsBrowser, conditionalFormsJourney and recordCommentsBrowser); `tests/ui-records-calendar.mjs` (record calendars, boards, private covers and saved view presentation at desktop and phone widths); `tests/ui-user-automations.mjs` (owners issue and revoke keys, edit record automations and inspect real completed runs on desktop and phone); `tests/helpers/records-browser-journey.mjs` (recordsJourney: actual phone viewport, page overflow, measured active 24-by-24 CSS-pixel hit regions and serious or critical axe checks)
+**Gap.** Every other records, import, view, form, interface, comment and automation-history journey still needs complete 320 and 390 coverage, target measurements and accessibility proof, including journeys for currently unbuilt features. These bounded sanity journeys do not satisfy the whole-phone-app clause. Ct contract conversion and generated-document synchronization remain unchanged release prerequisites; this held pin has no contract-docs generator or declared Lander-Regenerate command.
 
 #### MOBILE-002 — Installable app with camera and scanning
 
