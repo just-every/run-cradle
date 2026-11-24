@@ -3,6 +3,7 @@ import { identifier, registerTable } from '../admission/sql.server';
 import { compileSchema, createDescriptorRegistry, physicalName, type EntityDescriptor } from './descriptors.server';
 import { entitySchema } from './validators';
 import type { EntitySchema } from './contracts';
+import { fingerprint, recordVerification, verifiedFingerprints } from '../schema/verifications.server';
 /** Only retained choices may extend a source schema at the same version. */
 function retainedSuperset(source: EntityDescriptor, schema: EntitySchema): EntityDescriptor | undefined {
     if (!source.legacy || source.schema.fields.length !== schema.fields.length) return;
@@ -57,13 +58,27 @@ export async function loadDescriptorRegistry(db: D1Database, sources: readonly E
         const prior = schema.version > 1 ? (source ?? descriptors.get(key)!) : undefined;
         descriptors.set(key, compileSchema(schema, (app, id) => descriptors.get(app + ':' + id), prior).descriptor);
     }
-    for (const d of descriptors.values()) {
+    await verifyPhysicalColumns(db, [...descriptors.values()]);
+    return createDescriptorRegistry([...descriptors.values()]);
+}
+
+/** Each physical table's writable columns are proven against PRAGMA once, then recorded by the
+ * fingerprint of the column list; a run reads the records, not the schema. */
+async function verifyPhysicalColumns(db: D1Database, descriptors: readonly EntityDescriptor[]) {
+    const recorded = await verifiedFingerprints(db, 'physical-columns');
+    const changed: D1PreparedStatement[] = [];
+    for (const d of descriptors) {
+        const expected = await fingerprint(d.table.writableColumnIds.join(','));
+        if (recorded.get(d.table.tableId) === expected)
+            continue;
         const columns = await db.prepare(`PRAGMA table_xinfo(${identifier(d.table.tableId)})`).all<{
             name: string;
         }>();
         const actual = new Set(columns.results.map(c => c.name));
         if (!d.table.writableColumnIds.every(c => actual.has(c)))
             throw new Error('Admitted physical schema is unavailable: ' + d.table.tableId);
+        changed.push(recordVerification(db, 'physical-columns', d.table.tableId, expected));
     }
-    return createDescriptorRegistry([...descriptors.values()]);
+    if (changed.length)
+        await db.batch(changed);
 }

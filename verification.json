@@ -9,7 +9,8 @@
         "pnpm test:start",
         "pnpm test:integration",
         "pnpm test:domains",
-        "pnpm test:lifecycle-erasure"
+        "pnpm test:lifecycle-erasure",
+        "pnpm test:cron-budget"
       ]
     },
     {

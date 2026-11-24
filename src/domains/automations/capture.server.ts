@@ -1,5 +1,6 @@
 import type { DescriptorRegistry, EntityDescriptor } from '../records/descriptors.server'
 import { identifier } from '../admission/sql.server'
+import { fingerprint, recordVerification, verifiedFingerprint } from '../schema/verifications.server'
 
 const literal=(value:string)=>`'${value.replaceAll("'","''")}'`
 function trigger(descriptor:EntityDescriptor,operation:'INSERT'|'UPDATE',name:string) {
@@ -44,9 +45,12 @@ export async function ensureRecordAutomationTriggers(db:D1Database,descriptors:D
   const saved=await db.prepare('SELECT table_name FROM record_automation_triggers WHERE app_id=? AND entity_id=?')
    .bind(binding.app_id,binding.entity_id).first<{table_name:string}>()
   const stem='record_auto_'+binding.entity_id.toLowerCase()
+  // The expected update trigger is proven against sqlite_master once and recorded by its fingerprint.
+  const expected=trigger(descriptor,'UPDATE',stem+'_updated'),proof=await fingerprint(expected),name=binding.app_id+':'+binding.entity_id
   if(saved?.table_name===descriptor.table.tableId){
+   if(await verifiedFingerprint(db,'automation-trigger',name)===proof)continue
    const existing=await db.prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?").bind(stem+'_updated').first<{sql:string}>()
-   if(existing?.sql===trigger(descriptor,'UPDATE',stem+'_updated'))continue
+   if(existing?.sql===expected){await recordVerification(db,'automation-trigger',name,proof).run();continue}
   }
   const nonce=crypto.randomUUID()
   await db.batch([
@@ -57,6 +61,7 @@ export async function ensureRecordAutomationTriggers(db:D1Database,descriptors:D
    db.prepare(trigger(descriptor,'INSERT',stem+'_created')),db.prepare(trigger(descriptor,'UPDATE',stem+'_updated')),
    db.prepare(`INSERT INTO record_automation_triggers(app_id,entity_id,table_name) VALUES(?,?,?)
     ON CONFLICT(app_id,entity_id) DO UPDATE SET table_name=excluded.table_name`).bind(binding.app_id,binding.entity_id,descriptor.table.tableId),
+   recordVerification(db,'automation-trigger',name,proof),
    db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce),
   ])
  }

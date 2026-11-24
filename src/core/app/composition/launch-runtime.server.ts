@@ -75,24 +75,32 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
   visible:async ctx=>{try{await foundation.policy.scope(ctx,{appId:LAUNCH_APP_ID,entityId:'00000000000000000000000701',purpose:'read'});return true}catch{return false}},
   replayIdentity:async(_ctx,input)=>({appId:LAUNCH_APP_ID,canonicalInputHash:await canonicalHash({input:input.input,expected:input.expected})}),
   prepare:(ctx,input)=>prepareAnalysisRequest(context,ctx,input as CommandInput<Record<string,unknown>>,release())})
- async function events(commandId?:string){release();const rows=await db.prepare(`SELECT * FROM admission_events e WHERE app_id=? AND NOT EXISTS(SELECT 1 FROM launch_event_dispatches d WHERE d.event_id=e.id) ${commandId?'AND command_id=?':''} ORDER BY created_at,id LIMIT 200`).bind(LAUNCH_APP_ID,...commandId?[commandId]:[]).all<{id:string;name:string;version:number;subject_json:string|null;payload_json:string;cause_run_ids_json:string}>()
-  for(const e of rows.results){
-   // Lifecycle erasure retains the event identity with this exact JSON-null pair.
-   // Consume only its dispatch receipt; never restore or rewrite erased event data.
-   if(e.subject_json==='null'&&e.payload_json==='null'){await consumeRedactedEvent(e.id);continue}
-   try{
-    const event={name:e.name,version:e.version,subject:e.subject_json?JSON.parse(e.subject_json):null,payload:JSON.parse(e.payload_json),causeRunIds:JSON.parse(e.cause_run_ids_json)} as DomainEvent
-    if(event.payload===null)throw new ApiError('validation','Launch event payload is null without lifecycle redaction')
-    const unchanged=trustedPredicate('EXISTS(SELECT 1 FROM admission_events WHERE id=? AND app_id=? AND subject_json IS ? AND payload_json=? AND cause_run_ids_json=?)',[e.id,LAUNCH_APP_ID,e.subject_json,e.payload_json,e.cause_run_ids_json])
-    await automation.event(service.eventContext(e.id),e.id,event,unchanged)
-   }catch(error){
-    // Erasure can win after the read. Trigger commits fence the original event;
-    // only a now-redacted event may turn that refusal into safe consumption.
-    if(!await consumeRedactedEvent(e.id))throw error
-    continue
-   }
-   await db.prepare('INSERT OR IGNORE INTO launch_event_dispatches(event_id,processed_at) VALUES(?,?)').bind(e.id,clock().toISOString()).run()
-  }
+ // Every launch event at or below the cursor is dispatched; the cursor is ignored when its row no longer matches (restored or rewritten events).
+ // NOT INDEXED keeps the read on the rowid range after the cursor: the created_at index would walk all history to satisfy ORDER BY.
+ const cursorFloor="coalesce((SELECT CASE WHEN c.after_rowid=0 OR x.id IS c.after_id THEN c.after_rowid ELSE 0 END FROM launch_event_cursor c LEFT JOIN admission_events x ON x.rowid=c.after_rowid WHERE c.singleton=1),0)"
+ async function advanceEventCursor(){
+  await db.prepare(`INSERT INTO launch_event_cursor(singleton,after_rowid,after_id) SELECT 1,t.value,(SELECT id FROM admission_events WHERE rowid=t.value) FROM (SELECT coalesce((SELECT min(e.rowid)-1 FROM admission_events e WHERE e.rowid>${cursorFloor} AND e.app_id=? AND NOT EXISTS(SELECT 1 FROM launch_event_dispatches d WHERE d.event_id=e.id)),(SELECT coalesce(max(rowid),0) FROM admission_events)) AS value) t WHERE 1 ON CONFLICT(singleton) DO UPDATE SET after_rowid=excluded.after_rowid,after_id=excluded.after_id WHERE after_rowid<>excluded.after_rowid OR after_id IS NOT excluded.after_id`).bind(LAUNCH_APP_ID).run()
+ }
+ async function events(commandId?:string){release();const rows=await db.prepare(`SELECT * FROM admission_events e NOT INDEXED WHERE e.rowid>${cursorFloor} AND app_id=? AND NOT EXISTS(SELECT 1 FROM launch_event_dispatches d WHERE d.event_id=e.id) ${commandId?'AND command_id=?':''} ORDER BY created_at,id LIMIT 200`).bind(LAUNCH_APP_ID,...commandId?[commandId]:[]).all<{id:string;name:string;version:number;subject_json:string|null;payload_json:string;cause_run_ids_json:string}>()
+  try{
+    for(const e of rows.results){
+     // Lifecycle erasure retains the event identity with this exact JSON-null pair.
+     // Consume only its dispatch receipt; never restore or rewrite erased event data.
+     if(e.subject_json==='null'&&e.payload_json==='null'){await consumeRedactedEvent(e.id);continue}
+     try{
+      const event={name:e.name,version:e.version,subject:e.subject_json?JSON.parse(e.subject_json):null,payload:JSON.parse(e.payload_json),causeRunIds:JSON.parse(e.cause_run_ids_json)} as DomainEvent
+      if(event.payload===null)throw new ApiError('validation','Launch event payload is null without lifecycle redaction')
+      const unchanged=trustedPredicate('EXISTS(SELECT 1 FROM admission_events WHERE id=? AND app_id=? AND subject_json IS ? AND payload_json=? AND cause_run_ids_json=?)',[e.id,LAUNCH_APP_ID,e.subject_json,e.payload_json,e.cause_run_ids_json])
+      await automation.event(service.eventContext(e.id),e.id,event,unchanged)
+     }catch(error){
+      // Erasure can win after the read. Trigger commits fence the original event;
+      // only a now-redacted event may turn that refusal into safe consumption.
+      if(!await consumeRedactedEvent(e.id))throw error
+      continue
+     }
+     await db.prepare('INSERT OR IGNORE INTO launch_event_dispatches(event_id,processed_at) VALUES(?,?)').bind(e.id,clock().toISOString()).run()
+    }
+  }finally{await advanceEventCursor()}
  }
  async function consumeRedactedEvent(id:string){
   await db.prepare("INSERT OR IGNORE INTO launch_event_dispatches(event_id,processed_at) SELECT id,? FROM admission_events WHERE id=? AND app_id=? AND subject_json='null' AND payload_json='null'").bind(clock().toISOString(),id,LAUNCH_APP_ID).run()
@@ -105,7 +113,7 @@ export function createInstalledLaunch(platform:Platform,foundation:ServerFoundat
   else throw new ApiError('validation','Invalid launch queue lineage')
   await db.prepare("UPDATE admission_outbox SET state='dispatched',updated_at=? WHERE id=? AND state='pending'").bind(clock().toISOString(),entry.id).run()
  }
- async function scheduled(){release();await db.prepare("UPDATE launch_analysis_requests SET state='Unknown',error_code='provider_unavailable',error_message='Provider outcome was lost after the 60-second deadline; no analysis was stored',updated_at=?,version=version+1 WHERE state='Running' AND updated_at<?").bind(clock().getTime(),clock().getTime()-60000).run();await db.prepare("UPDATE launch_model_calls SET state='unavailable',error_code='provider_unavailable',error_message='Provider outcome was lost after its deadline',updated_at=? WHERE state='running' AND request_id IN (SELECT id FROM launch_analysis_requests WHERE state='Unknown')").bind(clock().getTime()).run();await events();await automation.schedule(service.scheduleContext());const ctx=service.scheduleContext(),effects=await schedules.overdue(ctx)
+ async function scheduled(){release();await db.prepare("UPDATE launch_analysis_requests SET state='Unknown',error_code='provider_unavailable',error_message='Provider outcome was lost after the 60-second deadline; no analysis was stored',updated_at=?,version=version+1 WHERE state='Running' AND updated_at<?").bind(clock().getTime(),clock().getTime()-60000).run();await db.prepare("UPDATE launch_model_calls SET state='unavailable',error_code='provider_unavailable',error_message='Provider outcome was lost after its deadline',updated_at=? WHERE state='running' AND EXISTS(SELECT 1 FROM launch_analysis_requests r WHERE r.id=launch_model_calls.request_id AND r.state='Unknown')").bind(clock().getTime()).run();await events();await automation.schedule(service.scheduleContext());const ctx=service.scheduleContext(),effects=await schedules.overdue(ctx)
   if(effects.mutations.length){const action='launch.notification.schedule';await foundation.admission.commit(ctx,{commandId:createUlid(),action,appId:LAUNCH_APP_ID,canonicalInputHash:await canonicalHash({at:ctx.now,effects}),permit:{actor:{id:ctx.principal.id,kind:'system'},action,appId:LAUNCH_APP_ID,grantId:null,grantVersion:null,policyVersion:1,validUntil:ctx.principal.expiresAt,guards:effects.guards,reservationMutations:[],reservationIds:[]},guards:[],mutations:effects.mutations,audit:[],events:[],outbox:[],committedResult:{scheduled:true}})}
   const due=await db.prepare("SELECT id,action,input_json FROM admission_outbox WHERE state='pending' AND action IN ('launch.automation.execute','launch.analysis.execute') AND not_before<=? ORDER BY not_before,id LIMIT 200").bind(clock().toISOString()).all<{id:string;action:string;input_json:string}>();for(const row of due.results)await dispatch({...row,input:JSON.parse(row.input_json)})
  }

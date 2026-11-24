@@ -69,6 +69,7 @@
     "test:contract": "rer check --profile first-party",
     "test:execution-resolution": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/execution-resolution.mjs tests/execution-budget-readback.mjs",
     "test:execution-resolution:browser": "node --import ./tests/helpers/typescript-loader.mjs tests/ui-execution-resolution-browser.mjs",
+    "test:cron-budget": "node --import ./tests/helpers/typescript-loader.mjs --test tests/cron-d1-budget.mjs",
     "test:lifecycle-erasure": "node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/lifecycle-erasure.mjs tests/lifecycle-identity-security.mjs",
     "test:repairs:outcome": "node tests/ui-repairs-outcome-browser.mjs",
     "test:oidc": "CRADLE_OIDC_EMITTED=1 node --import ./tests/helpers/typescript-loader.mjs --test --test-concurrency=1 tests/auth-oidc.mjs",

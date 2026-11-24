@@ -11,6 +11,19 @@ export function capacitySql(d:Pick<EntityDescriptor,'table'|'schema'>){const tab
  `CREATE TRIGGER ${identifier(table+'_capacity_delete')} BEFORE DELETE ON ${identifier(table)} BEGIN ${init} UPDATE record_capacity SET row_count=row_count-1 WHERE table_id=${key}; END;`,
  ]
 }
-/** Upgrade populated physical tables once; source-owned applications keep their declared limits. */
-export async function ensureRecordCapacity(db:D1Database,registry:DescriptorRegistry){const counted=new Set((await db.prepare('SELECT table_id FROM record_capacity').all<{table_id:string}>()).results.map(r=>r.table_id));const installed=new Set((await db.prepare("SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE '%_capacity_insert'").all<{name:string}>()).results.map(r=>r.name));for(const d of registry.list()){if(d.legacy||!d.schema.physicalRevision.startsWith('manual_'))continue;if(!installed.has(d.table.tableId+'_capacity_insert'))await db.batch(capacitySql(d).map(sql=>db.prepare(sql)));if(!counted.has(d.table.tableId))await db.prepare(`INSERT OR IGNORE INTO record_capacity SELECT ?,?,?,?,?,count(*) FROM ${identifier(d.table.tableId)} WHERE NOT EXISTS(SELECT 1 FROM record_capacity WHERE table_id=?)`).bind(d.table.tableId,d.schema.appId,d.schema.id,d.schema.version,d.schema.physicalRevision,d.table.tableId).run()}}
+/** Upgrade populated physical tables once; source-owned applications keep their declared limits.
+ * A counted table already has its triggers (they install first), so a run that finds every manual
+ * table counted never reads sqlite_master. */
+export async function ensureRecordCapacity(db:D1Database,registry:DescriptorRegistry){
+ const manual=registry.list().filter(d=>!d.legacy&&d.schema.physicalRevision.startsWith('manual_'))
+ if(!manual.length)return
+ const counted=new Set((await db.prepare('SELECT table_id FROM record_capacity').all<{table_id:string}>()).results.map(r=>r.table_id))
+ const uncounted=manual.filter(d=>!counted.has(d.table.tableId))
+ if(!uncounted.length)return
+ const installed=new Set((await db.prepare("SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE '%_capacity_insert'").all<{name:string}>()).results.map(r=>r.name))
+ for(const d of uncounted){
+  if(!installed.has(d.table.tableId+'_capacity_insert'))await db.batch(capacitySql(d).map(sql=>db.prepare(sql)))
+  await db.prepare(`INSERT OR IGNORE INTO record_capacity SELECT ?,?,?,?,?,count(*) FROM ${identifier(d.table.tableId)} WHERE NOT EXISTS(SELECT 1 FROM record_capacity WHERE table_id=?)`).bind(d.table.tableId,d.schema.appId,d.schema.id,d.schema.version,d.schema.physicalRevision,d.table.tableId).run()
+ }
+}
 export async function recordCapacityGuard(db:D1Database,d:EntityDescriptor){if(d.legacy)return [];const table=d.table.tableId,total=`(SELECT coalesce(sum(c.row_count),0) FROM ${live} WHERE c.app_id=?)`,row=await db.prepare(`SELECT (SELECT count(*) FROM ${identifier(table)}) AS table_count,${total} AS base_count`).bind(d.schema.appId).first<{table_count:number;base_count:number}>();if(row!.table_count>=recordLimits.recordsPerTable)throw new AdmissionError('capacity_limit',capacityMessage('recordsPerTable',row!.table_count));if(row!.base_count>=recordLimits.recordsPerBase)throw new AdmissionError('capacity_limit',capacityMessage('recordsPerBase',row!.base_count));return [trustedPredicate(`(SELECT count(*) FROM ${identifier(table)})<?`,[recordLimits.recordsPerTable]),trustedPredicate(`${total}<?`,[d.schema.appId,recordLimits.recordsPerBase])]}

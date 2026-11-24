@@ -942,6 +942,12 @@
       "name": "9083_record_template_buttons.sql",
       "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
       "sql": "CREATE TABLE record_template_buttons (\n id TEXT PRIMARY KEY,\n app_id TEXT NOT NULL,\n entity_id TEXT NOT NULL,\n owner_id TEXT NOT NULL,\n template_id TEXT NOT NULL REFERENCES record_templates(id),\n name TEXT NOT NULL,\n confirmation INTEGER NOT NULL CHECK (confirmation IN (0,1)),\n version INTEGER NOT NULL CHECK (version > 0),\n created_at TEXT NOT NULL,\n updated_at TEXT NOT NULL\n);\nCREATE INDEX record_template_buttons_table ON record_template_buttons(app_id,entity_id);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "9084_d1_read_budget.sql",
+      "sha256": "ab7ef249cbd18319d7cbecf2741f77fd77bd176e0a2932812613940970baf1b4",
+      "sql": "-- Flat D1 read cost for the minute cron and routine requests: schema facts proven once,\n-- a launch-event cursor, and indexes that match the scheduled queries.\nCREATE TABLE schema_verifications (\n kind TEXT NOT NULL, name TEXT NOT NULL, fingerprint TEXT NOT NULL,\n PRIMARY KEY(kind,name)\n);\n\n-- Every launch event at or below after_rowid is dispatched. after_id names the event at that\n-- rowid, so a cursor that no longer matches its row (restored or rewritten events) is ignored.\nCREATE TABLE launch_event_cursor (\n singleton INTEGER PRIMARY KEY CHECK(singleton=1), after_rowid INTEGER NOT NULL, after_id TEXT\n);\nINSERT INTO launch_event_cursor(singleton,after_rowid,after_id)\n SELECT 1,start.value,(SELECT id FROM admission_events WHERE rowid=start.value)\n FROM (SELECT coalesce((SELECT min(e.rowid)-1 FROM admission_events e WHERE e.app_id='00000000000000000000000700'\n   AND NOT EXISTS(SELECT 1 FROM launch_event_dispatches d WHERE d.event_id=e.id)),(SELECT coalesce(max(rowid),0) FROM admission_events)) AS value) start;\n\nCREATE INDEX execution_attempts_action_created ON execution_attempts(action,created_at);\nCREATE INDEX record_calendar_changes_pending ON record_calendar_changes(state,created_at,id);\nCREATE INDEX launch_analysis_requests_state ON launch_analysis_requests(state,updated_at);\nCREATE INDEX launch_model_calls_state ON launch_model_calls(state);\nCREATE INDEX record_change_windows_captured ON record_change_windows(captured_at);\nCREATE INDEX lifecycle_erasures_state ON lifecycle_erasures(state,requested_at);\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

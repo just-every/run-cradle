@@ -1,5 +1,6 @@
 import type {DescriptorRegistry} from '../descriptors.server'
 import {identifier} from '../../admission/sql.server'
+import {fingerprint,recordVerification,verifiedFingerprint} from '../../schema/verifications.server'
 const literal=(s:string)=>`'${s.replaceAll("'","''")}'`
 /** Import's inert admission never enters this context. Each ordinary command contributes once per record. */
 export async function ensureCalendarCapture(db:D1Database,descriptors:DescriptorRegistry){
@@ -7,8 +8,10 @@ export async function ensureCalendarCapture(db:D1Database,descriptors:Descriptor
  for(const b of bindings){const d=descriptors.get(b.app_id,b.entity_id)
   const live=await db.prepare('SELECT version,physical_revision FROM record_schemas WHERE id=? AND app_id=?').bind(b.entity_id,b.app_id).first<{version:number;physical_revision:string}>();if(!live||live.version!==d.schema.version||live.physical_revision!==d.schema.physicalRevision)continue
   for(const {name,sql} of calendarCaptureSchema(d)){
-   const prior=await db.prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?").bind(name).first<{sql:string}>();if(prior?.sql===sql)continue
-   const nonce=crypto.randomUUID();await db.batch([db.prepare('INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN EXISTS(SELECT 1 FROM record_schemas WHERE id=? AND app_id=? AND version=? AND physical_revision=?) THEN 1 ELSE 0 END').bind(nonce,b.entity_id,b.app_id,d.schema.version,d.schema.physicalRevision),db.prepare(`DROP TRIGGER IF EXISTS ${identifier(name)}`),db.prepare(sql),db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce)])
+   // The expected trigger is proven against sqlite_master once and recorded by its fingerprint.
+   const proof=await fingerprint(sql);if(await verifiedFingerprint(db,'calendar-capture',name)===proof)continue
+   const prior=await db.prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?").bind(name).first<{sql:string}>();if(prior?.sql===sql){await recordVerification(db,'calendar-capture',name,proof).run();continue}
+   const nonce=crypto.randomUUID();await db.batch([db.prepare('INSERT INTO admission_assertions(nonce,sequence,ok) SELECT ?,0,CASE WHEN EXISTS(SELECT 1 FROM record_schemas WHERE id=? AND app_id=? AND version=? AND physical_revision=?) THEN 1 ELSE 0 END').bind(nonce,b.entity_id,b.app_id,d.schema.version,d.schema.physicalRevision),db.prepare(`DROP TRIGGER IF EXISTS ${identifier(name)}`),db.prepare(sql),recordVerification(db,'calendar-capture',name,proof),db.prepare('DELETE FROM admission_assertions WHERE nonce=?').bind(nonce)])
   }
  }
 }
