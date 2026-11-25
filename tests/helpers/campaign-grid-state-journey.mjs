@@ -11,7 +11,11 @@ export async function campaignGridStateJourney({ page, h, campaign, sample, widt
   await result.getByText(campaign.name, { exact: true }).waitFor()
   assert.ok((await result.innerText()).includes(campaign.code), 'Independently created campaign is populated before the refresh')
   await result.getByRole('button', { name: /Inspect/ }).click()
-  const inspector = page.locator('.portfolio-inspector')
+  // On phone the inspector replaces its initial sidebar with a modal after hydration.
+  const inspector = page.getByRole(width < 768 ? 'dialog' : 'complementary', {
+    name: `${campaign.name} inspector`,
+    exact: true,
+  })
   await inspector.getByRole('heading', { name: campaign.name, exact: true }).waitFor()
   assert.ok((await inspector.innerText()).includes(campaign.code), 'The earlier successful read also populates the inspector')
   const close = inspector.getByRole('button', { name: 'Close campaign inspector', exact: true })
