@@ -4602,7 +4602,7 @@
       "executable": false
     },
     "management/integration/deployment-spec.json": {
-      "sha256": "d6e4ce4c4d02012043c047658a79f598e347363e7fa10cc518f97a120c708404",
+      "sha256": "10cadf77de352c0d40a91ecd0254cf2fa859e73e0bf253ebb5637633d0f076a9",
       "executable": false
     },
     "migrations/base/9000_base_operator_auth.sql": {
@@ -5219,6 +5219,10 @@
     },
     "migrations/updates/9083_record_template_buttons.sql": {
       "sha256": "1531e3abd394ce3926256b97cf3c879047b66e55d080c1d849d0345bf44da375",
+      "executable": false
+    },
+    "migrations/updates/9084_d1_read_budget.sql": {
+      "sha256": "ab7ef249cbd18319d7cbecf2741f77fd77bd176e0a2932812613940970baf1b4",
       "executable": false
     },
     "OPERATIONS.json": {
@@ -10153,6 +10157,10 @@
       "sha256": "ffb14b22f133d1c9a67f39836010211a9662f56e44830206b5e3f512de101ecc",
       "executable": false
     },
+    "src/domains/schema/verifications.server.ts": {
+      "sha256": "5786ae5d0d2a058c606071f206d8e2afb7275dbaf35568547b1c17c0edd6194f",
+      "executable": false
+    },
     "src/domains/scorecard/contracts.ts": {
       "sha256": "b76aaefb6507fdf4e83d49859983c892098118c685efa2578cf814360424c0c5",
       "executable": false
@@ -11635,6 +11643,14 @@
     },
     "tests/contract.mjs": {
       "sha256": "e487c7807f6745eb38d4c62bf83b652777a37a86cacc8a4b575af6f00d0ad828",
+      "executable": false
+    },
+    "tests/cron-d1-budget.mjs": {
+      "sha256": "ada57e185503d74d799116b2ce7d50c3e61b3a39acd147a9bc1652f23fede01f",
+      "executable": false
+    },
+    "tests/cron-runtime-entry.ts": {
+      "sha256": "bb48b30a71b125099c0137d24272172384c0a73f3708c4047123654841349f82",
       "executable": false
     },
     "tests/drizzle-schema.typecheck.ts": {
