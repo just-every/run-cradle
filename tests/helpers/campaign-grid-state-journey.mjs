@@ -15,8 +15,12 @@ export async function campaignGridStateJourney({ page, h, campaign, sample, widt
   await inspector.getByRole('heading', { name: campaign.name, exact: true }).waitFor()
   assert.ok((await inspector.innerText()).includes(campaign.code), 'The earlier successful read also populates the inspector')
   const close = inspector.getByRole('button', { name: 'Close campaign inspector', exact: true })
-  await page.keyboard.press('Tab')
+  await close.scrollIntoViewIfNeeded()
   await close.focus()
+  // Re-enter the control by keyboard after any scrolling caused by opening the inspector.
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Shift+Tab')
+  assert.equal(await close.evaluate(button => document.activeElement === button && button.matches(':focus-visible')), true)
   await page.getByRole('tooltip', { name: 'Close campaign inspector', exact: true }).waitFor()
   await capture(page, 'grid-populated-inspector', width)
   // The phone inspector is modal: dismiss it through its own control before

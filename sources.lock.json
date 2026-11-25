@@ -2910,7 +2910,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "344b1ce8fae8b1f4acc8e926f9e6545d6a35c04d57d44f53f2630ce7e3a9d1d3",
+      "sha256": "953620c96e7fd7f1a6d58f05af5b91369983cb576dc73a3983a8f97e5542be74",
       "executable": false
     },
     ".gitignore": {
@@ -12122,7 +12122,7 @@
       "executable": false
     },
     "tests/helpers/campaign-grid-state-journey.mjs": {
-      "sha256": "745967df5c71cbe975617d56302b5e06935d795c0e40d3f84774d32b23ee5351",
+      "sha256": "535e4fd92fb760ae219445e4133576963b06636787f82185152b9f094dfdd2d4",
       "executable": false
     },
     "tests/helpers/capacity-message.mjs": {
