@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.5.0
+
+What an owner gets:
+
 - The minute cron and every queue run now read a flat handful of D1 rows however much history the install holds (about 10,000 rows per run at 30 days of defaults before, about 90 after), so a small company on Workers Free no longer spends the account's shared 5,000,000-row daily read allowance on Cradle alone. Schema facts (physical columns, record automation and calendar capture triggers, record capacity triggers) are proven once and recorded, launch events are walked from a stored cursor, and the scheduled queries have matching indexes. Adds `updates/9084_d1_read_budget.sql`: two small tables and indexes, additive. The new tables are bookkeeping and never transfer in an archive.
 - Rewrite the product contract into Core and Agent surface targets with generated acceptance and homepage claims. Split seven mixed capabilities, preserve the previously unnumbered flagship gates as missing targets, and carry done only where the old cited journeys cover the whole clause. Move shared duties to Base citations, field receipts to a visible not-run register, and historical decisions and mechanisms into their own documents. No application behavior or test assertion changes.
 
@@ -10,6 +14,8 @@
 
 - Erasing an operator is final: Base's operator status and role routes now refuse any change to an erased person, so they cannot be re-activated (OPS-005). Adds `updates/9039`, an additive trigger.
 - OPS-004 and OPS-005 are done, each with a named journey over the launch HTTP doors.
+- The release also carries the schema and current work for Trash (records, views, tables and fields), record templates and template buttons, guests, Launch comments in the record thread, warehouse exports (CSV or Parquet, to R2 or another destination), opt-in company sign-in with SAML and SCIM, sheet sources for import, automation test runs, personal file stores, Google Calendar record sync, Twilio SMS, and Slack and chat apps. Integrations stay off until an owner configures them; `CONTRACT.md` says what is done, partial or missing for each.
+- Adds 37 migrations since 0.4.0 (`core/1290`, `core/1300`, and `updates/9039` to `updates/9084`), each listed in `RELEASE.json` with what it changes. Pins rer 0.2.80.
 
 ## 0.4.0
 

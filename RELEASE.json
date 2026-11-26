@@ -1,20 +1,169 @@
 {
-  "version": "0.4.0",
-  "previousVersion": "0.3.0",
-  "date": "2026-10-19",
+  "version": "0.5.0",
+  "previousVersion": "0.4.0",
+  "date": "2026-11-27",
   "contractChanges": {
-    "AUTH-BASE-001": {
+    "OPS-004": {
       "change": "changed",
-      "summary": "Install and sign in: the owner completes first-run details at /setup only when installation configuration did not already set them (SET-003), and the sign-in form fills its email from ?login_hint=, which the deployment specification declares (surfaces.app.signIn) so RER's Open app sends the claimed owner there with their email."
+      "summary": "Sessions and removal: status is now done, proven by a named journey over the launch HTTP doors."
     },
-    "SET-003": {
+    "OPS-005": {
       "change": "changed",
-      "summary": "First run and sample data: when the installation configuration sets the workspace name, timezone and currency (as rer setup and RER Managed hosting do), first-owner initialization stores them and records first run complete, so the owner's first sign-in opens /app; otherwise /setup asks first, as before."
+      "summary": "Erasure is final: Base's operator status and role routes refuse any change to an erased person, so they cannot be re-activated (updates/9039). Status is now done, proven by a named journey over the launch HTTP doors."
     }
   },
   "extensionPointChanges": [],
-  "migrations": [],
-  "breaking": false,
-  "agentUpdateInstructions": "Upgrade from 0.3.0 by merging this release into your checkout, keeping your customisations and every applied migration byte. There are no new migrations. Back up first: stop rer dev and run rer export --output exports/workspace.rer; for a hosted installation, sign in as the owner and download Settings → Export your installation → Download verified archive. Run rer install with the pinned @runeditrun/rer 0.2.68, then rer dev (local) or rer deploy (hosted). Restore: rer import --input PATH --yes restores an installation archive into a checkout, including archives made by Cradle 0.3.0 or earlier on RER Platform that carry Platform's rer_migrations ledger; the destination keeps its own migration history, and archives holding an unknown table are still refused. If you customised scripts/portability (records.mjs, worker.mjs) keep its restore wiring: migrations.mjs replays the destination's applied migrations, each with its file's SHA-256, so Base can place an older archive. Configured installs (WORKSPACE_NAME, WORKSPACE_TIMEZONE and WORKSPACE_CURRENCY set) now open /app on first sign-in instead of /setup.",
-  "publicReleaseNotes": "Cradle 0.4.0 makes backups made by the previous version restore. A Cradle installation archive made on RER Platform carries Platform's migration history; Cradle mistook that history for an unknown record table and refused the restore. It now hands it to Base, which checks it against the destination's own history and leaves that history unchanged. Every record and file in the archive is restored; an archive holding a table this version does not know is still refused.\n\nSign-in is quicker on hosted installs: when RER already collected the workspace name, timezone and currency, the owner's first sign-in opens the app instead of asking again, and Open app in RER fills the owner's email on the sign-in form.\n\nNo new migrations. Cradle now pins rer 0.2.68.\n\nProduct screenshot: .github/assets/release/cradle-0.3.0-records-1440.png"
+  "migrations": [
+    {
+      "id": "migrations/core/1290_warehouse_exports.sql",
+      "buyerSteps": "Apply in the core group after 1280, preserving all applied SQL. Adds warehouse export schedules, runs and object custody. Additive; every installation row and resource identity is kept."
+    },
+    {
+      "id": "migrations/core/1300_launch_run_history.sql",
+      "buyerSteps": "Apply after 1290. Adds the indexes run history and Automation Monitor page by; every released run and action row is kept."
+    },
+    {
+      "id": "migrations/updates/9039_erased_operator_guard.sql",
+      "buyerSteps": "Apply in the updates group after 9038. Adds a trigger that refuses any status or role change on the Base operator of an erased person (OPS-005). Additive."
+    },
+    {
+      "id": "migrations/updates/9040_warehouse_erasure_binding.sql",
+      "buyerSteps": "Apply after 9039. Binds erasure receipts to warehouse export custody; the files custody of every existing erasure receipt is kept."
+    },
+    {
+      "id": "migrations/updates/9041_company_identity.sql",
+      "buyerSteps": "Apply after 9040. Adds opt-in company sign-in (SAML) and SCIM tables. Nothing changes until an owner configures it; configuration, credentials and login attempts never travel in an archive."
+    },
+    {
+      "id": "migrations/updates/9042_sheet_sources.sql",
+      "buyerSteps": "Apply after 9041. Adds sheet sources for import. Existing full-base owner rules gain the read-only source-intake action; narrower rules and explicit denials are kept."
+    },
+    {
+      "id": "migrations/updates/9043_record_capacity.sql",
+      "buyerSteps": "Apply after 9042. Adds derived record counts per base and the capacity triggers that keep them. Additive."
+    },
+    {
+      "id": "migrations/updates/9044_file_store_connections.sql",
+      "buyerSteps": "Apply after 9043. Lets a connection belong to the person who uses it to pick files from their own file store. Existing connections keep no owner and are never offered to the chooser."
+    },
+    {
+      "id": "migrations/updates/9045_change_subscriptions.sql",
+      "buyerSteps": "Apply after 9044. Adds change subscriptions and a portable sequence over the audit; the audit payload stays canonical."
+    },
+    {
+      "id": "migrations/updates/9046_record_trash.sql",
+      "buyerSteps": "Apply after 9045. Adds the record Trash tables. Additive."
+    },
+    {
+      "id": "migrations/updates/9047_metadata_trash.sql",
+      "buyerSteps": "Apply after 9046. Adds Trash for views and other metadata. Views deleted before the upgrade enter a full restore window."
+    },
+    {
+      "id": "migrations/updates/9048_automation_test_runs.sql",
+      "buyerSteps": "Apply after 9047. Adds automation test runs, which never execute or recover automatically, including after a restore. Additive."
+    },
+    {
+      "id": "migrations/updates/9049_personal_file_stores.sql",
+      "buyerSteps": "Apply after 9048. Adds personal file stores. Existing credentials and identities are kept; preview sharing starts off."
+    },
+    {
+      "id": "migrations/updates/9050_record_calendar_sync.sql",
+      "buyerSteps": "Apply after 9049. Adds Google Calendar record sync configuration and event bindings; provider credentials stay in custody. Additive."
+    },
+    {
+      "id": "migrations/updates/9060_twilio_sms.sql",
+      "buyerSteps": "Apply after 9050. Adds owner-managed Twilio credentials and one-attempt SMS custody. Nothing sends until an owner configures it."
+    },
+    {
+      "id": "migrations/updates/9061_warehouse_format.sql",
+      "buyerSteps": "Apply after 9060. Adds the export format to warehouse schedules; existing schedules keep CSV and their watermark until an owner changes them."
+    },
+    {
+      "id": "migrations/updates/9062_warehouse_destinations.sql",
+      "buyerSteps": "Apply after 9061. Adds warehouse destinations beyond R2; every R2 schedule and its custody is kept."
+    },
+    {
+      "id": "migrations/updates/9063_warehouse_provider_custody.sql",
+      "buyerSteps": "Apply after 9062. Adds provider job custody for warehouse exports. Additive."
+    },
+    {
+      "id": "migrations/updates/9064_slack_app.sql",
+      "buyerSteps": "Apply after 9063. Adds one owner-managed Slack app installation; people link their own accounts. Nothing is installed until an owner does it."
+    },
+    {
+      "id": "migrations/updates/9065_schema_trash.sql",
+      "buyerSteps": "Apply after 9064. Puts table and field deletions under the existing Trash clock and authority. Additive."
+    },
+    {
+      "id": "migrations/updates/9066_sms_review.sql",
+      "buyerSteps": "Apply after 9065. Keeps provider refusals and SMS replies that need an owner review. Additive."
+    },
+    {
+      "id": "migrations/updates/9068_export_audit.sql",
+      "buyerSteps": "Apply after 9066. Adds metadata-only custody for read exports. Additive."
+    },
+    {
+      "id": "migrations/updates/9069_warehouse_transfers.sql",
+      "buyerSteps": "Apply after 9068. Adds multipart and resumable transfer custody for warehouse exports; an archive export carries no live transfer state."
+    },
+    {
+      "id": "migrations/updates/9071_rotation_audit_keys.sql",
+      "buyerSteps": "Apply after 9069. Records key identities in the rotation audit as metadata only; no credential value or digest is stored."
+    },
+    {
+      "id": "migrations/updates/9072_chat_app_providers.sql",
+      "buyerSteps": "Apply after 9071. Adds the chat app provider choice. Switching provider needs fresh consent."
+    },
+    {
+      "id": "migrations/updates/9073_chat_installation_instance.sql",
+      "buyerSteps": "Apply after 9072. Binds chat cards to their installation instance, so a removed and recreated installation never revives an old card. Existing cards keep no binding."
+    },
+    {
+      "id": "migrations/updates/9074_parallel_chat_providers.sql",
+      "buyerSteps": "Apply after 9073. Turns the one chat app into independently managed provider installations; credential ciphertext, cards, links and consent are kept."
+    },
+    {
+      "id": "migrations/updates/9075_base_dependency_key_custody.sql",
+      "buyerSteps": "Apply after 9074. Adopts Base's dependency-key custody without changing released rows."
+    },
+    {
+      "id": "migrations/updates/9076_channel_progress_owed.sql",
+      "buyerSteps": "Apply after 9075. Adds the progress notice owed to a job's starter, written with the job's outcome. Additive."
+    },
+    {
+      "id": "migrations/updates/9077_channel_progress_attempts.sql",
+      "buyerSteps": "Apply after 9076. Adds the write-ahead attempt record for those notices. No personal reference is added."
+    },
+    {
+      "id": "migrations/updates/9078_warehouse_export_recovery.sql",
+      "buyerSteps": "Apply after 9077. Makes automatic recovery of an interrupted warehouse export finite by counting attempts on the run's claim. Additive."
+    },
+    {
+      "id": "migrations/updates/9079_launch_typed_fields.sql",
+      "buyerSteps": "Apply after 9078. Types the fields of the retained Launch readiness tables without rewriting a stored row, version or rule. Breaking for Records API consumers of those tables: read the 0.5.0 CHANGELOG entry for each changed value shape before upgrading an integration."
+    },
+    {
+      "id": "migrations/updates/9080_launch_comments_to_record_thread.sql",
+      "buyerSteps": "Apply after 9079. Moves Launch comments into the record thread and retires the second thread table; comment text, authors and times are kept, and rules keep their IDs."
+    },
+    {
+      "id": "migrations/updates/9081_guests.sql",
+      "buyerSteps": "Apply after 9080. Adds guests. A guest's identity survives revocation and erasure so neither can widen access. Additive."
+    },
+    {
+      "id": "migrations/updates/9082_record_templates.sql",
+      "buyerSteps": "Apply after 9081. Adds record templates. Additive."
+    },
+    {
+      "id": "migrations/updates/9083_record_template_buttons.sql",
+      "buyerSteps": "Apply after 9082. Adds buttons that create a record from a template. Additive."
+    },
+    {
+      "id": "migrations/updates/9084_d1_read_budget.sql",
+      "buyerSteps": "Apply after 9083. Adds two small bookkeeping tables and indexes so the minute cron and queue runs read a flat handful of D1 rows. Additive; the new tables never travel in an archive."
+    }
+  ],
+  "breaking": true,
+  "agentUpdateInstructions": "Upgrade from 0.4.0 by merging this release into your checkout, keeping your customisations and every applied migration byte. Back up first: stop rer dev and run rer export --output exports/workspace.rer; for a hosted installation, sign in as the owner and download Settings → Export your installation → Download verified archive. Run rer install with the pinned @runeditrun/rer 0.2.80, then rer dev (local) or rer deploy (hosted). This release adds 37 migrations: core/1290 and core/1300 in the core group, then updates/9039 to updates/9084 in the updates group, each applied once in file order; never reset populated data to upgrade. Breaking for integrations only: updates/9079 types the fields of the Launch readiness tables at /api/v1/apps/00000000000000000000000700/entities/*, so percent, single select, relation, person, money and due-at values change shape as the 0.5.0 CHANGELOG entry lists; no stored row changes. Company sign-in, Slack and chat apps, Twilio SMS, Google Calendar sync, personal file stores and warehouse exports stay off until an owner configures each one. CONTRACT.md was rewritten into Core and Agent surface targets and is the source for what is done, partial or missing; this release adds 86 clause IDs and removes none.",
+  "publicReleaseNotes": "Cradle 0.5.0 releases the work on main since 0.4.0.\n\nThe minute cron and every queue run now read a flat handful of D1 rows however much history the install holds (about 90 rows a run, down from about 10,000 at 30 days of defaults), so a small company on Workers Free no longer spends its account's daily D1 read allowance on Cradle alone.\n\nDate-and-time fields are shown and entered in each viewer's own time zone. Erasing an operator is final.\n\nThe release also carries the schema and current work for Trash (records, views, tables and fields), record templates and template buttons, guests, Launch comments in the record thread, warehouse exports (CSV or Parquet, to R2 or another destination), opt-in company sign-in with SAML and SCIM, sheet sources for import, automation test runs, personal file stores, Google Calendar record sync, Twilio SMS, and Slack and chat apps. Integrations stay off until an owner configures them; CONTRACT.md says what is done, partial or missing for each.\n\nBreaking for integrations: the fields of the Launch readiness tables are now typed, so the Records API returns percent, single select, relation, person, money and due-at values in new shapes. No stored row changes. The CHANGELOG lists each shape.\n\nAdds 37 migrations, all listed in RELEASE.json. Cradle now pins rer 0.2.80.\n\nProduct screenshot: .github/assets/release/cradle-0.3.0-records-1440.png"
 }
